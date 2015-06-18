@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="styles/style.css" media="screen">
+<script type="text/javascript" src="bundle.js" charset="utf-8"></script>
+<title>CanalPlus - Player HTML5</title>
+</head>
+<body>
+
+<div id="player-container"></div>
+
+<script>
+
+window.mountDemoPlayer(
+  document.getElementById("player-container"),
+  { transport: "dash", autoPlay: true }
+);
+
+</script>
+</body>
+</html>

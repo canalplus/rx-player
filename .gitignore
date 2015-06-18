@@ -1,0 +1,9 @@
+node_modules
+*.log
+*.keys
+
+dist/*
+!dist/rx-player.js
+!dist/rx-player.min.js
+
+demo/bundle.js

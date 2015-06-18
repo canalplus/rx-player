@@ -1,0 +1,130 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans);
+
+@font-face {
+  font-family: 'icons';
+  src: url("../fonts/FontAwesome.otf");
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  background-color: rgb(10, 10, 10);
+}
+
+#title {
+  margin-bottom: 3em;
+}
+
+#title h1 {
+  font-family: "Open Sans", sans serif;
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 28px;
+  line-height: 1.05;
+  color: white;
+}
+
+#title .light {
+  font-family: "Open Sans", sans serif;
+}
+
+#player-container {
+  max-width: 70%;
+  margin: 3em auto;
+}
+
+#player-container video {
+  width: 100%;
+  height: 100%;
+}
+
+#controls-bar {
+  display: flex;
+  position: absolute;
+  bottom: 3%;
+  left: 2%;
+  width: 96%;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fafafa;
+  border-radius: 5px;
+  align-items: center;
+}
+
+.control-button {
+  width: 2em;
+  border: none;
+  font-family: "icons";
+  color: #fafafa;
+  background: transparent;
+  font-size: 1.2em;
+}
+
+#play-pause {
+  position: relative;
+}
+.play::before {
+  content: "\f04b";
+}
+.pause::before {
+  content: "\f04c";
+}
+
+.muted::before {
+  content: "\f026";
+}
+.unmuted::before {
+  content: "\f028";
+}
+
+#volume {
+  display:inline-block;
+  position: relative;
+}
+
+#volumeButton {
+  position: relative;
+}
+
+#currentVolume {
+  width: 10px;
+  background: #5c5c5c;;
+  position: absolute;
+  bottom: 0px;
+  border-radius: 4px;
+}
+
+#volume-bar-container {
+  position: absolute;
+  width: 9px;
+  height: 60px;
+  bottom : 30px;
+  left: 5px;
+  padding: 10px;
+}
+
+.progress-bar-container {
+  position: relative;
+  height: .6em;
+  border: 1px solid #fafafa;
+  border-radius: 5px;
+  flex: 1;
+}
+
+.progress-bar {
+  height: 100%;
+  position: absolute;
+  left: 0;
+  border-radius: 3px 0 0 3px;
+  transition: .5s all;
+}
+
+#progress-bar-played {
+  background: #fafafa;;
+  z-index: 3;
+}
+
+#progress-bar-buffered {
+  background: #6E6E6E;
+  z-index: 2;
+}
