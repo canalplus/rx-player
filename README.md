@@ -25,12 +25,13 @@ Another example is the way we abstracted our transport layer into an observable 
 
 ### Architecture
 
-
+TODO
 
 ## Demo
 
-To launch the demo yourself, run `make demo` and start a local webserver from the root
-directory of the repository. For instance:
+The demo is a small application written in [React](https://github.com/facebook/react) demonstrating a simple usage of the player.
+
+To launch the demo yourself, run `make demo` and start a local webserver from the root directory of the repository. For instance:
 
 ```sh
 python -m SimpleHTTPServer 8080 # open http://localhost:8080/demo
