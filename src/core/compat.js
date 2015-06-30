@@ -134,8 +134,8 @@ function compatibleListener(eventNames, prefixes) {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
     if (element instanceof HTMLElement_) {
-      if (!mem) {
-        mem = findSupportedEvent(element, eventNames);
+      if (typeof mem == "undefined") {
+        mem = findSupportedEvent(element, eventNames) || null;
       }
 
       if (mem) {
