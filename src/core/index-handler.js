@@ -46,7 +46,8 @@ function getLiveEdge(manifest) {
   return selectIndexHandler(videoIndex).getLiveEdge(videoIndex, manifest);
 }
 
-function IndexHandler(representation) {
+function IndexHandler(adaptation, representation) {
+  this.adaptation = adaptation;
   this.representation = representation;
   this.index = representation.index;
   this.handler = new (selectIndexHandler(this.index))(this.index);
@@ -55,7 +56,7 @@ function IndexHandler(representation) {
 IndexHandler.prototype.getInitSegment = function() {
   var initialization = this.index.initialization || {};
   return {
-    id: "init_" + this.representation.uid,
+    id: "init_" + this.adaptation.id + "_" + this.representation.id,
     init: true,
     media: initialization.media,
     range: initialization.range,

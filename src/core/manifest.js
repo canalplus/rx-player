@@ -136,11 +136,10 @@ function normalizeAdaptation(adaptation, inherit) {
 
 function normalizeRepresentation(representation, inherit) {
   representation.id = representation.id || _.uniqueId();
-  representation.uid = _.uniqueId();
   _.defaults(representation, inherit);
 
   var index = representation.index;
-  assert(index, "representation: no index found");
+  assert(index);
 
   if (!index.timescale) {
     index.timescale = 1;

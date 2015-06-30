@@ -93,7 +93,7 @@ function Buffer({
   }
 
   function createRepresentationBuffer(representation) {
-    var segmentIndex = new IndexHandler(representation);
+    var segmentIndex = new IndexHandler(adaptation, representation);
     var currentBitrate = representation.bitrate;
 
     var queuedSegments = new ArraySet();
