@@ -220,6 +220,10 @@ This method can be call anytime, even if a stream is already loaded an played by
 
   Boolean allowing to specify the stream URL given as parameter of `loadVideo` should be used without using `MediaSource` interface.
 
+* `options.initVideoBitrate` / `options.initAudioBitrate`
+
+  Number used as initial video and audio bitrates by the adaptive streaming.
+
 #### `play() : void`
 
 Starts video playback. Should be called when the stream is ready, eg. when state machine reaches the state `LOADED`.

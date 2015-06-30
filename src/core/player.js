@@ -75,7 +75,14 @@ function filterStreamByType(stream, type) {
 function Player(options = {}) {
   EventEmitter.call(this);
 
-  var { videoElement, transport, transportOptions, proxy } = options;
+  var {
+    videoElement,
+    transport,
+    transportOptions,
+    proxy,
+    initVideoBitrate,
+    initAudioBitrate
+  } = options;
 
   this.defaultTransport = transport;
   this.defaultTransportOptions = _.extend({ proxy }, transportOptions || {});
@@ -100,14 +107,17 @@ function Player(options = {}) {
   this.stream = new Subject();
 
   var { createPipelines, metrics } = PipeLines();
+
   var timings = timingsSampler(videoElement);
   var deviceEvents = DeviceEvents(videoElement);
-  var adaptive = Adaptive(metrics, timings, deviceEvents);
-  _.extend(this, {
-    createPipelines,
-    metrics,
-    timings,
-    adaptive
+
+  this.createPipelines = createPipelines;
+  this.metrics = metrics;
+  this.timings = timings;
+
+  this.adaptive = Adaptive(metrics, timings, deviceEvents, {
+    initVideoBitrate,
+    initAudioBitrate
   });
 
   // volume muted memory
@@ -469,7 +479,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
   },
 
   getAvailableVideoBitrates() {
-    var video = this.adas.video;
+    var video = this.man && this.man.adaptations.video[0];
     return (video && video.bitrates) || [];
   },
 

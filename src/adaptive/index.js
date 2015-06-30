@@ -33,7 +33,7 @@ var DEFAULTS = {
 };
 
 function def(x, val) {
-  return x > 0 ? x : val;
+  return typeof x == "number" && x > 0 ? x : val;
 }
 
 function getClosestBitrate(bitrates, btr, threshold=0) {
@@ -56,16 +56,28 @@ function findByLang(adaptations, lang) {
   }
 }
 
+function filterByType(stream, selectedType) {
+  return stream.filter(({ type }) => type === selectedType);
+}
+
 module.exports = function(metrics, timings, deviceEvents, options={}) {
-  var { defLanguage, defSubtitle, defBufSize, defBufThreshold } = _.defaults(options, DEFAULTS);
+  var {
+    defLanguage,
+    defSubtitle,
+    defBufSize,
+    defBufThreshold,
+    initVideoBitrate,
+    initAudioBitrate
+  } = _.defaults(options, DEFAULTS);
+
   var { videoWidth, inBackground } = deviceEvents;
 
   var $languages = new BehaviorSubject(defLanguage);
   var $subtitles = new BehaviorSubject(defSubtitle);
 
   var $averageBitrates = {
-    audio: AverageBitrate(metrics.filter(({ type }) => type === "audio"), timings, { alpha: 0.6 }).publishValue(0),
-    video: AverageBitrate(metrics.filter(({ type }) => type === "video"), timings, { alpha: 0.6 }).publishValue(0),
+    audio: AverageBitrate(filterByType(metrics, "audio"), timings, { alpha: 0.6 }).publishValue(initAudioBitrate || 0),
+    video: AverageBitrate(filterByType(metrics, "video"), timings, { alpha: 0.6 }).publishValue(initVideoBitrate || 0),
   };
 
   var conns = new CompositeDisposable(_.map(_.values($averageBitrates), a => a.connect()));
@@ -112,16 +124,25 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   function getBufferAdapters(adaptation) {
     var { type, bitrates, representations } = adaptation;
 
-    // TODO(pierre): specific algorithm for first representation
-    // selection
     var firstRep = representations[0];
 
     var representationsObservable;
     if (representations.length > 1) {
       var usrBitrates = $usrBitrates[type];
       var maxBitrates = $maxBitrates[type];
+
       var avrBitrates = $averageBitrates[type]
-        .map(b => getClosestBitrate(bitrates, b, defBufThreshold))
+        .map((avrBitrate, count) => {
+          // no threshold for the first value of the average bitrate
+          // stream corresponding to the selected initial video bitrate
+          var bufThreshold;
+          if (count === 0)
+            bufThreshold = 0;
+          else
+            bufThreshold = defBufThreshold;
+
+          return getClosestBitrate(bitrates, avrBitrate, bufThreshold);
+        })
         .changes()
         .customDebounce(2000, { leading: true });
 
