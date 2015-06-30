@@ -60,6 +60,7 @@ IndexHandler.prototype.getInitSegment = function() {
     init: true,
     media: initialization.media,
     range: initialization.range,
+    indexRange: this.index.indexRange
   };
 };
 
