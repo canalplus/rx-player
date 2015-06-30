@@ -217,7 +217,7 @@ function getAdaptations(manifest) {
   var adaptationsByType = manifest.adaptations;
 
   var adaptationsList = [];
-  _.each(Object.keys(adaptationsByType), (type) => {
+  _.each(_.keys(adaptationsByType), (type) => {
     var adaptations = adaptationsByType[type];
     adaptationsList.push({
       type: type,
