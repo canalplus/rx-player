@@ -81,21 +81,18 @@ function Buffer({
     return first(updateEnd);
   }
 
-  function lockedAppendBuffer(infos) {
+  function lockedAppendBuffer(blob) {
     return defer(() => {
-      var blob = infos.parsed.blob;
       if (sourceBuffer.updating) {
         return first(updateEnd).flatMap(() => appendBuffer(blob));
       } else {
         return appendBuffer(blob);
       }
-    }).map(infos);
+    });
   }
 
   function createRepresentationBuffer(representation) {
     var segmentIndex = new IndexHandler(adaptation, representation);
-    var currentBitrate = representation.bitrate;
-
     var queuedSegments = new ArraySet();
 
     function filterAlreadyLoaded(segment) {
@@ -114,13 +111,13 @@ function Buffer({
 
       var range = ranges.hasRange(time, duration);
       if (range) {
-        return range.bitrate * BITRATE_REBUFFERING_RATIO < currentBitrate;
+        return range.bitrate * BITRATE_REBUFFERING_RATIO < representation.bitrate;
       } else {
         return true;
       }
     }
 
-    function getInjectedSegments(timing, bufferSize, withInitSegment) {
+    function getSegmentsListToInject(timing, bufferSize, withInitSegment) {
       var segments = [];
 
       if (withInitSegment) {
@@ -128,37 +125,46 @@ function Buffer({
         segments.push(segmentIndex.getInitSegment());
       }
 
-      if (timing.readyState > 0) {
-        // wanted buffer size calculates the actual size of the
-        // buffer we want to ensure, taking into account the
-        // duration and the potential live gap.
-        var endDiff = (timing.duration || Infinity) - timing.ts;
-        var liveGap = (timing.liveGap);
-        var wantedBufferSize = Math.max(0, Math.min(bufferSize, liveGap, endDiff));
-
-        // the ts padding is the actual time gap that we want to
-        // apply to our current timestamp in order to calculate the
-        // list of segments to inject.
-        var sourceBufferGap = getGap(timing.ts, sourceBuffer.buffered);
-        var tsPadding = getTsPadding(sourceBufferGap);
-
-        var currentRange = ranges.getRange(timing.ts);
-        if (currentRange) {
-          var rangeEndGap = Math.floor(currentRange.end - timing.ts);
-          if (rangeEndGap > tsPadding)
-            tsPadding = rangeEndGap;
-        }
-
-        // given the current timestamp and the previously calculated
-        // time gap and wanted buffer size, we can retrieve the list
-        // of segments to inject in our pipelines.
-        var mediaSegments = segmentIndex.getSegments(timing.ts, tsPadding, wantedBufferSize);
-
-        segments = segments.concat(mediaSegments);
+      if (timing.readyState === 0) {
+        return segments;
       }
 
-      // filter out already loaded and already queued segments
-      return _.filter(segments, filterAlreadyLoaded);
+      var timestamp = timing.ts;
+
+      // wanted buffer size calculates the actual size of the buffer
+      // we want to ensure, taking into account the duration and the
+      // potential live gap.
+      var endDiff = (timing.duration || Infinity) - timestamp;
+      var wantedBufferSize = Math.max(0,
+        Math.min(bufferSize, timing.liveGap, endDiff));
+
+      // the ts padding is the actual time gap that we want to apply
+      // to our current timestamp in order to calculate the list of
+      // segments to inject.
+      var timestampPadding;
+      var bufferGap = getGap(timestamp, sourceBuffer.buffered);
+      if (bufferGap > LOW_WATER_MARK_PAD && bufferGap < Infinity) {
+        timestampPadding = Math.min(bufferGap, HIGH_WATER_MARK_PAD);
+      } else {
+        timestampPadding = 0;
+      }
+
+      // in case the current buffered range has the same bitrate as
+      // the requested representation, we can a optimistically discard
+      // all the already buffered data by using the
+      var currentRange = ranges.getRange(timestamp);
+      if (currentRange && currentRange.bitrate === representation.bitrate) {
+        var rangeEndGap = Math.floor(currentRange.end - timestamp);
+        if (rangeEndGap > timestampPadding)
+          timestampPadding = rangeEndGap;
+      }
+
+      // given the current timestamp and the previously calculated
+      // time gap and wanted buffer size, we can retrieve the list of
+      // segments to inject in our pipelines.
+      var mediaSegments = segmentIndex.getSegments(timestamp, timestampPadding, wantedBufferSize);
+
+      return segments.concat(mediaSegments);
     }
 
     var segmentsPipeline = combineLatest(
@@ -181,7 +187,9 @@ function Buffer({
 
         var injectedSegments;
         try {
-          injectedSegments = getInjectedSegments(timing, bufferSize, firstCall);
+          // filter out already loaded and already queued segments
+          injectedSegments = getSegmentsListToInject(timing, bufferSize, firstCall);
+          injectedSegments = _.filter(injectedSegments, filterAlreadyLoaded);
         }
         catch(err) {
           // catch OutOfIndexError errors thrown by when we try to
@@ -204,14 +212,19 @@ function Buffer({
           // queue all segments injected in the observable
           queuedSegments.add(segment.id);
 
-          return { adaptation, representation, segment };
+          return {
+            adaptation:     adaptation,
+            representation: representation,
+            segment
+          };
         }));
       })
       .concatMap(pipeline)
-      .concatMap(lockedAppendBuffer)
+      .concatMap((infos) => {
+        return lockedAppendBuffer(infos.parsed.blob).map(infos);
+      })
       .map((infos) => {
         var { segment, parsed } = infos;
-
         queuedSegments.remove(segment.id);
 
         // change the timescale if one has been extracted from the
@@ -234,7 +247,7 @@ function Buffer({
         // current segment timings informations are used to update
         // ranges informations
         if (currentSegment) {
-          ranges.insert(currentBitrate,
+          ranges.insert(representation.bitrate,
             segmentIndex.scale(currentSegment.ts),
             segmentIndex.scale(currentSegment.ts + currentSegment.d));
         }
