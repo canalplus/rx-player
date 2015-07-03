@@ -10,4 +10,7 @@ require("./core/time-fragment.test");
 require("./core/index-handler.test");
 
 // /net
+require("./net/smooth/parser.test");
+require("./net/smooth/tt-sami.test");
+require("./net/smooth/tt-ttml.test");
 require("./net/dash/parser.test");

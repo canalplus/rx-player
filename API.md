@@ -201,6 +201,7 @@ This method can be call anytime, even if a stream is already loaded an played by
   It is possible to choose between the available transports given a string. Currently, the available transports are :
 
     * `dash`: DASH transport implementation
+    * `smooth`: SmoothStreaming transport implementation
 
   It is also possible to write your own transport, by giving a function returning an object containing those parameters  `{ manifestPipeline, segmentPipeline, textTrackPipeline }`, where each parameter is a `Pipeline` object with the following interface:
 
