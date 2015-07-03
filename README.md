@@ -5,7 +5,7 @@ Latest release: v1.0.0
 
 The rx-player is a Javascript library implementic a generic streaming video player using HTML5 Media Source and Encrypted Media extensions. It is entirely written in reactive-programming with ECMAScript 6.
 
-It comes with a specific DASH transport implementation.
+It comes with a support for DASH and SmoothStreaming transports.
 
 ## API
 
