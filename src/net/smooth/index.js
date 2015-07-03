@@ -37,10 +37,10 @@ var {
 var { parseSami } = require("./tt-sami");
 var { parseTTML } = require("./tt-ttml");
 var TT_PARSERS = {
-  "application/x-sami":   parseSami,
-  "application/ttml+xml": parseTTML,
-  "text/mp4":             parseTTML,
-  "text/vtt":             _.identity,
+  "application/x-sami":       parseSami,
+  "application/ttml+xml":     parseTTML,
+  "application/ttml+xml+mp4": parseTTML,
+  "text/vtt":                 _.identity,
 };
 
 var ISM_REG = /\.(isml?)(\?token=\S+)?$/;
@@ -212,7 +212,7 @@ module.exports = function(opts={}) {
       var mimeType = representation.mimeType;
       var url = buildSegmentURL(adaptation, representation, segment);
 
-      if (mimeType === "text/mp4") {
+      if (mimeType.indexOf("mp4") >= 0) {
         // in case of TTML declared inside
         // playlists, the TTML file is embededded
         // inside an mp4 fragment.
@@ -231,10 +231,9 @@ module.exports = function(opts={}) {
 
       var blob = response.blob;
       var text;
-      if (mimeType === "text/mp4") {
-        // in case of TTML declared inside
-        // playlists, the TTML file is embededded
-        // inside an mp4 fragment.
+      // in case of TTML declared inside playlists, the TTML file is
+      // embededded inside an mp4 fragment.
+      if (mimeType.indexOf("mp4") >= 0) {
         blob = new Uint8Array(blob);
         text = bytesToStr(getMdat(blob));
       } else {

@@ -42,7 +42,7 @@ var MIME_TYPES = {
   "AACL": "audio/mp4",
   "AVC1": "video/mp4",
   "H264": "video/mp4",
-  "TTML": "text/mp4"
+  "TTML": "application/ttml+xml+mp4"
 };
 
 var CODECS = {
