@@ -182,13 +182,12 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       this.evts[type] = value;
       this.trigger(`${type}Change`, value);
     }
-  },
+  }
 
   _parseOptions(opts) {
     var {
       transport,
       transportOptions,
-      proxy, // retro-compat
       url,
       manifests,
       keySystems,

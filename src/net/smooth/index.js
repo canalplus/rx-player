@@ -87,14 +87,13 @@ function buildSegmentURL(adaptation, representation, segment) {
     .replace(/\{start time\}/g, segment.time);
 }
 
-module.exports = function(opts={}) {
-  var { proxy } = opts;
-  if (!proxy) proxy = _.identity;
+var req = reqOptions => {
+  reqOptions.withMetadata = true;
+  return request(reqOptions);
+};
 
-  var req = reqOptions => {
-    reqOptions.withMetadata = true;
-    return request(proxy(reqOptions));
-  };
+module.exports = function() {
+
 
   var manifestPipeline = {
     resolver({ url }) {

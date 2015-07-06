@@ -54,15 +54,15 @@ function createURL(adaptation, representation, path) {
   );
 }
 
-module.exports = function(opts={}) {
-  var { proxy, contentProtectionParser } = opts;
-  if (!proxy) proxy = _.identity;
-  if (!contentProtectionParser) contentProtectionParser = _.noop;
+var req = reqOptions => {
+  reqOptions.withMetadata = true;
+  return request(reqOptions);
+};
 
-  var req = reqOptions => {
-    reqOptions.withMetadata = true;
-    return request(proxy(reqOptions));
-  };
+module.exports = function(opts={}) {
+  var { contentProtectionParser } = opts;
+
+  if (!contentProtectionParser) contentProtectionParser = _.noop;
 
   var manifestPipeline = {
     loader({ url }) {
