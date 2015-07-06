@@ -266,17 +266,24 @@ class Player extends EventEmitter {
     stream = stream.publish();
 
     var segments = filterStreamByType(stream, "segment");
-    var manifest = filterStreamByType(stream, "manifest").take(1);
+    var manifests = filterStreamByType(stream, "manifest");
 
     var stalled = filterStreamByType(stream, "stalled").startWith(null);
     var canPlay = filterStreamByType(stream, "loaded").filter(v => v === true);
 
-    var loaded = directFile
-      ? canPlay.take(1)
-      : zip(canPlay,
-          segments.filter(({ adaptation }) => adaptation.type == "audio"),
-          segments.filter(({ adaptation }) => adaptation.type == "video"),
-          _.noop).take(1);
+    var loaded;
+
+    if (directFile) {
+      loaded = canPlay;
+    } else {
+      loaded = zip(
+        canPlay,
+        filterStreamByType(segments.pluck("adaptation"), "audio"),
+        filterStreamByType(segments.pluck("adaptation"), "video"),
+        _.noop);
+    }
+
+    loaded = loaded.take(1);
 
     var stateChanges = loaded.map(PLAYER_LOADED)
       .concat(combineLatest(this.playing, stalled,
@@ -322,7 +329,7 @@ class Player extends EventEmitter {
         this.trigger("progress", segment);
       }),
 
-      manifest.each(m => {
+      manifests.each(m => {
         this.man = m;
         this.trigger("manifestChange", m);
       }),
