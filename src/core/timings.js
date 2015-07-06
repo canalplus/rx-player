@@ -117,7 +117,7 @@ function timingsSampler(video) {
   }
 
   return Observable.create((obs) => {
-    var prevTimings = { name: "init", stalled: null };
+    var prevTimings = getTimings(video, "init");
 
     function emitSample(type) {
       prevTimings = scanTimingsSamples(prevTimings, type);
