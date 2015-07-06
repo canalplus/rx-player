@@ -206,7 +206,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       directFile: false,
     });
 
-    assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
+    assert(!manifests ^ !url, "player: you have to pass either a url or a list of manifests");
 
     timeFragment = parseTimeFragment(timeFragment);
 
@@ -293,15 +293,14 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
     var stateChanges = loaded.map(PLAYER_LOADED)
       .concat(combineLatest(this.playing, stalled,
         (isPlaying, isStalled) => {
-          if (isStalled)
-            return (isStalled.name == "seeking")
+          return (sStalled ?
+            (isStalled.name == "seeking"
               ? PLAYER_SEEKING
-              : PLAYER_BUFFERING;
-
-          if (isPlaying)
-            return PLAYER_PLAYING;
-
-          return PLAYER_PAUSED;
+              : PLAYER_BUFFERING
+            ) : (isPlaying
+              ? PLAYER_PLAYING
+              : PLAYER_PAUSED
+            );
         })
       )
       .changes()
@@ -432,11 +431,9 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
     if (!this.man)
       return NaN;
     var ct = this.video.currentTime;
-    if (this.man.isLive) {
-      return toWallClockTime(ct, this.man);
-    } else {
-      return ct;
-    }
+    return this.man.isLive
+      ? toWallClockTime(ct, this.man)
+      : ct;
   },
 
   getStartTime() {
