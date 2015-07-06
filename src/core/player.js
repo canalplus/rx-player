@@ -188,7 +188,6 @@ class Player extends EventEmitter {
       transport,
       transportOptions,
       url,
-      manifests,
       keySystems,
       timeFragment,
       subtitles,
@@ -204,16 +203,7 @@ class Player extends EventEmitter {
       directFile: false,
     });
 
-    assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
-
     timeFragment = parseTimeFragment(timeFragment);
-
-    if (manifests) {
-      var firstManifest = manifests[0];
-      url = firstManifest.url;
-      subtitles = firstManifest.subtitles || [];
-      keySystems = _.compact(_.pluck(manifests, "keySystem"));
-    }
 
     if (_.isString(transport))
       transport = Transports[transport];
