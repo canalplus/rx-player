@@ -145,16 +145,12 @@ All these methods return [Promises/A+](http://promisesaplus.com/) objects.
 Load a video stream given the url of its manifest.
 This method can be call anytime, even if a stream is already loaded an played by the player. In this case, the player states will be cleared, and the new stream will be loaded.
 
-* `options.url, options.keySystems` ou `options.manifests`
+* `options.url, options.keySystems`
 
   To load an encrypted stream, at least one `KeySystem` object must be given. This `KeySystem` provides interface to specify the license retrieval strategy.
 
 
   - `{ url, keySystems: [keySystem...], subtitles }`: an object containing the URL of an encrypted stream, with a list of `KeySystem` to decrypt it
-
-  - `{ manifests: [{ url, keySystem, subtitles }, ...] }`: an object containing a list of items associating a manifest URL to a `KeySystem` object and a subtitle track.
-
-  `subtitles` may be injected in the `manifests` parameter if they refer to a pair url / keySystem, or directly in the `options` if not.
 
   `Subtitles` is array of object with the following interface:
 
