@@ -79,13 +79,12 @@ function Player(options = {}) {
     videoElement,
     transport,
     transportOptions,
-    proxy,
     initVideoBitrate,
     initAudioBitrate
   } = options;
 
   this.defaultTransport = transport;
-  this.defaultTransportOptions = _.extend({ proxy }, transportOptions || {});
+  this.defaultTransportOptions = transportOptions || {};
 
   if (!videoElement)
     videoElement = document.createElement("video");
@@ -199,7 +198,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       directFile
     } = _.defaults(_.cloneObject(opts), {
       transport: this.defaultTransport,
-      transportOptions: this.defaultTransportOptions,
+      transportOptions: {},
       keySystems: [],
       timeFragment: {},
       subtitles: [],
@@ -224,9 +223,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
     }
 
     if (_.isFunction(transport))
-      // retro-compat for proxy options now included in a more generic
-      // transportOptions field
-      transport = transport(_.defaults({ proxy }, transportOptions));
+      transport = transport(_.defaults(transportOptions, this.defaultTransportOptions));
 
     if (directFile)
       directFile = createDirectFileManifest();
