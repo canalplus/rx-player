@@ -217,13 +217,13 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       keySystems = _.compact(_.pluck(manifests, "keySystem"));
     }
 
-    if (_.isString(transport)) {
+    if (_.isString(transport))
       transport = Transports[transport];
-      assert(!!transport, "transport: transport " + opts.transport + " is not supported")
-    }
 
     if (_.isFunction(transport))
       transport = transport(_.defaults(transportOptions, this.defaultTransportOptions));
+
+    assert(transport, "transport: transport " + opts.transport + " is not supported");
 
     if (directFile)
       directFile = createDirectFileManifest();
