@@ -72,84 +72,83 @@ function filterStreamByType(stream, type) {
   return stream.filter(o => o.type == type).pluck("value");
 }
 
-function Player(options = {}) {
-  EventEmitter.call(this);
+class Player extends EventEmitter {
 
-  var {
-    videoElement,
-    transport,
-    transportOptions,
-    initVideoBitrate,
-    initAudioBitrate
-  } = options;
+  constructor(options) {
+    var {
+      videoElement,
+      transport,
+      transportOptions,
+      initVideoBitrate,
+      initAudioBitrate
+    } = options;
 
-  this.defaultTransport = transport;
-  this.defaultTransportOptions = transportOptions || {};
+    this.defaultTransport = transport;
+    this.defaultTransportOptions = transportOptions || {};
 
-  if (!videoElement)
-    videoElement = document.createElement("video");
+    if (!videoElement)
+      videoElement = document.createElement("video");
 
-  assert((videoElement instanceof HTMLVideoElement_),
-    "requires an actual HTMLVideoElement");
+    assert((videoElement instanceof HTMLVideoElement_),
+      "requires an actual HTMLVideoElement");
 
-  this.version = __RX_PLAYER_VERSION_PLACEHOLDER__;
-  this.video = videoElement;
+    this.version = __RX_PLAYER_VERSION_PLACEHOLDER__;
+    this.video = videoElement;
 
-  // fullscreen change
-  this.fullscreen = onFullscreenChange(videoElement)
-    .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
+    // fullscreen change
+    this.fullscreen = onFullscreenChange(videoElement)
+      .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
-  // playing state change
-  this.playing = new BehaviorSubject();
+    // playing state change
+    this.playing = new BehaviorSubject();
 
-  // multicaster forwarding all streams events
-  this.stream = new Subject();
+    // multicaster forwarding all streams events
+    this.stream = new Subject();
 
-  var { createPipelines, metrics } = PipeLines();
+    var { createPipelines, metrics } = PipeLines();
 
-  var timings = timingsSampler(videoElement);
-  var deviceEvents = DeviceEvents(videoElement);
+    var timings = timingsSampler(videoElement);
+    var deviceEvents = DeviceEvents(videoElement);
 
-  this.createPipelines = createPipelines;
-  this.metrics = metrics;
-  this.timings = timings;
+    this.createPipelines = createPipelines;
+    this.metrics = metrics;
+    this.timings = timings;
 
-  this.adaptive = Adaptive(metrics, timings, deviceEvents, {
-    initVideoBitrate,
-    initAudioBitrate
-  });
+    this.adaptive = Adaptive(metrics, timings, deviceEvents, {
+      initVideoBitrate,
+      initAudioBitrate
+    });
 
-  // volume muted memory
-  this.muted = 0.1;
+    // volume muted memory
+    this.muted = 0.1;
 
-  // states
-  this._setState(PLAYER_STOPPED);
-  this.resetStates();
+    // states
+    this._setState(PLAYER_STOPPED);
+    this.resetStates();
 
-  this.log = log;
+    this.log = log;
 
-  on(document, "keydown")
-    .map(e => String.fromCharCode(e.which).toLowerCase())
-    .scan("", (w, l) => (w + l).slice(-CHEAT.length))
-    .filter(w => w == CHEAT)
-    .subscribe(() => this.showDebug());
-}
+    on(document, "keydown")
+      .map(e => String.fromCharCode(e.which).toLowerCase())
+      .scan("", (w, l) => (w + l).slice(-CHEAT.length))
+      .filter(w => w == CHEAT)
+      .subscribe(() => this.showDebug());
+  }
 
-Player.prototype = _.extend({}, EventEmitter.prototype, {
   resetStates() {
     this.man = null;
     this.reps = { video: null, audio: null, text: null };
     this.adas = { video: null, audio: null, text: null };
     this.evts = {};
     this.frag = { start: null, end: null };
-  },
+  }
 
   _clear() {
     if (this.subscriptions) {
       this.subscriptions.dispose();
       this.subscriptions = null;
     }
-  },
+  }
 
   stop() {
     if (this.state !== PLAYER_STOPPED) {
@@ -157,7 +156,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       this._clear();
       this._setState(PLAYER_STOPPED);
     }
-  },
+  }
 
   dispose() {
     this.stop();
@@ -174,7 +173,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
     this.timings = null;
     this.createPipelines = null;
     this.video = null;
-  },
+  }
 
   __recordState(type, value) {
     var prev = this.evts[type];
@@ -228,7 +227,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       directFile = createDirectFileManifest();
 
     return { url, keySystems, subtitles, timeFragment, autoPlay, transport, directFile };
-  },
+  }
 
   loadVideo(options = {}) {
     options = this._parseOptions(options);
@@ -380,52 +379,52 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
     _.each(subs, s => this.subscriptions.add(s));
 
     return loaded.toPromise();
-  },
+  }
 
   _setState(s) {
     if (this.state !== s) {
       this.state = s;
       this.trigger("playerStateChange", s);
     }
-  },
+  }
 
   getManifest() {
     return this.man;
-  },
+  }
 
   getVideoElement() {
     return this.video;
-  },
+  }
 
   getNativeTextTrack() {
     return this.video.textTracks[0];
-  },
+  }
 
   getPlayerState() {
     return this.state;
-  },
+  }
 
   isLive() {
     assertMan(this);
     return this.man.isLive;
-  },
+  }
 
   getUrl() {
     assertMan(this);
     return this.man.baseURL;
-  },
+  }
 
   getVideoDuration() {
     return this.video.duration;
-  },
+  }
 
   getVideoLoadedTime() {
     return getSize(this.video.currentTime, this.video.buffered);
-  },
+  }
 
   getVideoPlayedTime() {
     return getLoaded(this.video.currentTime, this.video.buffered);
-  },
+  }
 
   getCurrentTime() {
     if (!this.man)
@@ -436,105 +435,105 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
     } else {
       return ct;
     }
-  },
+  }
 
   getStartTime() {
     return this.frag.start;
-  },
+  }
 
   getEndTime() {
     return this.frag.end;
-  },
+  }
 
   getPlaybackRate() {
     return this.video.playbackRate;
-  },
+  }
 
   getVolume() {
     return this.video.volume;
-  },
+  }
 
   isFullscreen() {
     return isFullscreen();
-  },
+  }
 
   getAvailableLanguages() {
     return this.man && manifestHelpers.getAvailableLanguages(this.man) || [];
-  },
+  }
 
   getAvailableSubtitles() {
     return this.man && manifestHelpers.getAvailableSubtitles(this.man) || [];
-  },
+  }
 
   getLanguage() {
     return this.adaptive.getLanguage();
-  },
+  }
 
   getSubtitle() {
     return this.adaptive.getSubtitle();
-  },
+  }
 
   getAvailableVideoBitrates() {
     var video = this.man && this.man.adaptations.video[0];
     return (video && video.bitrates) || [];
-  },
+  }
 
   getAvailableAudioBitrates() {
     var audio = this.adas.audio;
     return (audio && audio.bitrates) || [];
-  },
+  }
 
   getVideoBitrate() {
     return this.evts.videoBitrate;
-  },
+  }
 
   getAudioBitrate() {
     return this.evts.audioBitrate;
-  },
+  }
 
   getVideoMaxBitrate() {
     return this.adaptive.getVideoMaxBitrate();
-  },
+  }
 
   getAudioMaxBitrate() {
     return this.adaptive.getAudioMaxBitrate();
-  },
+  }
 
   getVideoBufferSize() {
     return this.adaptive.getVideoBufferSize();
-  },
+  }
 
   getAudioBufferSize() {
     return this.adaptive.getAudioBufferSize();
-  },
+  }
 
   getAverageBitrates() {
     return this.adaptive.getAverageBitrates();
-  },
+  }
 
   getMetrics() {
     return this.metrics;
-  },
+  }
 
   getTimings() {
     return this.timings;
-  },
+  }
 
   play() {
     this.video.play();
-  },
+  }
 
   pause() {
     this.video.pause();
-  },
+  }
 
   setPlaybackRate(rate) {
     return new Promise_(res => res(this.video.playbackRate = rate));
-  },
+  }
 
   goToStart() {
     return this.seekTo(this.getStartTime());
-  },
+  }
 
   seekTo(time) {
     return new Promise_(res => {
@@ -548,31 +547,31 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
         res(currentTs);
       }
     });
-  },
+  }
 
   setFullscreen(toggle = true) {
     if (toggle === false)
       exitFullscreen();
     else
       requestFullscreen(this.video);
-  },
+  }
 
   setVolume(volume) {
     if (volume !== this.video.volume) {
       this.video.volume = volume;
       this.trigger("volumeChange", volume);
     }
-  },
+  }
 
   mute() {
     this.muted = this.getVolume() || 0.1;
     this.setVolume(0);
-  },
+  }
 
   unMute() {
     var vol = this.getVolume();
     if (vol === 0) this.setVolume(this.muted);
-  },
+  }
 
   setLanguage(lng) {
     // TODO(pierre): proper promise
@@ -580,7 +579,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       assert(_.contains(this.getAvailableLanguages(), lng), "player: unknown language");
       res(this.adaptive.setLanguage(lng));
     });
-  },
+  }
 
   setSubtitle(sub) {
     // TODO(pierre): proper promise
@@ -592,7 +591,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
         if (!sub)
           this.__recordState("subtitle", null);
       });
-  },
+  }
 
   setVideoBitrate(btr) {
     // TODO(pierre): proper promise
@@ -600,7 +599,7 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       assert(btr === 0 || _.contains(this.getAvailableVideoBitrates(), btr), "player: video bitrate unavailable");
       res(this.adaptive.setVideoBitrate(btr));
     });
-  },
+  }
 
   setAudioBitrate(btr) {
     // TODO(pierre): proper promise
@@ -608,54 +607,54 @@ Player.prototype = _.extend({}, EventEmitter.prototype, {
       assert(btr === 0 || _.contains(this.getAvailableAudioBitrates(), btr), "player: audio bitrate unavailable");
       res(this.adaptive.setAudioBitrate(btr));
     });
-  },
+  }
 
   setVideoMaxBitrate(btr) {
     // TODO(pierre): proper promise
     return new Promise_(res => {
       res(this.adaptive.setVideoMaxBitrate(btr));
     });
-  },
+  }
 
   setAudioMaxBitrate(btr) {
     // TODO(pierre): proper promise
     return new Promise_(res => {
       res(this.adaptive.setAudioMaxBitrate(btr));
     });
-  },
+  }
 
   setVideoBufferSize(size) {
     // TODO(pierre): proper promise
     return new Promise_(res => res(this.adaptive.setVideoBufferSize(size)));
-  },
+  }
 
   setAudioBufferSize(size) {
     // TODO(pierre): proper promise
     return new Promise_(res => res(this.adaptive.setAudioBufferSize(size)));
-  },
+  }
 
   getStreamObservable() {
     return this.stream;
-  },
+  }
 
   getDebug() {
     return debugPane.getDebug(this);
-  },
+  }
 
   showDebug() {
     debugPane.showDebug(this, this.video);
-  },
+  }
 
   hideDebug() {
     debugPane.hideDebug();
-  },
+  }
 
   toggleDebug() {
     debugPane.toggleDebug(this,this.video);
-  },
+  }
   getCurrentKeySystem() {
     return EME.getCurrentKeySystem();
   }
-});
+}
 
 module.exports = Player;
