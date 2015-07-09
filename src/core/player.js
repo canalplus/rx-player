@@ -55,8 +55,6 @@ var PLAYER_ENDED     = "ENDED";
 var PLAYER_BUFFERING = "BUFFERING";
 var PLAYER_SEEKING   = "SEEKING";
 
-var CHEAT = "&&((%'%'"; // Konami Code
-
 function createDirectFileManifest() {
   return {
     isLive: false,
@@ -127,12 +125,6 @@ class Player extends EventEmitter {
     this.resetStates();
 
     this.log = log;
-
-    on(document, "keydown")
-      .map(e => String.fromCharCode(e.which).toLowerCase())
-      .scan("", (w, l) => (w + l).slice(-CHEAT.length))
-      .filter(w => w == CHEAT)
-      .subscribe(() => this.showDebug());
   }
 
   resetStates() {
