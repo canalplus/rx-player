@@ -81,6 +81,7 @@ class Player extends EventEmitter {
       initAudioBitrate
     } = options;
 
+    super();
     this.defaultTransport = transport;
     this.defaultTransportOptions = transportOptions || {};
 
