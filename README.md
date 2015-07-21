@@ -36,6 +36,7 @@ To launch the demo yourself, run `make demo` and start a local webserver from th
 ```sh
 python -m SimpleHTTPServer 8080 # open http://localhost:8080/demo
 ```
+[View online Demo](http://canalplus.github.io/rx-player/)
 
 ## Installation
 
