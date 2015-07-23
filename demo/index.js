@@ -55,20 +55,20 @@ var DemoZapper = React.createClass({
 
   render: function() {
     var contentsOptions = contentsDatabase.map(function(content, index) {
-      return (<option key={index} value={index}>{content.name}</option>);
+      return (<option key={index} value={index}>{content.transport}: {content.name}{content.live ? " (live)" : ""}</option>);
     });
 
     return (
       <div>
         <section id="title">
           <h1 className="title">
-            <span className="light">CANAL+ HTML5 Player</span>
+            <span className="light">rx-player</span>
           </h1>
         </section>
 
         <section className="content-selection">
           <select onChange={this.onSelectionChange}>
-            <option value={null}>Sélectionnez un contenu</option>
+            <option value={null}>Select content...</option>
             {contentsOptions}
           </select>
         </section>
