@@ -1,3 +1,22 @@
+v1.1.0 on August 14, 2015
+=========================
+
+Added
+-----
+
+- smoothstreaming transport support
+- api for initial aubio/video bitrate choice
+- simplify WebVTT support and implementation
+- allow percentage values on start/end time values
+
+Bug fixes
+---------
+
+- fix local buffer representation out-of-sync with native ones
+- fix no retry for > 500 http codes
+- fix no MediaKeySession reuse on Chrome
+- fix quota error with MediaKeys attached to multiple video elements on Chrome
+
 v1.0.0 on June 16, 2015
 =======================
 
