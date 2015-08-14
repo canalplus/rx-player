@@ -204,7 +204,7 @@ class Player extends EventEmitter {
     if (_.isFunction(transport))
       transport = transport(_.defaults(transportOptions, this.defaultTransportOptions));
 
-    assert(transport, "transport: transport " + opts.transport + " is not supported");
+    assert(transport, "player: transport " + opts.transport + " is not supported");
 
     if (directFile)
       directFile = createDirectFileManifest();

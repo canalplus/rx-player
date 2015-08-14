@@ -539,11 +539,20 @@ function Stream({
     var duration = manifest.duration;
     var startTime = fragStartTime;
     var endTime = fragEndTime;
+    var percentage = /^\d*(\.\d+)? ?%$/;
 
-    if (endTime === Infinity)
+    if (_.isString(startTime) && percentage.test(startTime)) {
+      startTime = (parseFloat(startTime) / 100) * duration;
+    }
+
+    if (_.isString(endTime) && percentage.test(endTime)) {
+      fragEndTime = (parseFloat(endTime) / 100) * duration;
+    }
+
+    if (endTime === Infinity || endTime === "100%")
       endTime = duration;
 
-    if (!manifest.isLive)  {
+    if (!manifest.isLive) {
       assert(startTime < duration && endTime <= duration, `stream: bad startTime and endTime`);
     }
     else if (startTime) {

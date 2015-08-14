@@ -24,15 +24,31 @@ function parseTimeFragment(timeFragment) {
     timeFragment = _.pick(timeFragment, ["start", "end"]);
   }
 
-  if (!timeFragment.start) timeFragment.start = 0;
-  if (!timeFragment.end) timeFragment.end = Infinity;
+  if (_.isString(timeFragment.start) && _.isString(timeFragment.end)) {
+    if (!timeFragment.start) timeFragment.start = "0%";
+    if (!timeFragment.end) timeFragment.end = "100%";
+  }
+  else {
+    if (!timeFragment.start) timeFragment.start = 0;
+    if (!timeFragment.end) timeFragment.end = Infinity;
+  }
 
-  assert(
-    (_.isNumber(timeFragment.start) || _.isDate(timeFragment.start)) &&
-    (_.isNumber(timeFragment.end) || _.isDate(timeFragment.end)),
-    "player: timeFragment should have interface { start, end } where start and end are numbers or dates");
-  assert(timeFragment.start < timeFragment.end, "player: startTime should be lower than endTime");
-  assert(timeFragment.start >= 0, "player: startTime should be greater than 0");
+  if (_.isString(timeFragment.start) && _.isString(timeFragment.end)) {
+    assert(
+      (parseFloat(timeFragment.start) >= 0 && parseFloat(timeFragment.start) <= 100),
+      "player: startTime should be between 0% and 100%");
+    assert(
+      (parseFloat(timeFragment.end) >= 0 && parseFloat(timeFragment.end) <= 100),
+      "player: endTime should be between 0% and 100%");
+  }
+  else {
+    assert(
+      (_.isNumber(timeFragment.start) || _.isDate(timeFragment.start)) &&
+      (_.isNumber(timeFragment.end) || _.isDate(timeFragment.end)),
+      "player: timeFragment should have interface { start, end } where start and end are numbers or dates");
+    assert(timeFragment.start < timeFragment.end, "player: startTime should be lower than endTime");
+    assert(timeFragment.start >= 0, "player: startTime should be greater than 0");
+  }
 
   return timeFragment;
 }
@@ -134,6 +150,12 @@ function normalizeWallClockTime(time) {
   return new Date(Date.parse(time));
 }
 
+function normalizePercentage(time) {
+  if (!time) return false;
+
+  return time;
+}
+
 var errMessage = "Invalid MediaFragment";
 
 // MediaFragment temporal parser.
@@ -158,6 +180,8 @@ function temporalMediaFragmentParser(value) {
   var smpte = /^(\d+\:\d\d\:\d\d(\:\d\d(\.\d\d)?)?)?$/;
   // regexp adapted from http://delete.me.uk/2005/03/iso8601.html
   var wallClock = /^((\d{4})(-(\d{2})(-(\d{2})(T(\d{2})\:(\d{2})(\:(\d{2})(\.(\d+))?)?(Z|(([-\+])(\d{2})\:(\d{2})))?)?)?)?)?$/;
+  // float%
+  var percentage = /^(\d*(\.\d+)? ?%)?$/;
 
   var timeNormalizer;
   if (npt.test(start) && npt.test(end)) {
@@ -168,6 +192,9 @@ function temporalMediaFragmentParser(value) {
   }
   else if (wallClock.test(start) && wallClock.test(end)) {
     timeNormalizer = normalizeWallClockTime;
+  }
+  else if (percentage.test(start) && percentage.test(end)) {
+    timeNormalizer = normalizePercentage;
   }
   else {
     throw new Error(errMessage);
