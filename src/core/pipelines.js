@@ -52,7 +52,7 @@ function createPipeline(type, { resolver, loader, parser }, metrics, opts={}) {
     retryDelay: 500,
     totalRetry,
     shouldRetry: err => (
-      err.code == 500 ||
+      (err.code >= 500 || err.code < 200) ||
       /timeout/.test(err.message) ||
       /request: error event/.test(err.message)
     ),
