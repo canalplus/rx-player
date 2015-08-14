@@ -17,7 +17,8 @@
 var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 
-var EPSILON = 0.00001;
+// Factor for rounding errors
+var EPSILON = 1 / 60;
 
 function nearlyEqual(a, b) {
   return Math.abs(a - b) < EPSILON;
@@ -94,8 +95,8 @@ function getSize(ts, ranges) {
 }
 
 function bufferedToArray(ranges) {
-  if (ranges instanceof BufferedRanges)
-    return _.cloneArray(ranges.ranges);
+  if (_.isArray(ranges))
+    return ranges;
 
   var i = -1, l = ranges.length;
   var a = Array(l);
@@ -270,6 +271,19 @@ function intersect(ranges, others) {
   return ranges;
 }
 
+function rangesEquals(ranges, others) {
+  for (var i = 0; i < ranges.length; i++) {
+    var range = ranges[i];
+    var overlappingRange = findOverlappingRange(range, others);
+    if (!overlappingRange ||
+        overlappingRange.start > range.start ||
+        overlappingRange.end   < range.end) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function BufferedRanges() {
   this.ranges = [];
   this.length = 0;
@@ -316,8 +330,12 @@ BufferedRanges.prototype = {
     return this.ranges;
   },
 
+  equals(others) {
+    return rangesEquals(this.ranges, bufferedToArray(others));
+  },
+
   intersect(others) {
-    intersect(this.ranges, others);
+    intersect(this.ranges, bufferedToArray(others));
     this.length = this.ranges.length;
     return this.ranges;
   }

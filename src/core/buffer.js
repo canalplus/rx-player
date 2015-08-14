@@ -174,21 +174,21 @@ function Buffer({
       (timing, bufferSize) => ({ timing, bufferSize })
     )
       .flatMap(({ timing, bufferSize }, count) => {
-        var firstCall = (count === 0);
-
-        if (isAVBuffer && (firstCall || timing.stalled)) {
-          // side effect to cleanup & synchronize the buffered ranges
-          // object with de native sourceBuffer.buffered ranges in
-          // case some part of the stream have been auto-deleted by
-          // the browser.
-          log.debug("intersect new buffer", bufferType);
-          ranges.intersect(bufferedToArray(sourceBuffer.buffered));
+        // makes sure our own buffered ranges representation stay in
+        // sync with the native one
+        if (isAVBuffer) {
+          var bufferedRangesArray = bufferedToArray(sourceBuffer.buffered);
+          if (!ranges.equals(bufferedRangesArray)) {
+            log.debug("intersect new buffer", bufferType);
+            ranges.intersect(bufferedRangesArray);
+          }
         }
 
         var injectedSegments;
         try {
           // filter out already loaded and already queued segments
-          injectedSegments = getSegmentsListToInject(timing, bufferSize, firstCall);
+          var withInitSegment = (count === 0);
+          injectedSegments = getSegmentsListToInject(timing, bufferSize, withInitSegment);
           injectedSegments = _.filter(injectedSegments, filterAlreadyLoaded);
         }
         catch(err) {
