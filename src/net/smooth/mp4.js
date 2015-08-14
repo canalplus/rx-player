@@ -400,8 +400,10 @@ var atoms = {
 var reads = {
   traf(buff) {
     var moof = findAtom(buff, 0x6D6F6F66);
-    var traf = findAtom(moof, 0x74726166);
-    return traf;
+    if (moof)
+      return findAtom(moof, 0x74726166);
+    else
+      return null;
   },
 
   /**

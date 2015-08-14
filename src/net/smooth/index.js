@@ -21,6 +21,7 @@ var assert = require("canal-js-utils/assert");
 var request = require("canal-js-utils/rx-request");
 var { resolveURL } = require("canal-js-utils/url");
 var { bytesToStr } = require("canal-js-utils/bytes");
+var log = require("canal-js-utils/log");
 
 var smoothManifestParser = require("./parser");
 
@@ -130,8 +131,12 @@ module.exports = function() {
 
     if (adaptation.isLive) {
       var traf = getTraf(blob);
-      nextSegments = parseTfrf(traf);
-      currentSegment = parseTfxd(traf);
+      if (traf) {
+        nextSegments = parseTfrf(traf);
+        currentSegment = parseTfxd(traf);
+      } else {
+        log.warn("smooth: could not find traf atom");
+      }
     } else {
       nextSegments = null;
     }
