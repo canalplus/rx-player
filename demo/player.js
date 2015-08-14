@@ -75,7 +75,7 @@ var Volume = React.createClass({
     var target = React.findDOMNode(this.refs.volumeBar);
     var height = target.offsetHeight;
     var rect = target.getBoundingClientRect();
-    var v = ((rect.top + height) - event.clientY) / height;
+    var v = Math.min(((rect.top + height) - event.clientY) / height, 1);
     this.props.setVolume(v);
   },
 
