@@ -24,7 +24,7 @@ function ema(a) {
   return (s, x) => s == null ? x : (a * x + (1 - a) * s);
 }
 
-module.exports = function(metrics, timings, options={}) {
+module.exports = function(metrics, options) {
   return metrics
     .map(metric => metric.value.response)
     // do not take into account small chunks < 2KB. filters out init

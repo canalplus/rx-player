@@ -76,8 +76,8 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   var $subtitles = new BehaviorSubject(defSubtitle);
 
   var $averageBitrates = {
-    audio: AverageBitrate(filterByType(metrics, "audio"), timings, { alpha: 0.6 }).publishValue(initAudioBitrate || 0),
-    video: AverageBitrate(filterByType(metrics, "video"), timings, { alpha: 0.6 }).publishValue(initVideoBitrate || 0),
+    audio: AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).publishValue(initAudioBitrate || 0),
+    video: AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 }).publishValue(initVideoBitrate || 0),
   };
 
   var conns = new CompositeDisposable(_.map(_.values($averageBitrates), a => a.connect()));
@@ -152,11 +152,17 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
         //   - user-based maximum bitrate (subject)
         //   - maximum based on the video element width
         //   - maximum based on the application visibility (background tab)
-        maxBitrates = combineLatest(
-          maxBitrates,
-          videoWidth.map(width => getClosestDisplayBitrate(representations, width)),
-          inBackground.map(isHidden => isHidden ? bitrates[0] : Infinity),
-          Math.min);
+        maxBitrates = combineLatest(maxBitrates, videoWidth, inBackground,
+          (bitrate, width, isHidden) => {
+            if (isHidden)
+              return bitrates[0];
+
+            var closestDisplayBitrate = getClosestDisplayBitrate(representations, width);
+            if (closestDisplayBitrate < bitrate)
+              return closestDisplayBitrate;
+
+            return bitrate;
+          });
       }
 
       representationsObservable = combineLatest(
