@@ -302,9 +302,21 @@ function EME(video, keySystems, options={}) {
       });
   }
 
-  return onEncrypted(video)
-    .take(1)
-    .flatMap(handleEncryptedEvents);
+  return Observable.create(obs => {
+    var sub = onEncrypted(video)
+      .take(1)
+      .flatMap(handleEncryptedEvents)
+      .subscribe(obs);
+
+    return () => {
+      if (sub) {
+        sub.dispose();
+      }
+
+      setMediaKeys(video, null)
+        .catch((e) => log.warn(e));
+    };
+  });
 }
 
 EME.onEncrypted = video => onEncrypted(video);
