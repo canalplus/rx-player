@@ -59,15 +59,6 @@ AbstractSourceBuffer.prototype = _.extend({}, EventEmitter.prototype, {
   },
 });
 
-function emptyTextTrack(track, from=0, to=Infinity) {
-  _.each(_.cloneArray(track.cues), (cue) => {
-    var { startTime, endTime } = cue;
-    if (startTime >= from && startTime <= to && endTime <= to) {
-      track.removeCue(cue);
-    }
-  });
-}
-
 var Cue = window.VTTCue || window.TextTrackCue;
 
 function TextSourceBuffer(video, codec) {
@@ -77,54 +68,16 @@ function TextSourceBuffer(video, codec) {
   this.isVTT = /^text\/vtt/.test(codec);
   // there is no removeTextTrack method... so we need to reuse old
   // text-tracks objects and clean all its pending cues
-  var track;
-  if (video.textTracks.length) {
-    track = video.textTracks[0];
-    emptyTextTrack(track);
-  } else {
-    track = video.addTextTrack("captions");
-  }
-  track.mode = "showing";
+  var trackElement = document.createElement("track");
+  var track = trackElement.track;
+  this.trackElement = trackElement;
   this.track = track;
+  trackElement.kind = "subtitles";
+  track.mode = "showing";
+  video.appendChild(trackElement);
 }
 
 TextSourceBuffer.prototype = _.extend({}, AbstractSourceBuffer.prototype, {
-  // Creates a new <track> element in which we inject the VTT text from
-  // a Blob and copy all the cues from this track to the main textTrack
-  // object. This <track> is then removed.
-  createCuesFromVTT(vtt) {
-    var trackElement;
-    var videoElement = this.video;
-
-    var removeTrackElement = () => {
-      if (videoElement.hasChildNodes(trackElement)) {
-        videoElement.removeChild(trackElement);
-        trackElement = null;
-      }
-    };
-
-    return new Promise_((resolve) => {
-      var blob = new Blob([vtt], { type: "text/vtt" });
-      var url = URL.createObjectURL(blob);
-      trackElement = document.createElement("track");
-      trackElement.style.display = "none";
-      trackElement.mode = "hidden";
-      trackElement.addEventListener("load", () => {
-        resolve(_.cloneArray(trackElement.track.cues));
-      });
-      videoElement.appendChild(trackElement);
-      trackElement.src = url;
-    }).then(
-      (o) => {
-        removeTrackElement();
-        return o;
-      },
-      (e) => {
-        removeTrackElement();
-        throw e;
-      });
-  },
-
   createCuesFromArray(cues) {
     if (!cues.length)
       return [];
@@ -137,25 +90,43 @@ TextSourceBuffer.prototype = _.extend({}, AbstractSourceBuffer.prototype, {
   },
 
   _append(cues) {
-    return Promise_.resolve((this.isVTT)
-      ? this.createCuesFromVTT(cues)
-      : this.createCuesFromArray(cues))
-    .then((trackCues) => {
-      if (!trackCues.length) return;
-      _.each(trackCues, cue => this.track.addCue(cue));
-      var firstCue = trackCues[0];
-      var lastCue = _.last(trackCues);
-      this.buffered.insert(0, firstCue.startTime, lastCue.endTime);
-    });
+    if (this.isVTT) {
+      var blob = new Blob([cues], { type: "text/vtt" });
+      var url = URL.createObjectURL(blob);
+      this.trackElement.src = url;
+      this.buffered.insert(0, Infinity);
+    }
+    else {
+      var trackCues = this.createCuesFromArray(cues);
+      if (trackCues.length) {
+        _.each(trackCues, cue => this.track.addCue(cue));
+        var firstCue = trackCues[0];
+        var lastCue = _.last(trackCues);
+        this.buffered.insert(0, firstCue.startTime, lastCue.endTime);
+      }
+    }
+    return Promise_.resolve();
   },
 
   _remove(from, to) {
-    emptyTextTrack(this.track, from, to);
+    var track = this.track;
+    _.each(_.cloneArray(track.cues), (cue) => {
+      var { startTime, endTime } = cue;
+      if (startTime >= from && startTime <= to && endTime <= to) {
+        track.removeCue(cue);
+      }
+    });
   },
 
   _abort() {
+    var { trackElement, video } = this;
+    if (trackElement && video && video.hasChildNodes(trackElement)) {
+      video.removeChild(trackElement);
+    }
     this.track.mode = "disabled";
     this.size = 0;
+    this.trackElement = null;
+    this.track = null;
     this.video = null;
   },
 });
