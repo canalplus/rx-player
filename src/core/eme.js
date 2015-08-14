@@ -20,7 +20,7 @@ var Promise_ = require("canal-js-utils/promise");
 var assert = require("canal-js-utils/assert");
 var { bytesToHex } = require("canal-js-utils/bytes");
 var { Observable } = require("canal-js-utils/rx");
-var { empty, fromEvent, fromPromise, merge, just, throwError } = Observable;
+var { empty, fromPromise, merge, just } = Observable;
 var {
   requestMediaKeySystemAccess,
   setMediaKeys,
@@ -197,7 +197,7 @@ function EME(video, keySystems, options={}) {
           var session = $sessionsStore.get(initData);
           if (session) {
             var keyStatuses = session.keyStatuses;
-            if (keyStatuses.length > 0) {
+            if (keyStatuses.size > 0) {
               log.debug("eme: reuse session");
               return just(session);
             } else {
@@ -250,7 +250,7 @@ function EME(video, keySystems, options={}) {
       try {
         license = keySystem.onKeyStatusesChange(keyStatusesEvent, session);
       } catch(e) {
-        license = throwError(e);
+        license = Observable.throw(e);
       }
 
       return toObservable(license)
@@ -272,7 +272,7 @@ function EME(video, keySystems, options={}) {
       try {
         license = keySystem.getLicense(new Uint8Array(message), messageType || "licenserequest");
       } catch(e) {
-        license = throwError(e);
+        license = Observable.throw(e);
       }
 
       return toObservable(license)
