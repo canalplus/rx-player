@@ -331,10 +331,21 @@ if (!MediaKeys_) {
 
 function _setMediaKeys(elt, mk) {
   if (mk instanceof MockMediaKeys) return mk._setVideo(elt);
-  if (elt.setMediaKeys)       return elt.setMediaKeys(mk);
-  if (elt.WebkitSetMediaKeys) return elt.WebkitSetMediaKeys(mk);
-  if (elt.mozSetMediaKeys)    return elt.mozSetMediaKeys(mk);
-  if (elt.msSetMediaKeys)     return elt.msSetMediaKeys(mk);
+  if (elt.setMediaKeys)
+    return elt.setMediaKeys(mk);
+
+  if (mk === null)
+    return;
+
+  if (elt.WebkitSetMediaKeys)
+    return elt.WebkitSetMediaKeys(mk);
+
+  if (elt.mozSetMediaKeys)
+    return elt.mozSetMediaKeys(mk);
+
+  if (elt.msSetMediaKeys)
+    return elt.msSetMediaKeys(mk);
+
   throw new Error("compat: cannot find setMediaKeys method");
 }
 
