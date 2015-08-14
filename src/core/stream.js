@@ -354,7 +354,7 @@ function Stream({
         // If first buffered ranges does not
         // starts to 0, seek to start of first
         // buffered range
-        videoElement.currentTime = videoElement.buffered.start(0)
+        videoElement.currentTime = videoElement.buffered.start(0);
       });
 
     return first(zip(loadedMetadata, canPlay, _.noop))
