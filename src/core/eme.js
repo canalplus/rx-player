@@ -64,8 +64,8 @@ var $sessionsStore = (function() {
     set(initData, session) {
       sessions[bytesToHex(initData)] = session;
     },
-    remove(initData) {
-      return (delete sessions[bytesToHex(initData)]);
+    delete(initData) {
+      delete sessions[bytesToHex(initData)];
     },
     dispose() {
       sessions = {};
@@ -201,7 +201,7 @@ function EME(video, keySystems, options={}) {
               log.debug("eme: reuse session");
               return just(session);
             } else {
-              $sessionsStore.remove(initData);
+              $sessionsStore.delete(initData);
             }
           }
 
@@ -297,8 +297,8 @@ function EME(video, keySystems, options={}) {
 
     return merge(sessionUpdates, keyErrors)
       .tapOnError((err) => {
-        log.debug("eme: remove session from store", sessionId);
-        $sessionsStore.remove(initData);
+        log.debug("eme: delete session from store", sessionId);
+        $sessionsStore.delete(initData);
       });
   }
 
