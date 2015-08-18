@@ -20,28 +20,32 @@ var assert = require("canal-js-utils/assert");
 var EventEmitter = require("canal-js-utils/eventemitter");
 var { BufferedRanges } = require("./ranges");
 
-function AbstractSourceBuffer() {
-  EventEmitter.call(this);
-  this.updating = false;
-  this.readyState = "opened";
-  this.buffered = new BufferedRanges();
-}
+class AbstractSourceBuffer extends EventEmitter {
+  constructor() {
+    super();
+    this.updating = false;
+    this.readyState = "opened";
+    this.buffered = new BufferedRanges();
+  }
 
-AbstractSourceBuffer.prototype = _.extend({}, EventEmitter.prototype, {
   appendBuffer(data) {
     return this._lock(() => this._append(data));
-  },
+  }
+
   remove(from, to) {
     return this._lock(() => this._remove(from, to));
-  },
+  }
+
   abort() {
     this.remove(0, Infinity);
     this.updating = false;
     this.readyState = "closed";
     this._abort();
-  },
-  _append(data) {},
-  _remove(from, to) {},
+  }
+
+  _append(data) {}
+  _remove(from, to) {}
+
   _lock(func) {
     assert(!this.updating, "text-buffer: cannot remove while updating");
     this.updating = true;
@@ -51,33 +55,35 @@ AbstractSourceBuffer.prototype = _.extend({}, EventEmitter.prototype, {
         ()  => this._unlock("update"),
         (e) => this._unlock("error", e)
       );
-  },
+  }
+
   _unlock(eventName, value) {
     this.trigger(eventName, value);
     this.updating = false;
     this.trigger("updateend");
-  },
-});
+  }
+}
 
 var Cue = window.VTTCue || window.TextTrackCue;
 
-function TextSourceBuffer(video, codec) {
-  AbstractSourceBuffer.call(this);
-  this.video = video;
-  this.codec = codec;
-  this.isVTT = /^text\/vtt/.test(codec);
-  // there is no removeTextTrack method... so we need to reuse old
-  // text-tracks objects and clean all its pending cues
-  var trackElement = document.createElement("track");
-  var track = trackElement.track;
-  this.trackElement = trackElement;
-  this.track = track;
-  trackElement.kind = "subtitles";
-  track.mode = "showing";
-  video.appendChild(trackElement);
-}
+class TextSourceBuffer extends AbstractSourceBuffer {
 
-TextSourceBuffer.prototype = _.extend({}, AbstractSourceBuffer.prototype, {
+  constructor(video, codec) {
+    super();
+    this.video = video;
+    this.codec = codec;
+    this.isVTT = /^text\/vtt/.test(codec);
+    // there is no removeTextTrack method... so we need to reuse old
+    // text-tracks objects and clean all its pending cues
+    var trackElement = document.createElement("track");
+    var track = trackElement.track;
+    this.trackElement = trackElement;
+    this.track = track;
+    trackElement.kind = "subtitles";
+    track.mode = "showing";
+    video.appendChild(trackElement);
+  }
+
   createCuesFromArray(cues) {
     if (!cues.length)
       return [];
@@ -87,7 +93,7 @@ TextSourceBuffer.prototype = _.extend({}, AbstractSourceBuffer.prototype, {
     return _.compact(_.map(cues, ({ start, end, text }) => {
       if (text) return new Cue(start, end, text);
     }));
-  },
+  }
 
   _append(cues) {
     if (this.isVTT) {
@@ -106,7 +112,7 @@ TextSourceBuffer.prototype = _.extend({}, AbstractSourceBuffer.prototype, {
       }
     }
     return Promise_.resolve();
-  },
+  }
 
   _remove(from, to) {
     var track = this.track;
@@ -116,7 +122,7 @@ TextSourceBuffer.prototype = _.extend({}, AbstractSourceBuffer.prototype, {
         track.removeCue(cue);
       }
     });
-  },
+  }
 
   _abort() {
     var { trackElement, video } = this;
@@ -128,7 +134,7 @@ TextSourceBuffer.prototype = _.extend({}, AbstractSourceBuffer.prototype, {
     this.trackElement = null;
     this.track = null;
     this.video = null;
-  },
-});
+  }
+}
 
 module.exports = TextSourceBuffer;
