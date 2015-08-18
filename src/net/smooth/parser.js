@@ -269,7 +269,7 @@ function parseFromDocument(doc) {
     switch (name) {
     case "Protection":  res.protection = parseProtection(node);  break;
     case "StreamIndex":
-      var ada = parseAdaptation(node, timescale)
+      var ada = parseAdaptation(node, timescale);
       if (ada) {
         ada.id = adaptationCount++;
         res.adaptations.push(ada);
