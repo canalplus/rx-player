@@ -16,7 +16,7 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.js$/, exclude: [/rx\.lite\.js$/,/es6-promise\.js/], loader: "babel" },
+      { test: /\.js$/, exclude: [/rx\.lite\.js$/,/es6-promise\.js/], loader: "babel?loose=all" },
     ]
   },
   resolve: {
