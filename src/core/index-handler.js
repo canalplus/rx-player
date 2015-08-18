@@ -45,82 +45,84 @@ function getLiveEdge(manifest) {
   return selectIndexHandler(videoIndex).getLiveEdge(videoIndex, manifest);
 }
 
-function IndexHandler(adaptation, representation) {
-  this.adaptation = adaptation;
-  this.representation = representation;
-  this.index = representation.index;
-  this.handler = new (selectIndexHandler(this.index))(this.index);
-}
-
-IndexHandler.prototype.getInitSegment = function() {
-  var initialization = this.index.initialization || {};
-  return {
-    id: "init_" + this.adaptation.id + "_" + this.representation.id,
-    init: true,
-    media: initialization.media,
-    range: initialization.range,
-    indexRange: this.index.indexRange
-  };
-};
-
-IndexHandler.prototype.normalizeRange = function(ts, offset, bufSize) {
-  var presentationOffset = this.index.presentationTimeOffset || 0;
-  var timescale = this.index.timescale || 1;
-
-  if (!offset)  offset  = 0;
-  if (!bufSize) bufSize = 0;
-
-  offset = Math.min(offset, bufSize);
-
-  return {
-    time: ts * timescale - presentationOffset,
-    up: (ts + offset)  * timescale - presentationOffset,
-    to: (ts + bufSize) * timescale - presentationOffset,
-  };
-};
-
-IndexHandler.prototype.getSegments = function(ts, offset, bufSize) {
-  var { time, up, to } = this.normalizeRange(ts, offset, bufSize);
-  if (!this.handler.checkRange(time)) {
-    throw new OutOfIndexError(this.index.indexType);
+class IndexHandler {
+  constructor(adaptation, representation) {
+    this.adaptation = adaptation;
+    this.representation = representation;
+    this.index = representation.index;
+    this.handler = new (selectIndexHandler(this.index))(this.index);
   }
 
-  return this.handler.getSegments(up, to);
-};
+  getInitSegment() {
+    var initialization = this.index.initialization || {};
+    return {
+      id: "init_" + this.adaptation.id + "_" + this.representation.id,
+      init: true,
+      media: initialization.media,
+      range: initialization.range,
+      indexRange: this.index.indexRange
+    };
+  }
 
-IndexHandler.prototype.insertNewSegments = function(nextSegments, currentSegment) {
-  var addedSegments = [];
-  for (var i = 0; i < nextSegments.length; i++) {
-    if (this.handler.addSegment(nextSegments[i], currentSegment)) {
-      addedSegments.push(nextSegments[i]);
+  normalizeRange(ts, offset, bufSize) {
+    var presentationOffset = this.index.presentationTimeOffset || 0;
+    var timescale = this.index.timescale || 1;
+
+    if (!offset)  offset  = 0;
+    if (!bufSize) bufSize = 0;
+
+    offset = Math.min(offset, bufSize);
+
+    return {
+      time: ts * timescale - presentationOffset,
+      up: (ts + offset)  * timescale - presentationOffset,
+      to: (ts + bufSize) * timescale - presentationOffset,
+    };
+  }
+
+  getSegments(ts, offset, bufSize) {
+    var { time, up, to } = this.normalizeRange(ts, offset, bufSize);
+    if (!this.handler.checkRange(time)) {
+      throw new OutOfIndexError(this.index.indexType);
     }
-  }
-  return addedSegments;
-};
 
-IndexHandler.prototype.setTimescale = function(timescale) {
-  var { index } = this;
-
-  if (__DEV__) {
-    assert(typeof timescale == "number");
-    assert(timescale > 0);
+    return this.handler.getSegments(up, to);
   }
 
-  if (index.timescale !== timescale) {
-    index.timescale = timescale;
-    return true;
+  insertNewSegments(nextSegments, currentSegment) {
+    var addedSegments = [];
+    for (var i = 0; i < nextSegments.length; i++) {
+      if (this.handler.addSegment(nextSegments[i], currentSegment)) {
+        addedSegments.push(nextSegments[i]);
+      }
+    }
+    return addedSegments;
   }
 
-  return false;
-};
+  setTimescale(timescale) {
+    var { index } = this;
 
-IndexHandler.prototype.scale = function(time) {
-  if (__DEV__) {
-    assert(this.index.timescale > 0);
+    if (__DEV__) {
+      assert(typeof timescale == "number");
+      assert(timescale > 0);
+    }
+
+    if (index.timescale !== timescale) {
+      index.timescale = timescale;
+      return true;
+    }
+
+    return false;
   }
 
-  return time / this.index.timescale;
-};
+  scale(time) {
+    if (__DEV__) {
+      assert(this.index.timescale > 0);
+    }
+
+    return time / this.index.timescale;
+  }
+}
 
 module.exports = {
   OutOfIndexError,
