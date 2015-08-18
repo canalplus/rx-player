@@ -402,24 +402,22 @@ function Stream({
             videoElement.playbackRate = 0;
         }
 
-        return isEqual;
-      })
-      .map(timing => {
-        var stalled = timing.stalled;
-
         // Discontinuity check in case we are close a buffer but still
         // calculate a stalled state. This is useful for some
         // implementation that might drop an injected segment, or in
         // case of small discontinuity in the stream.
-        if (stalled) {
-          var nextRangeGap = getNextRangeGap(timing.ts, timing.buffered);
+        if (isStalled) {
+          var nextRangeGap = timing.buffered.getNextRangeGap(timing.ts);
           if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
-            var seekTo = (timing.ts + nextRangeGap + 0.01);
+            var seekTo = (timing.ts + nextRangeGap + 1/60);
             videoElement.currentTime = seekTo;
             log.warn("discontinuity seek", timing.ts, nextRangeGap, seekTo);
           }
         }
 
+        return isEqual;
+      })
+      .map(timing => {
         return { type: "stalled", value: timing.stalled };
       });
   }
