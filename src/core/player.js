@@ -231,9 +231,8 @@ class Player extends EventEmitter {
     this.playing.onNext(autoPlay);
 
     var pipelines = this.createPipelines(transport, {
-      segment: {
-        cache: InitializationSegmentCache()
-      }
+      audio: { cache: new InitializationSegmentCache() },
+      video: { cache: new InitializationSegmentCache() },
     });
 
     var { adaptive, timings, video } = this;

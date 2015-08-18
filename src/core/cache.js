@@ -18,23 +18,25 @@
  * Caching object used to cache initialization segments.
  * This allow to have a faster representation switch and seeking.
  */
-function InitializationSegmentCache() {
-  var cache = {};
-  return {
-    add({ segment }, loaded) {
-      if (segment.init) {
-        cache[segment.id] = loaded;
-      }
-    },
-    get({ segment }) {
-      if (segment.init) {
-        var value = cache[segment.id];
-        if (value != null)
-          return value;
-      }
-      return null;
+class InitializationSegmentCache {
+  constructor() {
+    this.cache = {};
+  }
+
+  add({ segment }, loaded) {
+    if (segment.init) {
+      this.cache[segment.id] = loaded;
     }
-  };
+  }
+
+  get({ segment }) {
+    if (segment.init) {
+      var value = this.cache[segment.id];
+      if (value != null)
+        return value;
+    }
+    return null;
+  }
 }
 
 module.exports = {
