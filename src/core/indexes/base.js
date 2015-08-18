@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var Timeline = require("./timeline");
 
-function Base(index) {
-  Timeline.call(this, index);
+class Base extends Timeline {
+  constructor(index) {
+    super(index);
+  }
+
+  static getLiveEdge() {
+    throw new Error("not implemented");
+  }
+
+  addSegment(newSegment) {
+    this.index.timeline.push(newSegment);
+    return true;
+  }
 }
-
-Base.getLiveEdge = function() {
-  throw new Error("not implemented");
-};
-
-_.extend(Base.prototype, Timeline.prototype);
-
-Base.prototype.addSegment = function(newSegment) {
-  this.index.timeline.push(newSegment);
-  return true;
-};
 
 module.exports = Base;

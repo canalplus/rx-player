@@ -14,49 +14,49 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
-
-function List(index) {
-  this.index = index;
-}
-
-List.getLiveEdge = function() {
-  throw new Error("not implemented");
-};
-
-List.prototype.checkRange = function(up) {
-  var { duration, list } = this.index;
-  var i = Math.floor(up / duration);
-  return (i >= 0 && i < list.length);
-};
-
-List.prototype.createSegment = function(segmentIndex, time) {
-  var segment = this.index.list[segmentIndex];
-  return {
-    id: segmentIndex,
-    media: segment.media,
-    time: time,
-    number: undefined,
-    range: segment.range,
-    duration: this.index.duration,
-  };
-};
-
-List.prototype.getSegments = function(up, to) {
-  // TODO(pierre): use startNumber
-  var { duration, list } = this.index;
-  var i = Math.floor(up / duration);
-  var l = Math.floor(to / duration);
-  var segments = [];
-  while (i < l) {
-    segments.push(this.createSegment(i, i * duration));
-    i++;
+class List {
+  constructor(index) {
+    this.index = index;
   }
-  return segments;
-};
 
-List.prototype.addSegment = function() {
-  return false;
-};
+  static getLiveEdge() {
+    throw new Error("not implemented");
+  }
+
+  checkRange(up) {
+    var { duration, list } = this.index;
+    var i = Math.floor(up / duration);
+    return (i >= 0 && i < list.length);
+  }
+
+  createSegment(segmentIndex, time) {
+    var segment = this.index.list[segmentIndex];
+    return {
+      id: segmentIndex,
+      media: segment.media,
+      time: time,
+      number: undefined,
+      range: segment.range,
+      duration: this.index.duration,
+    };
+  }
+
+  getSegments(up, to) {
+    // TODO(pierre): use startNumber
+    var { duration, list } = this.index;
+    var i = Math.floor(up / duration);
+    var l = Math.floor(to / duration);
+    var segments = [];
+    while (i < l) {
+      segments.push(this.createSegment(i, i * duration));
+      i++;
+    }
+    return segments;
+  }
+
+  addSegment() {
+    return false;
+  }
+}
 
 module.exports = List;
