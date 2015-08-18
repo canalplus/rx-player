@@ -28,80 +28,11 @@ function nearlyLt(a, b) {
   return a - b <= EPSILON;
 }
 
-/**
- * Returns the { start, end } buffered range
- * associated to the given timestamp.
- */
-function getRange(ts, ranges) {
-  var start, end, i = ranges.length;
-  start = Infinity; end = -Infinity;
-  while (--i >= 0 && ts < start) {
-    start = ranges.start(i);
-    end   = ranges.end(i);
-  }
-  return (ts >= start) ? { start, end } : null;
-}
-
-function getNextRangeGap(ts, ranges) {
-  var i = -1, nextRangeStart;
-  while (++i < ranges.length) {
-    var start = ranges.start(i);
-    if (start > ts) {
-      nextRangeStart = start;
-      break;
-    }
-  }
-
-  if (nextRangeStart != null)
-    return nextRangeStart - ts;
-  else
-    return Infinity;
-}
-
-function isRanges(ranges) {
-  return (!!ranges && typeof ranges.length === "number");
-}
-
-/**
- * Returns the time-gap between the buffered
- * end limit and the given timestamp
- */
-function getGap(ts, ranges) {
-  var range = isRanges(ranges) ? getRange(ts, ranges) : ranges;
-  return range
-    ? range.end - ts
-    : Infinity;
-}
-
-/**
- * Return the time gap between the current time
- * and the start of current range.
- */
-function getLoaded(ts, ranges) {
-  var range = isRanges(ranges) ? getRange(ts, ranges) : ranges;
-  return range
-    ? ts - range.start
-    : 0;
-}
-
-/**
- * Returns the total size of the current range.
- */
-function getSize(ts, ranges) {
-  var range = isRanges(ranges) ? getRange(ts, ranges) : ranges;
-  return range
-    ? range.end - range.start
-    : 0;
-}
-
 function bufferedToArray(ranges) {
-  if (_.isArray(ranges))
-    return ranges;
-
   var i = -1, l = ranges.length;
   var a = Array(l);
   while (++i < l) {
-    a[i] = { start: ranges.start(i), end: ranges.end(i) };
+    a[i] = { start: ranges.start(i), end: ranges.end(i), bitrate: 0 };
   }
   return a;
 }
@@ -284,19 +215,19 @@ function rangesEquals(ranges, others) {
   return true;
 }
 
-function BufferedRanges() {
-  this.ranges = [];
-  this.length = 0;
-}
+class BufferedRanges {
+  constructor(ranges) {
+    this.ranges = ranges ? bufferedToArray(ranges) : [];
+    this.length = this.ranges.length;
+  }
 
-BufferedRanges.prototype = {
   start(i) {
     return this.ranges[i].start;
-  },
+  }
 
   end(i) {
     return this.ranges[i].end;
-  },
+  }
 
   hasRange(startTime, duration) {
     var endTime = startTime + duration;
@@ -310,15 +241,67 @@ BufferedRanges.prototype = {
     }
 
     return null;
-  },
+  }
 
+  /**
+   * Get range associated to given time
+   */
   getRange(time) {
     for (var i = 0; i < this.ranges.length; i++) {
       if (isPointInRange(this.ranges[i], time))
         return this.ranges[i];
     }
     return null;
-  },
+  }
+
+  /**
+   * Returns the time-gap between the buffered
+   * end limit and the given timestamp
+   */
+  getGap(time) {
+    var range = this.getRange(time);
+    return range
+      ? range.end - time
+      : Infinity;
+  }
+
+  /**
+   * Return the time gap between the current time
+   * and the start of current range.
+   */
+  getLoaded(time) {
+    var range = this.getRange(time);
+    return range
+      ? time - range.start
+      : 0;
+  }
+
+  /**
+   * Returns the total size of the current range.
+   */
+  getSize(time) {
+    var range = this.getRange(time);
+    return range
+      ? range.end - range.start
+      : 0;
+  }
+
+  getNextRangeGap(time) {
+    var { ranges } = this;
+    var i = -1, nextRangeStart;
+    while (++i < ranges.length) {
+      var start = ranges[i].start;
+      if (start > time) {
+        nextRangeStart = start;
+        break;
+      }
+    }
+
+    if (nextRangeStart != null)
+      return nextRangeStart - time;
+    else
+      return Infinity;
+  }
 
   insert(bitrate, start, end) {
     if (__DEV__) {
@@ -328,25 +311,26 @@ BufferedRanges.prototype = {
     insertInto(this.ranges, bitrate, start, end);
     this.length = this.ranges.length;
     return this.ranges;
-  },
+  }
 
   equals(others) {
-    return rangesEquals(this.ranges, bufferedToArray(others));
-  },
+    if (__DEV__)
+      assert(others instanceof BufferedRanges);
+
+    return rangesEquals(this.ranges, others.ranges);
+  }
 
   intersect(others) {
-    intersect(this.ranges, bufferedToArray(others));
+    if (__DEV__)
+      assert(others instanceof BufferedRanges);
+
+    intersect(this.ranges, others.ranges);
     this.length = this.ranges.length;
     return this.ranges;
   }
-};
+}
 
 module.exports = {
- getRange,
- getGap,
- getNextRangeGap,
- getLoaded,
- getSize,
  bufferedToArray,
  BufferedRanges,
 };

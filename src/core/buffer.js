@@ -17,7 +17,7 @@
 var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
 var assert = require("canal-js-utils/assert");
-var { BufferedRanges, bufferedToArray, getGap } = require("./ranges");
+var { BufferedRanges } = require("./ranges");
 var { Observable, Subject } = require("canal-js-utils/rx");
 var { combineLatest, defer, empty, from, just, merge, timer } = Observable;
 var { first, on } = require("canal-js-utils/rx-ext");
@@ -117,7 +117,7 @@ function Buffer({
       }
     }
 
-    function getSegmentsListToInject(timing, bufferSize, withInitSegment) {
+    function getSegmentsListToInject(buffered, timing, bufferSize, withInitSegment) {
       var segments = [];
 
       if (withInitSegment) {
@@ -142,7 +142,7 @@ function Buffer({
       // to our current timestamp in order to calculate the list of
       // segments to inject.
       var timestampPadding;
-      var bufferGap = getGap(timestamp, sourceBuffer.buffered);
+      var bufferGap = buffered.getGap(timestamp);
       if (bufferGap > LOW_WATER_MARK_PAD && bufferGap < Infinity) {
         timestampPadding = Math.min(bufferGap, HIGH_WATER_MARK_PAD);
       } else {
@@ -174,13 +174,14 @@ function Buffer({
       (timing, bufferSize) => ({ timing, bufferSize })
     )
       .flatMap(({ timing, bufferSize }, count) => {
+        var nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
+
         // makes sure our own buffered ranges representation stay in
         // sync with the native one
         if (isAVBuffer) {
-          var bufferedRangesArray = bufferedToArray(sourceBuffer.buffered);
-          if (!ranges.equals(bufferedRangesArray)) {
+          if (!ranges.equals(nativeBufferedRanges)) {
             log.debug("intersect new buffer", bufferType);
-            ranges.intersect(bufferedRangesArray);
+            ranges.intersect(nativeBufferedRanges);
           }
         }
 
@@ -188,7 +189,7 @@ function Buffer({
         try {
           // filter out already loaded and already queued segments
           var withInitSegment = (count === 0);
-          injectedSegments = getSegmentsListToInject(timing, bufferSize, withInitSegment);
+          injectedSegments = getSegmentsListToInject(nativeBufferedRanges, timing, bufferSize, withInitSegment);
           injectedSegments = _.filter(injectedSegments, filterAlreadyLoaded);
         }
         catch(err) {

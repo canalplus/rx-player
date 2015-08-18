@@ -26,7 +26,6 @@ var min = Math.min;
 
 var { MediaSource_, sourceOpen, loadedMetadataEvent } = require("./compat");
 var TextSourceBuffer = require("./text-buffer");
-var { getNextRangeGap } = require("./ranges");
 var { getLiveEdge } = require("./index-handler");
 var Buffer = require("./buffer");
 var EME = require("./eme");

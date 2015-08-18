@@ -15,7 +15,7 @@
  */
 
 var { Observable } = require("canal-js-utils/rx");
-var { getGap, getRange } = require("./ranges");
+var { BufferedRanges } = require("./ranges");
 
 // time changes interval in milliseconds
 var TIMINGS_SAMPLING_INTERVAL = 1000;
@@ -52,9 +52,9 @@ function getTimings(video, name) {
   var duration = video.duration;
   var ts = video.currentTime;
   var readyState = video.readyState;
-  var buffered = video.buffered;
-  var range = getRange(ts, buffered);
-  var gap = getGap(ts, range);
+  var buffered = new BufferedRanges(video.buffered);
+  var range = buffered.getRange(ts);
+  var gap = buffered.getGap(ts);
   var stalled = null;
   return {
     name,
