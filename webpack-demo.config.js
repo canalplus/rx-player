@@ -1,6 +1,9 @@
 /* jshint node:true */
+var fs = require("fs");
 var path = require("path");
+
 var webpack = require("webpack");
+var version = fs.readFileSync("./VERSION").toString().replace(/\n$/g, "");
 
 module.exports = {
   entry: "./demo/index.js",
@@ -21,7 +24,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       "__DEV__": true,
-      "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify("0.0.0-demo"),
+      "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
     }),
   ],
   resolveLoader: {
