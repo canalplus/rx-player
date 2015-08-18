@@ -401,7 +401,7 @@ class Player extends EventEmitter {
 
   getUrl() {
     assertMan(this);
-    return this.man.baseURL;
+    return this.man.locations[0];
   }
 
   getVideoDuration() {
