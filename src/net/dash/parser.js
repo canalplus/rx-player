@@ -324,7 +324,12 @@ function parseRepresentation(root) {
     return res;
   }, {});
 
-  return feedAttributes(root, rep);
+  rep = feedAttributes(root, rep);
+  if (rep.id == null) {
+    rep.id = _.uniqueId();
+  }
+
+  return rep;
 }
 
 function parseContentComponent(root) {
@@ -349,7 +354,12 @@ function parseAdaptationSet(root, contentProtectionParser) {
     return res;
   }, { representations: [] });
 
-  return feedAttributes(root, res);
+  var ada = feedAttributes(root, res);
+  if (ada.id == null) {
+    ada.id = _.uniqueId();
+  }
+
+  return ada;
 }
 
 function parsePeriod(root, contentProtectionParser) {
