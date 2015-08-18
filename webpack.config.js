@@ -1,5 +1,6 @@
 /* jshint node:true */
 var fs = require("fs");
+var path = require("path");
 
 var RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "development";
 
@@ -32,4 +33,7 @@ module.exports = {
       "__DEV__": RX_PLAYER_ENV === "development"
     }),
   ],
+  resolveLoader: {
+    fallback: path.join(__dirname, "node_modules")
+  }
 };
