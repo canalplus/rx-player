@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 
 var Template = require("./indexes/template");

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-var log = require("canal-js-utils/log");
 var { Observable } = require("canal-js-utils/rx");
 var { merge, interval } = Observable;
 var { on } = require("canal-js-utils/rx-ext");

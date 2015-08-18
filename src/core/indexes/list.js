@@ -43,7 +43,7 @@ class List {
 
   getSegments(up, to) {
     // TODO(pierre): use startNumber
-    var { duration, list } = this.index;
+    var { duration } = this.index;
     var i = Math.floor(up / duration);
     var l = Math.floor(to / duration);
     var segments = [];

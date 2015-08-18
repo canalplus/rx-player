@@ -50,14 +50,6 @@ function Buffer({
   var LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
   var HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
 
-  function getTsPadding(gap) {
-    if (gap > LOW_WATER_MARK_PAD && gap < Infinity) {
-      return Math.min(gap, HIGH_WATER_MARK_PAD);
-    } else {
-      return 0;
-    }
-  }
-
   var { representations, bufferSizes } = adapters;
   var ranges = new BufferedRanges();
 
