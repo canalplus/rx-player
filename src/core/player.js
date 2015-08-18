@@ -35,7 +35,7 @@ var {
 
 var { timingsSampler, toWallClockTime, fromWallClockTime, getLiveGap } = require("./timings");
 var { InitializationSegmentCache } = require("./cache");
-var { getSize, getLoaded } = require("./ranges");
+var { BufferedRanges } = require("./ranges");
 var { parseTimeFragment } = require("./time-fragment");
 var DeviceEvents = require("./device-events");
 var manifestHelpers = require("./manifest");
@@ -409,11 +409,11 @@ class Player extends EventEmitter {
   }
 
   getVideoLoadedTime() {
-    return getSize(this.video.currentTime, this.video.buffered);
+    return new BufferedRanges(this.video.buffered).getSize(this.video.currentTime);
   }
 
   getVideoPlayedTime() {
-    return getLoaded(this.video.currentTime, this.video.buffered);
+    return new BufferedRanges(this.video.buffered).getLoaded(this.video.currentTime);
   }
 
   getCurrentTime() {
