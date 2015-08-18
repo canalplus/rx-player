@@ -105,7 +105,7 @@ function normalizePeriod(period, inherit, subtitles) {
 }
 
 function normalizeAdaptation(adaptation, inherit) {
-  adaptation.id = adaptation.id || _.uniqueId();
+  assert(typeof adaptation.id != "undefined");
   _.defaults(adaptation, inherit);
 
   var inheritedFromAdaptation = _.pick(adaptation, representationBaseType);
@@ -135,7 +135,7 @@ function normalizeAdaptation(adaptation, inherit) {
 }
 
 function normalizeRepresentation(representation, inherit) {
-  representation.id = representation.id || _.uniqueId();
+  assert(typeof representation.id != "undefined");
   _.defaults(representation, inherit);
 
   var index = representation.index;

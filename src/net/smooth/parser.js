@@ -191,6 +191,8 @@ function parseAdaptation(root, timescale) {
 
   assert(profile, "parser: unrecognized QualityLevel type " + type);
 
+  var representationCount = 0;
+
   var { representations, index } = reduceChildren(root, (res, name, node) => {
     switch (name) {
     case "QualityLevel":
@@ -198,7 +200,7 @@ function parseAdaptation(root, timescale) {
 
       // filter out video representations with small bitrates
       if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
-        rep.id = _.uniqueId();
+        rep.id = representationCount++;
         res.representations.push(rep);
       }
 
@@ -238,10 +240,9 @@ function parseAdaptation(root, timescale) {
 
   // TODO(pierre): real ad-insert support
   if (subType == "ADVT")
-    type = "ad-insert";
+    return null;
 
   return {
-    id: _.uniqueId(),
     type,
     index,
     representations,
@@ -262,12 +263,17 @@ function parseFromDocument(doc) {
     "Version should be 2.0, 2.1 or 2.2");
 
   var timescale = +root.getAttribute("Timescale") || 10000000;
+  var adaptationCount = 0;
 
   var { protection, adaptations } = reduceChildren(root, (res, name, node) => {
     switch (name) {
     case "Protection":  res.protection = parseProtection(node);  break;
     case "StreamIndex":
-      res.adaptations.push(parseAdaptation(node, timescale));
+      var ada = parseAdaptation(node, timescale)
+      if (ada) {
+        ada.id = adaptationCount++;
+        res.adaptations.push(ada);
+      }
       break;
     }
     return res;
