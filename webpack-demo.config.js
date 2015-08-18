@@ -1,3 +1,4 @@
+/* jshint node:true */
 var path = require("path");
 var webpack = require("webpack");
 
@@ -9,7 +10,7 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.js$/, loader: "babel", exclude: [/rx\.lite\.js$/] },
+      { test: /\.js$/, loader: "babel?loose=all", exclude: [/rx\.lite\.js$/] },
       { test: /\.css$/, loader: "style-loader!css-loader" },
       {
         test: /\.(otf|eot|svg|ttf|woff)/,
