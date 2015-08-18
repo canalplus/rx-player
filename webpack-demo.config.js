@@ -18,11 +18,13 @@ module.exports = {
       }
     ],
   },
-
   plugins: [
     new webpack.DefinePlugin({
       "__DEV__": true,
       "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify("0.0.0-demo"),
     }),
-  ]
+  ],
+  resolveLoader: {
+    fallback: path.join(__dirname, "node_modules")
+  }
 };
