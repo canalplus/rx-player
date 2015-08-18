@@ -348,12 +348,6 @@ function Stream({
         log.info("canplay event");
         if (autoPlay) videoElement.play();
         autoPlay = true;
-      })
-      .tap(() => {
-        // If first buffered ranges does not
-        // starts to 0, seek to start of first
-        // buffered range
-        videoElement.currentTime = videoElement.buffered.start(0);
       });
 
     return first(zip(loadedMetadata, canPlay, _.noop))
