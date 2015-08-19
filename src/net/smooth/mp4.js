@@ -53,6 +53,9 @@ function readUuid(buf, id1, id2, id3, id4) {
 }
 
 function findAtom(buf, atomName) {
+  if (typeof atomName == "string")
+    atomName = be4toi(boxName(atomName), 0);
+
   var i = 0, l = buf.length;
 
   var name, size;
@@ -528,6 +531,7 @@ function createInitSegment(
 }
 
 module.exports = {
+  findAtom,
   getMdat: reads.mdat,
   getTraf: reads.traf,
 
