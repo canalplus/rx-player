@@ -317,6 +317,17 @@ class BufferedRanges {
     return this.ranges;
   }
 
+  remove(start, end) {
+    if (__DEV__) {
+      assert(start >= 0);
+      assert(end - start > 0);
+    }
+    this.intersect(new BufferedRanges([
+      { start: 0, end: start },
+      { start: end, end: Infinity },
+    ]));
+  }
+
   equals(others) {
     if (__DEV__)
       assert(others instanceof BufferedRanges);

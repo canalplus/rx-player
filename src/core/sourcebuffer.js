@@ -28,6 +28,7 @@ class AbstractSourceBuffer extends EventEmitter {
 
   _append(data) {}
   _remove(from, to) {}
+  _abort() {}
 
   _lock(func) {
     assert(!this.updating, "text-buffer: cannot remove while updating");
