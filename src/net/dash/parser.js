@@ -324,12 +324,7 @@ function parseRepresentation(root) {
     return res;
   }, {});
 
-  rep = feedAttributes(root, rep);
-  if (rep.id == null) {
-    rep.id = _.uniqueId();
-  }
-
-  return rep;
+  return feedAttributes(root, rep);
 }
 
 function parseContentComponent(root) {
@@ -349,24 +344,29 @@ function parseAdaptationSet(root, contentProtectionParser) {
     case "SegmentBase": res.index = parseSegmentBase(node); break;
     case "SegmentList": res.index = parseSegmentList(node); break;
     case "SegmentTemplate": res.index = parseSegmentTemplate(node); break;
-    case "Representation": res.representations.push(parseRepresentation(node)); break;
+    case "Representation":
+      var rep = parseRepresentation(node);
+      if (rep.id == null) {
+        rep.id = res.representations.length;
+      }
+      res.representations.push(rep); break;
     }
     return res;
   }, { representations: [] });
 
-  var ada = feedAttributes(root, res);
-  if (ada.id == null) {
-    ada.id = _.uniqueId();
-  }
-
-  return ada;
+  return feedAttributes(root, res);
 }
 
 function parsePeriod(root, contentProtectionParser) {
   var attrs = feedAttributes(root, reduceChildren(root, (res, name, node) => {
     switch(name) {
     case "BaseURL": res.baseURL = node.textContent; break;
-    case "AdaptationSet": res.adaptations.push(parseAdaptationSet(node, contentProtectionParser)); break;
+    case "AdaptationSet":
+      var ada = parseAdaptationSet(node, contentProtectionParser);
+      if (ada.id == null) {
+        ada.id = res.adaptations.length;
+      }
+      res.adaptations.push(ada); break;
     }
     return res;
   }, { adaptations: [] }));
