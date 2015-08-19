@@ -29,6 +29,10 @@ function nearlyLt(a, b) {
 }
 
 function bufferedToArray(ranges) {
+  if (_.isArray(ranges)) {
+    return ranges;
+  }
+
   var i = -1, l = ranges.length;
   var a = Array(l);
   while (++i < l) {
