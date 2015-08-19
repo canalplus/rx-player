@@ -21,6 +21,12 @@ module.exports = {
       }
     ],
   },
+  resolve: {
+    alias: {
+      main: __dirname + "/src",
+      test: __dirname + "/test",
+    },
+  },
   plugins: [
     new webpack.DefinePlugin({
       "__DEV__": true,
