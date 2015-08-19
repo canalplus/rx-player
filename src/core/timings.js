@@ -124,16 +124,17 @@ function timingsSampler(video) {
       obs.onNext(prevTimings);
     }
 
-    function onPlay()    { emitSample("play"); }
-    function onSeeking() { emitSample("seeking"); }
-    function onSeeked()  { emitSample("seeked"); }
+    function onPlay()       { emitSample("play"); }
+    function onSeeking()    { emitSample("seeking"); }
+    function onSeeked()     { emitSample("seeked"); }
+    function onTimeupdate() { emitSample("timeupdate"); };
 
-    var samplerInterval = setInterval(() =>
-      emitSample("timeupdate"), TIMINGS_SAMPLING_INTERVAL);
+    var samplerInterval = setInterval(onTimeupdate, TIMINGS_SAMPLING_INTERVAL);
 
     video.addEventListener("play", onPlay);
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("seeked", onSeeked);
+    video.addEventListener("loadedmetadata", onTimeupdate);
 
     obs.onNext(prevTimings);
 
@@ -141,6 +142,7 @@ function timingsSampler(video) {
       video.removeEventListener("play", onPlay);
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeked);
+      video.removeEventListener("loadedmetadata", onTimeupdate);
       clearInterval(samplerInterval);
     };
   })
