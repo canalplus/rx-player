@@ -113,21 +113,20 @@ var atoms = {
   },
 
   /**
-   * {Number} h264Profile (H.264 profile)
-   * {Number} h264CompatibleProfile (H.264 compatible profiles)
-   * {Number} h264Level (H.264 level)
+   * {String} spsHex
+   * {String} ppsHex
    * {Number} nalLen (NAL Unit length: 1, 2 or 4 bytes)
-   * {String} spsHex (SPS hex string)
-   * {String} ppsHex (PPS hex string)
    * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0", 1, "68ef3880")
    */
-  avcc(h264Profile, h264CompatibleProfile, h264Level, nalLen, spsHex, ppsHex) {
+  avcc(sps, pps, nalLen) {
     var nal = (nalLen === 2) ?
         0x1 : (nalLen === 4) ?
         0x3 : 0x0;
 
-    var sps = hexToBytes(spsHex);
-    var pps = hexToBytes(ppsHex);
+    // Deduce AVC Profile from SPS
+    var h264Profile = sps[1];
+    var h264CompatibleProfile = sps[2];
+    var h264Level = sps[3];
 
     return Atom("avcC", concat(
       [1, h264Profile, h264CompatibleProfile, h264Level, (0x3F << 2 | nal), (0xE0 | 1)],
@@ -596,15 +595,12 @@ module.exports = {
   ) {
 
     if (!pssList) pssList = [];
-    var [, sps, pps] = codecPrivateData.split("00000001");
-
-    // Deduce AVC Profile from SPS hexString
-    var h264Profile           = parseInt(sps.substr(2, 2), 16);
-    var h264CompatibleProfile = parseInt(sps.substr(4, 2), 16);
-    var h264Level             = parseInt(sps.substr(6, 2), 16);
+    var [, spsHex, ppsHex] = codecPrivateData.split("00000001");
+    var sps = hexToBytes(spsHex);
+    var pps = hexToBytes(ppsHex);
 
     // TODO NAL length is forced to 4
-    var avcc = atoms.avcc(h264Profile, h264CompatibleProfile, h264Level, nalLength, sps, pps);
+    var avcc = atoms.avcc(sps, pps, nalLength);
     var stsd;
     if (!pssList.length) {
       var avc1 = atoms.avc1encv("avc1", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc);
