@@ -105,7 +105,7 @@ function timingsSampler(video) {
     if (hasStalled) {
       stalled = {
         name: currentTimings.name,
-        playback: currentTimings.playback
+        playback: currentTimings.playback,
       };
     }
     else if (stalled && gap < Infinity && gap > resumeGap(stalled)) {

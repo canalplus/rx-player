@@ -188,7 +188,7 @@ function insertInto(ranges, bitrate, start, end) {
   return mergeContiguousRanges(removeEmptyRanges(ranges));
 }
 
-function intersect(ranges, others) {
+function rangesIntersect(ranges, others) {
   for (var i = 0; i < ranges.length; i++) {
     var range = ranges[i];
     var overlappingRange = findOverlappingRange(range, others);
@@ -339,7 +339,7 @@ class BufferedRanges {
     if (__DEV__)
       assert(others instanceof BufferedRanges);
 
-    intersect(this.ranges, others.ranges);
+    rangesIntersect(this.ranges, others.ranges);
     this.length = this.ranges.length;
     return this.ranges;
   }
