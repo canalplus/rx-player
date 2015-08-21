@@ -390,10 +390,13 @@ function Stream({
           isEqual = (wasStalled.name == isStalled.name);
 
         if (!isEqual && changePlaybackRate) {
-          if (wasStalled)
+          if (wasStalled) {
+            log.warn("resume playback", timing.ts, timing.name);
             videoElement.playbackRate = wasStalled.playback;
-          else
+          } else {
+            log.warn("stop playback", timing.ts, timing.name);
             videoElement.playbackRate = 0;
+          }
         }
 
         // Discontinuity check in case we are close a buffer but still
