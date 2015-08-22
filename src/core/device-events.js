@@ -17,22 +17,17 @@
 var { Observable } = require("canal-js-utils/rx");
 var { merge, interval } = Observable;
 var { on } = require("canal-js-utils/rx-ext");
-var { hidden, visibilityChange } = require("./compat").visibilityEvents();
+var { visibilityChange, videoSizeChange } = require("./compat");
 
 var INACTIVITY_DELAY = 60 * 1000;
 
-var doc = document;
-var win = window;
-var pixelRatio = win.devicePixelRatio || 1;
+var pixelRatio = window.devicePixelRatio || 1;
 
 function DeviceEvents(videoElement) {
-  var visibility = on(doc, visibilityChange)
-    .map(() => doc[hidden]);
-
-  var isVisible = visibility
+  var isVisible = visibilityChange()
     .filter(x => x === false);
 
-  var isHidden = visibility
+  var isHidden = visibilityChange()
     .customDebounce(INACTIVITY_DELAY)
     .filter(x => x === true);
 
@@ -41,7 +36,7 @@ function DeviceEvents(videoElement) {
 
   var videoWidth = merge(
     interval(20000),
-    on(win, "resize").customDebounce(500)
+    videoSizeChange().customDebounce(500)
   )
     .startWith("init")
     .map(() => videoElement.clientWidth * pixelRatio)

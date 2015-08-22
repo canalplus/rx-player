@@ -75,39 +75,6 @@ function wrap(fn) {
   };
 }
 
-// Wrap "MediaKeys.prototype.update" form an event based system to a
-// Promise based function.
-function wrapUpdateWithPromise(memUpdate, sessionObj) {
-
-  function KeySessionError(err={}) {
-    if (err.errorCode) {
-      err = {
-        systemCode: err.systemCode,
-        code: err.errorCode.code
-      };
-    }
-    this.name = "KeySessionError";
-    this.mediaKeyError = err;
-    this.message = `MediaKeyError code:${err.code} and systemCode:${err.systemCode}`;
-  }
-  KeySessionError.prototype = new Error();
-
-  return function(license, sessionId) {
-    var session = _.isFunction(sessionObj)
-      ? sessionObj.call(this)
-      : this;
-
-    var keys = onKeyAdded(session);
-    var errs = onKeyError(session).map(evt => { throw new KeySessionError(session.error || evt); });
-    try {
-      memUpdate.call(this, license, sessionId);
-      return merge(keys, errs).take(1).toPromise();
-    } catch(e) {
-      return Promise_.reject(e);
-    }
-  };
-}
-
 function isEventSupported(element, eventNameSuffix) {
   var clone = document.createElement(element.tagName);
   var eventName = "on" + eventNameSuffix;
@@ -186,6 +153,39 @@ function sourceOpen(mediaSource) {
     return just();
   else
     return sourceOpenEvent(mediaSource).take(1);
+}
+
+// Wrap "MediaKeys.prototype.update" form an event based system to a
+// Promise based function.
+function wrapUpdateWithPromise(memUpdate, sessionObj) {
+
+  function KeySessionError(err={}) {
+    if (err.errorCode) {
+      err = {
+        systemCode: err.systemCode,
+        code: err.errorCode.code
+      };
+    }
+    this.name = "KeySessionError";
+    this.mediaKeyError = err;
+    this.message = `MediaKeyError code:${err.code} and systemCode:${err.systemCode}`;
+  }
+  KeySessionError.prototype = new Error();
+
+  return function(license, sessionId) {
+    var session = _.isFunction(sessionObj)
+      ? sessionObj.call(this)
+      : this;
+
+    var keys = onKeyAdded(session);
+    var errs = onKeyError(session).map(evt => { throw new KeySessionError(session.error || evt); });
+    try {
+      memUpdate.call(this, license, sessionId);
+      return merge(keys, errs).take(1).toPromise();
+    } catch(e) {
+      return Promise_.reject(e);
+    }
+  };
 }
 
 // Browser without any MediaKeys object: A mock for MediaKey and
@@ -404,31 +404,35 @@ function isFullscreen() {
   return !!(doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement);
 }
 
-function visibilityEvents() {
+function visibilityChange() {
   var prefix;
   if (doc.hidden != null)            prefix = "";
   else if (doc.mozHidden != null)    prefix = "moz";
   else if (doc.msHidden != null)     prefix = "ms";
   else if (doc.webkitHidden != null) prefix = "webkit";
-  return {
-    hidden:           prefix ? prefix + "Hidden" : "hidden",
-    visibilityChange: prefix + "visibilitychange"
-  };
+
+  var hidden = prefix ? prefix + "Hidden" : "hidden";
+  var visibilityChangeEvent = prefix + "visibilitychange";
+
+  return on(doc, visibilityChangeEvent)
+    .map(() => doc[hidden]);
+}
+
+function videoSizeChange() {
+  return on(win, "resize");
 }
 
 // On IE11, fullscreen change events is called MSFullscreenChange
 var onFullscreenChange = compatibleListener(["fullscreenchange", "FullscreenChange"], PREFIXES.concat("MS"));
 
 module.exports = {
-  isEventSupported,
-
   HTMLVideoElement_,
-
   MediaSource_,
-  requestMediaKeySystemAccess,
+  isCodecSupported,
   sourceOpen,
   loadedMetadataEvent,
-  isCodecSupported,
+
+  requestMediaKeySystemAccess,
   setMediaKeys,
   emeEvents,
 
@@ -436,5 +440,7 @@ module.exports = {
   onFullscreenChange,
   requestFullscreen,
   exitFullscreen,
-  visibilityEvents,
+
+  videoSizeChange,
+  visibilityChange,
 };
