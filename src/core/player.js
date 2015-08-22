@@ -294,7 +294,7 @@ class Player extends EventEmitter {
       .changes()
       .startWith(PLAYER_LOADING);
 
-    this.subscriptions = new CompositeDisposable();
+    var subscriptions = this.subscriptions = new CompositeDisposable();
     var subs = [
       on(video, ["play", "pause"])
         .each(evt => this.playing.onNext(evt.type == "play")),
@@ -365,7 +365,12 @@ class Player extends EventEmitter {
       stream.connect()
     ];
 
-    _.each(subs, s => this.subscriptions.add(s));
+    _.each(subs, s => subscriptions.add(s));
+
+    // _clear may have been called synchronously on early disposable
+    if (!this.subscriptions) {
+      subscriptions.dispose();
+    }
 
     return loaded.toPromise();
   }
