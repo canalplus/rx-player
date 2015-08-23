@@ -494,8 +494,7 @@ function Stream({
       throw new Error(errMessage);
     });
 
-    return merge(justManifest, canPlay, emeHandler, buffers, stalled, mediaError)
-      .takeUntil(endOfPlay);
+    return merge(justManifest, canPlay, emeHandler, buffers, stalled, mediaError);
   }
 
   function createDirectFileStream() {
@@ -503,8 +502,8 @@ function Stream({
     var justManifest = just({ type: "manifest", value: directFile });
     var canPlay = createLoadedMetadata(directFile);
     var stalled = createStalled(timings, false);
-    return merge(justManifest, canPlay, stalled)
-      .takeUntil(endOfPlay);
+
+    return merge(justManifest, canPlay, stalled);
   }
 
   /**
