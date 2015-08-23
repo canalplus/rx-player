@@ -169,17 +169,15 @@ function Stream({
       log.info("create mediasource object", objectURL);
 
       return () => {
-        video.src = "";
 
-        if (mediaSource && mediaSource.readyState !== "closed") {
+        if (mediaSource && mediaSource.readyState != "closed") {
           var state = mediaSource.readyState;
           _.each(_.cloneArray(mediaSource.sourceBuffers), sourceBuffer => {
             try {
               if (state == "open")
                 sourceBuffer.abort();
 
-              if (state != "closed")
-                mediaSource.removeSourceBuffer(sourceBuffer);
+              mediaSource.removeSourceBuffer(sourceBuffer);
             }
             catch(e) {
               log.warn("error while disposing souceBuffer", e);
@@ -197,8 +195,15 @@ function Stream({
           }
         });
 
+        // clear video srcAttribute
+        video.src = "";
+
         if (objectURL) {
-          URL.revokeObjectURL(objectURL);
+          try {
+            URL.revokeObjectURL(objectURL);
+          } catch(e) {
+            log.warn("error while revoking ObjectURL", e);
+          }
         }
 
         nativeBuffers = null;
