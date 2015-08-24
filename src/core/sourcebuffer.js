@@ -4,8 +4,9 @@ var Promise_ = require("canal-js-utils/promise");
 var assert = require("canal-js-utils/assert");
 
 class AbstractSourceBuffer extends EventEmitter {
-  constructor() {
+  constructor(codec) {
     super();
+    this.codec = codec;
     this.updating = false;
     this.readyState = "opened";
     this.buffered = new BufferedRanges();

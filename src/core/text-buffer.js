@@ -23,7 +23,7 @@ var Cue = window.VTTCue || window.TextTrackCue;
 class TextSourceBuffer extends AbstractSourceBuffer {
 
   constructor(video, codec) {
-    super();
+    super(codec);
     this.video = video;
     this.codec = codec;
     this.isVTT = /^text\/vtt/.test(codec);
