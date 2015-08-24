@@ -94,22 +94,27 @@ function timingsSampler(video) {
   function scanTimingsSamples(prevTimings, timingEventType) {
     var currentTimings = getTimings(video, timingEventType);
 
-    var { stalled } = prevTimings;
-    var { gap } = currentTimings;
+    var wasStalled = prevTimings.stalled;
+    var currentGap = currentTimings.gap;
 
     var hasStalled = (
-      !stalled && (gap <= STALL_GAP || gap === Infinity) &&
-      !isEnding(gap, currentTimings.range, currentTimings.duration)
+      !wasStalled &&
+      !isEnding(currentGap, currentTimings.range, currentTimings.duration) &&
+      (currentGap <= STALL_GAP || currentGap === Infinity)
     );
 
+    var stalled;
     if (hasStalled) {
       stalled = {
         name: currentTimings.name,
         playback: currentTimings.playback,
       };
     }
-    else if (stalled && gap < Infinity && gap > resumeGap(stalled)) {
+    else if (wasStalled && currentGap < Infinity && currentGap > resumeGap(wasStalled)) {
       stalled = null;
+    }
+    else {
+      stalled = wasStalled;
     }
 
     currentTimings.stalled = stalled;
@@ -119,31 +124,28 @@ function timingsSampler(video) {
   return Observable.create((obs) => {
     var prevTimings = getTimings(video, "init");
 
-    function emitSample(type) {
-      prevTimings = scanTimingsSamples(prevTimings, type);
+    function emitSample(evt) {
+      var timingEventType = evt && evt.type || "timeupdate";
+      prevTimings = scanTimingsSamples(prevTimings, timingEventType);
       obs.onNext(prevTimings);
     }
 
-    function onPlay()       { emitSample("play"); }
-    function onSeeking()    { emitSample("seeking"); }
-    function onSeeked()     { emitSample("seeked"); }
-    function onTimeupdate() { emitSample("timeupdate"); };
+    var samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
 
-    var samplerInterval = setInterval(onTimeupdate, TIMINGS_SAMPLING_INTERVAL);
-
-    video.addEventListener("play", onPlay);
-    video.addEventListener("seeking", onSeeking);
-    video.addEventListener("seeked", onSeeked);
-    video.addEventListener("loadedmetadata", onTimeupdate);
+    video.addEventListener("play", emitSample);
+    video.addEventListener("seeking", emitSample);
+    video.addEventListener("seeked", emitSample);
+    video.addEventListener("loadedmetadata", emitSample);
 
     obs.onNext(prevTimings);
 
     return () => {
-      video.removeEventListener("play", onPlay);
-      video.removeEventListener("seeking", onSeeking);
-      video.removeEventListener("seeked", onSeeked);
-      video.removeEventListener("loadedmetadata", onTimeupdate);
       clearInterval(samplerInterval);
+
+      video.removeEventListener("play", emitSample);
+      video.removeEventListener("seeking", emitSample);
+      video.removeEventListener("seeked", emitSample);
+      video.removeEventListener("loadedmetadata", emitSample);
     };
   })
     .shareValue({ name: "init", stalled: null });
