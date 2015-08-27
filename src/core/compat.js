@@ -343,8 +343,29 @@ function _setMediaKeys(elt, mk) {
   if (elt.mozSetMediaKeys)
     return elt.mozSetMediaKeys(mk);
 
-  if (elt.msSetMediaKeys)
-    return elt.msSetMediaKeys(mk);
+  // IE11 requires that the video has received metadata
+  // (readyState>=1) before setting metadata.
+  //
+  // TODO: how to handle dispose properly ?
+  if (elt.msSetMediaKeys) {
+    return Promise_((res, rej) => {
+      if (elt.readyState >= 1) {
+        elt.msSetMediaKeys(mk);
+        res();
+      } else {
+        elt.addEventListener("loadedmetatdata", () => {
+          try {
+            elt.msSetMediaKeys(mk);
+          } catch(e) {
+            return rej(e);
+          } finally {
+            elt.removeEventListener("loadedmetatdata");
+          }
+          res();
+        });
+      }
+    });
+  }
 
   throw new Error("compat: cannot find setMediaKeys method");
 }
