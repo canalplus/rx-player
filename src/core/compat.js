@@ -348,7 +348,7 @@ function _setMediaKeys(elt, mk) {
   //
   // TODO: how to handle dispose properly ?
   if (elt.msSetMediaKeys) {
-    return Promise_((res, rej) => {
+    return new Promise_((res, rej) => {
       if (elt.readyState >= 1) {
         elt.msSetMediaKeys(mk);
         res();
