@@ -42,8 +42,6 @@ class TextSourceBuffer extends AbstractSourceBuffer {
     if (!cues.length)
       return [];
 
-    var start = cues[0].start;
-    var end = _.last(cues).end;
     return _.compact(_.map(cues, ({ start, end, text }) => {
       if (text) return new Cue(start, end, text);
     }));

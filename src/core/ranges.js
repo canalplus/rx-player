@@ -346,6 +346,6 @@ class BufferedRanges {
 }
 
 module.exports = {
- bufferedToArray,
- BufferedRanges,
+  bufferedToArray,
+  BufferedRanges,
 };
