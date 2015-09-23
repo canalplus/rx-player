@@ -1,3 +1,11 @@
+v1.2.1 on September 23, 2015
+============================
+
+Bug fixes
+---------
+
+- stream: do not stall on loadedmetadata event
+
 v1.2.0 on September 23, 2015
 ============================
 

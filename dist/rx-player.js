@@ -4122,7 +4122,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var wasStalled = prevTimings.stalled;
 	    var currentGap = currentTimings.gap;
 
-	    var hasStalled = !wasStalled && !isEnding(currentGap, currentTimings.range, currentTimings.duration) && (currentGap <= STALL_GAP || currentGap === Infinity);
+	    var hasStalled = timingEventType != "loadedmetadata" && !wasStalled && !isEnding(currentGap, currentTimings.range, currentTimings.duration) && (currentGap <= STALL_GAP || currentGap === Infinity);
 
 	    var stalled;
 	    if (hasStalled) {
@@ -5546,7 +5546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    assert(videoElement instanceof HTMLVideoElement_, "requires an actual HTMLVideoElement");
 
-	    this.version = ("1.2.0");
+	    this.version = ("1.2.1");
 	    this.video = videoElement;
 
 	    // fullscreen change
