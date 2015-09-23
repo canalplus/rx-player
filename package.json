@@ -21,7 +21,7 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "canal-js-utils": "^1.4.0"
+    "canal-js-utils": "^2.0.0"
   },
   "devDependencies": {
     "babel-core": "^5.2.15",
