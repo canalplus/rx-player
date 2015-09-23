@@ -181,6 +181,7 @@ class Player extends EventEmitter {
       transport,
       transportOptions,
       url,
+      manifests,
       keySystems,
       timeFragment,
       subtitles,
@@ -197,6 +198,16 @@ class Player extends EventEmitter {
     });
 
     timeFragment = parseTimeFragment(timeFragment);
+
+    // compatibility with old API authorizing to pass multiple
+    // manifest url depending on the key system
+    assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
+    if (manifests) {
+      var firstManifest = manifests[0];
+      url = firstManifest.url;
+      subtitles = firstManifest.subtitles || [];
+      keySystems = _.compact(_.pluck(manifests, "keySystem"));
+    }
 
     if (_.isString(transport))
       transport = Transports[transport];
