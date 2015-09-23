@@ -22,7 +22,7 @@ var { resolveURL } = require("canal-js-utils/url");
 var { bytesToStr } = require("canal-js-utils/bytes");
 var log = require("canal-js-utils/log");
 
-var smoothManifestParser = require("./parser");
+var createSmoothStreamingParser = require("./parser");
 
 var {
   patchSegment,
@@ -93,8 +93,8 @@ var req = reqOptions => {
   return request(reqOptions);
 };
 
-module.exports = function() {
-
+module.exports = function(options={}) {
+  var smoothManifestParser = createSmoothStreamingParser(options);
 
   var manifestPipeline = {
     resolver({ url }) {
