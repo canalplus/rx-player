@@ -1,3 +1,34 @@
+v1.2.0 on September 23, 2015
+============================
+
+This release introduces the use of ES6 classes for all modules that
+depends on a sort of class hierarchy. It comes with an upgrade of
+RxJSv3.1.1.
+
+We also started using eslint as our main linter instead of jshint.
+
+Added
+-----
+
+- smooth: customizable parser (7b50ce9)
+- smooth: add application/smil as SAMI content-type (e0aa2bb)
+- improve video start time by ticking on loadedmetadata (27bd43c)
+- dash: incremental id from adaptations/representations (c24fecb)
+- stream: discontinuity check on each stalled tick (3a5b796)
+
+
+Bug fixes
+---------
+
+- fix missing new on Promise (4679632)
+- compat: fix IE11 compat for setMediaKeys (2ccb11f)
+- player: fix synchronous dispose on loadVideo (dc79bd1)
+- pipelines: fix audio/video init segment caches (ea3422f)
+- stream: remove initial seek hack (ae0ac23)
+- player: fix getVideoLoaded/PlayedTime (63bf304)
+- player: fix getUrl (577ce87)
+- manifest: enforce id setting to parsers (927d275)
+
 v1.1.0 on August 14, 2015
 =========================
 
