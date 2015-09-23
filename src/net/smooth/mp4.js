@@ -481,6 +481,7 @@ function createNewSegment(segment, newmoof, oldmoof, trunoffset) {
   return newSegment;
 }
 
+/*
 function patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) {
   var free = oldmoof.length - newmoof.length;
   segment.set(newmoof, 0);
@@ -488,6 +489,7 @@ function patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) {
   patchTrunDataOffset(segment, trunoffset, newmoof.length + 8 + free);
   return segment;
 }
+*/
 
 function createInitSegment(
   timescale,
@@ -555,10 +557,10 @@ module.exports = {
   parseTfxd(traf) {
     var tfxd = reads.tfxd(traf);
     if (tfxd) {
-     return {
-       d:  be8toi(tfxd, 12),
-       ts: be8toi(tfxd,  4),
-     };
+      return {
+        d:  be8toi(tfxd, 12),
+        ts: be8toi(tfxd,  4),
+      };
     }
   },
 

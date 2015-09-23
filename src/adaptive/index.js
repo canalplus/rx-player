@@ -104,7 +104,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   }
 
   function textAdaptationChoice(adaptations) {
-     return $subtitles.changes()
+    return $subtitles.changes()
       .map(lang => findByLang(adaptations, lang));
   }
 

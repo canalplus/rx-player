@@ -27,8 +27,8 @@ class AbstractSourceBuffer extends EventEmitter {
     this._abort();
   }
 
-  _append(data) {}
-  _remove(from, to) {}
+  _append(/* data */) {}
+  _remove(/* from, to */) {}
   _abort() {}
 
   _lock(func) {

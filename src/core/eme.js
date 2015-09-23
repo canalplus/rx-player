@@ -293,10 +293,10 @@ function EME(video, keySystems, options={}) {
             throw err;
           });
       })
-      .map(res => ({ type: "eme", value: { session: session, name: "session-updated" } }));
+      .map(() => ({ type: "eme", value: { session: session, name: "session-updated" } }));
 
     return merge(sessionUpdates, keyErrors)
-      .tapOnError((err) => {
+      .tapOnError(() => {
         log.debug("eme: delete session from store", sessionId);
         $sessionsStore.delete(initData);
       });

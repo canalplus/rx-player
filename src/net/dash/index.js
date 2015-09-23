@@ -176,7 +176,7 @@ module.exports = function(opts={}) {
   };
 
   var textTrackPipeline = {
-    loader({ adaptation, representation, segment }) {
+    loader(/* { adaptation, representation, segment } */) {
     },
   };
 

@@ -15,7 +15,6 @@
  */
 
 var _ = require("canal-js-utils/misc");
-var log = require("canal-js-utils/log");
 var { Subject, Observable } = require("canal-js-utils/rx");
 var { retryWithBackoff } = require("canal-js-utils/rx-ext");
 var { fromPromise, just } = Observable;

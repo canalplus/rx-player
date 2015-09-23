@@ -236,7 +236,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     _setVideo(vid) {
       this._vid = vid;
     },
-    createSession(sessionType) {
+    createSession(/* sessionType */) {
       return new MockMediaKeySession(this._vid, this.ks_);
     },
   };

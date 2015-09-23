@@ -156,7 +156,7 @@ function parseC(node, timeline) {
   if (r)  r--;
 
   if (l > 0 && d == prev.d && t == null) {
-    prev.r += (r || 0) + 1;
+    prev.r += (r || 0) + 1;
   }
   else {
     var ts = (t == null)

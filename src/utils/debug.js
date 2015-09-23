@@ -21,11 +21,11 @@ var closeBtn;
 
 var reUnescapedHtml = /[&<>"']/g;
 var htmlEscapes = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;'
+  "&":  "&amp;",
+  "<":  "&lt;",
+  ">":  "&gt;",
+  "\"": "&quot;",
+  "'":  "&#39;",
 };
 
 function escape(string) {

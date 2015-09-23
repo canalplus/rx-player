@@ -135,7 +135,7 @@ function normalizeSMPTETime(time) {
       frames = parseInt(frameSubFrame[0], 10);
       subframes = parseInt(frameSubFrame[1], 10);
     }
-  break;
+    break;
   default:
     return false;
   }
@@ -155,8 +155,6 @@ function normalizePercentage(time) {
 
   return time;
 }
-
-var errMessage = "Invalid MediaFragment";
 
 // MediaFragment temporal parser.
 // adapted from: https://github.com/tomayac/Media-Fragments-URI

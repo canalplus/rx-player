@@ -142,7 +142,7 @@ module.exports = function() {
     }
 
     if (!currentSegment) {
-     currentSegment = {
+      currentSegment = {
         d:  segment.duration,
         ts: segment.time,
       };
