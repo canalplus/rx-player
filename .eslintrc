@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "indent": [1, 2],
+    "quotes": [1, "double"],
+    "linebreak-style": [1, "unix"],
+    "semi": [1, "always"],
+    "comma-dangle": 0,
+    "no-console": 0
+  },
+  "env": {
+    "es6": true,
+    "browser": true,
+    "commonjs": true
+  },
+  "globals": {
+    "__DEV__": true,
+    "__RX_PLAYER_VERSION_PLACEHOLDER__": true
+  },
+  "extends": "eslint:recommended"
+}

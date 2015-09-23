@@ -27,7 +27,7 @@ release: lint all
 	@./bin/release
 
 lint:
-	@jshint --config .jshintrc $(SRC)
+	@eslint $(SRC)
 
 dev: $(SRC_IDX) $(SRC)
 	@$(BUNDLE_STD) -w $< dist/rx-player.js
