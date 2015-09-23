@@ -98,6 +98,7 @@ function timingsSampler(video) {
     var currentGap = currentTimings.gap;
 
     var hasStalled = (
+      timingEventType != "loadedmetadata" &&
       !wasStalled &&
       !isEnding(currentGap, currentTimings.range, currentTimings.duration) &&
       (currentGap <= STALL_GAP || currentGap === Infinity)
