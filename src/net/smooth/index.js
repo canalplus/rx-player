@@ -38,6 +38,7 @@ var { parseSami } = require("./tt-sami");
 var { parseTTML } = require("./tt-ttml");
 var TT_PARSERS = {
   "application/x-sami":       parseSami,
+  "application/smil":         parseSami,
   "application/ttml+xml":     parseTTML,
   "application/ttml+xml+mp4": parseTTML,
   "text/vtt":                 _.identity,
