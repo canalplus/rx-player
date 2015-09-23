@@ -2,7 +2,7 @@
 var fs = require("fs");
 var path = require("path");
 
-var RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "development";
+var RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "production";
 
 if (["development", "production"].indexOf(RX_PLAYER_ENV) < 0)
   throw new Error("unknown RX_PLAYER_ENV " + RX_PLAYER_ENV);
