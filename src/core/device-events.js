@@ -16,7 +16,6 @@
 
 var { Observable } = require("canal-js-utils/rx");
 var { merge, interval } = Observable;
-var { on } = require("canal-js-utils/rx-ext");
 var { visibilityChange, videoSizeChange } = require("./compat");
 
 var INACTIVITY_DELAY = 60 * 1000;
