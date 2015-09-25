@@ -91,6 +91,10 @@ class Player extends EventEmitter {
     assert((videoElement instanceof HTMLVideoElement_),
       "requires an actual HTMLVideoElement");
 
+    // Workaroud to support Firefox autoplay on FF 42.
+    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
+    videoElement.preload = "auto";
+
     this.version = __RX_PLAYER_VERSION_PLACEHOLDER__;
     this.video = videoElement;
 
