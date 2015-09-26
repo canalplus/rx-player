@@ -241,7 +241,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     }),
     close: wrap(function() {
       if (this._con)
-        this._con.dispose();
+        this._con.unsubscribe();
       this._con = null;
       this._vid = null;
     }),
@@ -343,7 +343,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       if (this._ss) {
         this._ss.close();
         this._ss = null;
-        this._con.dispose();
+        this._con.unsubscribe();
         this._con = null;
       }
     }),
@@ -406,18 +406,25 @@ if (!MediaKeys_) {
 }
 
 function _setMediaKeys(elt, mk) {
-  if (mk instanceof MockMediaKeys) return mk._setVideo(elt);
-  if (elt.setMediaKeys)
+  if (mk instanceof MockMediaKeys) {
+    return mk._setVideo(elt);
+  }
+
+  if (elt.setMediaKeys) {
     return elt.setMediaKeys(mk);
+  }
 
-  if (mk === null)
+  if (mk === null) {
     return;
+  }
 
-  if (elt.WebkitSetMediaKeys)
+  if (elt.WebkitSetMediaKeys) {
     return elt.WebkitSetMediaKeys(mk);
+  }
 
-  if (elt.mozSetMediaKeys)
+  if (elt.mozSetMediaKeys) {
     return elt.mozSetMediaKeys(mk);
+  }
 
   // IE11 requires that the video has received metadata
   // (readyState>=1) before setting metadata.

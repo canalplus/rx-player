@@ -142,7 +142,7 @@ function timingsSampler(video) {
     function emitSample(evt) {
       var timingEventType = evt && evt.type || "timeupdate";
       prevTimings = scanTimingsSamples(prevTimings, timingEventType);
-      obs.onNext(prevTimings);
+      obs.next(prevTimings);
     }
 
     var samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
@@ -153,7 +153,7 @@ function timingsSampler(video) {
     video.addEventListener("seeked", emitSample);
     video.addEventListener("loadedmetadata", emitSample);
 
-    obs.onNext(prevTimings);
+    obs.next(prevTimings);
 
     return () => {
       clearInterval(samplerInterval);

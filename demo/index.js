@@ -63,6 +63,7 @@ var DemoZapper = React.createClass({
     });
 
     this.player = player;
+    this.player.log.setLevel("DEBUG");
     this.player.addEventListener("error", function(error) {
       alert(error.message);
     });

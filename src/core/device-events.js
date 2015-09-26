@@ -39,7 +39,7 @@ function DeviceEvents(videoElement) {
   )
     .startWith("init")
     .map(() => videoElement.clientWidth * pixelRatio)
-    .changes();
+    .distinctUntilChanged();
 
   return {
     videoWidth,

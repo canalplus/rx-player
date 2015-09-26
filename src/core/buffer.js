@@ -190,7 +190,7 @@ function Buffer({
           // into the main buffer observable so that it can be treated
           // upstream
           if (err instanceof OutOfIndexError) {
-            outOfIndexStream.onNext({ type: "out-of-index", value: err });
+            outOfIndexStream.next({ type: "out-of-index", value: err });
             return empty();
           }
           else {
