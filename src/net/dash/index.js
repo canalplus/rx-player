@@ -16,7 +16,7 @@
 
 var _ = require("canal-js-utils/misc");
 var { Observable } = require("canal-js-utils/rx");
-var { empty, merge, just } = Observable;
+var { empty, merge, of } = Observable;
 var assert = require("canal-js-utils/assert");
 var request = require("canal-js-utils/rx-request");
 var { resolveURL } = require("canal-js-utils/url");
@@ -69,7 +69,7 @@ module.exports = function(opts={}) {
       return req({ url, format: "document" });
     },
     parser({ response }) {
-      return just({
+      return of({
         manifest: dashManifestParser(response.blob, contentProtectionParser),
         url:      response.url
       });
@@ -166,7 +166,7 @@ module.exports = function(opts={}) {
         blob = patchPssh(blob, adaptation.contentProtection);
       }
 
-      return just({
+      return of({
         blob,
         currentSegment,
         nextSegments,

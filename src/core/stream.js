@@ -21,7 +21,7 @@ var { Observable } = require("canal-js-utils/rx");
 var { first, on } = require("canal-js-utils/rx-ext");
 var { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 var { retryWithBackoff } = require("canal-js-utils/rx-ext");
-var { empty, never, just, merge, combineLatest } = Observable;
+var { empty, never, of, merge, combineLatest } = Observable;
 var min = Math.min;
 
 var { MediaSource_, sourceOpen, canPlay, loadedMetadata } = require("./compat");
@@ -46,7 +46,7 @@ var DISCONTINUITY_THRESHOLD = 1;
 function plugDirectFile(url, video) {
   return Observable.create((observer) => {
     video.src = url;
-    observer.onNext({ url });
+    observer.next({ url });
     return () => {
       video.src = "";
     };
@@ -165,7 +165,7 @@ function Stream({
       var mediaSource = new MediaSource_();
       var objectURL = video.src = URL.createObjectURL(mediaSource);
 
-      observer.onNext({ url, mediaSource });
+      observer.next({ url, mediaSource });
       log.info("create mediasource object", objectURL);
 
       return () => {
@@ -307,7 +307,7 @@ function Stream({
     if (__DEV__)
       assert(pipelines[type], "stream: no pipeline found for type " + type);
 
-    return adaptations.flatMapLatest(adaptation => {
+    return adaptations.switchMap(adaptation => {
       if (!adaptation) {
         disposeSourceBuffer(videoElement, mediaSource, bufferInfos);
         return never();
@@ -346,17 +346,17 @@ function Stream({
    */
   function createLoadedMetadata(manifest) {
     var loadedMetadata$ = loadedMetadata(videoElement)
-      .tap(() => setInitialTime(manifest));
+      .do(() => setInitialTime(manifest));
 
     var canPlay$ = canPlay(videoElement)
-      .tap(() => {
+      .do(() => {
         log.info("canplay event");
         if (autoPlay) videoElement.play();
         autoPlay = true;
       });
 
     return first(combineLatest(loadedMetadata$, canPlay$, _.noop))
-      .map({ type: "loaded", value: true })
+      .mapTo({ type: "loaded", value: true })
       .startWith({ type: "loaded", value: false });
   }
 
@@ -381,7 +381,7 @@ function Stream({
    */
   function createStalled(timings, changePlaybackRate=true) {
     return timings
-      .distinctUntilChanged(null, (prevTiming, timing) => {
+      .distinctUntilChanged((prevTiming, timing) => {
         var isStalled = timing.stalled;
         var wasStalled = prevTiming.stalled;
 
@@ -451,14 +451,14 @@ function Stream({
       log.warn("precondition failed", manifest.presentationLiveGap);
     }
 
-    return just(message);
+    return of(message);
   }
 
   function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
     var adaptationsBuffers = _.map(getAdaptations(manifest),
       adaptation => createBuffer(mediaSource, adaptation, timings, seekings));
 
-    var buffers = merge(adaptationsBuffers);
+    var buffers = merge.apply(null, adaptationsBuffers);
 
     if (!manifest.isLive)
       return buffers;
@@ -469,7 +469,7 @@ function Stream({
     return buffers
       // do not throw multiple times OutOfIndexErrors in order to have
       // only one manifest reload for each error.
-      .distinctUntilChanged(null, (a, b) =>
+      .distinctUntilChanged((a, b) =>
         isOutOfIndexError(b) &&
         isOutOfIndexError(a))
       .concatMap((message) => manifestAdapter(manifest, message));
@@ -481,7 +481,7 @@ function Stream({
    */
   function createStream(mediaSource, manifest) {
     var { timings, seekings } = createTimings(manifest);
-    var justManifest = just({ type: "manifest", value: manifest });
+    var justManifest = of({ type: "manifest", value: manifest });
     var canPlay = createLoadedMetadata(manifest);
     var buffers = createAdaptationsBuffers(mediaSource, manifest, timings, seekings);
     var emeHandler = createEME();
@@ -498,7 +498,7 @@ function Stream({
 
   function createDirectFileStream() {
     var { timings } = createTimings(directFile, { timeInterval: 1000 });
-    var justManifest = just({ type: "manifest", value: directFile });
+    var justManifest = of({ type: "manifest", value: directFile });
     var canPlay = createLoadedMetadata(directFile);
     var stalled = createStalled(timings, false);
 

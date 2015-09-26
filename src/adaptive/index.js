@@ -16,7 +16,7 @@
 
 var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
-var { Observable, BehaviorSubject, CompositeDisposable } = require("canal-js-utils/rx");
+var { Observable, BehaviorSubject, Subscription } = require("canal-js-utils/rx");
 var { combineLatest } = Observable;
 var { only } = require("canal-js-utils/rx-ext");
 
@@ -76,11 +76,12 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   var $subtitles = new BehaviorSubject(defaultSubtitle);
 
   var $averageBitrates = {
-    audio: AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).publishValue(initAudioBitrate || 0),
-    video: AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 }).publishValue(initVideoBitrate || 0),
+    audio: AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).multicast(() => new BehaviorSubject(initAudioBitrate || 0)),
+    video: AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 }).multicast(() => new BehaviorSubject(initVideoBitrate || 0)),
   };
 
-  var conns = new CompositeDisposable(_.map(_.values($averageBitrates), a => a.connect()));
+  var conns = new Subscription();
+  _.each(_.values($averageBitrates), a => conns.add(a.connect()));
 
   var $usrBitrates = {
     audio: new BehaviorSubject(Infinity),
@@ -99,12 +100,12 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   };
 
   function audioAdaptationChoice(adaptations) {
-    return $languages.changes()
+    return $languages.distinctUntilChanged()
       .map(lang => findByLang(adaptations, lang) || adaptations[0]);
   }
 
   function textAdaptationChoice(adaptations) {
-    return $subtitles.changes()
+    return $subtitles.distinctUntilChanged()
       .map(lang => findByLang(adaptations, lang));
   }
 
@@ -143,7 +144,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
 
           return getClosestBitrate(bitrates, avrBitrate, bufThreshold);
         })
-        .changes()
+        .distinctUntilChanged()
         .customDebounce(2000, { leading: true });
 
       if (type == "video") {
@@ -179,8 +180,8 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
           return avr;
         })
         .map(b => _.find(representations, rep => rep.bitrate === getClosestBitrate(bitrates, b)))
-        .changes(r => r.id)
-        .tap(r => log.info("bitrate", type, r.bitrate));
+        .distinctUntilChanged((a, b) => a.id === b.id)
+        .do(r => log.info("bitrate", type, r.bitrate));
     }
     else {
       representationsObservable = only(firstRep);
@@ -193,8 +194,8 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   }
 
   return {
-    setLanguage(lng) { $languages.onNext(lng); },
-    setSubtitle(sub) { $subtitles.onNext(sub); },
+    setLanguage(lng) { $languages.next(lng); },
+    setSubtitle(sub) { $subtitles.next(sub); },
     getLanguage() { return $languages.value; },
     getSubtitle() { return $subtitles.value; },
 
@@ -205,12 +206,12 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     getAudioBufferSize() { return $bufSizes.audio.value; },
     getVideoBufferSize() { return $bufSizes.video.value; },
 
-    setAudioBitrate(x)    { $usrBitrates.audio.onNext(def(x, Infinity)); },
-    setVideoBitrate(x)    { $usrBitrates.video.onNext(def(x, Infinity)); },
-    setAudioMaxBitrate(x) { $maxBitrates.audio.onNext(def(x, Infinity)); },
-    setVideoMaxBitrate(x) { $maxBitrates.video.onNext(def(x, Infinity)); },
-    setAudioBufferSize(x) { $bufSizes.audio.onNext(def(x, defaultBufferSize)); },
-    setVideoBufferSize(x) { $bufSizes.video.onNext(def(x, defaultBufferSize)); },
+    setAudioBitrate(x)    { $usrBitrates.audio.next(def(x, Infinity)); },
+    setVideoBitrate(x)    { $usrBitrates.video.next(def(x, Infinity)); },
+    setAudioMaxBitrate(x) { $maxBitrates.audio.next(def(x, Infinity)); },
+    setVideoMaxBitrate(x) { $maxBitrates.video.next(def(x, Infinity)); },
+    setAudioBufferSize(x) { $bufSizes.audio.next(def(x, defaultBufferSize)); },
+    setVideoBufferSize(x) { $bufSizes.video.next(def(x, defaultBufferSize)); },
 
     getBufferAdapters,
     getAdaptationsChoice,

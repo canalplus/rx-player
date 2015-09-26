@@ -18,7 +18,7 @@ var Promise_ = require("canal-js-utils/promise");
 
 var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
-var { CompositeDisposable, BehaviorSubject, Observable, Subject } = require("canal-js-utils/rx");
+var { Subscription, BehaviorSubject, Observable, Subject } = require("canal-js-utils/rx");
 var { combineLatest, defer } = Observable;
 var { on } = require("canal-js-utils/rx-ext");
 var EventEmitter = require("canal-js-utils/eventemitter");
@@ -153,7 +153,7 @@ class Player extends EventEmitter {
 
   _clear() {
     if (this.subscriptions) {
-      this.subscriptions.dispose();
+      this.subscriptions.unsubscribe();
       this.subscriptions = null;
     }
   }
@@ -168,10 +168,10 @@ class Player extends EventEmitter {
 
   dispose() {
     this.stop();
-    this.metrics.dispose();
-    this.adaptive.dispose();
-    this.fullscreen.dispose();
-    this.stream.dispose();
+    this.metrics.unsubscribe();
+    this.adaptive.unsubscribe();
+    this.fullscreen.unsubscribe();
+    this.stream.unsubscribe();
 
     this.metrics = null;
     this.adaptive = null;
@@ -254,7 +254,7 @@ class Player extends EventEmitter {
 
     this.stop();
     this.frag = timeFragment;
-    this.playing.onNext(autoPlay);
+    this.playing.next(autoPlay);
 
     var pipelines = this.createPipelines(transport, {
       audio: { cache: new InitializationSegmentCache() },
@@ -303,7 +303,7 @@ class Player extends EventEmitter {
 
     loaded = loaded.take(1);
 
-    var stateChanges = loaded.map(PLAYER_LOADED)
+    var stateChanges = loaded.mapTo(PLAYER_LOADED)
       .concat(combineLatest(this.playing, stalled,
         (isPlaying, isStalled) => {
           if (isStalled)
@@ -317,13 +317,13 @@ class Player extends EventEmitter {
           return PLAYER_PAUSED;
         })
       )
-      .changes()
+      .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 
-    var subscriptions = this.subscriptions = new CompositeDisposable();
+    var subscriptions = this.subscriptions = new Subscription();
     var subs = [
       on(video, ["play", "pause"])
-        .each(evt => this.playing.onNext(evt.type == "play")),
+        .each(evt => this.playing.next(evt.type == "play")),
 
       segments.each((segment) => {
         var type = segment.adaptation.type;
@@ -373,8 +373,8 @@ class Player extends EventEmitter {
       ),
 
       stream.subscribe(
-        n => this.stream.onNext(n),
-        e => this.stream.onNext({ type: "error", value: e })
+        n => this.stream.next(n),
+        e => this.stream.next({ type: "error", value: e })
       ),
 
       stream.connect()
@@ -384,7 +384,7 @@ class Player extends EventEmitter {
 
     // _clear may have been called synchronously on early disposable
     if (!this.subscriptions) {
-      subscriptions.dispose();
+      subscriptions.unsubscribe();
     }
 
     this._triggerTimeChange();
@@ -395,6 +395,7 @@ class Player extends EventEmitter {
   _setState(s) {
     if (this.state !== s) {
       this.state = s;
+      log.info("playerStateChange", s);
       this.trigger("playerStateChange", s);
     }
   }

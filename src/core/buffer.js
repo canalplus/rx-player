@@ -19,7 +19,7 @@ var log = require("canal-js-utils/log");
 var assert = require("canal-js-utils/assert");
 var { BufferedRanges } = require("./ranges");
 var { Observable, Subject } = require("canal-js-utils/rx");
-var { combineLatest, defer, empty, from, just, merge, timer } = Observable;
+var { combineLatest, defer, empty, from, of, merge, timer } = Observable;
 var { first, on } = require("canal-js-utils/rx-ext");
 
 var { ArraySet } = require("../utils/collections");
@@ -257,7 +257,7 @@ function Buffer({
           // into the main buffer observable so that it can be treated
           // upstream
           if (err instanceof OutOfIndexError) {
-            outOfIndexStream.onNext({ type: "out-of-index", value: err });
+            outOfIndexStream.next({ type: "out-of-index", value: err });
             return empty();
           }
           else {
@@ -294,7 +294,7 @@ function Buffer({
               throw err;
             }
           })
-          .map(infos);
+          .mapTo(infos);
       })
       .map((infos) => {
         var { segment, parsed } = infos;
@@ -339,14 +339,14 @@ function Buffer({
       // buffer to stop but are re-emitted in the stream as
       // "precondition-failed" type. They should be handled re-
       // adapting the live-gap that the player is holding
-      return just({ type: "precondition-failed", value: err })
+      return of({ type: "precondition-failed", value: err })
         .concat(timer(2000))
         .concat(createRepresentationBuffer(representation));
     });
   }
 
   return combineLatest(representations, seekings, _.identity)
-    .flatMapLatest(createRepresentationBuffer);
+    .switchMap(createRepresentationBuffer);
 }
 
 module.exports = Buffer;

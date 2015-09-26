@@ -19,7 +19,7 @@ const log = require("canal-js-utils/log");
 const Promise_ = require("canal-js-utils/promise");
 const assert = require("canal-js-utils/assert");
 const { Observable } = require("canal-js-utils/rx");
-const { combineLatest, empty, fromPromise, merge, just } = Observable;
+const { combineLatest, empty, fromPromise, merge, of } = Observable;
 const {
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -329,7 +329,7 @@ function findCompatibleKeySystem(keySystems) {
   const cachedKeySystemAccess = getCachedKeySystemAccess(keySystems);
   if (cachedKeySystemAccess) {
     log.debug("eme: found compatible keySystem quickly", cachedKeySystemAccess);
-    return just(cachedKeySystemAccess);
+    return of(cachedKeySystemAccess);
   }
 
   const keySystemsType = _.flatten(keySystems,
@@ -377,8 +377,8 @@ function findCompatibleKeySystem(keySystems) {
               };
             }
 
-            obs.onNext({ keySystem, keySystemAccess });
-            obs.onCompleted();
+            obs.next({ keySystem, keySystemAccess });
+            obs.complete();
           },
           () => {
             log.debug("eme: rejected access to keysystem", keyType, keySystemConfigurations);
@@ -464,7 +464,7 @@ function toObservable(value) {
     return fromPromise(value);
 
   if (!_.isObservable(value))
-    return just(value);
+    return of(value);
 
   return value;
 }
@@ -521,7 +521,7 @@ function EME(video, keySystems) {
           initDataType,
           initData
         )
-          .tap(
+          .do(
             (session) => {
               $storedSessions.add(initData, session);
               $loadedSessions.add(initData, session);
@@ -551,7 +551,7 @@ function EME(video, keySystems) {
     const loadedSession = $loadedSessions.get(initData);
     if (loadedSession) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
-      return just(loadedSession);
+      return of(loadedSession);
     }
 
     const persistentLicenseSupported = mediaKeySystemConfiguration.sessionTypes.indexOf("persistent-license") >= 0;
@@ -648,7 +648,7 @@ function EME(video, keySystems) {
       .flatMap(({ success, session }) => {
         if (success) {
           log.debug("eme: successfully loaded session");
-          return just(session);
+          return of(session);
         }
 
         log.warn(
@@ -670,7 +670,7 @@ function EME(video, keySystems) {
           initData
         );
 
-        return merge(newSession, just(sessionToRemove));
+        return merge(newSession, of(sessionToRemove));
       });
   }
 
@@ -774,8 +774,7 @@ function EME(video, keySystems) {
 
   return combineLatest(
     onEncrypted(video),
-    findCompatibleKeySystem(keySystems),
-    (evt, ks) => ([evt, ks])
+    findCompatibleKeySystem(keySystems)
   )
     .take(1)
     .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks));

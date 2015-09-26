@@ -16,7 +16,7 @@
 
 var _ = require("canal-js-utils/misc");
 var { Observable } = require("canal-js-utils/rx");
-var { empty, just } = Observable;
+var { empty, of } = Observable;
 var request = require("canal-js-utils/rx-request");
 var { resolveURL } = require("canal-js-utils/url");
 var { bytesToStr } = require("canal-js-utils/bytes");
@@ -108,7 +108,7 @@ module.exports = function(options={}) {
         }).map(({ blob }) => extractISML(blob));
       }
       else {
-        resolving = just(url);
+        resolving = of(url);
       }
 
       return resolving
@@ -118,7 +118,7 @@ module.exports = function(options={}) {
       return req({ url, format: "document" });
     },
     parser({ response }) {
-      return just({
+      return of({
         manifest: smoothManifestParser(response.blob),
         url:      response.url,
       });
@@ -178,7 +178,7 @@ module.exports = function(options={}) {
         ); break;
         }
 
-        return just({ blob, size: blob.length, duration: 100 });
+        return of({ blob, size: blob.length, duration: 100 });
       }
       else {
         var headers;
@@ -194,13 +194,13 @@ module.exports = function(options={}) {
     },
     parser({ adaptation, response, segment }) {
       if (segment.init) {
-        return just({ blob: response.blob, timings: null });
+        return of({ blob: response.blob, timings: null });
       }
 
       var blob = new Uint8Array(response.blob);
       var { nextSegments, currentSegment } = extractTimingsInfos(blob, adaptation, segment);
 
-      return just({
+      return of({
         blob: patchSegment(blob, currentSegment.ts),
         nextSegments,
         currentSegment,
@@ -247,7 +247,7 @@ module.exports = function(options={}) {
 
       var { nextSegments, currentSegment } = extractTimingsInfos(blob, adaptation, segment);
 
-      return just({
+      return of({
         blob: parser_(text, lang, segment.time / representation.index.timescale),
         currentSegment,
         nextSegments,
