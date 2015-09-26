@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
-var { Subject, Observable } = require("canal-js-utils/rx");
+var defaults = require("lodash/object/defaults");
+var { Subject, Observable } = require("rxjs");
 var { retryWithBackoff } = require("canal-js-utils/rx-ext");
-var { fromPromise, just } = Observable;
+var { fromPromise, of } = Observable;
+
+var timeoutError = new Error("timeout");
 
 var noCache = {
   add() {},
@@ -37,11 +39,11 @@ var noCache = {
  * TODO(pierre): create a pipeline patcher to work over a WebWorker
  */
 function createPipeline(type, { resolver, loader, parser }, metrics, opts={}) {
-  if (!parser) parser = just;
-  if (!loader) loader = just;
-  if (!resolver) resolver = just;
+  if (!parser) parser = of;
+  if (!loader) loader = of;
+  if (!resolver) resolver = of;
 
-  var { totalRetry, timeout, cache } = _.defaults(opts, {
+  var { totalRetry, timeout, cache } = defaults(opts, {
     totalRetry: 3,
     timeout: 10 * 1000,
     cache: noCache
@@ -59,15 +61,15 @@ function createPipeline(type, { resolver, loader, parser }, metrics, opts={}) {
 
   function callLoader(resolvedInfos) {
     return loader(resolvedInfos)
-      .simpleTimeout(timeout, "timeout")
+      .timeout(timeout, timeoutError)
       .map((response) => {
-        var loadedInfos = _.extend({ response }, resolvedInfos);
+        var loadedInfos = { response, ...resolvedInfos };
 
         // add loadedInfos to the pipeline cache
         cache.add(resolvedInfos, loadedInfos);
 
         // emit loadedInfos in the metrics observer
-        metrics.onNext({ type, value: loadedInfos });
+        metrics.next({ type, value: loadedInfos });
 
         return loadedInfos;
       });
@@ -79,18 +81,15 @@ function createPipeline(type, { resolver, loader, parser }, metrics, opts={}) {
         var backedOffLoader = retryWithBackoff(() => callLoader(resolvedInfos), backoffOptions);
 
         var fromCache = cache.get(resolvedInfos);
-        if (_.isPromise(fromCache))
+        if (fromCache && typeof fromCache.then == "function")
           return fromPromise(fromCache).catch(backedOffLoader);
 
         if (fromCache === null)
           return backedOffLoader();
         else
-          return just(fromCache);
+          return Observable.of(fromCache);
       })
-      .flatMap((loadedInfos) => {
-        return parser(loadedInfos)
-          .map(parsed => _.extend({ parsed }, loadedInfos));
-      });
+      .flatMap(parser, (loadedInfos, parsed) => ({ parsed, ...loadedInfos }));
   };
 }
 

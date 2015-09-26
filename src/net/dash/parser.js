@@ -17,8 +17,9 @@
 // XML-Schema
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
-var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
+var find = require("lodash/collection/find");
+var defaults = require("lodash/object/defaults");
 
 var iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 var rangeRe = /([0-9]+)-([0-9]+)/;
@@ -26,7 +27,7 @@ var frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 
 // TODO(pierre): support more than juste timeline index type
 function calcLastRef(index) {
-  var { ts, r, d } = _.last(index.timeline);
+  var { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r+1)*d) / index.timescale);
 }
 
@@ -35,14 +36,16 @@ function feedAttributes(node, base) {
 
   assert(attrs, "parser: no attributes for " + node.nodeName);
 
-  return _.reduce(attrs, (obj, { k, fn, n, def }) => {
+  var obj = base || {};
+  for (var i = 0; i < attrs.length; i++) {
+    var { k, fn, n, def } = attrs[i];
     if (node.hasAttribute(k)) {
       obj[n || k] = fn(node.getAttribute(k));
     } else if (def != null) {
       obj[n || k] = def;
     }
-    return obj;
-  }, base || {});
+  }
+  return obj;
 }
 
 function parseString(str) {
@@ -372,7 +375,8 @@ function parsePeriod(root, contentProtectionParser) {
   }, { adaptations: [] }));
 
   if (attrs.baseURL) {
-    _.each(attrs.adaptations, adaptation => _.defaults(adaptation, { baseURL: attrs.baseURL }));
+    attrs.adaptations.forEach(
+      (adaptation) => defaults(adaptation, { baseURL: attrs.baseURL }));
   }
 
   return attrs;
@@ -399,7 +403,7 @@ function parseFromDocument(document, contentProtectionParser) {
 
   if (/isoff-live/.test(manifest.profiles)) {
     var adaptations = manifest.periods[0].adaptations;
-    var videoAdaptation = _.find(adaptations, a => a.mimeType == "video/mp4");
+    var videoAdaptation = find(adaptations, a => a.mimeType == "video/mp4");
 
     var videoIndex = videoAdaptation && videoAdaptation.index;
 
@@ -428,9 +432,10 @@ function parseFromString(manifest, contentProtectionParser) {
 }
 
 function parser(manifest, contentProtectionParser) {
-  if (_.isString(manifest)) return parseFromString(manifest, contentProtectionParser);
-  if (manifest instanceof window.Document) return parseFromDocument(manifest, contentProtectionParser);
-  throw new Error("parser: unsupported type to parse");
+  if (typeof manifest == "string")
+    return parseFromString(manifest, contentProtectionParser);
+  else
+    return parseFromDocument(manifest, contentProtectionParser);
 }
 
 parser.parseFromString   = parseFromString;

@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
 var assert = require("canal-js-utils/assert");
-var { Observable } = require("canal-js-utils/rx");
+var { Observable } = require("rxjs");
 var { first, on } = require("canal-js-utils/rx-ext");
 var { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 var { retryWithBackoff } = require("canal-js-utils/rx-ext");
-var { empty, never, just, merge, combineLatest } = Observable;
+var { empty, never, merge, combineLatest } = Observable;
 var min = Math.min;
 
 var { MediaSource_, sourceOpen, canPlay, loadedMetadata } = require("./compat");
@@ -46,7 +45,7 @@ var DISCONTINUITY_THRESHOLD = 1;
 function plugDirectFile(url, video) {
   return Observable.create((observer) => {
     video.src = url;
-    observer.onNext({ url });
+    observer.next({ url });
     return () => {
       video.src = "";
     };
@@ -165,27 +164,29 @@ function Stream({
       var mediaSource = new MediaSource_();
       var objectURL = video.src = URL.createObjectURL(mediaSource);
 
-      observer.onNext({ url, mediaSource });
+      observer.next({ url, mediaSource });
       log.info("create mediasource object", objectURL);
 
       return () => {
 
         if (mediaSource && mediaSource.readyState != "closed") {
-          var state = mediaSource.readyState;
-          _.each(_.cloneArray(mediaSource.sourceBuffers), sourceBuffer => {
+          var { readyState, sourceBuffers } = mediaSource;
+          for (var i = 0; i < sourceBuffers.length; i++) {
+            var sourceBuffer = sourceBuffers[i];
             try {
-              if (state == "open")
+              if (readyState == "open") {
                 sourceBuffer.abort();
+              }
 
               mediaSource.removeSourceBuffer(sourceBuffer);
             }
             catch(e) {
               log.warn("error while disposing souceBuffer", e);
             }
-          });
+          }
         }
 
-        _.each(_.keys(customBuffers), sourceBufferType => {
+        Object.keys(customBuffers).forEach((sourceBufferType) => {
           var sourceBuffer = customBuffers[sourceBufferType];
           try {
             sourceBuffer.abort();
@@ -219,7 +220,7 @@ function Stream({
     var augmentedTimings = timings.map((timing) => {
       var clonedTiming;
       if (fragEndTimeIsFinite) {
-        clonedTiming = _.cloneObject(timing);
+        clonedTiming = { ...timing };
         clonedTiming.ts = min(timing.ts, fragEndTime);
         clonedTiming.duration = min(timing.duration, fragEndTime);
       } else {
@@ -263,7 +264,7 @@ function Stream({
     var sourceOpening = sourceOpen(mediaSource);
 
     return manifestPipeline({ url })
-      .zip(sourceOpening, _.identity)
+      .zip(sourceOpening, (x) => x)
       .flatMap(({ parsed }) => {
         var manifest = normalizeManifest(parsed.url, parsed.manifest, subtitles);
 
@@ -307,7 +308,7 @@ function Stream({
     if (__DEV__)
       assert(pipelines[type], "stream: no pipeline found for type " + type);
 
-    return adaptations.flatMapLatest(adaptation => {
+    return adaptations.switchMap(adaptation => {
       if (!adaptation) {
         disposeSourceBuffer(videoElement, mediaSource, bufferInfos);
         return never();
@@ -346,17 +347,17 @@ function Stream({
    */
   function createLoadedMetadata(manifest) {
     var loadedMetadata$ = loadedMetadata(videoElement)
-      .tap(() => setInitialTime(manifest));
+      .do(() => setInitialTime(manifest));
 
     var canPlay$ = canPlay(videoElement)
-      .tap(() => {
+      .do(() => {
         log.info("canplay event");
         if (autoPlay) videoElement.play();
         autoPlay = true;
       });
 
-    return first(combineLatest(loadedMetadata$, canPlay$, _.noop))
-      .map({ type: "loaded", value: true })
+    return first(combineLatest(loadedMetadata$, canPlay$, () => {}))
+      .mapTo({ type: "loaded", value: true })
       .startWith({ type: "loaded", value: false });
   }
 
@@ -381,7 +382,7 @@ function Stream({
    */
   function createStalled(timings, changePlaybackRate=true) {
     return timings
-      .distinctUntilChanged(null, (prevTiming, timing) => {
+      .distinctUntilChanged((prevTiming, timing) => {
         var isStalled = timing.stalled;
         var wasStalled = prevTiming.stalled;
 
@@ -451,14 +452,15 @@ function Stream({
       log.warn("precondition failed", manifest.presentationLiveGap);
     }
 
-    return just(message);
+    return Observable.of(message);
   }
 
   function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
-    var adaptationsBuffers = _.map(getAdaptations(manifest),
-      adaptation => createBuffer(mediaSource, adaptation, timings, seekings));
+    var adaptationsBuffers = getAdaptations(manifest).map(
+      (adaptation) => createBuffer(mediaSource, adaptation, timings, seekings)
+    );
 
-    var buffers = merge(adaptationsBuffers);
+    var buffers = merge.apply(null, adaptationsBuffers);
 
     if (!manifest.isLive)
       return buffers;
@@ -469,7 +471,7 @@ function Stream({
     return buffers
       // do not throw multiple times OutOfIndexErrors in order to have
       // only one manifest reload for each error.
-      .distinctUntilChanged(null, (a, b) =>
+      .distinctUntilChanged((a, b) =>
         isOutOfIndexError(b) &&
         isOutOfIndexError(a))
       .concatMap((message) => manifestAdapter(manifest, message));
@@ -481,7 +483,7 @@ function Stream({
    */
   function createStream(mediaSource, manifest) {
     var { timings, seekings } = createTimings(manifest);
-    var justManifest = just({ type: "manifest", value: manifest });
+    var justManifest = Observable.of({ type: "manifest", value: manifest });
     var canPlay = createLoadedMetadata(manifest);
     var buffers = createAdaptationsBuffers(mediaSource, manifest, timings, seekings);
     var emeHandler = createEME();
@@ -498,7 +500,7 @@ function Stream({
 
   function createDirectFileStream() {
     var { timings } = createTimings(directFile, { timeInterval: 1000 });
-    var justManifest = just({ type: "manifest", value: directFile });
+    var justManifest = Observable.of({ type: "manifest", value: directFile });
     var canPlay = createLoadedMetadata(directFile);
     var stalled = createStalled(timings, false);
 
@@ -538,11 +540,11 @@ function Stream({
     var endTime = fragEndTime;
     var percentage = /^\d*(\.\d+)? ?%$/;
 
-    if (_.isString(startTime) && percentage.test(startTime)) {
+    if (typeof startTime == "string" && percentage.test(startTime)) {
       startTime = (parseFloat(startTime) / 100) * duration;
     }
 
-    if (_.isString(endTime) && percentage.test(endTime)) {
+    if (typeof endTime == "string" && percentage.test(endTime)) {
       fragEndTime = (parseFloat(endTime) / 100) * duration;
     }
 

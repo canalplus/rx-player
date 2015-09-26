@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var { Observable } = require("canal-js-utils/rx");
+var { Observable } = require("rxjs");
 var { merge, interval } = Observable;
 var { visibilityChange, videoSizeChange } = require("./compat");
 
@@ -27,7 +27,7 @@ function DeviceEvents(videoElement) {
     .filter(x => x === false);
 
   var isHidden = visibilityChange()
-    .customDebounce(INACTIVITY_DELAY)
+    .debounceTime(INACTIVITY_DELAY)
     .filter(x => x === true);
 
   var inBackground = merge(isVisible, isHidden)
@@ -35,11 +35,11 @@ function DeviceEvents(videoElement) {
 
   var videoWidth = merge(
     interval(20000),
-    videoSizeChange().customDebounce(500)
+    videoSizeChange().debounceTime(500)
   )
     .startWith("init")
     .map(() => videoElement.clientWidth * pixelRatio)
-    .changes();
+    .distinctUntilChanged();
 
   return {
     videoWidth,

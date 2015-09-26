@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 
 var rBr = /<br[^>]+>/gm;
 var rAbsTime = /^(([0-9]+):)?([0-9]+):([0-9]+)(\.([0-9]+))?$/;
@@ -31,7 +30,7 @@ var MULTS = {
 
 function parseTTML(ttml, lang, offset) {
   var doc;
-  if (_.isString(ttml)) {
+  if (typeof ttml == "string") {
     doc = new DOMParser().parseFromString(ttml, "text/xml");
   } else {
     doc = ttml;
@@ -45,10 +44,12 @@ function parseTTML(ttml, lang, offset) {
     throw new Error("ttml: could not find <tt> tag");
 
   var subs = parseChildren(node.querySelector("body"), 0);
-  _.each(subs, s => {
+  for (var i = 0; i < subs.length; i++) {
+    var s = subs[i];
     s.start += offset;
     s.end += offset;
-  });
+  }
+
   return subs;
 }
 
@@ -87,7 +88,9 @@ function parseNode(node, parentOffset, siblingOffset) {
   var end = parseTimestamp(node.getAttribute("end"), parentOffset);
   var dur = parseTimestamp(node.getAttribute("dur"), 0);
 
-  if ((!_.isNumber(start) && !_.isNumber(end)) && !_.isNumber(dur))
+  if (!typeof start == "number" &&
+      !typeof end == "number" &&
+      !typeof dur == "number")
     throw new Error("ttml: unsupported timestamp format");
 
   if (dur > 0) {

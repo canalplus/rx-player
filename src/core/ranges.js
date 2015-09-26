@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 
 // Factor for rounding errors
@@ -29,7 +28,7 @@ function nearlyLt(a, b) {
 }
 
 function bufferedToArray(ranges) {
-  if (_.isArray(ranges)) {
+  if (Array.isArray(ranges)) {
     return ranges;
   }
 
@@ -256,6 +255,15 @@ class BufferedRanges {
         return this.ranges[i];
     }
     return null;
+  }
+
+  getOuterRanges(time) {
+    var ranges = [];
+    for (var i = 0; i < this.ranges.length; i++) {
+      if (!isPointInRange(this.ranges[i], time))
+        ranges.push(this.ranges[i]);
+    }
+    return ranges;
   }
 
   /**

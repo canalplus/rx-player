@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
+var find = require("lodash/collection/find");
 var bytes = require("canal-js-utils/bytes");
 
 var DEFAULT_MIME_TYPES = {
@@ -82,7 +82,7 @@ function parseBoolean(val) {
 }
 
 function calcLastRef(index) {
-  var { ts, r, d } = _.last(index.timeline);
+  var { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r+1)*d) / index.timescale);
 }
 
@@ -184,12 +184,14 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function parseQualityLevel(q, prof) {
-    return _.reduce(prof, (obj, [key, name, parse]) => {
-      obj[name] = _.isFunction(parse)
+    var obj = {};
+    for (var i = 0; i < prof.length; i++) {
+      var [key, name, parse] = prof[i];
+      obj[name] = typeof parse == "function"
         ? parse(q.getAttribute(key))
         : parse[q.getAttribute(key)];
-      return obj;
-    }, {});
+    }
+    return obj;
   }
 
   // Parse the adaptations (<StreamIndex>) tree containing
@@ -244,14 +246,14 @@ function createSmoothStreamingParser(parserOptions={}) {
     var codecs = representations[0].codecs;
     if (!codecs) {
       codecs = DEFAULT_CODECS[type];
-      _.each(representations, rep => rep.codecs = codecs);
+      representations.forEach((rep) => rep.codecs = codecs);
     }
 
     // apply default mimetype if non-supported
     var mimeType = representations[0].mimeType;
     if (!mimeType) {
       mimeType = DEFAULT_MIME_TYPES[type];
-      _.each(representations, rep => rep.mimeType = mimeType);
+      representations.forEach((rep) => rep.mimeType = mimeType);
     }
 
     // TODO(pierre): real ad-insert support
@@ -298,7 +300,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       adaptations: [],
     });
 
-    _.each(adaptations, a => a.smoothProtection = protection);
+    adaptations.forEach((a) => a.smoothProtection = protection);
 
     var
       suggestedPresentationDelay,
@@ -311,8 +313,8 @@ function createSmoothStreamingParser(parserOptions={}) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      var video = _.find(adaptations, a => a.type == "video");
-      var audio = _.find(adaptations, a => a.type == "audio");
+      var video = find(adaptations, a => a.type == "video");
+      var audio = find(adaptations, a => a.type == "audio");
       var lastRef = Math.min(calcLastRef(video.index), calcLastRef(audio.index));
       presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
     }
@@ -334,9 +336,11 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function parser(val) {
-    if (_.isString(val))                return parseFromString(val);
-    if (val instanceof window.Document) return parseFromDocument(val);
-    throw new Error("parser: unsupported type to parse");
+    if (typeof val == "string") {
+      return parseFromString(val);
+    } else {
+      return parseFromDocument(val);
+    }
   }
 
   parser.parseFromString   = parseFromString;

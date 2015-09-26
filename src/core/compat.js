@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
+var flatten = require("lodash/array/flatten");
 var log = require("canal-js-utils/log");
 var Promise_ = require("canal-js-utils/promise");
 var EventEmitter = require("canal-js-utils/eventemitter");
 var { bytesToStr, strToBytes } = require("canal-js-utils/bytes");
 var assert = require("canal-js-utils/assert");
-var { Observable } = require("canal-js-utils/rx");
-var { merge, never, fromEvent, just } = Observable;
+var { Observable } = require("rxjs");
+var { merge, never, fromEvent } = Observable;
 var { on } = require("canal-js-utils/rx-ext");
+var find = require("lodash/collection/find");
 
 var doc = document;
 var win = window;
@@ -49,7 +50,8 @@ var isIE = (
   navigator.appName == "Netscape" && /Trident\//.test(navigator.userAgent)
 );
 
-var MockMediaKeys = _.noop;
+var MockMediaKeys = function() {
+};
 
 var requestMediaKeySystemAccess;
 if (navigator.requestMediaKeySystemAccess)
@@ -100,16 +102,16 @@ function isEventSupported(element, eventNameSuffix) {
     return true;
   } else {
     clone.setAttribute(eventName, "return;");
-    return _.isFunction(clone[eventName]);
+    return typeof clone[eventName] == "function";
   }
 }
 
 function eventPrefixed(eventNames, prefixes) {
-  return _.flatten(eventNames, (name) => _.map(prefixes || PREFIXES, p => p + name));
+  return flatten(eventNames.map((name) => (prefixes || PREFIXES).map((p) => p + name)));
 }
 
 function findSupportedEvent(element, eventNames) {
-  return _.find(eventNames, name => isEventSupported(element, name));
+  return find(eventNames, name => isEventSupported(element, name));
 }
 
 function compatibleListener(eventNames, prefixes) {
@@ -168,21 +170,21 @@ var emeEvents = {
 
 function sourceOpen(mediaSource) {
   if (mediaSource.readyState == "open")
-    return just();
+    return Observable.of(null);
   else
     return sourceOpenEvent(mediaSource).take(1);
 }
 
 function loadedMetadata(videoElement) {
   if (videoElement.readyState >= HTMLVideoElement.HAVE_METADATA)
-    return just();
+    return Observable.of(null);
   else
     return loadedMetadataEvent(videoElement).take(1);
 }
 
 function canPlay(videoElement) {
   if (videoElement.readyState >= HTMLVideoElement.HAVE_ENOUGH_DATA)
-    return just();
+    return Observable.of(null);
   else
     return on(videoElement, "canplay").take(1);
 }
@@ -206,7 +208,7 @@ function wrapUpdateWithPromise(memUpdate, sessionObj) {
   KeySessionError.prototype = new Error();
 
   return function(license, sessionId) {
-    var session = _.isFunction(sessionObj)
+    var session = typeof sessionObj == "function"
       ? sessionObj.call(this)
       : this;
 
@@ -240,10 +242,14 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       onKeyError(video)
     ).subscribe(evt => this.trigger(evt.type, evt));
   };
-  MockMediaKeySession.prototype = _.extend({}, EventEmitter.prototype, {
+
+  MockMediaKeySession.prototype = {
+    ...EventEmitter.prototype,
+
     generateRequest: wrap(function (initDataType, initData) {
       this._vid.webkitGenerateKeyRequest(this._key, initData);
     }),
+
     update: wrapUpdateWithPromise(function (license, sessionId) {
       if (this._key.indexOf("clearkey") >= 0) {
         var json = JSON.parse(bytesToStr(license));
@@ -254,17 +260,19 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
         this._vid.webkitAddKey(this._key, license, null, sessionId);
       }
     }),
+
     close: wrap(function() {
       if (this._con)
-        this._con.dispose();
+        this._con.unsubscribe();
       this._con = null;
       this._vid = null;
     }),
-  });
+  };
 
   MockMediaKeys = function(keySystem) {
     this.ks_ = keySystem;
   };
+
   MockMediaKeys.prototype = {
     _setVideo(vid) {
       this._vid = vid;
@@ -301,8 +309,8 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       } = keySystemConfiguration;
 
       var supported = true;
-      supported = supported && (!initDataTypes || !!_.find(initDataTypes, initDataType => initDataType === "cenc"));
-      supported = supported && (!sessionTypes || _.filter(sessionTypes, sessionType => sessionType === "temporary").length === sessionTypes.length);
+      supported = supported && (!initDataTypes || !!find(initDataTypes, (initDataType) => initDataType === "cenc"));
+      supported = supported && (!sessionTypes || sessionTypes.filter((sessionType) => sessionType === "temporary").length === sessionTypes.length);
       supported = supported && (distinctiveIdentifier !== "required");
       supported = supported && (persistentState !== "required");
 
@@ -339,7 +347,9 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     this._mk = mk;
   };
 
-  SessionProxy.prototype = _.extend(EventEmitter.prototype, {
+  SessionProxy.prototype = {
+    ...EventEmitter.prototype,
+
     generateRequest: wrap(function(initDataType, initData) {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
       this._con = merge(
@@ -348,21 +358,23 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
         onKeyError(this._ss)
       ).subscribe(evt => this.trigger(evt.type, evt));
     }),
+
     update: wrapUpdateWithPromise(function(license, sessionId) {
       assert(this._ss);
       this._ss.update(license, sessionId);
     }, function() {
       return this._ss;
     }),
+
     close: wrap(function() {
       if (this._ss) {
         this._ss.close();
         this._ss = null;
-        this._con.dispose();
+        this._con.unsubscribe();
         this._con = null;
       }
     }),
-  });
+  };
 
   // on IE11, each created session needs to be created on a new
   // MediaKeys object
@@ -386,7 +398,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       } = keySystemConfiguration;
 
       var supported = true;
-      supported = supported && (!initDataTypes || _.find(initDataTypes, idt => idt === "cenc"));
+      supported = supported && (!initDataTypes || find(initDataTypes, idt => idt === "cenc"));
       supported = supported && (distinctiveIdentifier !== "required");
 
       if (supported) {
@@ -421,18 +433,25 @@ if (!MediaKeys_) {
 }
 
 function _setMediaKeys(elt, mk) {
-  if (mk instanceof MockMediaKeys) return mk._setVideo(elt);
-  if (elt.setMediaKeys)
+  if (mk instanceof MockMediaKeys) {
+    return mk._setVideo(elt);
+  }
+
+  if (elt.setMediaKeys) {
     return elt.setMediaKeys(mk);
+  }
 
-  if (mk === null)
+  if (mk === null) {
     return;
+  }
 
-  if (elt.WebkitSetMediaKeys)
+  if (elt.WebkitSetMediaKeys) {
     return elt.WebkitSetMediaKeys(mk);
+  }
 
-  if (elt.mozSetMediaKeys)
+  if (elt.mozSetMediaKeys) {
     return elt.mozSetMediaKeys(mk);
+  }
 
   // IE11 requires that the video has received metadata
   // (readyState>=1) before setting metadata.
@@ -470,7 +489,10 @@ if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener
   var SourceBuffer = win.WebKitSourceBuffer;
   var SBProto = SourceBuffer.prototype;
 
-  _.extend(SBProto, EventEmitter.prototype);
+  for (var fnNAme in EventEmitter.prototype) {
+    SBProto[fnNAme] = EventEmitter.prototype[fnNAme];
+  }
+
   SBProto.__listeners = [];
 
   SBProto.appendBuffer = function(data) {

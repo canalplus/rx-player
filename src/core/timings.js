@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var { Observable } = require("canal-js-utils/rx");
+var { Observable, BehaviorSubject } = require("rxjs");
 var { BufferedRanges } = require("./ranges");
 
 // time changes interval in milliseconds
@@ -142,7 +142,7 @@ function timingsSampler(video) {
     function emitSample(evt) {
       var timingEventType = evt && evt.type || "timeupdate";
       prevTimings = scanTimingsSamples(prevTimings, timingEventType);
-      obs.onNext(prevTimings);
+      obs.next(prevTimings);
     }
 
     var samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
@@ -153,7 +153,7 @@ function timingsSampler(video) {
     video.addEventListener("seeked", emitSample);
     video.addEventListener("loadedmetadata", emitSample);
 
-    obs.onNext(prevTimings);
+    obs.next(prevTimings);
 
     return () => {
       clearInterval(samplerInterval);
@@ -165,7 +165,8 @@ function timingsSampler(video) {
       video.removeEventListener("loadedmetadata", emitSample);
     };
   })
-    .shareValue({ name: "init", stalled: null });
+    .multicast(() => new BehaviorSubject({ name: "init", stalled: null }))
+    .refCount();
 }
 
 function seekingsSampler(timingsSampling) {

@@ -40,8 +40,8 @@ function getDebug(player) {
   var avr = player.getAverageBitrates();
 
   var avrAudio, avrVideo;
-  avr.video.subscribe(a => avrVideo = a|0).dispose();
-  avr.audio.subscribe(a => avrAudio = a|0).dispose();
+  avr.video.take(1).subscribe(a => avrVideo = a|0);
+  avr.audio.take(1).subscribe(a => avrAudio = a|0);
 
   return {
     manifest: player.man,

@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
-var { Observable, BehaviorSubject, CompositeDisposable } = require("canal-js-utils/rx");
+var { Observable, BehaviorSubject, Subscription } = require("rxjs");
 var { combineLatest } = Observable;
 var { only } = require("canal-js-utils/rx-ext");
+var find = require("lodash/collection/find");
+var findLast = require("lodash/collection/findLast");
+var defaults = require("lodash/object/defaults");
 
 var AverageBitrate = require("./average-bitrate");
 
@@ -37,11 +39,11 @@ function def(x, val) {
 }
 
 function getClosestBitrate(bitrates, btr, threshold=0) {
-  return _.findLast(bitrates, b => (b / btr) <= (1 - threshold)) || bitrates[0];
+  return findLast(bitrates, b => (b / btr) <= (1 - threshold)) || bitrates[0];
 }
 
 function getClosestDisplayBitrate(reps, width) {
-  var rep = _.find(reps, r => r.width >= width);
+  var rep = find(reps, r => r.width >= width);
   if (rep)
     return rep.bitrate;
   else
@@ -50,7 +52,7 @@ function getClosestDisplayBitrate(reps, width) {
 
 function findByLang(adaptations, lang) {
   if (lang) {
-    return _.find(adaptations, a => a.lang === lang);
+    return find(adaptations, a => a.lang === lang);
   } else {
     return null;
   }
@@ -68,7 +70,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     defaultBufferThreshold,
     initVideoBitrate,
     initAudioBitrate
-  } = _.defaults(options, DEFAULTS);
+  } = defaults(options, DEFAULTS);
 
   var { videoWidth, inBackground } = deviceEvents;
 
@@ -76,11 +78,17 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   var $subtitles = new BehaviorSubject(defaultSubtitle);
 
   var $averageBitrates = {
-    audio: AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).publishValue(initAudioBitrate || 0),
-    video: AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 }).publishValue(initVideoBitrate || 0),
+    audio: new BehaviorSubject(initAudioBitrate || 0),
+    video: new BehaviorSubject(initVideoBitrate || 0),
   };
 
-  var conns = new CompositeDisposable(_.map(_.values($averageBitrates), a => a.connect()));
+  var averageBitratesConns = [
+    AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).multicast($averageBitrates.audio),
+    AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 }).multicast($averageBitrates.video),
+  ];
+
+  var conns = new Subscription();
+  averageBitratesConns.forEach((a) => conns.add(a.connect()));
 
   var $usrBitrates = {
     audio: new BehaviorSubject(Infinity),
@@ -99,12 +107,12 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   };
 
   function audioAdaptationChoice(adaptations) {
-    return $languages.changes()
+    return $languages.distinctUntilChanged()
       .map(lang => findByLang(adaptations, lang) || adaptations[0]);
   }
 
   function textAdaptationChoice(adaptations) {
-    return $subtitles.changes()
+    return $subtitles.distinctUntilChanged()
       .map(lang => findByLang(adaptations, lang));
   }
 
@@ -143,8 +151,9 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
 
           return getClosestBitrate(bitrates, avrBitrate, bufThreshold);
         })
-        .changes()
-        .customDebounce(2000, { leading: true });
+        .distinctUntilChanged()
+        .debounceTime(2000)
+        .startWith(getClosestBitrate(bitrates, $averageBitrates[type].getValue(), 0));
 
       if (type == "video") {
         // To compute the bitrate upper-bound for video
@@ -178,9 +187,9 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
 
           return avr;
         })
-        .map(b => _.find(representations, rep => rep.bitrate === getClosestBitrate(bitrates, b)))
-        .changes(r => r.id)
-        .tap(r => log.info("bitrate", type, r.bitrate));
+        .map(b => find(representations, rep => rep.bitrate === getClosestBitrate(bitrates, b)))
+        .distinctUntilChanged((a, b) => a.id === b.id)
+        .do(r => log.info("bitrate", type, r.bitrate));
     }
     else {
       representationsObservable = only(firstRep);
@@ -193,8 +202,8 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   }
 
   return {
-    setLanguage(lng) { $languages.onNext(lng); },
-    setSubtitle(sub) { $subtitles.onNext(sub); },
+    setLanguage(lng) { $languages.next(lng); },
+    setSubtitle(sub) { $subtitles.next(sub); },
     getLanguage() { return $languages.value; },
     getSubtitle() { return $subtitles.value; },
 
@@ -205,19 +214,19 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     getAudioBufferSize() { return $bufSizes.audio.value; },
     getVideoBufferSize() { return $bufSizes.video.value; },
 
-    setAudioBitrate(x)    { $usrBitrates.audio.onNext(def(x, Infinity)); },
-    setVideoBitrate(x)    { $usrBitrates.video.onNext(def(x, Infinity)); },
-    setAudioMaxBitrate(x) { $maxBitrates.audio.onNext(def(x, Infinity)); },
-    setVideoMaxBitrate(x) { $maxBitrates.video.onNext(def(x, Infinity)); },
-    setAudioBufferSize(x) { $bufSizes.audio.onNext(def(x, defaultBufferSize)); },
-    setVideoBufferSize(x) { $bufSizes.video.onNext(def(x, defaultBufferSize)); },
+    setAudioBitrate(x)    { $usrBitrates.audio.next(def(x, Infinity)); },
+    setVideoBitrate(x)    { $usrBitrates.video.next(def(x, Infinity)); },
+    setAudioMaxBitrate(x) { $maxBitrates.audio.next(def(x, Infinity)); },
+    setVideoMaxBitrate(x) { $maxBitrates.video.next(def(x, Infinity)); },
+    setAudioBufferSize(x) { $bufSizes.audio.next(def(x, defaultBufferSize)); },
+    setVideoBufferSize(x) { $bufSizes.video.next(def(x, defaultBufferSize)); },
 
     getBufferAdapters,
     getAdaptationsChoice,
 
     dispose() {
       if (conns) {
-        conns.dispose();
+        conns.unsubscribe();
         conns = null;
       }
     }

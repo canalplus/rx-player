@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
 var assert = require("canal-js-utils/assert");
+var defaults = require("lodash/object/defaults");
+var flatten = require("lodash/array/flatten");
 var { parseBaseURL } = require("canal-js-utils/url");
 var { isCodecSupported } = require("./compat");
 
@@ -35,6 +36,7 @@ var representationBaseType = [
   "index",
 ];
 
+var uniqueId = 0;
 var SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text"];
 var DEFAULT_PRESENTATION_DELAY = 15;
 
@@ -45,7 +47,7 @@ function parseType(mimeType) {
 function normalizeManifest(location, manifest, subtitles) {
   assert(manifest.transportType);
 
-  manifest.id = manifest.id || _.uniqueId();
+  manifest.id = manifest.id || uniqueId++;
   manifest.type = manifest.type || "static";
 
   var locations = manifest.locations;
@@ -66,10 +68,10 @@ function normalizeManifest(location, manifest, subtitles) {
     subtitles = normalizeSubtitles(subtitles);
   }
 
-  var periods = _.map(manifest.periods, period => normalizePeriod(period, urlBase, subtitles));
+  var periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles));
 
   // TODO(pierre): support multiple periods
-  _.extend(manifest, periods[0]);
+  manifest = { ...manifest, ...periods[0] };
   manifest.periods = null;
 
   if (!manifest.duration)
@@ -84,12 +86,12 @@ function normalizeManifest(location, manifest, subtitles) {
 }
 
 function normalizePeriod(period, inherit, subtitles) {
-  period.id = period.id || _.uniqueId();
+  period.id = period.id || uniqueId++;
 
   var adaptations = period.adaptations;
   adaptations = adaptations.concat(subtitles || []);
-  adaptations = _.map(adaptations, ada => normalizeAdaptation(ada, inherit));
-  adaptations = _.filter(adaptations, (adaptation) => {
+  adaptations = adaptations.map((ada) => normalizeAdaptation(ada, inherit));
+  adaptations = adaptations.filter((adaptation) => {
     if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
       log.info("not supported adaptation type", adaptation.type);
       return false;
@@ -100,17 +102,32 @@ function normalizePeriod(period, inherit, subtitles) {
 
   assert(adaptations.length > 0);
 
-  period.adaptations = _.groupBy(adaptations, "type");
+  var adaptationsByType = {};
+  for (var i = 0; i < adaptations.length; i++) {
+    var adaptation = adaptations[i];
+    var adaptationType = adaptation.type;
+    adaptationsByType[adaptationType] = adaptationsByType[adaptationType] || [];
+    adaptationsByType[adaptationType].push(adaptation);
+  }
+
+  period.adaptations = adaptationsByType;
   return period;
 }
 
 function normalizeAdaptation(adaptation, inherit) {
   assert(typeof adaptation.id != "undefined");
-  _.defaults(adaptation, inherit);
+  defaults(adaptation, inherit);
 
-  var inheritedFromAdaptation = _.pick(adaptation, representationBaseType);
-  var representations = _.map(adaptation.representations,
-    rep => normalizeRepresentation(rep, inheritedFromAdaptation))
+  var inheritedFromAdaptation = {};
+  representationBaseType.forEach((baseType) => {
+    if (baseType in adaptation) {
+      inheritedFromAdaptation[baseType] = adaptation[baseType];
+    }
+  });
+
+  var representations = adaptation.representations.map(
+    (rep) => normalizeRepresentation(rep, inheritedFromAdaptation)
+  )
     .sort((a, b) => a.bitrate - b.bitrate);
 
   var { type, mimeType } = adaptation;
@@ -125,18 +142,18 @@ function normalizeAdaptation(adaptation, inherit) {
     type = adaptation.type = parseType(mimeType);
 
   if (type == "video" || type == "audio") {
-    representations = _.filter(representations, rep => isCodecSupported(getCodec(rep)));
+    representations = representations.filter((rep) => isCodecSupported(getCodec(rep)));
   }
 
   assert(representations.length > 0, "manifest: no compatible representation for this adaptation");
   adaptation.representations = representations;
-  adaptation.bitrates = _.pluck(representations, "bitrate");
+  adaptation.bitrates = representations.map((rep) => rep.bitrate);
   return adaptation;
 }
 
 function normalizeRepresentation(representation, inherit) {
   assert(typeof representation.id != "undefined");
-  _.defaults(representation, inherit);
+  defaults(representation, inherit);
 
   var index = representation.index;
   assert(index);
@@ -160,23 +177,23 @@ function normalizeRepresentation(representation, inherit) {
 }
 
 function normalizeSubtitles(subtitles) {
-  if (!_.isArray(subtitles))
+  if (!Array.isArray(subtitles))
     subtitles = [subtitles];
 
-  return _.flatten(subtitles, ({ mimeType, url, language, languages }) => {
+  return flatten(subtitles.map(({ mimeType, url, language, languages }) => {
     if (language) {
       languages = [language];
     }
 
-    return _.map(languages, lang => ({
-      id: _.uniqueId(),
+    return languages.map((lang) => ({
+      id: uniqueId++,
       type: "text",
       lang,
       mimeType,
       rootURL: url,
       baseURL: "",
       representations: [{
-        id: _.uniqueId(),
+        id: uniqueId++,
         mimeType,
         index: {
           indexType: "template",
@@ -186,7 +203,33 @@ function normalizeSubtitles(subtitles) {
         }
       }]
     }));
-  });
+  }));
+}
+
+function simpleMerge(source, dist) {
+  for (var attr in source) {
+    if (!dist.hasOwnProperty(attr)) {
+      continue;
+    }
+
+    var src = source[attr];
+    var dst = dist[attr];
+
+    if (typeof src == "string" ||
+        typeof src == "number" ||
+       (typeof src == "object" && src instanceof Date)) {
+      source[attr] = dst;
+    }
+    else if (Array.isArray(src)) {
+      src.length = 0;
+      Array.prototype.push.apply(src, dst);
+    }
+    else {
+      source[attr] = simpleMerge(src, dst);
+    }
+  }
+
+  return source;
 }
 
 function mergeManifestsIndex(oldManifest, newManifest) {
@@ -195,8 +238,8 @@ function mergeManifestsIndex(oldManifest, newManifest) {
   for (var type in oldAdaptations) {
     var oldAdas = oldAdaptations[type];
     var newAdas = newAdaptations[type];
-    _.each(oldAdas, (a, i) => {
-      _.simpleMerge(a.index, newAdas[i].index);
+    oldAdas.forEach((a, i) => {
+      simpleMerge(a.index, newAdas[i].index);
     });
   }
   return oldManifest;
@@ -220,14 +263,14 @@ function getAdaptations(manifest) {
   }
 
   var adaptationsList = [];
-  _.each(_.keys(adaptationsByType), (type) => {
+  for (var type in adaptationsByType) {
     var adaptations = adaptationsByType[type];
     adaptationsList.push({
       type: type,
       adaptations: adaptations,
       codec: getCodec(adaptations[0].representations[0])
     });
-  });
+  }
 
   return adaptationsList;
 }

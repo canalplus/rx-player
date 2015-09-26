@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-const _ = require("canal-js-utils/misc");
 const log = require("canal-js-utils/log");
 const Promise_ = require("canal-js-utils/promise");
 const assert = require("canal-js-utils/assert");
-const { Observable } = require("canal-js-utils/rx");
-const { combineLatest, empty, fromPromise, merge, just } = Observable;
+const find = require("lodash/collection/find");
+const flatten = require("lodash/array/flatten");
+const { Observable } = require("rxjs");
+const { combineLatest, empty, fromPromise, merge } = Observable;
 const {
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -88,7 +89,7 @@ class InMemorySessionsSet {
 
   get(initData) {
     initData = hashInitData(initData);
-    const entry = _.find(
+    const entry = find(
       this._entries,
       entry => entry.initData === initData
     );
@@ -119,7 +120,7 @@ class InMemorySessionsSet {
   }
 
   delete(sessionId) {
-    const entry = _.find(
+    const entry = find(
       this._entries,
       entry => entry.session.sessionId === sessionId
     );
@@ -188,7 +189,7 @@ class PersistedSessionsSet {
 
   get(initData) {
     initData = hashInitData(initData);
-    const entry = _.find(
+    const entry = find(
       this._entries,
       entry => entry.initData === initData
     );
@@ -214,7 +215,7 @@ class PersistedSessionsSet {
   delete(initData) {
     initData = hashInitData(initData);
 
-    const entry = _.find(
+    const entry = find(
       this._entries,
       entry => entry.initData === initData
     );
@@ -263,7 +264,7 @@ function getCachedKeySystemAccess(keySystems) {
   }
 
   const configuration = $mediaKeySystemConfiguration;
-  const foundKeySystem = _.find(keySystems, (ks) => {
+  const foundKeySystem = find(keySystems, (ks) => {
     if (ks.type !== $keySystem.type) {
       return false;
     }
@@ -329,11 +330,12 @@ function findCompatibleKeySystem(keySystems) {
   const cachedKeySystemAccess = getCachedKeySystemAccess(keySystems);
   if (cachedKeySystemAccess) {
     log.debug("eme: found compatible keySystem quickly", cachedKeySystemAccess);
-    return just(cachedKeySystemAccess);
+    return Observable.of(cachedKeySystemAccess);
   }
 
-  const keySystemsType = _.flatten(keySystems,
-    keySystem => _.map(SYSTEMS[keySystem.type], keyType => ({ keyType, keySystem })));
+  const keySystemsType = flatten(keySystems.map(
+    keySystem => SYSTEMS[keySystem.type].map((keyType) => ({ keyType, keySystem })))
+  );
 
   return Observable.create(obs => {
     let disposed = false;
@@ -361,8 +363,8 @@ function findCompatibleKeySystem(keySystems) {
         .then(
           keySystemAccess => {
             log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
-            obs.onNext({ keySystem, keySystemAccess });
-            obs.onCompleted();
+            obs.next({ keySystem, keySystemAccess });
+            obs.complete();
           },
           () => {
             log.debug("eme: rejected access to keysystem", keyType, keySystemConfigurations);
@@ -444,13 +446,13 @@ function logAndThrow(errMessage, reason) {
 }
 
 function toObservable(value) {
-  if (_.isPromise(value))
+  if (value && typeof value.then == "function")
     return fromPromise(value);
 
-  if (!_.isObservable(value))
-    return just(value);
+  if (value && typeof value.subscribe == "function")
+    return value;
 
-  return value;
+  return Observable.of(value);
 }
 
 /**
@@ -480,7 +482,7 @@ function toObservable(value) {
  */
 function EME(video, keySystems) {
   if (__DEV__) {
-    _.each(keySystems, ks => assert.iface(ks, "keySystem", {
+    keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
       type: "string",
     }));
@@ -505,7 +507,7 @@ function EME(video, keySystems) {
           initDataType,
           initData
         )
-          .tap(
+          .do(
             (session) => {
               $storedSessions.add(initData, session);
               $loadedSessions.add(initData, session);
@@ -516,7 +518,8 @@ function EME(video, keySystems) {
       )
       .flatMap((session) =>
         handleMessageEvents(session, keySystem)
-          .tapOnError(
+          .do(
+            null,
             (error) => {
               log.error("eme: error in session messages handler", session, error);
               $storedSessions.delete(initData);
@@ -535,7 +538,7 @@ function EME(video, keySystems) {
     const loadedSession = $loadedSessions.get(initData);
     if (loadedSession) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
-      return just(loadedSession);
+      return Observable.of(loadedSession);
     }
 
     const persistentLicenseSupported = mediaKeySystemConfiguration.sessionTypes.indexOf("persistent-license") >= 0;
@@ -632,7 +635,7 @@ function EME(video, keySystems) {
       .flatMap(({ success, session }) => {
         if (success) {
           log.debug("eme: successfully loaded session");
-          return just(session);
+          return Observable.of(session);
         }
 
         log.warn(
@@ -654,7 +657,7 @@ function EME(video, keySystems) {
           initData
         );
 
-        return merge(newSession, just(sessionToRemove));
+        return merge(newSession, Observable.of(sessionToRemove));
       });
   }
 
@@ -758,8 +761,7 @@ function EME(video, keySystems) {
 
   return combineLatest(
     onEncrypted(video),
-    findCompatibleKeySystem(keySystems),
-    (evt, ks) => ([evt, ks])
+    findCompatibleKeySystem(keySystems)
   )
     .take(1)
     .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks));

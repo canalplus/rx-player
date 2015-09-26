@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 
 function parseTimeFragment(timeFragment) {
-  if (_.isString(timeFragment)) {
+  if (typeof timeFragment == "string") {
     timeFragment = temporalMediaFragmentParser(timeFragment);
   } else {
-    timeFragment = _.pick(timeFragment, ["start", "end"]);
+    timeFragment = {
+      start: timeFragment.start,
+      end: timeFragment.end,
+    };
   }
 
-  if (_.isString(timeFragment.start) && _.isString(timeFragment.end)) {
+  if (typeof timeFragment.start == "string" &&
+      typeof timeFragment.end == "string") {
     if (!timeFragment.start) timeFragment.start = "0%";
     if (!timeFragment.end) timeFragment.end = "100%";
   }
@@ -33,7 +36,8 @@ function parseTimeFragment(timeFragment) {
     if (!timeFragment.end) timeFragment.end = Infinity;
   }
 
-  if (_.isString(timeFragment.start) && _.isString(timeFragment.end)) {
+  if (typeof timeFragment.start == "string" &&
+      typeof timeFragment.end == "string") {
     assert(
       (parseFloat(timeFragment.start) >= 0 && parseFloat(timeFragment.start) <= 100),
       "player: startTime should be between 0% and 100%");
@@ -43,8 +47,8 @@ function parseTimeFragment(timeFragment) {
   }
   else {
     assert(
-      (_.isNumber(timeFragment.start) || _.isDate(timeFragment.start)) &&
-      (_.isNumber(timeFragment.end) || _.isDate(timeFragment.end)),
+      (typeof timeFragment.start == "number" || timeFragment.start instanceof Date) &&
+      (typeof timeFragment.end == "number" || timeFragment.end instanceof Date),
       "player: timeFragment should have interface { start, end } where start and end are numbers or dates");
     assert(timeFragment.start < timeFragment.end, "player: startTime should be lower than endTime");
     assert(timeFragment.start >= 0, "player: startTime should be greater than 0");

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 
 function getTimelineBound({ ts, d, r }) {
   if (d === -1)
@@ -30,7 +29,8 @@ class Timeline {
   }
 
   static getLiveEdge(videoIndex, manifest) {
-    var calculatedLiveEdge = (getTimelineBound(_.last(videoIndex.timeline)) / videoIndex.timescale) - manifest.suggestedPresentationDelay;
+    var lastTimelineElement = videoIndex.timeline[videoIndex.timeline.length - 1];
+    var calculatedLiveEdge = (getTimelineBound(lastTimelineElement) / videoIndex.timescale) - manifest.suggestedPresentationDelay;
     var minimumLiveEdge = (videoIndex.timeline[0].ts / videoIndex.timescale) + 1.0;
 
     return Math.max(minimumLiveEdge, calculatedLiveEdge);
@@ -65,7 +65,7 @@ class Timeline {
   }
 
   checkRange(up) {
-    var last = _.last(this.timeline);
+    var last = this.timeline[this.timeline.length - 1];
     if (!last)
       return true;
 

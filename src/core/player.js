@@ -16,9 +16,9 @@
 
 var Promise_ = require("canal-js-utils/promise");
 
-var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
-var { CompositeDisposable, BehaviorSubject, Observable, Subject } = require("canal-js-utils/rx");
+var defaults = require("lodash/object/defaults");
+var { Subscription, BehaviorSubject, Observable, Subject } = require("rxjs");
 var { combineLatest, defer } = Observable;
 var { on } = require("canal-js-utils/rx-ext");
 var EventEmitter = require("canal-js-utils/eventemitter");
@@ -62,12 +62,22 @@ var PLAYER_ENDED     = "ENDED";
 var PLAYER_BUFFERING = "BUFFERING";
 var PLAYER_SEEKING   = "SEEKING";
 
+function pluck(source, key) {
+  return source.map(v => v[key]);
+}
+
+function noop() {}
+
+function each(source, fn) {
+  return source.subscribe(fn, noop);
+}
+
 function assertMan(player) {
   assert(player.man, "player: no manifest loaded");
 }
 
 function filterStreamByType(stream, type) {
-  return stream.filter(o => o.type == type).pluck("value");
+  return pluck(stream.filter(o => o.type == type), "value");
 }
 
 class Player extends EventEmitter {
@@ -146,7 +156,7 @@ class Player extends EventEmitter {
 
   _clear() {
     if (this.subscriptions) {
-      this.subscriptions.dispose();
+      this.subscriptions.unsubscribe();
       this.subscriptions = null;
     }
   }
@@ -161,10 +171,10 @@ class Player extends EventEmitter {
 
   dispose() {
     this.stop();
-    this.metrics.dispose();
-    this.adaptive.dispose();
-    this.fullscreen.dispose();
-    this.stream.dispose();
+    this.metrics.unsubscribe();
+    this.adaptive.unsubscribe();
+    this.fullscreen.unsubscribe();
+    this.stream.unsubscribe();
 
     this.metrics = null;
     this.adaptive = null;
@@ -195,7 +205,7 @@ class Player extends EventEmitter {
       subtitles,
       autoPlay,
       directFile
-    } = _.defaults(_.cloneObject(opts), {
+    } = defaults({ ...opts }, {
       transport: this.defaultTransport,
       transportOptions: {},
       keySystems: [],
@@ -214,14 +224,14 @@ class Player extends EventEmitter {
       var firstManifest = manifests[0];
       url = firstManifest.url;
       subtitles = firstManifest.subtitles || [];
-      keySystems = _.compact(_.pluck(manifests, "keySystem"));
+      keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
     }
 
-    if (_.isString(transport))
+    if (typeof transport == "string")
       transport = Transports[transport];
 
-    if (_.isFunction(transport))
-      transport = transport(_.defaults(transportOptions, this.defaultTransportOptions));
+    if (typeof transport == "function")
+      transport = transport(defaults(transportOptions, this.defaultTransportOptions));
 
     assert(transport, "player: transport " + opts.transport + " is not supported");
 
@@ -248,7 +258,7 @@ class Player extends EventEmitter {
 
     this.stop();
     this.frag = timeFragment;
-    this.playing.onNext(autoPlay);
+    this.playing.next(autoPlay);
 
     var pipelines = this.createPipelines(transport, {
       audio: { cache: new InitializationSegmentCache() },
@@ -290,14 +300,14 @@ class Player extends EventEmitter {
     } else {
       loaded = combineLatest(
         canPlay,
-        filterStreamByType(segments.pluck("adaptation"), "audio"),
-        filterStreamByType(segments.pluck("adaptation"), "video"),
-        _.noop);
+        filterStreamByType(pluck(segments, "adaptation"), "audio"),
+        filterStreamByType(pluck(segments, "adaptation"), "video"),
+        () => {});
     }
 
     loaded = loaded.take(1);
 
-    var stateChanges = loaded.map(PLAYER_LOADED)
+    var stateChanges = loaded.mapTo(PLAYER_LOADED)
       .concat(combineLatest(this.playing, stalled,
         (isPlaying, isStalled) => {
           if (isStalled)
@@ -311,15 +321,15 @@ class Player extends EventEmitter {
           return PLAYER_PAUSED;
         })
       )
-      .changes()
+      .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 
-    var subscriptions = this.subscriptions = new CompositeDisposable();
+    var subscriptions = this.subscriptions = new Subscription();
     var subs = [
       on(video, ["play", "pause"])
-        .each(evt => this.playing.onNext(evt.type == "play")),
+        .subscribe(evt => this.playing.next(evt.type == "play")),
 
-      segments.each((segment) => {
+      each(segments, (segment) => {
         var type = segment.adaptation.type;
 
         var rep = segment.representation;
@@ -341,15 +351,14 @@ class Player extends EventEmitter {
         this.trigger("progress", segment);
       }),
 
-      manifests.each(m => {
+      each(manifests, (m) => {
         this.man = m;
         this.trigger("manifestChange", m);
       }),
 
-      stateChanges
-        .each(s => this._setState(s)),
+      each(stateChanges, (s) => this._setState(s)),
 
-      timings.each(t => this._triggerTimeChange(t)),
+      each(timings, (t) => this._triggerTimeChange(t)),
 
       stream.subscribe(
         () => {},
@@ -367,18 +376,18 @@ class Player extends EventEmitter {
       ),
 
       stream.subscribe(
-        n => this.stream.onNext(n),
-        e => this.stream.onNext({ type: "error", value: e })
+        n => this.stream.next(n),
+        e => this.stream.next({ type: "error", value: e })
       ),
 
       stream.connect()
     ];
 
-    _.each(subs, s => subscriptions.add(s));
+    subs.forEach((s) => subscriptions.add(s));
 
     // _clear may have been called synchronously on early disposable
     if (!this.subscriptions) {
-      subscriptions.dispose();
+      subscriptions.unsubscribe();
     }
 
     this._triggerTimeChange();
@@ -389,6 +398,7 @@ class Player extends EventEmitter {
   _setState(s) {
     if (this.state !== s) {
       this.state = s;
+      log.info("playerStateChange", s);
       this.trigger("playerStateChange", s);
     }
   }
@@ -594,7 +604,7 @@ class Player extends EventEmitter {
   setLanguage(lng) {
     // TODO(pierre): proper promise
     return new Promise_(res => {
-      assert(_.contains(this.getAvailableLanguages(), lng), "player: unknown language");
+      assert(this.getAvailableLanguages().indexOf(lng) >= 0, "player: unknown language");
       res(this.adaptive.setLanguage(lng));
     });
   }
@@ -602,7 +612,7 @@ class Player extends EventEmitter {
   setSubtitle(sub) {
     // TODO(pierre): proper promise
     return new Promise_(res => {
-      assert(!sub || _.contains(this.getAvailableSubtitles(), sub), "player: unknown subtitle");
+      assert(!sub || this.getAvailableSubtitles().indexOf(sub) >= 0, "player: unknown subtitle");
       res(this.adaptive.setSubtitle(sub || ""));
     })
       .then(() => {
@@ -614,7 +624,7 @@ class Player extends EventEmitter {
   setVideoBitrate(btr) {
     // TODO(pierre): proper promise
     return new Promise_(res => {
-      assert(btr === 0 || _.contains(this.getAvailableVideoBitrates(), btr), "player: video bitrate unavailable");
+      assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
       res(this.adaptive.setVideoBitrate(btr));
     });
   }
@@ -622,7 +632,7 @@ class Player extends EventEmitter {
   setAudioBitrate(btr) {
     // TODO(pierre): proper promise
     return new Promise_(res => {
-      assert(btr === 0 || _.contains(this.getAvailableAudioBitrates(), btr), "player: audio bitrate unavailable");
+      assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
       res(this.adaptive.setAudioBitrate(btr));
     });
   }

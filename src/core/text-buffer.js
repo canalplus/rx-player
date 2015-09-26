@@ -15,7 +15,6 @@
  */
 
 var Promise_ = require("canal-js-utils/promise");
-var _ = require("canal-js-utils/misc");
 var AbstractSourceBuffer = require("./sourcebuffer");
 
 var Cue = window.VTTCue || window.TextTrackCue;
@@ -39,12 +38,14 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   }
 
   createCuesFromArray(cues) {
-    if (!cues.length)
-      return [];
-
-    return _.compact(_.map(cues, ({ start, end, text }) => {
-      if (text) return new Cue(start, end, text);
-    }));
+    var nativeCues = [];
+    for (var i = 0; i < cues.length; i++) {
+      var { start, end, text } = cues[i];
+      if (text) {
+        nativeCues.push(new Cue(start, end, text));
+      }
+    }
+    return nativeCues;
   }
 
   _append(cues) {
@@ -57,9 +58,9 @@ class TextSourceBuffer extends AbstractSourceBuffer {
     else {
       var trackCues = this.createCuesFromArray(cues);
       if (trackCues.length) {
-        _.each(trackCues, cue => this.track.addCue(cue));
+        trackCues.forEach(cue => this.track.addCue(cue));
         var firstCue = trackCues[0];
-        var lastCue = _.last(trackCues);
+        var lastCue = trackCues[trackCues.length - 1];
         this.buffered.insert(0, firstCue.startTime, lastCue.endTime);
       }
     }
@@ -68,12 +69,14 @@ class TextSourceBuffer extends AbstractSourceBuffer {
 
   _remove(from, to) {
     var track = this.track;
-    _.each(_.cloneArray(track.cues), (cue) => {
+    var cues = track.cues;
+    for (var i = 0; i < cues.length; i++) {
+      var cue = cues[i];
       var { startTime, endTime } = cue;
       if (startTime >= from && startTime <= to && endTime <= to) {
         track.removeCue(cue);
       }
-    });
+    }
   }
 
   _abort() {

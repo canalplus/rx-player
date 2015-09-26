@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 var HTML_ENTITIES = /&#([0-9]+);/g;
 var BR = /<br>/gi;
@@ -95,7 +94,7 @@ function parseSami(smi, lang) {
         continue;
 
       if (txt === "&nbsp;") {
-        _.last(subs).end = start;
+        subs[subs.length - 1].end = start;
       } else {
         subs.push({ text: decodeEntities(txt), start });
       }

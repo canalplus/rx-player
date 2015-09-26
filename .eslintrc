@@ -5,7 +5,8 @@
     "linebreak-style": [1, "unix"],
     "semi": [1, "always"],
     "comma-dangle": 0,
-    "no-console": 0
+    "no-console": 0,
+    "no-empty": 0,
   },
   "env": {
     "es6": true,
@@ -16,5 +17,8 @@
     "__DEV__": true,
     "__RX_PLAYER_VERSION_PLACEHOLDER__": true
   },
-  "extends": "eslint:recommended"
+  "extends": "eslint:recommended",
+  "ecmaFeatures": {
+    "experimentalObjectRestSpread": true,
+  }
 }

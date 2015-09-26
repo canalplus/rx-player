@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-var _ = require("canal-js-utils/misc");
-var { Observable } = require("canal-js-utils/rx");
-var { empty, merge, just } = Observable;
+var { Observable } = require("rxjs");
+var { empty, merge } = Observable;
 var assert = require("canal-js-utils/assert");
 var request = require("canal-js-utils/rx-request");
 var { resolveURL } = require("canal-js-utils/url");
@@ -62,14 +61,14 @@ var req = reqOptions => {
 module.exports = function(opts={}) {
   var { contentProtectionParser } = opts;
 
-  if (!contentProtectionParser) contentProtectionParser = _.noop;
+  if (!contentProtectionParser) contentProtectionParser = () => {};
 
   var manifestPipeline = {
     loader({ url }) {
       return req({ url, format: "document" });
     },
     parser({ response }) {
-      return just({
+      return Observable.of({
         manifest: dashManifestParser(response.blob, contentProtectionParser),
         url:      response.url
       });
@@ -87,7 +86,7 @@ module.exports = function(opts={}) {
       }
 
       var mediaHeaders;
-      if (_.isArray(range)) {
+      if (Array.isArray(range)) {
         mediaHeaders = { "Range": byteRange(range) };
       } else {
         mediaHeaders = null;
@@ -113,7 +112,7 @@ module.exports = function(opts={}) {
       // TODO(pierre): we could fire both these requests as one if the
       // init and index ranges are contiguous, which should be the
       // case most of the time.
-      if (_.isArray(indexRange)) {
+      if (Array.isArray(indexRange)) {
         var indexRequest = req({
           url: mediaUrl,
           format: "arraybuffer",
@@ -166,7 +165,7 @@ module.exports = function(opts={}) {
         blob = patchPssh(blob, adaptation.contentProtection);
       }
 
-      return just({
+      return Observable.of({
         blob,
         currentSegment,
         nextSegments,
