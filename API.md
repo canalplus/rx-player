@@ -172,12 +172,28 @@ This method can be call anytime, even if a stream is already loaded an played by
       // Currently, available DRM(s) are playready (Microsoft), widevine (Google), or clearkey
       string type;
 
-      // method called with the DRM challenge as a parameter
-      // It returns a Promise corresponding to XHR made to the server with the challenge as an ArrayBuffer
+      // Method called with the DRM challenge as a parameter
+      // It returns a Promise corresponding to XHR made to the server with the
+      // challenge as an ArrayBuffer
       Promise<ArrayBuffer> getLicense((ArrayBuffer) challenge);
 
-      // (optional) method allowing to preprocess `initData` which pushed to the CDM when EME session is created
-      ArrayBuffer extractInitData(ArrayBuffer);
+      // Optional Boolean specifying if the keySystem needs to be persisted.
+      // If true you need to pass a LicenseStorage with interface below.
+      boolean persistentLicense;
+      LicenseStorage licenseStorage;
+
+      // Booleans to parametrize the use of persistentState or
+      // distinctiveIdentifier functionnalities. See eme spec for
+      // more details. Both are false by default.
+      boolean persistentStateRequired;
+      boolean distinctiveIdentifierRequired;
+    }
+    ```
+
+    ```java
+    interface LicenseStorage {
+      Array save();
+      void load(Array entries);
     }
     ```
 

@@ -252,15 +252,35 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     }
   };
 
-  requestMediaKeySystemAccess = function(keyType) {
+  requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
     if (!isTypeSupported(keyType))
       return Promise_.reject();
 
-    return Promise_.resolve({
-      createMediaKeys() {
-        return Promise_.resolve(new MockMediaKeys(keyType));
+    for (let i = 0; i < keySystemConfigurations.length; i++) {
+      let keySystemConfiguration = keySystemConfigurations[i];
+      let {
+        initDataTypes,
+        sessionTypes,
+        distinctiveIdentifier,
+        persistentState,
+      } = keySystemConfiguration;
+
+      var supported = true;
+      supported = supported && (!initDataTypes || _.find(initDataTypes, initDataType => initDataType === "cenc"));
+      supported = supported && (!sessionTypes || _.filter(sessionTypes, sessionType => sessionType === "temporary").length === sessionTypes.length);
+      supported = supported && (distinctiveIdentifier !== "required");
+      supported = supported && (persistentState !== "required");
+
+      if (supported) {
+        return Promise_.resolve({
+          createMediaKeys() {
+            return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
+          }
+        });
       }
-    });
+    }
+
+    return Promise_.reject();
   };
 }
 
@@ -308,15 +328,31 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     return new SessionProxy(this);
   };
 
-  requestMediaKeySystemAccess = function(keyType) {
+  requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
     if (!MediaKeys_.isTypeSupported(keyType))
       return Promise_.reject();
 
-    return Promise_.resolve({
-      createMediaKeys() {
-        return Promise_.resolve(new MediaKeys_(keyType));
+    for (let i = 0; i < keySystemConfigurations.length; i++) {
+      let keySystemConfiguration = keySystemConfigurations[i];
+      let {
+        initDataTypes,
+        distinctiveIdentifier
+      } = keySystemConfiguration;
+
+      var supported = true;
+      supported = supported && (!initDataTypes || _.find(initDataTypes, idt => idt === "cenc"));
+      supported = supported && (distinctiveIdentifier !== "required");
+
+      if (supported) {
+        return Promise_.resolve({
+          createMediaKeys() {
+            return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
+          }
+        });
       }
-    });
+    }
+
+    return Promise_.reject();
   };
 }
 
