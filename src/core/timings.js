@@ -134,6 +134,7 @@ function timingsSampler(video) {
     var samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
 
     video.addEventListener("play", emitSample);
+    video.addEventListener("progress", emitSample);
     video.addEventListener("seeking", emitSample);
     video.addEventListener("seeked", emitSample);
     video.addEventListener("loadedmetadata", emitSample);
@@ -144,6 +145,7 @@ function timingsSampler(video) {
       clearInterval(samplerInterval);
 
       video.removeEventListener("play", emitSample);
+      video.removeEventListener("progress", emitSample);
       video.removeEventListener("seeking", emitSample);
       video.removeEventListener("seeked", emitSample);
       video.removeEventListener("loadedmetadata", emitSample);
