@@ -360,10 +360,9 @@ function Stream({
       .startWith({ type: "loaded", value: false });
   }
 
-  function createEME(manifest) {
+  function createEME() {
     if (keySystems && keySystems.length) {
-      // TODO(pierre): leave ability to chose session persistency
-      return EME(videoElement, keySystems, { persistedSessions: manifest.isLive });
+      return EME(videoElement, keySystems);
     } else {
       return EME.onEncrypted(videoElement).map(() => {
         var errMessage = "eme: ciphered media and no keySystem passed";
@@ -485,7 +484,7 @@ function Stream({
     var justManifest = just({ type: "manifest", value: manifest });
     var canPlay = createLoadedMetadata(manifest);
     var buffers = createAdaptationsBuffers(mediaSource, manifest, timings, seekings);
-    var emeHandler = createEME(manifest);
+    var emeHandler = createEME();
     var stalled = createStalled(timings, true);
 
     var mediaError = on(videoElement, "error").flatMap(() => {
