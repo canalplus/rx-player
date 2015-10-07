@@ -69,6 +69,18 @@ var profiles = {
   ]
 };
 
+function parseBoolean(val) {
+  if (typeof val == "boolean") {
+    return val;
+  }
+  else if (typeof val == "string") {
+    return val.toUpperCase() === "TRUE";
+  }
+  else {
+    return true;
+  }
+}
+
 function calcLastRef(index) {
   var { ts, r, d } = _.last(index.timeline);
   return ((ts + (r+1)*d) / index.timescale);
@@ -293,7 +305,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       timeShiftBufferDepth,
       availabilityStartTime;
 
-    var isLive = (root.getAttribute("IsLive") === "TRUE");
+    var isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
