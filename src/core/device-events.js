@@ -16,13 +16,12 @@
 
 var { Observable } = require("canal-js-utils/rx");
 var { merge, interval } = Observable;
-var { visibilityChange, videoSizeChange } = require("./compat");
 
 var INACTIVITY_DELAY = 60 * 1000;
 
-var pixelRatio = window.devicePixelRatio || 1;
+var pixelRatio = global.devicePixelRatio || 1;
 
-function DeviceEvents(videoElement) {
+function DeviceEvents(videoElement, { visibilityChange, videoSizeChange }) {
   var isVisible = visibilityChange()
     .filter(x => x === false);
 

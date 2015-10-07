@@ -25,14 +25,6 @@ var EventEmitter = require("canal-js-utils/eventemitter");
 var debugPane = require("../utils/debug");
 var assert = require("canal-js-utils/assert");
 
-var {
-  HTMLVideoElement_,
-  exitFullscreen,
-  requestFullscreen,
-  isFullscreen,
-  onFullscreenChange
-} = require("./compat");
-
 var { timingsSampler, toWallClockTime, fromWallClockTime, getLiveGap } = require("./timings");
 var { InitializationSegmentCache } = require("./cache");
 var { BufferedRanges } = require("./ranges");
@@ -72,7 +64,17 @@ function filterStreamByType(stream, type) {
 
 class Player extends EventEmitter {
 
-  constructor(options) {
+  static injectCompatibilityModule(compatModule) {
+    Player.__compat = compatModule;
+  }
+
+  constructor(options={}) {
+    var compat = Player.__compat;
+
+    assert(compat,
+      "No compatibility module injected." +
+      "Use the injectCompatibilityModule() function");
+
     var {
       videoElement,
       transport,
@@ -86,9 +88,9 @@ class Player extends EventEmitter {
     this.defaultTransportOptions = transportOptions || {};
 
     if (!videoElement)
-      videoElement = document.createElement("video");
+      videoElement = new (Player.__compat.HTMLVideoElement)();
 
-    assert((videoElement instanceof HTMLVideoElement_),
+    assert((videoElement instanceof Player.__compat.HTMLVideoElement),
       "requires an actual HTMLVideoElement");
 
     // Workaroud to support Firefox autoplay on FF 42.
@@ -99,7 +101,7 @@ class Player extends EventEmitter {
     this.video = videoElement;
 
     // fullscreen change
-    this.fullscreen = onFullscreenChange(videoElement)
+    this.fullscreen = Player.__compat.onFullscreenChange(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
     // playing state change
@@ -111,7 +113,10 @@ class Player extends EventEmitter {
     var { createPipelines, metrics } = PipeLines();
 
     var timings = timingsSampler(videoElement);
-    var deviceEvents = DeviceEvents(videoElement);
+    var deviceEvents = DeviceEvents(videoElement, {
+      visibilityChange: Player.__compat.visibilityChange,
+      videoSizeChange:  Player.__compat.videoSizeChange,
+    });
 
     this.createPipelines = createPipelines;
     this.metrics = metrics;
@@ -264,6 +269,7 @@ class Player extends EventEmitter {
         videoElement: video,
         autoPlay,
         directFile,
+        compat: Player.__compat
       });
     }
     catch(err) {
@@ -463,7 +469,7 @@ class Player extends EventEmitter {
   }
 
   isFullscreen() {
-    return isFullscreen();
+    return Player.__compat.isFullscreen();
   }
 
   getAvailableLanguages() {
@@ -560,9 +566,9 @@ class Player extends EventEmitter {
 
   setFullscreen(toggle = true) {
     if (toggle === false)
-      exitFullscreen();
+      Player.__compat.exitFullscreen();
     else
-      requestFullscreen(this.video);
+      Player.__compat.requestFullscreen(this.video);
   }
 
   setVolume(volume) {

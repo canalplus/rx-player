@@ -5,15 +5,18 @@ TST_IDX = test/index.js
 BUNDLE_STD ?= node "node_modules/webpack/bin/webpack.js" --progress
 BUNDLE_DEV ?= node "node_modules/webpack-dev-server/bin/webpack-dev-server.js" --port 9999 --progress
 
-dist/rx-player.js: $(SRC_IDX) $(SRC)
-	@$(BUNDLE_STD) $< $@
+dist/rx-player.js: $(SRC)
+	@$(BUNDLE_STD) --output-filename $@
+
+dist/rx-player.node.js: $(SRC)
+	@RX_PLAYER_TARGET=node $(BUNDLE_STD) --output-filename $@
 
 dist/rx-player.min.js: $(SRC_IDX) $(SRC)
 	@CP_PROD=true $(BUNDLE_STD) $< dist/rx-player.tmp.js
 	@closure-compiler --language_in=ECMASCRIPT5 --compilation_level SIMPLE_OPTIMIZATIONS --js dist/rx-player.tmp.js > $@
 	@rm dist/rx-player.tmp.js
 
-all: dist/rx-player.js dist/rx-player.min.js
+all: dist/rx-player.js dist/rx-player.node.js dist/rx-player.min.js
 
 build: dist/rx-player.js
 
@@ -22,6 +25,7 @@ min: dist/rx-player.min.js
 clean:
 	@rm -f dist/rx-player.js
 	@rm -f dist/rx-player.min.js
+	@rm -f dist/rx-player.node.js
 
 release: lint all
 	@./bin/release

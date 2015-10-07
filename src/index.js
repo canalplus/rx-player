@@ -14,4 +14,11 @@
  * limitations under the License.
  */
 
-module.exports = require("./core/player");
+var RxPlayer = require("./core/player");
+RxPlayer.injectCompatibilityModule(require("./compat/browser")({
+  HTMLVideoElement: null,
+  MediaSource: null,
+  URL: null,
+}));
+
+module.exports = RxPlayer;

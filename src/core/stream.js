@@ -24,15 +24,13 @@ var { retryWithBackoff } = require("canal-js-utils/rx-ext");
 var { empty, never, just, merge, zip } = Observable;
 var min = Math.min;
 
-var { MediaSource_, sourceOpen, loadedMetadataEvent } = require("./compat");
 var TextSourceBuffer = require("./text-buffer");
 var { getLiveEdge } = require("./index-handler");
 var Buffer = require("./buffer");
 var EME = require("./eme");
 
 var {
-  normalizeManifest,
-  mergeManifestsIndex,
+  Manifest,
   mutateManifestLiveGap,
   getAdaptations
 } = require("./manifest");
@@ -70,10 +68,12 @@ function Stream({
   pipelines,
   videoElement,
   autoPlay,
-  directFile
+  directFile,
+  compat
 }) {
+  var { MediaSource, URL, sourceOpen, loadedMetadataEvent } = compat;
 
-  assert(MediaSource_, "player: browser is required to support MediaSource");
+  assert(MediaSource, "player: browser is required to support MediaSource");
 
   var fragStartTime = timeFragment.start;
   var fragEndTime = timeFragment.end;
@@ -162,7 +162,7 @@ function Stream({
 
   function createAndPlugMediaSource(url, video) {
     return Observable.create((observer) => {
-      var mediaSource = new MediaSource_();
+      var mediaSource = new MediaSource();
       var objectURL = video.src = URL.createObjectURL(mediaSource);
 
       observer.onNext({ url, mediaSource });
@@ -265,7 +265,7 @@ function Stream({
     return manifestPipeline({ url })
       .zip(sourceOpening, _.identity)
       .flatMap(({ parsed }) => {
-        var manifest = normalizeManifest(parsed.url, parsed.manifest, subtitles);
+        var manifest = new Manifest(parsed.manifest, compat).normalize(parsed.url, subtitles);
 
         setDuration(mediaSource, manifest);
 
@@ -362,9 +362,9 @@ function Stream({
 
   function createEME() {
     if (keySystems && keySystems.length) {
-      return EME(videoElement, keySystems);
+      return EME(videoElement, keySystems, compat);
     } else {
-      return EME.onEncrypted(videoElement).map(() => {
+      return compat.emeEvents.onEncrypted(videoElement).map(() => {
         var errMessage = "eme: ciphered media and no keySystem passed";
         log.error(errMessage);
         throw new Error(errMessage);
@@ -438,7 +438,10 @@ function Stream({
       log.warn("out of index");
       return manifestPipeline({ url: manifest.locations[0] })
         .map(({ parsed }) => {
-          var newManifest = mergeManifestsIndex(manifest, normalizeManifest(parsed.url, parsed.manifest, subtitles));
+          var newManifest = new Manifest(parsed.manifest, compat)
+            .normalize(parsed.url, subtitles)
+            .mergeManifestsIndex(manifest);
+
           return { type: "manifest", value: newManifest };
         });
     }

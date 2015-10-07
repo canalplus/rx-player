@@ -20,6 +20,8 @@
 var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 
+var DOMParser = global.DOMParser;
+
 var iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 var rangeRe = /([0-9]+)-([0-9]+)/;
 var frameRateRe = /([0-9]+)(\/([0-9]+))?/;
@@ -216,12 +218,13 @@ var attributes = {
 };
 
 function reduceChildren(root, fn, init) {
-  var node = root.firstElementChild, r = init;
+  var node = root.firstElementChild || root.childNodes[0];
+  var res = init;
   while (node) {
-    r = fn(r, node.nodeName, node);
-    node = node.nextElementSibling;
+    res = fn(res, node.nodeName, node);
+    node = (node.nextElementSibling || node.nextSibling);
   }
-  return r;
+  return res;
 }
 
 function parseContentProtection(root, contentProtectionParser) {
@@ -256,13 +259,15 @@ function parseSegmentTimeline(root) {
   return reduceChildren(root, (arr, name, node) => {
     var len = arr.length;
     var seg = feedAttributes(node);
-    if (seg.ts == null) {
-      var prev = (len > 0) && arr[len - 1];
-      seg.ts = prev
-        ? prev.ts + prev.d * (prev.r + 1)
-        : 0;
+    if (seg.ts == null || seg.ts === "") {
+      if (len > 0) {
+        var prev = arr[len - 1];
+        seg.ts = prev.ts + prev.d * (prev.r + 1);
+      } else {
+        seg.ts = 0;
+      }
     }
-    if (seg.r == null) {
+    if (seg.r == null || seg.r === "") {
       seg.r = 0;
     }
     arr.push(seg);
@@ -378,8 +383,8 @@ function parsePeriod(root, contentProtectionParser) {
   return attrs;
 }
 
-function parseFromDocument(document, contentProtectionParser) {
-  var root = document.documentElement;
+function parseFromDocument(doc, contentProtectionParser) {
+  var root = doc.documentElement;
   assert.equal(root.nodeName, "MPD", "parser: document root should be MPD");
 
   var manifest = reduceChildren(root, (res, name, node) => {
@@ -428,9 +433,10 @@ function parseFromString(manifest, contentProtectionParser) {
 }
 
 function parser(manifest, contentProtectionParser) {
-  if (_.isString(manifest)) return parseFromString(manifest, contentProtectionParser);
-  if (manifest instanceof window.Document) return parseFromDocument(manifest, contentProtectionParser);
-  throw new Error("parser: unsupported type to parse");
+  if (_.isString(manifest))
+    return parseFromString(manifest, contentProtectionParser);
+  else
+    return parseFromDocument(manifest, contentProtectionParser);
 }
 
 parser.parseFromString   = parseFromString;

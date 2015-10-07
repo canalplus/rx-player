@@ -130,7 +130,7 @@ function showDebug(player, videoElement) {
 
   var container = videoParent.querySelector("#cp--debug-infos-container");
   if (!container) {
-    container = document.createElement("div");
+    container = global.document.createElement("div");
     container.setAttribute("id", "cp--debug-infos-container");
     videoParent.appendChild(container);
   }
