@@ -1,8 +1,9 @@
 var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 var { be4toi, strToBytes } = require("canal-js-utils/bytes");
-var boxName = _.memoize(strToBytes);
 var { concat, itobe4 } = require("canal-js-utils/bytes");
+
+var boxName = _.memoize(strToBytes);
 
 function Atom(name, buff) {
   if (__DEV__)

@@ -16,122 +16,20 @@
 
 var assert = require("canal-js-utils/assert");
 var EventEmitter = require("canal-js-utils/eventemitter");
-var { findAtom } = require("../utils/mp4");
-var { be4toi, be8toi } = require("canal-js-utils/bytes");
 var { BufferedRanges } = require("main/core/ranges");
-var AbstractSourceBuffer = require("main/core/sourcebuffer");
 
-class SourceBuffer extends AbstractSourceBuffer {
-  constructor(codec) {
-    super(codec);
-    this.inited = false;
-  }
-
-  _append(blob) {
-    // if moov atom, this is a init segment
-    var moov = findAtom(blob, "moov");
-    var moof = findAtom(blob, "moof");
-
-    if (moov) {
-      var mdhd = findAtom(findAtom(findAtom(moov, "trak"), "mdia"), "mdhd");
-      var version = mdhd[0];
-      var timescale;
-      if (version === 1) {
-        timescale = be4toi(mdhd, 20);
-      } else {
-        timescale = be4toi(mdhd, 12);
-      }
-      assert(timescale > 0);
-      this.inited = true;
-      this.timescale = timescale;
-    }
-
-    if (moof) {
-      assert(this.timescale > 0);
-      var traf = findAtom(moof, "traf");
-      var tfhd = findAtom(traf, "tfhd");
-      var tfdt = findAtom(traf, "tfdt");
-      var trun = findAtom(traf, "trun");
-
-      var defaultSampleDuration = 0;
-      var tfhdFlags = be4toi(tfhd, 0) & 0x00FFFFFF;
-      var defaultSampleDurationPresent = tfhdFlags & (1 << 3);
-      if (defaultSampleDurationPresent) {
-        var baseDataOffsetPresent = tfhdFlags & (1);
-        var sampleDescriptionIndexPresent = tfhdFlags & (1 << 1);
-
-        var defaultSampleDurationOffset = 8;
-        if (baseDataOffsetPresent)
-          defaultSampleDurationOffset += 4;
-        if (sampleDescriptionIndexPresent)
-          defaultSampleDurationOffset += 4;
-
-        defaultSampleDuration = be4toi(tfhd, defaultSampleDurationOffset);
-      }
-
-      var trunFlags = be4toi(trun, 0) & 0x00FFFFFF;
-      var sampleCount = be4toi(trun, 4);
-
-      var dataOffsetPresent = trunFlags & (1);
-      var firstSampleFlagsPresent = trunFlags & (1 << 2);
-      var sampleDurationPresent = trunFlags & (1 << 8);
-      var sampleSizePresent = trunFlags & (1 << 9);
-      var sampleFlagsPresent = trunFlags & (1 << 10);
-      var sampleCompositionFlagOffsetPresent = trunFlags & (1 << 11);
-
-      var totalDuration = 0;
-      if (defaultSampleDuration > 0) {
-        assert(!sampleDurationPresent);
-        totalDuration = sampleCount * defaultSampleDuration;
-      }
-      else {
-        var offset = 8;
-        if (dataOffsetPresent)
-          offset += 4;
-        if (firstSampleFlagsPresent)
-          offset += 4;
-
-        var sampleSize = 0;
-        if (sampleDurationPresent)
-          sampleSize += 4;
-        if (sampleSizePresent)
-          sampleSize += 4;
-        if (sampleFlagsPresent)
-          sampleSize += 4;
-        if (sampleCompositionFlagOffsetPresent)
-          sampleSize += 4;
-
-        var count = 0;
-        for (; offset < trun.length; offset += sampleSize) {
-          totalDuration += be4toi(trun, offset);
-          count++;
-        }
-
-        assert(count === sampleCount);
-      }
-
-      var decodeTime = be8toi(tfdt, 4);
-      assert(totalDuration > 0);
-      assert(decodeTime >= 0);
-
-      this.buffered.insert(0,
-        (decodeTime / this.timescale),
-        (decodeTime + totalDuration) / this.timescale);
-    }
-  }
-
-  _remove(from, to) {
-    this.buffered.remove(from, to);
-  }
-}
-
-function createMediaSource(SourceBuffer=SourceBuffer) {
+function createHeadlessMediaSource(SourceBuffer) {
 
   var objectUrls = [];
 
   var URL = {
     createObjectURL(object) {
-      var url = "random://"+Math.random();
+      var url;
+      if (object.getUrl) {
+        url = object.getUrl();
+      } else {
+        url = "random://" + String(Math.random()).substr(2);
+      }
       objectUrls.push({ url, object });
       return url;
     },
@@ -190,7 +88,7 @@ function createMediaSource(SourceBuffer=SourceBuffer) {
 
     addSourceBuffer(codec) {
       assert(this.readyState == MediaSourceReadyState.OPEN);
-      var sb = new SourceBuffer(codec);
+      var sb = new SourceBuffer(codec, this);
       sb.addEventListener("updateend", this._checkInited);
       sb.addEventListener("updateend", this._onProgress);
       this._buffers.push(sb);
@@ -425,7 +323,4 @@ function createMediaSource(SourceBuffer=SourceBuffer) {
   return { MediaSource, HTMLVideoElement, URL };
 }
 
-module.exports = {
-  SourceBuffer,
-  createMediaSource,
-};
+module.exports = createHeadlessMediaSource;

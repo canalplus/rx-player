@@ -64,16 +64,18 @@ function filterStreamByType(stream, type) {
 
 class Player extends EventEmitter {
 
-  static injectCompatibilityModule(compatModule) {
-    Player.__compat = compatModule;
+  static injectDefaultCompatibilityModule(defaultCompatModule) {
+    Player.__defaultCompat = defaultCompatModule;
   }
 
-  constructor(options={}) {
-    var compat = Player.__compat;
+  constructor(options={}, compatModule) {
+    super();
 
-    assert(compat,
+    compatModule = this.__compat = compatModule || Player.__defaultCompat;
+
+    assert(compatModule,
       "No compatibility module injected." +
-      "Use the injectCompatibilityModule() function");
+      "Use the injectDefaultCompatibilityModule() function");
 
     var {
       videoElement,
@@ -83,14 +85,13 @@ class Player extends EventEmitter {
       initAudioBitrate
     } = options;
 
-    super();
     this.defaultTransport = transport;
     this.defaultTransportOptions = transportOptions || {};
 
     if (!videoElement)
-      videoElement = new (Player.__compat.HTMLVideoElement)();
+      videoElement = new (compatModule.HTMLVideoElement)();
 
-    assert((videoElement instanceof Player.__compat.HTMLVideoElement),
+    assert((videoElement instanceof compatModule.HTMLVideoElement),
       "requires an actual HTMLVideoElement");
 
     // Workaroud to support Firefox autoplay on FF 42.
@@ -101,7 +102,7 @@ class Player extends EventEmitter {
     this.video = videoElement;
 
     // fullscreen change
-    this.fullscreen = Player.__compat.onFullscreenChange(videoElement)
+    this.fullscreen = compatModule.onFullscreenChange(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
     // playing state change
@@ -114,8 +115,8 @@ class Player extends EventEmitter {
 
     var timings = timingsSampler(videoElement);
     var deviceEvents = DeviceEvents(videoElement, {
-      visibilityChange: Player.__compat.visibilityChange,
-      videoSizeChange:  Player.__compat.videoSizeChange,
+      visibilityChange: compatModule.visibilityChange,
+      videoSizeChange:  compatModule.videoSizeChange,
     });
 
     this.createPipelines = createPipelines;
@@ -269,7 +270,7 @@ class Player extends EventEmitter {
         videoElement: video,
         autoPlay,
         directFile,
-        compat: Player.__compat
+        compat: this.__compat,
       });
     }
     catch(err) {
@@ -469,7 +470,7 @@ class Player extends EventEmitter {
   }
 
   isFullscreen() {
-    return Player.__compat.isFullscreen();
+    return this.__compat.isFullscreen();
   }
 
   getAvailableLanguages() {
@@ -566,9 +567,9 @@ class Player extends EventEmitter {
 
   setFullscreen(toggle = true) {
     if (toggle === false)
-      Player.__compat.exitFullscreen();
+      this.__compat.exitFullscreen();
     else
-      Player.__compat.requestFullscreen(this.video);
+      this.__compat.requestFullscreen(this.video);
   }
 
   setVolume(volume) {

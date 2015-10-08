@@ -1,15 +1,20 @@
 var RxPlayer = require("../dist/rx-player.node.js");
 var contents = require("./contents");
 
-var ms = RxPlayer.createMediaSource(RxPlayer.buffers.createFileSourceBuffer("/tmp"));
-RxPlayer.injectCompatibilityModule(RxPlayer.compat({
-  HTMLVideoElement: ms.HTMLVideoElement,
-  MediaSource: ms.MediaSource,
-  URL: ms.URL,
-}));
+var FileSourceBuffer = RxPlayer.buffers.createFileSourceBuffer("/tmp");
+var { H264SourceBuffer } = RxPlayer.buffers.H264SourceBuffer;
 
-var content = contents[1];
+class SourceBuffer extends mixin(FileSourceBuffer, H264SourceBuffer) {
+
+}
+
+var nodeFsMediaSource = RxPlayer.createHeadlessMediaSource(new SourceBuffer());
+
+RxPlayer.injectDefaultCompatibilityModule(RxPlayer.createNodeCompatibilityModule(nodeFsMediaSource));
+
+var content = contents[0];
 var player = new RxPlayer();
+player.log.setLevel("DEBUG");
 player.loadVideo({
   url: content.url,
   transport: content.transport,

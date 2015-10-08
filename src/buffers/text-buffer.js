@@ -16,7 +16,7 @@
 
 var Promise_ = require("canal-js-utils/promise");
 var _ = require("canal-js-utils/misc");
-var AbstractSourceBuffer = require("./sourcebuffer");
+var AbstractSourceBuffer = require("./abstract");
 
 var URL = global.URL;
 var Blob = global.Blob;

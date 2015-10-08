@@ -24,7 +24,7 @@ var { retryWithBackoff } = require("canal-js-utils/rx-ext");
 var { empty, never, just, merge, zip } = Observable;
 var min = Math.min;
 
-var TextSourceBuffer = require("./text-buffer");
+var TextSourceBuffer = require("../buffers/text-buffer");
 var { getLiveEdge } = require("./index-handler");
 var Buffer = require("./buffer");
 var EME = require("./eme");

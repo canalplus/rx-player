@@ -1,10 +1,13 @@
 var RxPlayer = require("./core/player");
-var createFileSourceBuffer = require("./utils/node-fsbuffer");
+var createFileSourceBuffer = require("./buffers/fs-buffer");
+var { MP4SourceBuffer, H264SourceBuffer } = require("./buffers/mp4");
 
-RxPlayer.createMediaSource = require("./utils/mse-headless").createMediaSource;
+RxPlayer.createHeadlessMediaSource = require("./compat/mse-headless");
+RxPlayer.createNodeCompatibilityModule = require("./compat/node");
 RxPlayer.buffers = {
-  createFileSourceBuffer
+  createFileSourceBuffer,
+  MP4SourceBuffer,
+  H264SourceBuffer,
 };
-RxPlayer.compat = require("./compat/node");
 
 module.exports = RxPlayer;
