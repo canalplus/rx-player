@@ -1,3 +1,11 @@
+v1.3.1 on October 14, 2015
+==========================
+
+Bug fixes
+---------
+
+- smooth: fix parseBoolean causing isLive to be always true
+
 v1.3.0 on October 14, 2015
 ==========================
 

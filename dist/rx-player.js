@@ -5861,7 +5861,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
 	    videoElement.preload = "auto";
 
-	    this.version = ("1.3.0");
+	    this.version = ("1.3.1");
 	    this.video = videoElement;
 
 	    // fullscreen change
@@ -9201,7 +9201,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else if (typeof val == "string") {
 	    return val.toUpperCase() === "TRUE";
 	  } else {
-	    return true;
+	    return false;
 	  }
 	}
 

@@ -1,7 +1,7 @@
 rx-player
 =========
 
-Latest release: v1.3.0
+Latest release: v1.3.1
 
 The rx-player is a Javascript library implementic a generic streaming video player using HTML5 Media Source and Encrypted Media extensions. It is entirely written in reactive-programming with ECMAScript 6.
 
