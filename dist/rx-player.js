@@ -197,9 +197,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  while (++i < l) {
 	    var value = arr[i];
 	    if (value && typeof value == "object" && typeof value.length == "number") {
-	      var valIndex = -1,
-	          valLength = value.length,
-	          resIndex = n.length;
+	      var valIndex = -1;
+	      var valLength = value.length;
+	      var resIndex = n.length;
 
 	      n.length += valLength;
 	      while (++valIndex < valLength) {
@@ -422,7 +422,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (n.length >= l) {
 	    return n;
 	  }
-	  var arr = new Array(l + 1).join('0') + n;
+	  var arr = new Array(l + 1).join("0") + n;
 	  return arr.slice(-l);
 	}
 
@@ -704,6 +704,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	module.exports = __webpack_require__(48).Promise;
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
 	var assert = __webpack_require__(2);
 
 	function totalBytes(arr) {
@@ -875,14 +883,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	module.exports = __webpack_require__(48).Promise;
-
-/***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -906,10 +906,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _ = __webpack_require__(1);
 	var log = __webpack_require__(4);
-	var Promise_ = __webpack_require__(7);
+	var Promise_ = __webpack_require__(6);
 	var EventEmitter = __webpack_require__(10);
 
-	var _require = __webpack_require__(6);
+	var _require = __webpack_require__(7);
 
 	var bytesToStr = _require.bytesToStr;
 	var strToBytes = _require.strToBytes;
@@ -1150,14 +1150,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  };
 
-	  requestMediaKeySystemAccess = function (keyType) {
+	  requestMediaKeySystemAccess = function (keyType, keySystemConfigurations) {
 	    if (!isTypeSupported(keyType)) return Promise_.reject();
 
-	    return Promise_.resolve({
-	      createMediaKeys: function createMediaKeys() {
-	        return Promise_.resolve(new MockMediaKeys(keyType));
+	    var _loop = function (i) {
+	      var keySystemConfiguration = keySystemConfigurations[i];
+	      var initDataTypes = keySystemConfiguration.initDataTypes;
+	      var sessionTypes = keySystemConfiguration.sessionTypes;
+	      var distinctiveIdentifier = keySystemConfiguration.distinctiveIdentifier;
+	      var persistentState = keySystemConfiguration.persistentState;
+	      supported = true;
+
+	      supported = supported && (!initDataTypes || _.find(initDataTypes, function (initDataType) {
+	        return initDataType === "cenc";
+	      }));
+	      supported = supported && (!sessionTypes || _.filter(sessionTypes, function (sessionType) {
+	        return sessionType === "temporary";
+	      }).length === sessionTypes.length);
+	      supported = supported && distinctiveIdentifier !== "required";
+	      supported = supported && persistentState !== "required";
+
+	      if (supported) {
+	        return {
+	          v: Promise_.resolve({
+	            createMediaKeys: function createMediaKeys() {
+	              return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
+	            }
+	          })
+	        };
 	      }
-	    });
+	    };
+
+	    for (var i = 0; i < keySystemConfigurations.length; i++) {
+	      var supported;
+
+	      var _ret = _loop(i);
+
+	      if (typeof _ret === "object") return _ret.v;
+	    }
+
+	    return Promise_.reject();
 	  };
 	}
 
@@ -1205,14 +1237,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return new SessionProxy(this);
 	    };
 
-	    requestMediaKeySystemAccess = function (keyType) {
+	    requestMediaKeySystemAccess = function (keyType, keySystemConfigurations) {
 	      if (!MediaKeys_.isTypeSupported(keyType)) return Promise_.reject();
 
-	      return Promise_.resolve({
-	        createMediaKeys: function createMediaKeys() {
-	          return Promise_.resolve(new MediaKeys_(keyType));
+	      var _loop2 = function (i) {
+	        var keySystemConfiguration = keySystemConfigurations[i];
+	        var initDataTypes = keySystemConfiguration.initDataTypes;
+	        var distinctiveIdentifier = keySystemConfiguration.distinctiveIdentifier;
+	        supported = true;
+
+	        supported = supported && (!initDataTypes || _.find(initDataTypes, function (idt) {
+	          return idt === "cenc";
+	        }));
+	        supported = supported && distinctiveIdentifier !== "required";
+
+	        if (supported) {
+	          return {
+	            v: Promise_.resolve({
+	              createMediaKeys: function createMediaKeys() {
+	                return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
+	              }
+	            })
+	          };
 	        }
-	      });
+	      };
+
+	      for (var i = 0; i < keySystemConfigurations.length; i++) {
+	        var supported;
+
+	        var _ret2 = _loop2(i);
+
+	        if (typeof _ret2 === "object") return _ret2.v;
+	      }
+
+	      return Promise_.reject();
 	    };
 	  }
 
@@ -1838,8 +1896,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */(function(global, process) {// v3.1.1
 	//
 	// Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
-	'use strict';var root=global;var Rx={internals:{},config:{Promise:root.Promise},helpers:{}}; // Defaults
-	var noop=Rx.helpers.noop = function(){},identity=Rx.helpers.identity = function(x){return x;},defaultNow=Rx.helpers.defaultNow = Date.now,defaultComparer=Rx.helpers.defaultComparer = function(x,y){return isEqual(x,y);},defaultSubComparer=Rx.helpers.defaultSubComparer = function(x,y){return x > y?1:x < y?-1:0;},defaultKeySerializer=Rx.helpers.defaultKeySerializer = function(x){return x.toString();},defaultError=Rx.helpers.defaultError = function(err){throw err;},isPromise=Rx.helpers.isPromise = function(p){return !!p && typeof p.subscribe !== 'function' && typeof p.then === 'function';},isFunction=Rx.helpers.isFunction = function(value){return typeof value == 'function' || false;};function cloneArray(arr){var len=arr.length,a=new Array(len);for(var i=0;i < len;i++) {a[i] = arr[i];}return a;}var errorObj={e:{}};var tryCatchTarget;function tryCatcher(){try{return tryCatchTarget.apply(this,arguments);}catch(e) {errorObj.e = e;return errorObj;}}function tryCatch(fn){if(!isFunction(fn)){throw new TypeError('fn must be a function');}tryCatchTarget = fn;return tryCatcher;}function thrower(e){throw e;}var EmptyError=Rx.EmptyError = function(){this.message = 'Sequence contains no elements.';this.name = 'EmptyError';Error.call(this);};EmptyError.prototype = Error.prototype;var ObjectDisposedError=Rx.ObjectDisposedError = function(){this.message = 'Object has been disposed';this.name = 'ObjectDisposedError';Error.call(this);};ObjectDisposedError.prototype = Error.prototype;var ArgumentOutOfRangeError=Rx.ArgumentOutOfRangeError = function(){this.message = 'Argument out of range';this.name = 'ArgumentOutOfRangeError';Error.call(this);};ArgumentOutOfRangeError.prototype = Error.prototype;var NotSupportedError=Rx.NotSupportedError = function(message){this.message = message || 'This operation is not supported';this.name = 'NotSupportedError';Error.call(this);};NotSupportedError.prototype = Error.prototype;var NotImplementedError=Rx.NotImplementedError = function(message){this.message = message || 'This operation is not implemented';this.name = 'NotImplementedError';Error.call(this);};NotImplementedError.prototype = Error.prototype;var notImplemented=Rx.helpers.notImplemented = function(){throw new NotImplementedError();};var notSupported=Rx.helpers.notSupported = function(){throw new NotSupportedError();}; // Shim in iterator support
+	'use strict';var root=global;var Promise_=__webpack_require__(6);var Rx={internals:{},config:{Promise:Promise_},helpers:{}}; // Defaults
+	var noop=Rx.helpers.noop = function(){},identity=Rx.helpers.identity = function(x){return x;},defaultNow=Rx.helpers.defaultNow = Date.now,defaultComparer=Rx.helpers.defaultComparer = function(x,y){return isEqual(x,y);},defaultSubComparer=Rx.helpers.defaultSubComparer = function(x,y){return x > y?1:x < y?-1:0;},defaultError=Rx.helpers.defaultError = function(err){throw err;},isPromise=Rx.helpers.isPromise = function(p){return !!p && typeof p.subscribe !== 'function' && typeof p.then === 'function';},isFunction=Rx.helpers.isFunction = function(value){return typeof value == 'function' || false;};function cloneArray(arr){var len=arr.length,a=new Array(len);for(var i=0;i < len;i++) {a[i] = arr[i];}return a;}var errorObj={e:{}};var tryCatchTarget;function tryCatcher(){try{return tryCatchTarget.apply(this,arguments);}catch(e) {errorObj.e = e;return errorObj;}}function tryCatch(fn){if(!isFunction(fn)){throw new TypeError('fn must be a function');}tryCatchTarget = fn;return tryCatcher;}function thrower(e){throw e;}var EmptyError=Rx.EmptyError = function(){this.message = 'Sequence contains no elements.';this.name = 'EmptyError';Error.call(this);};EmptyError.prototype = Error.prototype;var ObjectDisposedError=Rx.ObjectDisposedError = function(){this.message = 'Object has been disposed';this.name = 'ObjectDisposedError';Error.call(this);};ObjectDisposedError.prototype = Error.prototype;var ArgumentOutOfRangeError=Rx.ArgumentOutOfRangeError = function(){this.message = 'Argument out of range';this.name = 'ArgumentOutOfRangeError';Error.call(this);};ArgumentOutOfRangeError.prototype = Error.prototype;var NotSupportedError=Rx.NotSupportedError = function(message){this.message = message || 'This operation is not supported';this.name = 'NotSupportedError';Error.call(this);};NotSupportedError.prototype = Error.prototype;var NotImplementedError=Rx.NotImplementedError = function(message){this.message = message || 'This operation is not implemented';this.name = 'NotImplementedError';Error.call(this);};NotImplementedError.prototype = Error.prototype;var notImplemented=Rx.helpers.notImplemented = function(){throw new NotImplementedError();};var notSupported=Rx.helpers.notSupported = function(){throw new NotSupportedError();}; // Shim in iterator support
 	var $iterator$='_es6shim_iterator_';var doneEnumerator=Rx.doneEnumerator = {done:true,value:undefined};var isArrayLike=Rx.helpers.isArrayLike = function(o){return o && o.length !== undefined;};var bindCallback=Rx.internals.bindCallback = function(func,thisArg,argCount){if(!thisArg){return func;}return function(){return func.apply(thisArg,arguments);};};var isObject=Rx.internals.isObject = function(value){var type=typeof value;return value && (type == 'function' || type == 'object') || false;};var isEqual=Rx.internals.isEqual = function(objA,objB){if(objA === objB){return true;}if(!objA || !objB){return false;}if(typeof objA !== 'object' || typeof objB !== 'object'){return false;}var key; // Test for A's keys different from B.
 	for(key in objA) {if(objA.hasOwnProperty(key) && (!objB.hasOwnProperty(key) || objA[key] !== objB[key])){return false;}} // Test for B's keys missing from A.
 	for(key in objB) {if(objB.hasOwnProperty(key) && !objA.hasOwnProperty(key)){return false;}}return true;};var hasProp=({}).hasOwnProperty,slice=Array.prototype.slice;var inherits=Rx.internals.inherits = function(child,parent){function __(){this.constructor = child;}__.prototype = parent.prototype;child.prototype = new __();};var addProperties=Rx.internals.addProperties = function(obj){for(var idx=1,ln=arguments.length;idx < ln;idx++) {var source=arguments[idx];for(var prop in source) {obj[prop] = source[prop];}}};function arrayInitialize(count,factory){var a=new Array(count);for(var i=0;i < count;i++) {a[i] = factory();}return a;} /**
@@ -2878,9 +2936,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var ENTITIES_REG = /[&<>]/g;
 	var ENTITIES = {
-	  '&': '&amp;',
-	  '<': '&lt;',
-	  '>': '&gt;'
+	  "&": "&amp;",
+	  "<": "&lt;",
+	  ">": "&gt;"
 	};
 
 	function escapeXml(xml) {
@@ -2904,7 +2962,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return item && item.textContent;
 	}
 
-	var METHOD_CALL_XML = '<RestCallMethod xmlns:i="http://www.w3.org/2001/XMLSchema-instance">{payload}</RestCallMethod>';
+	var METHOD_CALL_XML = "<RestCallMethod xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\">{payload}</RestCallMethod>";
 
 	function restCallMethod(options) {
 	  options.method = "POST";
@@ -3053,28 +3111,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 	var _ = __webpack_require__(1);
 	var log = __webpack_require__(4);
-	var Promise_ = __webpack_require__(7);
+	var Promise_ = __webpack_require__(6);
 	var assert = __webpack_require__(2);
 
-	var _require = __webpack_require__(6);
+	var _require = __webpack_require__(3);
 
-	var bytesToHex = _require.bytesToHex;
-
-	var _require2 = __webpack_require__(3);
-
-	var Observable = _require2.Observable;
+	var Observable = _require.Observable;
+	var combineLatest = Observable.combineLatest;
 	var empty = Observable.empty;
 	var fromPromise = Observable.fromPromise;
 	var merge = Observable.merge;
 	var just = Observable.just;
 
-	var _require3 = __webpack_require__(8);
+	var _require2 = __webpack_require__(8);
 
-	var requestMediaKeySystemAccess = _require3.requestMediaKeySystemAccess;
-	var setMediaKeys = _require3.setMediaKeys;
-	var emeEvents = _require3.emeEvents;
+	var requestMediaKeySystemAccess = _require2.requestMediaKeySystemAccess;
+	var setMediaKeys = _require2.setMediaKeys;
+	var emeEvents = _require2.emeEvents;
 	var onEncrypted = emeEvents.onEncrypted;
 	var onKeyMessage = emeEvents.onKeyMessage;
 	var onKeyError = emeEvents.onKeyError;
@@ -3093,32 +3150,193 @@ return /******/ (function(modules) { // webpackBootstrap
 	  "internal-error": "eme: an unknown error has occurred in the CDM."
 	};
 
+	function hashBuffer(buffer) {
+	  var hash = 0;
+	  var char = undefined;
+	  for (var i = 0; i < buffer.length; i++) {
+	    char = buffer[i];
+	    hash = (hash << 5) - hash + char;
+	    hash = hash & hash; // Convert to 32bit integer
+	  }
+	  return hash;
+	}
+
 	var NotSupportedKeySystemError = function NotSupportedKeySystemError() {
 	  return new Error("eme: could not find a compatible key system");
 	};
 
-	// Persisted singleton instance of MediaKeys.
-	// We do not allow multiple CDM instances.
-	var $mediaKeys;
-	var $keySystem;
+	/**
+	 * Set maintaining a representation of all currently loaded
+	 * MediaKeySessions. This set allow to reuse sessions without re-
+	 * negotiating a license exchange if the key is already used in a
+	 * loaded session.
+	 */
 
-	var $sessionsStore = (function () {
-	  var sessions = {};
-	  return {
-	    get: function get(initData) {
-	      return sessions[bytesToHex(initData)];
-	    },
-	    set: function set(initData, session) {
-	      sessions[bytesToHex(initData)] = session;
-	    },
-	    "delete": function _delete(initData) {
-	      delete sessions[bytesToHex(initData)];
-	    },
-	    dispose: function dispose() {
-	      sessions = {};
+	var InMemorySessionsSet = (function () {
+	  function InMemorySessionsSet() {
+	    _classCallCheck(this, InMemorySessionsSet);
+
+	    this._hash = {};
+	  }
+
+	  /**
+	   * Set representing persisted licenses. Depends on a simple local-
+	   * storage implementation with a `save`/`load` synchronous interface
+	   * to persist informations on persisted sessions.
+	   *
+	   * This set is used only for a cdm/keysystem with license persistency
+	   * supported.
+	   */
+
+	  InMemorySessionsSet.prototype.getFirst = function getFirst() {
+	    for (var i in this._hash) {
+	      return this._hash[i];
 	    }
 	  };
+
+	  InMemorySessionsSet.prototype.get = function get(sessionId) {
+	    return this._hash[sessionId];
+	  };
+
+	  InMemorySessionsSet.prototype.add = function add(session) {
+	    var _this = this;
+
+	    var sessionId = session.sessionId;
+	    assert(sessionId);
+	    if (!this._hash[sessionId]) {
+	      log.debug("eme-store: add persisted session in store", sessionId);
+	      this._hash[sessionId] = session;
+
+	      session.closed.then(function () {
+	        log.debug("eme-store: remove persisted session from store", sessionId);
+	        delete _this._hash[sessionId];
+	      });
+	    }
+	  };
+
+	  InMemorySessionsSet.prototype["delete"] = function _delete(sessionId) {
+	    var session = this._hash[sessionId];
+	    if (session) {
+	      delete this._hash[sessionId];
+	      return session.close();
+	    } else {
+	      return Promise_.resolve();
+	    }
+	  };
+
+	  InMemorySessionsSet.prototype.dispose = function dispose() {
+	    var disposed = [];
+	    for (var sessionId in this._hash) {
+	      disposed.push(this._hash[sessionId].close());
+	    }
+	    this._hash = {};
+	    return Promise_.all(disposed);
+	  };
+
+	  return InMemorySessionsSet;
 	})();
+
+	var PersistedSessionsSet = (function () {
+	  function PersistedSessionsSet(storage) {
+	    _classCallCheck(this, PersistedSessionsSet);
+
+	    this.setStorage(storage);
+	  }
+
+	  PersistedSessionsSet.prototype.setStorage = function setStorage(storage) {
+	    if (this._storage === storage) {
+	      return;
+	    }
+
+	    assert(storage, "eme: no licenseStorage given for keySystem with persistentLicense");
+
+	    assert.iface(storage, "licenseStorage", { save: "function", load: "function" });
+
+	    this._storage = storage;
+	    try {
+	      this._entries = this._storage.load();
+	      assert(Array.isArray(this._entries));
+	    } catch (e) {
+	      log.warn("eme-store: could not get entries from license storage", e);
+	      this.dispose();
+	    }
+	  };
+
+	  PersistedSessionsSet.prototype.hashInitData = function hashInitData(initData) {
+	    if (typeof initData == "number") {
+	      return initData;
+	    } else {
+	      return hashBuffer(initData);
+	    }
+	  };
+
+	  PersistedSessionsSet.prototype.get = function get(initData) {
+	    initData = this.hashInitData(initData);
+	    var entry = _.find(this._entries, function (entry) {
+	      return entry.initData === initData;
+	    });
+	    if (entry) {
+	      return entry.sessionId;
+	    }
+	  };
+
+	  PersistedSessionsSet.prototype.add = function add(initData, session) {
+	    initData = this.hashInitData(initData);
+	    if (!this.get(initData)) {
+	      var sessionId = session.sessionId;
+	      assert(sessionId);
+
+	      log.info("eme-store: store new session", sessionId, session);
+	      this._entries.push({ sessionId: sessionId, initData: initData });
+	      this._save();
+	    }
+	  };
+
+	  PersistedSessionsSet.prototype["delete"] = function _delete(initData, session) {
+	    initData = this.hashInitData(initData);
+
+	    var entry = _.find(this._entries, function (entry) {
+	      return entry.initData === initData;
+	    });
+	    if (entry) {
+	      var sessionId = entry.sessionId;
+	      log.warn("eme-store: delete session from store", sessionId);
+
+	      var idx = this._entries.indexOf(entry);
+	      this._entries.splice(idx, 1);
+	      this._save();
+	    }
+
+	    if (session) {
+	      log.warn("eme-store: remove session from system", session.sessionId);
+	      session.remove();
+	    }
+	  };
+
+	  PersistedSessionsSet.prototype.dispose = function dispose() {
+	    this._entries = [];
+	    this._save();
+	  };
+
+	  PersistedSessionsSet.prototype._save = function _save() {
+	    try {
+	      this._storage.save(this._entries);
+	    } catch (e) {
+	      log.warn("eme-store: could not save licenses in localStorage");
+	    }
+	  };
+
+	  return PersistedSessionsSet;
+	})();
+
+	var emptyStorage = {
+	  load: function load() {
+	    return [];
+	  },
+	  save: function save() {}
+	};
+	var $storedSessions = new PersistedSessionsSet(emptyStorage);
+	var $loadedSessions = new InMemorySessionsSet();
 
 	var cachedKeySystemAccess = {
 	  createMediaKeys: function createMediaKeys() {
@@ -3126,27 +3344,62 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	};
 
+	// Persisted singleton instance of MediaKeys. We do not allow multiple
+	// CDM instances.
+	var $mediaKeys = undefined;
+	var $keySystem = undefined;
+
+	function buildKeySystemConfiguration(keySystem) {
+	  var sessionTypes = [];
+	  var persistentState = "optional";
+	  var distinctiveIdentifier = "optional";
+
+	  if (keySystem.persistentLicense) {
+	    persistentState = "required";
+	    sessionTypes.push("persistent-license");
+	  } else {
+	    sessionTypes.push("temporary");
+	  }
+
+	  if (keySystem.persistentStateRequired) {
+	    persistentState = "required";
+	  }
+
+	  if (keySystem.distinctiveIdentifierRequired) {
+	    distinctiveIdentifier = "required";
+	  }
+
+	  return {
+	    videoCapabilities: undefined,
+	    audioCapabilities: undefined,
+	    initDataTypes: ["cenc"],
+	    distinctiveIdentifier: distinctiveIdentifier,
+	    persistentState: persistentState,
+	    sessionTypes: sessionTypes
+	  };
+	}
+
 	function findCompatibleKeySystem(keySystems) {
-	  // in case we already have mounted a CDM with MediaKeys the
+	  // Fast way to find a compatible keySystem if the currently loaded
+	  // one as exactly the same compatibility options.
 	  //
 	  // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
 	  // creation of a new MediaKeys instance for each session creation
 	  if ($keySystem && $mediaKeys && !$mediaKeys.alwaysRenew) {
-	    var foundKeySystem = _.find(keySystems, function (_ref) {
-	      var type = _ref.type;
-	      return type == $keySystem;
+
+	    var foundKeySystem = _.find(keySystems, function (ks) {
+	      return ks.type == $keySystem.type && ks.persistentLicense == $keySystem.persistentLicense && ks.persistentStateRequired === $keySystem.persistentStateRequired && ks.distinctiveIdentifierRequired == $keySystem.distinctiveIdentifierRequired;
 	    });
+
 	    if (foundKeySystem) {
-	      return Promise_.resolve({
+	      log.debug("eme: found compatible keySystem quickly", foundKeySystem);
+
+	      return just({
 	        keySystem: foundKeySystem,
 	        keySystemAccess: cachedKeySystemAccess
 	      });
-	    } else {
-	      throw NotSupportedKeySystemError();
 	    }
 	  }
-
-	  var keySystemConfigurations = [{ initDataTypes: ["cenc"] }];
 
 	  var keySystemsType = _.flatten(keySystems, function (keySystem) {
 	    return _.map(SYSTEMS[keySystem.type], function (keyType) {
@@ -3154,49 +3407,77 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  });
 
-	  function testKeySystem(index, res, rej) {
-	    if (index >= keySystemsType.length) return rej(NotSupportedKeySystemError());
+	  return Observable.create(function (obs) {
+	    var disposed = false;
 
-	    var _keySystemsType$index = keySystemsType[index];
-	    var keyType = _keySystemsType$index.keyType;
-	    var keySystem = _keySystemsType$index.keySystem;
+	    function testKeySystem(index) {
+	      if (disposed) {
+	        return;
+	      }
 
-	    requestMediaKeySystemAccess(keyType, keySystemConfigurations).then(function (keySystemAccess) {
-	      return res({ keySystem: keySystem, keySystemAccess: keySystemAccess });
-	    }, function () {
-	      return testKeySystem(index + 1, res, rej);
+	      if (index >= keySystemsType.length) {
+	        obs.onError(NotSupportedKeySystemError());
+	        return;
+	      }
+
+	      var _keySystemsType$index = keySystemsType[index];
+	      var keyType = _keySystemsType$index.keyType;
+	      var keySystem = _keySystemsType$index.keySystem;
+
+	      var keySystemConfigurations = [buildKeySystemConfiguration(keySystem)];
+
+	      log.debug("eme: request keysystem access " + keyType + "," + (index + 1 + " of " + keySystemsType.length), keySystemConfigurations);
+
+	      requestMediaKeySystemAccess(keyType, keySystemConfigurations).then(function (keySystemAccess) {
+	        log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
+	        obs.onNext({ keySystem: keySystem, keySystemAccess: keySystemAccess });
+	        obs.onCompleted();
+	      }, function () {
+	        log.debug("eme: rejected access to keysystem", keyType, keySystemConfigurations);
+	        testKeySystem(index + 1);
+	      });
+	    }
+
+	    testKeySystem(0);
+
+	    (function () {
+	      return disposed = true;
 	    });
-	  }
-
-	  return new Promise_(function (res, rej) {
-	    return testKeySystem(0, res, rej);
 	  });
 	}
 
 	function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
-	  return keySystemAccess.createMediaKeys().then(function (mk) {
+	  return fromPromise(keySystemAccess.createMediaKeys().then(function (mk) {
 	    $mediaKeys = mk;
-	    $keySystem = keySystem.type;
+	    $keySystem = keySystem;
 	    log.debug("eme: set mediakeys");
 	    return setMediaKeys(video, mk).then(function () {
 	      return mk;
 	    });
-	  });
+	  }));
 	}
 
 	function makeNewKeyRequest(session, initDataType, initData) {
-	  var persistedSessions = arguments.length <= 3 || arguments[3] === undefined ? false : arguments[3];
-
-	  log.debug("eme: generate request", initDataType, initData, persistedSessions);
-	  return session.generateRequest(initDataType, initData).then(function () {
-	    // compat: store sessions only if they have a keyStatuses
-	    // property
-	    if (persistedSessions && session.keyStatuses) {
-	      log.info("eme: store session", session);
-	      $sessionsStore.set(initData, session);
-	    }
+	  log.debug("eme: generate request", initDataType, initData);
+	  return fromPromise(session.generateRequest(initDataType, initData).then(function () {
 	    return session;
-	  });
+	  }));
+	}
+
+	function loadPersistedSession(session, sessionId) {
+	  log.debug("eme: load persisted session", sessionId);
+	  return fromPromise(session.load(sessionId).then(function () {
+	    return session;
+	  }));
+	}
+
+	function logAndThrow(errMessage, reason) {
+	  var error = new Error(errMessage);
+	  if (reason) {
+	    error.reason = reason;
+	  }
+	  log.error(errMessage, reason);
+	  throw error;
 	}
 
 	function toObservable(value) {
@@ -3233,48 +3514,92 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * appropriate one supported by the user's browser.
 	 */
 	function EME(video, keySystems) {
-	  var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+	  if (false) {
+	    _.each(keySystems, function (ks) {
+	      return assert.iface(ks, "keySystem", { getLicense: "function", type: "string" });
+	    });
+	  }
 
-	  if (false) _.each(keySystems, function (ks) {
-	    return assert.iface(ks, "keySystem", { getLicense: "function", type: "string" });
-	  });
+	  function handleEncryptedEvents(encryptedEvent, _ref) {
+	    var keySystem = _ref.keySystem;
+	    var keySystemAccess = _ref.keySystemAccess;
 
-	  var persistedSessions = options.persistedSessions;
+	    if (keySystem.persistentLicense) {
+	      $storedSessions.setStorage(keySystem.licenseStorage);
+	    }
 
-	  function handleEncryptedEvents(encryptedEvent) {
 	    var initData = new Uint8Array(encryptedEvent.initData);
 	    var initDataType = encryptedEvent.initDataType;
 
 	    log.info("eme: encrypted event", encryptedEvent);
+	    return createAndSetMediaKeys(video, keySystem, keySystemAccess).flatMap(function (mediaKeys) {
+	      return manageSessionCreation(mediaKeys, keySystem, initDataType, initData).tap(function (session) {
+	        $storedSessions.add(initData, session);
+	        $loadedSessions.add(session);
+	      }, function (error) {
+	        log.error("eme: error during session management handler", error);
+	      });
+	    }).flatMap(function (session) {
+	      return handleMessageEvents(session, keySystem).tapOnError(function (error) {
+	        log.error("eme: error in session messages handler", session, error);
+	        $storedSessions["delete"](initData, session);
+	        $loadedSessions["delete"](session.sessionId);
+	      });
+	    });
+	  }
 
-	    var compatibleKeySystem = fromPromise(findCompatibleKeySystem(keySystems));
-	    return compatibleKeySystem.flatMap(function (_ref2) {
-	      var keySystem = _ref2.keySystem;
-	      var keySystemAccess = _ref2.keySystemAccess;
+	  function manageSessionCreation(mediaKeys, keySystem, initDataType, initData) {
+	    // reuse currently loaded sessions without making a new key
+	    // request
+	    var sessionId = $storedSessions.get(initData);
 
-	      log.info("eme: compatible keysystem", keySystem.type);
+	    var session = $loadedSessions.get(sessionId);
+	    if (session) {
+	      log.debug("eme: reuse loaded session", sessionId);
+	      return just(session);
+	    }
 
-	      var mediaKeysCreation = createAndSetMediaKeys(video, keySystem, keySystemAccess);
+	    var sessionType = undefined;
+	    if (keySystem.persistentLicense) {
+	      sessionType = "persistent-license";
+	    } else {
+	      sessionType = "temporary";
+	    }
 
-	      return fromPromise(mediaKeysCreation).flatMap(function (mediaKeys) {
-	        // reuse previously created sessions without making a new
-	        // license request
-	        var session = $sessionsStore.get(initData);
-	        if (session) {
-	          var keyStatuses = session.keyStatuses;
-	          if (keyStatuses.size > 0) {
-	            log.debug("eme: reuse session");
-	            return just(session);
-	          } else {
-	            $sessionsStore["delete"](initData);
-	          }
-	        }
+	    log.debug("eme: create a " + sessionType + " session");
+	    session = mediaKeys.createSession(sessionType);
 
-	        log.debug("eme: create session");
-	        session = mediaKeys.createSession("temporary");
-	        return makeNewKeyRequest(session, initDataType, initData, persistedSessions);
-	      }).flatMap(function (session) {
-	        return handleMessageEvents(session, keySystem, initData);
+	    if (keySystem.persistentLicense) {
+	      // if a persisted session exists in the store associated to this
+	      // initData, we reuse it without a new license request through
+	      // the `load` method.
+	      if (sessionId) {
+	        return loadPersistedSession(session, sessionId)["catch"](function (err) {
+	          log.warn("eme: failed to load persisted session, do fallback", sessionId, err);
+
+	          $storedSessions["delete"](initData, null);
+	          return fromPromise($loadedSessions["delete"](sessionId)).flatMap(function () {
+	            session = mediaKeys.createSession(sessionType);
+	            return makeNewKeyRequest(session, initDataType, initData);
+	          });
+	        });
+	      }
+	    }
+
+	    // we have a fresh session without persisted informations and need
+	    // to make a new key request that we will associate to this
+	    // session
+	    return makeNewKeyRequest(session, initDataType, initData)["catch"](function (err) {
+	      var firstLoadedSession = $loadedSessions.getFirst();
+	      if (!firstLoadedSession) {
+	        throw err;
+	      }
+
+	      log.warn("eme: could not create a new session, " + "retry after closing a currently loaded session", err);
+
+	      return fromPromise(firstLoadedSession.close()).flatMap(function () {
+	        session = mediaKeys.createSession(sessionType);
+	        return makeNewKeyRequest(session, initDataType, initData);
 	      });
 	    });
 	  }
@@ -3282,25 +3607,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // listen to "message" events from session containing a challenge
 	  // blob and map them to licenses using the getLicense method from
 	  // selected keySystem
-	  function handleMessageEvents(session, keySystem, initData) {
-	    var sessionId;
+	  function handleMessageEvents(session, keySystem) {
+	    var sessionId = undefined;
 
 	    var keyErrors = onKeyError(session).map(function (err) {
-	      var errMessage = "eme: keyerror event " + err.errorCode + " / " + err.systemCode;
-	      log.error(errMessage);
-	      throw new Error(errMessage);
+	      return logAndThrow("eme: keyerror event " + err.errorCode + " / " + err.systemCode, err);
 	    });
 
 	    var keyStatusesChanges = onKeyStatusesChange(session).flatMap(function (keyStatusesEvent) {
 	      sessionId = keyStatusesEvent.sessionId;
+	      log.debug("eme: keystatuseschange event", sessionId, session, keyStatusesEvent);
 
 	      // find out possible errors associated with this event
 	      var keyStatuses = session.keyStatuses.values();
 	      for (var v = keyStatuses.next(); !v.done; v = keyStatuses.next()) {
 	        var errMessage = KEY_STATUS_ERRORS[v.value];
 	        if (errMessage) {
-	          log.error(errMessage);
-	          throw new Error(errMessage);
+	          logAndThrow(errMessage);
 	        }
 	      }
 
@@ -3310,7 +3633,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return empty();
 	      }
 
-	      var license;
+	      var license = undefined;
 	      try {
 	        license = keySystem.onKeyStatusesChange(keyStatusesEvent, session);
 	      } catch (e) {
@@ -3318,11 +3641,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      return toObservable(license)["catch"](function (err) {
-	        var errMessage = "eme: onKeyStatusesChange has failed (reason: " + (err && err.message || "unknown") + ")";
-	        var error = new Error(errMessage);
-	        error.reason = err;
-	        log.error(errMessage);
-	        throw error;
+	        return logAndThrow("eme: onKeyStatusesChange has failed (reason: " + (err && err.message || "unknown") + ")", err);
 	      });
 	    });
 
@@ -3332,39 +3651,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var message = messageEvent.message;
 	      var messageType = messageEvent.messageType;
 
-	      var license;
+	      if (!messageType) {
+	        messageType = "license-request";
+	      }
+
+	      log.debug("eme: event message type " + messageType, session, messageEvent);
+
+	      var license = undefined;
 	      try {
-	        license = keySystem.getLicense(new Uint8Array(message), messageType || "licenserequest");
+	        license = keySystem.getLicense(new Uint8Array(message), messageType);
 	      } catch (e) {
 	        license = Observable["throw"](e);
 	      }
 
 	      return toObservable(license)["catch"](function (err) {
-	        var errMessage = "eme: getLicense has failed (reason: " + (err && err.message || "unknown") + ")";
-	        var error = new Error(errMessage);
-	        error.reason = err;
-	        log.error(errMessage);
-	        throw error;
+	        return logAndThrow("eme: getLicense has failed (reason: " + (err && err.message || "unknown") + ")", err);
 	      });
 	    });
 
 	    var sessionUpdates = merge(keyMessages, keyStatusesChanges).concatMap(function (res) {
+	      log.debug("eme: update session", sessionId, res);
+
 	      return session.update(res, sessionId)["catch"](function (err) {
-	        log.error("eme: error on session update", sessionId, err);
-	        throw err;
+	        return logAndThrow("eme: error on session update " + sessionId, err);
 	      });
 	    }).map(function () {
 	      return { type: "eme", value: { session: session, name: "session-updated" } };
 	    });
 
-	    return merge(sessionUpdates, keyErrors).tapOnError(function () {
-	      log.debug("eme: delete session from store", sessionId);
-	      $sessionsStore["delete"](initData);
-	    });
+	    return merge(sessionUpdates, keyErrors);
 	  }
 
 	  return Observable.create(function (obs) {
-	    var sub = onEncrypted(video).take(1).flatMap(handleEncryptedEvents).subscribe(obs);
+	    var sub = combineLatest(onEncrypted(video), findCompatibleKeySystem(keySystems), handleEncryptedEvents).take(1).mergeAll().subscribe(obs);
 
 	    return function () {
 	      if (sub) {
@@ -3378,16 +3697,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 
-	EME.onEncrypted = function (video) {
-	  return onEncrypted(video);
-	};
+	EME.onEncrypted = onEncrypted;
 	EME.getCurrentKeySystem = function () {
-	  return $keySystem;
+	  return $keySystem && $keySystem.type;
 	};
 	EME.dispose = function () {
 	  $mediaKeys = null;
 	  $keySystem = null;
-	  $sessionsStore.dispose();
+	  $loadedSessions.dispose();
 	};
 
 	module.exports = EME;
@@ -4152,6 +4469,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
 
 	    video.addEventListener("play", emitSample);
+	    video.addEventListener("progress", emitSample);
 	    video.addEventListener("seeking", emitSample);
 	    video.addEventListener("seeked", emitSample);
 	    video.addEventListener("loadedmetadata", emitSample);
@@ -4162,6 +4480,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      clearInterval(samplerInterval);
 
 	      video.removeEventListener("play", emitSample);
+	      video.removeEventListener("progress", emitSample);
 	      video.removeEventListener("seeking", emitSample);
 	      video.removeEventListener("seeked", emitSample);
 	      video.removeEventListener("loadedmetadata", emitSample);
@@ -4219,13 +4538,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 20 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	"use strict";
-
-	var _require = __webpack_require__(3);
-
-	var Observable = _require.Observable;
 
 	var FUZZ_FACTOR = 0.3;
 
@@ -4247,13 +4562,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 21 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	"use strict";
-
-	var _require = __webpack_require__(1);
-
-	var cloneArray = _require.cloneArray;
 
 	module.exports = function (fn, wait, debounceOptions) {
 	  var timer = null;
@@ -5439,7 +5750,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var Promise_ = __webpack_require__(7);
+	var Promise_ = __webpack_require__(6);
 
 	var _ = __webpack_require__(1);
 	var log = __webpack_require__(4);
@@ -5546,7 +5857,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    assert(videoElement instanceof HTMLVideoElement_, "requires an actual HTMLVideoElement");
 
-	    this.version = ("1.2.1");
+	    // Workaroud to support Firefox autoplay on FF 42.
+	    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
+	    videoElement.preload = "auto";
+
+	    this.version = ("1.3.0");
 	    this.video = videoElement;
 
 	    // fullscreen change
@@ -6140,7 +6455,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var BufferedRanges = _require.BufferedRanges;
 
-	var Promise_ = __webpack_require__(7);
+	var Promise_ = __webpack_require__(6);
 	var assert = __webpack_require__(2);
 
 	var AbstractSourceBuffer = (function (_EventEmitter) {
@@ -6592,10 +6907,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return first(zip(loadedMetadata, canPlay, _.noop)).map({ type: "loaded", value: true }).startWith({ type: "loaded", value: false });
 	  }
 
-	  function createEME(manifest) {
+	  function createEME() {
 	    if (keySystems && keySystems.length) {
-	      // TODO(pierre): leave ability to chose session persistency
-	      return EME(videoElement, keySystems, { persistedSessions: manifest.isLive });
+	      return EME(videoElement, keySystems);
 	    } else {
 	      return EME.onEncrypted(videoElement).map(function () {
 	        var errMessage = "eme: ciphered media and no keySystem passed";
@@ -6718,7 +7032,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var justManifest = just({ type: "manifest", value: manifest });
 	    var canPlay = createLoadedMetadata(manifest);
 	    var buffers = createAdaptationsBuffers(mediaSource, manifest, timings, seekings);
-	    var emeHandler = createEME(manifest);
+	    var emeHandler = createEME();
 	    var stalled = createStalled(timings, true);
 
 	    var mediaError = on(videoElement, "error").flatMap(function () {
@@ -6825,7 +7139,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var Promise_ = __webpack_require__(7);
+	var Promise_ = __webpack_require__(6);
 	var _ = __webpack_require__(1);
 	var AbstractSourceBuffer = __webpack_require__(33);
 
@@ -7353,7 +7667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var assert = __webpack_require__(2);
 
-	var _require = __webpack_require__(6);
+	var _require = __webpack_require__(7);
 
 	var itobe4 = _require.itobe4;
 	var be8toi = _require.be8toi;
@@ -7929,7 +8243,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var resolveURL = _require2.resolveURL;
 
-	var _require3 = __webpack_require__(6);
+	var _require3 = __webpack_require__(7);
 
 	var bytesToStr = _require3.bytesToStr;
 
@@ -8231,7 +8545,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _ = __webpack_require__(1);
 	var assert = __webpack_require__(2);
 
-	var _require = __webpack_require__(6);
+	var _require = __webpack_require__(7);
 
 	var concat = _require.concat;
 	var strToBytes = _require.strToBytes;
@@ -8848,7 +9162,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _ = __webpack_require__(1);
 	var assert = __webpack_require__(2);
-	var bytes = __webpack_require__(6);
+	var bytes = __webpack_require__(7);
 
 	var DEFAULT_MIME_TYPES = {
 	  audio: "audio/mp4",
@@ -8880,6 +9194,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  video: [["Bitrate", "bitrate", parseInt], ["FourCC", "mimeType", MIME_TYPES], ["FourCC", "codecs", CODECS], ["MaxWidth", "width", parseInt], ["MaxHeight", "height", parseInt], ["CodecPrivateData", "codecPrivateData", String]],
 	  text: [["Bitrate", "bitrate", parseInt], ["FourCC", "mimeType", MIME_TYPES]]
 	};
+
+	function parseBoolean(val) {
+	  if (typeof val == "boolean") {
+	    return val;
+	  } else if (typeof val == "string") {
+	    return val.toUpperCase() === "TRUE";
+	  } else {
+	    return true;
+	  }
+	}
 
 	function calcLastRef(index) {
 	  var _$last = _.last(index.timeline);
@@ -9114,7 +9438,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var suggestedPresentationDelay, presentationLiveGap, timeShiftBufferDepth, availabilityStartTime;
 
-	    var isLive = root.getAttribute("IsLive") === "TRUE";
+	    var isLive = parseBoolean(root.getAttribute("IsLive"));
 	    if (isLive) {
 	      suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
 	      timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;

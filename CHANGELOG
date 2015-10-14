@@ -1,3 +1,13 @@
+v1.3.0 on October 14, 2015
+==========================
+
+Added
+-----
+
+- eme: license persistency support
+- timings: add progress sampling
+- compat: add firefox workaround for autoplay
+
 v1.2.1 on September 23, 2015
 ============================
 
