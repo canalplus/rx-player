@@ -77,7 +77,7 @@ function parseBoolean(val) {
     return val.toUpperCase() === "TRUE";
   }
   else {
-    return true;
+    return false;
   }
 }
 
