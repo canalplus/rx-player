@@ -109,10 +109,6 @@ function getKeySystems(keyIdBytes) {
 function createSmoothStreamingParser(parserOptions={}) {
 
   var SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay || 20;
-
-  // Reference time to map the stream-clock to the wall-clock is based
-  // on the date 06/01/2013 for C+ SmoothStreaming streams, instead of
-  // 01/01/1970
   var REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
   var MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 190000;
 
@@ -169,6 +165,11 @@ function createSmoothStreamingParser(parserOptions={}) {
     // r refers to number of same duration
     // chunks, not repetitions (defers from DASH)
     if (r)  r--;
+
+    if (l > 0 && !prev.d) {
+      prev.d = t - prev.ts;
+      timeline[l - 1] = prev;
+    }
 
     if (l > 0 && d == prev.d && t == null) {
       prev.r += (r || 0) + 1;
