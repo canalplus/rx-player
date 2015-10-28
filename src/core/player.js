@@ -77,6 +77,8 @@ class Player extends EventEmitter {
       videoElement,
       transport,
       transportOptions,
+      defaultLanguage,
+      defaultSubtitle,
       initVideoBitrate,
       initAudioBitrate
     } = options;
@@ -119,7 +121,9 @@ class Player extends EventEmitter {
 
     this.adaptive = Adaptive(metrics, timings, deviceEvents, {
       initVideoBitrate,
-      initAudioBitrate
+      initAudioBitrate,
+      defaultLanguage,
+      defaultSubtitle,
     });
 
     // volume muted memory

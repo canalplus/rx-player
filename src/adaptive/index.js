@@ -23,13 +23,13 @@ var { only } = require("canal-js-utils/rx-ext");
 var AverageBitrate = require("./average-bitrate");
 
 var DEFAULTS = {
-  defLanguage: "fra",
-  defSubtitle: "",
+  defaultLanguage: "fra",
+  defaultSubtitle: "",
   // default buffer size in seconds
-  defBufSize: 30,
+  defaultBufferSize: 30,
   // buffer threshold ratio used as a lower bound
   // margin to find the suitable representation
-  defBufThreshold: 0.3,
+  defaultBufferThreshold: 0.3,
 };
 
 function def(x, val) {
@@ -62,18 +62,18 @@ function filterByType(stream, selectedType) {
 
 module.exports = function(metrics, timings, deviceEvents, options={}) {
   var {
-    defLanguage,
-    defSubtitle,
-    defBufSize,
-    defBufThreshold,
+    defaultLanguage,
+    defaultSubtitle,
+    defaultBufferSize,
+    defaultBufferThreshold,
     initVideoBitrate,
     initAudioBitrate
   } = _.defaults(options, DEFAULTS);
 
   var { videoWidth, inBackground } = deviceEvents;
 
-  var $languages = new BehaviorSubject(defLanguage);
-  var $subtitles = new BehaviorSubject(defSubtitle);
+  var $languages = new BehaviorSubject(defaultLanguage);
+  var $subtitles = new BehaviorSubject(defaultSubtitle);
 
   var $averageBitrates = {
     audio: AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).publishValue(initAudioBitrate || 0),
@@ -93,9 +93,9 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   };
 
   var $bufSizes = {
-    audio: new BehaviorSubject(defBufSize),
-    video: new BehaviorSubject(defBufSize),
-    text:  new BehaviorSubject(defBufSize),
+    audio: new BehaviorSubject(defaultBufferSize),
+    video: new BehaviorSubject(defaultBufferSize),
+    text:  new BehaviorSubject(defaultBufferSize),
   };
 
   function audioAdaptationChoice(adaptations) {
@@ -139,7 +139,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
           if (count === 0)
             bufThreshold = 0;
           else
-            bufThreshold = defBufThreshold;
+            bufThreshold = defaultBufferThreshold;
 
           return getClosestBitrate(bitrates, avrBitrate, bufThreshold);
         })
@@ -188,7 +188,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
 
     return {
       representations: representationsObservable,
-      bufferSizes: $bufSizes[type] || new BehaviorSubject(defBufSize),
+      bufferSizes: $bufSizes[type] || new BehaviorSubject(defaultBufferSize),
     };
   }
 
@@ -209,8 +209,8 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     setVideoBitrate(x)    { $usrBitrates.video.onNext(def(x, Infinity)); },
     setAudioMaxBitrate(x) { $maxBitrates.audio.onNext(def(x, Infinity)); },
     setVideoMaxBitrate(x) { $maxBitrates.video.onNext(def(x, Infinity)); },
-    setAudioBufferSize(x) { $bufSizes.audio.onNext(def(x, defBufSize)); },
-    setVideoBufferSize(x) { $bufSizes.video.onNext(def(x, defBufSize)); },
+    setAudioBufferSize(x) { $bufSizes.audio.onNext(def(x, defaultBufferSize)); },
+    setVideoBufferSize(x) { $bufSizes.video.onNext(def(x, defaultBufferSize)); },
 
     getBufferAdapters,
     getAdaptationsChoice,
