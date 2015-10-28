@@ -13,7 +13,24 @@ function getKeySystems(content) {
   throw "not implemented";
 }
 
+function getParameterByName(name) {
+  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)", "i"),
+      results = regex.exec(location.search);
+  return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
 var DemoZapper = React.createClass({
+  componentDidMount() {
+    var url = getParameterByName("url");
+    if (url) {
+      var autoPlay = getParameterByName("autoplay") !== "false";
+      var ciphered = getParameterByName("ciphered");
+      var transport = getParameterByName("transport");
+      this.zap({ url, ciphered, transport, autoPlay });
+    }
+  },
+
   onSelectionChange: function(e) {
     this.zap(+e.target.value);
   },
@@ -30,12 +47,13 @@ var DemoZapper = React.createClass({
     var videoUrl = content.url;
     var keySystems = getKeySystems(content);
     var transport = content.transport;
+    var autoPlay = content.autoPlay === false ? false : true;
 
     this.player.loadVideo({
       url: videoUrl,
       transport: transport,
       keySystems: keySystems,
-      autoPlay: true,
+      autoPlay: autoPlay,
     });
   },
 
