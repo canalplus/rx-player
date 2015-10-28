@@ -5,5 +5,3 @@ node_modules
 dist/*
 !dist/rx-player.js
 !dist/rx-player.min.js
-
-demo/bundle.js
