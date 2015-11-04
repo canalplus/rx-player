@@ -9,12 +9,13 @@
   },
   "env": {
     "es6": true,
-    "browser": true,
+    "node": true,
     "commonjs": true
   },
   "globals": {
     "__DEV__": true,
-    "__RX_PLAYER_VERSION_PLACEHOLDER__": true
+    "__RX_PLAYER_VERSION_PLACEHOLDER__": true,
+    "__RX_PLAYER_TARGET__": true
   },
   "extends": "eslint:recommended"
 }

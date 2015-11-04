@@ -20,18 +20,6 @@ const Promise_ = require("canal-js-utils/promise");
 const assert = require("canal-js-utils/assert");
 const { Observable } = require("canal-js-utils/rx");
 const { combineLatest, empty, fromPromise, merge, just } = Observable;
-const {
-  requestMediaKeySystemAccess,
-  setMediaKeys,
-  emeEvents
-} = require("./compat");
-
-const {
-  onEncrypted,
-  onKeyMessage,
-  onKeyError,
-  onKeyStatusesChange
-} = emeEvents;
 
 const SYSTEMS = {
   "clearkey":  ["webkit-org.w3.clearkey", "org.w3.clearkey"],
@@ -230,125 +218,6 @@ const cachedKeySystemAccess = {
 let $mediaKeys;
 let $keySystem;
 
-function buildKeySystemConfiguration(keySystem) {
-  let sessionTypes = [];
-  let persistentState = "optional";
-  let distinctiveIdentifier = "optional";
-
-  if (keySystem.persistentLicense) {
-    persistentState = "required";
-    sessionTypes.push("persistent-license");
-  } else {
-    sessionTypes.push("temporary");
-  }
-
-  if (keySystem.persistentStateRequired) {
-    persistentState = "required";
-  }
-
-  if (keySystem.distinctiveIdentifierRequired) {
-    distinctiveIdentifier = "required";
-  }
-
-  return {
-    videoCapabilities: undefined,
-    audioCapabilities: undefined,
-    initDataTypes: ["cenc"],
-    distinctiveIdentifier,
-    persistentState,
-    sessionTypes,
-  };
-}
-
-function findCompatibleKeySystem(keySystems) {
-  // Fast way to find a compatible keySystem if the currently loaded
-  // one as exactly the same compatibility options.
-  //
-  // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
-  // creation of a new MediaKeys instance for each session creation
-  if ($keySystem && $mediaKeys && !$mediaKeys.alwaysRenew) {
-
-    var foundKeySystem = _.find(keySystems, (ks) => (
-      ks.type == $keySystem.type &&
-      ks.persistentLicense == $keySystem.persistentLicense &&
-      ks.persistentStateRequired === $keySystem.persistentStateRequired &&
-      ks.distinctiveIdentifierRequired == $keySystem.distinctiveIdentifierRequired
-    ));
-
-    if (foundKeySystem) {
-      log.debug("eme: found compatible keySystem quickly", foundKeySystem);
-
-      return just({
-        keySystem: foundKeySystem,
-        keySystemAccess: cachedKeySystemAccess
-      });
-    }
-  }
-
-  var keySystemsType = _.flatten(keySystems,
-    keySystem => _.map(SYSTEMS[keySystem.type], keyType => ({ keyType, keySystem })));
-
-  return Observable.create(obs => {
-    let disposed = false;
-
-    function testKeySystem(index) {
-      if (disposed) {
-        return;
-      }
-
-      if (index >= keySystemsType.length) {
-        obs.onError(NotSupportedKeySystemError());
-        return;
-      }
-
-      var { keyType, keySystem } = keySystemsType[index];
-      var keySystemConfigurations = [buildKeySystemConfiguration(keySystem)];
-
-      log.debug(
-        `eme: request keysystem access ${keyType},` +
-        `${index+1} of ${keySystemsType.length}`,
-        keySystemConfigurations
-      );
-
-      requestMediaKeySystemAccess(keyType, keySystemConfigurations)
-        .then(
-          keySystemAccess => {
-            log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
-            obs.onNext({ keySystem, keySystemAccess });
-            obs.onCompleted();
-          },
-          () => {
-            log.debug("eme: rejected access to keysystem", keyType, keySystemConfigurations);
-            testKeySystem(index + 1);
-          }
-        );
-    }
-
-    testKeySystem(0);
-
-    () => disposed = true;
-  });
-}
-
-function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
-  return fromPromise(
-    keySystemAccess.createMediaKeys().then(mk => {
-      $mediaKeys = mk;
-      $keySystem = keySystem;
-      log.debug("eme: set mediakeys");
-      return setMediaKeys(video, mk).then(() => mk);
-    })
-  );
-}
-
-function makeNewKeyRequest(session, initDataType, initData) {
-  log.debug("eme: generate request", initDataType, initData);
-  return fromPromise(
-    session.generateRequest(initDataType, initData)
-      .then(() => session)
-  );
-}
-
 function loadPersistedSession(session, sessionId) {
   log.debug("eme: load persisted session", sessionId);
   return fromPromise(
@@ -401,7 +270,138 @@ function toObservable(value) {
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
  */
-function EME(video, keySystems) {
+function EME(video, keySystems, {
+  requestMediaKeySystemAccess,
+  setMediaKeys,
+  emeEvents
+}) {
+
+  const {
+    onEncrypted,
+    onKeyMessage,
+    onKeyError,
+    onKeyStatusesChange
+  } = emeEvents;
+
+  function buildKeySystemConfiguration(keySystem) {
+    let sessionTypes = [];
+    let persistentState = "optional";
+    let distinctiveIdentifier = "optional";
+
+    if (keySystem.persistentLicense) {
+      persistentState = "required";
+      sessionTypes.push("persistent-license");
+    } else {
+      sessionTypes.push("temporary");
+    }
+
+    if (keySystem.persistentStateRequired) {
+      persistentState = "required";
+    }
+
+    if (keySystem.distinctiveIdentifierRequired) {
+      distinctiveIdentifier = "required";
+    }
+
+    return {
+      videoCapabilities: undefined,
+      audioCapabilities: undefined,
+      initDataTypes: ["cenc"],
+      distinctiveIdentifier,
+      persistentState,
+      sessionTypes,
+    };
+  }
+
+  function findCompatibleKeySystem(keySystems) {
+    // Fast way to find a compatible keySystem if the currently loaded
+    // one as exactly the same compatibility options.
+    //
+    // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
+    // creation of a new MediaKeys instance for each session creation
+    if ($keySystem && $mediaKeys && !$mediaKeys.alwaysRenew) {
+
+      var foundKeySystem = _.find(keySystems, (ks) => (
+        ks.type == $keySystem.type &&
+        ks.persistentLicense == $keySystem.persistentLicense &&
+        ks.persistentStateRequired === $keySystem.persistentStateRequired &&
+        ks.distinctiveIdentifierRequired == $keySystem.distinctiveIdentifierRequired
+      ));
+
+      if (foundKeySystem) {
+        log.debug("eme: found compatible keySystem quickly", foundKeySystem);
+
+        return just({
+          keySystem: foundKeySystem,
+          keySystemAccess: cachedKeySystemAccess
+        });
+      }
+    }
+
+    var keySystemsType = _.flatten(keySystems,
+      keySystem => _.map(SYSTEMS[keySystem.type], keyType => ({ keyType, keySystem })));
+
+    return Observable.create(obs => {
+      let disposed = false;
+
+      function testKeySystem(index) {
+        if (disposed) {
+          return;
+        }
+
+        if (index >= keySystemsType.length) {
+          obs.onError(NotSupportedKeySystemError());
+          return;
+        }
+
+        var { keyType, keySystem } = keySystemsType[index];
+        var keySystemConfigurations = [buildKeySystemConfiguration(keySystem)];
+
+        log.debug(
+          `eme: request keysystem access ${keyType},` +
+          `${index+1} of ${keySystemsType.length}`,
+          keySystemConfigurations
+        );
+
+        requestMediaKeySystemAccess(keyType, keySystemConfigurations)
+          .then(
+            keySystemAccess => {
+              log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
+              obs.onNext({ keySystem, keySystemAccess });
+              obs.onCompleted();
+            },
+            () => {
+              log.debug("eme: rejected access to keysystem", keyType, keySystemConfigurations);
+              testKeySystem(index + 1);
+            }
+          );
+      }
+
+      testKeySystem(0);
+
+      () => disposed = true;
+    });
+  }
+
+  function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
+    return fromPromise(
+      keySystemAccess.createMediaKeys().then(mk => {
+        $mediaKeys = mk;
+        $keySystem = keySystem;
+        log.debug("eme: set mediakeys");
+        return setMediaKeys(video, mk).then(() => mk);
+      })
+    );
+  }
+
+  function makeNewKeyRequest(session, initDataType, initData) {
+    log.debug("eme: generate request", initDataType, initData);
+    return fromPromise(
+      session.generateRequest(initDataType, initData)
+        .then(() => session)
+    );
+  }
+
   if (__DEV__) {
     _.each(keySystems, ks => assert.iface(ks, "keySystem", { getLicense: "function", type: "string" }));
   }
@@ -601,10 +601,10 @@ function EME(video, keySystems) {
   });
 }
 
-EME.onEncrypted = onEncrypted;
 EME.getCurrentKeySystem = () => {
   return $keySystem && $keySystem.type;
 };
+
 EME.dispose = () => {
   $mediaKeys = null;
   $keySystem = null;

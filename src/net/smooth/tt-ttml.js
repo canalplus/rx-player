@@ -20,7 +20,8 @@ var rBr = /<br[^>]+>/gm;
 var rAbsTime = /^(([0-9]+):)?([0-9]+):([0-9]+)(\.([0-9]+))?$/;
 var rRelTime = /(([0-9]+)(\.[0-9]+)?)(ms|h|m|s)/;
 
-var escape = window.escape;
+var DOMParser = global.DOMParser;
+var escape = global.escape;
 
 var MULTS = {
   h: 3600,
@@ -36,9 +37,6 @@ function parseTTML(ttml, lang, offset) {
   } else {
     doc = ttml;
   }
-
-  if (!(doc instanceof window.Document || doc instanceof window.HTMLElement))
-    throw new Error("ttml: needs a Document to parse");
 
   var node = doc.querySelector("tt");
   if (!node)

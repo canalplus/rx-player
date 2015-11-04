@@ -17,6 +17,8 @@
 var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
 var bytes = require("canal-js-utils/bytes");
+var atob = global.atob;
+var DOMParser = global.DOMParser;
 
 var DEFAULT_MIME_TYPES = {
   audio: "audio/mp4",
@@ -123,12 +125,13 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function reduceChildren(root, fn, init) {
-    var node = root.firstElementChild, r = init;
+    var node = root.firstElementChild || root.childNodes[0];
+    var res = init;
     while (node) {
-      r = fn(r, node.nodeName, node);
-      node = node.nextElementSibling;
+      res = fn(res, node.nodeName, node);
+      node = (node.nextElementSibling || node.nextSibling);
     }
-    return r;
+    return res;
   }
 
   function parseProtection(root) {
@@ -161,25 +164,29 @@ function createSmoothStreamingParser(parserOptions={}) {
     var t =  node.getAttribute("t");
     var r = +node.getAttribute("r");
 
-    // in smooth streaming format,
-    // r refers to number of same duration
+    // in smooth streaming format, r refers to number of same duration
     // chunks, not repetitions (defers from DASH)
-    if (r)  r--;
+    if (r) r--;
 
     if (l > 0 && !prev.d) {
       prev.d = t - prev.ts;
       timeline[l - 1] = prev;
     }
 
-    if (l > 0 && d == prev.d && t == null) {
+    var noTAttr = (t == null || t === "");
+    if (noTAttr && l > 0 && d === prev.d) {
       prev.r += (r || 0) + 1;
     }
     else {
-      var ts = (t == null)
-        ? prev.ts + prev.d * (prev.r + 1)
-        : +t;
+      var ts;
+      if (noTAttr) {
+        ts = prev.ts + prev.d * (prev.r + 1);
+      } else {
+        ts = +t;
+      }
       timeline.push({ d, ts, r });
     }
+
     return timeline;
   }
 
@@ -334,9 +341,10 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function parser(val) {
-    if (_.isString(val))                return parseFromString(val);
-    if (val instanceof window.Document) return parseFromDocument(val);
-    throw new Error("parser: unsupported type to parse");
+    if (_.isString(val))
+      return parseFromString(val);
+    else
+      return parseFromDocument(val);
   }
 
   parser.parseFromString   = parseFromString;

@@ -16,6 +16,7 @@
 
 var _ = require("canal-js-utils/misc");
 var assert = require("canal-js-utils/assert");
+var { Atom, findAtom } = require("../../utils/mp4");
 var {
   concat,
   strToBytes, bytesToStr,
@@ -26,16 +27,6 @@ var {
 } = require("canal-js-utils/bytes");
 
 var FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
-
-var boxName = _.memoize(strToBytes);
-
-function Atom(name, buff) {
-  if (__DEV__)
-    assert(name.length === 4);
-
-  var len = buff.length + 8;
-  return concat(itobe4(len), boxName(name), buff);
-}
 
 function readUuid(buf, id1, id2, id3, id4) {
   var i = 0, l = buf.length, len;
@@ -50,26 +41,6 @@ function readUuid(buf, id1, id2, id3, id4) {
     ) return buf.subarray(i + 24, i + len);
     i += len;
   }
-}
-
-function findAtom(buf, atomName) {
-  var i = 0, l = buf.length;
-
-  var name, size;
-  while (i + 8 < l) {
-    size = be4toi(buf, i);
-    name = be4toi(buf, i + 4);
-    assert(size > 0, "dash: out of range size");
-    if (name === atomName) {
-      break;
-    } else {
-      i += size;
-    }
-  }
-
-  if (i >= l) return;
-
-  return buf.subarray(i + 8, i + size);
 }
 
 var atoms = {
@@ -398,9 +369,9 @@ var atoms = {
 
 var reads = {
   traf(buff) {
-    var moof = findAtom(buff, 0x6D6F6F66);
+    var moof = findAtom(buff, "moof");
     if (moof)
-      return findAtom(moof, 0x74726166);
+      return findAtom(moof, "traf");
     else
       return null;
   },
@@ -430,7 +401,7 @@ var reads = {
   },
 
   mdat(buff) {
-    return findAtom(buff, 0x6D646174 /* "mdat" */);
+    return findAtom(buff, "mdat");
   }
 };
 

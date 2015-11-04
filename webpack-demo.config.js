@@ -1,6 +1,11 @@
-/* jshint node:true */
+/* eslint-env node */
 var fs = require("fs");
 var path = require("path");
+
+var RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "development";
+
+if (["development", "production"].indexOf(RX_PLAYER_ENV) < 0)
+  throw new Error("unknown RX_PLAYER_ENV " + RX_PLAYER_ENV);
 
 var webpack = require("webpack");
 var version = fs.readFileSync("./VERSION").toString().replace(/\n$/g, "");
@@ -15,10 +20,7 @@ module.exports = {
     loaders: [
       { test: /\.js$/, loader: "babel?loose=all", exclude: [/rx\.lite\.js$/] },
       { test: /\.css$/, loader: "style-loader!css-loader" },
-      {
-        test: /\.(otf|eot|svg|ttf|woff)/,
-        loader: "url-loader"
-      }
+      { test: /\.(otf|eot|svg|ttf|woff)/, loader: "url-loader" }
     ],
   },
   resolve: {
@@ -29,8 +31,8 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      "__DEV__": true,
       "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
+      "__DEV__": RX_PLAYER_ENV === "development"
     }),
   ],
   resolveLoader: {

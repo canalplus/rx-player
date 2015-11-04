@@ -3,6 +3,7 @@
   "author": "Canal+",
   "version": "1.3.1",
   "description": "Canal+ HTML5 Video Player",
+  "main": "./dist/rx-player.node.js",
   "keywords": [
     "video",
     "streaming",
@@ -21,7 +22,9 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "canal-js-utils": "^2.0.0"
+    "canal-js-utils": "^2.0.0",
+    "xhr2": "^0.1.3",
+    "xmldom": "^0.1.19"
   },
   "devDependencies": {
     "babel-core": "^5.2.15",

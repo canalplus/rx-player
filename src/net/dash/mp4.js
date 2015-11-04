@@ -15,34 +15,14 @@
  */
 
 var assert = require("canal-js-utils/assert");
+var { Atom, findAtomIndex } = require("../../utils/mp4");
 var {
   itobe4, be8toi, be4toi, be2toi,
-  hexToBytes, strToBytes, concat
+  hexToBytes, concat
 } = require("canal-js-utils/bytes");
 
-function findAtom(buf, atomName) {
-  var i = 0, l = buf.length;
-
-  var name, size;
-  while (i + 8 < l) {
-    size = be4toi(buf, i);
-    name = be4toi(buf, i + 4);
-    assert(size > 0, "dash: out of range size");
-    if (name === atomName) {
-      break;
-    } else {
-      i += size;
-    }
-  }
-
-  if (i >= l) return -1;
-
-  assert(i + size <= l, "dash: atom out of range");
-  return i;
-}
-
 function parseSidx(buf, offset) {
-  var index = findAtom(buf, 0x73696478 /* "sidx" */);
+  var index = findAtomIndex(buf, 0x73696478 /* "sidx" */);
   if (index == -1) return null;
 
   var size = be4toi(buf, index);
@@ -113,12 +93,6 @@ function parseSidx(buf, offset) {
   return { segments, timescale };
 }
 
-
-function Atom(name, buff) {
-  var len = buff.length + 8;
-  return concat(itobe4(len), strToBytes(name), buff);
-}
-
 function createPssh({ systemId, privateData }) {
   systemId = systemId.replace(/-/g, "");
 
@@ -135,7 +109,7 @@ function patchPssh(buf, pssList) {
   if (!pssList || !pssList.length)
     return buf;
 
-  var pos = findAtom(buf, 0x6d6f6f76 /* = "moov" */);
+  var pos = findAtomIndex(buf, 0x6d6f6f76 /* = "moov" */);
   if (pos == -1)
     return buf;
 

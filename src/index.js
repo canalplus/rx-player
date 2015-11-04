@@ -14,4 +14,8 @@
  * limitations under the License.
  */
 
-module.exports = require("./core/player");
+var BrowserCompat = require("./compat/browser")();
+var RxPlayer = require("./core/player");
+RxPlayer.injectDefaultCompatModule(BrowserCompat);
+
+module.exports = RxPlayer;

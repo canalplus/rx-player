@@ -16,9 +16,11 @@
 
 var Promise_ = require("canal-js-utils/promise");
 var _ = require("canal-js-utils/misc");
-var AbstractSourceBuffer = require("./sourcebuffer");
+var AbstractSourceBuffer = require("./abstract");
 
-var Cue = window.VTTCue || window.TextTrackCue;
+var URL = global.URL;
+var Blob = global.Blob;
+var Cue = global.VTTCue || global.TextTrackCue;
 
 class TextSourceBuffer extends AbstractSourceBuffer {
 
@@ -29,7 +31,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
     this.isVTT = /^text\/vtt/.test(codec);
     // there is no removeTextTrack method... so we need to reuse old
     // text-tracks objects and clean all its pending cues
-    var trackElement = document.createElement("track");
+    var trackElement = global.document.createElement("track");
     var track = trackElement.track;
     this.trackElement = trackElement;
     this.track = track;

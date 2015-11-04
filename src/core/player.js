@@ -25,14 +25,6 @@ var EventEmitter = require("canal-js-utils/eventemitter");
 var debugPane = require("../utils/debug");
 var assert = require("canal-js-utils/assert");
 
-var {
-  HTMLVideoElement_,
-  exitFullscreen,
-  requestFullscreen,
-  isFullscreen,
-  onFullscreenChange
-} = require("./compat");
-
 var { timingsSampler, toWallClockTime, fromWallClockTime, getLiveGap } = require("./timings");
 var { InitializationSegmentCache } = require("./cache");
 var { BufferedRanges } = require("./ranges");
@@ -72,7 +64,19 @@ function filterStreamByType(stream, type) {
 
 class Player extends EventEmitter {
 
-  constructor(options) {
+  static injectDefaultCompatibilityModule(defaultCompatModule) {
+    Player.__defaultCompat = defaultCompatModule;
+  }
+
+  constructor(options={}, compatModule) {
+    super();
+
+    compatModule = this.__compat = compatModule || Player.__defaultCompat;
+
+    assert(compatModule,
+      "No compatibility module injected." +
+      "Use the injectDefaultCompatibilityModule() function");
+
     var {
       videoElement,
       transport,
@@ -81,14 +85,13 @@ class Player extends EventEmitter {
       initAudioBitrate
     } = options;
 
-    super();
     this.defaultTransport = transport;
     this.defaultTransportOptions = transportOptions || {};
 
     if (!videoElement)
-      videoElement = document.createElement("video");
+      videoElement = new (compatModule.HTMLVideoElement)();
 
-    assert((videoElement instanceof HTMLVideoElement_),
+    assert((videoElement instanceof compatModule.HTMLVideoElement),
       "requires an actual HTMLVideoElement");
 
     // Workaroud to support Firefox autoplay on FF 42.
@@ -99,7 +102,7 @@ class Player extends EventEmitter {
     this.video = videoElement;
 
     // fullscreen change
-    this.fullscreen = onFullscreenChange(videoElement)
+    this.fullscreen = compatModule.onFullscreenChange(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
     // playing state change
@@ -111,7 +114,10 @@ class Player extends EventEmitter {
     var { createPipelines, metrics } = PipeLines();
 
     var timings = timingsSampler(videoElement);
-    var deviceEvents = DeviceEvents(videoElement);
+    var deviceEvents = DeviceEvents(videoElement, {
+      visibilityChange: compatModule.visibilityChange,
+      videoSizeChange:  compatModule.videoSizeChange,
+    });
 
     this.createPipelines = createPipelines;
     this.metrics = metrics;
@@ -264,6 +270,7 @@ class Player extends EventEmitter {
         videoElement: video,
         autoPlay,
         directFile,
+        compat: this.__compat,
       });
     }
     catch(err) {
@@ -463,7 +470,7 @@ class Player extends EventEmitter {
   }
 
   isFullscreen() {
-    return isFullscreen();
+    return this.__compat.isFullscreen();
   }
 
   getAvailableLanguages() {
@@ -560,9 +567,9 @@ class Player extends EventEmitter {
 
   setFullscreen(toggle = true) {
     if (toggle === false)
-      exitFullscreen();
+      this.__compat.exitFullscreen();
     else
-      requestFullscreen(this.video);
+      this.__compat.requestFullscreen(this.video);
   }
 
   setVolume(volume) {
