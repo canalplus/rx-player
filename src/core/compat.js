@@ -55,6 +55,24 @@ var requestMediaKeySystemAccess;
 if (navigator.requestMediaKeySystemAccess)
   requestMediaKeySystemAccess = (a, b) => navigator.requestMediaKeySystemAccess(a, b);
 
+// @implement interface MediaKeySystemAccess
+class KeySystemAccess {
+  constructor(keyType, mediaKeys, mediaKeySystemConfiguration) {
+    this._keyType = keyType;
+    this._mediaKeys = mediaKeys;
+    this._configuration = mediaKeySystemConfiguration;
+  }
+  get keySystem() {
+    return this._keyType;
+  }
+  createMediaKeys() {
+    return Promise_.resolve(this._mediaKeys);
+  }
+  getConfiguration() {
+    return this._configuration;
+  }
+}
+
 function castToPromise(prom) {
   if (prom && typeof prom.then == "function") {
     return prom;
@@ -259,6 +277,8 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     for (let i = 0; i < keySystemConfigurations.length; i++) {
       let keySystemConfiguration = keySystemConfigurations[i];
       let {
+        videoCapabilities,
+        audioCapabilities,
         initDataTypes,
         sessionTypes,
         distinctiveIdentifier,
@@ -266,17 +286,26 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       } = keySystemConfiguration;
 
       var supported = true;
-      supported = supported && (!initDataTypes || _.find(initDataTypes, initDataType => initDataType === "cenc"));
+      supported = supported && (!initDataTypes || !!_.find(initDataTypes, initDataType => initDataType === "cenc"));
       supported = supported && (!sessionTypes || _.filter(sessionTypes, sessionType => sessionType === "temporary").length === sessionTypes.length);
       supported = supported && (distinctiveIdentifier !== "required");
       supported = supported && (persistentState !== "required");
 
       if (supported) {
-        return Promise_.resolve({
-          createMediaKeys() {
-            return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
-          }
-        });
+        var keySystemConfigurationResponse = {
+          videoCapabilities,
+          audioCapabilities,
+          initDataTypes: ["cenc"],
+          distinctiveIdentifier: "not-allowed",
+          persistentState: "not-allowed",
+          sessionTypes: ["temporary"],
+        };
+
+        return Promise_.resolve(
+          new KeySystemAccess(keyType,
+                              new MockMediaKeys(keyType),
+                              keySystemConfigurationResponse)
+        );
       }
     }
 
@@ -335,8 +364,10 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     for (let i = 0; i < keySystemConfigurations.length; i++) {
       let keySystemConfiguration = keySystemConfigurations[i];
       let {
+        videoCapabilities,
+        audioCapabilities,
         initDataTypes,
-        distinctiveIdentifier
+        distinctiveIdentifier,
       } = keySystemConfiguration;
 
       var supported = true;
@@ -344,11 +375,20 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       supported = supported && (distinctiveIdentifier !== "required");
 
       if (supported) {
-        return Promise_.resolve({
-          createMediaKeys() {
-            return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
-          }
-        });
+        var keySystemConfigurationResponse = {
+          videoCapabilities,
+          audioCapabilities,
+          initDataTypes: ["cenc"],
+          distinctiveIdentifier: "not-allowed",
+          persistentState: "required",
+          sessionTypes: ["temporary", "persistent-license"],
+        };
+
+        return Promise_.resolve(
+          new KeySystemAccess(keyType,
+                              new MockMediaKeys(keyType),
+                              keySystemConfigurationResponse)
+        );
       }
     }
 
@@ -489,6 +529,7 @@ module.exports = {
   sourceOpen,
   loadedMetadataEvent,
 
+  KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
   emeEvents,

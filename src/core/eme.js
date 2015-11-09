@@ -21,16 +21,17 @@ const assert = require("canal-js-utils/assert");
 const { Observable } = require("canal-js-utils/rx");
 const { combineLatest, empty, fromPromise, merge, just } = Observable;
 const {
+  KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
-  emeEvents
+  emeEvents,
 } = require("./compat");
 
 const {
   onEncrypted,
   onKeyMessage,
   onKeyError,
-  onKeyStatusesChange
+  onKeyStatusesChange,
 } = emeEvents;
 
 const SYSTEMS = {
@@ -57,6 +58,14 @@ function hashBuffer(buffer) {
   return hash;
 }
 
+function hashInitData(initData) {
+  if (typeof initData == "number") {
+    return initData;
+  } else {
+    return hashBuffer(initData);
+  }
+}
+
 const NotSupportedKeySystemError = () =>
   new Error("eme: could not find a compatible key system");
 
@@ -68,37 +77,64 @@ const NotSupportedKeySystemError = () =>
  */
 class InMemorySessionsSet {
   constructor() {
-    this._hash = {};
+    this._entries = [];
   }
 
   getFirst() {
-    for (let i in this._hash) {
-      return this._hash[i];
+    if (this._entries.length > 0) {
+      return this._entries[0].session;
     }
   }
 
-  get(sessionId) {
-    return this._hash[sessionId];
+  get(initData) {
+    initData = hashInitData(initData);
+    const entry = _.find(
+      this._entries,
+      entry => entry.initData === initData
+    );
+    if (entry) {
+      return entry.session;
+    }
   }
 
-  add(session) {
-    let sessionId = session.sessionId;
-    assert(sessionId);
-    if (!this._hash[sessionId]) {
-      log.debug("eme-store: add persisted session in store", sessionId);
-      this._hash[sessionId] = session;
+  add(initData, session) {
+    initData = hashInitData(initData);
+    if (!this.get(initData)) {
+      const sessionId = session.sessionId;
+      if (!sessionId) {
+        return;
+      }
 
+      const entry = { session, initData };
+      log.debug("eme-mem-store: add session", entry);
+      this._entries.push(entry);
       session.closed.then(() => {
-        log.debug("eme-store: remove persisted session from store", sessionId);
-        delete this._hash[sessionId];
+        log.debug("eme-mem-store: remove closed session", entry);
+        const idx = this._entries.indexOf(entry);
+        if (idx >= 0) {
+          this._entries.splice(idx, 1);
+        }
       });
     }
   }
 
   delete(sessionId) {
-    let session = this._hash[sessionId];
+    const entry = _.find(
+      this._entries,
+      entry => entry.session.sessionId === sessionId
+    );
+    if (entry) {
+      log.debug("eme-mem-store: delete session", sessionId);
+      const idx = this._entries.indexOf(entry);
+      this._entries.splice(idx, 1);
+      return entry.session;
+    }
+  }
+
+  deleteAndClose(sessionId) {
+    const session = this.delete(sessionId);
     if (session) {
-      delete this._hash[sessionId];
+      log.debug("eme-mem-store: close session", sessionId);
       return session.close();
     } else {
       return Promise_.resolve();
@@ -106,11 +142,8 @@ class InMemorySessionsSet {
   }
 
   dispose() {
-    let disposed = [];
-    for (let sessionId in this._hash) {
-      disposed.push(this._hash[sessionId].close());
-    }
-    this._hash = {};
+    const disposed = this._entries.map(({ session }) => session.close());
+    this._entires = [];
     return Promise_.all(disposed);
   }
 }
@@ -148,55 +181,49 @@ class PersistedSessionsSet {
       this._entries = this._storage.load();
       assert(Array.isArray(this._entries));
     } catch(e) {
-      log.warn("eme-store: could not get entries from license storage", e);
+      log.warn("eme-persitent-store: could not get entries from license storage", e);
       this.dispose();
     }
   }
 
-  hashInitData(initData) {
-    if (typeof initData == "number") {
-      return initData;
-    } else {
-      return hashBuffer(initData);
-    }
-  }
-
   get(initData) {
-    initData = this.hashInitData(initData);
-    let entry = _.find(this._entries, entry => entry.initData === initData);
+    initData = hashInitData(initData);
+    const entry = _.find(
+      this._entries,
+      entry => entry.initData === initData
+    );
     if (entry) {
       return entry.sessionId;
     }
   }
 
   add(initData, session) {
-    initData = this.hashInitData(initData);
-    if (!this.get(initData)) {
-      let sessionId = session.sessionId;
-      assert(sessionId);
+    initData = hashInitData(initData);
+    if (session.sessionType == "persistent-license" && !this.get(initData)) {
+      const sessionId = session.sessionId;
+      if (!sessionId) {
+        return;
+      }
 
-      log.info("eme-store: store new session", sessionId, session);
+      log.info("eme-persitent-store: add new session", sessionId, session);
       this._entries.push({ sessionId, initData });
       this._save();
     }
   }
 
-  delete(initData, session) {
-    initData = this.hashInitData(initData);
+  delete(initData) {
+    initData = hashInitData(initData);
 
-    let entry = _.find(this._entries, entry => entry.initData === initData);
+    const entry = _.find(
+      this._entries,
+      entry => entry.initData === initData
+    );
     if (entry) {
-      let sessionId = entry.sessionId;
-      log.warn("eme-store: delete session from store", sessionId);
+      log.warn("eme-persitent-store: delete session from store", entry);
 
-      let idx = this._entries.indexOf(entry);
+      const idx = this._entries.indexOf(entry);
       this._entries.splice(idx, 1);
       this._save();
-    }
-
-    if (session) {
-      log.warn("eme-store: remove session from system", session.sessionId);
-      session.remove();
     }
   }
 
@@ -209,7 +236,7 @@ class PersistedSessionsSet {
     try {
       this._storage.save(this._entries);
     } catch(e) {
-      log.warn("eme-store: could not save licenses in localStorage");
+      log.warn("eme-persitent-store: could not save licenses in localStorage");
     }
   }
 }
@@ -221,17 +248,55 @@ const emptyStorage = {
 const $storedSessions = new PersistedSessionsSet(emptyStorage);
 const $loadedSessions = new InMemorySessionsSet();
 
-const cachedKeySystemAccess = {
-  createMediaKeys: () => Promise_.resolve($mediaKeys)
-};
-
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
 let $mediaKeys;
+let $mediaKeySystemConfiguration;
 let $keySystem;
+let $videoElement;
+
+function getCachedKeySystemAccess(keySystems) {
+  // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
+  // creation of a new MediaKeys instance for each session creation
+  if (!$keySystem || !$mediaKeys || $mediaKeys.alwaysRenew) {
+    return null;
+  }
+
+  const configuration = $mediaKeySystemConfiguration;
+  const foundKeySystem = _.find(keySystems, (ks) => {
+    if (ks.type !== $keySystem.type) {
+      return false;
+    }
+
+    if (ks.persistentLicense &&
+        configuration.persistentState != "required") {
+      return false;
+    }
+
+    if (ks.distinctiveIdentifierRequired &&
+        configuration.distinctiveIdentifier != "required") {
+      return false;
+    }
+
+    return true;
+  });
+
+  if (foundKeySystem) {
+    return {
+      keySystem: foundKeySystem,
+      keySystemAccess: new KeySystemAccess(
+        $keySystem,
+        $mediaKeys,
+        $mediaKeySystemConfiguration),
+    };
+  }
+  else {
+    return null;
+  }
+}
 
 function buildKeySystemConfiguration(keySystem) {
-  let sessionTypes = [];
+  const sessionTypes = [];
   let persistentState = "optional";
   let distinctiveIdentifier = "optional";
 
@@ -263,29 +328,13 @@ function buildKeySystemConfiguration(keySystem) {
 function findCompatibleKeySystem(keySystems) {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
-  //
-  // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
-  // creation of a new MediaKeys instance for each session creation
-  if ($keySystem && $mediaKeys && !$mediaKeys.alwaysRenew) {
-
-    var foundKeySystem = _.find(keySystems, (ks) => (
-      ks.type == $keySystem.type &&
-      ks.persistentLicense == $keySystem.persistentLicense &&
-      ks.persistentStateRequired === $keySystem.persistentStateRequired &&
-      ks.distinctiveIdentifierRequired == $keySystem.distinctiveIdentifierRequired
-    ));
-
-    if (foundKeySystem) {
-      log.debug("eme: found compatible keySystem quickly", foundKeySystem);
-
-      return just({
-        keySystem: foundKeySystem,
-        keySystemAccess: cachedKeySystemAccess
-      });
-    }
+  const cachedKeySystemAccess = getCachedKeySystemAccess(keySystems);
+  if (cachedKeySystemAccess) {
+    log.debug("eme: found compatible keySystem quickly", cachedKeySystemAccess);
+    return just(cachedKeySystemAccess);
   }
 
-  var keySystemsType = _.flatten(keySystems,
+  const keySystemsType = _.flatten(keySystems,
     keySystem => _.map(SYSTEMS[keySystem.type], keyType => ({ keyType, keySystem })));
 
   return Observable.create(obs => {
@@ -301,8 +350,8 @@ function findCompatibleKeySystem(keySystems) {
         return;
       }
 
-      var { keyType, keySystem } = keySystemsType[index];
-      var keySystemConfigurations = [buildKeySystemConfiguration(keySystem)];
+      const { keyType, keySystem } = keySystemsType[index];
+      const keySystemConfigurations = [buildKeySystemConfiguration(keySystem)];
 
       log.debug(
         `eme: request keysystem access ${keyType},` +
@@ -314,6 +363,22 @@ function findCompatibleKeySystem(keySystems) {
         .then(
           keySystemAccess => {
             log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
+            // TODO(pierre): remove this compat code used only for X1
+            // with an intermediary implementation of EME
+            if (!keySystemAccess.getConfiguration) {
+              keySystemAccess.getConfiguration = () => {
+                const conf = keySystemConfigurations[0];
+                return {
+                  audioCapabilities: conf.audioCapabilities,
+                  videoCapabilities: conf.videoCapabilities,
+                  initDataTypes: ["cenc"],
+                  distinctiveIdentifier: conf.distinctiveIdentifier === "required" ? "required" : "not-allowed",
+                  persistentState: conf.persistentState === "required" ? "required" : "not-allowed",
+                  sessionTypes: conf.sessionTypes,
+                };
+              };
+            }
+
             obs.onNext({ keySystem, keySystemAccess });
             obs.onCompleted();
           },
@@ -331,14 +396,45 @@ function findCompatibleKeySystem(keySystems) {
 }
 
 function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
+  const oldVideoElement = $videoElement;
+  const oldMediaKeys = $mediaKeys;
+
   return fromPromise(
     keySystemAccess.createMediaKeys().then(mk => {
       $mediaKeys = mk;
+      $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
       $keySystem = keySystem;
-      log.debug("eme: set mediakeys");
-      return setMediaKeys(video, mk).then(() => mk);
+      $videoElement = video;
+
+      if (video.mediaKeys === mk) {
+        return Promise.resolve(mk);
+      }
+
+      if (oldMediaKeys && oldMediaKeys !== $mediaKeys) {
+        // if we change our mediaKeys singleton, we need to dispose all existing
+        // sessions linked to the previous one.
+        $loadedSessions.dispose();
+      }
+
+      if ((oldVideoElement && oldVideoElement !== $videoElement)) {
+        log.debug("eme: unlink old video element and set mediakeys");
+        return setMediaKeys(oldVideoElement, null)
+          .then(() => setMediaKeys($videoElement, mk))
+          .then(() => mk);
+      }
+      else {
+        log.debug("eme: set mediakeys");
+        return setMediaKeys($videoElement, mk)
+          .then(() => mk);
+      }
     })
   );
+}
+
+function createSession(mediaKeys, sessionType) {
+  const session = mediaKeys.createSession(sessionType);
+  session.sessionType = sessionType;
+  return session;
 }
 
 function makeNewKeyRequest(session, initDataType, initData) {
@@ -352,13 +448,12 @@ function makeNewKeyRequest(session, initDataType, initData) {
 function loadPersistedSession(session, sessionId) {
   log.debug("eme: load persisted session", sessionId);
   return fromPromise(
-    session.load(sessionId)
-      .then(() => session)
+    session.load(sessionId).then((success) => ({ success, session }))
   );
 }
 
 function logAndThrow(errMessage, reason) {
-  let error = new Error(errMessage);
+  const error = new Error(errMessage);
   if (reason) {
     error.reason = reason;
   }
@@ -403,7 +498,10 @@ function toObservable(value) {
  */
 function EME(video, keySystems) {
   if (__DEV__) {
-    _.each(keySystems, ks => assert.iface(ks, "keySystem", { getLicense: "function", type: "string" }));
+    _.each(keySystems, ks => assert.iface(ks, "keySystem", {
+      getLicense: "function",
+      type: "string",
+    }));
   }
 
   function handleEncryptedEvents(encryptedEvent, { keySystem, keySystemAccess }) {
@@ -411,17 +509,24 @@ function EME(video, keySystems) {
       $storedSessions.setStorage(keySystem.licenseStorage);
     }
 
-    let initData = new Uint8Array(encryptedEvent.initData);
-    let initDataType = encryptedEvent.initDataType;
+    const initData = new Uint8Array(encryptedEvent.initData);
+    const initDataType = encryptedEvent.initDataType;
+    const mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
 
     log.info("eme: encrypted event", encryptedEvent);
     return createAndSetMediaKeys(video, keySystem, keySystemAccess)
       .flatMap((mediaKeys) =>
-        manageSessionCreation(mediaKeys, keySystem, initDataType, initData)
+        manageSessionCreation(
+          mediaKeys,
+          mediaKeySystemConfiguration,
+          keySystem,
+          initDataType,
+          initData
+        )
           .tap(
             (session) => {
               $storedSessions.add(initData, session);
-              $loadedSessions.add(session);
+              $loadedSessions.add(initData, session);
             },
             (error) => {
               log.error("eme: error during session management handler", error);
@@ -432,61 +537,66 @@ function EME(video, keySystems) {
           .tapOnError(
             (error) => {
               log.error("eme: error in session messages handler", session, error);
-              $storedSessions.delete(initData, session);
-              $loadedSessions.delete(session.sessionId);
+              $storedSessions.delete(initData);
+              $loadedSessions.deleteAndClose(session.sessionId);
             })
       );
   }
 
-  function manageSessionCreation(mediaKeys, keySystem, initDataType, initData) {
+  function manageSessionCreation(mediaKeys,
+                                 mediaKeySystemConfiguration,
+                                 keySystem,
+                                 initDataType,
+                                 initData) {
     // reuse currently loaded sessions without making a new key
     // request
-    let sessionId = $storedSessions.get(initData);
-
-    let session = $loadedSessions.get(sessionId);
-    if (session) {
-      log.debug("eme: reuse loaded session", sessionId);
-      return just(session);
+    const loadedSession = $loadedSessions.get(initData);
+    if (loadedSession) {
+      log.debug("eme: reuse loaded session", loadedSession.sessionId);
+      return just(loadedSession);
     }
 
-    let sessionType;
-    if (keySystem.persistentLicense) {
-      sessionType = "persistent-license";
-    } else {
-      sessionType = "temporary";
-    }
+    const persistentLicenseSupported = mediaKeySystemConfiguration.sessionTypes.indexOf("persistent-license") >= 0;
+    const sessionType = persistentLicenseSupported && keySystem.persistentLicense
+      ? "persistent-license"
+      : "temporary";
 
-    log.debug(`eme: create a ${sessionType} session`);
-    session = mediaKeys.createSession(sessionType);
+    if (persistentLicenseSupported && keySystem.persistentLicense) {
+      const storedSessionId = $storedSessions.get(initData);
 
-    if (keySystem.persistentLicense) {
       // if a persisted session exists in the store associated to this
       // initData, we reuse it without a new license request through
       // the `load` method.
-      if (sessionId) {
-        return loadPersistedSession(session, sessionId)
-          .catch(err => {
-            log.warn(
-              "eme: failed to load persisted session, do fallback",
-              sessionId, err
-            );
-
-            $storedSessions.delete(initData, null);
-            return fromPromise($loadedSessions.delete(sessionId))
-              .flatMap(() => {
-                session = mediaKeys.createSession(sessionType);
-                return makeNewKeyRequest(session, initDataType, initData);
-              });
-          });
+      if (storedSessionId) {
+        return makeNewPersistentSessionAndLoad(
+          mediaKeys,
+          storedSessionId,
+          initDataType,
+          initData);
       }
     }
 
     // we have a fresh session without persisted informations and need
     // to make a new key request that we will associate to this
     // session
+    return makeNewSessionAndCreateKeyRequest(
+      mediaKeys,
+      sessionType,
+      initDataType,
+      initData
+    );
+  }
+
+  function makeNewSessionAndCreateKeyRequest(mediaKeys,
+                                             sessionType,
+                                             initDataType,
+                                             initData) {
+    log.debug(`eme: create a new ${sessionType} session`);
+    const session = createSession(mediaKeys, sessionType);
+
     return makeNewKeyRequest(session, initDataType, initData)
       .catch(err => {
-        var firstLoadedSession = $loadedSessions.getFirst();
+        const firstLoadedSession = $loadedSessions.getFirst();
         if (!firstLoadedSession) {
           throw err;
         }
@@ -497,11 +607,72 @@ function EME(video, keySystems) {
           err
         );
 
-        return fromPromise(firstLoadedSession.close())
-          .flatMap(() => {
-            session = mediaKeys.createSession(sessionType);
-            return makeNewKeyRequest(session, initDataType, initData);
-          });
+        return Observable
+          .from(firstLoadedSession.close())
+          .flatMap(() =>
+             makeNewKeyRequest(
+              createSession(mediaKeys, sessionType),
+              initDataType,
+              initData
+            )
+          );
+      });
+  }
+
+  function makeNewPersistentSessionAndLoad(mediaKeys,
+                                           storedSessionId,
+                                           initDataType,
+                                           initData) {
+    const sessionType = "persistent-license";
+
+    log.debug(`eme: create a new ${sessionType} session`);
+    const session = createSession(mediaKeys, sessionType);
+
+    return loadPersistedSession(session, storedSessionId)
+      .catch(err => {
+        log.warn(
+          "eme: failed to load persisted session, do fallback",
+          storedSessionId, err
+        );
+
+        $storedSessions.delete(initData);
+        $loadedSessions.delete(storedSessionId);
+
+        const newSession = makeNewSessionAndCreateKeyRequest(
+          mediaKeys,
+          sessionType,
+          initDataType,
+          initData
+        );
+
+        return newSession.map((session) => ({ success: true, session }));
+      })
+      .flatMap(({ success, session }) => {
+        if (success) {
+          log.debug("eme: successfully loaded session");
+          return just(session);
+        }
+
+        log.warn(
+          "eme: no data stored for the loaded session, removing it",
+          storedSessionId
+        );
+
+        $storedSessions.delete(initData);
+        $loadedSessions.delete(storedSessionId);
+
+        const sessionToRemove = session;
+        sessionToRemove.remove()
+          .catch((err) => log.warn("eme: could not remove session", err));
+
+        const newSession = makeNewSessionAndCreateKeyRequest(
+          mediaKeys,
+          sessionType,
+          initDataType,
+          initData
+        );
+
+        return merge(newSession, just(sessionToRemove));
       });
   }
 
@@ -509,66 +680,89 @@ function EME(video, keySystems) {
   // blob and map them to licenses using the getLicense method from
   // selected keySystem
   function handleMessageEvents(session, keySystem) {
+    log.debug("eme: handle message events for session", session.sessionId);
     let sessionId;
 
-    let keyErrors = onKeyError(session).map(err =>
+    const keyErrors = onKeyError(session).map(err =>
       logAndThrow(`eme: keyerror event ${err.errorCode} / ${err.systemCode}`, err)
     );
 
-    let keyStatusesChanges = onKeyStatusesChange(session).flatMap((keyStatusesEvent) => {
-      sessionId = keyStatusesEvent.sessionId;
-      log.debug("eme: keystatuseschange event", sessionId, session, keyStatusesEvent);
+    const keyStatusesChanges = onKeyStatusesChange(session)
+      .flatMap((keyStatusesEvent) => {
+        sessionId = keyStatusesEvent.sessionId;
+        log.debug(
+          "eme: keystatuseschange event",
+          sessionId,
+          session,
+          keyStatusesEvent
+        );
 
-      // find out possible errors associated with this event
-      let keyStatuses = session.keyStatuses.values();
-      for (let v = keyStatuses.next(); !v.done; v = keyStatuses.next()) {
-        let errMessage = KEY_STATUS_ERRORS[v.value];
-        if (errMessage) {
-          logAndThrow(errMessage);
+        // find out possible errors associated with this event
+        const keyStatuses = session.keyStatuses.values();
+        for (let v = keyStatuses.next(); !v.done; v = keyStatuses.next()) {
+          const errMessage = KEY_STATUS_ERRORS[v.value];
+          if (errMessage) {
+            logAndThrow(errMessage);
+          }
         }
-      }
 
-      // otherwise use the keysystem handler if disponible
-      if (!keySystem.onKeyStatusesChange) {
-        log.warn("eme: keystatuseschange event not handled");
-        return empty();
-      }
+        // otherwise use the keysystem handler if disponible
+        if (!keySystem.onKeyStatusesChange) {
+          log.warn("eme: keystatuseschange event not handled");
+          return empty();
+        }
 
-      let license;
-      try {
-        license = keySystem.onKeyStatusesChange(keyStatusesEvent, session);
-      } catch(e) {
-        license = Observable.throw(e);
-      }
+        let license;
+        try {
+          license = keySystem.onKeyStatusesChange(
+            keyStatusesEvent,
+            session
+          );
+        } catch(e) {
+          license = Observable.throw(e);
+        }
 
-      return toObservable(license)
-        .catch(err =>
-          logAndThrow(`eme: onKeyStatusesChange has failed (reason: ${err && err.message || "unknown"})`, err));
-    });
+        return toObservable(license)
+          .catch(err =>
+            logAndThrow(
+              `eme: onKeyStatusesChange has failed `
+              `(reason:${err && err.message || "unknown"})`,
+              err
+            )
+          );
+      });
 
-    let keyMessages = onKeyMessage(session).flatMap((messageEvent) => {
-      sessionId = messageEvent.sessionId;
+    const keyMessages = onKeyMessage(session)
+      .flatMap((messageEvent) => {
+        sessionId = messageEvent.sessionId;
 
-      let { message, messageType } = messageEvent;
-      if (!messageType) {
-        messageType = "license-request";
-      }
+        const message = new Uint8Array(messageEvent.message);
+        const messageType = messageEvent.messageType || "license-request";
 
-      log.debug(`eme: event message type ${messageType}`, session, messageEvent);
+        log.debug(
+          `eme: event message type ${messageType}`,
+          session,
+          messageEvent
+        );
 
-      let license;
-      try {
-        license = keySystem.getLicense(new Uint8Array(message), messageType);
-      } catch(e) {
-        license = Observable.throw(e);
-      }
+        let license;
+        try {
+          license = keySystem.getLicense(message, messageType);
+        } catch(e) {
+          license = Observable.throw(e);
+        }
 
-      return toObservable(license)
-        .catch(err =>
-          logAndThrow(`eme: getLicense has failed (reason: ${err && err.message || "unknown"})`, err));
-    });
+        return toObservable(license)
+          .catch(err =>
+            logAndThrow(
+              `eme: getLicense has failed `
+              `(reason: ${err && err.message || "unknown"})`,
+              err
+            )
+          );
+      });
 
-    let sessionUpdates = merge(keyMessages, keyStatusesChanges)
+    const sessionUpdates = merge(keyMessages, keyStatusesChanges)
       .concatMap(res => {
         log.debug("eme: update session", sessionId, res);
 
@@ -580,25 +774,13 @@ function EME(video, keySystems) {
     return merge(sessionUpdates, keyErrors);
   }
 
-  return Observable.create(obs => {
-    let sub = combineLatest(
-      onEncrypted(video),
-      findCompatibleKeySystem(keySystems),
-      handleEncryptedEvents
-    )
-      .take(1)
-      .mergeAll()
-      .subscribe(obs);
-
-    return () => {
-      if (sub) {
-        sub.dispose();
-      }
-
-      setMediaKeys(video, null)
-        .catch((e) => log.warn(e));
-    };
-  });
+  return combineLatest(
+    onEncrypted(video),
+    findCompatibleKeySystem(keySystems),
+    (evt, ks) => ([evt, ks])
+  )
+    .take(1)
+    .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks));
 }
 
 EME.onEncrypted = onEncrypted;
