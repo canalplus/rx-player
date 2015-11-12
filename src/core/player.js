@@ -33,7 +33,14 @@ var {
   onFullscreenChange
 } = require("./compat");
 
-var { timingsSampler, toWallClockTime, fromWallClockTime, getLiveGap } = require("./timings");
+var {
+  getEmptyTimings,
+  timingsSampler,
+  toWallClockTime,
+  fromWallClockTime,
+  getLiveGap,
+} = require("./timings");
+
 var { InitializationSegmentCache } = require("./cache");
 var { BufferedRanges } = require("./ranges");
 var { parseTimeFragment } = require("./time-fragment");
@@ -348,18 +355,7 @@ class Player extends EventEmitter {
       stateChanges
         .each(s => this._setState(s)),
 
-      timings
-        .each(t => {
-          if (!this.man)
-            return;
-
-          if (this.man.isLive && t.ts > 0) {
-            t.wallClockTime = toWallClockTime(t.ts, this.man);
-            t.liveGap = getLiveGap(t.ts, this.man);
-          }
-
-          this.trigger("currentTimeChange", t);
-        }),
+      timings.each(t => this._triggerTimeChange(t)),
 
       stream.subscribe(
         () => {},
@@ -391,6 +387,8 @@ class Player extends EventEmitter {
       subscriptions.dispose();
     }
 
+    this._triggerTimeChange();
+
     return loaded.toPromise();
   }
 
@@ -398,6 +396,18 @@ class Player extends EventEmitter {
     if (this.state !== s) {
       this.state = s;
       this.trigger("playerStateChange", s);
+    }
+  }
+
+  _triggerTimeChange(t) {
+    if (!this.man || !t) {
+      this.trigger("currentTimeChange", getEmptyTimings());
+    } else {
+      if (this.man.isLive && t.ts > 0) {
+        t.wallClockTime = toWallClockTime(t.ts, this.man);
+        t.liveGap = getLiveGap(t.ts, this.man);
+      }
+      this.trigger("currentTimeChange", t);
     }
   }
 
@@ -441,7 +451,8 @@ class Player extends EventEmitter {
 
   getCurrentTime() {
     if (!this.man)
-      return NaN;
+      return 0;
+
     var ct = this.video.currentTime;
     if (this.man.isLive) {
       return toWallClockTime(ct, this.man);

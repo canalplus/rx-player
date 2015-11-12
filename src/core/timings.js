@@ -47,6 +47,20 @@ function isEnding(gap, range, duration) {
   }
 }
 
+function getEmptyTimings() {
+  return {
+    name: "timeupdate",
+    ts: 0,
+    range: null,
+    gap: Infinity,
+    duration: 0,
+    playback: 1,
+    readyState: 0,
+    stalled: false,
+    buffered: new BufferedRanges(),
+  };
+}
+
 function getTimings(video, name) {
   var playback = video.playbackRate;
   var duration = video.duration;
@@ -205,6 +219,8 @@ function getLiveGap(ts, manifest) {
 }
 
 module.exports = {
+  getEmptyTimings,
+  getTimings,
   timingsSampler,
   seekingsSampler,
   getLiveGap,
