@@ -725,7 +725,7 @@ function EME(video, keySystems) {
         return toObservable(license)
           .catch(err =>
             logAndThrow(
-              `eme: onKeyStatusesChange has failed `
+              `eme: onKeyStatusesChange has failed ` +
               `(reason:${err && err.message || "unknown"})`,
               err
             )
@@ -755,7 +755,7 @@ function EME(video, keySystems) {
         return toObservable(license)
           .catch(err =>
             logAndThrow(
-              `eme: getLicense has failed `
+              `eme: getLicense has failed ` +
               `(reason: ${err && err.message || "unknown"})`,
               err
             )
