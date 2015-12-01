@@ -17,7 +17,7 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.js$/, exclude: [/rx\.lite\.js$/,/es6-promise\.js/], loader: "babel?loose=all" },
+      { test: /\.js$/, loader: "babel?loose=all" },
     ]
   },
   resolve: {
@@ -34,6 +34,6 @@ module.exports = {
     }),
   ],
   resolveLoader: {
-    fallback: path.join(__dirname, "node_modules")
+    root: path.join(__dirname, "node_modules")
   }
 };

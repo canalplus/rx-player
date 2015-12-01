@@ -46,6 +46,7 @@ var TT_PARSERS = {
 
 var ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 var WSX_REG = /\.wsx?(\?token=\S+)?/;
+var JSON_REG = /\.json?(\?token=\S+)?/;
 var TOKEN_REG = /\?token=(\S+)/;
 
 function byteRange([start, end]) {
@@ -58,6 +59,10 @@ function byteRange([start, end]) {
 
 function extractISML(doc) {
   return doc.getElementsByTagName("media")[0].getAttribute("src");
+}
+
+function extractJSON(json) {
+  return json.primary.src || json.backup.src || json.failover.src;
 }
 
 function extractToken(url) {
@@ -106,8 +111,12 @@ module.exports = function(options={}) {
           url: replaceToken(url, ""),
           format: "document"
         }).map(({ blob }) => extractISML(blob));
-      }
-      else {
+      } else if (JSON_REG.test(url)) {
+        resolving = req({
+          url: replaceToken(url, ""),
+          format: "json"
+        }).map(({ blob }) => extractJSON(blob));
+      } else {
         resolving = just(url);
       }
 

@@ -46,7 +46,7 @@ var DISCONTINUITY_THRESHOLD = 1;
 function plugDirectFile(url, video) {
   return Observable.create((observer) => {
     video.src = url;
-    observer.onNext({ url });
+    observer.next({ url });
     return () => {
       video.src = "";
     };
@@ -165,7 +165,7 @@ function Stream({
       var mediaSource = new MediaSource_();
       var objectURL = video.src = URL.createObjectURL(mediaSource);
 
-      observer.onNext({ url, mediaSource });
+      observer.next({ url, mediaSource });
       log.info("create mediasource object", objectURL);
 
       return () => {
@@ -381,7 +381,7 @@ function Stream({
    */
   function createStalled(timings, changePlaybackRate=true) {
     return timings
-      .distinctUntilChanged(null, (prevTiming, timing) => {
+      .distinctUntilChanged((prevTiming, timing) => {
         var isStalled = timing.stalled;
         var wasStalled = prevTiming.stalled;
 
@@ -458,7 +458,7 @@ function Stream({
     var adaptationsBuffers = _.map(getAdaptations(manifest),
       adaptation => createBuffer(mediaSource, adaptation, timings, seekings));
 
-    var buffers = merge(adaptationsBuffers);
+    var buffers = merge.apply(null, adaptationsBuffers);
 
     if (!manifest.isLive)
       return buffers;
@@ -469,7 +469,7 @@ function Stream({
     return buffers
       // do not throw multiple times OutOfIndexErrors in order to have
       // only one manifest reload for each error.
-      .distinctUntilChanged(null, (a, b) =>
+      .distinctUntilChanged((a, b) =>
         isOutOfIndexError(b) &&
         isOutOfIndexError(a))
       .concatMap((message) => manifestAdapter(manifest, message));

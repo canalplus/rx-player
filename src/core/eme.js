@@ -379,8 +379,8 @@ function findCompatibleKeySystem(keySystems) {
               };
             }
 
-            obs.onNext({ keySystem, keySystemAccess });
-            obs.onCompleted();
+            obs.next({ keySystem, keySystemAccess });
+            obs.complete();
           },
           () => {
             log.debug("eme: rejected access to keysystem", keyType, keySystemConfigurations);
@@ -776,8 +776,7 @@ function EME(video, keySystems) {
 
   return combineLatest(
     onEncrypted(video),
-    findCompatibleKeySystem(keySystems),
-    (evt, ks) => ([evt, ks])
+    findCompatibleKeySystem(keySystems)
   )
     .take(1)
     .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks));

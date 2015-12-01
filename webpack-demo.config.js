@@ -13,7 +13,7 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.js$/, loader: "babel?loose=all", exclude: [/rx\.lite\.js$/] },
+      { test: /\.js$/, loader: "babel?loose=all" },
       { test: /\.css$/, loader: "style-loader!css-loader" },
       {
         test: /\.(otf|eot|svg|ttf|woff)/,
@@ -34,6 +34,6 @@ module.exports = {
     }),
   ],
   resolveLoader: {
-    fallback: path.join(__dirname, "node_modules")
+    root: path.join(__dirname, "node_modules")
   }
 };
