@@ -19,7 +19,7 @@ var Promise_ = require("canal-js-utils/promise");
 var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
 var { CompositeDisposable, BehaviorSubject, Observable, Subject } = require("canal-js-utils/rx");
-var { combineLatest, defer, zip } = Observable;
+var { combineLatest, defer } = Observable;
 var { on } = require("canal-js-utils/rx-ext");
 var EventEmitter = require("canal-js-utils/eventemitter");
 var debugPane = require("../utils/debug");
@@ -294,7 +294,7 @@ class Player extends EventEmitter {
     if (directFile) {
       loaded = canPlay;
     } else {
-      loaded = zip(
+      loaded = combineLatest(
         canPlay,
         filterStreamByType(segments.pluck("adaptation"), "audio"),
         filterStreamByType(segments.pluck("adaptation"), "video"),

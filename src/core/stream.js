@@ -21,10 +21,10 @@ var { Observable } = require("canal-js-utils/rx");
 var { first, on } = require("canal-js-utils/rx-ext");
 var { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 var { retryWithBackoff } = require("canal-js-utils/rx-ext");
-var { empty, never, just, merge, zip } = Observable;
+var { empty, never, just, merge, combineLatest } = Observable;
 var min = Math.min;
 
-var { MediaSource_, sourceOpen, loadedMetadataEvent } = require("./compat");
+var { MediaSource_, sourceOpen, canPlay, loadedMetadata } = require("./compat");
 var TextSourceBuffer = require("./text-buffer");
 var { getLiveEdge } = require("./index-handler");
 var Buffer = require("./buffer");
@@ -345,17 +345,17 @@ function Stream({
    * the loadedmetadata event pops up.
    */
   function createLoadedMetadata(manifest) {
-    var loadedMetadata = loadedMetadataEvent(videoElement)
+    var loadedMetadata$ = loadedMetadata(videoElement)
       .tap(() => setInitialTime(manifest));
 
-    var canPlay = on(videoElement, "canplay")
+    var canPlay$ = canPlay(videoElement)
       .tap(() => {
         log.info("canplay event");
         if (autoPlay) videoElement.play();
         autoPlay = true;
       });
 
-    return first(zip(loadedMetadata, canPlay, _.noop))
+    return first(combineLatest(loadedMetadata$, canPlay$, _.noop))
       .map({ type: "loaded", value: true })
       .startWith({ type: "loaded", value: false });
   }

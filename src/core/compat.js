@@ -173,6 +173,21 @@ function sourceOpen(mediaSource) {
     return sourceOpenEvent(mediaSource).take(1);
 }
 
+function loadedMetadata(videoElement) {
+  if (videoElement.readyState >= HTMLVideoElement.HAVE_METADATA)
+    return just();
+  else
+    return loadedMetadataEvent(videoElement).take(1);
+}
+
+function canPlay(videoElement) {
+  if (videoElement.readyState >= HTMLVideoElement.HAVE_ENOUGH_DATA)
+    return just();
+  else
+    return on(videoElement, "canplay").take(1);
+}
+
+
 // Wrap "MediaKeys.prototype.update" form an event based system to a
 // Promise based function.
 function wrapUpdateWithPromise(memUpdate, sessionObj) {
@@ -527,7 +542,8 @@ module.exports = {
   MediaSource_,
   isCodecSupported,
   sourceOpen,
-  loadedMetadataEvent,
+  loadedMetadata,
+  canPlay,
 
   KeySystemAccess,
   requestMediaKeySystemAccess,
