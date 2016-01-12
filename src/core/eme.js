@@ -296,15 +296,13 @@ function getCachedKeySystemAccess(keySystems) {
 }
 
 function buildKeySystemConfiguration(keySystem) {
-  const sessionTypes = [];
+  const sessionTypes = ["temporary"];
   let persistentState = "optional";
   let distinctiveIdentifier = "optional";
 
   if (keySystem.persistentLicense) {
     persistentState = "required";
     sessionTypes.push("persistent-license");
-  } else {
-    sessionTypes.push("temporary");
   }
 
   if (keySystem.persistentStateRequired) {
