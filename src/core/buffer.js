@@ -27,6 +27,9 @@ var { IndexHandler, OutOfIndexError } = require("./index-handler");
 
 var BITRATE_REBUFFERING_RATIO = 1.5;
 
+var GC_GAP_CALM  = 240;
+var GC_GAP_BEEFY = 30;
+
 function Buffer({
   sourceBuffer, // SourceBuffer object
   adaptation,   // Adaptation buffered
@@ -56,9 +59,13 @@ function Buffer({
   var updateEnd = merge(
     on(sourceBuffer, "update"),
     on(sourceBuffer, "error").map((evt) => {
-      var errMessage = "buffer: error event";
-      log.error(errMessage, evt);
-      throw new Error(errMessage);
+      if (evt.target && evt.target.error) {
+        throw evt.target.error;
+      } else {
+        var errMessage = "buffer: error event";
+        log.error(errMessage, evt);
+        throw new Error(errMessage);
+      }
     })
   ).share();
 
@@ -73,13 +80,73 @@ function Buffer({
     return first(updateEnd);
   }
 
-  function lockedAppendBuffer(blob) {
-    return defer(() => {
-      if (sourceBuffer.updating) {
-        return first(updateEnd).flatMap(() => appendBuffer(blob));
-      } else {
-        return appendBuffer(blob);
+  function removeBuffer({ start, end }) {
+    sourceBuffer.remove(start, end);
+    return first(updateEnd);
+  }
+
+  function lockedBufferFunction(func) {
+    return function(data) {
+      return defer(() => {
+        if (sourceBuffer.updating) {
+          return first(updateEnd).flatMap(() => func(data));
+        } else {
+          return func(data);
+        }
+      });
+    };
+  }
+
+  var lockedAppendBuffer = lockedBufferFunction(appendBuffer);
+  var lockedRemoveBuffer = lockedBufferFunction(removeBuffer);
+
+  // Buffer garbage collector algorithm. Tries to free up some part of
+  // the ranges that are distant from the current playing time.
+  // See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
+  function selectGCedRanges({ts, buffered}, gcGap) {
+    var innerRange  = buffered.getRange(ts);
+    var outerRanges = buffered.getOuterRanges(ts);
+
+    var cleanedupRanges = [];
+
+    // start by trying to remove all ranges that do not contain the
+    // current time and respect the gcGap
+    for (var i = 0; i < outerRanges.length; i++) {
+      var outerRange = outerRanges[i];
+      if (ts - gcGap < outerRange.end) {
+        cleanedupRanges.push(outerRange);
       }
+      else if (ts + gcGap > outerRange.start) {
+        cleanedupRanges.push(outerRange);
+      }
+    }
+
+    // try to clean up some space in the current range
+    if (innerRange) {
+      log.debug("buffer: gc removing part of inner range", cleanedupRanges);
+      if (ts - gcGap > innerRange.start) {
+        cleanedupRanges.push({ start: innerRange.start, end: ts - gcGap });
+      }
+      if (ts + gcGap < innerRange.end) {
+        cleanedupRanges.push({ start: ts + gcGap, end: innerRange.end });
+      }
+    }
+
+    return cleanedupRanges;
+  }
+
+  function bufferGarbageCollector() {
+    log.warn("buffer: running garbage collector");
+    return timings.take(1).flatMap((timing) => {
+      var cleanedupRanges = selectGCedRanges(timing, GC_GAP_CALM);
+
+      // more aggressive GC if we could not find any range to clean
+      if (cleanedupRanges.length === 0) {
+        cleanedupRanges = selectGCedRanges(timing, GC_GAP_BEEFY);
+      }
+
+      log.debug("buffer: gc cleaning", cleanedupRanges);
+      return from(cleanedupRanges.map(lockedRemoveBuffer)).concatAll();
     });
   }
 
@@ -206,15 +273,28 @@ function Buffer({
           queuedSegments.add(segment.id);
 
           return {
-            adaptation:     adaptation,
-            representation: representation,
-            segment
+            adaptation,
+            representation,
+            segment,
           };
         }));
       })
       .concatMap(pipeline)
       .concatMap((infos) => {
-        return lockedAppendBuffer(infos.parsed.blob).map(infos);
+        var blob = infos.parsed.blob;
+        return lockedAppendBuffer(blob)
+          .catch((err) => {
+            // launch our garbage collector and retry on
+            // QuotaExceededError
+            if (err.name == "QuotaExceededError") {
+              return bufferGarbageCollector().flatMap(
+                () => lockedAppendBuffer(blob));
+            }
+            else {
+              throw err;
+            }
+          })
+          .map(infos);
       })
       .map((infos) => {
         var { segment, parsed } = infos;
