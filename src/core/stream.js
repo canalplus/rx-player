@@ -395,10 +395,10 @@ function Stream({
 
         if (!isEqual && changePlaybackRate) {
           if (wasStalled) {
-            log.warn("resume playback", timing.ts, timing.name);
+            log.info("resume playback", timing.ts, timing.name);
             videoElement.playbackRate = wasStalled.playback;
           } else {
-            log.warn("stop playback", timing.ts, timing.name);
+            log.info("stop playback", timing.ts, timing.name);
             videoElement.playbackRate = 0;
           }
         }
@@ -435,7 +435,7 @@ function Stream({
     // out-of-index messages require a complete reloading of the
     // manifest to refresh the current index
     if (isOutOfIndexError(message)) {
-      log.warn("out of index");
+      log.info("out of index");
       return manifestPipeline({ url: manifest.locations[0] })
         .map(({ parsed }) => {
           var newManifest = mergeManifestsIndex(manifest, normalizeManifest(parsed.url, parsed.manifest, subtitles));

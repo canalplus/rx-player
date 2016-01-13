@@ -91,7 +91,7 @@ function normalizePeriod(period, inherit, subtitles) {
   adaptations = _.map(adaptations, ada => normalizeAdaptation(ada, inherit));
   adaptations = _.filter(adaptations, (adaptation) => {
     if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
-      log.warn("not supported adaptation type", adaptation.type);
+      log.info("not supported adaptation type", adaptation.type);
       return false;
     } else {
       return true;
