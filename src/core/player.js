@@ -62,13 +62,6 @@ var PLAYER_ENDED     = "ENDED";
 var PLAYER_BUFFERING = "BUFFERING";
 var PLAYER_SEEKING   = "SEEKING";
 
-function createDirectFileManifest() {
-  return {
-    isLive: false,
-    duration: Infinity,
-  };
-}
-
 function assertMan(player) {
   assert(player.man, "player: no manifest loaded");
 }
@@ -232,8 +225,9 @@ class Player extends EventEmitter {
 
     assert(transport, "player: transport " + opts.transport + " is not supported");
 
-    if (directFile)
-      directFile = createDirectFileManifest();
+    if (directFile) {
+      directFile = manifestHelpers.createDirectFileManifest();
+    }
 
     return { url, keySystems, subtitles, timeFragment, autoPlay, transport, directFile };
   }
@@ -498,8 +492,8 @@ class Player extends EventEmitter {
   }
 
   getAvailableVideoBitrates() {
-    var video = this.man && this.man.adaptations.video[0];
-    return (video && video.bitrates) || [];
+    var video = manifestHelpers.getAdaptationsByType(this.man, "video");
+    return (video[0] && video[0].bitrates) || [];
   }
 
   getAvailableAudioBitrates() {

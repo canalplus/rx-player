@@ -215,6 +215,9 @@ function getCodec(representation) {
 
 function getAdaptations(manifest) {
   var adaptationsByType = manifest.adaptations;
+  if (!adaptationsByType) {
+    return [];
+  }
 
   var adaptationsList = [];
   _.each(_.keys(adaptationsByType), (type) => {
@@ -229,12 +232,30 @@ function getAdaptations(manifest) {
   return adaptationsList;
 }
 
+function getAdaptationsByType(manifest, type) {
+  var { adaptations } = manifest;
+  var adaptationsForType = adaptations && adaptations[type];
+  if (adaptationsForType) {
+    return adaptationsForType;
+  } else {
+    return [];
+  }
+}
+
 function getAvailableLanguages(manifest) {
-  return _.pluck(manifest.adaptations.audio, "lang");
+  return getAdaptationsByType(manifest, "audio").map((ada) => ada.lang);
 }
 
 function getAvailableSubtitles(manifest) {
-  return _.pluck(manifest.adaptations.text, "lang");
+  return getAdaptationsByType(manifest, "text").map((ada) => ada.lang);
+}
+
+function createDirectFileManifest() {
+  return {
+    isLive: false,
+    duration: Infinity,
+    adaptations: null,
+  };
 }
 
 module.exports = {
@@ -243,6 +264,8 @@ module.exports = {
   mutateManifestLiveGap,
   getCodec,
   getAdaptations,
+  getAdaptationsByType,
   getAvailableSubtitles,
   getAvailableLanguages,
+  createDirectFileManifest,
 };

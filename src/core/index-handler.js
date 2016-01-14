@@ -16,6 +16,7 @@
 
 var assert = require("canal-js-utils/assert");
 
+var { getAdaptationsByType } = require("./manifest");
 var Template = require("./indexes/template");
 var Timeline = require("./indexes/timeline");
 var List = require("./indexes/list");
@@ -41,8 +42,9 @@ function selectIndexHandler(index) {
 
 function getLiveEdge(manifest) {
   // TODO(pierre): improve index access ?
-  var videoIndex = manifest.adaptations.video[0].representations[0].index;
-  return selectIndexHandler(videoIndex).getLiveEdge(videoIndex, manifest);
+  var videoAda = getAdaptationsByType(manifest, "video");
+  var videoIdx = videoAda[0].representations[0].index;
+  return selectIndexHandler(videoIdx).getLiveEdge(videoIdx, manifest);
 }
 
 class IndexHandler {
