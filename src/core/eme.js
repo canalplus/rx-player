@@ -361,22 +361,6 @@ function findCompatibleKeySystem(keySystems) {
         .then(
           keySystemAccess => {
             log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
-            // TODO(pierre): remove this compat code used only for X1
-            // with an intermediary implementation of EME
-            if (!keySystemAccess.getConfiguration) {
-              keySystemAccess.getConfiguration = () => {
-                const conf = keySystemConfigurations[0];
-                return {
-                  audioCapabilities: conf.audioCapabilities,
-                  videoCapabilities: conf.videoCapabilities,
-                  initDataTypes: ["cenc"],
-                  distinctiveIdentifier: conf.distinctiveIdentifier === "required" ? "required" : "not-allowed",
-                  persistentState: conf.persistentState === "required" ? "required" : "not-allowed",
-                  sessionTypes: conf.sessionTypes,
-                };
-              };
-            }
-
             obs.onNext({ keySystem, keySystemAccess });
             obs.onCompleted();
           },
