@@ -1,3 +1,30 @@
+v1.4.0 on January 26, 2016
+==========================
+
+Added
+-----
+
+- buffer: add garbage collector
+- player: emit currentTimeChange synchronously
+- player: add {defaultLanguage,defaultSubtitle} api
+- log: warn to info for some logs
+
+Bug fixes
+---------
+
+- player: fix getAvailable* for direct files
+- player: fix subtle race on loadedmetadata after retry
+- eme: remove compat code for old chrome versions with eme flags
+- eme: always ask for temporary session type
+- eme: fix template error message
+- eme: improve persistent license support and compat
+- smooth: fix index timeline if no duration
+
+Demo
+----
+
+- allow to pass query parameters
+
 v1.3.1 on October 14, 2015
 ==========================
 
