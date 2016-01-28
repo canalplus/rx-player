@@ -72,8 +72,6 @@ function Stream({
   directFile
 }) {
 
-  assert(MediaSource_, "player: browser is required to support MediaSource");
-
   var fragStartTime = timeFragment.start;
   var fragEndTime = timeFragment.end;
   var fragEndTimeIsFinite = fragEndTime < Infinity;
@@ -161,6 +159,8 @@ function Stream({
 
   function createAndPlugMediaSource(url, video) {
     return Observable.create((observer) => {
+      assert(MediaSource_, "player: browser is required to support MediaSource");
+
       var mediaSource = new MediaSource_();
       var objectURL = video.src = URL.createObjectURL(mediaSource);
 
