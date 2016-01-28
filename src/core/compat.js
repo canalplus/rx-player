@@ -47,7 +47,7 @@ var MediaKeys_ = (
 
 var isIE = (
   navigator.appName == "Microsoft Internet Explorer" ||
-  navigator.appName == "Netscape" && /Trident\//.test(navigator.userAgent)
+  navigator.appName == "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
 );
 
 var MockMediaKeys = function() {
@@ -556,6 +556,40 @@ function videoSizeChange() {
   return on(win, "resize");
 }
 
+function clearVideoSrc(video) {
+  // On IE11 / Edge,  video.src = ""
+  // does not clear properly current MediaKey Session
+  // Microsoft recommended use to use video.removeAttr("src")
+  // instead. Since, video.removeAttr is not supported on
+  // other platforms, we have to make a compat function.
+  if (isIE)
+    video.removeAttribute("src");
+  else
+    video.src = "";
+}
+
+function addTextTrack(video) {
+  var track, trackElement;
+  var kind = "subtitles";
+  if (isIE) {
+    track = video.addTextTrack(kind);
+    track.mode = track.SHOWING;
+  } else {
+    // there is no removeTextTrack method... so we need to reuse old
+    // text-tracks objects and clean all its pending cues
+    trackElement = document.createElement("track");
+    track = trackElement.track;
+    trackElement.kind = "subtitles";
+    track.mode = "showing";
+    video.appendChild(trackElement);
+  }
+  return { track, trackElement };
+}
+
+function isVTTSupported() {
+  return !!isIE;
+}
+
 // On IE11, fullscreen change events is called MSFullscreenChange
 var onFullscreenChange = compatibleListener(["fullscreenchange", "FullscreenChange"], PREFIXES.concat("MS"));
 
@@ -579,4 +613,9 @@ module.exports = {
 
   videoSizeChange,
   visibilityChange,
+
+  clearVideoSrc,
+
+  addTextTrack,
+  isVTTSupported
 };

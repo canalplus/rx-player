@@ -23,7 +23,7 @@ var { retryWithBackoff } = require("canal-js-utils/rx-ext");
 var { empty, never, merge, combineLatest } = Observable;
 var min = Math.min;
 
-var { MediaSource_, sourceOpen, canPlay, loadedMetadata } = require("./compat");
+var { MediaSource_, sourceOpen, canPlay, loadedMetadata, clearVideoSrc } = require("./compat");
 var TextSourceBuffer = require("./text-buffer");
 var { getLiveEdge } = require("./index-handler");
 var Buffer = require("./buffer");
@@ -47,7 +47,7 @@ function plugDirectFile(url, video) {
     video.src = url;
     observer.next({ url });
     return () => {
-      video.src = "";
+      clearVideoSrc(video);
     };
   });
 }
@@ -197,7 +197,7 @@ function Stream({
         });
 
         // clear video srcAttribute
-        video.src = "";
+        clearVideoSrc(video);
 
         if (objectURL) {
           try {

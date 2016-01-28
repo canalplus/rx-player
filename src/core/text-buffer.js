@@ -16,6 +16,8 @@
 
 var Promise_ = require("canal-js-utils/promise");
 var AbstractSourceBuffer = require("./sourcebuffer");
+var { addTextTrack, isVTTSupported } = require("./compat");
+var log = require("canal-js-utils/log");
 
 var Cue = window.VTTCue || window.TextTrackCue;
 
@@ -26,15 +28,10 @@ class TextSourceBuffer extends AbstractSourceBuffer {
     this.video = video;
     this.codec = codec;
     this.isVTT = /^text\/vtt/.test(codec);
-    // there is no removeTextTrack method... so we need to reuse old
-    // text-tracks objects and clean all its pending cues
-    var trackElement = document.createElement("track");
-    var track = trackElement.track;
-    this.trackElement = trackElement;
+
+    var { track, trackElement } = addTextTrack(video);
     this.track = track;
-    trackElement.kind = "subtitles";
-    track.mode = "showing";
-    video.appendChild(trackElement);
+    this.trackElement = trackElement;
   }
 
   createCuesFromArray(cues) {
@@ -49,18 +46,33 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   }
 
   _append(cues) {
-    if (this.isVTT) {
+    if (this.isVTT && !isVTTSupported()) {
       var blob = new Blob([cues], { type: "text/vtt" });
       var url = URL.createObjectURL(blob);
-      this.trackElement.src = url;
-      this.buffered.insert(0, Infinity);
+      if (this.trackElement) {
+        this.trackElement.src = url;
+        this.buffered.insert(0, Infinity);
+      } else {
+        log.warn("vtt subtitles not supported");
+      }
     }
     else {
-      var trackCues = this.createCuesFromArray(cues);
-      if (trackCues.length) {
-        trackCues.forEach(cue => this.track.addCue(cue));
-        var firstCue = trackCues[0];
-        var lastCue = trackCues[trackCues.length - 1];
+      var newCues = this.createCuesFromArray(cues);
+      if (newCues.length > 0) {
+        var firstCue = newCues[0];
+        var lastCue = newCues[newCues.length - 1];
+
+        // NOTE(compat): cleanup all current cues if the newly added
+        // ones are in the past. this is supposed to fix an issue on
+        // IE/Edge.
+        var currentCues = this.track.cues;
+        if (currentCues.length > 0) {
+          if (firstCue.startTime < currentCues[currentCues.length - 1].endTime) {
+            this._remove(0, +Infinity);
+          }
+        }
+
+        newCues.forEach(cue => this.track.addCue(cue));
         this.buffered.insert(0, firstCue.startTime, lastCue.endTime);
       }
     }
@@ -77,6 +89,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
         track.removeCue(cue);
       }
     }
+    this.buffered.remove(from, to);
   }
 
   _abort() {
