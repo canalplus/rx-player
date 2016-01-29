@@ -30,7 +30,9 @@ class Timeline {
 
   static getLiveEdge(videoIndex, manifest) {
     var lastTimelineElement = videoIndex.timeline[videoIndex.timeline.length - 1];
-    var calculatedLiveEdge = (getTimelineBound(lastTimelineElement) / videoIndex.timescale) - manifest.suggestedPresentationDelay;
+    var calculatedLiveEdge = (
+      (getTimelineBound(lastTimelineElement) / videoIndex.timescale) - manifest.suggestedPresentationDelay
+    );
     var minimumLiveEdge = (videoIndex.timeline[0].ts / videoIndex.timescale) + 1.0;
 
     return Math.max(minimumLiveEdge, calculatedLiveEdge);

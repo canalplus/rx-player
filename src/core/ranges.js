@@ -102,8 +102,9 @@ function mergeContiguousRanges(ranges) {
 
 function insertInto(ranges, bitrate, start, end) {
   assert(start <= end);
-  if (start == end)
-    return;
+  if (start == end) {
+    return ranges;
+  }
 
   var addedRange = { start: start, end: end, bitrate: bitrate };
 

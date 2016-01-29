@@ -21,7 +21,7 @@ var {
   hexToBytes, bytesToHex,
   be2toi, itobe2,
   be4toi, itobe4,
-  be8toi, itobe8
+  be8toi, itobe8,
 } = require("canal-js-utils/bytes");
 
 var FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
@@ -75,9 +75,11 @@ function findAtom(buf, atomName) {
     }
   }
 
-  if (i >= l) return;
-
-  return buf.subarray(i + 8, i + size);
+  if (i < l) {
+    return buf.subarray(i + 8, i + size);
+  } else {
+    return null;
+  }
 }
 
 var atoms = {
@@ -238,7 +240,7 @@ var atoms = {
   },
 
   /**
-   * {String}       systemId    Hex string representing the CDM, 16 bytes. eg 1077efec-c0b2-4d02-ace3-3c1e52e2fb4b for ClearKey
+   * {String}       systemId    Hex string representing the CDM, 16 bytes.
    * {Uint8Array}   privateData Data associated to protection specific system
    * {[]Uint8Array} keyIds      List of key ids contained in the PSSH
    */
@@ -439,7 +441,7 @@ var reads = {
 
   mdat(buff) {
     return findAtom(buff, 0x6D646174 /* "mdat" */);
-  }
+  },
 };
 
 /**
@@ -514,7 +516,7 @@ function createInitSegment(
     Atom("stts", new Uint8Array(0x08)),
     Atom("stsc", new Uint8Array(0x08)),
     Atom("stsz", new Uint8Array(0x0c)),
-    Atom("stco", new Uint8Array(0x08))
+    Atom("stco", new Uint8Array(0x08)),
   ]);
 
   var url  = Atom("url ", new Uint8Array([0, 0, 0, 1]));
@@ -583,7 +585,7 @@ module.exports = {
    * Number   nalLength (1, 2 or 4)
    * String   SPShexstr
    * String   PPShexstr
-   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"} listing all Protection Systems
+   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
    * String   keyId (hex string representing the key Id, 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b)
    *
    *
@@ -633,7 +635,7 @@ module.exports = {
    * Number   packetSize
    * Number   sampleRate
    * String   codecPrivateData
-   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"} listing all Protection Systems
+   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"}
    * String   keyId (hex string representing the key Id, 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b)
    *
    *
@@ -712,5 +714,5 @@ module.exports = {
     // else {
     //   return createNewSegment(segment, newmoof, oldmoof, trunoffset);
     // }
-  }
+  },
 };

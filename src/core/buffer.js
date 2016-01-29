@@ -35,7 +35,7 @@ function Buffer({
   pipeline,     // Segment pipeline
   adapters,     // { representations, bufferSizes } observables
   timings,      // Timings observable
-  seekings      // Seekings observable
+  seekings,     // Seekings observable
 }) {
 
   var bufferType = adaptation.type;

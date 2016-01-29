@@ -129,7 +129,9 @@ function compatibleListener(eventNames, prefixes) {
         return fromEvent(element, mem);
       } else {
         if (__DEV__) {
-          log.warn(`compat: element <${element.tagName}> does not support any of these events: ${eventNames.join(", ")}`);
+          log.warn(
+            `compat: element <${element.tagName}> does not support any of these events: ${eventNames.join(", ")}`
+          );
         }
         return never();
       }
@@ -198,7 +200,7 @@ function wrapUpdateWithPromise(memUpdate, sessionObj) {
     if (err.errorCode) {
       err = {
         systemCode: err.systemCode,
-        code: err.errorCode.code
+        code: err.errorCode.code,
       };
     }
     this.name = "KeySessionError";
@@ -309,8 +311,14 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       } = keySystemConfiguration;
 
       var supported = true;
-      supported = supported && (!initDataTypes || !!find(initDataTypes, (initDataType) => initDataType === "cenc"));
-      supported = supported && (!sessionTypes || sessionTypes.filter((sessionType) => sessionType === "temporary").length === sessionTypes.length);
+      supported = supported && (
+        !initDataTypes ||
+        !!find(initDataTypes, (initDataType) => initDataType === "cenc")
+      );
+      supported = supported && (
+        !sessionTypes ||
+         sessionTypes.filter((sessionType) => sessionType === "temporary").length === sessionTypes.length
+      );
       supported = supported && (distinctiveIdentifier !== "required");
       supported = supported && (persistentState !== "required");
 
@@ -442,7 +450,7 @@ function _setMediaKeys(elt, mk) {
   }
 
   if (mk === null) {
-    return;
+    return Promise_.resolve();
   }
 
   if (elt.WebkitSetMediaKeys) {
@@ -519,23 +527,30 @@ if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener
 }
 
 function requestFullscreen(elt) {
-  if (isFullscreen()) return;
-  if (elt.requestFullscreen)       return elt.requestFullscreen();
-  if (elt.msRequestFullscreen)     return elt.msRequestFullscreen();
-  if (elt.mozRequestFullScreen)    return elt.mozRequestFullScreen();
-  if (elt.webkitRequestFullscreen) return elt.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+  if (!isFullscreen()) {
+    if (elt.requestFullscreen)            elt.requestFullscreen();
+    else if (elt.msRequestFullscreen)     elt.msRequestFullscreen();
+    else if (elt.mozRequestFullScreen)    elt.mozRequestFullScreen();
+    else if (elt.webkitRequestFullscreen) elt.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+  }
 }
 
 function exitFullscreen() {
-  if (!isFullscreen()) return;
-  if (doc.exitFullscreen)       return doc.exitFullscreen();
-  if (doc.msExitFullscreen)     return doc.msExitFullscreen();
-  if (doc.mozCancelFullScreen)  return doc.mozCancelFullScreen();
-  if (doc.webkitExitFullscreen) return doc.webkitExitFullscreen();
+  if (isFullscreen()) {
+    if (doc.exitFullscreen)            doc.exitFullscreen();
+    else if (doc.msExitFullscreen)     doc.msExitFullscreen();
+    else if (doc.mozCancelFullScreen)  doc.mozCancelFullScreen();
+    else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+  }
 }
 
 function isFullscreen() {
-  return !!(doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement);
+  return !!(
+    doc.fullscreenElement ||
+    doc.mozFullScreenElement ||
+    doc.webkitFullscreenElement ||
+    doc.msFullscreenElement
+  );
 }
 
 function visibilityChange() {
@@ -617,5 +632,5 @@ module.exports = {
   clearVideoSrc,
 
   addTextTrack,
-  isVTTSupported
+  isVTTSupported,
 };

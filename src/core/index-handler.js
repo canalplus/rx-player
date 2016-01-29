@@ -62,7 +62,7 @@ class IndexHandler {
       init: true,
       media: initialization.media,
       range: initialization.range,
-      indexRange: this.index.indexRange
+      indexRange: this.index.indexRange,
     };
   }
 

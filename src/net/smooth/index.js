@@ -30,7 +30,7 @@ var {
   getMdat,
   getTraf,
   parseTfrf,
-  parseTfxd
+  parseTfxd,
 } = require("./mp4");
 
 var { parseSami } = require("./tt-sami");
@@ -103,7 +103,7 @@ module.exports = function(options={}) {
       if (WSX_REG.test(url)) {
         resolving = req({
           url: replaceToken(url, ""),
-          format: "document"
+          format: "document",
         }).map(({ blob }) => extractISML(blob));
       }
       else {

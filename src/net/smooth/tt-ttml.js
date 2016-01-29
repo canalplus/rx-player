@@ -25,7 +25,7 @@ var MULTS = {
   h: 3600,
   m: 60,
   s: 1,
-  ms: 0.001
+  ms: 0.001,
 };
 
 function parseTTML(ttml, lang, offset) {
@@ -120,7 +120,9 @@ function parseNode(node, parentOffset, siblingOffset) {
 //   * absolute to timeline (hh:mm:ss.ms)
 //   * relative (decimal followed by metric) ex: 3.4s, 5.7m
 function parseTimestamp(time, offset) {
-  if (!time) return;
+  if (!time) {
+    return null;
+  }
 
   var match;
 
@@ -142,6 +144,8 @@ function parseTimestamp(time, offset) {
     var [,n,,,metric] = match;
     return parseFloat(n) * MULTS[metric] + offset;
   }
+
+  return null;
 }
 
 module.exports = { parseTTML };

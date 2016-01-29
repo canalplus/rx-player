@@ -30,7 +30,7 @@ var {
   exitFullscreen,
   requestFullscreen,
   isFullscreen,
-  onFullscreenChange
+  onFullscreenChange,
 } = require("./compat");
 
 var {
@@ -90,7 +90,7 @@ class Player extends EventEmitter {
       defaultLanguage,
       defaultSubtitle,
       initVideoBitrate,
-      initAudioBitrate
+      initAudioBitrate,
     } = options;
 
     super();
@@ -204,7 +204,7 @@ class Player extends EventEmitter {
       timeFragment,
       subtitles,
       autoPlay,
-      directFile
+      directFile,
     } = defaults({ ...opts }, {
       transport: this.defaultTransport,
       transportOptions: {},
@@ -253,7 +253,7 @@ class Player extends EventEmitter {
       timeFragment,
       autoPlay,
       transport,
-      directFile
+      directFile,
     } = options;
 
     this.stop();
@@ -380,7 +380,7 @@ class Player extends EventEmitter {
         e => this.stream.next({ type: "error", value: e })
       ),
 
-      stream.connect()
+      stream.connect(),
     ];
 
     subs.forEach((s) => subscriptions.add(s));

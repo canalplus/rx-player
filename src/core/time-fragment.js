@@ -181,7 +181,8 @@ function temporalMediaFragmentParser(value) {
   // hours:minutes:seconds:frames.further-subdivison-of-frames
   var smpte = /^(\d+\:\d\d\:\d\d(\:\d\d(\.\d\d)?)?)?$/;
   // regexp adapted from http://delete.me.uk/2005/03/iso8601.html
-  var wallClock = /^((\d{4})(-(\d{2})(-(\d{2})(T(\d{2})\:(\d{2})(\:(\d{2})(\.(\d+))?)?(Z|(([-\+])(\d{2})\:(\d{2})))?)?)?)?)?$/;
+  var wallClock =
+    /^((\d{4})(-(\d{2})(-(\d{2})(T(\d{2})\:(\d{2})(\:(\d{2})(\.(\d+))?)?(Z|(([-\+])(\d{2})\:(\d{2})))?)?)?)?)?$/;
   // float%
   var percentage = /^(\d*(\.\d+)? ?%)?$/;
 
@@ -207,7 +208,7 @@ function temporalMediaFragmentParser(value) {
   assert((start !== false) || (end !== false), errMessage);
   return {
     start: start === false ? "" : start,
-    end: end === false ? "" : end
+    end: end === false ? "" : end,
   };
 }
 

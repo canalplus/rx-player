@@ -143,7 +143,7 @@ var attributes = {
     { k: "media",      fn: parseString },
     { k: "mediaRange", fn: parseByteRange },
     { k: "index",      fn: parseString },
-    { k: "indexRange", fn: parseByteRange }
+    { k: "indexRange", fn: parseByteRange },
   ],
 
   "S": [
@@ -158,7 +158,7 @@ var attributes = {
     { k: "initialization",     fn: parseInitializationAttribute },
     { k: "index",              fn: parseString },
     { k: "media",              fn: parseString },
-    { k: "bitstreamSwitching", fn: parseString }
+    { k: "bitstreamSwitching", fn: parseString },
   ]),
   "SegmentList": MultipleSegmentBaseType,
 
@@ -198,7 +198,7 @@ var attributes = {
     { k: "id",                 fn: parseString },
     { k: "start",              fn: parseDuration },
     { k: "duration",           fn: parseDuration },
-    { k: "bitstreamSwitching", fn: parseBoolean }
+    { k: "bitstreamSwitching", fn: parseBoolean },
   ],
 
   "MPD": [
@@ -215,7 +215,7 @@ var attributes = {
     { k: "suggestedPresentationDelay", fn: parseDuration },
     { k: "maxSegmentDuration",         fn: parseDuration },
     { k: "maxSubsegmentDuration",      fn: parseDuration },
-  ]
+  ],
 };
 
 function reduceChildren(root, fn, init) {

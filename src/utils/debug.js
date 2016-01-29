@@ -87,16 +87,20 @@ function update(player, videoElement) {
         `Container: ${escape(manifest.transportType)}`,
         `Live: ${escape(""+manifest.isLive)}`,
      // `Playing bitrate: ${video.representation.bitrate}/${audio.representation.bitrate}`,
-        `Downloading bitrate (Kbit/s): ${bpsToKbps(video.representation.bitrate)}/${bpsToKbps(audio.representation.bitrate)}`,
-        `Estimated bandwidth (Kbit/s): ${bpsToKbps(video.avrBitrate)}/${bpsToKbps(audio.avrBitrate)}`,
+        `Downloading bitrate (Kbit/s):
+          ${bpsToKbps(video.representation.bitrate)}/${bpsToKbps(audio.representation.bitrate)}`,
+        `Estimated bandwidth (Kbit/s):
+          ${bpsToKbps(video.avrBitrate)}/${bpsToKbps(audio.avrBitrate)}`,
         `Location: ${manifest.locations[0]}`,
       ].join("<br>");
     }
 
-// Representation: ${escape(video.adaptation.id + "/" + video.representation.id)}<br>${getCodec(video.representation)}<br>
-// Buffered: ${escape(JSON.stringify(infos.buffer))}<br>
-// <br><b>Audio</b><br>
-// Representation: ${escape(audio.adaptation.id + "/" + audio.representation.id)}<br>${getCodec(audio.representation)}<br>`;
+    // Representation: ${escape(video.adaptation.id + "/" + video.representation.id)}<br>
+    //  ${getCodec(video.representation)}<br>
+    // Buffered: ${escape(JSON.stringify(infos.buffer))}<br>
+    // <br><b>Audio</b><br>
+    // Representation: ${escape(audio.adaptation.id + "/" + audio.representation.id)}<br>
+    //  ${getCodec(audio.representation)}<br>`;
     infoElement.innerHTML = secureHTML;
   }
 }

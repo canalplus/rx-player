@@ -33,7 +33,7 @@ var MIME_TYPES = {
   "AACL": "audio/mp4",
   "AVC1": "video/mp4",
   "H264": "video/mp4",
-  "TTML": "application/ttml+xml+mp4"
+  "TTML": "application/ttml+xml+mp4",
 };
 
 var CODECS = {
@@ -66,7 +66,7 @@ var profiles = {
   text: [
     ["Bitrate", "bitrate",  parseInt],
     ["FourCC",  "mimeType", MIME_TYPES],
-  ]
+  ],
 };
 
 function parseBoolean(val) {
@@ -149,8 +149,8 @@ function createSmoothStreamingParser(parserOptions={}) {
           systemId,
           privateData,
           // keyIds: [keyIdBytes],
-        }
-      ].concat(keySystems(keyIdBytes))
+        },
+      ].concat(keySystems(keyIdBytes)),
     };
   }
 
@@ -331,7 +331,7 @@ function createSmoothStreamingParser(parserOptions={}) {
         duration:    (+root.getAttribute("Duration") || Infinity) / timescale,
         adaptations,
         laFragCount: +root.getAttribute("LookAheadFragmentCount"),
-      }]
+      }],
     };
   }
 

@@ -17,7 +17,7 @@
 var assert = require("canal-js-utils/assert");
 var {
   itobe4, be8toi, be4toi, be2toi,
-  hexToBytes, strToBytes, concat
+  hexToBytes, strToBytes, concat,
 } = require("canal-js-utils/bytes");
 
 function findAtom(buf, atomName) {

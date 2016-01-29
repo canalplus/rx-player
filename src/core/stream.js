@@ -33,7 +33,7 @@ var {
   normalizeManifest,
   mergeManifestsIndex,
   mutateManifestLiveGap,
-  getAdaptations
+  getAdaptations,
 } = require("./manifest");
 
 var END_OF_PLAY = 0.2;
@@ -69,7 +69,7 @@ function Stream({
   pipelines,
   videoElement,
   autoPlay,
-  directFile
+  directFile,
 }) {
 
   var fragStartTime = timeFragment.start;
@@ -234,7 +234,7 @@ function Stream({
 
     return {
       timings: augmentedTimings,
-      seekings
+      seekings,
     };
   }
 

@@ -200,8 +200,8 @@ function normalizeSubtitles(subtitles) {
           duration: Number.MAX_VALUE,
           timescale: 1,
           startNumber: 0,
-        }
-      }]
+        },
+      }],
     }));
   }));
 }
@@ -268,7 +268,7 @@ function getAdaptations(manifest) {
     adaptationsList.push({
       type: type,
       adaptations: adaptations,
-      codec: getCodec(adaptations[0].representations[0])
+      codec: getCodec(adaptations[0].representations[0]),
     });
   }
 

@@ -25,7 +25,7 @@ var noCache = {
   add() {},
   get() {
     return null;
-  }
+  },
 };
 
 /**
@@ -46,7 +46,7 @@ function createPipeline(type, { resolver, loader, parser }, metrics, opts={}) {
   var { totalRetry, timeout, cache } = defaults(opts, {
     totalRetry: 3,
     timeout: 10 * 1000,
-    cache: noCache
+    cache: noCache,
   });
 
   var backoffOptions = {

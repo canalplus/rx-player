@@ -194,7 +194,7 @@ function normalizeWallClockTime(timeInMs, manifest) {
   var {
     suggestedPresentationDelay,
     presentationLiveGap,
-    timeShiftBufferDepth
+    timeShiftBufferDepth,
   } = manifest;
 
   if (typeof timeInMs != "number")
@@ -212,7 +212,7 @@ function getLiveGap(ts, manifest) {
 
   var {
     availabilityStartTime,
-    presentationLiveGap
+    presentationLiveGap,
   } = manifest;
 
   var liveGap = (Date.now() / 1000 - ts);

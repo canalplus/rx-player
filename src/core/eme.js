@@ -38,14 +38,14 @@ const {
 const SYSTEMS = {
   "clearkey":  ["webkit-org.w3.clearkey", "org.w3.clearkey"],
   "widevine":  ["com.widevine.alpha"],
-  "playready": ["com.youtube.playready", "com.microsoft.playready"]
+  "playready": ["com.youtube.playready", "com.microsoft.playready"],
 };
 
 // Key statuses to error mapping. Taken from shaka-player.
 const KEY_STATUS_ERRORS = {
   "output-not-allowed": "eme: the required output protection is not available.",
   "expired": "eme: a required key has expired and the content cannot be decrypted.",
-  "internal-error": "eme: an unknown error has occurred in the CDM."
+  "internal-error": "eme: an unknown error has occurred in the CDM.",
 };
 
 function hashBuffer(buffer) {

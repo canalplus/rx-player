@@ -70,7 +70,7 @@ module.exports = function(opts={}) {
     parser({ response }) {
       return Observable.of({
         manifest: dashManifestParser(response.blob, contentProtectionParser),
-        url:      response.url
+        url:      response.url,
       });
     },
   };
@@ -103,7 +103,7 @@ module.exports = function(opts={}) {
       var mediaOrInitRequest = req({
         url: mediaUrl,
         format: "arraybuffer",
-        headers: mediaHeaders
+        headers: mediaHeaders,
       });
 
       // If init segment has indexRange metadata, we need to fetch
@@ -116,7 +116,7 @@ module.exports = function(opts={}) {
         var indexRequest = req({
           url: mediaUrl,
           format: "arraybuffer",
-          headers: { "Range": byteRange(indexRange) }
+          headers: { "Range": byteRange(indexRange) },
         });
         return merge(mediaOrInitRequest, indexRequest);
       }
@@ -171,7 +171,7 @@ module.exports = function(opts={}) {
         nextSegments,
         timescale,
       });
-    }
+    },
   };
 
   var textTrackPipeline = {

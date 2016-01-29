@@ -69,7 +69,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     defaultBufferSize,
     defaultBufferThreshold,
     initVideoBitrate,
-    initAudioBitrate
+    initAudioBitrate,
   } = defaults(options, DEFAULTS);
 
   var { videoWidth, inBackground } = deviceEvents;
@@ -229,6 +229,6 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
         conns.unsubscribe();
         conns = null;
       }
-    }
+    },
   };
 };
