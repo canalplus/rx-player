@@ -38,8 +38,20 @@ module.exports = {
     new webpack.DefinePlugin({
       "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
       "__DEV__": RX_PLAYER_ENV === "development",
+      "process.env": {
+        NODE_ENV: JSON.stringify(RX_PLAYER_ENV)
+      },
     }),
   ],
+  node: {
+    console: false,
+    global: true,
+    process: false,
+    Buffer: false,
+    __filename: false,
+    __dirname: false,
+    setImmediate: false,
+  },
   resolveLoader: {
     root: path.join(__dirname, "node_modules"),
   },

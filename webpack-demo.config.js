@@ -36,11 +36,24 @@ module.exports = {
     },
   },
   plugins: [
+  new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
-      "__DEV__": true,
       "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
+      "__DEV__": true,
+      "process.env": {
+        NODE_ENV: JSON.stringify("production")
+      },
     }),
   ],
+  node: {
+    console: false,
+    global: true,
+    process: false,
+    Buffer: false,
+    __filename: false,
+    __dirname: false,
+    setImmediate: false,
+  },
   resolveLoader: {
     root: path.join(__dirname, "node_modules"),
   },
