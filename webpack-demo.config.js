@@ -1,4 +1,4 @@
-/* jshint node:true */
+/* eslint-env node */
 var fs = require("fs");
 var path = require("path");
 
@@ -13,12 +13,20 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.js$/, loader: "babel?loose=all" },
+      {
+        test: /\.js$/,
+        loader: "babel",
+        query: {
+          "cacheDirectory": true,
+          "plugins": ["transform-object-rest-spread"],
+          "presets": ["react", "es2015-loose"],
+        },
+      },
       { test: /\.css$/, loader: "style-loader!css-loader" },
       {
         test: /\.(otf|eot|svg|ttf|woff)/,
-        loader: "url-loader"
-      }
+        loader: "url-loader",
+      },
     ],
   },
   resolve: {
@@ -34,6 +42,6 @@ module.exports = {
     }),
   ],
   resolveLoader: {
-    root: path.join(__dirname, "node_modules")
-  }
+    root: path.join(__dirname, "node_modules"),
+  },
 };

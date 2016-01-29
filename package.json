@@ -21,18 +21,22 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "canal-js-utils": "3.0.0-rxnext18",
+    "canal-js-utils": "^3.0.0-rxnext18",
     "lodash": "^3.10.1",
-    "rxjs": "^5.0.0-beta.1"
+    "rxjs": "^5.0.0-beta.1",
   },
   "devDependencies": {
-    "babel-core": "^5.2.15",
-    "babel-loader": "^5.0.0",
+    "babel-core": "^6.4.5",
+    "babel-loader": "^6.2.1",
+    "babel-plugin-transform-object-rest-spread": "^6.3.13",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-es2015-loose": "^7.0.0",
+    "babel-preset-react": "^6.3.13",
     "chai": "^1.10.0",
     "chai-as-promised": "^4.1.1",
     "chai-spies": "^0.5.1",
     "coverjs-loader": "^0.5.0",
-    "css-loader": "^0.12.0",
+    "css-loader": "^0.23.1",
     "file-loader": "^0.8.1",
     "jsx-loader": "^0.13.1",
     "mocha": "^2.0.1",
@@ -40,8 +44,8 @@
     "raw-loader": "^0.5.1",
     "react": "^0.13.1",
     "script-loader": "^0.6.1",
-    "style-loader": "^0.12.1",
+    "style-loader": "^0.13.0",
     "url-loader": "^0.5.5",
-    "webpack": "^1.8.11"
+    "webpack": "^1.12.12"
   }
 }

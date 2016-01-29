@@ -1,4 +1,4 @@
-/* jshint node:true */
+/* eslint-env node */
 var fs = require("fs");
 var path = require("path");
 
@@ -13,12 +13,19 @@ var version = fs.readFileSync("./VERSION").toString().replace(/\n$/g, "");
 module.exports = {
   output: {
     library: "RxPlayer",
-    libraryTarget: "umd"
+    libraryTarget: "umd",
   },
   module: {
     loaders: [
-      { test: /\.js$/, loader: "babel?loose=all" },
-    ]
+      {
+        test: /\.js$/,
+        loader: "babel",
+        query: {
+          "plugins": ["transform-object-rest-spread"],
+          "presets": ["es2015-loose"],
+        },
+      },
+    ],
   },
   resolve: {
     alias: {
@@ -30,10 +37,10 @@ module.exports = {
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
       "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
-      "__DEV__": RX_PLAYER_ENV === "development"
+      "__DEV__": RX_PLAYER_ENV === "development",
     }),
   ],
   resolveLoader: {
-    root: path.join(__dirname, "node_modules")
-  }
+    root: path.join(__dirname, "node_modules"),
+  },
 };
