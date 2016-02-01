@@ -16,7 +16,6 @@
 
 var flatten = require("lodash/array/flatten");
 var log = require("canal-js-utils/log");
-var Promise_ = require("canal-js-utils/promise");
 var EventEmitter = require("canal-js-utils/eventemitter");
 var { bytesToStr, strToBytes } = require("canal-js-utils/bytes");
 var assert = require("canal-js-utils/assert");
@@ -68,7 +67,7 @@ class KeySystemAccess {
     return this._keyType;
   }
   createMediaKeys() {
-    return Promise_.resolve(this._mediaKeys);
+    return Promise.resolve(this._mediaKeys);
   }
   getConfiguration() {
     return this._configuration;
@@ -79,7 +78,7 @@ function castToPromise(prom) {
   if (prom && typeof prom.then == "function") {
     return prom;
   } else {
-    return Promise_.resolve(prom);
+    return Promise.resolve(prom);
   }
 }
 
@@ -89,7 +88,7 @@ function wrap(fn) {
     try {
       retValue = fn.apply(this, arguments);
     } catch(error) {
-      return Promise_.reject(error);
+      return Promise.reject(error);
     }
     return castToPromise(retValue);
   };
@@ -220,7 +219,7 @@ function wrapUpdateWithPromise(memUpdate, sessionObj) {
       memUpdate.call(this, license, sessionId);
       return merge(keys, errs).take(1).toPromise();
     } catch(e) {
-      return Promise_.reject(e);
+      return Promise.reject(e);
     }
   };
 }
@@ -297,7 +296,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
 
   requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
     if (!isTypeSupported(keyType))
-      return Promise_.reject();
+      return Promise.reject();
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
       let keySystemConfiguration = keySystemConfigurations[i];
@@ -332,7 +331,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
           sessionTypes: ["temporary"],
         };
 
-        return Promise_.resolve(
+        return Promise.resolve(
           new KeySystemAccess(keyType,
                               new MockMediaKeys(keyType),
                               keySystemConfigurationResponse)
@@ -340,7 +339,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       }
     }
 
-    return Promise_.reject();
+    return Promise.reject();
   };
 }
 
@@ -394,7 +393,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 
   requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
     if (!MediaKeys_.isTypeSupported(keyType))
-      return Promise_.reject();
+      return Promise.reject();
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
       let keySystemConfiguration = keySystemConfigurations[i];
@@ -419,7 +418,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
           sessionTypes: ["temporary", "persistent-license"],
         };
 
-        return Promise_.resolve(
+        return Promise.resolve(
           new KeySystemAccess(keyType,
                               new MockMediaKeys(keyType),
                               keySystemConfigurationResponse)
@@ -427,7 +426,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       }
     }
 
-    return Promise_.reject();
+    return Promise.reject();
   };
 }
 
@@ -450,7 +449,7 @@ function _setMediaKeys(elt, mk) {
   }
 
   if (mk === null) {
-    return Promise_.resolve();
+    return Promise.resolve();
   }
 
   if (elt.WebkitSetMediaKeys) {
@@ -466,7 +465,7 @@ function _setMediaKeys(elt, mk) {
   //
   // TODO: how to handle dispose properly ?
   if (elt.msSetMediaKeys) {
-    return new Promise_((res, rej) => {
+    return new Promise((res, rej) => {
       if (elt.readyState >= 1) {
         elt.msSetMediaKeys(mk);
         res();
