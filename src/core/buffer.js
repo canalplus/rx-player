@@ -228,10 +228,9 @@ function Buffer({
     var segmentsPipeline = combineLatest(
       timings,
       bufferSizes,
-      mutedUpdateEnd,
-      (timing, bufferSize) => ({ timing, bufferSize })
+      mutedUpdateEnd
     )
-      .flatMap(({ timing, bufferSize }, count) => {
+      .flatMap(([timing, bufferSize], count) => {
         var nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
 
         // makes sure our own buffered ranges representation stay in
@@ -279,56 +278,55 @@ function Buffer({
         }));
       })
       .concatMap(pipeline)
-      .concatMap((infos) => {
-        var blob = infos.parsed.blob;
-        return lockedAppendBuffer(blob)
-          .catch((err) => {
-            // launch our garbage collector and retry on
-            // QuotaExceededError
-            if (err.name == "QuotaExceededError") {
+      .concatMap(
+        (infos) => {
+          var blob = infos.parsed.blob;
+          return lockedAppendBuffer(blob)
+            .catch((err) => {
+              // launch our garbage collector and retry on
+              // QuotaExceededError
+              if (err.name !== "QuotaExceededError") {
+                throw err;
+              }
+
               return bufferGarbageCollector().flatMap(
                 () => lockedAppendBuffer(blob));
-            }
-            else {
-              throw err;
-            }
-          })
-          .mapTo(infos);
-      })
-      .map((infos) => {
-        var { segment, parsed } = infos;
-        queuedSegments.remove(segment.id);
+            });
+        },
+        (infos) => {
+          var { segment, parsed } = infos;
+          queuedSegments.remove(segment.id);
 
-        // change the timescale if one has been extracted from the
-        // parsed segment (SegmentBase)
-        var timescale = parsed.timescale;
-        if (timescale) {
-          segmentIndex.setTimescale(timescale);
-        }
+          // change the timescale if one has been extracted from the
+          // parsed segment (SegmentBase)
+          var timescale = parsed.timescale;
+          if (timescale) {
+            segmentIndex.setTimescale(timescale);
+          }
 
-        var { nextSegments, currentSegment } = parsed;
-        // added segments are values parsed from the segment metadata
-        // that should be added to the segmentIndex.
-        var addedSegments;
-        if (nextSegments) {
-          addedSegments = segmentIndex.insertNewSegments(nextSegments, currentSegment);
-        } else {
-          addedSegments = [];
-        }
+          var { nextSegments, currentSegment } = parsed;
+          // added segments are values parsed from the segment metadata
+          // that should be added to the segmentIndex.
+          var addedSegments;
+          if (nextSegments) {
+            addedSegments = segmentIndex.insertNewSegments(nextSegments, currentSegment);
+          } else {
+            addedSegments = [];
+          }
 
-        // current segment timings informations are used to update
-        // ranges informations
-        if (currentSegment) {
-          ranges.insert(representation.bitrate,
-            segmentIndex.scale(currentSegment.ts),
-            segmentIndex.scale(currentSegment.ts + currentSegment.d));
-        }
+          // current segment timings informations are used to update
+          // ranges informations
+          if (currentSegment) {
+            ranges.insert(representation.bitrate,
+              segmentIndex.scale(currentSegment.ts),
+              segmentIndex.scale(currentSegment.ts + currentSegment.d));
+          }
 
-        return {
-          type: "segment",
-          value: { addedSegments, ...infos },
-        };
-      });
+          return {
+            type: "segment",
+            value: { addedSegments, ...infos },
+          };
+        });
 
     return merge(segmentsPipeline, outOfIndexStream).catch(err => {
       if (err.code !== 412)

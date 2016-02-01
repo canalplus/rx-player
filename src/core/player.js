@@ -301,8 +301,7 @@ class Player extends EventEmitter {
       loaded = combineLatest(
         canPlay,
         filterStreamByType(pluck(segments, "adaptation"), "audio"),
-        filterStreamByType(pluck(segments, "adaptation"), "video"),
-        () => {});
+        filterStreamByType(pluck(segments, "adaptation"), "video"));
     }
 
     loaded = loaded.take(1);

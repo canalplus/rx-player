@@ -42,6 +42,10 @@ var TOTAL_RETRY_COUNT = 3;
 // discontinuity threshold in seconds
 var DISCONTINUITY_THRESHOLD = 1;
 
+function identity(x) {
+  return x;
+}
+
 function plugDirectFile(url, video) {
   return Observable.create((observer) => {
     video.src = url;
@@ -246,9 +250,7 @@ function Stream({
     .filter(({ ts, duration }) => (
       duration > 0 &&
       min(duration, fragEndTime) - ts < END_OF_PLAY
-    ))
-    .take(1)
-    .share();
+    ));
 
   if (directFile) {
     return plugDirectFile(url, videoElement)
@@ -263,8 +265,7 @@ function Stream({
   var createAllStream = retryWithBackoff(({ url, mediaSource }) => {
     var sourceOpening = sourceOpen(mediaSource);
 
-    return manifestPipeline({ url })
-      .zip(sourceOpening, (x) => x)
+    return combineLatest(manifestPipeline({ url }), sourceOpening, identity)
       .flatMap(({ parsed }) => {
         var manifest = normalizeManifest(parsed.url, parsed.manifest, subtitles);
 
@@ -356,7 +357,7 @@ function Stream({
         autoPlay = true;
       });
 
-    return first(combineLatest(loadedMetadata$, canPlay$, () => {}))
+    return first(combineLatest(loadedMetadata$, canPlay$))
       .mapTo({ type: "loaded", value: true })
       .startWith({ type: "loaded", value: false });
   }

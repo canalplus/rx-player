@@ -179,15 +179,16 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
         maxBitrates,
         avrBitrates,
         (usr, max, avr) => {
-          if (usr < Infinity)
-            return usr;
-
-          if (max < Infinity)
-            return Math.min(max, avr);
-
-          return avr;
+          let btr;
+          if (usr < Infinity) {
+            btr = usr;
+          } else if (max < Infinity) {
+            btr = Math.min(max, avr);
+          } else {
+            btr = avr;
+          }
+          return find(representations, rep => rep.bitrate === getClosestBitrate(bitrates, btr));
         })
-        .map(b => find(representations, rep => rep.bitrate === getClosestBitrate(bitrates, b)))
         .distinctUntilChanged((a, b) => a.id === b.id)
         .do(r => log.info("bitrate", type, r.bitrate));
     }
