@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+var { Segment } = require("../segment");
 
 function getTimelineBound({ ts, d, r }) {
   if (d === -1)
@@ -23,7 +24,9 @@ function getTimelineBound({ ts, d, r }) {
 }
 
 class Timeline {
-  constructor(index) {
+  constructor(adaptation, representation, index) {
+    this.adaptation = adaptation;
+    this.representation = representation;
     this.index = index;
     this.timeline = index.timeline;
   }
@@ -39,14 +42,20 @@ class Timeline {
   }
 
   createSegment(time, range, duration) {
-    return {
-      id: time,
-      media: this.index.media,
-      time,
-      number: undefined,
-      range,
-      duration,
-    };
+    var { adaptation, representation } = this;
+    var { media } = this.index;
+    return Segment.create(
+      adaptation,     /* adaptation */
+      representation, /* representation */
+      time,           /* id */
+      media,          /* media */
+      time,           /* time */
+      duration,       /* duration */
+      0,              /* number */
+      range,          /* range */
+      null,           /* indexRange */
+      false           /* init */
+    );
   }
 
   calculateRepeat(seg, nextSeg) {

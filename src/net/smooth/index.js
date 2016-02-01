@@ -81,10 +81,10 @@ function resolveManifest(url) {
   }
 }
 
-function buildSegmentURL(adaptation, representation, segment) {
-  return resolveURL(adaptation.rootURL, adaptation.baseURL, representation.baseURL)
-    .replace(/\{bitrate\}/g, representation.bitrate)
-    .replace(/\{start time\}/g, segment.time);
+function buildSegmentURL(segment) {
+  return segment.getResolvedURL()
+    .replace(/\{bitrate\}/g,    segment.getRepresentation().bitrate)
+    .replace(/\{start time\}/g, segment.getTime());
 }
 
 var req = reqOptions => {
@@ -124,11 +124,11 @@ module.exports = function(options={}) {
     },
   };
 
-  function extractTimingsInfos(blob, adaptation, segment) {
+  function extractTimingsInfos(blob, segment) {
     var nextSegments;
     var currentSegment;
 
-    if (adaptation.isLive) {
+    if (segment.getAdaptation().isLive) {
       var traf = getTraf(blob);
       if (traf) {
         nextSegments = parseTfrf(traf);
@@ -142,8 +142,8 @@ module.exports = function(options={}) {
 
     if (!currentSegment) {
       currentSegment = {
-        d:  segment.duration,
-        ts: segment.time,
+        d:  segment.getDuration(),
+        ts: segment.getTime(),
       };
     }
 
@@ -151,8 +151,11 @@ module.exports = function(options={}) {
   }
 
   var segmentPipeline = {
-    loader({ adaptation, representation, segment }) {
-      if (segment.init) {
+    loader({ segment }) {
+      if (segment.isInitSegment()) {
+        var adaptation = segment.getAdaptation();
+        var representation = segment.getRepresentation();
+
         var blob;
         var protection = adaptation.smoothProtection || {};
         switch(adaptation.type) {
@@ -182,22 +185,23 @@ module.exports = function(options={}) {
       else {
         var headers;
 
-        var range = segment.range;
+        var range = segment.getRange();
         if (range) {
           headers = { "Range": byteRange(range) };
         }
 
-        var url = buildSegmentURL(adaptation, representation, segment);
+        var url = buildSegmentURL(segment);
         return req({ url, format: "arraybuffer", headers });
       }
     },
-    parser({ adaptation, response, segment }) {
-      if (segment.init) {
+
+    parser({ segment, response }) {
+      if (segment.isInitSegment()) {
         return Observable.of({ blob: response.blob, timings: null });
       }
 
       var blob = new Uint8Array(response.blob);
-      var { nextSegments, currentSegment } = extractTimingsInfos(blob, adaptation, segment);
+      var { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
 
       return Observable.of({
         blob: patchSegment(blob, currentSegment.ts),
@@ -208,12 +212,13 @@ module.exports = function(options={}) {
   };
 
   var textTrackPipeline = {
-    loader({ adaptation, representation, segment }) {
-      if (segment.init)
+    loader({ segment }) {
+      if (segment.isInitSegment()) {
         return empty();
+      }
 
-      var mimeType = representation.mimeType;
-      var url = buildSegmentURL(adaptation, representation, segment);
+      var { mimeType } = segment.getRepresentation();
+      var url = buildSegmentURL(segment);
 
       if (mimeType.indexOf("mp4") >= 0) {
         // in case of TTML declared inside
@@ -224,9 +229,10 @@ module.exports = function(options={}) {
         return req({ url, format: "text" });
       }
     },
-    parser({ response, adaptation, representation, segment }) {
-      var { lang } = adaptation;
-      var mimeType = representation.mimeType;
+
+    parser({ response, segment }) {
+      var { lang } = segment.getAdaptation();
+      var { mimeType, index } = segment.getRepresentation();
       var parser_ = TT_PARSERS[mimeType];
       if (!parser_) {
         throw new Error(`smooth: could not find a text-track parser for the type ${mimeType}`);
@@ -244,10 +250,10 @@ module.exports = function(options={}) {
         text = blob;
       }
 
-      var { nextSegments, currentSegment } = extractTimingsInfos(blob, adaptation, segment);
+      var { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
 
       return Observable.of({
-        blob: parser_(text, lang, segment.time / representation.index.timescale),
+        blob: parser_(text, lang, segment.getTime() / index.timescale),
         currentSegment,
         nextSegments,
       });

@@ -17,6 +17,7 @@
 var assert = require("canal-js-utils/assert");
 
 var { getAdaptationsByType } = require("./manifest");
+var { InitSegment } = require("./segment");
 var Template = require("./indexes/template");
 var Timeline = require("./indexes/timeline");
 var List = require("./indexes/list");
@@ -52,18 +53,20 @@ class IndexHandler {
     this.adaptation = adaptation;
     this.representation = representation;
     this.index = representation.index;
-    this.handler = new (selectIndexHandler(this.index))(this.index);
+    this.handler = new (selectIndexHandler(this.index))(adaptation,
+                                                        representation,
+                                                        this.index);
   }
 
   getInitSegment() {
     var initialization = this.index.initialization || {};
-    return {
-      id: "init_" + this.adaptation.id + "_" + this.representation.id,
-      init: true,
-      media: initialization.media,
-      range: initialization.range,
-      indexRange: this.index.indexRange,
-    };
+    return new InitSegment(
+      this.adaptation,
+      this.representation,
+      initialization.media,
+      initialization.range,
+      this.index.indexRange
+    );
   }
 
   normalizeRange(ts, offset, bufSize) {

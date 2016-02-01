@@ -23,15 +23,15 @@ class InitializationSegmentCache {
     this.cache = {};
   }
 
-  add({ segment }, loaded) {
-    if (segment.init) {
-      this.cache[segment.id] = loaded;
+  add({ segment }, response) {
+    if (segment.isInitSegment()) {
+      this.cache[segment.getId()] = response;
     }
   }
 
   get({ segment }) {
-    if (segment.init) {
-      var value = this.cache[segment.id];
+    if (segment.isInitSegment()) {
+      var value = this.cache[segment.getId()];
       if (value != null)
         return value;
     }

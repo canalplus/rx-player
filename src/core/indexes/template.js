@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
+var { Segment } = require("../segment");
+
 class Template {
-  constructor(index) {
+  constructor(adaptation, representation, index) {
+    this.adaptation = adaptation;
+    this.representation = representation;
     this.index = index;
   }
 
@@ -28,21 +32,33 @@ class Template {
   }
 
   createSegment(ts) {
-    var { startNumber, duration } = this.index;
+    var {
+      adaptation,
+      representation,
+    } = this;
+
+    var {
+      startNumber,
+      duration,
+    } = this.index;
 
     if (startNumber == null) startNumber = 1;
 
     var number = Math.floor(ts / duration) + startNumber;
     var time = number * duration;
 
-    return {
-      id: number,
-      media: this.index.media,
-      time,
-      number,
-      range: undefined,
-      duration: this.index.duration,
-    };
+    return Segment.create(
+      adaptation,          /* adaptation */
+      representation,      /* representation */
+      number,              /* id */
+      this.index.media,    /* media */
+      time,                /* time */
+      this.index.duration, /* duration */
+      number,              /* number */
+      null,                /* range */
+      null,                /* indexRange */
+      false                /* init */
+    );
   }
 
   getSegments(up, to) {

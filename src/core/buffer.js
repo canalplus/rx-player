@@ -21,7 +21,7 @@ var { Observable, Subject } = require("rxjs");
 var { combineLatest, defer, empty, from, merge, timer } = Observable;
 var { first, on } = require("canal-js-utils/rx-ext");
 
-var { ArraySet } = require("../utils/collections");
+var { SimpleSet } = require("../utils/collections");
 var { IndexHandler, OutOfIndexError } = require("./index-handler");
 
 var BITRATE_REBUFFERING_RATIO = 1.5;
@@ -124,10 +124,17 @@ function Buffer({
     if (innerRange) {
       log.debug("buffer: gc removing part of inner range", cleanedupRanges);
       if (ts - gcGap > innerRange.start) {
-        cleanedupRanges.push({ start: innerRange.start, end: ts - gcGap });
+        cleanedupRanges.push({
+          start: innerRange.start,
+          end: ts - gcGap,
+        });
       }
+
       if (ts + gcGap < innerRange.end) {
-        cleanedupRanges.push({ start: ts + gcGap, end: innerRange.end });
+        cleanedupRanges.push({
+          start: ts + gcGap,
+          end: innerRange.end,
+        });
       }
     }
 
@@ -149,80 +156,192 @@ function Buffer({
     });
   }
 
+  function doAppendBufferOrGC(pipelineData) {
+    var blob = pipelineData.parsed.blob;
+    return lockedAppendBuffer(blob)
+      .catch((err) => {
+        // launch our garbage collector and retry on
+        // QuotaExceededError
+        if (err.name !== "QuotaExceededError") {
+          throw err;
+        }
+
+        return bufferGarbageCollector().flatMap(
+          () => lockedAppendBuffer(blob));
+      });
+  }
+
+  function getSegmentsListToInject(segmentIndex,
+                                   adaptation,
+                                   representation,
+                                   buffered,
+                                   timing,
+                                   bufferSize,
+                                   withInitSegment) {
+    var segments = [];
+
+    if (withInitSegment) {
+      log.debug("add init segment", bufferType);
+      segments.push(segmentIndex.getInitSegment());
+    }
+
+    if (timing.readyState === 0) {
+      return segments;
+    }
+
+    var timestamp = timing.ts;
+
+    // wanted buffer size calculates the actual size of the buffer
+    // we want to ensure, taking into account the duration and the
+    // potential live gap.
+    var endDiff = (timing.duration || Infinity) - timestamp;
+    var wantedBufferSize = Math.max(0,
+      Math.min(bufferSize, timing.liveGap, endDiff));
+
+    // the ts padding is the actual time gap that we want to apply
+    // to our current timestamp in order to calculate the list of
+    // segments to inject.
+    var timestampPadding;
+    var bufferGap = buffered.getGap(timestamp);
+    if (bufferGap > LOW_WATER_MARK_PAD && bufferGap < Infinity) {
+      timestampPadding = Math.min(bufferGap, HIGH_WATER_MARK_PAD);
+    } else {
+      timestampPadding = 0;
+    }
+
+    // in case the current buffered range has the same bitrate as
+    // the requested representation, we can a optimistically discard
+    // all the already buffered data by using the
+    var currentRange = ranges.getRange(timestamp);
+    if (currentRange && currentRange.bitrate === representation.bitrate) {
+      var rangeEndGap = Math.floor(currentRange.end - timestamp);
+      if (rangeEndGap > timestampPadding)
+        timestampPadding = rangeEndGap;
+    }
+
+    // given the current timestamp and the previously calculated
+    // time gap and wanted buffer size, we can retrieve the list of
+    // segments to inject in our pipelines.
+    var mediaSegments = segmentIndex.getSegments(timestamp,
+                                                 timestampPadding,
+                                                 wantedBufferSize);
+
+    return segments.concat(mediaSegments);
+  }
+
   function createRepresentationBuffer(representation) {
     var segmentIndex = new IndexHandler(adaptation, representation);
-    var queuedSegments = new ArraySet();
+    var queuedSegments = new SimpleSet();
 
     function filterAlreadyLoaded(segment) {
       // if this segment is already in the pipeline
-      var isInQueue = queuedSegments.test(segment.id);
-      if (isInQueue)
+      var isInQueue = queuedSegments.test(segment.getId());
+      if (isInQueue) {
         return false;
+      }
 
       // segment without time info are usually init segments or some
       // kind of metadata segment that we never filter out
-      if (segment.init || segment.time == null)
+      if (segment.isInitSegment() || segment.getTime() < 0) {
         return true;
+      }
 
-      var time = segmentIndex.scale(segment.time);
-      var duration = segmentIndex.scale(segment.duration);
+      var time     = segmentIndex.scale(segment.getTime());
+      var duration = segmentIndex.scale(segment.getDuration());
 
       var range = ranges.hasRange(time, duration);
       if (range) {
-        return range.bitrate * BITRATE_REBUFFERING_RATIO < representation.bitrate;
+        return range.bitrate * BITRATE_REBUFFERING_RATIO < segment.getRepresentation().bitrate;
       } else {
         return true;
       }
     }
 
-    function getSegmentsListToInject(buffered, timing, bufferSize, withInitSegment) {
-      var segments = [];
+    function doInjectSegments([timing, bufferSize], injectCount) {
+      var nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
 
-      if (withInitSegment) {
-        log.debug("add init segment", bufferType);
-        segments.push(segmentIndex.getInitSegment());
+      // makes sure our own buffered ranges representation stay in
+      // sync with the native one
+      if (isAVBuffer) {
+        if (!ranges.equals(nativeBufferedRanges)) {
+          log.debug("intersect new buffer", bufferType);
+          ranges.intersect(nativeBufferedRanges);
+        }
       }
 
-      if (timing.readyState === 0) {
-        return segments;
+      var injectedSegments;
+      try {
+        // filter out already loaded and already queued segments
+        var withInitSegment = (injectCount === 0);
+        injectedSegments = getSegmentsListToInject(segmentIndex,
+                                                   adaptation,
+                                                   representation,
+                                                   nativeBufferedRanges,
+                                                   timing,
+                                                   bufferSize,
+                                                   withInitSegment);
+
+        injectedSegments = injectedSegments.filter(filterAlreadyLoaded);
+      }
+      catch(err) {
+        // catch OutOfIndexError errors thrown by when we try to
+        // access to non available segments. Reinject this error
+        // into the main buffer observable so that it can be treated
+        // upstream
+        if (err instanceof OutOfIndexError) {
+          outOfIndexStream.next({ type: "out-of-index", value: err });
+          return empty();
+        }
+        else {
+          throw err;
+        }
+
+        // unreachable
+        assert(false);
       }
 
-      var timestamp = timing.ts;
+      // queue all segments injected in the observable
+      for (let i = 0; i < injectedSegments.length; i++) {
+        queuedSegments.add(injectedSegments[i].getId());
+      }
 
-      // wanted buffer size calculates the actual size of the buffer
-      // we want to ensure, taking into account the duration and the
-      // potential live gap.
-      var endDiff = (timing.duration || Infinity) - timestamp;
-      var wantedBufferSize = Math.max(0,
-        Math.min(bufferSize, timing.liveGap, endDiff));
+      return injectedSegments;
+    }
 
-      // the ts padding is the actual time gap that we want to apply
-      // to our current timestamp in order to calculate the list of
-      // segments to inject.
-      var timestampPadding;
-      var bufferGap = buffered.getGap(timestamp);
-      if (bufferGap > LOW_WATER_MARK_PAD && bufferGap < Infinity) {
-        timestampPadding = Math.min(bufferGap, HIGH_WATER_MARK_PAD);
+    function doUnqueueAndUpdateRanges(pipelineData) {
+      var { segment, parsed } = pipelineData;
+      queuedSegments.remove(segment.getId());
+
+      // change the timescale if one has been extracted from the
+      // parsed segment (SegmentBase)
+      var timescale = parsed.timescale;
+      if (timescale) {
+        segmentIndex.setTimescale(timescale);
+      }
+
+      var { nextSegments, currentSegment } = parsed;
+      // added segments are values parsed from the segment metadata
+      // that should be added to the segmentIndex.
+      var addedSegments;
+      if (nextSegments) {
+        addedSegments = segmentIndex.insertNewSegments(nextSegments,
+                                                       currentSegment);
       } else {
-        timestampPadding = 0;
+        addedSegments = [];
       }
 
-      // in case the current buffered range has the same bitrate as
-      // the requested representation, we can a optimistically discard
-      // all the already buffered data by using the
-      var currentRange = ranges.getRange(timestamp);
-      if (currentRange && currentRange.bitrate === representation.bitrate) {
-        var rangeEndGap = Math.floor(currentRange.end - timestamp);
-        if (rangeEndGap > timestampPadding)
-          timestampPadding = rangeEndGap;
+      // current segment timings informations are used to update
+      // ranges informations
+      if (currentSegment) {
+        ranges.insert(representation.bitrate,
+          segmentIndex.scale(currentSegment.ts),
+          segmentIndex.scale(currentSegment.ts + currentSegment.d));
       }
 
-      // given the current timestamp and the previously calculated
-      // time gap and wanted buffer size, we can retrieve the list of
-      // segments to inject in our pipelines.
-      var mediaSegments = segmentIndex.getSegments(timestamp, timestampPadding, wantedBufferSize);
-
-      return segments.concat(mediaSegments);
+      return {
+        type: "buffer",
+        value: { addedSegments, ...pipelineData },
+      };
     }
 
     var segmentsPipeline = combineLatest(
@@ -230,107 +349,17 @@ function Buffer({
       bufferSizes,
       mutedUpdateEnd
     )
-      .flatMap(([timing, bufferSize], count) => {
-        var nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
-
-        // makes sure our own buffered ranges representation stay in
-        // sync with the native one
-        if (isAVBuffer) {
-          if (!ranges.equals(nativeBufferedRanges)) {
-            log.debug("intersect new buffer", bufferType);
-            ranges.intersect(nativeBufferedRanges);
-          }
-        }
-
-        var injectedSegments;
-        try {
-          // filter out already loaded and already queued segments
-          var withInitSegment = (count === 0);
-          injectedSegments = getSegmentsListToInject(nativeBufferedRanges, timing, bufferSize, withInitSegment);
-          injectedSegments = injectedSegments.filter(filterAlreadyLoaded);
-        }
-        catch(err) {
-          // catch OutOfIndexError errors thrown by when we try to
-          // access to non available segments. Reinject this error
-          // into the main buffer observable so that it can be treated
-          // upstream
-          if (err instanceof OutOfIndexError) {
-            outOfIndexStream.next({ type: "out-of-index", value: err });
-            return empty();
-          }
-          else {
-            throw err;
-          }
-
-          // unreachable
-          assert(false);
-        }
-
-        return from(injectedSegments.map((segment) => {
-          // queue all segments injected in the observable
-          queuedSegments.add(segment.id);
-
-          return {
-            adaptation,
-            representation,
-            segment,
-          };
-        }));
-      })
-      .concatMap(pipeline)
+      .flatMap(doInjectSegments)
+      .concatMap((segment) => pipeline({ segment }))
       .concatMap(
-        (infos) => {
-          var blob = infos.parsed.blob;
-          return lockedAppendBuffer(blob)
-            .catch((err) => {
-              // launch our garbage collector and retry on
-              // QuotaExceededError
-              if (err.name !== "QuotaExceededError") {
-                throw err;
-              }
+        doAppendBufferOrGC,
+        doUnqueueAndUpdateRanges
+      );
 
-              return bufferGarbageCollector().flatMap(
-                () => lockedAppendBuffer(blob));
-            });
-        },
-        (infos) => {
-          var { segment, parsed } = infos;
-          queuedSegments.remove(segment.id);
-
-          // change the timescale if one has been extracted from the
-          // parsed segment (SegmentBase)
-          var timescale = parsed.timescale;
-          if (timescale) {
-            segmentIndex.setTimescale(timescale);
-          }
-
-          var { nextSegments, currentSegment } = parsed;
-          // added segments are values parsed from the segment metadata
-          // that should be added to the segmentIndex.
-          var addedSegments;
-          if (nextSegments) {
-            addedSegments = segmentIndex.insertNewSegments(nextSegments, currentSegment);
-          } else {
-            addedSegments = [];
-          }
-
-          // current segment timings informations are used to update
-          // ranges informations
-          if (currentSegment) {
-            ranges.insert(representation.bitrate,
-              segmentIndex.scale(currentSegment.ts),
-              segmentIndex.scale(currentSegment.ts + currentSegment.d));
-          }
-
-          return {
-            type: "segment",
-            value: { addedSegments, ...infos },
-          };
-        });
-
-    return merge(segmentsPipeline, outOfIndexStream).catch(err => {
-      if (err.code !== 412)
+    return merge(segmentsPipeline, outOfIndexStream).catch((err) => {
+      if (err.code !== 412) {
         throw err;
+      }
 
       // 412 Precondition Failed request errors do not cause the
       // buffer to stop but are re-emitted in the stream as

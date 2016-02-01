@@ -15,11 +15,14 @@
  */
 
 var defaults = require("lodash/object/defaults");
-var { Subject, Observable } = require("rxjs");
-var { retryWithBackoff } = require("canal-js-utils/rx-ext");
-var { fromPromise, of } = Observable;
+var { Subject, Scheduler, Observable } = require("rxjs");
+var { retryWithBackoff } = require("../utils/retry");
 
 var timeoutError = new Error("timeout");
+
+function isObservable(val) {
+  return !!val && typeof val.subscribe == "function";
+}
 
 var noCache = {
   add() {},
@@ -27,6 +30,8 @@ var noCache = {
     return null;
   },
 };
+
+var metricsScheduler = Scheduler.asap;
 
 /**
  * Creates the following pipeline:
@@ -38,10 +43,14 @@ var noCache = {
  *
  * TODO(pierre): create a pipeline patcher to work over a WebWorker
  */
-function createPipeline(type, { resolver, loader, parser }, metrics, opts={}) {
-  if (!parser) parser = of;
-  if (!loader) loader = of;
-  if (!resolver) resolver = of;
+function createPipeline(type,
+                        { resolver, loader, parser },
+                        metrics,
+                        opts={}) {
+
+  if (!parser) parser = Observable.of;
+  if (!loader) loader = Observable.of;
+  if (!resolver) resolver = Observable.of;
 
   var { totalRetry, timeout, cache } = defaults(opts, {
     totalRetry: 3,
@@ -59,37 +68,51 @@ function createPipeline(type, { resolver, loader, parser }, metrics, opts={}) {
     ),
   };
 
-  function callLoader(resolvedInfos) {
-    return loader(resolvedInfos)
-      .timeout(timeout, timeoutError)
-      .map((response) => {
-        var loadedInfos = { response, ...resolvedInfos };
-
-        // add loadedInfos to the pipeline cache
-        cache.add(resolvedInfos, loadedInfos);
-
-        // emit loadedInfos in the metrics observer
-        metrics.next({ type, value: loadedInfos });
-
-        return loadedInfos;
-      });
+  function dispatchMetrics(value) {
+    metrics.next(value);
   }
 
-  return (infos) => {
-    return resolver(infos)
-      .flatMap((resolvedInfos) => {
-        var backedOffLoader = retryWithBackoff(() => callLoader(resolvedInfos), backoffOptions);
+  function schedulMetrics(value) {
+    metricsScheduler.schedule(dispatchMetrics, 0, value);
+  }
 
-        var fromCache = cache.get(resolvedInfos);
-        if (fromCache && typeof fromCache.then == "function")
-          return fromPromise(fromCache).catch(backedOffLoader);
+  function loaderWithRetry(resolvedInfos) {
+    return retryWithBackoff(
+      loader(resolvedInfos).timeout(timeout, timeoutError),
+      backoffOptions
+    );
+  }
 
-        if (fromCache === null)
-          return backedOffLoader();
-        else
-          return Observable.of(fromCache);
-      })
-      .flatMap(parser, (loadedInfos, parsed) => ({ parsed, ...loadedInfos }));
+  function cacheOrLoader(resolvedInfos) {
+    var fromCache = cache.get(resolvedInfos);
+    if (fromCache === null) {
+      return loaderWithRetry(resolvedInfos);
+    } else if (isObservable(fromCache)) {
+      return fromCache.catch(() => loaderWithRetry(resolvedInfos));
+    } else {
+      return Observable.of(fromCache);
+    }
+  }
+
+  function extendsResponseAndResolvedInfos(resolvedInfos, response) {
+    var loadedInfos = { response, ...resolvedInfos };
+
+    // add loadedInfos to the pipeline cache and emits its value in
+    // the metrics observer.
+    cache.add(resolvedInfos, response);
+    schedulMetrics({ type, value: loadedInfos });
+
+    return loadedInfos;
+  }
+
+  function extendsParsedAndLoadedInfos(loadedInfos, parsed) {
+    return { parsed, ...loadedInfos };
+  }
+
+  return (data) => {
+    return resolver(data)
+      .flatMap(cacheOrLoader, extendsResponseAndResolvedInfos)
+      .flatMap(parser, extendsParsedAndLoadedInfos);
   };
 }
 
@@ -98,16 +121,16 @@ function PipeLines() {
   // about loaded responsed in the loader part of pipelines
   var metrics = new Subject();
 
-  var createPipelines = (transport, options) => {
-    options = options || {};
-
-    var ps = [];
+  var createPipelines = (transport, options={}) => {
+    var pipelinesList = [];
     for (var pipelineType in transport) {
-      ps[pipelineType] = createPipeline(
-        pipelineType, transport[pipelineType], metrics, options[pipelineType]);
+      pipelinesList[pipelineType] = createPipeline(
+                                        pipelineType,
+                                        transport[pipelineType],
+                                        metrics,
+                                        options[pipelineType]);
     }
-
-    return ps;
+    return pipelinesList;
   };
 
   return { createPipelines, metrics };

@@ -26,6 +26,7 @@ var min = Math.min;
 var { MediaSource_, sourceOpen, canPlay, loadedMetadata, clearVideoSrc } = require("./compat");
 var TextSourceBuffer = require("./text-buffer");
 var { getLiveEdge } = require("./index-handler");
+var { clearSegmentCache } = require("./segment");
 var Buffer = require("./buffer");
 var EME = require("./eme");
 
@@ -75,6 +76,8 @@ function Stream({
   autoPlay,
   directFile,
 }) {
+
+  clearSegmentCache();
 
   var fragStartTime = timeFragment.start;
   var fragEndTime = timeFragment.end;
@@ -514,14 +517,18 @@ function Stream({
    * mediaSource.
    */
   function setDuration(mediaSource, manifest) {
+    let duration;
     if (manifest.duration === Infinity) {
       // TODO(pierre): hack for Chrome 42
-      mediaSource.duration = Number.MAX_VALUE;
+      duration = Number.MAX_VALUE;
+    } else {
+      duration = manifest.duration;
     }
-    else {
-      mediaSource.duration = manifest.duration;
+
+    if (mediaSource.duration !== duration) {
+      mediaSource.duration = duration;
+      log.info("set duration", mediaSource.duration);
     }
-    log.info("set duration", mediaSource.duration);
   }
 
   /**

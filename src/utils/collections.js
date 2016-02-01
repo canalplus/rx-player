@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-function ArraySet() {
-  this.arr = [];
+class SimpleSet {
+  constructor() {
+    this.hash = {};
+  }
+
+  add(x) {
+    this.hash[x] = true;
+  }
+
+  remove(x) {
+    delete this.hash[x];
+  }
+
+  test(x) {
+    return this.hash[x] === true;
+  }
 }
 
-ArraySet.prototype.add = function(x) {
-  this.arr.push(x);
-};
 
-ArraySet.prototype.remove = function(x) {
-  var i = this.arr.indexOf(x);
-  if (i >= 0)
-    this.arr.splice(i, 1);
-};
-
-ArraySet.prototype.test = function(x) {
-  return this.arr.indexOf(x) >= 0;
-};
-
-ArraySet.prototype.size = function() {
-  return this.arr.length;
-};
-
-module.exports = { ArraySet };
+module.exports = { SimpleSet };

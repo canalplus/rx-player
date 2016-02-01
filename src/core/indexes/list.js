@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
+var { Segment } = require("../segment");
+
 class List {
-  constructor(index) {
+  constructor(adaptation, representation, index) {
+    this.adaptation = adaptation;
+    this.representation = representation;
     this.index = index;
   }
 
@@ -30,15 +34,30 @@ class List {
   }
 
   createSegment(segmentIndex, time) {
-    var segment = this.index.list[segmentIndex];
-    return {
-      id: segmentIndex,
-      media: segment.media,
-      time: time,
-      number: undefined,
-      range: segment.range,
-      duration: this.index.duration,
-    };
+    var {
+      adaptation,
+      representation,
+    } = this;
+
+    var {
+      duration,
+      list,
+    } = this.index;
+
+    var segment = list[segmentIndex];
+
+    return Segment.create(
+      adaptation,     /* adaptation */
+      representation, /* representation */
+      segmentIndex,   /* id */
+      segment.media,  /* media */
+      time,           /* time */
+      duration,       /* duration */
+      0,              /* number */
+      segment.range,  /* range */
+      null,           /* indexRange */
+      false           /* init */
+    );
   }
 
   getSegments(up, to) {

@@ -31,26 +31,18 @@ function byteRange([start, end]) {
   }
 }
 
-function replaceTokens(path, representation, time, number) {
+function replaceTokens(path, segment) {
   if (path.indexOf("$") === -1) {
     return path;
   } else {
+    var rep = segment.getRepresentation();
     return path
       .replace(/\$\$/g, "$")
-      .replace(/\$RepresentationID\$/g, representation.id)
-      .replace(/\$Bandwidth\$/g, representation.bitrate)
-      .replace(/\$Number\$/g, number)
-      .replace(/\$Time\$/g, time);
+      .replace(/\$RepresentationID\$/g, rep.id)
+      .replace(/\$Bandwidth\$/g, rep.bitrate)
+      .replace(/\$Number\$/g, segment.getNumber())
+      .replace(/\$Time\$/g, segment.getTime());
   }
-}
-
-function createURL(adaptation, representation, path) {
-  return resolveURL(
-    adaptation.rootURL,
-    adaptation.baseURL,
-    representation.baseURL,
-    path
-  );
 }
 
 var req = reqOptions => {
@@ -76,17 +68,19 @@ module.exports = function(opts={}) {
   };
 
   var segmentPipeline = {
-    loader({ adaptation, representation, segment }) {
-      var { init, media, range, indexRange } = segment;
+    loader({ segment }) {
+      var media = segment.getMedia();
+      var range = segment.getRange();
+      var indexRange = segment.getIndexRange();
 
       // init segment without initialization media/range/indexRange:
       // we do nothing on the network
-      if (init && !(media || range || indexRange)) {
+      if (segment.isInitSegment() && !(media || range || indexRange)) {
         return empty();
       }
 
       var mediaHeaders;
-      if (Array.isArray(range)) {
+      if (range) {
         mediaHeaders = { "Range": byteRange(range) };
       } else {
         mediaHeaders = null;
@@ -94,12 +88,12 @@ module.exports = function(opts={}) {
 
       var path;
       if (media) {
-        path = replaceTokens(media, representation, segment.time, segment.number);
+        path = replaceTokens(media, segment);
       } else {
         path = "";
       }
 
-      var mediaUrl = createURL(adaptation, representation, path);
+      var mediaUrl = resolveURL(segment.getResolvedURL(), path);
       var mediaOrInitRequest = req({
         url: mediaUrl,
         format: "arraybuffer",
@@ -112,7 +106,7 @@ module.exports = function(opts={}) {
       // TODO(pierre): we could fire both these requests as one if the
       // init and index ranges are contiguous, which should be the
       // case most of the time.
-      if (Array.isArray(indexRange)) {
+      if (indexRange) {
         var indexRequest = req({
           url: mediaUrl,
           format: "arraybuffer",
@@ -124,9 +118,9 @@ module.exports = function(opts={}) {
         return mediaOrInitRequest;
       }
     },
-    parser({ adaptation, segment, response }) {
+
+    parser({ segment, response }) {
       var blob = new Uint8Array(response.blob);
-      var { init, indexRange } = segment;
 
       // added segments and timescale informations are extracted from
       // sidx atom
@@ -134,20 +128,22 @@ module.exports = function(opts={}) {
 
       // added index (segments and timescale) informations are
       // extracted from sidx atom
+      var indexRange = segment.getIndexRange();
       var index = parseSidx(blob, indexRange ? indexRange[0] : 0);
       if (index) {
         nextSegments = index.segments;
         timescale = index.timescale;
       }
 
-      if (!init) {
+      if (!segment.isInitSegment()) {
         // current segment information may originate from the index
         // itself in which case we don't have to use the index
         // segments.
-        if (segment.time >= 0 && segment.duration >= 0) {
+        if (segment.getTime() >= 0 &&
+            segment.getDuration() >= 0) {
           currentSegment = {
-            ts: segment.time,
-            d: segment.duration,
+            ts: segment.getTime(),
+            d: segment.getDuration(),
           };
         }
         else if (index && index.segments.length === 1) {
@@ -161,8 +157,11 @@ module.exports = function(opts={}) {
           assert(currentSegment);
       }
 
-      if (init && adaptation.contentProtection) {
-        blob = patchPssh(blob, adaptation.contentProtection);
+      if (segment.isInitSegment()) {
+        var adaptation = segment.getAdaptatation();
+        if (adaptation.contentProtection) {
+          blob = patchPssh(blob, adaptation.contentProtection);
+        }
       }
 
       return Observable.of({
@@ -175,7 +174,7 @@ module.exports = function(opts={}) {
   };
 
   var textTrackPipeline = {
-    loader(/* { adaptation, representation, segment } */) {
+    loader(/* { segment } */) {
     },
   };
 

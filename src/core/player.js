@@ -62,10 +62,6 @@ var PLAYER_ENDED     = "ENDED";
 var PLAYER_BUFFERING = "BUFFERING";
 var PLAYER_SEEKING   = "SEEKING";
 
-function pluck(source, key) {
-  return source.map(v => v[key]);
-}
-
 function noop() {}
 
 function each(source, fn) {
@@ -77,7 +73,9 @@ function assertMan(player) {
 }
 
 function filterStreamByType(stream, type) {
-  return pluck(stream.filter(o => o.type == type), "value");
+  return stream
+    .filter((o) => o.type == type)
+    .map((o) => o.value);
 }
 
 class Player extends EventEmitter {
@@ -287,7 +285,7 @@ class Player extends EventEmitter {
 
     stream = stream.publish();
 
-    var segments = filterStreamByType(stream, "segment");
+    var segments = filterStreamByType(stream, "buffer").map(({ segment }) => segment);
     var manifests = filterStreamByType(stream, "manifest");
 
     var stalled = filterStreamByType(stream, "stalled").startWith(null);
@@ -298,10 +296,11 @@ class Player extends EventEmitter {
     if (directFile) {
       loaded = canPlay;
     } else {
+      var adas = segments.map((s) => s.getAdaptation());
       loaded = combineLatest(
         canPlay,
-        filterStreamByType(pluck(segments, "adaptation"), "audio"),
-        filterStreamByType(pluck(segments, "adaptation"), "video"));
+        filterStreamByType(adas, "audio"),
+        filterStreamByType(adas, "video"));
     }
 
     loaded = loaded.take(1);
@@ -329,10 +328,10 @@ class Player extends EventEmitter {
         .subscribe(evt => this.playing.next(evt.type == "play")),
 
       each(segments, (segment) => {
-        var type = segment.adaptation.type;
+        var ada = segment.getAdaptation();
+        var rep = segment.getRepresentation();
 
-        var rep = segment.representation;
-        var ada = segment.adaptation;
+        var type = ada.type;
         this.reps[type] = rep;
         this.adas[type] = ada;
 
