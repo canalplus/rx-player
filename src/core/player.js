@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-var Promise_ = require("canal-js-utils/promise");
-
 var log = require("canal-js-utils/log");
 var defaults = require("lodash/object/defaults");
 var { Subscription, BehaviorSubject, Observable, Subject } = require("rxjs");
@@ -303,7 +301,7 @@ class Player extends EventEmitter {
         filterStreamByType(adas, "video"));
     }
 
-    loaded = loaded.take(1);
+    loaded = loaded.take(1).share();
 
     var stateChanges = loaded.mapTo(PLAYER_LOADED)
       .concat(combineLatest(this.playing, stalled,
@@ -390,7 +388,7 @@ class Player extends EventEmitter {
 
     this._triggerTimeChange();
 
-    return loaded.toPromise();
+    return loaded;
   }
 
   _setState(s) {
@@ -554,7 +552,7 @@ class Player extends EventEmitter {
   }
 
   setPlaybackRate(rate) {
-    return new Promise_(res => res(this.video.playbackRate = rate));
+    this.video.playbackRate = rate;
   }
 
   goToStart() {
@@ -562,17 +560,15 @@ class Player extends EventEmitter {
   }
 
   seekTo(time) {
-    return new Promise_(res => {
-      assert(this.man);
-      var currentTs = this.video.currentTime;
-      if (this.man.isLive) time = fromWallClockTime(time, this.man);
-      if (time !== currentTs) {
-        log.info("seek to", time);
-        res(this.video.currentTime = time);
-      } else {
-        res(currentTs);
-      }
-    });
+    assert(this.man);
+    var currentTs = this.video.currentTime;
+    if (this.man.isLive) time = fromWallClockTime(time, this.man);
+    if (time !== currentTs) {
+      log.info("seek to", time);
+      return (this.video.currentTime = time);
+    } else {
+      return currentTs;
+    }
   }
 
   setFullscreen(toggle = true) {
@@ -600,63 +596,42 @@ class Player extends EventEmitter {
   }
 
   setLanguage(lng) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => {
-      assert(this.getAvailableLanguages().indexOf(lng) >= 0, "player: unknown language");
-      res(this.adaptive.setLanguage(lng));
-    });
+    assert(this.getAvailableLanguages().indexOf(lng) >= 0, "player: unknown language");
+    this.adaptive.setLanguage(lng);
   }
 
   setSubtitle(sub) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => {
-      assert(!sub || this.getAvailableSubtitles().indexOf(sub) >= 0, "player: unknown subtitle");
-      res(this.adaptive.setSubtitle(sub || ""));
-    })
-      .then(() => {
-        if (!sub)
-          this.__recordState("subtitle", null);
-      });
+    assert(!sub || this.getAvailableSubtitles().indexOf(sub) >= 0, "player: unknown subtitle");
+    this.adaptive.setSubtitle(sub || "");
+    if (!sub) {
+      this.__recordState("subtitle", null);
+    }
   }
 
   setVideoBitrate(btr) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => {
-      assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
-      res(this.adaptive.setVideoBitrate(btr));
-    });
+    assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
+    this.adaptive.setVideoBitrate(btr);
   }
 
   setAudioBitrate(btr) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => {
-      assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
-      res(this.adaptive.setAudioBitrate(btr));
-    });
+    assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
+    this.adaptive.setAudioBitrate(btr);
   }
 
   setVideoMaxBitrate(btr) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => {
-      res(this.adaptive.setVideoMaxBitrate(btr));
-    });
+    this.adaptive.setVideoMaxBitrate(btr);
   }
 
   setAudioMaxBitrate(btr) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => {
-      res(this.adaptive.setAudioMaxBitrate(btr));
-    });
+    this.adaptive.setAudioMaxBitrate(btr);
   }
 
   setVideoBufferSize(size) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => res(this.adaptive.setVideoBufferSize(size)));
+    this.adaptive.setVideoBufferSize(size);
   }
 
   setAudioBufferSize(size) {
-    // TODO(pierre): proper promise
-    return new Promise_(res => res(this.adaptive.setAudioBufferSize(size)));
+    this.adaptive.setAudioBufferSize(size);
   }
 
   getStreamObservable() {

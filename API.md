@@ -136,11 +136,10 @@ Returns the size of the video/audio buffer.
 ## Commandes
 
 This is a list of methods you can use to change player stats.
-All these methods return [Promises/A+](http://promisesaplus.com/) objects.
 
 ### Player
 
-#### `loadVideo(options) : Promise`
+#### `loadVideo(options) : Observable`
 
 Load a video stream given the url of its manifest.
 This method can be call anytime, even if a stream is already loaded an played by the player. In this case, the player states will be cleared, and the new stream will be loaded.
@@ -249,21 +248,21 @@ Pauses the video playback.
 
 Stops video playback and clean the player, to put back the machine state into start state.
 
-#### `setPlaybackRate(float) : Promise`
+#### `setPlaybackRate(float) : void`
 
 Changes the video playback speed.
 
-#### `seekTo(float) : Promise`
+#### `seekTo(float) : void`
 
 Changes the video position given a parameter :
   * in seconds for an on-demand content
   * with a `Date` object for live content.
 
-#### `goToLive() : Promise`
+#### `goToLive() : void`
 
 In case of a live video stream, take back position to live position. This is an alias to `seekTo(Date.now())`.
 
-#### `goToStart() : Promise`
+#### `goToStart() : void`
 
 Changes position to start position. This is an alias to `seekTo(start content timestamp)`.
 
@@ -283,11 +282,11 @@ Sets volume to 0.0 and record volume value, allowing then to unmute.
 
 Sets volume to recorded value before muting it.
 
-#### `setLanguage(string) : Promise`
+#### `setLanguage(string) : void`
 
 Changes the audio track to the one matching the audio language given in parameter. It is possible to list the available languages using the method `getAvailableLanguages()`.
 
-#### `setSubtitle(string) : Promise`
+#### `setSubtitle(string) : void`
 
 Changes the subtitle track to the one matching the subtitle language given in parameter. It is possible to list the available subtitles using the method `getAvailableSubtitles()`. If `null` is given, subtitle are disabled.
 

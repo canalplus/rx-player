@@ -15,7 +15,6 @@
  */
 
 const log = require("canal-js-utils/log");
-const Promise_ = require("canal-js-utils/promise");
 const assert = require("canal-js-utils/assert");
 const find = require("lodash/collection/find");
 const flatten = require("lodash/array/flatten");
@@ -136,16 +135,16 @@ class InMemorySessionsSet {
     const session = this.delete(sessionId);
     if (session) {
       log.debug("eme-mem-store: close session", sessionId);
-      return session.close();
+      return fromPromise(session.close());
     } else {
-      return Promise_.resolve();
+      return Observable.of(null);
     }
   }
 
   dispose() {
-    const disposed = this._entries.map(({ session }) => session.close());
+    const disposed = this._entries.map(({ session }) => fromPromise(session.close()));
     this._entires = [];
-    return Promise_.all(disposed);
+    return merge.apply(null, disposed);
   }
 }
 

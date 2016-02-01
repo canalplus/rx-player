@@ -1,6 +1,6 @@
 var EventEmitter = require("canal-js-utils/eventemitter");
+var { Observable, Scheduler } = require("rxjs");
 var { BufferedRanges } = require("./ranges");
-var Promise_ = require("canal-js-utils/promise");
 var assert = require("canal-js-utils/assert");
 
 class AbstractSourceBuffer extends EventEmitter {
@@ -13,11 +13,11 @@ class AbstractSourceBuffer extends EventEmitter {
   }
 
   appendBuffer(data) {
-    return this._lock(() => this._append(data));
+    this._lock(() => this._append(data));
   }
 
   remove(from, to) {
-    return this._lock(() => this._remove(from, to));
+    this._lock(() => this._remove(from, to));
   }
 
   abort() {
@@ -35,8 +35,15 @@ class AbstractSourceBuffer extends EventEmitter {
     assert(!this.updating, "text-buffer: cannot remove while updating");
     this.updating = true;
     this.trigger("updatestart");
-    return new Promise_(res => res(func()))
-      .then(
+    let result = func();
+
+    if (!(result && result.subscribe == "function")) {
+      result = Observable.of(result);
+    }
+
+    result
+      .subscribeOn(Scheduler.asap)
+      .subscribe(
         ()  => this._unlock("update"),
         (e) => this._unlock("error", e)
       );

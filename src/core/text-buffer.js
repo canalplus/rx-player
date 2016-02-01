@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-var Promise_ = require("canal-js-utils/promise");
 var AbstractSourceBuffer = require("./sourcebuffer");
 var { addTextTrack, isVTTSupported } = require("./compat");
 var log = require("canal-js-utils/log");
@@ -76,7 +75,6 @@ class TextSourceBuffer extends AbstractSourceBuffer {
         this.buffered.insert(0, firstCue.startTime, lastCue.endTime);
       }
     }
-    return Promise_.resolve();
   }
 
   _remove(from, to) {
