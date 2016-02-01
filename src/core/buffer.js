@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-var log = require("canal-js-utils/log");
-var assert = require("canal-js-utils/assert");
-var { BufferedRanges } = require("./ranges");
-var { Observable, Subject } = require("rxjs");
-var { combineLatest, defer, empty, from, merge, timer } = Observable;
-var { first, on } = require("canal-js-utils/rx-ext");
+const log = require("canal-js-utils/log");
+const assert = require("canal-js-utils/assert");
+const { BufferedRanges } = require("./ranges");
+const { Observable, Subject } = require("rxjs");
+const { combineLatest, defer, empty, from, merge, timer } = Observable;
+const { first, on } = require("canal-js-utils/rx-ext");
 
-var { SimpleSet } = require("../utils/collections");
-var { IndexHandler, OutOfIndexError } = require("./index-handler");
+const { SimpleSet } = require("../utils/collections");
+const { IndexHandler, OutOfIndexError } = require("./index-handler");
 
-var BITRATE_REBUFFERING_RATIO = 1.5;
+const BITRATE_REBUFFERING_RATIO = 1.5;
 
-var GC_GAP_CALM  = 240;
-var GC_GAP_BEEFY = 30;
+const GC_GAP_CALM  = 240;
+const GC_GAP_BEEFY = 30;
 
 function Buffer({
   sourceBuffer, // SourceBuffer object
@@ -38,30 +38,30 @@ function Buffer({
   seekings,     // Seekings observable
 }) {
 
-  var bufferType = adaptation.type;
-  var isAVBuffer = (
+  const bufferType = adaptation.type;
+  const isAVBuffer = (
     bufferType == "audio" ||
     bufferType == "video"
   );
 
-  var outOfIndexStream = new Subject();
+  const outOfIndexStream = new Subject();
 
   // safety level (low and high water mark) size of buffer that won't
   // be flushed when switching representation for smooth transitions
   // and avoiding buffer underflows
-  var LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
-  var HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
+  const LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
+  const HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
 
-  var { representations, bufferSizes } = adapters;
-  var ranges = new BufferedRanges();
+  const { representations, bufferSizes } = adapters;
+  const ranges = new BufferedRanges();
 
-  var updateEnd = merge(
+  const updateEnd = merge(
     on(sourceBuffer, "update"),
     on(sourceBuffer, "error").map((evt) => {
       if (evt.target && evt.target.error) {
         throw evt.target.error;
       } else {
-        var errMessage = "buffer: error event";
+        const errMessage = "buffer: error event";
         log.error(errMessage, evt);
         throw new Error(errMessage);
       }
@@ -70,7 +70,7 @@ function Buffer({
 
   // prevents unceasing add/remove event listeners by sharing an
   // open updateEnd stream (hackish)
-  var mutedUpdateEnd = updateEnd
+  const mutedUpdateEnd = updateEnd
     .ignoreElements()
     .startWith(true);
 
@@ -96,22 +96,22 @@ function Buffer({
     };
   }
 
-  var lockedAppendBuffer = lockedBufferFunction(appendBuffer);
-  var lockedRemoveBuffer = lockedBufferFunction(removeBuffer);
+  const lockedAppendBuffer = lockedBufferFunction(appendBuffer);
+  const lockedRemoveBuffer = lockedBufferFunction(removeBuffer);
 
   // Buffer garbage collector algorithm. Tries to free up some part of
   // the ranges that are distant from the current playing time.
   // See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
   function selectGCedRanges({ts, buffered}, gcGap) {
-    var innerRange  = buffered.getRange(ts);
-    var outerRanges = buffered.getOuterRanges(ts);
+    const innerRange  = buffered.getRange(ts);
+    const outerRanges = buffered.getOuterRanges(ts);
 
-    var cleanedupRanges = [];
+    const cleanedupRanges = [];
 
     // start by trying to remove all ranges that do not contain the
     // current time and respect the gcGap
-    for (var i = 0; i < outerRanges.length; i++) {
-      var outerRange = outerRanges[i];
+    for (let i = 0; i < outerRanges.length; i++) {
+      const outerRange = outerRanges[i];
       if (ts - gcGap < outerRange.end) {
         cleanedupRanges.push(outerRange);
       }
@@ -144,7 +144,7 @@ function Buffer({
   function bufferGarbageCollector() {
     log.warn("buffer: running garbage collector");
     return timings.take(1).flatMap((timing) => {
-      var cleanedupRanges = selectGCedRanges(timing, GC_GAP_CALM);
+      let cleanedupRanges = selectGCedRanges(timing, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean
       if (cleanedupRanges.length === 0) {
@@ -157,7 +157,7 @@ function Buffer({
   }
 
   function doAppendBufferOrGC(pipelineData) {
-    var blob = pipelineData.parsed.blob;
+    const blob = pipelineData.parsed.blob;
     return lockedAppendBuffer(blob)
       .catch((err) => {
         // launch our garbage collector and retry on
@@ -178,7 +178,7 @@ function Buffer({
                                    timing,
                                    bufferSize,
                                    withInitSegment) {
-    var segments = [];
+    const segments = [];
 
     if (withInitSegment) {
       log.debug("add init segment", bufferType);
@@ -189,20 +189,20 @@ function Buffer({
       return segments;
     }
 
-    var timestamp = timing.ts;
+    const timestamp = timing.ts;
 
     // wanted buffer size calculates the actual size of the buffer
     // we want to ensure, taking into account the duration and the
     // potential live gap.
-    var endDiff = (timing.duration || Infinity) - timestamp;
-    var wantedBufferSize = Math.max(0,
+    const endDiff = (timing.duration || Infinity) - timestamp;
+    const wantedBufferSize = Math.max(0,
       Math.min(bufferSize, timing.liveGap, endDiff));
 
     // the ts padding is the actual time gap that we want to apply
     // to our current timestamp in order to calculate the list of
     // segments to inject.
-    var timestampPadding;
-    var bufferGap = buffered.getGap(timestamp);
+    let timestampPadding;
+    const bufferGap = buffered.getGap(timestamp);
     if (bufferGap > LOW_WATER_MARK_PAD && bufferGap < Infinity) {
       timestampPadding = Math.min(bufferGap, HIGH_WATER_MARK_PAD);
     } else {
@@ -212,9 +212,9 @@ function Buffer({
     // in case the current buffered range has the same bitrate as
     // the requested representation, we can a optimistically discard
     // all the already buffered data by using the
-    var currentRange = ranges.getRange(timestamp);
+    const currentRange = ranges.getRange(timestamp);
     if (currentRange && currentRange.bitrate === representation.bitrate) {
-      var rangeEndGap = Math.floor(currentRange.end - timestamp);
+      const rangeEndGap = Math.floor(currentRange.end - timestamp);
       if (rangeEndGap > timestampPadding)
         timestampPadding = rangeEndGap;
     }
@@ -222,7 +222,7 @@ function Buffer({
     // given the current timestamp and the previously calculated
     // time gap and wanted buffer size, we can retrieve the list of
     // segments to inject in our pipelines.
-    var mediaSegments = segmentIndex.getSegments(timestamp,
+    const mediaSegments = segmentIndex.getSegments(timestamp,
                                                  timestampPadding,
                                                  wantedBufferSize);
 
@@ -230,12 +230,12 @@ function Buffer({
   }
 
   function createRepresentationBuffer(representation) {
-    var segmentIndex = new IndexHandler(adaptation, representation);
-    var queuedSegments = new SimpleSet();
+    const segmentIndex = new IndexHandler(adaptation, representation);
+    const queuedSegments = new SimpleSet();
 
     function filterAlreadyLoaded(segment) {
       // if this segment is already in the pipeline
-      var isInQueue = queuedSegments.test(segment.getId());
+      const isInQueue = queuedSegments.test(segment.getId());
       if (isInQueue) {
         return false;
       }
@@ -246,10 +246,10 @@ function Buffer({
         return true;
       }
 
-      var time     = segmentIndex.scale(segment.getTime());
-      var duration = segmentIndex.scale(segment.getDuration());
+      const time     = segmentIndex.scale(segment.getTime());
+      const duration = segmentIndex.scale(segment.getDuration());
 
-      var range = ranges.hasRange(time, duration);
+      const range = ranges.hasRange(time, duration);
       if (range) {
         return range.bitrate * BITRATE_REBUFFERING_RATIO < segment.getRepresentation().bitrate;
       } else {
@@ -258,7 +258,7 @@ function Buffer({
     }
 
     function doInjectSegments([timing, bufferSize], injectCount) {
-      var nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
+      const nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
 
       // makes sure our own buffered ranges representation stay in
       // sync with the native one
@@ -269,10 +269,10 @@ function Buffer({
         }
       }
 
-      var injectedSegments;
+      let injectedSegments;
       try {
         // filter out already loaded and already queued segments
-        var withInitSegment = (injectCount === 0);
+        const withInitSegment = (injectCount === 0);
         injectedSegments = getSegmentsListToInject(segmentIndex,
                                                    adaptation,
                                                    representation,
@@ -309,20 +309,20 @@ function Buffer({
     }
 
     function doUnqueueAndUpdateRanges(pipelineData) {
-      var { segment, parsed } = pipelineData;
+      const { segment, parsed } = pipelineData;
       queuedSegments.remove(segment.getId());
 
       // change the timescale if one has been extracted from the
       // parsed segment (SegmentBase)
-      var timescale = parsed.timescale;
+      const timescale = parsed.timescale;
       if (timescale) {
         segmentIndex.setTimescale(timescale);
       }
 
-      var { nextSegments, currentSegment } = parsed;
+      const { nextSegments, currentSegment } = parsed;
       // added segments are values parsed from the segment metadata
       // that should be added to the segmentIndex.
-      var addedSegments;
+      let addedSegments;
       if (nextSegments) {
         addedSegments = segmentIndex.insertNewSegments(nextSegments,
                                                        currentSegment);
@@ -344,7 +344,7 @@ function Buffer({
       };
     }
 
-    var segmentsPipeline = combineLatest(
+    const segmentsPipeline = combineLatest(
       timings,
       bufferSizes,
       mutedUpdateEnd

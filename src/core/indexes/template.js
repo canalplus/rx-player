@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var { Segment } = require("../segment");
+const { Segment } = require("../segment");
 
 class Template {
   constructor(adaptation, representation, index) {
@@ -32,20 +32,18 @@ class Template {
   }
 
   createSegment(ts) {
-    var {
+    const {
       adaptation,
       representation,
     } = this;
 
-    var {
+    const {
       startNumber,
       duration,
     } = this.index;
 
-    if (startNumber == null) startNumber = 1;
-
-    var number = Math.floor(ts / duration) + startNumber;
-    var time = number * duration;
+    const number = Math.floor(ts / duration) + (startNumber == null ? 1 : startNumber);
+    const time = number * duration;
 
     return Segment.create(
       adaptation,          /* adaptation */
@@ -62,10 +60,10 @@ class Template {
   }
 
   getSegments(up, to) {
-    var { duration } = this.index;
+    const { duration } = this.index;
 
-    var segments = [];
-    for (var time = up; time <= to; time += duration) {
+    const segments = [];
+    for (let time = up; time <= to; time += duration) {
       segments.push(this.createSegment(time));
     }
 

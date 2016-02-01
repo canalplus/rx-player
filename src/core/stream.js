@@ -14,34 +14,34 @@
  * limitations under the License.
  */
 
-var log = require("canal-js-utils/log");
-var assert = require("canal-js-utils/assert");
-var { Observable } = require("rxjs");
-var { first, on } = require("canal-js-utils/rx-ext");
-var { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
-var { retryWithBackoff } = require("canal-js-utils/rx-ext");
-var { empty, never, merge, combineLatest } = Observable;
-var min = Math.min;
+const log = require("canal-js-utils/log");
+const assert = require("canal-js-utils/assert");
+const { Observable } = require("rxjs");
+const { first, on } = require("canal-js-utils/rx-ext");
+const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
+const { retryWithBackoff } = require("canal-js-utils/rx-ext");
+const { empty, never, merge, combineLatest } = Observable;
+const min = Math.min;
 
-var { MediaSource_, sourceOpen, canPlay, loadedMetadata, clearVideoSrc } = require("./compat");
-var TextSourceBuffer = require("./text-buffer");
-var { getLiveEdge } = require("./index-handler");
-var { clearSegmentCache } = require("./segment");
-var Buffer = require("./buffer");
-var EME = require("./eme");
+const { MediaSource_, sourceOpen, canPlay, loadedMetadata, clearVideoSrc } = require("./compat");
+const TextSourceBuffer = require("./text-buffer");
+const { getLiveEdge } = require("./index-handler");
+const { clearSegmentCache } = require("./segment");
+const Buffer = require("./buffer");
+const EME = require("./eme");
 
-var {
+const {
   normalizeManifest,
   mergeManifestsIndex,
   mutateManifestLiveGap,
   getAdaptations,
 } = require("./manifest");
 
-var END_OF_PLAY = 0.2;
-var TOTAL_RETRY_COUNT = 3;
+const END_OF_PLAY = 0.2;
+const TOTAL_RETRY_COUNT = 3;
 
 // discontinuity threshold in seconds
-var DISCONTINUITY_THRESHOLD = 1;
+const DISCONTINUITY_THRESHOLD = 1;
 
 function identity(x) {
   return x;
@@ -79,19 +79,19 @@ function Stream({
 
   clearSegmentCache();
 
-  var fragStartTime = timeFragment.start;
-  var fragEndTime = timeFragment.end;
-  var fragEndTimeIsFinite = fragEndTime < Infinity;
+  const fragStartTime = timeFragment.start;
+  let fragEndTime = timeFragment.end;
+  const fragEndTimeIsFinite = fragEndTime < Infinity;
 
-  var manifestPipeline = pipelines.manifest;
+  const manifestPipeline = pipelines.manifest;
 
-  var nativeBuffers = {};
-  var customBuffers = {};
+  let nativeBuffers = {};
+  let customBuffers = {};
 
   function createSourceBuffer(video, mediaSource, bufferInfos) {
-    var { type, codec } = bufferInfos;
+    const { type, codec } = bufferInfos;
 
-    var sourceBuffer;
+    let sourceBuffer;
 
     if (isNativeBuffer(type)) {
 
@@ -106,7 +106,7 @@ function Stream({
     }
     else {
 
-      var oldSourceBuffer = customBuffers[type];
+      const oldSourceBuffer = customBuffers[type];
       if (oldSourceBuffer) {
         try {
           oldSourceBuffer.abort();
@@ -125,7 +125,7 @@ function Stream({
       //    ...
       // }
       else {
-        var errMessage = "stream: unknown buffer type " + type;
+        const errMessage = "stream: unknown buffer type " + type;
         log.error(errMessage);
         throw new Error(errMessage);
       }
@@ -137,11 +137,11 @@ function Stream({
   }
 
   function disposeSourceBuffer(video, mediaSource, bufferInfos) {
-    var { type } = bufferInfos;
+    const { type } = bufferInfos;
 
-    var oldSourceBuffer;
+    let oldSourceBuffer;
 
-    var isNative = isNativeBuffer(type);
+    const isNative = isNativeBuffer(type);
     if (isNative) {
       oldSourceBuffer = nativeBuffers[type];
       delete nativeBuffers[type];
@@ -168,8 +168,8 @@ function Stream({
     return Observable.create((observer) => {
       assert(MediaSource_, "player: browser is required to support MediaSource");
 
-      var mediaSource = new MediaSource_();
-      var objectURL = video.src = URL.createObjectURL(mediaSource);
+      let mediaSource = new MediaSource_();
+      let objectURL = video.src = URL.createObjectURL(mediaSource);
 
       observer.next({ url, mediaSource });
       log.info("create mediasource object", objectURL);
@@ -177,9 +177,9 @@ function Stream({
       return () => {
 
         if (mediaSource && mediaSource.readyState != "closed") {
-          var { readyState, sourceBuffers } = mediaSource;
-          for (var i = 0; i < sourceBuffers.length; i++) {
-            var sourceBuffer = sourceBuffers[i];
+          const { readyState, sourceBuffers } = mediaSource;
+          for (let i = 0; i < sourceBuffers.length; i++) {
+            const sourceBuffer = sourceBuffers[i];
             try {
               if (readyState == "open") {
                 sourceBuffer.abort();
@@ -194,7 +194,7 @@ function Stream({
         }
 
         Object.keys(customBuffers).forEach((sourceBufferType) => {
-          var sourceBuffer = customBuffers[sourceBufferType];
+          const sourceBuffer = customBuffers[sourceBufferType];
           try {
             sourceBuffer.abort();
           }
@@ -224,8 +224,8 @@ function Stream({
   }
 
   function createTimings(manifest) {
-    var augmentedTimings = timings.map((timing) => {
-      var clonedTiming;
+    const augmentedTimings = timings.map((timing) => {
+      let clonedTiming;
       if (fragEndTimeIsFinite) {
         clonedTiming = { ...timing };
         clonedTiming.ts = min(timing.ts, fragEndTime);
@@ -237,7 +237,7 @@ function Stream({
       return clonedTiming;
     });
 
-    var seekings = seekingsSampler(augmentedTimings);
+    const seekings = seekingsSampler(augmentedTimings);
 
     return {
       timings: augmentedTimings,
@@ -249,7 +249,7 @@ function Stream({
    * End-Of-Play stream popping a value when timings reaches the end of the
    * video
    */
-  var endOfPlay = timings
+  const endOfPlay = timings
     .filter(({ ts, duration }) => (
       duration > 0 &&
       min(duration, fragEndTime) - ts < END_OF_PLAY
@@ -265,12 +265,12 @@ function Stream({
    * Wait for manifest and media-source to open before initializing source
    * duration and creating buffers
    */
-  var createAllStream = retryWithBackoff(({ url, mediaSource }) => {
-    var sourceOpening = sourceOpen(mediaSource);
+  const createAllStream = retryWithBackoff(({ url, mediaSource }) => {
+    const sourceOpening = sourceOpen(mediaSource);
 
     return combineLatest(manifestPipeline({ url }), sourceOpening, identity)
       .flatMap(({ parsed }) => {
-        var manifest = normalizeManifest(parsed.url, parsed.manifest, subtitles);
+        const manifest = normalizeManifest(parsed.url, parsed.manifest, subtitles);
 
         setDuration(mediaSource, manifest);
 
@@ -306,8 +306,8 @@ function Stream({
    * reaction to user choices (ie. changing the language).
    */
   function createBuffer(mediaSource, bufferInfos, timings, seekings) {
-    var { type } = bufferInfos;
-    var adaptations = adaptive.getAdaptationsChoice(type, bufferInfos.adaptations);
+    const { type } = bufferInfos;
+    const adaptations = adaptive.getAdaptationsChoice(type, bufferInfos.adaptations);
 
     if (__DEV__)
       assert(pipelines[type], "stream: no pipeline found for type " + type);
@@ -318,8 +318,8 @@ function Stream({
         return never();
       }
 
-      var adapters = adaptive.getBufferAdapters(adaptation);
-      var buffer = Buffer({
+      const adapters = adaptive.getBufferAdapters(adaptation);
+      const buffer = Buffer({
         sourceBuffer: createSourceBuffer(videoElement, mediaSource, bufferInfos),
         pipeline: pipelines[type],
         adaptation,
@@ -350,10 +350,10 @@ function Stream({
    * the loadedmetadata event pops up.
    */
   function createLoadedMetadata(manifest) {
-    var loadedMetadata$ = loadedMetadata(videoElement)
+    const loadedMetadata$ = loadedMetadata(videoElement)
       .do(() => setInitialTime(manifest));
 
-    var canPlay$ = canPlay(videoElement)
+    const canPlay$ = canPlay(videoElement)
       .do(() => {
         log.info("canplay event");
         if (autoPlay) videoElement.play();
@@ -370,7 +370,7 @@ function Stream({
       return EME(videoElement, keySystems);
     } else {
       return EME.onEncrypted(videoElement).map(() => {
-        var errMessage = "eme: ciphered media and no keySystem passed";
+        const errMessage = "eme: ciphered media and no keySystem passed";
         log.error(errMessage);
         throw new Error(errMessage);
       });
@@ -387,10 +387,10 @@ function Stream({
   function createStalled(timings, changePlaybackRate=true) {
     return timings
       .distinctUntilChanged((prevTiming, timing) => {
-        var isStalled = timing.stalled;
-        var wasStalled = prevTiming.stalled;
+        const isStalled = timing.stalled;
+        const wasStalled = prevTiming.stalled;
 
-        var isEqual;
+        let isEqual;
         if (!wasStalled && !isStalled)
           isEqual = true;
         else if (!wasStalled || !isStalled)
@@ -413,9 +413,9 @@ function Stream({
         // implementation that might drop an injected segment, or in
         // case of small discontinuity in the stream.
         if (isStalled) {
-          var nextRangeGap = timing.buffered.getNextRangeGap(timing.ts);
+          const nextRangeGap = timing.buffered.getNextRangeGap(timing.ts);
           if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
-            var seekTo = (timing.ts + nextRangeGap + 1/60);
+            const seekTo = (timing.ts + nextRangeGap + 1/60);
             videoElement.currentTime = seekTo;
             log.warn("discontinuity seek", timing.ts, nextRangeGap, seekTo);
           }
@@ -443,7 +443,7 @@ function Stream({
       log.info("out of index");
       return manifestPipeline({ url: manifest.locations[0] })
         .map(({ parsed }) => {
-          var newManifest = mergeManifestsIndex(manifest, normalizeManifest(parsed.url, parsed.manifest, subtitles));
+          const newManifest = mergeManifestsIndex(manifest, normalizeManifest(parsed.url, parsed.manifest, subtitles));
           return { type: "manifest", value: newManifest };
         });
     }
@@ -460,11 +460,11 @@ function Stream({
   }
 
   function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
-    var adaptationsBuffers = getAdaptations(manifest).map(
+    const adaptationsBuffers = getAdaptations(manifest).map(
       (adaptation) => createBuffer(mediaSource, adaptation, timings, seekings)
     );
 
-    var buffers = merge.apply(null, adaptationsBuffers);
+    const buffers = merge.apply(null, adaptationsBuffers);
 
     if (!manifest.isLive)
       return buffers;
@@ -486,15 +486,15 @@ function Stream({
    * the system cooperate.
    */
   function createStream(mediaSource, manifest) {
-    var { timings, seekings } = createTimings(manifest);
-    var justManifest = Observable.of({ type: "manifest", value: manifest });
-    var canPlay = createLoadedMetadata(manifest);
-    var buffers = createAdaptationsBuffers(mediaSource, manifest, timings, seekings);
-    var emeHandler = createEME();
-    var stalled = createStalled(timings, true);
+    const { timings, seekings } = createTimings(manifest);
+    const justManifest = Observable.of({ type: "manifest", value: manifest });
+    const canPlay = createLoadedMetadata(manifest);
+    const buffers = createAdaptationsBuffers(mediaSource, manifest, timings, seekings);
+    const emeHandler = createEME();
+    const stalled = createStalled(timings, true);
 
-    var mediaError = on(videoElement, "error").flatMap(() => {
-      var errMessage = `stream: video element MEDIA_ERR code ${videoElement.error.code}`;
+    const mediaError = on(videoElement, "error").flatMap(() => {
+      const errMessage = `stream: video element MEDIA_ERR code ${videoElement.error.code}`;
       log.error(errMessage);
       throw new Error(errMessage);
     });
@@ -503,10 +503,10 @@ function Stream({
   }
 
   function createDirectFileStream() {
-    var { timings } = createTimings(directFile, { timeInterval: 1000 });
-    var justManifest = Observable.of({ type: "manifest", value: directFile });
-    var canPlay = createLoadedMetadata(directFile);
-    var stalled = createStalled(timings, false);
+    const { timings } = createTimings(directFile, { timeInterval: 1000 });
+    const justManifest = Observable.of({ type: "manifest", value: directFile });
+    const canPlay = createLoadedMetadata(directFile);
+    const stalled = createStalled(timings, false);
 
     return merge(justManifest, canPlay, stalled);
   }
@@ -543,10 +543,10 @@ function Stream({
    * see: createLoadedMetadata(manifest)
    */
   function setInitialTime(manifest) {
-    var duration = manifest.duration;
-    var startTime = fragStartTime;
-    var endTime = fragEndTime;
-    var percentage = /^\d*(\.\d+)? ?%$/;
+    const duration = manifest.duration;
+    let startTime = fragStartTime;
+    let endTime = fragEndTime;
+    const percentage = /^\d*(\.\d+)? ?%$/;
 
     if (typeof startTime == "string" && percentage.test(startTime)) {
       startTime = (parseFloat(startTime) / 100) * duration;

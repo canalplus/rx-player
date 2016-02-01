@@ -14,45 +14,45 @@
  * limitations under the License.
  */
 
-var flatten = require("lodash/array/flatten");
-var log = require("canal-js-utils/log");
-var EventEmitter = require("canal-js-utils/eventemitter");
-var { bytesToStr, strToBytes } = require("canal-js-utils/bytes");
-var assert = require("canal-js-utils/assert");
-var { Observable } = require("rxjs");
-var { merge, never, fromEvent } = Observable;
-var { on } = require("canal-js-utils/rx-ext");
-var find = require("lodash/collection/find");
+const flatten = require("lodash/array/flatten");
+const log = require("canal-js-utils/log");
+const EventEmitter = require("canal-js-utils/eventemitter");
+const { bytesToStr, strToBytes } = require("canal-js-utils/bytes");
+const assert = require("canal-js-utils/assert");
+const { Observable } = require("rxjs");
+const { merge, never, fromEvent } = Observable;
+const { on } = require("canal-js-utils/rx-ext");
+const find = require("lodash/collection/find");
 
-var doc = document;
-var win = window;
+const doc = document;
+const win = window;
 
-var PREFIXES = ["", "webkit", "moz", "ms"];
+const PREFIXES = ["", "webkit", "moz", "ms"];
 
-var HTMLElement_      = win.HTMLElement;
-var HTMLVideoElement_ = win.HTMLVideoElement;
+const HTMLElement_      = win.HTMLElement;
+const HTMLVideoElement_ = win.HTMLVideoElement;
 
-var MediaSource_ = (
+const MediaSource_ = (
   win.MediaSource ||
   win.MozMediaSource ||
   win.WebKitMediaSource ||
   win.MSMediaSource);
 
-var MediaKeys_ = (
+let MediaKeys_ = (
   win.MediaKeys ||
   win.MozMediaKeys ||
   win.WebKitMediaKeys ||
   win.MSMediaKeys);
 
-var isIE = (
+const isIE = (
   navigator.appName == "Microsoft Internet Explorer" ||
   navigator.appName == "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
 );
 
-var MockMediaKeys = function() {
+let MockMediaKeys = function() {
 };
 
-var requestMediaKeySystemAccess;
+let requestMediaKeySystemAccess;
 if (navigator.requestMediaKeySystemAccess)
   requestMediaKeySystemAccess = (a, b) => navigator.requestMediaKeySystemAccess(a, b);
 
@@ -84,7 +84,7 @@ function castToPromise(prom) {
 
 function wrap(fn) {
   return function() {
-    var retValue;
+    let retValue;
     try {
       retValue = fn.apply(this, arguments);
     } catch(error) {
@@ -95,8 +95,8 @@ function wrap(fn) {
 }
 
 function isEventSupported(element, eventNameSuffix) {
-  var clone = document.createElement(element.tagName);
-  var eventName = "on" + eventNameSuffix;
+  const clone = document.createElement(element.tagName);
+  const eventName = "on" + eventNameSuffix;
   if (eventName in clone) {
     return true;
   } else {
@@ -114,7 +114,7 @@ function findSupportedEvent(element, eventNames) {
 }
 
 function compatibleListener(eventNames, prefixes) {
-  var mem;
+  let mem;
   eventNames = eventPrefixed(eventNames, prefixes);
   return (element) => {
     // if the element is a HTMLElement we can detect
@@ -155,14 +155,14 @@ function isCodecSupported(codec) {
 // even send this "progress" before receiving the first data-segment.
 //
 // TODO(pierre): try to find a solution without "browser sniffing"...
-var loadedMetadataEvent = compatibleListener(isIE ? ["progress"] : ["loadedmetadata"]);
-var sourceOpenEvent = compatibleListener(["sourceopen", "webkitsourceopen"]);
-var onEncrypted = compatibleListener(["encrypted", "needkey"]);
-var onKeyMessage = compatibleListener(["keymessage", "message"]);
-var onKeyAdded = compatibleListener(["keyadded", "ready"]);
-var onKeyError = compatibleListener(["keyerror", "error"]);
-var onKeyStatusesChange = compatibleListener(["keystatuseschange"]);
-var emeEvents = {
+const loadedMetadataEvent = compatibleListener(isIE ? ["progress"] : ["loadedmetadata"]);
+const sourceOpenEvent = compatibleListener(["sourceopen", "webkitsourceopen"]);
+const onEncrypted = compatibleListener(["encrypted", "needkey"]);
+const onKeyMessage = compatibleListener(["keymessage", "message"]);
+const onKeyAdded = compatibleListener(["keyadded", "ready"]);
+const onKeyError = compatibleListener(["keyerror", "error"]);
+const onKeyStatusesChange = compatibleListener(["keystatuseschange"]);
+const emeEvents = {
   onEncrypted,
   onKeyMessage,
   onKeyStatusesChange,
@@ -209,12 +209,12 @@ function wrapUpdateWithPromise(memUpdate, sessionObj) {
   KeySessionError.prototype = new Error();
 
   return function(license, sessionId) {
-    var session = typeof sessionObj == "function"
+    const session = typeof sessionObj == "function"
       ? sessionObj.call(this)
       : this;
 
-    var keys = onKeyAdded(session);
-    var errs = onKeyError(session).map(evt => { throw new KeySessionError(session.error || evt); });
+    const keys = onKeyAdded(session);
+    const errs = onKeyError(session).map(evt => { throw new KeySessionError(session.error || evt); });
     try {
       memUpdate.call(this, license, sessionId);
       return merge(keys, errs).take(1).toPromise();
@@ -232,7 +232,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
 
   // Mock MediaKeySession interface for old chrome implementation
   // of the EME specifications
-  var MockMediaKeySession = function(video, keySystem) {
+  const MockMediaKeySession = function(video, keySystem) {
     EventEmitter.call(this);
 
     this._vid = video;
@@ -253,9 +253,9 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
 
     update: wrapUpdateWithPromise(function (license, sessionId) {
       if (this._key.indexOf("clearkey") >= 0) {
-        var json = JSON.parse(bytesToStr(license));
-        var key = strToBytes(atob(json.keys[0].k));
-        var kid = strToBytes(atob(json.keys[0].kid));
+        const json = JSON.parse(bytesToStr(license));
+        const key = strToBytes(atob(json.keys[0].k));
+        const kid = strToBytes(atob(json.keys[0].kid));
         this._vid.webkitAddKey(this._key, key, kid, sessionId);
       } else {
         this._vid.webkitAddKey(this._key, license, null, sessionId);
@@ -283,10 +283,10 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     },
   };
 
-  var isTypeSupported = function(keyType) {
+  const isTypeSupported = function(keyType) {
     // get any <video> element from the DOM or create one
     // and try the `canPlayType` method
-    var video = doc.querySelector("video") || doc.createElement("video");
+    const video = doc.querySelector("video") || doc.createElement("video");
     if (video && video.canPlayType) {
       return !!video.canPlayType("video/mp4", keyType);
     } else {
@@ -299,8 +299,8 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       return Promise.reject();
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
-      let keySystemConfiguration = keySystemConfigurations[i];
-      let {
+      const keySystemConfiguration = keySystemConfigurations[i];
+      const {
         videoCapabilities,
         audioCapabilities,
         initDataTypes,
@@ -309,7 +309,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
         persistentState,
       } = keySystemConfiguration;
 
-      var supported = true;
+      let supported = true;
       supported = supported && (
         !initDataTypes ||
         !!find(initDataTypes, (initDataType) => initDataType === "cenc")
@@ -322,7 +322,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       supported = supported && (persistentState !== "required");
 
       if (supported) {
-        var keySystemConfigurationResponse = {
+        const keySystemConfigurationResponse = {
           videoCapabilities,
           audioCapabilities,
           initDataTypes: ["cenc"],
@@ -349,7 +349,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
 // This is for IE11
 else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 
-  var SessionProxy = function(mk) {
+  const SessionProxy = function(mk) {
     EventEmitter.call(this);
     this._mk = mk;
   };
@@ -396,20 +396,20 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       return Promise.reject();
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
-      let keySystemConfiguration = keySystemConfigurations[i];
-      let {
+      const keySystemConfiguration = keySystemConfigurations[i];
+      const {
         videoCapabilities,
         audioCapabilities,
         initDataTypes,
         distinctiveIdentifier,
       } = keySystemConfiguration;
 
-      var supported = true;
+      let supported = true;
       supported = supported && (!initDataTypes || find(initDataTypes, idt => idt === "cenc"));
       supported = supported && (distinctiveIdentifier !== "required");
 
       if (supported) {
-        var keySystemConfigurationResponse = {
+        const keySystemConfigurationResponse = {
           videoCapabilities,
           audioCapabilities,
           initDataTypes: ["cenc"],
@@ -431,7 +431,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 }
 
 if (!MediaKeys_) {
-  var noMediaKeys = () => { throw new Error("eme: MediaKeys is not available"); };
+  const noMediaKeys = () => { throw new Error("eme: MediaKeys is not available"); };
 
   MediaKeys_ = {
     create: noMediaKeys,
@@ -487,16 +487,16 @@ function _setMediaKeys(elt, mk) {
   throw new Error("compat: cannot find setMediaKeys method");
 }
 
-var setMediaKeys = (elt, mk) => {
+const setMediaKeys = (elt, mk) => {
   return castToPromise(_setMediaKeys(elt, mk));
 };
 
 if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener) {
 
-  var SourceBuffer = win.WebKitSourceBuffer;
-  var SBProto = SourceBuffer.prototype;
+  const SourceBuffer = win.WebKitSourceBuffer;
+  const SBProto = SourceBuffer.prototype;
 
-  for (var fnNAme in EventEmitter.prototype) {
+  for (const fnNAme in EventEmitter.prototype) {
     SBProto[fnNAme] = EventEmitter.prototype[fnNAme];
   }
 
@@ -553,14 +553,14 @@ function isFullscreen() {
 }
 
 function visibilityChange() {
-  var prefix;
+  let prefix;
   if (doc.hidden != null)            prefix = "";
   else if (doc.mozHidden != null)    prefix = "moz";
   else if (doc.msHidden != null)     prefix = "ms";
   else if (doc.webkitHidden != null) prefix = "webkit";
 
-  var hidden = prefix ? prefix + "Hidden" : "hidden";
-  var visibilityChangeEvent = prefix + "visibilitychange";
+  const hidden = prefix ? prefix + "Hidden" : "hidden";
+  const visibilityChangeEvent = prefix + "visibilitychange";
 
   return on(doc, visibilityChangeEvent)
     .map(() => doc[hidden]);
@@ -583,8 +583,8 @@ function clearVideoSrc(video) {
 }
 
 function addTextTrack(video) {
-  var track, trackElement;
-  var kind = "subtitles";
+  let track, trackElement;
+  const kind = "subtitles";
   if (isIE) {
     track = video.addTextTrack(kind);
     track.mode = track.SHOWING;
@@ -605,7 +605,7 @@ function isVTTSupported() {
 }
 
 // On IE11, fullscreen change events is called MSFullscreenChange
-var onFullscreenChange = compatibleListener(["fullscreenchange", "FullscreenChange"], PREFIXES.concat("MS"));
+const onFullscreenChange = compatibleListener(["fullscreenchange", "FullscreenChange"], PREFIXES.concat("MS"));
 
 module.exports = {
   HTMLVideoElement_,

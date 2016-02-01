@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var assert = require("canal-js-utils/assert");
+const assert = require("canal-js-utils/assert");
 
 function parseTimeFragment(timeFragment) {
   if (typeof timeFragment == "string") {
@@ -57,7 +57,7 @@ function parseTimeFragment(timeFragment) {
   return timeFragment;
 }
 
-var errMessage = "Invalid MediaFragment";
+const errMessage = "Invalid MediaFragment";
 
 function normalizeNTPTime(time) {
   if (!time) return false;
@@ -73,11 +73,11 @@ function normalizeNTPTime(time) {
   //    34:56.789
   //       56.789
   //       56
-  var hours;
-  var minutes;
-  var seconds;
+  let hours;
+  let minutes;
+  let seconds;
   time = time.split(":");
-  var length = time.length;
+  const length = time.length;
   switch(length) {
   case 3:
     hours = parseInt(time[0], 10);
@@ -112,13 +112,13 @@ function normalizeSMPTETime(time) {
   // 12:34:56
   // 12:34:56:78
   // 12:34:56:78.90
-  var hours;
-  var minutes;
-  var seconds;
-  var frames;
-  var subframes;
+  let hours;
+  let minutes;
+  let seconds;
+  let frames;
+  let subframes;
   time = time.split(":");
-  var length = time.length;
+  const length = time.length;
   switch(length) {
   case 3:
     hours = parseInt(time[0], 10);
@@ -135,7 +135,7 @@ function normalizeSMPTETime(time) {
       frames = parseInt(time[3], 10);
       subframes = 0;
     } else {
-      var frameSubFrame = time[3].split(".");
+      const frameSubFrame = time[3].split(".");
       frames = parseInt(frameSubFrame[0], 10);
       subframes = parseInt(frameSubFrame[1], 10);
     }
@@ -164,11 +164,11 @@ function normalizePercentage(time) {
 // adapted from: https://github.com/tomayac/Media-Fragments-URI
 // specification: http://www.w3.org/TR/media-frags/#naming-time
 function temporalMediaFragmentParser(value) {
-  var components = value.split(",");
+  const components = value.split(",");
   assert(components.length <= 2, errMessage);
 
-  var start = components[0] ? components[0] : "";
-  var end = components[1] ? components[1] : "";
+  let start = components[0] ? components[0] : "";
+  let end = components[1] ? components[1] : "";
   assert((start || end) && (!start || end || value.indexOf(",") === -1),
          errMessage);
 
@@ -177,16 +177,16 @@ function temporalMediaFragmentParser(value) {
     .replace("clock:", "");
 
   // hours:minutes:seconds.milliseconds
-  var npt = /^((npt\:)?((\d+\:(\d\d)\:(\d\d))|((\d\d)\:(\d\d))|(\d+))(\.\d*)?)?$/;
+  const npt = /^((npt\:)?((\d+\:(\d\d)\:(\d\d))|((\d\d)\:(\d\d))|(\d+))(\.\d*)?)?$/;
   // hours:minutes:seconds:frames.further-subdivison-of-frames
-  var smpte = /^(\d+\:\d\d\:\d\d(\:\d\d(\.\d\d)?)?)?$/;
+  const smpte = /^(\d+\:\d\d\:\d\d(\:\d\d(\.\d\d)?)?)?$/;
   // regexp adapted from http://delete.me.uk/2005/03/iso8601.html
-  var wallClock =
+  const wallClock =
     /^((\d{4})(-(\d{2})(-(\d{2})(T(\d{2})\:(\d{2})(\:(\d{2})(\.(\d+))?)?(Z|(([-\+])(\d{2})\:(\d{2})))?)?)?)?)?$/;
   // float%
-  var percentage = /^(\d*(\.\d+)? ?%)?$/;
+  const percentage = /^(\d*(\.\d+)? ?%)?$/;
 
-  var timeNormalizer;
+  let timeNormalizer;
   if (npt.test(start) && npt.test(end)) {
     timeNormalizer = normalizeNTPTime;
   }

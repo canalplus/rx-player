@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-var { Observable } = require("rxjs");
-var { merge, interval } = Observable;
-var { visibilityChange, videoSizeChange } = require("./compat");
+const { Observable } = require("rxjs");
+const { merge, interval } = Observable;
+const { visibilityChange, videoSizeChange } = require("./compat");
 
-var INACTIVITY_DELAY = 60 * 1000;
+const INACTIVITY_DELAY = 60 * 1000;
 
-var pixelRatio = window.devicePixelRatio || 1;
+const pixelRatio = window.devicePixelRatio || 1;
 
 function DeviceEvents(videoElement) {
-  var isVisible = visibilityChange()
+  const isVisible = visibilityChange()
     .filter(x => x === false);
 
-  var isHidden = visibilityChange()
+  const isHidden = visibilityChange()
     .debounceTime(INACTIVITY_DELAY)
     .filter(x => x === true);
 
-  var inBackground = merge(isVisible, isHidden)
+  const inBackground = merge(isVisible, isHidden)
     .startWith(false);
 
-  var videoWidth = merge(
+  const videoWidth = merge(
     interval(20000),
     videoSizeChange().debounceTime(500)
   )

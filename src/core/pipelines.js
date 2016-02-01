@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-var defaults = require("lodash/object/defaults");
-var { Subject, Scheduler, Observable } = require("rxjs");
-var { retryWithBackoff } = require("../utils/retry");
+const defaults = require("lodash/object/defaults");
+const { Subject, Scheduler, Observable } = require("rxjs");
+const { retryWithBackoff } = require("../utils/retry");
 
-var timeoutError = new Error("timeout");
+const timeoutError = new Error("timeout");
 
 function isObservable(val) {
   return !!val && typeof val.subscribe == "function";
 }
 
-var noCache = {
+const noCache = {
   add() {},
   get() {
     return null;
   },
 };
 
-var metricsScheduler = Scheduler.asap;
+const metricsScheduler = Scheduler.asap;
 
 /**
  * Creates the following pipeline:
@@ -52,13 +52,13 @@ function createPipeline(type,
   if (!loader) loader = Observable.of;
   if (!resolver) resolver = Observable.of;
 
-  var { totalRetry, timeout, cache } = defaults(opts, {
+  const { totalRetry, timeout, cache } = defaults(opts, {
     totalRetry: 3,
     timeout: 10 * 1000,
     cache: noCache,
   });
 
-  var backoffOptions = {
+  const backoffOptions = {
     retryDelay: 500,
     totalRetry,
     shouldRetry: err => (
@@ -84,7 +84,7 @@ function createPipeline(type,
   }
 
   function cacheOrLoader(resolvedInfos) {
-    var fromCache = cache.get(resolvedInfos);
+    const fromCache = cache.get(resolvedInfos);
     if (fromCache === null) {
       return loaderWithRetry(resolvedInfos);
     } else if (isObservable(fromCache)) {
@@ -95,7 +95,7 @@ function createPipeline(type,
   }
 
   function extendsResponseAndResolvedInfos(resolvedInfos, response) {
-    var loadedInfos = { response, ...resolvedInfos };
+    const loadedInfos = { response, ...resolvedInfos };
 
     // add loadedInfos to the pipeline cache and emits its value in
     // the metrics observer.
@@ -119,11 +119,11 @@ function createPipeline(type,
 function PipeLines() {
   // the metrics observer/observable is used to calculate informations
   // about loaded responsed in the loader part of pipelines
-  var metrics = new Subject();
+  const metrics = new Subject();
 
-  var createPipelines = (transport, options={}) => {
-    var pipelinesList = [];
-    for (var pipelineType in transport) {
+  const createPipelines = (transport, options={}) => {
+    const pipelinesList = [];
+    for (const pipelineType in transport) {
       pipelinesList[pipelineType] = createPipeline(
                                         pipelineType,
                                         transport[pipelineType],

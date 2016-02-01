@@ -15,13 +15,13 @@
  */
 
 
-var rBr = /<br[^>]+>/gm;
-var rAbsTime = /^(([0-9]+):)?([0-9]+):([0-9]+)(\.([0-9]+))?$/;
-var rRelTime = /(([0-9]+)(\.[0-9]+)?)(ms|h|m|s)/;
+const rBr = /<br[^>]+>/gm;
+const rAbsTime = /^(([0-9]+):)?([0-9]+):([0-9]+)(\.([0-9]+))?$/;
+const rRelTime = /(([0-9]+)(\.[0-9]+)?)(ms|h|m|s)/;
 
-var escape = window.escape;
+const escape = window.escape;
 
-var MULTS = {
+const MULTS = {
   h: 3600,
   m: 60,
   s: 1,
@@ -29,7 +29,7 @@ var MULTS = {
 };
 
 function parseTTML(ttml, lang, offset) {
-  var doc;
+  let doc;
   if (typeof ttml == "string") {
     doc = new DOMParser().parseFromString(ttml, "text/xml");
   } else {
@@ -39,13 +39,13 @@ function parseTTML(ttml, lang, offset) {
   if (!(doc instanceof window.Document || doc instanceof window.HTMLElement))
     throw new Error("ttml: needs a Document to parse");
 
-  var node = doc.querySelector("tt");
+  const node = doc.querySelector("tt");
   if (!node)
     throw new Error("ttml: could not find <tt> tag");
 
-  var subs = parseChildren(node.querySelector("body"), 0);
-  for (var i = 0; i < subs.length; i++) {
-    var s = subs[i];
+  const subs = parseChildren(node.querySelector("body"), 0);
+  for (let i = 0; i < subs.length; i++) {
+    const s = subs[i];
     s.start += offset;
     s.end += offset;
   }
@@ -55,9 +55,10 @@ function parseTTML(ttml, lang, offset) {
 
 // Parse the children of the given node recursively
 function parseChildren(node, parentOffset) {
-  var siblingOffset = 0;
+  let siblingOffset = 0;
   node = node.firstChild;
-  var arr = [], sub;
+  const arr = [];
+  let sub;
 
   while(node) {
     if (node.nodeType === 1) {
@@ -70,7 +71,7 @@ function parseChildren(node, parentOffset) {
         break;
       case "DIV":
         // div is container for subtitles, recurse
-        var newOffset = parseTimestamp(node.getAttribute("begin"), 0);
+        let newOffset = parseTimestamp(node.getAttribute("begin"), 0);
         if (newOffset == null) newOffset = parentOffset;
         arr.push.apply(arr, parseChildren(node, newOffset));
         break;
@@ -84,9 +85,9 @@ function parseChildren(node, parentOffset) {
 
 // Parse a node for text content
 function parseNode(node, parentOffset, siblingOffset) {
-  var start = parseTimestamp(node.getAttribute("begin"), parentOffset);
-  var end = parseTimestamp(node.getAttribute("end"), parentOffset);
-  var dur = parseTimestamp(node.getAttribute("dur"), 0);
+  let start = parseTimestamp(node.getAttribute("begin"), parentOffset);
+  let end = parseTimestamp(node.getAttribute("end"), parentOffset);
+  const dur = parseTimestamp(node.getAttribute("dur"), 0);
 
   if (!typeof start == "number" &&
       !typeof end == "number" &&
@@ -124,12 +125,12 @@ function parseTimestamp(time, offset) {
     return null;
   }
 
-  var match;
+  let match;
 
   // Parse absolute times ISO 8601 format ([hh:]mm:ss[.mmm])
   match = time.match(rAbsTime);
   if (match) {
-    var [,,h,m,s,,ms] = match;
+    const [,,h,m,s,,ms] = match;
     return (
       parseInt((h || 0), 10) * 3600 +
       parseInt(m, 10) * 60 +
@@ -141,7 +142,7 @@ function parseTimestamp(time, offset) {
   // Parse relative times (fraction followed by a unit metric d.ddu)
   match = time.match(rRelTime);
   if (match) {
-    var [,n,,,metric] = match;
+    const [,n,,,metric] = match;
     return parseFloat(n) * MULTS[metric] + offset;
   }
 

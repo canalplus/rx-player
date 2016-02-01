@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-var { bufferedToArray } = require("../core/ranges");
+const { bufferedToArray } = require("../core/ranges");
 
-var interval;
-var closeBtn;
+let interval;
+let closeBtn;
 
-var reUnescapedHtml = /[&<>"']/g;
-var htmlEscapes = {
+const reUnescapedHtml = /[&<>"']/g;
+const htmlEscapes = {
   "&":  "&amp;",
   "<":  "&lt;",
   ">":  "&gt;",
@@ -37,9 +37,9 @@ function bpsToKbps(b) {
 }
 
 function getDebug(player) {
-  var avr = player.getAverageBitrates();
+  const avr = player.getAverageBitrates();
 
-  var avrAudio, avrVideo;
+  let avrAudio, avrVideo;
   avr.video.take(1).subscribe(a => avrVideo = a|0);
   avr.audio.take(1).subscribe(a => avrAudio = a|0);
 
@@ -69,18 +69,18 @@ function getDebug(player) {
 }
 
 function update(player, videoElement) {
-  var infoElement = videoElement.parentNode.querySelector("#cp--debug-infos-content");
+  const infoElement = videoElement.parentNode.querySelector("#cp--debug-infos-content");
   if (infoElement) {
-    var infos;
+    let infos;
     try {
       infos = getDebug(player);
     } catch(e) {
       return;
     }
 
-    var { video, audio, manifest } = infos;
+    const { video, audio, manifest } = infos;
 
-    var secureHTML = `<b>Player v${infos.version}</b> (${infos.state})<br>`;
+    let secureHTML = `<b>Player v${infos.version}</b> (${infos.state})<br>`;
 
     if (manifest && video && audio) {
       secureHTML += [
@@ -106,7 +106,7 @@ function update(player, videoElement) {
 }
 
 function showDebug(player, videoElement) {
-  var secureHTML = `<style>
+  const secureHTML = `<style>
 #cp--debug-infos {
   position: absolute;
   top: ${escape(videoElement.offsetTop + 10)}px;
@@ -130,9 +130,9 @@ function showDebug(player, videoElement) {
   <p id="cp--debug-infos-content"></p>
 </div>`;
 
-  var videoParent = videoElement.parentNode;
+  const videoParent = videoElement.parentNode;
 
-  var container = videoParent.querySelector("#cp--debug-infos-container");
+  let container = videoParent.querySelector("#cp--debug-infos-container");
   if (!container) {
     container = document.createElement("div");
     container.setAttribute("id", "cp--debug-infos-container");
@@ -152,7 +152,7 @@ function showDebug(player, videoElement) {
 }
 
 function hideDebug(videoElement) {
-  var container = videoElement.parentNode.querySelector("#cp--debug-infos-container");
+  const container = videoElement.parentNode.querySelector("#cp--debug-infos-container");
   if (container) {
     container.parentNode.removeChild(container);
   }
@@ -167,7 +167,7 @@ function hideDebug(videoElement) {
 }
 
 function toggleDebug(player, videoElement) {
-  var container = videoElement.parentNode.querySelector("#cp--debug-infos-container");
+  const container = videoElement.parentNode.querySelector("#cp--debug-infos-container");
   if (container) {
     hideDebug(videoElement);
   } else {

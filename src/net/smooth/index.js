@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-var { Observable } = require("rxjs");
-var { empty } = Observable;
-var request = require("canal-js-utils/rx-request");
-var { resolveURL } = require("canal-js-utils/url");
-var { bytesToStr } = require("canal-js-utils/bytes");
-var log = require("canal-js-utils/log");
+const { Observable } = require("rxjs");
+const { empty } = Observable;
+const request = require("canal-js-utils/rx-request");
+const { bytesToStr } = require("canal-js-utils/bytes");
+const log = require("canal-js-utils/log");
 
-var createSmoothStreamingParser = require("./parser");
+const createSmoothStreamingParser = require("./parser");
 
-var {
+const {
   patchSegment,
   createVideoInitSegment,
   createAudioInitSegment,
@@ -33,9 +32,9 @@ var {
   parseTfxd,
 } = require("./mp4");
 
-var { parseSami } = require("./tt-sami");
-var { parseTTML } = require("./tt-ttml");
-var TT_PARSERS = {
+const { parseSami } = require("./tt-sami");
+const { parseTTML } = require("./tt-ttml");
+const TT_PARSERS = {
   "application/x-sami":       parseSami,
   "application/smil":         parseSami,
   "application/ttml+xml":     parseTTML,
@@ -43,9 +42,9 @@ var TT_PARSERS = {
   "text/vtt":                 (text) => text,
 };
 
-var ISM_REG = /\.(isml?)(\?token=\S+)?$/;
-var WSX_REG = /\.wsx?(\?token=\S+)?/;
-var TOKEN_REG = /\?token=(\S+)/;
+const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
+const WSX_REG = /\.wsx?(\?token=\S+)?/;
+const TOKEN_REG = /\?token=(\S+)/;
 
 function byteRange([start, end]) {
   if (!end || end === Infinity) {
@@ -60,7 +59,7 @@ function extractISML(doc) {
 }
 
 function extractToken(url) {
-  var tokenMatch = url.match(TOKEN_REG);
+  const tokenMatch = url.match(TOKEN_REG);
   return (tokenMatch && tokenMatch[1]) || "";
 }
 
@@ -73,7 +72,7 @@ function replaceToken(url, token) {
 }
 
 function resolveManifest(url) {
-  var ismMatch = url.match(ISM_REG);
+  const ismMatch = url.match(ISM_REG);
   if (ismMatch) {
     return url.replace(ismMatch[1], ismMatch[1] + "/manifest");
   } else {
@@ -87,18 +86,18 @@ function buildSegmentURL(segment) {
     .replace(/\{start time\}/g, segment.getTime());
 }
 
-var req = reqOptions => {
+const req = reqOptions => {
   reqOptions.withMetadata = true;
   return request(reqOptions);
 };
 
 module.exports = function(options={}) {
-  var smoothManifestParser = createSmoothStreamingParser(options);
+  const smoothManifestParser = createSmoothStreamingParser(options);
 
-  var manifestPipeline = {
+  const manifestPipeline = {
     resolver({ url }) {
-      var resolving;
-      var token = extractToken(url);
+      let resolving;
+      const token = extractToken(url);
 
       if (WSX_REG.test(url)) {
         resolving = req({
@@ -125,11 +124,11 @@ module.exports = function(options={}) {
   };
 
   function extractTimingsInfos(blob, segment) {
-    var nextSegments;
-    var currentSegment;
+    let nextSegments;
+    let currentSegment;
 
     if (segment.getAdaptation().isLive) {
-      var traf = getTraf(blob);
+      const traf = getTraf(blob);
       if (traf) {
         nextSegments = parseTfrf(traf);
         currentSegment = parseTfxd(traf);
@@ -150,14 +149,14 @@ module.exports = function(options={}) {
     return { nextSegments, currentSegment };
   }
 
-  var segmentPipeline = {
+  const segmentPipeline = {
     loader({ segment }) {
       if (segment.isInitSegment()) {
-        var adaptation = segment.getAdaptation();
-        var representation = segment.getRepresentation();
+        const adaptation = segment.getAdaptation();
+        const representation = segment.getRepresentation();
 
-        var blob;
-        var protection = adaptation.smoothProtection || {};
+        let blob;
+        const protection = adaptation.smoothProtection || {};
         switch(adaptation.type) {
         case "video": blob = createVideoInitSegment(
           representation.index.timescale,
@@ -183,14 +182,14 @@ module.exports = function(options={}) {
         return Observable.of({ blob, size: blob.length, duration: 100 });
       }
       else {
-        var headers;
+        let headers;
 
-        var range = segment.getRange();
+        const range = segment.getRange();
         if (range) {
           headers = { "Range": byteRange(range) };
         }
 
-        var url = buildSegmentURL(segment);
+        const url = buildSegmentURL(segment);
         return req({ url, format: "arraybuffer", headers });
       }
     },
@@ -200,8 +199,8 @@ module.exports = function(options={}) {
         return Observable.of({ blob: response.blob, timings: null });
       }
 
-      var blob = new Uint8Array(response.blob);
-      var { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
+      const blob = new Uint8Array(response.blob);
+      const { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
 
       return Observable.of({
         blob: patchSegment(blob, currentSegment.ts),
@@ -211,14 +210,14 @@ module.exports = function(options={}) {
     },
   };
 
-  var textTrackPipeline = {
+  const textTrackPipeline = {
     loader({ segment }) {
       if (segment.isInitSegment()) {
         return empty();
       }
 
-      var { mimeType } = segment.getRepresentation();
-      var url = buildSegmentURL(segment);
+      const { mimeType } = segment.getRepresentation();
+      const url = buildSegmentURL(segment);
 
       if (mimeType.indexOf("mp4") >= 0) {
         // in case of TTML declared inside
@@ -231,15 +230,15 @@ module.exports = function(options={}) {
     },
 
     parser({ response, segment }) {
-      var { lang } = segment.getAdaptation();
-      var { mimeType, index } = segment.getRepresentation();
-      var parser_ = TT_PARSERS[mimeType];
+      const { lang } = segment.getAdaptation();
+      const { mimeType, index } = segment.getRepresentation();
+      const parser_ = TT_PARSERS[mimeType];
       if (!parser_) {
         throw new Error(`smooth: could not find a text-track parser for the type ${mimeType}`);
       }
 
-      var blob = response.blob;
-      var text;
+      let blob = response.blob;
+      let text;
       // in case of TTML declared inside playlists, the TTML file is
       // embededded inside an mp4 fragment.
       if (mimeType.indexOf("mp4") >= 0) {
@@ -250,7 +249,7 @@ module.exports = function(options={}) {
         text = blob;
       }
 
-      var { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
+      const { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
 
       return Observable.of({
         blob: parser_(text, lang, segment.getTime() / index.timescale),

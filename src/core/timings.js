@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-var { Observable, BehaviorSubject } = require("rxjs");
-var { BufferedRanges } = require("./ranges");
+const { Observable, BehaviorSubject } = require("rxjs");
+const { BufferedRanges } = require("./ranges");
 
 // time changes interval in milliseconds
-var TIMINGS_SAMPLING_INTERVAL = 1000;
+const TIMINGS_SAMPLING_INTERVAL = 1000;
 
 // time in seconds protecting live buffer to prevent ahead of time
 // buffering
-var LIVE_PROTECTION = 10;
+const LIVE_PROTECTION = 10;
 
 // stall gap in seconds
-var STALL_GAP = 0.5;
-var RESUME_GAP = 5;
+const STALL_GAP = 0.5;
+const RESUME_GAP = 5;
 
 // seek gap in seconds
-var SEEK_GAP = 2;
+const SEEK_GAP = 2;
 
 // waiting time differs between a "seeking" stall and
 // a buffering stall
@@ -62,14 +62,14 @@ function getEmptyTimings() {
 }
 
 function getTimings(video, name) {
-  var playback = video.playbackRate;
-  var duration = video.duration;
-  var ts = video.currentTime;
-  var readyState = video.readyState;
-  var buffered = new BufferedRanges(video.buffered);
-  var range = buffered.getRange(ts);
-  var gap = buffered.getGap(ts);
-  var stalled = null;
+  const playback = video.playbackRate;
+  const duration = video.duration;
+  const ts = video.currentTime;
+  const readyState = video.readyState;
+  const buffered = new BufferedRanges(video.buffered);
+  const range = buffered.getRange(ts);
+  const gap = buffered.getGap(ts);
+  const stalled = null;
   return {
     name,
     ts,
@@ -106,19 +106,19 @@ function getTimings(video, name) {
 function timingsSampler(video) {
 
   function scanTimingsSamples(prevTimings, timingEventType) {
-    var currentTimings = getTimings(video, timingEventType);
+    const currentTimings = getTimings(video, timingEventType);
 
-    var wasStalled = prevTimings.stalled;
-    var currentGap = currentTimings.gap;
+    const wasStalled = prevTimings.stalled;
+    const currentGap = currentTimings.gap;
 
-    var hasStalled = (
+    const hasStalled = (
       timingEventType != "loadedmetadata" &&
       !wasStalled &&
       !isEnding(currentGap, currentTimings.range, currentTimings.duration) &&
       (currentGap <= STALL_GAP || currentGap === Infinity)
     );
 
-    var stalled;
+    let stalled;
     if (hasStalled) {
       stalled = {
         name: currentTimings.name,
@@ -137,15 +137,15 @@ function timingsSampler(video) {
   }
 
   return Observable.create((obs) => {
-    var prevTimings = getTimings(video, "init");
+    let prevTimings = getTimings(video, "init");
 
     function emitSample(evt) {
-      var timingEventType = evt && evt.type || "timeupdate";
+      const timingEventType = evt && evt.type || "timeupdate";
       prevTimings = scanTimingsSamples(prevTimings, timingEventType);
       obs.next(prevTimings);
     }
 
-    var samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
+    const samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
 
     video.addEventListener("play", emitSample);
     video.addEventListener("progress", emitSample);
@@ -191,7 +191,7 @@ function fromWallClockTime(timeInMs, manifest) {
 }
 
 function normalizeWallClockTime(timeInMs, manifest) {
-  var {
+  const {
     suggestedPresentationDelay,
     presentationLiveGap,
     timeShiftBufferDepth,
@@ -200,9 +200,9 @@ function normalizeWallClockTime(timeInMs, manifest) {
   if (typeof timeInMs != "number")
     timeInMs = timeInMs.getTime();
 
-  var now = Date.now();
-  var max = now - (presentationLiveGap + suggestedPresentationDelay) * 1000;
-  var min = now - (timeShiftBufferDepth) * 1000;
+  const now = Date.now();
+  const max = now - (presentationLiveGap + suggestedPresentationDelay) * 1000;
+  const min = now - (timeShiftBufferDepth) * 1000;
   return Math.max(Math.min(timeInMs, max), min);
 }
 
@@ -210,12 +210,12 @@ function getLiveGap(ts, manifest) {
   if (!manifest.isLive)
     return Infinity;
 
-  var {
+  const {
     availabilityStartTime,
     presentationLiveGap,
   } = manifest;
 
-  var liveGap = (Date.now() / 1000 - ts);
+  const liveGap = (Date.now() / 1000 - ts);
   return (liveGap - (availabilityStartTime + presentationLiveGap + LIVE_PROTECTION));
 }
 

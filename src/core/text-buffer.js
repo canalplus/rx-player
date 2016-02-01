@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-var AbstractSourceBuffer = require("./sourcebuffer");
-var { addTextTrack, isVTTSupported } = require("./compat");
-var log = require("canal-js-utils/log");
+const AbstractSourceBuffer = require("./sourcebuffer");
+const { addTextTrack, isVTTSupported } = require("./compat");
+const log = require("canal-js-utils/log");
 
-var Cue = window.VTTCue || window.TextTrackCue;
+const Cue = window.VTTCue || window.TextTrackCue;
 
 class TextSourceBuffer extends AbstractSourceBuffer {
 
@@ -28,15 +28,15 @@ class TextSourceBuffer extends AbstractSourceBuffer {
     this.codec = codec;
     this.isVTT = /^text\/vtt/.test(codec);
 
-    var { track, trackElement } = addTextTrack(video);
+    const { track, trackElement } = addTextTrack(video);
     this.track = track;
     this.trackElement = trackElement;
   }
 
   createCuesFromArray(cues) {
-    var nativeCues = [];
-    for (var i = 0; i < cues.length; i++) {
-      var { start, end, text } = cues[i];
+    const nativeCues = [];
+    for (let i = 0; i < cues.length; i++) {
+      const { start, end, text } = cues[i];
       if (text) {
         nativeCues.push(new Cue(start, end, text));
       }
@@ -46,8 +46,8 @@ class TextSourceBuffer extends AbstractSourceBuffer {
 
   _append(cues) {
     if (this.isVTT && !isVTTSupported()) {
-      var blob = new Blob([cues], { type: "text/vtt" });
-      var url = URL.createObjectURL(blob);
+      const blob = new Blob([cues], { type: "text/vtt" });
+      const url = URL.createObjectURL(blob);
       if (this.trackElement) {
         this.trackElement.src = url;
         this.buffered.insert(0, Infinity);
@@ -56,15 +56,15 @@ class TextSourceBuffer extends AbstractSourceBuffer {
       }
     }
     else {
-      var newCues = this.createCuesFromArray(cues);
+      const newCues = this.createCuesFromArray(cues);
       if (newCues.length > 0) {
-        var firstCue = newCues[0];
-        var lastCue = newCues[newCues.length - 1];
+        const firstCue = newCues[0];
+        const lastCue = newCues[newCues.length - 1];
 
         // NOTE(compat): cleanup all current cues if the newly added
         // ones are in the past. this is supposed to fix an issue on
         // IE/Edge.
-        var currentCues = this.track.cues;
+        const currentCues = this.track.cues;
         if (currentCues.length > 0) {
           if (firstCue.startTime < currentCues[currentCues.length - 1].endTime) {
             this._remove(0, +Infinity);
@@ -78,11 +78,11 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   }
 
   _remove(from, to) {
-    var track = this.track;
-    var cues = track.cues;
-    for (var i = 0; i < cues.length; i++) {
-      var cue = cues[i];
-      var { startTime, endTime } = cue;
+    const track = this.track;
+    const cues = track.cues;
+    for (let i = 0; i < cues.length; i++) {
+      const cue = cues[i];
+      const { startTime, endTime } = cue;
       if (startTime >= from && startTime <= to && endTime <= to) {
         track.removeCue(cue);
       }
@@ -91,7 +91,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   }
 
   _abort() {
-    var { trackElement, video } = this;
+    const { trackElement, video } = this;
     if (trackElement && video && video.hasChildNodes(trackElement)) {
       video.removeChild(trackElement);
     }

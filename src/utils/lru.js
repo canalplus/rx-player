@@ -26,7 +26,7 @@ class LRUCache {
   }
 
   set(key, value) {
-    var entry = {
+    const entry = {
       key,
       value,
       newer: null,
@@ -53,7 +53,7 @@ class LRUCache {
   }
 
   shift() {
-    var entry = this.head;
+    const entry = this.head;
     if (entry) {
       if (this.head.newer) {
         this.head = this.head.newer;
@@ -69,7 +69,7 @@ class LRUCache {
   }
 
   get(key) {
-    var entry = this._keymap[key];
+    const entry = this._keymap[key];
     if (entry == null) {
       return;
     }

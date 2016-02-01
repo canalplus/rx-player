@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-var assert = require("canal-js-utils/assert");
-var HTML_ENTITIES = /&#([0-9]+);/g;
-var BR = /<br>/gi;
-var STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
-var PARAG = /\s*<p class=([^>]+)>(.*)/i;
-var START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
+const assert = require("canal-js-utils/assert");
+const HTML_ENTITIES = /&#([0-9]+);/g;
+const BR = /<br>/gi;
+const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
+const PARAG = /\s*<p class=([^>]+)>(.*)/i;
+const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
 // Really basic CSS parsers using regular-expressions.
 function rulesCss(str) {
-  var ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
-  var m, langs = {};
+  const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
+  const langs = {};
+  let m;
   while ((m = ruleRe.exec(str))) {
-    var name = m[1];
-    var lang = propCss(m[2], "lang");
+    const name = m[1];
+    const lang = propCss(m[2], "lang");
     if (name && lang) {
       langs[lang] = name;
     }
@@ -51,15 +52,15 @@ function decodeEntities(text) {
 // The specification being quite clunky, this parser
 // may not work for every sami input.
 function parseSami(smi, lang) {
-  var syncOp = /<sync[ >]/ig;
-  var syncCl = /<sync[ >]|<\/body>/ig;
+  const syncOp = /<sync[ >]/ig;
+  const syncCl = /<sync[ >]|<\/body>/ig;
 
-  var subs = [];
-  var [, css] = smi.match(STYLE);
-  var up, to = syncCl.exec(smi);
+  const subs = [];
+  const [, css] = smi.match(STYLE);
+  let up, to = syncCl.exec(smi);
 
-  var langs = rulesCss(css);
-  var klass = langs[lang];
+  const langs = rulesCss(css);
+  const klass = langs[lang];
 
   assert(klass, `sami: could not find lang ${lang} in CSS`);
 
@@ -70,12 +71,12 @@ function parseSami(smi, lang) {
     if (!up || !to || up.index >= to.index)
       throw new Error("parse error");
 
-    var str = smi.slice(up.index, to.index);
-    var tim = str.match(START);
+    const str = smi.slice(up.index, to.index);
+    const tim = str.match(START);
     if (!tim)
       throw new Error("parse error: sync time attribute");
 
-    var start = +tim[1];
+    const start = +tim[1];
     if (isNaN(start))
       throw new Error("parse error: sync time attribute NaN");
 
@@ -85,10 +86,10 @@ function parseSami(smi, lang) {
   return subs;
 
   function appendSub(subs, lines, start) {
-    var i = lines.length, m;
+    let i = lines.length, m;
     while(--i >= 0) {
       m = lines[i].match(PARAG); if (!m) continue;
-      var [, kl, txt] = m;
+      const [, kl, txt] = m;
 
       if (klass !== kl)
         continue;

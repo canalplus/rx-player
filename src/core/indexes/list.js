@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var { Segment } = require("../segment");
+const { Segment } = require("../segment");
 
 class List {
   constructor(adaptation, representation, index) {
@@ -28,23 +28,23 @@ class List {
   }
 
   checkRange(up) {
-    var { duration, list } = this.index;
-    var i = Math.floor(up / duration);
+    const { duration, list } = this.index;
+    const i = Math.floor(up / duration);
     return (i >= 0 && i < list.length);
   }
 
   createSegment(segmentIndex, time) {
-    var {
+    const {
       adaptation,
       representation,
     } = this;
 
-    var {
+    const {
       duration,
       list,
     } = this.index;
 
-    var segment = list[segmentIndex];
+    const segment = list[segmentIndex];
 
     return Segment.create(
       adaptation,     /* adaptation */
@@ -62,10 +62,10 @@ class List {
 
   getSegments(up, to) {
     // TODO(pierre): use startNumber
-    var { duration } = this.index;
-    var i = Math.floor(up / duration);
-    var l = Math.floor(to / duration);
-    var segments = [];
+    const { duration } = this.index;
+    const l = Math.floor(to / duration);
+    const segments = [];
+    let i = Math.floor(up / duration);
     while (i < l) {
       segments.push(this.createSegment(i, i * duration));
       i++;

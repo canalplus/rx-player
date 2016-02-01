@@ -1,7 +1,7 @@
-var EventEmitter = require("canal-js-utils/eventemitter");
-var { Observable, Scheduler } = require("rxjs");
-var { BufferedRanges } = require("./ranges");
-var assert = require("canal-js-utils/assert");
+const EventEmitter = require("canal-js-utils/eventemitter");
+const { Observable, Scheduler } = require("rxjs");
+const { BufferedRanges } = require("./ranges");
+const assert = require("canal-js-utils/assert");
 
 class AbstractSourceBuffer extends EventEmitter {
   constructor(codec) {

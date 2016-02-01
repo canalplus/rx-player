@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-var log = require("canal-js-utils/log");
-var defaults = require("lodash/object/defaults");
-var { Subscription, BehaviorSubject, Observable, Subject } = require("rxjs");
-var { combineLatest, defer } = Observable;
-var { on } = require("canal-js-utils/rx-ext");
-var EventEmitter = require("canal-js-utils/eventemitter");
-var debugPane = require("../utils/debug");
-var assert = require("canal-js-utils/assert");
+const log = require("canal-js-utils/log");
+const defaults = require("lodash/object/defaults");
+const { Subscription, BehaviorSubject, Observable, Subject } = require("rxjs");
+const { combineLatest, defer } = Observable;
+const { on } = require("canal-js-utils/rx-ext");
+const EventEmitter = require("canal-js-utils/eventemitter");
+const debugPane = require("../utils/debug");
+const assert = require("canal-js-utils/assert");
 
-var {
+const {
   HTMLVideoElement_,
   exitFullscreen,
   requestFullscreen,
@@ -31,7 +31,7 @@ var {
   onFullscreenChange,
 } = require("./compat");
 
-var {
+const {
   getEmptyTimings,
   timingsSampler,
   toWallClockTime,
@@ -39,26 +39,26 @@ var {
   getLiveGap,
 } = require("./timings");
 
-var { InitializationSegmentCache } = require("./cache");
-var { BufferedRanges } = require("./ranges");
-var { parseTimeFragment } = require("./time-fragment");
-var DeviceEvents = require("./device-events");
-var manifestHelpers = require("./manifest");
+const { InitializationSegmentCache } = require("./cache");
+const { BufferedRanges } = require("./ranges");
+const { parseTimeFragment } = require("./time-fragment");
+const DeviceEvents = require("./device-events");
+const manifestHelpers = require("./manifest");
 // TODO(pierre): separate transports from main build
-var Transports = require("../net");
-var PipeLines = require("./pipelines");
-var Adaptive = require("../adaptive");
-var Stream = require("./stream");
-var EME = require("./eme");
+const Transports = require("../net");
+const PipeLines = require("./pipelines");
+const Adaptive = require("../adaptive");
+const Stream = require("./stream");
+const EME = require("./eme");
 
-var PLAYER_STOPPED   = "STOPPED";
-var PLAYER_LOADED    = "LOADED";
-var PLAYER_LOADING   = "LOADING";
-var PLAYER_PLAYING   = "PLAYING";
-var PLAYER_PAUSED    = "PAUSED";
-var PLAYER_ENDED     = "ENDED";
-var PLAYER_BUFFERING = "BUFFERING";
-var PLAYER_SEEKING   = "SEEKING";
+const PLAYER_STOPPED   = "STOPPED";
+const PLAYER_LOADED    = "LOADED";
+const PLAYER_LOADING   = "LOADING";
+const PLAYER_PLAYING   = "PLAYING";
+const PLAYER_PAUSED    = "PAUSED";
+const PLAYER_ENDED     = "ENDED";
+const PLAYER_BUFFERING = "BUFFERING";
+const PLAYER_SEEKING   = "SEEKING";
 
 function noop() {}
 
@@ -79,8 +79,9 @@ function filterStreamByType(stream, type) {
 class Player extends EventEmitter {
 
   constructor(options) {
-    var {
-      videoElement,
+    let { videoElement } = options;
+
+    const {
       transport,
       transportOptions,
       defaultLanguage,
@@ -116,10 +117,10 @@ class Player extends EventEmitter {
     // multicaster forwarding all streams events
     this.stream = new Subject();
 
-    var { createPipelines, metrics } = PipeLines();
+    const { createPipelines, metrics } = PipeLines();
 
-    var timings = timingsSampler(videoElement);
-    var deviceEvents = DeviceEvents(videoElement);
+    const timings = timingsSampler(videoElement);
+    const deviceEvents = DeviceEvents(videoElement);
 
     this.createPipelines = createPipelines;
     this.metrics = metrics;
@@ -183,7 +184,7 @@ class Player extends EventEmitter {
   }
 
   __recordState(type, value) {
-    var prev = this.evts[type];
+    const prev = this.evts[type];
     if (prev !== value) {
       this.evts[type] = value;
       this.trigger(`${type}Change`, value);
@@ -191,17 +192,7 @@ class Player extends EventEmitter {
   }
 
   _parseOptions(opts) {
-    var {
-      transport,
-      transportOptions,
-      url,
-      manifests,
-      keySystems,
-      timeFragment,
-      subtitles,
-      autoPlay,
-      directFile,
-    } = defaults({ ...opts }, {
+    opts = defaults({ ...opts }, {
       transport: this.defaultTransport,
       transportOptions: {},
       keySystems: [],
@@ -211,13 +202,28 @@ class Player extends EventEmitter {
       directFile: false,
     });
 
+    let {
+      transport,
+      url,
+      keySystems,
+      timeFragment,
+      subtitles,
+      directFile,
+    } = opts;
+
+    const {
+      transportOptions,
+      manifests,
+      autoPlay,
+    } = opts;
+
     timeFragment = parseTimeFragment(timeFragment);
 
     // compatibility with old API authorizing to pass multiple
     // manifest url depending on the key system
     assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
     if (manifests) {
-      var firstManifest = manifests[0];
+      const firstManifest = manifests[0];
       url = firstManifest.url;
       subtitles = firstManifest.subtitles || [];
       keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
@@ -242,7 +248,7 @@ class Player extends EventEmitter {
     options = this._parseOptions(options);
     log.info("loadvideo", options);
 
-    var {
+    const {
       url,
       keySystems,
       subtitles,
@@ -256,13 +262,13 @@ class Player extends EventEmitter {
     this.frag = timeFragment;
     this.playing.next(autoPlay);
 
-    var pipelines = this.createPipelines(transport, {
+    const pipelines = this.createPipelines(transport, {
       audio: { cache: new InitializationSegmentCache() },
       video: { cache: new InitializationSegmentCache() },
     });
 
-    var { adaptive, timings, video } = this;
-    var stream;
+    const { adaptive, timings, video } = this;
+    let stream;
     try {
       stream = Stream({
         url,
@@ -283,18 +289,18 @@ class Player extends EventEmitter {
 
     stream = stream.publish();
 
-    var segments = filterStreamByType(stream, "buffer").map(({ segment }) => segment);
-    var manifests = filterStreamByType(stream, "manifest");
+    const segments = filterStreamByType(stream, "buffer").map(({ segment }) => segment);
+    const manifests = filterStreamByType(stream, "manifest");
 
-    var stalled = filterStreamByType(stream, "stalled").startWith(null);
-    var canPlay = filterStreamByType(stream, "loaded").filter(v => v === true);
+    const stalled = filterStreamByType(stream, "stalled").startWith(null);
+    const canPlay = filterStreamByType(stream, "loaded").filter(v => v === true);
 
-    var loaded;
+    let loaded;
 
     if (directFile) {
       loaded = canPlay;
     } else {
-      var adas = segments.map((s) => s.getAdaptation());
+      const adas = segments.map((s) => s.getAdaptation());
       loaded = combineLatest(
         canPlay,
         filterStreamByType(adas, "audio"),
@@ -303,7 +309,7 @@ class Player extends EventEmitter {
 
     loaded = loaded.take(1).share();
 
-    var stateChanges = loaded.mapTo(PLAYER_LOADED)
+    const stateChanges = loaded.mapTo(PLAYER_LOADED)
       .concat(combineLatest(this.playing, stalled,
         (isPlaying, isStalled) => {
           if (isStalled)
@@ -320,16 +326,16 @@ class Player extends EventEmitter {
       .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 
-    var subscriptions = this.subscriptions = new Subscription();
-    var subs = [
+    const subscriptions = this.subscriptions = new Subscription();
+    const subs = [
       on(video, ["play", "pause"])
         .subscribe(evt => this.playing.next(evt.type == "play")),
 
       each(segments, (segment) => {
-        var ada = segment.getAdaptation();
-        var rep = segment.getRepresentation();
+        const ada = segment.getAdaptation();
+        const rep = segment.getRepresentation();
 
-        var type = ada.type;
+        const type = ada.type;
         this.reps[type] = rep;
         this.adas[type] = ada;
 
@@ -453,7 +459,7 @@ class Player extends EventEmitter {
     if (!this.man)
       return 0;
 
-    var ct = this.video.currentTime;
+    const ct = this.video.currentTime;
     if (this.man.isLive) {
       return toWallClockTime(ct, this.man);
     } else {
@@ -498,12 +504,12 @@ class Player extends EventEmitter {
   }
 
   getAvailableVideoBitrates() {
-    var video = manifestHelpers.getAdaptationsByType(this.man, "video");
+    const video = manifestHelpers.getAdaptationsByType(this.man, "video");
     return (video[0] && video[0].bitrates) || [];
   }
 
   getAvailableAudioBitrates() {
-    var audio = this.adas.audio;
+    const audio = this.adas.audio;
     return (audio && audio.bitrates) || [];
   }
 
@@ -561,7 +567,7 @@ class Player extends EventEmitter {
 
   seekTo(time) {
     assert(this.man);
-    var currentTs = this.video.currentTime;
+    const currentTs = this.video.currentTime;
     if (this.man.isLive) time = fromWallClockTime(time, this.man);
     if (time !== currentTs) {
       log.info("seek to", time);
@@ -591,7 +597,7 @@ class Player extends EventEmitter {
   }
 
   unMute() {
-    var vol = this.getVolume();
+    const vol = this.getVolume();
     if (vol === 0) this.setVolume(this.muted);
   }
 

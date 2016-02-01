@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-var assert = require("canal-js-utils/assert");
+const assert = require("canal-js-utils/assert");
 
-var { getAdaptationsByType } = require("./manifest");
-var { InitSegment } = require("./segment");
-var Template = require("./indexes/template");
-var Timeline = require("./indexes/timeline");
-var List = require("./indexes/list");
-var Base = require("./indexes/base");
+const { getAdaptationsByType } = require("./manifest");
+const { InitSegment } = require("./segment");
+const Template = require("./indexes/template");
+const Timeline = require("./indexes/timeline");
+const List = require("./indexes/list");
+const Base = require("./indexes/base");
 
 function OutOfIndexError(type) {
   this.name = "OutOfIndexError";
@@ -43,8 +43,8 @@ function selectIndexHandler(index) {
 
 function getLiveEdge(manifest) {
   // TODO(pierre): improve index access ?
-  var videoAda = getAdaptationsByType(manifest, "video");
-  var videoIdx = videoAda[0].representations[0].index;
+  const videoAda = getAdaptationsByType(manifest, "video");
+  const videoIdx = videoAda[0].representations[0].index;
   return selectIndexHandler(videoIdx).getLiveEdge(videoIdx, manifest);
 }
 
@@ -59,7 +59,7 @@ class IndexHandler {
   }
 
   getInitSegment() {
-    var initialization = this.index.initialization || {};
+    const initialization = this.index.initialization || {};
     return new InitSegment(
       this.adaptation,
       this.representation,
@@ -70,8 +70,8 @@ class IndexHandler {
   }
 
   normalizeRange(ts, offset, bufSize) {
-    var presentationOffset = this.index.presentationTimeOffset || 0;
-    var timescale = this.index.timescale || 1;
+    const presentationOffset = this.index.presentationTimeOffset || 0;
+    const timescale = this.index.timescale || 1;
 
     if (!offset)  offset  = 0;
     if (!bufSize) bufSize = 0;
@@ -86,7 +86,7 @@ class IndexHandler {
   }
 
   getSegments(ts, offset, bufSize) {
-    var { time, up, to } = this.normalizeRange(ts, offset, bufSize);
+    const { time, up, to } = this.normalizeRange(ts, offset, bufSize);
     if (!this.handler.checkRange(time)) {
       throw new OutOfIndexError(this.index.indexType);
     }
@@ -95,8 +95,8 @@ class IndexHandler {
   }
 
   insertNewSegments(nextSegments, currentSegment) {
-    var addedSegments = [];
-    for (var i = 0; i < nextSegments.length; i++) {
+    const addedSegments = [];
+    for (let i = 0; i < nextSegments.length; i++) {
       if (this.handler.addSegment(nextSegments[i], currentSegment)) {
         addedSegments.push(nextSegments[i]);
       }
@@ -105,7 +105,7 @@ class IndexHandler {
   }
 
   setTimescale(timescale) {
-    var { index } = this;
+    const { index } = this;
 
     if (__DEV__) {
       assert(typeof timescale == "number");

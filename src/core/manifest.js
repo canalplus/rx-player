@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-var log = require("canal-js-utils/log");
-var assert = require("canal-js-utils/assert");
-var defaults = require("lodash/object/defaults");
-var flatten = require("lodash/array/flatten");
-var { parseBaseURL } = require("canal-js-utils/url");
-var { isCodecSupported } = require("./compat");
+const log = require("canal-js-utils/log");
+const assert = require("canal-js-utils/assert");
+const defaults = require("lodash/object/defaults");
+const flatten = require("lodash/array/flatten");
+const { parseBaseURL } = require("canal-js-utils/url");
+const { isCodecSupported } = require("./compat");
 
-var representationBaseType = [
+const representationBaseType = [
   "profiles",
   "width",
   "height",
@@ -36,9 +36,9 @@ var representationBaseType = [
   "index",
 ];
 
-var uniqueId = 0;
-var SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text"];
-var DEFAULT_PRESENTATION_DELAY = 15;
+let uniqueId = 0;
+const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text"];
+const DEFAULT_PRESENTATION_DELAY = 15;
 
 function parseType(mimeType) {
   return mimeType.split("/")[0];
@@ -50,7 +50,7 @@ function normalizeManifest(location, manifest, subtitles) {
   manifest.id = manifest.id || uniqueId++;
   manifest.type = manifest.type || "static";
 
-  var locations = manifest.locations;
+  const locations = manifest.locations;
   if (!locations || !locations.length) {
     manifest.locations = [location];
   }
@@ -58,7 +58,7 @@ function normalizeManifest(location, manifest, subtitles) {
   manifest.isLive = manifest.type == "dynamic";
 
   // TODO(pierre): support multi-locations/cdns
-  var urlBase = {
+  const urlBase = {
     rootURL: parseBaseURL(manifest.locations[0]),
     baseURL: manifest.baseURL,
     isLive: manifest.isLive,
@@ -68,7 +68,7 @@ function normalizeManifest(location, manifest, subtitles) {
     subtitles = normalizeSubtitles(subtitles);
   }
 
-  var periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles));
+  const periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles));
 
   // TODO(pierre): support multiple periods
   manifest = { ...manifest, ...periods[0] };
@@ -88,7 +88,7 @@ function normalizeManifest(location, manifest, subtitles) {
 function normalizePeriod(period, inherit, subtitles) {
   period.id = period.id || uniqueId++;
 
-  var adaptations = period.adaptations;
+  let adaptations = period.adaptations;
   adaptations = adaptations.concat(subtitles || []);
   adaptations = adaptations.map((ada) => normalizeAdaptation(ada, inherit));
   adaptations = adaptations.filter((adaptation) => {
@@ -102,10 +102,10 @@ function normalizePeriod(period, inherit, subtitles) {
 
   assert(adaptations.length > 0);
 
-  var adaptationsByType = {};
-  for (var i = 0; i < adaptations.length; i++) {
-    var adaptation = adaptations[i];
-    var adaptationType = adaptation.type;
+  const adaptationsByType = {};
+  for (let i = 0; i < adaptations.length; i++) {
+    const adaptation = adaptations[i];
+    const adaptationType = adaptation.type;
     adaptationsByType[adaptationType] = adaptationsByType[adaptationType] || [];
     adaptationsByType[adaptationType].push(adaptation);
   }
@@ -118,19 +118,19 @@ function normalizeAdaptation(adaptation, inherit) {
   assert(typeof adaptation.id != "undefined");
   defaults(adaptation, inherit);
 
-  var inheritedFromAdaptation = {};
+  const inheritedFromAdaptation = {};
   representationBaseType.forEach((baseType) => {
     if (baseType in adaptation) {
       inheritedFromAdaptation[baseType] = adaptation[baseType];
     }
   });
 
-  var representations = adaptation.representations.map(
+  let representations = adaptation.representations.map(
     (rep) => normalizeRepresentation(rep, inheritedFromAdaptation)
   )
     .sort((a, b) => a.bitrate - b.bitrate);
 
-  var { type, mimeType } = adaptation;
+  let { type, mimeType } = adaptation;
   if (!mimeType)
     mimeType = representations[0].mimeType;
 
@@ -155,7 +155,7 @@ function normalizeRepresentation(representation, inherit) {
   assert(typeof representation.id != "undefined");
   defaults(representation, inherit);
 
-  var index = representation.index;
+  const index = representation.index;
   assert(index);
 
   if (!index.timescale) {
@@ -207,13 +207,13 @@ function normalizeSubtitles(subtitles) {
 }
 
 function simpleMerge(source, dist) {
-  for (var attr in source) {
+  for (const attr in source) {
     if (!dist.hasOwnProperty(attr)) {
       continue;
     }
 
-    var src = source[attr];
-    var dst = dist[attr];
+    const src = source[attr];
+    const dst = dist[attr];
 
     if (typeof src == "string" ||
         typeof src == "number" ||
@@ -233,11 +233,11 @@ function simpleMerge(source, dist) {
 }
 
 function mergeManifestsIndex(oldManifest, newManifest) {
-  var oldAdaptations = oldManifest.adaptations;
-  var newAdaptations = newManifest.adaptations;
-  for (var type in oldAdaptations) {
-    var oldAdas = oldAdaptations[type];
-    var newAdas = newAdaptations[type];
+  const oldAdaptations = oldManifest.adaptations;
+  const newAdaptations = newManifest.adaptations;
+  for (const type in oldAdaptations) {
+    const oldAdas = oldAdaptations[type];
+    const newAdas = newAdaptations[type];
     oldAdas.forEach((a, i) => {
       simpleMerge(a.index, newAdas[i].index);
     });
@@ -252,19 +252,19 @@ function mutateManifestLiveGap(manifest, addedTime=1) {
 }
 
 function getCodec(representation) {
-  var { codecs, mimeType } = representation;
+  const { codecs, mimeType } = representation;
   return `${mimeType};codecs="${codecs}"`;
 }
 
 function getAdaptations(manifest) {
-  var adaptationsByType = manifest.adaptations;
+  const adaptationsByType = manifest.adaptations;
   if (!adaptationsByType) {
     return [];
   }
 
-  var adaptationsList = [];
-  for (var type in adaptationsByType) {
-    var adaptations = adaptationsByType[type];
+  const adaptationsList = [];
+  for (const type in adaptationsByType) {
+    const adaptations = adaptationsByType[type];
     adaptationsList.push({
       type: type,
       adaptations: adaptations,
@@ -276,8 +276,8 @@ function getAdaptations(manifest) {
 }
 
 function getAdaptationsByType(manifest, type) {
-  var { adaptations } = manifest;
-  var adaptationsForType = adaptations && adaptations[type];
+  const { adaptations } = manifest;
+  const adaptationsForType = adaptations && adaptations[type];
   if (adaptationsForType) {
     return adaptationsForType;
   } else {

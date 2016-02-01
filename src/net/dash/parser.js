@@ -17,28 +17,28 @@
 // XML-Schema
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
-var assert = require("canal-js-utils/assert");
-var find = require("lodash/collection/find");
-var defaults = require("lodash/object/defaults");
+const assert = require("canal-js-utils/assert");
+const find = require("lodash/collection/find");
+const defaults = require("lodash/object/defaults");
 
-var iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
-var rangeRe = /([0-9]+)-([0-9]+)/;
-var frameRateRe = /([0-9]+)(\/([0-9]+))?/;
+const iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
+const rangeRe = /([0-9]+)-([0-9]+)/;
+const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 
 // TODO(pierre): support more than juste timeline index type
 function calcLastRef(index) {
-  var { ts, r, d } = index.timeline[index.timeline.length - 1];
+  const { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r+1)*d) / index.timescale);
 }
 
 function feedAttributes(node, base) {
-  var attrs = attributes[node.nodeName];
+  const attrs = attributes[node.nodeName];
 
   assert(attrs, "parser: no attributes for " + node.nodeName);
 
-  var obj = base || {};
-  for (var i = 0; i < attrs.length; i++) {
-    var { k, fn, n, def } = attrs[i];
+  const obj = base || {};
+  for (let i = 0; i < attrs.length; i++) {
+    const { k, fn, n, def } = attrs[i];
     if (node.hasAttribute(k)) {
       obj[n || k] = fn(node.getAttribute(k));
     } else if (def != null) {
@@ -69,7 +69,7 @@ function parseDateTime(str) {
 function parseDuration(date) {
   if (!date) return 0;
 
-  var match = iso8601Duration.exec(date);
+  const match = iso8601Duration.exec(date);
   assert(match, `parser: ${date} is not a valid ISO8601 duration`);
 
   return (
@@ -83,11 +83,11 @@ function parseDuration(date) {
 }
 
 function parseFrameRate(str) {
-  var match = frameRateRe.exec(str);
+  const match = frameRateRe.exec(str);
   if (!match) return -1;
 
-  var nom = parseInt(match[1]) || 0;
-  var den = parseInt(match[2]) || 0;
+  const nom = parseInt(match[1]) || 0;
+  const den = parseInt(match[2]) || 0;
   return den > 0
     ? nom / den
     : nom;
@@ -98,14 +98,14 @@ function parseRatio(str) {
 }
 
 function parseByteRange(str) {
-  var match = rangeRe.exec(str);
+  const match = rangeRe.exec(str);
   if (!match)
     return null;
   else
     return [+match[1], +match[2]];
 }
 
-var RepresentationBaseType = [
+const RepresentationBaseType = [
   { k: "profiles",          fn: parseString },
   { k: "width",             fn: parseInt },
   { k: "height",            fn: parseInt },
@@ -119,7 +119,7 @@ var RepresentationBaseType = [
   { k: "codingDependency",  fn: parseBoolean },
 ];
 
-var SegmentBaseType = [
+const SegmentBaseType = [
   { k: "timescale",                fn: parseInt },
   { k: "presentationTimeOffset",   fn: parseFloat, def: 0 },
   { k: "indexRange",               fn: parseByteRange },
@@ -128,12 +128,12 @@ var SegmentBaseType = [
   { k: "availabilityTimeComplete", fn: parseBoolean },
 ];
 
-var MultipleSegmentBaseType = SegmentBaseType.concat([
+const MultipleSegmentBaseType = SegmentBaseType.concat([
   { k: "duration",    fn: parseInt },
   { k: "startNumber", fn: parseInt },
 ]);
 
-var attributes = {
+const attributes = {
   "ContentProtection": [
     { k: "schemeIdUri", fn: parseString },
     { k: "value", fn: parseString },
@@ -219,7 +219,7 @@ var attributes = {
 };
 
 function reduceChildren(root, fn, init) {
-  var node = root.firstElementChild, r = init;
+  let node = root.firstElementChild, r = init;
   while (node) {
     r = fn(r, node.nodeName, node);
     node = node.nextElementSibling;
@@ -232,7 +232,7 @@ function parseContentProtection(root, contentProtectionParser) {
 }
 
 function parseSegmentBase(root) {
-  var index = reduceChildren(root, (res, name, node) => {
+  const index = reduceChildren(root, (res, name, node) => {
     if (name == "Initialization") {
       res.initialization = parseInitialization(node);
     }
@@ -257,10 +257,10 @@ function parseMultipleSegmentBase(root) {
 
 function parseSegmentTimeline(root) {
   return reduceChildren(root, (arr, name, node) => {
-    var len = arr.length;
-    var seg = feedAttributes(node);
+    const len = arr.length;
+    const seg = feedAttributes(node);
     if (seg.ts == null) {
-      var prev = (len > 0) && arr[len - 1];
+      const prev = (len > 0) && arr[len - 1];
       seg.ts = prev
         ? prev.ts + prev.d * (prev.r + 1)
         : 0;
@@ -278,7 +278,7 @@ function parseInitializationAttribute(attrValue) {
 }
 
 function parseInitialization(root) {
-  var range, media;
+  let range, media;
 
   if (root.hasAttribute("range"))
     range = parseByteRange(root.getAttribute("range"));
@@ -290,7 +290,7 @@ function parseInitialization(root) {
 }
 
 function parseSegmentTemplate(root) {
-  var base = parseMultipleSegmentBase(root);
+  const base = parseMultipleSegmentBase(root);
   if (!base.indexType) {
     base.indexType = "template";
   }
@@ -298,7 +298,7 @@ function parseSegmentTemplate(root) {
 }
 
 function parseSegmentList(root) {
-  var base = parseMultipleSegmentBase(root);
+  const base = parseMultipleSegmentBase(root);
   base.list = [];
   base.indexType = "list";
   return reduceChildren(root, (res, name, node) => {
@@ -310,7 +310,7 @@ function parseSegmentList(root) {
 }
 
 function parseRepresentation(root) {
-  var rep = reduceChildren(root, (res, name, node) => {
+  const rep = reduceChildren(root, (res, name, node) => {
     switch(name) {
      // case "FramePacking": break;
      // case "AudioChannelConfiguration": break;
@@ -335,7 +335,7 @@ function parseContentComponent(root) {
 }
 
 function parseAdaptationSet(root, contentProtectionParser) {
-  var res = reduceChildren(root, (res, name, node) => {
+  const res = reduceChildren(root, (res, name, node) => {
     switch(name) {
     // case "Accessibility": break;
     // case "Role": break;
@@ -348,7 +348,7 @@ function parseAdaptationSet(root, contentProtectionParser) {
     case "SegmentList": res.index = parseSegmentList(node); break;
     case "SegmentTemplate": res.index = parseSegmentTemplate(node); break;
     case "Representation":
-      var rep = parseRepresentation(node);
+      const rep = parseRepresentation(node);
       if (rep.id == null) {
         rep.id = res.representations.length;
       }
@@ -361,11 +361,11 @@ function parseAdaptationSet(root, contentProtectionParser) {
 }
 
 function parsePeriod(root, contentProtectionParser) {
-  var attrs = feedAttributes(root, reduceChildren(root, (res, name, node) => {
+  const attrs = feedAttributes(root, reduceChildren(root, (res, name, node) => {
     switch(name) {
     case "BaseURL": res.baseURL = node.textContent; break;
     case "AdaptationSet":
-      var ada = parseAdaptationSet(node, contentProtectionParser);
+      const ada = parseAdaptationSet(node, contentProtectionParser);
       if (ada.id == null) {
         ada.id = res.adaptations.length;
       }
@@ -383,10 +383,10 @@ function parsePeriod(root, contentProtectionParser) {
 }
 
 function parseFromDocument(document, contentProtectionParser) {
-  var root = document.documentElement;
+  const root = document.documentElement;
   assert.equal(root.nodeName, "MPD", "parser: document root should be MPD");
 
-  var manifest = reduceChildren(root, (res, name, node) => {
+  let manifest = reduceChildren(root, (res, name, node) => {
     switch(name) {
     case "BaseURL": res.baseURL = node.textContent; break;
     case "Location": res.locations.push(node.textContent); break;
@@ -402,17 +402,17 @@ function parseFromDocument(document, contentProtectionParser) {
   manifest = feedAttributes(root, manifest);
 
   if (/isoff-live/.test(manifest.profiles)) {
-    var adaptations = manifest.periods[0].adaptations;
-    var videoAdaptation = find(adaptations, a => a.mimeType == "video/mp4");
+    const adaptations = manifest.periods[0].adaptations;
+    const videoAdaptation = find(adaptations, a => a.mimeType == "video/mp4");
 
-    var videoIndex = videoAdaptation && videoAdaptation.index;
+    const videoIndex = videoAdaptation && videoAdaptation.index;
 
     if (__DEV__) {
       assert(videoIndex && (videoIndex.indexType == "timeline" || videoIndex.indexType == "template"));
       assert(manifest.availabilityStartTime);
     }
 
-    var lastRef;
+    let lastRef;
     if (videoIndex.timeline) {
       lastRef = calcLastRef(videoIndex);
     }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-var assert = require("canal-js-utils/assert");
-var {
+const assert = require("canal-js-utils/assert");
+const {
   concat,
   strToBytes, bytesToStr,
   hexToBytes, bytesToHex,
@@ -24,15 +24,15 @@ var {
   be8toi, itobe8,
 } = require("canal-js-utils/bytes");
 
-var FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+const FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
 
-var boxNamesMem = {};
+const boxNamesMem = {};
 function boxName(str) {
   if (boxNamesMem[str]) {
     return boxNamesMem[str];
   }
 
-  var nameInBytes = strToBytes(str);
+  const nameInBytes = strToBytes(str);
   boxNamesMem[str] = nameInBytes;
   return nameInBytes;
 }
@@ -41,12 +41,13 @@ function Atom(name, buff) {
   if (__DEV__)
     assert(name.length === 4);
 
-  var len = buff.length + 8;
+  const len = buff.length + 8;
   return concat(itobe4(len), boxName(name), buff);
 }
 
 function readUuid(buf, id1, id2, id3, id4) {
-  var i = 0, l = buf.length, len;
+  const l = buf.length;
+  let i = 0, len;
   while (i < l) {
     len = be4toi(buf, i);
     if (
@@ -61,9 +62,10 @@ function readUuid(buf, id1, id2, id3, id4) {
 }
 
 function findAtom(buf, atomName) {
-  var i = 0, l = buf.length;
+  const l = buf.length;
+  let i = 0;
 
-  var name, size;
+  let name, size;
   while (i + 8 < l) {
     size = be4toi(buf, i);
     name = be4toi(buf, i + 4);
@@ -82,7 +84,7 @@ function findAtom(buf, atomName) {
   }
 }
 
-var atoms = {
+const atoms = {
 
   mult(name, children) {
     return Atom(name, concat.apply(null, children));
@@ -126,14 +128,14 @@ var atoms = {
    * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0", 1, "68ef3880")
    */
   avcc(sps, pps, nalLen) {
-    var nal = (nalLen === 2) ?
+    const nal = (nalLen === 2) ?
         0x1 : (nalLen === 4) ?
         0x3 : 0x0;
 
     // Deduce AVC Profile from SPS
-    var h264Profile = sps[1];
-    var h264CompatibleProfile = sps[2];
-    var h264Level = sps[3];
+    const h264Profile = sps[1];
+    const h264CompatibleProfile = sps[2];
+    const h264Level = sps[3];
 
     return Atom("avcC", concat(
       [1, h264Profile, h264CompatibleProfile, h264Level, (0x3F << 2 | nal), (0xE0 | 1)],
@@ -249,9 +251,9 @@ var atoms = {
 
     assert(systemId.length === 32, "wrong system id length");
 
-    var version;
-    var kidList;
-    var kidCount = keyIds.length;
+    let version;
+    let kidList;
+    const kidCount = keyIds.length;
     if (kidCount > 0) {
       version = 1;
       kidList = concat.apply(null, [itobe4(kidCount)].concat(keyIds));
@@ -285,16 +287,16 @@ var atoms = {
       return Atom("saiz", new Uint8Array());
     }
 
-    var flags   = be4toi(senc, 0);
-    var entries = be4toi(senc, 4);
+    const flags   = be4toi(senc, 0);
+    const entries = be4toi(senc, 4);
 
-    var arr = new Uint8Array(9 + entries);
+    const arr = new Uint8Array(9 + entries);
     arr.set(itobe4(entries), 5);
 
-    var i = 9;
-    var j = 8;
-    var pairsCnt;
-    var pairsLen;
+    let i = 9;
+    let j = 8;
+    let pairsCnt;
+    let pairsLen;
     while (j < senc.length) {
       j += 8; // assuming IV is 8 bytes TODO handle 16 bytes IV
               // if we have extradata for each entry
@@ -388,7 +390,7 @@ var atoms = {
   },
 
   traf(tfhd, tfdt, trun, senc, mfhd) {
-    var trafs = [tfhd, tfdt, trun];
+    const trafs = [tfhd, tfdt, trun];
     if (senc) {
       trafs.push(
         atoms.senc(senc),
@@ -400,15 +402,15 @@ var atoms = {
   },
 
   vmhd() {
-    var arr = new Uint8Array(12);
+    const arr = new Uint8Array(12);
     arr[3] = 1; // QuickTime...
     return Atom("vmhd", arr);
   },
 };
 
-var reads = {
+const reads = {
   traf(buff) {
-    var moof = findAtom(buff, 0x6D6F6F66);
+    const moof = findAtom(buff, 0x6D6F6F66);
     if (moof)
       return findAtom(moof, 0x74726166);
     else
@@ -455,10 +457,10 @@ var reads = {
  * {Number} chans (1 or 2)
  */
 function aacesHeader(type, frequency, chans) {
-  var freq = FREQS.indexOf(frequency);
+  const freq = FREQS.indexOf(frequency);
   if (__DEV__)
     assert(freq >= 0, "non supported frequency"); // TODO : handle Idx = 15...
-  var val;
+  let val;
   val = (type & 0x3F) << 0x4;
   val = (val | (freq  & 0x1F)) << 0x4;
   val = (val | (chans & 0x1F)) << 0x3;
@@ -466,9 +468,9 @@ function aacesHeader(type, frequency, chans) {
 }
 
 function moovChildren(mvhd, mvex, trak, pssList) {
-  var moov = [mvhd, mvex, trak];
+  const moov = [mvhd, mvex, trak];
   pssList.forEach((pss) => {
-    var pssh = atoms.pssh(pss.systemId, pss.privateData, pss.keyIds);
+    const pssh = atoms.pssh(pss.systemId, pss.privateData, pss.keyIds);
     moov.push(pssh);
   });
   return moov;
@@ -480,11 +482,11 @@ function patchTrunDataOffset(segment, trunoffset, dataOffset) {
 }
 
 function createNewSegment(segment, newmoof, oldmoof, trunoffset) {
-  var segmentlen = segment.length;
-  var newmooflen = newmoof.length;
-  var oldmooflen = oldmoof.length;
-  var mdat = segment.subarray(oldmooflen, segmentlen);
-  var newSegment = new Uint8Array(newmooflen + (segmentlen - oldmooflen));
+  const segmentlen = segment.length;
+  const newmooflen = newmoof.length;
+  const oldmooflen = oldmoof.length;
+  const mdat = segment.subarray(oldmooflen, segmentlen);
+  const newSegment = new Uint8Array(newmooflen + (segmentlen - oldmooflen));
   newSegment.set(newmoof, 0);
   newSegment.set(mdat, newmooflen);
   patchTrunDataOffset(newSegment, trunoffset, newmoof.length + 8);
@@ -493,7 +495,7 @@ function createNewSegment(segment, newmoof, oldmoof, trunoffset) {
 
 /*
 function patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) {
-  var free = oldmoof.length - newmoof.length;
+  let free = oldmoof.length - newmoof.length;
   segment.set(newmoof, 0);
   segment.set(atoms.free(free), newmoof.length);
   patchTrunDataOffset(segment, trunoffset, newmoof.length + 8 + free);
@@ -511,7 +513,7 @@ function createInitSegment(
   pssList
 ) {
 
-  var stbl = atoms.mult("stbl", [
+  const stbl = atoms.mult("stbl", [
     stsd,
     Atom("stts", new Uint8Array(0x08)),
     Atom("stsc", new Uint8Array(0x08)),
@@ -519,21 +521,21 @@ function createInitSegment(
     Atom("stco", new Uint8Array(0x08)),
   ]);
 
-  var url  = Atom("url ", new Uint8Array([0, 0, 0, 1]));
-  var dref = atoms.dref(url);
-  var dinf = atoms.mult("dinf", [dref]);
-  var minf = atoms.mult("minf", [mhd, dinf, stbl]);
-  var hdlr = atoms.hdlr(type);
-  var mdhd = atoms.mdhd(timescale); //this one is really important
-  var mdia = atoms.mult("mdia", [mdhd, hdlr, minf]);
-  var tkhd = atoms.tkhd(width, height, 1);
-  var trak = atoms.mult("trak", [tkhd, mdia]);
-  var trex = atoms.trex(1);
-  var mvex = atoms.mult("mvex", [trex]);
-  var mvhd = atoms.mvhd(timescale, 1); // in fact, we don"t give a shit about this value ;)
+  const url  = Atom("url ", new Uint8Array([0, 0, 0, 1]));
+  const dref = atoms.dref(url);
+  const dinf = atoms.mult("dinf", [dref]);
+  const minf = atoms.mult("minf", [mhd, dinf, stbl]);
+  const hdlr = atoms.hdlr(type);
+  const mdhd = atoms.mdhd(timescale); //this one is really important
+  const mdia = atoms.mult("mdia", [mdhd, hdlr, minf]);
+  const tkhd = atoms.tkhd(width, height, 1);
+  const trak = atoms.mult("trak", [tkhd, mdia]);
+  const trex = atoms.trex(1);
+  const mvex = atoms.mult("mvex", [trex]);
+  const mvhd = atoms.mvhd(timescale, 1); // in fact, we don"t give a shit about this value ;)
 
-  var moov = atoms.mult("moov", moovChildren(mvhd, mvex, trak, pssList));
-  var ftyp = atoms.ftyp("isom", ["isom", "iso2", "iso6", "avc1", "dash"]);
+  const moov = atoms.mult("moov", moovChildren(mvhd, mvex, trak, pssList));
+  const ftyp = atoms.ftyp("isom", ["isom", "iso2", "iso6", "avc1", "dash"]);
 
   return concat(ftyp, moov);
 }
@@ -543,15 +545,15 @@ module.exports = {
   getTraf: reads.traf,
 
   parseTfrf(traf) {
-    var tfrf = reads.tfrf(traf);
+    const tfrf = reads.tfrf(traf);
     if (!tfrf)
       return [];
 
-    var frags = [];
-    var version = tfrf[0];
-    var fragCount = tfrf[4];
-    for (var i = 0; i < fragCount; i++) {
-      var d, ts;
+    const frags = [];
+    const version = tfrf[0];
+    const fragCount = tfrf[4];
+    for (let i = 0; i < fragCount; i++) {
+      let d, ts;
       if (version == 1) {
         ts = be8toi(tfrf, 16 * i + 5);
         d  = be8toi(tfrf, 16 * i + 5 + 8);
@@ -565,7 +567,7 @@ module.exports = {
   },
 
   parseTfxd(traf) {
-    var tfxd = reads.tfxd(traf);
+    const tfxd = reads.tfxd(traf);
     if (tfxd) {
       return {
         d:  be8toi(tfxd, 12),
@@ -603,24 +605,24 @@ module.exports = {
   ) {
 
     if (!pssList) pssList = [];
-    var [, spsHex, ppsHex] = codecPrivateData.split("00000001");
-    var sps = hexToBytes(spsHex);
-    var pps = hexToBytes(ppsHex);
+    const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
+    const sps = hexToBytes(spsHex);
+    const pps = hexToBytes(ppsHex);
 
     // TODO NAL length is forced to 4
-    var avcc = atoms.avcc(sps, pps, nalLength);
-    var stsd;
+    const avcc = atoms.avcc(sps, pps, nalLength);
+    let stsd;
     if (!pssList.length) {
-      var avc1 = atoms.avc1encv("avc1", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc);
+      const avc1 = atoms.avc1encv("avc1", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc);
       stsd = atoms.stsd([avc1]);
     }
     else {
-      var tenc = atoms.tenc(1, 8, keyId);
-      var schi = atoms.mult("schi", [tenc]);
-      var schm = atoms.schm("cenc", 65536);
-      var frma = atoms.frma("avc1");
-      var sinf = atoms.mult("sinf", [frma, schm, schi]);
-      var encv = atoms.avc1encv("encv", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc, sinf);
+      const tenc = atoms.tenc(1, 8, keyId);
+      const schi = atoms.mult("schi", [tenc]);
+      const schm = atoms.schm("cenc", 65536);
+      const frma = atoms.frma("avc1");
+      const sinf = atoms.mult("sinf", [frma, schm, schi]);
+      const encv = atoms.avc1encv("encv", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc, sinf);
       stsd = atoms.stsd([encv]);
     }
 
@@ -654,19 +656,19 @@ module.exports = {
     if (!pssList) pssList = [];
     if (!codecPrivateData) codecPrivateData = aacesHeader(2, sampleRate, channelsCount);
 
-    var esds = atoms.esds(1, codecPrivateData);
-    var stsd;
+    const esds = atoms.esds(1, codecPrivateData);
+    let stsd;
     if (!pssList.length) {
-      var mp4a = atoms.mp4aenca("mp4a", 1, channelsCount, sampleSize, packetSize, sampleRate, esds);
+      const mp4a = atoms.mp4aenca("mp4a", 1, channelsCount, sampleSize, packetSize, sampleRate, esds);
       stsd = atoms.stsd([mp4a]);
     }
     else {
-      var tenc = atoms.tenc(1, 8, keyId);
-      var schi = atoms.mult("schi", [tenc]);
-      var schm = atoms.schm("cenc", 65536);
-      var frma = atoms.frma("mp4a");
-      var sinf = atoms.mult("sinf", [frma, schm, schi]);
-      var enca = atoms.mp4aenca("enca", 1, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf);
+      const tenc = atoms.tenc(1, 8, keyId);
+      const schi = atoms.mult("schi", [tenc]);
+      const schm = atoms.schm("cenc", 65536);
+      const frma = atoms.frma("mp4a");
+      const sinf = atoms.mult("sinf", [frma, schm, schi]);
+      const enca = atoms.mp4aenca("enca", 1, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf);
       stsd = atoms.stsd([enca]);
     }
 
@@ -676,34 +678,34 @@ module.exports = {
   patchSegment(segment, decodeTime) {
     if (__DEV__) {
       // TODO handle segments with styp/free...
-      var name = bytesToStr(segment.subarray(4, 8));
+      const name = bytesToStr(segment.subarray(4, 8));
       assert(name === "moof");
     }
 
-    var oldmoof = segment.subarray(0, be4toi(segment, 0));
-    var newtfdt = atoms.tfdt(decodeTime);
+    const oldmoof = segment.subarray(0, be4toi(segment, 0));
+    const newtfdt = atoms.tfdt(decodeTime);
 
     // reads [moof[mfhd|traf[tfhd|trun|..]]]
-    var tfdtlen = newtfdt.length;
-    var mfhdlen = be4toi(oldmoof, 8);
-    var traflen = be4toi(oldmoof, 8 + mfhdlen);
-    var tfhdlen = be4toi(oldmoof, 8 + mfhdlen + 8);
-    var trunlen = be4toi(oldmoof, 8 + mfhdlen + 8 + tfhdlen);
-    var oldmfhd = oldmoof.subarray(8, 8 + mfhdlen);
-    var oldtraf = oldmoof.subarray(8 + mfhdlen + 8, 8 + mfhdlen + 8 + traflen - 8);
-    var oldtfhd = oldtraf.subarray(0, tfhdlen);
-    var oldtrun = oldtraf.subarray(tfhdlen, tfhdlen + trunlen);
+    const tfdtlen = newtfdt.length;
+    const mfhdlen = be4toi(oldmoof, 8);
+    const traflen = be4toi(oldmoof, 8 + mfhdlen);
+    const tfhdlen = be4toi(oldmoof, 8 + mfhdlen + 8);
+    const trunlen = be4toi(oldmoof, 8 + mfhdlen + 8 + tfhdlen);
+    const oldmfhd = oldmoof.subarray(8, 8 + mfhdlen);
+    const oldtraf = oldmoof.subarray(8 + mfhdlen + 8, 8 + mfhdlen + 8 + traflen - 8);
+    const oldtfhd = oldtraf.subarray(0, tfhdlen);
+    const oldtrun = oldtraf.subarray(tfhdlen, tfhdlen + trunlen);
 
     // force trackId=1 since trackIds are not always reliable...
     oldtfhd.set([0, 0, 0, 1], 12);
 
-    var oldsenc = reads.senc(oldtraf);
+    const oldsenc = reads.senc(oldtraf);
 
     // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
-    var newtraf = atoms.traf(oldtfhd, newtfdt, oldtrun, oldsenc, oldmfhd);
-    var newmoof = atoms.moof(oldmfhd, newtraf);
+    const newtraf = atoms.traf(oldtfhd, newtfdt, oldtrun, oldsenc, oldmfhd);
+    const newmoof = atoms.moof(oldmfhd, newtraf);
 
-    var trunoffset = 8 + mfhdlen + 8 + tfhdlen + tfdtlen;
+    const trunoffset = 8 + mfhdlen + 8 + tfhdlen + tfdtlen;
     // TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
     // try to put free atom inside traf children
     return createNewSegment(segment, newmoof, oldmoof, trunoffset);

@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-var assert = require("canal-js-utils/assert");
-var {
+const assert = require("canal-js-utils/assert");
+const {
   itobe4, be8toi, be4toi, be2toi,
   hexToBytes, strToBytes, concat,
 } = require("canal-js-utils/bytes");
 
 function findAtom(buf, atomName) {
-  var i = 0, l = buf.length;
+  const l = buf.length;
+  let i = 0;
 
-  var name, size;
+  let name, size;
   while (i + 8 < l) {
     size = be4toi(buf, i);
     name = be4toi(buf, i + 4);
@@ -42,22 +43,22 @@ function findAtom(buf, atomName) {
 }
 
 function parseSidx(buf, offset) {
-  var index = findAtom(buf, 0x73696478 /* "sidx" */);
+  const index = findAtom(buf, 0x73696478 /* "sidx" */);
   if (index == -1) return null;
 
-  var size = be4toi(buf, index);
-  var pos = index + /* size */4 + /* name */4;
+  const size = be4toi(buf, index);
+  let pos = index + /* size */4 + /* name */4;
 
   /* version(8) */
   /* flags(24) */
   /* reference_ID(32); */
   /* timescale(32); */
-  var version = buf[pos]; pos += 4 + 4;
-  var timescale = be4toi(buf, pos); pos += 4;
+  const version = buf[pos]; pos += 4 + 4;
+  const timescale = be4toi(buf, pos); pos += 4;
 
   /* earliest_presentation_time(32 / 64) */
   /* first_offset(32 / 64) */
-  var time;
+  let time;
   if (version === 0) {
     time    = be4toi(buf, pos);        pos += 4;
     offset += be4toi(buf, pos) + size; pos += 4;
@@ -70,37 +71,37 @@ function parseSidx(buf, offset) {
     return null;
   }
 
-  var segments = [];
+  const segments = [];
 
   /* reserved(16) */
   /* reference_count(16) */
   pos += 2;
-  var count = be2toi(buf, pos);
+  let count = be2toi(buf, pos);
   pos += 2;
   while (--count >= 0) {
     /* reference_type(1) */
     /* reference_size(31) */
     /* segment_duration(32) */
     /* sap..(32) */
-    var refChunk = be4toi(buf, pos);
+    const refChunk = be4toi(buf, pos);
     pos += 4;
-    var refType = (refChunk & 0x80000000) >>> 31;
-    var refSize = (refChunk & 0x7fffffff);
+    const refType = (refChunk & 0x80000000) >>> 31;
+    const refSize = (refChunk & 0x7fffffff);
     if (refType == 1)
       throw new Error("not implemented");
 
-    var d = be4toi(buf, pos);
+    const d = be4toi(buf, pos);
     pos += 4;
 
-    // var sapChunk = be4toi(buf, pos + 8);
+    // let sapChunk = be4toi(buf, pos + 8);
     pos += 4;
 
     // TODO(pierre): handle sap
-    // var startsWithSap = (sapChunk & 0x80000000) >>> 31;
-    // var sapType = (sapChunk & 0x70000000) >>> 28;
-    // var sapDelta = sapChunk & 0x0FFFFFFF;
+    // let startsWithSap = (sapChunk & 0x80000000) >>> 31;
+    // let sapType = (sapChunk & 0x70000000) >>> 28;
+    // let sapDelta = sapChunk & 0x0FFFFFFF;
 
-    var ts = time;
+    const ts = time;
     segments.push({
       ts, d, r: 0,
       range: [offset, offset + refSize - 1],
@@ -115,7 +116,7 @@ function parseSidx(buf, offset) {
 
 
 function Atom(name, buff) {
-  var len = buff.length + 8;
+  const len = buff.length + 8;
   return concat(itobe4(len), strToBytes(name), buff);
 }
 
@@ -135,15 +136,15 @@ function patchPssh(buf, pssList) {
   if (!pssList || !pssList.length)
     return buf;
 
-  var pos = findAtom(buf, 0x6d6f6f76 /* = "moov" */);
+  const pos = findAtom(buf, 0x6d6f6f76 /* = "moov" */);
   if (pos == -1)
     return buf;
 
-  var size = be4toi(buf, pos);
-  var moov = buf.subarray(pos, pos + size);
+  const size = be4toi(buf, pos);
+  const moov = buf.subarray(pos, pos + size);
 
-  var newmoov = [moov];
-  for (var i = 0; i < pssList.length; i++) {
+  let newmoov = [moov];
+  for (let i = 0; i < pssList.length; i++) {
     newmoov.push(createPssh(pssList[i]));
   }
 

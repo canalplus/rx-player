@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-var { Observable } = require("rxjs");
-var { empty, merge } = Observable;
-var assert = require("canal-js-utils/assert");
-var request = require("canal-js-utils/rx-request");
-var { resolveURL } = require("canal-js-utils/url");
-var { parseSidx, patchPssh } = require("./mp4");
+const { Observable } = require("rxjs");
+const { empty, merge } = Observable;
+const assert = require("canal-js-utils/assert");
+const request = require("canal-js-utils/rx-request");
+const { resolveURL } = require("canal-js-utils/url");
+const { parseSidx, patchPssh } = require("./mp4");
 
-var dashManifestParser = require("./parser");
+const dashManifestParser = require("./parser");
 
 function byteRange([start, end]) {
   if (!end || end === Infinity) {
@@ -35,7 +35,7 @@ function replaceTokens(path, segment) {
   if (path.indexOf("$") === -1) {
     return path;
   } else {
-    var rep = segment.getRepresentation();
+    const rep = segment.getRepresentation();
     return path
       .replace(/\$\$/g, "$")
       .replace(/\$RepresentationID\$/g, rep.id)
@@ -45,17 +45,17 @@ function replaceTokens(path, segment) {
   }
 }
 
-var req = reqOptions => {
+const req = reqOptions => {
   reqOptions.withMetadata = true;
   return request(reqOptions);
 };
 
 module.exports = function(opts={}) {
-  var { contentProtectionParser } = opts;
+  let { contentProtectionParser } = opts;
 
   if (!contentProtectionParser) contentProtectionParser = () => {};
 
-  var manifestPipeline = {
+  const manifestPipeline = {
     loader({ url }) {
       return req({ url, format: "document" });
     },
@@ -67,11 +67,11 @@ module.exports = function(opts={}) {
     },
   };
 
-  var segmentPipeline = {
+  const segmentPipeline = {
     loader({ segment }) {
-      var media = segment.getMedia();
-      var range = segment.getRange();
-      var indexRange = segment.getIndexRange();
+      const media = segment.getMedia();
+      const range = segment.getRange();
+      const indexRange = segment.getIndexRange();
 
       // init segment without initialization media/range/indexRange:
       // we do nothing on the network
@@ -79,22 +79,22 @@ module.exports = function(opts={}) {
         return empty();
       }
 
-      var mediaHeaders;
+      let mediaHeaders;
       if (range) {
         mediaHeaders = { "Range": byteRange(range) };
       } else {
         mediaHeaders = null;
       }
 
-      var path;
+      let path;
       if (media) {
         path = replaceTokens(media, segment);
       } else {
         path = "";
       }
 
-      var mediaUrl = resolveURL(segment.getResolvedURL(), path);
-      var mediaOrInitRequest = req({
+      const mediaUrl = resolveURL(segment.getResolvedURL(), path);
+      const mediaOrInitRequest = req({
         url: mediaUrl,
         format: "arraybuffer",
         headers: mediaHeaders,
@@ -107,7 +107,7 @@ module.exports = function(opts={}) {
       // init and index ranges are contiguous, which should be the
       // case most of the time.
       if (indexRange) {
-        var indexRequest = req({
+        const indexRequest = req({
           url: mediaUrl,
           format: "arraybuffer",
           headers: { "Range": byteRange(indexRange) },
@@ -120,16 +120,16 @@ module.exports = function(opts={}) {
     },
 
     parser({ segment, response }) {
-      var blob = new Uint8Array(response.blob);
+      let blob = new Uint8Array(response.blob);
 
       // added segments and timescale informations are extracted from
       // sidx atom
-      var nextSegments, timescale, currentSegment;
+      let nextSegments, timescale, currentSegment;
 
       // added index (segments and timescale) informations are
       // extracted from sidx atom
-      var indexRange = segment.getIndexRange();
-      var index = parseSidx(blob, indexRange ? indexRange[0] : 0);
+      const indexRange = segment.getIndexRange();
+      const index = parseSidx(blob, indexRange ? indexRange[0] : 0);
       if (index) {
         nextSegments = index.segments;
         timescale = index.timescale;
@@ -158,7 +158,7 @@ module.exports = function(opts={}) {
       }
 
       if (segment.isInitSegment()) {
-        var adaptation = segment.getAdaptatation();
+        const adaptation = segment.getAdaptatation();
         if (adaptation.contentProtection) {
           blob = patchPssh(blob, adaptation.contentProtection);
         }
@@ -173,7 +173,7 @@ module.exports = function(opts={}) {
     },
   };
 
-  var textTrackPipeline = {
+  const textTrackPipeline = {
     loader(/* { segment } */) {
     },
   };

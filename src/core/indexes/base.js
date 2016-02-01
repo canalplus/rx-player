@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var Timeline = require("./timeline");
+const Timeline = require("./timeline");
 
 class Base extends Timeline {
   constructor(index) {

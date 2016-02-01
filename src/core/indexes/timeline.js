@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var { Segment } = require("../segment");
+const { Segment } = require("../segment");
 
 function getTimelineBound({ ts, d, r }) {
   if (d === -1)
@@ -32,18 +32,18 @@ class Timeline {
   }
 
   static getLiveEdge(videoIndex, manifest) {
-    var lastTimelineElement = videoIndex.timeline[videoIndex.timeline.length - 1];
-    var calculatedLiveEdge = (
+    const lastTimelineElement = videoIndex.timeline[videoIndex.timeline.length - 1];
+    const calculatedLiveEdge = (
       (getTimelineBound(lastTimelineElement) / videoIndex.timescale) - manifest.suggestedPresentationDelay
     );
-    var minimumLiveEdge = (videoIndex.timeline[0].ts / videoIndex.timescale) + 1.0;
+    const minimumLiveEdge = (videoIndex.timeline[0].ts / videoIndex.timescale) + 1.0;
 
     return Math.max(minimumLiveEdge, calculatedLiveEdge);
   }
 
   createSegment(time, range, duration) {
-    var { adaptation, representation } = this;
-    var { media } = this.index;
+    const { adaptation, representation } = this;
+    const { media } = this.index;
     return Segment.create(
       adaptation,     /* adaptation */
       representation, /* representation */
@@ -59,14 +59,14 @@ class Timeline {
   }
 
   calculateRepeat(seg, nextSeg) {
-    var rep = seg.r || 0;
+    let rep = seg.r || 0;
 
     // A negative value of the @r attribute of the S element indicates
     // that the duration indicated in @d attribute repeats until the
     // start of the next S element, the end of the Period or until the
     // next MPD update.
     if (rep < 0) {
-      var repEnd = nextSeg
+      const repEnd = nextSeg
         ? nextSeg.t
         : Infinity;
       rep = Math.ceil((repEnd - seg.ts) / seg.d) - 1;
@@ -76,7 +76,7 @@ class Timeline {
   }
 
   checkRange(up) {
-    var last = this.timeline[this.timeline.length - 1];
+    let last = this.timeline[this.timeline.length - 1];
     if (!last)
       return true;
 
@@ -87,12 +87,12 @@ class Timeline {
   }
 
   getSegmentIndex(ts) {
-    var timeline = this.timeline;
-    var low = 0;
-    var high = timeline.length;
+    const timeline = this.timeline;
+    let low = 0;
+    let high = timeline.length;
 
     while (low < high) {
-      var mid = (low + high) >>> 1;
+      const mid = (low + high) >>> 1;
       if (timeline[mid].ts < ts) {
         low = mid + 1;
       } else {
@@ -106,7 +106,7 @@ class Timeline {
   }
 
   getSegmentNumber(ts, up, duration) {
-    var diff = up - ts;
+    const diff = up - ts;
     if (diff > 0)
       return Math.floor(diff / duration);
     else
@@ -114,21 +114,21 @@ class Timeline {
   }
 
   getSegments(up, to) {
-    var timeline = this.index.timeline;
-    var segments = [];
+    const timeline = this.index.timeline;
+    const segments = [];
 
-    var timelineLength = timeline.length;
-    var timelineIndex = this.getSegmentIndex(up) - 1;
+    const timelineLength = timeline.length;
+    let timelineIndex = this.getSegmentIndex(up) - 1;
     // TODO(pierre): use @maxSegmentDuration if possible
-    var maxDuration = (timeline.length && timeline[0].d) || 0;
+    let maxDuration = (timeline.length && timeline[0].d) || 0;
 
     loop:
     for(;;) {
       if (++timelineIndex >= timelineLength)
         break;
 
-      var segmentRange = timeline[timelineIndex];
-      var { d, ts, range } = segmentRange;
+      const segmentRange = timeline[timelineIndex];
+      const { d, ts, range } = segmentRange;
       maxDuration = Math.max(maxDuration, d);
 
       // live-added segments have @d attribute equals to -1
@@ -139,9 +139,9 @@ class Timeline {
         break;
       }
 
-      var repeat = this.calculateRepeat(segmentRange, timeline[timelineIndex + 1]);
-      var segmentNumber = this.getSegmentNumber(ts, up, d);
-      var segmentTime;
+      const repeat = this.calculateRepeat(segmentRange, timeline[timelineIndex + 1]);
+      let segmentNumber = this.getSegmentNumber(ts, up, d);
+      let segmentTime;
       while ((segmentTime = ts + segmentNumber * d) < to) {
         if (segmentNumber++ <= repeat) {
           segments.push(this.createSegment(segmentTime, range, d));
@@ -157,19 +157,19 @@ class Timeline {
   }
 
   addSegment(newSegment, currentSegment) {
-    var timeline = this.timeline;
-    var timelineLength = timeline.length;
-    var last = timeline[timelineLength - 1];
+    const timeline = this.timeline;
+    const timelineLength = timeline.length;
+    const last = timeline[timelineLength - 1];
 
     // in some circumstances, the new segment informations are only
     // duration informations that we can use de deduct the ts of the
     // next segment. this is the case where the new segment are
     // associated to a current segment and have the same ts
-    var shouldDeductNextSegment = !!currentSegment && (newSegment.ts === currentSegment.ts);
+    const shouldDeductNextSegment = !!currentSegment && (newSegment.ts === currentSegment.ts);
     if (shouldDeductNextSegment) {
-      var newSegmentTs = newSegment.ts + newSegment.d;
-      var lastSegmentTs = (last.ts + last.d * last.r);
-      var tsDiff = newSegmentTs - lastSegmentTs;
+      const newSegmentTs = newSegment.ts + newSegment.d;
+      const lastSegmentTs = (last.ts + last.d * last.r);
+      const tsDiff = newSegmentTs - lastSegmentTs;
 
       if (tsDiff <= 0)
         return false;
@@ -178,7 +178,7 @@ class Timeline {
       // to elements of the timeline if we find out they have the same
       // duration
       if (last.d === -1) {
-        var prev = timeline[timelineLength - 2];
+        const prev = timeline[timelineLength - 2];
         if (prev && prev.d === tsDiff) {
           prev.r++;
           timeline.pop();

@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
-var assert = require("canal-js-utils/assert");
-var find = require("lodash/collection/find");
-var bytes = require("canal-js-utils/bytes");
+const assert = require("canal-js-utils/assert");
+const find = require("lodash/collection/find");
+const bytes = require("canal-js-utils/bytes");
 
-var DEFAULT_MIME_TYPES = {
+const DEFAULT_MIME_TYPES = {
   audio: "audio/mp4",
   video: "video/mp4",
   text: "application/ttml+xml",
 };
 
-var DEFAULT_CODECS = {
+const DEFAULT_CODECS = {
   audio: "mp4a.40.2",
   video: "avc1.4D401E",
 };
 
-var MIME_TYPES = {
+const MIME_TYPES = {
   "AACL": "audio/mp4",
   "AVC1": "video/mp4",
   "H264": "video/mp4",
   "TTML": "application/ttml+xml+mp4",
 };
 
-var CODECS = {
+const CODECS = {
   "AACL": "mp4a.40.5",
   "AACH": "mp4a.40.5",
   "AVC1": "avc1.4D401E",
   "H264": "avc1.4D401E",
 };
 
-var profiles = {
+const profiles = {
   audio: [
     ["Bitrate",          "bitrate",          parseInt],
     ["AudioTag",         "audiotag",         parseInt],
@@ -82,7 +82,7 @@ function parseBoolean(val) {
 }
 
 function calcLastRef(index) {
-  var { ts, r, d } = index.timeline[index.timeline.length - 1];
+  const { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r+1)*d) / index.timescale);
 }
 
@@ -108,22 +108,22 @@ function getKeySystems(keyIdBytes) {
 
 function createSmoothStreamingParser(parserOptions={}) {
 
-  var SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay || 20;
-  var REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
-  var MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 190000;
+  const SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay || 20;
+  const REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
+  const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 190000;
 
-  var keySystems = parserOptions.keySystems || getKeySystems;
+  const keySystems = parserOptions.keySystems || getKeySystems;
 
   function getHexKeyId(buf) {
-    var len = bytes.le2toi(buf, 8);
-    var xml = bytes.bytesToUTF16Str(buf.subarray(10, 10 + len));
-    var doc = new DOMParser().parseFromString(xml, "application/xml");
-    var kid = doc.querySelector("KID").textContent;
+    const len = bytes.le2toi(buf, 8);
+    const xml = bytes.bytesToUTF16Str(buf.subarray(10, 10 + len));
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    const kid = doc.querySelector("KID").textContent;
     return bytes.guidToUuid(atob(kid)).toLowerCase();
   }
 
   function reduceChildren(root, fn, init) {
-    var node = root.firstElementChild, r = init;
+    let node = root.firstElementChild, r = init;
     while (node) {
       r = fn(r, node.nodeName, node);
       node = node.nextElementSibling;
@@ -132,14 +132,14 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function parseProtection(root) {
-    var header = root.firstElementChild;
+    const header = root.firstElementChild;
     assert.equal(header.nodeName, "ProtectionHeader", "parser: Protection should have ProtectionHeader child");
-    var privateData = bytes.strToBytes(atob(header.textContent));
-    var keyId = getHexKeyId(privateData);
-    var keyIdBytes = bytes.hexToBytes(keyId);
+    const privateData = bytes.strToBytes(atob(header.textContent));
+    const keyId = getHexKeyId(privateData);
+    const keyIdBytes = bytes.hexToBytes(keyId);
 
     // remove possible braces
-    var systemId = header.getAttribute("SystemID").toLowerCase()
+    const systemId = header.getAttribute("SystemID").toLowerCase()
       .replace(/\{|\}/g, "");
 
     return {
@@ -155,11 +155,11 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function parseC(node, timeline) {
-    var l = timeline.length;
-    var prev = l > 0 ? timeline[l - 1] : { d: 0, ts: 0, r: 0 };
-    var d = +node.getAttribute("d");
-    var t =  node.getAttribute("t");
-    var r = +node.getAttribute("r");
+    const l = timeline.length;
+    const prev = l > 0 ? timeline[l - 1] : { d: 0, ts: 0, r: 0 };
+    const d = +node.getAttribute("d");
+    const t =  node.getAttribute("t");
+    let r = +node.getAttribute("r");
 
     // in smooth streaming format,
     // r refers to number of same duration
@@ -175,7 +175,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       prev.r += (r || 0) + 1;
     }
     else {
-      var ts = (t == null)
+      const ts = (t == null)
         ? prev.ts + prev.d * (prev.r + 1)
         : +t;
       timeline.push({ d, ts, r });
@@ -184,9 +184,9 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function parseQualityLevel(q, prof) {
-    var obj = {};
-    for (var i = 0; i < prof.length; i++) {
-      var [key, name, parse] = prof[i];
+    const obj = {};
+    for (let i = 0; i < prof.length; i++) {
+      const [key, name, parse] = prof[i];
       obj[name] = typeof parse == "function"
         ? parse(q.getAttribute(key))
         : parse[q.getAttribute(key)];
@@ -203,18 +203,18 @@ function createSmoothStreamingParser(parserOptions={}) {
       timescale = +root.getAttribute("Timescale");
     }
 
-    var type = root.getAttribute("Type");
-    var subType = root.getAttribute("Subtype");
-    var profile = profiles[type];
+    const type = root.getAttribute("Type");
+    const subType = root.getAttribute("Subtype");
+    const profile = profiles[type];
 
     assert(profile, "parser: unrecognized QualityLevel type " + type);
 
-    var representationCount = 0;
+    let representationCount = 0;
 
-    var { representations, index } = reduceChildren(root, (res, name, node) => {
+    const { representations, index } = reduceChildren(root, (res, name, node) => {
       switch (name) {
       case "QualityLevel":
-        var rep = parseQualityLevel(node, profile);
+        const rep = parseQualityLevel(node, profile);
 
         // filter out video representations with small bitrates
         if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
@@ -243,14 +243,14 @@ function createSmoothStreamingParser(parserOptions={}) {
     assert(representations.length, "parser: adaptation should have at least one representation");
 
     // apply default codec if non-supported
-    var codecs = representations[0].codecs;
+    let codecs = representations[0].codecs;
     if (!codecs) {
       codecs = DEFAULT_CODECS[type];
       representations.forEach((rep) => rep.codecs = codecs);
     }
 
     // apply default mimetype if non-supported
-    var mimeType = representations[0].mimeType;
+    let mimeType = representations[0].mimeType;
     if (!mimeType) {
       mimeType = DEFAULT_MIME_TYPES[type];
       representations.forEach((rep) => rep.mimeType = mimeType);
@@ -275,19 +275,19 @@ function createSmoothStreamingParser(parserOptions={}) {
   }
 
   function parseFromDocument(doc) {
-    var root = doc.documentElement;
+    const root = doc.documentElement;
     assert.equal(root.nodeName, "SmoothStreamingMedia", "parser: document root should be SmoothStreamingMedia");
     assert(/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
       "Version should be 2.0, 2.1 or 2.2");
 
-    var timescale = +root.getAttribute("Timescale") || 10000000;
-    var adaptationCount = 0;
+    const timescale = +root.getAttribute("Timescale") || 10000000;
+    let adaptationCount = 0;
 
-    var { protection, adaptations } = reduceChildren(root, (res, name, node) => {
+    const { protection, adaptations } = reduceChildren(root, (res, name, node) => {
       switch (name) {
       case "Protection":  res.protection = parseProtection(node);  break;
       case "StreamIndex":
-        var ada = parseAdaptation(node, timescale);
+        const ada = parseAdaptation(node, timescale);
         if (ada) {
           ada.id = adaptationCount++;
           res.adaptations.push(ada);
@@ -302,20 +302,20 @@ function createSmoothStreamingParser(parserOptions={}) {
 
     adaptations.forEach((a) => a.smoothProtection = protection);
 
-    var
+    let
       suggestedPresentationDelay,
       presentationLiveGap,
       timeShiftBufferDepth,
       availabilityStartTime;
 
-    var isLive = parseBoolean(root.getAttribute("IsLive"));
+    const isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      var video = find(adaptations, a => a.type == "video");
-      var audio = find(adaptations, a => a.type == "audio");
-      var lastRef = Math.min(calcLastRef(video.index), calcLastRef(audio.index));
+      const video = find(adaptations, a => a.type == "video");
+      const audio = find(adaptations, a => a.type == "audio");
+      const lastRef = Math.min(calcLastRef(video.index), calcLastRef(audio.index));
       presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
     }
 

@@ -31,7 +31,7 @@ class InitializationSegmentCache {
 
   get({ segment }) {
     if (segment.isInitSegment()) {
-      var value = this.cache[segment.getId()];
+      const value = this.cache[segment.getId()];
       if (value != null)
         return value;
     }

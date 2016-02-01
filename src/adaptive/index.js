@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-var log = require("canal-js-utils/log");
-var { Observable, BehaviorSubject, Subscription } = require("rxjs");
-var { combineLatest } = Observable;
-var { only } = require("canal-js-utils/rx-ext");
-var find = require("lodash/collection/find");
-var findLast = require("lodash/collection/findLast");
-var defaults = require("lodash/object/defaults");
+const log = require("canal-js-utils/log");
+const { Observable, BehaviorSubject, Subscription } = require("rxjs");
+const { combineLatest } = Observable;
+const { only } = require("canal-js-utils/rx-ext");
+const find = require("lodash/collection/find");
+const findLast = require("lodash/collection/findLast");
+const defaults = require("lodash/object/defaults");
 
-var AverageBitrate = require("./average-bitrate");
+const AverageBitrate = require("./average-bitrate");
 
-var DEFAULTS = {
+const DEFAULTS = {
   defaultLanguage: "fra",
   defaultSubtitle: "",
   // default buffer size in seconds
@@ -43,7 +43,7 @@ function getClosestBitrate(bitrates, btr, threshold=0) {
 }
 
 function getClosestDisplayBitrate(reps, width) {
-  var rep = find(reps, r => r.width >= width);
+  const rep = find(reps, r => r.width >= width);
   if (rep)
     return rep.bitrate;
   else
@@ -63,7 +63,7 @@ function filterByType(stream, selectedType) {
 }
 
 module.exports = function(metrics, timings, deviceEvents, options={}) {
-  var {
+  const {
     defaultLanguage,
     defaultSubtitle,
     defaultBufferSize,
@@ -72,35 +72,35 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     initAudioBitrate,
   } = defaults(options, DEFAULTS);
 
-  var { videoWidth, inBackground } = deviceEvents;
+  const { videoWidth, inBackground } = deviceEvents;
 
-  var $languages = new BehaviorSubject(defaultLanguage);
-  var $subtitles = new BehaviorSubject(defaultSubtitle);
+  const $languages = new BehaviorSubject(defaultLanguage);
+  const $subtitles = new BehaviorSubject(defaultSubtitle);
 
-  var $averageBitrates = {
+  const $averageBitrates = {
     audio: new BehaviorSubject(initAudioBitrate || 0),
     video: new BehaviorSubject(initVideoBitrate || 0),
   };
 
-  var averageBitratesConns = [
+  const averageBitratesConns = [
     AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).multicast($averageBitrates.audio),
     AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 }).multicast($averageBitrates.video),
   ];
 
-  var conns = new Subscription();
+  let conns = new Subscription();
   averageBitratesConns.forEach((a) => conns.add(a.connect()));
 
-  var $usrBitrates = {
+  const $usrBitrates = {
     audio: new BehaviorSubject(Infinity),
     video: new BehaviorSubject(Infinity),
   };
 
-  var $maxBitrates = {
+  const $maxBitrates = {
     audio: new BehaviorSubject(Infinity),
     video: new BehaviorSubject(Infinity),
   };
 
-  var $bufSizes = {
+  const $bufSizes = {
     audio: new BehaviorSubject(defaultBufferSize),
     video: new BehaviorSubject(defaultBufferSize),
     text:  new BehaviorSubject(defaultBufferSize),
@@ -130,20 +130,20 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   }
 
   function getBufferAdapters(adaptation) {
-    var { type, bitrates, representations } = adaptation;
+    const { type, bitrates, representations } = adaptation;
 
-    var firstRep = representations[0];
+    const firstRep = representations[0];
 
-    var representationsObservable;
+    let representationsObservable;
     if (representations.length > 1) {
-      var usrBitrates = $usrBitrates[type];
-      var maxBitrates = $maxBitrates[type];
+      const usrBitrates = $usrBitrates[type];
+      let maxBitrates = $maxBitrates[type];
 
-      var avrBitrates = $averageBitrates[type]
+      const avrBitrates = $averageBitrates[type]
         .map((avrBitrate, count) => {
           // no threshold for the first value of the average bitrate
           // stream corresponding to the selected initial video bitrate
-          var bufThreshold;
+          let bufThreshold;
           if (count === 0)
             bufThreshold = 0;
           else
@@ -166,7 +166,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
             if (isHidden)
               return bitrates[0];
 
-            var closestDisplayBitrate = getClosestDisplayBitrate(representations, width);
+            const closestDisplayBitrate = getClosestDisplayBitrate(representations, width);
             if (closestDisplayBitrate < bitrate)
               return closestDisplayBitrate;
 

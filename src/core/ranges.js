@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-var assert = require("canal-js-utils/assert");
+const assert = require("canal-js-utils/assert");
 
 // Factor for rounding errors
-var EPSILON = 1 / 60;
+const EPSILON = 1 / 60;
 
 function nearlyEqual(a, b) {
   return Math.abs(a - b) < EPSILON;
@@ -32,8 +32,9 @@ function bufferedToArray(ranges) {
     return ranges;
   }
 
-  var i = -1, l = ranges.length;
-  var a = Array(l);
+  const l = ranges.length;
+  const a = Array(l);
+  let i = -1;
   while (++i < l) {
     a[i] = { start: ranges.start(i), end: ranges.end(i), bitrate: 0 };
   }
@@ -45,7 +46,7 @@ function isPointInRange(r, point) {
 }
 
 function findOverlappingRange(range, others) {
-  for (var i = 0; i < others.length; i++) {
+  for (let i = 0; i < others.length; i++) {
     if (areOverlappingRanges(range, others[i]))
       return others[i];
   }
@@ -65,8 +66,8 @@ function areContiguousWithRanges(r1, r2) {
 }
 
 function unionWithOverlappingOrContiguousRange(r1, r2, bitrate) {
-  var start = Math.min(r1.start, r2.start);
-  var end = Math.max(r1.end, r2.end);
+  const start = Math.min(r1.start, r2.start);
+  const end = Math.max(r1.end, r2.end);
   return { start, end, bitrate };
 }
 
@@ -79,8 +80,8 @@ function sameBitrate(r1, r2) {
 }
 
 function removeEmptyRanges(ranges) {
-  for (var index = 0; index < ranges.length; index++) {
-    var range = ranges[index];
+  for (let index = 0; index < ranges.length; index++) {
+    const range = ranges[index];
     if (range.start === range.end)
       ranges.splice(index++, 1);
   }
@@ -88,12 +89,12 @@ function removeEmptyRanges(ranges) {
 }
 
 function mergeContiguousRanges(ranges) {
-  for (var index = 1; index < ranges.length; index++) {
-    var prevRange = ranges[index-1];
-    var currRange = ranges[index];
+  for (let index = 1; index < ranges.length; index++) {
+    const prevRange = ranges[index-1];
+    const currRange = ranges[index];
     if (sameBitrate(prevRange, currRange) &&
         areContiguousWithRanges(prevRange, currRange)) {
-      var unionRange = unionWithOverlappingOrContiguousRange(prevRange, currRange, currRange.bitrate);
+      const unionRange = unionWithOverlappingOrContiguousRange(prevRange, currRange, currRange.bitrate);
       ranges.splice(--index, 2, unionRange);
     }
   }
@@ -106,7 +107,7 @@ function insertInto(ranges, bitrate, start, end) {
     return ranges;
   }
 
-  var addedRange = { start: start, end: end, bitrate: bitrate };
+  let addedRange = { start: start, end: end, bitrate: bitrate };
 
   // For each present range check if we need to:
   // - In case we are overlapping or contiguous:
@@ -117,11 +118,12 @@ function insertInto(ranges, bitrate, start, end) {
   // - Need to insert in place, we we are completely, not overlapping
   //   and not contiguous in between two ranges.
 
-  for (var index = 0; index < ranges.length; index++) {
-    var currentRange = ranges[index];
+  let index = 0;
+  for (; index < ranges.length; index++) {
+    const currentRange = ranges[index];
 
-    var overlapping = areOverlappingRanges(addedRange, currentRange);
-    var contiguous = areContiguousWithRanges(addedRange, currentRange);
+    const overlapping = areOverlappingRanges(addedRange, currentRange);
+    const contiguous = areContiguousWithRanges(addedRange, currentRange);
 
     // We assume ranges are ordered and two ranges can not be
     // completely overlapping.
@@ -136,7 +138,7 @@ function insertInto(ranges, bitrate, start, end) {
         // Added range is contained in on existing range
         if (isContainedInto(currentRange, addedRange)) {
           ranges.splice(++index, 0, addedRange);
-          var memCurrentEnd = currentRange.end;
+          const memCurrentEnd = currentRange.end;
           currentRange.end = addedRange.start;
           addedRange = {
             start: addedRange.end,
@@ -189,9 +191,9 @@ function insertInto(ranges, bitrate, start, end) {
 }
 
 function rangesIntersect(ranges, others) {
-  for (var i = 0; i < ranges.length; i++) {
-    var range = ranges[i];
-    var overlappingRange = findOverlappingRange(range, others);
+  for (let i = 0; i < ranges.length; i++) {
+    const range = ranges[i];
+    const overlappingRange = findOverlappingRange(range, others);
     if (!overlappingRange) {
       ranges.splice(i--, 1);
       continue;
@@ -207,9 +209,9 @@ function rangesIntersect(ranges, others) {
 }
 
 function rangesEquals(ranges, others) {
-  for (var i = 0; i < ranges.length; i++) {
-    var range = ranges[i];
-    var overlappingRange = findOverlappingRange(range, others);
+  for (let i = 0; i < ranges.length; i++) {
+    const range = ranges[i];
+    const overlappingRange = findOverlappingRange(range, others);
     if (!overlappingRange ||
         overlappingRange.start > range.start ||
         overlappingRange.end   < range.end) {
@@ -234,10 +236,10 @@ class BufferedRanges {
   }
 
   hasRange(startTime, duration) {
-    var endTime = startTime + duration;
+    const endTime = startTime + duration;
 
-    for (var i = 0; i < this.ranges.length; i++) {
-      var { start, end } = this.ranges[i];
+    for (let i = 0; i < this.ranges.length; i++) {
+      const { start, end } = this.ranges[i];
 
       if ((nearlyLt(start, startTime) && nearlyLt(startTime, end)) &&
           (nearlyLt(start, endTime) && nearlyLt(endTime, end)))
@@ -251,7 +253,7 @@ class BufferedRanges {
    * Get range associated to given time
    */
   getRange(time) {
-    for (var i = 0; i < this.ranges.length; i++) {
+    for (let i = 0; i < this.ranges.length; i++) {
       if (isPointInRange(this.ranges[i], time))
         return this.ranges[i];
     }
@@ -259,8 +261,8 @@ class BufferedRanges {
   }
 
   getOuterRanges(time) {
-    var ranges = [];
-    for (var i = 0; i < this.ranges.length; i++) {
+    const ranges = [];
+    for (let i = 0; i < this.ranges.length; i++) {
       if (!isPointInRange(this.ranges[i], time))
         ranges.push(this.ranges[i]);
     }
@@ -272,7 +274,7 @@ class BufferedRanges {
    * end limit and the given timestamp
    */
   getGap(time) {
-    var range = this.getRange(time);
+    const range = this.getRange(time);
     return range
       ? range.end - time
       : Infinity;
@@ -283,7 +285,7 @@ class BufferedRanges {
    * and the start of current range.
    */
   getLoaded(time) {
-    var range = this.getRange(time);
+    const range = this.getRange(time);
     return range
       ? time - range.start
       : 0;
@@ -293,17 +295,17 @@ class BufferedRanges {
    * Returns the total size of the current range.
    */
   getSize(time) {
-    var range = this.getRange(time);
+    const range = this.getRange(time);
     return range
       ? range.end - range.start
       : 0;
   }
 
   getNextRangeGap(time) {
-    var { ranges } = this;
-    var i = -1, nextRangeStart;
+    const { ranges } = this;
+    let i = -1, nextRangeStart;
     while (++i < ranges.length) {
-      var start = ranges[i].start;
+      const start = ranges[i].start;
       if (start > time) {
         nextRangeStart = start;
         break;

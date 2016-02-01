@@ -1,22 +1,22 @@
-var { Observable } = require("rxjs");
-var { timer } = Observable;
-var { getBackedoffDelay } = require("canal-js-utils/backoff");
-var debounce = require("canal-js-utils/debounce");
+const { Observable } = require("rxjs");
+const { timer } = Observable;
+const { getBackedoffDelay } = require("canal-js-utils/backoff");
+const debounce = require("canal-js-utils/debounce");
 
 function retryWithBackoff(obs, { retryDelay, totalRetry, shouldRetry, resetDelay }) {
-  var retryCount = 0;
-  var debounceRetryCount;
+  let retryCount = 0;
+  let debounceRetryCount;
   if (resetDelay > 0) {
     debounceRetryCount = debounce(() => retryCount = 0, resetDelay);
   }
 
   return obs.catch((err, source) => {
-    var wantRetry = !shouldRetry || shouldRetry(err, retryCount);
+    const wantRetry = !shouldRetry || shouldRetry(err, retryCount);
     if (!wantRetry || retryCount++ >= totalRetry) {
       throw err;
     }
 
-    var fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
+    const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
     return timer(fuzzedDelay).flatMap(() => {
       debounceRetryCount && debounceRetryCount();
       return source;
