@@ -39,7 +39,7 @@ module.exports = {
       "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
       "__DEV__": RX_PLAYER_ENV === "development",
       "process.env": {
-        NODE_ENV: JSON.stringify(RX_PLAYER_ENV)
+        NODE_ENV: JSON.stringify(RX_PLAYER_ENV),
       },
     }),
   ],
