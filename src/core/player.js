@@ -502,12 +502,12 @@ class Player extends EventEmitter {
 
   getAvailableVideoBitrates() {
     const video = manifestHelpers.getAdaptationsByType(this.man, "video");
-    return (video[0] && video[0].bitrates) || [];
+    return (video[0] && video[0].bitrates.slice()) || [];
   }
 
   getAvailableAudioBitrates() {
     const audio = this.adas.audio;
-    return (audio && audio.bitrates) || [];
+    return (audio && audio.bitrates.slice()) || [];
   }
 
   getVideoBitrate() {
