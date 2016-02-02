@@ -24,11 +24,11 @@ const pixelRatio = window.devicePixelRatio || 1;
 
 function DeviceEvents(videoElement) {
   const isVisible = visibilityChange()
-    .filter(x => x === false);
+    .filter((x) => x === false);
 
   const isHidden = visibilityChange()
     .debounceTime(INACTIVITY_DELAY)
-    .filter(x => x === true);
+    .filter((x) => x === true);
 
   const inBackground = merge(isVisible, isHidden)
     .startWith(false);

@@ -39,11 +39,11 @@ function def(x, val) {
 }
 
 function getClosestBitrate(bitrates, btr, threshold=0) {
-  return findLast(bitrates, b => (b / btr) <= (1 - threshold)) || bitrates[0];
+  return findLast(bitrates, (b) => (b / btr) <= (1 - threshold)) || bitrates[0];
 }
 
 function getClosestDisplayBitrate(reps, width) {
-  const rep = find(reps, r => r.width >= width);
+  const rep = find(reps, (r) => r.width >= width);
   if (rep) {
     return rep.bitrate;
   } else {
@@ -53,7 +53,7 @@ function getClosestDisplayBitrate(reps, width) {
 
 function findByLang(adaptations, lang) {
   if (lang) {
-    return find(adaptations, a => a.lang === lang);
+    return find(adaptations, (a) => a.lang === lang);
   } else {
     return null;
   }
@@ -109,12 +109,12 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
 
   function audioAdaptationChoice(adaptations) {
     return $languages.distinctUntilChanged()
-      .map(lang => findByLang(adaptations, lang) || adaptations[0]);
+      .map((lang) => findByLang(adaptations, lang) || adaptations[0]);
   }
 
   function textAdaptationChoice(adaptations) {
     return $subtitles.distinctUntilChanged()
-      .map(lang => findByLang(adaptations, lang));
+      .map((lang) => findByLang(adaptations, lang));
   }
 
   function getAdaptationsChoice(type, adaptations) {
@@ -194,10 +194,10 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
           } else {
             btr = avr;
           }
-          return find(representations, rep => rep.bitrate === getClosestBitrate(bitrates, btr));
+          return find(representations, (rep) => rep.bitrate === getClosestBitrate(bitrates, btr));
         })
         .distinctUntilChanged((a, b) => a.id === b.id)
-        .do(r => log.info("bitrate", type, r.bitrate));
+        .do((r) => log.info("bitrate", type, r.bitrate));
     }
     else {
       representationsObservable = only(firstRep);
@@ -232,7 +232,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     getBufferAdapters,
     getAdaptationsChoice,
 
-    dispose() {
+    unsubscribe() {
       if (conns) {
         conns.unsubscribe();
         conns = null;

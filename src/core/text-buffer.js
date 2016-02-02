@@ -71,7 +71,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
           }
         }
 
-        newCues.forEach(cue => this.track.addCue(cue));
+        newCues.forEach((cue) => this.track.addCue(cue));
         this.buffered.insert(0, firstCue.startTime, lastCue.endTime);
       }
     }

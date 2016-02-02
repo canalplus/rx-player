@@ -26,11 +26,11 @@ function ema(a) {
 
 module.exports = function(metrics, options) {
   return metrics
-    .map(metric => metric.value.response)
+    .map((metric) => metric.value.response)
     // do not take into account small chunks < 2KB. filters out init
     // segments and small manifests in particular.
-    .filter(response => response.size > 2000)
+    .filter((response) => response.size > 2000)
     // converts response metadata in bits-per-seconds
-    .map(response => response.size / response.duration * 8000)
+    .map((response) => response.size / response.duration * 8000)
     .scan(ema(options.alpha));
 };

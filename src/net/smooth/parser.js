@@ -316,8 +316,8 @@ function createSmoothStreamingParser(parserOptions={}) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      const video = find(adaptations, a => a.type == "video");
-      const audio = find(adaptations, a => a.type == "audio");
+      const video = find(adaptations, (a) => a.type == "video");
+      const audio = find(adaptations, (a) => a.type == "audio");
       const lastRef = Math.min(calcLastRef(video.index), calcLastRef(audio.index));
       presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
     }

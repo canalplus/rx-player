@@ -111,7 +111,7 @@ function eventPrefixed(eventNames, prefixes) {
 }
 
 function findSupportedEvent(element, eventNames) {
-  return find(eventNames, name => isEventSupported(element, name));
+  return find(eventNames, (name) => isEventSupported(element, name));
 }
 
 function compatibleListener(eventNames, prefixes) {
@@ -218,7 +218,7 @@ function wrapUpdateWithPromise(memUpdate, sessionObj) {
       : this;
 
     const keys = onKeyAdded(session);
-    const errs = onKeyError(session).map(evt => { throw new KeySessionError(session.error || evt); });
+    const errs = onKeyError(session).map((evt) => { throw new KeySessionError(session.error || evt); });
     try {
       memUpdate.call(this, license, sessionId);
       return merge(keys, errs).take(1).toPromise();
@@ -245,7 +245,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       onKeyMessage(video),
       onKeyAdded(video),
       onKeyError(video)
-    ).subscribe(evt => this.trigger(evt.type, evt));
+    ).subscribe((evt) => this.trigger(evt.type, evt));
   };
 
   MockMediaKeySession.prototype = {
@@ -369,7 +369,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
         onKeyMessage(this._ss),
         onKeyAdded(this._ss),
         onKeyError(this._ss)
-      ).subscribe(evt => this.trigger(evt.type, evt));
+      ).subscribe((evt) => this.trigger(evt.type, evt));
     }),
 
     update: wrapUpdateWithPromise(function(license, sessionId) {
@@ -412,7 +412,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       } = keySystemConfiguration;
 
       let supported = true;
-      supported = supported && (!initDataTypes || find(initDataTypes, idt => idt === "cenc"));
+      supported = supported && (!initDataTypes || find(initDataTypes, (idt) => idt === "cenc"));
       supported = supported && (distinctiveIdentifier !== "required");
 
       if (supported) {

@@ -45,7 +45,7 @@ function replaceTokens(path, segment) {
   }
 }
 
-const req = reqOptions => {
+const req = (reqOptions) => {
   reqOptions.withMetadata = true;
   return request(reqOptions);
 };

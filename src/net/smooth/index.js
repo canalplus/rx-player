@@ -86,7 +86,7 @@ function buildSegmentURL(segment) {
     .replace(/\{start time\}/g, segment.getTime());
 }
 
-const req = reqOptions => {
+const req = (reqOptions) => {
   reqOptions.withMetadata = true;
   return request(reqOptions);
 };
@@ -110,7 +110,7 @@ module.exports = function(options={}) {
       }
 
       return resolving
-        .map(url => ({ url: replaceToken(resolveManifest(url), token) }));
+        .map((url) => ({ url: replaceToken(resolveManifest(url), token) }));
     },
     loader({ url }) {
       return req({ url, format: "document" });

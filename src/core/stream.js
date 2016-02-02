@@ -432,7 +432,7 @@ function Stream({
 
         return isEqual;
       })
-      .map(timing => {
+      .map((timing) => {
         return { type: "stalled", value: timing.stalled };
       });
   }

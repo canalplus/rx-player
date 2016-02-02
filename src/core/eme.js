@@ -90,7 +90,7 @@ class InMemorySessionsSet {
     initData = hashInitData(initData);
     const entry = find(
       this._entries,
-      entry => entry.initData === initData
+      (entry) => entry.initData === initData
     );
     if (entry) {
       return entry.session;
@@ -121,7 +121,7 @@ class InMemorySessionsSet {
   delete(sessionId) {
     const entry = find(
       this._entries,
-      entry => entry.session.sessionId === sessionId
+      (entry) => entry.session.sessionId === sessionId
     );
     if (entry) {
       log.debug("eme-mem-store: delete session", sessionId);
@@ -190,7 +190,7 @@ class PersistedSessionsSet {
     initData = hashInitData(initData);
     const entry = find(
       this._entries,
-      entry => entry.initData === initData
+      (entry) => entry.initData === initData
     );
     if (entry) {
       return entry.sessionId;
@@ -216,7 +216,7 @@ class PersistedSessionsSet {
 
     const entry = find(
       this._entries,
-      entry => entry.initData === initData
+      (entry) => entry.initData === initData
     );
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
@@ -333,10 +333,10 @@ function findCompatibleKeySystem(keySystems) {
   }
 
   const keySystemsType = flatten(keySystems.map(
-    keySystem => SYSTEMS[keySystem.type].map((keyType) => ({ keyType, keySystem })))
+    (keySystem) => SYSTEMS[keySystem.type].map((keyType) => ({ keyType, keySystem })))
   );
 
-  return Observable.create(obs => {
+  return Observable.create((obs) => {
     let disposed = false;
 
     function testKeySystem(index) {
@@ -360,7 +360,7 @@ function findCompatibleKeySystem(keySystems) {
 
       requestMediaKeySystemAccess(keyType, keySystemConfigurations)
         .then(
-          keySystemAccess => {
+          (keySystemAccess) => {
             log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
             obs.next({ keySystem, keySystemAccess });
             obs.complete();
@@ -383,7 +383,7 @@ function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
   const oldMediaKeys = $mediaKeys;
 
   return fromPromise(
-    keySystemAccess.createMediaKeys().then(mk => {
+    keySystemAccess.createMediaKeys().then((mk) => {
       $mediaKeys = mk;
       $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
       $keySystem = keySystem;
@@ -581,7 +581,7 @@ function EME(video, keySystems) {
     const session = createSession(mediaKeys, sessionType);
 
     return makeNewKeyRequest(session, initDataType, initData)
-      .catch(err => {
+      .catch((err) => {
         const firstLoadedSession = $loadedSessions.getFirst();
         if (!firstLoadedSession) {
           throw err;
@@ -615,7 +615,7 @@ function EME(video, keySystems) {
     const session = createSession(mediaKeys, sessionType);
 
     return loadPersistedSession(session, storedSessionId)
-      .catch(err => {
+      .catch((err) => {
         log.warn(
           "eme: failed to load persisted session, do fallback",
           storedSessionId, err
@@ -749,11 +749,11 @@ function EME(video, keySystems) {
       });
 
     const sessionUpdates = merge(keyMessages, keyStatusesChanges)
-      .concatMap(res => {
+      .concatMap((res) => {
         log.debug("eme: update session", sessionId, res);
 
         return session.update(res, sessionId)
-          .catch(err => logAndThrow(`eme: error on session update ${sessionId}`, err));
+          .catch((err) => logAndThrow(`eme: error on session update ${sessionId}`, err));
       })
       .map(() => ({ type: "eme", value: { session: session, name: "session-updated" } }));
 

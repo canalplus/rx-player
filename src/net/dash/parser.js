@@ -414,7 +414,7 @@ function parseFromDocument(document, contentProtectionParser) {
 
   if (/isoff-live/.test(manifest.profiles)) {
     const adaptations = manifest.periods[0].adaptations;
-    const videoAdaptation = find(adaptations, a => a.mimeType == "video/mp4");
+    const videoAdaptation = find(adaptations, (a) => a.mimeType == "video/mp4");
 
     const videoIndex = videoAdaptation && videoAdaptation.index;
 

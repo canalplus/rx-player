@@ -195,7 +195,7 @@ function timingsSampler(video) {
 
 function seekingsSampler(timingsSampling) {
   return timingsSampling
-    .filter(t => (
+    .filter((t) => (
       t.name == "seeking" &&
       ( t.gap === Infinity ||
         t.gap < -SEEK_GAP )

@@ -29,7 +29,7 @@ const htmlEscapes = {
 };
 
 function escape(string) {
-  return string == null ? "" : String(string).replace(reUnescapedHtml, match => htmlEscapes[match]);
+  return string == null ? "" : String(string).replace(reUnescapedHtml, (match) => htmlEscapes[match]);
 }
 
 function bpsToKbps(b) {
@@ -40,8 +40,8 @@ function getDebug(player) {
   const avr = player.getAverageBitrates();
 
   let avrAudio, avrVideo;
-  avr.video.take(1).subscribe(a => avrVideo = a|0);
-  avr.audio.take(1).subscribe(a => avrAudio = a|0);
+  avr.video.take(1).subscribe((a) => avrVideo = a|0);
+  avr.audio.take(1).subscribe((a) => avrAudio = a|0);
 
   return {
     manifest: player.man,
