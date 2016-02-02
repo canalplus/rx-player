@@ -179,6 +179,7 @@ module.exports = function(opts={}) {
   };
 
   return {
+    directFile: false,
     manifest: manifestPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,

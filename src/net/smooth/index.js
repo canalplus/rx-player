@@ -260,6 +260,7 @@ module.exports = function(options={}) {
   };
 
   return {
+    directFile: false,
     manifest: manifestPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,
