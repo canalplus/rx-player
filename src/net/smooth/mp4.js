@@ -15,6 +15,7 @@
  */
 
 const assert = require("canal-js-utils/assert");
+const { isIE } = require("../../core/compat");
 const {
   concat,
   strToBytes, bytesToStr,
@@ -493,15 +494,13 @@ function createNewSegment(segment, newmoof, oldmoof, trunoffset) {
   return newSegment;
 }
 
-/*
 function patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) {
-  let free = oldmoof.length - newmoof.length;
+  const free = oldmoof.length - newmoof.length;
   segment.set(newmoof, 0);
   segment.set(atoms.free(free), newmoof.length);
   patchTrunDataOffset(segment, trunoffset, newmoof.length + 8 + free);
   return segment;
 }
-*/
 
 function createInitSegment(
   timescale,
@@ -708,13 +707,14 @@ module.exports = {
     const trunoffset = 8 + mfhdlen + 8 + tfhdlen + tfdtlen;
     // TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
     // try to put free atom inside traf children
-    return createNewSegment(segment, newmoof, oldmoof, trunoffset);
-
-    // if (oldmoof.length - newmoof.length >= 8 /* minimum "free" atom size */) {
-    //   return patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset);
-    // }
-    // else {
-    //   return createNewSegment(segment, newmoof, oldmoof, trunoffset);
-    // }
+    if (isIE) {
+      return createNewSegment(segment, newmoof, oldmoof, trunoffset);
+    } else {
+      if (oldmoof.length - newmoof.length >= 8 /* minimum "free" atom size */) {
+        return patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset);
+      } else {
+        return createNewSegment(segment, newmoof, oldmoof, trunoffset);
+      }
+    }
   },
 };
