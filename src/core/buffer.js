@@ -381,7 +381,7 @@ function Buffer({
 }
 
 function EmptyBuffer(bufferType) {
-  return Observable.just({
+  return Observable.of({
     type: "buffer",
     value: {
       bufferType,

@@ -34,7 +34,7 @@ const {
 const TextSourceBuffer = require("./text-buffer");
 const { getLiveEdge } = require("./index-handler");
 const { clearSegmentCache } = require("./segment");
-const { Buffer, EmtpyBuffer } = require("./buffer");
+const { Buffer, EmptyBuffer } = require("./buffer");
 const EME = require("./eme");
 
 const {
@@ -321,7 +321,7 @@ function Stream({
     return adaptations.switchMap((adaptation) => {
       if (!adaptation) {
         disposeSourceBuffer(videoElement, mediaSource, bufferInfos);
-        return EmtpyBuffer(bufferType);
+        return EmptyBuffer(bufferType);
       }
 
       const adapters = adaptive.getBufferAdapters(adaptation);
