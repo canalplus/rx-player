@@ -15,6 +15,7 @@
  */
 
 module.exports = {
-  smooth: require("./smooth"),
-  dash:   require("./dash"),
+  "smooth": require("./smooth"),
+  "dash": require("./dash"),
+  "directfile": require("./directfile"),
 };

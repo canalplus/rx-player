@@ -23,7 +23,14 @@ const { retryWithBackoff } = require("canal-js-utils/rx-ext");
 const { empty, never, merge, combineLatest } = Observable;
 const min = Math.min;
 
-const { MediaSource_, sourceOpen, canPlay, loadedMetadata, clearVideoSrc } = require("./compat");
+const {
+  MediaSource_,
+  sourceOpen,
+  canPlay,
+  loadedMetadata,
+  clearVideoSrc,
+} = require("./compat");
+
 const TextSourceBuffer = require("./text-buffer");
 const { getLiveEdge } = require("./index-handler");
 const { clearSegmentCache } = require("./segment");
@@ -38,30 +45,31 @@ const {
 } = require("./manifest");
 
 const END_OF_PLAY = 0.2;
-const TOTAL_RETRY_COUNT = 3;
+
+const RETRY_OPTIONS = {
+  retryDelay: 3,
+  totalRetry: 250,
+  resetDelay: 60 * 1000,
+  shouldRetry,
+};
 
 // discontinuity threshold in seconds
 const DISCONTINUITY_THRESHOLD = 1;
-
-function identity(x) {
-  return x;
-}
-
-function plugDirectFile(url, video) {
-  return Observable.create((observer) => {
-    video.src = url;
-    observer.next({ url });
-    return () => {
-      clearVideoSrc(video);
-    };
-  });
-}
 
 function isNativeBuffer(bufferType) {
   return (
     bufferType == "audio" ||
     bufferType == "video"
   );
+}
+
+function shouldRetry(err, tryCount) {
+  if (/MEDIA_ERR/.test(err.message)) {
+    return false;
+  } else {
+    log.warn("stream retry", err, tryCount);
+    return true;
+  }
 }
 
 function Stream({
@@ -74,14 +82,13 @@ function Stream({
   pipelines,
   videoElement,
   autoPlay,
-  directFile,
 }) {
 
   clearSegmentCache();
 
   const fragStartTime = timeFragment.start;
-  let fragEndTime = timeFragment.end;
   const fragEndTimeIsFinite = fragEndTime < Infinity;
+  let fragEndTime = timeFragment.end;
 
   const manifestPipeline = pipelines.manifest;
 
@@ -168,8 +175,17 @@ function Stream({
     return Observable.create((observer) => {
       assert(MediaSource_, "player: browser is required to support MediaSource");
 
-      let mediaSource = new MediaSource_();
-      let objectURL = video.src = URL.createObjectURL(mediaSource);
+      let mediaSource, objectURL;
+
+      if (pipelines.requiresMediaSource()) {
+        mediaSource = new MediaSource_();
+        objectURL = URL.createObjectURL(mediaSource);
+      } else {
+        mediaSource = null;
+        objectURL = url;
+      }
+
+      video.src = objectURL;
 
       observer.next({ url, mediaSource });
       log.info("create mediasource object", objectURL);
@@ -227,7 +243,7 @@ function Stream({
     const augmentedTimings = timings.map((timing) => {
       let clonedTiming;
       if (fragEndTimeIsFinite) {
-        clonedTiming = { ...timing };
+        clonedTiming = timing.clone();
         clonedTiming.ts = min(timing.ts, fragEndTime);
         clonedTiming.duration = min(timing.duration, fragEndTime);
       } else {
@@ -255,40 +271,28 @@ function Stream({
       min(duration, fragEndTime) - ts < END_OF_PLAY
     ));
 
-  if (directFile) {
-    return plugDirectFile(url, videoElement)
-      .flatMap(createDirectFileStream)
-      .takeUntil(endOfPlay);
-  }
-
   /**
    * Wait for manifest and media-source to open before initializing source
    * duration and creating buffers
    */
   const createAllStream = retryWithBackoff(({ url, mediaSource }) => {
-    const sourceOpening = sourceOpen(mediaSource);
+    const sourceOpening = mediaSource
+      ? sourceOpen(mediaSource)
+      : Observable.of(null);
 
-    return combineLatest(manifestPipeline({ url }), sourceOpening, identity)
-      .flatMap(({ parsed }) => {
-        const manifest = normalizeManifest(parsed.url, parsed.manifest, subtitles);
+    return combineLatest(manifestPipeline({ url }), sourceOpening)
+      .flatMap(([{ parsed }]) => {
+        const manifest = normalizeManifest(parsed.url,
+                                           parsed.manifest,
+                                           subtitles);
 
-        setDuration(mediaSource, manifest);
+        if (mediaSource) {
+          setDuration(mediaSource, manifest);
+        }
 
         return createStream(mediaSource, manifest);
       });
-  }, {
-    retryDelay: 500,
-    totalRetry: TOTAL_RETRY_COUNT,
-    resetDelay: 60 * 1000,
-    shouldRetry: (err, tryCount) => {
-      if (/MEDIA_ERR/.test(err.message)) {
-        return false;
-      } else {
-        log.warn("stream retry", err, tryCount);
-        return true;
-      }
-    },
-  });
+  }, RETRY_OPTIONS);
 
   return createAndPlugMediaSource(url, videoElement)
     .flatMap(createAllStream)
@@ -312,7 +316,7 @@ function Stream({
     if (__DEV__)
       assert(pipelines[type], "stream: no pipeline found for type " + type);
 
-    return adaptations.switchMap(adaptation => {
+    return adaptations.switchMap((adaptation) => {
       if (!adaptation) {
         disposeSourceBuffer(videoElement, mediaSource, bufferInfos);
         return never();
@@ -443,7 +447,10 @@ function Stream({
       log.info("out of index");
       return manifestPipeline({ url: manifest.locations[0] })
         .map(({ parsed }) => {
-          const newManifest = mergeManifestsIndex(manifest, normalizeManifest(parsed.url, parsed.manifest, subtitles));
+          const newManifest = mergeManifestsIndex(
+            manifest,
+            normalizeManifest(parsed.url, parsed.manifest, subtitles)
+          );
           return { type: "manifest", value: newManifest };
         });
     }
@@ -466,8 +473,9 @@ function Stream({
 
     const buffers = merge.apply(null, adaptationsBuffers);
 
-    if (!manifest.isLive)
+    if (!manifest.isLive) {
       return buffers;
+    }
 
     // handle manifest reloading for live streamings using outofindex
     // errors thrown when a buffer asks for a segment out of its
@@ -481,6 +489,14 @@ function Stream({
       .concatMap((message) => manifestAdapter(manifest, message));
   }
 
+  function createMediaErrorStream() {
+    return on(videoElement, "error").flatMap(() => {
+      const errMessage = `stream: video element MEDIA_ERR code ${videoElement.error.code}`;
+      log.error(errMessage);
+      throw new Error(errMessage);
+    });
+  }
+
   /**
    * Creates a stream merging all observable that are required to make
    * the system cooperate.
@@ -488,27 +504,21 @@ function Stream({
   function createStream(mediaSource, manifest) {
     const { timings, seekings } = createTimings(manifest);
     const justManifest = Observable.of({ type: "manifest", value: manifest });
-    const canPlay = createLoadedMetadata(manifest);
-    const buffers = createAdaptationsBuffers(mediaSource, manifest, timings, seekings);
     const emeHandler = createEME();
+    const canPlay = createLoadedMetadata(manifest);
     const stalled = createStalled(timings, true);
+    const buffers = createAdaptationsBuffers(mediaSource,
+                                             manifest,
+                                             timings,
+                                             seekings);
+    const mediaError = createMediaErrorStream();
 
-    const mediaError = on(videoElement, "error").flatMap(() => {
-      const errMessage = `stream: video element MEDIA_ERR code ${videoElement.error.code}`;
-      log.error(errMessage);
-      throw new Error(errMessage);
-    });
-
-    return merge(justManifest, canPlay, emeHandler, buffers, stalled, mediaError);
-  }
-
-  function createDirectFileStream() {
-    const { timings } = createTimings(directFile, { timeInterval: 1000 });
-    const justManifest = Observable.of({ type: "manifest", value: directFile });
-    const canPlay = createLoadedMetadata(directFile);
-    const stalled = createStalled(timings, false);
-
-    return merge(justManifest, canPlay, stalled);
+    return merge(justManifest,
+                 canPlay,
+                 emeHandler,
+                 buffers,
+                 stalled,
+                 mediaError);
   }
 
   /**

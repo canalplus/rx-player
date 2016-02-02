@@ -17,7 +17,7 @@
 const log = require("canal-js-utils/log");
 const defaults = require("lodash/object/defaults");
 const { Subscription, BehaviorSubject, Observable, Subject } = require("rxjs");
-const { combineLatest, defer } = Observable;
+const { combineLatest } = Observable;
 const { on } = require("canal-js-utils/rx-ext");
 const EventEmitter = require("canal-js-utils/eventemitter");
 const debugPane = require("../utils/debug");
@@ -60,11 +60,21 @@ const PLAYER_ENDED     = "ENDED";
 const PLAYER_BUFFERING = "BUFFERING";
 const PLAYER_SEEKING   = "SEEKING";
 
-function noop() {}
+function calcPlayerState(isPlaying, stalled) {
+  if (stalled) {
+    return (stalled.name == "seeking")
+      ? PLAYER_SEEKING
+      : PLAYER_BUFFERING;
+  }
 
-function each(source, fn) {
-  return source.subscribe(fn, noop);
+  if (isPlaying) {
+    return PLAYER_PLAYING;
+  }
+
+  return PLAYER_PAUSED;
 }
+
+function noop() {}
 
 function assertMan(player) {
   assert(player.man, "player: no manifest loaded");
@@ -137,13 +147,13 @@ class Player extends EventEmitter {
     this.muted = 0.1;
 
     // states
-    this._setState(PLAYER_STOPPED);
-    this.resetStates();
+    this._setPlayerState(PLAYER_STOPPED);
+    this._resetStates();
 
     this.log = log;
   }
 
-  resetStates() {
+  _resetStates() {
     this.man = null;
     this.reps = { video: null, audio: null, text: null };
     this.adas = { video: null, audio: null, text: null };
@@ -151,7 +161,7 @@ class Player extends EventEmitter {
     this.frag = { start: null, end: null };
   }
 
-  _clear() {
+  _unsubscribe() {
     if (this.subscriptions) {
       this.subscriptions.unsubscribe();
       this.subscriptions = null;
@@ -160,9 +170,9 @@ class Player extends EventEmitter {
 
   stop() {
     if (this.state !== PLAYER_STOPPED) {
-      this.resetStates();
-      this._clear();
-      this._setState(PLAYER_STOPPED);
+      this._resetStates();
+      this._unsubscribe();
+      this._setPlayerState(PLAYER_STOPPED);
     }
   }
 
@@ -183,7 +193,7 @@ class Player extends EventEmitter {
     this.video = null;
   }
 
-  __recordState(type, value) {
+  _recordState(type, value) {
     const prev = this.evts[type];
     if (prev !== value) {
       this.evts[type] = value;
@@ -208,16 +218,21 @@ class Player extends EventEmitter {
       keySystems,
       timeFragment,
       subtitles,
-      directFile,
     } = opts;
 
     const {
       transportOptions,
       manifests,
       autoPlay,
+      directFile,
     } = opts;
 
     timeFragment = parseTimeFragment(timeFragment);
+
+    // compatibility with directFile api
+    if (directFile) {
+      transport = "directfile";
+    }
 
     // compatibility with old API authorizing to pass multiple
     // manifest url depending on the key system
@@ -229,19 +244,24 @@ class Player extends EventEmitter {
       keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
     }
 
-    if (typeof transport == "string")
+    if (typeof transport == "string") {
       transport = Transports[transport];
+    }
 
-    if (typeof transport == "function")
+    if (typeof transport == "function") {
       transport = transport(defaults(transportOptions, this.defaultTransportOptions));
+    }
 
     assert(transport, "player: transport " + opts.transport + " is not supported");
 
-    if (directFile) {
-      directFile = manifestHelpers.createDirectFileManifest();
-    }
-
-    return { url, keySystems, subtitles, timeFragment, autoPlay, transport, directFile };
+    return {
+      url,
+      keySystems,
+      subtitles,
+      timeFragment,
+      autoPlay,
+      transport,
+    };
   }
 
   loadVideo(options = {}) {
@@ -255,7 +275,6 @@ class Player extends EventEmitter {
       timeFragment,
       autoPlay,
       transport,
-      directFile,
     } = options;
 
     this.stop();
@@ -267,137 +286,114 @@ class Player extends EventEmitter {
       video: { cache: new InitializationSegmentCache() },
     });
 
-    const { adaptive, timings, video } = this;
-    let stream;
-    try {
-      stream = Stream({
-        url,
-        keySystems,
-        subtitles,
-        timings,
-        timeFragment,
-        adaptive,
-        pipelines,
-        videoElement: video,
-        autoPlay,
-        directFile,
-      });
-    }
-    catch(err) {
-      stream = defer(() => { throw err; });
-    }
-
-    stream = stream.publish();
-
-    const segments = filterStreamByType(stream, "buffer").map(({ segment }) => segment);
-    const manifests = filterStreamByType(stream, "manifest");
+    const { adaptive, timings, video: videoElement } = this;
+    const stream = Stream({
+      url,
+      keySystems,
+      subtitles,
+      timings,
+      timeFragment,
+      adaptive,
+      pipelines,
+      videoElement,
+      autoPlay,
+    })
+      .publish();
 
     const stalled = filterStreamByType(stream, "stalled").startWith(null);
-    const canPlay = filterStreamByType(stream, "loaded").filter(v => v === true);
-
-    let loaded;
-
-    if (directFile) {
-      loaded = canPlay;
-    } else {
-      const adas = segments.map((s) => s.getAdaptation());
-      loaded = combineLatest(
-        canPlay,
-        filterStreamByType(adas, "audio"),
-        filterStreamByType(adas, "video"));
-    }
-
-    loaded = loaded.take(1).share();
+    const loaded = filterStreamByType(stream, "loaded")
+      .filter(Boolean)
+      .take(1)
+      .share();
 
     const stateChanges = loaded.mapTo(PLAYER_LOADED)
-      .concat(combineLatest(this.playing, stalled,
-        (isPlaying, isStalled) => {
-          if (isStalled)
-            return (isStalled.name == "seeking")
-              ? PLAYER_SEEKING
-              : PLAYER_BUFFERING;
-
-          if (isPlaying)
-            return PLAYER_PLAYING;
-
-          return PLAYER_PAUSED;
-        })
-      )
+      .concat(combineLatest(this.playing, stalled, calcPlayerState))
       .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 
-    const subscriptions = this.subscriptions = new Subscription();
-    const subs = [
-      on(video, ["play", "pause"])
-        .subscribe(evt => this.playing.next(evt.type == "play")),
+    const playChanges = on(videoElement, ["play", "pause"]);
 
-      each(segments, (segment) => {
-        const ada = segment.getAdaptation();
-        const rep = segment.getRepresentation();
+    const subs = this.subscriptions = new Subscription();
+    subs.add(playChanges.subscribe(this._playPauseNext.bind(this), noop));
+    subs.add(stateChanges.subscribe(this._setPlayerState.bind(this), noop));
+    subs.add(timings.subscribe(this._triggerTimeChange.bind(this), noop));
+    subs.add(stream.subscribe(
+      this._streamNext.bind(this),
+      this._streamError.bind(this),
+      this._streamComplete.bind(this)
+    ));
+    subs.add(stream.connect());
 
-        const type = ada.type;
-        this.reps[type] = rep;
-        this.adas[type] = ada;
-
-        if (type == "text") {
-          this.__recordState("subtitle", ada.lang);
-        }
-        if (type == "video") {
-          this.__recordState("videoBitrate", rep.bitrate);
-        }
-        if (type == "audio") {
-          this.__recordState("language", ada.lang);
-          this.__recordState("audioBitrate", rep.bitrate);
-        }
-
-        this.trigger("progress", segment);
-      }),
-
-      each(manifests, (m) => {
-        this.man = m;
-        this.trigger("manifestChange", m);
-      }),
-
-      each(stateChanges, (s) => this._setState(s)),
-
-      each(timings, (t) => this._triggerTimeChange(t)),
-
-      stream.subscribe(
-        () => {},
-        (e) => {
-          this.resetStates();
-          this.trigger("error", e);
-          this._setState(PLAYER_STOPPED);
-          this._clear();
-        },
-        () => {
-          this.resetStates();
-          this._setState(PLAYER_ENDED);
-          this._clear();
-        }
-      ),
-
-      stream.subscribe(
-        n => this.stream.next(n),
-        e => this.stream.next({ type: "error", value: e })
-      ),
-
-      stream.connect(),
-    ];
-
-    subs.forEach((s) => subscriptions.add(s));
-
-    // _clear may have been called synchronously on early disposable
+    // _unsubscribe may have been called synchronously on early disposable
     if (!this.subscriptions) {
-      subscriptions.unsubscribe();
+      subs.unsubscribe();
+    } else {
+      this._triggerTimeChange();
     }
-
-    this._triggerTimeChange();
 
     return loaded;
   }
 
-  _setState(s) {
+  _streamNext(streamInfos) {
+    const { type, value } = streamInfos;
+
+    if (type == "buffer") {
+      this._bufferNext(value.segment);
+    }
+    if (type == "manifest") {
+      this._manifestNext(value);
+    }
+
+    this.stream.next(streamInfos);
+  }
+
+  _streamError(error) {
+    this._resetStates();
+    this.trigger("error", error);
+    this._setPlayerState(PLAYER_STOPPED);
+    this._unsubscribe();
+    this.stream.next({ type: "error", value: error });
+  }
+
+  _streamComplete() {
+    this._resetStates();
+    this._setPlayerState(PLAYER_ENDED);
+    this._unsubscribe();
+    this.stream.next({ type: "ended", value: null });
+  }
+
+  _manifestNext(manifest) {
+    this.man = manifest;
+    this.trigger("manifestChange", manifest);
+  }
+
+  _bufferNext(segment) {
+    const ada = segment.getAdaptation();
+    const rep = segment.getRepresentation();
+
+    const { type } = ada;
+    this.reps[type] = rep;
+    this.adas[type] = ada;
+
+    if (type == "text") {
+      this._recordState("subtitle", ada.lang);
+    }
+    if (type == "video") {
+      this._recordState("videoBitrate", rep.bitrate);
+    }
+    if (type == "audio") {
+      this._recordState("language", ada.lang);
+      this._recordState("audioBitrate", rep.bitrate);
+    }
+
+    this.trigger("progress", segment);
+  }
+
+  _playPauseNext(evt) {
+    this.playing.next(evt.type == "play");
+  }
+
+  _setPlayerState(s) {
     if (this.state !== s) {
       this.state = s;
       log.info("playerStateChange", s);
@@ -456,8 +452,9 @@ class Player extends EventEmitter {
   }
 
   getCurrentTime() {
-    if (!this.man)
+    if (!this.man) {
       return 0;
+    }
 
     const ct = this.video.currentTime;
     if (this.man.isLive) {
@@ -578,10 +575,11 @@ class Player extends EventEmitter {
   }
 
   setFullscreen(toggle = true) {
-    if (toggle === false)
+    if (toggle === false) {
       exitFullscreen();
-    else
+    } else {
       requestFullscreen(this.video);
+    }
   }
 
   setVolume(volume) {
@@ -598,7 +596,9 @@ class Player extends EventEmitter {
 
   unMute() {
     const vol = this.getVolume();
-    if (vol === 0) this.setVolume(this.muted);
+    if (vol === 0) {
+      this.setVolume(this.muted);
+    }
   }
 
   setLanguage(lng) {
@@ -610,7 +610,7 @@ class Player extends EventEmitter {
     assert(!sub || this.getAvailableSubtitles().indexOf(sub) >= 0, "player: unknown subtitle");
     this.adaptive.setSubtitle(sub || "");
     if (!sub) {
-      this.__recordState("subtitle", null);
+      this._recordState("subtitle", null);
     }
   }
 
@@ -640,6 +640,11 @@ class Player extends EventEmitter {
     this.adaptive.setAudioBufferSize(size);
   }
 
+  asObservable() {
+    return this.stream;
+  }
+
+  // TODO: deprecate this one
   getStreamObservable() {
     return this.stream;
   }
@@ -659,6 +664,7 @@ class Player extends EventEmitter {
   toggleDebug() {
     debugPane.toggleDebug(this,this.video);
   }
+
   getCurrentKeySystem() {
     return EME.getCurrentKeySystem();
   }

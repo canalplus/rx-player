@@ -293,14 +293,6 @@ function getAvailableSubtitles(manifest) {
   return getAdaptationsByType(manifest, "text").map((ada) => ada.lang);
 }
 
-function createDirectFileManifest() {
-  return {
-    isLive: false,
-    duration: Infinity,
-    adaptations: null,
-  };
-}
-
 module.exports = {
   normalizeManifest,
   mergeManifestsIndex,
@@ -310,5 +302,4 @@ module.exports = {
   getAdaptationsByType,
   getAvailableSubtitles,
   getAvailableLanguages,
-  createDirectFileManifest,
 };

@@ -632,4 +632,5 @@ module.exports = {
 
   addTextTrack,
   isVTTSupported,
+  isIE,
 };
