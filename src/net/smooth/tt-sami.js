@@ -67,18 +67,23 @@ function parseSami(smi, lang) {
   for(;;) {
     up = syncOp.exec(smi);
     to = syncCl.exec(smi);
-    if (!up && !to) break;
-    if (!up || !to || up.index >= to.index)
+    if (!up && !to) {
+      break;
+    }
+    if (!up || !to || up.index >= to.index) {
       throw new Error("parse error");
+    }
 
     const str = smi.slice(up.index, to.index);
     const tim = str.match(START);
-    if (!tim)
+    if (!tim) {
       throw new Error("parse error: sync time attribute");
+    }
 
     const start = +tim[1];
-    if (isNaN(start))
+    if (isNaN(start)) {
       throw new Error("parse error: sync time attribute NaN");
+    }
 
     appendSub(subs, str.split("\n"), start / 1000);
   }
@@ -88,11 +93,16 @@ function parseSami(smi, lang) {
   function appendSub(subs, lines, start) {
     let i = lines.length, m;
     while(--i >= 0) {
-      m = lines[i].match(PARAG); if (!m) continue;
+      m = lines[i].match(PARAG);
+      if (!m) {
+        continue;
+      }
+
       const [, kl, txt] = m;
 
-      if (klass !== kl)
+      if (klass !== kl) {
         continue;
+      }
 
       if (txt === "&nbsp;") {
         subs[subs.length - 1].end = start;

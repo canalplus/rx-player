@@ -28,12 +28,20 @@ function parseTimeFragment(timeFragment) {
 
   if (typeof timeFragment.start == "string" &&
       typeof timeFragment.end == "string") {
-    if (!timeFragment.start) timeFragment.start = "0%";
-    if (!timeFragment.end) timeFragment.end = "100%";
+    if (!timeFragment.start) {
+      timeFragment.start = "0%";
+    }
+    if (!timeFragment.end) {
+      timeFragment.end = "100%";
+    }
   }
   else {
-    if (!timeFragment.start) timeFragment.start = 0;
-    if (!timeFragment.end) timeFragment.end = Infinity;
+    if (!timeFragment.start) {
+      timeFragment.start = 0;
+    }
+    if (!timeFragment.end) {
+      timeFragment.end = Infinity;
+    }
   }
 
   if (typeof timeFragment.start == "string" &&
@@ -60,7 +68,9 @@ function parseTimeFragment(timeFragment) {
 const errMessage = "Invalid MediaFragment";
 
 function normalizeNTPTime(time) {
-  if (!time) return false;
+  if (!time) {
+    return false;
+  }
 
   // replace a sole trailing dot, which is legal:
   // npt-sec = 1*DIGIT [ "." *DIGIT ]
@@ -106,7 +116,9 @@ function normalizeNTPTime(time) {
 // we interpret frames as milliseconds, and further-subdivison-of-frames
 // as microseconds. this allows for relatively easy comparison.
 function normalizeSMPTETime(time) {
-  if (!time) return false;
+  if (!time) {
+    return false;
+  }
 
   // possible cases:
   // 12:34:56
@@ -155,7 +167,9 @@ function normalizeWallClockTime(time) {
 }
 
 function normalizePercentage(time) {
-  if (!time) return false;
+  if (!time) {
+    return false;
+  }
 
   return time;
 }

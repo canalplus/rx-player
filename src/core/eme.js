@@ -445,11 +445,13 @@ function logAndThrow(errMessage, reason) {
 }
 
 function toObservable(value) {
-  if (value && typeof value.then == "function")
+  if (value && typeof value.then == "function") {
     return fromPromise(value);
+  }
 
-  if (value && typeof value.subscribe == "function")
+  if (value && typeof value.subscribe == "function") {
     return value;
+  }
 
   return Observable.of(value);
 }

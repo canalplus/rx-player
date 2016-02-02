@@ -57,8 +57,12 @@ function parseBoolean(str) {
 }
 
 function parseIntOrBoolean(str) {
-  if (str == "true") return true;
-  if (str == "false") return false;
+  if (str == "true") {
+    return true;
+  }
+  if (str == "false") {
+    return false;
+  }
   return parseInt(str);
 }
 
@@ -67,7 +71,9 @@ function parseDateTime(str) {
 }
 
 function parseDuration(date) {
-  if (!date) return 0;
+  if (!date) {
+    return 0;
+  }
 
   const match = iso8601Duration.exec(date);
   assert(match, `parser: ${date} is not a valid ISO8601 duration`);
@@ -84,7 +90,9 @@ function parseDuration(date) {
 
 function parseFrameRate(str) {
   const match = frameRateRe.exec(str);
-  if (!match) return -1;
+  if (!match) {
+    return -1;
+  }
 
   const nom = parseInt(match[1]) || 0;
   const den = parseInt(match[2]) || 0;
@@ -99,10 +107,11 @@ function parseRatio(str) {
 
 function parseByteRange(str) {
   const match = rangeRe.exec(str);
-  if (!match)
+  if (!match) {
     return null;
-  else
+  } else {
     return [+match[1], +match[2]];
+  }
 }
 
 const RepresentationBaseType = [
@@ -280,11 +289,13 @@ function parseInitializationAttribute(attrValue) {
 function parseInitialization(root) {
   let range, media;
 
-  if (root.hasAttribute("range"))
+  if (root.hasAttribute("range")) {
     range = parseByteRange(root.getAttribute("range"));
+  }
 
-  if (root.hasAttribute("sourceURL"))
+  if (root.hasAttribute("sourceURL")) {
     media = root.getAttribute("sourceURL");
+  }
 
   return { range, media };
 }
@@ -432,10 +443,11 @@ function parseFromString(manifest, contentProtectionParser) {
 }
 
 function parser(manifest, contentProtectionParser) {
-  if (typeof manifest == "string")
+  if (typeof manifest == "string") {
     return parseFromString(manifest, contentProtectionParser);
-  else
+  } else {
     return parseFromDocument(manifest, contentProtectionParser);
+  }
 }
 
 parser.parseFromString   = parseFromString;

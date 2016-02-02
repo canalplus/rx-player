@@ -74,8 +74,9 @@ function normalizeManifest(location, manifest, subtitles) {
   manifest = { ...manifest, ...periods[0] };
   manifest.periods = null;
 
-  if (!manifest.duration)
+  if (!manifest.duration) {
     manifest.duration = Infinity;
+  }
 
   if (manifest.isLive) {
     manifest.suggestedPresentationDelay = manifest.suggestedPresentationDelay || DEFAULT_PRESENTATION_DELAY;
@@ -131,15 +132,17 @@ function normalizeAdaptation(adaptation, inherit) {
     .sort((a, b) => a.bitrate - b.bitrate);
 
   let { type, mimeType } = adaptation;
-  if (!mimeType)
+  if (!mimeType) {
     mimeType = representations[0].mimeType;
+  }
 
   assert(mimeType);
 
   adaptation.mimeType = mimeType;
 
-  if (!type)
+  if (!type) {
     type = adaptation.type = parseType(mimeType);
+  }
 
   if (type == "video" || type == "audio") {
     representations = representations.filter((rep) => isCodecSupported(getCodec(rep)));
@@ -177,8 +180,9 @@ function normalizeRepresentation(representation, inherit) {
 }
 
 function normalizeSubtitles(subtitles) {
-  if (!Array.isArray(subtitles))
+  if (!Array.isArray(subtitles)) {
     subtitles = [subtitles];
+  }
 
   return flatten(subtitles.map(({ mimeType, url, language, languages }) => {
     if (language) {

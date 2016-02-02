@@ -47,8 +47,9 @@ function isPointInRange(r, point) {
 
 function findOverlappingRange(range, others) {
   for (let i = 0; i < others.length; i++) {
-    if (areOverlappingRanges(range, others[i]))
+    if (areOverlappingRanges(range, others[i])) {
       return others[i];
+    }
   }
   return null;
 }
@@ -82,8 +83,9 @@ function sameBitrate(r1, r2) {
 function removeEmptyRanges(ranges) {
   for (let index = 0; index < ranges.length; index++) {
     const range = ranges[index];
-    if (range.start === range.end)
+    if (range.start === range.end) {
       ranges.splice(index++, 1);
+    }
   }
   return ranges;
 }
@@ -242,8 +244,9 @@ class BufferedRanges {
       const { start, end } = this.ranges[i];
 
       if ((nearlyLt(start, startTime) && nearlyLt(startTime, end)) &&
-          (nearlyLt(start, endTime) && nearlyLt(endTime, end)))
+          (nearlyLt(start, endTime) && nearlyLt(endTime, end))) {
         return this.ranges[i];
+      }
     }
 
     return null;
@@ -254,8 +257,9 @@ class BufferedRanges {
    */
   getRange(time) {
     for (let i = 0; i < this.ranges.length; i++) {
-      if (isPointInRange(this.ranges[i], time))
+      if (isPointInRange(this.ranges[i], time)) {
         return this.ranges[i];
+      }
     }
     return null;
   }
@@ -263,8 +267,9 @@ class BufferedRanges {
   getOuterRanges(time) {
     const ranges = [];
     for (let i = 0; i < this.ranges.length; i++) {
-      if (!isPointInRange(this.ranges[i], time))
+      if (!isPointInRange(this.ranges[i], time)) {
         ranges.push(this.ranges[i]);
+      }
     }
     return ranges;
   }
@@ -312,10 +317,11 @@ class BufferedRanges {
       }
     }
 
-    if (nextRangeStart != null)
+    if (nextRangeStart != null) {
       return nextRangeStart - time;
-    else
+    } else {
       return Infinity;
+    }
   }
 
   insert(bitrate, start, end) {
@@ -340,15 +346,17 @@ class BufferedRanges {
   }
 
   equals(others) {
-    if (__DEV__)
+    if (__DEV__) {
       assert(others instanceof BufferedRanges);
+    }
 
     return rangesEquals(this.ranges, others.ranges);
   }
 
   intersect(others) {
-    if (__DEV__)
+    if (__DEV__) {
       assert(others instanceof BufferedRanges);
+    }
 
     rangesIntersect(this.ranges, others.ranges);
     this.length = this.ranges.length;

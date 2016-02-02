@@ -17,10 +17,11 @@
 const { Segment } = require("../segment");
 
 function getTimelineBound({ ts, d, r }) {
-  if (d === -1)
+  if (d === -1) {
     return ts;
-  else
+  } else {
     return ts + (r+1) * d;
+  }
 }
 
 class Timeline {
@@ -77,11 +78,13 @@ class Timeline {
 
   checkRange(up) {
     let last = this.timeline[this.timeline.length - 1];
-    if (!last)
+    if (!last) {
       return true;
+    }
 
-    if (last.d < 0)
+    if (last.d < 0) {
       last = { ts: last.ts, d: 0, r: last.r };
+    }
 
     return (up <= getTimelineBound(last));
   }
@@ -107,10 +110,11 @@ class Timeline {
 
   getSegmentNumber(ts, up, duration) {
     const diff = up - ts;
-    if (diff > 0)
+    if (diff > 0) {
       return Math.floor(diff / duration);
-    else
+    } else {
       return 0;
+    }
   }
 
   getSegments(up, to) {
@@ -124,8 +128,9 @@ class Timeline {
 
     loop:
     for(;;) {
-      if (++timelineIndex >= timelineLength)
+      if (++timelineIndex >= timelineLength) {
         break;
+      }
 
       const segmentRange = timeline[timelineIndex];
       const { d, ts, range } = segmentRange;
@@ -171,8 +176,9 @@ class Timeline {
       const lastSegmentTs = (last.ts + last.d * last.r);
       const tsDiff = newSegmentTs - lastSegmentTs;
 
-      if (tsDiff <= 0)
+      if (tsDiff <= 0) {
         return false;
+      }
 
       // try to use the compact notation with @r attribute on the last
       // to elements of the timeline if we find out they have the same

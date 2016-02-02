@@ -65,6 +65,8 @@
     'block-scoped-var': 0,
     // cyclomatic complexity, we're too far gone
     'complexity': 0,
+    // style guide: Always use brackets, even when optional.
+    'curly': [1, 'all'],
 
     'no-var': 1,
     'prefer-const': 1,

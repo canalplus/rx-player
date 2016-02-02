@@ -53,8 +53,9 @@ let MockMediaKeys = function() {
 };
 
 let requestMediaKeySystemAccess;
-if (navigator.requestMediaKeySystemAccess)
+if (navigator.requestMediaKeySystemAccess) {
   requestMediaKeySystemAccess = (a, b) => navigator.requestMediaKeySystemAccess(a, b);
+}
 
 // @implement interface MediaKeySystemAccess
 class KeySystemAccess {
@@ -170,24 +171,27 @@ const emeEvents = {
 };
 
 function sourceOpen(mediaSource) {
-  if (mediaSource.readyState == "open")
+  if (mediaSource.readyState == "open") {
     return Observable.of(null);
-  else
+  } else {
     return sourceOpenEvent(mediaSource).take(1);
+  }
 }
 
 function loadedMetadata(videoElement) {
-  if (videoElement.readyState >= HTMLVideoElement.HAVE_METADATA)
+  if (videoElement.readyState >= HTMLVideoElement.HAVE_METADATA) {
     return Observable.of(null);
-  else
+  } else {
     return loadedMetadataEvent(videoElement).take(1);
+  }
 }
 
 function canPlay(videoElement) {
-  if (videoElement.readyState >= HTMLVideoElement.HAVE_ENOUGH_DATA)
+  if (videoElement.readyState >= HTMLVideoElement.HAVE_ENOUGH_DATA) {
     return Observable.of(null);
-  else
+  } else {
     return on(videoElement, "canplay").take(1);
+  }
 }
 
 
@@ -263,8 +267,9 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     }),
 
     close: wrap(function() {
-      if (this._con)
+      if (this._con) {
         this._con.unsubscribe();
+      }
       this._con = null;
       this._vid = null;
     }),
@@ -295,8 +300,9 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
   };
 
   requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
-    if (!isTypeSupported(keyType))
+    if (!isTypeSupported(keyType)) {
       return Promise.reject();
+    }
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
       const keySystemConfiguration = keySystemConfigurations[i];
@@ -392,8 +398,9 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
   };
 
   requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
-    if (!MediaKeys_.isTypeSupported(keyType))
+    if (!MediaKeys_.isTypeSupported(keyType)) {
       return Promise.reject();
+    }
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
       const keySystemConfiguration = keySystemConfigurations[i];
@@ -503,7 +510,9 @@ if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener
   SBProto.__listeners = [];
 
   SBProto.appendBuffer = function(data) {
-    if (this.updating) throw new Error("SourceBuffer updating");
+    if (this.updating) {
+      throw new Error("SourceBuffer updating");
+    }
     this.trigger("updatestart");
     this.updating = true;
     try {
@@ -527,19 +536,29 @@ if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener
 
 function requestFullscreen(elt) {
   if (!isFullscreen()) {
-    if (elt.requestFullscreen)            elt.requestFullscreen();
-    else if (elt.msRequestFullscreen)     elt.msRequestFullscreen();
-    else if (elt.mozRequestFullScreen)    elt.mozRequestFullScreen();
-    else if (elt.webkitRequestFullscreen) elt.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    if (elt.requestFullscreen) {
+      elt.requestFullscreen();
+    } else if (elt.msRequestFullscreen) {
+      elt.msRequestFullscreen();
+    } else if (elt.mozRequestFullScreen) {
+      elt.mozRequestFullScreen();
+    } else if (elt.webkitRequestFullscreen) {
+      elt.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    }
   }
 }
 
 function exitFullscreen() {
   if (isFullscreen()) {
-    if (doc.exitFullscreen)            doc.exitFullscreen();
-    else if (doc.msExitFullscreen)     doc.msExitFullscreen();
-    else if (doc.mozCancelFullScreen)  doc.mozCancelFullScreen();
-    else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+    if (doc.exitFullscreen) {
+      doc.exitFullscreen();
+    } else if (doc.msExitFullscreen) {
+      doc.msExitFullscreen();
+    } else if (doc.mozCancelFullScreen) {
+      doc.mozCancelFullScreen();
+    } else if (doc.webkitExitFullscreen) {
+      doc.webkitExitFullscreen();
+    }
   }
 }
 
@@ -554,10 +573,15 @@ function isFullscreen() {
 
 function visibilityChange() {
   let prefix;
-  if (doc.hidden != null)            prefix = "";
-  else if (doc.mozHidden != null)    prefix = "moz";
-  else if (doc.msHidden != null)     prefix = "ms";
-  else if (doc.webkitHidden != null) prefix = "webkit";
+  if (doc.hidden != null) {
+    prefix = "";
+  } else if (doc.mozHidden != null) {
+    prefix = "moz";
+  } else if (doc.msHidden != null) {
+    prefix = "ms";
+  } else if (doc.webkitHidden != null) {
+    prefix = "webkit";
+  }
 
   const hidden = prefix ? prefix + "Hidden" : "hidden";
   const visibilityChangeEvent = prefix + "visibilitychange";
@@ -576,10 +600,11 @@ function clearVideoSrc(video) {
   // Microsoft recommended use to use video.removeAttr("src")
   // instead. Since, video.removeAttr is not supported on
   // other platforms, we have to make a compat function.
-  if (isIE)
+  if (isIE) {
     video.removeAttribute("src");
-  else
+  } else {
     video.src = "";
+  }
 }
 
 function addTextTrack(video) {

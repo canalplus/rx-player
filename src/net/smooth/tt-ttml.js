@@ -36,12 +36,14 @@ function parseTTML(ttml, lang, offset) {
     doc = ttml;
   }
 
-  if (!(doc instanceof window.Document || doc instanceof window.HTMLElement))
+  if (!(doc instanceof window.Document || doc instanceof window.HTMLElement)) {
     throw new Error("ttml: needs a Document to parse");
+  }
 
   const node = doc.querySelector("tt");
-  if (!node)
+  if (!node) {
     throw new Error("ttml: could not find <tt> tag");
+  }
 
   const subs = parseChildren(node.querySelector("body"), 0);
   for (let i = 0; i < subs.length; i++) {
@@ -72,7 +74,9 @@ function parseChildren(node, parentOffset) {
       case "DIV":
         // div is container for subtitles, recurse
         let newOffset = parseTimestamp(node.getAttribute("begin"), 0);
-        if (newOffset == null) newOffset = parentOffset;
+        if (newOffset == null) {
+          newOffset = parentOffset;
+        }
         arr.push.apply(arr, parseChildren(node, newOffset));
         break;
       }
@@ -91,12 +95,17 @@ function parseNode(node, parentOffset, siblingOffset) {
 
   if (!typeof start == "number" &&
       !typeof end == "number" &&
-      !typeof dur == "number")
+      !typeof dur == "number") {
     throw new Error("ttml: unsupported timestamp format");
+  }
 
   if (dur > 0) {
-    if (start == null) start = siblingOffset || parentOffset;
-    if (end == null) end = start + dur;
+    if (start == null) {
+      start = siblingOffset || parentOffset;
+    }
+    if (end == null) {
+      end = start + dur;
+    }
   }
   else if (end == null) {
     // No end given, infer duration if possible

@@ -73,8 +73,12 @@ class IndexHandler {
     const presentationOffset = this.index.presentationTimeOffset || 0;
     const timescale = this.index.timescale || 1;
 
-    if (!offset)  offset  = 0;
-    if (!bufSize) bufSize = 0;
+    if (!offset) {
+      offset  = 0;
+    }
+    if (!bufSize) {
+      bufSize = 0;
+    }
 
     offset = Math.min(offset, bufSize);
 

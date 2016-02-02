@@ -162,8 +162,9 @@ function Stream({
       try {
         oldSourceBuffer.abort();
 
-        if (isNative)
+        if (isNative) {
           mediaSource.removeSourceBuffer(oldSourceBuffer);
+        }
 
       } catch(e) {
         log.warn(e);
@@ -313,8 +314,9 @@ function Stream({
     const { type } = bufferInfos;
     const adaptations = adaptive.getAdaptationsChoice(type, bufferInfos.adaptations);
 
-    if (__DEV__)
+    if (__DEV__) {
       assert(pipelines[type], "stream: no pipeline found for type " + type);
+    }
 
     return adaptations.switchMap((adaptation) => {
       if (!adaptation) {
@@ -360,7 +362,9 @@ function Stream({
     const canPlay$ = canPlay(videoElement)
       .do(() => {
         log.info("canplay event");
-        if (autoPlay) videoElement.play();
+        if (autoPlay) {
+          videoElement.play();
+        }
         autoPlay = true;
       });
 
@@ -395,12 +399,13 @@ function Stream({
         const wasStalled = prevTiming.stalled;
 
         let isEqual;
-        if (!wasStalled && !isStalled)
+        if (!wasStalled && !isStalled) {
           isEqual = true;
-        else if (!wasStalled || !isStalled)
+        } else if (!wasStalled || !isStalled) {
           isEqual = false;
-        else
+        } else {
           isEqual = (wasStalled.name == isStalled.name);
+        }
 
         if (!isEqual && changePlaybackRate) {
           if (wasStalled) {
@@ -566,8 +571,9 @@ function Stream({
       fragEndTime = (parseFloat(endTime) / 100) * duration;
     }
 
-    if (endTime === Infinity || endTime === "100%")
+    if (endTime === Infinity || endTime === "100%") {
       endTime = duration;
+    }
 
     if (!manifest.isLive) {
       assert(startTime < duration && endTime <= duration, `stream: bad startTime and endTime`);

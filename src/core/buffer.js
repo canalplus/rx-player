@@ -215,8 +215,9 @@ function Buffer({
     const currentRange = ranges.getRange(timestamp);
     if (currentRange && currentRange.bitrate === representation.bitrate) {
       const rangeEndGap = Math.floor(currentRange.end - timestamp);
-      if (rangeEndGap > timestampPadding)
+      if (rangeEndGap > timestampPadding) {
         timestampPadding = rangeEndGap;
+      }
     }
 
     // given the current timestamp and the previously calculated

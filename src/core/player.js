@@ -104,8 +104,9 @@ class Player extends EventEmitter {
     this.defaultTransport = transport;
     this.defaultTransportOptions = transportOptions || {};
 
-    if (!videoElement)
+    if (!videoElement) {
       videoElement = document.createElement("video");
+    }
 
     assert((videoElement instanceof HTMLVideoElement_),
       "requires an actual HTMLVideoElement");
@@ -565,7 +566,9 @@ class Player extends EventEmitter {
   seekTo(time) {
     assert(this.man);
     const currentTs = this.video.currentTime;
-    if (this.man.isLive) time = fromWallClockTime(time, this.man);
+    if (this.man.isLive) {
+      time = fromWallClockTime(time, this.man);
+    }
     if (time !== currentTs) {
       log.info("seek to", time);
       return (this.video.currentTime = time);

@@ -53,7 +53,9 @@ const req = reqOptions => {
 module.exports = function(opts={}) {
   let { contentProtectionParser } = opts;
 
-  if (!contentProtectionParser) contentProtectionParser = () => {};
+  if (!contentProtectionParser) {
+    contentProtectionParser = () => {};
+  }
 
   const manifestPipeline = {
     loader({ url }) {
@@ -153,8 +155,9 @@ module.exports = function(opts={}) {
           };
         }
 
-        if (__DEV__)
+        if (__DEV__) {
           assert(currentSegment);
+        }
       }
 
       if (segment.isInitSegment()) {

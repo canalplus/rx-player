@@ -44,10 +44,11 @@ function getClosestBitrate(bitrates, btr, threshold=0) {
 
 function getClosestDisplayBitrate(reps, width) {
   const rep = find(reps, r => r.width >= width);
-  if (rep)
+  if (rep) {
     return rep.bitrate;
-  else
+  } else {
     return Infinity;
+  }
 }
 
 function findByLang(adaptations, lang) {
@@ -117,14 +118,17 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   }
 
   function getAdaptationsChoice(type, adaptations) {
-    if (type == "audio")
+    if (type == "audio") {
       return audioAdaptationChoice(adaptations);
+    }
 
-    if (type == "text")
+    if (type == "text") {
       return textAdaptationChoice(adaptations);
+    }
 
-    if (adaptations.length == 1)
+    if (adaptations.length == 1) {
       return only(adaptations[0]);
+    }
 
     throw new Error(`adaptive: unknown type ${type} for adaptation chooser`);
   }
@@ -144,10 +148,11 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
           // no threshold for the first value of the average bitrate
           // stream corresponding to the selected initial video bitrate
           let bufThreshold;
-          if (count === 0)
+          if (count === 0) {
             bufThreshold = 0;
-          else
+          } else {
             bufThreshold = defaultBufferThreshold;
+          }
 
           return getClosestBitrate(bitrates, avrBitrate, bufThreshold);
         })
@@ -163,12 +168,14 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
         //   - maximum based on the application visibility (background tab)
         maxBitrates = combineLatest(maxBitrates, videoWidth, inBackground,
           (bitrate, width, isHidden) => {
-            if (isHidden)
+            if (isHidden) {
               return bitrates[0];
+            }
 
             const closestDisplayBitrate = getClosestDisplayBitrate(representations, width);
-            if (closestDisplayBitrate < bitrate)
+            if (closestDisplayBitrate < bitrate) {
               return closestDisplayBitrate;
+            }
 
             return bitrate;
           });

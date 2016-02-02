@@ -48,9 +48,15 @@ function createPipeline(type,
                         metrics,
                         opts={}) {
 
-  if (!parser) parser = Observable.of;
-  if (!loader) loader = Observable.of;
-  if (!resolver) resolver = Observable.of;
+  if (!parser) {
+    parser = Observable.of;
+  }
+  if (!loader)  {
+    loader = Observable.of;
+  }
+  if (!resolver) {
+    resolver = Observable.of;
+  }
 
   const { totalRetry, timeout, cache } = defaults(opts, {
     totalRetry: 3,

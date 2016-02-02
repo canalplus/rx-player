@@ -39,8 +39,9 @@ function boxName(str) {
 }
 
 function Atom(name, buff) {
-  if (__DEV__)
+  if (__DEV__) {
     assert(name.length === 4);
+  }
 
   const len = buff.length + 8;
   return concat(itobe4(len), boxName(name), buff);
@@ -57,7 +58,9 @@ function readUuid(buf, id1, id2, id3, id4) {
       be4toi(buf, i + 12) === id2 &&
       be4toi(buf, i + 16) === id3 &&
       be4toi(buf, i + 20) === id4
-    ) return buf.subarray(i + 24, i + len);
+    ) {
+      return buf.subarray(i + 24, i + len);
+    }
     i += len;
   }
 }
@@ -103,8 +106,9 @@ const atoms = {
    * {Uint8Array} sinf (Uint8Array representing the sinf atom, only if name == "encv")
    */
   avc1encv(name, drefIdx, width, height, hRes, vRes, encName, colorDepth, avcc, sinf) {
-    if (__DEV__)
+    if (__DEV__) {
       assert(name === "avc1" || name === "encv", "should be avc1 or encv atom");
+    }
     return Atom(name, concat(
       6,                      // 6 bytes reserved
       itobe2(drefIdx), 16,    // drefIdx + QuickTime reserved, zeroes
@@ -171,8 +175,9 @@ const atoms = {
    * {String} dataFormat, four letters (eg "avc1")
    */
   frma(dataFormat) {
-    if (__DEV__)
+    if (__DEV__) {
       assert.equal(dataFormat.length, 4, "wrong data format length");
+    }
     return Atom("frma", strToBytes(dataFormat));
   },
 
@@ -321,8 +326,9 @@ const atoms = {
    * {Number} schemeVersion (eg 65536)
    */
   schm(schemeType, schemeVersion) {
-    if (__DEV__)
+    if (__DEV__) {
       assert.equal(schemeType.length, 4, "wrong scheme type length");
+    }
     return Atom("schm", concat(
       4,
       strToBytes(schemeType),
@@ -381,8 +387,9 @@ const atoms = {
    * {String} keyId Hex KID 93789920e8d6520098577df8f2dd5546
    */
   tenc(algId, ivSize, keyId) {
-    if (__DEV__)
+    if (__DEV__) {
       assert.equal(keyId.length, 32, "wrong default KID length");
+    }
     return Atom("tenc", concat(
       6,
       [algId, ivSize],
@@ -412,10 +419,11 @@ const atoms = {
 const reads = {
   traf(buff) {
     const moof = findAtom(buff, 0x6D6F6F66);
-    if (moof)
+    if (moof) {
       return findAtom(moof, 0x74726166);
-    else
+    } else {
       return null;
+    }
   },
 
   /**
@@ -459,8 +467,9 @@ const reads = {
  */
 function aacesHeader(type, frequency, chans) {
   const freq = FREQS.indexOf(frequency);
-  if (__DEV__)
+  if (__DEV__) {
     assert(freq >= 0, "non supported frequency"); // TODO : handle Idx = 15...
+  }
   let val;
   val = (type & 0x3F) << 0x4;
   val = (val | (freq  & 0x1F)) << 0x4;
@@ -545,8 +554,9 @@ module.exports = {
 
   parseTfrf(traf) {
     const tfrf = reads.tfrf(traf);
-    if (!tfrf)
+    if (!tfrf) {
       return [];
+    }
 
     const frags = [];
     const version = tfrf[0];
@@ -603,7 +613,9 @@ module.exports = {
     pssList
   ) {
 
-    if (!pssList) pssList = [];
+    if (!pssList) {
+      pssList = [];
+    }
     const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
     const sps = hexToBytes(spsHex);
     const pps = hexToBytes(ppsHex);
@@ -652,8 +664,12 @@ module.exports = {
     pssList
   ) {
 
-    if (!pssList) pssList = [];
-    if (!codecPrivateData) codecPrivateData = aacesHeader(2, sampleRate, channelsCount);
+    if (!pssList) {
+      pssList = [];
+    }
+    if (!codecPrivateData) {
+      codecPrivateData = aacesHeader(2, sampleRate, channelsCount);
+    }
 
     const esds = atoms.esds(1, codecPrivateData);
     let stsd;

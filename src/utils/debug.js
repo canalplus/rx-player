@@ -145,7 +145,9 @@ function showDebug(player, videoElement) {
     closeBtn.addEventListener("click", () => hideDebug(videoElement));
   }
 
-  if (interval) clearInterval(interval);
+  if (interval) {
+    clearInterval(interval);
+  }
   interval = setInterval(() => update(player, videoElement), 1000);
 
   update(player, videoElement);

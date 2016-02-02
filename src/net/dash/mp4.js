@@ -36,7 +36,9 @@ function findAtom(buf, atomName) {
     }
   }
 
-  if (i >= l) return -1;
+  if (i >= l) {
+    return -1;
+  }
 
   assert(i + size <= l, "dash: atom out of range");
   return i;
@@ -44,7 +46,9 @@ function findAtom(buf, atomName) {
 
 function parseSidx(buf, offset) {
   const index = findAtom(buf, 0x73696478 /* "sidx" */);
-  if (index == -1) return null;
+  if (index == -1) {
+    return null;
+  }
 
   const size = be4toi(buf, index);
   let pos = index + /* size */4 + /* name */4;
@@ -87,8 +91,9 @@ function parseSidx(buf, offset) {
     pos += 4;
     const refType = (refChunk & 0x80000000) >>> 31;
     const refSize = (refChunk & 0x7fffffff);
-    if (refType == 1)
+    if (refType == 1) {
       throw new Error("not implemented");
+    }
 
     const d = be4toi(buf, pos);
     pos += 4;
@@ -133,12 +138,14 @@ function createPssh({ systemId, privateData }) {
 }
 
 function patchPssh(buf, pssList) {
-  if (!pssList || !pssList.length)
+  if (!pssList || !pssList.length) {
     return buf;
+  }
 
   const pos = findAtom(buf, 0x6d6f6f76 /* = "moov" */);
-  if (pos == -1)
+  if (pos == -1) {
     return buf;
+  }
 
   const size = be4toi(buf, pos);
   const moov = buf.subarray(pos, pos + size);

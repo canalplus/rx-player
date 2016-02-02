@@ -221,8 +221,9 @@ function normalizeWallClockTime(timeInMs, manifest) {
     timeShiftBufferDepth,
   } = manifest;
 
-  if (typeof timeInMs != "number")
+  if (typeof timeInMs != "number") {
     timeInMs = timeInMs.getTime();
+  }
 
   const now = Date.now();
   const max = now - (presentationLiveGap + suggestedPresentationDelay) * 1000;
@@ -231,8 +232,9 @@ function normalizeWallClockTime(timeInMs, manifest) {
 }
 
 function getLiveGap(ts, manifest) {
-  if (!manifest.isLive)
+  if (!manifest.isLive) {
     return Infinity;
+  }
 
   const {
     availabilityStartTime,

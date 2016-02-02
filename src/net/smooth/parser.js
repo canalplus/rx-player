@@ -164,7 +164,9 @@ function createSmoothStreamingParser(parserOptions={}) {
     // in smooth streaming format,
     // r refers to number of same duration
     // chunks, not repetitions (defers from DASH)
-    if (r)  r--;
+    if (r) {
+      r--;
+    }
 
     if (l > 0 && !prev.d) {
       prev.d = t - prev.ts;
@@ -257,8 +259,9 @@ function createSmoothStreamingParser(parserOptions={}) {
     }
 
     // TODO(pierre): real ad-insert support
-    if (subType == "ADVT")
+    if (subType == "ADVT") {
       return null;
+    }
 
     return {
       type,
