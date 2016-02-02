@@ -30,6 +30,7 @@ const GC_GAP_CALM  = 240;
 const GC_GAP_BEEFY = 30;
 
 function Buffer({
+  bufferType,   // Buffer type (audio, video, text)
   sourceBuffer, // SourceBuffer object
   adaptation,   // Adaptation buffered
   pipeline,     // Segment pipeline
@@ -38,7 +39,6 @@ function Buffer({
   seekings,     // Seekings observable
 }) {
 
-  const bufferType = adaptation.type;
   const isAVBuffer = (
     bufferType == "audio" ||
     bufferType == "video"
@@ -340,8 +340,8 @@ function Buffer({
       }
 
       return {
-        type: "buffer",
-        value: { addedSegments, ...pipelineData },
+        type: "pipeline",
+        value: { bufferType, addedSegments, ...pipelineData },
       };
     }
 
@@ -369,11 +369,29 @@ function Buffer({
       return Observable.of({ type: "precondition-failed", value: err })
         .concat(timer(2000))
         .concat(createRepresentationBuffer(representation));
-    });
+    })
+      .startWith({
+        type: "buffer",
+        value: { bufferType, adaptation, representation },
+      });
   }
 
   return combineLatest(representations, seekings, (rep) => rep)
     .switchMap(createRepresentationBuffer);
 }
 
-module.exports = Buffer;
+function EmptyBuffer(bufferType) {
+  return Observable.just({
+    type: "buffer",
+    value: {
+      bufferType,
+      adaptation: null,
+      representation: null,
+    },
+  });
+}
+
+module.exports = {
+  Buffer,
+  EmptyBuffer,
+};

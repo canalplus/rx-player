@@ -20,7 +20,7 @@ const { Observable } = require("rxjs");
 const { first, on } = require("canal-js-utils/rx-ext");
 const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 const { retryWithBackoff } = require("canal-js-utils/rx-ext");
-const { empty, never, merge, combineLatest } = Observable;
+const { empty, merge, combineLatest } = Observable;
 const min = Math.min;
 
 const {
@@ -34,7 +34,7 @@ const {
 const TextSourceBuffer = require("./text-buffer");
 const { getLiveEdge } = require("./index-handler");
 const { clearSegmentCache } = require("./segment");
-const Buffer = require("./buffer");
+const { Buffer, EmtpyBuffer } = require("./buffer");
 const EME = require("./eme");
 
 const {
@@ -311,23 +311,24 @@ function Stream({
    * reaction to user choices (ie. changing the language).
    */
   function createBuffer(mediaSource, bufferInfos, timings, seekings) {
-    const { type } = bufferInfos;
-    const adaptations = adaptive.getAdaptationsChoice(type, bufferInfos.adaptations);
+    const { type: bufferType } = bufferInfos;
+    const adaptations = adaptive.getAdaptationsChoice(bufferType, bufferInfos.adaptations);
 
     if (__DEV__) {
-      assert(pipelines[type], "stream: no pipeline found for type " + type);
+      assert(pipelines[bufferType], "stream: no pipeline found for type " + bufferType);
     }
 
     return adaptations.switchMap((adaptation) => {
       if (!adaptation) {
         disposeSourceBuffer(videoElement, mediaSource, bufferInfos);
-        return never();
+        return EmtpyBuffer(bufferType);
       }
 
       const adapters = adaptive.getBufferAdapters(adaptation);
       const buffer = Buffer({
+        bufferType,
         sourceBuffer: createSourceBuffer(videoElement, mediaSource, bufferInfos),
-        pipeline: pipelines[type],
+        pipeline: pipelines[bufferType],
         adaptation,
         timings,
         seekings,
@@ -337,9 +338,9 @@ function Stream({
       // non native buffer should not impact on the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue streaming without any subtitles
-      if (!isNativeBuffer(type)) {
+      if (!isNativeBuffer(bufferType)) {
         return buffer.catch((err) => {
-          log.error("buffer", type, "has crashed", err);
+          log.error("buffer", bufferType, "has crashed", err);
           return empty();
         });
       }

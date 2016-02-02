@@ -339,10 +339,13 @@ class Player extends EventEmitter {
     const { type, value } = streamInfos;
 
     if (type == "buffer") {
-      this._bufferNext(value.segment);
+      this._bufferNext(value);
     }
     if (type == "manifest") {
       this._manifestNext(value);
+    }
+    if (type == "pipeline") {
+      this.trigger("progress", value.segment);
     }
 
     this.stream.next(streamInfos);
@@ -368,26 +371,22 @@ class Player extends EventEmitter {
     this.trigger("manifestChange", manifest);
   }
 
-  _bufferNext(segment) {
-    const ada = segment.getAdaptation();
-    const rep = segment.getRepresentation();
+  _bufferNext({ bufferType, adaptation, representation }) {
+    this.reps[bufferType] = representation;
+    this.adas[bufferType] = adaptation;
 
-    const { type } = ada;
-    this.reps[type] = rep;
-    this.adas[type] = ada;
-
-    if (type == "text") {
-      this._recordState("subtitle", ada.lang);
-    }
-    if (type == "video") {
-      this._recordState("videoBitrate", rep.bitrate);
-    }
-    if (type == "audio") {
-      this._recordState("language", ada.lang);
-      this._recordState("audioBitrate", rep.bitrate);
+    if (bufferType == "text") {
+      this._recordState("subtitle", adaptation.lang);
     }
 
-    this.trigger("progress", segment);
+    if (bufferType == "video") {
+      this._recordState("videoBitrate", representation.bitrate);
+    }
+
+    if (bufferType == "audio") {
+      this._recordState("language", adaptation.lang);
+      this._recordState("audioBitrate", representation.bitrate);
+    }
   }
 
   _playPauseNext(evt) {
