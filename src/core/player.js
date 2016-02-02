@@ -376,16 +376,16 @@ class Player extends EventEmitter {
     this.adas[bufferType] = adaptation;
 
     if (bufferType == "text") {
-      this._recordState("subtitle", adaptation.lang);
+      this._recordState("subtitle", adaptation && adaptation.lang || "");
     }
 
     if (bufferType == "video") {
-      this._recordState("videoBitrate", representation.bitrate);
+      this._recordState("videoBitrate", representation && representation.bitrate || -1);
     }
 
     if (bufferType == "audio") {
-      this._recordState("language", adaptation.lang);
-      this._recordState("audioBitrate", representation.bitrate);
+      this._recordState("language", adaptation && adaptation.lang || "");
+      this._recordState("audioBitrate", representation && representation.bitrate || -1);
     }
   }
 
