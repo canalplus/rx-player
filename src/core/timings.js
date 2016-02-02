@@ -47,40 +47,64 @@ function isEnding(gap, range, duration) {
   }
 }
 
+class Timings {
+  constructor(ts,
+              buffered,
+              duration,
+              gap,
+              name,
+              playback,
+              range,
+              readyState,
+              stalled) {
+    this.ts = ts;
+    this.buffered = buffered;
+    this.duration = duration;
+    this.gap = gap;
+    this.name = name;
+    this.playback = playback;
+    this.range = range;
+    this.readyState = readyState;
+    this.stalled = stalled;
+  }
+
+  clone() {
+    return new Timings(this.ts,
+                       this.buffered,
+                       this.duration,
+                       this.gap,
+                       this.name,
+                       this.playback,
+                       this.range,
+                       this.readyState,
+                       this.stalled);
+  }
+}
+
 function getEmptyTimings() {
-  return {
-    name: "timeupdate",
-    ts: 0,
-    range: null,
-    gap: Infinity,
-    duration: 0,
-    playback: 1,
-    readyState: 0,
-    stalled: false,
-    buffered: new BufferedRanges(),
-  };
+  return new Timings(0,
+                     new BufferedRanges(),
+                     0,
+                     Infinity,
+                     "timeupdate",
+                     1,
+                     null,
+                     0,
+                     null);
 }
 
 function getTimings(video, name) {
-  const playback = video.playbackRate;
-  const duration = video.duration;
   const ts = video.currentTime;
-  const readyState = video.readyState;
   const buffered = new BufferedRanges(video.buffered);
-  const range = buffered.getRange(ts);
-  const gap = buffered.getGap(ts);
-  const stalled = null;
-  return {
-    name,
-    ts,
-    range,
-    gap,
-    duration,
-    playback,
-    readyState,
-    stalled,
-    buffered,
-  };
+  return new Timings(ts,
+                     buffered,
+                     video.duration,
+                     buffered.getGap(ts),
+                     name,
+                     video.playbackRate,
+                     buffered.getRange(ts),
+                     video.readyState,
+                     null);
 }
 
 /**
