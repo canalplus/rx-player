@@ -302,10 +302,7 @@ class Player extends EventEmitter {
       .publish();
 
     const stalled = filterStreamByType(stream, "stalled").startWith(null);
-    const loaded = filterStreamByType(stream, "loaded")
-      .filter(Boolean)
-      .take(1)
-      .share();
+    const loaded = filterStreamByType(stream, "loaded").take(1).share();
 
     const stateChanges = loaded.mapTo(PLAYER_LOADED)
       .concat(combineLatest(this.playing, stalled, calcPlayerState))

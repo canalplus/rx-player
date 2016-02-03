@@ -369,9 +369,8 @@ function Stream({
         autoPlay = true;
       });
 
-    return first(combineLatest(loadedMetadata$, canPlay$))
-      .mapTo({ type: "loaded", value: true })
-      .startWith({ type: "loaded", value: false });
+    return first(combineLatest(canSeek$, canPlay$))
+      .mapTo({ type: "loaded", value: true });
   }
 
   function createEME() {
@@ -393,7 +392,7 @@ function Stream({
    * It mutates its value to stop the video when buffer is too low, or
    * resume the video when the buffer has regained a decent size.
    */
-  function createStalled(timings, changePlaybackRate=true) {
+  function createStalled(timings, { changePlaybackRate=true }) {
     return timings
       .distinctUntilChanged((prevTiming, timing) => {
         const isStalled = timing.stalled;
@@ -511,8 +510,10 @@ function Stream({
     const { timings, seekings } = createTimings(manifest);
     const justManifest = Observable.of({ type: "manifest", value: manifest });
     const emeHandler = createEME();
-    const canPlay = createLoadedMetadata(manifest);
-    const stalled = createStalled(timings, true);
+    const stalled = createStalled(timings, {
+      changePlayback: pipelines.requiresMediaSource(),
+    });
+    const canPlay = createLoadedMetadata(manifest).concat(stalled);
     const buffers = createAdaptationsBuffers(mediaSource,
                                              manifest,
                                              timings,
@@ -523,7 +524,6 @@ function Stream({
                  canPlay,
                  emeHandler,
                  buffers,
-                 stalled,
                  mediaError);
   }
 
