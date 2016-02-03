@@ -45,7 +45,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   }
 
   _append(cues) {
-    if (this.isVTT && !isVTTSupported()) {
+    if (this.isVTT && isVTTSupported()) {
       const blob = new Blob([cues], { type: "text/vtt" });
       const url = URL.createObjectURL(blob);
       if (this.trackElement) {

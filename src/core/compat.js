@@ -626,7 +626,7 @@ function addTextTrack(video) {
 }
 
 function isVTTSupported() {
-  return !!isIE;
+  return !isIE;
 }
 
 // On IE11, fullscreen change events is called MSFullscreenChange
