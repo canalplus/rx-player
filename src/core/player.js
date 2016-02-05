@@ -648,11 +648,6 @@ class Player extends EventEmitter {
     return this.stream;
   }
 
-  // TODO: deprecate this one
-  getStreamObservable() {
-    return this.stream;
-  }
-
   getDebug() {
     return debugPane.getDebug(this);
   }
