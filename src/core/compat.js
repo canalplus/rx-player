@@ -23,6 +23,7 @@ const { Observable } = require("rxjs");
 const { merge, never, fromEvent } = Observable;
 const { on } = require("canal-js-utils/rx-ext");
 const find = require("lodash/collection/find");
+const castToObservable = require("../utils/to-observable");
 
 const doc = document;
 const win = window;
@@ -57,7 +58,7 @@ let MockMediaKeys = function() {
 
 let requestMediaKeySystemAccess;
 if (navigator.requestMediaKeySystemAccess) {
-  requestMediaKeySystemAccess = (a, b) => navigator.requestMediaKeySystemAccess(a, b);
+  requestMediaKeySystemAccess = (a, b) => castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 }
 
 // @implement interface MediaKeySystemAccess
@@ -71,31 +72,11 @@ class KeySystemAccess {
     return this._keyType;
   }
   createMediaKeys() {
-    return Promise.resolve(this._mediaKeys);
+    return Observable.of(this._mediaKeys);
   }
   getConfiguration() {
     return this._configuration;
   }
-}
-
-function castToPromise(prom) {
-  if (prom && typeof prom.then == "function") {
-    return prom;
-  } else {
-    return Promise.resolve(prom);
-  }
-}
-
-function wrap(fn) {
-  return function() {
-    let retValue;
-    try {
-      retValue = fn.apply(this, arguments);
-    } catch(error) {
-      return Promise.reject(error);
-    }
-    return castToPromise(retValue);
-  };
 }
 
 function isEventSupported(element, eventNameSuffix) {
@@ -159,7 +140,7 @@ function isCodecSupported(codec) {
 // even send this "progress" before receiving the first data-segment.
 //
 // TODO(pierre): try to find a solution without "browser sniffing"...
-const loadedMetadataEvent = compatibleListener(isIE ? ["progress"] : ["loadedmetadata"]);
+const loadedMetadataEvent = compatibleListener(["loadedmetadata"]);
 const sourceOpenEvent = compatibleListener(["sourceopen", "webkitsourceopen"]);
 const onEncrypted = compatibleListener(["encrypted", "needkey"]);
 const onKeyMessage = compatibleListener(["keymessage", "message"]);
@@ -172,6 +153,10 @@ const emeEvents = {
   onKeyStatusesChange,
   onKeyError,
 };
+
+function shouldRenewMediaKeys() {
+  return isIE;
+}
 
 function sourceOpen(mediaSource) {
   if (mediaSource.readyState == "open") {
@@ -200,7 +185,7 @@ function canPlay(videoElement) {
 
 // Wrap "MediaKeys.prototype.update" form an event based system to a
 // Promise based function.
-function wrapUpdateWithPromise(memUpdate, sessionObj) {
+function wrapUpdate(memUpdate, sessionObj) {
 
   function KeySessionError(err={}) {
     if (err.errorCode) {
@@ -221,19 +206,24 @@ function wrapUpdateWithPromise(memUpdate, sessionObj) {
       : this;
 
     const keys = onKeyAdded(session);
-    const errs = onKeyError(session).map((evt) => { throw new KeySessionError(session.error || evt); });
+    const errs = onKeyError(session).map((evt) => {
+      throw new KeySessionError(session.error || evt);
+    });
+
     try {
       memUpdate.call(this, license, sessionId);
-      return merge(keys, errs).take(1).toPromise();
+      return merge(keys, errs).take(1);
     } catch(e) {
-      return Promise.reject(e);
+      return Observable.throw(e);
     }
   };
+
 }
 
 // Browser without any MediaKeys object: A mock for MediaKey and
 // MediaKeySession are created, and the <video>.addKey api is used to
 // pass the license.
+//
 // This is for Chrome with unprefixed EME api
 if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKeyRequest) {
 
@@ -254,11 +244,11 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
   MockMediaKeySession.prototype = {
     ...EventEmitter.prototype,
 
-    generateRequest: wrap(function (initDataType, initData) {
+    generateRequest: function (initDataType, initData) {
       this._vid.webkitGenerateKeyRequest(this._key, initData);
-    }),
+    },
 
-    update: wrapUpdateWithPromise(function (license, sessionId) {
+    update: wrapUpdate(function (license, sessionId) {
       if (this._key.indexOf("clearkey") >= 0) {
         const json = JSON.parse(bytesToStr(license));
         const key = strToBytes(atob(json.keys[0].k));
@@ -269,13 +259,13 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       }
     }),
 
-    close: wrap(function() {
+    close: function() {
       if (this._con) {
         this._con.unsubscribe();
       }
       this._con = null;
       this._vid = null;
-    }),
+    },
   };
 
   MockMediaKeys = function(keySystem) {
@@ -304,7 +294,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
 
   requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
     if (!isTypeSupported(keyType)) {
-      return Promise.reject();
+      return Observable.throw();
     }
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -340,7 +330,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
           sessionTypes: ["temporary"],
         };
 
-        return Promise.resolve(
+        return Observable.of(
           new KeySystemAccess(keyType,
                               new MockMediaKeys(keyType),
                               keySystemConfigurationResponse)
@@ -348,7 +338,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       }
     }
 
-    return Promise.reject();
+    return Observable.throw();
   };
 }
 
@@ -366,30 +356,32 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
   SessionProxy.prototype = {
     ...EventEmitter.prototype,
 
-    generateRequest: wrap(function(initDataType, initData) {
+    generateRequest: function(initDataType, initData) {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
       this._con = merge(
         onKeyMessage(this._ss),
         onKeyAdded(this._ss),
         onKeyError(this._ss)
       ).subscribe((evt) => this.trigger(evt.type, evt));
-    }),
+    },
 
-    update: wrapUpdateWithPromise(function(license, sessionId) {
+    update: wrapUpdate(function(license, sessionId) {
       assert(this._ss);
       this._ss.update(license, sessionId);
     }, function() {
       return this._ss;
     }),
 
-    close: wrap(function() {
+    close: function() {
       if (this._ss) {
         this._ss.close();
         this._ss = null;
+      }
+      if (this._con) {
         this._con.unsubscribe();
         this._con = null;
       }
-    }),
+    },
   };
 
   // on IE11, each created session needs to be created on a new
@@ -402,7 +394,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 
   requestMediaKeySystemAccess = function(keyType, keySystemConfigurations) {
     if (!MediaKeys_.isTypeSupported(keyType)) {
-      return Promise.reject();
+      return Observable.throw();
     }
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -428,15 +420,15 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
           sessionTypes: ["temporary", "persistent-license"],
         };
 
-        return Promise.resolve(
+        return Observable.of(
           new KeySystemAccess(keyType,
-                              new MockMediaKeys(keyType),
+                              new MediaKeys_(keyType),
                               keySystemConfigurationResponse)
         );
       }
     }
 
-    return Promise.reject();
+    return Observable.throw();
   };
 }
 
@@ -459,7 +451,7 @@ function _setMediaKeys(elt, mk) {
   }
 
   if (mk === null) {
-    return Promise.resolve();
+    return;
   }
 
   if (elt.WebkitSetMediaKeys) {
@@ -470,35 +462,15 @@ function _setMediaKeys(elt, mk) {
     return elt.mozSetMediaKeys(mk);
   }
 
-  // IE11 requires that the video has received metadata
-  // (readyState>=1) before setting metadata.
-  //
-  // TODO: how to handle dispose properly ?
   if (elt.msSetMediaKeys) {
-    return new Promise((res, rej) => {
-      if (elt.readyState >= 1) {
-        elt.msSetMediaKeys(mk);
-        res();
-      } else {
-        elt.addEventListener("loadedmetatdata", () => {
-          try {
-            elt.msSetMediaKeys(mk);
-          } catch(e) {
-            return rej(e);
-          } finally {
-            elt.removeEventListener("loadedmetatdata");
-          }
-          res();
-        });
-      }
-    });
+    return elt.msSetMediaKeys(mk);
   }
 
   throw new Error("compat: cannot find setMediaKeys method");
 }
 
 const setMediaKeys = (elt, mk) => {
-  return castToPromise(_setMediaKeys(elt, mk));
+  return castToObservable(_setMediaKeys(elt, mk));
 };
 
 if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener) {
@@ -647,6 +619,7 @@ module.exports = {
   requestMediaKeySystemAccess,
   setMediaKeys,
   emeEvents,
+  shouldRenewMediaKeys,
 
   isFullscreen,
   onFullscreenChange,

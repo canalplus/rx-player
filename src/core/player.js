@@ -419,7 +419,12 @@ class Player extends EventEmitter {
   }
 
   getNativeTextTrack() {
-    return this.video.textTracks[0];
+    const textTracks = this.video.textTracks;
+    if (textTracks.length > 0) {
+      return this.video.textTracks[0];
+    } else {
+      return null;
+    }
   }
 
   getPlayerState() {
