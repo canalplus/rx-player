@@ -614,7 +614,7 @@ class Player extends EventEmitter {
     assert(!sub || this.getAvailableSubtitles().indexOf(sub) >= 0, "player: unknown subtitle");
     this.adaptive.setSubtitle(sub || "");
     if (!sub) {
-      this._recordState("subtitle", null);
+      this._recordState("subtitle", "");
     }
   }
 
