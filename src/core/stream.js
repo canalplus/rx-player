@@ -27,7 +27,7 @@ const {
   MediaSource_,
   sourceOpen,
   canPlay,
-  loadedMetadata,
+  canSeek,
   clearVideoSrc,
 } = require("./compat");
 
@@ -357,7 +357,7 @@ function Stream({
    * the loadedmetadata event pops up.
    */
   function createLoadedMetadata(manifest) {
-    const loadedMetadata$ = loadedMetadata(videoElement)
+    const canSeek$ = canSeek(videoElement)
       .do(() => setInitialTime(manifest));
 
     const canPlay$ = canPlay(videoElement)
@@ -587,6 +587,9 @@ function Stream({
     }
 
     log.info("set initial time", startTime);
+    // reset playbackRate to 1 in case we were at 0 (from a stalled
+    // retry for instance)
+    videoElement.playbackRate = 1;
     videoElement.currentTime = startTime;
   }
 }

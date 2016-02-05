@@ -49,6 +49,9 @@ const isIE = (
   navigator.appName == "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
 );
 
+const HAVE_METADATA    = 1;
+const HAVE_ENOUGH_DATA = 4;
+
 let MockMediaKeys = function() {
 };
 
@@ -178,8 +181,8 @@ function sourceOpen(mediaSource) {
   }
 }
 
-function loadedMetadata(videoElement) {
-  if (videoElement.readyState >= HTMLVideoElement.HAVE_METADATA) {
+function canSeek(videoElement) {
+  if (videoElement.readyState >= HAVE_METADATA) {
     return Observable.of(null);
   } else {
     return loadedMetadataEvent(videoElement).take(1);
@@ -187,7 +190,7 @@ function loadedMetadata(videoElement) {
 }
 
 function canPlay(videoElement) {
-  if (videoElement.readyState >= HTMLVideoElement.HAVE_ENOUGH_DATA) {
+  if (videoElement.readyState >= HAVE_ENOUGH_DATA) {
     return Observable.of(null);
   } else {
     return on(videoElement, "canplay").take(1);
@@ -637,7 +640,7 @@ module.exports = {
   MediaSource_,
   isCodecSupported,
   sourceOpen,
-  loadedMetadata,
+  canSeek,
   canPlay,
 
   KeySystemAccess,
