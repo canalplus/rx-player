@@ -148,7 +148,7 @@ class InMemorySessionsSet {
 
   dispose() {
     const disposed = this._entries.map(({ session }) => castToObservable(session.close()));
-    this._entires = [];
+    this._entries = [];
     return merge.apply(null, disposed);
   }
 }
