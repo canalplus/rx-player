@@ -213,6 +213,7 @@ This method can be call anytime, even if a stream is already loaded an played by
 
     * `dash`: DASH transport implementation
     * `smooth`: SmoothStreaming transport implementation
+    * `directfile`: Use <video> src without MediaSource
 
   It is also possible to write your own transport, by giving a function returning an object containing those parameters  `{ manifestPipeline, segmentPipeline, textTrackPipeline }`, where each parameter is a `Pipeline` object with the following interface:
 
@@ -227,10 +228,6 @@ This method can be call anytime, even if a stream is already loaded an played by
 * `options.transportOptions`
 
   Object which is used as a parameter of the transport method each time the player is instanciated.
-
-* `options.directFile`
-
-  Boolean allowing to specify the stream URL given as parameter of `loadVideo` should be used without using `MediaSource` interface.
 
 * `options.initVideoBitrate` / `options.initAudioBitrate`
 
