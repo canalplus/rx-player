@@ -1,3 +1,22 @@
+v2.0.0-alpha1 on February 9, 2016
+=================================
+
+- RxJS: use RxJS5.beta1
+- Promise: remove es6-promise dependency and stop relying completely
+  on promises
+
+- eme: improve IE11 and Edge support on EME
+- smooth: activate patch in place on non IE targets for less memory allocation
+- player: deprecate directFile api and skip MediaSource assert for directfile
+- player: clone array for getAvailableBitrates methods
+- player: fix when no adaptation or no representation
+- player: record subtitle state as empty string
+- buffer: start with buffer infos to cache infos asap
+- stream: start stalling system after having first metadata
+- refacto: clean pipelined objects and POO where needed
+
+- lint: add new rules (no-var, prefer-const, enforce brackets)
+
 v1.4.0 on January 26, 2016
 ==========================
 
