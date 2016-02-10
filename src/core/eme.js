@@ -106,29 +106,36 @@ class InMemorySessionsSet {
 
   add(initData, session, keySystem) {
     initData = hashInitData(initData);
-    if (!this.get(initData)) {
-      const eventSubscription = sessionEventsHandler(session, keySystem)
-        .subscribe(
-          () => {},
-          (error) => {
-            log.error("eme: error in session messages handler", session, error);
-            $storedSessions.delete(initData);
-            $loadedSessions.deleteAndClose(session.sessionId);
-          });
+    const currentSession = this.get(initData);
+    if (currentSession) {
+      this.deleteAndClose(currentSession);
+    }
 
-      const entry = { session, initData, eventSubscription };
-      log.debug("eme-mem-store: add session", entry);
-      this._entries.push(entry);
-      if (session.closed) {
-        session.closed.then(() => this.delete(session.sessionId));
-      }
+    const eventSubscription = sessionEventsHandler(session, keySystem)
+      .finally(() => {
+        $storedSessions.delete(initData);
+        $loadedSessions.deleteAndClose(session);
+      })
+      .subscribe(null);
+
+    const entry = { session, initData, eventSubscription };
+    log.debug("eme-mem-store: add session", entry);
+    this._entries.push(entry);
+  }
+
+  deleteById(sessionId) {
+    const entry = find(this._entries, (e) => e.session.sessionId === sessionId);
+    if (entry) {
+      return this.delete(entry.session);
+    } else {
+      return null;
     }
   }
 
-  delete(sessionId) {
-    const entry = find(this._entries, ({ session }) => session.sessionId === sessionId);
+  delete(session_) {
+    const entry = find(this._entries, (e) => e.session === session_);
     if (entry) {
-      log.debug("eme-mem-store: delete session", sessionId);
+      log.debug("eme-mem-store: delete session", entry);
       const idx = this._entries.indexOf(entry);
       this._entries.splice(idx, 1);
       entry.eventSubscription.unsubscribe();
@@ -136,18 +143,19 @@ class InMemorySessionsSet {
     }
   }
 
-  deleteAndClose(sessionId) {
-    const session = this.delete(sessionId);
-    if (session) {
-      log.debug("eme-mem-store: close session", sessionId);
-      return castToObservable(session.close());
+  deleteAndClose(session_) {
+    const session = this.delete(session_);
+    if (session && session.sessionId) {
+      log.debug("eme-mem-store: close session", session);
+      return castToObservable(session.close())
+        .catch(() => Observable.of(null));
     } else {
       return Observable.of(null);
     }
   }
 
   dispose() {
-    const disposed = this._entries.map(({ session }) => castToObservable(session.close()));
+    const disposed = this._entries.map((e) => this.deleteAndClose(e.session));
     this._entries = [];
     return merge.apply(null, disposed);
   }
@@ -193,13 +201,8 @@ class PersistedSessionsSet {
 
   get(initData) {
     initData = hashInitData(initData);
-    const entry = find(
-      this._entries,
-      (entry) => entry.initData === initData
-    );
-    if (entry) {
-      return entry.sessionId;
-    }
+    const entry = find(this._entries, (e) => e.initData === initData);
+    return entry || null;
   }
 
   add(initData, session) {
@@ -209,20 +212,20 @@ class PersistedSessionsSet {
     }
 
     initData = hashInitData(initData);
-    if (!this.get(initData)) {
-      log.info("eme-persitent-store: add new session", sessionId, session);
-      this._entries.push({ sessionId, initData });
-      this._save();
+    const currentEntry = this.get(initData);
+    if (currentEntry) {
+      this.delete(initData);
     }
+
+    log.info("eme-persitent-store: add new session", sessionId, session);
+    this._entries.push({ sessionId, initData });
+    this._save();
   }
 
   delete(initData) {
     initData = hashInitData(initData);
 
-    const entry = find(
-      this._entries,
-      (entry) => entry.initData === initData
-    );
+    const entry = find(this._entries, (e) => e.initData === initData);
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
 
@@ -482,13 +485,13 @@ function createPersistedSessionAndLoad(mediaKeys,
           .catch((err) => log.warn("eme: could not remove session", err));
 
         $storedSessions.delete(initData);
-        $loadedSessions.delete(storedSessionId);
+        $loadedSessions.deleteById(storedSessionId);
       }
       return { success, session };
     })
     .catch((e) => {
       $storedSessions.delete(initData);
-      $loadedSessions.delete(storedSessionId);
+      $loadedSessions.deleteById(storedSessionId);
       throw e;
     });
 }
@@ -515,7 +518,7 @@ function makeNewSessionAndCreateKeyRequest(mediaKeys,
                "retry after closing a currently loaded session",
                err);
 
-      return castToObservable(firstLoadedSession.close())
+      return $loadedSessions.deleteAndClose(firstLoadedSession)
         .flatMap(() =>
           createSessionAndMakeNewKeyRequest(
             mediaKeys,
@@ -671,7 +674,12 @@ function sessionEventsHandler(session, keySystem) {
           logAndThrow(`eme: error on session update ${sessionId}`, err));
     });
 
-  return merge(sessionUpdates, keyErrors);
+  const sessionEvents = merge(sessionUpdates, keyErrors);
+  if (session.closed) {
+    return sessionEvents.takeUntil(castToObservable(session.closed));
+  } else {
+    return sessionEvents;
+  }
 }
 
 function manageSessionCreation(mediaKeys,
@@ -682,7 +690,7 @@ function manageSessionCreation(mediaKeys,
   // reuse currently loaded sessions without making a new key
   // request
   const loadedSession = $loadedSessions.get(initData);
-  if (loadedSession) {
+  if (loadedSession && loadedSession.sessionId) {
     log.debug("eme: reuse loaded session", loadedSession.sessionId);
     return Observable.of(loadedSession);
   }
@@ -698,16 +706,16 @@ function manageSessionCreation(mediaKeys,
     : "temporary";
 
   if (persistentLicenseSupported && keySystem.persistentLicense) {
-    const storedSessionId = $storedSessions.get(initData);
+    const storedEntry = $storedSessions.get(initData);
 
     // if a persisted session exists in the store associated to this
     // initData, we reuse it without a new license request through
     // the `load` method.
-    if (storedSessionId) {
+    if (storedEntry) {
       return makeNewPersistentSessionAndLoad(
         mediaKeys,
         keySystem,
-        storedSessionId,
+        storedEntry.sessionId,
         initDataType,
         initData);
     }

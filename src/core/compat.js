@@ -232,6 +232,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
   const MockMediaKeySession = function(video, keySystem) {
     EventEmitter.call(this);
 
+    this.sessionId = "";
     this._vid = video;
     this._key = keySystem;
     this._con = merge(
@@ -257,6 +258,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       } else {
         this._vid.webkitAddKey(this._key, license, null, sessionId);
       }
+      this.sessionId = sessionId;
     }),
 
     close: function() {
@@ -350,6 +352,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 
   const SessionProxy = function(mk) {
     EventEmitter.call(this);
+    this.sessionId = "";
     this._mk = mk;
   };
 
@@ -368,6 +371,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     update: wrapUpdate(function(license, sessionId) {
       assert(this._ss);
       this._ss.update(license, sessionId);
+      this.sessionId = sessionId;
     }, function() {
       return this._ss;
     }),
