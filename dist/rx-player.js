@@ -1480,6 +1480,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      EventEmitter.call(this);
 
+	      this.sessionId = "";
 	      this._vid = video;
 	      this._key = keySystem;
 	      this._con = merge(onKeyMessage(video), onKeyAdded(video), onKeyError(video)).subscribe(function (evt) {
@@ -1502,6 +1503,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        } else {
 	          this._vid.webkitAddKey(this._key, license, null, sessionId);
 	        }
+	        this.sessionId = sessionId;
 	      }),
 
 	      close: function close() {
@@ -1590,6 +1592,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var SessionProxy = function SessionProxy(mk) {
 	        EventEmitter.call(this);
+	        this.sessionId = "";
 	        this._mk = mk;
 	      };
 
@@ -1607,6 +1610,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        update: wrapUpdate(function (license, sessionId) {
 	          assert(this._ss);
 	          this._ss.update(license, sessionId);
+	          this.sessionId = sessionId;
 	        }, function () {
 	          return this._ss;
 	        }),
@@ -6381,34 +6385,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  InMemorySessionsSet.prototype.add = function add(initData, session, keySystem) {
-	    var _this = this;
-
 	    initData = hashInitData(initData);
-	    if (!this.get(initData)) {
-	      var eventSubscription = sessionEventsHandler(session, keySystem).subscribe(function () {}, function (error) {
-	        log.error("eme: error in session messages handler", session, error);
-	        $storedSessions.delete(initData);
-	        $loadedSessions.deleteAndClose(session.sessionId);
-	      });
+	    var currentSession = this.get(initData);
+	    if (currentSession) {
+	      this.deleteAndClose(currentSession);
+	    }
 
-	      var entry = { session: session, initData: initData, eventSubscription: eventSubscription };
-	      log.debug("eme-mem-store: add session", entry);
-	      this._entries.push(entry);
-	      if (session.closed) {
-	        session.closed.then(function () {
-	          return _this.delete(session.sessionId);
-	        });
-	      }
+	    var eventSubscription = sessionEventsHandler(session, keySystem).finally(function () {
+	      $storedSessions.delete(initData);
+	      $loadedSessions.deleteAndClose(session);
+	    }).subscribe(null);
+
+	    var entry = { session: session, initData: initData, eventSubscription: eventSubscription };
+	    log.debug("eme-mem-store: add session", entry);
+	    this._entries.push(entry);
+	  };
+
+	  InMemorySessionsSet.prototype.deleteById = function deleteById(sessionId) {
+	    var entry = find(this._entries, function (e) {
+	      return e.session.sessionId === sessionId;
+	    });
+	    if (entry) {
+	      return this.delete(entry.session);
+	    } else {
+	      return null;
 	    }
 	  };
 
-	  InMemorySessionsSet.prototype.delete = function _delete(sessionId) {
-	    var entry = find(this._entries, function (_ref) {
-	      var session = _ref.session;
-	      return session.sessionId === sessionId;
+	  InMemorySessionsSet.prototype.delete = function _delete(session_) {
+	    var entry = find(this._entries, function (e) {
+	      return e.session === session_;
 	    });
 	    if (entry) {
-	      log.debug("eme-mem-store: delete session", sessionId);
+	      log.debug("eme-mem-store: delete session", entry);
 	      var idx = this._entries.indexOf(entry);
 	      this._entries.splice(idx, 1);
 	      entry.eventSubscription.unsubscribe();
@@ -6416,20 +6425,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  };
 
-	  InMemorySessionsSet.prototype.deleteAndClose = function deleteAndClose(sessionId) {
-	    var session = this.delete(sessionId);
-	    if (session) {
-	      log.debug("eme-mem-store: close session", sessionId);
-	      return castToObservable(session.close());
+	  InMemorySessionsSet.prototype.deleteAndClose = function deleteAndClose(session_) {
+	    var session = this.delete(session_);
+	    if (session && session.sessionId) {
+	      log.debug("eme-mem-store: close session", session);
+	      return castToObservable(session.close()).catch(function () {
+	        return Observable.of(null);
+	      });
 	    } else {
 	      return Observable.of(null);
 	    }
 	  };
 
 	  InMemorySessionsSet.prototype.dispose = function dispose() {
-	    var disposed = this._entries.map(function (_ref2) {
-	      var session = _ref2.session;
-	      return castToObservable(session.close());
+	    var _this = this;
+
+	    var disposed = this._entries.map(function (e) {
+	      return _this.deleteAndClose(e.session);
 	    });
 	    this._entries = [];
 	    return merge.apply(null, disposed);
@@ -6476,12 +6488,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  PersistedSessionsSet.prototype.get = function get(initData) {
 	    initData = hashInitData(initData);
-	    var entry = find(this._entries, function (entry) {
-	      return entry.initData === initData;
+	    var entry = find(this._entries, function (e) {
+	      return e.initData === initData;
 	    });
-	    if (entry) {
-	      return entry.sessionId;
-	    }
+	    return entry || null;
 	  };
 
 	  PersistedSessionsSet.prototype.add = function add(initData, session) {
@@ -6491,18 +6501,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    initData = hashInitData(initData);
-	    if (!this.get(initData)) {
-	      log.info("eme-persitent-store: add new session", sessionId, session);
-	      this._entries.push({ sessionId: sessionId, initData: initData });
-	      this._save();
+	    var currentEntry = this.get(initData);
+	    if (currentEntry) {
+	      this.delete(initData);
 	    }
+
+	    log.info("eme-persitent-store: add new session", sessionId, session);
+	    this._entries.push({ sessionId: sessionId, initData: initData });
+	    this._save();
 	  };
 
 	  PersistedSessionsSet.prototype.delete = function _delete(initData) {
 	    initData = hashInitData(initData);
 
-	    var entry = find(this._entries, function (entry) {
-	      return entry.initData === initData;
+	    var entry = find(this._entries, function (e) {
+	      return e.initData === initData;
 	    });
 	    if (entry) {
 	      log.warn("eme-persitent-store: delete session from store", entry);
@@ -6738,12 +6751,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      $storedSessions.delete(initData);
-	      $loadedSessions.delete(storedSessionId);
+	      $loadedSessions.deleteById(storedSessionId);
 	    }
 	    return { success: success, session: session };
 	  }).catch(function (e) {
 	    $storedSessions.delete(initData);
-	    $loadedSessions.delete(storedSessionId);
+	    $loadedSessions.deleteById(storedSessionId);
 	    throw e;
 	  });
 	}
@@ -6757,7 +6770,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    log.warn("eme: could not create a new session, " + "retry after closing a currently loaded session", err);
 
-	    return castToObservable(firstLoadedSession.close()).flatMap(function () {
+	    return $loadedSessions.deleteAndClose(firstLoadedSession).flatMap(function () {
 	      return createSessionAndMakeNewKeyRequest(mediaKeys, keySystem, sessionType, initDataType, initData);
 	    });
 	  });
@@ -6774,9 +6787,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return newSession.map(function (session) {
 	      return { success: true, session: session };
 	    });
-	  }).flatMap(function (_ref3) {
-	    var success = _ref3.success;
-	    var session = _ref3.session;
+	  }).flatMap(function (_ref) {
+	    var success = _ref.success;
+	    var session = _ref.session;
 
 	    if (success) {
 	      log.debug("eme: successfully loaded session");
@@ -6859,14 +6872,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  });
 
-	  return merge(sessionUpdates, keyErrors);
+	  var sessionEvents = merge(sessionUpdates, keyErrors);
+	  if (session.closed) {
+	    return sessionEvents.takeUntil(castToObservable(session.closed));
+	  } else {
+	    return sessionEvents;
+	  }
 	}
 
 	function manageSessionCreation(mediaKeys, mediaKeySystemConfiguration, keySystem, initDataType, initData) {
 	  // reuse currently loaded sessions without making a new key
 	  // request
 	  var loadedSession = $loadedSessions.get(initData);
-	  if (loadedSession) {
+	  if (loadedSession && loadedSession.sessionId) {
 	    log.debug("eme: reuse loaded session", loadedSession.sessionId);
 	    return Observable.of(loadedSession);
 	  }
@@ -6877,13 +6895,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var sessionType = persistentLicenseSupported && keySystem.persistentLicense ? "persistent-license" : "temporary";
 
 	  if (persistentLicenseSupported && keySystem.persistentLicense) {
-	    var storedSessionId = $storedSessions.get(initData);
+	    var storedEntry = $storedSessions.get(initData);
 
 	    // if a persisted session exists in the store associated to this
 	    // initData, we reuse it without a new license request through
 	    // the `load` method.
-	    if (storedSessionId) {
-	      return makeNewPersistentSessionAndLoad(mediaKeys, keySystem, storedSessionId, initDataType, initData);
+	    if (storedEntry) {
+	      return makeNewPersistentSessionAndLoad(mediaKeys, keySystem, storedEntry.sessionId, initDataType, initData);
 	    }
 	  }
 
@@ -6937,9 +6955,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  }
 
-	  function handleEncryptedEvents(encryptedEvent, _ref4) {
-	    var keySystem = _ref4.keySystem;
-	    var keySystemAccess = _ref4.keySystemAccess;
+	  function handleEncryptedEvents(encryptedEvent, _ref2) {
+	    var keySystem = _ref2.keySystem;
+	    var keySystemAccess = _ref2.keySystemAccess;
 
 	    if (keySystem.persistentLicense) {
 	      $storedSessions.setStorage(keySystem.licenseStorage);
@@ -6951,9 +6969,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  }
 
-	  return combineLatest(onEncrypted(video), findCompatibleKeySystem(keySystems)).take(1).flatMap(function (_ref5) {
-	    var evt = _ref5[0];
-	    var ks = _ref5[1];
+	  return combineLatest(onEncrypted(video), findCompatibleKeySystem(keySystems)).take(1).flatMap(function (_ref3) {
+	    var evt = _ref3[0];
+	    var ks = _ref3[1];
 	    return handleEncryptedEvents(evt, ks);
 	  });
 	}
@@ -18745,7 +18763,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
 	    videoElement.preload = "auto";
 
-	    _this.version = ("2.0.0-alpha1");
+	    _this.version = ("2.0.0-alpha2");
 	    _this.video = videoElement;
 
 	    // fullscreen change
