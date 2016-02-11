@@ -95,29 +95,22 @@ class InMemorySessionsSet {
 
   get(initData) {
     initData = hashInitData(initData);
-    const entry = find(
-      this._entries,
-      (entry) => entry.initData === initData
-    );
+    const entry = find(this._entries, (e) => e.initData === initData);
     if (entry) {
       return entry.session;
+    } else {
+      return null;
     }
   }
 
-  add(initData, session, keySystem) {
+  add(initData, session, sessionEvents) {
     initData = hashInitData(initData);
     const currentSession = this.get(initData);
     if (currentSession) {
       this.deleteAndClose(currentSession);
     }
 
-    const eventSubscription = sessionEventsHandler(session, keySystem)
-      .finally(() => {
-        $storedSessions.delete(initData);
-        $loadedSessions.deleteAndClose(session);
-      })
-      .subscribe(null);
-
+    const eventSubscription = sessionEvents.connect();
     const entry = { session, initData, eventSubscription };
     log.debug("eme-mem-store: add session", entry);
     this._entries.push(entry);
@@ -134,13 +127,16 @@ class InMemorySessionsSet {
 
   delete(session_) {
     const entry = find(this._entries, (e) => e.session === session_);
-    if (entry) {
-      log.debug("eme-mem-store: delete session", entry);
-      const idx = this._entries.indexOf(entry);
-      this._entries.splice(idx, 1);
-      entry.eventSubscription.unsubscribe();
-      return entry.session;
+    if (!entry) {
+      return null;
     }
+
+    const { session, eventSubscription } = entry;
+    log.debug("eme-mem-store: delete session", entry);
+    const idx = this._entries.indexOf(entry);
+    this._entries.splice(idx, 1);
+    eventSubscription.unsubscribe();
+    return session;
   }
 
   deleteAndClose(session_) {
@@ -213,6 +209,10 @@ class PersistedSessionsSet {
 
     initData = hashInitData(initData);
     const currentEntry = this.get(initData);
+    if (currentEntry && currentEntry.sessionId === sessionId) {
+      return;
+    }
+
     if (currentEntry) {
       this.delete(initData);
     }
@@ -267,6 +267,10 @@ let $mediaKeys;
 let $mediaKeySystemConfiguration;
 let $keySystem;
 let $videoElement;
+
+function createMessage(name, session, options) {
+  return { type: "eme", value: { name, session, ...options } };
+}
 
 function getCachedKeySystemAccess(keySystems) {
   // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
@@ -434,21 +438,32 @@ function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
     });
 }
 
-function createSession(mediaKeys, sessionType) {
+function createSession(mediaKeys, sessionType, keySystem, initData) {
   log.debug(`eme: create a new ${sessionType} session`);
-  return mediaKeys.createSession(sessionType);
+  const session = mediaKeys.createSession(sessionType);
+  const sessionEvents = sessionEventsHandler(session, keySystem)
+    .finally(() => {
+      $loadedSessions.deleteAndClose(session);
+      $storedSessions.delete(initData);
+    })
+    .publish();
+
+  return { session, sessionEvents };
 }
 
-function createSessionAndMakeNewKeyRequest(mediaKeys,
-                                           keySystem,
-                                           sessionType,
-                                           initDataType,
-                                           initData) {
-  const session = createSession(mediaKeys, sessionType);
-  $loadedSessions.add(initData, session, keySystem);
+function createSessionAndKeyRequest(mediaKeys,
+                                    keySystem,
+                                    sessionType,
+                                    initDataType,
+                                    initData) {
+  const { session, sessionEvents } = createSession(mediaKeys, sessionType,
+                                                   keySystem, initData);
+
+  $loadedSessions.add(initData, session, sessionEvents);
 
   log.debug("eme: generate request", initDataType, initData);
-  return castToObservable(
+
+  const generateRequest = castToObservable(
     session.generateRequest(initDataType, initData)
   )
     .do(() => {
@@ -456,52 +471,17 @@ function createSessionAndMakeNewKeyRequest(mediaKeys,
         $storedSessions.add(initData, session);
       }
     })
-    .mapTo(session);
+    .mapTo(createMessage("generated-request", session, { initData, initDataType }));
+
+  return merge(sessionEvents, generateRequest);
 }
 
-function createPersistedSessionAndLoad(mediaKeys,
-                                       keySystem,
-                                       storedSessionId,
-                                       initDataType,
-                                       initData) {
-  log.debug("eme: load persisted session", storedSessionId);
-
-  const sessionType = "persistent-license";
-  const session = createSession(mediaKeys, sessionType);
-  return castToObservable(
-    session.load(storedSessionId)
-  )
-    .map((success) => {
-      if (success) {
-        $storedSessions.add(initData, session, keySystem);
-        $loadedSessions.add(initData, session);
-      } else {
-        log.warn(
-          "eme: no data stored for the loaded session, removing it",
-          storedSessionId
-        );
-
-        castToObservable(session.remove())
-          .catch((err) => log.warn("eme: could not remove session", err));
-
-        $storedSessions.delete(initData);
-        $loadedSessions.deleteById(storedSessionId);
-      }
-      return { success, session };
-    })
-    .catch((e) => {
-      $storedSessions.delete(initData);
-      $loadedSessions.deleteById(storedSessionId);
-      throw e;
-    });
-}
-
-function makeNewSessionAndCreateKeyRequest(mediaKeys,
-                                           keySystem,
-                                           sessionType,
-                                           initDataType,
-                                           initData) {
-  return createSessionAndMakeNewKeyRequest(
+function createSessionAndKeyRequestWithRetry(mediaKeys,
+                                             keySystem,
+                                             sessionType,
+                                             initDataType,
+                                             initData) {
+  return createSessionAndKeyRequest(
     mediaKeys,
     keySystem,
     sessionType,
@@ -520,7 +500,7 @@ function makeNewSessionAndCreateKeyRequest(mediaKeys,
 
       return $loadedSessions.deleteAndClose(firstLoadedSession)
         .flatMap(() =>
-          createSessionAndMakeNewKeyRequest(
+          createSessionAndKeyRequest(
             mediaKeys,
             keySystem,
             sessionType,
@@ -531,50 +511,103 @@ function makeNewSessionAndCreateKeyRequest(mediaKeys,
     });
 }
 
-function makeNewPersistentSessionAndLoad(mediaKeys,
+function createPersistentSessionAndLoad(mediaKeys,
                                          keySystem,
                                          storedSessionId,
                                          initDataType,
                                          initData) {
-  const sessionType = "persistent-license";
+  log.debug("eme: load persisted session", storedSessionId);
 
-  return createPersistedSessionAndLoad(
+  const sessionType = "persistent-license";
+  const { session, sessionEvents } = createSession(mediaKeys, sessionType,
+                                                   keySystem, initData);
+
+  return castToObservable(
+    session.load(storedSessionId)
+  )
+    .catch(() => Observable.of(false))
+    .flatMap((success) => {
+      if (success) {
+        $loadedSessions.add(initData, session, sessionEvents);
+        $storedSessions.add(initData, session);
+        return sessionEvents.startWith(
+          createMessage("loaded-session", session, { storedSessionId })
+        );
+      } else {
+        log.warn(
+          "eme: no data stored for the loaded session, do fallback",
+          storedSessionId
+        );
+
+        $loadedSessions.deleteById(storedSessionId);
+        $storedSessions.delete(initData);
+
+        if (session.sessionId) {
+          session.remove();
+        }
+
+        return createSessionAndKeyRequestWithRetry(
+          mediaKeys,
+          keySystem,
+          sessionType,
+          initDataType,
+          initData
+        ).startWith(
+          createMessage("loaded-session-failed", session, { storedSessionId })
+        );
+      }
+    });
+}
+
+function manageSessionCreation(mediaKeys,
+                               mediaKeySystemConfiguration,
+                               keySystem,
+                               initDataType,
+                               initData) {
+  // reuse currently loaded sessions without making a new key
+  // request
+  const loadedSession = $loadedSessions.get(initData);
+  if (loadedSession && loadedSession.sessionId) {
+    log.debug("eme: reuse loaded session", loadedSession.sessionId);
+    return Observable.of(createMessage("reuse-session", loadedSession));
+  }
+
+  const sessionTypes = mediaKeySystemConfiguration.sessionTypes;
+  const persistentLicenseSupported = (
+    sessionTypes &&
+    sessionTypes.indexOf("persistent-license") >= 0
+  );
+
+  const sessionType = persistentLicenseSupported && keySystem.persistentLicense
+    ? "persistent-license"
+    : "temporary";
+
+  if (persistentLicenseSupported && keySystem.persistentLicense) {
+    const storedEntry = $storedSessions.get(initData);
+
+    // if a persisted session exists in the store associated to this
+    // initData, we reuse it without a new license request through
+    // the `load` method.
+    if (storedEntry) {
+      return createPersistentSessionAndLoad(
+        mediaKeys,
+        keySystem,
+        storedEntry.sessionId,
+        initDataType,
+        initData);
+    }
+  }
+
+  // we have a fresh session without persisted informations and need
+  // to make a new key request that we will associate to this
+  // session
+  return createSessionAndKeyRequestWithRetry(
     mediaKeys,
     keySystem,
-    storedSessionId,
+    sessionType,
     initDataType,
     initData
-  )
-    .catch((err) => {
-      log.warn(
-        "eme: failed to load persisted session, do fallback",
-        storedSessionId, err
-      );
-
-      const newSession = makeNewSessionAndCreateKeyRequest(
-        mediaKeys,
-        keySystem,
-        sessionType,
-        initDataType,
-        initData
-      );
-
-      return newSession.map((session) => ({ success: true, session }));
-    })
-    .flatMap(({ success, session }) => {
-      if (success) {
-        log.debug("eme: successfully loaded session");
-        return Observable.of(session);
-      }
-
-      return makeNewSessionAndCreateKeyRequest(
-        mediaKeys,
-        keySystem,
-        sessionType,
-        initDataType,
-        initData
-      );
-    });
+  );
 }
 
 // listen to "message" events from session containing a challenge
@@ -627,8 +660,7 @@ function sessionEventsHandler(session, keySystem) {
 
       return castToObservable(license).catch((err) =>
         logAndThrow(
-          `eme: onKeyStatusesChange has failed ` +
-          `(reason:${err && err.message || "unknown"})`,
+          `eme: onKeyStatusesChange has failed (reason:${err && err.message || "unknown"})`,
           err
         )
       );
@@ -656,8 +688,7 @@ function sessionEventsHandler(session, keySystem) {
 
       return castToObservable(license).catch((err) =>
         logAndThrow(
-          `eme: getLicense has failed ` +
-          `(reason: ${err && err.message || "unknown"})`,
+          `eme: getLicense has failed (reason: ${err && err.message || "unknown"})`,
           err
         )
       );
@@ -671,7 +702,9 @@ function sessionEventsHandler(session, keySystem) {
         session.update(res, sessionId)
       )
         .catch((err) =>
-          logAndThrow(`eme: error on session update ${sessionId}`, err));
+          logAndThrow(`eme: error on session update ${sessionId}`, err)
+        )
+        .mapTo(createMessage("session-update", session, { updatedWith: res }));
     });
 
   const sessionEvents = merge(sessionUpdates, keyErrors);
@@ -680,57 +713,6 @@ function sessionEventsHandler(session, keySystem) {
   } else {
     return sessionEvents;
   }
-}
-
-function manageSessionCreation(mediaKeys,
-                               mediaKeySystemConfiguration,
-                               keySystem,
-                               initDataType,
-                               initData) {
-  // reuse currently loaded sessions without making a new key
-  // request
-  const loadedSession = $loadedSessions.get(initData);
-  if (loadedSession && loadedSession.sessionId) {
-    log.debug("eme: reuse loaded session", loadedSession.sessionId);
-    return Observable.of(loadedSession);
-  }
-
-  const sessionTypes = mediaKeySystemConfiguration.sessionTypes;
-  const persistentLicenseSupported = (
-    sessionTypes &&
-    sessionTypes.indexOf("persistent-license") >= 0
-  );
-
-  const sessionType = persistentLicenseSupported && keySystem.persistentLicense
-    ? "persistent-license"
-    : "temporary";
-
-  if (persistentLicenseSupported && keySystem.persistentLicense) {
-    const storedEntry = $storedSessions.get(initData);
-
-    // if a persisted session exists in the store associated to this
-    // initData, we reuse it without a new license request through
-    // the `load` method.
-    if (storedEntry) {
-      return makeNewPersistentSessionAndLoad(
-        mediaKeys,
-        keySystem,
-        storedEntry.sessionId,
-        initDataType,
-        initData);
-    }
-  }
-
-  // we have a fresh session without persisted informations and need
-  // to make a new key request that we will associate to this
-  // session
-  return makeNewSessionAndCreateKeyRequest(
-    mediaKeys,
-    keySystem,
-    sessionType,
-    initDataType,
-    initData
-  );
 }
 
 function logAndThrow(errMessage, reason) {
