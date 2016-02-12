@@ -644,7 +644,7 @@ function sessionEventsHandler(session, keySystem) {
 
       // otherwise use the keysystem handler if disponible
       if (!keySystem.onKeyStatusesChange) {
-        log.warn("eme: keystatuseschange event not handled");
+        log.info("eme: keystatuseschange event not handled");
         return empty();
       }
 
