@@ -53,6 +53,15 @@ const KEY_STATUS_ERRORS = {
    // "status-pending",
 };
 
+class GenerateRequestError extends Error {
+  constructor(session, evt) {
+    super();
+    this.name = "GenerateRequestError";
+    this.session = session;
+    this.reason = evt;
+  }
+}
+
 function hashBuffer(buffer) {
   let hash = 0;
   let char;
@@ -141,13 +150,9 @@ class InMemorySessionsSet {
 
   deleteAndClose(session_) {
     const session = this.delete(session_);
-    if (session && session.sessionId) {
-      log.debug("eme-mem-store: close session", session);
-      return castToObservable(session.close())
-        .catch(() => Observable.of(null));
-    } else {
-      return Observable.of(null);
-    }
+    log.debug("eme-mem-store: close session", session);
+    return castToObservable(session.close())
+      .catch(() => Observable.of(null));
   }
 
   dispose() {
@@ -466,6 +471,9 @@ function createSessionAndKeyRequest(mediaKeys,
   const generateRequest = castToObservable(
     session.generateRequest(initDataType, initData)
   )
+    .catch((e) => {
+      throw new GenerateRequestError(session, e);
+    })
     .do(() => {
       if (sessionType == "persistent-license") {
         $storedSessions.add(initData, session);
@@ -489,6 +497,10 @@ function createSessionAndKeyRequestWithRetry(mediaKeys,
     initData
   )
     .catch((err) => {
+      if (!(err instanceof GenerateRequestError)) {
+        throw err;
+      }
+
       const firstLoadedSession = $loadedSessions.getFirst();
       if (!firstLoadedSession) {
         throw err;
@@ -614,7 +626,7 @@ function manageSessionCreation(mediaKeys,
 // blob and map them to licenses using the getLicense method from
 // selected keySystem
 function sessionEventsHandler(session, keySystem) {
-  log.debug("eme: handle message events for session", session.sessionId);
+  log.debug("eme: handle message events", session);
   let sessionId;
 
   const keyErrors = onKeyError(session).map((err) =>
