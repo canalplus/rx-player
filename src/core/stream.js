@@ -16,11 +16,13 @@
 
 const log = require("canal-js-utils/log");
 const assert = require("canal-js-utils/assert");
-const { Observable } = require("rxjs");
-const { first, on } = require("canal-js-utils/rx-ext");
 const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 const { retryWithBackoff } = require("canal-js-utils/rx-ext");
-const { empty, merge, combineLatest } = Observable;
+const { Observable } = require("rxjs/Observable");
+const { first, on } = require("canal-js-utils/rx-ext");
+const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
+const { mergeStatic } = require("rxjs/operator/merge");
+const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const min = Math.min;
 
 const {
@@ -282,7 +284,7 @@ function Stream({
       ? sourceOpen(mediaSource)
       : Observable.of(null);
 
-    return combineLatest(manifestPipeline({ url }), sourceOpening)
+    return combineLatestStatic(manifestPipeline({ url }), sourceOpening)
       .flatMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
@@ -370,7 +372,7 @@ function Stream({
         autoPlay = true;
       });
 
-    return first(combineLatest(canSeek$, canPlay$))
+    return first(combineLatestStatic(canSeek$, canPlay$))
       .mapTo({ type: "loaded", value: true });
   }
 
@@ -477,7 +479,7 @@ function Stream({
       (adaptation) => createBuffer(mediaSource, adaptation, timings, seekings)
     );
 
-    const buffers = merge.apply(null, adaptationsBuffers);
+    const buffers = mergeStatic.apply(null, adaptationsBuffers);
 
     if (!manifest.isLive) {
       return buffers;
@@ -521,11 +523,11 @@ function Stream({
                                              seekings);
     const mediaError = createMediaErrorStream();
 
-    return merge(justManifest,
-                 canPlay,
-                 emeHandler,
-                 buffers,
-                 mediaError);
+    return mergeStatic(justManifest,
+                       canPlay,
+                       emeHandler,
+                       buffers,
+                       mediaError);
   }
 
   /**

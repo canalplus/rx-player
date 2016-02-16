@@ -1,6 +1,5 @@
-const { Observable } = require("rxjs");
-const { timer } = Observable;
 const { getBackedoffDelay } = require("canal-js-utils/backoff");
+const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
 const debounce = require("canal-js-utils/debounce");
 
 function retryWithBackoff(obs, { retryDelay, totalRetry, shouldRetry, resetDelay }) {

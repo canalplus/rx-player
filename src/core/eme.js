@@ -20,8 +20,10 @@ const find = require("lodash/collection/find");
 const flatten = require("lodash/array/flatten");
 const castToObservable = require("../utils/to-observable");
 const { retryWithBackoff } = require("canal-js-utils/rx-ext");
-const { Observable } = require("rxjs");
-const { combineLatest, empty, merge } = Observable;
+const { Observable } = require("rxjs/Observable");
+const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
+const { combineLatestStatic } = require("rxjs/operator/combineLatest");
+const { mergeStatic } = require("rxjs/operator/merge");
 const {
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -172,7 +174,7 @@ class InMemorySessionsSet {
   dispose() {
     const disposed = this._entries.map((e) => this.deleteAndClose(e.session));
     this._entries = [];
-    return merge.apply(null, disposed);
+    return mergeStatic.apply(null, disposed);
   }
 }
 
@@ -495,7 +497,7 @@ function createSessionAndKeyRequest(mediaKeys,
     })
     .mapTo(createMessage("generated-request", session, { initData, initDataType }));
 
-  return merge(sessionEvents, generateRequest);
+  return mergeStatic(sessionEvents, generateRequest);
 }
 
 function createSessionAndKeyRequestWithRetry(mediaKeys,
@@ -721,7 +723,7 @@ function sessionEventsHandler(session, keySystem) {
       );
     });
 
-  const sessionUpdates = merge(keyMessages, keyStatusesChanges)
+  const sessionUpdates = mergeStatic(keyMessages, keyStatusesChanges)
     .concatMap((res) => {
       log.debug("eme: update session", sessionId, res);
 
@@ -734,7 +736,7 @@ function sessionEventsHandler(session, keySystem) {
         .mapTo(createMessage("session-update", session, { updatedWith: res }));
     });
 
-  const sessionEvents = merge(sessionUpdates, keyErrors);
+  const sessionEvents = mergeStatic(sessionUpdates, keyErrors);
   if (session.closed) {
     return sessionEvents.takeUntil(castToObservable(session.closed));
   } else {
@@ -802,7 +804,7 @@ function createEME(video, keySystems) {
       );
   }
 
-  return combineLatest(
+  return combineLatestStatic(
     onEncrypted(video),
     findCompatibleKeySystem(keySystems)
   )

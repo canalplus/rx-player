@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-const { Observable, BehaviorSubject } = require("rxjs");
+const { Observable } = require("rxjs/Observable");
+const { BehaviorSubject } = require("rxjs/subject/BehaviorSubject");
 const { BufferedRanges } = require("./ranges");
 
 // time changes interval in milliseconds

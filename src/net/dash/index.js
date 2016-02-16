@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-const { Observable } = require("rxjs");
-const { empty, merge } = Observable;
+const { Observable } = require("rxjs/Observable");
+const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
+const { mergeStatic } = require("rxjs/operator/merge");
 const assert = require("canal-js-utils/assert");
 const request = require("canal-js-utils/rx-request");
 const { resolveURL } = require("canal-js-utils/url");
@@ -114,7 +115,7 @@ module.exports = function(opts={}) {
           format: "arraybuffer",
           headers: { "Range": byteRange(indexRange) },
         });
-        return merge(mediaOrInitRequest, indexRequest);
+        return mergeStatic(mediaOrInitRequest, indexRequest);
       }
       else {
         return mediaOrInitRequest;

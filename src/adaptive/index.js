@@ -15,8 +15,9 @@
  */
 
 const log = require("canal-js-utils/log");
-const { Observable, BehaviorSubject, Subscription } = require("rxjs");
-const { combineLatest } = Observable;
+const { Subscription } = require("rxjs/Subscription");
+const { BehaviorSubject } = require("rxjs/subject/BehaviorSubject");
+const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const { only } = require("canal-js-utils/rx-ext");
 const find = require("lodash/collection/find");
 const findLast = require("lodash/collection/findLast");
@@ -166,7 +167,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
         //   - user-based maximum bitrate (subject)
         //   - maximum based on the video element width
         //   - maximum based on the application visibility (background tab)
-        maxBitrates = combineLatest(maxBitrates, videoWidth, inBackground,
+        maxBitrates = combineLatestStatic(maxBitrates, videoWidth, inBackground,
           (bitrate, width, isHidden) => {
             if (isHidden) {
               return bitrates[0];
@@ -181,7 +182,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
           });
       }
 
-      representationsObservable = combineLatest(
+      representationsObservable = combineLatestStatic(
         usrBitrates,
         maxBitrates,
         avrBitrates,

@@ -1,5 +1,5 @@
-const { Observable } = require("rxjs");
-const { fromPromise } = Observable;
+const Observable = require("rxjs/Observable");
+const fromPromise = require("rxjs/observable/PromiseObservable").PromiseObservable.create;
 
 function castToObservable(value) {
   if (value && typeof value.subscribe == "function") {

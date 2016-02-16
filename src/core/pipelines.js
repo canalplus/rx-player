@@ -15,7 +15,9 @@
  */
 
 const defaults = require("lodash/object/defaults");
-const { Subject, Scheduler, Observable } = require("rxjs");
+const { Subject } = require("rxjs/Subject");
+const { asap } = require("rxjs/scheduler/asap");
+const { Observable } = require("rxjs/Observable");
 const { retryWithBackoff } = require("../utils/retry");
 
 const timeoutError = new Error("timeout");
@@ -31,7 +33,7 @@ const noCache = {
   },
 };
 
-const metricsScheduler = Scheduler.asap;
+const metricsScheduler = asap;
 
 /**
  * Creates the following pipeline:

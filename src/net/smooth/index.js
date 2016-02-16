@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const { Observable } = require("rxjs");
-const { empty } = Observable;
+const { Observable } = require("rxjs/Observable");
+const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const request = require("canal-js-utils/rx-request");
 const { bytesToStr } = require("canal-js-utils/bytes");
 const log = require("canal-js-utils/log");

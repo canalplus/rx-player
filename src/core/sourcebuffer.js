@@ -1,5 +1,5 @@
 const EventEmitter = require("canal-js-utils/eventemitter");
-const { Observable, Scheduler } = require("rxjs");
+const { Observable } = require("rxjs/Observable");
 const { BufferedRanges } = require("./ranges");
 const assert = require("canal-js-utils/assert");
 
@@ -42,10 +42,9 @@ class AbstractSourceBuffer extends EventEmitter {
     }
 
     result
-      .subscribeOn(Scheduler.asap)
       .subscribe(
-        ()  => this._unlock("update"),
-        (e) => this._unlock("error", e)
+        ()  => setTimeout(() => this._unlock("update"), 0),
+        (e) => setTimeout(() => this._unlock("error", e), 0)
       );
   }
 

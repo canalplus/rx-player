@@ -16,8 +16,10 @@
 
 const log = require("canal-js-utils/log");
 const defaults = require("lodash/object/defaults");
-const { Subscription, BehaviorSubject, Observable, Subject } = require("rxjs");
-const { combineLatest } = Observable;
+const { Subscription } = require("rxjs/Subscription");
+const { Subject } = require("rxjs/Subject");
+const { BehaviorSubject } = require("rxjs/subject/BehaviorSubject");
+const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const { on } = require("canal-js-utils/rx-ext");
 const EventEmitter = require("canal-js-utils/eventemitter");
 const debugPane = require("../utils/debug");
@@ -305,7 +307,7 @@ class Player extends EventEmitter {
     const loaded = filterStreamByType(stream, "loaded").take(1).share();
 
     const stateChanges = loaded.mapTo(PLAYER_LOADED)
-      .concat(combineLatest(this.playing, stalled, calcPlayerState))
+      .concat(combineLatestStatic(this.playing, stalled, calcPlayerState))
       .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 

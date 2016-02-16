@@ -17,8 +17,14 @@
 const log = require("canal-js-utils/log");
 const assert = require("canal-js-utils/assert");
 const { BufferedRanges } = require("./ranges");
-const { Observable, Subject } = require("rxjs");
-const { combineLatest, defer, empty, from, merge, timer } = Observable;
+const { Observable } = require("rxjs/Observable");
+const { Subject } = require("rxjs/Subject");
+const { combineLatestStatic } = require("rxjs/operator/combineLatest");
+const { mergeStatic } = require("rxjs/operator/merge");
+const defer = require("rxjs/observable/DeferObservable").DeferObservable.create;
+const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
+const from = require("rxjs/observable/FromObservable").FromObservable.create;
+const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
 const { first, on } = require("canal-js-utils/rx-ext");
 
 const { SimpleSet } = require("../utils/collections");
@@ -55,7 +61,7 @@ function Buffer({
   const { representations, bufferSizes } = adapters;
   const ranges = new BufferedRanges();
 
-  const updateEnd = merge(
+  const updateEnd = mergeStatic(
     on(sourceBuffer, "update"),
     on(sourceBuffer, "error").map((evt) => {
       if (evt.target && evt.target.error) {
@@ -345,7 +351,7 @@ function Buffer({
       };
     }
 
-    const segmentsPipeline = combineLatest(
+    const segmentsPipeline = combineLatestStatic(
       timings,
       bufferSizes,
       mutedUpdateEnd
@@ -357,7 +363,7 @@ function Buffer({
         doUnqueueAndUpdateRanges
       );
 
-    return merge(segmentsPipeline, outOfIndexStream).catch((err) => {
+    return mergeStatic(segmentsPipeline, outOfIndexStream).catch((err) => {
       if (err.code !== 412) {
         throw err;
       }
@@ -376,7 +382,7 @@ function Buffer({
       });
   }
 
-  return combineLatest(representations, seekings, (rep) => rep)
+  return combineLatestStatic(representations, seekings, (rep) => rep)
     .switchMap(createRepresentationBuffer);
 }
 

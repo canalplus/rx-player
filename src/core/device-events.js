@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const { Observable } = require("rxjs");
-const { merge, interval } = Observable;
+const { mergeStatic } = require("rxjs/operator/merge");
+const interval = require("rxjs/observable/IntervalObservable").IntervalObservable.create;
 const { visibilityChange, videoSizeChange } = require("./compat");
 
 const INACTIVITY_DELAY = 60 * 1000;
@@ -30,10 +30,10 @@ function DeviceEvents(videoElement) {
     .debounceTime(INACTIVITY_DELAY)
     .filter((x) => x === true);
 
-  const inBackground = merge(isVisible, isHidden)
+  const inBackground = mergeStatic(isVisible, isHidden)
     .startWith(false);
 
-  const videoWidth = merge(
+  const videoWidth = mergeStatic(
     interval(20000),
     videoSizeChange().debounceTime(500)
   )

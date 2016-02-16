@@ -1,4 +1,4 @@
-const { Observable } = require("rxjs");
+const { Observable } = require("rxjs/Observable");
 
 const manifestPipeline = {
   parser({ url }) {
