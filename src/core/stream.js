@@ -35,7 +35,7 @@ const TextSourceBuffer = require("./text-buffer");
 const { getLiveEdge } = require("./index-handler");
 const { clearSegmentCache } = require("./segment");
 const { Buffer, EmptyBuffer } = require("./buffer");
-const EME = require("./eme");
+const { createEME, onEncrypted, EMEError } = require("./eme");
 
 const {
   normalizeManifest,
@@ -64,7 +64,8 @@ function isNativeBuffer(bufferType) {
 }
 
 function shouldRetry(err, tryCount) {
-  if (/MEDIA_ERR/.test(err.message)) {
+  if (/MEDIA_ERR/.test(err.message) ||
+      err instanceof EMEError) {
     return false;
   } else {
     log.warn("stream retry", err, tryCount);
@@ -373,11 +374,11 @@ function Stream({
       .mapTo({ type: "loaded", value: true });
   }
 
-  function createEME() {
+  function createEMEIfKeySystems() {
     if (keySystems && keySystems.length) {
-      return EME(videoElement, keySystems);
+      return createEME(videoElement, keySystems);
     } else {
-      return EME.onEncrypted(videoElement).map(() => {
+      return onEncrypted(videoElement).map(() => {
         const errMessage = "eme: ciphered media and no keySystem passed";
         log.error(errMessage);
         throw new Error(errMessage);
@@ -509,7 +510,7 @@ function Stream({
   function createStream(mediaSource, manifest) {
     const { timings, seekings } = createTimings(manifest);
     const justManifest = Observable.of({ type: "manifest", value: manifest });
-    const emeHandler = createEME();
+    const emeHandler = createEMEIfKeySystems();
     const stalled = createStalled(timings, {
       changePlayback: pipelines.requiresMediaSource(),
     });

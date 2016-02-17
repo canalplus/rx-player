@@ -19,6 +19,7 @@ const assert = require("canal-js-utils/assert");
 const find = require("lodash/collection/find");
 const flatten = require("lodash/array/flatten");
 const castToObservable = require("../utils/to-observable");
+const { retryWithBackoff } = require("canal-js-utils/rx-ext");
 const { Observable } = require("rxjs");
 const { combineLatest, empty, merge } = Observable;
 const {
@@ -52,6 +53,15 @@ const KEY_STATUS_ERRORS = {
    // "output-downscaled",
    // "status-pending",
 };
+
+class EMEError extends Error {
+  constructor(reason) {
+    super();
+    this.name = "EMEError";
+    this.reason = reason;
+    this.message = reason && reason.message || "eme: unknown error";
+  }
+}
 
 class GenerateRequestError extends Error {
   constructor(session, evt) {
@@ -150,9 +160,13 @@ class InMemorySessionsSet {
 
   deleteAndClose(session_) {
     const session = this.delete(session_);
-    log.debug("eme-mem-store: close session", session);
-    return castToObservable(session.close())
-      .catch(() => Observable.of(null));
+    if (session) {
+      log.debug("eme-mem-store: close session", session);
+      return castToObservable(session.close())
+        .catch(() => Observable.of(null));
+    } else {
+      return Observable.of(null);
+    }
   }
 
   dispose() {
@@ -693,7 +707,8 @@ function sessionEventsHandler(session, keySystem) {
 
       let license;
       try {
-        license = keySystem.getLicense(message, messageType);
+        license = retryWithBackoff(() => keySystem.getLicense(message, messageType),
+          { totalRetry: 3, retryDelay: 100 });
       } catch(e) {
         license = Observable.throw(e);
       }
@@ -761,7 +776,7 @@ function logAndThrow(errMessage, reason) {
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
  */
-function EME(video, keySystems) {
+function createEME(video, keySystems) {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
@@ -792,17 +807,26 @@ function EME(video, keySystems) {
     findCompatibleKeySystem(keySystems)
   )
     .take(1)
-    .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks));
+    .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks))
+    .catch((e) => {
+      throw new EMEError(e);
+    });
 }
 
-EME.onEncrypted = onEncrypted;
-EME.getCurrentKeySystem = () => {
+function getCurrentKeySystem() {
   return $keySystem && $keySystem.type;
-};
-EME.dispose = () => {
+}
+
+function dispose() {
   $mediaKeys = null;
   $keySystem = null;
   $loadedSessions.dispose();
-};
+}
 
-module.exports = EME;
+module.exports = {
+  createEME,
+  EMEError,
+  getCurrentKeySystem,
+  onEncrypted,
+  dispose,
+};
