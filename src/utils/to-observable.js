@@ -1,4 +1,4 @@
-const Observable = require("rxjs/Observable");
+const { Observable } = require("rxjs/Observable");
 const fromPromise = require("rxjs/observable/PromiseObservable").PromiseObservable.create;
 
 function castToObservable(value) {

@@ -707,15 +707,10 @@ function sessionEventsHandler(session, keySystem) {
         messageEvent
       );
 
-      let license;
-      try {
-        license = retryWithBackoff(() => keySystem.getLicense(message, messageType),
-          { totalRetry: 3, retryDelay: 100 });
-      } catch(e) {
-        license = Observable.throw(e);
-      }
+      const license = retryWithBackoff(() => keySystem.getLicense(message, messageType),
+        { totalRetry: 3, retryDelay: 100 });
 
-      return castToObservable(license).catch((err) =>
+      return castToObservable(license()).catch((err) =>
         logAndThrow(
           `eme: getLicense has failed (reason: ${err && err.message || "unknown"})`,
           err
