@@ -57,20 +57,19 @@ const KEY_STATUS_ERRORS = {
 };
 
 class EMEError extends Error {
-  constructor(reason) {
+  constructor(error) {
     super();
     this.name = "EMEError";
-    this.reason = reason;
-    this.message = reason && reason.message || "eme: unknown error";
+    this.message = error && error.message || "eme: unknown error";
+    this.reason = error;
   }
 }
 
 class GenerateRequestError extends Error {
-  constructor(session, evt) {
+  constructor(session) {
     super();
     this.name = "GenerateRequestError";
     this.session = session;
-    this.reason = evt;
   }
 }
 
@@ -487,8 +486,8 @@ function createSessionAndKeyRequest(mediaKeys,
   const generateRequest = castToObservable(
     session.generateRequest(initDataType, initData)
   )
-    .catch((e) => {
-      throw new GenerateRequestError(session, e);
+    .catch(() => {
+      throw new GenerateRequestError(session);
     })
     .do(() => {
       if (sessionType == "persistent-license") {
