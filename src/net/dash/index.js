@@ -162,7 +162,7 @@ module.exports = function(opts={}) {
       }
 
       if (segment.isInitSegment()) {
-        const adaptation = segment.getAdaptatation();
+        const adaptation = segment.getAdaptation();
         if (adaptation.contentProtection) {
           blob = patchPssh(blob, adaptation.contentProtection);
         }
