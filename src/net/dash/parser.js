@@ -213,7 +213,7 @@ const attributes = {
   "MPD": [
     { k: "id",                         fn: parseString },
     { k: "profiles",                   fn: parseString },
-    { k: "type",                       fn: parseString },
+    { k: "type",                       fn: parseString, def: "static" },
     { k: "availabilityStartTime",      fn: parseDateTime },
     { k: "availabilityEndTime",        fn: parseDateTime },
     { k: "publishTime",                fn: parseDateTime },
@@ -412,7 +412,7 @@ function parseFromDocument(document, contentProtectionParser) {
 
   manifest = feedAttributes(root, manifest);
 
-  if (/isoff-live/.test(manifest.profiles)) {
+  if (/dynamic/.test(manifest.type)) {
     const adaptations = manifest.periods[0].adaptations;
     const videoAdaptation = find(adaptations, (a) => a.mimeType == "video/mp4");
 
