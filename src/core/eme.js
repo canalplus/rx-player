@@ -60,8 +60,8 @@ class EMEError extends Error {
   constructor(error) {
     super();
     this.name = "EMEError";
-    this.message = error && error.message || "eme: unknown error";
-    this.reason = error;
+    this.message = (error && error.message) || "eme: unknown error";
+    this.reason = (error && error.reason) || error;
   }
 }
 
