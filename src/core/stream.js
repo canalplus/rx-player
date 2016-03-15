@@ -49,8 +49,8 @@ const {
 const END_OF_PLAY = 0.2;
 
 const RETRY_OPTIONS = {
-  retryDelay: 3,
-  totalRetry: 250,
+  totalRetry: 3,
+  retryDelay: 250,
   resetDelay: 60 * 1000,
   shouldRetry,
 };
