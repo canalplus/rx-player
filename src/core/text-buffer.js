@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const AbstractSourceBuffer = require("./sourcebuffer");
+const { AbstractSourceBuffer } = require("./sourcebuffer");
 const { addTextTrack, isVTTSupported } = require("./compat");
 const log = require("canal-js-utils/log");
 

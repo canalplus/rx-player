@@ -16,16 +16,15 @@
 
 const log = require("canal-js-utils/log");
 const assert = require("canal-js-utils/assert");
+const { BufferingQueue } = require("./buffering-queue");
 const { BufferedRanges } = require("./ranges");
 const { Observable } = require("rxjs/Observable");
 const { Subject } = require("rxjs/Subject");
 const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const { mergeStatic } = require("rxjs/operator/merge");
-const defer = require("rxjs/observable/DeferObservable").DeferObservable.create;
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const from = require("rxjs/observable/FromObservable").FromObservable.create;
 const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
-const { first, on } = require("canal-js-utils/rx-ext");
 
 const { SimpleSet } = require("../utils/collections");
 const { IndexHandler, OutOfIndexError } = require("./index-handler");
@@ -60,50 +59,7 @@ function Buffer({
 
   const { representations, bufferSizes } = adapters;
   const ranges = new BufferedRanges();
-
-  const updateEnd = mergeStatic(
-    on(sourceBuffer, "update"),
-    on(sourceBuffer, "error").map((evt) => {
-      if (evt.target && evt.target.error) {
-        throw evt.target.error;
-      } else {
-        const errMessage = "buffer: error event";
-        log.error(errMessage, evt);
-        throw new Error(errMessage);
-      }
-    })
-  ).share();
-
-  // prevents unceasing add/remove event listeners by sharing an
-  // open updateEnd stream (hackish)
-  const mutedUpdateEnd = updateEnd
-    .ignoreElements()
-    .startWith(true);
-
-  function appendBuffer(blob) {
-    sourceBuffer.appendBuffer(blob);
-    return first(updateEnd);
-  }
-
-  function removeBuffer({ start, end }) {
-    sourceBuffer.remove(start, end);
-    return first(updateEnd);
-  }
-
-  function lockedBufferFunction(func) {
-    return function(data) {
-      return defer(() => {
-        if (sourceBuffer.updating) {
-          return first(updateEnd).flatMap(() => func(data));
-        } else {
-          return func(data);
-        }
-      });
-    };
-  }
-
-  const lockedAppendBuffer = lockedBufferFunction(appendBuffer);
-  const lockedRemoveBuffer = lockedBufferFunction(removeBuffer);
+  const bufferingQueue = new BufferingQueue(sourceBuffer);
 
   // Buffer garbage collector algorithm. Tries to free up some part of
   // the ranges that are distant from the current playing time.
@@ -158,13 +114,13 @@ function Buffer({
       }
 
       log.debug("buffer: gc cleaning", cleanedupRanges);
-      return from(cleanedupRanges.map(lockedRemoveBuffer)).concatAll();
+      return from(cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))).concatAll();
     });
   }
 
   function doAppendBufferOrGC(pipelineData) {
     const blob = pipelineData.parsed.blob;
-    return lockedAppendBuffer(blob)
+    return bufferingQueue.appendBuffer(blob)
       .catch((err) => {
         // launch our garbage collector and retry on
         // QuotaExceededError
@@ -173,7 +129,7 @@ function Buffer({
         }
 
         return bufferGarbageCollector().flatMap(
-          () => lockedAppendBuffer(blob));
+          () => bufferingQueue.appendBuffer(blob));
       });
   }
 
@@ -353,8 +309,7 @@ function Buffer({
 
     const segmentsPipeline = combineLatestStatic(
       timings,
-      bufferSizes,
-      mutedUpdateEnd
+      bufferSizes
     )
       .flatMap(doInjectSegments)
       .concatMap((segment) => pipeline({ segment }))
@@ -383,7 +338,8 @@ function Buffer({
   }
 
   return combineLatestStatic(representations, seekings, (rep) => rep)
-    .switchMap(createRepresentationBuffer);
+    .switchMap(createRepresentationBuffer)
+    .finally(() => bufferingQueue.dispose());
 }
 
 function EmptyBuffer(bufferType) {

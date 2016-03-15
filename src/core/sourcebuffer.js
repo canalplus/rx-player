@@ -43,16 +43,18 @@ class AbstractSourceBuffer extends EventEmitter {
 
     result
       .subscribe(
-        ()  => setTimeout(() => this._unlock("update"), 0),
-        (e) => setTimeout(() => this._unlock("error", e), 0)
+        ()  => this._unlock("update"),
+        (e) => this._unlock("error", e)
       );
   }
 
   _unlock(eventName, value) {
-    this.trigger(eventName, value);
     this.updating = false;
+    this.trigger(eventName, value);
     this.trigger("updateend");
   }
 }
 
-module.exports = AbstractSourceBuffer;
+module.exports = {
+  AbstractSourceBuffer,
+};
