@@ -56,22 +56,21 @@ const KEY_STATUS_ERRORS = {
    // "status-pending",
 };
 
-class EMEError extends Error {
-  constructor(error) {
-    super();
-    this.name = "EMEError";
-    this.message = (error && error.message) || "eme: unknown error";
-    this.reason = (error && error.reason) || error;
-  }
+function EMEError(error) {
+  this.name = "EMEError";
+  this.message = (error && error.message) || "eme: unknown error";
+  this.reason = (error && error.reason) || error;
+  this.stack = (new Error()).stack;
 }
+EMEError.prototype = new Error;
 
-class GenerateRequestError extends Error {
-  constructor(session) {
-    super();
-    this.name = "GenerateRequestError";
-    this.session = session;
-  }
+function GenerateRequestError(session) {
+  this.name = "GenerateRequestError";
+  this.message = "";
+  this.stack = (new Error()).stack;
+  this.session = session;
 }
+GenerateRequestError.prototype = new Error;
 
 function hashBuffer(buffer) {
   let hash = 0;
