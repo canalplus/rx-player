@@ -20,6 +20,7 @@ const { mergeStatic } = require("rxjs/operator/merge");
 const assert = require("canal-js-utils/assert");
 const request = require("canal-js-utils/rx-request");
 const { resolveURL } = require("canal-js-utils/url");
+const { pad } = require("canal-js-utils/misc");
 const { parseSidx, patchPssh } = require("./mp4");
 
 const dashManifestParser = require("./parser");
@@ -32,6 +33,13 @@ function byteRange([start, end]) {
   }
 }
 
+function processFormatedToken(replacer) {
+  return (match, format, widthStr) => {
+    const width = widthStr ? parseInt(widthStr, 10) : 1;
+    return pad(""+replacer, width);
+  };
+}
+
 function replaceTokens(path, segment) {
   if (path.indexOf("$") === -1) {
     return path;
@@ -40,9 +48,9 @@ function replaceTokens(path, segment) {
     return path
       .replace(/\$\$/g, "$")
       .replace(/\$RepresentationID\$/g, rep.id)
-      .replace(/\$Bandwidth\$/g, rep.bitrate)
-      .replace(/\$Number\$/g, segment.getNumber())
-      .replace(/\$Time\$/g, segment.getTime());
+      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g, processFormatedToken(rep.bitrate))
+      .replace(/\$Number(|\%0(\d+)d)\$/g, processFormatedToken(segment.getNumber()))
+      .replace(/\$Time(|\%0(\d+)d)\$/g, processFormatedToken(segment.getTime()));
   }
 }
 
