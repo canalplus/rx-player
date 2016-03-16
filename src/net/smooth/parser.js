@@ -37,7 +37,7 @@ const MIME_TYPES = {
 };
 
 const CODECS = {
-  "AACL": "mp4a.40.5",
+  "AACL": "mp4a.40.2",
   "AACH": "mp4a.40.5",
   "AVC1": "avc1.4D401E",
   "H264": "avc1.4D401E",
