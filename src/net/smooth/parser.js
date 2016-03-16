@@ -60,17 +60,18 @@ const profiles = {
   ],
 };
 
-function extractCodec(fourCC, rep) {
-  if (["H264", "AVC1"].indexOf(fourCC) >= 0) {
-    const [, avcProfile] = /00000001\d7([0-9a-fA-F]{6})/.exec(rep.codecPrivateData) || [];
+// fourCC values: https://msdn.microsoft.com/en-us/library/ff728116%28v=vs.95%29.aspx
+function extractCodec(fourCC, codecPrivateData) {
+  if (["H264", "X264", "DAVC", "AVC1"].indexOf(fourCC) >= 0) {
+    const [, avcProfile] = /00000001\d7([0-9a-fA-F]{6})/.exec(codecPrivateData) || [];
     return avcProfile ? ("avc1." + avcProfile) : "";
   } else {
     let mpProfile;
     if (fourCC == "AACH") {
       mpProfile = 5; // High Efficiency AAC Profile
     } else {
-      if (rep.codecPrivateData) {
-        mpProfile = (parseInt(rep.codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3;
+      if (codecPrivateData) {
+        mpProfile = (parseInt(codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3;
       } else {
         mpProfile = 2; // AAC Main Low Complexity
       }
@@ -203,7 +204,6 @@ function createSmoothStreamingParser(parserOptions={}) {
         ? parse(q.getAttribute(key))
         : parse[q.getAttribute(key)];
     }
-    obj["codec"] = extractCodec(q.getAttribute("FourCC") || "", obj);
     return obj;
   }
 
@@ -227,15 +227,15 @@ function createSmoothStreamingParser(parserOptions={}) {
     const { representations, index } = reduceChildren(root, (res, name, node) => {
       switch (name) {
       case "QualityLevel":
-        const rep = parseQualityLevel(node, profile);
-
+        let rep = parseQualityLevel(node, profile);
+        if (["video", "audio"].indexOf(type) >= 0) {
+          let fourCC = node.getAttribute("FourCC") || "";
+          rep.codecs = extractCodec(fourCC, rep.codecPrivateData) || DEFAULT_CODECS[type];
+        }
         // filter out video representations with small bitrates
         if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
           rep.id = representationCount++;
           res.representations.push(rep);
-        }
-        if (!rep.codec) {
-          rep.codec = DEFAULT_CODECS[type];
         }
 
         break;
