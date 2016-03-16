@@ -227,9 +227,9 @@ function createSmoothStreamingParser(parserOptions={}) {
     const { representations, index } = reduceChildren(root, (res, name, node) => {
       switch (name) {
       case "QualityLevel":
-        let rep = parseQualityLevel(node, profile);
+        const rep = parseQualityLevel(node, profile);
         if (["video", "audio"].indexOf(type) >= 0) {
-          let fourCC = node.getAttribute("FourCC") || "";
+          const fourCC = node.getAttribute("FourCC") || "";
           rep.codecs = extractCodec(fourCC, rep.codecPrivateData) || DEFAULT_CODECS[type];
         }
         // filter out video representations with small bitrates
