@@ -36,19 +36,11 @@ const MIME_TYPES = {
   "TTML": "application/ttml+xml+mp4",
 };
 
-const CODECS = {
-  "AACL": "mp4a.40.2",
-  "AACH": "mp4a.40.5",
-  "AVC1": "avc1.4D401E",
-  "H264": "avc1.4D401E",
-};
-
 const profiles = {
   audio: [
     ["Bitrate",          "bitrate",          parseInt],
     ["AudioTag",         "audiotag",         parseInt],
     ["FourCC",           "mimeType",         MIME_TYPES],
-    ["FourCC",           "codecs",           CODECS],
     ["Channels",         "channels",         parseInt],
     ["SamplingRate",     "samplingRate",     parseInt],
     ["BitsPerSample",    "bitsPerSample",    parseInt],
@@ -58,7 +50,6 @@ const profiles = {
   video: [
     ["Bitrate",          "bitrate",          parseInt],
     ["FourCC",           "mimeType",         MIME_TYPES],
-    ["FourCC",           "codecs",           CODECS],
     ["MaxWidth",         "width",            parseInt],
     ["MaxHeight",        "height",           parseInt],
     ["CodecPrivateData", "codecPrivateData", String],
@@ -68,6 +59,25 @@ const profiles = {
     ["FourCC",  "mimeType", MIME_TYPES],
   ],
 };
+
+function extractCodec(fourCC, rep) {
+  if (["H264", "AVC1"].indexOf(fourCC) >= 0) {
+    const [, avcProfile] = /00000001\d7([0-9a-fA-F]{6})/.exec(rep.codecPrivateData) || [];
+    return avcProfile ? ("avc1." + avcProfile) : "";
+  } else {
+    let mpProfile;
+    if (fourCC == "AACH") {
+      mpProfile = 5; // High Efficiency AAC Profile
+    } else {
+      if (rep.codecPrivateData) {
+        mpProfile = (parseInt(rep.codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3;
+      } else {
+        mpProfile = 2; // AAC Main Low Complexity
+      }
+    }
+    return "mp4a.40." + mpProfile;
+  }
+}
 
 function parseBoolean(val) {
   if (typeof val == "boolean") {
@@ -193,6 +203,7 @@ function createSmoothStreamingParser(parserOptions={}) {
         ? parse(q.getAttribute(key))
         : parse[q.getAttribute(key)];
     }
+    obj["codec"] = extractCodec(q.getAttribute("FourCC") || "", obj);
     return obj;
   }
 
@@ -222,6 +233,9 @@ function createSmoothStreamingParser(parserOptions={}) {
         if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
           rep.id = representationCount++;
           res.representations.push(rep);
+        }
+        if (!rep.codec) {
+          rep.codec = DEFAULT_CODECS[type];
         }
 
         break;
