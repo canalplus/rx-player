@@ -65,7 +65,7 @@ function extractCodec(fourCC, codecPrivateData) {
   if (["H264", "X264", "DAVC", "AVC1"].indexOf(fourCC) >= 0) {
     const [, avcProfile] = /00000001\d7([0-9a-fA-F]{6})/.exec(codecPrivateData) || [];
     return avcProfile ? ("avc1." + avcProfile) : "";
-  } else {
+  } else if (!fourCC || /^AAC/.test(fourCC)) {
     let mpProfile;
     if (fourCC == "AACH") {
       mpProfile = 5; // High Efficiency AAC Profile
@@ -77,7 +77,10 @@ function extractCodec(fourCC, codecPrivateData) {
       }
     }
     return "mp4a.40." + mpProfile;
+  } else {
+    return "";
   }
+
 }
 
 function parseBoolean(val) {
@@ -230,7 +233,7 @@ function createSmoothStreamingParser(parserOptions={}) {
         const rep = parseQualityLevel(node, profile);
         if (["video", "audio"].indexOf(type) >= 0) {
           const fourCC = node.getAttribute("FourCC") || "";
-          rep.codecs = extractCodec(fourCC, rep.codecPrivateData) || DEFAULT_CODECS[type];
+          rep.codecs = extractCodec(fourCC, rep.codecPrivateData);
         }
         // filter out video representations with small bitrates
         if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
@@ -259,18 +262,10 @@ function createSmoothStreamingParser(parserOptions={}) {
     assert(representations.length, "parser: adaptation should have at least one representation");
 
     // apply default codec if non-supported
-    let codecs = representations[0].codecs;
-    if (!codecs) {
-      codecs = DEFAULT_CODECS[type];
-      representations.forEach((rep) => rep.codecs = codecs);
-    }
+    representations.forEach((rep) => rep.codecs = rep.codecs || DEFAULT_CODECS[type]);
 
     // apply default mimetype if non-supported
-    let mimeType = representations[0].mimeType;
-    if (!mimeType) {
-      mimeType = DEFAULT_MIME_TYPES[type];
-      representations.forEach((rep) => rep.mimeType = mimeType);
-    }
+    representations.forEach((rep) => rep.mimeType = rep.mimeType || DEFAULT_MIME_TYPES[type]);
 
     // TODO(pierre): real ad-insert support
     if (subType == "ADVT") {
