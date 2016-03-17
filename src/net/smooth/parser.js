@@ -36,19 +36,11 @@ const MIME_TYPES = {
   "TTML": "application/ttml+xml+mp4",
 };
 
-const CODECS = {
-  "AACL": "mp4a.40.2",
-  "AACH": "mp4a.40.5",
-  "AVC1": "avc1.4D401E",
-  "H264": "avc1.4D401E",
-};
-
 const profiles = {
   audio: [
     ["Bitrate",          "bitrate",          parseInt],
     ["AudioTag",         "audiotag",         parseInt],
     ["FourCC",           "mimeType",         MIME_TYPES],
-    ["FourCC",           "codecs",           CODECS],
     ["Channels",         "channels",         parseInt],
     ["SamplingRate",     "samplingRate",     parseInt],
     ["BitsPerSample",    "bitsPerSample",    parseInt],
@@ -58,7 +50,7 @@ const profiles = {
   video: [
     ["Bitrate",          "bitrate",          parseInt],
     ["FourCC",           "mimeType",         MIME_TYPES],
-    ["FourCC",           "codecs",           CODECS],
+    ["CodecPrivateData", "codecs",           extractVideoCodecs],
     ["MaxWidth",         "width",            parseInt],
     ["MaxHeight",        "height",           parseInt],
     ["CodecPrivateData", "codecPrivateData", String],
@@ -68,6 +60,26 @@ const profiles = {
     ["FourCC",  "mimeType", MIME_TYPES],
   ],
 };
+
+function extractVideoCodecs(codecPrivateData) {
+  // we can extract codes only if fourCC is on of "H264", "X264", "DAVC", "AVC1"
+  const [, avcProfile] = /00000001\d7([0-9a-fA-F]{6})/.exec(codecPrivateData) || [];
+  return avcProfile ? ("avc1." + avcProfile) : "";
+}
+
+function extractAudioCodecs(fourCC, codecPrivateData) {
+  let mpProfile;
+  if (fourCC == "AACH") {
+    mpProfile = 5; // High Efficiency AAC Profile
+  } else {
+    if (codecPrivateData) {
+      mpProfile = (parseInt(codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3;
+    } else {
+      mpProfile = 2; // AAC Main Low Complexity
+    }
+  }
+  return mpProfile ? ("mp4a.40." + mpProfile) : "";
+}
 
 function parseBoolean(val) {
   if (typeof val == "boolean") {
@@ -217,7 +229,10 @@ function createSmoothStreamingParser(parserOptions={}) {
       switch (name) {
       case "QualityLevel":
         const rep = parseQualityLevel(node, profile);
-
+        if (type == "audio") {
+          const fourCC = node.getAttribute("FourCC") || "";
+          rep.codecs = extractAudioCodecs(fourCC, rep.codecPrivateData);
+        }
         // filter out video representations with small bitrates
         if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
           rep.id = representationCount++;
@@ -245,18 +260,10 @@ function createSmoothStreamingParser(parserOptions={}) {
     assert(representations.length, "parser: adaptation should have at least one representation");
 
     // apply default codec if non-supported
-    let codecs = representations[0].codecs;
-    if (!codecs) {
-      codecs = DEFAULT_CODECS[type];
-      representations.forEach((rep) => rep.codecs = codecs);
-    }
+    representations.forEach((rep) => rep.codecs = rep.codecs || DEFAULT_CODECS[type]);
 
     // apply default mimetype if non-supported
-    let mimeType = representations[0].mimeType;
-    if (!mimeType) {
-      mimeType = DEFAULT_MIME_TYPES[type];
-      representations.forEach((rep) => rep.mimeType = mimeType);
-    }
+    representations.forEach((rep) => rep.mimeType = rep.mimeType || DEFAULT_MIME_TYPES[type]);
 
     // TODO(pierre): real ad-insert support
     if (subType == "ADVT") {
