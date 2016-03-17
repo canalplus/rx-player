@@ -17,10 +17,6 @@
 const Timeline = require("./timeline");
 
 class Base extends Timeline {
-  constructor(index) {
-    super(index);
-  }
-
   static getLiveEdge() {
     throw new Error("not implemented");
   }
