@@ -237,45 +237,47 @@ var Player = React.createClass({
     this.player = player;
     this.setState({ volume: player.getVolume() });
 
-    var _this = this;
+    if (!this.props.noUI) {
+      var _this = this;
 
-    rootNode.addEventListener("mousemove", this.activityDebounce);
-    rootNode.addEventListener("click", this.activityDebounce);
+      rootNode.addEventListener("mousemove", this.activityDebounce);
+      rootNode.addEventListener("click", this.activityDebounce);
 
-    this.onPlayerStateChange = function(state) {
-      _this.setState({
-        isPlaying: state === "PLAYING"
-      });
-
-      if (state == "STOPPED") {
+      this.onPlayerStateChange = function(state) {
         _this.setState({
-          currentTime: null,
-          language: null,
-          subtitle: null,
+          isPlaying: state === "PLAYING"
         });
-      }
-    };
 
-    this.onCurrentTimeChange = function(currentTime) {
-      _this.setState({ currentTime: currentTime });
-    };
+        if (state == "STOPPED") {
+          _this.setState({
+            currentTime: null,
+            language: null,
+            subtitle: null,
+          });
+        }
+      };
 
-    this.onLangChange = function() {
-      _this.setState({
-        language: player.getLanguage(),
-        subtitle: player.getSubtitle(),
-      });
-    };
+      this.onCurrentTimeChange = function(currentTime) {
+        _this.setState({ currentTime: currentTime });
+      };
 
-    this.onVolumeChange = function(volume) {
-      _this.setState({ volume: volume });
-    };
+      this.onLangChange = function() {
+        _this.setState({
+          language: player.getLanguage(),
+          subtitle: player.getSubtitle(),
+        });
+      };
 
-    player.addEventListener("playerStateChange", this.onPlayerStateChange);
-    player.addEventListener("currentTimeChange", this.onCurrentTimeChange);
-    player.addEventListener("languageChange", this.onLangChange);
-    player.addEventListener("subtitleChange", this.onLangChange);
-    player.addEventListener("volumeChange", this.onVolumeChange);
+      this.onVolumeChange = function(volume) {
+        _this.setState({ volume: volume });
+      };
+
+      player.addEventListener("playerStateChange", this.onPlayerStateChange);
+      player.addEventListener("currentTimeChange", this.onCurrentTimeChange);
+      player.addEventListener("languageChange", this.onLangChange);
+      player.addEventListener("subtitleChange", this.onLangChange);
+      player.addEventListener("volumeChange", this.onVolumeChange);
+    }
 
     if (this.props.autoPlay) {
       setTimeout(this.loadVideo, 0);
@@ -364,12 +366,13 @@ var Player = React.createClass({
 
   render: function() {
     var player = this.player;
+    var noUI = this.props.noUI;
 
     return (
       <div style={ {position: "relative"} }>
         <video ref="video" width="100%" id="videoEl" className="video" />
 
-        { player ?
+        { player && !noUI ?
           <div id="controls-bar">
             <PlayPause
               isPlaying={this.state.isPlaying}

@@ -20,6 +20,8 @@ function getParameterByName(name) {
   return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+const noUI = !!getParameterByName("noui");
+
 var DemoZapper = React.createClass({
   componentDidMount() {
     var url = getParameterByName("url");
@@ -92,7 +94,7 @@ var DemoZapper = React.createClass({
           </select>
         </section>
 
-        <DemoPlayer createPlayer={this.createPlayer} />
+        <DemoPlayer createPlayer={this.createPlayer} noUI={noUI} />
       </div>
     );
   }
