@@ -19,9 +19,10 @@ const assert = require("canal-js-utils/assert");
 const find = require("lodash/collection/find");
 const flatten = require("lodash/array/flatten");
 const castToObservable = require("../utils/to-observable");
-const { retryWithBackoff } = require("canal-js-utils/rx-ext");
+const { retryWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
+const defer = require("rxjs/observable/DeferObservable").DeferObservable.create;
 const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const { mergeStatic } = require("rxjs/operator/merge");
 const {
@@ -31,6 +32,11 @@ const {
   emeEvents,
   shouldRenewMediaKeys,
 } = require("./compat");
+
+const {
+  ErrorTypes,
+  EncryptedMediaError,
+} = require("../errors");
 
 const {
   onEncrypted,
@@ -45,32 +51,14 @@ const SYSTEMS = {
   "playready": ["com.youtube.playready", "com.microsoft.playready"],
 };
 
-// Key statuses to error mapping. Taken from shaka-player.
 const KEY_STATUS_ERRORS = {
-  "expired": "eme: a required key has expired and the content cannot be decrypted.",
-  "internal-error": "eme: an unknown error has occurred in the CDM.",
-   // "expired",
+  "expired": true,
+  "internal-error": true,
    // "released",
    // "output-restricted",
    // "output-downscaled",
    // "status-pending",
 };
-
-function EMEError(error) {
-  this.name = "EMEError";
-  this.message = (error && error.message) || "eme: unknown error";
-  this.reason = (error && error.reason) || error;
-  this.stack = (new Error()).stack;
-}
-EMEError.prototype = new Error;
-
-function GenerateRequestError(session) {
-  this.name = "GenerateRequestError";
-  this.message = "";
-  this.stack = (new Error()).stack;
-  this.session = session;
-}
-GenerateRequestError.prototype = new Error;
 
 function hashBuffer(buffer) {
   let hash = 0;
@@ -91,9 +79,7 @@ function hashInitData(initData) {
   }
 }
 
-const NotSupportedKeySystemError = () => {
-  new Error("eme: could not find a compatible key system");
-};
+const GENERATE_REQUEST_ERROR = "generateRequestError";
 
 /**
  * Set maintaining a representation of all currently loaded
@@ -196,7 +182,7 @@ class PersistedSessionsSet {
 
     assert(
       storage,
-      `eme: no licenseStorage given for keySystem with persistentLicense`
+      `no licenseStorage given for keySystem with persistentLicense`
     );
 
     assert.iface(
@@ -382,7 +368,7 @@ function findCompatibleKeySystem(keySystems) {
       }
 
       if (index >= keySystemsType.length) {
-        obs.onError(NotSupportedKeySystemError());
+        obs.error(new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS", null, true));
         return;
       }
 
@@ -457,10 +443,10 @@ function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
     });
 }
 
-function createSession(mediaKeys, sessionType, keySystem, initData) {
+function createSession(mediaKeys, sessionType, keySystem, initData, errorStream) {
   log.debug(`eme: create a new ${sessionType} session`);
   const session = mediaKeys.createSession(sessionType);
-  const sessionEvents = sessionEventsHandler(session, keySystem)
+  const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
       $loadedSessions.deleteAndClose(session);
       $storedSessions.delete(initData);
@@ -474,9 +460,10 @@ function createSessionAndKeyRequest(mediaKeys,
                                     keySystem,
                                     sessionType,
                                     initDataType,
-                                    initData) {
+                                    initData,
+                                    errorStream) {
   const { session, sessionEvents } = createSession(mediaKeys, sessionType,
-                                                   keySystem, initData);
+                                                   keySystem, initData, errorStream);
 
   $loadedSessions.add(initData, session, sessionEvents);
 
@@ -486,7 +473,7 @@ function createSessionAndKeyRequest(mediaKeys,
     session.generateRequest(initDataType, initData)
   )
     .catch(() => {
-      throw new GenerateRequestError(session);
+      throw GENERATE_REQUEST_ERROR;
     })
     .do(() => {
       if (sessionType == "persistent-license") {
@@ -502,27 +489,29 @@ function createSessionAndKeyRequestWithRetry(mediaKeys,
                                              keySystem,
                                              sessionType,
                                              initDataType,
-                                             initData) {
+                                             initData,
+                                             errorStream) {
   return createSessionAndKeyRequest(
     mediaKeys,
     keySystem,
     sessionType,
     initDataType,
-    initData
+    initData,
+    errorStream
   )
-    .catch((err) => {
-      if (!(err instanceof GenerateRequestError)) {
-        throw err;
+    .catch((error) => {
+      if (error !== GENERATE_REQUEST_ERROR) {
+        throw error;
       }
 
       const firstLoadedSession = $loadedSessions.getFirst();
       if (!firstLoadedSession) {
-        throw err;
+        throw error;
       }
 
       log.warn("eme: could not create a new session, " +
                "retry after closing a currently loaded session",
-               err);
+               error);
 
       return $loadedSessions.deleteAndClose(firstLoadedSession)
         .flatMap(() =>
@@ -531,7 +520,8 @@ function createSessionAndKeyRequestWithRetry(mediaKeys,
             keySystem,
             sessionType,
             initDataType,
-            initData
+            initData,
+            errorStream
           )
         );
     });
@@ -541,12 +531,13 @@ function createPersistentSessionAndLoad(mediaKeys,
                                          keySystem,
                                          storedSessionId,
                                          initDataType,
-                                         initData) {
+                                         initData,
+                                         errorStream) {
   log.debug("eme: load persisted session", storedSessionId);
 
   const sessionType = "persistent-license";
   const { session, sessionEvents } = createSession(mediaKeys, sessionType,
-                                                   keySystem, initData);
+                                                   keySystem, initData, errorStream);
 
   return castToObservable(
     session.load(storedSessionId)
@@ -577,7 +568,8 @@ function createPersistentSessionAndLoad(mediaKeys,
           keySystem,
           sessionType,
           initDataType,
-          initData
+          initData,
+          errorStream
         ).startWith(
           createMessage("loaded-session-failed", session, { storedSessionId })
         );
@@ -589,7 +581,8 @@ function manageSessionCreation(mediaKeys,
                                mediaKeySystemConfiguration,
                                keySystem,
                                initDataType,
-                               initData) {
+                               initData,
+                               errorStream) {
   // reuse currently loaded sessions without making a new key
   // request
   const loadedSession = $loadedSessions.get(initData);
@@ -620,7 +613,8 @@ function manageSessionCreation(mediaKeys,
         keySystem,
         storedEntry.sessionId,
         initDataType,
-        initData);
+        initData,
+        errorStream);
     }
   }
 
@@ -632,20 +626,37 @@ function manageSessionCreation(mediaKeys,
     keySystem,
     sessionType,
     initDataType,
-    initData
+    initData,
+    errorStream
   );
 }
 
 // listen to "message" events from session containing a challenge
 // blob and map them to licenses using the getLicense method from
 // selected keySystem
-function sessionEventsHandler(session, keySystem) {
+function sessionEventsHandler(session, keySystem, errorStream) {
   log.debug("eme: handle message events", session);
   let sessionId;
 
-  const keyErrors = onKeyError(session).map((err) =>
-    logAndThrow(`eme: keyerror event ${err.errorCode} / ${err.systemCode}`, err)
-  );
+  function licenseErrorSelector(error, fatal) {
+    if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
+      error.fatal = fatal;
+      return error;
+    } else {
+      return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
+    }
+  }
+
+  const getLicenseRetryOptions = {
+    totalRetry: 2,
+    retryDelay: 200,
+    errorSelector: (error) => licenseErrorSelector(error, true),
+    onRetry: (error) => errorStream.next(licenseErrorSelector(error, false)),
+  };
+
+  const keyErrors = onKeyError(session).map((error) => {
+    throw new EncryptedMediaError("KEY_ERROR", error, true);
+  });
 
   const keyStatusesChanges = onKeyStatusesChange(session)
     .flatMap((keyStatusesEvent) => {
@@ -662,9 +673,9 @@ function sessionEventsHandler(session, keySystem) {
         // TODO: remove this hack present because the order of the
         // arguments has changed in spec and is not the same between
         // Edge and Chrome.
-        const errMessage = KEY_STATUS_ERRORS[keyStatus] || KEY_STATUS_ERRORS[keyId];
-        if (errMessage) {
-          logAndThrow(errMessage);
+        const reason = KEY_STATUS_ERRORS[keyStatus] || KEY_STATUS_ERRORS[keyId];
+        if (reason) {
+          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
         }
       });
 
@@ -684,12 +695,9 @@ function sessionEventsHandler(session, keySystem) {
         license = Observable.throw(e);
       }
 
-      return castToObservable(license).catch((err) =>
-        logAndThrow(
-          `eme: onKeyStatusesChange has failed (reason:${err && err.message || "unknown"})`,
-          err
-        )
-      );
+      return castToObservable(license).catch((error) => {
+        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
+      });
     });
 
   const keyMessages = onKeyMessage(session)
@@ -705,15 +713,12 @@ function sessionEventsHandler(session, keySystem) {
         messageEvent
       );
 
-      const license = retryWithBackoff(() => keySystem.getLicense(message, messageType),
-        { totalRetry: 3, retryDelay: 100 });
+      const getLicense = defer(() => {
+        return castToObservable(keySystem.getLicense(message, messageType))
+          .timeout(10 * 1000, new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false));
+      });
 
-      return castToObservable(license()).catch((err) =>
-        logAndThrow(
-          `eme: getLicense has failed (reason: ${err && err.message || "unknown"})`,
-          err
-        )
-      );
+      return retryWithBackoff(getLicense, getLicenseRetryOptions);
     });
 
   const sessionUpdates = mergeStatic(keyMessages, keyStatusesChanges)
@@ -723,9 +728,9 @@ function sessionEventsHandler(session, keySystem) {
       return castToObservable(
         session.update(res, sessionId)
       )
-        .catch((err) =>
-          logAndThrow(`eme: error on session update ${sessionId}`, err)
-        )
+        .catch((error) => {
+          throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
+        })
         .mapTo(createMessage("session-update", session, { updatedWith: res }));
     });
 
@@ -735,15 +740,6 @@ function sessionEventsHandler(session, keySystem) {
   } else {
     return sessionEvents;
   }
-}
-
-function logAndThrow(errMessage, reason) {
-  const error = new Error(errMessage);
-  if (reason) {
-    error.reason = reason;
-  }
-  log.error(errMessage, reason);
-  throw error;
 }
 
 /**
@@ -771,7 +767,7 @@ function logAndThrow(errMessage, reason) {
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
  */
-function createEME(video, keySystems) {
+function createEME(video, keySystems, errorStream) {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
@@ -792,7 +788,8 @@ function createEME(video, keySystems) {
           keySystemAccess.getConfiguration(),
           keySystem,
           encryptedEvent.initDataType,
-          new Uint8Array(encryptedEvent.initData)
+          new Uint8Array(encryptedEvent.initData),
+          errorStream
         )
       );
   }
@@ -803,8 +800,12 @@ function createEME(video, keySystems) {
   )
     .take(1)
     .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks))
-    .catch((e) => {
-      throw new EMEError(e);
+    .catch((error) => {
+      if (error.type !== ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
+        throw new EncryptedMediaError("NONE", error, true);
+      } else {
+        throw error;
+      }
     });
 }
 
@@ -820,7 +821,6 @@ function dispose() {
 
 module.exports = {
   createEME,
-  EMEError,
   getCurrentKeySystem,
   onEncrypted,
   dispose,

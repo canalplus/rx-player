@@ -1,14 +1,15 @@
 /* eslint-env node */
-var fs = require("fs");
-var path = require("path");
+const fs = require("fs");
+const path = require("path");
 
-var RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "production";
+const RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "production";
 
-if (["development", "production"].indexOf(RX_PLAYER_ENV) < 0)
+if (["development", "production"].indexOf(RX_PLAYER_ENV) < 0) {
   throw new Error("unknown RX_PLAYER_ENV " + RX_PLAYER_ENV);
+}
 
-var webpack = require("webpack");
-var version = fs.readFileSync("./VERSION").toString().replace(/\n$/g, "");
+const webpack = require("webpack");
+const version = fs.readFileSync("./VERSION").toString().replace(/\n$/g, "");
 
 module.exports = {
   output: {

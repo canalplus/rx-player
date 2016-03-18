@@ -34,7 +34,7 @@ function calcLastRef(index) {
 function feedAttributes(node, base) {
   const attrs = attributes[node.nodeName];
 
-  assert(attrs, "parser: no attributes for " + node.nodeName);
+  assert(attrs, "no attributes for " + node.nodeName);
 
   const obj = base || {};
   for (let i = 0; i < attrs.length; i++) {
@@ -76,7 +76,7 @@ function parseDuration(date) {
   }
 
   const match = iso8601Duration.exec(date);
-  assert(match, `parser: ${date} is not a valid ISO8601 duration`);
+  assert(match, `${date} is not a valid ISO8601 duration`);
 
   return (
     parseFloat(match[2]  || 0) * 365 * 24 * 60 * 60 +
@@ -395,7 +395,7 @@ function parsePeriod(root, contentProtectionParser) {
 
 function parseFromDocument(document, contentProtectionParser) {
   const root = document.documentElement;
-  assert.equal(root.nodeName, "MPD", "parser: document root should be MPD");
+  assert.equal(root.nodeName, "MPD", "document root should be MPD");
 
   let manifest = reduceChildren(root, (res, name, node) => {
     switch(name) {

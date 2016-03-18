@@ -77,12 +77,12 @@ function parseSami(smi, lang) {
     const str = smi.slice(up.index, to.index);
     const tim = str.match(START);
     if (!tim) {
-      throw new Error("parse error: sync time attribute");
+      throw new Error("parse error (sync time attribute)");
     }
 
     const start = +tim[1];
     if (isNaN(start)) {
-      throw new Error("parse error: sync time attribute NaN");
+      throw new Error("parse error (sync time attribute NaN)");
     }
 
     appendSub(subs, str.split("\n"), start / 1000);

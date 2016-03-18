@@ -2,6 +2,7 @@ const EventEmitter = require("canal-js-utils/eventemitter");
 const { Observable } = require("rxjs/Observable");
 const { BufferedRanges } = require("./ranges");
 const assert = require("canal-js-utils/assert");
+const castToObservable = require("../utils/to-observable");
 
 class AbstractSourceBuffer extends EventEmitter {
   constructor(codec) {
@@ -32,20 +33,19 @@ class AbstractSourceBuffer extends EventEmitter {
   _abort() {}
 
   _lock(func) {
-    assert(!this.updating, "text-buffer: cannot remove while updating");
+    assert(!this.updating, "updating");
     this.updating = true;
     this.trigger("updatestart");
-    let result = func();
-
-    if (!(result && result.subscribe == "function")) {
-      result = Observable.of(result);
+    let result;
+    try {
+      result = castToObservable(func());
+    } catch(e) {
+      result = Observable.throw(e);
     }
-
-    result
-      .subscribe(
-        ()  => this._unlock("update"),
-        (e) => this._unlock("error", e)
-      );
+    result.subscribe(
+      ()  => this._unlock("update"),
+      (e) => this._unlock("error", e)
+    );
   }
 
   _unlock(eventName, value) {

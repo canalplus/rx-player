@@ -15,11 +15,11 @@
  */
 
 const log = require("canal-js-utils/log");
-const assert = require("canal-js-utils/assert");
 const defaults = require("lodash/object/defaults");
 const flatten = require("lodash/array/flatten");
 const { parseBaseURL } = require("canal-js-utils/url");
 const { isCodecSupported } = require("./compat");
+const { MediaError } = require("../errors");
 
 const representationBaseType = [
   "profiles",
@@ -45,7 +45,9 @@ function parseType(mimeType) {
 }
 
 function normalizeManifest(location, manifest, subtitles) {
-  assert(manifest.transportType);
+  if (!manifest.transportType) {
+    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+  }
 
   manifest.id = manifest.id || uniqueId++;
   manifest.type = manifest.type || "static";
@@ -101,7 +103,9 @@ function normalizePeriod(period, inherit, subtitles) {
     }
   });
 
-  assert(adaptations.length > 0);
+  if (adaptations.length === 0) {
+    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+  }
 
   const adaptationsByType = {};
   for (let i = 0; i < adaptations.length; i++) {
@@ -116,7 +120,10 @@ function normalizePeriod(period, inherit, subtitles) {
 }
 
 function normalizeAdaptation(adaptation, inherit) {
-  assert(typeof adaptation.id != "undefined");
+  if (typeof adaptation.id == "undefined") {
+    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+  }
+
   defaults(adaptation, inherit);
 
   const inheritedFromAdaptation = {};
@@ -136,7 +143,9 @@ function normalizeAdaptation(adaptation, inherit) {
     mimeType = representations[0].mimeType;
   }
 
-  assert(mimeType);
+  if (!mimeType) {
+    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+  }
 
   adaptation.mimeType = mimeType;
 
@@ -148,18 +157,26 @@ function normalizeAdaptation(adaptation, inherit) {
     representations = representations.filter((rep) => isCodecSupported(getCodec(rep)));
   }
 
-  assert(representations.length > 0, "manifest: no compatible representation for this adaptation");
+  if (representations.length === 0) {
+    throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, true);
+  }
+
   adaptation.representations = representations;
   adaptation.bitrates = representations.map((rep) => rep.bitrate);
   return adaptation;
 }
 
 function normalizeRepresentation(representation, inherit) {
-  assert(typeof representation.id != "undefined");
+  if (typeof representation.id == "undefined") {
+    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+  }
+
   defaults(representation, inherit);
 
   const index = representation.index;
-  assert(index);
+  if (!index) {
+    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+  }
 
   if (!index.timescale) {
     index.timescale = 1;

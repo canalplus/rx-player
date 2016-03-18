@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-const log = require("canal-js-utils/log");
 const { Subscription } = require("rxjs/Subscription");
 const { BehaviorSubject } = require("rxjs/subject/BehaviorSubject");
 const { combineLatestStatic } = require("rxjs/operator/combineLatest");
@@ -127,11 +126,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
       return textAdaptationChoice(adaptations);
     }
 
-    if (adaptations.length == 1) {
-      return only(adaptations[0]);
-    }
-
-    throw new Error(`adaptive: unknown type ${type} for adaptation chooser`);
+    return only(adaptations[0]);
   }
 
   function getBufferAdapters(adaptation) {
@@ -197,8 +192,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
           }
           return find(representations, (rep) => rep.bitrate === getClosestBitrate(bitrates, btr));
         })
-        .distinctUntilChanged((a, b) => a.id === b.id)
-        .do((r) => log.info("bitrate", type, r.bitrate));
+        .distinctUntilChanged((a, b) => a.id === b.id);
     }
     else {
       representationsObservable = only(firstRep);

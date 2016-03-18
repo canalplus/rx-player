@@ -41,6 +41,11 @@ const {
   getLiveGap,
 } = require("./timings");
 
+const {
+  ErrorTypes,
+  ErrorCodes,
+} = require("../errors");
+
 const { InitializationSegmentCache } = require("./cache");
 const { BufferedRanges } = require("./ranges");
 const { parseTimeFragment } = require("./time-fragment");
@@ -90,6 +95,14 @@ function filterStreamByType(stream, type) {
 
 class Player extends EventEmitter {
 
+  static getErrorTypes() {
+    return ErrorTypes;
+  }
+
+  static getErrorCodes() {
+    return ErrorCodes;
+  }
+
   constructor(options) {
     let { videoElement } = options;
 
@@ -110,6 +123,7 @@ class Player extends EventEmitter {
     this._triggerTimeChange$ = this._triggerTimeChange.bind(this);
     this._streamNext$ = this._streamNext.bind(this);
     this._streamError$ = this._streamError.bind(this);
+    this._streamFatalError$ = this._streamFatalError.bind(this);
     this._streamComplete$ = this._streamComplete.bind(this);
 
     this.defaultTransport = transport;
@@ -138,6 +152,7 @@ class Player extends EventEmitter {
 
     // multicaster forwarding all streams events
     this.stream = new Subject();
+    this.errorStream = new Subject();
 
     const { createPipelines, metrics } = PipeLines();
 
@@ -171,6 +186,7 @@ class Player extends EventEmitter {
     this.adas = { video: null, audio: null, text: null };
     this.evts = {};
     this.frag = { start: null, end: null };
+    this.error = null;
   }
 
   _unsubscribe() {
@@ -293,14 +309,23 @@ class Player extends EventEmitter {
     this.frag = timeFragment;
     this.playing.next(autoPlay);
 
+    const {
+      adaptive,
+      timings,
+      video:
+      videoElement,
+      errorStream,
+    } = this;
+
     const pipelines = this.createPipelines(transport, {
+      errorStream: errorStream,
       audio: { cache: new InitializationSegmentCache() },
       video: { cache: new InitializationSegmentCache() },
     });
 
-    const { adaptive, timings, video: videoElement } = this;
     const stream = Stream({
       url,
+      errorStream,
       keySystems,
       subtitles,
       timings,
@@ -328,9 +353,10 @@ class Player extends EventEmitter {
     subs.add(timings.subscribe(this._triggerTimeChange$, noop));
     subs.add(stream.subscribe(
       this._streamNext$,
-      this._streamError$,
+      this._streamFatalError$,
       this._streamComplete$
     ));
+    subs.add(errorStream.subscribe(this._streamError$));
     subs.add(stream.connect());
 
     // _unsubscribe may have been called synchronously on early disposable
@@ -360,10 +386,16 @@ class Player extends EventEmitter {
   }
 
   _streamError(error) {
+    this.trigger("warning", error);
+    this.stream.next({ type: "warning", value: error });
+  }
+
+  _streamFatalError(error) {
     this._resetStates();
-    this.trigger("error", error);
+    this.error = error;
     this._setPlayerState(PLAYER_STOPPED);
     this._unsubscribe();
+    this.trigger("error", error);
     this.stream.next({ type: "error", value: error });
   }
 
@@ -419,6 +451,10 @@ class Player extends EventEmitter {
       }
       this.trigger("currentTimeChange", t);
     }
+  }
+
+  getError() {
+    return this.error;
   }
 
   getManifest() {

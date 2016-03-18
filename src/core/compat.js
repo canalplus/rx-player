@@ -26,6 +26,7 @@ const never = require("rxjs/observable/NeverObservable").NeverObservable.create;
 const { on } = require("../utils/rx-utils");
 const find = require("lodash/collection/find");
 const castToObservable = require("../utils/to-observable");
+const { MediaError } = require("../errors");
 
 const doc = document;
 const win = window;
@@ -439,7 +440,9 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 }
 
 if (!MediaKeys_) {
-  const noMediaKeys = () => { throw new Error("eme: MediaKeys is not available"); };
+  const noMediaKeys = () => {
+    throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED", null, true);
+  };
 
   MediaKeys_ = {
     create: noMediaKeys,
@@ -471,8 +474,6 @@ function _setMediaKeys(elt, mk) {
   if (elt.msSetMediaKeys) {
     return elt.msSetMediaKeys(mk);
   }
-
-  throw new Error("compat: cannot find setMediaKeys method");
 }
 
 const setMediaKeys = (elt, mk) => {
@@ -492,14 +493,14 @@ if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener
 
   SBProto.appendBuffer = function(data) {
     if (this.updating) {
-      throw new Error("SourceBuffer updating");
+      throw new Error("updating");
     }
     this.trigger("updatestart");
     this.updating = true;
     try {
       this.append(data);
-    } catch(err) {
-      this.__emitUpdate("error", err);
+    } catch(error) {
+      this.__emitUpdate("error", error);
       return;
     }
     this.__emitUpdate("update");

@@ -16,10 +16,11 @@
 
 const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const request = require("canal-js-utils/rx-request");
 const { bytesToStr } = require("canal-js-utils/bytes");
 const log = require("canal-js-utils/log");
 
+const request = require("../../request");
+const { RequestResponse } = request;
 const createSmoothStreamingParser = require("./parser");
 
 const {
@@ -54,8 +55,8 @@ function byteRange([start, end]) {
   }
 }
 
-function extractISML(doc) {
-  return doc.getElementsByTagName("media")[0].getAttribute("src");
+function extractISML({ responseData }) {
+  return responseData.getElementsByTagName("media")[0].getAttribute("src");
 }
 
 function extractToken(url) {
@@ -86,13 +87,9 @@ function buildSegmentURL(segment) {
     .replace(/\{start time\}/g, segment.getTime());
 }
 
-const req = (reqOptions) => {
-  reqOptions.withMetadata = true;
-  return request(reqOptions);
-};
-
 module.exports = function(options={}) {
   const smoothManifestParser = createSmoothStreamingParser(options);
+  const createXHR = options.createXHR;
 
   const manifestPipeline = {
     resolver({ url }) {
@@ -100,10 +97,12 @@ module.exports = function(options={}) {
       const token = extractToken(url);
 
       if (WSX_REG.test(url)) {
-        resolving = req({
+        resolving = request({
           url: replaceToken(url, ""),
-          format: "document",
-        }).map(({ blob }) => extractISML(blob));
+          responseType: "document",
+          resultSelector: extractISML,
+          createXHR,
+        });
       }
       else {
         resolving = Observable.of(url);
@@ -112,23 +111,29 @@ module.exports = function(options={}) {
       return resolving
         .map((url) => ({ url: replaceToken(resolveManifest(url), token) }));
     },
+
     loader({ url }) {
-      return req({ url, format: "document" });
+      return request({
+        url,
+        responseType: "document",
+        createXHR,
+      });
     },
+
     parser({ response }) {
       return Observable.of({
-        manifest: smoothManifestParser(response.blob),
+        manifest: smoothManifestParser(response.responseData),
         url:      response.url,
       });
     },
   };
 
-  function extractTimingsInfos(blob, segment) {
+  function extractTimingsInfos(responseData, segment) {
     let nextSegments;
     let currentSegment;
 
     if (segment.getAdaptation().isLive) {
-      const traf = getTraf(blob);
+      const traf = getTraf(responseData);
       if (traf) {
         nextSegments = parseTfrf(traf);
         currentSegment = parseTfxd(traf);
@@ -155,10 +160,10 @@ module.exports = function(options={}) {
         const adaptation = segment.getAdaptation();
         const representation = segment.getRepresentation();
 
-        let blob;
+        let responseData;
         const protection = adaptation.smoothProtection || {};
         switch(adaptation.type) {
-        case "video": blob = createVideoInitSegment(
+        case "video": responseData = createVideoInitSegment(
           representation.index.timescale,
           representation.width,
           representation.height,
@@ -167,7 +172,7 @@ module.exports = function(options={}) {
           protection.keyId,     // keyId
           protection.keySystems // pssList
         ); break;
-        case "audio": blob = createAudioInitSegment(
+        case "audio": responseData = createAudioInitSegment(
           representation.index.timescale,
           representation.channels,
           representation.bitsPerSample,
@@ -179,7 +184,15 @@ module.exports = function(options={}) {
         ); break;
         }
 
-        return Observable.of({ blob, size: blob.length, duration: 100 });
+        return Observable.of(new RequestResponse(
+          200,
+          "",
+          "arraybuffer",
+          Date.now() - 100,
+          Date.now(),
+          responseData.length,
+          responseData
+        ));
       }
       else {
         let headers;
@@ -190,20 +203,32 @@ module.exports = function(options={}) {
         }
 
         const url = buildSegmentURL(segment);
-        return req({ url, format: "arraybuffer", headers });
+        return request({
+          url,
+          responseType: "arraybuffer",
+          headers,
+          createXHR,
+        });
       }
     },
 
     parser({ segment, response }) {
+      const { responseData } = response;
+
       if (segment.isInitSegment()) {
-        return Observable.of({ blob: response.blob, timings: null });
+        return Observable.of({
+          segmentData: responseData,
+          timings: null,
+        });
       }
 
-      const blob = new Uint8Array(response.blob);
-      const { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
+      const responseBuffer = new Uint8Array(responseData);
+      const { nextSegments, currentSegment } = extractTimingsInfos(responseBuffer, segment);
+
+      const segmentData = patchSegment(responseBuffer, currentSegment.ts);
 
       return Observable.of({
-        blob: patchSegment(blob, currentSegment.ts),
+        segmentData,
         nextSegments,
         currentSegment,
       });
@@ -220,39 +245,39 @@ module.exports = function(options={}) {
       const url = buildSegmentURL(segment);
 
       if (mimeType.indexOf("mp4") >= 0) {
-        // in case of TTML declared inside
-        // playlists, the TTML file is embededded
-        // inside an mp4 fragment.
-        return req({ url, format: "arraybuffer" });
+        // in case of TTML declared inside playlists, the TTML file is
+        // embededded inside an mp4 fragment.
+        return request({ url, responseType: "arraybuffer", createXHR });
       } else {
-        return req({ url, format: "text" });
+        return request({ url, responseType: "text", createXHR });
       }
     },
 
     parser({ response, segment }) {
       const { lang } = segment.getAdaptation();
       const { mimeType, index } = segment.getRepresentation();
-      const parser_ = TT_PARSERS[mimeType];
-      if (!parser_) {
-        throw new Error(`smooth: could not find a text-track parser for the type ${mimeType}`);
+      const ttParser = TT_PARSERS[mimeType];
+      if (!ttParser) {
+        throw new Error(`could not find a text-track parser for the type ${mimeType}`);
       }
 
-      let blob = response.blob;
+      let responseData = response.responseData;
       let text;
       // in case of TTML declared inside playlists, the TTML file is
       // embededded inside an mp4 fragment.
       if (mimeType.indexOf("mp4") >= 0) {
-        blob = new Uint8Array(blob);
-        text = bytesToStr(getMdat(blob));
+        responseData = new Uint8Array(responseData);
+        text = bytesToStr(getMdat(responseData));
       } else {
         // vod is simple WebVTT or TTML text
-        text = blob;
+        text = responseData;
       }
 
-      const { nextSegments, currentSegment } = extractTimingsInfos(blob, segment);
+      const { nextSegments, currentSegment } = extractTimingsInfos(responseData, segment);
+      const segmentData = ttParser(text, lang, segment.getTime() / index.timescale);
 
       return Observable.of({
-        blob: parser_(text, lang, segment.getTime() / index.timescale),
+        segmentData,
         currentSegment,
         nextSegments,
       });

@@ -38,13 +38,7 @@ class BufferingQueue {
 
   onError(evt) {
     if (this.flushing) {
-      let error;
-      if (evt.target && evt.target.error) {
-        error = evt.target.error;
-      } else {
-        error = new Error("buffer: error event");
-      }
-      this.flushing.error(error);
+      this.flushing.error(evt.target.error);
       this.flushing = null;
     }
   }
@@ -79,13 +73,17 @@ class BufferingQueue {
 
     const { type, args, subj } = this.queue.pop();
     this.flushing = subj;
-    switch(type) {
-    case BUFFER_APPEND:
-      this.buffer.appendBuffer(args); break;
-    case BUFFER_STREAM:
-      this.buffer.appendStream(args); break;
-    case BUFFER_REMOVE:
-      this.buffer.removeBuffer(args.start, args.end); break;
+    try {
+      switch(type) {
+      case BUFFER_APPEND:
+        this.buffer.appendBuffer(args); break;
+      case BUFFER_STREAM:
+        this.buffer.appendStream(args); break;
+      case BUFFER_REMOVE:
+        this.buffer.removeBuffer(args.start, args.end); break;
+      }
+    } catch(e) {
+      this.onError(e);
     }
   }
 }

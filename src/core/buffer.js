@@ -15,7 +15,6 @@
  */
 
 const log = require("canal-js-utils/log");
-const assert = require("canal-js-utils/assert");
 const { BufferingQueue } = require("./buffering-queue");
 const { BufferedRanges } = require("./ranges");
 const { Observable } = require("rxjs/Observable");
@@ -27,7 +26,12 @@ const from = require("rxjs/observable/FromObservable").FromObservable.create;
 const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
 
 const { SimpleSet } = require("../utils/collections");
-const { IndexHandler, OutOfIndexError } = require("./index-handler");
+const { IndexHandler } = require("./index-handler");
+const {
+  MediaError,
+  ErrorTypes,
+  ErrorCodes,
+} = require("../errors");
 
 const BITRATE_REBUFFERING_RATIO = 1.5;
 
@@ -114,22 +118,28 @@ function Buffer({
       }
 
       log.debug("buffer: gc cleaning", cleanedupRanges);
-      return from(cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))).concatAll();
+      return from(
+        cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
+      ).concatAll();
     });
   }
 
   function doAppendBufferOrGC(pipelineData) {
-    const blob = pipelineData.parsed.blob;
-    return bufferingQueue.appendBuffer(blob)
-      .catch((err) => {
-        // launch our garbage collector and retry on
-        // QuotaExceededError
-        if (err.name !== "QuotaExceededError") {
-          throw err;
+    const segmentData = pipelineData.parsed.segmentData;
+    return bufferingQueue.appendBuffer(segmentData)
+      .catch((error) => {
+        if (error.name != "QuotaExceededError") {
+          throw new MediaError("BUFFER_APPEND_ERROR", error, false);
         }
 
-        return bufferGarbageCollector().flatMap(
-          () => bufferingQueue.appendBuffer(blob));
+        // launch our garbage collector and retry on
+        // QuotaExceededError and throw a fatal error if we still have
+        // an error.
+        return bufferGarbageCollector()
+          .flatMap(() => bufferingQueue.appendBuffer(segmentData))
+          .catch((error) => {
+            throw new MediaError("BUFFER_FULL_ERROR", error, true);
+          });
       });
   }
 
@@ -193,6 +203,8 @@ function Buffer({
   }
 
   function createRepresentationBuffer(representation) {
+    log.info("bitrate", bufferType, representation.bitrate);
+
     const segmentIndex = new IndexHandler(adaptation, representation);
     const queuedSegments = new SimpleSet();
 
@@ -246,21 +258,22 @@ function Buffer({
 
         injectedSegments = injectedSegments.filter(filterAlreadyLoaded);
       }
-      catch(err) {
-        // catch OutOfIndexError errors thrown by when we try to
-        // access to non available segments. Reinject this error
-        // into the main buffer observable so that it can be treated
-        // upstream
-        if (err instanceof OutOfIndexError) {
-          outOfIndexStream.next({ type: "out-of-index", value: err });
+      catch(error) {
+        // catch IndexError errors thrown by when we try to access to
+        // non available segments. Reinject this error into the main
+        // buffer observable so that it can be treated upstream
+        const isOutOfIndexError = (
+          error.type === ErrorTypes.INDEX_ERROR &&
+          error.code === ErrorCodes.OUT_OF_INDEX_ERROR
+        );
+
+        if (isOutOfIndexError) {
+          outOfIndexStream.next({ type: "out-of-index", value: error });
           return empty();
         }
         else {
-          throw err;
+          throw new MediaError("BUFFER_INDEX_ERROR", error, false);
         }
-
-        // unreachable
-        assert(false);
       }
 
       // queue all segments injected in the observable
@@ -318,16 +331,21 @@ function Buffer({
         doUnqueueAndUpdateRanges
       );
 
-    return mergeStatic(segmentsPipeline, outOfIndexStream).catch((err) => {
-      if (err.code !== 412) {
-        throw err;
+    return mergeStatic(segmentsPipeline, outOfIndexStream).catch((error) => {
+      const isPreconditionFailedError = (
+        error.type == ErrorTypes.NETWORK_ERRROR &&
+        error.isHttpError(412)
+      );
+
+      if (!isPreconditionFailedError) {
+        throw error;
       }
 
       // 412 Precondition Failed request errors do not cause the
       // buffer to stop but are re-emitted in the stream as
       // "precondition-failed" type. They should be handled re-
       // adapting the live-gap that the player is holding
-      return Observable.of({ type: "precondition-failed", value: err })
+      return Observable.of({ type: "precondition-failed", value: error })
         .concat(timer(2000))
         .concat(createRepresentationBuffer(representation));
     })

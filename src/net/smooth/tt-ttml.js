@@ -37,12 +37,12 @@ function parseTTML(ttml, lang, offset) {
   }
 
   if (!(doc instanceof window.Document || doc instanceof window.HTMLElement)) {
-    throw new Error("ttml: needs a Document to parse");
+    throw new Error("ttml needs a Document to parse");
   }
 
   const node = doc.querySelector("tt");
   if (!node) {
-    throw new Error("ttml: could not find <tt> tag");
+    throw new Error("ttml could not find <tt> tag");
   }
 
   const subs = parseChildren(node.querySelector("body"), 0);
@@ -96,7 +96,7 @@ function parseNode(node, parentOffset, siblingOffset) {
   if (!typeof start == "number" &&
       !typeof end == "number" &&
       !typeof dur == "number") {
-    throw new Error("ttml: unsupported timestamp format");
+    throw new Error("ttml unsupported timestamp format");
   }
 
   if (dur > 0) {

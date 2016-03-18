@@ -301,6 +301,47 @@ Sets a maximum limit in the bitrate chosen by the *auto-adaptive* player strateg
 
 Sets the buffer size in seconds. If 0 is given, default value is used (30 seconds, in the inital implementation).
 
+## Errors
+
+Errors have categorized is thoses types, accessible via the `type` attribute:
+
+  - `NETWORK_ERROR`: network related error, the `reason` attribute is a `RequestError`
+  - `MEDIA_ERROR`: media related error (decoding, parsing of any media related asset)
+  - `ENCRYPTED_MEDIA_ERROR`: encryption and EME related errors
+  - `INDEX_ERROR`: playlist index access error
+  - `OTHER_ERROR`: any other type of error
+
+A `code` attribute may also be associated to the error:
+
+  - `PIPELINE_RESOLVE_ERROR`
+  - `PIPELINE_LOAD_ERROR`
+  - `PIPELINE_PARSING_ERROR`
+  - `MANIFEST_PARSE_ERROR`
+  - `MANIFEST_INCOMPATIBLE_CODECS_ERROR`
+  - `MEDIA_IS_ENCRYPTED_ERROR`
+  - `KEY_ERROR`
+  - `KEY_STATUS_CHANGE_ERROR`
+  - `KEY_UPDATE_ERROR`
+  - `KEY_LOAD_ERROR`
+  - `KEY_LOAD_TIMEOUT`
+  - `INCOMPATIBLE_KEYSYSTEMS`
+  - `BUFFER_APPEND_ERROR`
+  - `BUFFER_FULL_ERROR`
+  - `BUFFER_INDEX_ERROR`
+  - `BUFFER_TYPE_UNKNOWN`
+  - `MEDIA_ERR_ABORTED`
+  - `MEDIA_ERR_NETWORK`
+  - `MEDIA_ERR_DECODE`
+  - `MEDIA_ERR_SRC_NOT_SUPPORTED`
+  - `MEDIA_SOURCE_NOT_SUPPORTED`
+  - `MEDIA_KEYS_NOT_SUPPORTED`
+  - `OUT_OF_INDEX_ERROR`
+  - `UNKNOWN_INDEX`
+
+Errors also have a `fatal` attribute indicating whether or not they where fatal to the playback and an optional `reason` attribute with the original error they may originate from.
+
+Error types and codes enums can be accessed via `RxPlayer.getErrorTypes()` and `RxPlayer.getErrorCodes()`.
+
 ## Events
 
 #### `addEventListener(event, func)`
@@ -315,7 +356,8 @@ Adds a listener on an event. The avaiable events are :
 - `"audioBitrateChange", int`: changes in audio bitrate
 - `"videoBitrateChange", int`: changes in video bitrate
 - `"fullscreenChange", bool`: changes in fullscreen state
-- `"error", Error TBD`: asynchronous error in playback.
+- `"error", Error`: asynchronous error that was fatal to playback
+- `"warning", Error`: asynchronous error that was not fatal to playback
 
 #### `removeEventListener(event, func)`
 

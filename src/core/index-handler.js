@@ -23,21 +23,17 @@ const Timeline = require("./indexes/timeline");
 const List = require("./indexes/list");
 const Base = require("./indexes/base");
 
-function OutOfIndexError(type) {
-  this.name = "OutOfIndexError";
-  this.type = type;
-  this.message = "out of range in index " + type;
-}
-OutOfIndexError.prototype = new Error();
+const { IndexError } = require("../errors");
 
 function selectIndexHandler(index) {
-  switch(index.indexType) {
+  const { indexType } = index;
+  switch(indexType) {
   case "template": return Template;
   case "timeline": return Timeline;
   case "list":     return List;
   case "base":     return Base;
   default:
-    throw new Error(`index-handler: unrecognized indexType ${index.indexType}`);
+    throw new IndexError("UNKNOWN_INDEX", indexType, true);
   }
 }
 
@@ -92,7 +88,7 @@ class IndexHandler {
   getSegments(ts, offset, bufSize) {
     const { time, up, to } = this.normalizeRange(ts, offset, bufSize);
     if (!this.handler.checkRange(time)) {
-      throw new OutOfIndexError(this.index.indexType);
+      throw new IndexError("OUT_OF_INDEX_ERROR", this.index.indexType, false);
     }
 
     return this.handler.getSegments(up, to);
@@ -134,7 +130,6 @@ class IndexHandler {
 }
 
 module.exports = {
-  OutOfIndexError,
   IndexHandler,
   getLiveEdge,
 };

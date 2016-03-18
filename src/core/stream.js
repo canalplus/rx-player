@@ -17,7 +17,7 @@
 const log = require("canal-js-utils/log");
 const assert = require("canal-js-utils/assert");
 const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
-const { retryWithBackoff } = require("canal-js-utils/rx-ext");
+const { retryableFuncWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
 const { on } = require("../utils/rx-utils");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
@@ -37,7 +37,14 @@ const TextSourceBuffer = require("./text-buffer");
 const { getLiveEdge } = require("./index-handler");
 const { clearSegmentCache } = require("./segment");
 const { Buffer, EmptyBuffer } = require("./buffer");
-const { createEME, onEncrypted, EMEError } = require("./eme");
+const { createEME, onEncrypted } = require("./eme");
+
+const {
+  MediaError,
+  OtherError,
+  EncryptedMediaError,
+  isKnownError,
+} = require("../errors");
 
 const {
   normalizeManifest,
@@ -47,13 +54,6 @@ const {
 } = require("./manifest");
 
 const END_OF_PLAY = 0.2;
-
-const RETRY_OPTIONS = {
-  totalRetry: 3,
-  retryDelay: 250,
-  resetDelay: 60 * 1000,
-  shouldRetry,
-};
 
 // discontinuity threshold in seconds
 const DISCONTINUITY_THRESHOLD = 1;
@@ -65,18 +65,9 @@ function isNativeBuffer(bufferType) {
   );
 }
 
-function shouldRetry(err, tryCount) {
-  if (/MEDIA_ERR/.test(err.message) ||
-      err instanceof EMEError) {
-    return false;
-  } else {
-    log.warn("stream retry", err, tryCount);
-    return true;
-  }
-}
-
 function Stream({
   url,
+  errorStream,
   keySystems,
   subtitles,
   timings,
@@ -97,6 +88,24 @@ function Stream({
 
   let nativeBuffers = {};
   let customBuffers = {};
+
+  const retryOptions = {
+    totalRetry: 3,
+    retryDelay: 250,
+    resetDelay: 60 * 1000,
+    shouldRetry: (error) => error.fatal !== true,
+    errorSelector: (error) => {
+      if (!isKnownError(error)) {
+        error = new OtherError("NONE", error, true);
+      }
+      error.fatal = true;
+      return error;
+    },
+    onRetry: (error, tryCount) => {
+      log.warn("stream retry", error, tryCount);
+      errorStream.next(error);
+    },
+  };
 
   function createSourceBuffer(video, mediaSource, bufferInfos) {
     const { type, codec } = bufferInfos;
@@ -135,9 +144,8 @@ function Stream({
       //    ...
       // }
       else {
-        const errMessage = "stream: unknown buffer type " + type;
-        log.error(errMessage);
-        throw new Error(errMessage);
+        log.error("unknown buffer type " + type);
+        throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
       }
 
       customBuffers[type] = sourceBuffer;
@@ -177,7 +185,9 @@ function Stream({
 
   function createAndPlugMediaSource(url, video) {
     return Observable.create((observer) => {
-      assert(MediaSource_, "player: browser is required to support MediaSource");
+      if (!MediaSource_) {
+        throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
+      }
 
       let mediaSource, objectURL;
 
@@ -279,7 +289,7 @@ function Stream({
    * Wait for manifest and media-source to open before initializing source
    * duration and creating buffers
    */
-  const createAllStream = retryWithBackoff(({ url, mediaSource }) => {
+  const createAllStream = retryableFuncWithBackoff(({ url, mediaSource }) => {
     const sourceOpening = mediaSource
       ? sourceOpen(mediaSource)
       : Observable.of(null);
@@ -296,7 +306,7 @@ function Stream({
 
         return createStream(mediaSource, manifest);
       });
-  }, RETRY_OPTIONS);
+  }, retryOptions);
 
   return createAndPlugMediaSource(url, videoElement)
     .flatMap(createAllStream)
@@ -342,8 +352,9 @@ function Stream({
       // player. ie: if a text buffer sends an error, we want to
       // continue streaming without any subtitles
       if (!isNativeBuffer(bufferType)) {
-        return buffer.catch((err) => {
-          log.error("buffer", bufferType, "has crashed", err);
+        return buffer.catch((error) => {
+          log.error("buffer", bufferType, "has crashed", error);
+          errorStream.next(error);
           return empty();
         });
       }
@@ -379,12 +390,11 @@ function Stream({
 
   function createEMEIfKeySystems() {
     if (keySystems && keySystems.length) {
-      return createEME(videoElement, keySystems);
+      return createEME(videoElement, keySystems, errorStream);
     } else {
       return onEncrypted(videoElement).map(() => {
-        const errMessage = "eme: ciphered media and no keySystem passed";
-        log.error(errMessage);
-        throw new Error(errMessage);
+        log.error("eme: ciphered media and no keySystem passed");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
       });
     }
   }
@@ -441,12 +451,12 @@ function Stream({
       });
   }
 
-  function isOutOfIndexError(err) {
-    return err && err.type == "out-of-index";
+  function isOutOfIndexError(error) {
+    return error && error.type == "out-of-index";
   }
 
-  function isPreconditionFailedError(err) {
-    return err && err.type == "precondition-failed";
+  function isPreconditionFailedError(error) {
+    return error && error.type == "precondition-failed";
   }
 
   function manifestAdapter(manifest, message) {
@@ -500,9 +510,16 @@ function Stream({
 
   function createMediaErrorStream() {
     return on(videoElement, "error").flatMap(() => {
-      const errMessage = `stream: video element MEDIA_ERR code ${videoElement.error.code}`;
-      log.error(errMessage);
-      throw new Error(errMessage);
+      const errorCode = videoElement.error.code;
+      let errorDetail;
+      switch(errorCode) {
+      case 1: errorDetail = "MEDIA_ERR_ABORTED"; break;
+      case 2: errorDetail = "MEDIA_ERR_NETWORK"; break;
+      case 3: errorDetail = "MEDIA_ERR_DECODE"; break;
+      case 4: errorDetail = "MEDIA_ERR_SRC_NOT_SUPPORTED"; break;
+      }
+      log.error(`stream: video element MEDIA_ERR(${errorDetail})`);
+      throw new MediaError(errorDetail, null, true);
     });
   }
 

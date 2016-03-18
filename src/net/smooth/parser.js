@@ -145,7 +145,7 @@ function createSmoothStreamingParser(parserOptions={}) {
 
   function parseProtection(root) {
     const header = root.firstElementChild;
-    assert.equal(header.nodeName, "ProtectionHeader", "parser: Protection should have ProtectionHeader child");
+    assert.equal(header.nodeName, "ProtectionHeader", "Protection should have ProtectionHeader child");
     const privateData = bytes.strToBytes(atob(header.textContent));
     const keyId = getHexKeyId(privateData);
     const keyIdBytes = bytes.hexToBytes(keyId);
@@ -221,7 +221,7 @@ function createSmoothStreamingParser(parserOptions={}) {
     const subType = root.getAttribute("Subtype");
     const profile = profiles[type];
 
-    assert(profile, "parser: unrecognized QualityLevel type " + type);
+    assert(profile, "unrecognized QualityLevel type " + type);
 
     let representationCount = 0;
 
@@ -258,7 +258,7 @@ function createSmoothStreamingParser(parserOptions={}) {
 
     // we assume that all representations have the same
     // codec and mimeType
-    assert(representations.length, "parser: adaptation should have at least one representation");
+    assert(representations.length, "adaptation should have at least one representation");
 
     // apply default codec if non-supported
     representations.forEach((rep) => rep.codecs = rep.codecs || DEFAULT_CODECS[type]);
@@ -287,7 +287,7 @@ function createSmoothStreamingParser(parserOptions={}) {
 
   function parseFromDocument(doc) {
     const root = doc.documentElement;
-    assert.equal(root.nodeName, "SmoothStreamingMedia", "parser: document root should be SmoothStreamingMedia");
+    assert.equal(root.nodeName, "SmoothStreamingMedia", "document root should be SmoothStreamingMedia");
     assert(/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
       "Version should be 2.0, 2.1 or 2.2");
 

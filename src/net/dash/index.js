@@ -18,11 +18,11 @@ const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const { mergeStatic } = require("rxjs/operator/merge");
 const assert = require("canal-js-utils/assert");
-const request = require("canal-js-utils/rx-request");
 const { resolveURL } = require("canal-js-utils/url");
 const { pad } = require("canal-js-utils/misc");
 const { parseSidx, patchPssh } = require("./mp4");
 
+const request = require("../../request");
 const dashManifestParser = require("./parser");
 
 function byteRange([start, end]) {
@@ -54,11 +54,6 @@ function replaceTokens(path, segment) {
   }
 }
 
-const req = (reqOptions) => {
-  reqOptions.withMetadata = true;
-  return request(reqOptions);
-};
-
 module.exports = function(opts={}) {
   let { contentProtectionParser } = opts;
 
@@ -66,13 +61,20 @@ module.exports = function(opts={}) {
     contentProtectionParser = () => {};
   }
 
+  const createXHR = opts.createXHR;
+
   const manifestPipeline = {
     loader({ url }) {
-      return req({ url, format: "document" });
+      return request({
+        url,
+        responseType: "document",
+        createXHR,
+      });
     },
+
     parser({ response }) {
       return Observable.of({
-        manifest: dashManifestParser(response.blob, contentProtectionParser),
+        manifest: dashManifestParser(response.responseData, contentProtectionParser),
         url:      response.url,
       });
     },
@@ -105,10 +107,11 @@ module.exports = function(opts={}) {
       }
 
       const mediaUrl = resolveURL(segment.getResolvedURL(), path);
-      const mediaOrInitRequest = req({
+      const mediaOrInitRequest = request({
         url: mediaUrl,
-        format: "arraybuffer",
+        responseType: "arraybuffer",
         headers: mediaHeaders,
+        createXHR,
       });
 
       // If init segment has indexRange metadata, we need to fetch
@@ -118,10 +121,11 @@ module.exports = function(opts={}) {
       // init and index ranges are contiguous, which should be the
       // case most of the time.
       if (indexRange) {
-        const indexRequest = req({
+        const indexRequest = request({
           url: mediaUrl,
-          format: "arraybuffer",
+          responseType: "arraybuffer",
           headers: { "Range": byteRange(indexRange) },
+          createXHR,
         });
         return mergeStatic(mediaOrInitRequest, indexRequest);
       }
@@ -131,7 +135,7 @@ module.exports = function(opts={}) {
     },
 
     parser({ segment, response }) {
-      let blob = new Uint8Array(response.blob);
+      const responseData = new Uint8Array(response.responseData);
 
       // added segments and timescale informations are extracted from
       // sidx atom
@@ -140,7 +144,7 @@ module.exports = function(opts={}) {
       // added index (segments and timescale) informations are
       // extracted from sidx atom
       const indexRange = segment.getIndexRange();
-      const index = parseSidx(blob, indexRange ? indexRange[0] : 0);
+      const index = parseSidx(responseData, indexRange ? indexRange[0] : 0);
       if (index) {
         nextSegments = index.segments;
         timescale = index.timescale;
@@ -169,15 +173,16 @@ module.exports = function(opts={}) {
         }
       }
 
+      let segmentData = responseData;
       if (segment.isInitSegment()) {
         const adaptation = segment.getAdaptation();
         if (adaptation.contentProtection) {
-          blob = patchPssh(blob, adaptation.contentProtection);
+          segmentData = patchPssh(responseData, adaptation.contentProtection);
         }
       }
 
       return Observable.of({
-        blob,
+        segmentData,
         currentSegment,
         nextSegments,
         timescale,

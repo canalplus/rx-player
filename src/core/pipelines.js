@@ -14,26 +14,66 @@
  * limitations under the License.
  */
 
-const defaults = require("lodash/object/defaults");
 const { Subject } = require("rxjs/Subject");
 const { asap } = require("rxjs/scheduler/asap");
 const { Observable } = require("rxjs/Observable");
 const { retryWithBackoff } = require("../utils/retry");
+const castToObservable = require("../utils/to-observable");
+const {
+  RequestError,
+  NetworkError,
+  OtherError,
+  RequestErrorTypes,
+  isKnownError,
+} = require("../errors");
 
-const timeoutError = new Error("timeout");
 
-function isObservable(val) {
-  return !!val && typeof val.subscribe == "function";
+function errorSelector(code, error, fatal=true) {
+  if (isKnownError(error)) {
+    return error;
+  }
+
+  const ErrorType = (error instanceof RequestError)
+    ? NetworkError
+    : OtherError;
+
+  return new ErrorType(code, error, fatal);
 }
 
-const noCache = {
-  add() {},
-  get() {
-    return null;
-  },
-};
+function resolverErrorSelector(error) {
+  throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
+}
+
+function loaderErrorSelector(error) {
+  throw errorSelector("PIPELINE_LOAD_ERROR", error);
+}
+
+function parserErrorSelector(error) {
+  throw errorSelector("PIPELINE_PARSING_ERROR", error);
+}
+
+function loaderShouldRetry(error) {
+  if (!(error instanceof RequestError)) {
+    return false;
+  }
+  if (error.type === RequestErrorTypes.ERROR_HTTP_CODE) {
+    return error.status < 500;
+  }
+  return (
+    error.type === RequestErrorTypes.TIMEOUT ||
+    error.type === RequestErrorTypes.ERROR_EVENT
+  );
+}
 
 const metricsScheduler = asap;
+
+function tryCatch(func, args) {
+  try {
+    return func(args);
+  } catch(e) {
+    return Observable.throw(e);
+  }
+}
 
 /**
  * Creates the following pipeline:
@@ -48,32 +88,29 @@ const metricsScheduler = asap;
 function createPipeline(type,
                         { resolver, loader, parser },
                         metrics,
-                        opts={}) {
+                        errorStream,
+                        options={}) {
 
-  if (!parser) {
-    parser = Observable.of;
+  if (!resolver) {
+    resolver = Observable.of;
   }
   if (!loader)  {
     loader = Observable.of;
   }
-  if (!resolver) {
-    resolver = Observable.of;
+  if (!parser) {
+    parser = Observable.of;
   }
 
-  const { totalRetry, timeout, cache } = defaults(opts, {
-    totalRetry: 3,
-    timeout: 10 * 1000,
-    cache: noCache,
-  });
+  const { totalRetry, cache } = options;
 
-  const backoffOptions = {
-    retryDelay: 500,
-    totalRetry,
-    shouldRetry: (err) => (
-      (err.code >= 500 || err.code < 200) ||
-      /timeout/.test(err.message) ||
-      /request: error event/.test(err.message)
-    ),
+  const loaderBackoffOptions = {
+    retryDelay: 200,
+    errorSelector: loaderErrorSelector,
+    totalRetry: totalRetry || 4,
+    shouldRetry: loaderShouldRetry,
+    onRetry: (error) => {
+      errorStream.next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
+    },
   };
 
   function dispatchMetrics(value) {
@@ -84,43 +121,56 @@ function createPipeline(type,
     metricsScheduler.schedule(dispatchMetrics, 0, value);
   }
 
-  function loaderWithRetry(resolvedInfos) {
-    return retryWithBackoff(
-      loader(resolvedInfos).timeout(timeout, timeoutError),
-      backoffOptions
-    );
+  function resolverWithCatch(pipelineInputData) {
+    return tryCatch(resolver, pipelineInputData).catch(resolverErrorSelector);
   }
 
-  function cacheOrLoader(resolvedInfos) {
-    const fromCache = cache.get(resolvedInfos);
+  function loaderWithRetry(resolvedInfos) {
+    return retryWithBackoff(tryCatch(loader, resolvedInfos), loaderBackoffOptions);
+  }
+
+  function loaderWithCache(resolvedInfos) {
+    const fromCache = cache ? cache.get(resolvedInfos) : null;
     if (fromCache === null) {
       return loaderWithRetry(resolvedInfos);
-    } else if (isObservable(fromCache)) {
-      return fromCache.catch(() => loaderWithRetry(resolvedInfos));
     } else {
-      return Observable.of(fromCache);
+      return castToObservable(fromCache)
+        .catch(() => loaderWithRetry(resolvedInfos));
     }
   }
 
-  function extendsResponseAndResolvedInfos(resolvedInfos, response) {
-    const loadedInfos = { response, ...resolvedInfos };
+  function parserWithCatch(loadedInfos) {
+    return tryCatch(parser, loadedInfos).catch(parserErrorSelector);
+  }
 
-    // add loadedInfos to the pipeline cache and emits its value in
-    // the metrics observer.
-    cache.add(resolvedInfos, response);
+  function extendsResponseAndResolvedInfos(resolvedInfos, response) {
+    const loadedInfos = {
+      response,
+      ...resolvedInfos,
+    };
+
+    // add loadedInfos to the pipeline cache
+    if (cache) {
+      cache.add(resolvedInfos, response);
+    }
+
+    // emits its value in the metrics observer
     schedulMetrics({ type, value: loadedInfos });
 
     return loadedInfos;
   }
 
   function extendsParsedAndLoadedInfos(loadedInfos, parsed) {
-    return { parsed, ...loadedInfos };
+    return {
+      parsed,
+      ...loadedInfos,
+    };
   }
 
-  return (data) => {
-    return resolver(data)
-      .flatMap(cacheOrLoader, extendsResponseAndResolvedInfos)
-      .flatMap(parser, extendsParsedAndLoadedInfos);
+  return (pipelineInputData) => {
+    return resolverWithCatch(pipelineInputData)
+      .flatMap(loaderWithCache, extendsResponseAndResolvedInfos)
+      .flatMap(parserWithCatch, extendsParsedAndLoadedInfos);
   };
 }
 
@@ -140,6 +190,7 @@ function PipeLines() {
       pipelines[pipelineType] = createPipeline(pipelineType,
                                                transport[pipelineType],
                                                metrics,
+                                               options.errorStream,
                                                options[pipelineType]);
     }
 

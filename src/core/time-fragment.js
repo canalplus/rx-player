@@ -65,7 +65,7 @@ function parseTimeFragment(timeFragment) {
   return timeFragment;
 }
 
-const errMessage = "Invalid MediaFragment";
+const errMessage = "invalid MediaFragment";
 
 function normalizeNTPTime(time) {
   if (!time) {
