@@ -103,6 +103,15 @@ class Player extends EventEmitter {
     } = options;
 
     super();
+
+    // auto-bindings
+    this._playPauseNext$ = this._playPauseNext.bind(this);
+    this._setPlayerState$ = this._setPlayerState.bind(this);
+    this._triggerTimeChange$ = this._triggerTimeChange.bind(this);
+    this._streamNext$ = this._streamNext.bind(this);
+    this._streamError$ = this._streamError.bind(this);
+    this._streamComplete$ = this._streamComplete.bind(this);
+
     this.defaultTransport = transport;
     this.defaultTransportOptions = transportOptions || {};
 
@@ -314,13 +323,13 @@ class Player extends EventEmitter {
     const playChanges = on(videoElement, ["play", "pause"]);
 
     const subs = this.subscriptions = new Subscription();
-    subs.add(playChanges.subscribe(this._playPauseNext.bind(this), noop));
-    subs.add(stateChanges.subscribe(this._setPlayerState.bind(this), noop));
-    subs.add(timings.subscribe(this._triggerTimeChange.bind(this), noop));
+    subs.add(playChanges.subscribe(this._playPauseNext$, noop));
+    subs.add(stateChanges.subscribe(this._setPlayerState$, noop));
+    subs.add(timings.subscribe(this._triggerTimeChange$, noop));
     subs.add(stream.subscribe(
-      this._streamNext.bind(this),
-      this._streamError.bind(this),
-      this._streamComplete.bind(this)
+      this._streamNext$,
+      this._streamError$,
+      this._streamComplete$
     ));
     subs.add(stream.connect());
 
