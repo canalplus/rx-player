@@ -19,7 +19,7 @@ const assert = require("canal-js-utils/assert");
 const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 const { retryWithBackoff } = require("canal-js-utils/rx-ext");
 const { Observable } = require("rxjs/Observable");
-const { first, on } = require("canal-js-utils/rx-ext");
+const { on } = require("../utils/rx-utils");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const { mergeStatic } = require("rxjs/operator/merge");
 const { combineLatestStatic } = require("rxjs/operator/combineLatest");
@@ -372,7 +372,8 @@ function Stream({
         autoPlay = true;
       });
 
-    return first(combineLatestStatic(canSeek$, canPlay$))
+    return combineLatestStatic(canSeek$, canPlay$)
+      .take(1)
       .mapTo({ type: "loaded", value: true });
   }
 
