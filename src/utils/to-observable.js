@@ -3,7 +3,11 @@ const fromPromise = require("rxjs/observable/PromiseObservable").PromiseObservab
 
 function castToObservable(value) {
   if (value && typeof value.subscribe == "function") {
-    return value;
+    if (value instanceof Observable) {
+      return Observable;
+    } else {
+      return new Observable((obs) => value.subscribe(obs));
+    }
   }
 
   if (value && typeof value.then == "function") {
