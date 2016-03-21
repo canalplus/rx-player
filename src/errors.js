@@ -1,12 +1,6 @@
-function camelize(str) {
-  return str
-    .toLowerCase()
-    .replace(/_([a-z])/g, ([,letter]) => letter.toUpperCase());
-}
-
 function listToMap(list) {
   const map = list.reduce((map, name) => {
-    map[name] = camelize(name);
+    map[name] = name;
     return map;
   }, {});
 
