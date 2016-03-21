@@ -345,7 +345,7 @@ function buildKeySystemConfiguration(keySystem) {
   };
 }
 
-function findCompatibleKeySystem(keySystems) {
+function compatibleKeySystem(keySystems) {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
   const cachedKeySystemAccess = getCachedKeySystemAccess(keySystems);
@@ -354,6 +354,10 @@ function findCompatibleKeySystem(keySystems) {
     return Observable.of(cachedKeySystemAccess);
   }
 
+  return findCompatibleKeySystem(keySystems);
+}
+
+function findCompatibleKeySystem(keySystems) {
   const keySystemsType = flatten(keySystems.map(
     (keySystem) => SYSTEMS[keySystem.type].map((keyType) => ({ keyType, keySystem })))
   );
@@ -796,7 +800,7 @@ function createEME(video, keySystems, errorStream) {
 
   return combineLatestStatic(
     onEncrypted(video),
-    findCompatibleKeySystem(keySystems)
+    compatibleKeySystem(keySystems)
   )
     .take(1)
     .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks))
@@ -822,6 +826,7 @@ function dispose() {
 module.exports = {
   createEME,
   getCurrentKeySystem,
+  findCompatibleKeySystem,
   onEncrypted,
   dispose,
 };
