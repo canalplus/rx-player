@@ -2,7 +2,6 @@ const { Observable } = require("rxjs/Observable");
 const { mergeStatic } = require("rxjs/operator/merge");
 const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
 const fromPromise = require("rxjs/observable/PromiseObservable").PromiseObservable.create;
-const never = require("rxjs/observable/NeverObservable").NeverObservable.create;
 
 function on(elt, evts) {
   if (Array.isArray(evts)) {
@@ -14,12 +13,12 @@ function on(elt, evts) {
 
 
 function castToObservable(value) {
+  if (value instanceof Observable) {
+    return value;
+  }
+
   if (value && typeof value.subscribe == "function") {
-    if (value instanceof Observable) {
-      return value;
-    } else {
-      return new Observable((obs) => value.subscribe(obs));
-    }
+    return new Observable((obs) => value.subscribe(obs));
   }
 
   if (value && typeof value.then == "function") {
@@ -29,9 +28,21 @@ function castToObservable(value) {
   return Observable.of(value);
 }
 
-function only(x) {
-  return never().startWith(x);
+
+class OnlyObservable extends Observable {
+  constructor(value) {
+    super();
+    this.value = value;
+  }
+  _subscribe(subscriber) {
+    subscriber.next(this.value);
+  }
 }
+
+function only(value) {
+  return new OnlyObservable(value);
+}
+
 
 function tryCatch(func, args) {
   try {
