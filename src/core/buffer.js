@@ -333,7 +333,7 @@ function Buffer({
 
     return mergeStatic(segmentsPipeline, outOfIndexStream).catch((error) => {
       const isPreconditionFailedError = (
-        error.type == ErrorTypes.NETWORK_ERRROR &&
+        error.type == ErrorTypes.NETWORK_ERROR &&
         error.isHttpError(412)
       );
 
