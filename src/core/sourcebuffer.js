@@ -1,8 +1,7 @@
 const EventEmitter = require("canal-js-utils/eventemitter");
-const { Observable } = require("rxjs/Observable");
 const { BufferedRanges } = require("./ranges");
 const assert = require("canal-js-utils/assert");
-const { castToObservable } = require("../utils/rx-utils");
+const { tryCatch, castToObservable } = require("../utils/rx-utils");
 
 class AbstractSourceBuffer extends EventEmitter {
   constructor(codec) {
@@ -36,12 +35,7 @@ class AbstractSourceBuffer extends EventEmitter {
     assert(!this.updating, "updating");
     this.updating = true;
     this.trigger("updatestart");
-    let result;
-    try {
-      result = castToObservable(func());
-    } catch(e) {
-      result = Observable.throw(e);
-    }
+    const result = tryCatch(() => castToObservable(func()));
     result.subscribe(
       ()  => this._unlock("update"),
       (e) => this._unlock("error", e)

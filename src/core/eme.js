@@ -35,6 +35,7 @@ const {
 
 const {
   ErrorTypes,
+  ErrorCodes,
   EncryptedMediaError,
 } = require("../errors");
 
@@ -78,8 +79,6 @@ function hashInitData(initData) {
     return hashBuffer(initData);
   }
 }
-
-const GENERATE_REQUEST_ERROR = "generateRequestError";
 
 /**
  * Set maintaining a representation of all currently loaded
@@ -472,8 +471,8 @@ function createSessionAndKeyRequest(mediaKeys,
   const generateRequest = castToObservable(
     session.generateRequest(initDataType, initData)
   )
-    .catch(() => {
-      throw GENERATE_REQUEST_ERROR;
+    .catch((error) => {
+      throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
     })
     .do(() => {
       if (sessionType == "persistent-license") {
@@ -500,7 +499,7 @@ function createSessionAndKeyRequestWithRetry(mediaKeys,
     errorStream
   )
     .catch((error) => {
-      if (error !== GENERATE_REQUEST_ERROR) {
+      if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
         throw error;
       }
 
