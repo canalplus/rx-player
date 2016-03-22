@@ -161,8 +161,8 @@ function createPipeline(type,
 
   return (pipelineInputData) => {
     return resolverWithCatch(pipelineInputData)
-      .flatMap(loaderWithCache, extendsResponseAndResolvedInfos)
-      .flatMap(parserWithCatch, extendsParsedAndLoadedInfos);
+      .mergeMap(loaderWithCache, extendsResponseAndResolvedInfos)
+      .mergeMap(parserWithCatch, extendsParsedAndLoadedInfos);
   };
 }
 

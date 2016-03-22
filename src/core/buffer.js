@@ -109,7 +109,7 @@ function Buffer({
 
   function bufferGarbageCollector() {
     log.warn("buffer: running garbage collector");
-    return timings.take(1).flatMap((timing) => {
+    return timings.take(1).mergeMap((timing) => {
       let cleanedupRanges = selectGCedRanges(timing, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean
@@ -136,7 +136,7 @@ function Buffer({
         // QuotaExceededError and throw a fatal error if we still have
         // an error.
         return bufferGarbageCollector()
-          .flatMap(() => bufferingQueue.appendBuffer(segmentData))
+          .mergeMap(() => bufferingQueue.appendBuffer(segmentData))
           .catch((error) => {
             throw new MediaError("BUFFER_FULL_ERROR", error, true);
           });
@@ -324,7 +324,7 @@ function Buffer({
       timings,
       bufferSizes
     )
-      .flatMap(doInjectSegments)
+      .mergeMap(doInjectSegments)
       .concatMap((segment) => pipeline({ segment }))
       .concatMap(
         doAppendBufferOrGC,

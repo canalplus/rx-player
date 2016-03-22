@@ -33,7 +33,7 @@ function retryWithBackoff(obs, options) {
     }
 
     const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-    return timer(fuzzedDelay).flatMap(() => {
+    return timer(fuzzedDelay).mergeMap(() => {
       debounceRetryCount && debounceRetryCount();
       return source;
     });
@@ -72,7 +72,7 @@ function retryableFuncWithBackoff(fn, options) {
       }
 
       const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return timer(fuzzedDelay).flatMap(() => {
+      return timer(fuzzedDelay).mergeMap(() => {
         debounceRetryCount && debounceRetryCount();
         return doRetry(...args);
       });

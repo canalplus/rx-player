@@ -295,7 +295,7 @@ function Stream({
       : Observable.of(null);
 
     return combineLatestStatic(manifestPipeline({ url }), sourceOpening)
-      .flatMap(([{ parsed }]) => {
+      .mergeMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
                                            subtitles);
@@ -309,7 +309,7 @@ function Stream({
   }, retryOptions);
 
   return createAndPlugMediaSource(url, videoElement)
-    .flatMap(createAllStream)
+    .mergeMap(createAllStream)
     .takeUntil(endOfPlay);
 
   /**
@@ -509,7 +509,7 @@ function Stream({
   }
 
   function createMediaErrorStream() {
-    return on(videoElement, "error").flatMap(() => {
+    return on(videoElement, "error").mergeMap(() => {
       const errorCode = videoElement.error.code;
       let errorDetail;
       switch(errorCode) {

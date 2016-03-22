@@ -411,7 +411,7 @@ function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
   const oldMediaKeys = $mediaKeys;
 
   return castToObservable(keySystemAccess.createMediaKeys())
-    .flatMap((mk) => {
+    .mergeMap((mk) => {
       $mediaKeys = mk;
       $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
       $keySystem = keySystem;
@@ -513,7 +513,7 @@ function createSessionAndKeyRequestWithRetry(mediaKeys,
                error);
 
       return $loadedSessions.deleteAndClose(firstLoadedSession)
-        .flatMap(() =>
+        .mergeMap(() =>
           createSessionAndKeyRequest(
             mediaKeys,
             keySystem,
@@ -542,7 +542,7 @@ function createPersistentSessionAndLoad(mediaKeys,
     session.load(storedSessionId)
   )
     .catch(() => Observable.of(false))
-    .flatMap((success) => {
+    .mergeMap((success) => {
       if (success) {
         $loadedSessions.add(initData, session, sessionEvents);
         $storedSessions.add(initData, session);
@@ -658,7 +658,7 @@ function sessionEventsHandler(session, keySystem, errorStream) {
   });
 
   const keyStatusesChanges = onKeyStatusesChange(session)
-    .flatMap((keyStatusesEvent) => {
+    .mergeMap((keyStatusesEvent) => {
       sessionId = keyStatusesEvent.sessionId;
       log.debug(
         "eme: keystatuseschange event",
@@ -693,7 +693,7 @@ function sessionEventsHandler(session, keySystem, errorStream) {
     });
 
   const keyMessages = onKeyMessage(session)
-    .flatMap((messageEvent) => {
+    .mergeMap((messageEvent) => {
       sessionId = messageEvent.sessionId;
 
       const message = new Uint8Array(messageEvent.message);
@@ -774,7 +774,7 @@ function createEME(video, keySystems, errorStream) {
 
     log.info("eme: encrypted event", encryptedEvent);
     return createAndSetMediaKeys(video, keySystem, keySystemAccess)
-      .flatMap((mediaKeys) =>
+      .mergeMap((mediaKeys) =>
         manageSessionCreation(
           mediaKeys,
           keySystemAccess.getConfiguration(),
@@ -791,7 +791,7 @@ function createEME(video, keySystems, errorStream) {
     findCompatibleKeySystem(keySystems)
   )
     .take(1)
-    .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks));
+    .mergeMap(([evt, ks]) => handleEncryptedEvents(evt, ks));
 }
 
 function getCurrentKeySystem() {
