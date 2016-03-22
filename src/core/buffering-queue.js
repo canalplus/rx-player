@@ -36,9 +36,9 @@ class BufferingQueue {
     }
   }
 
-  onError(evt) {
+  onError(error) {
     if (this.flushing) {
-      this.flushing.error(evt.target.error);
+      this.flushing.error(error);
       this.flushing = null;
     }
   }
