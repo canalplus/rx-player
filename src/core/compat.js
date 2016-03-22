@@ -23,9 +23,8 @@ const { Observable } = require("rxjs/Observable");
 const { mergeStatic } = require("rxjs/operator/merge");
 const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
 const never = require("rxjs/observable/NeverObservable").NeverObservable.create;
-const { on } = require("../utils/rx-utils");
+const { on, castToObservable } = require("../utils/rx-utils");
 const find = require("lodash/collection/find");
-const castToObservable = require("../utils/to-observable");
 const { MediaError } = require("../errors");
 
 const doc = document;

@@ -18,7 +18,7 @@ const log = require("canal-js-utils/log");
 const assert = require("canal-js-utils/assert");
 const find = require("lodash/collection/find");
 const flatten = require("lodash/array/flatten");
-const castToObservable = require("../utils/to-observable");
+const { tryCatch, castToObservable } = require("../utils/rx-utils");
 const { retryWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
@@ -685,17 +685,10 @@ function sessionEventsHandler(session, keySystem, errorStream) {
         return empty();
       }
 
-      let license;
-      try {
-        license = keySystem.onKeyStatusesChange(
-          keyStatusesEvent,
-          session
-        );
-      } catch(e) {
-        license = Observable.throw(e);
-      }
+      const license = tryCatch(() =>
+        castToObservable(keySystem.onKeyStatusesChange(keyStatusesEvent, session)));
 
-      return castToObservable(license).catch((error) => {
+      return license.catch((error) => {
         throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
       });
     });

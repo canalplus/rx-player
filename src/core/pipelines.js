@@ -18,7 +18,7 @@ const { Subject } = require("rxjs/Subject");
 const { asap } = require("rxjs/scheduler/asap");
 const { Observable } = require("rxjs/Observable");
 const { retryWithBackoff } = require("../utils/retry");
-const castToObservable = require("../utils/to-observable");
+const { tryCatch, castToObservable } = require("../utils/rx-utils");
 const {
   RequestError,
   NetworkError,
@@ -66,14 +66,6 @@ function loaderShouldRetry(error) {
 }
 
 const metricsScheduler = asap;
-
-function tryCatch(func, args) {
-  try {
-    return func(args);
-  } catch(e) {
-    return Observable.throw(e);
-  }
-}
 
 /**
  * Creates the following pipeline:
