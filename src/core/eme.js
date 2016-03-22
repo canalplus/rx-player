@@ -398,7 +398,7 @@ function findCompatibleKeySystem(keySystems) {
 
     testKeySystem(0);
 
-    () => {
+    return () => {
       disposed = true;
       if (sub) {
         sub.unsubscribe();
