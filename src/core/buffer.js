@@ -272,7 +272,7 @@ function Buffer({
           return empty();
         }
         else {
-          throw new MediaError("BUFFER_INDEX_ERROR", error, false);
+          throw error;
         }
       }
 
