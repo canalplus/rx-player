@@ -792,14 +792,7 @@ function createEME(video, keySystems, errorStream) {
     findCompatibleKeySystem(keySystems)
   )
     .take(1)
-    .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks))
-    .catch((error) => {
-      if (error.type !== ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
-        throw new EncryptedMediaError("NONE", error, true);
-      } else {
-        throw error;
-      }
-    });
+    .flatMap(([evt, ks]) => handleEncryptedEvents(evt, ks));
 }
 
 function getCurrentKeySystem() {

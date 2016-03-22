@@ -55,8 +55,6 @@ const ErrorCodes = listToMap([
 
   "OUT_OF_INDEX_ERROR",
   "UNKNOWN_INDEX",
-
-  "NONE",
 ]);
 
 function errorMessage(name, code, reason) {
