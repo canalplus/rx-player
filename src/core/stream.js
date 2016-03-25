@@ -29,7 +29,7 @@ const {
   MediaSource_,
   sourceOpen,
   canPlay,
-  canSeek,
+  haveMetadata,
   clearVideoSrc,
 } = require("./compat");
 
@@ -371,7 +371,7 @@ function Stream({
    * the loadedmetadata event pops up.
    */
   function createLoadedMetadata(manifest) {
-    const canSeek$ = canSeek(videoElement)
+    const haveMetadata$ = haveMetadata(videoElement)
       .do(() => setInitialTime(manifest));
 
     const canPlay$ = canPlay(videoElement)
@@ -383,7 +383,7 @@ function Stream({
         autoPlay = true;
       });
 
-    return combineLatestStatic(canSeek$, canPlay$)
+    return combineLatestStatic(haveMetadata$, canPlay$)
       .take(1)
       .mapTo({ type: "loaded", value: true });
   }
