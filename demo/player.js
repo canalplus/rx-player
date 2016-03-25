@@ -1,7 +1,12 @@
 var React = require("react");
+var { PureRenderMixin } = require("react/addons").addons;
+var { SubscriptionMixin, EventHandlerMixin } = require("./mixins");
+var { Observable } = require("canal-js-utils/rx");
+var { fromEvent, merge, just, timer } = Observable;
+var { between, identity } = require("canal-js-utils/misc");
 
 var PlayPause = React.createClass({
-  render: function() {
+  render() {
     return (
       <button
         id="play-pause"
@@ -12,12 +17,109 @@ var PlayPause = React.createClass({
   }
 });
 
+function getPositionInProgress(moveEvent, targetElement) {
+  var { left, width } = targetElement.getBoundingClientRect();
+
+  var clientX;
+  if (moveEvent.clientX != null) {
+    clientX = moveEvent.clientX;
+  } else {
+    var touches = moveEvent.touches.length
+      ? moveEvent.touches
+      : moveEvent.changedTouches;
+    clientX = touches[0].clientX;
+  }
+
+  return Math.min(width, Math.max(0, (clientX - left))) / width;
+}
+
+function getTipsyPosition({
+  enter,
+  leave,
+  move,
+  down,
+  up,
+  targetElement
+}) {
+  var goOut = merge(
+    enter.map(false),
+    leave.map(true)
+  )
+    .flatMapLatest(isOut => isOut
+      ? timer(100).map(true)
+      : just(false)
+    )
+    .startWith(false)
+    .distinctUntilChanged();
+
+  var isDown = merge(
+    down.map(true),
+    up.map(false)
+  )
+    .startWith(false)
+    .distinctUntilChanged();
+
+  return enter
+    .combineLatest(goOut, isDown, (enterEvent, isOut, isDown) => ({
+      enterEvent,
+      isOut,
+      isDown,
+    }))
+    .flatMapLatest(combined => {
+      var { isOut, isDown, enterEvent } = combined;
+      if (isOut && !isDown)
+        return just(null);
+      else
+        return move.map(moveEvent => getPositionInProgress(moveEvent, targetElement));
+    })
+    .startWith(null);
+}
+
+var Tipsy = React.createClass({
+  mixins: [PureRenderMixin],
+  getInitialState() {
+    return { domNode: null };
+  },
+  componentDidMount() {
+    var domNode = this.getDOMNode();
+    this.setState({ domNode });
+  },
+  getRect() {
+    var domNode = this.state.domNode;
+    return domNode && domNode.getBoundingClientRect();
+  },
+  render() {
+    var selfRect = this.getRect();
+    var style = {};
+
+    if (selfRect) {
+      var { height, width } = selfRect;
+      var { position } = this.props;
+
+      style.left = position;
+      style.transform = `translate(-` + width / 2 + `px, ` + (3 - height) + `px)`;
+    }
+
+    return (
+      <section
+        className={`tipsy ${this.props.className}`}
+        style={style}>
+        {this.props.children}
+      </section>
+    );
+  }
+});
+
+
 var Progressbar = React.createClass({
+  mixins: [EventHandlerMixin],
+  subjects: ["onMouseEnter", "onMouseLeave", "onMouseDown"],
   getInitialState: function() {
     return {
       duration: 0,
       playingPosition: 0,
-      bufferPosition: 0
+      bufferPosition: 0,
+      tipsyPosition: null,
     };
   },
 
@@ -26,6 +128,44 @@ var Progressbar = React.createClass({
     var rect = target.getBoundingClientRect();
     var position = (event.clientX - rect.left) / target.offsetWidth;
     this.props.seekTo(position * this.state.duration);
+  },
+
+  getImage() {
+    let { images } = this.props;
+    let { duration, tipsyPosition } = this.state;
+
+    if (!images) return;
+
+    var pos = tipsyPosition * duration * 1000;
+    var thb = between(images, 'ts', pos);
+
+    if (thb) {
+      var blob = new Blob([thb.data], {type: "image/jpeg"})
+      return URL.createObjectURL(blob);
+    }
+  },
+
+  plugStreams({
+    onMouseEnter,
+    onMouseLeave,
+    onMouseDown,
+  }) {
+    var progressElement = this.getDOMNode();
+
+    var onDocMouseUp = fromEvent(document, "mouseup");
+    var onDocMouseMove = fromEvent(document, "mousemove");
+
+    this.tipsyPosition = getTipsyPosition({
+      enter: onMouseEnter,
+      leave: onMouseLeave,
+      move: onDocMouseMove,
+      down: onMouseDown,
+      up: onDocMouseUp,
+      targetElement: progressElement
+    });
+
+    this.addSubscription(this.tipsyPosition.distinctUntilChanged()
+      .subscribe((tipsyPosition) => this.setState({ tipsyPosition })));
   },
 
   componentWillReceiveProps: function(nextProps) {
@@ -50,7 +190,11 @@ var Progressbar = React.createClass({
     var playingPosition = this.state.playingPosition;
     var bufferPosition = this.state.bufferPosition;
     return (
-      <div className="progress-bar-container" onClick={this.seek}>
+      <div className="progress-bar-container"
+        onMouseEnter={this.handlers.onMouseEnter}
+        onMouseLeave={this.handlers.onMouseLeave}
+        onMouseDown={this.handlers.onMouseDown}
+        onClick={this.seek}>
         <div
           id="progress-bar-played"
           className="progress-bar"
@@ -60,6 +204,16 @@ var Progressbar = React.createClass({
           id="progress-bar-buffered"
           className="progress-bar"
           style={{ width: bufferPosition * 100 + "%" }}>
+        </div>
+        <div
+          id="progress-bar-tipsy"
+          className="progress-bar"
+          style={{ width: "100%" }}>
+          { this.state.tipsyPosition ? <Tipsy key="progress-bar-tipsy"
+            position={(this.state.tipsyPosition * 100) + "%"}
+            className="tipsy-image">
+            <img src={this.getImage()} />
+          </Tipsy> : null }
         </div>
       </div>
     );
@@ -197,6 +351,7 @@ var Subtitles = React.createClass({
 });
 
 var Player = React.createClass({
+  mixins: [SubscriptionMixin],
   getDefaultProps: function () {
     return {
       transport: "dash",
@@ -213,6 +368,7 @@ var Player = React.createClass({
       subtitle: null,
       currentTime: null,
       volume: 0,
+      images: null,
     };
   },
 
@@ -277,6 +433,8 @@ var Player = React.createClass({
       player.addEventListener("languageChange", this.onLangChange);
       player.addEventListener("subtitleChange", this.onLangChange);
       player.addEventListener("volumeChange", this.onVolumeChange);
+
+      this.addSubscription(player.getImageTrack().subscribe(images => this.setState({ images })));
     }
 
     if (this.props.autoPlay) {
@@ -378,6 +536,7 @@ var Player = React.createClass({
               isPlaying={this.state.isPlaying}
               togglePlay={this.togglePlay} />
             <Progressbar
+              images={this.state.images}
               currentTime={this.state.currentTime}
               seekTo={this.seekTo} />
             <Volume

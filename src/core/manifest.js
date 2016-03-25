@@ -37,14 +37,14 @@ const representationBaseType = [
 ];
 
 let uniqueId = 0;
-const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text"];
+const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 const DEFAULT_PRESENTATION_DELAY = 15;
 
 function parseType(mimeType) {
   return mimeType.split("/")[0];
 }
 
-function normalizeManifest(location, manifest, subtitles) {
+function normalizeManifest(location, manifest, subtitles, images) {
   if (!manifest.transportType) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
@@ -70,7 +70,11 @@ function normalizeManifest(location, manifest, subtitles) {
     subtitles = normalizeSubtitles(subtitles);
   }
 
-  const periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles));
+  if (images) {
+    images = normalizeImages(images);
+  }
+
+  const periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles, images));
 
   // TODO(pierre): support multiple periods
   manifest = { ...manifest, ...periods[0] };
@@ -88,11 +92,12 @@ function normalizeManifest(location, manifest, subtitles) {
   return manifest;
 }
 
-function normalizePeriod(period, inherit, subtitles) {
+function normalizePeriod(period, inherit, subtitles, images) {
   period.id = period.id || uniqueId++;
 
   let adaptations = period.adaptations;
   adaptations = adaptations.concat(subtitles || []);
+  adaptations = adaptations.concat(images || []);
   adaptations = adaptations.map((ada) => normalizeAdaptation(ada, inherit));
   adaptations = adaptations.filter((adaptation) => {
     if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
@@ -225,6 +230,32 @@ function normalizeSubtitles(subtitles) {
       }],
     }));
   }));
+}
+
+function normalizeImages(images) {
+  if (!Array.isArray(images)) {
+    images = [images];
+  }
+
+  return images.map(({ mimeType, url /*, size */ }) => {
+    return {
+      id: uniqueId++,
+      type: "image",
+      mimeType,
+      rootURL: url,
+      baseURL: "",
+      representations: [{
+        id: uniqueId++,
+        mimeType,
+        index: {
+          indexType: "template",
+          duration: Number.MAX_VALUE,
+          timescale: 1,
+          startNumber: 0,
+        },
+      }],
+    };
+  });
 }
 
 function simpleMerge(source, dist) {

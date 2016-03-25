@@ -128,3 +128,12 @@ body {
   background: #6E6E6E;
   z-index: 2;
 }
+
+.tipsy {
+  max-width: 45%;
+  position: relative;
+
+  img {
+    width: 100%;
+  }
+}
