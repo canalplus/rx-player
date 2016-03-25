@@ -34,6 +34,7 @@ const {
 } = require("./compat");
 
 const TextSourceBuffer = require("./text-buffer");
+const ImageSourceBuffer = require("./image-buffer");
 const { getLiveEdge } = require("./index-handler");
 const { clearSegmentCache } = require("./segment");
 const { Buffer, EmptyBuffer } = require("./buffer");
@@ -70,6 +71,7 @@ function Stream({
   errorStream,
   keySystems,
   subtitles,
+  images,
   timings,
   timeFragment,
   adaptive,
@@ -113,7 +115,6 @@ function Stream({
     let sourceBuffer;
 
     if (isNativeBuffer(type)) {
-
       if (nativeBuffers[type]) {
         sourceBuffer = nativeBuffers[type];
       } else {
@@ -140,9 +141,10 @@ function Stream({
         log.info("add text sourcebuffer", codec);
         sourceBuffer = new TextSourceBuffer(video, codec);
       }
-      // else if (type == "image") {
-      //    ...
-      // }
+      else if (type == "image") {
+        log.info("add image sourcebuffer", codec);
+        sourceBuffer = new ImageSourceBuffer(video, codec);
+      }
       else {
         log.error("unknown buffer type " + type);
         throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
@@ -298,7 +300,8 @@ function Stream({
       .mergeMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
-                                           subtitles);
+                                           subtitles,
+                                           images);
 
         if (mediaSource) {
           setDuration(mediaSource, manifest);

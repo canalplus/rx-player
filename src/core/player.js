@@ -152,6 +152,7 @@ class Player extends EventEmitter {
 
     // multicaster forwarding all streams events
     this.stream = new Subject();
+    this.images = new Subject();
     this.errorStream = new Subject();
 
     const { createPipelines, metrics } = PipeLines();
@@ -182,8 +183,8 @@ class Player extends EventEmitter {
 
   _resetStates() {
     this.man = null;
-    this.reps = { video: null, audio: null, text: null };
-    this.adas = { video: null, audio: null, text: null };
+    this.reps = { video: null, audio: null, text: null, images: null };
+    this.adas = { video: null, audio: null, text: null, images: null };
     this.evts = {};
     this.frag = { start: null, end: null };
     this.error = null;
@@ -194,6 +195,7 @@ class Player extends EventEmitter {
       this.subscriptions.unsubscribe();
       this.subscriptions = null;
     }
+    this.images.next(null);
   }
 
   stop() {
@@ -236,6 +238,7 @@ class Player extends EventEmitter {
       keySystems: [],
       timeFragment: {},
       subtitles: [],
+      images: [],
       autoPlay: false,
       directFile: false,
     });
@@ -253,6 +256,7 @@ class Player extends EventEmitter {
       manifests,
       autoPlay,
       directFile,
+      images,
     } = opts;
 
     timeFragment = parseTimeFragment(timeFragment);
@@ -286,6 +290,7 @@ class Player extends EventEmitter {
       url,
       keySystems,
       subtitles,
+      images,
       timeFragment,
       autoPlay,
       transport,
@@ -300,6 +305,7 @@ class Player extends EventEmitter {
       url,
       keySystems,
       subtitles,
+      images,
       timeFragment,
       autoPlay,
       transport,
@@ -329,6 +335,7 @@ class Player extends EventEmitter {
       keySystems,
       subtitles,
       timings,
+      images,
       timeFragment,
       adaptive,
       pipelines,
@@ -380,6 +387,10 @@ class Player extends EventEmitter {
     }
     if (type == "pipeline") {
       this.trigger("progress", value.segment);
+      const { bufferType, parsed } = value;
+      if (bufferType === "image") {
+        this.images.next(parsed.segmentData);
+      }
     }
 
     this.stream.next(streamInfos);
@@ -472,6 +483,10 @@ class Player extends EventEmitter {
     } else {
       return null;
     }
+  }
+
+  getImageTrack() {
+    return this.images;
   }
 
   getPlayerState() {
