@@ -33,5 +33,27 @@ module.exports = [
     "transport": "dash",
     "ciphered": false,
     "live": false
-  }
+  },
+  {
+    "name": "pub CubeS (bif)",
+    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
+    "transport": "smooth",
+    "ciphered": false,
+    "live": false,
+    "images": {
+      "mimeType": "application/bif",
+      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif"
+    },
+  },
+  {
+    "name": "Zapping 23/03 (bif)",
+      "url": "http://hss-od-mycanal-l3.canal-plus.com/replay/cplus/ssd/cpl000042164-ant-1173465-170/SSE_ANT_1173465_170_VR_16_OTT_SD_7_levels_VF.ism",
+    "transport": "smooth",
+    "ciphered": false,
+    "live": false,
+    "images": {
+      "mimeType": "application/bif",
+      "url": "http://hss-od-mycanal-l3.canal-plus.com/replay/cplus/ssd/cpl000042164-ant-1173465-170/ANT_1173465_170.bif"
+    },
+  },
 ];

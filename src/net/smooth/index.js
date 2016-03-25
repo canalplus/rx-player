@@ -33,6 +33,10 @@ const {
   parseTfxd,
 } = require("./mp4");
 
+const {
+  parseBif,
+} = require("../bif");
+
 const { parseSami } = require("./tt-sami");
 const { parseTTML } = require("./tt-ttml");
 const TT_PARSERS = {
@@ -284,11 +288,53 @@ module.exports = function(options={}) {
     },
   };
 
+  const imageTrackPipeline = {
+    loader({ segment }) {
+      if (segment.init) {
+        return empty();
+      } else {
+        const url = buildSegmentURL(segment);
+        return request({ url, responseType: "arraybuffer", createXHR });
+      }
+    },
+    parser({ response /*, adaptation, representation, segment */ }) {
+      const responseData = response.responseData;
+      const blob = new Uint8Array(responseData);
+
+      const currentSegment = {
+        ts: 0,
+        d:  Infinity,
+      };
+
+      let segmentData, timescale;
+      if (blob) {
+        const bif = parseBif(blob);
+        segmentData = bif.thumbs;
+        timescale   = bif.timescale;
+
+        // var firstThumb = blob[0];
+        // var lastThumb  = blob[blob.length - 1];
+
+        // currentSegment = {
+        //   ts: firstThumb.ts,
+        //   d:  lastThumb.ts
+        // };
+      }
+
+      return Observable.of({
+        segmentData,
+        currentSegment,
+        timescale,
+      });
+    },
+  };
+
   return {
     directFile: false,
     manifest: manifestPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,
+    image: imageTrackPipeline,
   };
 };

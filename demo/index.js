@@ -50,12 +50,14 @@ var DemoZapper = React.createClass({
     var keySystems = getKeySystems(content);
     var transport = content.transport;
     var autoPlay = content.autoPlay === false ? false : true;
+    var images = content.images;
 
     this.player.loadVideo({
       url: videoUrl,
       transport: transport,
       keySystems: keySystems,
       autoPlay: autoPlay,
+      images: images,
     });
   },
 
