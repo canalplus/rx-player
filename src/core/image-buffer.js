@@ -3,8 +3,6 @@ const { AbstractSourceBuffer } = require("./sourcebuffer");
 class ImageSourceBuffer extends AbstractSourceBuffer {
   constructor(video, codec) {
     super(codec);
-    this.video = video;
-    this.codec = codec;
   }
 
   _append() {
