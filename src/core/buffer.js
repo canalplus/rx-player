@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const log = require("canal-js-utils/log");
+const log = require("../utils/log");
 const { BufferingQueue } = require("./buffering-queue");
 const { BufferedRanges } = require("./ranges");
 const { Observable } = require("rxjs/Observable");

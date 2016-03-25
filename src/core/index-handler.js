@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const assert = require("canal-js-utils/assert");
+const assert = require("../utils/assert");
 
 const { getAdaptationsByType } = require("./manifest");
 const { InitSegment } = require("./segment");

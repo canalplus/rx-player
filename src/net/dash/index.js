@@ -17,13 +17,21 @@
 const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const { mergeStatic } = require("rxjs/operator/merge");
-const assert = require("canal-js-utils/assert");
-const { resolveURL } = require("canal-js-utils/url");
-const { pad } = require("canal-js-utils/misc");
+const assert = require("../../utils/assert");
+const { resolveURL } = require("../../utils/url");
 const { parseSidx, patchPssh } = require("./mp4");
 
 const request = require("../../request");
 const dashManifestParser = require("./parser");
+
+function pad(n, l) {
+  n = n.toString();
+  if (n.length >= l) {
+    return n;
+  }
+  const arr = new Array(l + 1).join("0") + n;
+  return arr.slice(-l);
+}
 
 function byteRange([start, end]) {
   if (!end || end === Infinity) {

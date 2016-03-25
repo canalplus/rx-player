@@ -16,7 +16,7 @@
 
 const { AbstractSourceBuffer } = require("./sourcebuffer");
 const { addTextTrack, isVTTSupported } = require("./compat");
-const log = require("canal-js-utils/log");
+const log = require("../utils/log");
 
 const Cue = window.VTTCue || window.TextTrackCue;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const assert = require("canal-js-utils/assert");
+const assert = require("../../utils/assert");
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
 const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;

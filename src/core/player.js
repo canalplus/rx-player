@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-const log = require("canal-js-utils/log");
+const log = require("../utils/log");
 const defaults = require("lodash/object/defaults");
 const { Subscription } = require("rxjs/Subscription");
 const { Subject } = require("rxjs/Subject");
 const { BehaviorSubject } = require("rxjs/subject/BehaviorSubject");
 const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const { on } = require("../utils/rx-utils");
-const EventEmitter = require("canal-js-utils/eventemitter");
+const EventEmitter = require("../utils/eventemitter");
 const debugPane = require("../utils/debug");
-const assert = require("canal-js-utils/assert");
+const assert = require("../utils/assert");
 
 const {
   HTMLVideoElement_,

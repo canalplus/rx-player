@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-const assert = require("canal-js-utils/assert");
+const assert = require("../../utils/assert");
 const {
   itobe4, be8toi, be4toi, be2toi,
   hexToBytes, strToBytes, concat,
-} = require("canal-js-utils/bytes");
+} = require("../../utils/bytes");
 
 function findAtom(buf, atomName) {
   const l = buf.length;

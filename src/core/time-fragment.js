@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const assert = require("canal-js-utils/assert");
+const assert = require("../utils/assert");
 
 function parseTimeFragment(timeFragment) {
   if (typeof timeFragment == "string") {

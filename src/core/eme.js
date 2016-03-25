@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const log = require("canal-js-utils/log");
-const assert = require("canal-js-utils/assert");
+const log = require("../utils/log");
+const assert = require("../utils/assert");
 const find = require("lodash/collection/find");
 const flatten = require("lodash/array/flatten");
 const { tryCatch, castToObservable } = require("../utils/rx-utils");

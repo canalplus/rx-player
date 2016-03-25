@@ -1,6 +1,15 @@
-const { getBackedoffDelay } = require("canal-js-utils/backoff");
+const { getBackedoffDelay } = require("./backoff");
 const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
-const debounce = require("canal-js-utils/debounce");
+
+function debounce(fn, delay) {
+  let timer = 0;
+  return () => {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(fn, delay);
+  };
+}
 
 function retryWithBackoff(obs, options) {
   const {

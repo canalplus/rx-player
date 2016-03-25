@@ -17,7 +17,7 @@
 // XML-Schema
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
-const assert = require("canal-js-utils/assert");
+const assert = require("../../utils/assert");
 const find = require("lodash/collection/find");
 const defaults = require("lodash/object/defaults");
 

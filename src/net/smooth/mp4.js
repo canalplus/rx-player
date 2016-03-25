@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const assert = require("canal-js-utils/assert");
+const assert = require("../../utils/assert");
 const { isIE } = require("../../core/compat");
 const {
   concat,
@@ -23,7 +23,7 @@ const {
   be2toi, itobe2,
   be4toi, itobe4,
   be8toi, itobe8,
-} = require("canal-js-utils/bytes");
+} = require("../../utils/bytes");
 
 const FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
 

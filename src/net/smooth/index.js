@@ -16,8 +16,8 @@
 
 const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const { bytesToStr } = require("canal-js-utils/bytes");
-const log = require("canal-js-utils/log");
+const { bytesToStr } = require("../../utils/bytes");
+const log = require("../../utils/log");
 
 const request = require("../../request");
 const { RequestResponse } = request;

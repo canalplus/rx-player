@@ -1,6 +1,6 @@
-const EventEmitter = require("canal-js-utils/eventemitter");
+const EventEmitter = require("../utils/eventemitter");
 const { BufferedRanges } = require("./ranges");
-const assert = require("canal-js-utils/assert");
+const assert = require("../utils/assert");
 const { tryCatch, castToObservable } = require("../utils/rx-utils");
 
 class AbstractSourceBuffer extends EventEmitter {

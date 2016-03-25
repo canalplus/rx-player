@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-const assert = require("canal-js-utils/assert");
+const assert = require("../../utils/assert");
 const find = require("lodash/collection/find");
-const bytes = require("canal-js-utils/bytes");
+const bytes = require("../../utils/bytes");
 
 const DEFAULT_MIME_TYPES = {
   audio: "audio/mp4",

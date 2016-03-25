@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-const log = require("canal-js-utils/log");
+const log = require("../utils/log");
 const defaults = require("lodash/object/defaults");
 const flatten = require("lodash/array/flatten");
-const { parseBaseURL } = require("canal-js-utils/url");
+const { parseBaseURL } = require("../utils/url");
 const { isCodecSupported } = require("./compat");
 const { MediaError } = require("../errors");
 

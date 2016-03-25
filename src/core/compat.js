@@ -15,10 +15,10 @@
  */
 
 const flatten = require("lodash/array/flatten");
-const log = require("canal-js-utils/log");
-const EventEmitter = require("canal-js-utils/eventemitter");
-const { bytesToStr, strToBytes } = require("canal-js-utils/bytes");
-const assert = require("canal-js-utils/assert");
+const log = require("../utils/log");
+const EventEmitter = require("../utils/eventemitter");
+const { bytesToStr, strToBytes } = require("../utils/bytes");
+const assert = require("../utils/assert");
 const { Observable } = require("rxjs/Observable");
 const { mergeStatic } = require("rxjs/operator/merge");
 const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;

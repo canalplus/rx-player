@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { resolveURL } = require("canal-js-utils/url");
+const { resolveURL } = require("../utils/url");
 const LRUCache = require("../utils/lru");
 const CACHE_SIZE = 100;
 

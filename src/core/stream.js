@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const log = require("canal-js-utils/log");
-const assert = require("canal-js-utils/assert");
+const log = require("../utils/log");
+const assert = require("../utils/assert");
 const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 const { retryableFuncWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
