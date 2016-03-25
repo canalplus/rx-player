@@ -143,7 +143,7 @@ function Stream({
       }
       else if (type == "image") {
         log.info("add image sourcebuffer", codec);
-        sourceBuffer = new ImageSourceBuffer(video, codec);
+        sourceBuffer = new ImageSourceBuffer(codec);
       }
       else {
         log.error("unknown buffer type " + type);
