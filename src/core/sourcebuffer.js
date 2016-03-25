@@ -37,8 +37,8 @@ class AbstractSourceBuffer extends EventEmitter {
     this.trigger("updatestart");
     const result = tryCatch(() => castToObservable(func()));
     result.subscribe(
-      ()  => this._unlock("update"),
-      (e) => this._unlock("error", e)
+      ()  => setTimeout(() => this._unlock("update"), 0),
+      (e) => setTimeout(() => this._unlock("error", e), 0)
     );
   }
 
