@@ -144,7 +144,7 @@ function isCodecSupported(codec) {
 // TODO(pierre): try to find a solution without "browser sniffing"...
 const loadedMetadataEvent = compatibleListener(["loadedmetadata"]);
 const sourceOpenEvent = compatibleListener(["sourceopen", "webkitsourceopen"]);
-const onEncrypted = compatibleListener(["encrypted", "needkey"]);
+const onEncrypted = compatibleListener(["needkey", "encrypted"]);
 const onKeyMessage = compatibleListener(["keymessage", "message"]);
 const onKeyAdded = compatibleListener(["keyadded", "ready"]);
 const onKeyError = compatibleListener(["keyerror", "error"]);
@@ -372,7 +372,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 
     update: wrapUpdate(function(license, sessionId) {
       assert(this._ss);
-      this._ss.update(license, sessionId);
+      this._ss.update(ArrayBuffer.isView(license) ? license : new Uint8Array(license));
       this.sessionId = sessionId;
     }, function() {
       return this._ss;
