@@ -80,7 +80,7 @@ class BufferingQueue {
       case BUFFER_STREAM:
         this.buffer.appendStream(args); break;
       case BUFFER_REMOVE:
-        this.buffer.removeBuffer(args.start, args.end); break;
+        this.buffer.remove(args.start, args.end); break;
       }
     } catch(e) {
       this.onError(e);
