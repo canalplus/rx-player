@@ -59,7 +59,7 @@ let MockMediaKeys = function() {
 };
 
 let requestMediaKeySystemAccess;
-if (navigator.requestMediaKeySystemAccess) {
+if (navigator.requestMediaKeySystemAccess && !win.MSMediaKeys) {
   requestMediaKeySystemAccess = (a, b) => castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 }
 
