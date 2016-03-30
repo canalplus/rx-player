@@ -1,5 +1,5 @@
-var schemeRe = /^(?:[a-z]+:)?\/\//i;
-var selfDirRe = /\/[\.]{1,2}\//;
+const schemeRe = /^(?:[a-z]+:)?\/\//i;
+const selfDirRe = /\/[\.]{1,2}\//;
 
 function _normalizeUrl(url) {
   // fast path if no ./ or ../ are present in the url
@@ -7,9 +7,9 @@ function _normalizeUrl(url) {
     return url;
   }
 
-  var newUrl = [];
-  var oldUrl = url.split("/");
-  for (var i = 0, l = oldUrl.length; i < l; i++) {
+  const newUrl = [];
+  const oldUrl = url.split("/");
+  for (let i = 0, l = oldUrl.length; i < l; i++) {
     if (oldUrl[i] == "..") {
       newUrl.pop();
     } else if (oldUrl[i] == ".") {
@@ -23,13 +23,14 @@ function _normalizeUrl(url) {
 }
 
 function resolveURL() {
-  var len = arguments.length;
-  if (len === 0)
+  const len = arguments.length;
+  if (len === 0) {
     return "";
+  }
 
-  var base = "";
-  for (var i = 0; i < len; i++) {
-    var part = arguments[i];
+  let base = "";
+  for (let i = 0; i < len; i++) {
+    let part = arguments[i];
     if (typeof part !== "string" || part === "") {
       continue;
     }
@@ -53,7 +54,7 @@ function resolveURL() {
 }
 
 function parseBaseURL(url) {
-  var slash = url.lastIndexOf("/");
+  const slash = url.lastIndexOf("/");
   if (slash >= 0) {
     return url.substring(0, slash + 1);
   } else {

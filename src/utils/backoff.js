@@ -1,7 +1,7 @@
-var FUZZ_FACTOR = 0.3;
+const FUZZ_FACTOR = 0.3;
 
 function getFuzzedDelay(retryDelay) {
-  var fuzzingFactor = ((Math.random() * 2) - 1) * FUZZ_FACTOR;
+  const fuzzingFactor = ((Math.random() * 2) - 1) * FUZZ_FACTOR;
   return retryDelay * (1.0 + fuzzingFactor);
 }
 

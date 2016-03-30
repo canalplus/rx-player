@@ -2,7 +2,7 @@ const {
   le2toi,
   le4toi,
   bytesToStr,
-} = require("canal-js-utils/bytes");
+} = require("../utils/bytes");
 
 function parseBif(buf) {
   let pos = 0;
