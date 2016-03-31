@@ -1,5 +1,4 @@
-const { Subscription, Subject } = require("canal-js-utils/rx");
-const { each, extend } = require("canal-js-utils/misc");
+const { Subscription, Subject } = require("rxjs");
 
 const SubscriptionMixin = {
   addSubscription(disposable) {
@@ -27,7 +26,7 @@ const SubscriptionMixin = {
   },
 };
 
-const EventHandlerMixin = extend({
+const EventHandlerMixin = {
   componentWillMount() {
     if (!this.subjects) {
       return;
@@ -36,7 +35,7 @@ const EventHandlerMixin = extend({
     let handlers = {};
     let subjects = {};
 
-    each(this.subjects, (key) => {
+    this.subjects.forEach((key) => {
       const subject = new Subject();
       handlers[key] = (data) => subject.next(data);
       subjects[key] = subject;
@@ -57,6 +56,8 @@ const EventHandlerMixin = extend({
       this.__subscription = null;
     }
   },
-}, SubscriptionMixin);
+
+  ...SubscriptionMixin,
+};
 
 module.exports = { SubscriptionMixin, EventHandlerMixin };

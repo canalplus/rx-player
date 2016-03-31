@@ -1,9 +1,19 @@
 var React = require("react");
 var { PureRenderMixin } = require("react/addons").addons;
 var { SubscriptionMixin, EventHandlerMixin } = require("./mixins");
-var { Observable } = require("canal-js-utils/rx");
-var { fromEvent, merge, just, timer } = Observable;
-var { between, identity } = require("canal-js-utils/misc");
+var { Observable } = require("rxjs");
+var { fromEvent, merge, timer } = Observable;
+
+function between(arr, f, v) {
+  var i = -1;
+  var l = arr ? arr.length : 0;
+  while (++i < l) {
+    if (arr[i][f] <= v &&
+        arr[i+1]       &&
+        v < arr[i+1][f])
+      return arr[i];
+  }
+}
 
 var PlayPause = React.createClass({
   render() {
@@ -42,19 +52,19 @@ function getTipsyPosition({
   targetElement
 }) {
   var goOut = merge(
-    enter.map(false),
-    leave.map(true)
+    enter.mapTo(false),
+    leave.mapTo(true)
   )
     .flatMapLatest(isOut => isOut
-      ? timer(100).map(true)
-      : just(false)
+      ? timer(100).mapTo(true)
+      : Observable.of(false)
     )
     .startWith(false)
     .distinctUntilChanged();
 
   var isDown = merge(
-    down.map(true),
-    up.map(false)
+    down.mapTo(true),
+    up.mapTo(false)
   )
     .startWith(false)
     .distinctUntilChanged();
@@ -68,7 +78,7 @@ function getTipsyPosition({
     .flatMapLatest(combined => {
       var { isOut, isDown, enterEvent } = combined;
       if (isOut && !isDown)
-        return just(null);
+        return Observable.of(null);
       else
         return move.map(moveEvent => getPositionInProgress(moveEvent, targetElement));
     })
