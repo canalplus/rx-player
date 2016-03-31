@@ -55,7 +55,7 @@ function getTipsyPosition({
     enter.mapTo(false),
     leave.mapTo(true)
   )
-    .flatMapLatest(isOut => isOut
+    .switchMap(isOut => isOut
       ? timer(100).mapTo(true)
       : Observable.of(false)
     )
@@ -75,7 +75,7 @@ function getTipsyPosition({
       isOut,
       isDown,
     }))
-    .flatMapLatest(combined => {
+    .switchMap(combined => {
       var { isOut, isDown, enterEvent } = combined;
       if (isOut && !isDown)
         return Observable.of(null);

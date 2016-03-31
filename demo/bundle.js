@@ -20266,7 +20266,7 @@
 	  var up = _ref.up;
 	  var targetElement = _ref.targetElement;
 
-	  var goOut = merge(enter.mapTo(false), leave.mapTo(true)).flatMapLatest(function (isOut) {
+	  var goOut = merge(enter.mapTo(false), leave.mapTo(true)).switchMap(function (isOut) {
 	    return isOut ? timer(100).mapTo(true) : Observable.of(false);
 	  }).startWith(false).distinctUntilChanged();
 
@@ -20278,7 +20278,7 @@
 	      isOut: isOut,
 	      isDown: isDown
 	    };
-	  }).flatMapLatest(function (combined) {
+	  }).switchMap(function (combined) {
 	    var isOut = combined.isOut;
 	    var isDown = combined.isDown;
 	    var enterEvent = combined.enterEvent;
