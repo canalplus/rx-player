@@ -534,9 +534,7 @@ function Stream({
     const { timings, seekings } = createTimings(manifest);
     const justManifest = Observable.of({ type: "manifest", value: manifest });
     const emeHandler = createEMEIfKeySystems();
-    const stalled = createStalled(timings, {
-      changePlayback: pipelines.requiresMediaSource(),
-    });
+    const stalled = createStalled(timings, true);
     const canPlay = createLoadedMetadata(manifest).concat(stalled);
     const buffers = createAdaptationsBuffers(mediaSource,
                                              manifest,

@@ -57,7 +57,8 @@ class Timings {
               playback,
               range,
               readyState,
-              stalled) {
+              stalled,
+              paused) {
     this.ts = ts;
     this.buffered = buffered;
     this.duration = duration;
@@ -67,6 +68,7 @@ class Timings {
     this.range = range;
     this.readyState = readyState;
     this.stalled = stalled;
+    this.paused = paused;
   }
 
   clone() {
@@ -78,7 +80,8 @@ class Timings {
                        this.playback,
                        this.range,
                        this.readyState,
-                       this.stalled);
+                       this.stalled,
+                       this.paused);
   }
 }
 
@@ -91,11 +94,13 @@ function getEmptyTimings() {
                      1,
                      null,
                      0,
+                     null,
                      null);
 }
 
 function getTimings(video, name) {
   const ts = video.currentTime;
+  const paused = video.paused;
   const buffered = new BufferedRanges(video.buffered);
   return new Timings(ts,
                      buffered,
@@ -105,7 +110,8 @@ function getTimings(video, name) {
                      video.playbackRate,
                      buffered.getRange(ts),
                      video.readyState,
-                     null);
+                     null,
+                     paused);
 }
 
 /**
@@ -136,21 +142,29 @@ function timingsSampler(video) {
     const wasStalled = prevTimings.stalled;
     const currentGap = currentTimings.gap;
 
-    const hasStalled = (
+    const _hasStalled = (
       timingEventType != "loadedmetadata" &&
       !wasStalled &&
-      !isEnding(currentGap, currentTimings.range, currentTimings.duration) &&
-      (currentGap <= STALL_GAP || currentGap === Infinity)
+      !isEnding(currentGap, currentTimings.range, currentTimings.duration)
+    );
+    const hasStalled = _hasStalled && (currentGap <= STALL_GAP || currentGap === Infinity);
+    const hasUnexpectedlyStalled = (
+      _hasStalled &&
+      timingEventType === "timeupdate" &&
+      !currentTimings.playbackRate !== 0 && !currentTimings.paused &&
+      currentTimings.ts !== 0 && currentTimings.ts == prevTimings.ts
     );
 
     let stalled;
-    if (hasStalled) {
+    if (hasStalled || hasUnexpectedlyStalled) {
       stalled = {
         name: currentTimings.name,
         playback: currentTimings.playback,
       };
     }
     else if (wasStalled && currentGap < Infinity && currentGap > resumeGap(wasStalled)) {
+      stalled = null;
+    } else if (timingEventType === "canplay") {
       stalled = null;
     }
     else {
@@ -172,6 +186,7 @@ function timingsSampler(video) {
 
     const samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
 
+    video.addEventListener("canplay", emitSample);
     video.addEventListener("play", emitSample);
     video.addEventListener("progress", emitSample);
     video.addEventListener("seeking", emitSample);
