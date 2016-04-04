@@ -141,18 +141,18 @@ function timingsSampler(video) {
 
     const wasStalled = prevTimings.stalled;
     const currentGap = currentTimings.gap;
+    const ending = isEnding(currentGap, currentTimings.range, currentTimings.duration);
 
     const _hasStalled = (
       timingEventType != "loadedmetadata" &&
       !wasStalled &&
-      !isEnding(currentGap, currentTimings.range, currentTimings.duration)
+      !ending
     );
     const hasStalled = _hasStalled && (currentGap <= STALL_GAP || currentGap === Infinity);
     const hasUnexpectedlyStalled = (
       _hasStalled &&
       timingEventType === "timeupdate" &&
-      !currentTimings.playbackRate !== 0 && !currentTimings.paused &&
-      currentTimings.ts !== 0 && currentTimings.ts == prevTimings.ts
+      !currentTimings.paused && currentTimings.ts !== 0 && currentTimings.ts === prevTimings.ts
     );
 
     let stalled;
@@ -162,7 +162,7 @@ function timingsSampler(video) {
         playback: currentTimings.playback,
       };
     }
-    else if (wasStalled && currentGap < Infinity && currentGap > resumeGap(wasStalled)) {
+    else if (wasStalled && currentGap < Infinity && (currentGap > resumeGap(wasStalled) || ending)) {
       stalled = null;
     } else if (timingEventType === "canplay") {
       stalled = null;
@@ -198,6 +198,7 @@ function timingsSampler(video) {
     return () => {
       clearInterval(samplerInterval);
 
+      video.removeEventListener("canplay", emitSample);
       video.removeEventListener("play", emitSample);
       video.removeEventListener("progress", emitSample);
       video.removeEventListener("seeking", emitSample);
