@@ -15,7 +15,7 @@
  */
 
 const { Observable } = require("rxjs/Observable");
-const { BehaviorSubject } = require("rxjs/subject/BehaviorSubject");
+const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { BufferedRanges } = require("./ranges");
 
 // time changes interval in milliseconds

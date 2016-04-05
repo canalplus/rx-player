@@ -15,7 +15,7 @@
  */
 
 const { Subscription } = require("rxjs/Subscription");
-const { BehaviorSubject } = require("rxjs/subject/BehaviorSubject");
+const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const { only } = require("../utils/rx-utils");
 const find = require("lodash/collection/find");
