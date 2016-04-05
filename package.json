@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "lodash": "3.10.1",
-    "rxjs": "5.0.0-beta.4"
+    "rxjs": "5.0.0-beta.5"
   },
   "devDependencies": {
     "babel-core": "^6.4.5",
