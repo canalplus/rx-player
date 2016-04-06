@@ -30,7 +30,7 @@ const { MediaError } = require("../errors");
 const doc = document;
 const win = window;
 
-const PREFIXES = ["", "webkit", "moz", "ms"];
+const PREFIXES = ["ms", "", "webkit", "moz"];
 
 const HTMLElement_      = win.HTMLElement;
 const HTMLVideoElement_ = win.HTMLVideoElement;
@@ -42,10 +42,10 @@ const MediaSource_ = (
   win.MSMediaSource);
 
 let MediaKeys_ = (
+  win.MSMediaKeys ||
   win.MediaKeys ||
   win.MozMediaKeys ||
-  win.WebKitMediaKeys ||
-  win.MSMediaKeys);
+  win.WebKitMediaKeys);
 
 const isIE = (
   navigator.appName == "Microsoft Internet Explorer" ||
@@ -59,7 +59,7 @@ let MockMediaKeys = function() {
 };
 
 let requestMediaKeySystemAccess;
-if (navigator.requestMediaKeySystemAccess) {
+if (navigator.requestMediaKeySystemAccess && !win.MSMediaKeys) {
   requestMediaKeySystemAccess = (a, b) => castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 }
 
@@ -144,7 +144,7 @@ function isCodecSupported(codec) {
 // TODO(pierre): try to find a solution without "browser sniffing"...
 const loadedMetadataEvent = compatibleListener(["loadedmetadata"]);
 const sourceOpenEvent = compatibleListener(["sourceopen", "webkitsourceopen"]);
-const onEncrypted = compatibleListener(["encrypted", "needkey"]);
+const onEncrypted = compatibleListener(["needkey", "encrypted"]);
 const onKeyMessage = compatibleListener(["keymessage", "message"]);
 const onKeyAdded = compatibleListener(["keyadded", "ready"]);
 const onKeyError = compatibleListener(["keyerror", "error"]);
@@ -168,7 +168,7 @@ function sourceOpen(mediaSource) {
   }
 }
 
-function canSeek(videoElement) {
+function haveMetadata(videoElement) {
   if (videoElement.readyState >= HAVE_METADATA) {
     return Observable.of(null);
   } else {
@@ -361,8 +361,8 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
   SessionProxy.prototype = {
     ...EventEmitter.prototype,
 
-    generateRequest: function(initDataType, initData) {
-      this._ss = this._mk.memCreateSession("video/mp4", initData);
+    generateRequest: function(initDataType, initData, cdmData) {
+      this._ss = this._mk.memCreateSession("video/mp4", initData, cdmData ? new Uint8Array(cdmData) : null);
       this._con = mergeStatic(
         onKeyMessage(this._ss),
         onKeyAdded(this._ss),
@@ -372,7 +372,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 
     update: wrapUpdate(function(license, sessionId) {
       assert(this._ss);
-      this._ss.update(license, sessionId);
+      this._ss.update(ArrayBuffer.isView(license) ? license : new Uint8Array(license));
       this.sessionId = sessionId;
     }, function() {
       return this._ss;
@@ -454,6 +454,11 @@ function _setMediaKeys(elt, mk) {
     return mk._setVideo(elt);
   }
 
+  if (elt.msSetMediaKeys) {
+    return haveMetadata(elt)
+      .do(() => elt.msSetMediaKeys(mk));
+  }
+
   if (elt.setMediaKeys) {
     return elt.setMediaKeys(mk);
   }
@@ -470,9 +475,6 @@ function _setMediaKeys(elt, mk) {
     return elt.mozSetMediaKeys(mk);
   }
 
-  if (elt.msSetMediaKeys) {
-    return elt.msSetMediaKeys(mk);
-  }
 }
 
 const setMediaKeys = (elt, mk) => {
@@ -618,7 +620,7 @@ module.exports = {
   MediaSource_,
   isCodecSupported,
   sourceOpen,
-  canSeek,
+  haveMetadata,
   canPlay,
 
   KeySystemAccess,

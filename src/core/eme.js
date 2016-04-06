@@ -467,9 +467,9 @@ function createSessionAndKeyRequest(mediaKeys,
   $loadedSessions.add(initData, session, sessionEvents);
 
   log.debug("eme: generate request", initDataType, initData);
-
+  const cdmData = keySystem.getCdmData ? keySystem.getCdmData() : null;
   const generateRequest = castToObservable(
-    session.generateRequest(initDataType, initData)
+    session.generateRequest(initDataType, initData, cdmData)
   )
     .catch((error) => {
       throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
@@ -479,7 +479,7 @@ function createSessionAndKeyRequest(mediaKeys,
         $storedSessions.add(initData, session);
       }
     })
-    .mapTo(createMessage("generated-request", session, { initData, initDataType }));
+    .mapTo(createMessage("generated-request", session, { initData, initDataType, cdmData }));
 
   return mergeStatic(sessionEvents, generateRequest);
 }
@@ -780,7 +780,7 @@ function createEME(video, keySystems, errorStream) {
           keySystemAccess.getConfiguration(),
           keySystem,
           encryptedEvent.initDataType,
-          new Uint8Array(encryptedEvent.initData),
+          new Uint8Array(ArrayBuffer.isView(encryptedEvent.initData) ? encryptedEvent.initData.buffer : encryptedEvent.initData),
           errorStream
         )
       );
