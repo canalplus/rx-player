@@ -18,7 +18,6 @@ module.exports = {
         loader: "babel",
         query: {
           "cacheDirectory": true,
-          "plugins": ["transform-object-rest-spread"],
           "presets": ["react", "es2015-loose"],
         },
       },

@@ -18,8 +18,6 @@
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
 const assert = require("../../utils/assert");
-const find = require("lodash/collection/find");
-const defaults = require("lodash/object/defaults");
 
 const iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
@@ -387,7 +385,7 @@ function parsePeriod(root, contentProtectionParser) {
 
   if (attrs.baseURL) {
     attrs.adaptations.forEach(
-      (adaptation) => defaults(adaptation, { baseURL: attrs.baseURL }));
+      (adaptation) => Object.assign({ baseURL: attrs.baseURL }, adaptation));
   }
 
   return attrs;
@@ -414,7 +412,7 @@ function parseFromDocument(document, contentProtectionParser) {
 
   if (/dynamic/.test(manifest.type)) {
     const adaptations = manifest.periods[0].adaptations;
-    const videoAdaptation = find(adaptations, (a) => a.mimeType == "video/mp4");
+    const videoAdaptation = adaptations.filter((a) => a.mimeType == "video/mp4")[0];
 
     const videoIndex = videoAdaptation && videoAdaptation.index;
 

@@ -22,7 +22,6 @@ module.exports = {
         test: /\.js$/,
         loader: "babel",
         query: {
-          "plugins": ["transform-object-rest-spread"],
           "presets": ["es2015-loose"],
         },
       },

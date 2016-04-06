@@ -137,10 +137,7 @@ function createPipeline(pipelineType,
   }
 
   function extendsResponseAndResolvedInfos(resolvedInfos, response) {
-    const loadedInfos = {
-      response,
-      ...resolvedInfos,
-    };
+    const loadedInfos = Object.assign({ response }, resolvedInfos);
 
     // add loadedInfos to the pipeline cache
     if (cache) {
@@ -154,10 +151,7 @@ function createPipeline(pipelineType,
   }
 
   function extendsParsedAndLoadedInfos(loadedInfos, parsed) {
-    return {
-      parsed,
-      ...loadedInfos,
-    };
+    return Object.assign({ parsed }, loadedInfos);
   }
 
   return (pipelineInputData) => {

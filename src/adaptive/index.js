@@ -18,9 +18,6 @@ const { Subscription } = require("rxjs/Subscription");
 const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { combineLatestStatic } = require("rxjs/operator/combineLatest");
 const { only } = require("../utils/rx-utils");
-const find = require("lodash/collection/find");
-const findLast = require("lodash/collection/findLast");
-const defaults = require("lodash/object/defaults");
 
 const AverageBitrate = require("./average-bitrate");
 
@@ -34,12 +31,26 @@ const DEFAULTS = {
   defaultBufferThreshold: 0.3,
 };
 
+function find(array, predicate) {
+  for (let i = 0; i < array.length; i++) {
+    if (predicate(array[i], i, array) === true) {
+      return array[i];
+    }
+  }
+  return null;
+}
+
 function def(x, val) {
   return typeof x == "number" && x > 0 ? x : val;
 }
 
 function getClosestBitrate(bitrates, btr, threshold=0) {
-  return findLast(bitrates, (b) => (b / btr) <= (1 - threshold)) || bitrates[0];
+  for (let i = bitrates.length - 1; i >= 0; i--) {
+    if ((bitrates[i] / btr) <= (1 - threshold)) {
+      return bitrates[i];
+    }
+  }
+  return bitrates[0];
 }
 
 function getClosestDisplayBitrate(reps, width) {
@@ -71,7 +82,7 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
     defaultBufferThreshold,
     initVideoBitrate,
     initAudioBitrate,
-  } = defaults(options, DEFAULTS);
+  } = Object.assign({}, DEFAULTS, options);
 
   const { videoWidth, inBackground } = deviceEvents;
 

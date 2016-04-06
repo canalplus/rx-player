@@ -15,7 +15,6 @@
  */
 
 const log = require("../utils/log");
-const defaults = require("lodash/object/defaults");
 const { Subscription } = require("rxjs/Subscription");
 const { Subject } = require("rxjs/Subject");
 const { BehaviorSubject } = require("rxjs/BehaviorSubject");
@@ -232,7 +231,7 @@ class Player extends EventEmitter {
   }
 
   _parseOptions(opts) {
-    opts = defaults({ ...opts }, {
+    opts = Object.assign({
       transport: this.defaultTransport,
       transportOptions: {},
       keySystems: [],
@@ -241,7 +240,7 @@ class Player extends EventEmitter {
       images: [],
       autoPlay: false,
       directFile: false,
-    });
+    }, opts);
 
     let {
       transport,
@@ -281,7 +280,7 @@ class Player extends EventEmitter {
     }
 
     if (typeof transport == "function") {
-      transport = transport(defaults(transportOptions, this.defaultTransportOptions));
+      transport = transport(Object.assign({}, this.defaultTransportOptions, transportOptions));
     }
 
     assert(transport, "player: transport " + opts.transport + " is not supported");

@@ -15,7 +15,6 @@
  */
 
 const assert = require("../../utils/assert");
-const find = require("lodash/collection/find");
 const bytes = require("../../utils/bytes");
 
 const DEFAULT_MIME_TYPES = {
@@ -324,8 +323,8 @@ function createSmoothStreamingParser(parserOptions={}) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      const video = find(adaptations, (a) => a.type == "video");
-      const audio = find(adaptations, (a) => a.type == "audio");
+      const video = adaptations.filter((a) => a.type == "video")[0];
+      const audio = adaptations.filter((a) => a.type == "audio")[0];
       const lastRef = Math.min(calcLastRef(video.index), calcLastRef(audio.index));
       presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
     }

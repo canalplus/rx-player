@@ -316,7 +316,7 @@ function Buffer({
 
       return {
         type: "pipeline",
-        value: { bufferType, addedSegments, ...pipelineData },
+        value: Object.assign({ bufferType, addedSegments }, pipelineData),
       };
     }
 

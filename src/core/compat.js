@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-const flatten = require("lodash/array/flatten");
 const log = require("../utils/log");
 const EventEmitter = require("../utils/eventemitter");
 const { bytesToStr, strToBytes } = require("../utils/bytes");
@@ -24,7 +23,6 @@ const { mergeStatic } = require("rxjs/operator/merge");
 const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
 const never = require("rxjs/observable/NeverObservable").NeverObservable.create;
 const { on, castToObservable } = require("../utils/rx-utils");
-const find = require("lodash/collection/find");
 const { MediaError } = require("../errors");
 
 const doc = document;
@@ -93,11 +91,12 @@ function isEventSupported(element, eventNameSuffix) {
 }
 
 function eventPrefixed(eventNames, prefixes) {
-  return flatten(eventNames.map((name) => (prefixes || PREFIXES).map((p) => p + name)));
+  return eventNames.reduce((parent, name) =>
+    parent.concat((prefixes || PREFIXES).map((p) => p + name)), []);
 }
 
 function findSupportedEvent(element, eventNames) {
-  return find(eventNames, (name) => isEventSupported(element, name));
+  return eventNames.filter((name) => isEventSupported(element, name))[0];
 }
 
 function compatibleListener(eventNames, prefixes) {
@@ -244,9 +243,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     ).subscribe((evt) => this.trigger(evt.type, evt));
   };
 
-  MockMediaKeySession.prototype = {
-    ...EventEmitter.prototype,
-
+  MockMediaKeySession.prototype = Object.assign({
     generateRequest: function (initDataType, initData) {
       this._vid.webkitGenerateKeyRequest(this._key, initData);
     },
@@ -270,7 +267,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       this._con = null;
       this._vid = null;
     },
-  };
+  }, EventEmitter.prototype);
 
   MockMediaKeys = function(keySystem) {
     this.ks_ = keySystem;
@@ -315,7 +312,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
       let supported = true;
       supported = supported && (
         !initDataTypes ||
-        !!find(initDataTypes, (initDataType) => initDataType === "cenc")
+        !!initDataTypes.filter((initDataType) => initDataType === "cenc")[0]
       );
       supported = supported && (
         !sessionTypes ||
@@ -358,9 +355,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     this._mk = mk;
   };
 
-  SessionProxy.prototype = {
-    ...EventEmitter.prototype,
-
+  SessionProxy.prototype = Object.assign({
     generateRequest: function(initDataType, initData) {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
       this._con = mergeStatic(
@@ -388,7 +383,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
         this._con = null;
       }
     },
-  };
+  }, EventEmitter.prototype);
 
   // on IE11, each created session needs to be created on a new
   // MediaKeys object
@@ -413,7 +408,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       } = keySystemConfiguration;
 
       let supported = true;
-      supported = supported && (!initDataTypes || find(initDataTypes, (idt) => idt === "cenc"));
+      supported = supported && (!initDataTypes || !!initDataTypes.filter((idt) => idt === "cenc")[0]);
       supported = supported && (distinctiveIdentifier !== "required");
 
       if (supported) {

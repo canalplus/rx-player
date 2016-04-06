@@ -15,8 +15,6 @@
  */
 
 const log = require("../utils/log");
-const defaults = require("lodash/object/defaults");
-const flatten = require("lodash/array/flatten");
 const { parseBaseURL } = require("../utils/url");
 const { isCodecSupported } = require("./compat");
 const { MediaError } = require("../errors");
@@ -77,7 +75,7 @@ function normalizeManifest(location, manifest, subtitles, images) {
   const periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles, images));
 
   // TODO(pierre): support multiple periods
-  manifest = { ...manifest, ...periods[0] };
+  manifest = Object.assign({}, manifest, periods[0]);
   manifest.periods = null;
 
   if (!manifest.duration) {
@@ -129,7 +127,7 @@ function normalizeAdaptation(adaptation, inherit) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  defaults(adaptation, inherit);
+  adaptation = Object.assign({}, inherit, adaptation);
 
   const inheritedFromAdaptation = {};
   representationBaseType.forEach((baseType) => {
@@ -176,7 +174,7 @@ function normalizeRepresentation(representation, inherit) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  defaults(representation, inherit);
+  representation = Object.assign({}, inherit, representation);
 
   const index = representation.index;
   if (!index) {
@@ -206,12 +204,12 @@ function normalizeSubtitles(subtitles) {
     subtitles = [subtitles];
   }
 
-  return flatten(subtitles.map(({ mimeType, url, language, languages }) => {
+  return subtitles.reduce((allSubs, { mimeType, url, language, languages }) => {
     if (language) {
       languages = [language];
     }
 
-    return languages.map((lang) => ({
+    return allSubs.concat(languages.map((lang) => ({
       id: uniqueId++,
       type: "text",
       lang,
@@ -228,8 +226,8 @@ function normalizeSubtitles(subtitles) {
           startNumber: 0,
         },
       }],
-    }));
-  }));
+    })));
+  }, []);
 }
 
 function normalizeImages(images) {

@@ -16,8 +16,6 @@
 
 const log = require("../utils/log");
 const assert = require("../utils/assert");
-const find = require("lodash/collection/find");
-const flatten = require("lodash/array/flatten");
 const { tryCatch, castToObservable } = require("../utils/rx-utils");
 const { retryWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
@@ -97,9 +95,18 @@ class InMemorySessionsSet {
     }
   }
 
+  find(func) {
+    for (let i = 0; i < this._entries.length; i++) {
+      if (func(this._entries[i]) === true) {
+        return this._entries[i];
+      }
+    }
+    return null;
+  }
+
   get(initData) {
     initData = hashInitData(initData);
-    const entry = find(this._entries, (e) => e.initData === initData);
+    const entry = this.find((e) => e.initData === initData);
     if (entry) {
       return entry.session;
     } else {
@@ -121,7 +128,7 @@ class InMemorySessionsSet {
   }
 
   deleteById(sessionId) {
-    const entry = find(this._entries, (e) => e.session.sessionId === sessionId);
+    const entry = this.find((e) => e.session.sessionId === sessionId);
     if (entry) {
       return this.delete(entry.session);
     } else {
@@ -130,7 +137,7 @@ class InMemorySessionsSet {
   }
 
   delete(session_) {
-    const entry = find(this._entries, (e) => e.session === session_);
+    const entry = this.find((e) => e.session === session_);
     if (!entry) {
       return null;
     }
@@ -201,7 +208,7 @@ class PersistedSessionsSet {
 
   get(initData) {
     initData = hashInitData(initData);
-    const entry = find(this._entries, (e) => e.initData === initData);
+    const entry = this.find((e) => e.initData === initData);
     return entry || null;
   }
 
@@ -229,7 +236,7 @@ class PersistedSessionsSet {
   delete(initData) {
     initData = hashInitData(initData);
 
-    const entry = find(this._entries, (e) => e.initData === initData);
+    const entry = this.find((e) => e.initData === initData);
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
 
@@ -273,7 +280,7 @@ let $keySystem;
 let $videoElement;
 
 function createMessage(name, session, options) {
-  return { type: "eme", value: { name, session, ...options } };
+  return { type: "eme", value: Object.assign({ name, session }, options) };
 }
 
 function getCachedKeySystemAccess(keySystems) {
@@ -284,7 +291,7 @@ function getCachedKeySystemAccess(keySystems) {
   }
 
   const configuration = $mediaKeySystemConfiguration;
-  const foundKeySystem = find(keySystems, (ks) => {
+  const foundKeySystem = keySystems.filter((ks) => {
     if (ks.type !== $keySystem.type) {
       return false;
     }
@@ -300,7 +307,7 @@ function getCachedKeySystemAccess(keySystems) {
     }
 
     return true;
-  });
+  })[0];
 
   if (foundKeySystem) {
     return {
@@ -353,9 +360,9 @@ function findCompatibleKeySystem(keySystems) {
     return Observable.of(cachedKeySystemAccess);
   }
 
-  const keySystemsType = flatten(keySystems.map(
-    (keySystem) => SYSTEMS[keySystem.type].map((keyType) => ({ keyType, keySystem })))
-  );
+  const keySystemsType = keySystems.reduce(
+    (parent, keySystem) => parent.concat(SYSTEMS[keySystem.type].map((keyType) => ({ keyType, keySystem })))
+  , []);
 
   return Observable.create((obs) => {
     let disposed = false;

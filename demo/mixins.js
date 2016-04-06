@@ -26,7 +26,7 @@ const SubscriptionMixin = {
   },
 };
 
-const EventHandlerMixin = {
+const EventHandlerMixin = Object.assign({
   componentWillMount() {
     if (!this.subjects) {
       return;
@@ -56,8 +56,6 @@ const EventHandlerMixin = {
       this.__subscription = null;
     }
   },
-
-  ...SubscriptionMixin,
-};
+}, SubscriptionMixin);
 
 module.exports = { SubscriptionMixin, EventHandlerMixin };
