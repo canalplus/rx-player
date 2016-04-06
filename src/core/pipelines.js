@@ -28,28 +28,17 @@ const {
 } = require("../errors");
 
 
-function errorSelector(code, error, fatal=true) {
-  if (isKnownError(error)) {
-    return error;
+function errorSelector(code, pipelineType, error, fatal=true) {
+  if (!isKnownError(error)) {
+    const ErrorType = (error instanceof RequestError)
+      ? NetworkError
+      : OtherError;
+
+    error = new ErrorType(code, error, fatal);
   }
 
-  const ErrorType = (error instanceof RequestError)
-    ? NetworkError
-    : OtherError;
-
-  return new ErrorType(code, error, fatal);
-}
-
-function resolverErrorSelector(error) {
-  throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
-}
-
-function loaderErrorSelector(error) {
-  throw errorSelector("PIPELINE_LOAD_ERROR", error);
-}
-
-function parserErrorSelector(error) {
-  throw errorSelector("PIPELINE_PARSING_ERROR", error);
+  error.pipelineType = pipelineType;
+  return error;
 }
 
 function loaderShouldRetry(error) {
@@ -77,7 +66,7 @@ const metricsScheduler = asap;
  *
  * TODO(pierre): create a pipeline patcher to work over a WebWorker
  */
-function createPipeline(type,
+function createPipeline(pipelineType,
                         { resolver, loader, parser },
                         metrics,
                         errorStream,
@@ -95,13 +84,25 @@ function createPipeline(type,
 
   const { totalRetry, cache } = options;
 
+  function resolverErrorSelector(error) {
+    throw errorSelector("PIPELINE_RESOLVE_ERROR", pipelineType, error);
+  }
+
+  function loaderErrorSelector(error) {
+    throw errorSelector("PIPELINE_LOAD_ERROR", pipelineType, error);
+  }
+
+  function parserErrorSelector(error) {
+    throw errorSelector("PIPELINE_PARSING_ERROR", pipelineType, error);
+  }
+
   const loaderBackoffOptions = {
     retryDelay: 200,
     errorSelector: loaderErrorSelector,
     totalRetry: totalRetry || 4,
     shouldRetry: loaderShouldRetry,
     onRetry: (error) => {
-      errorStream.next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
+      errorStream.next(errorSelector("PIPELINE_LOAD_ERROR", pipelineType, error, false));
     },
   };
 
@@ -147,7 +148,7 @@ function createPipeline(type,
     }
 
     // emits its value in the metrics observer
-    schedulMetrics({ type, value: loadedInfos });
+    schedulMetrics({ type: pipelineType, value: loadedInfos });
 
     return loadedInfos;
   }
