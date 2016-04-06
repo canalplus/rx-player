@@ -592,7 +592,8 @@ function addTextTrack(video) {
   let track, trackElement;
   const kind = "subtitles";
   if (isIE) {
-    track = video.addTextTrack(kind);
+    const tracksLength = video.textTracks.length;
+    track = tracksLength > 0 ? video.textTracks[tracksLength - 1] : video.addTextTrack(kind);
     track.mode = track.SHOWING;
   } else {
     // there is no removeTextTrack method... so we need to reuse old
