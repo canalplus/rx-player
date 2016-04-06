@@ -5,8 +5,10 @@ version=`cat VERSION`
 changelog=`awk "/^v[0-9]/{flag=0} /^v${version}/{flag=1} flag {print}" CHANGELOG`
 
 echo "update version..."
-sed -i '' "s/[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}/${version}/g" README.md
-sed -i '' "s/\"version\": \"[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}/\"version\": \"${version}/g" package.json
+sed -i.bak -e "s/[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}/${version}/g" README.md
+rm README.md.bak
+sed -i.bak -e "s/\"version\": \"[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}\.[[:digit:]]\{1,2\}/\"version\": \"${version}/g" package.json
+rm package.json.bak
 
 echo "record state in git..."
 git commit -m "Release v${version}" -- dist/ package.json CHANGELOG README.md VERSION
