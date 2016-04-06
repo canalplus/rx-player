@@ -218,15 +218,15 @@ module.exports = function(metrics, timings, deviceEvents, options={}) {
   return {
     setLanguage(lng) { $languages.next(lng); },
     setSubtitle(sub) { $subtitles.next(sub); },
-    getLanguage() { return $languages.value; },
-    getSubtitle() { return $subtitles.value; },
+    getLanguage() { return $languages.getValue(); },
+    getSubtitle() { return $subtitles.getValue(); },
 
     getAverageBitrates() { return $averageBitrates; },
 
-    getAudioMaxBitrate() { return $maxBitrates.audio.value; },
-    getVideoMaxBitrate() { return $maxBitrates.video.value; },
-    getAudioBufferSize() { return $bufSizes.audio.value; },
-    getVideoBufferSize() { return $bufSizes.video.value; },
+    getAudioMaxBitrate() { return $maxBitrates.audio.getValue(); },
+    getVideoMaxBitrate() { return $maxBitrates.video.getValue(); },
+    getAudioBufferSize() { return $bufSizes.audio.getValue(); },
+    getVideoBufferSize() { return $bufSizes.video.getValue(); },
 
     setAudioBitrate(x)    { $usrBitrates.audio.next(def(x, Infinity)); },
     setVideoBitrate(x)    { $usrBitrates.video.next(def(x, Infinity)); },
