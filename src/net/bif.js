@@ -7,6 +7,7 @@ const {
 function parseBif(buf) {
   let pos = 0;
 
+  const length = buf.length;
   const fileFormat = bytesToStr(buf.subarray(pos, pos + 8));   pos += 8;
 
   const minorVersion = buf[pos]; pos += 1;
@@ -29,16 +30,16 @@ function parseBif(buf) {
   const isVod = buf[pos] === 1; pos += 1;
 
   // bytes 0x1F to 0x40 is unused data for now
-  pos = 64;
+  pos = 0x40;
 
   const thumbs = [];
-  let currentImage, foundLastImage, currentTs = 0;
+  let currentImage, currentTs = 0;
 
   if (!imageCount) {
     throw new Error("bif: no images to parse");
   }
 
-  while(!foundLastImage) {
+  while (pos < length) {
     const currentImageIndex = le4toi(buf, pos); pos += 4;
     const currentImageOffset = le4toi(buf, pos); pos += 4;
 
@@ -53,8 +54,14 @@ function parseBif(buf) {
       currentTs += timescale;
     }
 
-    currentImage = { index: currentImageIndex, offset: currentImageOffset };
-    foundLastImage = currentImageIndex === 4294967295; /* when index is 0xffffffff */
+    if (currentImageIndex === 0xffffffff) {
+      break;
+    }
+
+    currentImage = {
+      index: currentImageIndex,
+      offset: currentImageOffset,
+    };
   }
 
   return {
