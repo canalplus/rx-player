@@ -36,7 +36,6 @@ const {
 const TextSourceBuffer = require("./text-buffer");
 const ImageSourceBuffer = require("./image-buffer");
 const { getLiveEdge } = require("./index-handler");
-const { clearSegmentCache } = require("./segment");
 const { Buffer, EmptyBuffer } = require("./buffer");
 const { createEME, onEncrypted } = require("./eme");
 
@@ -79,8 +78,6 @@ function Stream({
   videoElement,
   autoPlay,
 }) {
-
-  clearSegmentCache();
 
   const fragStartTime = timeFragment.start;
   const fragEndTimeIsFinite = fragEndTime < Infinity;

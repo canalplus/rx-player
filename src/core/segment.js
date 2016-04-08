@@ -15,17 +15,9 @@
  */
 
 const { resolveURL } = require("../utils/url");
-const LRUCache = require("../utils/lru");
-const CACHE_SIZE = 100;
-
-let segmentsCache = new LRUCache(CACHE_SIZE);
 
 function isNumber(val) {
   return (typeof val == "number" && !isNaN(val)) || !isNaN(+val) ? true : false;
-}
-
-function clearSegmentCache() {
-  segmentsCache = new LRUCache(CACHE_SIZE);
 }
 
 class Segment {
@@ -41,12 +33,6 @@ class Segment {
                 init) {
 
     const segId = `${adaptation.id}_${representation.id}_${id}`;
-    const cachedSegment = segmentsCache.get(segId);
-
-    if (cachedSegment) {
-      return cachedSegment;
-    }
-
     const segment = new Segment(adaptation,
                                 representation,
                                 segId,
@@ -57,8 +43,6 @@ class Segment {
                                 range,
                                 indexRange,
                                 init);
-
-    segmentsCache.set(segId, segment);
     return segment;
   }
 
@@ -159,5 +143,4 @@ class InitSegment extends Segment {
 module.exports = {
   Segment,
   InitSegment,
-  clearSegmentCache,
 };
