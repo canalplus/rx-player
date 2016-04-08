@@ -440,7 +440,9 @@ class Player extends EventEmitter {
   }
 
   _playPauseNext(evt) {
-    this.playing.next(evt.type == "play");
+    if (this.video.ended !== true) {
+      this.playing.next(evt.type == "play");
+    }
   }
 
   _setPlayerState(s) {
