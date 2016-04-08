@@ -78,16 +78,28 @@ function hashInitData(initData) {
   }
 }
 
+class SessionSet {
+  constructor() {
+    this._entries = [];
+  }
+
+  find(func) {
+    for (let i = 0; i < this._entries.length; i++) {
+      if (func(this._entries[i]) === true) {
+        return this._entries[i];
+      }
+    }
+    return null;
+  }
+}
+
 /**
  * Set maintaining a representation of all currently loaded
  * MediaKeySessions. This set allow to reuse sessions without re-
  * negotiating a license exchange if the key is already used in a
  * loaded session.
  */
-class InMemorySessionsSet {
-  constructor() {
-    this._entries = [];
-  }
+class InMemorySessionsSet extends SessionSet {
 
   getFirst() {
     if (this._entries.length > 0) {
@@ -176,8 +188,9 @@ class InMemorySessionsSet {
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
  */
-class PersistedSessionsSet {
+class PersistedSessionsSet extends SessionSet {
   constructor(storage) {
+    super();
     this.setStorage(storage);
   }
 
