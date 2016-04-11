@@ -84,7 +84,12 @@ function NetworkError(code, reason, fatal) {
   this.reason = reason;
   this.code = ErrorCodes[code];
   this.fatal = fatal;
-  this.message = errorMessage(this.name, this.code, this.reason);
+  if (this.reason) {
+    this.message = errorMessage(this.name, this.code, this.reason);
+  } else {
+    const reasonMessage = `${this.reqType}${this.status > 0 ? `(${this.status})` : ""} on ${this.url}`;
+    this.message = errorMessage(this.name, this.code, { message: reasonMessage });
+  }
 }
 NetworkError.prototype = new Error();
 
