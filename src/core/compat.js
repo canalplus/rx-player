@@ -367,7 +367,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
 
     update: wrapUpdate(function(license, sessionId) {
       assert(this._ss);
-      this._ss.update(license, sessionId);
+      this._ss.update(ArrayBuffer.isView(license) ? license : new Uint8Array(license));
       this.sessionId = sessionId;
     }, function() {
       return this._ss;
