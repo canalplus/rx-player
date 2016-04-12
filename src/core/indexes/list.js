@@ -62,11 +62,11 @@ class List {
 
   getSegments(up, to) {
     // TODO(pierre): use startNumber
-    const { duration } = this.index;
-    const l = Math.floor(to / duration);
+    const { duration, list } = this.index;
+    const length = Math.min(list.length - 1, Math.floor(to / duration));
     const segments = [];
     let i = Math.floor(up / duration);
-    while (i < l) {
+    while (i <= length) {
       segments.push(this.createSegment(i, i * duration));
       i++;
     }
