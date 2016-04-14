@@ -34,7 +34,7 @@ const {
 
 const {
   getEmptyTimings,
-  timingsSampler,
+  TimingsSampler,
   toWallClockTime,
   fromWallClockTime,
   getLiveGap,
@@ -156,11 +156,13 @@ class Player extends EventEmitter {
 
     const { createPipelines, metrics } = PipeLines();
 
-    const timings = timingsSampler(videoElement);
+    const timingsSampler = new TimingsSampler(videoElement);
+    const timings = timingsSampler.timings;
     const deviceEvents = DeviceEvents(videoElement);
 
     this.createPipelines = createPipelines;
     this.metrics = metrics;
+    this.timingsSampler = timingsSampler;
     this.timings = timings;
 
     this.adaptive = Adaptive(metrics, timings, deviceEvents, {
@@ -217,6 +219,7 @@ class Player extends EventEmitter {
     this.fullscreen = null;
     this.stream = null;
 
+    this.timingsSampler = null;
     this.timings = null;
     this.createPipelines = null;
     this.video = null;
@@ -316,11 +319,14 @@ class Player extends EventEmitter {
 
     const {
       adaptive,
+      timingsSampler,
       timings,
       video:
       videoElement,
       errorStream,
     } = this;
+
+    timingsSampler.transport = transport;
 
     const pipelines = this.createPipelines(transport, {
       errorStream: errorStream,

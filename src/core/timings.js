@@ -19,7 +19,7 @@ const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { BufferedRanges } = require("./ranges");
 
 // time changes interval in milliseconds
-const TIMINGS_SAMPLING_INTERVAL = 1000;
+const TIMINGS_SAMPLING_INTERVAL = 700;
 
 // time in seconds protecting live buffer to prevent ahead of time
 // buffering
@@ -134,9 +134,15 @@ function getTimings(video, name) {
  * The sampling is manual instead of based on "timeupdate" to reduce the
  * number of events.
  */
-function timingsSampler(video) {
+class TimingsSampler {
 
-  function scanTimingsSamples(prevTimings, timingEventType) {
+  constructor(video, transport = null) {
+    this.video = video;
+    this.transport = transport;
+    this.timings = this._createTimingsObservable();
+  }
+
+  _scanTimingsSamples(prevTimings, timingEventType, video, transport) {
     const currentTimings = getTimings(video, timingEventType);
 
     const {
@@ -162,69 +168,82 @@ function timingsSampler(video) {
 
     const shouldStall = (
       mayStall &&
+      !transport.directFile &&
       (currentGap <= STALL_GAP || currentGap === Infinity)
     );
 
-    // If between two timeupdate events the currentTime (ts) has not
-    // changed while not in pause and not already stalled, we consider
-    // that we have unexpectedly stall the player.
-    const hasUnexpectedlyStalled = (
-      mayStall && !paused && currentTs > 0 &&
-      currentName == "timeupdate" && prevTimings.name == "timeupdate" &&
-      currentTs === prevTimings.ts
+    const shouldUnstall = (
+      wasStalled &&
+      currentGap < Infinity && (currentGap > resumeGap(wasStalled) || ending)
+    );
+
+    // when using a direct file, the video will stall and unstall on its own
+    const hasStalled = (
+      mayStall &&
+      transport.directFile &&
+      ( !paused && currentName == "timeupdate" && prevTimings.name == "timeupdate" && currentTs === prevTimings.ts ||
+        currentName == "seeking" && currentGap === Infinity )
+    );
+
+    const hasUnstalled = (
+      wasStalled &&
+      transport.directFile &&
+      currentName !== "seeking" && currentTs !== prevTimings.ts
     );
 
     let stalled;
-    if (shouldStall || hasUnexpectedlyStalled) {
+    if (shouldStall || hasStalled) {
       stalled = { name: currentName, playback };
     }
-    else if (wasStalled && currentGap < Infinity && (currentGap > resumeGap(wasStalled) || ending)) {
-      stalled = null;
-    }
-    else if (currentName === "canplay") {
+    else if (shouldUnstall || hasUnstalled || timingEventType === "canplay") {
       stalled = null;
     }
     else {
       stalled = wasStalled;
     }
-
     currentTimings.stalled = stalled;
     return currentTimings;
   }
 
-  return Observable.create((obs) => {
-    let prevTimings = getTimings(video, "init");
+  _createTimingsObservable() {
+    const _this = this;
 
-    function emitSample(evt) {
-      const timingEventType = evt && evt.type || "timeupdate";
-      prevTimings = scanTimingsSamples(prevTimings, timingEventType);
+    return Observable.create((obs) => {
+      const { video, transport, _scanTimingsSamples } = _this;
+      let prevTimings = getTimings(video, "init");
+
+      function emitSample(evt) {
+        const timingEventType = evt && evt.type || "timeupdate";
+        prevTimings = _scanTimingsSamples(prevTimings, timingEventType, video, transport);
+        obs.next(prevTimings);
+      }
+
+      const samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
+
+      video.addEventListener("canplay", emitSample);
+      video.addEventListener("play", emitSample);
+      video.addEventListener("progress", emitSample);
+      video.addEventListener("seeking", emitSample);
+      video.addEventListener("seeked", emitSample);
+      video.addEventListener("loadedmetadata", emitSample);
+
       obs.next(prevTimings);
-    }
 
-    const samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
+      return () => {
+        clearInterval(samplerInterval);
 
-    video.addEventListener("canplay", emitSample);
-    video.addEventListener("play", emitSample);
-    video.addEventListener("progress", emitSample);
-    video.addEventListener("seeking", emitSample);
-    video.addEventListener("seeked", emitSample);
-    video.addEventListener("loadedmetadata", emitSample);
+        video.removeEventListener("canplay", emitSample);
+        video.removeEventListener("play", emitSample);
+        video.removeEventListener("progress", emitSample);
+        video.removeEventListener("seeking", emitSample);
+        video.removeEventListener("seeked", emitSample);
+        video.removeEventListener("loadedmetadata", emitSample);
+      };
+    })
+      .multicast(() => new BehaviorSubject({ name: "init", stalled: null }))
+      .refCount();
+  }
 
-    obs.next(prevTimings);
-
-    return () => {
-      clearInterval(samplerInterval);
-
-      video.removeEventListener("canplay", emitSample);
-      video.removeEventListener("play", emitSample);
-      video.removeEventListener("progress", emitSample);
-      video.removeEventListener("seeking", emitSample);
-      video.removeEventListener("seeked", emitSample);
-      video.removeEventListener("loadedmetadata", emitSample);
-    };
-  })
-    .multicast(() => new BehaviorSubject({ name: "init", stalled: null }))
-    .refCount();
 }
 
 function seekingsSampler(timingsSampling) {
@@ -282,7 +301,7 @@ function getLiveGap(ts, manifest) {
 module.exports = {
   getEmptyTimings,
   getTimings,
-  timingsSampler,
+  TimingsSampler,
   seekingsSampler,
   getLiveGap,
   toWallClockTime,
