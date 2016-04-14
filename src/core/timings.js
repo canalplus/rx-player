@@ -146,6 +146,7 @@ function timingsSampler(video) {
       range,
       duration,
       paused,
+      readyState,
       playback,
     } = currentTimings;
 
@@ -153,6 +154,7 @@ function timingsSampler(video) {
     const ending = isEnding(currentGap, range, duration);
 
     const mayStall = (
+      readyState >= 1 &&
       currentName != "loadedmetadata" &&
       !wasStalled &&
       !ending
