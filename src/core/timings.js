@@ -139,12 +139,21 @@ function timingsSampler(video) {
   function scanTimingsSamples(prevTimings, timingEventType) {
     const currentTimings = getTimings(video, timingEventType);
 
+    const {
+      name: currentName,
+      gap: currentGap,
+      ts: currentTs,
+      range,
+      duration,
+      paused,
+      playback,
+    } = currentTimings;
+
     const wasStalled = prevTimings.stalled;
-    const currentGap = currentTimings.gap;
-    const ending = isEnding(currentGap, currentTimings.range, currentTimings.duration);
+    const ending = isEnding(currentGap, range, duration);
 
     const mayStall = (
-      timingEventType != "loadedmetadata" &&
+      currentName != "loadedmetadata" &&
       !wasStalled &&
       !ending
     );
@@ -154,23 +163,23 @@ function timingsSampler(video) {
       (currentGap <= STALL_GAP || currentGap === Infinity)
     );
 
+    // If between two timeupdate events the currentTime (ts) has not
+    // changed while not in pause and not already stalled, we consider
+    // that we have unexpectedly stall the player.
     const hasUnexpectedlyStalled = (
-      mayStall &&
-      timingEventType == "timeupdate" &&
-      !currentTimings.paused && currentTimings.ts !== 0 && currentTimings.ts === prevTimings.ts
+      mayStall && !paused && currentTs > 0 &&
+      currentName == "timeupdate" && prevTimings.name == "timeupdate" &&
+      currentTs === prevTimings.ts
     );
 
     let stalled;
     if (shouldStall || hasUnexpectedlyStalled) {
-      stalled = {
-        name: currentTimings.name,
-        playback: currentTimings.playback,
-      };
+      stalled = { name: currentName, playback };
     }
     else if (wasStalled && currentGap < Infinity && (currentGap > resumeGap(wasStalled) || ending)) {
       stalled = null;
     }
-    else if (timingEventType === "canplay") {
+    else if (currentName === "canplay") {
       stalled = null;
     }
     else {
