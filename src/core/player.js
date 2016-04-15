@@ -34,7 +34,7 @@ const {
 
 const {
   getEmptyTimings,
-  TimingsSampler,
+  createTimingsSampler,
   toWallClockTime,
   fromWallClockTime,
   getLiveGap,
@@ -156,16 +156,12 @@ class Player extends EventEmitter {
 
     const { createPipelines, metrics } = PipeLines();
 
-    const timingsSampler = new TimingsSampler(videoElement);
-    const timings = timingsSampler.timings;
     const deviceEvents = DeviceEvents(videoElement);
 
     this.createPipelines = createPipelines;
     this.metrics = metrics;
-    this.timingsSampler = timingsSampler;
-    this.timings = timings;
 
-    this.adaptive = Adaptive(metrics, timings, deviceEvents, {
+    this.adaptive = Adaptive(metrics, deviceEvents, {
       initVideoBitrate,
       initAudioBitrate,
       defaultLanguage,
@@ -219,8 +215,6 @@ class Player extends EventEmitter {
     this.fullscreen = null;
     this.stream = null;
 
-    this.timingsSampler = null;
-    this.timings = null;
     this.createPipelines = null;
     this.video = null;
   }
@@ -318,15 +312,10 @@ class Player extends EventEmitter {
     this.playing.next(autoPlay);
 
     const {
+      video: videoElement,
       adaptive,
-      timingsSampler,
-      timings,
-      video:
-      videoElement,
       errorStream,
     } = this;
-
-    timingsSampler.transport = transport;
 
     const pipelines = this.createPipelines(transport, {
       errorStream: errorStream,
@@ -334,6 +323,7 @@ class Player extends EventEmitter {
       video: { cache: new InitializationSegmentCache() },
     });
 
+    const timings = createTimingsSampler(videoElement, { requiresMediaSource: pipelines.requiresMediaSource() });
     const stream = Stream({
       url,
       errorStream,
@@ -611,10 +601,6 @@ class Player extends EventEmitter {
 
   getMetrics() {
     return this.metrics;
-  }
-
-  getTimings() {
-    return this.timings;
   }
 
   play() {

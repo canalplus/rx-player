@@ -74,7 +74,7 @@ function filterByType(stream, selectedType) {
   return stream.filter(({ type }) => type === selectedType);
 }
 
-module.exports = function(metrics, timings, deviceEvents, options={}) {
+module.exports = function(metrics, deviceEvents, options={}) {
   const {
     defaultLanguage,
     defaultSubtitle,
