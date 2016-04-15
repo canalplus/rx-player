@@ -23,7 +23,10 @@ clean:
 	@rm -f dist/rx-player.js
 	@rm -f dist/rx-player.min.js
 
-release: lint all
+update-version:
+	@./bin/update-version
+
+release: lint update-version all
 	@./bin/release
 
 lint:
