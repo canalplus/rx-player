@@ -278,7 +278,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var isFunction_1 = __webpack_require__(25);
+	var isFunction_1 = __webpack_require__(24);
 	var Subscription_1 = __webpack_require__(4);
 	var rxSubscriber_1 = __webpack_require__(33);
 	var Observer_1 = __webpack_require__(59);
@@ -568,8 +568,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	var isArray_1 = __webpack_require__(20);
 	var isObject_1 = __webpack_require__(47);
-	var isFunction_1 = __webpack_require__(25);
-	var tryCatch_1 = __webpack_require__(26);
+	var isFunction_1 = __webpack_require__(24);
+	var tryCatch_1 = __webpack_require__(25);
 	var errorObject_1 = __webpack_require__(19);
 	/**
 	 * Represents a disposable resource, such as the execution of an Observable. A
@@ -887,7 +887,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.reason = reason;
 	  this.code = ErrorCodes[code];
 	  this.fatal = fatal;
-	  this.message = errorMessage(this.name, this.code, this.reason);
+	  if (this.reason) {
+	    this.message = errorMessage(this.name, this.code, this.reason);
+	  } else {
+	    var reasonMessage = "" + this.reqType + (this.status > 0 ? "(" + this.status + ")" : "") + " on " + this.url;
+	    this.message = errorMessage(this.name, this.code, { message: reasonMessage });
+	  }
 	}
 	NetworkError.prototype = new Error();
 
@@ -3124,156 +3129,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * Copyright 2015 CANAL+ Group
-	 *
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 *     http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 */
-
-	var _require = __webpack_require__(37);
-
-	var resolveURL = _require.resolveURL;
-
-	var LRUCache = __webpack_require__(155);
-	var CACHE_SIZE = 100;
-
-	var segmentsCache = new LRUCache(CACHE_SIZE);
-
-	function isNumber(val) {
-	  return typeof val == "number" && !isNaN(val) || !isNaN(+val) ? true : false;
-	}
-
-	function clearSegmentCache() {
-	  segmentsCache = new LRUCache(CACHE_SIZE);
-	}
-
-	var Segment = function () {
-	  Segment.create = function create(adaptation, representation, id, media, time, duration, number, range, indexRange, init) {
-
-	    var segId = adaptation.id + "_" + representation.id + "_" + id;
-	    var cachedSegment = segmentsCache.get(segId);
-
-	    if (cachedSegment) {
-	      return cachedSegment;
-	    }
-
-	    var segment = new Segment(adaptation, representation, segId, media, time, duration, number, range, indexRange, init);
-
-	    segmentsCache.set(segId, segment);
-	    return segment;
-	  };
-
-	  function Segment(adaptation, representation, id, media, time, duration, number, range, indexRange, init) {
-	    _classCallCheck(this, Segment);
-
-	    this.id = id;
-	    this.ada = adaptation;
-	    this.rep = representation;
-	    this.time = isNumber(time) ? +time : -1;
-	    this.duration = isNumber(duration) ? +duration : -1;
-	    this.number = isNumber(number) ? +number : -1;
-	    this.media = media ? "" + media : "";
-	    this.range = Array.isArray(range) ? range : null;
-	    this.indexRange = Array.isArray(indexRange) ? indexRange : null;
-	    this.init = !!init;
-	  }
-
-	  Segment.prototype.getId = function getId() {
-	    return this.id;
-	  };
-
-	  Segment.prototype.getAdaptation = function getAdaptation() {
-	    return this.ada;
-	  };
-
-	  Segment.prototype.getRepresentation = function getRepresentation() {
-	    return this.rep;
-	  };
-
-	  Segment.prototype.getTime = function getTime() {
-	    return this.time;
-	  };
-
-	  Segment.prototype.getDuration = function getDuration() {
-	    return this.duration;
-	  };
-
-	  Segment.prototype.getNumber = function getNumber() {
-	    return this.number;
-	  };
-
-	  Segment.prototype.getMedia = function getMedia() {
-	    return this.media;
-	  };
-
-	  Segment.prototype.getRange = function getRange() {
-	    return this.range;
-	  };
-
-	  Segment.prototype.getIndexRange = function getIndexRange() {
-	    return this.indexRange;
-	  };
-
-	  Segment.prototype.isInitSegment = function isInitSegment() {
-	    return this.init;
-	  };
-
-	  Segment.prototype.getResolvedURL = function getResolvedURL() {
-	    return resolveURL(this.ada.rootURL, this.ada.baseURL, this.rep.baseURL);
-	  };
-
-	  return Segment;
-	}();
-
-	var InitSegment = function (_Segment) {
-	  _inherits(InitSegment, _Segment);
-
-	  function InitSegment(adaptation, representation, media, range, indexRange) {
-	    _classCallCheck(this, InitSegment);
-
-	    return _possibleConstructorReturn(this, _Segment.call(this, adaptation, representation, adaptation.id + "_" + representation.id + "_init",
-	    /* id */
-	    media, /* media */
-	    -1, /* time */
-	    -1, /* duration */
-	    -1, /* number */
-	    range, /* range */
-	    indexRange, /* indexRange */
-	    true /* init */
-	    ));
-	  }
-
-	  return InitSegment;
-	}(Segment);
-
-	module.exports = {
-	  Segment: Segment,
-	  InitSegment: InitSegment,
-	  clearSegmentCache: clearSegmentCache
-	};
-
-/***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
 	var __extends = undefined && undefined.__extends || function (d, b) {
 	    for (var p in b) {
 	        if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -3419,7 +3274,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	//# sourceMappingURL=FutureAction.js.map
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3429,7 +3284,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	//# sourceMappingURL=async.js.map
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -3441,7 +3296,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	//# sourceMappingURL=isFunction.js.map
 
 /***/ },
-/* 26 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3463,6 +3318,139 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.tryCatch = tryCatch;
 	;
 	//# sourceMappingURL=tryCatch.js.map
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * Copyright 2015 CANAL+ Group
+	 *
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	var _require = __webpack_require__(37);
+
+	var resolveURL = _require.resolveURL;
+
+
+	function isNumber(val) {
+	  return typeof val == "number" && !isNaN(val) || !isNaN(+val) ? true : false;
+	}
+
+	var Segment = function () {
+	  Segment.create = function create(adaptation, representation, id, media, time, duration, number, range, indexRange, init) {
+
+	    var segId = adaptation.id + "_" + representation.id + "_" + id;
+	    var segment = new Segment(adaptation, representation, segId, media, time, duration, number, range, indexRange, init);
+	    return segment;
+	  };
+
+	  function Segment(adaptation, representation, id, media, time, duration, number, range, indexRange, init) {
+	    _classCallCheck(this, Segment);
+
+	    this.id = id;
+	    this.ada = adaptation;
+	    this.rep = representation;
+	    this.time = isNumber(time) ? +time : -1;
+	    this.duration = isNumber(duration) ? +duration : -1;
+	    this.number = isNumber(number) ? +number : -1;
+	    this.media = media ? "" + media : "";
+	    this.range = Array.isArray(range) ? range : null;
+	    this.indexRange = Array.isArray(indexRange) ? indexRange : null;
+	    this.init = !!init;
+	  }
+
+	  Segment.prototype.getId = function getId() {
+	    return this.id;
+	  };
+
+	  Segment.prototype.getAdaptation = function getAdaptation() {
+	    return this.ada;
+	  };
+
+	  Segment.prototype.getRepresentation = function getRepresentation() {
+	    return this.rep;
+	  };
+
+	  Segment.prototype.getTime = function getTime() {
+	    return this.time;
+	  };
+
+	  Segment.prototype.getDuration = function getDuration() {
+	    return this.duration;
+	  };
+
+	  Segment.prototype.getNumber = function getNumber() {
+	    return this.number;
+	  };
+
+	  Segment.prototype.getMedia = function getMedia() {
+	    return this.media;
+	  };
+
+	  Segment.prototype.getRange = function getRange() {
+	    return this.range;
+	  };
+
+	  Segment.prototype.getIndexRange = function getIndexRange() {
+	    return this.indexRange;
+	  };
+
+	  Segment.prototype.isInitSegment = function isInitSegment() {
+	    return this.init;
+	  };
+
+	  Segment.prototype.getResolvedURL = function getResolvedURL() {
+	    return resolveURL(this.ada.rootURL, this.ada.baseURL, this.rep.baseURL);
+	  };
+
+	  return Segment;
+	}();
+
+	var InitSegment = function (_Segment) {
+	  _inherits(InitSegment, _Segment);
+
+	  function InitSegment(adaptation, representation, media, range, indexRange) {
+	    _classCallCheck(this, InitSegment);
+
+	    return _possibleConstructorReturn(this, _Segment.call(this, adaptation, representation, adaptation.id + "_" + representation.id + "_init",
+	    /* id */
+	    media, /* media */
+	    -1, /* time */
+	    -1, /* duration */
+	    -1, /* number */
+	    range, /* range */
+	    indexRange, /* indexRange */
+	    true /* init */
+	    ));
+	  }
+
+	  return InitSegment;
+	}(Segment);
+
+	module.exports = {
+	  Segment: Segment,
+	  InitSegment: InitSegment
+	};
 
 /***/ },
 /* 27 */
@@ -4472,7 +4460,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var Observable_1 = __webpack_require__(1);
-	var tryCatch_1 = __webpack_require__(26);
+	var tryCatch_1 = __webpack_require__(25);
 	var errorObject_1 = __webpack_require__(19);
 	var Subscription_1 = __webpack_require__(4);
 	function isNodeStyleEventEmmitter(sourceObj) {
@@ -4699,7 +4687,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	var isNumeric_1 = __webpack_require__(46);
 	var Observable_1 = __webpack_require__(1);
-	var async_1 = __webpack_require__(24);
+	var async_1 = __webpack_require__(23);
 	var isScheduler_1 = __webpack_require__(11);
 	var isDate_1 = __webpack_require__(45);
 	/**
@@ -5096,7 +5084,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 
 	var QueueAction_1 = __webpack_require__(120);
-	var FutureAction_1 = __webpack_require__(23);
+	var FutureAction_1 = __webpack_require__(22);
 	var QueueScheduler = function () {
 	    function QueueScheduler() {
 	        this.active = false;
@@ -5258,6 +5246,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	/**
@@ -5356,6 +5348,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 
+	var SessionSet = function () {
+	  function SessionSet() {
+	    _classCallCheck(this, SessionSet);
+
+	    this._entries = [];
+	  }
+
+	  SessionSet.prototype.find = function find(func) {
+	    for (var i = 0; i < this._entries.length; i++) {
+	      if (func(this._entries[i]) === true) {
+	        return this._entries[i];
+	      }
+	    }
+	    return null;
+	  };
+
+	  return SessionSet;
+	}();
+
 	/**
 	 * Set maintaining a representation of all currently loaded
 	 * MediaKeySessions. This set allow to reuse sessions without re-
@@ -5363,11 +5374,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * loaded session.
 	 */
 
-	var InMemorySessionsSet = function () {
+
+	var InMemorySessionsSet = function (_SessionSet) {
+	  _inherits(InMemorySessionsSet, _SessionSet);
+
 	  function InMemorySessionsSet() {
 	    _classCallCheck(this, InMemorySessionsSet);
 
-	    this._entries = [];
+	    return _possibleConstructorReturn(this, _SessionSet.apply(this, arguments));
 	  }
 
 	  InMemorySessionsSet.prototype.getFirst = function getFirst() {
@@ -5452,17 +5466,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  InMemorySessionsSet.prototype.dispose = function dispose() {
-	    var _this = this;
+	    var _this2 = this;
 
 	    var disposed = this._entries.map(function (e) {
-	      return _this.deleteAndClose(e.session);
+	      return _this2.deleteAndClose(e.session);
 	    });
 	    this._entries = [];
 	    return mergeStatic.apply(null, disposed);
 	  };
 
 	  return InMemorySessionsSet;
-	}();
+	}(SessionSet);
 
 	/**
 	 * Set representing persisted licenses. Depends on a simple local-
@@ -5474,11 +5488,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 
-	var PersistedSessionsSet = function () {
+	var PersistedSessionsSet = function (_SessionSet2) {
+	  _inherits(PersistedSessionsSet, _SessionSet2);
+
 	  function PersistedSessionsSet(storage) {
 	    _classCallCheck(this, PersistedSessionsSet);
 
-	    this.setStorage(storage);
+	    var _this3 = _possibleConstructorReturn(this, _SessionSet2.call(this));
+
+	    _this3.setStorage(storage);
+	    return _this3;
 	  }
 
 	  PersistedSessionsSet.prototype.setStorage = function setStorage(storage) {
@@ -5558,7 +5577,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  return PersistedSessionsSet;
-	}();
+	}(SessionSet);
 
 	var emptyStorage = {
 	  load: function load() {
@@ -6050,7 +6069,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var getAdaptationsByType = _require.getAdaptationsByType;
 
-	var _require2 = __webpack_require__(22);
+	var _require2 = __webpack_require__(26);
 
 	var InitSegment = _require2.InitSegment;
 
@@ -6204,7 +6223,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
-	var _require = __webpack_require__(22);
+	var _require = __webpack_require__(26);
 
 	var Segment = _require.Segment;
 
@@ -6639,25 +6658,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function scanTimingsSamples(prevTimings, timingEventType) {
 	    var currentTimings = getTimings(video, timingEventType);
 
-	    var wasStalled = prevTimings.stalled;
+	    var currentName = currentTimings.name;
 	    var currentGap = currentTimings.gap;
-	    var ending = isEnding(currentGap, currentTimings.range, currentTimings.duration);
+	    var currentTs = currentTimings.ts;
+	    var range = currentTimings.range;
+	    var duration = currentTimings.duration;
+	    var paused = currentTimings.paused;
+	    var readyState = currentTimings.readyState;
+	    var playback = currentTimings.playback;
 
-	    var mayStall = timingEventType != "loadedmetadata" && !wasStalled && !ending;
+
+	    var wasStalled = prevTimings.stalled;
+	    var ending = isEnding(currentGap, range, duration);
+
+	    var mayStall = readyState >= 1 && currentName != "loadedmetadata" && !wasStalled && !ending;
 
 	    var shouldStall = mayStall && (currentGap <= STALL_GAP || currentGap === Infinity);
 
-	    var hasUnexpectedlyStalled = mayStall && timingEventType == "timeupdate" && !currentTimings.paused && currentTimings.ts !== 0 && currentTimings.ts === prevTimings.ts;
+	    // If between two timeupdate events the currentTime (ts) has not
+	    // changed while not in pause and not already stalled, we consider
+	    // that we have unexpectedly stall the player.
+	    var hasUnexpectedlyStalled = mayStall && !paused && currentTs > 0 && currentName == "timeupdate" && prevTimings.name == "timeupdate" && currentTs === prevTimings.ts;
 
 	    var stalled = void 0;
 	    if (shouldStall || hasUnexpectedlyStalled) {
-	      stalled = {
-	        name: currentTimings.name,
-	        playback: currentTimings.playback
-	      };
+	      stalled = { name: currentName, playback: playback };
 	    } else if (wasStalled && currentGap < Infinity && (currentGap > resumeGap(wasStalled) || ending)) {
 	      stalled = null;
-	    } else if (timingEventType === "canplay") {
+	    } else if (currentName === "canplay") {
 	      stalled = null;
 	    } else {
 	      stalled = wasStalled;
@@ -7994,7 +8022,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var isArray_1 = __webpack_require__(20);
-	var isFunction_1 = __webpack_require__(25);
+	var isFunction_1 = __webpack_require__(24);
 	var isPromise_1 = __webpack_require__(48);
 	var isScheduler_1 = __webpack_require__(11);
 	var PromiseObservable_1 = __webpack_require__(39);
@@ -8077,7 +8105,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	var isNumeric_1 = __webpack_require__(46);
 	var Observable_1 = __webpack_require__(1);
-	var async_1 = __webpack_require__(24);
+	var async_1 = __webpack_require__(23);
 	/**
 	 * We need this JSDoc comment for affecting ESDoc.
 	 * @extends {Ignored}
@@ -8184,9 +8212,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	var root_1 = __webpack_require__(6);
 	var isObject_1 = __webpack_require__(47);
-	var tryCatch_1 = __webpack_require__(26);
+	var tryCatch_1 = __webpack_require__(25);
 	var Observable_1 = __webpack_require__(1);
-	var isFunction_1 = __webpack_require__(25);
+	var isFunction_1 = __webpack_require__(24);
 	var iterator_1 = __webpack_require__(31);
 	var errorObject_1 = __webpack_require__(19);
 	/**
@@ -8686,7 +8714,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var Subscriber_1 = __webpack_require__(2);
-	var async_1 = __webpack_require__(24);
+	var async_1 = __webpack_require__(23);
 	/**
 	 * Returns the source Observable delayed by the computed debounce duration,
 	 * with the duration lengthened if a new source item arrives before the delay
@@ -8781,7 +8809,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var Subscriber_1 = __webpack_require__(2);
-	var tryCatch_1 = __webpack_require__(26);
+	var tryCatch_1 = __webpack_require__(25);
 	var errorObject_1 = __webpack_require__(19);
 	/**
 	 * Returns an Observable that emits all items emitted by the source Observable that are distinct by comparison from the previous item.
@@ -9872,7 +9900,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var async_1 = __webpack_require__(24);
+	var async_1 = __webpack_require__(23);
 	var isDate_1 = __webpack_require__(45);
 	var Subscriber_1 = __webpack_require__(2);
 	/**
@@ -9988,7 +10016,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var Immediate_1 = __webpack_require__(123);
-	var FutureAction_1 = __webpack_require__(23);
+	var FutureAction_1 = __webpack_require__(22);
 	/**
 	 * We need this JSDoc comment for affecting ESDoc.
 	 * @ignore
@@ -10079,7 +10107,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var FutureAction_1 = __webpack_require__(23);
+	var FutureAction_1 = __webpack_require__(22);
 	var QueueScheduler_1 = __webpack_require__(43);
 	var AsyncScheduler = function (_super) {
 	    __extends(AsyncScheduler, _super);
@@ -10108,7 +10136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var FutureAction_1 = __webpack_require__(23);
+	var FutureAction_1 = __webpack_require__(22);
 	/**
 	 * We need this JSDoc comment for affecting ESDoc.
 	 * @ignore
@@ -10735,25 +10763,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	      $subtitles.next(sub);
 	    },
 	    getLanguage: function getLanguage() {
-	      return $languages.value;
+	      return $languages.getValue();
 	    },
 	    getSubtitle: function getSubtitle() {
-	      return $subtitles.value;
+	      return $subtitles.getValue();
 	    },
 	    getAverageBitrates: function getAverageBitrates() {
 	      return $averageBitrates;
 	    },
 	    getAudioMaxBitrate: function getAudioMaxBitrate() {
-	      return $maxBitrates.audio.value;
+	      return $maxBitrates.audio.getValue();
 	    },
 	    getVideoMaxBitrate: function getVideoMaxBitrate() {
-	      return $maxBitrates.video.value;
+	      return $maxBitrates.video.getValue();
 	    },
 	    getAudioBufferSize: function getAudioBufferSize() {
-	      return $bufSizes.audio.value;
+	      return $bufSizes.audio.getValue();
 	    },
 	    getVideoBufferSize: function getVideoBufferSize() {
-	      return $bufSizes.video.value;
+	      return $bufSizes.video.getValue();
 	    },
 	    setAudioBitrate: function setAudioBitrate(x) {
 	      $usrBitrates.audio.next(def(x, Infinity));
@@ -11532,7 +11560,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
-	var _require = __webpack_require__(22);
+	var _require = __webpack_require__(26);
 
 	var Segment = _require.Segment;
 
@@ -11583,12 +11611,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  List.prototype.getSegments = function getSegments(up, to) {
 	    // TODO(pierre): use startNumber
-	    var duration = this.index.duration;
+	    var _index3 = this.index;
+	    var duration = _index3.duration;
+	    var list = _index3.list;
 
-	    var l = Math.floor(to / duration);
+	    var length = Math.min(list.length - 1, Math.floor(to / duration));
 	    var segments = [];
 	    var i = Math.floor(up / duration);
-	    while (i < l) {
+	    while (i <= length) {
 	      segments.push(this.createSegment(i, i * duration));
 	      i++;
 	    }
@@ -11628,7 +11658,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
-	var _require = __webpack_require__(22);
+	var _require = __webpack_require__(26);
 
 	var Segment = _require.Segment;
 
@@ -12083,7 +12113,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
 	    videoElement.preload = "auto";
 
-	    _this.version = ("2.0.0-alpha4");
+	    _this.version = /*PLAYER_VERSION*/"2.0.0-alpha5";
 	    _this.video = videoElement;
 
 	    // fullscreen change
@@ -12390,7 +12420,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  Player.prototype._playPauseNext = function _playPauseNext(evt) {
-	    this.playing.next(evt.type == "play");
+	    if (this.video.ended !== true) {
+	      this.playing.next(evt.type == "play");
+	    }
 	  };
 
 	  Player.prototype._setPlayerState = function _setPlayerState(s) {
@@ -12757,33 +12789,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var getLiveEdge = _require8.getLiveEdge;
 
-	var _require9 = __webpack_require__(22);
+	var _require9 = __webpack_require__(128);
 
-	var clearSegmentCache = _require9.clearSegmentCache;
+	var Buffer = _require9.Buffer;
+	var EmptyBuffer = _require9.EmptyBuffer;
 
-	var _require10 = __webpack_require__(128);
+	var _require10 = __webpack_require__(51);
 
-	var Buffer = _require10.Buffer;
-	var EmptyBuffer = _require10.EmptyBuffer;
+	var createEME = _require10.createEME;
+	var onEncrypted = _require10.onEncrypted;
 
-	var _require11 = __webpack_require__(51);
+	var _require11 = __webpack_require__(7);
 
-	var createEME = _require11.createEME;
-	var onEncrypted = _require11.onEncrypted;
+	var MediaError = _require11.MediaError;
+	var OtherError = _require11.OtherError;
+	var EncryptedMediaError = _require11.EncryptedMediaError;
+	var isKnownError = _require11.isKnownError;
 
-	var _require12 = __webpack_require__(7);
+	var _require12 = __webpack_require__(34);
 
-	var MediaError = _require12.MediaError;
-	var OtherError = _require12.OtherError;
-	var EncryptedMediaError = _require12.EncryptedMediaError;
-	var isKnownError = _require12.isKnownError;
-
-	var _require13 = __webpack_require__(34);
-
-	var normalizeManifest = _require13.normalizeManifest;
-	var mergeManifestsIndex = _require13.mergeManifestsIndex;
-	var mutateManifestLiveGap = _require13.mutateManifestLiveGap;
-	var getAdaptations = _require13.getAdaptations;
+	var normalizeManifest = _require12.normalizeManifest;
+	var mergeManifestsIndex = _require12.mergeManifestsIndex;
+	var mutateManifestLiveGap = _require12.mutateManifestLiveGap;
+	var getAdaptations = _require12.getAdaptations;
 
 
 	var END_OF_PLAY = 0.2;
@@ -12808,8 +12836,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var videoElement = _ref.videoElement;
 	  var autoPlay = _ref.autoPlay;
 
-
-	  clearSegmentCache();
 
 	  var fragStartTime = timeFragment.start;
 	  var fragEndTimeIsFinite = fragEndTime < Infinity;
@@ -16633,123 +16659,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  hideDebug: hideDebug,
 	  toggleDebug: toggleDebug
 	};
-
-/***/ },
-/* 155 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	/**
-	 * A doubly linked list-based Least Recently Used (LRU) cache. Will
-	 * keep most recently used items while discarding least recently used
-	 * items when its limit is reached.
-	 *
-	 * Licensed under MIT. Copyright (c) 2010 Rasmus Andersson
-	 * <http://hunch.se/> See README.md for details.
-	 *
-	 * Illustration of the design:
-	 *
-	 *       entry             entry             entry             entry
-	 *       ______            ______            ______            ______
-	 *      | head |.newer => |      |.newer => |      |.newer => | tail |
-	 *      |  A   |          |  B   |          |  C   |          |  D   |
-	 *      |______| <= older.|______| <= older.|______| <= older.|______|
-	 *
-	 *  removed  <--  <--  <--  <--  <--  <--  <--  <--  <--  <--  <--  added
-	 */
-
-	var LRUCache = function () {
-	  function LRUCache(limit) {
-	    _classCallCheck(this, LRUCache);
-
-	    this.size = 0;
-	    this.limit = limit;
-	    this._keymap = {};
-	    this.head = null;
-	    this.tail = null;
-	  }
-
-	  LRUCache.prototype.set = function set(key, value) {
-	    var entry = {
-	      key: key,
-	      value: value,
-	      newer: null,
-	      older: null
-	    };
-
-	    this._keymap[key] = entry;
-
-	    if (this.tail) {
-	      this.tail.newer = entry;
-	      entry.older = this.tail;
-	    } else {
-	      this.head = entry;
-	    }
-
-	    this.tail = entry;
-
-	    if (this.size === this.limit) {
-	      return this.shift();
-	    } else {
-	      this.size++;
-	      return null;
-	    }
-	  };
-
-	  LRUCache.prototype.shift = function shift() {
-	    var entry = this.head;
-	    if (entry) {
-	      if (this.head.newer) {
-	        this.head = this.head.newer;
-	        this.head.older = null;
-	      } else {
-	        this.head = null;
-	      }
-	      entry.newer = entry.older = null;
-	      delete this._keymap[entry.key];
-	    }
-
-	    return entry;
-	  };
-
-	  LRUCache.prototype.get = function get(key) {
-	    var entry = this._keymap[key];
-	    if (entry == null) {
-	      return;
-	    }
-
-	    if (entry === this.tail) {
-	      return entry.value;
-	    }
-
-	    if (entry.newer) {
-	      if (entry === this.head) {
-	        this.head = entry.newer;
-	      }
-	      entry.newer.older = entry.older;
-	    }
-	    if (entry.older) {
-	      entry.older.newer = entry.newer;
-	    }
-
-	    entry.newer = null;
-	    entry.older = this.tail;
-
-	    if (this.tail) {
-	      this.tail.newer = entry;
-	    }
-
-	    this.tail = entry;
-	    return entry.value;
-	  };
-
-	  return LRUCache;
-	}();
-
-	module.exports = LRUCache;
 
 /***/ }
 /******/ ])
