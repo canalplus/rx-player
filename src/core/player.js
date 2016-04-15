@@ -139,7 +139,7 @@ class Player extends EventEmitter {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = __RX_PLAYER_VERSION_PLACEHOLDER__;
+    this.version = /*PLAYER_VERSION*/"2.0.0-alpha4";
     this.video = videoElement;
 
     // fullscreen change

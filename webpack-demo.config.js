@@ -1,9 +1,7 @@
 /* eslint-env node */
-var fs = require("fs");
 var path = require("path");
 
 var webpack = require("webpack");
-var version = fs.readFileSync("./VERSION").toString().replace(/\n$/g, "");
 
 module.exports = {
   entry: "./demo/index.js",
@@ -35,12 +33,11 @@ module.exports = {
     },
   },
   plugins: [
-  new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
-      "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
       "__DEV__": true,
       "process.env": {
-        NODE_ENV: JSON.stringify("production")
+        NODE_ENV: JSON.stringify("production"),
       },
     }),
   ],

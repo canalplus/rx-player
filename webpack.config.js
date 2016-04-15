@@ -1,5 +1,4 @@
 /* eslint-env node */
-const fs = require("fs");
 const path = require("path");
 
 const RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "production";
@@ -9,7 +8,6 @@ if (["development", "production"].indexOf(RX_PLAYER_ENV) < 0) {
 }
 
 const webpack = require("webpack");
-const version = fs.readFileSync("./VERSION").toString().replace(/\n$/g, "");
 
 module.exports = {
   output: {
@@ -36,7 +34,6 @@ module.exports = {
   plugins: [
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
-      "__RX_PLAYER_VERSION_PLACEHOLDER__": JSON.stringify(version),
       "__DEV__": RX_PLAYER_ENV === "development",
       "process.env": {
         NODE_ENV: JSON.stringify(RX_PLAYER_ENV),

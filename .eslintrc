@@ -87,7 +87,6 @@
   },
   "globals": {
     "__DEV__": true,
-    "__RX_PLAYER_VERSION_PLACEHOLDER__": true
   },
   "extends": "eslint:recommended",
   "ecmaFeatures": {
