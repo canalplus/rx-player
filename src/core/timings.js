@@ -19,7 +19,8 @@ const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { BufferedRanges } = require("./ranges");
 
 // time changes interval in milliseconds
-const TIMINGS_SAMPLING_INTERVAL = 700;
+const SAMPLING_INTERVAL_MEDIASOURCE = 1000;
+const SAMPLING_INTERVAL_NO_MEDIASOURCE = 500;
 
 // time in seconds protecting live buffer to prevent ahead of time
 // buffering
@@ -226,13 +227,17 @@ function createTimingsSampler(video, { requiresMediaSource }) {
       obs.next(prevTimings);
     }
 
-    const samplerInterval = setInterval(emitSample, TIMINGS_SAMPLING_INTERVAL);
+    const samplerTimeInterval = requiresMediaSource
+      ? SAMPLING_INTERVAL_MEDIASOURCE
+      : SAMPLING_INTERVAL_NO_MEDIASOURCE;
+
+    const timeUpdateHandler = setInterval(emitSample, samplerTimeInterval);
     SCANNED_VIDEO_EVENTS.forEach((eventName) => video.addEventListener(eventName, emitSample));
 
     obs.next(prevTimings);
 
     return () => {
-      clearInterval(samplerInterval);
+      clearInterval(timeUpdateHandler);
       SCANNED_VIDEO_EVENTS.forEach((eventName) => video.removeEventListener(eventName, emitSample));
     };
   })
