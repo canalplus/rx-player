@@ -177,7 +177,8 @@ function scanTimings(prevTimings, currentTimings, requiresMediaSource) {
     shouldUnstall = (
       prevStalled &&
       ( currentName != "seeking" && currentTs !== prevTs ||
-        currentName == "canplay" )
+        currentName == "canplay" ||
+        gap < Infinity && (gap > resumeGap(prevStalled) || ending))
     );
   }
 
