@@ -184,13 +184,12 @@ function Stream({
 
   function createAndPlugMediaSource(url, video) {
     return Observable.create((observer) => {
-      if (!MediaSource_) {
-        throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
-      }
-
       let mediaSource, objectURL;
 
       if (pipelines.requiresMediaSource()) {
+        if (!MediaSource_) {
+          throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
+        }
         mediaSource = new MediaSource_();
         objectURL = URL.createObjectURL(mediaSource);
       } else {
