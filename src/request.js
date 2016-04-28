@@ -84,7 +84,7 @@ class RequestSubscriber extends Subscriber {
     const size = this.totalSize;
     const sentTime = this.sentTime;
     const receivedTime = this.receivedTime;
-    const url = request.url;
+    const url = xhr.responseURL || request.url;
 
     let responseData;
     if (request.responseType == "json") {
