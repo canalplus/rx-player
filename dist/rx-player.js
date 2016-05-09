@@ -505,7 +505,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 
 	__webpack_require__(5);
-	module.exports = __webpack_require__(12);
+	module.exports = __webpack_require__(13);
 
 /***/ },
 /* 4 */
@@ -546,7 +546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
-	var _require = __webpack_require__(12);
+	var _require = __webpack_require__(13);
 
 	var Observable = _require.Observable;
 	var SingleAssignmentDisposable = _require.SingleAssignmentDisposable;
@@ -904,6 +904,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 	var _ = __webpack_require__(1);
 	var log = __webpack_require__(4);
 	var Promise_ = __webpack_require__(6);
@@ -948,6 +952,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	if (navigator.requestMediaKeySystemAccess) requestMediaKeySystemAccess = function (a, b) {
 	  return navigator.requestMediaKeySystemAccess(a, b);
 	};
+
+	// @implement interface MediaKeySystemAccess
+
+	var KeySystemAccess = (function () {
+	  function KeySystemAccess(keyType, mediaKeys, mediaKeySystemConfiguration) {
+	    _classCallCheck(this, KeySystemAccess);
+
+	    this._keyType = keyType;
+	    this._mediaKeys = mediaKeys;
+	    this._configuration = mediaKeySystemConfiguration;
+	  }
+
+	  KeySystemAccess.prototype.createMediaKeys = function createMediaKeys() {
+	    return Promise_.resolve(this._mediaKeys);
+	  };
+
+	  KeySystemAccess.prototype.getConfiguration = function getConfiguration() {
+	    return this._configuration;
+	  };
+
+	  _createClass(KeySystemAccess, [{
+	    key: "keySystem",
+	    get: function get() {
+	      return this._keyType;
+	    }
+	  }]);
+
+	  return KeySystemAccess;
+	})();
 
 	function castToPromise(prom) {
 	  if (prom && typeof prom.then == "function") {
@@ -1052,6 +1085,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (mediaSource.readyState == "open") return just();else return sourceOpenEvent(mediaSource).take(1);
 	}
 
+	function loadedMetadata(videoElement) {
+	  if (videoElement.readyState >= HTMLVideoElement.HAVE_METADATA) return just();else return loadedMetadataEvent(videoElement).take(1);
+	}
+
+	function canPlay(videoElement) {
+	  if (videoElement.readyState >= HTMLVideoElement.HAVE_ENOUGH_DATA) return just();else return on(videoElement, "canplay").take(1);
+	}
+
 	// Wrap "MediaKeys.prototype.update" form an event based system to a
 	// Promise based function.
 	function wrapUpdateWithPromise(memUpdate, sessionObj) {
@@ -1153,15 +1194,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	  requestMediaKeySystemAccess = function (keyType, keySystemConfigurations) {
 	    if (!isTypeSupported(keyType)) return Promise_.reject();
 
-	    var _loop = function (i) {
+	    for (var i = 0; i < keySystemConfigurations.length; i++) {
 	      var keySystemConfiguration = keySystemConfigurations[i];
+	      var videoCapabilities = keySystemConfiguration.videoCapabilities;
+	      var audioCapabilities = keySystemConfiguration.audioCapabilities;
 	      var initDataTypes = keySystemConfiguration.initDataTypes;
 	      var sessionTypes = keySystemConfiguration.sessionTypes;
 	      var distinctiveIdentifier = keySystemConfiguration.distinctiveIdentifier;
 	      var persistentState = keySystemConfiguration.persistentState;
-	      supported = true;
 
-	      supported = supported && (!initDataTypes || _.find(initDataTypes, function (initDataType) {
+	      var supported = true;
+	      supported = supported && (!initDataTypes || !!_.find(initDataTypes, function (initDataType) {
 	        return initDataType === "cenc";
 	      }));
 	      supported = supported && (!sessionTypes || _.filter(sessionTypes, function (sessionType) {
@@ -1171,22 +1214,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      supported = supported && persistentState !== "required";
 
 	      if (supported) {
-	        return {
-	          v: Promise_.resolve({
-	            createMediaKeys: function createMediaKeys() {
-	              return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
-	            }
-	          })
+	        var keySystemConfigurationResponse = {
+	          videoCapabilities: videoCapabilities,
+	          audioCapabilities: audioCapabilities,
+	          initDataTypes: ["cenc"],
+	          distinctiveIdentifier: "not-allowed",
+	          persistentState: "not-allowed",
+	          sessionTypes: ["temporary"]
 	        };
+
+	        return Promise_.resolve(new KeySystemAccess(keyType, new MockMediaKeys(keyType), keySystemConfigurationResponse));
 	      }
-	    };
-
-	    for (var i = 0; i < keySystemConfigurations.length; i++) {
-	      var supported;
-
-	      var _ret = _loop(i);
-
-	      if (typeof _ret === "object") return _ret.v;
 	    }
 
 	    return Promise_.reject();
@@ -1240,34 +1278,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	    requestMediaKeySystemAccess = function (keyType, keySystemConfigurations) {
 	      if (!MediaKeys_.isTypeSupported(keyType)) return Promise_.reject();
 
-	      var _loop2 = function (i) {
+	      for (var i = 0; i < keySystemConfigurations.length; i++) {
 	        var keySystemConfiguration = keySystemConfigurations[i];
+	        var videoCapabilities = keySystemConfiguration.videoCapabilities;
+	        var audioCapabilities = keySystemConfiguration.audioCapabilities;
 	        var initDataTypes = keySystemConfiguration.initDataTypes;
 	        var distinctiveIdentifier = keySystemConfiguration.distinctiveIdentifier;
-	        supported = true;
 
+	        var supported = true;
 	        supported = supported && (!initDataTypes || _.find(initDataTypes, function (idt) {
 	          return idt === "cenc";
 	        }));
 	        supported = supported && distinctiveIdentifier !== "required";
 
 	        if (supported) {
-	          return {
-	            v: Promise_.resolve({
-	              createMediaKeys: function createMediaKeys() {
-	                return Promise_.resolve(new MockMediaKeys(keyType), keySystemConfiguration);
-	              }
-	            })
+	          var keySystemConfigurationResponse = {
+	            videoCapabilities: videoCapabilities,
+	            audioCapabilities: audioCapabilities,
+	            initDataTypes: ["cenc"],
+	            distinctiveIdentifier: "not-allowed",
+	            persistentState: "required",
+	            sessionTypes: ["temporary", "persistent-license"]
 	          };
+
+	          return Promise_.resolve(new KeySystemAccess(keyType, new MockMediaKeys(keyType), keySystemConfigurationResponse));
 	        }
-	      };
-
-	      for (var i = 0; i < keySystemConfigurations.length; i++) {
-	        var supported;
-
-	        var _ret2 = _loop2(i);
-
-	        if (typeof _ret2 === "object") return _ret2.v;
 	      }
 
 	      return Promise_.reject();
@@ -1402,8 +1437,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  MediaSource_: MediaSource_,
 	  isCodecSupported: isCodecSupported,
 	  sourceOpen: sourceOpen,
-	  loadedMetadataEvent: loadedMetadataEvent,
+	  loadedMetadata: loadedMetadata,
+	  canPlay: canPlay,
 
+	  KeySystemAccess: KeySystemAccess,
 	  requestMediaKeySystemAccess: requestMediaKeySystemAccess,
 	  setMediaKeys: setMediaKeys,
 	  emeEvents: emeEvents,
@@ -1662,7 +1699,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var start = _ranges$i.start;
 	      var end = _ranges$i.end;
 
-	      if (nearlyLt(start, startTime) && nearlyLt(startTime, end) && (nearlyLt(start, endTime) && nearlyLt(endTime, end))) return this.ranges[i];
+	      if (nearlyLt(start, startTime) && nearlyLt(startTime, end) && nearlyLt(start, endTime) && nearlyLt(endTime, end)) return this.ranges[i];
 	    }
 
 	    return null;
@@ -1891,6 +1928,299 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2015 CANAL+ Group
+	 *
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	"use strict";
+
+	var _ = __webpack_require__(1);
+	var log = __webpack_require__(4);
+	var assert = __webpack_require__(2);
+
+	var _require = __webpack_require__(11);
+
+	var parseBaseURL = _require.parseBaseURL;
+
+	var _require2 = __webpack_require__(8);
+
+	var isCodecSupported = _require2.isCodecSupported;
+
+	var representationBaseType = ["profiles", "width", "height", "frameRate", "audioSamplingRate", "mimeType", "segmentProfiles", "codecs", "maximumSAPPeriod", "maxPlayoutRate", "codingDependency", "index"];
+
+	var SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text"];
+	var DEFAULT_PRESENTATION_DELAY = 15;
+
+	function parseType(mimeType) {
+	  return mimeType.split("/")[0];
+	}
+
+	function normalizeManifest(location, manifest, subtitles) {
+	  assert(manifest.transportType);
+
+	  manifest.id = manifest.id || _.uniqueId();
+	  manifest.type = manifest.type || "static";
+
+	  var locations = manifest.locations;
+	  if (!locations || !locations.length) {
+	    manifest.locations = [location];
+	  }
+
+	  manifest.isLive = manifest.type == "dynamic";
+
+	  // TODO(pierre): support multi-locations/cdns
+	  var urlBase = {
+	    rootURL: parseBaseURL(manifest.locations[0]),
+	    baseURL: manifest.baseURL,
+	    isLive: manifest.isLive
+	  };
+
+	  if (subtitles) {
+	    subtitles = normalizeSubtitles(subtitles);
+	  }
+
+	  var periods = _.map(manifest.periods, function (period) {
+	    return normalizePeriod(period, urlBase, subtitles);
+	  });
+
+	  // TODO(pierre): support multiple periods
+	  _.extend(manifest, periods[0]);
+	  manifest.periods = null;
+
+	  if (!manifest.duration) manifest.duration = Infinity;
+
+	  if (manifest.isLive) {
+	    manifest.suggestedPresentationDelay = manifest.suggestedPresentationDelay || DEFAULT_PRESENTATION_DELAY;
+	    manifest.availabilityStartTime = manifest.availabilityStartTime || 0;
+	  }
+
+	  return manifest;
+	}
+
+	function normalizePeriod(period, inherit, subtitles) {
+	  period.id = period.id || _.uniqueId();
+
+	  var adaptations = period.adaptations;
+	  adaptations = adaptations.concat(subtitles || []);
+	  adaptations = _.map(adaptations, function (ada) {
+	    return normalizeAdaptation(ada, inherit);
+	  });
+	  adaptations = _.filter(adaptations, function (adaptation) {
+	    if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
+	      log.info("not supported adaptation type", adaptation.type);
+	      return false;
+	    } else {
+	      return true;
+	    }
+	  });
+
+	  assert(adaptations.length > 0);
+
+	  period.adaptations = _.groupBy(adaptations, "type");
+	  return period;
+	}
+
+	function normalizeAdaptation(adaptation, inherit) {
+	  assert(typeof adaptation.id != "undefined");
+	  _.defaults(adaptation, inherit);
+
+	  var inheritedFromAdaptation = _.pick(adaptation, representationBaseType);
+	  var representations = _.map(adaptation.representations, function (rep) {
+	    return normalizeRepresentation(rep, inheritedFromAdaptation);
+	  }).sort(function (a, b) {
+	    return a.bitrate - b.bitrate;
+	  });
+
+	  var type = adaptation.type;
+	  var mimeType = adaptation.mimeType;
+
+	  if (!mimeType) mimeType = representations[0].mimeType;
+
+	  assert(mimeType);
+
+	  adaptation.mimeType = mimeType;
+
+	  if (!type) type = adaptation.type = parseType(mimeType);
+
+	  if (type == "video" || type == "audio") {
+	    representations = _.filter(representations, function (rep) {
+	      return isCodecSupported(getCodec(rep));
+	    });
+	  }
+
+	  assert(representations.length > 0, "manifest: no compatible representation for this adaptation");
+	  adaptation.representations = representations;
+	  adaptation.bitrates = _.pluck(representations, "bitrate");
+	  return adaptation;
+	}
+
+	function normalizeRepresentation(representation, inherit) {
+	  assert(typeof representation.id != "undefined");
+	  _.defaults(representation, inherit);
+
+	  var index = representation.index;
+	  assert(index);
+
+	  if (!index.timescale) {
+	    index.timescale = 1;
+	  }
+
+	  if (!representation.bitrate) {
+	    representation.bitrate = 1;
+	  }
+
+	  // Fix issue in some packagers, like GPAC, generating a non
+	  // compliant mimetype with RFC 6381. Other closed-source packagers
+	  // maybe impacted.
+	  if (representation.codecs == "mp4a.40.02") {
+	    representation.codecs = "mp4a.40.2";
+	  }
+
+	  return representation;
+	}
+
+	function normalizeSubtitles(subtitles) {
+	  if (!_.isArray(subtitles)) subtitles = [subtitles];
+
+	  return _.flatten(subtitles, function (_ref) {
+	    var mimeType = _ref.mimeType;
+	    var url = _ref.url;
+	    var language = _ref.language;
+	    var languages = _ref.languages;
+
+	    if (language) {
+	      languages = [language];
+	    }
+
+	    return _.map(languages, function (lang) {
+	      return {
+	        id: _.uniqueId(),
+	        type: "text",
+	        lang: lang,
+	        mimeType: mimeType,
+	        rootURL: url,
+	        baseURL: "",
+	        representations: [{
+	          id: _.uniqueId(),
+	          mimeType: mimeType,
+	          index: {
+	            indexType: "template",
+	            duration: Number.MAX_VALUE,
+	            timescale: 1,
+	            startNumber: 0
+	          }
+	        }]
+	      };
+	    });
+	  });
+	}
+
+	function mergeManifestsIndex(oldManifest, newManifest) {
+	  var oldAdaptations = oldManifest.adaptations;
+	  var newAdaptations = newManifest.adaptations;
+	  for (var type in oldAdaptations) {
+	    var oldAdas = oldAdaptations[type];
+	    var newAdas = newAdaptations[type];
+	    _.each(oldAdas, function (a, i) {
+	      _.simpleMerge(a.index, newAdas[i].index);
+	    });
+	  }
+	  return oldManifest;
+	}
+
+	function mutateManifestLiveGap(manifest) {
+	  var addedTime = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
+
+	  if (manifest.isLive) {
+	    manifest.presentationLiveGap += addedTime;
+	  }
+	}
+
+	function getCodec(representation) {
+	  var codecs = representation.codecs;
+	  var mimeType = representation.mimeType;
+
+	  return mimeType + ";codecs=\"" + codecs + "\"";
+	}
+
+	function getAdaptations(manifest) {
+	  var adaptationsByType = manifest.adaptations;
+	  if (!adaptationsByType) {
+	    return [];
+	  }
+
+	  var adaptationsList = [];
+	  _.each(_.keys(adaptationsByType), function (type) {
+	    var adaptations = adaptationsByType[type];
+	    adaptationsList.push({
+	      type: type,
+	      adaptations: adaptations,
+	      codec: getCodec(adaptations[0].representations[0])
+	    });
+	  });
+
+	  return adaptationsList;
+	}
+
+	function getAdaptationsByType(manifest, type) {
+	  var adaptations = manifest.adaptations;
+
+	  var adaptationsForType = adaptations && adaptations[type];
+	  if (adaptationsForType) {
+	    return adaptationsForType;
+	  } else {
+	    return [];
+	  }
+	}
+
+	function getAvailableLanguages(manifest) {
+	  return getAdaptationsByType(manifest, "audio").map(function (ada) {
+	    return ada.lang;
+	  });
+	}
+
+	function getAvailableSubtitles(manifest) {
+	  return getAdaptationsByType(manifest, "text").map(function (ada) {
+	    return ada.lang;
+	  });
+	}
+
+	function createDirectFileManifest() {
+	  return {
+	    isLive: false,
+	    duration: Infinity,
+	    adaptations: null
+	  };
+	}
+
+	module.exports = {
+	  normalizeManifest: normalizeManifest,
+	  mergeManifestsIndex: mergeManifestsIndex,
+	  mutateManifestLiveGap: mutateManifestLiveGap,
+	  getCodec: getCodec,
+	  getAdaptations: getAdaptations,
+	  getAdaptationsByType: getAdaptationsByType,
+	  getAvailableSubtitles: getAvailableSubtitles,
+	  getAvailableLanguages: getAvailableLanguages,
+	  createDirectFileManifest: createDirectFileManifest
+	};
+
+/***/ },
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// v3.1.1
@@ -2749,10 +3079,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */Pauser.prototype.pause = function(){this.onNext(false);}; /**
 	  * Resumes the underlying sequence.
 	  */Pauser.prototype.resume = function(){this.onNext(true);};return Pauser;})(Subject);module.exports = Rx;
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(14)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(15)))
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {"use strict";
@@ -2988,7 +3318,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -3002,6 +3332,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var queueIndex = -1;
 
 	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
 	    draining = false;
 	    if (currentQueue.length) {
 	        queue = currentQueue.concat(queue);
@@ -3090,7 +3423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3129,6 +3462,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _require2 = __webpack_require__(8);
 
+	var KeySystemAccess = _require2.KeySystemAccess;
 	var requestMediaKeySystemAccess = _require2.requestMediaKeySystemAccess;
 	var setMediaKeys = _require2.setMediaKeys;
 	var emeEvents = _require2.emeEvents;
@@ -3161,6 +3495,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return hash;
 	}
 
+	function hashInitData(initData) {
+	  if (typeof initData == "number") {
+	    return initData;
+	  } else {
+	    return hashBuffer(initData);
+	  }
+	}
+
 	var NotSupportedKeySystemError = function NotSupportedKeySystemError() {
 	  return new Error("eme: could not find a compatible key system");
 	};
@@ -3176,7 +3518,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function InMemorySessionsSet() {
 	    _classCallCheck(this, InMemorySessionsSet);
 
-	    this._hash = {};
+	    this._entries = [];
 	  }
 
 	  /**
@@ -3189,35 +3531,66 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */
 
 	  InMemorySessionsSet.prototype.getFirst = function getFirst() {
-	    for (var i in this._hash) {
-	      return this._hash[i];
+	    if (this._entries.length > 0) {
+	      return this._entries[0].session;
 	    }
 	  };
 
-	  InMemorySessionsSet.prototype.get = function get(sessionId) {
-	    return this._hash[sessionId];
+	  InMemorySessionsSet.prototype.get = function get(initData) {
+	    initData = hashInitData(initData);
+	    var entry = _.find(this._entries, function (entry) {
+	      return entry.initData === initData;
+	    });
+	    if (entry) {
+	      return entry.session;
+	    }
 	  };
 
-	  InMemorySessionsSet.prototype.add = function add(session) {
+	  InMemorySessionsSet.prototype.add = function add(initData, session) {
 	    var _this = this;
 
-	    var sessionId = session.sessionId;
-	    assert(sessionId);
-	    if (!this._hash[sessionId]) {
-	      log.debug("eme-store: add persisted session in store", sessionId);
-	      this._hash[sessionId] = session;
+	    initData = hashInitData(initData);
+	    if (!this.get(initData)) {
+	      var _ret = (function () {
+	        var sessionId = session.sessionId;
+	        if (!sessionId) {
+	          return {
+	            v: undefined
+	          };
+	        }
 
-	      session.closed.then(function () {
-	        log.debug("eme-store: remove persisted session from store", sessionId);
-	        delete _this._hash[sessionId];
-	      });
+	        var entry = { session: session, initData: initData };
+	        log.debug("eme-mem-store: add session", entry);
+	        _this._entries.push(entry);
+	        session.closed.then(function () {
+	          log.debug("eme-mem-store: remove closed session", entry);
+	          var idx = _this._entries.indexOf(entry);
+	          if (idx >= 0) {
+	            _this._entries.splice(idx, 1);
+	          }
+	        });
+	      })();
+
+	      if (typeof _ret === "object") return _ret.v;
 	    }
 	  };
 
 	  InMemorySessionsSet.prototype["delete"] = function _delete(sessionId) {
-	    var session = this._hash[sessionId];
+	    var entry = _.find(this._entries, function (entry) {
+	      return entry.session.sessionId === sessionId;
+	    });
+	    if (entry) {
+	      log.debug("eme-mem-store: delete session", sessionId);
+	      var idx = this._entries.indexOf(entry);
+	      this._entries.splice(idx, 1);
+	      return entry.session;
+	    }
+	  };
+
+	  InMemorySessionsSet.prototype.deleteAndClose = function deleteAndClose(sessionId) {
+	    var session = this["delete"](sessionId);
 	    if (session) {
-	      delete this._hash[sessionId];
+	      log.debug("eme-mem-store: close session", sessionId);
 	      return session.close();
 	    } else {
 	      return Promise_.resolve();
@@ -3225,11 +3598,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  InMemorySessionsSet.prototype.dispose = function dispose() {
-	    var disposed = [];
-	    for (var sessionId in this._hash) {
-	      disposed.push(this._hash[sessionId].close());
-	    }
-	    this._hash = {};
+	    var disposed = this._entries.map(function (_ref) {
+	      var session = _ref.session;
+	      return session.close();
+	    });
+	    this._entires = [];
 	    return Promise_.all(disposed);
 	  };
 
@@ -3257,21 +3630,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._entries = this._storage.load();
 	      assert(Array.isArray(this._entries));
 	    } catch (e) {
-	      log.warn("eme-store: could not get entries from license storage", e);
+	      log.warn("eme-persitent-store: could not get entries from license storage", e);
 	      this.dispose();
 	    }
 	  };
 
-	  PersistedSessionsSet.prototype.hashInitData = function hashInitData(initData) {
-	    if (typeof initData == "number") {
-	      return initData;
-	    } else {
-	      return hashBuffer(initData);
-	    }
-	  };
-
 	  PersistedSessionsSet.prototype.get = function get(initData) {
-	    initData = this.hashInitData(initData);
+	    initData = hashInitData(initData);
 	    var entry = _.find(this._entries, function (entry) {
 	      return entry.initData === initData;
 	    });
@@ -3281,35 +3646,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  PersistedSessionsSet.prototype.add = function add(initData, session) {
-	    initData = this.hashInitData(initData);
-	    if (!this.get(initData)) {
+	    initData = hashInitData(initData);
+	    if (session.sessionType == "persistent-license" && !this.get(initData)) {
 	      var sessionId = session.sessionId;
-	      assert(sessionId);
+	      if (!sessionId) {
+	        return;
+	      }
 
-	      log.info("eme-store: store new session", sessionId, session);
+	      log.info("eme-persitent-store: add new session", sessionId, session);
 	      this._entries.push({ sessionId: sessionId, initData: initData });
 	      this._save();
 	    }
 	  };
 
-	  PersistedSessionsSet.prototype["delete"] = function _delete(initData, session) {
-	    initData = this.hashInitData(initData);
+	  PersistedSessionsSet.prototype["delete"] = function _delete(initData) {
+	    initData = hashInitData(initData);
 
 	    var entry = _.find(this._entries, function (entry) {
 	      return entry.initData === initData;
 	    });
 	    if (entry) {
-	      var sessionId = entry.sessionId;
-	      log.warn("eme-store: delete session from store", sessionId);
+	      log.warn("eme-persitent-store: delete session from store", entry);
 
 	      var idx = this._entries.indexOf(entry);
 	      this._entries.splice(idx, 1);
 	      this._save();
-	    }
-
-	    if (session) {
-	      log.warn("eme-store: remove session from system", session.sessionId);
-	      session.remove();
 	    }
 	  };
 
@@ -3322,7 +3683,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    try {
 	      this._storage.save(this._entries);
 	    } catch (e) {
-	      log.warn("eme-store: could not save licenses in localStorage");
+	      log.warn("eme-persitent-store: could not save licenses in localStorage");
 	    }
 	  };
 
@@ -3338,27 +3699,55 @@ return /******/ (function(modules) { // webpackBootstrap
 	var $storedSessions = new PersistedSessionsSet(emptyStorage);
 	var $loadedSessions = new InMemorySessionsSet();
 
-	var cachedKeySystemAccess = {
-	  createMediaKeys: function createMediaKeys() {
-	    return Promise_.resolve($mediaKeys);
-	  }
-	};
-
 	// Persisted singleton instance of MediaKeys. We do not allow multiple
 	// CDM instances.
 	var $mediaKeys = undefined;
+	var $mediaKeySystemConfiguration = undefined;
 	var $keySystem = undefined;
+	var $videoElement = undefined;
+
+	function getCachedKeySystemAccess(keySystems) {
+	  // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
+	  // creation of a new MediaKeys instance for each session creation
+	  if (!$keySystem || !$mediaKeys || $mediaKeys.alwaysRenew) {
+	    return null;
+	  }
+
+	  var configuration = $mediaKeySystemConfiguration;
+	  var foundKeySystem = _.find(keySystems, function (ks) {
+	    if (ks.type !== $keySystem.type) {
+	      return false;
+	    }
+
+	    if (ks.persistentLicense && configuration.persistentState != "required") {
+	      return false;
+	    }
+
+	    if (ks.distinctiveIdentifierRequired && configuration.distinctiveIdentifier != "required") {
+	      return false;
+	    }
+
+	    return true;
+	  });
+
+	  if (foundKeySystem) {
+	    return {
+	      keySystem: foundKeySystem,
+	      keySystemAccess: new KeySystemAccess($keySystem, $mediaKeys, $mediaKeySystemConfiguration)
+	    };
+	  } else {
+	    return null;
+	  }
+	}
 
 	function buildKeySystemConfiguration(keySystem) {
-	  var sessionTypes = [];
+	  var sessionTypes = ["temporary"];
 	  var persistentState = "optional";
 	  var distinctiveIdentifier = "optional";
 
 	  if (keySystem.persistentLicense) {
 	    persistentState = "required";
 	    sessionTypes.push("persistent-license");
-	  } else {
-	    sessionTypes.push("temporary");
 	  }
 
 	  if (keySystem.persistentStateRequired) {
@@ -3382,23 +3771,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	function findCompatibleKeySystem(keySystems) {
 	  // Fast way to find a compatible keySystem if the currently loaded
 	  // one as exactly the same compatibility options.
-	  //
-	  // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
-	  // creation of a new MediaKeys instance for each session creation
-	  if ($keySystem && $mediaKeys && !$mediaKeys.alwaysRenew) {
-
-	    var foundKeySystem = _.find(keySystems, function (ks) {
-	      return ks.type == $keySystem.type && ks.persistentLicense == $keySystem.persistentLicense && ks.persistentStateRequired === $keySystem.persistentStateRequired && ks.distinctiveIdentifierRequired == $keySystem.distinctiveIdentifierRequired;
-	    });
-
-	    if (foundKeySystem) {
-	      log.debug("eme: found compatible keySystem quickly", foundKeySystem);
-
-	      return just({
-	        keySystem: foundKeySystem,
-	        keySystemAccess: cachedKeySystemAccess
-	      });
-	    }
+	  var cachedKeySystemAccess = getCachedKeySystemAccess(keySystems);
+	  if (cachedKeySystemAccess) {
+	    log.debug("eme: found compatible keySystem quickly", cachedKeySystemAccess);
+	    return just(cachedKeySystemAccess);
 	  }
 
 	  var keySystemsType = _.flatten(keySystems, function (keySystem) {
@@ -3447,14 +3823,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
+	  var oldVideoElement = $videoElement;
+	  var oldMediaKeys = $mediaKeys;
+
 	  return fromPromise(keySystemAccess.createMediaKeys().then(function (mk) {
 	    $mediaKeys = mk;
+	    $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
 	    $keySystem = keySystem;
-	    log.debug("eme: set mediakeys");
-	    return setMediaKeys(video, mk).then(function () {
-	      return mk;
-	    });
+	    $videoElement = video;
+
+	    if (video.mediaKeys === mk) {
+	      return Promise.resolve(mk);
+	    }
+
+	    if (oldMediaKeys && oldMediaKeys !== $mediaKeys) {
+	      // if we change our mediaKeys singleton, we need to dispose all existing
+	      // sessions linked to the previous one.
+	      $loadedSessions.dispose();
+	    }
+
+	    if (oldVideoElement && oldVideoElement !== $videoElement) {
+	      log.debug("eme: unlink old video element and set mediakeys");
+	      return setMediaKeys(oldVideoElement, null).then(function () {
+	        return setMediaKeys($videoElement, mk);
+	      }).then(function () {
+	        return mk;
+	      });
+	    } else {
+	      log.debug("eme: set mediakeys");
+	      return setMediaKeys($videoElement, mk).then(function () {
+	        return mk;
+	      });
+	    }
 	  }));
+	}
+
+	function createSession(mediaKeys, sessionType) {
+	  var session = mediaKeys.createSession(sessionType);
+	  session.sessionType = sessionType;
+	  return session;
 	}
 
 	function makeNewKeyRequest(session, initDataType, initData) {
@@ -3466,8 +3873,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function loadPersistedSession(session, sessionId) {
 	  log.debug("eme: load persisted session", sessionId);
-	  return fromPromise(session.load(sessionId).then(function () {
-	    return session;
+	  return fromPromise(session.load(sessionId).then(function (success) {
+	    return { success: success, session: session };
 	  }));
 	}
 
@@ -3516,13 +3923,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	function EME(video, keySystems) {
 	  if (false) {
 	    _.each(keySystems, function (ks) {
-	      return assert.iface(ks, "keySystem", { getLicense: "function", type: "string" });
+	      return assert.iface(ks, "keySystem", {
+	        getLicense: "function",
+	        type: "string"
+	      });
 	    });
 	  }
 
-	  function handleEncryptedEvents(encryptedEvent, _ref) {
-	    var keySystem = _ref.keySystem;
-	    var keySystemAccess = _ref.keySystemAccess;
+	  function handleEncryptedEvents(encryptedEvent, _ref2) {
+	    var keySystem = _ref2.keySystem;
+	    var keySystemAccess = _ref2.keySystemAccess;
 
 	    if (keySystem.persistentLicense) {
 	      $storedSessions.setStorage(keySystem.licenseStorage);
@@ -3530,65 +3940,58 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var initData = new Uint8Array(encryptedEvent.initData);
 	    var initDataType = encryptedEvent.initDataType;
+	    var mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
 
 	    log.info("eme: encrypted event", encryptedEvent);
 	    return createAndSetMediaKeys(video, keySystem, keySystemAccess).flatMap(function (mediaKeys) {
-	      return manageSessionCreation(mediaKeys, keySystem, initDataType, initData).tap(function (session) {
+	      return manageSessionCreation(mediaKeys, mediaKeySystemConfiguration, keySystem, initDataType, initData).tap(function (session) {
 	        $storedSessions.add(initData, session);
-	        $loadedSessions.add(session);
+	        $loadedSessions.add(initData, session);
 	      }, function (error) {
 	        log.error("eme: error during session management handler", error);
 	      });
 	    }).flatMap(function (session) {
 	      return handleMessageEvents(session, keySystem).tapOnError(function (error) {
 	        log.error("eme: error in session messages handler", session, error);
-	        $storedSessions["delete"](initData, session);
-	        $loadedSessions["delete"](session.sessionId);
+	        $storedSessions["delete"](initData);
+	        $loadedSessions.deleteAndClose(session.sessionId);
 	      });
 	    });
 	  }
 
-	  function manageSessionCreation(mediaKeys, keySystem, initDataType, initData) {
+	  function manageSessionCreation(mediaKeys, mediaKeySystemConfiguration, keySystem, initDataType, initData) {
 	    // reuse currently loaded sessions without making a new key
 	    // request
-	    var sessionId = $storedSessions.get(initData);
-
-	    var session = $loadedSessions.get(sessionId);
-	    if (session) {
-	      log.debug("eme: reuse loaded session", sessionId);
-	      return just(session);
+	    var loadedSession = $loadedSessions.get(initData);
+	    if (loadedSession) {
+	      log.debug("eme: reuse loaded session", loadedSession.sessionId);
+	      return just(loadedSession);
 	    }
 
-	    var sessionType = undefined;
-	    if (keySystem.persistentLicense) {
-	      sessionType = "persistent-license";
-	    } else {
-	      sessionType = "temporary";
-	    }
+	    var persistentLicenseSupported = mediaKeySystemConfiguration.sessionTypes.indexOf("persistent-license") >= 0;
+	    var sessionType = persistentLicenseSupported && keySystem.persistentLicense ? "persistent-license" : "temporary";
 
-	    log.debug("eme: create a " + sessionType + " session");
-	    session = mediaKeys.createSession(sessionType);
+	    if (persistentLicenseSupported && keySystem.persistentLicense) {
+	      var storedSessionId = $storedSessions.get(initData);
 
-	    if (keySystem.persistentLicense) {
 	      // if a persisted session exists in the store associated to this
 	      // initData, we reuse it without a new license request through
 	      // the `load` method.
-	      if (sessionId) {
-	        return loadPersistedSession(session, sessionId)["catch"](function (err) {
-	          log.warn("eme: failed to load persisted session, do fallback", sessionId, err);
-
-	          $storedSessions["delete"](initData, null);
-	          return fromPromise($loadedSessions["delete"](sessionId)).flatMap(function () {
-	            session = mediaKeys.createSession(sessionType);
-	            return makeNewKeyRequest(session, initDataType, initData);
-	          });
-	        });
+	      if (storedSessionId) {
+	        return makeNewPersistentSessionAndLoad(mediaKeys, storedSessionId, initDataType, initData);
 	      }
 	    }
 
 	    // we have a fresh session without persisted informations and need
 	    // to make a new key request that we will associate to this
 	    // session
+	    return makeNewSessionAndCreateKeyRequest(mediaKeys, sessionType, initDataType, initData);
+	  }
+
+	  function makeNewSessionAndCreateKeyRequest(mediaKeys, sessionType, initDataType, initData) {
+	    log.debug("eme: create a new " + sessionType + " session");
+	    var session = createSession(mediaKeys, sessionType);
+
 	    return makeNewKeyRequest(session, initDataType, initData)["catch"](function (err) {
 	      var firstLoadedSession = $loadedSessions.getFirst();
 	      if (!firstLoadedSession) {
@@ -3597,10 +4000,51 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      log.warn("eme: could not create a new session, " + "retry after closing a currently loaded session", err);
 
-	      return fromPromise(firstLoadedSession.close()).flatMap(function () {
-	        session = mediaKeys.createSession(sessionType);
-	        return makeNewKeyRequest(session, initDataType, initData);
+	      return Observable.from(firstLoadedSession.close()).flatMap(function () {
+	        return makeNewKeyRequest(createSession(mediaKeys, sessionType), initDataType, initData);
 	      });
+	    });
+	  }
+
+	  function makeNewPersistentSessionAndLoad(mediaKeys, storedSessionId, initDataType, initData) {
+	    var sessionType = "persistent-license";
+
+	    log.debug("eme: create a new " + sessionType + " session");
+	    var session = createSession(mediaKeys, sessionType);
+
+	    return loadPersistedSession(session, storedSessionId)["catch"](function (err) {
+	      log.warn("eme: failed to load persisted session, do fallback", storedSessionId, err);
+
+	      $storedSessions["delete"](initData);
+	      $loadedSessions["delete"](storedSessionId);
+
+	      var newSession = makeNewSessionAndCreateKeyRequest(mediaKeys, sessionType, initDataType, initData);
+
+	      return newSession.map(function (session) {
+	        return { success: true, session: session };
+	      });
+	    }).flatMap(function (_ref3) {
+	      var success = _ref3.success;
+	      var session = _ref3.session;
+
+	      if (success) {
+	        log.debug("eme: successfully loaded session");
+	        return just(session);
+	      }
+
+	      log.warn("eme: no data stored for the loaded session, removing it", storedSessionId);
+
+	      $storedSessions["delete"](initData);
+	      $loadedSessions["delete"](storedSessionId);
+
+	      var sessionToRemove = session;
+	      sessionToRemove.remove()["catch"](function (err) {
+	        return log.warn("eme: could not remove session", err);
+	      });
+
+	      var newSession = makeNewSessionAndCreateKeyRequest(mediaKeys, sessionType, initDataType, initData);
+
+	      return merge(newSession, just(sessionToRemove));
 	    });
 	  }
 
@@ -3608,6 +4052,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // blob and map them to licenses using the getLicense method from
 	  // selected keySystem
 	  function handleMessageEvents(session, keySystem) {
+	    log.debug("eme: handle message events for session", session.sessionId);
 	    var sessionId = undefined;
 
 	    var keyErrors = onKeyError(session).map(function (err) {
@@ -3641,31 +4086,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      return toObservable(license)["catch"](function (err) {
-	        return logAndThrow("eme: onKeyStatusesChange has failed (reason: " + (err && err.message || "unknown") + ")", err);
+	        return logAndThrow("eme: onKeyStatusesChange has failed " + ("(reason:" + (err && err.message || "unknown") + ")"), err);
 	      });
 	    });
 
 	    var keyMessages = onKeyMessage(session).flatMap(function (messageEvent) {
 	      sessionId = messageEvent.sessionId;
 
-	      var message = messageEvent.message;
-	      var messageType = messageEvent.messageType;
-
-	      if (!messageType) {
-	        messageType = "license-request";
-	      }
+	      var message = new Uint8Array(messageEvent.message);
+	      var messageType = messageEvent.messageType || "license-request";
 
 	      log.debug("eme: event message type " + messageType, session, messageEvent);
 
 	      var license = undefined;
 	      try {
-	        license = keySystem.getLicense(new Uint8Array(message), messageType);
+	        license = keySystem.getLicense(message, messageType);
 	      } catch (e) {
 	        license = Observable["throw"](e);
 	      }
 
 	      return toObservable(license)["catch"](function (err) {
-	        return logAndThrow("eme: getLicense has failed (reason: " + (err && err.message || "unknown") + ")", err);
+	        return logAndThrow("eme: getLicense has failed " + ("(reason: " + (err && err.message || "unknown") + ")"), err);
 	      });
 	    });
 
@@ -3682,18 +4123,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return merge(sessionUpdates, keyErrors);
 	  }
 
-	  return Observable.create(function (obs) {
-	    var sub = combineLatest(onEncrypted(video), findCompatibleKeySystem(keySystems), handleEncryptedEvents).take(1).mergeAll().subscribe(obs);
-
-	    return function () {
-	      if (sub) {
-	        sub.dispose();
-	      }
-
-	      setMediaKeys(video, null)["catch"](function (e) {
-	        return log.warn(e);
-	      });
-	    };
+	  return combineLatest(onEncrypted(video), findCompatibleKeySystem(keySystems), function (evt, ks) {
+	    return [evt, ks];
+	  }).take(1).flatMap(function (_ref4) {
+	    var evt = _ref4[0];
+	    var ks = _ref4[1];
+	    return handleEncryptedEvents(evt, ks);
 	  });
 	}
 
@@ -3710,7 +4145,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = EME;
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3735,8 +4170,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var assert = __webpack_require__(2);
 
+	var _require = __webpack_require__(12);
+
+	var getAdaptationsByType = _require.getAdaptationsByType;
+
 	var Template = __webpack_require__(30);
-	var Timeline = __webpack_require__(17);
+	var Timeline = __webpack_require__(18);
 	var List = __webpack_require__(29);
 	var Base = __webpack_require__(28);
 
@@ -3764,8 +4203,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getLiveEdge(manifest) {
 	  // TODO(pierre): improve index access ?
-	  var videoIndex = manifest.adaptations.video[0].representations[0].index;
-	  return selectIndexHandler(videoIndex).getLiveEdge(videoIndex, manifest);
+	  var videoAda = getAdaptationsByType(manifest, "video");
+	  var videoIdx = videoAda[0].representations[0].index;
+	  return selectIndexHandler(videoIdx).getLiveEdge(videoIdx, manifest);
 	}
 
 	var IndexHandler = (function () {
@@ -3863,7 +4303,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -4067,271 +4507,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Timeline;
 
 /***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2015 CANAL+ Group
-	 *
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 *     http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 */
-
-	"use strict";
-
-	var _ = __webpack_require__(1);
-	var log = __webpack_require__(4);
-	var assert = __webpack_require__(2);
-
-	var _require = __webpack_require__(11);
-
-	var parseBaseURL = _require.parseBaseURL;
-
-	var _require2 = __webpack_require__(8);
-
-	var isCodecSupported = _require2.isCodecSupported;
-
-	var representationBaseType = ["profiles", "width", "height", "frameRate", "audioSamplingRate", "mimeType", "segmentProfiles", "codecs", "maximumSAPPeriod", "maxPlayoutRate", "codingDependency", "index"];
-
-	var SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text"];
-	var DEFAULT_PRESENTATION_DELAY = 15;
-
-	function parseType(mimeType) {
-	  return mimeType.split("/")[0];
-	}
-
-	function normalizeManifest(location, manifest, subtitles) {
-	  assert(manifest.transportType);
-
-	  manifest.id = manifest.id || _.uniqueId();
-	  manifest.type = manifest.type || "static";
-
-	  var locations = manifest.locations;
-	  if (!locations || !locations.length) {
-	    manifest.locations = [location];
-	  }
-
-	  manifest.isLive = manifest.type == "dynamic";
-
-	  // TODO(pierre): support multi-locations/cdns
-	  var urlBase = {
-	    rootURL: parseBaseURL(manifest.locations[0]),
-	    baseURL: manifest.baseURL,
-	    isLive: manifest.isLive
-	  };
-
-	  if (subtitles) {
-	    subtitles = normalizeSubtitles(subtitles);
-	  }
-
-	  var periods = _.map(manifest.periods, function (period) {
-	    return normalizePeriod(period, urlBase, subtitles);
-	  });
-
-	  // TODO(pierre): support multiple periods
-	  _.extend(manifest, periods[0]);
-	  manifest.periods = null;
-
-	  if (!manifest.duration) manifest.duration = Infinity;
-
-	  if (manifest.isLive) {
-	    manifest.suggestedPresentationDelay = manifest.suggestedPresentationDelay || DEFAULT_PRESENTATION_DELAY;
-	    manifest.availabilityStartTime = manifest.availabilityStartTime || 0;
-	  }
-
-	  return manifest;
-	}
-
-	function normalizePeriod(period, inherit, subtitles) {
-	  period.id = period.id || _.uniqueId();
-
-	  var adaptations = period.adaptations;
-	  adaptations = adaptations.concat(subtitles || []);
-	  adaptations = _.map(adaptations, function (ada) {
-	    return normalizeAdaptation(ada, inherit);
-	  });
-	  adaptations = _.filter(adaptations, function (adaptation) {
-	    if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
-	      log.warn("not supported adaptation type", adaptation.type);
-	      return false;
-	    } else {
-	      return true;
-	    }
-	  });
-
-	  assert(adaptations.length > 0);
-
-	  period.adaptations = _.groupBy(adaptations, "type");
-	  return period;
-	}
-
-	function normalizeAdaptation(adaptation, inherit) {
-	  assert(typeof adaptation.id != "undefined");
-	  _.defaults(adaptation, inherit);
-
-	  var inheritedFromAdaptation = _.pick(adaptation, representationBaseType);
-	  var representations = _.map(adaptation.representations, function (rep) {
-	    return normalizeRepresentation(rep, inheritedFromAdaptation);
-	  }).sort(function (a, b) {
-	    return a.bitrate - b.bitrate;
-	  });
-
-	  var type = adaptation.type;
-	  var mimeType = adaptation.mimeType;
-
-	  if (!mimeType) mimeType = representations[0].mimeType;
-
-	  assert(mimeType);
-
-	  adaptation.mimeType = mimeType;
-
-	  if (!type) type = adaptation.type = parseType(mimeType);
-
-	  if (type == "video" || type == "audio") {
-	    representations = _.filter(representations, function (rep) {
-	      return isCodecSupported(getCodec(rep));
-	    });
-	  }
-
-	  assert(representations.length > 0, "manifest: no compatible representation for this adaptation");
-	  adaptation.representations = representations;
-	  adaptation.bitrates = _.pluck(representations, "bitrate");
-	  return adaptation;
-	}
-
-	function normalizeRepresentation(representation, inherit) {
-	  assert(typeof representation.id != "undefined");
-	  _.defaults(representation, inherit);
-
-	  var index = representation.index;
-	  assert(index);
-
-	  if (!index.timescale) {
-	    index.timescale = 1;
-	  }
-
-	  if (!representation.bitrate) {
-	    representation.bitrate = 1;
-	  }
-
-	  // Fix issue in some packagers, like GPAC, generating a non
-	  // compliant mimetype with RFC 6381. Other closed-source packagers
-	  // maybe impacted.
-	  if (representation.codecs == "mp4a.40.02") {
-	    representation.codecs = "mp4a.40.2";
-	  }
-
-	  return representation;
-	}
-
-	function normalizeSubtitles(subtitles) {
-	  if (!_.isArray(subtitles)) subtitles = [subtitles];
-
-	  return _.flatten(subtitles, function (_ref) {
-	    var mimeType = _ref.mimeType;
-	    var url = _ref.url;
-	    var language = _ref.language;
-	    var languages = _ref.languages;
-
-	    if (language) {
-	      languages = [language];
-	    }
-
-	    return _.map(languages, function (lang) {
-	      return {
-	        id: _.uniqueId(),
-	        type: "text",
-	        lang: lang,
-	        mimeType: mimeType,
-	        rootURL: url,
-	        baseURL: "",
-	        representations: [{
-	          id: _.uniqueId(),
-	          mimeType: mimeType,
-	          index: {
-	            indexType: "template",
-	            duration: Number.MAX_VALUE,
-	            timescale: 1,
-	            startNumber: 0
-	          }
-	        }]
-	      };
-	    });
-	  });
-	}
-
-	function mergeManifestsIndex(oldManifest, newManifest) {
-	  var oldAdaptations = oldManifest.adaptations;
-	  var newAdaptations = newManifest.adaptations;
-	  for (var type in oldAdaptations) {
-	    var oldAdas = oldAdaptations[type];
-	    var newAdas = newAdaptations[type];
-	    _.each(oldAdas, function (a, i) {
-	      _.simpleMerge(a.index, newAdas[i].index);
-	    });
-	  }
-	  return oldManifest;
-	}
-
-	function mutateManifestLiveGap(manifest) {
-	  var addedTime = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
-
-	  if (manifest.isLive) {
-	    manifest.presentationLiveGap += addedTime;
-	  }
-	}
-
-	function getCodec(representation) {
-	  var codecs = representation.codecs;
-	  var mimeType = representation.mimeType;
-
-	  return mimeType + ";codecs=\"" + codecs + "\"";
-	}
-
-	function getAdaptations(manifest) {
-	  var adaptationsByType = manifest.adaptations;
-
-	  var adaptationsList = [];
-	  _.each(_.keys(adaptationsByType), function (type) {
-	    var adaptations = adaptationsByType[type];
-	    adaptationsList.push({
-	      type: type,
-	      adaptations: adaptations,
-	      codec: getCodec(adaptations[0].representations[0])
-	    });
-	  });
-
-	  return adaptationsList;
-	}
-
-	function getAvailableLanguages(manifest) {
-	  return _.pluck(manifest.adaptations.audio, "lang");
-	}
-
-	function getAvailableSubtitles(manifest) {
-	  return _.pluck(manifest.adaptations.text, "lang");
-	}
-
-	module.exports = {
-	  normalizeManifest: normalizeManifest,
-	  mergeManifestsIndex: mergeManifestsIndex,
-	  mutateManifestLiveGap: mutateManifestLiveGap,
-	  getCodec: getCodec,
-	  getAdaptations: getAdaptations,
-	  getAvailableSubtitles: getAvailableSubtitles,
-	  getAvailableLanguages: getAvailableLanguages
-	};
-
-/***/ },
 /* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -4387,6 +4562,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else {
 	    return false;
 	  }
+	}
+
+	function getEmptyTimings() {
+	  return {
+	    name: "timeupdate",
+	    ts: 0,
+	    range: null,
+	    gap: Infinity,
+	    duration: 0,
+	    playback: 1,
+	    readyState: 0,
+	    stalled: false,
+	    buffered: new BufferedRanges()
+	  };
 	}
 
 	function getTimings(video, name) {
@@ -4529,6 +4718,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = {
+	  getEmptyTimings: getEmptyTimings,
+	  getTimings: getTimings,
 	  timingsSampler: timingsSampler,
 	  seekingsSampler: seekingsSampler,
 	  getLiveGap: getLiveGap,
@@ -4738,13 +4929,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	var AverageBitrate = __webpack_require__(23);
 
 	var DEFAULTS = {
-	  defLanguage: "fra",
-	  defSubtitle: "",
+	  defaultLanguage: "fra",
+	  defaultSubtitle: "",
 	  // default buffer size in seconds
-	  defBufSize: 30,
+	  defaultBufferSize: 30,
 	  // buffer threshold ratio used as a lower bound
 	  // margin to find the suitable representation
-	  defBufThreshold: 0.3
+	  defaultBufferThreshold: 0.3
 	};
 
 	function def(x, val) {
@@ -4788,17 +4979,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var _$defaults = _.defaults(options, DEFAULTS);
 
-	  var defLanguage = _$defaults.defLanguage;
-	  var defSubtitle = _$defaults.defSubtitle;
-	  var defBufSize = _$defaults.defBufSize;
-	  var defBufThreshold = _$defaults.defBufThreshold;
+	  var defaultLanguage = _$defaults.defaultLanguage;
+	  var defaultSubtitle = _$defaults.defaultSubtitle;
+	  var defaultBufferSize = _$defaults.defaultBufferSize;
+	  var defaultBufferThreshold = _$defaults.defaultBufferThreshold;
 	  var initVideoBitrate = _$defaults.initVideoBitrate;
 	  var initAudioBitrate = _$defaults.initAudioBitrate;
 	  var videoWidth = deviceEvents.videoWidth;
 	  var inBackground = deviceEvents.inBackground;
 
-	  var $languages = new BehaviorSubject(defLanguage);
-	  var $subtitles = new BehaviorSubject(defSubtitle);
+	  var $languages = new BehaviorSubject(defaultLanguage);
+	  var $subtitles = new BehaviorSubject(defaultSubtitle);
 
 	  var $averageBitrates = {
 	    audio: AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).publishValue(initAudioBitrate || 0),
@@ -4820,9 +5011,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  var $bufSizes = {
-	    audio: new BehaviorSubject(defBufSize),
-	    video: new BehaviorSubject(defBufSize),
-	    text: new BehaviorSubject(defBufSize)
+	    audio: new BehaviorSubject(defaultBufferSize),
+	    video: new BehaviorSubject(defaultBufferSize),
+	    text: new BehaviorSubject(defaultBufferSize)
 	  };
 
 	  function audioAdaptationChoice(adaptations) {
@@ -4863,7 +5054,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // no threshold for the first value of the average bitrate
 	        // stream corresponding to the selected initial video bitrate
 	        var bufThreshold;
-	        if (count === 0) bufThreshold = 0;else bufThreshold = defBufThreshold;
+	        if (count === 0) bufThreshold = 0;else bufThreshold = defaultBufferThreshold;
 
 	        return getClosestBitrate(bitrates, avrBitrate, bufThreshold);
 	      }).changes().customDebounce(2000, { leading: true });
@@ -4905,7 +5096,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return {
 	      representations: representationsObservable,
-	      bufferSizes: $bufSizes[type] || new BehaviorSubject(defBufSize)
+	      bufferSizes: $bufSizes[type] || new BehaviorSubject(defaultBufferSize)
 	    };
 	  }
 
@@ -4953,10 +5144,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      $maxBitrates.video.onNext(def(x, Infinity));
 	    },
 	    setAudioBufferSize: function setAudioBufferSize(x) {
-	      $bufSizes.audio.onNext(def(x, defBufSize));
+	      $bufSizes.audio.onNext(def(x, defaultBufferSize));
 	    },
 	    setVideoBufferSize: function setVideoBufferSize(x) {
-	      $bufSizes.video.onNext(def(x, defBufSize));
+	      $bufSizes.video.onNext(def(x, defaultBufferSize));
 	    },
 
 	    getBufferAdapters: getBufferAdapters,
@@ -5022,12 +5213,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var ArraySet = _require4.ArraySet;
 
-	var _require5 = __webpack_require__(16);
+	var _require5 = __webpack_require__(17);
 
 	var IndexHandler = _require5.IndexHandler;
 	var OutOfIndexError = _require5.OutOfIndexError;
 
 	var BITRATE_REBUFFERING_RATIO = 1.5;
+
+	var GC_GAP_CALM = 240;
+	var GC_GAP_BEEFY = 30;
 
 	function Buffer(_ref) // Timings observable
 	// Seekings observable
@@ -5060,9 +5254,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var ranges = new BufferedRanges();
 
 	  var updateEnd = merge(on(sourceBuffer, "update"), on(sourceBuffer, "error").map(function (evt) {
-	    var errMessage = "buffer: error event";
-	    log.error(errMessage, evt);
-	    throw new Error(errMessage);
+	    if (evt.target && evt.target.error) {
+	      throw evt.target.error;
+	    } else {
+	      var errMessage = "buffer: error event";
+	      log.error(errMessage, evt);
+	      throw new Error(errMessage);
+	    }
 	  })).share();
 
 	  // prevents unceasing add/remove event listeners by sharing an
@@ -5074,15 +5272,80 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return first(updateEnd);
 	  }
 
-	  function lockedAppendBuffer(blob) {
-	    return defer(function () {
-	      if (sourceBuffer.updating) {
-	        return first(updateEnd).flatMap(function () {
-	          return appendBuffer(blob);
-	        });
-	      } else {
-	        return appendBuffer(blob);
+	  function removeBuffer(_ref2) {
+	    var start = _ref2.start;
+	    var end = _ref2.end;
+
+	    sourceBuffer.remove(start, end);
+	    return first(updateEnd);
+	  }
+
+	  function lockedBufferFunction(func) {
+	    return function (data) {
+	      return defer(function () {
+	        if (sourceBuffer.updating) {
+	          return first(updateEnd).flatMap(function () {
+	            return func(data);
+	          });
+	        } else {
+	          return func(data);
+	        }
+	      });
+	    };
+	  }
+
+	  var lockedAppendBuffer = lockedBufferFunction(appendBuffer);
+	  var lockedRemoveBuffer = lockedBufferFunction(removeBuffer);
+
+	  // Buffer garbage collector algorithm. Tries to free up some part of
+	  // the ranges that are distant from the current playing time.
+	  // See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
+	  function selectGCedRanges(_ref3, gcGap) {
+	    var ts = _ref3.ts;
+	    var buffered = _ref3.buffered;
+
+	    var innerRange = buffered.getRange(ts);
+	    var outerRanges = buffered.getOuterRanges(ts);
+
+	    var cleanedupRanges = [];
+
+	    // start by trying to remove all ranges that do not contain the
+	    // current time and respect the gcGap
+	    for (var i = 0; i < outerRanges.length; i++) {
+	      var outerRange = outerRanges[i];
+	      if (ts - gcGap < outerRange.end) {
+	        cleanedupRanges.push(outerRange);
+	      } else if (ts + gcGap > outerRange.start) {
+	        cleanedupRanges.push(outerRange);
 	      }
+	    }
+
+	    // try to clean up some space in the current range
+	    if (innerRange) {
+	      log.debug("buffer: gc removing part of inner range", cleanedupRanges);
+	      if (ts - gcGap > innerRange.start) {
+	        cleanedupRanges.push({ start: innerRange.start, end: ts - gcGap });
+	      }
+	      if (ts + gcGap < innerRange.end) {
+	        cleanedupRanges.push({ start: ts + gcGap, end: innerRange.end });
+	      }
+	    }
+
+	    return cleanedupRanges;
+	  }
+
+	  function bufferGarbageCollector() {
+	    log.warn("buffer: running garbage collector");
+	    return timings.take(1).flatMap(function (timing) {
+	      var cleanedupRanges = selectGCedRanges(timing, GC_GAP_CALM);
+
+	      // more aggressive GC if we could not find any range to clean
+	      if (cleanedupRanges.length === 0) {
+	        cleanedupRanges = selectGCedRanges(timing, GC_GAP_BEEFY);
+	      }
+
+	      log.debug("buffer: gc cleaning", cleanedupRanges);
+	      return from(cleanedupRanges.map(lockedRemoveBuffer)).concatAll();
 	    });
 	  }
 
@@ -5160,9 +5423,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var segmentsPipeline = combineLatest(timings, bufferSizes, mutedUpdateEnd, function (timing, bufferSize) {
 	      return { timing: timing, bufferSize: bufferSize };
-	    }).flatMap(function (_ref2, count) {
-	      var timing = _ref2.timing;
-	      var bufferSize = _ref2.bufferSize;
+	    }).flatMap(function (_ref4, count) {
+	      var timing = _ref4.timing;
+	      var bufferSize = _ref4.bufferSize;
 
 	      var nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
 
@@ -5208,7 +5471,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        };
 	      }));
 	    }).concatMap(pipeline).concatMap(function (infos) {
-	      return lockedAppendBuffer(infos.parsed.blob).map(infos);
+	      var blob = infos.parsed.blob;
+	      return lockedAppendBuffer(blob)["catch"](function (err) {
+	        // launch our garbage collector and retry on
+	        // QuotaExceededError
+	        if (err.name == "QuotaExceededError") {
+	          return bufferGarbageCollector().flatMap(function () {
+	            return lockedAppendBuffer(blob);
+	          });
+	        } else {
+	          throw err;
+	        }
+	      }).map(infos);
 	    }).map(function (infos) {
 	      var segment = infos.segment;
 	      var parsed = infos.parsed;
@@ -5408,7 +5682,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var Timeline = __webpack_require__(17);
+	var Timeline = __webpack_require__(18);
 
 	var Base = (function (_Timeline) {
 	  _inherits(Base, _Timeline);
@@ -5763,7 +6037,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Subject = _require.Subject;
 	var combineLatest = Observable.combineLatest;
 	var defer = Observable.defer;
-	var zip = Observable.zip;
 
 	var _require2 = __webpack_require__(5);
 
@@ -5783,6 +6056,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _require4 = __webpack_require__(19);
 
+	var getEmptyTimings = _require4.getEmptyTimings;
 	var timingsSampler = _require4.timingsSampler;
 	var toWallClockTime = _require4.toWallClockTime;
 	var fromWallClockTime = _require4.fromWallClockTime;
@@ -5801,13 +6075,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	var parseTimeFragment = _require7.parseTimeFragment;
 
 	var DeviceEvents = __webpack_require__(27);
-	var manifestHelpers = __webpack_require__(18);
+	var manifestHelpers = __webpack_require__(12);
 	// TODO(pierre): separate transports from main build
 	var Transports = __webpack_require__(40);
 	var PipeLines = __webpack_require__(31);
 	var Adaptive = __webpack_require__(24);
 	var Stream = __webpack_require__(34);
-	var EME = __webpack_require__(15);
+	var EME = __webpack_require__(16);
 
 	var PLAYER_STOPPED = "STOPPED";
 	var PLAYER_LOADED = "LOADED";
@@ -5817,13 +6091,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var PLAYER_ENDED = "ENDED";
 	var PLAYER_BUFFERING = "BUFFERING";
 	var PLAYER_SEEKING = "SEEKING";
-
-	function createDirectFileManifest() {
-	  return {
-	    isLive: false,
-	    duration: Infinity
-	  };
-	}
 
 	function assertMan(player) {
 	  assert(player.man, "player: no manifest loaded");
@@ -5846,6 +6113,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var videoElement = options.videoElement;
 	    var transport = options.transport;
 	    var transportOptions = options.transportOptions;
+	    var defaultLanguage = options.defaultLanguage;
+	    var defaultSubtitle = options.defaultSubtitle;
 	    var initVideoBitrate = options.initVideoBitrate;
 	    var initAudioBitrate = options.initAudioBitrate;
 
@@ -5861,7 +6130,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
 	    videoElement.preload = "auto";
 
-	    this.version = ("1.3.1");
+	    this.version = ("1.4.1");
 	    this.video = videoElement;
 
 	    // fullscreen change
@@ -5889,7 +6158,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.adaptive = Adaptive(metrics, timings, deviceEvents, {
 	      initVideoBitrate: initVideoBitrate,
-	      initAudioBitrate: initAudioBitrate
+	      initAudioBitrate: initAudioBitrate,
+	      defaultLanguage: defaultLanguage,
+	      defaultSubtitle: defaultSubtitle
 	    });
 
 	    // volume muted memory
@@ -5989,7 +6260,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    assert(transport, "player: transport " + opts.transport + " is not supported");
 
-	    if (directFile) directFile = createDirectFileManifest();
+	    if (directFile) {
+	      directFile = manifestHelpers.createDirectFileManifest();
+	    }
 
 	    return { url: url, keySystems: keySystems, subtitles: subtitles, timeFragment: timeFragment, autoPlay: autoPlay, transport: transport, directFile: directFile };
 	  };
@@ -6059,7 +6332,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (directFile) {
 	      loaded = canPlay;
 	    } else {
-	      loaded = zip(canPlay, filterStreamByType(segments.pluck("adaptation"), "audio"), filterStreamByType(segments.pluck("adaptation"), "video"), _.noop);
+	      loaded = combineLatest(canPlay, filterStreamByType(segments.pluck("adaptation"), "audio"), filterStreamByType(segments.pluck("adaptation"), "video"), _.noop);
 	    }
 
 	    loaded = loaded.take(1);
@@ -6101,14 +6374,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }), stateChanges.each(function (s) {
 	      return _this2._setState(s);
 	    }), timings.each(function (t) {
-	      if (!_this2.man) return;
-
-	      if (_this2.man.isLive && t.ts > 0) {
-	        t.wallClockTime = toWallClockTime(t.ts, _this2.man);
-	        t.liveGap = getLiveGap(t.ts, _this2.man);
-	      }
-
-	      _this2.trigger("currentTimeChange", t);
+	      return _this2._triggerTimeChange(t);
 	    }), stream.subscribe(function () {}, function (e) {
 	      _this2.resetStates();
 	      _this2.trigger("error", e);
@@ -6133,6 +6399,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      subscriptions.dispose();
 	    }
 
+	    this._triggerTimeChange();
+
 	    return loaded.toPromise();
 	  };
 
@@ -6140,6 +6408,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (this.state !== s) {
 	      this.state = s;
 	      this.trigger("playerStateChange", s);
+	    }
+	  };
+
+	  Player.prototype._triggerTimeChange = function _triggerTimeChange(t) {
+	    if (!this.man || !t) {
+	      this.trigger("currentTimeChange", getEmptyTimings());
+	    } else {
+	      if (this.man.isLive && t.ts > 0) {
+	        t.wallClockTime = toWallClockTime(t.ts, this.man);
+	        t.liveGap = getLiveGap(t.ts, this.man);
+	      }
+	      this.trigger("currentTimeChange", t);
 	    }
 	  };
 
@@ -6182,7 +6462,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  Player.prototype.getCurrentTime = function getCurrentTime() {
-	    if (!this.man) return NaN;
+	    if (!this.man) return 0;
+
 	    var ct = this.video.currentTime;
 	    if (this.man.isLive) {
 	      return toWallClockTime(ct, this.man);
@@ -6228,8 +6509,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  Player.prototype.getAvailableVideoBitrates = function getAvailableVideoBitrates() {
-	    var video = this.man && this.man.adaptations.video[0];
-	    return video && video.bitrates || [];
+	    var video = manifestHelpers.getAdaptationsByType(this.man, "video");
+	    return video[0] && video[0].bitrates || [];
 	  };
 
 	  Player.prototype.getAvailableAudioBitrates = function getAvailableAudioBitrates() {
@@ -6574,7 +6855,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var never = Observable.never;
 	var just = Observable.just;
 	var merge = Observable.merge;
-	var zip = Observable.zip;
+	var combineLatest = Observable.combineLatest;
 
 	var min = Math.min;
 
@@ -6582,18 +6863,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var MediaSource_ = _require5.MediaSource_;
 	var sourceOpen = _require5.sourceOpen;
-	var loadedMetadataEvent = _require5.loadedMetadataEvent;
+	var canPlay = _require5.canPlay;
+	var loadedMetadata = _require5.loadedMetadata;
 
 	var TextSourceBuffer = __webpack_require__(35);
 
-	var _require6 = __webpack_require__(16);
+	var _require6 = __webpack_require__(17);
 
 	var getLiveEdge = _require6.getLiveEdge;
 
 	var Buffer = __webpack_require__(25);
-	var EME = __webpack_require__(15);
+	var EME = __webpack_require__(16);
 
-	var _require7 = __webpack_require__(18);
+	var _require7 = __webpack_require__(12);
 
 	var normalizeManifest = _require7.normalizeManifest;
 	var mergeManifestsIndex = _require7.mergeManifestsIndex;
@@ -6894,17 +7176,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * the loadedmetadata event pops up.
 	   */
 	  function createLoadedMetadata(manifest) {
-	    var loadedMetadata = loadedMetadataEvent(videoElement).tap(function () {
+	    var loadedMetadata$ = loadedMetadata(videoElement).tap(function () {
 	      return setInitialTime(manifest);
 	    });
 
-	    var canPlay = on(videoElement, "canplay").tap(function () {
+	    var canPlay$ = canPlay(videoElement).tap(function () {
 	      log.info("canplay event");
 	      if (autoPlay) videoElement.play();
 	      autoPlay = true;
 	    });
 
-	    return first(zip(loadedMetadata, canPlay, _.noop)).map({ type: "loaded", value: true }).startWith({ type: "loaded", value: false });
+	    return first(combineLatest(loadedMetadata$, canPlay$, _.noop)).map({ type: "loaded", value: true }).startWith({ type: "loaded", value: false });
 	  }
 
 	  function createEME() {
@@ -6938,10 +7220,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (!isEqual && changePlaybackRate) {
 	        if (wasStalled) {
-	          log.warn("resume playback", timing.ts, timing.name);
+	          log.info("resume playback", timing.ts, timing.name);
 	          videoElement.playbackRate = wasStalled.playback;
 	        } else {
-	          log.warn("stop playback", timing.ts, timing.name);
+	          log.info("stop playback", timing.ts, timing.name);
 	          videoElement.playbackRate = 0;
 	        }
 	      }
@@ -6977,7 +7259,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // out-of-index messages require a complete reloading of the
 	    // manifest to refresh the current index
 	    if (isOutOfIndexError(message)) {
-	      log.warn("out of index");
+	      log.info("out of index");
 	      return manifestPipeline({ url: manifest.locations[0] }).map(function (_ref5) {
 	        var parsed = _ref5.parsed;
 
@@ -7461,7 +7743,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var just = Observable.just;
 
 	var assert = __webpack_require__(2);
-	var request = __webpack_require__(13);
+	var request = __webpack_require__(14);
 
 	var _require2 = __webpack_require__(11);
 
@@ -8237,7 +8519,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var empty = Observable.empty;
 	var just = Observable.just;
 
-	var request = __webpack_require__(13);
+	var request = __webpack_require__(14);
 
 	var _require2 = __webpack_require__(11);
 
@@ -8855,6 +9137,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return atoms.mult("traf", trafs);
 	  },
 
+	  trun: function trun(oldtrun) {
+	    var headersLast = oldtrun[11];
+	    var hasDataOffset = headersLast & 0x01;
+	    if (hasDataOffset) {
+	      return oldtrun;
+	    }
+
+	    // If no dataoffset is present, we change the headers and add one
+	    var trun = new Uint8Array(oldtrun.length + 4);
+	    trun.set(itobe4(oldtrun.length + 4), 0);
+	    trun.set(oldtrun.slice(4, 16), 4); // name + (version + headers) + samplecount
+	    trun[11] = trun[11] | 0x01; // add data offset header info
+	    trun.set([0, 0, 0, 0], 16); // data offset
+	    trun.set(oldtrun.slice(16, oldtrun.length), 20);
+	    return trun;
+	  },
+
 	  vmhd: function vmhd() {
 	    var arr = new Uint8Array(12);
 	    arr[3] = 1; // QuickTime...
@@ -9121,7 +9420,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var oldsenc = reads.senc(oldtraf);
 
 	    // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
-	    var newtraf = atoms.traf(oldtfhd, newtfdt, oldtrun, oldsenc, oldmfhd);
+	    var newtrun = atoms.trun(oldtrun);
+	    var newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldsenc, oldmfhd);
 	    var newmoof = atoms.moof(oldmfhd, newtraf);
 
 	    var trunoffset = 8 + mfhdlen + 8 + tfhdlen + tfdtlen;
@@ -9238,10 +9538,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var parserOptions = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 	  var SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay || 20;
-
-	  // Reference time to map the stream-clock to the wall-clock is based
-	  // on the date 06/01/2013 for C+ SmoothStreaming streams, instead of
-	  // 01/01/1970
 	  var REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
 	  var MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 190000;
 
@@ -9296,6 +9592,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // r refers to number of same duration
 	    // chunks, not repetitions (defers from DASH)
 	    if (r) r--;
+
+	    if (l > 0 && !prev.d) {
+	      prev.d = t - prev.ts;
+	      timeline[l - 1] = prev;
+	    }
 
 	    if (l > 0 && d == prev.d && t == null) {
 	      prev.r += (r || 0) + 1;
@@ -10935,7 +11236,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this['ES6Promise'] = es6$promise$umd$$ES6Promise;
 	    }
 	}).call(this);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(14), (function() { return this; }()), __webpack_require__(22)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15), (function() { return this; }()), __webpack_require__(22)(module)))
 
 /***/ },
 /* 49 */
