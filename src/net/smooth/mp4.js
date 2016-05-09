@@ -389,6 +389,23 @@ var atoms = {
     return atoms.mult("traf", trafs);
   },
 
+  trun(oldtrun) {
+    const headersLast = oldtrun[11];
+    const hasDataOffset = headersLast & 0x01;
+    if (hasDataOffset) {
+      return oldtrun;
+    }
+
+    // If no dataoffset is present, we change the headers and add one
+    const trun = new Uint8Array(oldtrun.length + 4);
+    trun.set(itobe4(oldtrun.length + 4), 0);
+    trun.set(oldtrun.slice(4, 16), 4); // name + (version + headers) + samplecount
+    trun[11] = trun[11] | 0x01;        // add data offset header info
+    trun.set([0,0,0,0], 16);           // data offset
+    trun.set(oldtrun.slice(16, oldtrun.length), 20);
+    return trun;
+  },
+
   vmhd() {
     var arr = new Uint8Array(12);
     arr[3] = 1; // QuickTime...
@@ -690,7 +707,8 @@ module.exports = {
     var oldsenc = reads.senc(oldtraf);
 
     // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
-    var newtraf = atoms.traf(oldtfhd, newtfdt, oldtrun, oldsenc, oldmfhd);
+    var newtrun = atoms.trun(oldtrun);
+    var newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldsenc, oldmfhd);
     var newmoof = atoms.moof(oldmfhd, newtraf);
 
     var trunoffset = 8 + mfhdlen + 8 + tfhdlen + tfdtlen;
