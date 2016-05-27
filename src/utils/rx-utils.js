@@ -1,11 +1,11 @@
 const { Observable } = require("rxjs/Observable");
-const { mergeStatic } = require("rxjs/operator/merge");
+const { merge } = require("rxjs/observable/merge");
 const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
 const fromPromise = require("rxjs/observable/PromiseObservable").PromiseObservable.create;
 
 function on(elt, evts) {
   if (Array.isArray(evts)) {
-    return mergeStatic.apply(null, evts.map((evt) => fromEvent(elt, evt)));
+    return merge.apply(null, evts.map((evt) => fromEvent(elt, evt)));
   } else {
     return fromEvent(elt, evts);
   }

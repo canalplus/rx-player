@@ -16,7 +16,7 @@
 
 const { Subscription } = require("rxjs/Subscription");
 const { BehaviorSubject } = require("rxjs/BehaviorSubject");
-const { combineLatestStatic } = require("rxjs/operator/combineLatest");
+const { combineLatest } = require("rxjs/observable/combineLatest");
 const { only } = require("../utils/rx-utils");
 
 const AverageBitrate = require("./average-bitrate");
@@ -173,7 +173,7 @@ module.exports = function(metrics, deviceEvents, options={}) {
         //   - user-based maximum bitrate (subject)
         //   - maximum based on the video element width
         //   - maximum based on the application visibility (background tab)
-        maxBitrates = combineLatestStatic(maxBitrates, videoWidth, inBackground,
+        maxBitrates = combineLatest(maxBitrates, videoWidth, inBackground,
           (bitrate, width, isHidden) => {
             if (isHidden) {
               return bitrates[0];
@@ -188,7 +188,7 @@ module.exports = function(metrics, deviceEvents, options={}) {
           });
       }
 
-      representationsObservable = combineLatestStatic(
+      representationsObservable = combineLatest(
         usrBitrates,
         maxBitrates,
         avrBitrates,

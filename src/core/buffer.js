@@ -19,8 +19,8 @@ const { BufferingQueue } = require("./buffering-queue");
 const { BufferedRanges } = require("./ranges");
 const { Observable } = require("rxjs/Observable");
 const { Subject } = require("rxjs/Subject");
-const { combineLatestStatic } = require("rxjs/operator/combineLatest");
-const { mergeStatic } = require("rxjs/operator/merge");
+const { combineLatest } = require("rxjs/observable/combineLatest");
+const { merge } = require("rxjs/observable/merge");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const from = require("rxjs/observable/FromObservable").FromObservable.create;
 const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
@@ -320,7 +320,7 @@ function Buffer({
       };
     }
 
-    const segmentsPipeline = combineLatestStatic(
+    const segmentsPipeline = combineLatest(
       timings,
       bufferSizes
     )
@@ -331,7 +331,7 @@ function Buffer({
         doUnqueueAndUpdateRanges
       );
 
-    return mergeStatic(segmentsPipeline, outOfIndexStream).catch((error) => {
+    return merge(segmentsPipeline, outOfIndexStream).catch((error) => {
       // For live adaptations, handle 412 and 404 errors as
       // precondition-failed errors, ie: we are requesting for
       // segments before they exist
@@ -359,7 +359,7 @@ function Buffer({
       });
   }
 
-  return combineLatestStatic(representations, seekings, (rep) => rep)
+  return combineLatest(representations, seekings, (rep) => rep)
     .switchMap(createRepresentationBuffer)
     .finally(() => bufferingQueue.dispose());
 }

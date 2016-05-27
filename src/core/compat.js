@@ -19,7 +19,7 @@ const EventEmitter = require("../utils/eventemitter");
 const { bytesToStr, strToBytes } = require("../utils/bytes");
 const assert = require("../utils/assert");
 const { Observable } = require("rxjs/Observable");
-const { mergeStatic } = require("rxjs/operator/merge");
+const { merge } = require("rxjs/observable/merge");
 const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
 const never = require("rxjs/observable/NeverObservable").NeverObservable.create;
 const { on, castToObservable } = require("../utils/rx-utils");
@@ -213,7 +213,7 @@ function wrapUpdate(memUpdate, sessionObj) {
 
     try {
       memUpdate.call(this, license, sessionId);
-      return mergeStatic(keys, errs).take(1);
+      return merge(keys, errs).take(1);
     } catch(e) {
       return Observable.throw(e);
     }
@@ -236,7 +236,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     this.sessionId = "";
     this._vid = video;
     this._key = keySystem;
-    this._con = mergeStatic(
+    this._con = merge(
       onKeyMessage(video),
       onKeyAdded(video),
       onKeyError(video)
@@ -358,7 +358,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
   SessionProxy.prototype = Object.assign({
     generateRequest: function(initDataType, initData) {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
-      this._con = mergeStatic(
+      this._con = merge(
         onKeyMessage(this._ss),
         onKeyAdded(this._ss),
         onKeyError(this._ss)

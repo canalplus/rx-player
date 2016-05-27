@@ -16,7 +16,7 @@
 
 const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const { mergeStatic } = require("rxjs/operator/merge");
+const { merge } = require("rxjs/observable/merge");
 const assert = require("../../utils/assert");
 const { resolveURL } = require("../../utils/url");
 const { parseSidx, patchPssh } = require("./mp4");
@@ -135,7 +135,7 @@ module.exports = function(opts={}) {
           headers: { "Range": byteRange(indexRange) },
           createXHR,
         });
-        return mergeStatic(mediaOrInitRequest, indexRequest);
+        return merge(mediaOrInitRequest, indexRequest);
       }
       else {
         return mediaOrInitRequest;

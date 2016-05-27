@@ -21,8 +21,8 @@ const { retryWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const defer = require("rxjs/observable/DeferObservable").DeferObservable.create;
-const { combineLatestStatic } = require("rxjs/operator/combineLatest");
-const { mergeStatic } = require("rxjs/operator/merge");
+const { combineLatest } = require("rxjs/observable/combineLatest");
+const { merge } = require("rxjs/observable/merge");
 const {
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -176,7 +176,7 @@ class InMemorySessionsSet extends SessionSet {
   dispose() {
     const disposed = this._entries.map((e) => this.deleteAndClose(e.session));
     this._entries = [];
-    return mergeStatic.apply(null, disposed);
+    return merge.apply(null, disposed);
   }
 }
 
@@ -501,7 +501,7 @@ function createSessionAndKeyRequest(mediaKeys,
     })
     .mapTo(createMessage("generated-request", session, { initData, initDataType }));
 
-  return mergeStatic(sessionEvents, generateRequest);
+  return merge(sessionEvents, generateRequest);
 }
 
 function createSessionAndKeyRequestWithRetry(mediaKeys,
@@ -733,7 +733,7 @@ function sessionEventsHandler(session, keySystem, errorStream) {
       return retryWithBackoff(getLicense, getLicenseRetryOptions);
     });
 
-  const sessionUpdates = mergeStatic(keyMessages, keyStatusesChanges)
+  const sessionUpdates = merge(keyMessages, keyStatusesChanges)
     .concatMap((res) => {
       log.debug("eme: update session", sessionId, res);
 
@@ -746,7 +746,7 @@ function sessionEventsHandler(session, keySystem, errorStream) {
         .mapTo(createMessage("session-update", session, { updatedWith: res }));
     });
 
-  const sessionEvents = mergeStatic(sessionUpdates, keyErrors);
+  const sessionEvents = merge(sessionUpdates, keyErrors);
   if (session.closed) {
     return sessionEvents.takeUntil(castToObservable(session.closed));
   } else {
@@ -806,7 +806,7 @@ function createEME(video, keySystems, errorStream) {
       );
   }
 
-  return combineLatestStatic(
+  return combineLatest(
     onEncrypted(video),
     findCompatibleKeySystem(keySystems)
   )

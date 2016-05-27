@@ -18,7 +18,7 @@ const log = require("../utils/log");
 const { Subscription } = require("rxjs/Subscription");
 const { Subject } = require("rxjs/Subject");
 const { BehaviorSubject } = require("rxjs/BehaviorSubject");
-const { combineLatestStatic } = require("rxjs/operator/combineLatest");
+const { combineLatest } = require("rxjs/observable/combineLatest");
 const { on } = require("../utils/rx-utils");
 const EventEmitter = require("../utils/eventemitter");
 const debugPane = require("../utils/debug");
@@ -343,7 +343,7 @@ class Player extends EventEmitter {
     const loaded = filterStreamByType(stream, "loaded").take(1).share();
 
     const stateChanges = loaded.mapTo(PLAYER_LOADED)
-      .concat(combineLatestStatic(this.playing, stalled, calcPlayerState))
+      .concat(combineLatest(this.playing, stalled, calcPlayerState))
       .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 

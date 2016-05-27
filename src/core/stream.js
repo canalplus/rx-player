@@ -21,8 +21,8 @@ const { retryableFuncWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
 const { on } = require("../utils/rx-utils");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const { mergeStatic } = require("rxjs/operator/merge");
-const { combineLatestStatic } = require("rxjs/operator/combineLatest");
+const { merge } = require("rxjs/observable/merge");
+const { combineLatest } = require("rxjs/observable/combineLatest");
 const min = Math.min;
 
 const {
@@ -292,7 +292,7 @@ function Stream({
       ? sourceOpen(mediaSource)
       : Observable.of(null);
 
-    return combineLatestStatic(manifestPipeline({ url }), sourceOpening)
+    return combineLatest(manifestPipeline({ url }), sourceOpening)
       .mergeMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
@@ -382,7 +382,7 @@ function Stream({
         autoPlay = true;
       });
 
-    return combineLatestStatic(canSeek$, canPlay$)
+    return combineLatest(canSeek$, canPlay$)
       .take(1)
       .mapTo({ type: "loaded", value: true });
   }
@@ -489,7 +489,7 @@ function Stream({
       (adaptation) => createBuffer(mediaSource, adaptation, timings, seekings)
     );
 
-    const buffers = mergeStatic.apply(null, adaptationsBuffers);
+    const buffers = merge.apply(null, adaptationsBuffers);
 
     if (!manifest.isLive) {
       return buffers;
@@ -540,7 +540,7 @@ function Stream({
                                              seekings);
     const mediaError = createMediaErrorStream();
 
-    return mergeStatic(justManifest,
+    return merge(justManifest,
                        canPlay,
                        emeHandler,
                        buffers,
