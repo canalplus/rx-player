@@ -193,13 +193,27 @@ const atoms = {
    * {String} type ("video" or "audio")
    */
   hdlr(type) {
-    type = (type === "audio") ?
-      "soun" : // audio
-      "vide" ; // video
+    let name, handlerName;
+
+    switch (type) {
+    case "video":
+      name = "vide";
+      handlerName = "VideoHandler";
+      break;
+    case "audio":
+      name = "soun";
+      handlerName = "SoundHandler";
+      break;
+    default:
+      name = "hint";
+      handlerName = "";
+      break;
+    }
+
     return Atom("hdlr", concat(
       8,
-      strToBytes(type), 12,
-      strToBytes("Media Handler")
+      strToBytes(name), 12,
+      strToBytes(handlerName), 1 // handler name is C-style string (0 terminated)
     ));
   },
 
