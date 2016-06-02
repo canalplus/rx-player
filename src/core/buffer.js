@@ -16,7 +16,6 @@
 
 var _ = require("canal-js-utils/misc");
 var log = require("canal-js-utils/log");
-var assert = require("canal-js-utils/assert");
 var { BufferedRanges } = require("./ranges");
 var { Observable, Subject } = require("canal-js-utils/rx");
 var { combineLatest, defer, empty, from, just, merge, timer } = Observable;
@@ -263,9 +262,6 @@ function Buffer({
           else {
             throw err;
           }
-
-          // unreachable
-          assert(false);
         }
 
         return from(_.map(injectedSegments, segment => {

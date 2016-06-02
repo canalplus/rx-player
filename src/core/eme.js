@@ -168,7 +168,7 @@ class PersistedSessionsSet {
 
     assert(
       storage,
-      `eme: no licenseStorage given for keySystem with persistentLicense`
+      "eme: no licenseStorage given for keySystem with persistentLicense"
     );
 
     assert.iface(
@@ -707,7 +707,7 @@ function EME(video, keySystems) {
         return toObservable(license)
           .catch(err =>
             logAndThrow(
-              `eme: onKeyStatusesChange has failed ` +
+              "eme: onKeyStatusesChange has failed " +
               `(reason:${err && err.message || "unknown"})`,
               err
             )
@@ -737,7 +737,7 @@ function EME(video, keySystems) {
         return toObservable(license)
           .catch(err =>
             logAndThrow(
-              `eme: getLicense has failed ` +
+              "eme: getLicense has failed " +
               `(reason: ${err && err.message || "unknown"})`,
               err
             )

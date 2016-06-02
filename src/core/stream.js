@@ -550,7 +550,7 @@ function Stream({
       endTime = duration;
 
     if (!manifest.isLive) {
-      assert(startTime < duration && endTime <= duration, `stream: bad startTime and endTime`);
+      assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
     }
     else if (startTime) {
       startTime = fromWallClockTime(startTime, manifest);
