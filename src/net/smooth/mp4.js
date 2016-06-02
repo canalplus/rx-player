@@ -413,10 +413,10 @@ var atoms = {
     // If no dataoffset is present, we change the headers and add one
     const trun = new Uint8Array(oldtrun.length + 4);
     trun.set(itobe4(oldtrun.length + 4), 0);
-    trun.set(oldtrun.slice(4, 16), 4); // name + (version + headers) + samplecount
+    trun.set(oldtrun.subarray(4, 16), 4); // name + (version + headers) + samplecount
     trun[11] = trun[11] | 0x01;        // add data offset header info
     trun.set([0,0,0,0], 16);           // data offset
-    trun.set(oldtrun.slice(16, oldtrun.length), 20);
+    trun.set(oldtrun.subarray(16, oldtrun.length), 20);
     return trun;
   },
 
