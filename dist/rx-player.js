@@ -5186,7 +5186,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _ = __webpack_require__(1);
 	var log = __webpack_require__(4);
-	var assert = __webpack_require__(2);
 
 	var _require = __webpack_require__(9);
 
@@ -5455,9 +5454,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        } else {
 	          throw err;
 	        }
-
-	        // unreachable
-	        assert(false);
 	      }
 
 	      return from(_.map(injectedSegments, function (segment) {
@@ -6130,7 +6126,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
 	    videoElement.preload = "auto";
 
-	    this.version = ("1.4.1");
+	    this.version = ("1.4.2");
 	    this.video = videoElement;
 
 	    // fullscreen change
@@ -8969,9 +8965,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * {String} type ("video" or "audio")
 	   */
 	  hdlr: function hdlr(type) {
-	    type = type === "audio" ? "soun" : // audio
-	    "vide"; // video
-	    return Atom("hdlr", concat(8, strToBytes(type), 12, strToBytes("Media Handler")));
+	    var name = undefined,
+	        handlerName = undefined;
+
+	    switch (type) {
+	      case "video":
+	        name = "vide";
+	        handlerName = "VideoHandler";
+	        break;
+	      case "audio":
+	        name = "soun";
+	        handlerName = "SoundHandler";
+	        break;
+	      default:
+	        name = "hint";
+	        handlerName = "";
+	        break;
+	    }
+
+	    return Atom("hdlr", concat(8, strToBytes(name), 12, strToBytes(handlerName), 1 // handler name is C-style string (0 terminated)
+	    ));
 	  },
 
 	  mdhd: function mdhd(timescale) {
@@ -9147,10 +9160,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // If no dataoffset is present, we change the headers and add one
 	    var trun = new Uint8Array(oldtrun.length + 4);
 	    trun.set(itobe4(oldtrun.length + 4), 0);
-	    trun.set(oldtrun.slice(4, 16), 4); // name + (version + headers) + samplecount
+	    trun.set(oldtrun.subarray(4, 16), 4); // name + (version + headers) + samplecount
 	    trun[11] = trun[11] | 0x01; // add data offset header info
 	    trun.set([0, 0, 0, 0], 16); // data offset
-	    trun.set(oldtrun.slice(16, oldtrun.length), 20);
+	    trun.set(oldtrun.subarray(16, oldtrun.length), 20);
 	    return trun;
 	  },
 
