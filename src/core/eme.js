@@ -201,7 +201,7 @@ class PersistedSessionsSet extends SessionSet {
 
     assert(
       storage,
-      `no licenseStorage given for keySystem with persistentLicense`
+      "no licenseStorage given for keySystem with persistentLicense"
     );
 
     assert.iface(
