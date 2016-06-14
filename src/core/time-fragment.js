@@ -19,11 +19,8 @@ const assert = require("../utils/assert");
 function parseTimeFragment(timeFragment) {
   if (typeof timeFragment == "string") {
     timeFragment = temporalMediaFragmentParser(timeFragment);
-  } else {
-    timeFragment = {
-      start: timeFragment.start,
-      end: timeFragment.end,
-    };
+  } else if (!timeFragment) {
+    timeFragment = {};
   }
 
   if (typeof timeFragment.start == "string" &&

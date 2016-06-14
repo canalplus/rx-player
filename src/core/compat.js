@@ -132,15 +132,6 @@ function isCodecSupported(codec) {
   return !!MediaSource_ && MediaSource_.isTypeSupported(codec);
 }
 
-// On IE11, we use the "progress" instead of "loadedmetadata" to set
-// the "currentTime.
-//
-// Internet Explorer emits an error when setting the "currentTime"
-// before a "progress" event sent just after the "loadedmetadata"
-// after receiving the first init-segments. Other browsers do not
-// even send this "progress" before receiving the first data-segment.
-//
-// TODO(pierre): try to find a solution without "browser sniffing"...
 const loadedMetadataEvent = compatibleListener(["loadedmetadata"]);
 const sourceOpenEvent = compatibleListener(["sourceopen", "webkitsourceopen"]);
 const onEncrypted = compatibleListener(["encrypted", "needkey"]);
