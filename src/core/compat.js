@@ -577,18 +577,19 @@ function clearVideoSrc(video) {
 function addTextTrack(video) {
   let track, trackElement;
   const kind = "subtitles";
+  const mode = "showing";
   if (isIE) {
     const tracksLength = video.textTracks.length;
     track = tracksLength > 0 ? video.textTracks[tracksLength - 1] : video.addTextTrack(kind);
-    track.mode = track.SHOWING;
+    track.mode = mode;
   } else {
     // there is no removeTextTrack method... so we need to reuse old
     // text-tracks objects and clean all its pending cues
     trackElement = document.createElement("track");
-    track = trackElement.track;
-    trackElement.kind = "subtitles";
-    track.mode = "showing";
     video.appendChild(trackElement);
+    track = trackElement.track;
+    trackElement.kind = kind;
+    track.mode = mode;
   }
   return { track, trackElement };
 }

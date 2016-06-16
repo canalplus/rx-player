@@ -55,8 +55,8 @@ const {
 
 const END_OF_PLAY = 0.2;
 
-// discontinuity threshold in seconds
-const DISCONTINUITY_THRESHOLD = 1;
+const DISCONTINUITY_THRESHOLD = 1; // discontinuity threshold in seconds
+const FREEZE_THRESHOLD = 10; // freeze threshold in seconds
 
 function isNativeBuffer(bufferType) {
   return (
@@ -435,8 +435,17 @@ function Stream({
         // implementation that might drop an injected segment, or in
         // case of small discontinuity in the stream.
         if (isStalled) {
+          const currentRange = timing.range;
           const nextRangeGap = timing.buffered.getNextRangeGap(timing.ts);
-          if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
+
+          // firefox fix: sometimes, the stream can be stalled, even
+          // if we are in a buffer. This should only affect firefox
+          // users.
+          if (currentRange && currentRange.end - timing.ts > FREEZE_THRESHOLD) {
+            const seekTo = timing.ts;
+            videoElement.currentTime = seekTo;
+            log.warn("after freeze seek", timing.ts, currentRange, seekTo);
+          } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
             const seekTo = (timing.ts + nextRangeGap + 1/60);
             videoElement.currentTime = seekTo;
             log.warn("discontinuity seek", timing.ts, nextRangeGap, seekTo);
@@ -550,7 +559,7 @@ function Stream({
     const stalled = createStalled(timings, {
       changePlaybackRate: pipelines.requiresMediaSource(),
     });
-    const canPlay = createLoadedMetadata(manifest).concat(stalled);
+    const canPlay = createLoadedMetadata(manifest);
     const buffers = createAdaptationsBuffers(mediaSource,
                                              manifest,
                                              timings,
@@ -559,6 +568,7 @@ function Stream({
 
     return merge(justManifest,
                        canPlay,
+                       stalled,
                        emeHandler,
                        buffers,
                        mediaError);

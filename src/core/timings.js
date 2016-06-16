@@ -159,11 +159,12 @@ function scanTimings(prevTimings, currentTimings, requiresMediaSource) {
   if (requiresMediaSource) {
     shouldStall = (
       mayStall &&
-      (gap <= STALL_GAP || gap === Infinity)
+      (gap <= STALL_GAP || gap === Infinity || readyState === 1)
     );
 
     shouldUnstall = (
       prevStalled &&
+      readyState > 1 &&
       gap < Infinity && (gap > resumeGap(prevStalled) || ending)
     );
   }
