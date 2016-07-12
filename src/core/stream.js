@@ -106,23 +106,23 @@ function Stream({
     },
   };
 
+  function addNativeSourceBuffer(mediaSource, type, codec) {
+    if (!nativeBuffers[type]) {
+      log.info("add sourcebuffer", codec);
+      nativeBuffers[type] = mediaSource.addSourceBuffer(codec);
+    }
+    return nativeBuffers[type];
+  }
+
   function createSourceBuffer(video, mediaSource, bufferInfos) {
     const { type, codec } = bufferInfos;
 
     let sourceBuffer;
 
     if (isNativeBuffer(type)) {
-      if (nativeBuffers[type]) {
-        sourceBuffer = nativeBuffers[type];
-      } else {
-        log.info("add sourcebuffer", codec);
-        sourceBuffer = mediaSource.addSourceBuffer(codec);
-        nativeBuffers[type] = sourceBuffer;
-      }
-
+      sourceBuffer = addNativeSourceBuffer(mediaSource, type, codec);
     }
     else {
-
       const oldSourceBuffer = customBuffers[type];
       if (oldSourceBuffer) {
         try {
@@ -485,7 +485,24 @@ function Stream({
   }
 
   function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
-    const adaptationsBuffers = getAdaptations(manifest).map(
+    const adaptations = getAdaptations(manifest);
+
+    // Initialize all native source buffer at the same time. We cannot
+    // lazily create native sourcebuffers since the spec does not
+    // allow adding them during playback.
+    //
+    // From https://w3c.github.io/media-source/#methods
+    //    For example, a user agent may throw a QuotaExceededError
+    //    exception if the media element has reached the HAVE_METADATA
+    //    readyState. This can occur if the user agent's media engine
+    //    does not support adding more tracks during playback.
+    adaptations.forEach(({ type, codec }) => {
+      if (isNativeBuffer(type)) {
+        addNativeSourceBuffer(mediaSource, type, codec);
+      }
+    });
+
+    const adaptationsBuffers = adaptations.map(
       (adaptation) => createBuffer(mediaSource, adaptation, timings, seekings)
     );
 
