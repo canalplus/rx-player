@@ -57,6 +57,51 @@ Or with tools like [Browserify](http://browserify.org/) or
 [Webpack](http://webpack.github.io/) you can import the player as a CommonJS
 or AMD dependency.
 
+## Example
+
+We will create a simply working player app just in 4 simple steps:
+- Create a directory ```example```.
+- Copy ```rx-player.js``` in ```example``` directory.
+- Copy this content in ```example/index.html```.
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!--Our amazing player-->
+  <title>rx-player</title>
+</head>
+<body>
+  <!--We create a video container for our player-->
+  <video width="100%" id="videoEl" class="video"></video>
+  <!--Include the player-->
+  <script src="rx-player.js"></script>
+  <script>
+    // Here we use ECMAScript 6 syntax and we recuperate a video container
+    const videoElement = document.getElementById("videoEl");
+    // We instanciate our player
+    const rxPlayer = new RxPlayer({
+      videoElement,
+    });
+    // The stream definition
+    const unifiedStream = {
+      name: "Unified Streaming Live",
+      url: "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020",
+      transport: "dash",
+      ciphered: false,
+      live: true,
+      autoPlay: true,
+    };
+    // We run the stream in player
+    rxPlayer.loadVideo(unifiedStream);
+  </script>
+</body>
+</html>
+```
+- Expose example directory with your prefered web-server. For example
+```bash
+python -m SimpleHTTPServer 8080
+```
+
 ## Dependencies
 
 - [RxJS](https://github.com/Reactive-Extensions/RxJS)
