@@ -27,6 +27,11 @@ function nearlyLt(a, b) {
   return a - b <= EPSILON;
 }
 
+/**
+ * Translate a TimeRanges Object into an Array of ranges.
+ * @param {TimeRanges} ranges
+ * @returns {Array.<Range>}
+ */
 function bufferedToRanges(ranges) {
   const l = ranges.length;
   const a = [];
@@ -66,16 +71,35 @@ function isContainedInto(r1, r2) {
   return (isPointInRange(r1, r2.start) && isPointInRange(r1, r2.end));
 }
 
+/**
+ * Returns true if the two ranges given can be considered contiguous.
+ * @param {Range} r1
+ * @param {Range} r2
+ * @returns {Boolean}
+ */
 function areContiguousWithRanges(r1, r2) {
   return nearlyEqual(r2.start, r1.end) || nearlyEqual(r2.end, r1.start);
 }
 
+/**
+ * Construct a new range which will have, as start/end, the min/max
+ * of both the range given, and the given bitrate.
+ * @param {Range} r1
+ * @param {Range} r2
+ * @returns {Number} bitrate
+ */
 function unionWithOverlappingOrContiguousRange(r1, r2, bitrate) {
   const start = Math.min(r1.start, r2.start);
   const end = Math.max(r1.end, r2.end);
   return new Range(start, end, bitrate);
 }
 
+/**
+ * Returns true if r1 is _after_ r2.
+ * @param {Range} r1
+ * @param {Range} r2
+ * @returns {Boolean}
+ */
 function isOrdered(r1, r2) {
   return r1.end <= r2.start;
 }
@@ -107,6 +131,14 @@ function mergeContiguousRanges(ranges) {
   return ranges;
 }
 
+/**
+ * Insert addedRange into the Array of Ranges.
+ * Avoid overlapping or contiguous ranges.
+ * /!\ Mutates the ranges array given
+ * @param {Array.<Range>} ranges
+ * @param {Range} addedRange
+ * @returns {Array.<Range>}
+ */
 function insertInto(ranges, addedRange) {
   if (addedRange.isNil()) {
     return ranges;
@@ -189,6 +221,14 @@ function insertInto(ranges, addedRange) {
   return mergeContiguousRanges(removeEmptyRanges(ranges));
 }
 
+/**
+ * Returns only the intersection between the two ranges, from the first
+ * ranges argument given.
+ * /!\ Mutates the ranges array given
+ * @param {Array.<Range>} ranges
+ * @param {Array.<Range>} others
+ * @returns {Array.<Range>}
+ */
 function rangesIntersect(ranges, others) {
   for (let i = 0; i < ranges.length; i++) {
     const range = ranges[i];
@@ -207,6 +247,12 @@ function rangesIntersect(ranges, others) {
   return ranges;
 }
 
+/**
+ * For the Array of ranges given, set all bitrates to 0 and merge contiguous
+ * ranges. This allows to prove an equality between multiple ranges.
+ * @param {Array.<Range>} ranges
+ * @returns {Array.<Range>}
+ */
 function normalizeRanges(ranges) {
   const clonedRanges = cloneRanges(ranges);
   for (let i = 0; i < clonedRanges.length; i++) {
@@ -230,6 +276,10 @@ function rangesEquals(ranges, others) {
   return true;
 }
 
+/**
+ * Simple class with 3 properties: start, end and bitrate.
+ * @class Range
+ */
 class Range {
   constructor(start, end, bitrate) {
     this.start = start;
@@ -246,7 +296,19 @@ class Range {
   }
 }
 
+/**
+ * Manage buffered ranges.
+ * That is multiple Ranges (or a single) of contiguous data in the buffer.
+ * Contiguous buffer space is automatically merged on insertion.
+ *
+ * This can be seen as a more powerful HTML5 TimeRanges.
+ *
+ * @class BufferedRanges
+ */
 class BufferedRanges {
+  /**
+   * @param {Array.<Range>|TimeRanges} [ranges] - the initial Ranges to insert.
+   */
   constructor(ranges) {
     let _ranges;
     if (!ranges) {
@@ -260,14 +322,33 @@ class BufferedRanges {
     this.length = _ranges.length;
   }
 
+  /**
+   * Get start, in seconds of the nth Range.
+   * @param {Number} i - index
+   * @returns {Number}
+   * @throws TypeError - the range index does not exists
+   */
   start(i) {
     return this.ranges[i].start;
   }
 
+  /**
+   * Get end, in seconds of the nth Range.
+   * @param {Number} i - index
+   * @returns {Number}
+   * @throws TypeError - the range index does not exists
+   */
   end(i) {
     return this.ranges[i].end;
   }
 
+  /**
+   * Returns the range, if found, that contains the startTime and duration
+   * given.
+   * @param {Number} startTime
+   * @param {Number} duration
+   * @returns {Range|null}
+   */
   hasRange(startTime, duration) {
     const endTime = startTime + duration;
 
@@ -285,6 +366,8 @@ class BufferedRanges {
 
   /**
    * Get range associated to given time
+   * @param {Number} time - time in seconds
+   * @returns {Range|null}
    */
   getRange(time) {
     for (let i = 0; i < this.ranges.length; i++) {
@@ -295,6 +378,14 @@ class BufferedRanges {
     return null;
   }
 
+  /**
+   * Get ranges NOT associated with a given time.
+   *
+   * That is the other ranges which are not contiguous with the one concerned
+   * by the time given.
+   * @param {Number} time - time in seconds
+   * @returns {Array.<Range>}
+   */
   getOuterRanges(time) {
     const ranges = [];
     for (let i = 0; i < this.ranges.length; i++) {
@@ -306,8 +397,11 @@ class BufferedRanges {
   }
 
   /**
-   * Returns the time-gap between the buffered
-   * end limit and the given timestamp
+   * Returns the time-gap between the buffered end limit and the given
+   * timestamp.
+   * Infinity if not buffered.
+   * @param {Number} time
+   * @returns {Number}
    */
   getGap(time) {
     const range = this.getRange(time);
@@ -317,8 +411,11 @@ class BufferedRanges {
   }
 
   /**
-   * Return the time gap between the current time
-   * and the start of current range.
+   * Return the time gap between the time and the start of current
+   * range.
+   * 0 if not buffered
+   * @param {Number} time
+   * @returns {Number}
    */
   getLoaded(time) {
     const range = this.getRange(time);
@@ -329,6 +426,8 @@ class BufferedRanges {
 
   /**
    * Returns the total size of the current range.
+   * @param {Number} time
+   * @returns {Number}
    */
   getSize(time) {
     const range = this.getRange(time);
@@ -337,6 +436,13 @@ class BufferedRanges {
       : 0;
   }
 
+  /**
+   * Get the gap between the time given and the start of the next
+   * range (not the one currently in).
+   * Infinity if there is no next range found.
+   * @param {Number} time
+   * @returns {Number}
+   */
   getNextRangeGap(time) {
     const { ranges } = this;
     let i = -1, nextRangeStart;
@@ -355,6 +461,13 @@ class BufferedRanges {
     }
   }
 
+  /**
+   * Add a new range.
+   * @param {Number} bitrate
+   * @param {Number} start
+   * @param {Number} end
+   * @returns {Range}
+   */
   insert(bitrate, start, end) {
     if (__DEV__) {
       assert(start >= 0);
@@ -365,17 +478,28 @@ class BufferedRanges {
     return this.ranges;
   }
 
+  /**
+   * Remove a/multiple range(s).
+   * @param {Number} start
+   * @param {Number} end
+   */
   remove(start, end) {
     if (__DEV__) {
       assert(start >= 0);
       assert(end - start > 0);
     }
     this.intersect(new BufferedRanges([
-      new Range(0, start, 0),
-      new Range(end, Infinity, 0),
+      new Range(0, start, 0), // from 0 to start
+      new Range(end, Infinity, 0), // from end to Infinity
     ]));
   }
 
+  /**
+   * Returns true if, without considering their bitrates, the BufferedRanges
+   * given can be considered equal to the current one (after normalization).
+   * @param {BufferedRanges} others
+   * @returns {Boolean}
+   */
   equals(others) {
     if (__DEV__) {
       assert(others instanceof BufferedRanges);
@@ -384,6 +508,12 @@ class BufferedRanges {
     return rangesEquals(this.ranges, others.ranges);
   }
 
+  /**
+   * Updates the ranges by only keeping the intersection with the BufferedRanges
+   * given.
+   * @param {BufferedRanges} others
+   * @returns {Array.<Range>}
+   */
   intersect(others) {
     if (__DEV__) {
       assert(others instanceof BufferedRanges);

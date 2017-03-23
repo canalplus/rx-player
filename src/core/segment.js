@@ -16,10 +16,21 @@
 
 const { resolveURL } = require("../utils/url");
 
+/**
+ * Returns true if the value given is a number, or can be translated into a
+ * number (NaN will return false).
+ * /!\ isNumber(null) === true // +null === 0
+ * @param {Number} val
+ * @returns {Boolean}
+ */
 function isNumber(val) {
   return (typeof val == "number" && !isNaN(val)) || !isNaN(+val) ? true : false;
 }
 
+/**
+ * Represent a single segment from the corresponding adaptation/representation.
+ * @class Segment
+ */
 class Segment {
   static create(adaptation,
                 representation,
@@ -117,6 +128,10 @@ class Segment {
   }
 }
 
+/**
+ * Represent the init segment for the given representation.
+ * @class InitSegment
+ */
 class InitSegment extends Segment {
   constructor(adaptation,
               representation,

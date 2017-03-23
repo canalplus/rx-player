@@ -1,6 +1,12 @@
 const { getBackedoffDelay } = require("./backoff");
 const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
 
+/**
+ * Simple debounce implementation.
+ * @param {Function} fn
+ * @param {Number} delay
+ * @returns {Function}
+ */
 function debounce(fn, delay) {
   let timer = 0;
   return () => {
@@ -11,6 +17,17 @@ function debounce(fn, delay) {
   };
 }
 
+/**
+ * @param {Observable} obs
+ * @param {Object} options
+ * @param {Number} options.retryDelay
+ * @param {Number} options.totalRetry
+ * @param {Number} options.resetDelay
+ * @param {Function} [options.shouldRetry]
+ * @param {Function} [options.errorSelector]
+ * @param {Function} [options.onRetry]
+ * @returns {Observable}
+ */
 function retryWithBackoff(obs, options) {
   const {
     retryDelay,
@@ -49,6 +66,19 @@ function retryWithBackoff(obs, options) {
   });
 }
 
+/**
+ * @param {Function} fn - Function returning an Observable which
+ * will (well, might) me retried.
+ * @param {Object} options
+ * @param {Number} options.retryDelay
+ * @param {Number} options.totalRetry
+ * @param {Number} options.resetDelay
+ * @param {Function} [options.shouldRetry]
+ * @param {Function} [options.errorSelector]
+ * @param {Function} [options.onRetry]
+ * @returns {Function} - take in argument fn's arguments, returns
+ * an Observable.
+ */
 function retryableFuncWithBackoff(fn, options) {
   const {
     retryDelay,

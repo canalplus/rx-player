@@ -16,6 +16,11 @@
 
 const { Segment } = require("../segment");
 
+/**
+ * Get upper bound for the given timeline range given (in the right timescale).
+ * @param {Object} range - timeline's range
+ * @returns {Number}
+ */
 function getTimelineBound({ ts, d, r }) {
   if (d === -1) {
     return ts;
@@ -76,6 +81,15 @@ class Timeline {
     return rep;
   }
 
+  /**
+   * Checks if the time given is in a discontinuity. That is:
+   *   - We're on the upper bound of the current range (end of the range - time
+   *     is inferior to the timescale)
+   *   - The next range starts after the end of the current range.
+   * @param {Number} time
+   * @returns {Number} - If a discontinuity is present, this is the Starting ts
+   * for the next (discontinuited) range. If not this is equal to -1.
+   */
   checkDiscontinuity(time) {
     if (time <= 0) {
       return -1;

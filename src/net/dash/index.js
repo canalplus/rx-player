@@ -24,6 +24,12 @@ const { parseSidx, patchPssh } = require("./mp4");
 const request = require("../../request");
 const dashManifestParser = require("./parser");
 
+/**
+ * Pad with 0 in the left of the given n argument to reach l length
+ * @param {Number|string} n
+ * @param {Number} l
+ * @returns {string}
+ */
 function pad(n, l) {
   n = n.toString();
   if (n.length >= l) {
@@ -33,6 +39,11 @@ function pad(n, l) {
   return arr.slice(-l);
 }
 
+/**
+ * Returns text-formatted byteRange (`bytes=$start-$end?)`
+ * @param {Array.<string|Number>}
+ * @returns {string}
+ */
 function byteRange([start, end]) {
   if (!end || end === Infinity) {
     return "bytes=" + (+start) + "-";
@@ -62,6 +73,15 @@ function replaceTokens(path, segment) {
   }
 }
 
+/**
+ * Returns pipelines used for DASH streaming.
+ * @param {Object} opts
+ * @param {Function} [opts.createXHR] - Optional custom XMLHttpRequest
+ * implementation. Used for each generated http request.
+ * @param {Function} [opts.contentProtectionParser] - Optional parser for the
+ * manifest's content Protection.
+ * @returns {Object}
+ */
 module.exports = function(opts={}) {
   let { contentProtectionParser } = opts;
 

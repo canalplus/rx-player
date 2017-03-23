@@ -59,6 +59,12 @@ const END_OF_PLAY = 0.5;
 
 const DISCONTINUITY_THRESHOLD = 1; // discontinuity threshold in seconds
 
+/**
+ * Returns true if the given buffeType is a native buffer, false otherwise.
+ * "Native" source buffers are directly added to the MediaSource.
+ * @param {string} bufferType
+ * @returns {Boolean}
+ */
 function isNativeBuffer(bufferType) {
   return (
     bufferType == "audio" ||
@@ -66,13 +72,23 @@ function isNativeBuffer(bufferType) {
   );
 }
 
+/**
+ * On subscription:
+ *  - Creates the MediaSource and attached sourceBuffers instances.
+ *  - download the content's manifest
+ *  - Perform EME management if needed
+ *  - create Buffer instances for each adaptation to manage buffers.
+ *  - returns Observable emitting notifications about the stream lifecycle.
+ * @param {Object} args
+ * @returns {Observable}
+ */
 function Stream({
   url,
-  errorStream,
+  errorStream, // subject through which minor errors are emitted
   keySystems,
-  subtitles,
-  hideNativeSubtitle,
-  images,
+  subtitles, // eventual manually added subtitles
+  hideNativeSubtitle, // Whether TextTracks subtitles should be hidden or not
+  images, // eventual manually added images
   timings,
   timeFragment,
   adaptive,
@@ -82,14 +98,23 @@ function Stream({
 }) {
 
   const fragStartTime = timeFragment.start;
+
+  // XXX fragEndTime is not even defined yet (next line).
+  // This will always be false
+  // Why did the linter let go?
   const fragEndTimeIsFinite = fragEndTime < Infinity;
   let fragEndTime = timeFragment.end;
 
   const manifestPipeline = pipelines.manifest;
 
-  let nativeBuffers = {};
-  let customBuffers = {};
+  let nativeBuffers = {}; // SourceBuffers added to the MediaSource
+  let customBuffers = {}; // custom SourceBuffers
 
+  /**
+   * Backoff options used given to the backoff retry done with the manifest
+   * pipeline.
+   * @see retryWithBackoff
+   */
   const retryOptions = {
     totalRetry: 3,
     retryDelay: 250,
@@ -108,6 +133,13 @@ function Stream({
     },
   };
 
+  /**
+   * Adds a SourceBuffer to the MediaSource.
+   * @param {MediaSource} mediaSource
+   * @param {string} type - The "type" of SourceBuffer (audio/video...)
+   * @param {string} codec
+   * @returns {SourceBuffer}
+   */
   function addNativeSourceBuffer(mediaSource, type, codec) {
     if (!nativeBuffers[type]) {
       log.info("add sourcebuffer", codec);
@@ -116,6 +148,15 @@ function Stream({
     return nativeBuffers[type];
   }
 
+  /**
+   * Creates a new SourceBuffer.
+   * Can be a native one (audio/video) as well as a custom one (image/text).
+   * @throws MediaError - The type of bugger given is unknown.
+   * @param {HTMLMediaElement} video
+   * @param {MediaSource} mediaSource
+   * @param {Object} bufferInfos
+   * @returns {SourceBuffer|AbstractSourceBuffer}
+   */
   function createSourceBuffer(video, mediaSource, bufferInfos) {
     const { type, codec } = bufferInfos;
 
@@ -155,6 +196,12 @@ function Stream({
     return sourceBuffer;
   }
 
+  /**
+   * Abort and remove te SourceBuffer given.
+   * @param {HTMLMediaElement} video
+   * @param {MediaSource} mediaSource
+   * @param {Object} bufferInfos
+   */
   function disposeSourceBuffer(video, mediaSource, bufferInfos) {
     const { type } = bufferInfos;
 
@@ -184,6 +231,28 @@ function Stream({
     }
   }
 
+  /**
+   * Create, on subscription, a MediaSource instance and attach it to the given
+   * video element's src attribute.
+   *
+   * Returns an Observable which emits one time when done an object with the
+   * following properties:
+   *
+   *   - src {string} - the src given
+   *
+   *   - mediaSource {MediaSource|null} - the MediaSource instance. Can be null
+   *     in the case no MediaSource is needed.
+   *
+   * This Observable never completes. It can throw if MediaSource is needed but
+   * is not available in the current environment.
+   *
+   * On unsubscription, the video.src is cleaned, MediaSource sourceBuffers and
+   * customBuffers are aborted and some minor cleaning is done.
+   *
+   * @param {string} url
+   * @param {HTMLMediaElement} video
+   * @returns {Observable}
+   */
   function createAndPlugMediaSource(url, video) {
     return Observable.create((observer) => {
       let mediaSource, objectURL;
@@ -261,6 +330,13 @@ function Stream({
     });
   }
 
+  /**
+   * Create timings and seekings Observables:
+   *   - timings is the given timings observable with added informations.
+   *   - seekings emits each time the player go in a seeking state.
+   * @param {Object} manifest
+   * @returns {Object}
+   */
   function createTimings(manifest) {
     const augmentedTimings = timings.map((timing) => {
       let clonedTiming;
@@ -284,8 +360,9 @@ function Stream({
   }
 
   /**
-   * End-Of-Play stream popping a value when timings reaches the end of the
-   * video
+   * End-Of-Play emit when the current timing is really close to the end.
+   * @see END_OF_PLAY
+   * @type {Observable}
    */
   const endOfPlay = timings
     .filter(({ ts, duration }) => (
@@ -294,8 +371,18 @@ function Stream({
     ));
 
   /**
-   * Wait for manifest and media-source to open before initializing source
-   * duration and creating buffers
+   * On subscription:
+   *   - load the manifest (through its pipeline)
+   *   - wiat for the given mediasource to be open
+   * Once those are done, initialize the source duration and creates every
+   * SourceBuffers and Buffers instances.
+   *
+   * This Observable can be retried on the basis of the retryOptions defined
+   * here.
+   * @param {Object} params
+   * @param {string} params.url
+   * @param {MediaSource|null} params.mediaSource
+   * @returns {Observable}
    */
   const createAllStream = retryableFuncWithBackoff(({ url, mediaSource }) => {
     const sourceOpening = mediaSource
@@ -331,6 +418,13 @@ function Stream({
    * An "adaptations choice" observable is also created and
    * responsible for changing the video or audio adaptation choice in
    * reaction to user choices (ie. changing the language).
+   *
+   * @param {MediaSource} mediaSource
+   * @param {Object} bufferInfos - Per-type object containing the adaptions,
+   * the codec and the type
+   * @param {Observable} timings
+   * @param {Observable} seekings
+   * @returns {Observable}
    */
   function createBuffer(mediaSource, bufferInfos, timings, seekings) {
     const { type: bufferType } = bufferInfos;
@@ -378,6 +472,7 @@ function Stream({
    *
    * This stream also the side effect of setting the initial time as soon as
    * the loadedmetadata event pops up.
+   * @param {Object} manifest
    */
   function createLoadedMetadata(manifest) {
     const canSeek$ = canSeek(videoElement)
@@ -397,6 +492,10 @@ function Stream({
       .mapTo({ type: "loaded", value: true });
   }
 
+  /**
+   * Perform EME management.
+   * @returns {Observable}
+   */
   function createEMEIfKeySystems() {
     if (keySystems && keySystems.length) {
       return createEME(videoElement, keySystems, errorStream);
@@ -410,10 +509,17 @@ function Stream({
 
   /**
    * Extracted stalled info changing over-time from timings. This
-   * stream has a side-effect of the <video> playbackRate property.
+   * stream has a side-effect of the <video> playbackRate and
+   * currentTime properties.
    *
-   * It mutates its value to stop the video when buffer is too low, or
-   * resume the video when the buffer has regained a decent size.
+   * It mutates the playbackRate value to stop the video when buffer is too
+   * low, or resume the video when the buffer has regained a decent size.
+   *
+   * It mutates the currentTime in case of a discontinuity in the stream.
+   * @param {Observable} timings
+   * @param {Object} options
+   * @param {Boolean} [options.changePlaybackRate=true]
+   * @returns {Observable}
    */
   function createStalled(timings, { changePlaybackRate=true }) {
     return timings
@@ -487,6 +593,8 @@ function Stream({
         .map(({ parsed }) => {
           const newManifest = mergeManifestsIndex(
             manifest,
+
+            // XXX TOFIX likely forgot images Object as last argument here.
             normalizeManifest(parsed.url, parsed.manifest, subtitles)
           );
           return { type: "manifest", value: newManifest };
@@ -503,6 +611,16 @@ function Stream({
     );
   }
 
+  /**
+   * Creates, for every managed adaptations defined in the manifest, a
+   * SourceBuffer and Buffer instance.
+   * @see Buffer class
+   * @param {MediaSource} mediaSource
+   * @param {Object} manifest
+   * @param {Observable} timings
+   * @param {Observable} seekings
+   * @returns {Observable}
+   */
   function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
     const adaptations = getAdaptations(manifest);
 
@@ -543,6 +661,12 @@ function Stream({
       .concatMap((message) => messageHandler(message, manifest));
   }
 
+  /**
+   * Returns an observable which throws the right MediaError as soon an "error"
+   * event is received through the videoElement
+   * @see MediaError
+   * @returns {Observable}
+   */
   function createMediaErrorStream() {
     return on(videoElement, "error").mergeMap(() => {
       const errorCode = videoElement.error.code;
@@ -561,6 +685,9 @@ function Stream({
   /**
    * Creates a stream merging all observable that are required to make
    * the system cooperate.
+   * @param {MediaSource} mediaSource
+   * @param {Object} manifest
+   * @returns {Observable}
    */
   function createStream(mediaSource, manifest) {
     const { timings, seekings } = createTimings(manifest);
@@ -585,9 +712,11 @@ function Stream({
   }
 
   /**
-   * Side effect the set the media duration in mediaSource. This side
+   * Side effect that set the media duration in the mediaSource. This side
    * effect occurs when we receive the "sourceopen" from the
    * mediaSource.
+   * @param {MediaSource} mediaSource
+   * @param {Object} manifest
    */
   function setDuration(mediaSource, manifest) {
     let duration;
@@ -614,6 +743,8 @@ function Stream({
    * the <video>.
    *
    * see: createLoadedMetadata(manifest)
+   * @param {Object} manifest
+   * @throws Error - throws if an invalid startTime or fragEndTime was set.
    */
   function setInitialTime(manifest) {
     const duration = manifest.duration;

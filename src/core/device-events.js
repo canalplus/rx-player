@@ -22,10 +22,24 @@ const INACTIVITY_DELAY = 60 * 1000;
 
 const pixelRatio = window.devicePixelRatio || 1;
 
+/**
+ * Returns an Object containing two Observables:
+ *
+ *   - _videoWidth_: Returns the width of the videoElement, in pixels, each time
+ *     it changes (with a light delay - 500 ms - to avoid frequent updates).
+ *     Note: This observable first emit the string 'init'.
+ *
+ *   - _inBackground_: Emit false when the current document is visible, true
+ *     when hidden since 60s
+ *
+ * @param {HTMLMediaElement} videoElement
+ * @returns {Object}
+ */
 function DeviceEvents(videoElement) {
-  const isVisible = visibilityChange()
+  const isVisible = visibilityChange() // emit false when visible
     .filter((x) => x === false);
 
+  // Emit true if the visibility changed to hidden since 60s
   const isHidden = visibilityChange()
     .debounceTime(INACTIVITY_DELAY)
     .filter((x) => x === true);

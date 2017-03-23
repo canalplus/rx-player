@@ -2,9 +2,9 @@ const { AbstractSourceBuffer } = require("./sourcebuffer");
 
 class ImageSourceBuffer extends AbstractSourceBuffer {
   _append() {
-    // TODO: handle live case we suppose here the first receive bsi
-    // includes all images
-    this.buffered.insert(0, 0, Infinity);
+    // TODO: handle live case.
+    // We suppose here that the first received bsi includes all images
+    this.buffered.insert(0 /* bitrate */, 0 /* start */, Infinity /* end */);
   }
 }
 

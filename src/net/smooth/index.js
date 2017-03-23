@@ -63,11 +63,23 @@ function extractISML({ responseData }) {
   return responseData.getElementsByTagName("media")[0].getAttribute("src");
 }
 
+/**
+ * Returns string corresponding to the token contained in the url's querystring.
+ * Empty string if no token is found.
+ * @param {string} url
+ * @returns {string}
+ */
 function extractToken(url) {
   const tokenMatch = url.match(TOKEN_REG);
   return (tokenMatch && tokenMatch[1]) || "";
 }
 
+/**
+ * Replace/Remove token from the url's querystring
+ * @param {string} url
+ * @param {string} [token]
+ * @returns {string}
+ */
 function replaceToken(url, token) {
   if (token) {
     return url.replace(TOKEN_REG, "?token=" + token);

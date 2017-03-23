@@ -20,6 +20,15 @@ const {
   hexToBytes, strToBytes, concat,
 } = require("../../utils/bytes");
 
+/**
+ * Find the right atom (box) in an isobmff file from its hexa-encoded name.
+ * /!\ Only works for top-level boxes
+ * @param {Uint8Array} buf - the isobmff structure
+ * @param {Number} atomName - the 'name' of the box (e.g. 'sidx' or 'moov'),
+ * hexa encoded
+ * @returns {Number} - offset where the corresponding box is (starting with its
+ * size), 0 if not found.
+ */
 function findAtom(buf, atomName) {
   const l = buf.length;
   let i = 0;
@@ -44,6 +53,25 @@ function findAtom(buf, atomName) {
   return i;
 }
 
+/**
+ * Parse the sidx part (segment index) of the isobmff.
+ * Returns null if not found.
+ *
+ * The object returned contains two keys:
+ *   - segments {Array.<Object>} - Informations about each subsegment.
+ *     Basically contains three keys:
+ *       - ts {Number}: starting _presentation time_ for the subsegment,
+ *         timescaled
+ *       - d {Number}: duration of the subsegment, timescaled
+ *       - r {Number}: always at 0
+ *       - range {Array.<Number>}: first and last bytes in the media file
+ *         from the anchor point (first byte after the sidx box) for the
+ *         concerned subsegment.
+ *   - timescale {Number}: The timescale used, to convert it to seconds
+ * @param {Uint8Array} buf
+ * @param {Number} offset
+ * @returns {Object|null}
+ */
 function parseSidx(buf, offset) {
   const index = findAtom(buf, 0x73696478 /* "sidx" */);
   if (index == -1) {
@@ -91,6 +119,8 @@ function parseSidx(buf, offset) {
     pos += 4;
     const refType = (refChunk & 0x80000000) >>> 31;
     const refSize = (refChunk & 0x7fffffff);
+
+    // when set to 1 indicates that the reference is to a sidx, else to media
     if (refType == 1) {
       throw new Error("not implemented");
     }
@@ -119,24 +149,44 @@ function parseSidx(buf, offset) {
   return { segments, timescale };
 }
 
-
+/**
+ * Create a new _Atom_ (isobmff box).
+ * @param {string} name - The box name (e.g. sidx, moov, pssh etc.)
+ * @param {Uint8Array} buff - The box's content
+ */
 function Atom(name, buff) {
   const len = buff.length + 8;
   return concat(itobe4(len), strToBytes(name), buff);
 }
 
+/**
+ * Returns a PSSH Atom from a systemId and private data.
+ * @param {Object} args
+ * @returns {Uint8Array}
+ */
 function createPssh({ systemId, privateData }) {
   systemId = systemId.replace(/-/g, "");
 
   assert(systemId.length === 32);
   return Atom("pssh", concat(
-    4,
+    4, // 4 initial zeroed bytes
     hexToBytes(systemId),
     itobe4(privateData.length),
     privateData
   ));
 }
 
+/**
+ * Update ISOBMFF given to add a "pssh" box in the "moov" box for every content
+ * protection in the pssList array given.
+ * @param {Uint8Array} buf - the ISOBMFF file
+ * @param {Array.<Object>} pssList - The content protections under the form of
+ * objects containing two properties:
+ *   - systemId {string}: The uuid code. Should only contain 32 hexadecimal
+ *     numbers and hyphens
+ *   - privateData {*}: private data associated.
+ * @returns {Uint8Array} - The new ISOBMFF generated.
+ */
 function patchPssh(buf, pssList) {
   if (!pssList || !pssList.length) {
     return buf;
@@ -147,7 +197,7 @@ function patchPssh(buf, pssList) {
     return buf;
   }
 
-  const size = be4toi(buf, pos);
+  const size = be4toi(buf, pos); // size of the "moov" box
   const moov = buf.subarray(pos, pos + size);
 
   let newmoov = [moov];
@@ -156,7 +206,7 @@ function patchPssh(buf, pssList) {
   }
 
   newmoov = concat.apply(null, newmoov);
-  newmoov.set(itobe4(newmoov.length), 0);
+  newmoov.set(itobe4(newmoov.length), 0); // overwrite "moov" length
 
   return concat(
     buf.subarray(0, pos),

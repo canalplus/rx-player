@@ -53,6 +53,11 @@ function resolveURL() {
   return _normalizeUrl(base);
 }
 
+/**
+ * Remove string after the last '/'.
+ * @param {string} url
+ * @returns {string}
+ */
 function normalizeBaseURL(url) {
   const slash = url.lastIndexOf("/");
   if (slash >= 0) {

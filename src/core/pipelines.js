@@ -28,6 +28,17 @@ const {
 } = require("../errors");
 
 
+/**
+ * Generate a new error from the infos given.
+ * Also attach the pipeline type (audio/manifest...) to the _pipelineType_
+ * property of the returned error.
+ * @param {string} code
+ * @param {string} pipelineType
+ * @param {Error} error
+ * @param {Boolean} [fatal=true] - Whether the error is fatal to the content's
+ * playback.
+ * @returns {Error}
+ */
 function errorSelector(code, pipelineType, error, fatal=true) {
   if (!isKnownError(error)) {
     const ErrorType = (error instanceof RequestError)
@@ -41,6 +52,12 @@ function errorSelector(code, pipelineType, error, fatal=true) {
   return error;
 }
 
+/**
+ * Called on a pipeline's loader error.
+ * Returns whether the loader request should be retried.
+ * @param {Error} error
+ * @returns {Boolean}
+ */
 function loaderShouldRetry(error) {
   if (!(error instanceof RequestError)) {
     return false;
@@ -65,12 +82,18 @@ const metricsScheduler = asap;
  *      => { ...ResolvedInfos, ...ParsedInfos }
  *
  * TODO(pierre): create a pipeline patcher to work over a WebWorker
+ * @param {string} pipelineType
+ * @param {Object} transportObject
+ * @param {Subject} metrics
+ * @param {Object} [options={}]
+ * @returns {Function}
  */
 function createPipeline(pipelineType,
                         { resolver, loader, parser },
                         metrics,
                         errorStream,
                         options={}) {
+
 
   if (!resolver) {
     resolver = Observable.of;
@@ -84,6 +107,21 @@ function createPipeline(pipelineType,
 
   const { totalRetry, cache } = options;
 
+  /**
+   * Backoff options given to the backoff retry done with the loader function.
+   * @see retryWithBackoff
+   */
+  const loaderBackoffOptions = {
+    retryDelay: 200,
+    errorSelector: loaderErrorSelector,
+    totalRetry: totalRetry || 4,
+    shouldRetry: loaderShouldRetry,
+    onRetry: (error) => {
+      schedulMetrics({ type: pipelineType, value: error.xhr });
+      errorStream.next(errorSelector("PIPELINE_LOAD_ERROR", pipelineType, error, false));
+    },
+  };
+
   function resolverErrorSelector(error) {
     throw errorSelector("PIPELINE_RESOLVE_ERROR", pipelineType, error);
   }
@@ -95,17 +133,6 @@ function createPipeline(pipelineType,
   function parserErrorSelector(error) {
     throw errorSelector("PIPELINE_PARSING_ERROR", pipelineType, error);
   }
-
-  const loaderBackoffOptions = {
-    retryDelay: 200,
-    errorSelector: loaderErrorSelector,
-    totalRetry: totalRetry || 4,
-    shouldRetry: loaderShouldRetry,
-    onRetry: (error) => {
-      schedulMetrics({ type: pipelineType, value: error.xhr });
-      errorStream.next(errorSelector("PIPELINE_LOAD_ERROR", pipelineType, error, false));
-    },
-  };
 
   function dispatchMetrics(value) {
     metrics.next(value);
@@ -162,6 +189,15 @@ function createPipeline(pipelineType,
   };
 }
 
+/**
+ * Returns an object allowing to easily create the pipelines (resolve + load +
+ * parse) for given "pipelineTypes" (audio/video...) for the transport wanted
+ * (dash, smooth...).
+ *
+ * This object will contain both metrics, an Observable, and createPipelines,
+ * a function.
+ * @returns {Object}
+ */
 function PipeLines() {
   // the metrics observer/observable is used to calculate informations
   // about loaded responsed in the loader part of pipelines

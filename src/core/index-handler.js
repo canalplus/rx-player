@@ -25,6 +25,12 @@ const Base = require("./indexes/base");
 
 const { IndexError } = require("../errors");
 
+/**
+ * Returns right indexHandler for the given index
+ * @param {Object} index
+ * @returns {List|Template|Base|Timeline}
+ * @throws IndexError - The indexType is not known
+ */
 function selectIndexHandler(index) {
   const { indexType } = index;
   switch(indexType) {
@@ -37,6 +43,13 @@ function selectIndexHandler(index) {
   }
 }
 
+/**
+ * Recuperate liveEdge for the manifest's first video representation.
+ * @param {Object} manifest
+ * @returns {Number}
+ * @throws IndexError - The video indexType (contained in the manifest) is not
+ * known.
+ */
 function getLiveEdge(manifest) {
   // TODO(pierre): improve index access ?
   const videoAda = getAdaptationsByType(manifest, "video");
@@ -54,6 +67,10 @@ class IndexHandler {
                                                         this.index);
   }
 
+  /**
+   * Construct and returns the InitSegment.
+   * @returns {InitSegment}
+   */
   getInitSegment() {
     const initialization = this.index.initialization || {};
     return new InitSegment(
@@ -65,6 +82,16 @@ class IndexHandler {
     );
   }
 
+  /**
+   * Returns ranges needed (current time, lower bound and upper bound needed)
+   * in the right timescale and with the presentationTimeOffset taken into
+   * account.
+   * @param {Number} ts - current timestamp
+   * @param {Number} offset - offset from the current timestamp we need
+   * @param {Number} bufSize - buffer size we need
+   * @returns {Object} - Object with time (current time), up (lower bound)
+   * and to (upper bounds) properties, all in the right timescale.
+   */
   normalizeRange(ts, offset, bufSize) {
     const presentationOffset = this.index.presentationTimeOffset || 0;
     const timescale = this.index.timescale || 1;
@@ -97,9 +124,19 @@ class IndexHandler {
     return null;
   }
 
+  /**
+   * Returns an array of segment needed to fulfill what is asked in terms of
+   * range.
+   * @param {Number} ts - current timestamp
+   * @param {Number} offset - offset from the current timestamp we need
+   * @param {Number} bufSize - buffer size we need
+   * @returns {Array.<Segment>}
+   * @throws IndexError - Throws if the current timestamp is considered out
+   * of bounds.
+   */
   getSegments(ts, offset, bufSize) {
     const { time, up, to } = this.normalizeRange(ts, offset, bufSize);
-    if (!this.handler.checkRange(time)) {
+    if (!this.handler.checkRange(time)) { // XXX shouldn't we check that for ts + bufsize?
       throw new IndexError("OUT_OF_INDEX_ERROR", this.index.indexType, false);
     }
 
@@ -116,6 +153,11 @@ class IndexHandler {
     return addedSegments;
   }
 
+  /**
+   * Update the timescale used (for all segments).
+   * @param {Number} timescale
+   * @returns {Boolean} - Returns true if the timescale has been updated.
+   */
   setTimescale(timescale) {
     const { index } = this;
 
@@ -132,6 +174,11 @@ class IndexHandler {
     return false;
   }
 
+  /**
+   * Returns time given scaled into seconds.
+   * @param {Number} time
+   * @returns {Number}
+   */
   scale(time) {
     if (__DEV__) {
       assert(this.index.timescale > 0);

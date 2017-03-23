@@ -36,6 +36,15 @@ const DEFAULTS = {
   maxAudioBitrate: Infinity,
 };
 
+/**
+ * Simple find function implementation.
+ * @param {Array} array
+ * @param {Function} predicate - The predicate. Will take as arguments:
+ *   1. the current array element
+ *   2. the array index
+ *   3. the entire array
+ * @returns {*} - null if not found
+ */
 function find(array, predicate) {
   for (let i = 0; i < array.length; i++) {
     if (predicate(array[i], i, array) === true) {
@@ -45,10 +54,25 @@ function find(array, predicate) {
   return null;
 }
 
+/**
+ * Returns val if x is either not a Number type or inferior or equal to 0.
+ * @param {Number} [x]
+ * @param {*} val
+ * @returns {*}
+ */
 function def(x, val) {
   return typeof x == "number" && x > 0 ? x : val;
 }
 
+/**
+ * Get closest bitrate lower or equal to the bitrate wanted when the threshold
+ * is equal to 0. You can add a security margin by setting the threshold between
+ * 0 and 1.
+ * @param {Array.<Number>} bitrates - all available bitrates.
+ * @param {Number} btr - a chosen bitrate
+ * @param {Number} [treshold=0]
+ * @returns {Number}
+ */
 function getClosestBitrate(bitrates, btr, threshold=0) {
   for (let i = bitrates.length - 1; i >= 0; i--) {
     if ((bitrates[i] / btr) <= (1 - threshold)) {
@@ -58,6 +82,14 @@ function getClosestBitrate(bitrates, btr, threshold=0) {
   return bitrates[0];
 }
 
+/**
+ * Get the bitrate from the first representation which has a width >= to the
+ * width wanted.
+ * Returns Infinity if not found.
+ * @param {Array.<Object>} reps - The representations array
+ * @param {Number} width
+ * @returns {Number}
+ */
 function getClosestDisplayBitrate(reps, width) {
   const rep = find(reps, (r) => r.width >= width);
   if (rep) {
@@ -67,6 +99,11 @@ function getClosestDisplayBitrate(reps, width) {
   }
 }
 
+/**
+ * @param {Array.<Object>} adaptations
+ * @param {string} lang
+ * @returns {Object|null}
+ */
 function findAdaptationByLang(adaptations, lang) {
   const index = findBetterMatchIndex(adaptations.map((a) => a.lang), lang);
   if (index >= 0) {
@@ -75,6 +112,13 @@ function findAdaptationByLang(adaptations, lang) {
   return null;
 }
 
+/**
+ * Filter the given observable/array to only keep the item with the selected
+ * type.
+ * @param {Observable|Array.<Object>} stream
+ * @param {string} selectedType
+ * @returns {Observable|Array.<Object>}
+ */
 function filterByType(stream, selectedType) {
   return stream.filter(({ type }) => type === selectedType);
 }
@@ -104,8 +148,10 @@ module.exports = function(metrics, deviceEvents, options={}) {
   };
 
   const averageBitratesConns = [
-    AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 }).multicast($averageBitrates.audio),
-    AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 }).multicast($averageBitrates.video),
+    AverageBitrate(filterByType(metrics, "audio"), { alpha: 0.6 })
+      .multicast($averageBitrates.audio),
+    AverageBitrate(filterByType(metrics, "video"), { alpha: 0.6 })
+      .multicast($averageBitrates.video),
   ];
 
   let conns = new Subscription();
@@ -127,16 +173,41 @@ module.exports = function(metrics, deviceEvents, options={}) {
     text:  new BehaviorSubject(defaultBufferSize),
   };
 
+  /**
+   * Returns an Observable emitting:
+   *   - first, the current audio adaption
+   *   - the new one each time it changes
+   * @param {Array.<Object>} adaptations - The available audio adaptations
+   * objects.
+   * @returns {Observable}
+   */
   function audioAdaptationChoice(adaptations) {
     return $languages.distinctUntilChanged()
       .map((lang) => findAdaptationByLang(adaptations, lang) || adaptations[0]);
   }
 
+  /**
+   * Returns an Observable emitting:
+   *   - first, the current text adaption
+   *   - the new one each time it changes
+   * @param {Array.<Object>} adaptations - The available text adaptations
+   * objects.
+   * @returns {Observable}
+   */
   function textAdaptationChoice(adaptations) {
     return $subtitles.distinctUntilChanged()
       .map((lang) => findAdaptationByLang(adaptations, lang));
   }
 
+  /**
+   * Get the current and new adaptations each time it changes for all
+   * types.
+   * Mostly useful for audio languages and text subtitles to know which one
+   * to choose first and when it changes.
+   * @param {string} type - The adaptation type
+   * @param {Array.<Object>} adaptations
+   * @returns {Observable}
+   */
   function getAdaptationsChoice(type, adaptations) {
     if (type == "audio") {
       return audioAdaptationChoice(adaptations);
@@ -149,10 +220,16 @@ module.exports = function(metrics, deviceEvents, options={}) {
     return only(adaptations[0]);
   }
 
+  /**
+   * Returns an object containing two observables:
+   *   - representations: the chosen best representation for the adaptation
+   *     (correlated from the user, max and average bitrates)
+   *   - bufferSizes: the bufferSize chosen
+   * @param {Object} adaptation
+   * @returns {Object}
+   */
   function getBufferAdapters(adaptation) {
     const { type, bitrates, representations } = adaptation;
-
-    const firstRep = representations[0];
 
     let representationsObservable;
     if (representations.length > 1) {
@@ -214,8 +291,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
         })
         .distinctUntilChanged((a, b) => a.id === b.id);
     }
-    else {
-      representationsObservable = only(firstRep);
+    else { // representations.length <= 1
+      representationsObservable = only(representations[0]);
     }
 
     return {

@@ -16,7 +16,7 @@
 
 /**
  * Caching object used to cache initialization segments.
- * This allow to have a faster representation switch and seeking.
+ * This allow to have a faster representation switch and faster seeking.
  */
 class InitializationSegmentCache {
   constructor() {

@@ -806,6 +806,10 @@ function sessionEventsHandler(session, keySystem, errorStream) {
  *
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
+ * @param {HTMLMediaElement} video
+ * @param {Object} keySystems
+ * @param {Subject} errorStream
+ * @returns {Observable}
  */
 function createEME(video, keySystems, errorStream) {
   if (__DEV__) {

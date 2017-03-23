@@ -66,7 +66,7 @@ function normalizeBase(base) {
   if (base.length === 2) {
     result = ISO_MAP_2_3[base];
   }
-  if (base.length === 3) {
+  else if (base.length === 3) {
     result = ISO_MAP_3_3[base];
   }
   return result || base;

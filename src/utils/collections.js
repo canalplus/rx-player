@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * Simple hash-based set.
+ * @class SimpleSet
+ */
 class SimpleSet {
   constructor() {
     this.hash = {};

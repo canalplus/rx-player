@@ -1,5 +1,10 @@
 const assert = require("./assert");
 
+/**
+ * Returns total bytes in a TypedArray.
+ * @param {TypedArray} arr
+ * @returns {Number}
+ */
 function totalBytes(arr) {
   let tot = 0;
   for (let i = 0; i < arr.length; i++) {
@@ -8,6 +13,12 @@ function totalBytes(arr) {
   return tot;
 }
 
+/**
+ * Returns Uint8Array from UTF16 string.
+ * /!\ Take only the first byte from each UTF16 code.
+ * @param {string} str
+ * @returns {Uint8Array}
+ */
 function strToBytes(str) {
   const len = str.length;
   const arr = new Uint8Array(len);
@@ -17,10 +28,23 @@ function strToBytes(str) {
   return arr;
 }
 
+/**
+ * construct string from unicode values.
+ * /!\ does not support non-UCS-2 values
+ * @param {TypedArray} bytes
+ * @returns {string}
+ */
 function bytesToStr(bytes) {
   return String.fromCharCode.apply(null, bytes);
 }
 
+/**
+ * construct string from unicode values.
+ * Only use every other byte for each UTF-16 character.
+ * /!\ does not support non-UCS-2 values
+ * @param {TypedArray} bytes
+ * @returns {string}
+ */
 function bytesToUTF16Str(bytes) {
   let str = "";
   const len = bytes.length;
@@ -30,6 +54,12 @@ function bytesToUTF16Str(bytes) {
   return str;
 }
 
+/**
+ * Convert hex codes in a string form into the corresponding bytes.
+ * @param {string} str
+ * @returns {Uint8Array}
+ * @throws TypeError - str.length is odd
+ */
 function hexToBytes(str) {
   const len = str.length;
   const arr = new Uint8Array(len/2);
@@ -39,6 +69,13 @@ function hexToBytes(str) {
   return arr;
 }
 
+/**
+ * Convert bytes into the corresponding hex string, with the possibility
+ * to add a separator.
+ * @param {TypedArray} bytes
+ * @param {string} [sep=""] - separator. Separate each two hex character.
+ * @returns {string}
+ */
 function bytesToHex(bytes, sep) {
   if (!sep) {
     sep = "";
@@ -55,6 +92,13 @@ function bytesToHex(bytes, sep) {
   return hex;
 }
 
+/**
+ * Returns a Uint8Array from the arguments given, in order:
+ *   - if the next argument given is a number N set the N next bytes to 0.
+ *   - else set the next bytes to the argument given.
+ * @param {...(Number|TypedArray)} arguments
+ * @returns {Uint8Array}
+ */
 function concat() {
   const l = arguments.length;
   let i = -1;
@@ -80,12 +124,24 @@ function concat() {
   return arr;
 }
 
+/**
+ * Translate groups of 2 big-endian bytes to Integer (from 0 up to 65535).
+ * @param {TypedArray} bytes
+ * @param {Number} off - The offset (from the start of the given array)
+ * @returns {Number}
+ */
 function be2toi(bytes, off) {
   return (
     (bytes[0+off] << 8) +
-    (bytes[1+off] << 0));
+    (bytes[1+off] << 0)); // XXX what's '<< 0' for?
 }
 
+/**
+ * Translate groups of 4 big-endian bytes to Integer.
+ * @param {TypedArray} bytes
+ * @param {Number} off - The offset (from the start of the given array)
+ * @returns {Number}
+ */
 function be4toi(bytes, off) {
   return (
     (bytes[0+off] * 0x1000000) +
@@ -94,18 +150,32 @@ function be4toi(bytes, off) {
     (bytes[3+off]));
 }
 
+/**
+ * Translate groups of 8 big-endian bytes to Integer.
+ * @param {TypedArray} bytes
+ * @param {Number} off - The offset (from the start of the given array)
+ * @returns {Number}
+ */
 function be8toi(bytes, off) {
   return (
-   ((bytes[0+off] * 0x1000000) +
-    (bytes[1+off] * 0x0010000) +
-    (bytes[2+off] * 0x0000100) +
-    (bytes[3+off])) * 0x100000000 +
-    (bytes[4+off] * 0x1000000) +
-    (bytes[5+off] * 0x0010000) +
-    (bytes[6+off] * 0x0000100) +
-    (bytes[7+off]));
+    (
+      (bytes[0+off] * 0x1000000) +
+      (bytes[1+off] * 0x0010000) +
+      (bytes[2+off] * 0x0000100) +
+       (bytes[3+off])
+     ) * 0x100000000 +
+     (bytes[4+off] * 0x1000000) +
+     (bytes[5+off] * 0x0010000) +
+     (bytes[6+off] * 0x0000100) +
+     (bytes[7+off]));
 }
 
+/**
+ * Translate Integer (from 0 up to 65535) to a Uint8Array of length 2 of
+ * the corresponding big-endian bytes.
+ * @param {Number} num
+ * @returns {Uint8Array}
+ */
 function itobe2(num) {
   return new Uint8Array([
     (num >>> 8) & 0xFF,
@@ -113,6 +183,12 @@ function itobe2(num) {
   ]);
 }
 
+/**
+ * Translate Integer to a Uint8Array of length 4 of the corresponding big-endian
+ * bytes.
+ * @param {Number} num
+ * @returns {Uint8Array}
+ */
 function itobe4(num) {
   return new Uint8Array([
     (num >>> 24) & 0xFF,
@@ -122,6 +198,12 @@ function itobe4(num) {
   ]);
 }
 
+/**
+ * Translate Integer to a Uint8Array of length 8 of the corresponding big-endian
+ * bytes.
+ * @param {Number} num
+ * @returns {Uint8Array}
+ */
 function itobe8(num) {
   const l = (num % 0x100000000);
   const h = (num - l) / 0x100000000;
@@ -137,12 +219,24 @@ function itobe8(num) {
   ]);
 }
 
+/**
+ * Translate groups of 2 little-endian bytes to Integer (from 0 up to 65535).
+ * @param {TypedArray} bytes
+ * @param {Number} off - The offset (from the start of the given array)
+ * @returns {Number}
+ */
 function le2toi(bytes, off) {
   return (
     (bytes[0+off] << 0) +
     (bytes[1+off] << 8));
 }
 
+/**
+ * Translate groups of 4 little-endian bytes to Integer.
+ * @param {TypedArray} bytes
+ * @param {Number} off - The offset (from the start of the given array)
+ * @returns {Number}
+ */
 function le4toi(bytes, off) {
   return (
     (bytes[0+off]) +
@@ -151,6 +245,12 @@ function le4toi(bytes, off) {
     (bytes[3+off] * 0x1000000));
 }
 
+/**
+ * Translate groups of 8 little-endian bytes to Integer.
+ * @param {TypedArray} bytes
+ * @param {Number} off - The offset (from the start of the given array)
+ * @returns {Number}
+ */
 function le8toi(bytes, off) {
   return (
     (bytes[0+off]) +
@@ -163,6 +263,12 @@ function le8toi(bytes, off) {
     (bytes[7+off] * 0x1000000) * 0x100000000));
 }
 
+/**
+ * Translate Integer (from 0 up to 65535) to a Uint8Array of length 2 of
+ * the corresponding little-endian bytes.
+ * @param {Number} num
+ * @returns {Uint8Array}
+ */
 function itole2(num) {
   return new Uint8Array([
     (num)       & 0xFF,
@@ -170,6 +276,12 @@ function itole2(num) {
   ]);
 }
 
+/**
+ * Translate Integer to a Uint8Array of length 4 of the corresponding
+ * little-endian bytes.
+ * @param {Number} num
+ * @returns {Uint8Array}
+ */
 function itole4(num) {
   return new Uint8Array([
     (num)        & 0xFF,
@@ -179,6 +291,12 @@ function itole4(num) {
   ]);
 }
 
+/**
+ * Translate Integer to a Uint8Array of length 8 of the corresponding
+ * little-endian bytes.
+ * @param {Number} num
+ * @returns {Uint8Array}
+ */
 function itole8(num) {
   const l = (num % 0x100000000);
   const h = (num - l) / 0x100000000;
@@ -194,6 +312,11 @@ function itole8(num) {
   ]);
 }
 
+/**
+ * @param {string} uuid
+ * @returns {string}
+ * @throws AssertionError - The uuid length is not 16
+ */
 function guidToUuid(uuid) {
   assert.equal(uuid.length, 16, "UUID length should be 16");
   const buf = strToBytes(uuid);
@@ -219,6 +342,12 @@ function guidToUuid(uuid) {
   return bytesToHex(ord);
 }
 
+/**
+ * Creates a base-64 encoded ASCII string from a string of binary data, with
+ * possible trailing equal sign(s) stripped.
+ * @param {string}
+ * @returns {string}
+ */
 function toBase64URL(str) {
   return btoa(str).replace(/\=+$/, "");
 }

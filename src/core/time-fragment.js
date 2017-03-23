@@ -16,6 +16,14 @@
 
 const assert = require("../utils/assert");
 
+/**
+ * Parse multiple formats of timeFragments for start and end to either:
+ *   - percentages
+ *   - time numbers in seconds
+ *   - Date Objects
+ * @param {string|Object} timeFragment
+ * @returns {Object}
+ */
 function parseTimeFragment(timeFragment) {
   if (typeof timeFragment == "string") {
     timeFragment = temporalMediaFragmentParser(timeFragment);
@@ -23,6 +31,7 @@ function parseTimeFragment(timeFragment) {
     timeFragment = {};
   }
 
+  // string timeFragment are percentages
   if (typeof timeFragment.start == "string" &&
       typeof timeFragment.end == "string") {
     if (!timeFragment.start) {
@@ -32,7 +41,7 @@ function parseTimeFragment(timeFragment) {
       timeFragment.end = "100%";
     }
   }
-  else {
+  else { // Number / Date
     if (!timeFragment.start) {
       timeFragment.start = 0;
     }
@@ -64,7 +73,12 @@ function parseTimeFragment(timeFragment) {
 
 const errMessage = "invalid MediaFragment";
 
-function normalizeNTPTime(time) {
+/**
+ * Convert NPT (normal play time - RFC2326) into seconds.
+ * @param {string} time
+ * @returns {Number}
+ */
+function normalizeNPTTime(time) {
   if (!time) {
     return false;
   }
@@ -110,8 +124,15 @@ function normalizeNTPTime(time) {
   return hours * 3600 + minutes * 60 + seconds;
 }
 
-// we interpret frames as milliseconds, and further-subdivison-of-frames
-// as microseconds. this allows for relatively easy comparison.
+/**
+ * Convert SMPTE timecode to seconds.
+ * (https://en.wikipedia.org/wiki/SMPTE_timecode)
+ *
+ * We interpret frames as milliseconds, and further-subdivison-of-frames
+ * as microseconds. this allows for relatively easy comparison.
+ * @param {string} time
+ * @returns {Number|Boolean} - time in seconds. Boolean if not valid.
+ */
 function normalizeSMPTETime(time) {
   if (!time) {
     return false;
@@ -159,10 +180,24 @@ function normalizeSMPTETime(time) {
       frames * 0.001 + subframes * 0.000001;
 }
 
+/**
+ * Convert ISO8601 to a Date Object.
+ * XXX Returning a Date leads to some undefined behavior down the code
+ * where a Number is expected.
+ * @param {string} time
+ * @returns {Date}
+ */
 function normalizeWallClockTime(time) {
+  // Date.parse already understand ISO 8601, thankfully
   return new Date(Date.parse(time));
 }
 
+/**
+ * Convert percentage string into... the same percentage string.
+ * False if empty string.
+ * @param {string} time
+ * @returns {string|Boolean}
+ */
 function normalizePercentage(time) {
   if (!time) {
     return false;
@@ -171,9 +206,13 @@ function normalizePercentage(time) {
   return time;
 }
 
-// MediaFragment temporal parser.
-// adapted from: https://github.com/tomayac/Media-Fragments-URI
-// specification: http://www.w3.org/TR/media-frags/#naming-time
+/*
+ * MediaFragment temporal parser.
+ * adapted from: https://github.com/tomayac/Media-Fragments-URI
+ * specification: http://www.w3.org/TR/media-frags/#naming-time
+ * @param {string} value
+ * @returns {Object}
+ */
 function temporalMediaFragmentParser(value) {
   const components = value.split(",");
   assert(components.length <= 2, errMessage);
@@ -188,18 +227,36 @@ function temporalMediaFragmentParser(value) {
     .replace("clock:", "");
 
   // hours:minutes:seconds.milliseconds
+  // XXX in RFC2326 we seems to see that "npt=" is recommended, not "npt:". Fix that?
   const npt = /^((npt\:)?((\d+\:(\d\d)\:(\d\d))|((\d\d)\:(\d\d))|(\d+))(\.\d*)?)?$/;
+
   // hours:minutes:seconds:frames.further-subdivison-of-frames
   const smpte = /^(\d+\:\d\d\:\d\d(\:\d\d(\.\d\d)?)?)?$/;
-  // regexp adapted from http://delete.me.uk/2005/03/iso8601.html
+
+  // ISO8601 regExp
+  // Examples:
+  // 2017-03-23T15:09:17Z
+  // 2017-03-23T17:07:46+01:00
+  // 2017-03-23T17:07:46-01:00
+  // XXX This regexp matches empty string, just years, just year-months, just
+  // years-months-days. Should probably be fixed we want at least until the
+  // timezone (Z for Zulu time).
   const wallClock =
     /^((\d{4})(-(\d{2})(-(\d{2})(T(\d{2})\:(\d{2})(\:(\d{2})(\.(\d+))?)?(Z|(([-\+])(\d{2})\:(\d{2})))?)?)?)?)?$/;
-  // float%
+
+  // Pecentages
+  // Examples:
+  // 80 %
+  // 80%
+  // 32.12324 %
+  // 32.12324%
+  //
+  // XXX matches an empty string
   const percentage = /^(\d*(\.\d+)? ?%)?$/;
 
   let timeNormalizer;
   if (npt.test(start) && npt.test(end)) {
-    timeNormalizer = normalizeNTPTime;
+    timeNormalizer = normalizeNPTTime;
   }
   else if (smpte.test(start) && smpte.test(end)) {
     timeNormalizer = normalizeSMPTETime;

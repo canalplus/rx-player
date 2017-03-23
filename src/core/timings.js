@@ -24,6 +24,7 @@ const SAMPLING_INTERVAL_NO_MEDIASOURCE = 500;
 
 // time in seconds protecting live buffer to prevent ahead of time
 // buffering
+// XXX Delete this?
 const LIVE_PROTECTION = 10;
 
 // stall gap in seconds
@@ -33,6 +34,10 @@ const RESUME_GAP = 5;
 // seek gap in seconds
 const SEEK_GAP = 2;
 
+/**
+ * HTMLMediaElement Events for which timings are calculated and emitted.
+ * @type {Array.<string>}
+ */
 const SCANNED_VIDEO_EVENTS = [
   "canplay",
   "play",
@@ -217,11 +222,19 @@ function scanTimings(prevTimings, currentTimings, requiresMediaSource) {
  *
  * The sampling is manual instead of based on "timeupdate" to reduce the
  * number of events.
+ * @param {HTMLMediaElement} video
+ * @param {Object} options
+ * @returns {Observable}
  */
 function createTimingsSampler(video, { requiresMediaSource }) {
   return Observable.create((obs) => {
     let prevTimings = getTimings(video, "init");
 
+    /**
+     * Emit timings sample.
+     * Meant to be used as a callback on various async events.
+     * @param {Event} [evt] - The Event which triggered the callback, if one.
+     */
     function emitSample(evt) {
       const timingEventType = evt && evt.type || "timeupdate";
       const currentTimings = getTimings(video, timingEventType);
@@ -247,6 +260,14 @@ function createTimingsSampler(video, { requiresMediaSource }) {
     .refCount();
 }
 
+/**
+ * Observable emitting each time the player is in a true seeking state.
+ * That is, the player is seeking and the buffer gap is not big enough to
+ * guarantee uninterrupted playback.
+ * @param {Observable} timingsSampling - the timings observable emitting every
+ * seeking events.
+ * @returns {Observable}
+ */
 function seekingsSampler(timingsSampling) {
   return timingsSampling
     .filter((t) => (

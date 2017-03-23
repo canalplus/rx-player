@@ -4,6 +4,12 @@ const BUFFER_APPEND = "append";
 const BUFFER_REMOVE = "remove";
 const BUFFER_STREAM = "stream";
 
+/**
+ * Append/Remove from sourceBuffer in a queue.
+ * Wait for the previous buffer action to be finished (updateend event) to
+ * perform the next in the queue.
+ * @class BufferingQueue
+ */
 class BufferingQueue {
   constructor(sourceBuffer) {
     this.buffer = sourceBuffer;
@@ -43,6 +49,13 @@ class BufferingQueue {
     }
   }
 
+  /**
+   * Queue a new action.
+   * Begin flushing if no action were previously in the queue.
+   * @param {string} type
+   * @param {*} args
+   * @returns {Subject} - Can be used to follow the buffer action advancement.
+   */
   queueAction(type, args) {
     const subj = new Subject();
     const length = this.queue.unshift({ type, args, subj });
@@ -64,6 +77,9 @@ class BufferingQueue {
     return this.queueAction(BUFFER_STREAM, stream);
   }
 
+  /**
+   * Perform next queued action if one and none are pending.
+   */
   flush() {
     if (this.flushing ||
         this.queue.length === 0 ||

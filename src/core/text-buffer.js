@@ -33,6 +33,11 @@ class TextSourceBuffer extends AbstractSourceBuffer {
     this.trackElement = trackElement;
   }
 
+  /**
+   * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
+   * @param {Array.<Object>} - Objects containing the start, end and text.
+   * @returns {Array.<Cue>}
+   */
   createCuesFromArray(cues) {
     const nativeCues = [];
     for (let i = 0; i < cues.length; i++) {
@@ -45,12 +50,12 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   }
 
   _append(cues) {
-    if (this.isVTT && isVTTSupported()) {
-      const blob = new Blob([cues], { type: "text/vtt" });
-      const url = URL.createObjectURL(blob);
+    if (this.isVTT && isVTTSupported()) { // XXX isVTTSupported wanted in if?
       if (this.trackElement) {
+        const blob = new Blob([cues], { type: "text/vtt" });
+        const url = URL.createObjectURL(blob);
         this.trackElement.src = url;
-        this.buffered.insert(0, Infinity);
+        this.buffered.insert(0, Infinity); // XXX wanted?
       } else {
         log.warn("vtt subtitles not supported");
       }

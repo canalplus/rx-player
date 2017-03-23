@@ -46,6 +46,7 @@ let MediaKeys_ = (
   win.WebKitMediaKeys ||
   win.MSMediaKeys);
 
+// true for IE / Edge
 const isIE = (
   navigator.appName == "Microsoft Internet Explorer" ||
   navigator.appName == "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
@@ -155,6 +156,12 @@ function shouldRenewMediaKeys() {
   return isIE;
 }
 
+/**
+ * Wait for the MediaSource's sourceopen event and emit. Emit immediatelly if
+ * already received.
+ * @param {MediaSource}
+ * @returns {Observable}
+ */
 function sourceOpen(mediaSource) {
   if (mediaSource.readyState == "open") {
     return Observable.of(null);
@@ -163,6 +170,12 @@ function sourceOpen(mediaSource) {
   }
 }
 
+/**
+ * Returns an observable emitting a single time, as soon as a seek is possible
+ * (the metatada are loaded).
+ * @param {HTMLMediaElement} videoElement
+ * @returns {Observable}
+ */
 function canSeek(videoElement) {
   if (videoElement.readyState >= HAVE_METADATA) {
     return Observable.of(null);
@@ -171,6 +184,11 @@ function canSeek(videoElement) {
   }
 }
 
+/**
+ * Returns ane observable emitting a single time, as soon as a play is possible.
+ * @param {HTMLMediaElement} videoElement
+ * @returns {Observable}
+ */
 function canPlay(videoElement) {
   if (videoElement.readyState >= HAVE_ENOUGH_DATA) {
     return Observable.of(null);
@@ -508,6 +526,10 @@ if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener
 
 }
 
+/**
+ * Request fullScreen action on a given element.
+ * @param {HTMLElement} elt
+ */
 function requestFullscreen(elt) {
   if (!isFullscreen()) {
     if (elt.requestFullscreen) {
@@ -522,6 +544,9 @@ function requestFullscreen(elt) {
   }
 }
 
+/**
+ * Exit fullscreen if an element is currently in fullscreen.
+ */
 function exitFullscreen() {
   if (isFullscreen()) {
     if (doc.exitFullscreen) {
@@ -536,6 +561,11 @@ function exitFullscreen() {
   }
 }
 
+/**
+ * Returns true if the document is being displayed in fullscreen mode;
+ * otherwise it's false.
+ * @returns {boolean}
+ */
 function isFullscreen() {
   return !!(
     doc.fullscreenElement ||
@@ -545,6 +575,12 @@ function isFullscreen() {
   );
 }
 
+/**
+ * Returns an observable:
+ *   - emitting true when the visibility of document changes to hidden
+ *   - emitting false when the visibility of document changes to visible
+ * @returns {Observable}
+ */
 function visibilityChange() {
   let prefix;
   if (doc.hidden != null) {
@@ -587,12 +623,21 @@ function addTextTrack(video, hideNativeSubtitle) {
   return { track, trackElement };
 }
 
+/**
+ * Returns true if video text tracks (vtt) are supported in the current browser.
+ * @returns {Boolean}
+ */
 function isVTTSupported() {
   return !isIE;
 }
 
+/**
+ * firefox fix: sometimes the stream can be stalled, even if we are in a
+ * buffer.
+ * @param {Object} timing
+ * @returns {Boolean}
+ */
 function isPlaybackStuck(timing) {
-  // firefox fix: sometimes, the stream can be stalled, even if we are in a buffer.
   const FREEZE_THRESHOLD = 10; // video freeze threshold in seconds
   return (
     isFirefox &&
@@ -602,8 +647,19 @@ function isPlaybackStuck(timing) {
   );
 }
 
-// On IE11, fullscreen change events is called MSFullscreenChange
-const onFullscreenChange = compatibleListener(["fullscreenchange", "FullscreenChange"], PREFIXES.concat("MS"));
+/**
+ * Returns an Observable emitting events when the fullscreen situation of the
+ * element you gave in arguments just changed.
+ *
+ * @param {HMTLElement}
+ * @returns {Observable}
+ */
+const onFullscreenChange = compatibleListener(
+  ["fullscreenchange", "FullscreenChange"],
+
+  // On IE11, fullscreen change events is called MSFullscreenChange
+  PREFIXES.concat("MS")
+);
 
 module.exports = {
   HTMLVideoElement_,

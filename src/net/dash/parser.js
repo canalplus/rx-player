@@ -24,12 +24,22 @@ const iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([
 const rangeRe = /([0-9]+)-([0-9]+)/;
 const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 
-// TODO(pierre): support more than juste timeline index type
+/**
+ * Calculate the last time for the last video index, in s.
+ * TODO(pierre): support more than juste timeline index type
+ * @param {Object}
+ * @returns {Number}
+ */
 function calcLastRef(index) {
   const { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r+1)*d) / index.timescale);
 }
 
+/**
+ * @param {Document} node - The Node content
+ * @param {Object} [base] - Base object that will be enriched
+ * @returns {Object}
+ */
 function feedAttributes(node, base) {
   const attrs = attributes[node.nodeName];
 
@@ -47,14 +57,29 @@ function feedAttributes(node, base) {
   return obj;
 }
 
+/**
+ * Parse MPD string attributes.
+ * @param {string} str
+ * @returns {string} - the same string
+ */
 function parseString(str) {
   return str;
 }
 
+/**
+ * Parse MPD boolean attributes.
+ * @param {string}
+ * @returns {Boolean}
+ */
 function parseBoolean(str) {
   return str == "true";
 }
 
+/**
+ * Parse some MPD attributes.
+ * @param {string}
+ * @returns {Boolean|Number}
+ */
 function parseIntOrBoolean(str) {
   if (str == "true") {
     return true;
@@ -65,10 +90,20 @@ function parseIntOrBoolean(str) {
   return parseInt(str);
 }
 
+/**
+ * Parse MPD date attributes.
+ * @param {string}
+ * @returns {Date}
+ */
 function parseDateTime(str) {
   return new Date(Date.parse(str));
 }
 
+/**
+ * Parse MPD ISO8601 duration attributes into seconds.
+ * @param {string}
+ * @returns {Number}
+ */
 function parseDuration(date) {
   if (!date) {
     return 0;
@@ -87,6 +122,12 @@ function parseDuration(date) {
   );
 }
 
+/**
+ * Parse MPD frame rate attributes.
+ * -1 if the frameRate could not be parsed,
+ * @param {string} str
+ * @returns {Number}
+ */
 function parseFrameRate(str) {
   const match = frameRateRe.exec(str);
   if (!match) {
@@ -100,10 +141,21 @@ function parseFrameRate(str) {
     : nom;
 }
 
+/**
+ * Parse MPD ratio attributes.
+ * @param {string} str
+ * @returns {string}
+ */
 function parseRatio(str) {
   return str;
 }
 
+/**
+ * Parse MPD byterange attributes into arrays of two elements: the start and
+ * the end.
+ * @param {string} str
+ * @returns {Array.<Number>}
+ */
 function parseByteRange(str) {
   const match = rangeRe.exec(str);
   if (!match) {
@@ -113,6 +165,7 @@ function parseByteRange(str) {
   }
 }
 
+// @see attributes
 const RepresentationBaseType = [
   { k: "profiles",          fn: parseString },
   { k: "width",             fn: parseInt },
@@ -127,6 +180,7 @@ const RepresentationBaseType = [
   { k: "codingDependency",  fn: parseBoolean },
 ];
 
+// @see attributes
 const SegmentBaseType = [
   { k: "timescale",                fn: parseInt },
   { k: "presentationTimeOffset",   fn: parseFloat, def: 0 },
@@ -136,11 +190,30 @@ const SegmentBaseType = [
   { k: "availabilityTimeComplete", fn: parseBoolean },
 ];
 
+// @see attributes
 const MultipleSegmentBaseType = SegmentBaseType.concat([
   { k: "duration",    fn: parseInt },
   { k: "startNumber", fn: parseInt },
 ]);
 
+/**
+ * Object describing how a Dash MPD should be parsed automatically.
+ *
+ * Basically, immediate keys are the nodeName concerned.
+ * They contain array of Objects, each concerning a unique node attributes.
+ *
+ * The keys these Objects have are as such:
+ *
+ *   - k {string}: the name of the node attribute
+ *
+ *   - fn {Function}: the function called to parse this attribute. It takes
+ *     as argument the attribute value and should return the parsed value.
+ *
+ *   - n {string}: new name used for the attribute in the parsed object.
+ *
+ *   - def {*}: the default value used if the attribute is not found in the
+ *     MPD.
+ */
 const attributes = {
   "ContentProtection": [
     { k: "schemeIdUri", fn: parseString },
@@ -226,6 +299,17 @@ const attributes = {
   ],
 };
 
+/**
+ * Reduce on each immediate children from the Document object given.
+ * @param {Document} root
+ * @param {Function} fn - Will be called on each children with the following
+ * arguments:
+ *   1. the reducer's accumulator
+ *   2. the current node's name
+ *   3. the current node Document Object
+ * @param {*} init - the initial value for the accumulator
+ * @returns {*} - the accumulator
+ */
 function reduceChildren(root, fn, init) {
   let node = root.firstElementChild, r = init;
   while (node) {
@@ -235,6 +319,12 @@ function reduceChildren(root, fn, init) {
   return r;
 }
 
+/**
+ * Parse the contentProtection node of a MPD.
+ * @param {Document} root
+ * @param {Function} contentProtectionParser
+ * @returns {Object}
+ */
 function parseContentProtection(root, contentProtectionParser) {
   return contentProtectionParser(feedAttributes(root), root);
 }
@@ -370,6 +460,12 @@ function parseAdaptationSet(root, contentProtectionParser) {
   return feedAttributes(root, res);
 }
 
+/**
+ * Parse a single manifest period.
+ * @param {Document} root
+ * @param {Function} contentProtectionParser
+ * @returns {Object}
+ */
 function parsePeriod(root, contentProtectionParser) {
   const attrs = feedAttributes(root, reduceChildren(root, (res, name, node) => {
     switch(name) {
@@ -392,6 +488,11 @@ function parsePeriod(root, contentProtectionParser) {
   return attrs;
 }
 
+/**
+ * @param {Document} manifest - Original manifest as returned by the server
+ * @param {Function} [contentProtectionParser]
+ * @returns {Object} - parsed manifest
+ */
 function parseFromDocument(document, contentProtectionParser) {
   const root = document.documentElement;
   assert.equal(root.nodeName, "MPD", "document root should be MPD");
@@ -437,10 +538,21 @@ function parseFromDocument(document, contentProtectionParser) {
   return manifest;
 }
 
+/**
+ * @param {string} manifest - manifest file in a string format
+ * @param {Function} [contentProtectionParser]
+ * @returns {Object} - parsed manifest
+ */
 function parseFromString(manifest, contentProtectionParser) {
   return parseFromDocument(new DOMParser().parseFromString(manifest, "application/xml"), contentProtectionParser);
 }
 
+/**
+ * @param {string|Document} manifest - Original manifest as returned by the
+ * server. Either in string format, or in a Document Object format.
+ * @param {Function} [contentProtectionParser]
+ * @returns {Object} - parsed manifest
+ */
 function parser(manifest, contentProtectionParser) {
   if (typeof manifest == "string") {
     return parseFromString(manifest, contentProtectionParser);

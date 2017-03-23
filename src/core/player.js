@@ -58,6 +58,7 @@ const Adaptive = require("../adaptive");
 const Stream = require("./stream");
 const EME = require("./eme");
 
+// -- PLAYER STATES --
 const PLAYER_STOPPED   = "STOPPED";
 const PLAYER_LOADED    = "LOADED";
 const PLAYER_LOADING   = "LOADING";
@@ -67,6 +68,16 @@ const PLAYER_ENDED     = "ENDED";
 const PLAYER_BUFFERING = "BUFFERING";
 const PLAYER_SEEKING   = "SEEKING";
 
+/**
+ * Returns current playback state for the current content.
+ * /!\ Only pertinent for a content that is currently loaded and playing
+ * (i.e. not loading, ended or stopped).
+ * @param {Boolean} isPlaying - Whether the player is currently playing
+ * (not paused).
+ * @param {Boolean} stalled - Whether the player is currently "stalled".
+ *
+ * @returns {string}
+ */
 function calcPlayerState(isPlaying, stalled) {
   if (stalled) {
     return (stalled.name == "seeking")
@@ -81,28 +92,56 @@ function calcPlayerState(isPlaying, stalled) {
   return PLAYER_PAUSED;
 }
 
+/**
+ * Function with no effect. Created as a placeholder function.
+ * TODO remove? Might not be needed.
+ */
 function noop() {}
 
+/**
+ * Assert that a manifest has been loaded (throws otherwise).
+ * @param {Player} player
+ * @throws Error - Throws if the given player has no manifest loaded.
+ */
 function assertMan(player) {
   assert(player.man, "player: no manifest loaded");
 }
 
+/**
+ * @param {Observable} stream
+ * @param {string} type
+ * @returns {Observable}
+ */
 function filterStreamByType(stream, type) {
   return stream
     .filter((o) => o.type == type)
     .map((o) => o.value);
 }
 
+/**
+ * @class Player
+ * @extends EventEmitter
+ */
 class Player extends EventEmitter {
 
+  /**
+   * @returns {Object}
+   */
   static getErrorTypes() {
     return ErrorTypes;
   }
 
+  /**
+   * @returns {Object}
+   */
   static getErrorCodes() {
     return ErrorCodes;
   }
 
+  /**
+   * @param {Object} options
+   * @param {HTMLVideoElement_} options.videoElement
+   */
   constructor(options) {
     let { videoElement } = options;
 
@@ -119,7 +158,7 @@ class Player extends EventEmitter {
 
     super();
 
-    // auto-bindings
+    // auto-bindings. TODO Needed? Pollute the namespace / Only one use for each
     this._playPauseNext$ = this._playPauseNext.bind(this);
     this._textTrackChanges$ = this._textTrackChanges.bind(this);
     this._setPlayerState$ = this._setPlayerState.bind(this);
@@ -139,21 +178,24 @@ class Player extends EventEmitter {
     assert((videoElement instanceof HTMLVideoElement_),
       "requires an actual HTMLVideoElement");
 
-    // Workaroud to support Firefox autoplay on FF 42.
+    // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
     this.version = /*PLAYER_VERSION*/"2.0.12";
     this.video = videoElement;
 
-    // fullscreen change
+    // fullscreen change subscription.
+    // TODO prepend '_' to indicate private status?
     this.fullscreen = onFullscreenChange(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
-    // playing state change
+    // playing state change.
+    // TODO prepend '_' to indicate private status?
     this.playing = new BehaviorSubject();
 
     // multicaster forwarding all streams events
+    // TODO prepend '_' to indicate private status?
     this.stream = new Subject();
     this.images = new Subject();
     this.errorStream = new Subject();
@@ -174,7 +216,7 @@ class Player extends EventEmitter {
       defaultSubtitle: normalizeLang(defaultSubtitle),
     });
 
-    // volume muted memory
+    // memorize previous volume when muted - minimum at first
     this.muted = 0.1;
 
     // states
@@ -184,6 +226,9 @@ class Player extends EventEmitter {
     this.log = log;
   }
 
+  /**
+   * Reset all states relative to a playing content.
+   */
   _resetStates() {
     this.man = null;
     this.reps = { video: null, audio: null, text: null, images: null };
@@ -194,6 +239,10 @@ class Player extends EventEmitter {
     this.images.next(null);
   }
 
+  /**
+   * Unsubscribe from subscriptions done in loadVideo for the current content.
+   * This also stops the current video as a side-effect.
+   */
   _unsubscribe() {
     if (this.subscriptions) {
       const subscriptions = this.subscriptions;
@@ -202,6 +251,9 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Stop the player.
+   */
   stop() {
     if (this.state !== PLAYER_STOPPED) {
       this._resetStates();
@@ -235,6 +287,11 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Parse the options given as arguments to the loadVideo method.
+   * @param {Object} opts
+   * @returns {Object}
+   */
   _parseOptions(opts) {
     opts = Object.assign({
       transport: this.defaultTransport,
@@ -330,8 +387,13 @@ class Player extends EventEmitter {
     this.frag = timeFragment;
     this.playing.next(autoPlay);
 
-    if (defaultLanguage) { this.adaptive.setLanguage(normalizeLang(defaultLanguage)); }
-    if (defaultSubtitle) { this.adaptive.setSubtitle(normalizeLang(defaultSubtitle)); }
+    if (defaultLanguage) {
+      this.adaptive.setLanguage(normalizeLang(defaultLanguage));
+    }
+
+    if (defaultSubtitle) {
+      this.adaptive.setSubtitle(normalizeLang(defaultSubtitle));
+    }
 
     const {
       video: videoElement,
@@ -500,10 +562,18 @@ class Player extends EventEmitter {
     return this.man;
   }
 
+  /**
+   * Returns the DOM element used by the player.
+   * @returns {HMTLMediaElement}
+   */
   getVideoElement() {
     return this.video;
   }
 
+  /**
+   * Returns the text-track element used by the player to inject subtitles.
+   * @returns {TextTrack}
+   */
   getNativeTextTrack() {
     const textTracks = this.video.textTracks;
     if (textTracks.length > 0) {
@@ -517,32 +587,67 @@ class Player extends EventEmitter {
     return this.images.distinctUntilChanged();
   }
 
+  /**
+   * Returns the player's current state.
+   * @returns {string}
+   */
   getPlayerState() {
     return this.state;
   }
 
+  /**
+   * Returns true if the content is a live content.
+   * @returns {Boolean}
+   * @throws Error - Throws if the given player has no manifest loaded.
+   */
   isLive() {
     assertMan(this);
     return this.man.isLive;
   }
 
+  /**
+   * Returns the url of the content's manifest
+   * @returns {string}
+   * @throws Error - Throws if the given player has no manifest loaded.
+   */
   getUrl() {
     assertMan(this);
     return this.man.locations[0];
   }
 
+  /**
+   * Returns the video duration, in seconds.
+   * NaN if no video is playing.
+   * Infinity if a live content is playing.
+   * @returns {Number}
+   */
   getVideoDuration() {
     return this.video.duration;
   }
 
+  /**
+   * Returns in seconds the duration of the loaded video on the current range.
+   * @returns {Number}
+   */
   getVideoLoadedTime() {
     return new BufferedRanges(this.video.buffered).getSize(this.video.currentTime);
   }
 
+  /**
+   * Returns in seconds the duration of the played video on the current range.
+   * @returns {Number}
+   */
   getVideoPlayedTime() {
     return new BufferedRanges(this.video.buffered).getLoaded(this.video.currentTime);
   }
 
+    /**
+     * Returns the current playback position :
+     *   - 0 if no manifest is currently loaded
+     *   - in seconds for an on-demand content
+     *   - with a Date object for live content.
+     * @returns {Number|Date}
+     */
   getCurrentTime() {
     if (!this.man) {
       return 0;

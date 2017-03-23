@@ -52,6 +52,15 @@ function parseBaseURL(manifest) {
   return baseURL;
 }
 
+/**
+ * @param {string} location - the manifest's url
+ * @param {Object} manifest - the parsed manifest
+ * @param {Array.<Object>|Object} subtitles - Will be added to the manifest,
+ * as an adaptation.
+ * @param {Array.<Object>|Object} images - Will be added to the manifest,
+ * as an adaptation.
+ * @returns {Object}
+ */
 function normalizeManifest(location, manifest, subtitles, images) {
   if (!manifest.transportType) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
@@ -218,6 +227,11 @@ function normalizeRepresentation(representation, inherit) {
   return representation;
 }
 
+/**
+ * Normalize subtitles Object/Array to include it in a normalized manifest.
+ * @param {Array.<Object>|Object} subtitles
+ * @returns {Array.<Object>}
+ */
 function normalizeSubtitles(subtitles) {
   if (!Array.isArray(subtitles)) {
     subtitles = [subtitles];
@@ -240,7 +254,7 @@ function normalizeSubtitles(subtitles) {
         mimeType,
         index: {
           indexType: "template",
-          duration: Number.MAX_VALUE,
+          duration: Number.MAX_VALUE, // XXX why not Infinity?
           timescale: 1,
           startNumber: 0,
         },
@@ -249,6 +263,11 @@ function normalizeSubtitles(subtitles) {
   }, []);
 }
 
+/**
+ * Normalize images Object/Array to include it in a normalized manifest.
+ * @param {Array.<Object>|Object} images
+ * @returns {Array.<Object>}
+ */
 function normalizeImages(images) {
   if (!Array.isArray(images)) {
     images = [images];
@@ -266,7 +285,7 @@ function normalizeImages(images) {
         mimeType,
         index: {
           indexType: "template",
-          duration: Number.MAX_VALUE,
+          duration: Number.MAX_VALUE, // XXX why not Infinity?
           timescale: 1,
           startNumber: 0,
         },
@@ -275,6 +294,17 @@ function normalizeImages(images) {
   });
 }
 
+/**
+ * Merge dist Object in source Object.
+ * _Deep merge_ Object attributes (excepted when they are Arrays or Date
+ * instances in which cases it is a simple merge).
+ * Think of it as a deeper Object.assign (with only two arguments).
+ *
+ * /!\ the source is mutated during this process
+ * @param {Object} source
+ * @param {Object} dist
+ * @returns {Object}
+ */
 function simpleMerge(source, dist) {
   for (const attr in source) {
     if (!dist.hasOwnProperty(attr)) {
@@ -301,6 +331,15 @@ function simpleMerge(source, dist) {
   return source;
 }
 
+/**
+ * Merge index objects from every newManifest adaptations into the oldManifest
+ * adaptations.
+ *
+ * /!\ mutate oldManifest
+ * @param {Object} oldManifest
+ * @param {Object} newManifest
+ * @returns {Object}
+ */
 function mergeManifestsIndex(oldManifest, newManifest) {
   const oldAdaptations = oldManifest.adaptations;
   const newAdaptations = newManifest.adaptations;
@@ -320,11 +359,24 @@ function mutateManifestLiveGap(manifest, addedTime=1) {
   }
 }
 
+/**
+ * Construct the codec string from given codecs and mimetype.
+ * @param {Object} representation
+ * @returns {string}
+ */
 function getCodec(representation) {
   const { codecs, mimeType } = representation;
   return `${mimeType};codecs="${codecs}"`;
 }
 
+/**
+ * Get every adaptations parsed in an array of objects with 3 properties:
+ *   - type {string}: e.g. audio/video
+ *   - adaptation {Object}: the adaptation itself
+ *   - codec {string}: the codec string for this adaptation
+ * @param {Object} manifest
+ * @returns {Array.<Object>}
+ */
 function getAdaptations(manifest) {
   const adaptationsByType = manifest.adaptations;
   if (!adaptationsByType) {
@@ -344,6 +396,12 @@ function getAdaptations(manifest) {
   return adaptationsList;
 }
 
+/**
+ * Returns only adaptations for a given type (audio/video/image...).
+ * @param {Object} manifest
+ * @param {string} type
+ * @returns {Array.<Object>}
+ */
 function getAdaptationsByType(manifest, type) {
   const { adaptations } = manifest;
   const adaptationsForType = adaptations && adaptations[type];
@@ -355,11 +413,13 @@ function getAdaptationsByType(manifest, type) {
 }
 
 function getAvailableLanguages(manifest) {
-  return getAdaptationsByType(manifest, "audio").map((ada) => normalizeLang(ada.lang));
+  return getAdaptationsByType(manifest, "audio")
+    .map((ada) => normalizeLang(ada.lang));
 }
 
 function getAvailableSubtitles(manifest) {
-  return getAdaptationsByType(manifest, "text").map((ada) => normalizeLang(ada.lang));
+  return getAdaptationsByType(manifest, "text")
+    .map((ada) => normalizeLang(ada.lang));
 }
 
 module.exports = {

@@ -73,7 +73,7 @@ function findAtom(buf, atomName) {
   while (i + 8 < l) {
     size = be4toi(buf, i);
     name = be4toi(buf, i + 4);
-    assert(size > 0, "dash: out of range size");
+    assert(size > 0, "smooth: out of range size");
     if (name === atomName) {
       break;
     } else {
@@ -262,9 +262,10 @@ const atoms = {
   },
 
   /**
-   * {String}       systemId    Hex string representing the CDM, 16 bytes.
-   * {Uint8Array}   privateData Data associated to protection specific system
-   * {[]Uint8Array} keyIds      List of key ids contained in the PSSH
+   * @param {String} systemId - Hex string representing the CDM, 16 bytes.
+   * @param {Uint8Array} privateData - Data associated to protection specific
+   * system.
+   * @param {[]Uint8Array} keyIds - List of key ids contained in the PSSH
    */
   pssh(systemId, privateData=[], keyIds=[]) {
     systemId = systemId.replace(/-/g, "");

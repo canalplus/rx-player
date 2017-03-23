@@ -1,3 +1,9 @@
+/**
+ * Transform an array of strings into an Object with the key and value
+ * mirrored.
+ * @param {Array.<string>} list
+ * @returns {Object}
+ */
 function listToMap(list) {
   const map = list.reduce((map, name) => {
     map[name] = name;
@@ -61,6 +67,9 @@ function errorMessage(name, code, reason) {
   return `${name}(${code})${reason ? ": " + reason.message : ""}`;
 }
 
+/**
+ * @class MediaError
+ */
 function MediaError(code, reason, fatal) {
   this.name = "MediaError";
   this.type = ErrorTypes.MEDIA_ERROR;
@@ -72,6 +81,9 @@ function MediaError(code, reason, fatal) {
 }
 MediaError.prototype = new Error();
 
+/**
+ * @class NetworkError
+ */
 function NetworkError(code, reason, fatal) {
   this.name = "NetworkError";
   this.type = ErrorTypes.NETWORK_ERROR;
@@ -100,6 +112,9 @@ NetworkError.prototype.isHttpError = function(httpErrorCode) {
   );
 };
 
+/**
+ * @class EncryptedMediaError
+ */
 function EncryptedMediaError(code, reason, fatal) {
   this.name = "EncryptedMediaError";
   this.type = ErrorTypes.ENCRYPTED_MEDIA_ERROR;
@@ -111,6 +126,9 @@ function EncryptedMediaError(code, reason, fatal) {
 }
 EncryptedMediaError.prototype = new Error();
 
+/**
+ * @class IndexError
+ */
 function IndexError(code, indexType, fatal) {
   this.name = "IndexError";
   this.type = ErrorTypes.INDEX_ERROR;
@@ -124,6 +142,9 @@ function IndexError(code, indexType, fatal) {
 }
 IndexError.prototype = new Error();
 
+/**
+ * @class OtherError
+ */
 function OtherError(code, reason, fatal) {
   this.name = "OtherError";
   this.type = ErrorTypes.OTHER_ERROR;
@@ -135,6 +156,9 @@ function OtherError(code, reason, fatal) {
 }
 OtherError.prototype = new Error();
 
+/**
+ * @class RequestError
+ */
 function RequestError(xhr, request, type) {
   this.name = "RequestError";
   this.url = request.url;
@@ -145,6 +169,11 @@ function RequestError(xhr, request, type) {
 }
 RequestError.prototype = new Error();
 
+/**
+ * Whether the error given has a type defined here.
+ * @param {Error} error
+ * @returns {Boolean}
+ */
 function isKnownError(error) {
   return (!!error && !!error.type && ErrorTypes.keys.indexOf(error.type) >= 0);
 }
