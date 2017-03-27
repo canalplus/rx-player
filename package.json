@@ -65,6 +65,8 @@
     "rimraf": "^2.5.2",
     "script-loader": "^0.6.1",
     "selenium-webdriver": "^2.53.2",
+    "sinon": "^2.1.0",
+    "sinon-chai": "^2.9.0",
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.5",
     "webpack": "^1.12.12",
