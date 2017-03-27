@@ -17,6 +17,10 @@
   "homepage": "https://github.com/canalplus/rx-player",
   "bugs": "https://github.com/canalplus/rx-player/issues",
   "license": "Apache-2.0",
+  "scripts": {
+    "lint": "eslint --ext .js ./src/**/*.js",
+    "karma": "karma start test/karma.conf.js"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/canalplus/rx-player.git"
@@ -43,6 +47,12 @@
     "eslint-plugin-react": "^6.10.3",
     "file-loader": "^0.8.1",
     "jsx-loader": "^0.13.1",
+    "karma": "^1.5.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-firefox-launcher": "^1.0.1",
+    "karma-mocha": "^1.3.0",
+    "karma-mocha-reporter": "^2.2.3",
+    "karma-webpack": "^2.0.3",
     "lodash": "4.11.1",
     "mkdirp": "^0.5.1",
     "mocha": "^2.5.3",
