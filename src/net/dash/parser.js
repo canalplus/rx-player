@@ -467,7 +467,7 @@ function parseAdaptationSet(root, contentProtectionParser) {
  * @returns {Object}
  */
 function parsePeriod(root, contentProtectionParser) {
-  const attrs = feedAttributes(root, reduceChildren(root, (res, name, node) => {
+  return feedAttributes(root, reduceChildren(root, (res, name, node) => {
     switch(name) {
     case "BaseURL": res.baseURL = node.textContent; break;
     case "AdaptationSet":
@@ -479,13 +479,6 @@ function parsePeriod(root, contentProtectionParser) {
     }
     return res;
   }, { adaptations: [] }));
-
-  if (attrs.baseURL) {
-    attrs.adaptations.forEach(
-      (adaptation) => Object.assign({ baseURL: attrs.baseURL }, adaptation));
-  }
-
-  return attrs;
 }
 
 /**
