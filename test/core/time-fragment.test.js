@@ -1,27 +1,55 @@
 const expect = require("chai").expect;
-const { parseTimeFragment } = require("main/core/time-fragment");
+const { parseTimeFragment } = require("../../src/core/time-fragment.js");
 
 describe("Time fragment", function() {
 
   describe("parser", function() {
 
-    it("parses dates values", function() {
+    it("parses Date Objects into Date Objects", function() {
       const now = Date.now();
       expect(parseTimeFragment({
         start: new Date(now),
         end: new Date(now + 1000),
-      })).to.eql({ start: new Date(now), end: new Date(now + 1000) });
+      })).to.eql({
+        start: new Date(now),
+        end: new Date(now + 1000),
+      });
     });
 
     it("fails with wrong { start, end } interface", function() {
-      expect(() => parseTimeFragment({ start: "foo" })).to.throw();
-      expect(() => parseTimeFragment({ end: "foo" })).to.throw();
-      expect(() => parseTimeFragment({ start: {} })).to.throw();
+      expect(() => parseTimeFragment({
+        start: "foo",
+      })).to.throw();
+      expect(() => parseTimeFragment({
+        end: "foo",
+      })).to.throw();
+      expect(() => parseTimeFragment({
+        start: {},
+      })).to.throw();
     });
 
     it("defaults to a value if none given", function() {
-      expect(parseTimeFragment({ start: 10 })).to.eql({ start: 10, end: Infinity });
-      expect(parseTimeFragment({ end: 10 })).to.eql({ start: 0, end: 10 });
+      expect(parseTimeFragment({
+        start: 10,
+      })).to.eql({ start: 10, end: Infinity });
+
+      expect(parseTimeFragment({
+        end: 10,
+      })).to.eql({ start: 0, end: 10 });
+
+      expect(parseTimeFragment({
+        start: "0%",
+      })).to.eql({
+        start: "0%",
+        end: "100%",
+      });
+
+      expect(parseTimeFragment({
+        start: "0%",
+      })).to.eql({
+        start: "0%",
+        end: "100%",
+      });
     });
 
     it("fails if start >= end", function() {

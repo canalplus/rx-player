@@ -2,7 +2,7 @@ const _ = require("lodash");
 const expect = require("chai").expect;
 const ttmlRollUp = require("raw!test/fixtures/captures-rollup.ttml");
 const ttmlPopOn = require("raw!test/fixtures/captures-popon.ttml");
-const { parseTTML } = require("main/net/smooth/tt-ttml");
+const { parseTTML } = require("../../../src/net/smooth/tt-ttml");
 
 describe("ttml parser", function() {
 

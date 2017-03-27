@@ -1,5 +1,5 @@
 const expect = require("chai").expect;
-const Player = require("main/core/player");
+const Player = require("../../src/core/player.js");
 
 describe("main player", function() {
   const transport = { manifestPipeline: {}, segmentPipeline: {}, textTrackPipeline: {} };

@@ -1,6 +1,6 @@
 const _ = require("lodash");
 const expect = require("chai").expect;
-const parser = require("main/net/smooth/parser");
+const parser = require("../../../src/net/smooth/parser");
 
 describe("smooth parser", function() {
 

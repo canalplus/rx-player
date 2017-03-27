@@ -5,7 +5,7 @@ const {
  getLoaded,
  getSize,
  BufferedRanges,
-} = require("main/core/ranges");
+} = require("../../src/core/ranges.js");
 
 function createRange(ranges) {
   return {

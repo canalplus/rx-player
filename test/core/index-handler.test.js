@@ -1,6 +1,7 @@
 const _ = require("lodash");
 const expect = require("chai").expect;
-const { Timeline, Template } = require("main/core/index-handler");
+const Timeline = require("../../src/core/indexes/timeline.js");
+const Template = require("../../src/core/indexes/template.js");
 
 describe("Timeline index handler", function() {
   const { getSegments, addSegment } = Timeline;
