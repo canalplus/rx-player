@@ -53,14 +53,6 @@ describe("main player", function() {
     expect(pl.getVolume()).to.equal(0.1);
   });
 
-  xit("can seek", function() {
-    return expect(new Player({ transport }).seekTo(1)).to.eventually.equal(1);
-  });
-
-  it("throw error if currentTime not double", function() {
-    return expect(new Player({ transport }).seekTo("troll")).to.be.rejected;
-  });
-
   it("is an eventemitter", function(done) {
     const player = new Player({ transport });
     expect(player.addEventListener).to.be.a("function");
