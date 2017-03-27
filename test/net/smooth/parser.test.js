@@ -1,6 +1,6 @@
-var _ = require("lodash");
-var expect = require("chai").expect;
-var parser = require("main/net/smooth/parser");
+const _ = require("lodash");
+const expect = require("chai").expect;
+const parser = require("main/net/smooth/parser");
 
 describe("smooth parser", function() {
 
@@ -9,28 +9,71 @@ describe("smooth parser", function() {
   });
 
   it("throws root if not SmoothStreamingMedia", function() {
-    expect(function() { parser.parseFromString("<foo></foo>"); }).to.throw("parser: document root should be SmoothStreamingMedia");
+    expect(function() {
+      parser.parseFromString("<foo></foo>");
+    }).to.throw("parser: document root should be SmoothStreamingMedia");
   });
 
   it("check major and minor versions", function() {
-    expect(function() { parser.parseFromString('<SmoothStreamingMedia></SmoothStreamingMedia>'); }).to.throw();
-    expect(function() { parser.parseFromString('<SmoothStreamingMedia MajorVersion="1"></SmoothStreamingMedia>'); }).to.throw();
-    expect(function() { parser.parseFromString('<SmoothStreamingMedia MajorVersion="2"></SmoothStreamingMedia>'); }).to.throw();
-    expect(function() { parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="3"></SmoothStreamingMedia>'); }).to.throw();
-    expect(function() { parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="0"></SmoothStreamingMedia>'); }).to.not.throw();
-    expect(function() { parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="1"></SmoothStreamingMedia>'); }).to.not.throw();
-    expect(function() { parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="2"></SmoothStreamingMedia>'); }).to.not.throw();
+    expect(function() {
+      parser.parseFromString("<SmoothStreamingMedia></SmoothStreamingMedia>");
+    }).to.throw();
+    expect(function() {
+      parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"1\"></SmoothStreamingMedia>");
+    }).to.throw();
+    expect(function() {
+      parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\"></SmoothStreamingMedia>");
+    }).to.throw();
+    expect(function() {
+      parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"3\"></SmoothStreamingMedia>");
+    }).to.throw();
+    expect(function() {
+      parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"0\"></SmoothStreamingMedia>");
+    }).to.not.throw();
+    expect(function() {
+      parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"1\"></SmoothStreamingMedia>");
+    }).to.not.throw();
+    expect(function() {
+      parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"2\"></SmoothStreamingMedia>");
+    }).to.not.throw();
   });
 
   it("parses Duration", function() {
-    expect(parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="0" Duration="1000" Timescale="10" IsLive="TRUE"></SmoothStreamingMedia>').periods[0].duration).to.equal(100);
-    expect(parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="0" Duration="" IsLive="FALSE"></SmoothStreamingMedia>').periods[0].duration).to.equal(Infinity);
-    expect(parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="0" Duration="0" IsLive="FALSE"></SmoothStreamingMedia>').periods[0].duration).to.equal(Infinity);
+    expect(parser.parseFromString(
+      "<SmoothStreamingMedia " +
+      "MajorVersion=\"2\" MinorVersion=\"0\" " +
+      "Duration=\"1000\" Timescale=\"10\" IsLive=\"TRUE\">" +
+      "</SmoothStreamingMedia>"
+    ).periods[0].duration).to.equal(100);
+
+    expect(parser.parseFromString(
+      "<SmoothStreamingMedia " +
+      "MajorVersion=\"2\" MinorVersion=\"0\" " +
+      "Duration=\"\" IsLive=\"FALSE\">" +
+      "</SmoothStreamingMedia>"
+    ).periods[0].duration).to.equal(Infinity);
+
+    expect(parser.parseFromString(
+      "<SmoothStreamingMedia " +
+      "MajorVersion=\"2\" MinorVersion=\"0\" " +
+      "Duration=\"0\" IsLive=\"FALSE\">" +
+      "</SmoothStreamingMedia>"
+    ).periods[0].duration).to.equal(Infinity);
   });
 
   it("parses IsLive", function() {
-    expect(parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="0" Duration="1000" IsLive="TRUE"></SmoothStreamingMedia>').profiles).to.match(/isoff-live/);
-    expect(parser.parseFromString('<SmoothStreamingMedia MajorVersion="2" MinorVersion="0" Duration="" IsLive="FALSE"></SmoothStreamingMedia>').profiles).not.to.match(/isoff-live/);
+    expect(parser.parseFromString(
+      "<SmoothStreamingMedia " +
+      "MajorVersion=\"2\" MinorVersion=\"0\" " +
+      "Duration=\"1000\" " +
+      "IsLive=\"TRUE\">" +
+      "</SmoothStreamingMedia>"
+    ).profiles).to.match(/isoff-live/);
+
+    expect(parser.parseFromString(
+      "<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"0\" Duration=\"\" IsLive=\"FALSE\">" +
+      "</SmoothStreamingMedia>"
+    ).profiles).not.to.match(/isoff-live/);
   });
 
   describe("Protection", function() {
@@ -55,13 +98,13 @@ describe("smooth parser", function() {
     });
 
     it("has a playReady keySystem", function() {
-      var playReady = _.find(this.smoothProtection.keySystems, { systemId: "9a04f079-9840-4286-ab92-e65be0885f95" });
+      const playReady = _.find(this.smoothProtection.keySystems, { systemId: "9a04f079-9840-4286-ab92-e65be0885f95" });
       expect(playReady).to.be.ok;
       expect(playReady.privateData).to.be.instanceOf(Uint8Array);
     });
 
     it("has a widevine keySystem", function() {
-      var widevine = _.find(this.smoothProtection.keySystems, { systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" });
+      const widevine = _.find(this.smoothProtection.keySystems, { systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" });
       expect(widevine).to.be.ok;
       expect(widevine.privateData).to.be.instanceOf(Uint8Array);
     });
@@ -82,7 +125,7 @@ describe("smooth parser", function() {
     });
 
     it("has adaptations grouped by types (audio/video/text)", function() {
-      expect(this.json.periods[0].adaptations).to.be.an('array');
+      expect(this.json.periods[0].adaptations).to.be.an("array");
       expect(this.json.periods[0].adaptations).to.have.length(5);
     });
   });

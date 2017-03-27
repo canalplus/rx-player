@@ -1,8 +1,8 @@
-var expect = require("chai").expect;
-var parser = require("main/net/dash/parser");
+const expect = require("chai").expect;
+const parser = require("main/net/dash/parser");
 
-// var mpd = require("raw!test/fixtures/dash-seg-list.mpd");
-var mpd = require("raw!test/fixtures/dash-seg-template.mpd");
+// const mpd = require("raw!test/fixtures/dash-seg-list.mpd");
+// const mpd = require("raw!test/fixtures/dash-seg-template.mpd");
 
 describe("dash parser", function() {
 

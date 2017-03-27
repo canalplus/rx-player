@@ -1,10 +1,10 @@
-var expect = require("chai").expect;
-var {
+const expect = require("chai").expect;
+const {
  getRange,
  getGap,
  getLoaded,
  getSize,
- BufferedRanges
+ BufferedRanges,
 } = require("main/core/ranges");
 
 function createRange(ranges) {
@@ -95,18 +95,18 @@ describe("BufferedRanges", function() {
   describe("intersect", function() {
 
     it("intersects when no overlapping range", function() {
-      var ranges = new BufferedRanges();
+      const ranges = new BufferedRanges();
 
       ranges.insert("1", 0, 10);
       ranges.insert("1", 20, 30);
 
       expect(ranges.intersect([{ start: 20, end: 30 }])).to.eql([
-        { start: 20, end: 30, bitrate: "1" }
+        { start: 20, end: 30, bitrate: "1" },
       ]);
     });
 
     it("intersects when smaller overlapping range", function() {
-      var ranges = new BufferedRanges();
+      const ranges = new BufferedRanges();
 
       ranges.insert("1", 0, 10);
       ranges.insert("1", 20, 30);
@@ -114,7 +114,7 @@ describe("BufferedRanges", function() {
 
       expect(ranges.intersect([
         { start: 0, end: 10 },
-        { start: 25, end: 40 }
+        { start: 25, end: 40 },
       ])).to.eql([
         { start: 0, end: 10, bitrate: "1" },
         { start: 25, end: 30, bitrate: "1" },
@@ -123,7 +123,7 @@ describe("BufferedRanges", function() {
 
       expect(ranges.intersect([
         { start: 0, end: 10 },
-        { start: 30, end: 40 }
+        { start: 30, end: 40 },
       ])).to.eql([
         { start: 0, end: 10, bitrate: "1" },
         { start: 30, end: 40, bitrate: "2" },
@@ -131,7 +131,7 @@ describe("BufferedRanges", function() {
     });
 
     it("doest nothing with same ranges", function() {
-      var ranges = new BufferedRanges();
+      const ranges = new BufferedRanges();
 
       ranges.insert("1", 0, 10);
       ranges.insert("1", 20, 30);

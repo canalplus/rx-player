@@ -1,11 +1,11 @@
-var expect = require("chai").expect;
-var Player = require("main/core/player");
+const expect = require("chai").expect;
+const Player = require("main/core/player");
 
 describe("main player", function() {
-  var transport = { manifestPipeline: {}, segmentPipeline: {}, textTrackPipeline: {} };
+  const transport = { manifestPipeline: {}, segmentPipeline: {}, textTrackPipeline: {} };
 
   it("has constructor", function() {
-    expect(new Player({ transport })).to.be.an('object');
+    expect(new Player({ transport })).to.be.an("object");
   });
 
   it("is stopped on instanciation", function() {
@@ -17,12 +17,12 @@ describe("main player", function() {
   });
 
   it("can get volume", function() {
-    expect(new Player({ transport }).getVolume()).to.be.a('number');
+    expect(new Player({ transport }).getVolume()).to.be.a("number");
     expect(new Player({ transport }).getVolume()).to.equal(1);
   });
 
   it("can set volume", function() {
-    var pl = new Player({ transport });
+    const pl = new Player({ transport });
     pl.setVolume(0);
     expect(pl.getVolume()).to.equal(0);
   });
@@ -32,12 +32,12 @@ describe("main player", function() {
   });
 
   it("can mute", function() {
-    var pl = new Player({ transport }); pl.mute();
+    const pl = new Player({ transport }); pl.mute();
     expect(pl.getVolume()).to.equal(0);
   });
 
   it("can unmute", function() {
-    var pl = new Player({ transport });
+    const pl = new Player({ transport });
     pl.setVolume(0.7);
     expect(pl.getVolume()).to.equal(0.7);
     pl.mute();
@@ -47,7 +47,7 @@ describe("main player", function() {
   });
 
   it("can unmute a muted player", function() {
-    var pl = new Player({ transport });
+    const pl = new Player({ transport });
     pl.setVolume(0);
     pl.unMute();
     expect(pl.getVolume()).to.equal(0.1);
@@ -62,7 +62,7 @@ describe("main player", function() {
   });
 
   it("is an eventemitter", function(done) {
-    var player = new Player({ transport });
+    const player = new Player({ transport });
     expect(player.addEventListener).to.be.a("function");
     expect(player.removeEventListener).to.be.a("function");
     player.addEventListener("foo", function() { done(); });

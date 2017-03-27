@@ -1,7 +1,7 @@
-var _ = require("lodash");
-var expect = require("chai").expect;
-var smi = require("raw!test/fixtures/captures.smi");
-var { parseSami } = require("main/net/smooth/tt-sami");
+const _ = require("lodash");
+const expect = require("chai").expect;
+const smi = require("raw!test/fixtures/captures.smi");
+const { parseSami } = require("main/net/smooth/tt-sami");
 
 describe("sami parser", function() {
 
@@ -10,7 +10,7 @@ describe("sami parser", function() {
   });
 
   it("has many cues with { start, end, text }", function() {
-    var subs = parseSami(smi, "fr-FR");
+    const subs = parseSami(smi, "fr-FR");
     expect(subs).to.be.an("array");
     expect(subs).to.have.length(32);
     _.each(subs, s => {

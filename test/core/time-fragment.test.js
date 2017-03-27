@@ -1,13 +1,16 @@
-var expect = require("chai").expect;
-var { parseTimeFragment } = require("main/core/time-fragment");
+const expect = require("chai").expect;
+const { parseTimeFragment } = require("main/core/time-fragment");
 
 describe("Time fragment", function() {
 
   describe("parser", function() {
 
     it("parses dates values", function() {
-      var now = Date.now();
-      expect(parseTimeFragment({ start: new Date(now), end: new Date(now + 1000) })).to.eql({ start: new Date(now), end: new Date(now + 1000) });
+      const now = Date.now();
+      expect(parseTimeFragment({
+        start: new Date(now),
+        end: new Date(now + 1000),
+      })).to.eql({ start: new Date(now), end: new Date(now + 1000) });
     });
 
     it("fails with wrong { start, end } interface", function() {

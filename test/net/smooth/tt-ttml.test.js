@@ -1,8 +1,8 @@
-var _ = require("lodash");
-var expect = require("chai").expect;
-var ttmlRollUp = require("raw!test/fixtures/captures-rollup.ttml");
-var ttmlPopOn = require("raw!test/fixtures/captures-popon.ttml");
-var { parseTTML } = require("main/net/smooth/tt-ttml");
+const _ = require("lodash");
+const expect = require("chai").expect;
+const ttmlRollUp = require("raw!test/fixtures/captures-rollup.ttml");
+const ttmlPopOn = require("raw!test/fixtures/captures-popon.ttml");
+const { parseTTML } = require("main/net/smooth/tt-ttml");
 
 describe("ttml parser", function() {
 
@@ -12,7 +12,7 @@ describe("ttml parser", function() {
   });
 
   it("has many cues", function() {
-    var subs = parseTTML(ttmlRollUp);
+    const subs = parseTTML(ttmlRollUp);
     expect(subs).to.have.length(5);
     _.each(subs, s => {
       expect(s.start).to.be.a("number");
@@ -22,8 +22,8 @@ describe("ttml parser", function() {
   });
 
   it("parses correctly ttml with relative sibling duration", function() {
-    var subs = parseTTML(ttmlPopOn);
-    var start = 12;
+    const subs = parseTTML(ttmlPopOn);
+    let start = 12;
     _.each(_.zip([4, 4, 6, 4, 7], subs), ([duration, sub]) => {
       expect(sub.start).to.equal(start);
       expect(sub.end - sub.start).to.equal(duration);
@@ -32,7 +32,7 @@ describe("ttml parser", function() {
   });
 
   it("parses correctly ttml with absolute timings", function() {
-    var subs = parseTTML(ttmlRollUp);
+    const subs = parseTTML(ttmlRollUp);
     _.each(_.zip([
       [ 0.00,  8.00],
       [ 4.00, 12.00],
