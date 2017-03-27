@@ -85,9 +85,7 @@ function normalizeNPTTime(time) {
 
   // replace a sole trailing dot, which is legal:
   // npt-sec = 1*DIGIT [ "." *DIGIT ]
-  time = time
-    .replace(/^npt\:/, "")
-    .replace(/\.$/, "");
+  time = time.replace(/\.$/, "");
 
   // possible cases:
   // 12:34:56.789
@@ -223,26 +221,32 @@ function temporalMediaFragmentParser(value) {
          errMessage);
 
   start = start
-    .replace(/^smpte(-25|-30|-30-drop)?\:/, "")
-    .replace("clock:", "");
+    .replace(/^smpte(-25|-30|-30-drop)?:/, "") // remove smpte prefix
+    .replace(/^npt[:=]/, "") // remove npt prefix
+    .replace("clock:", ""); // remove clock prefix
 
-  // hours:minutes:seconds.milliseconds
-  // XXX in RFC2326 we seems to see that "npt=" is recommended, not "npt:". Fix that?
-  const npt = /^((npt\:)?((\d+\:(\d\d)\:(\d\d))|((\d\d)\:(\d\d))|(\d+))(\.\d*)?)?$/;
-
-  // hours:minutes:seconds:frames.further-subdivison-of-frames
-  const smpte = /^(\d+\:\d\d\:\d\d(\:\d\d(\.\d\d)?)?)?$/;
-
-  // ISO8601 regExp
+  // Normal Play Time, as specified in the RFC2326
   // Examples:
+  // 123:45:47.7878 -> hours:minutes:seconds.milliseconds
+  // 123:45:47 -> hours:minutes:seconds
+  // 45:47.887 -> minutes:seconds.milliseconds
+  // 2254 -> just seconds
+  // 0.487 -> 487 milliseconds
+  const npt = /(((\d+:)?(\d\d):(\d\d))|(\d+))(\.\d*)?$/;
+
+  // SMPTE Format.
+  // Examples:
+  // 123:45:47:12.9 -> hours:minutes:seconds:frames.subdivison-of-frames
+  const smpte = /^\d+:\d\d:\d\d(:\d\d(\.\d\d)?)?$/;
+
+  // ISO8601 regExp - Should specify at least to the second.
+  // Examples:
+  // 2017-03-23T15:09:17
   // 2017-03-23T15:09:17Z
   // 2017-03-23T17:07:46+01:00
   // 2017-03-23T17:07:46-01:00
-  // XXX This regexp matches empty string, just years, just year-months, just
-  // years-months-days. Should probably be fixed we want at least until the
-  // timezone (Z for Zulu time).
   const wallClock =
-    /^((\d{4})(-(\d{2})(-(\d{2})(T(\d{2})\:(\d{2})(\:(\d{2})(\.(\d+))?)?(Z|(([-\+])(\d{2})\:(\d{2})))?)?)?)?)?$/;
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|([-+]\d{2}:\d{2}))?$/;
 
   // Pecentages
   // Examples:
@@ -250,10 +254,10 @@ function temporalMediaFragmentParser(value) {
   // 80%
   // 32.12324 %
   // 32.12324%
-  //
-  // XXX matches an empty string
-  const percentage = /^(\d*(\.\d+)? ?%)?$/;
+  // .8787%
+  const percentage = /^\d*(\.\d+)? ?%$/;
 
+  // "normalize" time by understanding its format
   let timeNormalizer;
   if (npt.test(start) && npt.test(end)) {
     timeNormalizer = normalizeNPTTime;
