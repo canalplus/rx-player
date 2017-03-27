@@ -98,12 +98,9 @@ function Stream({
 }) {
 
   const fragStartTime = timeFragment.start;
-
-  // XXX fragEndTime is not even defined yet (next line).
-  // This will always be false
-  // Why did the linter let go?
-  const fragEndTimeIsFinite = fragEndTime < Infinity;
   let fragEndTime = timeFragment.end;
+
+  const fragEndTimeIsFinite = fragEndTime < Infinity;
 
   const manifestPipeline = pipelines.manifest;
 
