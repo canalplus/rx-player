@@ -18,8 +18,10 @@
   "bugs": "https://github.com/canalplus/rx-player/issues",
   "license": "Apache-2.0",
   "scripts": {
-    "lint": "eslint --ext .js ./src/**/*.js",
-    "karma": "karma start test/karma.conf.js"
+    "lint": "eslint ./src/**/*.js",
+    "karma": "karma start test/karma.conf.js",
+    "karma-chrome": "karma start test/karma.conf.js --browsers Chrome",
+    "karma-firefox": "karma start test/karma.conf.js --browsers Firefox"
   },
   "repository": {
     "type": "git",
