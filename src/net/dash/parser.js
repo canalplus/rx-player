@@ -537,7 +537,8 @@ function parseFromDocument(document, contentProtectionParser) {
  * @returns {Object} - parsed manifest
  */
 function parseFromString(manifest, contentProtectionParser) {
-  return parseFromDocument(new DOMParser().parseFromString(manifest, "application/xml"), contentProtectionParser);
+  return parser
+    .parseFromDocument(new DOMParser().parseFromString(manifest, "application/xml"), contentProtectionParser);
 }
 
 /**
@@ -548,9 +549,9 @@ function parseFromString(manifest, contentProtectionParser) {
  */
 function parser(manifest, contentProtectionParser) {
   if (typeof manifest == "string") {
-    return parseFromString(manifest, contentProtectionParser);
+    return parser.parseFromString(manifest, contentProtectionParser);
   } else {
-    return parseFromDocument(manifest, contentProtectionParser);
+    return parser.parseFromDocument(manifest, contentProtectionParser);
   }
 }
 
