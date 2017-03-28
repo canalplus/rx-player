@@ -262,7 +262,8 @@ function le8toi(bytes, off) {
    ((bytes[4+off]) +
     (bytes[5+off] * 0x0000100) +
     (bytes[6+off] * 0x0010000) +
-    (bytes[7+off] * 0x1000000) * 0x100000000));
+     (bytes[7+off] * 0x1000000)
+   ) * 0x100000000);
 }
 
 /**
