@@ -1,11 +1,11 @@
+// requires the entire RxPlayer
+require("../src/index.js");
+
 // load chai plugins
 const chai = require("chai");
 chai.use(require("chai-as-promised"));
 chai.use(require("chai-spies"));
 chai.use(require("sinon-chai"));
-
-// defines rxjs operators / polyfills TODO better way to handle that?
-require("../src/index.js");
 
 // /core
 require("./core/player.test");

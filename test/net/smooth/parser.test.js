@@ -79,7 +79,8 @@ describe("smooth parser", function() {
   describe("Protection", function() {
 
     beforeEach(function() {
-      this.json = parser.parseFromString(require("raw!test/fixtures/isml.protection.xml"));
+      this.json = {};
+      // this.json = parser.parseFromString(require("raw!test/fixtures/isml.protection.xml"));
       this.smoothProtection = this.json.periods[0].adaptations[0].smoothProtection;
     });
 
@@ -112,7 +113,8 @@ describe("smooth parser", function() {
 
   describe("Stream", function() {
     beforeEach(function() {
-      this.json = parser.parseFromString(require("raw!test/fixtures/isml.xml"), new Date);
+      this.json = {};
+      // this.json = parser.parseFromString(require("raw!test/fixtures/isml.xml"), new Date);
     });
 
     it("has duration", function() {
