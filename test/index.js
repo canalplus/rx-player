@@ -18,3 +18,6 @@ require("./net/smooth/parser.test");
 require("./net/smooth/tt-sami.test");
 require("./net/smooth/tt-ttml.test");
 require("./net/dash/parser.test");
+
+// /utils
+require("./utils/bytes.js");

@@ -1,8 +1,8 @@
 const assert = require("./assert");
 
 /**
- * Returns total bytes in a TypedArray.
- * @param {TypedArray} arr
+ * Returns total bytes in an array of ArrayBuffer.
+ * @param {Array.<ArrayBuffer>} arr
  * @returns {Number}
  */
 function totalBytes(arr) {
@@ -133,7 +133,7 @@ function concat() {
 function be2toi(bytes, off) {
   return (
     (bytes[0+off] << 8) +
-    (bytes[1+off] << 0)); // XXX what's '<< 0' for?
+    (bytes[1+off] << 0));
 }
 
 /**
@@ -201,6 +201,8 @@ function itobe4(num) {
 /**
  * Translate Integer to a Uint8Array of length 8 of the corresponding big-endian
  * bytes.
+ * /!\ If the top-most bytes are set, this might go over MAX_SAFE_INTEGER, thus
+ * leading to a "bad" value.
  * @param {Number} num
  * @returns {Uint8Array}
  */
