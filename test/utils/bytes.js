@@ -2,7 +2,7 @@ const expect = require("chai").expect;
 
 const bytes = require("../../src/utils/bytes.js");
 
-describe.only("utils - bytes", () => {
+describe("utils - bytes", () => {
   const base64ToArrayBuffer = (base64) => {
     const bin = atob(base64);
     const len = bin.length;
@@ -292,6 +292,35 @@ describe.only("utils - bytes", () => {
         expect(bytes.le8toi(arr, 0)).to.equal(expected[0]);
         expect(bytes.le8toi(arr, 8)).to.equal(expected[1]);
       });
+  });
+
+  describe("itole2", () => {
+    it("should return a little-endian style Uint8Array of length 2 translated from the number given", () => {
+      const values = [264, 65281, 65535, 255];
+      expect(bytes.itole2(values[0])).to.deep.equal(new Uint8Array([8, 1]));
+      expect(bytes.itole2(values[1])).to.deep.equal(new Uint8Array([1, 255]));
+      expect(bytes.itole2(values[2])).to.deep.equal(new Uint8Array([255, 255]));
+    });
+  });
+
+  describe("itole4", () => {
+    it("should return a little-endian style Uint8Array of length 4 translated from the number given", () => {
+      const values = [ 33489666, 130819, 511, 1 ];
+      expect(bytes.itole4(values[0])).to.deep.equal(new Uint8Array([2, 3, 255, 1]));
+      expect(bytes.itole4(values[1])).to.deep.equal(new Uint8Array([3, 255, 1, 0]));
+      expect(bytes.itole4(values[2])).to.deep.equal(new Uint8Array([255, 1, 0, 0]));
+      expect(bytes.itole4(values[3])).to.deep.equal(new Uint8Array([1, 0, 0, 0]));
+    });
+  });
+
+  describe("itole8", () => {
+    it("should return a little-endian style Uint8Array of length 8 translated from the number given", () => {
+      const values = [ 1, 280379743338240 ];
+      expect(bytes.itole8(values[0])).to.deep.equal(new Uint8Array([
+        1, 0, 0, 0, 0, 0, 0, 0 ]));
+      expect(bytes.itole8(values[1])).to.deep.equal(new Uint8Array([
+        0, 255, 0, 255, 0, 255, 0, 0 ]));
+    });
   });
 });
 
