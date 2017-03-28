@@ -590,9 +590,7 @@ function Stream({
         .map(({ parsed }) => {
           const newManifest = mergeManifestsIndex(
             manifest,
-
-            // XXX TOFIX likely forgot images Object as last argument here.
-            normalizeManifest(parsed.url, parsed.manifest, subtitles)
+            normalizeManifest(parsed.url, parsed.manifest, subtitles, images)
           );
           return { type: "manifest", value: newManifest };
         });
