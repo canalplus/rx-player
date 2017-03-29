@@ -139,10 +139,10 @@ class Player extends EventEmitter {
   }
 
   /**
-   * @param {Object} options
+   * @param {Object} [options={}]
    * @param {HTMLVideoElement_} options.videoElement
    */
-  constructor(options) {
+  constructor(options = {}) {
     let { videoElement } = options;
 
     const {
