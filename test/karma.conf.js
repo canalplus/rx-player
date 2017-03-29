@@ -9,14 +9,14 @@ if (coverageIsWanted) {
     webpackConfig.module = {};
   }
 
-  if (!webpackConfig.rules) {
-    webpackConfig.rules = [];
+  if (!webpackConfig.module.postLoaders) {
+    webpackConfig.module.postLoaders = [];
   }
 
   // add coverage for js files in src
-  webpackConfig.rules.push({
+  webpackConfig.module.postLoaders.push({
     test: /\.js$/,
-    include: path.resolve("src/"),
+    include: path.resolve(__dirname, "../src/"),
     loader: "istanbul-instrumenter-loader",
   });
 }
@@ -30,8 +30,9 @@ const karmaConf = {
     "Firefox",
   ],
 
-  reporters: ["mocha"]
-    .concat(coverageIsWanted ? ["coverage-istanbul"] : []),
+  singleRun: !!coverageIsWanted,
+
+  reporters: ["mocha", "coverage-istanbul"],
 
   frameworks: ["mocha"],
 
@@ -56,13 +57,8 @@ const karmaConf = {
   },
 
   coverageIstanbulReporter: {
-    // reports can be any that are listed here:
-    // https://github.com/istanbuljs/istanbul-reports/tree/590e6b0089f67b723a1fdf57bc7ccc080ff189d7/lib
-    reports: ["html"],
-
-    // base output directory. If you include %browser% in the path it will be
-    // replaced with the karma browser name
-    dir: path.join(__dirname, "coverage/%browser%/"),
+    reports: ["html", "lcovonly", "text-summary"],
+    dir: path.resolve(__dirname, "../coverage/%browser%"),
 
     // if using webpack and pre-loaders, work around webpack breaking the source
     // path

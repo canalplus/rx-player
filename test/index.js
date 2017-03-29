@@ -1,11 +1,14 @@
-// requires the entire RxPlayer
-require("../src/index.js");
-
 // load chai plugins
 const chai = require("chai");
 chai.use(require("chai-as-promised"));
 chai.use(require("chai-spies"));
 chai.use(require("sinon-chai"));
+
+// require ALL js files in src for complete coverage
+const context = require.context("../src", true, /\.js$/);
+context.keys().forEach(context);
+
+// TODO automatic import
 
 // /core
 require("./core/player.test");
