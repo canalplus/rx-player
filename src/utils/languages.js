@@ -49,7 +49,7 @@ function findBetterMatchIndex(langs, lang) {
 }
 
 function normalize(lang) {
-  if (lang === null || lang === "") {
+  if (lang == null || lang === "") {
     return "";
   }
   const fields = (""+lang).toLowerCase().split("-");
