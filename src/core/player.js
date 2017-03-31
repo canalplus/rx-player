@@ -212,8 +212,10 @@ class Player extends EventEmitter {
       initAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
-      defaultLanguage: normalizeLang(defaultLanguage),
-      defaultSubtitle: normalizeLang(defaultSubtitle),
+      defaultLanguage: defaultLanguage == null ?
+        undefined : normalizeLang(defaultLanguage),
+      defaultSubtitle: defaultSubtitle == null ?
+      undefined : normalizeLang(defaultSubtitle),
     });
 
     // memorize previous volume when muted - minimum at first
@@ -387,11 +389,11 @@ class Player extends EventEmitter {
     this.frag = timeFragment;
     this.playing.next(autoPlay);
 
-    if (defaultLanguage) {
+    if (defaultLanguage != null) {
       this.adaptive.setLanguage(normalizeLang(defaultLanguage));
     }
 
-    if (defaultSubtitle) {
+    if (defaultSubtitle != null) {
       this.adaptive.setSubtitle(normalizeLang(defaultSubtitle));
     }
 
