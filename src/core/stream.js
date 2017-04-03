@@ -19,7 +19,7 @@ const assert = require("../utils/assert");
 const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
 const { retryableFuncWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
-const { on } = require("../utils/rx-utils");
+const { on, throttle } = require("../utils/rx-utils");
 const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const { merge } = require("rxjs/observable/merge");
 const { combineLatest } = require("rxjs/observable/combineLatest");
@@ -102,7 +102,9 @@ function Stream({
 
   const fragEndTimeIsFinite = fragEndTime < Infinity;
 
-  const manifestPipeline = pipelines.manifest;
+  // throttled to avoid doing multiple simultaneous requests because multiple
+  // source buffers are out-of-index
+  const fetchManifest = throttle(pipelines.manifest);
 
   let nativeBuffers = {}; // SourceBuffers added to the MediaSource
   let customBuffers = {}; // custom SourceBuffers
@@ -386,7 +388,7 @@ function Stream({
       ? sourceOpen(mediaSource)
       : Observable.of(null);
 
-    return combineLatest(manifestPipeline({ url }), sourceOpening)
+    return combineLatest(fetchManifest({ url }), sourceOpening)
       .mergeMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
@@ -586,7 +588,7 @@ function Stream({
       // out-of-index messages require a complete reloading of the
       // manifest to refresh the current index
       log.info("out of index");
-      return manifestPipeline({ url: manifest.locations[0] })
+      return fetchManifest({ url: manifest.locations[0] })
         .map(({ parsed }) => {
           const newManifest = mergeManifestsIndex(
             manifest,
@@ -597,13 +599,6 @@ function Stream({
     }
 
     return Observable.of(message);
-  }
-
-  function isErrorMessage(message) {
-    return (
-      message.type == "out-of-index" ||
-      message.type == "index-discontinuity"
-    );
   }
 
   /**
@@ -648,11 +643,6 @@ function Stream({
     // errors thrown when a buffer asks for a segment out of its
     // current index
     return buffers
-      // do not throw multiple times OutOfIndexErrors in order to have
-      // only one manifest reload for each error.
-      .distinctUntilChanged((a, b) =>
-        isErrorMessage(b) &&
-        isErrorMessage(a))
       .concatMap((message) => messageHandler(message, manifest));
   }
 
