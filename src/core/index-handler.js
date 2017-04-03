@@ -135,8 +135,8 @@ class IndexHandler {
    * of bounds.
    */
   getSegments(ts, offset, bufSize) {
-    const { time, up, to } = this.normalizeRange(ts, offset, bufSize);
-    if (!this.handler.checkRange(time)) { // XXX shouldn't we check that for ts + bufsize?
+    const { up, to } = this.normalizeRange(ts, offset, bufSize);
+    if (!this.handler.checkRange(to)) {
       throw new IndexError("OUT_OF_INDEX_ERROR", this.index.indexType, false);
     }
 
