@@ -27,12 +27,16 @@ const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 /**
  * Calculate the last time for the last video index, in s.
  * TODO(pierre): support more than juste timeline index type
- * @param {Object}
+ * @param {Object} index
  * @returns {Number}
  */
-function calcLastRef(index) {
-  const { ts, r, d } = index.timeline[index.timeline.length - 1];
-  return ((ts + (r+1)*d) / index.timescale);
+function calculateIndexLastLiveTimeReference(index) {
+  if (index.indexType === "timeline") {
+    const { ts, r, d } = index.timeline[index.timeline.length - 1];
+    return ((ts + (r+1)*d) / index.timescale);
+  }
+  // TODO 60s security? why?
+  return Date.now() / 1000 - 60;
 }
 
 /**
@@ -509,18 +513,16 @@ function parseFromDocument(document, contentProtectionParser) {
     const adaptations = manifest.periods[0].adaptations;
     const videoAdaptation = adaptations.filter((a) => a.mimeType == "video/mp4")[0];
 
-    const videoIndex = videoAdaptation && videoAdaptation.index;
+    let lastRef = getLastLiveTimeReference(videoAdaptation);
 
     if (__DEV__) {
-      assert(videoIndex && (videoIndex.indexType == "timeline" || videoIndex.indexType == "template"));
+      assert(lastRef);
       assert(manifest.availabilityStartTime);
     }
 
-    let lastRef;
-    if (videoIndex.timeline) {
-      lastRef = calcLastRef(videoIndex);
-    }
-    else {
+    // if last time not found / something was invalid in the indexes, set a
+    // default live time.
+    if (!lastRef) {
       lastRef = Date.now() / 1000 - 60;
     }
 
@@ -530,6 +532,67 @@ function parseFromDocument(document, contentProtectionParser) {
 
   return manifest;
 }
+
+/**
+ * Returns "last time of reference" from the adaptation given, considering a
+ * live content.
+ * Undefined if a time could not be found.
+ *
+ * We consider the earliest last time from every representations in the given
+ * adaptation.
+ *
+ * This is done to calculate a liveGap which is valid for the whole manifest,
+ * even in weird ones.
+ * @param {Object} adaptation
+ * @returns {Number|undefined}
+ */
+const getLastLiveTimeReference = (adaptation) => {
+  // Here's how we do, for each possibility:
+  //  1. only the adaptation has an index (no representation has):
+  //    - returns the index last time reference
+  //
+  //  2. every representations have an index:
+  //    - returns minimum for every representations
+  //
+  //  3. not all representations have an index but the adaptation has
+  //    - returns minimum between all representations and the adaptation
+  //
+  //  4. no index for 1+ representation(s) and no adaptation index:
+  //    - returns undefined
+  //
+  //  5. Invalid index found somewhere:
+  //    - returns undefined
+
+  if (!adaptation) {
+    return;
+  }
+
+  const representations = adaptation.representations || [];
+  const representationsWithIndex = representations.filter(r => r && r.index);
+
+  if (!representations.length) {
+    return calculateIndexLastLiveTimeReference(adaptation.index);
+  }
+
+  const representationsMin = Math.min(
+    ...representationsWithIndex
+      .map(r => calculateIndexLastLiveTimeReference(r.index))
+  );
+
+  // should not happen, means invalid index data has been found
+  if (isNaN(representationsMin)) {
+    return;
+  }
+
+  if (representations.length === representationsWithIndex.length) {
+    return representationsMin;
+  }
+
+  if (adaptation.index) {
+    const adaptationRef = calculateIndexLastLiveTimeReference(adaptation.index);
+    return Math.min(representationsMin, adaptationRef);
+  }
+};
 
 /**
  * @param {string} manifest - manifest file in a string format
