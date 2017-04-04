@@ -204,13 +204,9 @@ function normalizeRepresentation(representation, inherit) {
 
   representation = Object.assign({}, inherit, representation);
 
-  const index = representation.index;
-  if (!index) {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
-
-  if (!index.timescale) {
-    index.timescale = 1;
+  representation.index = representation.index || {};
+  if (!representation.index.timescale) {
+    representation.index.timescale = 1;
   }
 
   if (!representation.bitrate) {

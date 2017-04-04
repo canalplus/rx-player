@@ -810,7 +810,7 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getLanguage() {
-    return this.adaptive.getLanguage();
+    return this.evts.language;
   }
 
   /**
@@ -818,7 +818,7 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getSubtitle() {
-    return this.adaptive.getSubtitle();
+    return this.evts.subtitle;
   }
 
   /**
@@ -1038,7 +1038,7 @@ class Player extends EventEmitter {
   setSubtitle(sub) {
     sub = normalizeLang(sub);
     assert(!sub || this.isSubtitleAvailable(sub), "player: unknown subtitle");
-    this.adaptive.setSubtitle(sub || "");
+    this.adaptive.setSubtitle(sub);
     if (!sub) {
       this._recordState("subtitle", "");
     }
