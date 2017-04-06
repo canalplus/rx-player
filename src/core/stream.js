@@ -196,7 +196,7 @@ function Stream({
   }
 
   /**
-   * Abort and remove te SourceBuffer given.
+   * Abort and remove the SourceBuffer given.
    * @param {HTMLMediaElement} video
    * @param {MediaSource} mediaSource
    * @param {Object} bufferInfos
@@ -569,6 +569,27 @@ function Stream({
       });
   }
 
+  /**
+   * Re-fetch the manifest and merge it with the previous version.
+   * @param {Object} manifest
+   * @returns {Observable}
+   */
+  function refreshManifest(manifest) {
+    return fetchManifest({ url: manifest.locations[0]})
+      .map(({ parsed }) => {
+        const newManifest = mergeManifestsIndex(
+          manifest,
+          normalizeManifest(parsed.url, parsed.manifest, subtitles, images)
+        );
+        return { type: "manifest", value: newManifest };
+      });
+  }
+
+  /**
+   * @param {Object} message
+   * @param {Object} manifest
+   * @returns {Observable}
+   */
   function messageHandler(message, manifest) {
     switch(message.type) {
     case "index-discontinuity":
@@ -588,14 +609,7 @@ function Stream({
       // out-of-index messages require a complete reloading of the
       // manifest to refresh the current index
       log.info("out of index");
-      return fetchManifest({ url: manifest.locations[0] })
-        .map(({ parsed }) => {
-          const newManifest = mergeManifestsIndex(
-            manifest,
-            normalizeManifest(parsed.url, parsed.manifest, subtitles, images)
-          );
-          return { type: "manifest", value: newManifest };
-        });
+      return refreshManifest(manifest);
     }
 
     return Observable.of(message);
