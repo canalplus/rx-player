@@ -39,6 +39,7 @@ let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 const DEFAULT_PRESENTATION_DELAY = 15;
 
+// TODO not true for application/mp4 subtitles
 function parseType(mimeType) {
   return mimeType.split("/")[0];
 }
@@ -154,12 +155,12 @@ function normalizePeriod(period, inherit, subtitles, images) {
   return period;
 }
 
-function normalizeAdaptation(adaptation, inherit) {
-  if (typeof adaptation.id == "undefined") {
+function normalizeAdaptation(initialAdaptation, inherit) {
+  if (typeof initialAdaptation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  adaptation = Object.assign({}, inherit, adaptation);
+  const adaptation = Object.assign({}, inherit, initialAdaptation);
 
   const inheritedFromAdaptation = {};
   representationBaseType.forEach((baseType) => {
@@ -175,6 +176,7 @@ function normalizeAdaptation(adaptation, inherit) {
 
   let { type, mimeType } = adaptation;
   if (!mimeType) {
+    // TODO what? mimeType should be managed by representation
     mimeType = representations[0].mimeType;
   }
 
@@ -189,7 +191,8 @@ function normalizeAdaptation(adaptation, inherit) {
   }
 
   if (type == "video" || type == "audio") {
-    representations = representations.filter((rep) => isCodecSupported(getCodec(rep)));
+    representations = representations
+      .filter((rep) => isCodecSupported(getCodec(rep)));
   }
 
   adaptation.representations = representations;
@@ -197,12 +200,12 @@ function normalizeAdaptation(adaptation, inherit) {
   return adaptation;
 }
 
-function normalizeRepresentation(representation, inherit) {
-  if (typeof representation.id == "undefined") {
+function normalizeRepresentation(initialRepresentation, inherit) {
+  if (typeof initialRepresentation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  representation = Object.assign({}, inherit, representation);
+  const representation = Object.assign({}, inherit, initialRepresentation);
 
   representation.index = representation.index || {};
   if (!representation.index.timescale) {
@@ -215,7 +218,7 @@ function normalizeRepresentation(representation, inherit) {
 
   // Fix issue in some packagers, like GPAC, generating a non
   // compliant mimetype with RFC 6381. Other closed-source packagers
-  // maybe impacted.
+  // may be impacted.
   if (representation.codecs == "mp4a.40.02") {
     representation.codecs = "mp4a.40.2";
   }
@@ -328,8 +331,8 @@ function simpleMerge(source, dist) {
 }
 
 /**
- * Merge index objects from every newManifest adaptations into the oldManifest
- * adaptations.
+ * Merge index objects from every newManifest representations into the
+ * oldManifest representations.
  *
  * /!\ mutate oldManifest
  * @param {Object} oldManifest
@@ -343,7 +346,9 @@ function mergeManifestsIndex(oldManifest, newManifest) {
     const oldAdas = oldAdaptations[type];
     const newAdas = newAdaptations[type];
     oldAdas.forEach((a, i) => {
-      simpleMerge(a.index, newAdas[i].index);
+      a.representations.forEach((r, j) => {
+        simpleMerge(r.index, newAdas[i].representations[j].index);
+      });
     });
   }
   return oldManifest;
