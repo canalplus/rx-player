@@ -97,7 +97,7 @@ function normalizeManifest(location, manifest, subtitles, images) {
   const periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles, images));
 
   // TODO(pierre): support multiple periods
-  manifest = Object.assign({}, manifest, periods[0]);
+  manifest = mergeAndCloneAttributes(manifest, periods[0]);
   manifest.periods = null;
 
   if (!manifest.duration) {
@@ -155,12 +155,14 @@ function normalizePeriod(period, inherit, subtitles, images) {
   return period;
 }
 
+// TODO perform some cleanup like adaptations.index (indexes are
+// in the representations)
 function normalizeAdaptation(initialAdaptation, inherit) {
   if (typeof initialAdaptation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  const adaptation = Object.assign({}, inherit, initialAdaptation);
+  const adaptation = mergeAndCloneAttributes(inherit, initialAdaptation);
 
   const inheritedFromAdaptation = {};
   representationBaseType.forEach((baseType) => {
@@ -205,7 +207,7 @@ function normalizeRepresentation(initialRepresentation, inherit) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  const representation = Object.assign({}, inherit, initialRepresentation);
+  const representation = mergeAndCloneAttributes(inherit, initialRepresentation);
 
   representation.index = representation.index || {};
   if (!representation.index.timescale) {
@@ -328,6 +330,48 @@ function simpleMerge(source, dist) {
   }
 
   return source;
+}
+
+/**
+ * Returns an object which is a merge of all arguments given
+ * (Object.assign-like) but with all the corresponding merged attributes
+ * cloned (they do not share the same references than the original attributes).
+ *
+ * This is useful to keep representations, for example, sharing inherited
+ * Objects to also share their references. In that case, an update of a single
+ * representation would update every other one.
+ *
+ * @param {...Object} args
+ * @returns {Object}
+ */
+function mergeAndCloneAttributes(...args) {
+  const res = {};
+
+  for (let i = args.length - 1; i >= 0; i--) {
+    const arg = args[i];
+    for (const attr in arg) {
+      if (res.hasOwnProperty(attr)) {
+        continue;
+      }
+
+      const val = arg[attr];
+      if (val && typeof val === "object") {
+        if (val instanceof Date) {
+          res[attr] = new Date(val.getTime());
+        }
+        else if (Array.isArray(val)) {
+          res[attr] = val.slice(0);
+        }
+        else {
+          res[attr] = mergeAndCloneAttributes(val);
+        }
+      } else {
+        res[attr] = val;
+      }
+    }
+  }
+
+  return res;
 }
 
 /**
