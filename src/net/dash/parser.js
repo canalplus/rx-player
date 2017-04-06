@@ -35,8 +35,8 @@ function calculateIndexLastLiveTimeReference(index) {
     const { ts, r, d } = index.timeline[index.timeline.length - 1];
     return ((ts + (r+1)*d) / index.timescale);
   }
-  // TODO 60s security? why?
-  return Date.now() / 1000 - 60;
+  // By default (e.g. for templates), live Edge is right now
+  return Date.now() / 1000;
 }
 
 /**
@@ -511,6 +511,8 @@ function parseFromDocument(document, contentProtectionParser) {
 
   if (/dynamic/.test(manifest.type)) {
     const adaptations = manifest.periods[0].adaptations;
+
+    // TODO video should not be limited to mp4
     const videoAdaptation = adaptations.filter((a) => a.mimeType == "video/mp4")[0];
 
     let lastRef = getLastLiveTimeReference(videoAdaptation);
@@ -523,6 +525,7 @@ function parseFromDocument(document, contentProtectionParser) {
     // if last time not found / something was invalid in the indexes, set a
     // default live time.
     if (!lastRef) {
+      console.warn("Live edge not deduced from manifest, setting a default one");
       lastRef = Date.now() / 1000 - 60;
     }
 
