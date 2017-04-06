@@ -306,7 +306,7 @@ function normalizeImages(images) {
  * @param {Object} dist
  * @returns {Object}
  */
-function simpleMerge(source, dist) {
+function deepAssignAttributes(source, dist) {
   for (const attr in source) {
     if (!dist.hasOwnProperty(attr)) {
       continue;
@@ -325,7 +325,7 @@ function simpleMerge(source, dist) {
       Array.prototype.push.apply(src, dst);
     }
     else {
-      source[attr] = simpleMerge(src, dst);
+      source[attr] = deepAssignAttributes(src, dst);
     }
   }
 
@@ -391,7 +391,7 @@ function mergeManifestsIndex(oldManifest, newManifest) {
     const newAdas = newAdaptations[type];
     oldAdas.forEach((a, i) => {
       a.representations.forEach((r, j) => {
-        simpleMerge(r.index, newAdas[i].representations[j].index);
+        deepAssignAttributes(r.index, newAdas[i].representations[j].index);
       });
     });
   }
