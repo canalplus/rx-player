@@ -39,9 +39,47 @@ let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 const DEFAULT_PRESENTATION_DELAY = 15;
 
-// TODO not true for application/mp4 subtitles
-function parseType(mimeType) {
-  return mimeType.split("/")[0];
+/**
+ * Infers the type of adaptation from codec and mimetypes found in it.
+ *
+ * This follows the guidelines defined by the DASH-IF IOP:
+ *   - one adaptation set contains a single media type
+ *   - The order of verifications are:
+ *       1. mimeType
+ *       2. Role
+ *       3. codec
+ *
+ * Note: This is based on DASH-IF-IOP-v4.0 with some more freedom.
+ * @param {Object} adaptation
+ * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
+ */
+function inferAdaptationType(adaptation) {
+  const { mimeType = "" } = adaptation;
+  const topLevel = mimeType.split("/")[0];
+  if (SUPPORTED_ADAPTATIONS_TYPE.includes(topLevel)) {
+    return topLevel;
+  }
+
+  if (mimeType === "application/ttml+xml") {
+    return "text";
+  }
+
+  // manage DASH-IF mp4-embedded subtitles and metadata
+  if (mimeType === "application/mp4") {
+    const { role } = adaptation;
+    if (role) {
+      if (
+        role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+        role.value === "subtitle"
+      ) {
+        return "text";
+      }
+    }
+    return "metadata";
+  }
+
+  // TODO infer from representations' codecs?
+  return "unknown";
 }
 
 function parseBaseURL(manifest) {
@@ -178,7 +216,6 @@ function normalizeAdaptation(initialAdaptation, inherit) {
 
   let { type, mimeType } = adaptation;
   if (!mimeType) {
-    // TODO what? mimeType should be managed by representation
     mimeType = representations[0].mimeType;
   }
 
@@ -189,7 +226,7 @@ function normalizeAdaptation(initialAdaptation, inherit) {
   adaptation.mimeType = mimeType;
 
   if (!type) {
-    type = adaptation.type = parseType(mimeType);
+    type = adaptation.type = inferAdaptationType(adaptation);
   }
 
   if (type == "video" || type == "audio") {
