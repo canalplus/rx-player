@@ -301,6 +301,16 @@ const attributes = {
     { k: "maxSegmentDuration",         fn: parseDuration },
     { k: "maxSubsegmentDuration",      fn: parseDuration },
   ],
+
+  "Role": [
+    { k: "schemeIdUri", fn: parseString },
+    { k: "value",       fn: parseString},
+  ],
+
+  "Accessibility": [
+    { k: "schemeIdUri", fn: parseString },
+    { k: "value",       fn: parseString},
+  ],
 };
 
 /**
@@ -434,6 +444,14 @@ function parseRepresentation(root) {
   return feedAttributes(root, rep);
 }
 
+function parseRole(root) {
+  return feedAttributes(root);
+}
+
+function parseAccessibility(root) {
+  return feedAttributes(root);
+}
+
 function parseContentComponent(root) {
   return feedAttributes(root);
 }
@@ -441,8 +459,8 @@ function parseContentComponent(root) {
 function parseAdaptationSet(root, contentProtectionParser) {
   const res = reduceChildren(root, (res, name, node) => {
     switch(name) {
-    // case "Accessibility": break;
-    // case "Role": break;
+    case "Accessibility": res.accessibility = parseAccessibility(node); break;
+    case "Role": res.role = parseRole(node); break;
     // case "Rating": break;
     // case "Viewpoint": break;
     case "ContentProtection": res.contentProtection = parseContentProtection(node, contentProtectionParser); break;

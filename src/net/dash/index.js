@@ -120,19 +120,11 @@ module.exports = function(opts={}) {
         return empty();
       }
 
-      let mediaHeaders;
-      if (range) {
-        mediaHeaders = { "Range": byteRange(range) };
-      } else {
-        mediaHeaders = null;
-      }
+      const mediaHeaders = range ?
+        { "Range": byteRange(range) } : null;
 
-      let path;
-      if (media) {
-        path = replaceTokens(media, segment);
-      } else {
-        path = "";
-      }
+      const path = media ?
+        replaceTokens(media, segment) : "";
 
       const mediaUrl = resolveURL(segment.getResolvedURL(), path);
       const mediaOrInitRequest = request({
