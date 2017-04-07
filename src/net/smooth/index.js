@@ -37,8 +37,8 @@ const {
   parseBif,
 } = require("../bif");
 
-const { parseSami } = require("./tt-sami");
-const { parseTTML } = require("./tt-ttml");
+const { parseSami } = require("../parsers/texttracks/sami.js");
+const { parseTTML } = require("../parsers/texttracks/ttml.js");
 const TT_PARSERS = {
   "application/x-sami":       parseSami,
   "application/smil":         parseSami,

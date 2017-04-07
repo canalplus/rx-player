@@ -121,7 +121,7 @@ function parseNode(node, parentOffset, siblingOffset) {
   // NOTE(compat): on IE xml nodes do not have an innerHTML property.
   // we have to re-serialize and re-parse as text/html to access the
   // <p>'s innerHTML
-  if (innerHTML === undefined || innerHTML === null) {
+  if (innerHTML == null) {
     const serializedXML = new XMLSerializer().serializeToString(node);
     innerHTML = new DOMParser().parseFromString(serializedXML, "text/html").body.firstChild.innerHTML;
   }
