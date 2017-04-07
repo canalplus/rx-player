@@ -56,6 +56,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
         const url = URL.createObjectURL(blob);
         this.trackElement.src = url;
         this.buffered.insert(0, Infinity); // XXX wanted?
+        // Surely means 0, 0, infinity here...
       } else {
         log.warn("vtt subtitles not supported");
       }

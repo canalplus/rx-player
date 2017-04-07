@@ -54,6 +54,40 @@ function findAtom(buf, atomName) {
 }
 
 /**
+ * @param {Uint8Array} buf - the isobmff structure
+ * @param {Number} atomName - the 'name' of the box (e.g. 'sidx' or 'moov'),
+ * hexa encoded
+ * @returns {Number} - offset where the corresponding box is (starting with its
+ * size), 0 if not found.
+ */
+function getAtomContent(buf, atomName) {
+  const l = buf.length;
+  let i = 0;
+
+  let name, size;
+  while (i + 8 < l) {
+    size = be4toi(buf, i);
+    name = be4toi(buf, i + 4);
+    assert(size > 0, "dash: out of range size");
+    if (name === atomName) {
+      break;
+    } else {
+      i += size;
+    }
+  }
+
+  if (i < l) {
+    return buf.subarray(i + 8, i + size);
+  } else {
+    return null;
+  }
+}
+
+function getMdat(buf) {
+  return getAtomContent(buf, 0x6D646174 /* "mdat" */);
+}
+
+/**
  * Parse the sidx part (segment index) of the isobmff.
  * Returns null if not found.
  *
@@ -215,4 +249,8 @@ function patchPssh(buf, pssList) {
   );
 }
 
-module.exports = { parseSidx, patchPssh };
+module.exports = {
+  parseSidx,
+  patchPssh,
+  getMdat,
+};
