@@ -39,49 +39,6 @@ let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 const DEFAULT_PRESENTATION_DELAY = 15;
 
-/**
- * Infers the type of adaptation from codec and mimetypes found in it.
- *
- * This follows the guidelines defined by the DASH-IF IOP:
- *   - one adaptation set contains a single media type
- *   - The order of verifications are:
- *       1. mimeType
- *       2. Role
- *       3. codec
- *
- * Note: This is based on DASH-IF-IOP-v4.0 with some more freedom.
- * @param {Object} adaptation
- * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
- */
-function inferAdaptationType(adaptation) {
-  const { mimeType = "" } = adaptation;
-  const topLevel = mimeType.split("/")[0];
-  if (SUPPORTED_ADAPTATIONS_TYPE.includes(topLevel)) {
-    return topLevel;
-  }
-
-  if (mimeType === "application/ttml+xml") {
-    return "text";
-  }
-
-  // manage DASH-IF mp4-embedded subtitles and metadata
-  if (mimeType === "application/mp4") {
-    const { role } = adaptation;
-    if (role) {
-      if (
-        role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-        role.value === "subtitle"
-      ) {
-        return "text";
-      }
-    }
-    return "metadata";
-  }
-
-  // TODO infer from representations' codecs?
-  return "unknown";
-}
-
 function parseBaseURL(manifest) {
   let baseURL = normalizeBaseURL(manifest.locations[0]);
   const period = manifest.periods[0];
@@ -214,19 +171,9 @@ function normalizeAdaptation(initialAdaptation, inherit) {
   )
     .sort((a, b) => a.bitrate - b.bitrate);
 
-  let { type, mimeType } = adaptation;
-  if (!mimeType) {
-    mimeType = representations[0].mimeType;
-  }
-
-  if (!mimeType) {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
-
-  adaptation.mimeType = mimeType;
-
+  const { type } = adaptation;
   if (!type) {
-    type = adaptation.type = inferAdaptationType(adaptation);
+    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
   if (type == "video" || type == "audio") {
@@ -275,7 +222,13 @@ function normalizeSubtitles(subtitles) {
     subtitles = [subtitles];
   }
 
-  return subtitles.reduce((allSubs, { mimeType, url, language, languages }) => {
+  return subtitles.reduce((allSubs, {
+    mimeType,
+    url,
+    language,
+    languages,
+    closedCaption,
+  }) => {
     if (language) {
       languages = [language];
     }
@@ -284,6 +237,7 @@ function normalizeSubtitles(subtitles) {
       id: uniqueId++,
       type: "text",
       lang,
+      closedCaption: !!closedCaption,
       mimeType,
       rootURL: url,
       baseURL: "",

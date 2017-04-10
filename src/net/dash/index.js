@@ -23,7 +23,7 @@ const { parseSidx, patchPssh, getMdat } = require("./mp4");
 const { bytesToStr } = require("../../utils/bytes.js");
 
 const request = require("../../request");
-const dashManifestParser = require("./parser");
+const dashManifestParser = require("./manifest");
 
 const { parseTTML } = require("../parsers/texttracks/ttml.js");
 
