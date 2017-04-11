@@ -1,6 +1,20 @@
+/**
+ * Scheme part of an url (e.g. "http://").
+ */
 const schemeRe = /^(?:[a-z]+:)?\/\//i;
-const selfDirRe = /\/[\.]{1,2}\//;
 
+/**
+ * Captures "/../" or "/./".
+ */
+const selfDirRe = /\/\.{1,2}\//;
+
+/**
+ * Resolve self directory and previous directory references to obtain a
+ * "normalized" url.
+ * @example "https://foo.bar/baz/booz/../biz" => "https://foo.bar/baz/biz"
+ * @param {string} url
+ * @returns {string}
+ */
 function _normalizeUrl(url) {
   // fast path if no ./ or ../ are present in the url
   if (!selfDirRe.test(url)) {
@@ -22,6 +36,15 @@ function _normalizeUrl(url) {
   return newUrl.join("/");
 }
 
+/**
+ * Construct an url from the arguments given.
+ * Basically:
+ *   - The last arguments that contains a scheme (e.g. "http://") is the base
+ *     of the url.
+ *   - every subsequent string arguments are concatened to it.
+ * @param {...string} arguments
+ * @returns {string}
+ */
 function resolveURL() {
   const len = arguments.length;
   if (len === 0) {
@@ -38,10 +61,12 @@ function resolveURL() {
       base = part;
     }
     else {
+      // trim if begins with "/"
       if (part[0] === "/") {
         part = part.substr(1);
       }
 
+      // trim if ends with "/"
       if (base[base.length - 1] === "/") {
         base = base.substr(0, base.length - 1);
       }
