@@ -20,7 +20,11 @@ const { Subject } = require("rxjs/Subject");
 const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { combineLatest } = require("rxjs/observable/combineLatest");
 const { on } = require("../utils/rx-utils");
-const { normalize: normalizeLang } = require("../utils/languages");
+const {
+  normalize: normalizeLang,
+  normalizeLanguage,
+  normalizeSubtitle,
+} = require("../utils/languages");
 const EventEmitter = require("../utils/eventemitter");
 const debugPane = require("../utils/debug");
 const assert = require("../utils/assert");
@@ -67,6 +71,41 @@ const PLAYER_PAUSED    = "PAUSED";
 const PLAYER_ENDED     = "ENDED";
 const PLAYER_BUFFERING = "BUFFERING";
 const PLAYER_SEEKING   = "SEEKING";
+
+/**
+ * VERY simple deepEqual function, optimized for the player
+ * events.
+ * @param {*} prev
+ * @param {*} next
+ * @returns {Boolean}
+ */
+function eventsAreEqual(prev, next) {
+  if (prev === next) {
+    return true;
+  }
+
+  if (typeof prev === "object" && typeof next === "object") {
+    if (prev === null || next === null) {
+      return false;
+    }
+    const prevKeys = Object.keys(prev);
+    if (prevKeys.length !== Object.keys(next).length) {
+      return false;
+    }
+
+    for (const prop of prevKeys) {
+      if (
+        !next.hasOwnProperty(prop) ||
+        !eventsAreEqual(prev[prop], next[prop])
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
 
 /**
  * Returns current playback state for the current content.
@@ -216,10 +255,8 @@ class Player extends EventEmitter {
       initAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
-      defaultLanguage: defaultLanguage == null ?
-        undefined : normalizeLang(defaultLanguage),
-      defaultSubtitle: defaultSubtitle == null ?
-      undefined : normalizeLang(defaultSubtitle),
+      defaultLanguage: normalizeLanguage(defaultLanguage),
+      defaultSubtitle: normalizeSubtitle(defaultSubtitle),
     });
 
     // memorize previous volume when muted - minimum at first
@@ -298,7 +335,7 @@ class Player extends EventEmitter {
    */
   _recordState(type, value) {
     const prev = this.evts[type];
-    if (prev !== value) {
+    if (!eventsAreEqual(prev, value)) {
       this.evts[type] = value;
       this.trigger(`${type}Change`, value);
     }
@@ -411,11 +448,11 @@ class Player extends EventEmitter {
     this.playing.next(autoPlay);
 
     if (defaultLanguage != null) {
-      this.adaptive.setLanguage(normalizeLang(defaultLanguage));
+      this.adaptive.setLanguage(normalizeLanguage(defaultLanguage));
     }
 
     if (defaultSubtitle != null) {
-      this.adaptive.setSubtitle(normalizeLang(defaultSubtitle));
+      this.adaptive.setSubtitle(normalizeSubtitle(defaultSubtitle));
     }
 
     const {
@@ -566,7 +603,11 @@ class Player extends EventEmitter {
     this.adas[bufferType] = adaptation;
 
     if (bufferType == "text") {
-      this._recordState("subtitle", adaptation && adaptation.lang || "");
+      const track = adaptation && adaptation.lang ? {
+        language: adaptation.lang,
+        closedCaption: !!adaptation.closedCaption,
+      } : null;
+      this._recordState("subtitle", track);
     }
 
     if (bufferType == "video") {
@@ -574,7 +615,11 @@ class Player extends EventEmitter {
     }
 
     if (bufferType == "audio") {
-      this._recordState("language", adaptation && adaptation.lang || "");
+      const track = {
+        language: adaptation && adaptation.lang || "",
+        audioDescription: !!(adaptation && adaptation.audioDescription),
+      };
+      this._recordState("language", track);
       this._recordState("audioBitrate", representation && representation.bitrate || -1);
     }
   }
@@ -1000,48 +1045,69 @@ class Player extends EventEmitter {
 
   /**
    * Returns true if the corresponding audio language, normalized, is available.
-   * @param {string} lng
-   * @returns {string}
+   * @param {string|Object} lng
+   * @returns {Boolean}
    * TODO Deprecate and rename to hasAudioTrack (next-version)
    */
-  isLanguageAvailable(lng) {
-    return this.getAvailableLanguages().indexOf(normalizeLang(lng)) >= 0;
+  isLanguageAvailable(arg) {
+    const track = normalizeLanguage(arg);
+
+    if (!track) {
+      return false;
+    }
+
+    return !!this.getAvailableLanguages().find(lng =>
+      lng.language === track.language &&
+      lng.audioDescription === !!track.audioDescription
+    );
   }
 
   /**
    * Returns true if the corresponding subtitles track, normalized,
    * is available.
-   * @param {string} lng
-   * @returns {string}
+   * @param {string|Object} lng
+   * @returns {Boolean}
    * TODO Deprecate and rename to hasSubtitlesTrack (next-version)
    */
-  isSubtitleAvailable(sub) {
-    return this.getAvailableSubtitles().indexOf(normalizeLang(sub)) >= 0;
+  isSubtitleAvailable(arg) {
+    const track = normalizeSubtitle(arg);
+
+    if (!track) {
+      return false;
+    }
+
+    return !!this.getAvailableSubtitles().find(lng =>
+      lng.language === track.language &&
+      lng.closedCaption === !!track.closedCaption
+    );
   }
 
   /**
    * Update the audio language.
-   * @param {string} lng
+   * @param {string|Object} lng
    * TODO Deprecate and rename to setAudioTrack (next-version)
    */
-  setLanguage(lng) {
-    lng = normalizeLang(lng);
-    assert(this.isLanguageAvailable(lng), "player: unknown language");
-    this.adaptive.setLanguage(lng);
+  setLanguage(arg) {
+    const track = normalizeLanguage(arg);
+    assert(this.isLanguageAvailable(track), "player: unknown language");
+    this.adaptive.setLanguage(track);
   }
 
   /**
    * Update the audio language.
-   * @param {string} sub
+   * @param {string|Object} sub
    * TODO Deprecate and rename to setSubtitlesTrack (next-version)
    */
-  setSubtitle(sub) {
-    sub = normalizeLang(sub);
-    assert(!sub || this.isSubtitleAvailable(sub), "player: unknown subtitle");
-    this.adaptive.setSubtitle(sub);
-    if (!sub) {
-      this._recordState("subtitle", "");
+  setSubtitle(arg) {
+    if (arg == null) { // deactivate subtitles
+      this.adaptive.setSubtitle(null);
+      this._recordState("subtitle", null);
+      return;
     }
+
+    const track = normalizeSubtitle(arg);
+    assert(this.isSubtitleAvailable(track), "player: unknown subtitle");
+    this.adaptive.setSubtitle(track);
   }
 
   /**

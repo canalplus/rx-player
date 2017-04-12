@@ -23,8 +23,11 @@ const { findBetterMatchIndex } = require("../utils/languages");
 const AverageBitrate = require("./average-bitrate");
 
 const DEFAULTS = {
-  defaultLanguage: "fra",
-  defaultSubtitle: "",
+  defaultLanguage: {
+    language: "fra",
+    audioDescription: false,
+  },
+  defaultSubtitle: null,
   // default buffer size in seconds
   defaultBufferSize: 30,
   // buffer threshold ratio used as a lower bound
@@ -100,16 +103,45 @@ function getClosestDisplayBitrate(reps, width) {
 }
 
 /**
+ * Find first adaptation with the corresponding language.
  * @param {Array.<Object>} adaptations
  * @param {string} lang
  * @returns {Object|null}
  */
 function findAdaptationByLang(adaptations, lang) {
-  const index = findBetterMatchIndex(adaptations.map((a) => a.lang), lang);
+  const langs = adaptations.map(a => a.lang);
+
+  const index = findBetterMatchIndex(langs, lang);
   if (index >= 0) {
     return adaptations[index];
   }
   return null;
+}
+
+/**
+ * @param {Array.<Object>} adaptations
+ * @param {string} lang
+ * @param {Boolean} [audioDescription=false]
+ * @returns {Object|null}
+ */
+function findAudioAdaptation(adaptations, lang, audioDescription = false) {
+  const filteredAdaptations = adaptations.filter(adaptation =>
+    adaptation.audioDescription == audioDescription
+  );
+  return findAdaptationByLang(filteredAdaptations, lang);
+}
+
+/**
+ * @param {Array.<Object>} adaptations
+ * @param {string} lang
+ * @param {Boolean} [closedCaption=false]
+ * @returns {Object|null}
+ */
+function findTextAdaptation(adaptations, lang, closedCaption = false) {
+  const filteredAdaptations = adaptations.filter(adaptation =>
+    adaptation.closedCaption == closedCaption
+  );
+  return findAdaptationByLang(filteredAdaptations, lang);
 }
 
 /**
@@ -124,7 +156,9 @@ function filterByType(stream, selectedType) {
 }
 
 module.exports = function(metrics, deviceEvents, options={}) {
-  Object.keys(options).forEach(key => options[key] === undefined && delete options[key]);
+  Object.keys(options).forEach(key =>
+    options[key] === undefined && delete options[key]
+  );
 
   const {
     defaultLanguage,
@@ -183,7 +217,13 @@ module.exports = function(metrics, deviceEvents, options={}) {
    */
   function audioAdaptationChoice(adaptations) {
     return $languages.distinctUntilChanged()
-      .map((lang) => findAdaptationByLang(adaptations, lang) || adaptations[0]);
+      .map(({ language, audioDescription }) =>
+        findAudioAdaptation(
+          adaptations,
+          language,
+          audioDescription
+        ) || adaptations[0]
+      );
   }
 
   /**
@@ -196,7 +236,13 @@ module.exports = function(metrics, deviceEvents, options={}) {
    */
   function textAdaptationChoice(adaptations) {
     return $subtitles.distinctUntilChanged()
-      .map((lang) => findAdaptationByLang(adaptations, lang));
+      .map(arg =>
+        arg ?  findTextAdaptation(
+          adaptations,
+          arg.language,
+          arg.closedCaption
+        ) : null
+      );
   }
 
   /**

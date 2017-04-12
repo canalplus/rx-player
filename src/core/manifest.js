@@ -20,19 +20,24 @@ const { isCodecSupported } = require("./compat");
 const { MediaError } = require("../errors");
 const { normalize: normalizeLang } = require("../utils/languages");
 
+/**
+ * Representation keys directly inherited from the adaptation.
+ * If any of those keys are in an adaptation but not in one of its
+ * representation, it will be inherited.
+ */
 const representationBaseType = [
-  "profiles",
-  "width",
-  "height",
-  "frameRate",
   "audioSamplingRate",
-  "mimeType",
-  "segmentProfiles",
   "codecs",
-  "maximumSAPPeriod",
-  "maxPlayoutRate",
   "codingDependency",
+  "frameRate",
+  "height",
   "index",
+  "maxPlayoutRate",
+  "maximumSAPPeriod",
+  "mimeType",
+  "profiles",
+  "segmentProfiles",
+  "width",
 ];
 
 let uniqueId = 0;
@@ -171,7 +176,7 @@ function normalizeAdaptation(initialAdaptation, inherit) {
   )
     .sort((a, b) => a.bitrate - b.bitrate);
 
-  const { type } = adaptation;
+  const { type, accessibility = [] } = adaptation;
   if (!type) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
@@ -179,6 +184,15 @@ function normalizeAdaptation(initialAdaptation, inherit) {
   if (type == "video" || type == "audio") {
     representations = representations
       .filter((rep) => isCodecSupported(getCodec(rep)));
+
+    if (type === "audio") {
+      const isAudioDescription = accessibility.includes("visuallyImpaired");
+      adaptation.audioDescription = isAudioDescription;
+    }
+  }
+  else if (type === "text") {
+    const isHardOfHearing = accessibility.includes("hardOfHearing");
+    adaptation.closedCaption = isHardOfHearing;
   }
 
   adaptation.representations = representations;
@@ -238,9 +252,7 @@ function normalizeSubtitles(subtitles) {
       type: "text",
       lang,
       closedCaption: !!closedCaption,
-      mimeType,
-      rootURL: url,
-      baseURL: "",
+      baseURL: url,
       representations: [{
         id: uniqueId++,
         mimeType,
@@ -269,9 +281,7 @@ function normalizeImages(images) {
     return {
       id: uniqueId++,
       type: "image",
-      mimeType,
-      rootURL: url,
-      baseURL: "",
+      baseURL: url,
       representations: [{
         id: uniqueId++,
         mimeType,
@@ -389,6 +399,11 @@ function mergeManifestsIndex(oldManifest, newManifest) {
   return oldManifest;
 }
 
+/**
+ * Add time to a manifest live gap.
+ * @param {Object} manifest
+ * @param {Number} [addedTime=1]
+ */
 function mutateManifestLiveGap(manifest, addedTime=1) {
   if (manifest.isLive) {
     manifest.presentationLiveGap += addedTime;
@@ -450,12 +465,18 @@ function getAdaptationsByType(manifest, type) {
 
 function getAvailableLanguages(manifest) {
   return getAdaptationsByType(manifest, "audio")
-    .map((ada) => normalizeLang(ada.lang));
+    .map((ada) => ({
+      language: normalizeLang(ada.lang),
+      audioDescription: ada.audioDescription,
+    }));
 }
 
 function getAvailableSubtitles(manifest) {
   return getAdaptationsByType(manifest, "text")
-    .map((ada) => normalizeLang(ada.lang));
+    .map((ada) => ({
+      language: normalizeLang(ada.lang),
+      closedCaption: ada.closedCaption,
+    }));
 }
 
 module.exports = {
