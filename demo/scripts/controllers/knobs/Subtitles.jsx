@@ -2,7 +2,7 @@ const React = require("react");
 const withModulesState = require("../../lib/withModulesState.jsx");
 const Knob = require("../../components/Knob.jsx");
 
-// const CLOSED_CAPTION_ICON = "(CC)"; // String.fromCharCode(0xf2a4);
+const CLOSED_CAPTION_ICON = "(CC)"; // String.fromCharCode(0xf2a4);
 const LANG_CODE_TO_LANG = {
   eng: "english",
   fre: "french",
@@ -17,7 +17,10 @@ const translateLanguage = langCode => {
 };
 
 const findLanguageIndex = (subtitle, languages) => {
-  return languages.findIndex(ln => ln === subtitle);
+  return languages.findIndex(ln =>
+    ln.language === subtitle.language &&
+    ln.closedCaption === subtitle.closedCaption
+  );
 };
 
 const SubtitlesKnobBase = ({
@@ -30,7 +33,9 @@ const SubtitlesKnobBase = ({
     "no subtitles",
     ...availableSubtitles
       .map(subtitle => {
-        return translateLanguage(subtitle);
+        return translateLanguage(subtitle.language) +
+          (subtitle.closedCaption ?
+            (" " + CLOSED_CAPTION_ICON) : "");
       }),
   ];
 

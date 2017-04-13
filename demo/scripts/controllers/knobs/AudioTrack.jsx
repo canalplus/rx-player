@@ -2,7 +2,7 @@ const React = require("react");
 const withModulesState = require("../../lib/withModulesState.jsx");
 const Knob = require("../../components/Knob.jsx");
 
-// const AUDIO_DESCRIPTION_ICON = "(AD)"; // String.fromCharCode(0xf29e);
+const AUDIO_DESCRIPTION_ICON = "(AD)"; // String.fromCharCode(0xf29e);
 const LANG_CODE_TO_LANG = {
   eng: "english",
   fre: "french",
@@ -17,7 +17,10 @@ const translateLanguage = langCode => {
 };
 
 const findLanguageIndex = (language, languages) => {
-  return languages.findIndex(ln => ln === language);
+  return languages.findIndex(ln =>
+    ln.language === language.language &&
+    ln.audioDescription === language.audioDescription
+  );
 };
 
 const AudioTrackKnobBase = ({
@@ -28,7 +31,9 @@ const AudioTrackKnobBase = ({
 
   const options = availableLanguages
     .map(language => {
-      return translateLanguage(language);
+      return translateLanguage(language.language) +
+        (language.audioDescription ?
+          (" " + AUDIO_DESCRIPTION_ICON) : "");
     });
 
   const currentLanguageIndex =
