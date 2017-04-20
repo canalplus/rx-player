@@ -315,7 +315,6 @@ module.exports = function(opts={}) {
 
     parser({ segment, response }) {
       const { lang } = segment.getAdaptation();
-      // const { index: representationIndex } = segment.getRepresentation();
 
       let responseData;
       let text;
@@ -368,8 +367,15 @@ module.exports = function(opts={}) {
         // const timescale = (index && index.timescale) ||
         //   representationIndex.timescale;
 
-        // TODO check if TTML / webVTT (from codecs)
-        segmentData = parseTTML(text, lang, 0);
+        const { codecs = "" } = segment.getRepresentation();
+
+        switch (codecs.toLowerCase()) {
+        case "stpp":
+          segmentData = parseTTML(text, lang, 0);
+          break;
+        default:
+          console.warn("The codec used for the subtitle is not managed yet.");
+        }
       }
 
       return Observable.of({
