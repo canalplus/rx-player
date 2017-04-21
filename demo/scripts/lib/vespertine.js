@@ -1,4 +1,5 @@
 const { Subject } = require("rxjs/Subject");
+const { Observable } = require("rxjs/Observable");
 
 /**
  * Homemade redux and r9webapp-core inspired state management architecture.
@@ -123,15 +124,36 @@ const createModule = (module, payload) => {
   const $updates = new Subject()
     .takeUntil($destroy);
 
-  const getFromModule = (...args) =>
-    args.length ? moduleState[args[0]] : moduleState;
+  const getFromModule = (...args) => {
+    if (!args.length) {
+      return moduleState;
+    }
+    if (args.length === 1) {
+      return moduleState[args[0]];
+    }
+    return args.map(arg => moduleState[arg]);
+  };
 
-  const $getFromModule = (...args) =>
-    args.length ?
+  const $getFromModule = (...args) => {
+    if (!args.length) {
+      return $updates;
+    }
+
+    if (args.length === 1) {
+      return $updates
+        .map(state => state[args])
+        .distinctUntilChanged();
+    }
+
+    const observables = args.map(arg =>
       $updates
-        .map(state => state[args[0]])
-        .distinctUntilChanged() :
-      $updates;
+      .map(state => state[arg])
+      .distinctUntilChanged()
+    );
+
+    return Observable
+      .combineLatest(...observables);
+  };
 
   const moduleArgs = {
     state: {
