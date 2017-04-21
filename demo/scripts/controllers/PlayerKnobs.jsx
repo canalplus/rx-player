@@ -5,18 +5,13 @@ const AudioBitrateKnob = require("./knobs/AudioBitrate.jsx");
 const LanguageKnob = require("./knobs/AudioTrack.jsx");
 const SubtitlesKnob = require("./knobs/Subtitles.jsx");
 
-// TODO DRY
-// TODO Manage no subtitle
-// TODO Manage CC
-// TODO Manage AD
 const PlayerKnobs = ({
   player,
-  isStopped,
+  hasLoadedContent,
   hasEnded,
 }) => {
 
-  // TODO manage this higher up
-  if (isStopped || hasEnded) {
+  if (!hasLoadedContent || hasEnded) {
     return null;
   }
 
@@ -33,6 +28,7 @@ const PlayerKnobs = ({
 module.exports = withModulesState({
   player: {
     isStopped: "isStopped",
+    hasLoadedContent: "hasLoadedContent",
     hasEnded: "hasEnded",
   },
 })(PlayerKnobs);
