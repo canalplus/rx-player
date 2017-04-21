@@ -1,6 +1,4 @@
 const { Subject } = require("rxjs/Subject");
-const { BehaviorSubject } = require("rxjs/BehaviorSubject");
-const { Observable } = require("rxjs/Observable");
 
 /**
  * Homemade redux and r9webapp-core inspired state management architecture.
@@ -8,7 +6,7 @@ const { Observable } = require("rxjs/Observable");
  * This function creates a new module (defined in the modules directory) and
  * give it the payload in argument.
  *
- * The module can send state updates at any time, through its $state Subject,
+ * The module can send state updates at any time, through its state Object,
  * and returns an Object containing functions: the actions.
  *
  * The actions can then be called through the dispatch function returned here.
@@ -17,9 +15,9 @@ const { Observable } = require("rxjs/Observable");
  * @example
  * ```js
  * // 1 - The module
- * const TodoList = ({ $state }, { maxLength }) => {
+ * const TodoList = ({ state }, { maxLength }) => {
  *   // initial state
- *   $state.next({
+ *   state.set({
  *     todos: [],
  *   });
  *
@@ -28,7 +26,7 @@ const { Observable } = require("rxjs/Observable");
  *
  *     // add a todo if max length is not yet reached
  *     ADD_TODO: function(text) {
- *       const currentTodos = $state.getValue().todos;
+ *       const currentTodos = state.get("todos");
  *       if (currentTodos.length >= maxLength) {
  *         return -1;
  *       }
@@ -36,7 +34,7 @@ const { Observable } = require("rxjs/Observable");
  *       const id = lastTodoId++;
  *
  *       // update state
- *       $state.next({
+ *       state.set({
  *         todos: [
  *           ...currentTodos,
  *           { id, text },
@@ -49,7 +47,7 @@ const { Observable } = require("rxjs/Observable");
  *
  *     // remove a todo thanks to its id
  *     REMOVE_TODO function(todoId) {
- *       const currentTodos = $state.getValue().todos;
+ *       const currentTodos = state.get("todos");
  *
  *       const index = currentTodos
  *        .findIndex(({ id }) => id === todoId);
@@ -63,7 +61,7 @@ const { Observable } = require("rxjs/Observable");
  *        const todosClone = [ ...currentTodos ];
  *        todosClone.splice(index, 1);
  *
- *        $state.next({
+ *        state.set({
  *          todos: todosClone,
  *        });
  *        return true;
@@ -107,8 +105,7 @@ const { Observable } = require("rxjs/Observable");
  *     returns.
  *
  *   - get: get the entire module state, or the property named after the
- *     argument (a string). If you give it multiple strings, it returns an array
- *     for all the values asked.
+ *     argument (a string).
  *
  *   - $get: same as get, but returns an observable instead. Start emitting at
  *     the first change (I do not know yet if it's better to first emit the
@@ -122,28 +119,32 @@ const createModule = (module, payload) => {
   }
 
   const moduleState = {};
-  const $state = new BehaviorSubject();
   const $destroy = new Subject();
-
-  const $updates = $state
-    .skip(1)
-    .map(newState => Object.assign(moduleState, newState))
+  const $updates = new Subject()
     .takeUntil($destroy);
 
-  // TODO find better operator!
-  $updates.publish().connect();
+  const getFromModule = (...args) =>
+    args.length ? moduleState[args[0]] : moduleState;
 
-  // try {
-  const args = {
-    $state,
+  const $getFromModule = (...args) =>
+    args.length ?
+      $updates
+        .map(state => state[args[0]])
+        .distinctUntilChanged() :
+      $updates;
+
+  const moduleArgs = {
+    state: {
+      get: getFromModule,
+      set: (arg) => {
+        const newState = Object.assign(moduleState, arg);
+        $updates.next(newState);
+      },
+    },
     $destroy,
   };
 
-  const moduleActions = module(args, payload);
-  // } catch (e) {
-  //   const message = (e && e.message) ? e.message : e;
-  //   throw new Error(`Error while creating a module: ${message}`);
-  // }
+  const moduleActions = module(moduleArgs, payload);
 
   return {
     dispatch: (actionName, payload) => {
@@ -152,47 +153,11 @@ const createModule = (module, payload) => {
           `The ${actionName} action does not exist on this module.`
         );
       }
-
-      // try {
       return moduleActions[actionName](payload);
-      // } catch (e) {
-      //   const message = (e && e.message) ? e.message : e;
-      //   throw new Error(`Error while dispatching ${actionName}: ${message}`);
-      // }
     },
 
-    get: (...args) => {
-      if (!args.length) {
-        return moduleState;
-      }
-      if (args.length === 1) {
-        return moduleState[args];
-      }
-
-      return args.map(arg => moduleState[arg]);
-    },
-
-    $get: (...args) => {
-      if (!args.length) {
-        return $updates;
-      }
-
-      if (args.length === 1) {
-        return $updates
-          .map(state => state[args])
-          .distinctUntilChanged();
-      }
-
-      const observables = args.map(arg =>
-        $updates
-          .map(state => state[arg])
-          .distinctUntilChanged()
-      );
-
-      return Observable
-        .combineLatest(...observables);
-    },
-
+    get: getFromModule,
+    $get: $getFromModule,
     destroy: () => {
       $destroy.next();
       $destroy.complete();

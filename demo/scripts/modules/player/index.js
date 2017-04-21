@@ -9,14 +9,14 @@
 const RxPlayer = require("../../../../src");
 const { linkPlayerEventsToState } = require("./events.js");
 
-const PLAYER = ({ $destroy, $state }, { videoElement }) => {
+const PLAYER = ({ $destroy, state }, { videoElement }) => {
   const player = new RxPlayer({ videoElement });
 
   // facilitate DEV mode
   window.player = window.rxPlayer = player;
 
   // initial state. Written here to easily showcase it exhaustively
-  $state.next({
+  state.set({
     audioBitrateAuto: true,
     audioBitrate: undefined,
     availableAudioBitrates: [],
@@ -46,7 +46,7 @@ const PLAYER = ({ $destroy, $state }, { videoElement }) => {
     volume: player.getVolume(),
   });
 
-  linkPlayerEventsToState(player, $state, $destroy);
+  linkPlayerEventsToState(player, state, $destroy);
 
   // dispose of the RxPlayer when destroyed
   $destroy.subscribe(() => player.dispose());
@@ -62,32 +62,24 @@ const PLAYER = ({ $destroy, $state }, { videoElement }) => {
 
     LOAD: (arg) => {
       player.loadVideo(arg);
-      $state.next({ loadedVideo: arg });
+      state.set({ loadedVideo: arg });
     },
 
     PLAY: () => {
       player.play();
 
-      const currentState = $state.getValue();
-
-      if (
-        !currentState.isStopped &&
-        !currentState.hasEnded
-      ) {
-        $state.next({ isPaused: false });
+      const { isStopped, hasEnded } = state.get();
+      if (!isStopped && !hasEnded) {
+        state.set({ isPaused: false });
       }
     },
 
     PAUSE: () => {
       player.pause();
 
-      const currentState = $state.getValue();
-
-      if (
-        !currentState.isStopped &&
-        !currentState.hasEnded
-      ) {
-        $state.next({ isPaused: true });
+      const { isStopped, hasEnded } = state.get();
+      if (!isStopped && !hasEnded) {
+        state.set({ isPaused: true });
       }
     },
 
@@ -117,14 +109,14 @@ const PLAYER = ({ $destroy, $state }, { videoElement }) => {
 
     SET_AUDIO_BITRATE: (bitrate) => {
       player.setAudioBitrate(bitrate || 0);
-      $state.next({
+      state.set({
         audioBitrateAuto: !bitrate,
       });
     },
 
     SET_VIDEO_BITRATE: (bitrate) => {
       player.setVideoBitrate(bitrate || 0);
-      $state.next({
+      state.set({
         videoBitrateAuto: !bitrate,
       });
     },

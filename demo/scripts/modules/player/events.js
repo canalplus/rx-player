@@ -7,10 +7,10 @@ const POSITION_UPDATES_INTERVAL = 100;
  * time.
  * Unsubscribe when $destroy emit.
  * @param {RxPlayer} player
- * @param {Subject} $state
+ * @param {Subject} state
  * @param {Subject} $destroy
  */
-const linkPlayerEventsToState = (player, $state, $destroy) => {
+const linkPlayerEventsToState = (player, state, $destroy) => {
   const fromPlayerEvent = (event) =>
     Observable.create(obs => {
       const func = (payload) => obs.next(payload);
@@ -21,10 +21,10 @@ const linkPlayerEventsToState = (player, $state, $destroy) => {
       };
     });
 
-  const linkPlayerEventToState = (event, state) =>
+  const linkPlayerEventToState = (event, stateItem) =>
     fromPlayerEvent(event)
       .takeUntil($destroy)
-      .subscribe(arg => $state.next({ [state]: arg }));
+      .subscribe(arg => state.set({ [stateItem]: arg }));
 
   linkPlayerEventToState("subtitleChange", "subtitle");
   linkPlayerEventToState("languageChange", "language");
@@ -36,7 +36,7 @@ const linkPlayerEventsToState = (player, $state, $destroy) => {
 
   player.getImageTrack()
     .takeUntil($destroy)
-    .subscribe(images => $state.next({ images }));
+    .subscribe(images => state.set({ images }));
 
   // use an interval for current position
   // TODO Only active for content playback
@@ -49,28 +49,28 @@ const linkPlayerEventsToState = (player, $state, $destroy) => {
     }))
     .takeUntil($destroy)
     .subscribe(arg => {
-      $state.next(arg);
+      state.set(arg);
     });
 
   fromPlayerEvent("playerStateChange")
     .distinctUntilChanged()
     .takeUntil($destroy)
-    .subscribe((state) => {
+    .subscribe((arg) => {
       const stateUpdates = {
-        hasEnded: state === "ENDED",
-        hasLoadedContent: !["STOPPED", "LOADING"].includes(state),
-        isBuffering: state === "BUFFERING",
-        isLoading: state === "LOADING",
-        isSeeking: state === "SEEKING",
-        isStopped: state === "STOPPED",
-        speed: state === "PLAYING" ? player.getPlaybackRate() : 0,
+        hasEnded: arg === "ENDED",
+        hasLoadedContent: !["STOPPED", "LOADING"].includes(arg),
+        isBuffering: arg === "BUFFERING",
+        isLoading: arg === "LOADING",
+        isSeeking: arg === "SEEKING",
+        isStopped: arg === "STOPPED",
+        speed: arg === "PLAYING" ? player.getPlaybackRate() : 0,
       };
 
-      if (state === "PAUSED") {
+      if (arg === "PAUSED") {
         stateUpdates.isPaused = true;
-      } else if (state === "PLAYING") {
+      } else if (arg === "PLAYING") {
         stateUpdates.isPaused = false;
-      } else if (state === "LOADED") {
+      } else if (arg === "LOADED") {
         stateUpdates.availableAudioBitrates =
           player.getAvailableAudioBitrates();
         stateUpdates.availableVideoBitrates =
@@ -79,7 +79,7 @@ const linkPlayerEventsToState = (player, $state, $destroy) => {
           player.getAvailableLanguages();
         stateUpdates.availableSubtitles =
           player.getAvailableSubtitles();
-      } else if (state === "STOPPED" || state === "ENDED") {
+      } else if (arg === "STOPPED" || arg === "ENDED") {
         stateUpdates.audioBitrate = undefined;
         stateUpdates.videoBitrate = undefined;
         stateUpdates.availableAudioBitrates = [];
@@ -88,12 +88,12 @@ const linkPlayerEventsToState = (player, $state, $destroy) => {
         stateUpdates.availableSubtitles = [];
       }
 
-      if (state !== "STOPPED") {
+      if (arg !== "STOPPED") {
         // error is never cleaned up
         stateUpdates.error = null;
       }
 
-      $state.next(stateUpdates);
+      state.set(stateUpdates);
     });
 
   player.getMetrics()
@@ -103,7 +103,7 @@ const linkPlayerEventsToState = (player, $state, $destroy) => {
     .subscribe((metric = {}) => {
       const { response } = metric.value;
       if (response.size > 10000) {
-        $state.next({
+        state.set({
           bandwidth: (response.size / response.duration) * 0.008, // in mbps
         });
       }
@@ -114,7 +114,7 @@ const linkPlayerEventsToState = (player, $state, $destroy) => {
     .distinctUntilChanged()
     .takeUntil($destroy)
     .subscribe((isLive) => {
-      $state.next({ isLive });
+      state.set({ isLive });
     });
 };
 

@@ -1,7 +1,7 @@
-const ChartData = ({ $state }, { maxSize }) => {
+const ChartData = ({ state }, { maxSize }) => {
   const data = [];
 
-  $state.next({ data: data.slice() });
+  state.set({ data: data.slice() });
   return {
     ADD_DATA: (val) => {
       if (data.length >= maxSize) {
@@ -12,12 +12,12 @@ const ChartData = ({ $state }, { maxSize }) => {
         value: val,
       });
 
-      $state.next({ data: data.slice() });
+      state.set({ data: data.slice() });
     },
 
     REMOVE_DATA: (number = 1) => {
       data.splice(0, number);
-      $state.next({ data: data.slice() });
+      state.set({ data: data.slice() });
     },
   };
 };
