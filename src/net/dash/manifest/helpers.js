@@ -207,6 +207,10 @@ function inferAdaptationType(adaptation) {
     return topLevel;
   }
 
+  if (mimeType === "application/bif") {
+    return "image";
+  }
+
   if (mimeType === "application/ttml+xml") {
     return "text";
   }
