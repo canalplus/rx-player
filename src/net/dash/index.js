@@ -31,6 +31,7 @@ import request from "../../request";
 import dashManifestParser from "./manifest";
 
 import { parseTTML } from "../parsers/texttracks/ttml.js";
+import { parseBif } from "../parsers/bif.js";
 
 const empty = EmptyObservable.create;
 
@@ -456,6 +457,56 @@ export default function(options={}) {
         timescale,
       });
     },
+
+  };
+
+  const imageTrackPipeline = {
+    loader({ segment }) {
+      if (segment.init) {
+        return empty();
+      } else {
+        const media = segment.getMedia();
+        const path = media ?
+          replaceTokens(media, segment) : "";
+        const mediaUrl = resolveURL(segment.getResolvedURL(), path);
+        return request({
+          url: mediaUrl,
+          responseType: "arraybuffer",
+          createXHR,
+        });
+      }
+    },
+
+    parser({ response /*, adaptation, representation, segment */ }) {
+      const responseData = response.responseData;
+      const blob = new Uint8Array(responseData);
+
+      const currentSegment = {
+        ts: 0,
+        d:  Infinity,
+      };
+
+      let segmentData, timescale;
+      if (blob) {
+        const bif = parseBif(blob);
+        segmentData = bif.thumbs;
+        timescale   = bif.timescale;
+
+        // var firstThumb = blob[0];
+        // var lastThumb  = blob[blob.length - 1];
+
+        // currentSegment = {
+        //   ts: firstThumb.ts,
+        //   d:  lastThumb.ts
+        // };
+      }
+
+      return Observable.of({
+        segmentData,
+        currentSegment,
+        timescale,
+      });
+    },
   };
 
   return {
@@ -464,5 +515,6 @@ export default function(options={}) {
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,
+    image: imageTrackPipeline,
   };
-};
+}
