@@ -30,6 +30,7 @@ const {
   sourceOpen,
   canPlay,
   canSeek,
+  clearVideoSrc,
   isPlaybackStuck,
 } = require("./compat");
 
@@ -284,12 +285,7 @@ function Stream({
           }
         });
 
-        // Clear video src attribute.
-        // On IE11,  video.src = "" is not sufficient as it
-        // does not clear properly the current MediaKey Session.
-        // Microsoft recommended to use video.removeAttr("src").
-        video.src = "";
-        video.removeAttribute("src");
+        clearVideoSrc(video);
 
         if (objectURL) {
           try {

@@ -647,6 +647,19 @@ function isPlaybackStuck(timing) {
   );
 }
 
+/*
+ * Clear video src attribute.
+ *
+ * On IE11,  video.src = "" is not sufficient as it
+ * does not clear properly the current MediaKey Session.
+ * Microsoft recommended to use video.removeAttr("src").
+ * @param {HTMLMediaElement} video
+ */
+function clearVideoSrc(video) {
+  video.src = "";
+  video.removeAttribute("src");
+}
+
 /**
  * Returns an Observable emitting events when the fullscreen situation of the
  * element you gave in arguments just changed.
@@ -684,6 +697,7 @@ module.exports = {
   visibilityChange,
 
   addTextTrack,
+  clearVideoSrc,
   isVTTSupported,
   isPlaybackStuck,
   isIE,
