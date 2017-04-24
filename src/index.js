@@ -37,6 +37,10 @@ if (typeof Object.assign != "function") {
   })();
 }
 
+if (__DEV__) {
+  require("./utils/log.js").setLevel("DEBUG");
+}
+
 require("rxjs/add/observable/of");
 require("rxjs/add/observable/throw");
 
