@@ -22,6 +22,7 @@ const Template = require("./indexes/template");
 const Timeline = require("./indexes/timeline");
 const List = require("./indexes/list");
 const Base = require("./indexes/base");
+const Smooth = require("./indexes/smooth");
 
 const { IndexError } = require("../errors");
 
@@ -38,6 +39,7 @@ function selectIndexHandler(index) {
   case "timeline": return Timeline;
   case "list":     return List;
   case "base":     return Base;
+  case "smooth":   return Smooth;
   default:
     throw new IndexError("UNKNOWN_INDEX", indexType, true);
   }
@@ -136,7 +138,7 @@ class IndexHandler {
    */
   getSegments(ts, offset, bufSize) {
     const { up, to } = this.normalizeRange(ts, offset, bufSize);
-    if (!this.handler.checkRange(to)) {
+    if (!this.handler.checkRange(up, to)) {
       throw new IndexError("OUT_OF_INDEX_ERROR", this.index.indexType, false);
     }
 

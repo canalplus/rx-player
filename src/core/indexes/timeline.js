@@ -122,7 +122,7 @@ class Timeline {
     return -1;
   }
 
-  checkRange(up) {
+  checkRange(_, to) {
     let last = this.timeline[this.timeline.length - 1];
     if (!last) {
       return true;
@@ -132,7 +132,7 @@ class Timeline {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return (up <= getTimelineBound(last));
+    return (to <= getTimelineBound(last));
   }
 
   getSegmentIndex(ts) {

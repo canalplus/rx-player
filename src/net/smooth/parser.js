@@ -255,7 +255,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       representations: [],
       index: {
         timeline: [],
-        indexType: "timeline",
+        indexType: "smooth",
         timescale: timescale,
         initialization: {},
       },
