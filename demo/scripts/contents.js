@@ -15,6 +15,12 @@ module.exports = [
     "live": true,
   },
   {
+    "name": "Big Buck Bunny Wowza",
+    "url": "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd",
+    "transport": "dash",
+    "live": true,
+  },
+  {
     "name": "Unified Streaming Live",
     "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020",
     "transport": "dash",
