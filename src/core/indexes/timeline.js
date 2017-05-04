@@ -16,31 +16,32 @@
 
 const { Segment } = require("../segment");
 
-/**
- * Get upper bound for the given timeline range given (in the right timescale).
- * @param {Object} range - timeline's range
- * @returns {Number}
- */
-function getTimelineBound({ ts, d, r }) {
-  if (d === -1) {
-    return ts;
-  } else {
-    return ts + (r+1) * d;
-  }
-}
-
 class Timeline {
   constructor(adaptation, representation, index) {
     this.adaptation = adaptation;
     this.representation = representation;
     this.index = index;
-    this.timeline = index.timeline;
+  }
+
+
+  /**
+   * Get upper bound for the given timeline range given (in the right
+   * timescale).
+   * @param {Object} range - timeline's range
+   * @returns {Number}
+   */
+  static getRangeEnd({ ts, d, r }) {
+    if (d === -1) {
+      return ts;
+    } else {
+      return ts + (r+1) * d;
+    }
   }
 
   static getLiveEdge(videoIndex, manifest) {
     const lastTimelineElement = videoIndex.timeline[videoIndex.timeline.length - 1];
     const calculatedLiveEdge = (
-      (getTimelineBound(lastTimelineElement) / videoIndex.timescale) - manifest.suggestedPresentationDelay
+      (Timeline.getRangeEnd(lastTimelineElement) / videoIndex.timescale) - manifest.suggestedPresentationDelay
     );
     const minimumLiveEdge = (videoIndex.timeline[0].ts / videoIndex.timescale) + 1.0;
 
@@ -91,23 +92,25 @@ class Timeline {
    * for the next (discontinuited) range. If not this is equal to -1.
    */
   checkDiscontinuity(time) {
+    const { timeline } = this.index;
+
     if (time <= 0) {
       return -1;
     }
 
     const index = this.getSegmentIndex(time);
-    if (index < 0 || index >= this.timeline.length - 1) {
+    if (index < 0 || index >= timeline.length - 1) {
       return -1;
     }
 
-    const range = this.timeline[index];
+    const range = timeline[index];
     if (range.d === -1) {
       return -1;
     }
 
     const rangeUp = range.ts;
-    const rangeTo = getTimelineBound(range);
-    const nextRange = this.timeline[index + 1];
+    const rangeTo = Timeline.getRangeEnd(range);
+    const nextRange = timeline[index + 1];
 
     const timescale = this.index.timescale || 1;
     // when we are actually inside the found range and this range has
@@ -122,8 +125,10 @@ class Timeline {
     return -1;
   }
 
-  checkRange(_, to) {
-    let last = this.timeline[this.timeline.length - 1];
+  checkRange(time, up, to) {
+    const { timeline } = this.index;
+
+    let last = timeline[timeline.length - 1];
     if (!last) {
       return true;
     }
@@ -132,11 +137,12 @@ class Timeline {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return (to <= getTimelineBound(last));
+    return (to <= Timeline.getRangeEnd(last));
   }
 
   getSegmentIndex(ts) {
-    const timeline = this.timeline;
+    const { timeline } = this.index;
+
     let low = 0;
     let high = timeline.length;
 
@@ -208,7 +214,7 @@ class Timeline {
   }
 
   addSegment(newSegment, currentSegment) {
-    const timeline = this.timeline;
+    const { timeline } = this.index;
     const timelineLength = timeline.length;
     const last = timeline[timelineLength - 1];
 
@@ -246,7 +252,7 @@ class Timeline {
     // if the given timing has a timestamp after le timeline bound we
     // just need to push a new element in the timeline, or increase
     // the @r attribute of the last element.
-    else if (newSegment.ts >= getTimelineBound(last)) {
+    else if (newSegment.ts >= Timeline.getRangeEnd(last)) {
       if (last.d === newSegment.d) {
         last.r++;
       } else {

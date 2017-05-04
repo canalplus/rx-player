@@ -17,8 +17,18 @@
 const Timeline = require("./timeline");
 
 class Smooth extends Timeline {
-  checkRange() {
-    return true;
+  checkRange(time) {
+    const { timeline } = this.index;
+    let last = timeline[timeline.length - 1];
+    if (!last) {
+      return true;
+    }
+
+    if (last.d < 0) {
+      last = { ts: last.ts, d: 0, r: last.r };
+    }
+
+    return (time <= Timeline.getRangeEnd(last));
   }
 }
 

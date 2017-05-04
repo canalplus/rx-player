@@ -31,7 +31,7 @@ class List {
     return -1;
   }
 
-  checkRange(_, to) {
+  checkRange(time, up, to) {
     const { duration, list } = this.index;
     const i = Math.floor(to / duration);
     return (i >= 0 && i < list.length);

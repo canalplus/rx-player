@@ -63,6 +63,8 @@ class IndexHandler {
   constructor(adaptation, representation) {
     this.adaptation = adaptation;
     this.representation = representation;
+
+    // TODO always access index through this.representation
     this.index = representation.index;
     this.handler = new (selectIndexHandler(this.index))(adaptation,
                                                         representation,
@@ -137,8 +139,8 @@ class IndexHandler {
    * of bounds.
    */
   getSegments(ts, offset, bufSize) {
-    const { up, to } = this.normalizeRange(ts, offset, bufSize);
-    if (!this.handler.checkRange(up, to)) {
+    const { time, up, to } = this.normalizeRange(ts, offset, bufSize);
+    if (!this.handler.checkRange(time, up, to)) {
       throw new IndexError("OUT_OF_INDEX_ERROR", this.index.indexType, false);
     }
 
@@ -157,6 +159,8 @@ class IndexHandler {
 
   /**
    * Update the timescale used (for all segments).
+   * TODO This should probably update all previous segments to the newly set
+   * Timescale.
    * @param {Number} timescale
    * @returns {Boolean} - Returns true if the timescale has been updated.
    */
