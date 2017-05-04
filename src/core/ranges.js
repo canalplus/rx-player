@@ -345,6 +345,7 @@ class BufferedRanges {
   /**
    * Returns the range, if found, that contains the startTime and duration
    * given.
+   * TODO change name to getRange
    * @param {Number} startTime
    * @param {Number} duration
    * @returns {Range|null}
@@ -366,6 +367,7 @@ class BufferedRanges {
 
   /**
    * Get range associated to given time
+   * TODO change name to getIncludingRange or smthg like that.
    * @param {Number} time - time in seconds
    * @returns {Range|null}
    */

@@ -80,11 +80,6 @@ function Buffer({
   seekings,     // Seekings observable
 }) {
 
-  const isAVBuffer = (
-    bufferType == "audio" ||
-    bufferType == "video"
-  );
-
   // will be used to emit messages to the calling function
   const messageSubject = new Subject();
 
@@ -169,31 +164,6 @@ function Buffer({
         cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
       ).concatAll();
     });
-  }
-
-  /**
-   * Append buffer to the bufferingQueue.
-   * If it leads to a QuotaExceededError, try to run our custom range
-   * _garbage collector_.
-   * @returns {Observable}
-   */
-  function doAppendBufferOrGC(pipelineData) {
-    const segmentData = pipelineData.parsed.segmentData;
-    return bufferingQueue.appendBuffer(segmentData)
-      .catch((error) => {
-        if (error.name != "QuotaExceededError") {
-          throw new MediaError("BUFFER_APPEND_ERROR", error, false);
-        }
-
-        // launch our garbage collector and retry on
-        // QuotaExceededError and throw a fatal error if we still have
-        // an error.
-        return bufferGarbageCollector()
-          .mergeMap(() => bufferingQueue.appendBuffer(segmentData))
-          .catch((error) => {
-            throw new MediaError("BUFFER_FULL_ERROR", error, true);
-          });
-      });
   }
 
   /**
@@ -302,11 +272,67 @@ function Buffer({
 
       const range = ranges.hasRange(time, duration);
       if (range) {
+        const segmentBitrate = segment.getRepresentation().bitrate;
         // only re-load comparatively-poor bitrates
-        return range.bitrate * BITRATE_REBUFFERING_RATIO < segment.getRepresentation().bitrate;
+        return range.bitrate * BITRATE_REBUFFERING_RATIO < segmentBitrate;
       } else {
         return true;
       }
+    }
+
+    /**
+     * Append buffer to the bufferingQueue.
+     * If it leads to a QuotaExceededError, try to run our custom range
+     * _garbage collector_.
+     * @returns {Observable}
+     */
+    function appendDataInBuffer(pipelineData) {
+      const { segment, parsed } = pipelineData;
+      const { segmentData, nextSegments, currentSegment, timescale } = parsed;
+
+      // change the timescale if one has been extracted from the
+      // parsed segment (SegmentBase)
+      // TODO do that higher up?
+      if (timescale) {
+        segmentIndex.setTimescale(timescale);
+      }
+
+      // addedSegments are values parsed from the segment metadata
+      // that should be added to the segmentIndex.
+      // TODO do that higher up?
+      const addedSegments = nextSegments ?
+        segmentIndex.insertNewSegments(nextSegments, currentSegment) : [];
+
+      queuedSegments.remove(segment.getId());
+
+      // current segment timings informations are used to update
+      // ranges informations
+      if (currentSegment) {
+        ranges.insert(
+          representation.bitrate,
+          segmentIndex.scale(currentSegment.ts),
+          segmentIndex.scale(currentSegment.ts + currentSegment.d)
+        );
+      }
+
+      return bufferingQueue.appendBuffer(segmentData)
+        .catch((error) => {
+          if (error.name != "QuotaExceededError") {
+            throw new MediaError("BUFFER_APPEND_ERROR", error, false);
+          }
+
+          // launch our garbage collector and retry on
+          // QuotaExceededError and throw a fatal error if we still have
+          // an error.
+          return bufferGarbageCollector()
+            .mergeMap(() => bufferingQueue.appendBuffer(segmentData))
+            .catch((error) => {
+              throw new MediaError("BUFFER_FULL_ERROR", error, true);
+            });
+        }).map(() => ({
+          type: "pipeline",
+          value: Object.assign({ bufferType, addedSegments }, pipelineData),
+        }));
     }
 
     /**
@@ -315,25 +341,41 @@ function Buffer({
      * @param {Number} injectCount
      * @returns {Observable|Array.<Segment>}
      */
-    function doInjectSegments([timing, bufferSize], injectCount) {
+    function getNeededSegments([timing, bufferSize], injectCount) {
       const nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
 
-      // makes sure our own buffered ranges representation stay in
-      // sync with the native one.
-      // If not, only keep the intersection between the two.
-      if (isAVBuffer) {
-        if (!ranges.equals(nativeBufferedRanges)) {
-          log.debug("intersect new buffer", bufferType);
-          ranges.intersect(nativeBufferedRanges);
-        }
-      }
+      // TODO This code didn't work previously (typo in the equals method) but
+      // cause problems when it does:
+      // nativeBufferedRanges can differ in ms from "ranges" (TODO because of
+      // what?) which is updated with the segment data downloaded.
+      //
+      // Later in the code we need both:
+      //   - nativeBufferedRanges to know until where the player can play (think
+      //     of it as an improved mediaSource.buffered)
+      //   - ranges to know which segments have been downloaded and with
+      //     which bitrate.
+      // For now, I'm keeping both for simplicity, but we should probably
+      // re-think about that.
+
+      // // makes sure our own buffered ranges representation stay in
+      // // sync with the native one.
+      // // If not, only keep the intersection between the two.
+      // if (isAVBuffer) {
+      //   if (!ranges.equals(nativeBufferedRanges)) {
+      //     log.debug("intersect new buffer", bufferType);
+      //     ranges.intersect(nativeBufferedRanges);
+      //   }
+      // }
 
       // send a message downstream when bumping on an explicit
       // discontinuity announced in the segment index.
       if (timing.stalled) {
         const discontinuity = segmentIndex.checkDiscontinuity(timing.ts);
         if (discontinuity) {
-          messageSubject.next({ type: "index-discontinuity", value: discontinuity });
+          messageSubject.next({
+            type: "index-discontinuity",
+            value: discontinuity,
+          });
         }
       }
 
@@ -376,52 +418,13 @@ function Buffer({
       return injectedSegments;
     }
 
-    function doUnqueueAndUpdateRanges(pipelineData) {
-      const { segment, parsed } = pipelineData;
-      queuedSegments.remove(segment.getId());
-
-      // change the timescale if one has been extracted from the
-      // parsed segment (SegmentBase)
-      const timescale = parsed.timescale;
-      if (timescale) {
-        segmentIndex.setTimescale(timescale);
-      }
-
-      const { nextSegments, currentSegment } = parsed;
-      // added segments are values parsed from the segment metadata
-      // that should be added to the segmentIndex.
-      let addedSegments;
-      if (nextSegments) {
-        addedSegments = segmentIndex.insertNewSegments(nextSegments,
-                                                       currentSegment);
-      } else {
-        addedSegments = [];
-      }
-
-      // current segment timings informations are used to update
-      // ranges informations
-      if (currentSegment) {
-        ranges.insert(representation.bitrate,
-          segmentIndex.scale(currentSegment.ts),
-          segmentIndex.scale(currentSegment.ts + currentSegment.d));
-      }
-
-      return {
-        type: "pipeline",
-        value: Object.assign({ bufferType, addedSegments }, pipelineData),
-      };
-    }
-
     const segmentsPipeline = combineLatest(
       timings,
       bufferSizes
     )
-      .mergeMap(doInjectSegments)
+      .mergeMap(getNeededSegments)
       .concatMap((segment) => pipeline({ segment }))
-      .concatMap(
-        doAppendBufferOrGC,
-        doUnqueueAndUpdateRanges
-      );
+      .concatMap(appendDataInBuffer);
 
     return merge(segmentsPipeline, messageSubject).catch((error) => {
       // For live adaptations, handle 412 errors as precondition-
