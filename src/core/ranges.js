@@ -262,11 +262,11 @@ function normalizeRanges(ranges) {
 }
 
 function rangesEquals(ranges, others) {
-  ranges = normalizeRanges(ranges);
-  others = normalizeRanges(ranges);
-  for (let i = 0; i < ranges.length; i++) {
-    const range = ranges[i];
-    const overlappingRange = findOverlappingRange(range, others);
+  const _ranges = normalizeRanges(ranges);
+  const _others = normalizeRanges(others);
+  for (let i = 0; i < _ranges.length; i++) {
+    const range = _ranges[i];
+    const overlappingRange = findOverlappingRange(range, _others);
     if (!overlappingRange ||
         !nearlyEqual(overlappingRange.start, range.start) ||
         !nearlyEqual(overlappingRange.end, range.end)) {
