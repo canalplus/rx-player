@@ -18,6 +18,8 @@
   "bugs": "https://github.com/canalplus/rx-player/issues",
   "license": "Apache-2.0",
   "scripts": {
+    "build": "webpack --progress --config webpack.config.js src/index.js dist/one-player-core.js",
+    "build:watch": "webpack --progress --config webpack.config.js -w src/index.js dist/one-player-core.js",
     "lint": "eslint ./src/**/*.js",
     "karma": "karma start test/karma.conf.js",
     "coverage": "RXP_COVERAGE=true karma start test/karma.conf.js --browsers Chrome,Firefox",
