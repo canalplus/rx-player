@@ -22,7 +22,9 @@
     "karma": "karma start test/karma.conf.js",
     "coverage": "RXP_COVERAGE=true karma start test/karma.conf.js --browsers Chrome,Firefox",
     "karma-chrome": "karma start test/karma.conf.js --browsers Chrome",
-    "karma-firefox": "karma start test/karma.conf.js --browsers Firefox"
+    "karma-firefox": "karma start test/karma.conf.js --browsers Firefox",
+    "demo": "webpack --progress --config webpack-demo.config.js",
+    "demo:watch": "webpack --progress --config webpack-demo.config.js -w"
   },
   "repository": {
     "type": "git",
@@ -30,9 +32,6 @@
   },
   "dependencies": {
     "rxjs": "5.0.0-rc.1"
-  },
-  "scripts":{
-    "demo": "webpack --progress --config webpack-demo.config.js -w"
   },
   "devDependencies": {
     "babel-core": "^6.4.5",
