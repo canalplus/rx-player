@@ -1,9 +1,10 @@
 node_modules
 *.log
 *.keys
-*.iml
 
 dist/*
-example/*
 !dist/rx-player.js
 !dist/rx-player.min.js
+test-output.xml
+
+demo/bundle.js

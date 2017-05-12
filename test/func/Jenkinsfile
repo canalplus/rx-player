@@ -1,0 +1,13 @@
+node {
+    stage 'test'
+    checkout scm
+    sh 'npm install'
+
+    sh 'cd test/func && bash install.sh'
+    sh 'cd test/func &&  rm -rf /tmp/chrome /tmp/firefox && mv chrome firefox /tmp'
+
+    sh 'cd test/func && ORIGIN=/tmp make test'
+
+    stage 'publish'
+    step([$class: 'JUnitResultArchiver', testResults: 'test/func/test-output.*.xml'])
+}

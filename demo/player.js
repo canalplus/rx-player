@@ -575,4 +575,8 @@ var Player = React.createClass({
   }
 });
 
+window.mountDemoPlayer = function(element, props) {
+  return React.render(<Player {...props} />, element);
+};
+
 module.exports = Player;

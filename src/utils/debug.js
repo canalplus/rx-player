@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { bufferedToArray } = require("../core/ranges");
+const { bufferedToRanges } = require("../core/ranges");
 
 let interval;
 let closeBtn;
@@ -49,7 +49,7 @@ function getDebug(player) {
     timeFragment: player.frag,
     currentTime: player.getCurrentTime(),
     state: player.getPlayerState(),
-    buffer: bufferedToArray(player.video.buffered),
+    buffer: bufferedToRanges(player.video.buffered),
     volume: player.getVolume(),
     video: {
       adaptation: player.adas.video,

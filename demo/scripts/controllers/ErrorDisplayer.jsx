@@ -1,0 +1,49 @@
+const React = require("react");
+const withModulesState = require("../lib/withModulesState.jsx");
+
+const PlayerError = ({ error }) => {
+  const message = error && error.message ? error.message : error;
+
+  return (
+    <span
+      className="fatal-error"
+    >
+      <span
+        className="error-icon icon"
+      >
+        {String.fromCharCode(0xf071)}
+      </span>
+
+      <span
+        className="error-intro"
+      >
+        The Player encountered a fatal Error:
+      </span>
+
+      <span
+        className="error-message"
+      >
+        {message}
+      </span>
+
+    </span>
+  );
+};
+
+const ErrorDisplayer = ({ error }) => {
+  return (
+    <div
+      className="player-error"
+    >
+      { error ?
+          <PlayerError error={error} /> : null
+      }
+    </div>
+  );
+};
+
+module.exports = withModulesState({
+  player: {
+    error: "error",
+  },
+})(ErrorDisplayer);

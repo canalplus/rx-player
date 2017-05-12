@@ -27,6 +27,10 @@ class List {
     throw new Error("not implemented");
   }
 
+  checkDiscontinuity() {
+    return -1;
+  }
+
   checkRange(up) {
     const { duration, list } = this.index;
     const i = Math.floor(up / duration);

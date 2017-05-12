@@ -20,6 +20,7 @@ const { Subject } = require("rxjs/Subject");
 const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { combineLatest } = require("rxjs/observable/combineLatest");
 const { on } = require("../utils/rx-utils");
+const { normalize: normalizeLang } = require("../utils/languages");
 const EventEmitter = require("../utils/eventemitter");
 const debugPane = require("../utils/debug");
 const assert = require("../utils/assert");
@@ -112,12 +113,15 @@ class Player extends EventEmitter {
       defaultSubtitle,
       initVideoBitrate,
       initAudioBitrate,
+      maxVideoBitrate,
+      maxAudioBitrate,
     } = options;
 
     super();
 
     // auto-bindings
     this._playPauseNext$ = this._playPauseNext.bind(this);
+    this._textTrackChanges$ = this._textTrackChanges.bind(this);
     this._setPlayerState$ = this._setPlayerState.bind(this);
     this._triggerTimeChange$ = this._triggerTimeChange.bind(this);
     this._streamNext$ = this._streamNext.bind(this);
@@ -139,7 +143,7 @@ class Player extends EventEmitter {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"2.0.0-alpha6";
+    this.version = /*PLAYER_VERSION*/"2.0.12";
     this.video = videoElement;
 
     // fullscreen change
@@ -164,8 +168,10 @@ class Player extends EventEmitter {
     this.adaptive = Adaptive(metrics, deviceEvents, {
       initVideoBitrate,
       initAudioBitrate,
-      defaultLanguage,
-      defaultSubtitle,
+      maxVideoBitrate,
+      maxAudioBitrate,
+      defaultLanguage: normalizeLang(defaultLanguage),
+      defaultSubtitle: normalizeLang(defaultSubtitle),
     });
 
     // volume muted memory
@@ -185,14 +191,15 @@ class Player extends EventEmitter {
     this.evts = {};
     this.frag = { start: null, end: null };
     this.error = null;
+    this.images.next(null);
   }
 
   _unsubscribe() {
     if (this.subscriptions) {
-      this.subscriptions.unsubscribe();
+      const subscriptions = this.subscriptions;
       this.subscriptions = null;
+      subscriptions.unsubscribe();
     }
-    this.images.next(null);
   }
 
   stop() {
@@ -209,6 +216,7 @@ class Player extends EventEmitter {
     this.adaptive.unsubscribe();
     this.fullscreen.unsubscribe();
     this.stream.unsubscribe();
+    EME.dispose();
 
     this.metrics = null;
     this.adaptive = null;
@@ -236,6 +244,7 @@ class Player extends EventEmitter {
       subtitles: [],
       images: [],
       autoPlay: false,
+      hideNativeSubtitle: false,
       directFile: false,
     }, opts);
 
@@ -245,6 +254,7 @@ class Player extends EventEmitter {
       keySystems,
       timeFragment,
       subtitles,
+      images,
     } = opts;
 
     const {
@@ -252,7 +262,9 @@ class Player extends EventEmitter {
       manifests,
       autoPlay,
       directFile,
-      images,
+      defaultLanguage,
+      defaultSubtitle,
+      hideNativeSubtitle,
     } = opts;
 
     timeFragment = parseTimeFragment(timeFragment);
@@ -269,6 +281,7 @@ class Player extends EventEmitter {
       const firstManifest = manifests[0];
       url = firstManifest.url;
       subtitles = firstManifest.subtitles || [];
+      images = firstManifest.images || [];
       keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
     }
 
@@ -286,9 +299,12 @@ class Player extends EventEmitter {
       url,
       keySystems,
       subtitles,
+      hideNativeSubtitle,
       images,
       timeFragment,
       autoPlay,
+      defaultLanguage,
+      defaultSubtitle,
       transport,
     };
   }
@@ -301,15 +317,21 @@ class Player extends EventEmitter {
       url,
       keySystems,
       subtitles,
+      hideNativeSubtitle,
       images,
       timeFragment,
       autoPlay,
       transport,
+      defaultLanguage,
+      defaultSubtitle,
     } = options;
 
     this.stop();
     this.frag = timeFragment;
     this.playing.next(autoPlay);
+
+    if (defaultLanguage) { this.adaptive.setLanguage(normalizeLang(defaultLanguage)); }
+    if (defaultSubtitle) { this.adaptive.setSubtitle(normalizeLang(defaultSubtitle)); }
 
     const {
       video: videoElement,
@@ -329,6 +351,7 @@ class Player extends EventEmitter {
       errorStream,
       keySystems,
       subtitles,
+      hideNativeSubtitle,
       timings,
       images,
       timeFragment,
@@ -348,9 +371,11 @@ class Player extends EventEmitter {
       .startWith(PLAYER_LOADING);
 
     const playChanges = on(videoElement, ["play", "pause"]);
+    const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
 
     const subs = this.subscriptions = new Subscription();
     subs.add(playChanges.subscribe(this._playPauseNext$, noop));
+    subs.add(textTracksChanges.subscribe(this._textTrackChanges$, noop));
     subs.add(stateChanges.subscribe(this._setPlayerState$, noop));
     subs.add(timings.subscribe(this._triggerTimeChange$, noop));
     subs.add(stream.subscribe(
@@ -441,6 +466,12 @@ class Player extends EventEmitter {
     }
   }
 
+  _textTrackChanges({ target: [trackElement] }) {
+    if (trackElement) {
+      this.trigger("nativeTextTrackChange", trackElement);
+    }
+  }
+
   _setPlayerState(s) {
     if (this.state !== s) {
       this.state = s;
@@ -483,7 +514,7 @@ class Player extends EventEmitter {
   }
 
   getImageTrack() {
-    return this.images;
+    return this.images.distinctUntilChanged();
   }
 
   getPlayerState() {
@@ -660,13 +691,27 @@ class Player extends EventEmitter {
     }
   }
 
+  normalizeLanguageCode(lng) {
+    return normalizeLang(lng);
+  }
+
+  isLanguageAvailable(lng) {
+    return this.getAvailableLanguages().indexOf(normalizeLang(lng)) >= 0;
+  }
+
+  isSubtitleAvailable(sub) {
+    return this.getAvailableSubtitles().indexOf(normalizeLang(sub)) >= 0;
+  }
+
   setLanguage(lng) {
-    assert(this.getAvailableLanguages().indexOf(lng) >= 0, "player: unknown language");
+    lng = normalizeLang(lng);
+    assert(this.isLanguageAvailable(lng), "player: unknown language");
     this.adaptive.setLanguage(lng);
   }
 
   setSubtitle(sub) {
-    assert(!sub || this.getAvailableSubtitles().indexOf(sub) >= 0, "player: unknown subtitle");
+    sub = normalizeLang(sub);
+    assert(!sub || this.isSubtitleAvailable(sub), "player: unknown subtitle");
     this.adaptive.setSubtitle(sub || "");
     if (!sub) {
       this._recordState("subtitle", "");

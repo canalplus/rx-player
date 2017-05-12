@@ -43,7 +43,7 @@ class RequestObservable extends Observable {
       headers: null,
       method: "GET",
       responseType: "json",
-      timeout: 15 * 1000,
+      timeout: 10 * 1000,
       resultSelector: null,
       body: null,
     };

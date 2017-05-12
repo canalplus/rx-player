@@ -53,7 +53,7 @@ function resolveURL() {
   return _normalizeUrl(base);
 }
 
-function parseBaseURL(url) {
+function normalizeBaseURL(url) {
   const slash = url.lastIndexOf("/");
   if (slash >= 0) {
     return url.substring(0, slash + 1);
@@ -64,5 +64,5 @@ function parseBaseURL(url) {
 
 module.exports = {
   resolveURL,
-  parseBaseURL,
+  normalizeBaseURL,
 };

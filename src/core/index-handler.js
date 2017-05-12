@@ -85,6 +85,18 @@ class IndexHandler {
     };
   }
 
+  checkDiscontinuity(time) {
+    if (!this.adaptation.isLive) {
+      return null;
+    }
+    const timescale = this.index.timescale || 1;
+    const ts = this.handler.checkDiscontinuity(time * timescale);
+    if (ts > 0) {
+      return { ts: ts / timescale + 1 };
+    }
+    return null;
+  }
+
   getSegments(ts, offset, bufSize) {
     const { time, up, to } = this.normalizeRange(ts, offset, bufSize);
     if (!this.handler.checkRange(time)) {

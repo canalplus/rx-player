@@ -16,6 +16,7 @@
 
 const assert = require("../../utils/assert");
 const bytes = require("../../utils/bytes");
+const { normalize: normalizeLang } = require("../../utils/languages");
 
 const DEFAULT_MIME_TYPES = {
   audio: "audio/mp4",
@@ -92,7 +93,9 @@ function parseBoolean(val) {
   }
 }
 
-function calcLastRef(index) {
+function calcLastRef(adaptation) {
+  if (!adaptation) { return Infinity; }
+  const { index } = adaptation;
   const { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r+1)*d) / index.timescale);
 }
@@ -218,6 +221,9 @@ function createSmoothStreamingParser(parserOptions={}) {
 
     const type = root.getAttribute("Type");
     const subType = root.getAttribute("Subtype");
+    const name = root.getAttribute("Name");
+    const lang = normalizeLang(root.getAttribute("Language"));
+    const baseURL = root.getAttribute("Url");
     const profile = profiles[type];
 
     assert(profile, "unrecognized QualityLevel type " + type);
@@ -274,9 +280,9 @@ function createSmoothStreamingParser(parserOptions={}) {
       type,
       index,
       representations,
-      name: root.getAttribute("Name"),
-      lang: root.getAttribute("Language"),
-      baseURL: root.getAttribute("Url"),
+      name,
+      lang,
+      baseURL,
     };
   }
 
@@ -325,7 +331,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       availabilityStartTime = REFERENCE_DATE_TIME;
       const video = adaptations.filter((a) => a.type == "video")[0];
       const audio = adaptations.filter((a) => a.type == "audio")[0];
-      const lastRef = Math.min(calcLastRef(video.index), calcLastRef(audio.index));
+      const lastRef = Math.min(calcLastRef(video), calcLastRef(audio));
       presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
     }
 

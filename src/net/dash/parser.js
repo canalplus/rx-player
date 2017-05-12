@@ -18,6 +18,7 @@
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
 const assert = require("../../utils/assert");
+const { normalize: normalizeLang } = require("../../utils/languages");
 
 const iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
@@ -171,7 +172,7 @@ const attributes = {
 
   "ContentComponent": [
     { k: "id",          fn: parseString },
-    { k: "lang",        fn: parseString },
+    { k: "lang",        fn: normalizeLang },
     { k: "contentType", fn: parseString },
     { k: "par",         fn: parseRatio },
   ],
@@ -185,7 +186,7 @@ const attributes = {
   "AdaptationSet": RepresentationBaseType.concat([
     { k: "id",                  fn: parseString },
     { k: "group",               fn: parseInt },
-    { k: "lang",                fn: parseString },
+    { k: "lang",                fn: normalizeLang },
     { k: "contentType",         fn: parseString },
     { k: "par",                 fn: parseRatio },
     { k: "minBandwidth",        fn: parseInt, n: "minBitrate" },

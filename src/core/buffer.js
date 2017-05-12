@@ -53,7 +53,7 @@ function Buffer({
     bufferType == "video"
   );
 
-  const outOfIndexStream = new Subject();
+  const messageSubject = new Subject();
 
   // safety level (low and high water mark) size of buffer that won't
   // be flushed when switching representation for smooth transitions
@@ -150,15 +150,15 @@ function Buffer({
                                    timing,
                                    bufferSize,
                                    withInitSegment) {
-    const segments = [];
+    let initSegment = null;
 
     if (withInitSegment) {
       log.debug("add init segment", bufferType);
-      segments.push(segmentIndex.getInitSegment());
+      initSegment = segmentIndex.getInitSegment();
     }
 
     if (timing.readyState === 0) {
-      return segments;
+      return initSegment ? [initSegment] : [];
     }
 
     const timestamp = timing.ts;
@@ -196,10 +196,14 @@ function Buffer({
     // time gap and wanted buffer size, we can retrieve the list of
     // segments to inject in our pipelines.
     const mediaSegments = segmentIndex.getSegments(timestamp,
-                                                 timestampPadding,
-                                                 wantedBufferSize);
+                                                   timestampPadding,
+                                                   wantedBufferSize);
 
-    return segments.concat(mediaSegments);
+    if (initSegment) {
+      mediaSegments.unshift(initSegment);
+    }
+
+    return mediaSegments;
   }
 
   function createRepresentationBuffer(representation) {
@@ -244,6 +248,15 @@ function Buffer({
         }
       }
 
+      // send a message downstream when bumping on an explicit
+      // discontinuity announced in the segment index.
+      if (timing.stalled) {
+        const discontinuity = segmentIndex.checkDiscontinuity(timing.ts);
+        if (discontinuity) {
+          messageSubject.next({ type: "index-discontinuity", value: discontinuity });
+        }
+      }
+
       let injectedSegments;
       try {
         // filter out already loaded and already queued segments
@@ -268,12 +281,11 @@ function Buffer({
         );
 
         if (isOutOfIndexError) {
-          outOfIndexStream.next({ type: "out-of-index", value: error });
+          messageSubject.next({ type: "out-of-index", value: error });
           return empty();
         }
-        else {
-          throw error;
-        }
+
+        throw error;
       }
 
       // queue all segments injected in the observable
@@ -331,14 +343,14 @@ function Buffer({
         doUnqueueAndUpdateRanges
       );
 
-    return merge(segmentsPipeline, outOfIndexStream).catch((error) => {
-      // For live adaptations, handle 412 and 404 errors as
-      // precondition-failed errors, ie: we are requesting for
-      // segments before they exist
+    return merge(segmentsPipeline, messageSubject).catch((error) => {
+      // For live adaptations, handle 412 errors as precondition-
+      // failed errors, ie: we are requesting for segments before they
+      // exist
       const isPreconditionFailedError = (
         adaptation.isLive &&
-        (error.type == ErrorTypes.NETWORK_ERROR) &&
-        (error.isHttpError(412) || error.isHttpError(404))
+        error.type == ErrorTypes.NETWORK_ERROR &&
+        error.isHttpError(412)
       );
 
       if (!isPreconditionFailedError) {

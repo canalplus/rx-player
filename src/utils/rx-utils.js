@@ -18,7 +18,22 @@ function castToObservable(value) {
   }
 
   if (value && typeof value.subscribe == "function") {
-    return new Observable((obs) => value.subscribe(obs));
+    return new Observable((obs) => {
+      const sub = value.subscribe(
+        (val) => obs.next(val),
+        (err) => obs.error(err),
+        ()    => obs.complete()
+      );
+
+      return () => {
+        if (sub && sub.dispose) {
+          sub.dispose();
+        }
+        else if (sub && sub.unsubscribe) {
+          sub.unsubscribe();
+        }
+      };
+    });
   }
 
   if (value && typeof value.then == "function") {

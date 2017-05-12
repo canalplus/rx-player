@@ -4,7 +4,7 @@ var path = require("path");
 var webpack = require("webpack");
 
 module.exports = {
-  entry: "./demo/index.js",
+  entry: "./demo/scripts/index.js",
   output: {
     path: path.join(__dirname, "demo"),
     filename: "bundle.js",
@@ -12,7 +12,7 @@ module.exports = {
   module: {
     loaders: [
       {
-        test: /\.js$/,
+        test: /\.jsx?$/,
         loader: "babel",
         query: {
           "cacheDirectory": true,

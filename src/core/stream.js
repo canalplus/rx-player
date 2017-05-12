@@ -30,7 +30,7 @@ const {
   sourceOpen,
   canPlay,
   canSeek,
-  clearVideoSrc,
+  isPlaybackStuck,
 } = require("./compat");
 
 const TextSourceBuffer = require("./text-buffer");
@@ -53,10 +53,11 @@ const {
   getAdaptations,
 } = require("./manifest");
 
-const END_OF_PLAY = 0.2;
+// Stop stream 0.5 second before the end of video
+// It happens often that the video gets stuck 100 to 300 ms before the end, especially on IE11 and Edge
+const END_OF_PLAY = 0.5;
 
 const DISCONTINUITY_THRESHOLD = 1; // discontinuity threshold in seconds
-const FREEZE_THRESHOLD = 10; // freeze threshold in seconds
 
 function isNativeBuffer(bufferType) {
   return (
@@ -70,6 +71,7 @@ function Stream({
   errorStream,
   keySystems,
   subtitles,
+  hideNativeSubtitle,
   images,
   timings,
   timeFragment,
@@ -136,7 +138,7 @@ function Stream({
 
       if (type == "text") {
         log.info("add text sourcebuffer", codec);
-        sourceBuffer = new TextSourceBuffer(video, codec);
+        sourceBuffer = new TextSourceBuffer(video, codec, hideNativeSubtitle);
       }
       else if (type == "image") {
         log.info("add image sourcebuffer", codec);
@@ -186,24 +188,7 @@ function Stream({
     return Observable.create((observer) => {
       let mediaSource, objectURL;
 
-      if (pipelines.requiresMediaSource()) {
-        if (!MediaSource_) {
-          throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
-        }
-        mediaSource = new MediaSource_();
-        objectURL = URL.createObjectURL(mediaSource);
-      } else {
-        mediaSource = null;
-        objectURL = url;
-      }
-
-      video.src = objectURL;
-
-      observer.next({ url, mediaSource });
-      log.info("create mediasource object", objectURL);
-
-      return () => {
-
+      function resetMediaElement() {
         if (mediaSource && mediaSource.readyState != "closed") {
           const { readyState, sourceBuffers } = mediaSource;
           for (let i = 0; i < sourceBuffers.length; i++) {
@@ -231,8 +216,12 @@ function Stream({
           }
         });
 
-        // clear video srcAttribute
-        clearVideoSrc(video);
+        // Clear video src attribute.
+        // On IE11,  video.src = "" is not sufficient as it
+        // does not clear properly the current MediaKey Session.
+        // Microsoft recommended to use video.removeAttr("src").
+        video.src = "";
+        video.removeAttribute("src");
 
         if (objectURL) {
           try {
@@ -242,12 +231,33 @@ function Stream({
           }
         }
 
-        nativeBuffers = null;
-        customBuffers = null;
+        nativeBuffers = {};
+        customBuffers = {};
 
         mediaSource = null;
         objectURL = null;
-      };
+      }
+
+      // make sure the media has been correctly reset
+      resetMediaElement();
+
+      if (pipelines.requiresMediaSource()) {
+        if (!MediaSource_) {
+          throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
+        }
+        mediaSource = new MediaSource_();
+        objectURL = URL.createObjectURL(mediaSource);
+      } else {
+        mediaSource = null;
+        objectURL = url;
+      }
+
+      video.src = objectURL;
+
+      observer.next({ url, mediaSource });
+      log.info("create mediasource object", objectURL);
+
+      return resetMediaElement;
     });
   }
 
@@ -435,16 +445,11 @@ function Stream({
         // implementation that might drop an injected segment, or in
         // case of small discontinuity in the stream.
         if (isStalled) {
-          const currentRange = timing.range;
           const nextRangeGap = timing.buffered.getNextRangeGap(timing.ts);
 
-          // firefox fix: sometimes, the stream can be stalled, even
-          // if we are in a buffer. This should only affect firefox
-          // users.
-          if (currentRange && currentRange.end - timing.ts > FREEZE_THRESHOLD) {
-            const seekTo = timing.ts;
-            videoElement.currentTime = seekTo;
-            log.warn("after freeze seek", timing.ts, currentRange, seekTo);
+          if (isPlaybackStuck(timing)) {
+            videoElement.currentTime = timing.ts;
+            log.warn("after freeze seek", timing.ts, timing.range);
           } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
             const seekTo = (timing.ts + nextRangeGap + 1/60);
             videoElement.currentTime = seekTo;
@@ -459,18 +464,24 @@ function Stream({
       });
   }
 
-  function isOutOfIndexError(error) {
-    return error && error.type == "out-of-index";
-  }
+  function messageHandler(message, manifest) {
+    switch(message.type) {
+    case "index-discontinuity":
+      log.warn("explicit discontinuity seek", message.value.ts);
+      videoElement.currentTime = message.value.ts;
+      break;
 
-  function isPreconditionFailedError(error) {
-    return error && error.type == "precondition-failed";
-  }
+    // precondition-failed messages require a change of live-gap to
+    // calibrate the live representation of the player
+    // TODO(pierre): smarter converging algorithm
+    case "precondition-failed":
+      mutateManifestLiveGap(manifest, 1);
+      log.warn("precondition failed", manifest.presentationLiveGap);
+      break;
 
-  function manifestAdapter(manifest, message) {
-    // out-of-index messages require a complete reloading of the
-    // manifest to refresh the current index
-    if (isOutOfIndexError(message)) {
+    case "out-of-index":
+      // out-of-index messages require a complete reloading of the
+      // manifest to refresh the current index
       log.info("out of index");
       return manifestPipeline({ url: manifest.locations[0] })
         .map(({ parsed }) => {
@@ -482,15 +493,14 @@ function Stream({
         });
     }
 
-    // precondition-failed messages require a change of live-gap to
-    // calibrate the live representation of the player
-    // TODO(pierre): smarter converging algorithm
-    if (isPreconditionFailedError(message)) {
-      mutateManifestLiveGap(manifest, 1);
-      log.warn("precondition failed", manifest.presentationLiveGap);
-    }
-
     return Observable.of(message);
+  }
+
+  function isErrorMessage(message) {
+    return (
+      message.type == "out-of-index" ||
+      message.type == "index-discontinuity"
+    );
   }
 
   function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
@@ -528,9 +538,9 @@ function Stream({
       // do not throw multiple times OutOfIndexErrors in order to have
       // only one manifest reload for each error.
       .distinctUntilChanged((a, b) =>
-        isOutOfIndexError(b) &&
-        isOutOfIndexError(a))
-      .concatMap((message) => manifestAdapter(manifest, message));
+        isErrorMessage(b) &&
+        isErrorMessage(a))
+      .concatMap((message) => messageHandler(message, manifest));
   }
 
   function createMediaErrorStream() {

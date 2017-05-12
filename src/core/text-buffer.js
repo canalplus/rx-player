@@ -22,13 +22,13 @@ const Cue = window.VTTCue || window.TextTrackCue;
 
 class TextSourceBuffer extends AbstractSourceBuffer {
 
-  constructor(video, codec) {
+  constructor(video, codec, hideNativeSubtitle) {
     super(codec);
     this.video = video;
     this.codec = codec;
     this.isVTT = /^text\/vtt/.test(codec);
 
-    const { track, trackElement } = addTextTrack(video);
+    const { track, trackElement } = addTextTrack(video, hideNativeSubtitle);
     this.track = track;
     this.trackElement = trackElement;
   }
@@ -66,8 +66,8 @@ class TextSourceBuffer extends AbstractSourceBuffer {
         // IE/Edge.
         const currentCues = this.track.cues;
         if (currentCues.length > 0) {
-          if (firstCue.startTime < currentCues[currentCues.length - 1].endTime) {
-            this._remove(0, +Infinity);
+          if (firstCue.startTime < currentCues[currentCues.length - 1].startTime) {
+            this._remove(firstCue.startTime, +Infinity);
           }
         }
 
@@ -80,7 +80,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   _remove(from, to) {
     const track = this.track;
     const cues = track.cues;
-    for (let i = 0; i < cues.length; i++) {
+    for (let i = cues.length - 1; i >= 0; i--) {
       const cue = cues[i];
       const { startTime, endTime } = cue;
       if (startTime >= from && startTime <= to && endTime <= to) {

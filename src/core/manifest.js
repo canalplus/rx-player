@@ -15,9 +15,10 @@
  */
 
 const log = require("../utils/log");
-const { parseBaseURL } = require("../utils/url");
+const { normalizeBaseURL } = require("../utils/url");
 const { isCodecSupported } = require("./compat");
 const { MediaError } = require("../errors");
+const { normalize: normalizeLang } = require("../utils/languages");
 
 const representationBaseType = [
   "profiles",
@@ -42,6 +43,15 @@ function parseType(mimeType) {
   return mimeType.split("/")[0];
 }
 
+function parseBaseURL(manifest) {
+  let baseURL = normalizeBaseURL(manifest.locations[0]);
+  const period = manifest.periods[0];
+  if (period && period.baseURL) {
+    baseURL += "" + period.baseURL;
+  }
+  return baseURL;
+}
+
 function normalizeManifest(location, manifest, subtitles, images) {
   if (!manifest.transportType) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
@@ -57,9 +67,11 @@ function normalizeManifest(location, manifest, subtitles, images) {
 
   manifest.isLive = manifest.type == "dynamic";
 
+  const rootURL = parseBaseURL(manifest);
+
   // TODO(pierre): support multi-locations/cdns
   const urlBase = {
-    rootURL: parseBaseURL(manifest.locations[0]),
+    rootURL,
     baseURL: manifest.baseURL,
     isLive: manifest.isLive,
   };
@@ -114,8 +126,19 @@ function normalizePeriod(period, inherit, subtitles, images) {
   for (let i = 0; i < adaptations.length; i++) {
     const adaptation = adaptations[i];
     const adaptationType = adaptation.type;
+    const adaptationReps = adaptation.representations;
     adaptationsByType[adaptationType] = adaptationsByType[adaptationType] || [];
-    adaptationsByType[adaptationType].push(adaptation);
+
+    // only keep adaptations that have at least one representation
+    if (adaptationReps.length > 0) {
+      adaptationsByType[adaptationType].push(adaptation);
+    }
+  }
+
+  for (const adaptationType in adaptationsByType) {
+    if (adaptationsByType[adaptationType].length === 0) {
+      throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, true);
+    }
   }
 
   period.adaptations = adaptationsByType;
@@ -158,10 +181,6 @@ function normalizeAdaptation(adaptation, inherit) {
 
   if (type == "video" || type == "audio") {
     representations = representations.filter((rep) => isCodecSupported(getCodec(rep)));
-  }
-
-  if (representations.length === 0) {
-    throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, true);
   }
 
   adaptation.representations = representations;
@@ -336,11 +355,11 @@ function getAdaptationsByType(manifest, type) {
 }
 
 function getAvailableLanguages(manifest) {
-  return getAdaptationsByType(manifest, "audio").map((ada) => ada.lang);
+  return getAdaptationsByType(manifest, "audio").map((ada) => normalizeLang(ada.lang));
 }
 
 function getAvailableSubtitles(manifest) {
-  return getAdaptationsByType(manifest, "text").map((ada) => ada.lang);
+  return getAdaptationsByType(manifest, "text").map((ada) => normalizeLang(ada.lang));
 }
 
 module.exports = {

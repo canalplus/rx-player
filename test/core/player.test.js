@@ -1,4 +1,3 @@
-var _ = require("lodash");
 var expect = require("chai").expect;
 var Player = require("main/core/player");
 

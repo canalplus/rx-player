@@ -22,6 +22,7 @@ const { Observable } = require("rxjs/Observable");
 const { merge } = require("rxjs/observable/merge");
 const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
 const never = require("rxjs/observable/NeverObservable").NeverObservable.create;
+const defer = require("rxjs/observable/DeferObservable").DeferObservable.create;
 const { on, castToObservable } = require("../utils/rx-utils");
 const { MediaError } = require("../errors");
 
@@ -48,6 +49,10 @@ let MediaKeys_ = (
 const isIE = (
   navigator.appName == "Microsoft Internet Explorer" ||
   navigator.appName == "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
+);
+
+const isFirefox = (
+  navigator.userAgent.toLowerCase().indexOf("firefox") !== -1
 );
 
 const HAVE_METADATA    = 1;
@@ -462,7 +467,9 @@ function _setMediaKeys(elt, mk) {
 }
 
 const setMediaKeys = (elt, mk) => {
-  return castToObservable(_setMediaKeys(elt, mk));
+  return defer(() =>
+    castToObservable(_setMediaKeys(elt, mk))
+  );
 };
 
 if (win.WebKitSourceBuffer && !win.WebKitSourceBuffer.prototype.addEventListener) {
@@ -561,27 +568,13 @@ function videoSizeChange() {
   return on(win, "resize");
 }
 
-function clearVideoSrc(video) {
-  // On IE11 / Edge,  video.src = ""
-  // does not clear properly current MediaKey Session
-  // Microsoft recommended use to use video.removeAttr("src")
-  // instead. Since, video.removeAttr is not supported on
-  // other platforms, we have to make a compat function.
-  if (isIE) {
-    video.removeAttribute("src");
-  } else {
-    video.src = "";
-  }
-}
-
-function addTextTrack(video) {
+function addTextTrack(video, hideNativeSubtitle) {
   let track, trackElement;
   const kind = "subtitles";
-  const mode = "showing";
   if (isIE) {
     const tracksLength = video.textTracks.length;
     track = tracksLength > 0 ? video.textTracks[tracksLength - 1] : video.addTextTrack(kind);
-    track.mode = mode;
+    track.mode = hideNativeSubtitle ? track.HIDDEN : track.SHOWING;
   } else {
     // there is no removeTextTrack method... so we need to reuse old
     // text-tracks objects and clean all its pending cues
@@ -589,13 +582,24 @@ function addTextTrack(video) {
     video.appendChild(trackElement);
     track = trackElement.track;
     trackElement.kind = kind;
-    track.mode = mode;
+    track.mode = hideNativeSubtitle ? "hidden" : "showing";
   }
   return { track, trackElement };
 }
 
 function isVTTSupported() {
   return !isIE;
+}
+
+function isPlaybackStuck(timing) {
+  // firefox fix: sometimes, the stream can be stalled, even if we are in a buffer.
+  const FREEZE_THRESHOLD = 10; // video freeze threshold in seconds
+  return (
+    isFirefox &&
+    timing.name === "timeupdate" &&
+    timing.range &&
+    timing.range.end - timing.ts > FREEZE_THRESHOLD
+  );
 }
 
 // On IE11, fullscreen change events is called MSFullscreenChange
@@ -623,9 +627,9 @@ module.exports = {
   videoSizeChange,
   visibilityChange,
 
-  clearVideoSrc,
-
   addTextTrack,
   isVTTSupported,
+  isPlaybackStuck,
   isIE,
+  isFirefox,
 };

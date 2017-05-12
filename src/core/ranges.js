@@ -27,16 +27,20 @@ function nearlyLt(a, b) {
   return a - b <= EPSILON;
 }
 
-function bufferedToArray(ranges) {
-  if (Array.isArray(ranges)) {
-    return ranges;
-  }
-
+function bufferedToRanges(ranges) {
   const l = ranges.length;
-  const a = Array(l);
-  let i = -1;
-  while (++i < l) {
-    a[i] = { start: ranges.start(i), end: ranges.end(i), bitrate: 0 };
+  const a = [];
+  for (let i = 0; i < l; i++) {
+    a.push(new Range(ranges.start(i), ranges.end(i), 0));
+  }
+  return a;
+}
+
+function cloneRanges(ranges) {
+  const l = ranges.length;
+  const a = [];
+  for (let i = 0; i < l; i++) {
+    a.push(ranges[i].clone());
   }
   return a;
 }
@@ -69,7 +73,7 @@ function areContiguousWithRanges(r1, r2) {
 function unionWithOverlappingOrContiguousRange(r1, r2, bitrate) {
   const start = Math.min(r1.start, r2.start);
   const end = Math.max(r1.end, r2.end);
-  return { start, end, bitrate };
+  return new Range(start, end, bitrate);
 }
 
 function isOrdered(r1, r2) {
@@ -83,7 +87,7 @@ function sameBitrate(r1, r2) {
 function removeEmptyRanges(ranges) {
   for (let index = 0; index < ranges.length; index++) {
     const range = ranges[index];
-    if (range.start === range.end) {
+    if (range.isNil()) {
       ranges.splice(index++, 1);
     }
   }
@@ -103,13 +107,10 @@ function mergeContiguousRanges(ranges) {
   return ranges;
 }
 
-function insertInto(ranges, bitrate, start, end) {
-  assert(start <= end);
-  if (start == end) {
+function insertInto(ranges, addedRange) {
+  if (addedRange.isNil()) {
     return ranges;
   }
-
-  let addedRange = { start: start, end: end, bitrate: bitrate };
 
   // For each present range check if we need to:
   // - In case we are overlapping or contiguous:
@@ -142,11 +143,7 @@ function insertInto(ranges, bitrate, start, end) {
           ranges.splice(++index, 0, addedRange);
           const memCurrentEnd = currentRange.end;
           currentRange.end = addedRange.start;
-          addedRange = {
-            start: addedRange.end,
-            end: memCurrentEnd,
-            bitrate: currentRange.bitrate,
-          };
+          addedRange = new Range(addedRange.end, memCurrentEnd, currentRange.bitrate);
         }
         // Added range contains one existing range
         else if (isContainedInto(addedRange, currentRange)) {
@@ -210,23 +207,57 @@ function rangesIntersect(ranges, others) {
   return ranges;
 }
 
+function normalizeRanges(ranges) {
+  const clonedRanges = cloneRanges(ranges);
+  for (let i = 0; i < clonedRanges.length; i++) {
+    clonedRanges[i].bitrate = 0;
+  }
+  return mergeContiguousRanges(clonedRanges);
+}
+
 function rangesEquals(ranges, others) {
+  ranges = normalizeRanges(ranges);
+  others = normalizeRanges(ranges);
   for (let i = 0; i < ranges.length; i++) {
     const range = ranges[i];
     const overlappingRange = findOverlappingRange(range, others);
     if (!overlappingRange ||
-        overlappingRange.start > range.start ||
-        overlappingRange.end   < range.end) {
+        !nearlyEqual(overlappingRange.start, range.start) ||
+        !nearlyEqual(overlappingRange.end, range.end)) {
       return false;
     }
   }
   return true;
 }
 
+class Range {
+  constructor(start, end, bitrate) {
+    this.start = start;
+    this.end = end;
+    this.bitrate = bitrate;
+  }
+
+  isNil() {
+    return this.start === this.end;
+  }
+
+  clone() {
+    return new Range(this.start, this.end, this.bitrate);
+  }
+}
+
 class BufferedRanges {
   constructor(ranges) {
-    this.ranges = ranges ? bufferedToArray(ranges) : [];
-    this.length = this.ranges.length;
+    let _ranges;
+    if (!ranges) {
+      _ranges = [];
+    } else if (Array.isArray(ranges)) {
+      _ranges = cloneRanges(ranges);
+    } else {
+      _ranges = bufferedToRanges(ranges);
+    }
+    this.ranges = _ranges;
+    this.length = _ranges.length;
   }
 
   start(i) {
@@ -329,7 +360,7 @@ class BufferedRanges {
       assert(start >= 0);
       assert(end - start > 0);
     }
-    insertInto(this.ranges, bitrate, start, end);
+    insertInto(this.ranges, new Range(start, end, bitrate));
     this.length = this.ranges.length;
     return this.ranges;
   }
@@ -340,8 +371,8 @@ class BufferedRanges {
       assert(end - start > 0);
     }
     this.intersect(new BufferedRanges([
-      { start: 0, end: start },
-      { start: end, end: Infinity },
+      new Range(0, start, 0),
+      new Range(end, Infinity, 0),
     ]));
   }
 
@@ -365,6 +396,6 @@ class BufferedRanges {
 }
 
 module.exports = {
-  bufferedToArray,
+  bufferedToRanges,
   BufferedRanges,
 };

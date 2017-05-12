@@ -1,4 +1,28 @@
 {
+  "env": {
+    "es6": true,
+    "browser": true,
+    "commonjs": true,
+    "mocha": true
+  },
+
+  "globals": {
+    "__DEV__": true
+  },
+
+  "plugins": [
+    "react"
+  ],
+
+  "extends": "eslint:recommended",
+
+  "parserOptions": {
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true,
+      "jsx": true
+    }
+  },
+
   "rules": {
     // Possible Errors <http://eslint.org/docs/rules/#possible-errors>
     // babel removes them for older browsers, we should do a codemod
@@ -68,31 +92,19 @@
     // style guide: Always use brackets, even when optional.
     'curly': [1, 'all'],
 
-    // we need this
     'no-case-declarations': 0,
-
     'no-var': 1,
     'prefer-const': 1,
 
     'max-len': [1, 120, 2,
-      {'ignorePattern': maxLenIgnorePattern},
+      {'ignorePattern': maxLenIgnorePattern}
     ],
 
     "indent": [1, 2],
     "quotes": [1, "double"],
     "linebreak-style": [1, "unix"],
     "semi": [1, "always"],
-  },
-  "env": {
-    "es6": true,
-    "browser": true,
-    "commonjs": true
-  },
-  "globals": {
-    "__DEV__": true,
-  },
-  "extends": "eslint:recommended",
-  "ecmaFeatures": {
-    "experimentalObjectRestSpread": true,
+    "react/jsx-uses-vars": [2],
+    "react/jsx-uses-react": [2]
   }
 }

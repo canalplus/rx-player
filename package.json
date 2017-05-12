@@ -1,8 +1,9 @@
 {
   "name": "rx-player",
   "author": "Canal+",
-  "version": "2.0.0-alpha6",
+  "version": "2.0.12",
   "description": "Canal+ HTML5 Video Player",
+  "main": "./dist/rx-player.min.js",
   "keywords": [
     "video",
     "streaming",
@@ -21,7 +22,10 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "rxjs": "5.0.0-beta.10"
+    "rxjs": "5.0.0-rc.1"
+  },
+  "scripts":{
+    "demo": "webpack --progress --config webpack-demo.config.js -w"
   },
   "devDependencies": {
     "babel-core": "^6.4.5",
@@ -32,19 +36,27 @@
     "chai": "^1.10.0",
     "chai-as-promised": "^4.1.1",
     "chai-spies": "^0.5.1",
+    "chart.js": "^2.5.0",
     "coverjs-loader": "^0.5.0",
     "css-loader": "^0.23.1",
+    "eslint": "^3.18.0",
+    "eslint-plugin-react": "^6.10.3",
     "file-loader": "^0.8.1",
     "jsx-loader": "^0.13.1",
-    "lodash": "3.10.1",
-    "mocha": "^2.0.1",
+    "lodash": "4.11.1",
+    "mkdirp": "^0.5.1",
+    "mocha": "^2.5.3",
     "mocha-loader": "^0.7.0",
     "raw-loader": "^0.5.1",
-    "react": "^0.13.1",
+    "react": "^15.5.4",
+    "react-dom": "^15.5.4",
+    "rimraf": "^2.5.2",
     "script-loader": "^0.6.1",
+    "selenium-webdriver": "^2.53.2",
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.5",
     "webpack": "^1.12.12",
-    "webpack-dev-server": "^1.14.1"
+    "webpack-dev-server": "^1.14.1",
+    "xunit-file": "0.0.9"
   }
 }

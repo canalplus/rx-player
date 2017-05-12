@@ -18,6 +18,7 @@ const { Subscription } = require("rxjs/Subscription");
 const { BehaviorSubject } = require("rxjs/BehaviorSubject");
 const { combineLatest } = require("rxjs/observable/combineLatest");
 const { only } = require("../utils/rx-utils");
+const { findBetterMatchIndex } = require("../utils/languages");
 
 const AverageBitrate = require("./average-bitrate");
 
@@ -29,6 +30,10 @@ const DEFAULTS = {
   // buffer threshold ratio used as a lower bound
   // margin to find the suitable representation
   defaultBufferThreshold: 0.3,
+  initVideoBitrate: 0,
+  initAudioBitrate: 0,
+  maxVideoBitrate: Infinity,
+  maxAudioBitrate: Infinity,
 };
 
 function find(array, predicate) {
@@ -62,12 +67,12 @@ function getClosestDisplayBitrate(reps, width) {
   }
 }
 
-function findByLang(adaptations, lang) {
-  if (lang) {
-    return find(adaptations, (a) => a.lang === lang);
-  } else {
-    return null;
+function findAdaptationByLang(adaptations, lang) {
+  const index = findBetterMatchIndex(adaptations.map((a) => a.lang), lang);
+  if (index >= 0) {
+    return adaptations[index];
   }
+  return null;
 }
 
 function filterByType(stream, selectedType) {
@@ -75,6 +80,8 @@ function filterByType(stream, selectedType) {
 }
 
 module.exports = function(metrics, deviceEvents, options={}) {
+  Object.keys(options).forEach(key => options[key] === undefined && delete options[key]);
+
   const {
     defaultLanguage,
     defaultSubtitle,
@@ -82,6 +89,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
     defaultBufferThreshold,
     initVideoBitrate,
     initAudioBitrate,
+    maxVideoBitrate,
+    maxAudioBitrate,
   } = Object.assign({}, DEFAULTS, options);
 
   const { videoWidth, inBackground } = deviceEvents;
@@ -90,8 +99,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
   const $subtitles = new BehaviorSubject(defaultSubtitle);
 
   const $averageBitrates = {
-    audio: new BehaviorSubject(initAudioBitrate || 0),
-    video: new BehaviorSubject(initVideoBitrate || 0),
+    audio: new BehaviorSubject(initAudioBitrate),
+    video: new BehaviorSubject(initVideoBitrate),
   };
 
   const averageBitratesConns = [
@@ -108,8 +117,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
   };
 
   const $maxBitrates = {
-    audio: new BehaviorSubject(Infinity),
-    video: new BehaviorSubject(Infinity),
+    audio: new BehaviorSubject(maxAudioBitrate),
+    video: new BehaviorSubject(maxVideoBitrate),
   };
 
   const $bufSizes = {
@@ -120,12 +129,12 @@ module.exports = function(metrics, deviceEvents, options={}) {
 
   function audioAdaptationChoice(adaptations) {
     return $languages.distinctUntilChanged()
-      .map((lang) => findByLang(adaptations, lang) || adaptations[0]);
+      .map((lang) => findAdaptationByLang(adaptations, lang) || adaptations[0]);
   }
 
   function textAdaptationChoice(adaptations) {
     return $subtitles.distinctUntilChanged()
-      .map((lang) => findByLang(adaptations, lang));
+      .map((lang) => findAdaptationByLang(adaptations, lang));
   }
 
   function getAdaptationsChoice(type, adaptations) {

@@ -76,6 +76,38 @@ class Timeline {
     return rep;
   }
 
+  checkDiscontinuity(time) {
+    if (time <= 0) {
+      return -1;
+    }
+
+    const index = this.getSegmentIndex(time);
+    if (index < 0 || index >= this.timeline.length - 1) {
+      return -1;
+    }
+
+    const range = this.timeline[index];
+    if (range.d === -1) {
+      return -1;
+    }
+
+    const rangeUp = range.ts;
+    const rangeTo = getTimelineBound(range);
+    const nextRange = this.timeline[index + 1];
+
+    const timescale = this.index.timescale || 1;
+    // when we are actually inside the found range and this range has
+    // an explicit discontinuity with the next one
+    if (rangeTo !== nextRange.ts &&
+        time >= rangeUp &&
+        time <= rangeTo &&
+        (rangeTo - time) < timescale) {
+      return nextRange.ts;
+    }
+
+    return -1;
+  }
+
   checkRange(up) {
     let last = this.timeline[this.timeline.length - 1];
     if (!last) {

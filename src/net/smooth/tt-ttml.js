@@ -15,11 +15,9 @@
  */
 
 
-const rBr = /<br[^>]+>/gm;
+const rBr = /<br.*?>/gm;
 const rAbsTime = /^(([0-9]+):)?([0-9]+):([0-9]+)(\.([0-9]+))?$/;
 const rRelTime = /(([0-9]+)(\.[0-9]+)?)(ms|h|m|s)/;
-
-const escape = window.escape;
 
 const MULTS = {
   h: 3600,
@@ -118,10 +116,27 @@ function parseNode(node, parentOffset, siblingOffset) {
     }
   }
 
+  let innerHTML = node.innerHTML;
+
+  // NOTE(compat): on IE xml nodes do not have an innerHTML property.
+  // we have to re-serialize and re-parse as text/html to access the
+  // <p>'s innerHTML
+  if (innerHTML === undefined || innerHTML === null) {
+    const serializedXML = new XMLSerializer().serializeToString(node);
+    innerHTML = new DOMParser().parseFromString(serializedXML, "text/html").body.firstChild.innerHTML;
+  }
+
+  // Trim left and right whitespace from text and convert non-explicit line breaks.
+  // Using deprecated escape all together with decodeURIComponent to convert unicode characters
+  innerHTML = window.escape(innerHTML.replace(rBr, "\r\n"));
+
+  // TODO(guillaume): find out if we have an encoding issue when
+  // receiving TTML files to explain the problem with the "à"
+  innerHTML = innerHTML.replace(/%C3%26nbsp%3B/gm, "%C3%A0");
+
   return {
-    // Trim left and right whitespace from text and convert non-explicit line breaks
     id: node.getAttribute("xml:id") || node.getAttribute("id"),
-    text: decodeURIComponent(escape(node.innerHTML.replace(rBr, "\n"))),
+    text: decodeURIComponent(innerHTML),
     start, end,
   };
 }

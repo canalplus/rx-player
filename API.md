@@ -115,6 +115,14 @@ Returns an array availables languages/subtitles.
 
 Returns current language/subtitle. `null` if not set.
 
+### `isLanguageAvailable(lng: string)/isSubtitleAvailable(sub: string): boolean`
+
+Check whether the given language/subtitle is available. This method is useful because it normalizes the given language to match against the list of langs.
+
+### `normalizeLanguageCode(lng: string): string`
+
+Normalizes the language code.
+
 ### Bitrates
 
 #### `getAvailableVideoBitrates()/getAvailableAudioBitrates() : []int`
@@ -232,6 +240,11 @@ This method can be call anytime, even if a stream is already loaded an played by
 * `options.initVideoBitrate` / `options.initAudioBitrate`
 
   Number used as initial video and audio bitrates by the adaptive streaming.
+
+* `options.hideNativeSubtitle`
+
+Default : false
+Hide the native subtitle
 
 #### `play() : void`
 
@@ -358,6 +371,7 @@ Adds a listener on an event. The avaiable events are :
 - `"fullscreenChange", bool`: changes in fullscreen state
 - `"error", Error`: asynchronous error that was fatal to playback
 - `"warning", Error`: asynchronous error that was not fatal to playback
+- `"nativeTextTrackChange", Object`: textTrack element creation, triggered only if not null
 
 #### `removeEventListener(event, func)`
 

@@ -51,6 +51,7 @@ var DemoZapper = React.createClass({
     var transport = content.transport;
     var autoPlay = content.autoPlay === false ? false : true;
     var images = content.images;
+    var subtitles = content.subtitles;
 
     this.player.loadVideo({
       url: videoUrl,
@@ -58,6 +59,7 @@ var DemoZapper = React.createClass({
       keySystems: keySystems,
       autoPlay: autoPlay,
       images: images,
+      subtitles,
     });
   },
 
@@ -102,6 +104,7 @@ var DemoZapper = React.createClass({
   }
 });
 
-window.mountDemoPlayer = function(element, props) {
+window.RxPlayer = RxPlayer;
+window.mountDemoZapper = function(element, props) {
   return React.render(<DemoZapper {...props} />, element);
 };

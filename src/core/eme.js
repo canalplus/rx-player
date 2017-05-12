@@ -47,8 +47,17 @@ const {
 const SYSTEMS = {
   "clearkey":  ["webkit-org.w3.clearkey", "org.w3.clearkey"],
   "widevine":  ["com.widevine.alpha"],
-  "playready": ["com.youtube.playready", "com.microsoft.playready"],
+  "playready": ["com.microsoft.playready", "com.chromecast.playready", "com.youtube.playready"],
 };
+
+// List of all eme security robustnesses from highest to lowest
+const ROBUSTNESSES = [
+  "HW_SECURE_ALL",
+  "HW_SECURE_DECODE",
+  "HW_SECURE_CRYPTO",
+  "SW_SECURE_DECODE",
+  "SW_SECURE_CRYPTO",
+];
 
 const KEY_STATUS_ERRORS = {
   "expired": true,
@@ -354,10 +363,29 @@ function buildKeySystemConfiguration(keySystem) {
     distinctiveIdentifier = "required";
   }
 
+  // From chrome 58, you must specify at least one videoCapabilities and one audioCapabilities
+  // These capabilities must specify a codec (even though your stream can use a completely
+  // different codec afterward). It is also strongly recommended to specify the required
+  // security robustness. As we do not want to forbide any security level, we specify
+  // every existing security level from highest to lowest so that the best security level is selected.
+  // More details here: https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
+  // TODO: enable the user to specify which codec and robustness he wants
+  const videoCapabilities = [], audioCapabilities = [];
+  ROBUSTNESSES.forEach(robustness => {
+    videoCapabilities.push({
+      contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
+      robustness,
+    });
+    audioCapabilities.push({
+      contentType: "audio/mp4;codecs=\"mp4a.40.2\"", // standard mp4 codec
+      robustness,
+    });
+  });
+
   return {
-    videoCapabilities: undefined,
-    audioCapabilities: undefined,
     initDataTypes: ["cenc"],
+    videoCapabilities,
+    audioCapabilities,
     distinctiveIdentifier,
     persistentState,
     sessionTypes,
@@ -374,7 +402,7 @@ function findCompatibleKeySystem(keySystems) {
   }
 
   const keySystemsType = keySystems.reduce(
-    (parent, keySystem) => parent.concat(SYSTEMS[keySystem.type].map((keyType) => ({ keyType, keySystem })))
+    (parent, keySystem) => parent.concat((SYSTEMS[keySystem.type] || []).map((keyType) => ({ keyType, keySystem })))
   , []);
 
   return Observable.create((obs) => {
@@ -819,8 +847,14 @@ function getCurrentKeySystem() {
 }
 
 function dispose() {
+  // Remove MediaKey before to prevent MediaKey error
+  // if other instance is creating after dispose
+  if ($videoElement) {
+    setMediaKeys($videoElement, null).subscribe(()=>{});
+  }
   $mediaKeys = null;
   $keySystem = null;
+  $videoElement = null;
   $loadedSessions.dispose();
 }
 

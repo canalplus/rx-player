@@ -27,6 +27,10 @@ class Template {
     return (Date.now() / 1000 - manifest.availabilityStartTime) - manifest.suggestedPresentationDelay;
   }
 
+  checkDiscontinuity() {
+    return -1;
+  }
+
   checkRange() {
     return true;
   }
