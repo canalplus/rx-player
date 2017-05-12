@@ -1,3 +1,26 @@
+next version (pending)
+=================================
+
+Bug fixes
+---------
+
+- api: differentiate unset default languages from empty strings
+- languages: handle undefined languages (to an empty string)
+- api: allow the player to be instanciated with no option
+- mp4: fix minor bugs with isobmff parsing
+- images: keep externally-given BIF track when the manifest is refreshed
+- timings: fix timeFragment arguments RegExp
+- subtitles: fix webVTT management for unsupported user agents
+- timings: fix calculation of the position and duration for non-dynamic contetns
+
+Other improvements
+------------------
+
+- tests: fix and re-write unit tests
+- documentation: Code documentation has been added
+- demo: The Demo has been updated
+- demo: The bundle has been removed from the code committed.
+
 v2.0.0-alpha1 on February 9, 2016
 =================================
 
