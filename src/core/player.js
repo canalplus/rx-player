@@ -126,6 +126,8 @@ class Player extends EventEmitter {
 
   /**
    * @returns {Object}
+   * TODO deprecate an switch to static get ErrorTypes, more idiomatic
+   * (next-version)
    */
   static getErrorTypes() {
     return ErrorTypes;
@@ -133,6 +135,8 @@ class Player extends EventEmitter {
 
   /**
    * @returns {Object}
+   * TODO deprecate an switch to static get ErrorCodes, more idiomatic
+   * (next-version)
    */
   static getErrorCodes() {
     return ErrorCodes;
@@ -230,6 +234,7 @@ class Player extends EventEmitter {
 
   /**
    * Reset all states relative to a playing content.
+   * @private
    */
   _resetStates() {
     this.man = null;
@@ -244,6 +249,7 @@ class Player extends EventEmitter {
   /**
    * Unsubscribe from subscriptions done in loadVideo for the current content.
    * This also stops the current video as a side-effect.
+   * @private
    */
   _unsubscribe() {
     if (this.subscriptions) {
@@ -264,6 +270,9 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Free the resources used by the player.
+   */
   dispose() {
     this.stop();
     this.metrics.unsubscribe();
@@ -281,6 +290,12 @@ class Player extends EventEmitter {
     this.video = null;
   }
 
+  /**
+   * Store and emit new player state (e.g. subtitle, videoBitrate...).
+   * @private
+   * @param {string} type - the type of the updated state (videoBitrate...)
+   * @param {*} value - its new value
+   */
   _recordState(type, value) {
     const prev = this.evts[type];
     if (prev !== value) {
@@ -291,6 +306,7 @@ class Player extends EventEmitter {
 
   /**
    * Parse the options given as arguments to the loadVideo method.
+   * @private
    * @param {Object} opts
    * @returns {Object}
    */
@@ -368,6 +384,11 @@ class Player extends EventEmitter {
     };
   }
 
+  /**
+   * Load a new video.
+   * @param {Object} options
+   * @returns {Observable}
+   */
   loadVideo(options = {}) {
     options = this._parseOptions(options);
     log.info("loadvideo", options);
@@ -460,6 +481,11 @@ class Player extends EventEmitter {
     return loaded;
   }
 
+  /**
+   * Called each time the Stream instance emits.
+   * @private
+   * @param {Object} streamInfos
+   */
   _streamNext(streamInfos) {
     const { type, value } = streamInfos;
 
@@ -480,11 +506,22 @@ class Player extends EventEmitter {
     this.stream.next(streamInfos);
   }
 
+  /**
+   * Called each time the Stream emits through its errorStream (non-fatal
+   * errors).
+   * @private
+   * @param {Object} streamInfos
+   */
   _streamError(error) {
     this.trigger("warning", error);
     this.stream.next({ type: "warning", value: error });
   }
 
+  /**
+   * Called when the Stream instance throws (fatal errors).
+   * @private
+   * @param {Object} streamInfos
+   */
   _streamFatalError(error) {
     this._resetStates();
     this.error = error;
@@ -494,6 +531,11 @@ class Player extends EventEmitter {
     this.stream.next({ type: "error", value: error });
   }
 
+  /**
+   * Called when the Stream instance complete.
+   * @private
+   * @param {Object} streamInfos
+   */
   _streamComplete() {
     this._resetStates();
     this._setPlayerState(PLAYER_ENDED);
@@ -501,11 +543,24 @@ class Player extends EventEmitter {
     this.stream.next({ type: "ended", value: null });
   }
 
+  /**
+   * Called each time a manifest is downloaded.
+   * @private
+   * @param {Object} manifest
+   */
   _manifestNext(manifest) {
     this.man = manifest;
     this.trigger("manifestChange", manifest);
   }
 
+  /**
+   * Called each time the Stream emits a buffer-related event.
+   * @private
+   * @param {Object} obj
+   * @param {string} obj.bufferType
+   * @param {Object} obj.adaptation
+   * @param {Object} obj.representation
+   */
   _bufferNext({ bufferType, adaptation, representation }) {
     this.reps[bufferType] = representation;
     this.adas[bufferType] = adaptation;
@@ -524,18 +579,35 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Called each time the player alternates between play and pause.
+   * @private
+   * @param {Object} evt
+   * @param {string} evt.type
+   */
   _playPauseNext(evt) {
     if (this.video.ended !== true) {
       this.playing.next(evt.type == "play");
     }
   }
 
+  /**
+   * Called each time a textTrack is added to the video DOM Element.
+   * @private
+   * @param {Object} evt
+   * @param {HTMLElement} evt.target
+   */
   _textTrackChanges({ target: [trackElement] }) {
     if (trackElement) {
       this.trigger("nativeTextTrackChange", trackElement);
     }
   }
 
+  /**
+   * Called each time the player state updates.
+   * @private
+   * @param {string} s
+   */
   _setPlayerState(s) {
     if (this.state !== s) {
       this.state = s;
@@ -544,6 +616,10 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Called each time a new timing object is emitted.
+   * @param {Object} t
+   */
   _triggerTimeChange(t) {
     if (!this.man || !t) {
       this.trigger("currentTimeChange", getEmptyTimings());
@@ -556,16 +632,26 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Returns fatal error if one for the current content. null otherwise.
+   * @returns {Object|null}
+   */
   getError() {
     return this.error;
   }
 
+  /**
+   * Returns manifest/playlist object.
+   * null if the player is STOPPED.
+   * @returns {Object|null}
+   * TODO Define manifest structure in documentation.
+   */
   getManifest() {
     return this.man;
   }
 
   /**
-   * Returns the DOM element used by the player.
+   * Returns the video DOM element used by the player.
    * @returns {HMTLMediaElement}
    */
   getVideoElement() {
@@ -585,6 +671,10 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * @returns {Observable}
+   * TODO simpler option that an observable for an API?
+   */
   getImageTrack() {
     return this.images.distinctUntilChanged();
   }
@@ -600,6 +690,7 @@ class Player extends EventEmitter {
   /**
    * Returns true if the content is a live content.
    * @returns {Boolean}
+   * TODO Do not throw if STOPPED
    * @throws Error - Throws if the given player has no manifest loaded.
    */
   isLive() {
@@ -611,6 +702,8 @@ class Player extends EventEmitter {
    * Returns the url of the content's manifest
    * @returns {string}
    * @throws Error - Throws if the given player has no manifest loaded.
+   * TODO Do not throw if STOPPED
+   * TODO Rename to getManifestUrl (next-version)
    */
   getUrl() {
     assertMan(this);
@@ -643,13 +736,13 @@ class Player extends EventEmitter {
     return new BufferedRanges(this.video.buffered).getLoaded(this.video.currentTime);
   }
 
-    /**
-     * Returns the current playback position :
-     *   - 0 if no manifest is currently loaded
-     *   - in seconds for an on-demand content
-     *   - with a Date object for live content.
-     * @returns {Number|Date}
-     */
+  /**
+   * Returns the current playback position :
+   *   - 0 if no manifest is currently loaded
+   *   - in seconds for an on-demand content
+   *   - with a Date object for live content.
+   * @returns {Number|Date}
+   */
   getCurrentTime() {
     if (!this.man) {
       return 0;
@@ -663,100 +756,188 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * @returns {Number}
+   */
   getStartTime() {
     return this.frag.start;
   }
 
+  /**
+   * @returns {Number}
+   */
   getEndTime() {
     return this.frag.end;
   }
 
+  /**
+   * @returns {Number}
+   */
   getPlaybackRate() {
     return this.video.playbackRate;
   }
 
+  /**
+   * @returns {Number}
+   */
   getVolume() {
     return this.video.volume;
   }
 
+  /**
+   * @returns {Boolean}
+   */
   isFullscreen() {
     return isFullscreen();
   }
 
+  /**
+   * @returns {Array.<string}
+   */
   getAvailableLanguages() {
     return this.man && manifestHelpers.getAvailableLanguages(this.man) || [];
   }
 
+  /**
+   * @returns {Array.<string}
+   */
   getAvailableSubtitles() {
     return this.man && manifestHelpers.getAvailableSubtitles(this.man) || [];
   }
 
+  /**
+   * Returns last chosen language.
+   * @returns {string}
+   */
   getLanguage() {
     return this.adaptive.getLanguage();
   }
 
+  /**
+   * Returns last chosen subtitle.
+   * @returns {string}
+   */
   getSubtitle() {
     return this.adaptive.getSubtitle();
   }
 
+  /**
+   * @returns {Array.<Number>}
+   */
   getAvailableVideoBitrates() {
     const video = manifestHelpers.getAdaptationsByType(this.man, "video");
     return (video[0] && video[0].bitrates.slice()) || [];
   }
 
+  /**
+   * @returns {Array.<Number>}
+   */
   getAvailableAudioBitrates() {
     const audio = this.adas.audio;
     return (audio && audio.bitrates.slice()) || [];
   }
 
+  /**
+   * Returns currently considered bitrate for video segments.
+   * @returns {Number}
+   */
   getVideoBitrate() {
     return this.evts.videoBitrate;
   }
 
+  /**
+   * Returns currently considered bitrate for audio segments.
+   * @returns {Number}
+   */
   getAudioBitrate() {
     return this.evts.audioBitrate;
   }
 
+  /**
+   * Returns max wanted video bitrate currently set.
+   * @returns {Number}
+   */
   getVideoMaxBitrate() {
     return this.adaptive.getVideoMaxBitrate();
   }
 
+  /**
+   * Returns max wanted audio bitrate currently set.
+   * @returns {Number}
+   */
   getAudioMaxBitrate() {
     return this.adaptive.getAudioMaxBitrate();
   }
 
+  /**
+   * Returns maximum buffer size wanted for video segments, in seconds.
+   * @returns {Number}
+   */
   getVideoBufferSize() {
     return this.adaptive.getVideoBufferSize();
   }
 
+  /**
+   * Returns maximum buffer size wanted for audio segments, in seconds.
+   * @returns {Number}
+   */
   getAudioBufferSize() {
     return this.adaptive.getAudioBufferSize();
   }
 
+  /**
+   * Get last calculated average bitrate, from an exponential moving average
+   * formula.
+   * @returns {Number}
+   */
   getAverageBitrates() {
     return this.adaptive.getAverageBitrates();
   }
 
+  /**
+   * Returns metrics used to emit informations about the downloaded segments.
+   * TODO deprecate
+   */
   getMetrics() {
     return this.metrics;
   }
 
+  /**
+   * Play/Resume the current video.
+   */
   play() {
     this.video.play();
   }
 
+  /**
+   * Pause playback of the video.
+   */
   pause() {
     this.video.pause();
   }
 
+  /**
+   * Update the playback rate of the video (TODO adapt this with ABR).
+   * @param {Number} rate
+   */
   setPlaybackRate(rate) {
     this.video.playbackRate = rate;
   }
 
+  /**
+   * Seek to the start of the content.
+   */
   goToStart() {
     return this.seekTo(this.getStartTime());
   }
 
+  /**
+   * Seek to a given absolute position.
+   * Refer to getCurrentTime to give relative positions.
+   * @param {Number} time
+   * @returns {Number} - The time the player has seek to, relatively to the
+   * video tag currentTime.
+   */
   seekTo(time) {
     assert(this.man);
     const currentTs = this.video.currentTime;
@@ -771,6 +952,12 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Set/exit fullScreen.
+   * @param {Boolean} [toggle=true] - if false, exit full screen.
+   * TODO just toggleFullscreen API or setFullscreen + exitFullscreen
+   * deprecate this one.
+   */
   setFullscreen(toggle = true) {
     if (toggle === false) {
       exitFullscreen();
@@ -779,6 +966,9 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * @param {Number}
+   */
   setVolume(volume) {
     if (volume !== this.video.volume) {
       this.video.volume = volume;
@@ -798,24 +988,53 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Translate a generic language code, like the one defined in a manifest file,
+   * to the code used by the player.
+   * @param {string} lng
+   * @returns {string}
+   */
   normalizeLanguageCode(lng) {
     return normalizeLang(lng);
   }
 
+  /**
+   * Returns true if the corresponding audio language, normalized, is available.
+   * @param {string} lng
+   * @returns {string}
+   * TODO Deprecate and rename to hasAudioTrack (next-version)
+   */
   isLanguageAvailable(lng) {
     return this.getAvailableLanguages().indexOf(normalizeLang(lng)) >= 0;
   }
 
+  /**
+   * Returns true if the corresponding subtitles track, normalized,
+   * is available.
+   * @param {string} lng
+   * @returns {string}
+   * TODO Deprecate and rename to hasSubtitlesTrack (next-version)
+   */
   isSubtitleAvailable(sub) {
     return this.getAvailableSubtitles().indexOf(normalizeLang(sub)) >= 0;
   }
 
+  /**
+   * Update the audio language.
+   * @param {string} lng
+   * TODO Deprecate and rename to setAudioTrack (next-version)
+   */
   setLanguage(lng) {
     lng = normalizeLang(lng);
     assert(this.isLanguageAvailable(lng), "player: unknown language");
     this.adaptive.setLanguage(lng);
   }
 
+  /**
+   * Update the audio language.
+   * @param {string} sub
+   * TODO Deprecate and rename to setSubtitlesTrack (next-version)
+   */
   setSubtitle(sub) {
     sub = normalizeLang(sub);
     assert(!sub || this.isSubtitleAvailable(sub), "player: unknown subtitle");
@@ -825,52 +1044,104 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Force the video bitrate to a given value.
+   * Set to 0 or undefined to switch to automatic mode.
+   * @throws Error - The bitrate given is not available as a video bitrate.
+   * @param {Number} btr
+   * TODO Stop throwing, act as a ceil instead
+   */
   setVideoBitrate(btr) {
     assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
     this.adaptive.setVideoBitrate(btr);
   }
 
+  /**
+   * Force the audio bitrate to a given value.
+   * Set to 0 or undefined to switch to automatic mode.
+   * @throws Error - The bitrate given is not available as an audio bitrate.
+   * @param {Number} btr
+   * TODO Stop throwing, act as a ceil instead
+   */
   setAudioBitrate(btr) {
     assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
     this.adaptive.setAudioBitrate(btr);
   }
 
+  /**
+   * Update the maximum video bitrate the user can switch to.
+   * @param {Number} btr
+   */
   setVideoMaxBitrate(btr) {
     this.adaptive.setVideoMaxBitrate(btr);
   }
 
+  /**
+   * Update the maximum video bitrate the user can switch to.
+   * @param {Number} btr
+   */
   setAudioMaxBitrate(btr) {
     this.adaptive.setAudioMaxBitrate(btr);
   }
 
+  /**
+   * Update the maximum buffer size for the video segments, in second
+   * @param {Number} size
+   */
   setVideoBufferSize(size) {
     this.adaptive.setVideoBufferSize(size);
   }
 
+  /**
+   * Update the maximum buffer size for the audio segments, in second
+   * @param {Number} size
+   */
   setAudioBufferSize(size) {
     this.adaptive.setAudioBufferSize(size);
   }
 
+  /**
+   * TODO Deprecate this API
+   */
   asObservable() {
     return this.stream;
   }
 
+  /**
+   * Returns multiple debugs informations.
+   * TODO Document that
+   * @returns {Object}
+   */
   getDebug() {
     return debugPane.getDebug(this);
   }
 
+  /**
+   * Show debug overlay on the video element.
+   */
   showDebug() {
     debugPane.showDebug(this, this.video);
   }
 
+  /**
+   * Hide debug overlay from the video element.
+   */
   hideDebug() {
     debugPane.hideDebug();
   }
 
+  /**
+   * Show/Hide debug overlay from the video element.
+   */
   toggleDebug() {
     debugPane.toggleDebug(this,this.video);
   }
 
+  /**
+   * Returns type of current keysystem (e.g. playready, widevine) if the content
+   * is encrypted. null otherwise.
+   * @returns {string}
+   */
   getCurrentKeySystem() {
     return EME.getCurrentKeySystem();
   }
