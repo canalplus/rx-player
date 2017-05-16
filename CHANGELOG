@@ -4,6 +4,10 @@ next version (pending)
 Bug fixes
 ---------
 
+- dash: lowered security time raising the startup time for SegmentTemplate-based contents
+- api: getLanguage/getSubtitle returns the language of the last chunk received, not the last set
+- manifest: fixed manifest-refreshing logic (mainly for live contents)
+- dash: fixed support for dash SegmentTimeline-based contents
 - api: differentiate unset default languages from empty strings
 - languages: handle undefined languages (to an empty string)
 - api: allow the player to be instanciated with no option
