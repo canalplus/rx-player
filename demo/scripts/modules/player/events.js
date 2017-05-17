@@ -76,9 +76,9 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.availableVideoBitrates =
           player.getAvailableVideoBitrates();
         stateUpdates.availableLanguages =
-          player.getAvailableLanguages();
+          player.getAvailableAudioTracks();
         stateUpdates.availableSubtitles =
-          player.getAvailableSubtitles();
+          player.getAvailableSubtitlesTracks();
       } else if (arg === "STOPPED" || arg === "ENDED") {
         stateUpdates.audioBitrate = undefined;
         stateUpdates.videoBitrate = undefined;
@@ -102,7 +102,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     // .filter((response) => response.size > 2000)
     .subscribe((metric = {}) => {
       const { response } = metric.value;
-      if (response.size > 10000) {
+      if (response && response.size > 10000) {
         state.set({
           bandwidth: (response.size / response.duration) * 0.008, // in mbps
         });

@@ -122,11 +122,11 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     },
 
     SET_AUDIO_TRACK: (track) => {
-      player.setLanguage(track);
+      player.setAudioTrack(track);
     },
 
     SET_SUBTITLES_TRACK: (track) => {
-      player.setSubtitle(track);
+      player.setSubtitlesTrack(track);
     },
   };
 };
