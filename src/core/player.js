@@ -840,14 +840,26 @@ class Player extends EventEmitter {
    * @returns {Array.<string}
    */
   getAvailableLanguages() {
-    return this.man && manifestHelpers.getAvailableLanguages(this.man) || [];
+    console.warn(
+      "getAvailableLanguages is deprecated and won't be available in the next major version." +
+      " Use getAvailableAudioTracks instead."
+    );
+    return this.man &&
+      manifestHelpers.getAvailableLanguages(this.man).map(l => l.language)
+      || [];
   }
 
   /**
    * @returns {Array.<string}
    */
   getAvailableSubtitles() {
-    return this.man && manifestHelpers.getAvailableSubtitles(this.man) || [];
+    console.warn(
+      "getAvailableSubtitles is deprecated and won't be available in the next major version." +
+      " Use getAvailableSubtitlesTracks instead."
+    );
+    return this.man &&
+      manifestHelpers.getAvailableSubtitles(this.man).map(s =>  s.language)
+      || [];
   }
 
   /**
@@ -855,7 +867,11 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getLanguage() {
-    return this.evts.language;
+    console.warn(
+      "getLanguage is deprecated and won't be available in the next major version." +
+      " Use getAudioTrack instead."
+    );
+    return this.evts.language.language;
   }
 
   /**
@@ -863,6 +879,10 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getSubtitle() {
+    console.warn(
+      "getSubtitle is deprecated and won't be available in the next major version." +
+      " Use getSubtitlesTrack instead."
+    );
     return this.evts.subtitle;
   }
 
@@ -1047,16 +1067,19 @@ class Player extends EventEmitter {
    * Returns true if the corresponding audio language, normalized, is available.
    * @param {string|Object} lng
    * @returns {Boolean}
-   * TODO Deprecate and rename to hasAudioTrack (next-version)
    */
   isLanguageAvailable(arg) {
+    console.warn(
+      "isLanguageAvailable is deprecated and won't be available in the next major version." +
+      " Use hasAudioTrack instead."
+    );
     const track = normalizeLanguage(arg);
 
     if (!track) {
       return false;
     }
 
-    return !!this.getAvailableLanguages().find(lng =>
+    return !!this.getAvailableAudioTracks().find(lng =>
       lng.language === track.language &&
       lng.audioDescription === !!track.audioDescription
     );
@@ -1070,13 +1093,17 @@ class Player extends EventEmitter {
    * TODO Deprecate and rename to hasSubtitlesTrack (next-version)
    */
   isSubtitleAvailable(arg) {
+    console.warn(
+      "isSubtitleAvailable is deprecated and won't be available in the next major version." +
+      " Use hasSubtitlesTrack instead."
+    );
     const track = normalizeSubtitle(arg);
 
     if (!track) {
       return false;
     }
 
-    return !!this.getAvailableSubtitles().find(lng =>
+    return !!this.getAvailableSubtitlesTracks().find(lng =>
       lng.language === track.language &&
       lng.closedCaption === !!track.closedCaption
     );
@@ -1088,8 +1115,12 @@ class Player extends EventEmitter {
    * TODO Deprecate and rename to setAudioTrack (next-version)
    */
   setLanguage(arg) {
+    console.warn(
+      "setLanguage is deprecated and won't be available in the next major version." +
+      " Use setAudioTrack instead."
+    );
     const track = normalizeLanguage(arg);
-    assert(this.isLanguageAvailable(track), "player: unknown language");
+    assert(this.hasAudioTrack(track), "player: unknown language");
     this.adaptive.setLanguage(track);
   }
 
@@ -1099,6 +1130,10 @@ class Player extends EventEmitter {
    * TODO Deprecate and rename to setSubtitlesTrack (next-version)
    */
   setSubtitle(arg) {
+    console.warn(
+      "setSubtitle is deprecated and won't be available in the next major version." +
+      " Use setSubtitlesTrack instead."
+    );
     if (arg == null) { // deactivate subtitles
       this.adaptive.setSubtitle(null);
       this._recordState("subtitle", null);
@@ -1106,7 +1141,7 @@ class Player extends EventEmitter {
     }
 
     const track = normalizeSubtitle(arg);
-    assert(this.isSubtitleAvailable(track), "player: unknown subtitle");
+    assert(this.hasSubtitlesTrack(track), "player: unknown subtitle");
     this.adaptive.setSubtitle(track);
   }
 
@@ -1210,6 +1245,99 @@ class Player extends EventEmitter {
    */
   getCurrentKeySystem() {
     return EME.getCurrentKeySystem();
+  }
+
+  /**
+   * @returns {Array.<string}
+   */
+  getAvailableAudioTracks() {
+    return this.man && manifestHelpers.getAvailableLanguages(this.man) || [];
+  }
+
+  /**
+   * @returns {Array.<string}
+   */
+  getAvailableSubtitlesTracks() {
+    return this.man && manifestHelpers.getAvailableSubtitles(this.man) || [];
+  }
+
+  /**
+   * Returns last chosen language.
+   * @returns {string}
+   */
+  getAudioTrack() {
+    return this.evts.language;
+  }
+
+  /**
+   * Returns last chosen subtitle.
+   * @returns {string}
+   */
+  getSubtitlesTrack() {
+    return this.evts.subtitle.language;
+  }
+
+  /**
+   * Returns true if the corresponding audio language, normalized, is available.
+   * @param {string|Object} lng
+   * @returns {Boolean}
+   */
+  hasAudioTrack(arg) {
+    const track = normalizeLanguage(arg);
+
+    if (!track) {
+      return false;
+    }
+
+    return !!this.getAvailableAudioTracks().find(lng =>
+      lng.language === track.language &&
+      lng.audioDescription === !!track.audioDescription
+    );
+  }
+
+  /**
+   * Returns true if the corresponding subtitles track, normalized,
+   * is available.
+   * @param {string|Object} lng
+   * @returns {Boolean}
+   */
+  hasSubtitlesTrack(arg) {
+    const track = normalizeSubtitle(arg);
+
+    if (!track) {
+      return false;
+    }
+
+    return !!this.getAvailableSubtitlesTracks().find(lng =>
+      lng.language === track.language &&
+      lng.closedCaption === !!track.closedCaption
+    );
+  }
+
+  /**
+   * Update the audio language.
+   * @param {string|Object} lng
+   */
+  setAudioTrack(arg) {
+    const track = normalizeLanguage(arg);
+    assert(this.hasAudioTrack(track), "player: unknown language");
+    this.adaptive.setLanguage(track);
+  }
+
+  /**
+   * Update the audio language.
+   * @param {string|Object} sub
+   */
+  setSubtitlesTrack(arg) {
+    if (arg == null) { // deactivate subtitles
+      this.adaptive.setSubtitle(null);
+      this._recordState("subtitle", null);
+      return;
+    }
+
+    const track = normalizeSubtitle(arg);
+    assert(this.hasSubtitlesTrack(track), "player: unknown subtitle");
+    this.adaptive.setSubtitle(track);
   }
 }
 
