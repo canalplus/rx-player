@@ -1,6 +1,33 @@
 next version (pending)
 =================================
 
+Added
+-----
+- languages: getAvailableAudioTracks API has been added with audio description support
+- languages: getAvailableSubtitlesTracks API has been added with closed caption support
+- languages: getAudioTrack API has been added with audio description support
+- languages: getSubtitlesTrack API has been added with closed caption support
+- languages: hasAudioTrack API has been added with audio description support
+- languages: hasSubtitlesTrack API has been added with closed caption support
+- languages: setAudioTrack API has been added with audio description support
+- languages: setSubtitlesTrack API has been added with closed caption support
+- dash/subtitles: detect audio description in MPD
+- audiotrack: add audio description support
+- dash/subtitles: detect closed captions in MPD
+- subtitles: add closed captions support
+- dash/subtitles: add subtitles support (only ttml for now)
+
+Deprecated
+----------
+- languages: getAvailableLanguages is deprecated in favor of getAvailableAudioTracks
+- languages: getAvailableSubtitles is deprecated in favor of getAvailableSubtitlesTracks
+- languages: getLanguage is deprecated in favor of getAudioTrack
+- languages: getSubtitle is deprecated in favor of getSubtitlesTrack
+- languages: isLanguageAvailable is deprecated in favor of hasAudioTrack
+- languages: isSubtitleAvailable is deprecated in favor of hasSubtitlesTrack
+- languages: setLanguage is deprecated in favor of setAudioTrack
+- languages: setSubtitle is deprecated in favor of setSubtitlesTrack
+
 Bug fixes
 ---------
 
@@ -20,6 +47,8 @@ Bug fixes
 Other improvements
 ------------------
 
+- manifest: The DASH manifest handling has been refactored
+- smooth: Smooth index handling has been completely separated from the DASH logic
 - tests: fix and re-write unit tests
 - documentation: Code documentation has been added
 - demo: The Demo has been updated
