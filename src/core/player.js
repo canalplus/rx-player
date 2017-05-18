@@ -192,14 +192,44 @@ class Player extends EventEmitter {
       transport,
       transportOptions,
       defaultLanguage,
+      defaultAudioTrack,
       defaultSubtitle,
+      defaultSubtitlesTrack,
       initVideoBitrate,
+      initialVideoBitrate,
       initAudioBitrate,
+      initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
     } = options;
 
     super();
+
+    // -- Deprecated checks
+
+    let _initialVideoBitrate = initialVideoBitrate;
+    let _initialAudioBitrate = initialAudioBitrate;
+    let _defaultAudioTrack = defaultAudioTrack;
+    let _defaultSubtitlesTrack = defaultSubtitlesTrack;
+
+    if (initVideoBitrate != null && initialVideoBitrate == null) {
+      console.warn("initVideoBitrate is deprecated. Use initialVideoBitrate instead");
+      _initialVideoBitrate = initVideoBitrate;
+    }
+    if (initAudioBitrate != null && initialAudioBitrate == null) {
+      console.warn("initAudioBitrate is deprecated. Use initialAudioBitrate instead");
+      _initialAudioBitrate = initAudioBitrate;
+    }
+    if (defaultLanguage != null && defaultAudioTrack == null) {
+      console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
+      _defaultAudioTrack = defaultLanguage;
+    }
+    if (defaultSubtitle != null && defaultSubtitlesTrack == null) {
+      console.warn("defaultSubtitle is deprecated. Use defaultSubtitlesTrack instead");
+      _defaultSubtitlesTrack = defaultSubtitle;
+    }
+
+    // --
 
     // auto-bindings. TODO Needed? Pollute the namespace / Only one use for each
     this._playPauseNext$ = this._playPauseNext.bind(this);
@@ -251,12 +281,12 @@ class Player extends EventEmitter {
     this.metrics = metrics;
 
     this.adaptive = Adaptive(metrics, deviceEvents, {
-      initVideoBitrate,
-      initAudioBitrate,
+      _initialVideoBitrate,
+      _initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
-      defaultLanguage: normalizeLanguage(defaultLanguage),
-      defaultSubtitle: normalizeSubtitle(defaultSubtitle),
+      defaultLanguage: normalizeLanguage(_defaultAudioTrack),
+      defaultSubtitle: normalizeSubtitle(_defaultSubtitlesTrack),
     });
 
     // memorize previous volume when muted - minimum at first
