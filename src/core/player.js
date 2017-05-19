@@ -861,10 +861,10 @@ class Player extends EventEmitter {
    * @returns {Number|Date}
    */
   getCurrentTime() {
-    console.warn(
-      "getCurrentTime is deprecated and won't be available in the next major version." +
-      " Use either getWallClockTime or getPosition instead."
-    );
+    // console.warn(
+    //   "getCurrentTime is deprecated and won't be available in the next major version." +
+    //   " Use either getWallClockTime or getPosition instead."
+    // );
     if (!this.man) {
       return 0;
     }
