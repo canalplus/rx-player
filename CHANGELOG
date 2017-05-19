@@ -3,6 +3,13 @@ next version (pending)
 
 Added
 -----
+- api: added setMaxAudioBitrate api call
+- api: added setMaxVideoBitrate api call
+- api: added exitFullscreen api call
+- api: added ErrorTypes static property
+- api: added ErrorCodes static property
+- api: added getPosition API call
+- api: added getWallClockTime API call
 - api: add throttleWhenHidden option to constructor to disable throttling when the current page is hidden for an extended time
 - api: add limitVideoWidth option to constructor to disable throttling to match the video element's width
 - api: added initialAudioBitrate to constructor's options
@@ -25,6 +32,11 @@ Added
 
 Deprecated
 ----------
+- api: setVideoMaxBitrate is replaced by setMaxVideoBitrate
+- api: setAudioMaxBitrate is replaced by setMaxAudioBitrate
+- api: using setFullscreen(false) is replaced by exitFullscreen
+- api: getErrorTypes API call has been deprecated in favor of the ErrorTypes property
+- api: getErrorCodes API call has been deprecated in favor of the ErrorCodes property
 - languages: initAudioBitrate option in constructor in favor of initialAudioBitrate
 - languages: initVideoBitrate option in constructor in favor of initialVideoBitrate
 - languages: defaultSubtitle option in constructor and loadVideo in favor of defaultTextTrack
