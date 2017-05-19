@@ -27,6 +27,12 @@ const {
   isKnownError,
 } = require("../errors");
 
+/**
+ * The default number of times a pipeline request will be re-performed when
+ * on error.
+ * @type Number
+ */
+const DEFAULT_MAXIMUM_RETRY_ON_ERROR = 4;
 
 /**
  * Generate a new error from the infos given.
@@ -105,7 +111,10 @@ function createPipeline(pipelineType,
     parser = Observable.of;
   }
 
-  const { totalRetry, cache } = options;
+  const { maxRetry, cache } = options;
+
+  const totalRetry = typeof maxRetry === "number" ?
+    maxRetry : DEFAULT_MAXIMUM_RETRY_ON_ERROR;
 
   /**
    * Backoff options given to the backoff retry done with the loader function.
@@ -114,8 +123,8 @@ function createPipeline(pipelineType,
   const loaderBackoffOptions = {
     retryDelay: 200,
     errorSelector: loaderErrorSelector,
-    totalRetry: totalRetry || 4,
-    shouldRetry: loaderShouldRetry,
+    totalRetry: totalRetry,
+    shouldRetry: totalRetry && loaderShouldRetry,
     onRetry: (error) => {
       schedulMetrics({ type: pipelineType, value: error.xhr });
       errorStream.next(errorSelector("PIPELINE_LOAD_ERROR", pipelineType, error, false));
