@@ -5,16 +5,16 @@ Added
 -----
 - api: added initialAudioBitrate to constructor's options
 - api: added initialVideoBitrate to constructor's options
-- api: added defaultSubtitlesTrack to loadVideo and constructor's options
+- api: added defaultTextTrack to loadVideo and constructor's options
 - api: added defaultAudioTrack to loadVideo and constructor's options
 - languages: getAvailableAudioTracks API has been added with audio description support
-- languages: getAvailableSubtitlesTracks API has been added with closed caption support
+- languages: getAvailableTextTracks API has been added with closed caption support
 - languages: getAudioTrack API has been added with audio description support
-- languages: getSubtitlesTrack API has been added with closed caption support
+- languages: getTextTrack API has been added with closed caption support
 - languages: hasAudioTrack API has been added with audio description support
-- languages: hasSubtitlesTrack API has been added with closed caption support
+- languages: hasTextTrack API has been added with closed caption support
 - languages: setAudioTrack API has been added with audio description support
-- languages: setSubtitlesTrack API has been added with closed caption support
+- languages: setTextTrack API has been added with closed caption support
 - dash/subtitles: detect audio description in MPD
 - audiotrack: add audio description support
 - dash/subtitles: detect closed captions in MPD
@@ -25,16 +25,16 @@ Deprecated
 ----------
 - languages: initAudioBitrate option in constructor in favor of initialAudioBitrate
 - languages: initVideoBitrate option in constructor in favor of initialVideoBitrate
-- languages: defaultSubtitle option in constructor and loadVideo in favor of defaultSubtitlesTrack
+- languages: defaultSubtitle option in constructor and loadVideo in favor of defaultTextTrack
 - languages: defaultLanguage option in constructor and loadVideo in favor of defaultAudioTrack
 - languages: getAvailableLanguages is deprecated in favor of getAvailableAudioTracks
-- languages: getAvailableSubtitles is deprecated in favor of getAvailableSubtitlesTracks
+- languages: getAvailableSubtitles is deprecated in favor of getAvailableTextTracks
 - languages: getLanguage is deprecated in favor of getAudioTrack
-- languages: getSubtitle is deprecated in favor of getSubtitlesTrack
+- languages: getSubtitle is deprecated in favor of getTextTrack
 - languages: isLanguageAvailable is deprecated in favor of hasAudioTrack
-- languages: isSubtitleAvailable is deprecated in favor of hasSubtitlesTrack
+- languages: isSubtitleAvailable is deprecated in favor of hasTextTrack
 - languages: setLanguage is deprecated in favor of setAudioTrack
-- languages: setSubtitle is deprecated in favor of setSubtitlesTrack
+- languages: setSubtitle is deprecated in favor of setTextTrack
 
 Bug fixes
 ---------
