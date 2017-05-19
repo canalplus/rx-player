@@ -3,6 +3,10 @@ next version (pending)
 
 Added
 -----
+- api: added initialAudioBitrate to constructor's options
+- api: added initialVideoBitrate to constructor's options
+- api: added defaultSubtitlesTrack to loadVideo and constructor's options
+- api: added defaultAudioTrack to loadVideo and constructor's options
 - languages: getAvailableAudioTracks API has been added with audio description support
 - languages: getAvailableSubtitlesTracks API has been added with closed caption support
 - languages: getAudioTrack API has been added with audio description support
@@ -19,6 +23,10 @@ Added
 
 Deprecated
 ----------
+- languages: initAudioBitrate option in constructor in favor of initialAudioBitrate
+- languages: initVideoBitrate option in constructor in favor of initialVideoBitrate
+- languages: defaultSubtitle option in constructor and loadVideo in favor of defaultSubtitlesTrack
+- languages: defaultLanguage option in constructor and loadVideo in favor of defaultAudioTrack
 - languages: getAvailableLanguages is deprecated in favor of getAvailableAudioTracks
 - languages: getAvailableSubtitles is deprecated in favor of getAvailableSubtitlesTracks
 - languages: getLanguage is deprecated in favor of getAudioTrack
