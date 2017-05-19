@@ -3,6 +3,9 @@ next version (pending)
 
 Added
 -----
+- api: add throttleWhenHidden option to constructor to disable throttling when the
+current page is hidden
+- api: add limitVideoWidth option to constructor to disable throttling to match the browser width
 - api: added initialAudioBitrate to constructor's options
 - api: added initialVideoBitrate to constructor's options
 - api: added defaultTextTrack to loadVideo and constructor's options
