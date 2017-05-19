@@ -194,7 +194,7 @@ class Player extends EventEmitter {
       defaultLanguage,
       defaultAudioTrack,
       defaultSubtitle,
-      defaultSubtitlesTrack,
+      defaultTextTrack,
       initVideoBitrate,
       initialVideoBitrate,
       initAudioBitrate,
@@ -210,7 +210,7 @@ class Player extends EventEmitter {
     let _initialVideoBitrate = initialVideoBitrate;
     let _initialAudioBitrate = initialAudioBitrate;
     let _defaultAudioTrack = defaultAudioTrack;
-    let _defaultSubtitlesTrack = defaultSubtitlesTrack;
+    let _defaultTextTrack = defaultTextTrack;
 
     if (initVideoBitrate != null && initialVideoBitrate == null) {
       console.warn("initVideoBitrate is deprecated. Use initialVideoBitrate instead");
@@ -224,9 +224,9 @@ class Player extends EventEmitter {
       console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
       _defaultAudioTrack = defaultLanguage;
     }
-    if (defaultSubtitle != null && defaultSubtitlesTrack == null) {
-      console.warn("defaultSubtitle is deprecated. Use defaultSubtitlesTrack instead");
-      _defaultSubtitlesTrack = defaultSubtitle;
+    if (defaultSubtitle != null && defaultTextTrack == null) {
+      console.warn("defaultSubtitle is deprecated. Use defaultTextTrack instead");
+      _defaultTextTrack = defaultSubtitle;
     }
 
     // --
@@ -286,7 +286,7 @@ class Player extends EventEmitter {
       maxVideoBitrate,
       maxAudioBitrate,
       defaultLanguage: normalizeLanguage(_defaultAudioTrack),
-      defaultSubtitle: normalizeSubtitle(_defaultSubtitlesTrack),
+      defaultSubtitle: normalizeSubtitle(_defaultTextTrack),
     });
 
     // memorize previous volume when muted - minimum at first
@@ -407,7 +407,7 @@ class Player extends EventEmitter {
       defaultLanguage,
       defaultAudioTrack,
       defaultSubtitle,
-      defaultSubtitlesTrack,
+      defaultTextTrack,
       hideNativeSubtitle,
     } = opts;
 
@@ -450,7 +450,7 @@ class Player extends EventEmitter {
       defaultLanguage,
       defaultAudioTrack,
       defaultSubtitle,
-      defaultSubtitlesTrack,
+      defaultTextTrack,
       transport,
     };
   }
@@ -476,7 +476,7 @@ class Player extends EventEmitter {
       defaultLanguage,
       defaultAudioTrack,
       defaultSubtitle,
-      defaultSubtitlesTrack,
+      defaultTextTrack,
     } = options;
 
     this.stop();
@@ -484,27 +484,27 @@ class Player extends EventEmitter {
     this.playing.next(autoPlay);
 
     // -- Deprecated checks
- 
+
     let _defaultAudioTrack = defaultAudioTrack;
-    let _defaultSubtitlesTrack = defaultSubtitlesTrack;
- 
+    let _defaultTextTrack = defaultTextTrack;
+
     if (defaultLanguage != null && defaultAudioTrack == null) {
       console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
       _defaultAudioTrack = defaultLanguage;
     }
-    if (defaultSubtitle != null && defaultSubtitlesTrack == null) {
-      console.warn("defaultSubtitle is deprecated. Use defaultSubtitlesTrack instead");
-      _defaultSubtitlesTrack = defaultSubtitle;
+    if (defaultSubtitle != null && defaultTextTrack == null) {
+      console.warn("defaultSubtitle is deprecated. Use defaultTextTrack instead");
+      _defaultTextTrack = defaultSubtitle;
     }
- 
+
     // --
- 
+
     if (_defaultAudioTrack != null) {
       this.adaptive.setLanguage(normalizeLanguage(_defaultAudioTrack));
     }
 
-    if (_defaultSubtitlesTrack != null) {
-      this.adaptive.setSubtitle(normalizeSubtitle(_defaultSubtitlesTrack));
+    if (_defaultTextTrack != null) {
+      this.adaptive.setSubtitle(normalizeSubtitle(_defaultTextTrack));
     }
 
     const {
@@ -907,7 +907,7 @@ class Player extends EventEmitter {
   getAvailableSubtitles() {
     console.warn(
       "getAvailableSubtitles is deprecated and won't be available in the next major version." +
-      " Use getAvailableSubtitlesTracks instead."
+      " Use getAvailableTextTracks instead."
     );
     return this.man &&
       manifestHelpers.getAvailableSubtitles(this.man).map(s =>  s.language)
@@ -933,7 +933,7 @@ class Player extends EventEmitter {
   getSubtitle() {
     console.warn(
       "getSubtitle is deprecated and won't be available in the next major version." +
-      " Use getSubtitlesTrack instead."
+      " Use getTextTrack instead."
     );
     return this.evts.subtitle;
   }
@@ -1142,12 +1142,12 @@ class Player extends EventEmitter {
    * is available.
    * @param {string|Object} lng
    * @returns {Boolean}
-   * TODO Deprecate and rename to hasSubtitlesTrack (next-version)
+   * TODO Deprecate and rename to hasTextTrack (next-version)
    */
   isSubtitleAvailable(arg) {
     console.warn(
       "isSubtitleAvailable is deprecated and won't be available in the next major version." +
-      " Use hasSubtitlesTrack instead."
+      " Use hasTextTrack instead."
     );
     const track = normalizeSubtitle(arg);
 
@@ -1155,7 +1155,7 @@ class Player extends EventEmitter {
       return false;
     }
 
-    return !!this.getAvailableSubtitlesTracks().find(lng =>
+    return !!this.getAvailableTextTracks().find(lng =>
       lng.language === track.language &&
       lng.closedCaption === !!track.closedCaption
     );
@@ -1179,12 +1179,12 @@ class Player extends EventEmitter {
   /**
    * Update the audio language.
    * @param {string|Object} sub
-   * TODO Deprecate and rename to setSubtitlesTrack (next-version)
+   * TODO Deprecate and rename to setTextTrack (next-version)
    */
   setSubtitle(arg) {
     console.warn(
       "setSubtitle is deprecated and won't be available in the next major version." +
-      " Use setSubtitlesTrack instead."
+      " Use setTextTrack instead."
     );
     if (arg == null) { // deactivate subtitles
       this.adaptive.setSubtitle(null);
@@ -1193,7 +1193,7 @@ class Player extends EventEmitter {
     }
 
     const track = normalizeSubtitle(arg);
-    assert(this.hasSubtitlesTrack(track), "player: unknown subtitle");
+    assert(this.hasTextTrack(track), "player: unknown subtitle");
     this.adaptive.setSubtitle(track);
   }
 
@@ -1309,7 +1309,7 @@ class Player extends EventEmitter {
   /**
    * @returns {Array.<string}
    */
-  getAvailableSubtitlesTracks() {
+  getAvailableTextTracks() {
     return this.man && manifestHelpers.getAvailableSubtitles(this.man) || [];
   }
 
@@ -1325,7 +1325,7 @@ class Player extends EventEmitter {
    * Returns last chosen subtitle.
    * @returns {string}
    */
-  getSubtitlesTrack() {
+  getTextTrack() {
     return this.evts.subtitle.language;
   }
 
@@ -1353,14 +1353,14 @@ class Player extends EventEmitter {
    * @param {string|Object} lng
    * @returns {Boolean}
    */
-  hasSubtitlesTrack(arg) {
+  hasTextTrack(arg) {
     const track = normalizeSubtitle(arg);
 
     if (!track) {
       return false;
     }
 
-    return !!this.getAvailableSubtitlesTracks().find(lng =>
+    return !!this.getAvailableTextTracks().find(lng =>
       lng.language === track.language &&
       lng.closedCaption === !!track.closedCaption
     );
@@ -1380,7 +1380,7 @@ class Player extends EventEmitter {
    * Update the audio language.
    * @param {string|Object} sub
    */
-  setSubtitlesTrack(arg) {
+  setTextTrack(arg) {
     if (arg == null) { // deactivate subtitles
       this.adaptive.setSubtitle(null);
       this._recordState("subtitle", null);
@@ -1388,7 +1388,7 @@ class Player extends EventEmitter {
     }
 
     const track = normalizeSubtitle(arg);
-    assert(this.hasSubtitlesTrack(track), "player: unknown subtitle");
+    assert(this.hasTextTrack(track), "player: unknown subtitle");
     this.adaptive.setSubtitle(track);
   }
 }
