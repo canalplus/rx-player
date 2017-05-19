@@ -164,20 +164,34 @@ function filterStreamByType(stream, type) {
 class Player extends EventEmitter {
 
   /**
+   * @deprecated
    * @returns {Object}
-   * TODO deprecate an switch to static get ErrorTypes, more idiomatic
-   * (next-version)
    */
   static getErrorTypes() {
+    console.warn("getErrorTypes is deprecated. Use the ErrorTypes property instead");
     return ErrorTypes;
   }
 
   /**
    * @returns {Object}
-   * TODO deprecate an switch to static get ErrorCodes, more idiomatic
-   * (next-version)
+   */
+  static get ErrorTypes() {
+    return ErrorTypes;
+  }
+
+  /**
+   * @deprecated
+   * @returns {Object}
    */
   static getErrorCodes() {
+    console.warn("getErrorTypes is deprecated. Use the ErrorTypes property instead");
+    return ErrorCodes;
+  }
+
+  /**
+   * @returns {Object}
+   */
+  static get ErrorCodes() {
     return ErrorCodes;
   }
 
@@ -806,7 +820,6 @@ class Player extends EventEmitter {
    * @returns {string}
    * @throws Error - Throws if the given player has no manifest loaded.
    * TODO Do not throw if STOPPED
-   * TODO Rename to getManifestUrl (next-version)
    */
   getUrl() {
     assertMan(this);
@@ -844,9 +857,14 @@ class Player extends EventEmitter {
    *   - 0 if no manifest is currently loaded
    *   - in seconds for an on-demand content
    *   - with a Date object for live content.
+   * @deprecated
    * @returns {Number|Date}
    */
   getCurrentTime() {
+    console.warn(
+      "getCurrentTime is deprecated and won't be available in the next major version." +
+      " Use either getWallClockTime or getPosition instead."
+    );
     if (!this.man) {
       return 0;
     }
@@ -857,6 +875,44 @@ class Player extends EventEmitter {
     } else {
       return ct;
     }
+  }
+
+  /**
+   * Get the current position, in ms, in wall-clock time.
+   * That is:
+   *   - for live content, get a timestamp of the current played content.
+   *   - for static content, returns the position from beginning in ms.
+   *
+   * If you do not know if you want to use this method or getPosition:
+   *   - If what you want is to display the current time to the user, use this
+   *     one.
+   *   - If what you want is to interact with the player's API or perform other
+   *     actions (like statistics) with the real player data, use getPosition.
+   *
+   * @returns {Number}
+   */
+  getWallClockTime() {
+    if (!this.man) {
+      return 0;
+    }
+    const ct = this.video.currentTime;
+    return this.isLive() ?
+      +toWallClockTime(ct, this.man) : ct * 1000;
+  }
+
+  /**
+   * Get the current position, in seconds, of the video element.
+   *
+   * If you do not know if you want to use this method or getWallClockTime:
+   *   - If what you want is to display the current time to the user, use
+   *     getWallClockTime.
+   *   - If what you want is to interact with the player's API or perform other
+   *     actions (like statistics) with the real player data, use this one.
+   *
+   * @returns {Number}
+   */
+  getPosition() {
+    return this.video.currentTime;
   }
 
   /**
@@ -895,6 +951,7 @@ class Player extends EventEmitter {
   }
 
   /**
+   * @deprecated
    * @returns {Array.<string}
    */
   getAvailableLanguages() {
@@ -908,6 +965,7 @@ class Player extends EventEmitter {
   }
 
   /**
+   * @deprecated
    * @returns {Array.<string}
    */
   getAvailableSubtitles() {
@@ -922,6 +980,7 @@ class Player extends EventEmitter {
 
   /**
    * Returns last chosen language.
+   * @deprecated
    * @returns {string}
    */
   getLanguage() {
@@ -934,6 +993,7 @@ class Player extends EventEmitter {
 
   /**
    * Returns last chosen subtitle.
+   * @deprecated
    * @returns {string}
    */
   getSubtitle() {
@@ -1060,6 +1120,16 @@ class Player extends EventEmitter {
    * @param {Number} time
    * @returns {Number} - The time the player has seek to, relatively to the
    * video tag currentTime.
+   *
+   * TODO I have multiple problems with this methods:
+   *   - it's not that evident/logic that a seekTo function should receive
+   *     wall-clock time (and not the element's time)
+   *   - it returns the element's time even if given wall-clock time.
+   *   - some future API will have to use the element's time (like
+   *     RepresentationIndex.prototype.getSegments in the streamroot-plugin
+   *     branch).
+   * I'm thinking about refactoring this method to be able to give both
+   * wall-clock and real position. I do not know the best way yet.
    */
   seekTo(time) {
     assert(this.man);
@@ -1075,19 +1145,24 @@ class Player extends EventEmitter {
     }
   }
 
+  exitFullscreen() {
+    exitFullscreen();
+  }
+
   /**
    * Set/exit fullScreen.
+   * @deprecated
    * @param {Boolean} [toggle=true] - if false, exit full screen.
-   * TODO just toggleFullscreen API or setFullscreen + exitFullscreen
-   * deprecate this one.
    */
   setFullscreen(toggle = true) {
     if (toggle === false) {
+      console.warn("setFullscreen(false) is deprecated. Use exitFullscreen instead");
       exitFullscreen();
     } else {
       requestFullscreen(this.video);
     }
   }
+
 
   /**
    * @param {Number}
@@ -1123,6 +1198,7 @@ class Player extends EventEmitter {
 
   /**
    * Returns true if the corresponding audio language, normalized, is available.
+   * @deprecated
    * @param {string|Object} lng
    * @returns {Boolean}
    */
@@ -1145,10 +1221,10 @@ class Player extends EventEmitter {
 
   /**
    * Returns true if the corresponding subtitles track, normalized,
+   * @deprecated
    * is available.
    * @param {string|Object} lng
    * @returns {Boolean}
-   * TODO Deprecate and rename to hasTextTrack (next-version)
    */
   isSubtitleAvailable(arg) {
     console.warn(
@@ -1169,8 +1245,8 @@ class Player extends EventEmitter {
 
   /**
    * Update the audio language.
+   * @deprecated
    * @param {string|Object} lng
-   * TODO Deprecate and rename to setAudioTrack (next-version)
    */
   setLanguage(arg) {
     console.warn(
@@ -1184,8 +1260,8 @@ class Player extends EventEmitter {
 
   /**
    * Update the audio language.
+   * @deprecated
    * @param {string|Object} sub
-   * TODO Deprecate and rename to setTextTrack (next-version)
    */
   setSubtitle(arg) {
     console.warn(
@@ -1229,9 +1305,11 @@ class Player extends EventEmitter {
 
   /**
    * Update the maximum video bitrate the user can switch to.
+   * @deprecated
    * @param {Number} btr
    */
   setVideoMaxBitrate(btr) {
+    console.warn("setVideoMaxBitrate is deprecated. Use setMaxVideoBitrate instead");
     this.adaptive.setVideoMaxBitrate(btr);
   }
 
@@ -1239,7 +1317,25 @@ class Player extends EventEmitter {
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
    */
+  setMaxVideoBitrate(btr) {
+    this.adaptive.setVideoMaxBitrate(btr);
+  }
+
+  /**
+   * Update the maximum video bitrate the user can switch to.
+   * @deprecated
+   * @param {Number} btr
+   */
   setAudioMaxBitrate(btr) {
+    console.warn("setAudioMaxBitrate is deprecated. Use setMaxAudioBitrate instead");
+    this.adaptive.setAudioMaxBitrate(btr);
+  }
+
+  /**
+   * Update the maximum video bitrate the user can switch to.
+   * @param {Number} btr
+   */
+  setMaxAudioBitrate(btr) {
     this.adaptive.setAudioMaxBitrate(btr);
   }
 
