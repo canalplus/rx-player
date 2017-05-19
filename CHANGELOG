@@ -41,6 +41,7 @@ Deprecated
 Bug fixes
 ---------
 
+- images: image playlists are now not re-fetched if the request failed (no retry)
 - dash: lowered security time raising the startup time for SegmentTemplate-based contents
 - api: getLanguage/getSubtitle returns the language of the last chunk received, not the last set
 - manifest: fixed manifest-refreshing logic (mainly for live contents)
