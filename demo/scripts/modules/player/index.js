@@ -10,7 +10,11 @@ const RxPlayer = require("../../../../src");
 const { linkPlayerEventsToState } = require("./events.js");
 
 const PLAYER = ({ $destroy, state }, { videoElement }) => {
-  const player = new RxPlayer({ videoElement });
+  const player = new RxPlayer({
+    limitVideoWidth: false,
+    throttleWhenHidden: true,
+    videoElement,
+  });
 
   // facilitate DEV mode
   window.player = window.rxPlayer = player;
