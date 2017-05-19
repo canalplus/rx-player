@@ -405,7 +405,9 @@ class Player extends EventEmitter {
       autoPlay,
       directFile,
       defaultLanguage,
+      defaultAudioTrack,
       defaultSubtitle,
+      defaultSubtitlesTrack,
       hideNativeSubtitle,
     } = opts;
 
@@ -446,7 +448,9 @@ class Player extends EventEmitter {
       timeFragment,
       autoPlay,
       defaultLanguage,
+      defaultAudioTrack,
       defaultSubtitle,
+      defaultSubtitlesTrack,
       transport,
     };
   }
@@ -470,19 +474,37 @@ class Player extends EventEmitter {
       autoPlay,
       transport,
       defaultLanguage,
+      defaultAudioTrack,
       defaultSubtitle,
+      defaultSubtitlesTrack,
     } = options;
 
     this.stop();
     this.frag = timeFragment;
     this.playing.next(autoPlay);
 
-    if (defaultLanguage != null) {
-      this.adaptive.setLanguage(normalizeLanguage(defaultLanguage));
+    // -- Deprecated checks
+ 
+    let _defaultAudioTrack = defaultAudioTrack;
+    let _defaultSubtitlesTrack = defaultSubtitlesTrack;
+ 
+    if (defaultLanguage != null && defaultAudioTrack == null) {
+      console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
+      _defaultAudioTrack = defaultLanguage;
+    }
+    if (defaultSubtitle != null && defaultSubtitlesTrack == null) {
+      console.warn("defaultSubtitle is deprecated. Use defaultSubtitlesTrack instead");
+      _defaultSubtitlesTrack = defaultSubtitle;
+    }
+ 
+    // --
+ 
+    if (_defaultAudioTrack != null) {
+      this.adaptive.setLanguage(normalizeLanguage(_defaultAudioTrack));
     }
 
-    if (defaultSubtitle != null) {
-      this.adaptive.setSubtitle(normalizeSubtitle(defaultSubtitle));
+    if (_defaultSubtitlesTrack != null) {
+      this.adaptive.setSubtitle(normalizeSubtitle(_defaultSubtitlesTrack));
     }
 
     const {
