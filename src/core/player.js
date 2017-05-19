@@ -201,6 +201,8 @@ class Player extends EventEmitter {
       initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
+      limitVideoWidth = true,
+      throttleWhenHidden = true,
     } = options;
 
     super();
@@ -287,6 +289,8 @@ class Player extends EventEmitter {
       maxAudioBitrate,
       defaultLanguage: normalizeLanguage(_defaultAudioTrack),
       defaultSubtitle: normalizeSubtitle(_defaultTextTrack),
+      limitVideoWidth,
+      throttleWhenHidden,
     });
 
     // memorize previous volume when muted - minimum at first

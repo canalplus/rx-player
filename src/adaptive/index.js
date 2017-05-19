@@ -169,6 +169,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
     initAudioBitrate,
     maxVideoBitrate,
     maxAudioBitrate,
+    limitVideoWidth,
+    throttleWhenHidden,
   } = Object.assign({}, DEFAULTS, options);
 
   const { videoWidth, inBackground } = deviceEvents;
@@ -300,13 +302,23 @@ module.exports = function(metrics, deviceEvents, options={}) {
         .startWith(getClosestBitrate(bitrates, $averageBitrates[type].getValue(), 0));
 
       if (type == "video") {
+        const maxBitrateUpdatesObs = [maxBitrates];
+
+        if (limitVideoWidth) {
+          maxBitrateUpdatesObs.push(videoWidth);
+        }
+
+        if (throttleWhenHidden) {
+          maxBitrateUpdatesObs.push(inBackground);
+        }
+
         // To compute the bitrate upper-bound for video
         // representations we need to combine multiple stream:
         //   - user-based maximum bitrate (subject)
         //   - maximum based on the video element width
         //   - maximum based on the application visibility (background tab)
-        maxBitrates = combineLatest(maxBitrates, videoWidth, inBackground,
-          (bitrate, width, isHidden) => {
+        maxBitrates = combineLatest(...maxBitrateUpdatesObs)
+          .map((bitrate, width, isHidden) => {
             if (isHidden) {
               return bitrates[0];
             }
