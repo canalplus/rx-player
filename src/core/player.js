@@ -189,7 +189,7 @@ class Player extends EventEmitter {
    * @returns {Object}
    */
   static getErrorCodes() {
-    console.warn("getErrorTypes is deprecated. Use the ErrorTypes property instead");
+    console.warn("getErrorCodes is deprecated. Use the ErrorCodes property instead");
     return ErrorCodes;
   }
 
@@ -1070,17 +1070,37 @@ class Player extends EventEmitter {
 
   /**
    * Returns max wanted video bitrate currently set.
+   * @deprecated
    * @returns {Number}
    */
   getVideoMaxBitrate() {
+    console.warn("getVideoMaxBitrate is deprecated. Use getMaxVideoBitrate instead");
+    return this.getMaxVideoBitrate();
+  }
+
+  /**
+   * Returns max wanted video bitrate currently set.
+   * @returns {Number}
+   */
+  getMaxVideoBitrate() {
     return this.adaptive.getVideoMaxBitrate();
+  }
+
+  /**
+   * Returns max wanted audio bitrate currently set.
+   * @deprecated
+   * @returns {Number}
+   */
+  getAudioMaxBitrate() {
+    console.warn("getAudioMaxBitrate is deprecated. Use getMaxAudioBitrate instead");
+    return this.getMaxAudioBitrate();
   }
 
   /**
    * Returns max wanted audio bitrate currently set.
    * @returns {Number}
    */
-  getAudioMaxBitrate() {
+  getMaxAudioBitrate() {
     return this.adaptive.getAudioMaxBitrate();
   }
 
@@ -1111,7 +1131,7 @@ class Player extends EventEmitter {
 
   /**
    * Returns metrics used to emit informations about the downloaded segments.
-   * TODO deprecate
+   * @deprecated
    */
   getMetrics() {
     return this.metrics;
@@ -1360,7 +1380,7 @@ class Player extends EventEmitter {
    */
   setVideoMaxBitrate(btr) {
     console.warn("setVideoMaxBitrate is deprecated. Use setMaxVideoBitrate instead");
-    this.adaptive.setVideoMaxBitrate(btr);
+    return this.setMaxVideoBitrate(btr);
   }
 
   /**
@@ -1378,7 +1398,7 @@ class Player extends EventEmitter {
    */
   setAudioMaxBitrate(btr) {
     console.warn("setAudioMaxBitrate is deprecated. Use setMaxAudioBitrate instead");
-    this.adaptive.setAudioMaxBitrate(btr);
+    return this.setMaxAudioBitrate(btr);
   }
 
   /**
@@ -1524,7 +1544,7 @@ class Player extends EventEmitter {
     this.adaptive.setTextTrack(track);
   }
 
-  unsetTextTrack() {
+  disableTextTrack() {
     this.adaptive.setTextTrack(null);
     this._recordState("subtitle", null);
     return;
