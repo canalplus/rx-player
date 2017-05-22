@@ -438,6 +438,18 @@ class Player extends EventEmitter {
 
     // ---- Deprecated calls
 
+    let _defaultAudioTrack = defaultAudioTrack;
+    let _defaultTextTrack = defaultTextTrack;
+
+    if (defaultLanguage != null && defaultAudioTrack == null) {
+      console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
+      _defaultAudioTrack = defaultLanguage;
+    }
+    if (defaultSubtitle != null && defaultTextTrack == null) {
+      console.warn("defaultSubtitle is deprecated. Use defaultTextTrack instead");
+      _defaultTextTrack = defaultSubtitle;
+    }
+
     if (subtitles !== void 0 && supplementaryTextTracks === void 0) {
       console.warn(
         "the subtitles option is deprecated. Use supplementaryTextTracks instead"
@@ -493,10 +505,8 @@ class Player extends EventEmitter {
       supplementaryImageTracks,
       timeFragment,
       autoPlay,
-      defaultLanguage,
-      defaultAudioTrack,
-      defaultSubtitle,
-      defaultTextTrack,
+      defaultAudioTrack: _defaultAudioTrack,
+      defaultTextTrack: _defaultTextTrack,
       transport,
     };
   }
@@ -519,9 +529,7 @@ class Player extends EventEmitter {
       timeFragment,
       autoPlay,
       transport,
-      defaultLanguage,
       defaultAudioTrack,
-      defaultSubtitle,
       defaultTextTrack,
     } = options;
 
@@ -529,28 +537,12 @@ class Player extends EventEmitter {
     this.frag = timeFragment;
     this.playing.next(autoPlay);
 
-    // -- Deprecated checks
-
-    let _defaultAudioTrack = defaultAudioTrack;
-    let _defaultTextTrack = defaultTextTrack;
-
-    if (defaultLanguage != null && defaultAudioTrack == null) {
-      console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
-      _defaultAudioTrack = defaultLanguage;
-    }
-    if (defaultSubtitle != null && defaultTextTrack == null) {
-      console.warn("defaultSubtitle is deprecated. Use defaultTextTrack instead");
-      _defaultTextTrack = defaultSubtitle;
+    if (defaultAudioTrack != null) {
+      this.adaptive.setAudioTrack(normalizeAudioTrack(defaultAudioTrack));
     }
 
-    // --
-
-    if (_defaultAudioTrack != null) {
-      this.adaptive.setAudioTrack(normalizeAudioTrack(_defaultAudioTrack));
-    }
-
-    if (_defaultTextTrack != null) {
-      this.adaptive.setTextTrack(normalizeTextTrack(_defaultTextTrack));
+    if (defaultTextTrack != null) {
+      this.adaptive.setTextTrack(normalizeTextTrack(defaultTextTrack));
     }
 
     const {
