@@ -1172,16 +1172,6 @@ class Player extends EventEmitter {
    * @param {Number} time
    * @returns {Number} - The time the player has seek to, relatively to the
    * video tag currentTime.
-   *
-   * TODO I have multiple problems with this methods:
-   *   - it's not that evident/logic that a seekTo function should receive
-   *     wall-clock time (and not the element's time)
-   *   - it returns the element's time even if given wall-clock time.
-   *   - some future API will have to use the element's time (like
-   *     RepresentationIndex.prototype.getSegments in the streamroot-plugin
-   *     branch).
-   * I'm thinking about refactoring this method to be able to give both
-   * wall-clock and real position. I do not know the best way yet.
    */
   seekTo(time) {
     assert(this.man);
