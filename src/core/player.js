@@ -1020,7 +1020,7 @@ class Player extends EventEmitter {
       "getLanguage is deprecated and won't be available in the next major version." +
       " Use getAudioTrack instead."
     );
-    return this.evts.language.language;
+    return this.evts.language;
   }
 
   /**
@@ -1273,10 +1273,9 @@ class Player extends EventEmitter {
    * @returns {Boolean}
    */
   isLanguageAvailable(arg) {
-    console.warn(
-      "isLanguageAvailable is deprecated and won't be available in the next major version." +
-      " Use hasAudioTrack instead."
-    );
+    // console.warn(
+    //   "isLanguageAvailable is deprecated and won't be available in the next major version."
+    // );
     const track = normalizeAudioTrack(arg);
 
     if (!track) {
@@ -1297,10 +1296,9 @@ class Player extends EventEmitter {
    * @returns {Boolean}
    */
   isSubtitleAvailable(arg) {
-    console.warn(
-      "isSubtitleAvailable is deprecated and won't be available in the next major version." +
-      " Use hasTextTrack instead."
-    );
+    // console.warn(
+    //   "isSubtitleAvailable is deprecated and won't be available in the next major version."
+    // );
     const track = normalizeTextTrack(arg);
 
     if (!track) {
@@ -1324,7 +1322,7 @@ class Player extends EventEmitter {
       " Use setAudioTrack instead."
     );
     const track = normalizeAudioTrack(arg);
-    assert(this.hasAudioTrack(track), "player: unknown language");
+    assert(this.isLanguageAvailable(track), "player: unknown language");
     this.adaptive.setAudioTrack(track);
   }
 
@@ -1345,7 +1343,7 @@ class Player extends EventEmitter {
     }
 
     const track = normalizeTextTrack(arg);
-    assert(this.hasTextTrack(track), "player: unknown subtitle");
+    assert(this.isSubtitleAvailable(track), "player: unknown subtitle");
     this.adaptive.setTextTrack(track);
   }
 
@@ -1490,7 +1488,7 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getAudioTrack() {
-    return this.evts.language;
+    return this.evts.audioTrack;
   }
 
   /**
@@ -1498,28 +1496,7 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getTextTrack() {
-    return this.evts.subtitle;
-  }
-
-  /**
-   * Returns true if the corresponding audio language, normalized, is available.
-   * @param {string} audioId
-   * @returns {Boolean}
-   */
-  hasAudioTrack(audioId) {
-    return !!this.getAvailableAudioTracks()
-      .find(({ id }) => id === audioId);
-  }
-
-  /**
-   * Returns true if the corresponding subtitles track, normalized,
-   * is available.
-   * @param {string} textId
-   * @returns {Boolean}
-   */
-  hasTextTrack(textId) {
-    return !!this.getAvailableTextTracks()
-      .find(({ id }) => id === textId);
+    return this.evts.textTrack;
   }
 
   /**
