@@ -226,6 +226,8 @@ function createSmoothStreamingParser(parserOptions={}) {
     const baseURL = root.getAttribute("Url");
     const profile = profiles[type];
 
+    const accessibility = [];
+
     assert(profile, "unrecognized QualityLevel type " + type);
 
     let representationCount = 0;
@@ -275,9 +277,18 @@ function createSmoothStreamingParser(parserOptions={}) {
     if (subType == "ADVT") {
       return null;
     }
+    else if (type === "text" && subType === "DESC") {
+      accessibility.push("hardOfHearing");
+    }
+
+    // TODO check that one, I did not find it in the spec
+    // else if (type === "audio" && subType === "DESC") {
+    //   accessibility.push("visuallyImpaired");
+    // }
 
     return {
       type,
+      accessibility,
       index,
       representations,
       name,
