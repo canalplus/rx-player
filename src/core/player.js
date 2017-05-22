@@ -535,8 +535,8 @@ class Player extends EventEmitter {
       errorStream: errorStream,
       audio: { cache: new InitializationSegmentCache() },
       video: { cache: new InitializationSegmentCache() },
-      images: { maxRetry: 0 }, // Deactivate BIF fetching if it fails
-                               // TODO Better adaptive strategy
+      image: { maxRetry: 0 }, // Deactivate BIF fetching if it fails
+                              // TODO Better adaptive strategy
     });
 
     const timings = createTimingsSampler(videoElement, { requiresMediaSource: pipelines.requiresMediaSource() });
