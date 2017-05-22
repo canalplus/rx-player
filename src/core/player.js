@@ -708,7 +708,7 @@ class Player extends EventEmitter {
         closedCaption: !!adaptation.closedCaption,
         id: adaptation.id,
       } : null;
-      this._recordState("subtitle", track.language); // deprecated
+      this._recordState("subtitle", track && track.language); // deprecated
       this._recordState("textTrack", track);
     }
 
