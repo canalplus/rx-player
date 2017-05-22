@@ -42,18 +42,18 @@ function _normalizeUrl(url) {
  *   - The last arguments that contains a scheme (e.g. "http://") is the base
  *     of the url.
  *   - every subsequent string arguments are concatened to it.
- * @param {...string} arguments
+ * @param {...string} args
  * @returns {string}
  */
-function resolveURL() {
-  const len = arguments.length;
+function resolveURL(...args) {
+  const len = args.length;
   if (len === 0) {
     return "";
   }
 
   let base = "";
   for (let i = 0; i < len; i++) {
-    let part = arguments[i];
+    let part = args[i];
     if (typeof part !== "string" || part === "") {
       continue;
     }

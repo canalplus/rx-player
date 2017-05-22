@@ -42,7 +42,7 @@ const representationBaseType = [
 
 let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
-const DEFAULT_PRESENTATION_DELAY = 15;
+const DEFAULT_PRESENTATION_DELAY = 15; // TODO might lower that limit.
 
 function parseBaseURL(manifest) {
   let baseURL = normalizeBaseURL(manifest.locations[0]);
@@ -82,7 +82,8 @@ function normalizeManifest(location, manifest, subtitles, images) {
   // TODO(pierre): support multi-locations/cdns
   const urlBase = {
     rootURL,
-    baseURL: manifest.baseURL,
+    baseURL: manifest.baseURL, // TODO so manifest.baseURL is more important
+                               // than manifest.periods[0].baseURL?
     isLive: manifest.isLive,
   };
 

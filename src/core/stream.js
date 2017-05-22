@@ -74,6 +74,29 @@ function isNativeBuffer(bufferType) {
 }
 
 /**
+ * Side effect that set the media duration in the mediaSource. This side
+ * effect occurs when we receive the "sourceopen" from the
+ * mediaSource.
+ * @param {MediaSource} mediaSource
+ * @param {Object} manifest
+ */
+function setDurationToMediaSource(mediaSource, duration) {
+  let newDuration;
+  if (duration === Infinity) {
+    // TODO(pierre): hack for Chrome 42
+    // is it "https://bugs.chromium.org/p/chromium/issues/detail?id=461733"?
+    newDuration = Number.MAX_VALUE;
+  } else {
+    newDuration = duration;
+  }
+
+  if (mediaSource.duration !== newDuration) {
+    mediaSource.duration = newDuration;
+    log.info("set duration", mediaSource.duration);
+  }
+}
+
+/**
  * On subscription:
  *  - Creates the MediaSource and attached sourceBuffers instances.
  *  - download the content's manifest
@@ -392,7 +415,7 @@ function Stream({
                                            images);
 
         if (mediaSource) {
-          setDuration(mediaSource, manifest);
+          setDurationToMediaSource(mediaSource, manifest.duration);
         }
 
         return createStream(mediaSource, manifest);
@@ -597,7 +620,7 @@ function Stream({
     // calibrate the live representation of the player
     // TODO(pierre): smarter converging algorithm
     case "precondition-failed":
-      mutateManifestLiveGap(manifest, 1);
+      mutateManifestLiveGap(manifest, 1); // go back 1s for now
       log.warn("precondition failed", manifest.presentationLiveGap);
       break;
 
@@ -643,7 +666,7 @@ function Stream({
       (adaptation) => createBuffer(mediaSource, adaptation, timings, seekings)
     );
 
-    const buffers = merge.apply(null, adaptationsBuffers);
+    const buffers = merge(...adaptationsBuffers);
 
     if (!manifest.isLive) {
       return buffers;
@@ -704,28 +727,6 @@ function Stream({
                        emeHandler,
                        buffers,
                        mediaError);
-  }
-
-  /**
-   * Side effect that set the media duration in the mediaSource. This side
-   * effect occurs when we receive the "sourceopen" from the
-   * mediaSource.
-   * @param {MediaSource} mediaSource
-   * @param {Object} manifest
-   */
-  function setDuration(mediaSource, manifest) {
-    let duration;
-    if (manifest.duration === Infinity) {
-      // TODO(pierre): hack for Chrome 42
-      duration = Number.MAX_VALUE;
-    } else {
-      duration = manifest.duration;
-    }
-
-    if (mediaSource.duration !== duration) {
-      mediaSource.duration = duration;
-      log.info("set duration", mediaSource.duration);
-    }
   }
 
   /**
