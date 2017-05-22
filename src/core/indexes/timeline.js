@@ -219,7 +219,7 @@ class Timeline {
     const last = timeline[timelineLength - 1];
 
     // in some circumstances, the new segment informations are only
-    // duration informations that we can use de deduct the ts of the
+    // duration informations that we can use to deduct the ts of the
     // next segment. this is the case where the new segment are
     // associated to a current segment and have the same ts
     const shouldDeductNextSegment = !!currentSegment && (newSegment.ts === currentSegment.ts);
@@ -228,7 +228,7 @@ class Timeline {
       const lastSegmentTs = (last.ts + last.d * last.r);
       const tsDiff = newSegmentTs - lastSegmentTs;
 
-      if (tsDiff <= 0) {
+      if (tsDiff <= 0) { // same segment / behind the last
         return false;
       }
 
@@ -249,7 +249,7 @@ class Timeline {
       return true;
     }
 
-    // if the given timing has a timestamp after le timeline bound we
+    // if the given timing has a timestamp after the timeline end we
     // just need to push a new element in the timeline, or increase
     // the @r attribute of the last element.
     else if (newSegment.ts >= Timeline.getRangeEnd(last)) {
