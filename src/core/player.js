@@ -685,7 +685,8 @@ class Player extends EventEmitter {
         closedCaption: !!adaptation.closedCaption,
         id: adaptation.id,
       } : null;
-      this._recordState("subtitle", track);
+      this._recordState("subtitle", track.language); // deprecated
+      this._recordState("textTrack", track);
     }
 
     if (bufferType == "video") {
@@ -698,7 +699,8 @@ class Player extends EventEmitter {
         audioDescription: !!(adaptation && adaptation.audioDescription),
         id: adaptation.id,
       };
-      this._recordState("language", track);
+      this._recordState("language", track.language); // deprecated
+      this._recordState("audioTrack", track);
       this._recordState("audioBitrate", representation && representation.bitrate || -1);
     }
   }
