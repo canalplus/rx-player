@@ -678,6 +678,7 @@ class Player extends EventEmitter {
       const track = adaptation && adaptation.lang ? {
         language: adaptation.lang,
         closedCaption: !!adaptation.closedCaption,
+        id: adaptation.id,
       } : null;
       this._recordState("subtitle", track);
     }
@@ -690,6 +691,7 @@ class Player extends EventEmitter {
       const track = {
         language: adaptation && adaptation.lang || "",
         audioDescription: !!(adaptation && adaptation.audioDescription),
+        id: adaptation.id,
       };
       this._recordState("language", track);
       this._recordState("audioBitrate", representation && representation.bitrate || -1);
@@ -1428,70 +1430,56 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getTextTrack() {
-    return this.evts.subtitle.language;
+    return this.evts.subtitle;
   }
 
   /**
    * Returns true if the corresponding audio language, normalized, is available.
-   * @param {string|Object} lng
+   * @param {string} audioId
    * @returns {Boolean}
    */
-  hasAudioTrack(arg) {
-    const track = normalizeLanguage(arg);
-
-    if (!track) {
-      return false;
-    }
-
-    return !!this.getAvailableAudioTracks().find(lng =>
-      lng.language === track.language &&
-      lng.audioDescription === !!track.audioDescription
-    );
+  hasAudioTrack(audioId) {
+    return !!this.getAvailableAudioTracks()
+      .find(({ id }) => id === audioId);
   }
 
   /**
    * Returns true if the corresponding subtitles track, normalized,
    * is available.
-   * @param {string|Object} lng
+   * @param {string} textId
    * @returns {Boolean}
    */
-  hasTextTrack(arg) {
-    const track = normalizeSubtitle(arg);
-
-    if (!track) {
-      return false;
-    }
-
-    return !!this.getAvailableTextTracks().find(lng =>
-      lng.language === track.language &&
-      lng.closedCaption === !!track.closedCaption
-    );
+  hasTextTrack(textId) {
+    return !!this.getAvailableTextTracks()
+      .find(({ id }) => id === textId);
   }
 
   /**
    * Update the audio language.
-   * @param {string|Object} lng
+   * @param {string} audioId
    */
-  setAudioTrack(arg) {
-    const track = normalizeLanguage(arg);
-    assert(this.hasAudioTrack(track), "player: unknown language");
+  setAudioTrack(audioId) {
+    const track = this.getAvailableAudioTracks()
+      .find(({ id }) => id === audioId);
+    assert(track, "player: unknown audio track");
     this.adaptive.setLanguage(track);
   }
 
   /**
    * Update the audio language.
-   * @param {string|Object} sub
+   * @param {string} sub
    */
-  setTextTrack(arg) {
-    if (arg == null) { // deactivate subtitles
-      this.adaptive.setSubtitle(null);
-      this._recordState("subtitle", null);
-      return;
-    }
-
-    const track = normalizeSubtitle(arg);
-    assert(this.hasTextTrack(track), "player: unknown subtitle");
+  setTextTrack(textId) {
+    const track = this.getAvailableTextTracks()
+      .find(({ id }) => id === textId);
+    assert(track, "player: unknown text track");
     this.adaptive.setSubtitle(track);
+  }
+
+  unsetTextTrack() {
+    this.adaptive.setSubtitle(null);
+    this._recordState("subtitle", null);
+    return;
   }
 }
 

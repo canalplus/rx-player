@@ -469,6 +469,7 @@ function getAvailableLanguages(manifest) {
     .map((ada) => ({
       language: normalizeLang(ada.lang),
       audioDescription: ada.audioDescription,
+      id: ada.id,
     }));
 }
 
@@ -477,6 +478,7 @@ function getAvailableSubtitles(manifest) {
     .map((ada) => ({
       language: normalizeLang(ada.lang),
       closedCaption: ada.closedCaption,
+      id: ada.id,
     }));
 }
 
