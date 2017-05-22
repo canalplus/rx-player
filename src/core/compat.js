@@ -604,13 +604,13 @@ function videoSizeChange() {
   return on(win, "resize");
 }
 
-function addTextTrack(video, hideNativeSubtitle) {
+function addTextTrack(video, hidden) {
   let track, trackElement;
   const kind = "subtitles";
   if (isIE) {
     const tracksLength = video.textTracks.length;
     track = tracksLength > 0 ? video.textTracks[tracksLength - 1] : video.addTextTrack(kind);
-    track.mode = hideNativeSubtitle ? track.HIDDEN : track.SHOWING;
+    track.mode = hidden ? track.HIDDEN : track.SHOWING;
   } else {
     // there is no removeTextTrack method... so we need to reuse old
     // text-tracks objects and clean all its pending cues
@@ -618,7 +618,7 @@ function addTextTrack(video, hideNativeSubtitle) {
     video.appendChild(trackElement);
     track = trackElement.track;
     trackElement.kind = kind;
-    track.mode = hideNativeSubtitle ? "hidden" : "showing";
+    track.mode = hidden ? "hidden" : "showing";
   }
   return { track, trackElement };
 }

@@ -22,8 +22,8 @@ const { combineLatest } = require("rxjs/observable/combineLatest");
 const { on } = require("../utils/rx-utils");
 const {
   normalize: normalizeLang,
-  normalizeLanguage,
-  normalizeSubtitle,
+  normalizeAudioTrack,
+  normalizeTextTrack,
 } = require("../utils/languages");
 const EventEmitter = require("../utils/eventemitter");
 const debugPane = require("../utils/debug");
@@ -54,7 +54,12 @@ const { InitializationSegmentCache } = require("./cache");
 const { BufferedRanges } = require("./ranges");
 const { parseTimeFragment } = require("./time-fragment");
 const DeviceEvents = require("./device-events");
-const manifestHelpers = require("./manifest");
+const {
+  getAvailableTextTracks,
+  getAvailableAudioTracks,
+  getAdaptationsByType,
+} = require("./manifest.js");
+
 // TODO(pierre): separate transports from main build
 const Transports = require("../net");
 const PipeLines = require("./pipelines");
@@ -301,8 +306,8 @@ class Player extends EventEmitter {
       _initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
-      defaultLanguage: normalizeLanguage(_defaultAudioTrack),
-      defaultSubtitle: normalizeSubtitle(_defaultTextTrack),
+      defaultAudioTrack: normalizeAudioTrack(_defaultAudioTrack),
+      defaultTextTrack: normalizeTextTrack(_defaultTextTrack),
       limitVideoWidth,
       throttleWhenHidden,
     });
@@ -376,7 +381,7 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Store and emit new player state (e.g. subtitle, videoBitrate...).
+   * Store and emit new player state (e.g. text track, videoBitrate...).
    * @private
    * @param {string} type - the type of the updated state (videoBitrate...)
    * @param {*} value - its new value
@@ -413,8 +418,8 @@ class Player extends EventEmitter {
       url,
       keySystems,
       timeFragment,
-      subtitles,
-      images,
+      subtitles,  // TODO deprecate and rename textTracks
+      images, // TODO deprecate and rename imageTracks
     } = opts;
 
     const {
@@ -426,7 +431,7 @@ class Player extends EventEmitter {
       defaultAudioTrack,
       defaultSubtitle,
       defaultTextTrack,
-      hideNativeSubtitle,
+      hideNativeSubtitle, // TODO better name
     } = opts;
 
     timeFragment = parseTimeFragment(timeFragment);
@@ -442,8 +447,8 @@ class Player extends EventEmitter {
     if (manifests) {
       const firstManifest = manifests[0];
       url = firstManifest.url;
-      subtitles = firstManifest.subtitles || [];
-      images = firstManifest.images || [];
+      subtitles = firstManifest.subtitles || []; // TODO deprecate and rename textTracks
+      images = firstManifest.images || []; // TODO deprecate and rename audioTracks
       keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
     }
 
@@ -518,11 +523,11 @@ class Player extends EventEmitter {
     // --
 
     if (_defaultAudioTrack != null) {
-      this.adaptive.setLanguage(normalizeLanguage(_defaultAudioTrack));
+      this.adaptive.setAudioTrack(normalizeAudioTrack(_defaultAudioTrack));
     }
 
     if (_defaultTextTrack != null) {
-      this.adaptive.setSubtitle(normalizeSubtitle(_defaultTextTrack));
+      this.adaptive.setTextTrack(normalizeTextTrack(_defaultTextTrack));
     }
 
     const {
@@ -962,7 +967,7 @@ class Player extends EventEmitter {
       " Use getAvailableAudioTracks instead."
     );
     return this.man &&
-      manifestHelpers.getAvailableLanguages(this.man).map(l => l.language)
+      getAvailableAudioTracks(this.man).map(l => l.language)
       || [];
   }
 
@@ -976,7 +981,7 @@ class Player extends EventEmitter {
       " Use getAvailableTextTracks instead."
     );
     return this.man &&
-      manifestHelpers.getAvailableSubtitles(this.man).map(s =>  s.language)
+      getAvailableTextTracks(this.man).map(s =>  s.language)
       || [];
   }
 
@@ -1010,7 +1015,7 @@ class Player extends EventEmitter {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() {
-    const video = manifestHelpers.getAdaptationsByType(this.man, "video");
+    const video = getAdaptationsByType(this.man, "video");
     return (video[0] && video[0].bitrates.slice()) || [];
   }
 
@@ -1209,7 +1214,7 @@ class Player extends EventEmitter {
       "isLanguageAvailable is deprecated and won't be available in the next major version." +
       " Use hasAudioTrack instead."
     );
-    const track = normalizeLanguage(arg);
+    const track = normalizeAudioTrack(arg);
 
     if (!track) {
       return false;
@@ -1233,7 +1238,7 @@ class Player extends EventEmitter {
       "isSubtitleAvailable is deprecated and won't be available in the next major version." +
       " Use hasTextTrack instead."
     );
-    const track = normalizeSubtitle(arg);
+    const track = normalizeTextTrack(arg);
 
     if (!track) {
       return false;
@@ -1255,9 +1260,9 @@ class Player extends EventEmitter {
       "setLanguage is deprecated and won't be available in the next major version." +
       " Use setAudioTrack instead."
     );
-    const track = normalizeLanguage(arg);
+    const track = normalizeAudioTrack(arg);
     assert(this.hasAudioTrack(track), "player: unknown language");
-    this.adaptive.setLanguage(track);
+    this.adaptive.setAudioTrack(track);
   }
 
   /**
@@ -1271,14 +1276,14 @@ class Player extends EventEmitter {
       " Use setTextTrack instead."
     );
     if (arg == null) { // deactivate subtitles
-      this.adaptive.setSubtitle(null);
+      this.adaptive.setTextTrack(null);
       this._recordState("subtitle", null);
       return;
     }
 
-    const track = normalizeSubtitle(arg);
+    const track = normalizeTextTrack(arg);
     assert(this.hasTextTrack(track), "player: unknown subtitle");
-    this.adaptive.setSubtitle(track);
+    this.adaptive.setTextTrack(track);
   }
 
   /**
@@ -1407,14 +1412,14 @@ class Player extends EventEmitter {
    * @returns {Array.<string}
    */
   getAvailableAudioTracks() {
-    return this.man && manifestHelpers.getAvailableLanguages(this.man) || [];
+    return this.man && getAvailableAudioTracks(this.man) || [];
   }
 
   /**
    * @returns {Array.<string}
    */
   getAvailableTextTracks() {
-    return this.man && manifestHelpers.getAvailableSubtitles(this.man) || [];
+    return this.man && getAvailableTextTracks(this.man) || [];
   }
 
   /**
@@ -1462,7 +1467,7 @@ class Player extends EventEmitter {
     const track = this.getAvailableAudioTracks()
       .find(({ id }) => id === audioId);
     assert(track, "player: unknown audio track");
-    this.adaptive.setLanguage(track);
+    this.adaptive.setAudioTrack(track);
   }
 
   /**
@@ -1473,11 +1478,11 @@ class Player extends EventEmitter {
     const track = this.getAvailableTextTracks()
       .find(({ id }) => id === textId);
     assert(track, "player: unknown text track");
-    this.adaptive.setSubtitle(track);
+    this.adaptive.setTextTrack(track);
   }
 
   unsetTextTrack() {
-    this.adaptive.setSubtitle(null);
+    this.adaptive.setTextTrack(null);
     this._recordState("subtitle", null);
     return;
   }

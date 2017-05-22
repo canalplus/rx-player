@@ -23,11 +23,11 @@ const { findBetterMatchIndex } = require("../utils/languages");
 const AverageBitrate = require("./average-bitrate");
 
 const DEFAULTS = {
-  defaultLanguage: {
+  defaultAudioTrack: {
     language: "fra",
     audioDescription: false,
   },
-  defaultSubtitle: null,
+  defaultTextTrack: null,
   // default buffer size in seconds
   defaultBufferSize: 30,
   // buffer threshold ratio used as a lower bound
@@ -161,8 +161,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
   );
 
   const {
-    defaultLanguage,
-    defaultSubtitle,
+    defaultAudioTrack,
+    defaultTextTrack,
     defaultBufferSize,
     defaultBufferThreshold,
     initVideoBitrate,
@@ -175,8 +175,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
 
   const { videoWidth, inBackground } = deviceEvents;
 
-  const $languages = new BehaviorSubject(defaultLanguage);
-  const $subtitles = new BehaviorSubject(defaultSubtitle);
+  const $languages = new BehaviorSubject(defaultAudioTrack);
+  const $subtitles = new BehaviorSubject(defaultTextTrack);
 
   const $averageBitrates = {
     audio: new BehaviorSubject(initAudioBitrate),
@@ -349,10 +349,10 @@ module.exports = function(metrics, deviceEvents, options={}) {
   }
 
   return {
-    setLanguage(lng) { $languages.next(lng); },
-    setSubtitle(sub) { $subtitles.next(sub); },
-    getLanguage() { return $languages.getValue(); },
-    getSubtitle() { return $subtitles.getValue(); },
+    setAudioTrack(track) { $languages.next(track); },
+    setTextTrack(track)  { $subtitles.next(track); },
+    getAudioTrack()      { return $languages.getValue(); },
+    getTextTrack()       { return $subtitles.getValue(); },
 
     getAverageBitrates() { return $averageBitrates; },
 

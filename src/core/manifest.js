@@ -88,11 +88,11 @@ function normalizeManifest(location, manifest, subtitles, images) {
   };
 
   if (subtitles) {
-    subtitles = normalizeSubtitles(subtitles);
+    subtitles = normalizeTextAdaptation(subtitles);
   }
 
   if (images) {
-    images = normalizeImages(images);
+    images = normalizeImageAdaptation(images);
   }
 
   const periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles, images));
@@ -232,7 +232,7 @@ function normalizeRepresentation(initialRepresentation, inherit) {
  * @param {Array.<Object>|Object} subtitles
  * @returns {Array.<Object>}
  */
-function normalizeSubtitles(subtitles) {
+function normalizeTextAdaptation(subtitles) {
   if (!Array.isArray(subtitles)) {
     subtitles = [subtitles];
   }
@@ -273,7 +273,7 @@ function normalizeSubtitles(subtitles) {
  * @param {Array.<Object>|Object} images
  * @returns {Array.<Object>}
  */
-function normalizeImages(images) {
+function normalizeImageAdaptation(images) {
   if (!Array.isArray(images)) {
     images = [images];
   }
@@ -464,7 +464,7 @@ function getAdaptationsByType(manifest, type) {
   }
 }
 
-function getAvailableLanguages(manifest) {
+function getAvailableAudioTracks(manifest) {
   return getAdaptationsByType(manifest, "audio")
     .map((ada) => ({
       language: normalizeLang(ada.lang),
@@ -473,7 +473,7 @@ function getAvailableLanguages(manifest) {
     }));
 }
 
-function getAvailableSubtitles(manifest) {
+function getAvailableTextTracks(manifest) {
   return getAdaptationsByType(manifest, "text")
     .map((ada) => ({
       language: normalizeLang(ada.lang),
@@ -489,6 +489,6 @@ module.exports = {
   getCodec,
   getAdaptations,
   getAdaptationsByType,
-  getAvailableSubtitles,
-  getAvailableLanguages,
+  getAvailableTextTracks,
+  getAvailableAudioTracks,
 };

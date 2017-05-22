@@ -8,11 +8,11 @@ const HIGHER_MATCH_LEVEL = MATCH_LEVELS.PERFECT_MATCH;
 const LOSER_MATCH_LEVEL = MATCH_LEVELS.OTHER_SUBLANG_MATCH;
 
 /**
- * Normalize subtitle Object from a user given input.
+ * Normalize text track Object from a user given input.
  * @param {Object|string} lang
  * @returns {Object}
  */
-function normalizeSubtitle(lang) {
+function normalizeTextTrack(lang) {
   if (lang != null) {
     let language, closedCaption;
     if (typeof lang === "string") {
@@ -28,11 +28,11 @@ function normalizeSubtitle(lang) {
 }
 
 /**
- * Normalize language Object from a user given input.
+ * Normalize audio track Object from a user given input.
  * @param {Object|string} lang
  * @returns {Object}
  */
-function normalizeLanguage(lang) {
+function normalizeAudioTrack(lang) {
   if (lang != null) {
     let language, audioDescription;
     if (typeof lang === "string") {
@@ -179,7 +179,7 @@ const ISO_MAP_3_3 = {
 module.exports = {
   match,
   normalize,
-  normalizeLanguage,
-  normalizeSubtitle,
+  normalizeAudioTrack,
+  normalizeTextTrack,
   findBetterMatchIndex,
 };
