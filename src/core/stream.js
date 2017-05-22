@@ -110,9 +110,9 @@ function Stream({
   url,
   errorStream, // subject through which minor errors are emitted
   keySystems,
-  subtitles, // eventual manually added subtitles
+  supplementaryTextTracks, // eventual manually added subtitles
   hideNativeSubtitle, // Whether TextTracks subtitles should be hidden or not
-  images, // eventual manually added images
+  supplementaryImageTracks, // eventual manually added images
   timings,
   timeFragment,
   adaptive,
@@ -411,8 +411,8 @@ function Stream({
       .mergeMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
-                                           subtitles,
-                                           images);
+                                           supplementaryTextTracks,
+                                           supplementaryImageTracks);
 
         if (mediaSource) {
           setDurationToMediaSource(mediaSource, manifest.duration);
@@ -598,7 +598,12 @@ function Stream({
       .map(({ parsed }) => {
         const newManifest = mergeManifestsIndex(
           manifest,
-          normalizeManifest(parsed.url, parsed.manifest, subtitles, images)
+          normalizeManifest(
+            parsed.url,
+            parsed.manifest,
+            supplementaryTextTracks,
+            supplementaryImageTracks
+          )
         );
         return { type: "manifest", value: newManifest };
       });
