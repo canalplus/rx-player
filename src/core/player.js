@@ -406,8 +406,8 @@ class Player extends EventEmitter {
       transportOptions: {},
       keySystems: [],
       timeFragment: {},
-      subtitles: [],
-      images: [],
+      textTracks: [],
+      imageTracks: [],
       autoPlay: false,
       hideNativeSubtitle: false,
       directFile: false,
@@ -418,11 +418,13 @@ class Player extends EventEmitter {
       url,
       keySystems,
       timeFragment,
-      subtitles,  // TODO deprecate and rename textTracks
-      images, // TODO deprecate and rename imageTracks
+      supplementaryTextTracks,
+      supplementaryImageTracks,
     } = opts;
 
     const {
+      subtitles,
+      images,
       transportOptions,
       manifests,
       autoPlay,
@@ -433,6 +435,23 @@ class Player extends EventEmitter {
       defaultTextTrack,
       hideNativeSubtitle, // TODO better name
     } = opts;
+
+    // ---- Deprecated calls
+
+    if (subtitles !== void 0 && supplementaryTextTracks === void 0) {
+      console.warn(
+        "the subtitles option is deprecated. Use supplementaryTextTracks instead"
+      );
+      supplementaryTextTracks = subtitles;
+    }
+    if (images !== void 0 && supplementaryImageTracks === void 0) {
+      console.warn(
+        "the images option is deprecated. Use supplementaryImageTracks instead"
+      );
+      supplementaryImageTracks = images;
+    }
+
+    // ----
 
     timeFragment = parseTimeFragment(timeFragment);
 
@@ -445,10 +464,14 @@ class Player extends EventEmitter {
     // manifest url depending on the key system
     assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
     if (manifests) {
+      console.warn(
+        "the manifests options is deprecated, use url instead"
+      );
       const firstManifest = manifests[0];
       url = firstManifest.url;
-      subtitles = firstManifest.subtitles || []; // TODO deprecate and rename textTracks
-      images = firstManifest.images || []; // TODO deprecate and rename audioTracks
+
+      supplementaryTextTracks = firstManifest.subtitles || [];
+      supplementaryImageTracks = firstManifest.images || [];
       keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
     }
 
@@ -465,9 +488,9 @@ class Player extends EventEmitter {
     return {
       url,
       keySystems,
-      subtitles,
+      supplementaryTextTracks,
       hideNativeSubtitle,
-      images,
+      supplementaryImageTracks,
       timeFragment,
       autoPlay,
       defaultLanguage,
@@ -490,9 +513,9 @@ class Player extends EventEmitter {
     const {
       url,
       keySystems,
-      subtitles,
+      supplementaryTextTracks,
       hideNativeSubtitle,
-      images,
+      supplementaryImageTracks,
       timeFragment,
       autoPlay,
       transport,
@@ -549,10 +572,10 @@ class Player extends EventEmitter {
       url,
       errorStream,
       keySystems,
-      subtitles,
+      supplementaryTextTracks,
       hideNativeSubtitle,
       timings,
-      images,
+      supplementaryImageTracks,
       timeFragment,
       adaptive,
       pipelines,
