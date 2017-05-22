@@ -887,10 +887,10 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Get the current position, in ms, in wall-clock time.
+   * Get the current position, in s, in wall-clock time.
    * That is:
-   *   - for live content, get a timestamp of the current played content.
-   *   - for static content, returns the position from beginning in ms.
+   *   - for live content, get a timestamp, in s, of the current played content.
+   *   - for static content, returns the position from beginning in s.
    *
    * If you do not know if you want to use this method or getPosition:
    *   - If what you want is to display the current time to the user, use this
@@ -906,7 +906,7 @@ class Player extends EventEmitter {
     }
     const ct = this.video.currentTime;
     return this.isLive() ?
-      +toWallClockTime(ct, this.man) : ct * 1000;
+      (+toWallClockTime(ct, this.man) / 1000) : ct;
   }
 
   /**
@@ -1143,6 +1143,24 @@ class Player extends EventEmitter {
   seekTo(time) {
     assert(this.man);
     const currentTs = this.video.currentTime;
+
+    // NON-deprecated part
+    if (time) {
+      if (time.relative) {
+        this.video.currentTime = currentTs + time.relative;
+        return;
+      }
+      else if (time.position) {
+        this.video.currentTime = time.relative;
+        return;
+      }
+      else if (time.wallClock) {
+        this.video.currentTime = fromWallClockTime(time * 1000, this.man);
+        return;
+      }
+    }
+
+    // deprecated part
     if (this.man.isLive) {
       time = fromWallClockTime(time, this.man);
     }
