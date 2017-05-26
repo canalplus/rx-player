@@ -69,9 +69,7 @@ If you have questions first, we have created a [gitter room](https://gitter.im/r
 
 ### Install dependencies
 
-As of today, the only dependency to run the player is [RxJS](https://github.com/Reactive-Extensions/RxJS).
-
-You can install it directly via the ``npm install`` command.
+You must first install our dependencies via [npm](https://www.npmjs.com/):
 ```sh
 npm install
 ```
@@ -81,21 +79,22 @@ npm install
 A build is directly included at `dist/rx-player.js` directory if you don't
 want to build it yourself.
 
-To bundle the application yourself, you can use npm scripts.
-
-Here are some examples:
+To bundle the application, we use npm scripts:
 ```sh
-# build the player dist/rx-player.js
+# build the player in dist/rx-player.js
 npm run build
 
-# build/re-build automatically the player when file changes
+# build and re-build automatically the player on file change
 npm run build:watch
 
-# lint the code with jshint
+# lint the code with eslint
 npm run lint
 
-# build the demo with the current player
+# build the demo with the current player code
 npm run demo
+
+# list all available npm scripts
+npm run info
 ```
 
 ## Target support
