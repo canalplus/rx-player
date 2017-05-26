@@ -1,8 +1,9 @@
-next version (pending)
-=================================
+# Changelog
 
-Added
------
+## v2.1.0 (2017/05/26)
+
+### Added
+
 - position: add getMinimumPosition, getMaximumPosition and startAt loadVideo argument to replace the timeFragment API
 - api: add the positionUpdate event
 - images: add the getImageTrackData method
@@ -38,8 +39,8 @@ Added
 - subtitles: add closed captions support
 - dash/subtitles: add subtitles support (only ttml for now)
 
-Deprecated
-----------
+### Deprecated
+
 - position: the timeFragment API (loadVideo's timeFragment argument, getStartTime, getEndTime and goToStart) is deprecated
 - api: currentTimeChange event is replaced by the positionUpdate event
 - api: progress event is deprecated and not replaced
@@ -75,8 +76,7 @@ Deprecated
 - languages: setLanguage is deprecated in favor of setAudioTrack
 - languages: setSubtitle is deprecated in favor of setTextTrack
 
-Bug fixes
----------
+### Bug fixes
 
 - adaptive: fix a bug where multiple videos representations with the same width could be discriminated
 - languages: fix bug where the user could switch to a closed caption track unknowngly
@@ -97,8 +97,7 @@ Bug fixes
 - subtitles: fix webVTT management for unsupported user agents
 - timings: fix calculation of the position and duration for non-dynamic contetns
 
-Other improvements
-------------------
+### Other improvements
 
 - manifest: The DASH manifest handling has been refactored
 - smooth: Smooth index handling has been completely separated from the DASH logic
@@ -107,8 +106,7 @@ Other improvements
 - demo: The Demo has been updated
 - demo: The bundle has been removed from the code committed.
 
-v2.0.0-alpha1 on February 9, 2016
-=================================
+## v2.0.0-alpha1 (2016/02/09)
 
 - RxJS: use RxJS5.beta1
 - Promise: remove es6-promise dependency and stop relying completely
@@ -126,19 +124,16 @@ v2.0.0-alpha1 on February 9, 2016
 
 - lint: add new rules (no-var, prefer-const, enforce brackets)
 
-v1.4.0 on January 26, 2016
-==========================
+## v1.4.0 (2016/01/26)
 
-Added
------
+### Added
 
 - buffer: add garbage collector
 - player: emit currentTimeChange synchronously
 - player: add {defaultLanguage,defaultSubtitle} api
 - log: warn to info for some logs
 
-Bug fixes
----------
+### Bug fixes
 
 - player: fix getAvailable* for direct files
 - player: fix subtle race on loadedmetadata after retry
@@ -153,34 +148,27 @@ Demo
 
 - allow to pass query parameters
 
-v1.3.1 on October 14, 2015
-==========================
+## v1.3.1 (2015/10/14)
 
-Bug fixes
----------
+### Bug fixes
 
 - smooth: fix parseBoolean causing isLive to be always true
 
-v1.3.0 on October 14, 2015
-==========================
+## v1.3.0 (2015/10/14)
 
-Added
------
+### Added
 
 - eme: license persistency support
 - timings: add progress sampling
 - compat: add firefox workaround for autoplay
 
-v1.2.1 on September 23, 2015
-============================
+## v1.2.1 (2015/09/23)
 
-Bug fixes
----------
+### Bug fixes
 
 - stream: do not stall on loadedmetadata event
 
-v1.2.0 on September 23, 2015
-============================
+## v1.2.0 (2015/09/23)
 
 This release introduces the use of ES6 classes for all modules that
 depends on a sort of class hierarchy. It comes with an upgrade of
@@ -188,8 +176,7 @@ RxJSv3.1.1.
 
 We also started using eslint as our main linter instead of jshint.
 
-Added
------
+### Added
 
 - smooth: customizable parser (7b50ce9)
 - smooth: add application/smil as SAMI content-type (e0aa2bb)
@@ -198,8 +185,7 @@ Added
 - stream: discontinuity check on each stalled tick (3a5b796)
 
 
-Bug fixes
----------
+### Bug fixes
 
 - fix missing new on Promise (4679632)
 - compat: fix IE11 compat for setMediaKeys (2ccb11f)
@@ -210,26 +196,22 @@ Bug fixes
 - player: fix getUrl (577ce87)
 - manifest: enforce id setting to parsers (927d275)
 
-v1.1.0 on August 14, 2015
-=========================
+## v1.1.0 (2015/08/14)
 
-Added
------
+### Added
 
 - smoothstreaming transport support
 - api for initial aubio/video bitrate choice
 - simplify WebVTT support and implementation
 - allow percentage values on start/end time values
 
-Bug fixes
----------
+### Bug fixes
 
 - fix local buffer representation out-of-sync with native ones
 - fix no retry for > 500 http codes
 - fix no MediaKeySession reuse on Chrome
 - fix quota error with MediaKeys attached to multiple video elements on Chrome
 
-v1.0.0 on June 16, 2015
-=======================
+## v1.0.0 (2015/06/16)
 
 Initial public release.
