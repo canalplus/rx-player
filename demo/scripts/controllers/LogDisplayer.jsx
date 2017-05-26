@@ -161,7 +161,7 @@ class LogDisplayer extends React.Component {
       }
     };
 
-    this.element.addEventListener("scroll", onScroll);
+    this.element.addEventListener("scroll", onScroll, { passive: true });
     this.destructionSubject.subscribe(() =>
       this.element.removeEventListener("scroll", onScroll)
     );

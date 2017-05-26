@@ -1265,8 +1265,7 @@ class Player extends EventEmitter {
     }
 
     return !!this.getAvailableAudioTracks().find(lng =>
-      lng.language === track.language &&
-      lng.audioDescription === !!track.audioDescription
+      lng.language === track.language
     );
   }
 
@@ -1288,8 +1287,7 @@ class Player extends EventEmitter {
     }
 
     return !!this.getAvailableTextTracks().find(lng =>
-      lng.language === track.language &&
-      lng.closedCaption === !!track.closedCaption
+      lng.language === track.language
     );
   }
 
@@ -1452,17 +1450,39 @@ class Player extends EventEmitter {
   }
 
   /**
-   * @returns {Array.<string}
+   * @returns {Array.<Object>|null}
    */
   getAvailableAudioTracks() {
-    return this.man && getAvailableAudioTracks(this.man) || [];
+    const currentAudioTrack = this.getAudioTrack();
+
+    if (!this.man) {
+      return null;
+    }
+
+    return getAvailableAudioTracks(this.man)
+      .map(track =>
+        Object.assign({}, track, {
+          active: currentAudioTrack.id === track.id,
+        })
+      );
   }
 
   /**
-   * @returns {Array.<string}
+   * @returns {Array.<Object>|null}
    */
   getAvailableTextTracks() {
-    return this.man && getAvailableTextTracks(this.man) || [];
+    const currentTextTrack = this.getTextTrack();
+
+    if (!this.man) {
+      return null;
+    }
+
+    return getAvailableTextTracks(this.man)
+      .map(track =>
+        Object.assign({}, track, {
+          active: !!currentTextTrack && currentTextTrack.id === track.id,
+        })
+      );
   }
 
   /**
