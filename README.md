@@ -45,7 +45,7 @@ import Player from "rx-player";
 
 ## Your questions
 
-You can ask directly your questions about the project on [our gitter](https://gitter.im/rx-player/questions). We will try our best to answer them as quickly as possible.
+You can ask directly your questions about the project on [our gitter](https://gitter.im/canalplus/rx-player). We will try our best to answer them as quickly as possible.
 
 ## Why a new player? Why Rx?
 
@@ -65,27 +65,21 @@ You can help and contribute either by:
   - reporting bugs directly on the [issues tab](https://github.com/canalplus/rx-player/issues) on top of this page.
   - adding new features / fixing bugs and doing a pull request (please open an issue first for that).
 
-If you have questions first, we have created a [gitter room](https://gitter.im/rx-player/contribute) specifically for that purpose.
+If you have any questions about contributing, you can ask it in our [gitter room](https://gitter.im/canalplus/rx-player).
 
-### Install dependencies
+### Dependencies
 
-You must first install our dependencies via [npm](https://www.npmjs.com/):
+After cloning our repo, you should first install our dependencies via [npm](https://www.npmjs.com/):
 ```sh
 npm install
 ```
 
-### Build the player
+### Build
 
-A build is directly included at `dist/rx-player.js` directory if you don't
-want to build it yourself.
-
-To bundle the application, we use npm scripts:
+We use npm scripts to bundle, lint and test the player. Here are some examples:
 ```sh
 # build the player in dist/rx-player.js
 npm run build
-
-# build and re-build automatically the player on file change
-npm run build:watch
 
 # lint the code with eslint
 npm run lint
@@ -93,9 +87,14 @@ npm run lint
 # build the demo with the current player code
 npm run demo
 
+# launch our test suite on various browsers
+npm run karma
+
 # list all available npm scripts
 npm run info
 ```
+
+Builds are included in the ``dist/`` directory (builds based on the last version are already included there).
 
 ## Target support
 
