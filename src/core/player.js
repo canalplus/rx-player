@@ -337,6 +337,7 @@ class Player extends EventEmitter {
     this.frag = { start: null, end: null };
     this.error = null;
     this.images.next(null);
+    this._currentImagePlaylist = null;
   }
 
   /**
@@ -631,7 +632,16 @@ class Player extends EventEmitter {
       this.trigger("progress", value.segment);
       const { bufferType, parsed } = value;
       if (bufferType === "image") {
-        this.images.next(parsed.segmentData);
+        const value = parsed.segmentData;
+
+        // TODO merge multiple data from the same track together
+        this._currentImagePlaylist = value;
+        this.trigger("imageTrackUpdate", {
+          data: this._currentImagePlaylist,
+        });
+
+        // TODO @deprecated remove that
+        this.images.next(value);
       }
     }
 
@@ -851,8 +861,8 @@ class Player extends EventEmitter {
   }
 
   /**
+   * @deprecate
    * @returns {Observable}
-   * TODO simpler option that an observable for an API?
    */
   getImageTrack() {
     return this.images.distinctUntilChanged();
@@ -1565,6 +1575,14 @@ class Player extends EventEmitter {
     this.adaptive.setTextTrack(null);
     this._recordState("subtitle", null);
     return;
+  }
+
+  getImageTrackData() {
+    if (!this.man) {
+      return null;
+    }
+
+    return this._currentImagePlaylist;
   }
 }
 
