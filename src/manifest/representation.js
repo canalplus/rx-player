@@ -17,9 +17,23 @@ import RepresentationIndex from "./representation_index.js";
  *   - getSegments () => {[]Segment}
  */
 class Representation {
+  /**
+   * @constructor
+   * @param {Object} [args={}]
+   * @param {string|Number} [args.rootId]
+   * @param {string|Number} [args.id]
+   * @param {Number} args.bitrate
+   * @param {string} args.codecs
+   * @param {Number} args.height
+   * @param {Number} args.height
+   * @param {string} args.mimeType
+   * @param {Object} args.index
+   */
   constructor(args = {}) {
     const nId = generateNewId();
-    this.id = args.id == null ? nId : "" + args.id;
+    this.id =
+      // (args.rootId == null ? "" : args.rootId + "_") + // TODO uncomment on manifest switch
+      (args.id == null ? nId : args.id);
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
 
@@ -37,7 +51,8 @@ class Representation {
 
     this.index = new RepresentationIndex({
       index: args.index,
-      rootId: this.id,
+      // rootId: this.id, // TODO uncomment on manifest switch
+      rootId: (args.rootId == null ? "" : args.rootId + "_") + this.id,
     });
 
     // Most of those are for the smooth init segment

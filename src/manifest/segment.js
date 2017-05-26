@@ -1,4 +1,16 @@
 class Segment {
+  /**
+   * @constructor
+   * @param {Object} args
+   * @param {string|Number} args.id
+   * @param {Number} args.duration
+   * @param {Boolean} [args.init=false]
+   * @param {Array.<Number>} [args.range]
+   * @param {Number} args.time
+   * @param {Array.<Number>} [args.indexRange]
+   * @param {Number} [args.number]
+   * @param {Number} args.timescale
+   */
   constructor(args = {}) {
     this.id = args.id;
     this.duration = args.duration;

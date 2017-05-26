@@ -1,6 +1,12 @@
 import { getRightIndexHelpers } from "./indexes/index.js";
 
 class RepresentationIndex {
+  /**
+   * @constructor
+   * @param {Object} args
+   * @param {Object} args.index
+   * @param {string|Number} args.rootId
+   */
   constructor(args) {
     this._index = args.index;
     this._rootId = args.rootId;

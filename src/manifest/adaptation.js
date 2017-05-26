@@ -16,13 +16,24 @@ import generateNewId from "../utils/id.js";
  *   - getAvailableBitrates () => {[]Number}
  */
 class Adaptation {
+  /**
+   * @constructor
+   * @param {Object} [args={}]
+   * @param {string|Number} [args.id]
+   * @param {string} args.type
+   * @param {string} [args.lang]
+   * @param {string} [args.language]
+   * @param {Array.<string>} [args.accessibility]
+   * @param {Array.<Object>} args.representations
+   * @param {Boolean} args.manual
+   */
   constructor(args = {}) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.type = args.type || "";
     this.representations = Array.isArray(args.representations) ?
       args.representations
-        .map(r => new Representation(r))
+        .map(r => new Representation(Object.assign({ rootId: this.id }, r)))
         .sort((a, b) => a.bitrate - b.bitrate) : [];
 
     if (args.lang != null) {

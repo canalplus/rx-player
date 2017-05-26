@@ -21,6 +21,16 @@ import generateNewId from "../utils/id.js";
  *   - getDuration () => {Number} - Returns duration of the entire content, in s
  */
 class Manifest {
+  /**
+   * @constructor
+   * @param {Object} [args={}]
+   * @param {string|Number} [args.id]
+   * @param {string} args.transportType
+   * @param {Array.<Object>} args.adaptations
+   * @param {string} args.type
+   * @param {Array.<string>} args.locations
+   * @param {Number} args.duration
+   */
   constructor(args = {}) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;

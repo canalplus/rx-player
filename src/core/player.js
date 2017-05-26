@@ -65,7 +65,6 @@ import {
   getAdaptationsByType,
 } from "./manifest.js";
 
-// TODO(pierre): separate transports from main build
 import Transports from "../net";
 import PipeLines from "./pipelines";
 import Adaptive from "../adaptive";
