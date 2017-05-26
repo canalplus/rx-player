@@ -1,4 +1,4 @@
-import { Representation } from "./representation.js";
+import Representation from "./representation.js";
 import generateNewId from "../utils/id.js";
 
 /**
@@ -67,6 +67,4 @@ class Adaptation {
   }
 }
 
-export {
-  Adaptation,
-};
+export default Adaptation;

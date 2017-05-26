@@ -23,9 +23,9 @@ import { parseSidx, patchPssh, getMdat } from "./mp4";
 import { bytesToStr } from "../../utils/bytes.js";
 
 // TODO Those should already be constructed here
-import { Adaptation } from "../../manifest/adaptation.js";
-import { Representation } from "../../manifest/representation.js";
-import { Segment } from "../../manifest/segment.js";
+import Adaptation from "../../manifest/adaptation.js";
+import Representation from "../../manifest/representation.js";
+import Segment from "../../manifest/segment.js";
 
 import request from "../../request";
 import dashManifestParser from "./manifest";

@@ -28,9 +28,9 @@ import {
 import EventEmitter from "../utils/eventemitter";
 import debugPane from "../utils/debug";
 import assert from "../utils/assert";
-import { Manifest } from "../manifest/manifest.js";
-import { Adaptation } from "../manifest/adaptation.js";
-import { Representation } from "../manifest/representation.js";
+import Manifest from "../manifest/manifest.js";
+import Adaptation from "../manifest/adaptation.js";
+import Representation from "../manifest/representation.js";
 
 import {
   HTMLVideoElement_,

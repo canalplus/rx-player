@@ -20,9 +20,9 @@ import { bytesToStr } from "../../utils/bytes";
 import log from "../../utils/log";
 
 // TODO Those should already be constructed here
-import { Adaptation } from "../../manifest/adaptation.js";
-import { Representation } from "../../manifest/representation.js";
-import { Segment } from "../../manifest/segment.js";
+import Adaptation from "../../manifest/adaptation.js";
+import Representation from "../../manifest/representation.js";
+import Segment from "../../manifest/segment.js";
 
 import request from "../../request";
 import createSmoothStreamingParser from "./parser";

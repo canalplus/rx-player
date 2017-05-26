@@ -1,4 +1,4 @@
-import { Adaptation } from "./adaptation.js";
+import Adaptation from "./adaptation.js";
 import generateNewId from "../utils/id.js";
 
 /**
@@ -59,4 +59,4 @@ class Manifest {
   }
 }
 
-export { Manifest };
+export default Manifest;

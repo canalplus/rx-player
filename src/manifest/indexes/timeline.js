@@ -1,4 +1,4 @@
-import { Segment } from "../segment.js";
+import Segment from "../segment.js";
 import {
   normalizeRange,
   getTimelineRangeEnd,

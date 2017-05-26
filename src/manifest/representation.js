@@ -57,6 +57,4 @@ class Representation {
   }
 }
 
-export {
-  Representation,
-};
+export default Representation;

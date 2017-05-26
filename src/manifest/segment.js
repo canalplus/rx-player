@@ -11,6 +11,4 @@ class Segment {
   }
 }
 
-export {
-  Segment,
-};
+export default Segment;
