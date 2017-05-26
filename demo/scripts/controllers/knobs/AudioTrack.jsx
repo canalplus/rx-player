@@ -1,6 +1,6 @@
-const React = require("react");
-const withModulesState = require("../../lib/withModulesState.jsx");
-const Knob = require("../../components/Knob.jsx");
+import React from "react";
+import withModulesState from "../../lib/withModulesState.jsx";
+import Knob from "../../components/Knob.jsx";
 
 const AUDIO_DESCRIPTION_ICON = "(AD)"; // String.fromCharCode(0xf29e);
 const LANG_CODE_TO_LANG = {
@@ -54,7 +54,7 @@ const AudioTrackKnobBase = ({
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     language: "currentLanguage",
     availableLanguages: "availableLanguages",

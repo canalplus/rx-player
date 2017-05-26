@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-const log = require("../utils/log");
-const { Subscription } = require("rxjs/Subscription");
-const { Subject } = require("rxjs/Subject");
-const { BehaviorSubject } = require("rxjs/BehaviorSubject");
-const { combineLatest } = require("rxjs/observable/combineLatest");
-const { on } = require("../utils/rx-utils");
-const {
-  normalize: normalizeLang,
+import log from "../utils/log";
+import { Subscription } from "rxjs/Subscription";
+import { Subject } from "rxjs/Subject";
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { combineLatest } from "rxjs/observable/combineLatest";
+import { on } from "../utils/rx-utils";
+import {
+  normalize as normalizeLang,
   normalizeAudioTrack,
   normalizeTextTrack,
-} = require("../utils/languages");
-const EventEmitter = require("../utils/eventemitter");
-const debugPane = require("../utils/debug");
-const assert = require("../utils/assert");
-const { Manifest } = require("../manifest/manifest.js");
-const { Adaptation } = require("../manifest/adaptation.js");
-const { Representation } = require("../manifest/representation.js");
+} from "../utils/languages";
+import EventEmitter from "../utils/eventemitter";
+import debugPane from "../utils/debug";
+import assert from "../utils/assert";
+import { Manifest } from "../manifest/manifest.js";
+import { Adaptation } from "../manifest/adaptation.js";
+import { Representation } from "../manifest/representation.js";
 
-const {
+import {
   HTMLVideoElement_,
   exitFullscreen,
   requestFullscreen,
   isFullscreen,
   onFullscreenChange,
-} = require("./compat");
+} from "./compat";
 
-const {
+import {
   getEmptyTimings,
   createTimingsSampler,
   toWallClockTime,
@@ -48,29 +48,29 @@ const {
   getLiveGap,
   getMaximumBufferPosition,
   getMinimumBufferPosition,
-} = require("./timings");
+} from "./timings";
 
-const {
+import {
   ErrorTypes,
   ErrorCodes,
-} = require("../errors");
+} from "../errors";
 
-const { InitializationSegmentCache } = require("./cache");
-const { BufferedRanges } = require("./ranges");
-const { parseTimeFragment } = require("./time-fragment");
-const DeviceEvents = require("./device-events");
-const {
+import { InitializationSegmentCache } from "./cache";
+import { BufferedRanges } from "./ranges";
+import { parseTimeFragment } from "./time-fragment";
+import DeviceEvents from "./device-events";
+import {
   getAvailableTextTracks,
   getAvailableAudioTracks,
   getAdaptationsByType,
-} = require("./manifest.js");
+} from "./manifest.js";
 
 // TODO(pierre): separate transports from main build
-const Transports = require("../net");
-const PipeLines = require("./pipelines");
-const Adaptive = require("../adaptive");
-const Stream = require("./stream");
-const EME = require("./eme");
+import Transports from "../net";
+import PipeLines from "./pipelines";
+import Adaptive from "../adaptive";
+import Stream from "./stream";
+import { dispose as emeDispose , getCurrentKeySystem } from "./eme";
 
 // -- PLAYER STATES --
 const PLAYER_STOPPED   = "STOPPED";
@@ -375,7 +375,7 @@ class Player extends EventEmitter {
     this.adaptive.unsubscribe();
     this.fullscreen.unsubscribe();
     this.stream.unsubscribe();
-    EME.dispose();
+    emeDispose();
 
     this.metrics = null;
     this.adaptive = null;
@@ -1519,7 +1519,7 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getCurrentKeySystem() {
-    return EME.getCurrentKeySystem();
+    return getCurrentKeySystem();
   }
 
   /**
@@ -1627,4 +1627,4 @@ class Player extends EventEmitter {
   }
 }
 
-module.exports = Player;
+export default Player;

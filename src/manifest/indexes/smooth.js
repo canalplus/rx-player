@@ -1,7 +1,7 @@
-const TimelineIndex = require("./timeline.js");
-const { getTimelineRangeEnd } = require("./helpers.js");
+import TimelineIndex from "./timeline.js";
+import { getTimelineRangeEnd } from "./helpers.js";
 
-module.exports = {
+export default {
   getSegments: TimelineIndex.getSegments,
 
   shouldRefresh: (index, time) => {

@@ -1,7 +1,7 @@
-const { Segment } = require("../segment.js");
-const { normalizeRange } = require("./helpers.js");
+import { Segment } from "../segment.js";
+import { normalizeRange } from "./helpers.js";
 
-const SegmentTemplateHelpers = {
+export default {
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
@@ -33,5 +33,3 @@ const SegmentTemplateHelpers = {
     return false;
   },
 };
-
-module.exports = SegmentTemplateHelpers;

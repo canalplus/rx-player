@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { Segment } = require("../segment");
+import { Segment } from "../segment";
 
 class Timeline {
   constructor(adaptation, representation, index) {
@@ -267,4 +267,4 @@ class Timeline {
   }
 }
 
-module.exports = Timeline;
+export default Timeline;

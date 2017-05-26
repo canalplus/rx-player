@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-const { Observable } = require("rxjs/Observable");
-const { BehaviorSubject } = require("rxjs/BehaviorSubject");
-const { BufferedRanges } = require("./ranges");
+import { Observable } from "rxjs/Observable";
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { BufferedRanges } from "./ranges";
 
 // time changes interval in milliseconds
 const SAMPLING_INTERVAL_MEDIASOURCE = 1000;
@@ -371,7 +371,7 @@ function getLiveGap(ts, manifest) {
   return (liveGap - (availabilityStartTime + presentationLiveGap + LIVE_PROTECTION));
 }
 
-module.exports = {
+export {
   getEmptyTimings,
   getTimings,
   createTimingsSampler,

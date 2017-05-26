@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { Segment } = require("../segment");
+import { Segment } from "../segment";
 
 class List {
   constructor(adaptation, representation, index) {
@@ -82,4 +82,4 @@ class List {
   }
 }
 
-module.exports = List;
+export default List;

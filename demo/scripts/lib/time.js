@@ -49,7 +49,7 @@ const toHours = (timeInSeconds) => {
     ":" + (String(numberOfSecondsRemaining)).padStart(2, "0");
 };
 
-module.exports = {
+export {
   toSeconds,
   toMinutes,
   toHours,

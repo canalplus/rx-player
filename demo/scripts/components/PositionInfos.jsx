@@ -1,5 +1,5 @@
-const React = require("react");
-const { toMinutes, toHours } = require("../lib/time.js");
+import React from "react";
+import { toMinutes, toHours } from "../lib/time.js";
 
 /**
  * Text with the following structure:
@@ -7,7 +7,7 @@ const { toMinutes, toHours } = require("../lib/time.js");
  * @param {Object} props
  * @returns {Object}
  */
-module.exports = ({
+export default ({
   className = "",
   position = 0,
   duration = 0,

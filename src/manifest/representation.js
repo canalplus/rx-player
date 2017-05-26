@@ -1,7 +1,6 @@
-// const { Segment } = require("./segment.js");
-const generateNewId = require("../utils/id.js");
+import generateNewId from "../utils/id.js";
 
-const RepresentationIndex = require("./representation_index.js");
+import RepresentationIndex from "./representation_index.js";
 
 /**
  * Normalized Representation structure.
@@ -58,6 +57,6 @@ class Representation {
   }
 }
 
-module.exports = {
+export {
   Representation,
 };

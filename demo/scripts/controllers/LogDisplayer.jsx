@@ -1,5 +1,5 @@
-const React = require("react");
-const { Subject } = require("rxjs/Subject");
+import React from "react";
+import { Subject } from "rxjs/Subject";
 
 const LogElement = ({ text, date }) => (
   <div
@@ -211,4 +211,4 @@ class LogDisplayer extends React.Component {
   }
 }
 
-module.exports = LogDisplayer;
+export default LogDisplayer;

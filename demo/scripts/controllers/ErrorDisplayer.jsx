@@ -1,5 +1,5 @@
-const React = require("react");
-const withModulesState = require("../lib/withModulesState.jsx");
+import React from "react";
+import withModulesState from "../lib/withModulesState.jsx";
 
 const PlayerError = ({ error }) => {
   const message = error && error.message ? error.message : error;
@@ -42,7 +42,7 @@ const ErrorDisplayer = ({ error }) => {
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     error: "error",
   },

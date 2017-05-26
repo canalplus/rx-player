@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-const log = require("../utils/log");
-const assert = require("../utils/assert");
-const { tryCatch, castToObservable } = require("../utils/rx-utils");
-const { retryWithBackoff } = require("../utils/retry");
-const { Observable } = require("rxjs/Observable");
-const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const defer = require("rxjs/observable/DeferObservable").DeferObservable.create;
-const { combineLatest } = require("rxjs/observable/combineLatest");
-const { merge } = require("rxjs/observable/merge");
-const {
+import log from "../utils/log";
+import assert from "../utils/assert";
+import { tryCatch, castToObservable } from "../utils/rx-utils";
+import { retryWithBackoff } from "../utils/retry";
+import { Observable } from "rxjs/Observable";
+import { EmptyObservable } from "rxjs/observable/EmptyObservable";
+import { DeferObservable } from "rxjs/observable/DeferObservable";
+import { combineLatest } from "rxjs/observable/combineLatest";
+import { merge } from "rxjs/observable/merge";
+import {
   KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
   emeEvents,
   shouldRenewMediaKeys,
-} = require("./compat");
+} from "./compat";
 
-const {
+import {
   ErrorTypes,
   ErrorCodes,
   EncryptedMediaError,
-} = require("../errors");
+} from "../errors";
 
 const {
   onEncrypted,
@@ -43,6 +43,9 @@ const {
   onKeyError,
   onKeyStatusesChange,
 } = emeEvents;
+
+const empty = EmptyObservable.create;
+const defer = DeferObservable.create;
 
 const SYSTEMS = {
   "clearkey":  ["webkit-org.w3.clearkey", "org.w3.clearkey"],
@@ -862,7 +865,7 @@ function dispose() {
   $loadedSessions.dispose();
 }
 
-module.exports = {
+export {
   createEME,
   getCurrentKeySystem,
   onEncrypted,

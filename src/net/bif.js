@@ -1,8 +1,8 @@
-const {
+import {
   le2toi,
   le4toi,
   bytesToStr,
-} = require("../utils/bytes");
+} from "../utils/bytes";
 
 function parseBif(buf) {
   let pos = 0;
@@ -78,6 +78,6 @@ function parseBif(buf) {
   };
 }
 
-module.exports = {
+export {
   parseBif,
 };

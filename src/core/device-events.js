@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-const { merge } = require("rxjs/observable/merge");
-const interval = require("rxjs/observable/IntervalObservable").IntervalObservable.create;
-const { visibilityChange, videoSizeChange } = require("./compat");
+import { merge } from "rxjs/observable/merge";
+import { IntervalObservable } from "rxjs/observable/IntervalObservable";
+import { visibilityChange, videoSizeChange } from "./compat";
+
+const interval = IntervalObservable.create;
 
 const INACTIVITY_DELAY = 60 * 1000;
 
@@ -61,4 +63,4 @@ function DeviceEvents(videoElement) {
   };
 }
 
-module.exports = DeviceEvents;
+export default DeviceEvents;

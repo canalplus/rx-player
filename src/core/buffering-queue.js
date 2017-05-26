@@ -1,4 +1,4 @@
-const { Subject } = require("rxjs/Subject");
+import { Subject } from "rxjs/Subject";
 
 const BUFFER_APPEND = "append";
 const BUFFER_REMOVE = "remove";
@@ -104,6 +104,6 @@ class BufferingQueue {
   }
 }
 
-module.exports = {
+export {
   BufferingQueue,
 };

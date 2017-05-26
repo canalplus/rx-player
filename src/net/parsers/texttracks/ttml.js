@@ -173,4 +173,4 @@ function parseTimestamp(time, offset) {
   return null;
 }
 
-module.exports = { parseTTML };
+export { parseTTML };

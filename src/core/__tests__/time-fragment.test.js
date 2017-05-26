@@ -1,5 +1,5 @@
-const expect = require("chai").expect;
-const { parseTimeFragment } = require("../time-fragment.js");
+import { expect } from "chai";
+import { parseTimeFragment } from "../time-fragment.js";
 
 describe("Time fragment", function() {
 

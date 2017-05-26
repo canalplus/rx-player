@@ -14,50 +14,52 @@
  * limitations under the License.
  */
 
-const log = require("../utils/log");
-const assert = require("../utils/assert");
-const {
+import log from "../utils/log";
+import assert from "../utils/assert";
+import {
   getLiveGap,
   seekingsSampler,
   fromWallClockTime,
   getBufferLimits,
-} = require("./timings");
-const { retryableFuncWithBackoff } = require("../utils/retry");
-const { Observable } = require("rxjs/Observable");
-const { on, throttle } = require("../utils/rx-utils");
-const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const { merge } = require("rxjs/observable/merge");
-const { combineLatest } = require("rxjs/observable/combineLatest");
-const min = Math.min;
+} from "./timings";
+import { retryableFuncWithBackoff } from "../utils/retry";
+import { Observable } from "rxjs/Observable";
+import { on, throttle } from "../utils/rx-utils";
+import { EmptyObservable } from "rxjs/observable/EmptyObservable";
+import { merge } from "rxjs/observable/merge";
+import { combineLatest } from "rxjs/observable/combineLatest";
 
-const {
+import {
   MediaSource_,
   sourceOpen,
   canPlay,
   canSeek,
   clearVideoSrc,
   isPlaybackStuck,
-} = require("./compat");
+} from "./compat";
 
-const TextSourceBuffer = require("./text-buffer");
-const ImageSourceBuffer = require("./image-buffer");
-const { getLiveEdge } = require("./index-handler");
-const { Buffer, EmptyBuffer } = require("./buffer");
-const { createEME, onEncrypted } = require("./eme");
+import TextSourceBuffer from "./text-buffer";
+import ImageSourceBuffer from "./image-buffer";
+import { getLiveEdge } from "./index-handler";
+import { Buffer, EmptyBuffer } from "./buffer";
+import { createEME, onEncrypted } from "./eme";
 
-const {
+import {
   MediaError,
   OtherError,
   EncryptedMediaError,
   isKnownError,
-} = require("../errors");
+} from "../errors";
 
-const {
+import {
   normalizeManifest,
   mergeManifestsIndex,
   mutateManifestLiveGap,
   getAdaptations,
-} = require("./manifest");
+} from "./manifest";
+
+const min = Math.min;
+const empty = EmptyObservable.create;
 
 // Stop stream 0.5 second before the end of video
 // It happens often that the video gets stuck 100 to 300 ms before the end, especially on IE11 and Edge
@@ -817,4 +819,4 @@ function Stream({
   }
 }
 
-module.exports = Stream;
+export default Stream;

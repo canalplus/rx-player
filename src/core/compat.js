@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-const log = require("../utils/log");
-const EventEmitter = require("../utils/eventemitter");
-const { bytesToStr, strToBytes } = require("../utils/bytes");
-const assert = require("../utils/assert");
-const { Observable } = require("rxjs/Observable");
-const { merge } = require("rxjs/observable/merge");
-const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
-const never = require("rxjs/observable/NeverObservable").NeverObservable.create;
-const defer = require("rxjs/observable/DeferObservable").DeferObservable.create;
-const { on, castToObservable } = require("../utils/rx-utils");
-const { MediaError } = require("../errors");
+import log from "../utils/log";
+import EventEmitter from "../utils/eventemitter";
+import { bytesToStr, strToBytes } from "../utils/bytes";
+import assert from "../utils/assert";
+import { Observable } from "rxjs/Observable";
+import { merge } from "rxjs/observable/merge";
+import { FromEventObservable } from "rxjs/observable/FromEventObservable";
+import { NeverObservable } from "rxjs/observable/NeverObservable";
+import { DeferObservable } from "rxjs/observable/DeferObservable";
+import { on, castToObservable } from "../utils/rx-utils";
+import { MediaError } from "../errors";
+
+const fromEvent = FromEventObservable.create;
+const never = NeverObservable.create;
+const defer = DeferObservable.create;
 
 const doc = document;
 const win = window;
@@ -674,7 +678,7 @@ const onFullscreenChange = compatibleListener(
   PREFIXES.concat("MS")
 );
 
-module.exports = {
+export {
   HTMLVideoElement_,
   MediaSource_,
   isCodecSupported,

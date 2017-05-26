@@ -1,4 +1,4 @@
-const { Observable } = require("rxjs/Observable");
+import { Observable } from "rxjs/Observable";
 
 const manifestPipeline = {
   parser({ url }) {
@@ -15,7 +15,7 @@ const manifestPipeline = {
   },
 };
 
-module.exports = {
+export default {
   directFile: true,
   manifest: manifestPipeline,
 };

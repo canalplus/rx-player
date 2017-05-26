@@ -1,13 +1,13 @@
-const React = require("react");
-const withModulesState = require("../lib/withModulesState.jsx");
-const PositionInfos = require("../components/PositionInfos.jsx");
-const LivePosition = require("../components/LivePosition.jsx");
-// const SettingsButton = require("./SettingsButton.jsx");
-const PlayPauseButton = require("./PlayPauseButton.jsx");
-const FullscreenButton = require("./FullScreenButton.jsx");
-const Progressbar = require("./ProgressBar.jsx");
-const VolumeButton = require("./VolumeButton.jsx");
-const VolumeBar = require("./VolumeBar.jsx");
+import React from "react";
+import withModulesState from "../lib/withModulesState.jsx";
+import PositionInfos from "../components/PositionInfos.jsx";
+import LivePosition from "../components/LivePosition.jsx";
+// import SettingsButton from "./SettingsButton.jsx";
+import PlayPauseButton from "./PlayPauseButton.jsx";
+import FullscreenButton from "./FullScreenButton.jsx";
+import Progressbar from "./ProgressBar.jsx";
+import VolumeButton from "./VolumeButton.jsx";
+import VolumeBar from "./VolumeBar.jsx";
 
 const ControlBar = ({
   currentTime,
@@ -63,7 +63,7 @@ const ControlBar = ({
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     currentTime: "currentTime",
     duration: "duration",

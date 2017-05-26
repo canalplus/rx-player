@@ -21,7 +21,7 @@ function getBackedoffDelay(retryDelay, retryCount=1) {
   return getFuzzedDelay(retryDelay * Math.pow(2, retryCount - 1));
 }
 
-module.exports = {
+export {
   getFuzzedDelay,
   getBackedoffDelay,
 };

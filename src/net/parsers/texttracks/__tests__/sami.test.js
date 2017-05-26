@@ -1,7 +1,7 @@
-const _ = require("lodash");
-const expect = require("chai").expect;
-const smi = require("raw-loader!./fixtures/captures.smi");
-const { parseSami } = require("../sami.js");
+import _ from "lodash";
+import { expect } from "chai";
+import smi from "raw-loader!./fixtures/captures.smi";
+import { parseSami } from "../sami.js";
 
 describe("sami parser", function() {
 

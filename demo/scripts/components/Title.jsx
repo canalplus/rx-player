@@ -1,6 +1,6 @@
-const React = require("react");
+import React from "react";
 
-module.exports = ({ title }) =>
+export default ({ title }) =>
   <section className="title-wrapper">
     <h1 className="title">
       <span className="light">{title}</span>

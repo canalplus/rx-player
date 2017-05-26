@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-const assert = require("../../../utils/assert.js");
-const { normalize: normalizeLang } = require("../../../utils/languages");
-const {
+import assert from "../../../utils/assert.js";
+import { normalize as normalizeLang } from "../../../utils/languages";
+import {
   parseString,
   parseFrameRate,
   parseByteRange,
@@ -25,7 +25,7 @@ const {
   parseDuration,
   parseIntOrBoolean,
   parseRatio,
-} = require("./helpers.js");
+} from "./helpers.js";
 
 /**
  * Parse initialization attribute found in segment Template to
@@ -204,4 +204,4 @@ function feedAttributes(node, base) {
   return obj;
 }
 
-module.exports = feedAttributes;
+export default feedAttributes;

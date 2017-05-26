@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { bufferedToRanges } = require("../core/ranges");
+import { bufferedToRanges } from "../core/ranges";
 
 let interval;
 let closeBtn;
@@ -177,7 +177,7 @@ function toggleDebug(player, videoElement) {
   }
 }
 
-module.exports = {
+export default {
   getDebug,
   showDebug,
   hideDebug,

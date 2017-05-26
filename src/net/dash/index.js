@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-const { Observable } = require("rxjs/Observable");
-const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const { merge } = require("rxjs/observable/merge");
-const assert = require("../../utils/assert");
-const { resolveURL } = require("../../utils/url");
-const { parseSidx, patchPssh, getMdat } = require("./mp4");
-const { bytesToStr } = require("../../utils/bytes.js");
+import { Observable } from "rxjs/Observable";
+import { EmptyObservable } from "rxjs/observable/EmptyObservable";
+import { merge } from "rxjs/observable/merge";
+import assert from "../../utils/assert";
+import { resolveURL } from "../../utils/url";
+import { parseSidx, patchPssh, getMdat } from "./mp4";
+import { bytesToStr } from "../../utils/bytes.js";
 
 // TODO Those should already be constructed here
-const { Adaptation } = require("../../manifest/adaptation.js");
-const { Representation } = require("../../manifest/representation.js");
-const { Segment } = require("../../manifest/segment.js");
+import { Adaptation } from "../../manifest/adaptation.js";
+import { Representation } from "../../manifest/representation.js";
+import { Segment } from "../../manifest/segment.js";
 
-const request = require("../../request");
-const dashManifestParser = require("./manifest");
+import request from "../../request";
+import dashManifestParser from "./manifest";
 
-const { parseTTML } = require("../parsers/texttracks/ttml.js");
+import { parseTTML } from "../parsers/texttracks/ttml.js";
+
+const empty = EmptyObservable.create;
 
 /**
  * Pad with 0 in the left of the given n argument to reach l length
@@ -112,7 +114,7 @@ function isMP4EmbeddedTrack(segment) {
  * manifest's content Protection.
  * @returns {Object}
  */
-module.exports = function(options={}) {
+export default function(options={}) {
   let { contentProtectionParser } = options;
 
   if (!contentProtectionParser) {

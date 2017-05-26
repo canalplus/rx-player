@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-const { Observable } = require("rxjs/Observable");
-const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const { bytesToStr } = require("../../utils/bytes");
-const log = require("../../utils/log");
+import { Observable } from "rxjs/Observable";
+import { EmptyObservable } from  "rxjs/observable/EmptyObservable";
+import { bytesToStr } from "../../utils/bytes";
+import log from "../../utils/log";
 
 // TODO Those should already be constructed here
-const { Adaptation } = require("../../manifest/adaptation.js");
-const { Representation } = require("../../manifest/representation.js");
-const { Segment } = require("../../manifest/segment.js");
+import { Adaptation } from "../../manifest/adaptation.js";
+import { Representation } from "../../manifest/representation.js";
+import { Segment } from "../../manifest/segment.js";
 
-const request = require("../../request");
-const { RequestResponse } = request;
-const createSmoothStreamingParser = require("./parser");
+import request from "../../request";
+import createSmoothStreamingParser from "./parser";
+
+import mp4Utils from "./mp4.js";
+import { parseBif } from "../bif";
+import { parseSami } from "../parsers/texttracks/sami.js";
+import { parseTTML } from "../parsers/texttracks/ttml.js";
 
 const {
   patchSegment,
@@ -36,14 +40,8 @@ const {
   getTraf,
   parseTfrf,
   parseTfxd,
-} = require("./mp4");
+} = mp4Utils;
 
-const {
-  parseBif,
-} = require("../bif");
-
-const { parseSami } = require("../parsers/texttracks/sami.js");
-const { parseTTML } = require("../parsers/texttracks/ttml.js");
 const TT_PARSERS = {
   "application/x-sami":       parseSami,
   "application/smil":         parseSami,
@@ -51,6 +49,9 @@ const TT_PARSERS = {
   "application/ttml+xml+mp4": parseTTML,
   "text/vtt":                 (text) => text,
 };
+
+const { RequestResponse } = request;
+const empty = EmptyObservable.create;
 
 const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
@@ -108,7 +109,7 @@ function buildSegmentURL(segment) {
     .replace(/\{start time\}/g, segment.getTime());
 }
 
-module.exports = function(options={}) {
+export default function(options={}) {
   const smoothManifestParser = createSmoothStreamingParser(options);
   const createXHR = options.createXHR;
 
@@ -424,4 +425,4 @@ module.exports = function(options={}) {
     text: textTrackPipeline,
     image: imageTrackPipeline,
   };
-};
+}

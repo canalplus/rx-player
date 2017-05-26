@@ -1,7 +1,7 @@
-const React = require("react");
-const ProgressbarComponent = require("../components/ProgressBar.jsx");
-const ImageTip = require("../components/ImageTip.jsx");
-const withModulesState = require("../lib/withModulesState.jsx");
+import React from "react";
+import ProgressbarComponent from "../components/ProgressBar.jsx";
+import ImageTip from "../components/ImageTip.jsx";
+import withModulesState from "../lib/withModulesState.jsx";
 
 class Progressbar extends React.Component {
   constructor(...args) {
@@ -80,7 +80,7 @@ class Progressbar extends React.Component {
   }
 }
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     bufferGap: "bufferGap",
     currentTime: "currentTime",

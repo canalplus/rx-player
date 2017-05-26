@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-module.exports = {
-  "smooth": require("./smooth"),
-  "dash": require("./dash"),
-  "directfile": require("./directfile"),
+import smooth from "./smooth";
+import dash from "./dash";
+import directfile from "./directfile";
+
+export default {
+  smooth,
+  dash,
+  directfile,
 };

@@ -1,11 +1,11 @@
-const React = require("react");
+import React from "react";
 
 /**
  * For now, only written "Live" (we will see for timeshifting and such)
  * @param {Object} props
  * @returns {Object}
  */
-module.exports = ({
+export default ({
   className = "",
 }) => {
   return (

@@ -40,6 +40,6 @@ class InitializationSegmentCache {
   }
 }
 
-module.exports = {
+export {
   InitializationSegmentCache,
 };

@@ -14,24 +14,28 @@
  * limitations under the License.
  */
 
-const log = require("../utils/log");
-const { BufferingQueue } = require("./buffering-queue");
-const { BufferedRanges } = require("./ranges");
-const { Observable } = require("rxjs/Observable");
-const { Subject } = require("rxjs/Subject");
-const { combineLatest } = require("rxjs/observable/combineLatest");
-const { merge } = require("rxjs/observable/merge");
-const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
-const from = require("rxjs/observable/FromObservable").FromObservable.create;
-const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
+import log from "../utils/log";
+import { BufferingQueue } from "./buffering-queue";
+import { BufferedRanges } from "./ranges";
+import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
+import { combineLatest } from "rxjs/observable/combineLatest";
+import { merge } from "rxjs/observable/merge";
+import { EmptyObservable } from "rxjs/observable/EmptyObservable";
+import { FromObservable } from "rxjs/observable/FromObservable";
+import { TimerObservable } from "rxjs/observable/TimerObservable";
 
-const { SimpleSet } = require("../utils/collections");
-const { IndexHandler } = require("./index-handler");
-const {
+import { SimpleSet } from "../utils/collections";
+import { IndexHandler } from "./index-handler";
+import {
   MediaError,
   ErrorTypes,
   ErrorCodes,
-} = require("../errors");
+} from "../errors";
+
+const empty = EmptyObservable.create;
+const from = FromObservable.create;
+const timer = TimerObservable.create;
 
 /**
  * Ratio used to know if an already loaded segment should be re-buffered.
@@ -470,7 +474,7 @@ function EmptyBuffer(bufferType) {
   });
 }
 
-module.exports = {
+export {
   Buffer,
   EmptyBuffer,
 };

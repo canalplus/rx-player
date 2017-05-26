@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-const { Subscription } = require("rxjs/Subscription");
-const { BehaviorSubject } = require("rxjs/BehaviorSubject");
-const { combineLatest } = require("rxjs/observable/combineLatest");
-const { only } = require("../utils/rx-utils");
-const { findBetterMatchIndex } = require("../utils/languages");
+import { Subscription } from "rxjs/Subscription";
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { combineLatest } from "rxjs/observable/combineLatest";
+import { only } from "../utils/rx-utils";
+import { findBetterMatchIndex } from "../utils/languages";
 
-const AverageBitrate = require("./average-bitrate");
+import AverageBitrate from "./average-bitrate";
 
 const DEFAULTS = {
   defaultAudioTrack: {
@@ -157,7 +157,7 @@ function filterByType(stream, selectedType) {
   return stream.filter(({ type }) => type === selectedType);
 }
 
-module.exports = function(metrics, deviceEvents, options={}) {
+export default function(metrics, deviceEvents, options={}) {
   Object.keys(options).forEach(key =>
     options[key] === undefined && delete options[key]
   );
@@ -380,4 +380,4 @@ module.exports = function(metrics, deviceEvents, options={}) {
       }
     },
   };
-};
+}

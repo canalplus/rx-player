@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { Segment } = require("../segment");
+import { Segment } from "../segment";
 
 class Template {
   constructor(adaptation, representation, index) {
@@ -79,4 +79,4 @@ class Template {
   }
 }
 
-module.exports = Template;
+export default Template;

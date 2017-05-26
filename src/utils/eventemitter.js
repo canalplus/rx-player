@@ -1,4 +1,4 @@
-const assert = require("./assert");
+import assert from "./assert";
 
 function EventEmitter() {
   this.__listeners = {};
@@ -52,4 +52,4 @@ EventEmitter.prototype.trigger = function(evt, arg) {
 EventEmitter.prototype.on = EventEmitter.prototype.addEventListener;
 EventEmitter.prototype.off = EventEmitter.prototype.removeEventListener;
 
-module.exports = EventEmitter;
+export default EventEmitter;

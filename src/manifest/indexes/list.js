@@ -1,5 +1,5 @@
-const { Segment } = require("../segment.js");
-const { normalizeRange } = require("./helpers.js");
+import { Segment } from "../segment.js";
+import { normalizeRange } from "./helpers.js";
 
 const ListIndexHelpers = {
   getSegments(repId, index, _up, _to) {
@@ -46,4 +46,4 @@ const ListIndexHelpers = {
   },
 };
 
-module.exports = ListIndexHelpers;
+export default ListIndexHelpers;

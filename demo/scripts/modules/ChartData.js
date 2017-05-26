@@ -1,4 +1,4 @@
-const ChartData = ({ state }, { maxSize }) => {
+export default ({ state }, { maxSize }) => {
   const data = [];
 
   state.set({ data: data.slice() });
@@ -21,5 +21,3 @@ const ChartData = ({ state }, { maxSize }) => {
     },
   };
 };
-
-module.exports = ChartData;

@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-const assert = require("../../../utils/assert.js");
-const {
+import assert from "../../../utils/assert.js";
+import {
   reduceChildren,
   getLastLiveTimeReference,
   isHardOfHearing,
   isVisuallyImpaired,
   inferAdaptationType,
   parseByteRange,
-} = require("./helpers.js");
-const {
+} from "./helpers.js";
+import {
   filterMPD,
   filterPeriod,
   filterAdaptation,
   filterRepresentation,
-} = require("./filters.js");
-const feedAttributes = require("./attributes.js");
+} from "./filters.js";
+
+import feedAttributes from "./attributes.js";
 
 const representationKeysInheritedFromAdaptation = [
   "codecs",
@@ -343,6 +344,6 @@ function parseInitialization(root) {
   return { range, media };
 }
 
-module.exports = {
+export {
   parseMPD,
 };

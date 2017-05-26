@@ -1,8 +1,8 @@
-const { Segment } = require("../segment.js");
-const {
+import { Segment } from "../segment.js";
+import {
   normalizeRange,
   getTimelineRangeEnd,
-} = require("./helpers.js");
+} from "./helpers.js";
 
 const getSegmentIndex = (index, ts) => {
   const { timeline } = index;
@@ -188,4 +188,4 @@ const SegmentTimelineHelpers = {
   },
 };
 
-module.exports = SegmentTimelineHelpers;
+export default SegmentTimelineHelpers;

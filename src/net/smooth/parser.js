@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-const assert = require("../../utils/assert");
-const bytes = require("../../utils/bytes");
-const { normalize: normalizeLang } = require("../../utils/languages");
+import {
+  concat,
+  strToBytes,
+  // toBase64URL,
+  // bytesToStr,
+  le2toi,
+  bytesToUTF16Str,
+  guidToUuid,
+  hexToBytes,
+} from "../../utils/bytes";
+
+import assert from "../../utils/assert";
+import { normalize as normalizeLang } from "../../utils/languages";
 
 const DEFAULT_MIME_TYPES = {
   audio: "audio/mp4",
@@ -105,15 +115,15 @@ function getKeySystems(keyIdBytes) {
     {
       // Widevine
       systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
-      privateData: bytes.concat([0x08, 0x01, 0x12, 0x10], keyIdBytes),
+      privateData: concat([0x08, 0x01, 0x12, 0x10], keyIdBytes),
       // keyIds: [keyIdBytes],
     },
     // {
     //   // Clearkey
     //   // (https://dvcs.w3.org/hg/html-media/raw-file/tip/encrypted-media/cenc-format.html)
     //   systemId: "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b",
-    //   privateData: bytes.strToBytes(JSON.stringify({
-    //     kids: [bytes.toBase64URL(bytes.bytesToStr(keyIdBytes))],
+    //   privateData: strToBytes(JSON.stringify({
+    //     kids: [toBase64URL(bytesToStr(keyIdBytes))],
     //     type: "temporary"
     //   }))
     // }
@@ -129,11 +139,11 @@ function createSmoothStreamingParser(parserOptions={}) {
   const keySystems = parserOptions.keySystems || getKeySystems;
 
   function getHexKeyId(buf) {
-    const len = bytes.le2toi(buf, 8);
-    const xml = bytes.bytesToUTF16Str(buf.subarray(10, 10 + len));
+    const len = le2toi(buf, 8);
+    const xml = bytesToUTF16Str(buf.subarray(10, 10 + len));
     const doc = new DOMParser().parseFromString(xml, "application/xml");
     const kid = doc.querySelector("KID").textContent;
-    return bytes.guidToUuid(atob(kid)).toLowerCase();
+    return guidToUuid(atob(kid)).toLowerCase();
   }
 
   function reduceChildren(root, fn, init) {
@@ -148,9 +158,9 @@ function createSmoothStreamingParser(parserOptions={}) {
   function parseProtection(root) {
     const header = root.firstElementChild;
     assert.equal(header.nodeName, "ProtectionHeader", "Protection should have ProtectionHeader child");
-    const privateData = bytes.strToBytes(atob(header.textContent));
+    const privateData = strToBytes(atob(header.textContent));
     const keyId = getHexKeyId(privateData);
-    const keyIdBytes = bytes.hexToBytes(keyId);
+    const keyIdBytes = hexToBytes(keyId);
 
     // remove possible braces
     const systemId = header.getAttribute("SystemID").toLowerCase()
@@ -376,4 +386,4 @@ function createSmoothStreamingParser(parserOptions={}) {
   return parser;
 }
 
-module.exports = createSmoothStreamingParser;
+export default createSmoothStreamingParser;

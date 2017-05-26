@@ -1,8 +1,8 @@
-const React = require("react");
-const Button = require("../components/Button.jsx");
-const TextInput = require("../components/Input.jsx");
-const Select = require("../components/Select.jsx");
-const contentsDatabase = require("../contents.js");
+import React from "react";
+import Button from "../components/Button.jsx";
+import TextInput from "../components/Input.jsx";
+import Select from "../components/Select.jsx";
+import contentsDatabase from "../contents.js";
 
 const STREAMING_TECHNOS = ["DASH", "Smooth"];
 const CONTENTS_PER_TECHNO = STREAMING_TECHNOS.reduce((acc, tech) => {
@@ -148,4 +148,4 @@ class ContentList extends React.Component {
   }
 }
 
-module.exports = ContentList;
+export default ContentList;

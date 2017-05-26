@@ -1,5 +1,5 @@
-const { Representation } = require("./representation.js");
-const generateNewId = require("../utils/id.js");
+import { Representation } from "./representation.js";
+import generateNewId from "../utils/id.js";
 
 /**
  * Normalized Adaptation structure.
@@ -67,6 +67,6 @@ class Adaptation {
   }
 }
 
-module.exports = {
+export {
   Adaptation,
 };

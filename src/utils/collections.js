@@ -37,4 +37,4 @@ class SimpleSet {
 }
 
 
-module.exports = { SimpleSet };
+export { SimpleSet };

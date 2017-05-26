@@ -176,7 +176,7 @@ const ISO_MAP_3_3 = {
   "nld": "dut", "rum": "ron", "slo": "slk", "sqi": "alb", "zho": "chi",
 };
 
-module.exports = {
+export {
   match,
   normalize,
   normalizeAudioTrack,

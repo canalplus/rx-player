@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-const log = require("../utils/log");
-const { normalizeBaseURL } = require("../utils/url");
-const { isCodecSupported } = require("./compat");
-const { MediaError } = require("../errors");
-const { normalize: normalizeLang } = require("../utils/languages");
+import log from "../utils/log";
+import { normalizeBaseURL } from "../utils/url";
+import { isCodecSupported } from "./compat";
+import { MediaError } from "../errors";
+import { normalize as normalizeLang } from "../utils/languages";
 
 /**
  * Representation keys directly inherited from the adaptation.
@@ -483,7 +483,7 @@ function getAvailableTextTracks(manifest) {
     }));
 }
 
-module.exports = {
+export {
   normalizeManifest,
   mergeManifestsIndex,
   mutateManifestLiveGap,

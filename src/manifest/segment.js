@@ -11,6 +11,6 @@ class Segment {
   }
 }
 
-module.exports = {
+export {
   Segment,
 };

@@ -1,5 +1,5 @@
-const { Subject } = require("rxjs/Subject");
-const { Observable } = require("rxjs/Observable");
+import { Subject } from "rxjs/Subject";
+import { Observable } from "rxjs/Observable";
 
 /**
  * Homemade redux and r9webapp-core inspired state management architecture.
@@ -187,6 +187,6 @@ const createModule = (module, payload) => {
   };
 };
 
-module.exports = {
+export {
   createModule,
 };

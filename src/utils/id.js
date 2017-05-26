@@ -9,4 +9,4 @@ const generateNewId = () => {
   return "" + newId;
 };
 
-module.exports = generateNewId;
+export default generateNewId;

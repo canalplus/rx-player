@@ -1,5 +1,5 @@
-const expect = require("chai").expect;
-const bytes = require("../bytes.js");
+import  { expect } from "chai";
+import * as bytes from "../bytes.js";
 
 describe("utils - bytes", () => {
   const base64ToArrayBuffer = (base64) => {

@@ -1,7 +1,7 @@
-const React = require("react");
-const Select = require("./Select.jsx");
+import React from "react";
+import Select from "./Select.jsx";
 
-module.exports = ({
+export default ({
   className = "",
   name = "",
   onChange,

@@ -23,4 +23,4 @@ log.setLevel = function(level) {
   log.debug = (level >= Levels.DEBUG) ? console.log.bind(console) : noop;
 };
 
-module.exports = log;
+export default log;

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-const assert = require("../../utils/assert");
-const { isIE } = require("../../core/compat");
-const {
+import assert from "../../utils/assert";
+import { isIE } from "../../core/compat";
+import {
   concat,
   strToBytes, bytesToStr,
   hexToBytes, bytesToHex,
   be2toi, itobe2,
   be4toi, itobe4,
   be8toi, itobe8,
-} = require("../../utils/bytes");
+} from "../../utils/bytes";
 
 const FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
 
@@ -580,7 +580,8 @@ function createInitSegment(
   return concat(ftyp, moov);
 }
 
-module.exports = {
+// TODO
+export default {
   getMdat: reads.mdat,
   getTraf: reads.traf,
 

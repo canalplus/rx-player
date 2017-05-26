@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const Timeline = require("./timeline");
+import Timeline from "./timeline";
 
 class Smooth extends Timeline {
   checkRange(time) {
@@ -32,4 +32,4 @@ class Smooth extends Timeline {
   }
 }
 
-module.exports = Smooth;
+export default Smooth;

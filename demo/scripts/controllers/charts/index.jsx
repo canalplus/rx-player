@@ -1,8 +1,8 @@
-const React = require("react");
-const { createModule } = require("../../lib/vespertine.js");
-const ChartDataModule = require("../../modules/ChartData.js");
-const BufferSizeChart = require("./BufferSize.jsx");
-const BandwidthChart = require("./Bandwidth.jsx");
+import React from "react";
+import { createModule } from "../../lib/vespertine.js";
+import ChartDataModule from "../../modules/ChartData.js";
+import BufferSizeChart from "./BufferSize.jsx";
+import BandwidthChart from "./Bandwidth.jsx";
 
 const BUFFER_GAP_REFRESH_TIME = 500;
 const MAX_BUFFER_SIZE_LENGTH = 2000;
@@ -100,4 +100,4 @@ class ChartsManager extends React.Component {
   }
 }
 
-module.exports = ChartsManager;
+export default ChartsManager;

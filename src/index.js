@@ -14,41 +14,45 @@
  * limitations under the License.
  */
 
+import "rxjs/add/observable/of";
+import "rxjs/add/observable/throw";
+
+import "rxjs/add/operator/catch";
+import "rxjs/add/operator/concat";
+import "rxjs/add/operator/concatAll";
+import "rxjs/add/operator/concatMap";
+import "rxjs/add/operator/debounceTime";
+import "rxjs/add/operator/distinctUntilChanged";
+import "rxjs/add/operator/do";
+import "rxjs/add/operator/filter";
+import "rxjs/add/operator/finally";
+import "rxjs/add/operator/ignoreElements";
+import "rxjs/add/operator/map";
+import "rxjs/add/operator/mapTo";
+import "rxjs/add/operator/mergeMap";
+import "rxjs/add/operator/multicast";
+import "rxjs/add/operator/publish";
+import "rxjs/add/operator/scan";
+import "rxjs/add/operator/share";
+import "rxjs/add/operator/skip";
+import "rxjs/add/operator/startWith";
+import "rxjs/add/operator/switchMap";
+import "rxjs/add/operator/take";
+import "rxjs/add/operator/takeUntil";
+import "rxjs/add/operator/timeout";
+
+import objectAssign from "./utils/object-assign.js";
+import logger from "./utils/log.js";
+
+import Player from "./core/player";
+
 if (typeof Object.assign != "function") {
   (function () {
-    Object.assign = require("./utils/object-assign.js");
+    Object.assign = objectAssign;
   })();
 }
 
 if (__DEV__) {
-  require("./utils/log.js").setLevel("DEBUG");
+  logger.setLevel("DEBUG");
 }
-
-require("rxjs/add/observable/of");
-require("rxjs/add/observable/throw");
-
-require("rxjs/add/operator/catch");
-require("rxjs/add/operator/concat");
-require("rxjs/add/operator/concatAll");
-require("rxjs/add/operator/concatMap");
-require("rxjs/add/operator/debounceTime");
-require("rxjs/add/operator/distinctUntilChanged");
-require("rxjs/add/operator/do");
-require("rxjs/add/operator/filter");
-require("rxjs/add/operator/finally");
-require("rxjs/add/operator/ignoreElements");
-require("rxjs/add/operator/map");
-require("rxjs/add/operator/mapTo");
-require("rxjs/add/operator/mergeMap");
-require("rxjs/add/operator/multicast");
-require("rxjs/add/operator/publish");
-require("rxjs/add/operator/scan");
-require("rxjs/add/operator/share");
-require("rxjs/add/operator/skip");
-require("rxjs/add/operator/startWith");
-require("rxjs/add/operator/switchMap");
-require("rxjs/add/operator/take");
-require("rxjs/add/operator/takeUntil");
-require("rxjs/add/operator/timeout");
-
-module.exports = require("./core/player");
+export default Player;

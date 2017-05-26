@@ -1,6 +1,6 @@
-const { Observable } = require("rxjs/Observable");
-const { Subscriber } = require("rxjs/Subscriber");
-const { RequestError, RequestErrorTypes } = require("./errors");
+import { Observable } from "rxjs/Observable";
+import { Subscriber } from "rxjs/Subscriber";
+import { RequestError, RequestErrorTypes } from "./errors";
 
 function createXHRDefault() {
   return new XMLHttpRequest();
@@ -222,4 +222,4 @@ request.RequestError = RequestError;
 request.RequestResponse = RequestResponse;
 request.RequestErrorTypes = RequestErrorTypes;
 
-module.exports = request;
+export default request;

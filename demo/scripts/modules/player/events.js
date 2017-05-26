@@ -1,4 +1,4 @@
-const { Observable } = require("rxjs");
+import { Observable } from "rxjs/Observable";
 
 const POSITION_UPDATES_INTERVAL = 100;
 
@@ -122,6 +122,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     });
 };
 
-module.exports = {
+export {
   linkPlayerEventsToState,
 };

@@ -1,4 +1,4 @@
-const assert = require("./assert");
+import assert from "./assert";
 
 /**
  * Returns total bytes in an array of ArrayBuffer.
@@ -355,7 +355,7 @@ function toBase64URL(str) {
   return btoa(str).replace(/\=+$/, "");
 }
 
-module.exports = {
+export {
   totalBytes,
   strToBytes,
   bytesToStr, bytesToUTF16Str,

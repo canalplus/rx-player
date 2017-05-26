@@ -92,7 +92,7 @@ function normalizeBaseURL(url) {
   }
 }
 
-module.exports = {
+export {
   resolveURL,
   normalizeBaseURL,
 };

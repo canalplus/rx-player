@@ -1,4 +1,4 @@
-const { getRightIndexHelpers } = require("./indexes/index.js");
+import { getRightIndexHelpers } from "./indexes/index.js";
 
 class RepresentationIndex {
   constructor(args) {
@@ -43,4 +43,4 @@ class RepresentationIndex {
   }
 }
 
-module.exports = RepresentationIndex;
+export default RepresentationIndex;

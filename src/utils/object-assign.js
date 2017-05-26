@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-module.exports = function(target) {
+export default function(target) {
   if (target === undefined || target === null) {
     throw new TypeError("Cannot convert undefined or null to object");
   }
@@ -31,4 +31,4 @@ module.exports = function(target) {
     }
   }
   return output;
-};
+}

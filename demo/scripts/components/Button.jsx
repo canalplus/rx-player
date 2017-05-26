@@ -1,11 +1,11 @@
-const React = require("react");
+import React from "react";
 
 /**
  * Generic Button React component.
  * @param {Object} props
  * @returns {Object}
  */
-module.exports = ({
+export default ({
   className = "",
   onClick,
   value,

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-const { AbstractSourceBuffer } = require("./sourcebuffer");
-const { addTextTrack, isVTTSupported } = require("./compat");
-const log = require("../utils/log");
+import { AbstractSourceBuffer } from "./sourcebuffer";
+import { addTextTrack, isVTTSupported } from "./compat";
+import log from "../utils/log";
 
 const Cue = window.VTTCue || window.TextTrackCue;
 
@@ -109,4 +109,4 @@ class TextSourceBuffer extends AbstractSourceBuffer {
   }
 }
 
-module.exports = TextSourceBuffer;
+export default TextSourceBuffer;

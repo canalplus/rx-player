@@ -26,7 +26,7 @@ const config = {
           options: {
             presets: [
               "react",
-              ["es2015", { loose: true, modules:false }],
+              ["es2015", { loose: true, modules: false }],
             ],
           },
         },

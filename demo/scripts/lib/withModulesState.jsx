@@ -1,4 +1,4 @@
-const React = require("react");
+import React from "react";
 
 /**
  * Higher Order component which link module(s) state to your component's prop.
@@ -11,7 +11,7 @@ const React = require("react");
  *
  * @example
  * ```js
- * const MyComponent = require("./MyComponent.js");
+ * import MyComponent from "./MyComponent.js";
  *
  * const MyEnhancedComponent = withModuleState({
  *   moduleA: {
@@ -132,4 +132,4 @@ const withModulesState = (modulesState) => (Comp) => {
   };
 };
 
-module.exports = withModulesState;
+export default withModulesState;

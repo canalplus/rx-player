@@ -1,6 +1,6 @@
-const _ = require("lodash");
-const expect = require("chai").expect;
-const parser = require("../parser.js");
+import _ from "lodash";
+import { expect } from "chai";
+import parser from "../parser.js";
 
 describe("smooth parser", function() {
 

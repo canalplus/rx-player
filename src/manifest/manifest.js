@@ -1,5 +1,5 @@
-const { Adaptation } = require("./adaptation.js");
-const generateNewId = require("../utils/id.js");
+import { Adaptation } from "./adaptation.js";
+import generateNewId from "../utils/id.js";
 
 /**
  * Normalized Manifest structure.
@@ -59,4 +59,4 @@ class Manifest {
   }
 }
 
-module.exports = { Manifest };
+export { Manifest };

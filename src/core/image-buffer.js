@@ -1,4 +1,4 @@
-const { AbstractSourceBuffer } = require("./sourcebuffer");
+import { AbstractSourceBuffer } from "./sourcebuffer";
 
 class ImageSourceBuffer extends AbstractSourceBuffer {
   _append() {
@@ -8,4 +8,4 @@ class ImageSourceBuffer extends AbstractSourceBuffer {
   }
 }
 
-module.exports = ImageSourceBuffer;
+export default ImageSourceBuffer;

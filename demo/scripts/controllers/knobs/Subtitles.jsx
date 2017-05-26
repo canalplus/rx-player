@@ -1,6 +1,6 @@
-const React = require("react");
-const withModulesState = require("../../lib/withModulesState.jsx");
-const Knob = require("../../components/Knob.jsx");
+import React from "react";
+import withModulesState from "../../lib/withModulesState.jsx";
+import Knob from "../../components/Knob.jsx";
 
 const CLOSED_CAPTION_ICON = "(CC)"; // String.fromCharCode(0xf2a4);
 const LANG_CODE_TO_LANG = {
@@ -60,10 +60,9 @@ const SubtitlesKnobBase = ({
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     subtitle: "currentSubtitle",
     availableSubtitles: "availableSubtitles",
   },
 })(SubtitlesKnobBase);
-

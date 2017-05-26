@@ -1,8 +1,8 @@
-const TimelineIndex = require("./timeline.js");
-const ListIndex = require("./list.js");
-const TemplateIndex = require("./template.js");
-const SmoothIndex = require("./smooth.js");
-const BaseIndex = require("./base.js");
+import TimelineIndex from "./timeline.js";
+import ListIndex from "./list.js";
+import TemplateIndex from "./template.js";
+import SmoothIndex from "./smooth.js";
+import BaseIndex from "./base.js";
 
 const getRightIndexHelpers = index => {
   switch (index.indexType) {
@@ -21,6 +21,6 @@ const getRightIndexHelpers = index => {
   }
 };
 
-module.exports = {
+export {
   getRightIndexHelpers,
 };

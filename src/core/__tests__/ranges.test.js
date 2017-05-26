@@ -1,11 +1,14 @@
-const expect = require("chai").expect;
+import { expect } from "chai";
+import {
+ BufferedRanges,
+} from "../ranges.js";
+
 const {
  getRange,
  getGap,
  getLoaded,
  getSize,
- BufferedRanges,
-} = require("../ranges.js");
+} = new BufferedRanges();
 
 function createRange(ranges) {
   return {

@@ -1,4 +1,4 @@
-const React = require("react");
+import React from "react";
 
 /**
  * Horizontal (left-to-right) progress bar component which:
@@ -15,7 +15,7 @@ const React = require("react");
  * @param {Object} props
  * @returns {Object}
  */
-module.exports = ({
+export default ({
   seek, // seek callback, will be called with the position clicked
   position,
   bufferGap,

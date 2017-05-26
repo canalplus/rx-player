@@ -16,7 +16,7 @@ const getTimelineRangeEnd = ({ ts, d, r }) => {
   }
 };
 
-module.exports = {
+export {
   normalizeRange,
   getTimelineRangeEnd,
 };

@@ -1,6 +1,5 @@
-const React = require("react");
-const Chart = require("chart.js");
-// const LineChart = require("../../components/LineChart.jsx");
+import React from "react";
+import Chart from "chart.js";
 
 const repeat = (str, time) => {
   const ret = [];
@@ -105,4 +104,4 @@ class Bandwidth extends React.Component {
   }
 }
 
-module.exports = Bandwidth;
+export default Bandwidth;

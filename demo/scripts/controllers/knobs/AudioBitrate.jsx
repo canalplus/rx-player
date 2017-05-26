@@ -1,6 +1,6 @@
-const React = require("react");
-const withModulesState = require("../../lib/withModulesState.jsx");
-const Knob = require("../../components/Knob.jsx");
+import React from "react";
+import withModulesState from "../../lib/withModulesState.jsx";
+import Knob from "../../components/Knob.jsx";
 
 const AudioBitrateKnobBase = ({
   player,
@@ -44,7 +44,7 @@ const AudioBitrateKnobBase = ({
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     audioBitrateAuto: "audioBitrateAuto",
     audioBitrate: "audioBitrate",

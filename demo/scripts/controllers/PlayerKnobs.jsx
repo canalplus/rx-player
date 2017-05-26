@@ -1,9 +1,9 @@
-const React = require("react");
-const withModulesState = require("../lib/withModulesState.jsx");
-const VideoBitrateKnob = require("./knobs/VideoBitrate.jsx");
-const AudioBitrateKnob = require("./knobs/AudioBitrate.jsx");
-const LanguageKnob = require("./knobs/AudioTrack.jsx");
-const SubtitlesKnob = require("./knobs/Subtitles.jsx");
+import React from "react";
+import withModulesState from "../lib/withModulesState.jsx";
+import VideoBitrateKnob from "./knobs/VideoBitrate.jsx";
+import AudioBitrateKnob from "./knobs/AudioBitrate.jsx";
+import LanguageKnob from "./knobs/AudioTrack.jsx";
+import SubtitlesKnob from "./knobs/Subtitles.jsx";
 
 const PlayerKnobs = ({
   player,
@@ -25,7 +25,7 @@ const PlayerKnobs = ({
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     isStopped: "isStopped",
     hasLoadedContent: "hasLoadedContent",

@@ -178,7 +178,7 @@ function isKnownError(error) {
   return (!!error && !!error.type && ErrorTypes.keys.indexOf(error.type) >= 0);
 }
 
-module.exports = {
+export {
   ErrorTypes,
   ErrorCodes,
 

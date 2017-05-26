@@ -1,6 +1,6 @@
-const React = require("react");
-const Button = require("../components/Button.jsx");
-const withModulesState = require("../lib/withModulesState.jsx");
+import React from "react";
+import Button from "../components/Button.jsx";
+import withModulesState from "../lib/withModulesState.jsx";
 
 /**
  * Simple fullscreen button.
@@ -32,7 +32,7 @@ const FullscreenButton = ({
   />
 );
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     isFullscreen: "isFullscreen",
     hasLoadedContent: "hasLoadedContent",

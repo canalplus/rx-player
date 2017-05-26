@@ -1,13 +1,13 @@
-const React = require("react");
-const { Subject } = require("rxjs/Subject");
-const { createModule } = require("../lib/vespertine.js");
-const PlayerModule = require("../modules/player");
-const ControlBar = require("./ControlBar.jsx");
-const ContentList = require("./ContentList.jsx");
-const ErrorDisplayer = require("./ErrorDisplayer.jsx");
-const PlayerKnobsManager = require("./PlayerKnobs.jsx");
-const LogDisplayer = require("./LogDisplayer.jsx");
-const ChartsManager = require("./charts/index.jsx");
+import React from "react";
+import { Subject } from "rxjs/Subject";
+import { createModule } from "../lib/vespertine.js";
+import PlayerModule from "../modules/player";
+import ControlBar from "./ControlBar.jsx";
+import ContentList from "./ContentList.jsx";
+import ErrorDisplayer from "./ErrorDisplayer.jsx";
+import PlayerKnobsManager from "./PlayerKnobs.jsx";
+import LogDisplayer from "./LogDisplayer.jsx";
+import ChartsManager from "./charts/index.jsx";
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
@@ -120,4 +120,4 @@ class Player extends React.Component {
   }
 }
 
-module.exports = Player;
+export default Player;

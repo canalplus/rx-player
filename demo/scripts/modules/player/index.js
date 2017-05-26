@@ -6,8 +6,8 @@
  * application.
  */
 
-const RxPlayer = require("../../../../src");
-const { linkPlayerEventsToState } = require("./events.js");
+import RxPlayer from "../../../../src";
+import { linkPlayerEventsToState } from "./events.js";
 
 const PLAYER = ({ $destroy, state }, { videoElement }) => {
   const player = new RxPlayer({
@@ -139,4 +139,4 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
   };
 };
 
-module.exports = PLAYER;
+export default PLAYER;

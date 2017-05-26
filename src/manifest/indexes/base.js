@@ -1,6 +1,6 @@
-const TimelineIndex = require("./timeline.js");
+import TimelineIndex from "./timeline.js";
 
-module.exports = Object.assign({}, TimelineIndex, {
+export default Object.assign({}, TimelineIndex, {
   getLiveEdge() {
     throw new Error("not implemented");
   },

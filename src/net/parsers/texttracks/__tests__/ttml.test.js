@@ -1,11 +1,10 @@
-const _ = require("lodash");
-const expect = require("chai").expect;
-const ttmlRollUp = require("raw-loader!./fixtures/captures-rollup.ttml");
-const ttmlPopOn = require("raw-loader!./fixtures/captures-popon.ttml");
-const { parseTTML } = require("../ttml.js");
+import _ from "lodash";
+import { expect } from "chai";
+import ttmlRollUp from "raw-loader!./fixtures/captures-rollup.ttml";
+import ttmlPopOn from "raw-loader!./fixtures/captures-popon.ttml";
+import { parseTTML } from "../ttml.js";
 
 describe("ttml parser", function() {
-
   xit("parses a ttml file", function() {
     expect(parseTTML(ttmlRollUp, null, 0)).to.be.an("array");
     expect(parseTTML(ttmlPopOn, null, 0)).to.be.an("array");

@@ -1,7 +1,7 @@
-const expect = require("chai").expect;
-const sinon = require("sinon");
+import { expect } from "chai";
+import sinon from "sinon";
 
-const parser = require("../index.js");
+import parser from "../index.js";
 
 // const mpd = require("raw!test/fixtures/dash-seg-list.mpd");
 // const mpd = require("raw!test/fixtures/dash-seg-template.mpd");

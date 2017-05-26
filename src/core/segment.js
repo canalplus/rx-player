@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { resolveURL } = require("../utils/url");
+import { resolveURL } from "../utils/url";
 
 /**
  * Returns true if the value given is a number, or can be translated into a
@@ -155,7 +155,7 @@ class InitSegment extends Segment {
   }
 }
 
-module.exports = {
+export {
   Segment,
   InitSegment,
 };

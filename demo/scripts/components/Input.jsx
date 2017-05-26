@@ -1,4 +1,4 @@
-const React = require("react");
+import React from "react";
 
 /**
  * Simple select list. Call the onChange call back on choice with the index of
@@ -6,7 +6,7 @@ const React = require("react");
  * @param {Object} props
  * @returns {Object}
  */
-module.exports = ({
+export default ({
   className = "",
   onChange,
   value = "",

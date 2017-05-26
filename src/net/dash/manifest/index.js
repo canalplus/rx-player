@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const assert = require("../../../utils/assert");
-const { parseMPD } = require("./parsers.js");
+import assert from "../../../utils/assert";
+import { parseMPD } from "./parsers.js";
 
 /**
  * @param {Document} manifest - Original manifest as returned by the server
@@ -55,4 +55,9 @@ function parser(manifest, contentProtectionParser) {
 parser.parseFromString   = parseFromString;
 parser.parseFromDocument = parseFromDocument;
 
-module.exports = parser;
+export {
+  parseFromString,
+  parseFromDocument,
+};
+
+export default parser;

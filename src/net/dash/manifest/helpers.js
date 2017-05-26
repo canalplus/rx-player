@@ -17,7 +17,7 @@
 // XML-Schema
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
-const assert = require("../../../utils/assert");
+import assert from "../../../utils/assert";
 
 const iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
@@ -318,7 +318,7 @@ const getLastLiveTimeReference = (adaptation) => {
   }
 };
 
-module.exports = {
+export {
   parseString,
   parseFrameRate,
   parseByteRange,

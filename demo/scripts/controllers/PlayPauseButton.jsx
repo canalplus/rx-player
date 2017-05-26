@@ -1,6 +1,6 @@
-const React = require("react");
-const Button = require("../components/Button.jsx");
-const withModulesState = require("../lib/withModulesState.jsx");
+import React from "react";
+import Button from "../components/Button.jsx";
+import withModulesState from "../lib/withModulesState.jsx";
 
 /**
  * Play/Pause button.
@@ -42,7 +42,7 @@ const PlayPauseButton = ({
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     isPaused: "isPaused",
     hasLoadedContent: "hasLoadedContent",

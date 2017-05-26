@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-const assert = require("../utils/assert");
+import assert from "../utils/assert";
 
-const { getAdaptationsByType } = require("./manifest");
-const { InitSegment } = require("./segment");
-const Template = require("./indexes/template");
-const Timeline = require("./indexes/timeline");
-const List = require("./indexes/list");
-const Base = require("./indexes/base");
-const Smooth = require("./indexes/smooth");
+import { getAdaptationsByType } from "./manifest";
+import { InitSegment } from "./segment";
+import Template from "./indexes/template";
+import Timeline from "./indexes/timeline";
+import List from "./indexes/list";
+import Base from "./indexes/base";
+import Smooth from "./indexes/smooth";
 
-const { IndexError } = require("../errors");
+import { IndexError } from "../errors";
 
 /**
  * Returns right indexHandler for the given index
@@ -194,7 +194,7 @@ class IndexHandler {
   }
 }
 
-module.exports = {
+export {
   IndexHandler,
   getLiveEdge,
 };

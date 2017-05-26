@@ -21,7 +21,7 @@ const config = {
             cacheDirectory: true,
             presets: [
               "react",
-              ["es2015", { loose: true }],
+              ["es2015", { loose: true, modules: false }],
             ],
           },
         },

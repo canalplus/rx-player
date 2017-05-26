@@ -1,6 +1,5 @@
-const React = require("react");
-const withModulesState = require("../lib/withModulesState.jsx");
-
+import React from "react";
+import withModulesState from "../lib/withModulesState.jsx";
 
 /**
  * Horizontal (left-to-right) volume indication component which:
@@ -45,7 +44,7 @@ const VolumeBar = ({
   );
 };
 
-module.exports = withModulesState({
+export default withModulesState({
   player: {
     volume: "volume",
   },

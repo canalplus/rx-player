@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-const { Subject } = require("rxjs/Subject");
-const { asap } = require("rxjs/scheduler/asap");
-const { Observable } = require("rxjs/Observable");
-const { retryWithBackoff } = require("../utils/retry");
-const { tryCatch, castToObservable } = require("../utils/rx-utils");
-const {
+import { Subject } from "rxjs/Subject";
+import { asap } from "rxjs/scheduler/asap";
+import { Observable } from "rxjs/Observable";
+import { retryWithBackoff } from "../utils/retry";
+import { tryCatch, castToObservable } from "../utils/rx-utils";
+import {
   RequestError,
   NetworkError,
   OtherError,
   RequestErrorTypes,
   isKnownError,
-} = require("../errors");
+} from "../errors";
 
 /**
  * The default number of times a pipeline request will be re-performed when
@@ -233,4 +233,4 @@ function PipeLines() {
   return { createPipelines, metrics };
 }
 
-module.exports = PipeLines;
+export default PipeLines;

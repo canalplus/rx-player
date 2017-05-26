@@ -1,6 +1,19 @@
-require("./lib/polyfills.js");
-const React = require("react");
-const ReactDOM = require("react-dom");
-const Main = require("./controllers/Main.jsx");
+import "./lib/polyfills.js";
+import React from "react";
+import ReactDOM from "react-dom";
+import Main from "./controllers/Main.jsx";
+
+import "rxjs/add/observable/combineLatest";
+import "rxjs/add/observable/interval";
+import "rxjs/add/operator/catch";
+import "rxjs/add/operator/concat";
+import "rxjs/add/operator/distinctUntilChanged";
+import "rxjs/add/operator/do";
+import "rxjs/add/operator/filter";
+import "rxjs/add/operator/map";
+import "rxjs/add/operator/mergeMap";
+import "rxjs/add/operator/startWith";
+import "rxjs/add/operator/switchMap";
+import "rxjs/add/operator/take";
 
 ReactDOM.render(<Main />, document.getElementById("player-container"));

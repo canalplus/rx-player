@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const Timeline = require("./timeline");
+import Timeline from "./timeline";
 
 class Base extends Timeline {
   static getLiveEdge() {
@@ -27,4 +27,4 @@ class Base extends Timeline {
   }
 }
 
-module.exports = Base;
+export default Base;

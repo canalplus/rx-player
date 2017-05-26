@@ -1,4 +1,4 @@
-const React = require("react");
+import React from "react";
 
 /**
  * React Component which Displays an Image tip centered and on top of the
@@ -94,4 +94,4 @@ class ImageTip extends React.Component {
   }
 }
 
-module.exports = ImageTip;
+export default ImageTip;

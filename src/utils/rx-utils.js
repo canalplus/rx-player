@@ -1,7 +1,10 @@
-const { Observable } = require("rxjs/Observable");
-const { merge } = require("rxjs/observable/merge");
-const fromEvent = require("rxjs/observable/FromEventObservable").FromEventObservable.create;
-const fromPromise = require("rxjs/observable/PromiseObservable").PromiseObservable.create;
+import { Observable } from "rxjs/Observable";
+import { merge } from "rxjs/observable/merge";
+import { FromEventObservable } from "rxjs/observable/FromEventObservable";
+import { PromiseObservable } from "rxjs/observable/PromiseObservable";
+
+const fromEvent = FromEventObservable.create;
+const fromPromise = PromiseObservable.create;
 
 /**
  * Returns a fromEvent on the given element for the given event(s).
@@ -135,7 +138,7 @@ const throttle = (func) => {
   };
 };
 
-module.exports = {
+export {
   on,
   only,
   tryCatch,

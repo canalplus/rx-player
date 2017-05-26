@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-const assert = require("../../utils/assert");
-const {
+import assert from "../../utils/assert";
+import {
   itobe4, be8toi, be4toi, be2toi,
   hexToBytes, strToBytes, concat,
-} = require("../../utils/bytes");
+} from "../../utils/bytes";
 
 /**
  * Find the right atom (box) in an isobmff file from its hexa-encoded name.
@@ -249,7 +249,7 @@ function patchPssh(buf, pssList) {
   );
 }
 
-module.exports = {
+export {
   parseSidx,
   patchPssh,
   getMdat,

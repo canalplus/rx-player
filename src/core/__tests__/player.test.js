@@ -1,5 +1,5 @@
-const expect = require("chai").expect;
-const Player = require("../player.js");
+import { expect } from "chai";
+import Player from "../player.js";
 
 describe("main player", function() {
   const transport = { manifestPipeline: {}, segmentPipeline: {}, textTrackPipeline: {} };

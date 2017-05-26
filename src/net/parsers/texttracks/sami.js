@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-const assert = require("../../../utils/assert");
+import assert from "../../../utils/assert";
+
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
 const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
@@ -113,4 +114,4 @@ function parseSami(smi, lang) {
   }
 }
 
-module.exports = { parseSami };
+export { parseSami };

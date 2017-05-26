@@ -145,9 +145,7 @@ const createFilter = (filter) => (obj) =>
     return acc;
   }, {});
 
-module.exports = {
-  filterMPD: createFilter(FILTERED_KEYS.MPD),
-  filterPeriod: createFilter(FILTERED_KEYS.PERIOD),
-  filterAdaptation: createFilter(FILTERED_KEYS.ADAPTATION),
-  filterRepresentation: createFilter(FILTERED_KEYS.REPRESENTATION),
-};
+export const filterMPD = createFilter(FILTERED_KEYS.MPD);
+export const filterPeriod = createFilter(FILTERED_KEYS.PERIOD);
+export const filterAdaptation = createFilter(FILTERED_KEYS.ADAPTATION);
+export const filterRepresentation = createFilter(FILTERED_KEYS.REPRESENTATION);

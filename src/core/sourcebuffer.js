@@ -1,7 +1,7 @@
-const EventEmitter = require("../utils/eventemitter");
-const { BufferedRanges } = require("./ranges");
-const assert = require("../utils/assert");
-const { tryCatch, castToObservable } = require("../utils/rx-utils");
+import EventEmitter from "../utils/eventemitter";
+import { BufferedRanges } from "./ranges";
+import assert from "../utils/assert";
+import { tryCatch, castToObservable } from "../utils/rx-utils";
 
 /**
  * Abstract class for a custom SourceBuffer implementation.
@@ -78,6 +78,6 @@ class AbstractSourceBuffer extends EventEmitter {
   }
 }
 
-module.exports = {
+export {
   AbstractSourceBuffer,
 };

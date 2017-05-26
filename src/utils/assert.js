@@ -37,4 +37,4 @@ assert.iface = function(o, name, iface) {
   }
 };
 
-module.exports = assert;
+export default assert;

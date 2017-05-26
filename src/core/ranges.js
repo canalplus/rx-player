@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const assert = require("../utils/assert");
+import assert from "../utils/assert";
 
 // Factor for rounding errors
 const EPSILON = 1 / 60;
@@ -527,7 +527,7 @@ class BufferedRanges {
   }
 }
 
-module.exports = {
+export {
   bufferedToRanges,
   BufferedRanges,
 };

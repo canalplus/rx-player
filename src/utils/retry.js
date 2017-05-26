@@ -1,5 +1,7 @@
-const { getBackedoffDelay } = require("./backoff");
-const timer = require("rxjs/observable/TimerObservable").TimerObservable.create;
+import { getBackedoffDelay } from "./backoff";
+import { TimerObservable } from "rxjs/observable/TimerObservable";
+
+const timer = TimerObservable.create;
 
 /**
  * Simple debounce implementation.
@@ -119,7 +121,7 @@ function retryableFuncWithBackoff(fn, options) {
   };
 }
 
-module.exports = {
+export {
   retryWithBackoff,
   retryableFuncWithBackoff,
 };

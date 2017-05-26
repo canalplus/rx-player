@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     "name": "BIF Thumbnail Track example",
     "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
