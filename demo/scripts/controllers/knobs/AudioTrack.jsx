@@ -17,15 +17,12 @@ const translateLanguage = langCode => {
 };
 
 const findLanguageIndex = (language, languages) => {
-  return languages.findIndex(ln =>
-    ln.language === language.language &&
-    ln.audioDescription === language.audioDescription
-  );
+  return languages.findIndex(ln => ln.id === language.id);
 };
 
 const AudioTrackKnobBase = ({
   player,
-  language,
+  currentLanguage,
   availableLanguages = [],
 }) => {
 
@@ -36,8 +33,9 @@ const AudioTrackKnobBase = ({
           (" " + AUDIO_DESCRIPTION_ICON) : "");
     });
 
-  const currentLanguageIndex =
-    findLanguageIndex(language, availableLanguages) || 0;
+  const currentLanguageIndex = currentLanguage ?
+    Math.max(findLanguageIndex(currentLanguage, availableLanguages), 0)
+    : 0;
 
   const onLanguageChange = (evt) => {
     const index = +evt.target.value;
@@ -58,7 +56,7 @@ const AudioTrackKnobBase = ({
 
 module.exports = withModulesState({
   player: {
-    language: "language",
+    language: "currentLanguage",
     availableLanguages: "availableLanguages",
   },
 })(AudioTrackKnobBase);

@@ -16,19 +16,15 @@ const translateLanguage = langCode => {
   return LANG_CODE_TO_LANG[langCode] || langCode;
 };
 
-const findLanguageIndex = (subtitle, languages) => {
-  return languages.findIndex(ln =>
-    ln.language === subtitle.language &&
-    ln.closedCaption === subtitle.closedCaption
-  );
+const findLanguageIndex = (currentSubtitle, languages) => {
+  return languages.findIndex(ln => ln.id === currentSubtitle.id);
 };
 
 const SubtitlesKnobBase = ({
   player,
-  subtitle,
+  currentSubtitle,
   availableSubtitles = [],
 }) => {
-
   const options = [
     "no subtitles",
     ...availableSubtitles
@@ -39,8 +35,9 @@ const SubtitlesKnobBase = ({
       }),
   ];
 
-  const currentLanguageIndex = subtitle ?
-    (findLanguageIndex(subtitle, availableSubtitles) + 1 || 0) : 0;
+  const currentLanguageIndex = currentSubtitle ?
+    findLanguageIndex(currentSubtitle, availableSubtitles) + 1
+    : 0;
 
   const onLanguageChange = (evt) => {
     const index = +evt.target.value;
@@ -48,7 +45,7 @@ const SubtitlesKnobBase = ({
       const sub = availableSubtitles[index - 1];
       player.dispatch("SET_SUBTITLES_TRACK", sub);
     } else {
-      player.dispatch("SET_SUBTITLES_TRACK");
+      player.dispatch("DISABLE_SUBTITLES_TRACK");
     }
   };
 
@@ -65,7 +62,7 @@ const SubtitlesKnobBase = ({
 
 module.exports = withModulesState({
   player: {
-    subtitle: "subtitle",
+    subtitle: "currentSubtitle",
     availableSubtitles: "availableSubtitles",
   },
 })(SubtitlesKnobBase);

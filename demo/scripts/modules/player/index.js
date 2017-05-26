@@ -108,7 +108,7 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     },
 
     EXIT_FULL_SCREEN: () => {
-      player.setFullscreen(false);
+      player.exitFullscreen();
     },
 
     SET_AUDIO_BITRATE: (bitrate) => {
@@ -126,11 +126,15 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     },
 
     SET_AUDIO_TRACK: (track) => {
-      player.setAudioTrack(track);
+      player.setAudioTrack(track.id);
     },
 
     SET_SUBTITLES_TRACK: (track) => {
-      player.setTextTrack(track);
+      player.setTextTrack(track.id);
+    },
+
+    DISABLE_SUBTITLES_TRACK: () => {
+      player.disableTextTrack();
     },
   };
 };

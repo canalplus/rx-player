@@ -26,8 +26,8 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       .takeUntil($destroy)
       .subscribe(arg => state.set({ [stateItem]: arg }));
 
-  linkPlayerEventToState("subtitleChange", "subtitle");
-  linkPlayerEventToState("languageChange", "language");
+  linkPlayerEventToState("textTrackChange", "subtitle");
+  linkPlayerEventToState("audioTrackChange", "language");
   linkPlayerEventToState("videoBitrateChange", "videoBitrate");
   linkPlayerEventToState("audioBitrateChange", "audioBitrate");
   linkPlayerEventToState("error", "error");
