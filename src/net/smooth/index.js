@@ -28,7 +28,7 @@ import request from "../../request";
 import createSmoothStreamingParser from "./parser";
 
 import mp4Utils from "./mp4.js";
-import { parseBif } from "../bif";
+import { parseBif } from "../parsers/bif";
 import { parseSami } from "../parsers/texttracks/sami.js";
 import { parseTTML } from "../parsers/texttracks/ttml.js";
 

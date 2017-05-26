@@ -2,7 +2,7 @@ import {
   le2toi,
   le4toi,
   bytesToStr,
-} from "../utils/bytes";
+} from "../../utils/bytes";
 
 function parseBif(buf) {
   let pos = 0;
