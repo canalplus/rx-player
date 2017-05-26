@@ -10,7 +10,7 @@ Its main goals are:
   - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB integration...)
   - To be easy to integrate and use as a library in various codebases.
 
-Latest release: v2.0.12
+Latest release: v2.1.0
 
 ## API
 
