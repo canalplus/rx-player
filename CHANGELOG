@@ -3,6 +3,14 @@ next version (pending)
 
 Added
 -----
+- position: add getMinimumPosition, getMaximumPosition and startAt loadVideo argument to replace the timeFragment API
+- api: add the positionUpdate event
+- images: add the getImageTrackData method
+- images: add the imageTrackUpdate event
+- position: added getPosition method
+- position: added getWallClockTime method
+- position: added possibility to use relative, absolute and wall-clock time for seekTo
+- transport: added segmentLoader transportOption
 - api: added setMaxAudioBitrate api call
 - api: added setMaxVideoBitrate api call
 - api: added exitFullscreen api call
@@ -10,6 +18,8 @@ Added
 - api: added ErrorCodes static property
 - api: added getPosition API call
 - api: added getWallClockTime API call
+- manifest: added getCurrentRepresentations API call
+- manifest: added getCurrentAdaptations API call
 - api: add throttleWhenHidden option to constructor to disable throttling when the current page is hidden for an extended time
 - api: add limitVideoWidth option to constructor to disable throttling to match the video element's width
 - api: added initialAudioBitrate to constructor's options
@@ -20,8 +30,6 @@ Added
 - languages: getAvailableTextTracks API has been added with closed caption support
 - languages: getAudioTrack API has been added with audio description support
 - languages: getTextTrack API has been added with closed caption support
-- languages: hasAudioTrack API has been added with audio description support
-- languages: hasTextTrack API has been added with closed caption support
 - languages: setAudioTrack API has been added with audio description support
 - languages: setTextTrack API has been added with closed caption support
 - dash/subtitles: detect audio description in MPD
@@ -32,6 +40,23 @@ Added
 
 Deprecated
 ----------
+- position: the timeFragment API (loadVideo's timeFragment argument, getStartTime, getEndTime and goToStart) is deprecated
+- api: currentTimeChange event is replaced by the positionUpdate event
+- api: progress event is deprecated and not replaced
+- api: getImageTrack is replaced by the imageTrackUpdate event
+- api: loadVideo parameter subtitles is replaced by supplementaryTextTracks
+- api: loadVideo parameter images is replaced by supplementaryImageTracks
+- api: getVideoMaxBitrate is replaced by getMaxVideoBitrate
+- api: getAudioMaxBitrate is replaced by getMaxAudioBitrate
+- api: toggleDebug is deprecated and not replaced
+- api: hideDebug is deprecated and not replaced
+- api: showDebug is deprecated and not replaced
+- api: getDebug is deprecated and not replaced
+- api: asObservable is deprecated and not replaced
+- api: getAverageBitrates is deprecated and not replaced
+- api: getMetrics is deprecated and not replaced
+- position: using seekTo with a Number argument is deprecated.
+- position: getCurrentTime is deprecated in favor of getWallClockTime
 - api: setVideoMaxBitrate is replaced by setMaxVideoBitrate
 - api: setAudioMaxBitrate is replaced by setMaxAudioBitrate
 - api: using setFullscreen(false) is replaced by exitFullscreen
@@ -45,14 +70,19 @@ Deprecated
 - languages: getAvailableSubtitles is deprecated in favor of getAvailableTextTracks
 - languages: getLanguage is deprecated in favor of getAudioTrack
 - languages: getSubtitle is deprecated in favor of getTextTrack
-- languages: isLanguageAvailable is deprecated in favor of hasAudioTrack
-- languages: isSubtitleAvailable is deprecated in favor of hasTextTrack
+- languages: isLanguageAvailable is deprecated and not replaced
+- languages: isSubtitleAvailable is deprecated and not replaced
 - languages: setLanguage is deprecated in favor of setAudioTrack
 - languages: setSubtitle is deprecated in favor of setTextTrack
 
 Bug fixes
 ---------
 
+- adaptive: fix a bug where multiple videos representations with the same width could be discriminated
+- languages: fix bug where the user could switch to a closed caption track unknowngly
+- languages: fix bug where the user could switch to an audio description track unknowngly
+- manifest: improved and documented getManifest's return value
+- manifest: defined and documented a generic manifest object structure (slowly replacing the old object).
 - images: image playlists are now not re-fetched if the request failed (no retry)
 - dash: lowered security time raising the startup time for SegmentTemplate-based contents
 - api: getLanguage/getSubtitle returns the language of the last chunk received, not the last set
