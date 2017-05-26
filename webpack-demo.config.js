@@ -12,30 +12,34 @@ const config = {
     filename: "bundle.js",
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.jsx?$/,
-        loader: "babel",
-        query: {
-          cacheDirectory: true,
-          presets: ["react", ["es2015", { loose: true }]],
+        use: {
+          loader: "babel-loader",
+          options: {
+            cacheDirectory: true,
+            presets: [
+              "react",
+              ["es2015", { loose: true }],
+            ],
+          },
         },
       },
-      { test: /\.css$/, loader: "style-loader!css-loader" },
+      {
+        test: /\.css$/,
+        use: [
+          "style-loader",
+          "css-loader",
+        ],
+      },
       {
         test: /\.(otf|eot|svg|ttf|woff)/,
-        loader: "url-loader",
+        use: ["url-loader"],
       },
     ],
   },
-  resolve: {
-    alias: {
-      main: __dirname + "/src",
-      test: __dirname + "/test",
-    },
-  },
   plugins: [
-    new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
       "__DEV__": true,
       "process.env": {
@@ -51,9 +55,6 @@ const config = {
     __filename: false,
     __dirname: false,
     setImmediate: false,
-  },
-  resolveLoader: {
-    root: path.join(__dirname, "node_modules"),
   },
 };
 

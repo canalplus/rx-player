@@ -1,5 +1,4 @@
 /* eslint-env node */
-const path = require("path");
 const ClosureCompiler = require("webpack-closure-compiler");
 
 const RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "production";
@@ -18,25 +17,23 @@ const config = {
     libraryTarget: "umd",
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
-        loader: "babel",
         exclude: /node_modules/,
-        query: {
-          presets: [["es2015", { loose: true }]],
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: [
+              "react",
+              ["es2015", { loose: true, modules:false }],
+            ],
+          },
         },
       },
     ],
   },
-  resolve: {
-    alias: {
-      main: __dirname + "/src",
-      test: __dirname + "/test",
-    },
-  },
   plugins: [
-    new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
       "__DEV__": RX_PLAYER_ENV === "development",
       "process.env": {
@@ -52,9 +49,6 @@ const config = {
     __filename: false,
     __dirname: false,
     setImmediate: false,
-  },
-  resolveLoader: {
-    root: path.join(__dirname, "node_modules"),
   },
 };
 
