@@ -1,7 +1,10 @@
 /* eslint-env node */
 const path = require("path");
+const ClosureCompiler = require("webpack-closure-compiler");
 
 const RX_PLAYER_ENV = process.env.RX_PLAYER_ENV || "production";
+
+const shouldMinify = process.env.RXP_MINIFY;
 
 if (["development", "production"].indexOf(RX_PLAYER_ENV) < 0) {
   throw new Error("unknown RX_PLAYER_ENV " + RX_PLAYER_ENV);
@@ -9,7 +12,7 @@ if (["development", "production"].indexOf(RX_PLAYER_ENV) < 0) {
 
 const webpack = require("webpack");
 
-module.exports = {
+const config = {
   output: {
     library: "RxPlayer",
     libraryTarget: "umd",
@@ -54,3 +57,15 @@ module.exports = {
     root: path.join(__dirname, "node_modules"),
   },
 };
+
+if (shouldMinify) {
+  config.plugins.push(new ClosureCompiler({
+    options: {
+      compilation_level: "SIMPLE",
+      language_in: "ES5",
+      warning_level: "VERBOSE",
+    },
+  }));
+}
+
+module.exports = config;
