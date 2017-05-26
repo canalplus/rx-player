@@ -46,6 +46,8 @@ const {
   toWallClockTime,
   fromWallClockTime,
   getLiveGap,
+  getMaximumBufferPosition,
+  getMinimumBufferPosition,
 } = require("./timings");
 
 const {
@@ -438,6 +440,7 @@ class Player extends EventEmitter {
       defaultSubtitle,
       defaultTextTrack,
       hideNativeSubtitle, // TODO better name
+      startAt,
     } = opts;
 
     // ---- Deprecated calls
@@ -512,6 +515,7 @@ class Player extends EventEmitter {
       defaultAudioTrack: _defaultAudioTrack,
       defaultTextTrack: _defaultTextTrack,
       transport,
+      startAt,
     };
   }
 
@@ -535,6 +539,7 @@ class Player extends EventEmitter {
       transport,
       defaultAudioTrack,
       defaultTextTrack,
+      startAt,
     } = options;
 
     this.stop();
@@ -577,6 +582,7 @@ class Player extends EventEmitter {
       pipelines,
       videoElement,
       autoPlay,
+      startAt,
     })
       .publish();
 
@@ -1243,8 +1249,9 @@ class Player extends EventEmitter {
         this.video.currentTime = time.relative;
         return;
       }
-      else if (time.wallClock) {
-        this.video.currentTime = fromWallClockTime(time * 1000, this.man);
+      else if (time.wallClockTime) {
+        this.video.currentTime =
+          fromWallClockTime(time.wallClockTime * 1000, this.man);
         return;
       }
     }
@@ -1601,6 +1608,22 @@ class Player extends EventEmitter {
     }
 
     return this._currentImagePlaylist;
+  }
+
+  getMinimumPosition() {
+    if (!this.man) {
+      return null;
+    }
+
+    return getMinimumBufferPosition(this.man);
+  }
+
+  getMaximumPosition() {
+    if (!this.man) {
+      return null;
+    }
+
+    return getMaximumBufferPosition(this.man);
   }
 }
 

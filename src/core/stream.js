@@ -16,7 +16,12 @@
 
 const log = require("../utils/log");
 const assert = require("../utils/assert");
-const { getLiveGap, seekingsSampler, fromWallClockTime } = require("./timings");
+const {
+  getLiveGap,
+  seekingsSampler,
+  fromWallClockTime,
+  getBufferLimits,
+} = require("./timings");
 const { retryableFuncWithBackoff } = require("../utils/retry");
 const { Observable } = require("rxjs/Observable");
 const { on, throttle } = require("../utils/rx-utils");
@@ -119,11 +124,13 @@ function Stream({
   pipelines,
   videoElement,
   autoPlay,
+  startAt,
 }) {
 
   const fragStartTime = timeFragment.start;
   let fragEndTime = timeFragment.end;
 
+  // TODO @deprecate?
   const fragEndTimeIsFinite = fragEndTime < Infinity;
 
   // throttled to avoid doing multiple simultaneous requests because multiple
@@ -753,27 +760,53 @@ function Stream({
     let endTime = fragEndTime;
     const percentage = /^\d*(\.\d+)? ?%$/;
 
-    if (typeof startTime == "string" && percentage.test(startTime)) {
-      startTime = (parseFloat(startTime) / 100) * duration;
-    }
+    if (startAt) {
+      const [min, max] = getBufferLimits();
+      if (startAt.position != null) {
+        startTime = Math.max(Math.min(startAt.position, max), min);
+      }
+      else if (startAt.wallClockTime != null) {
+        const position = manifest.isLive ?
+          startAt.wallClockTime - manifest.availabilityStartTime :
+          startAt.wallClockTime;
 
-    if (typeof endTime == "string" && percentage.test(endTime)) {
-      fragEndTime = (parseFloat(endTime) / 100) * duration;
+        startTime = Math.max(Math.min(position, max), min);
+      }
+      else if (startAt.fromFirstPosition != null) {
+        const { fromFirstPosition } = startAt;
+        startTime = fromFirstPosition <= 0 ?
+          min : Math.min(min + fromFirstPosition, max);
+      }
+      else if (startAt.fromLastPosition != null) {
+        const { fromLastPosition } = startAt;
+        startTime = fromLastPosition >= 0 ?
+          max : Math.max(min, max + fromLastPosition);
+      }
     }
+    else { // TODO @deprecated
+      if (typeof startTime == "string" && percentage.test(startTime)) {
+        startTime = (parseFloat(startTime) / 100) * duration;
+      }
 
-    if (endTime === Infinity || endTime === "100%") {
-      endTime = duration;
-    }
+      if (typeof endTime == "string" && percentage.test(endTime)) {
+        fragEndTime = (parseFloat(endTime) / 100) * duration;
+      }
 
-    if (!manifest.isLive) {
-      assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
-    }
-    else if (startTime) {
-      // TODO To re-think for v3.0.0
-      startTime = fromWallClockTime(startTime, manifest);
-    }
-    else {
-      startTime = getLiveEdge(manifest);
+      if (endTime === Infinity || endTime === "100%") {
+        endTime = duration;
+      }
+
+      if (!manifest.isLive) {
+        assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
+      }
+      else if (startTime) {
+        startTime = fromWallClockTime(startTime, manifest);
+      }
+      else {
+        // TODO use something akin to getMaximumBufferPosition() -
+        //   (manifest.suggestedPresentationDelay || DEFAULT_LIVE_GAP)
+        startTime = getLiveEdge(manifest);
+      }
     }
 
     log.info("set initial time", startTime);

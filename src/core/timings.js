@@ -285,10 +285,23 @@ function toWallClockTime(ts, manifest) {
   return new Date((ts + manifest.availabilityStartTime) * 1000);
 }
 
+/**
+ * TODO This function should have more of a seekTo kind of name
+ * ``fromWallClockTime`` should probably just do:
+ * ```js
+ * (timeInSeconds, manifest) => {
+ *   return timeInSeconds - manifest.availabilityStartTime;
+ * };
+ * ```
+ * It should be the exact opposite of ``toWallClockTime``
+ */
 function fromWallClockTime(timeInMs, manifest) {
   return normalizeWallClockTime(timeInMs, manifest) / 1000 - manifest.availabilityStartTime;
 }
 
+/**
+ * TODO This function should have more of a seekTo kind of name
+ */
 function normalizeWallClockTime(timeInMs, manifest) {
   const {
     suggestedPresentationDelay,
@@ -305,6 +318,44 @@ function normalizeWallClockTime(timeInMs, manifest) {
   const min = now - (timeShiftBufferDepth) * 1000;
   return Math.max(Math.min(timeInMs, max), min);
 }
+
+function getMinimumBufferPosition(manifest) {
+  // we have to know both the min and the max to be sure
+  const [min] = getBufferLimits(manifest);
+  return min;
+}
+
+function getMaximumBufferPosition(manifest) {
+  if (!manifest.isLive) {
+    return manifest.duration;
+  }
+
+  const { presentationLiveGap } = manifest;
+  const now = Date.now() / 1000;
+  return now - presentationLiveGap;
+}
+
+function getBufferLimits(manifest) {
+  // TODO use RTT for the manifest request + 3 or something
+  const BUFFER_DEPTH_SECURITY = 5;
+
+  if (!manifest.isLive) {
+    return [0, manifest.duration];
+  }
+
+  const {
+    presentationLiveGap,
+    timeShiftBufferDepth,
+  } = manifest;
+
+  const now = Date.now() / 1000;
+  const max = now - presentationLiveGap;
+  return [
+    Math.min(max, max - timeShiftBufferDepth + BUFFER_DEPTH_SECURITY),
+    max,
+  ];
+}
+
 
 function getLiveGap(ts, manifest) {
   if (!manifest.isLive) {
@@ -328,4 +379,7 @@ module.exports = {
   getLiveGap,
   toWallClockTime,
   fromWallClockTime,
+  getMinimumBufferPosition,
+  getMaximumBufferPosition,
+  getBufferLimits,
 };
