@@ -34,8 +34,10 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   linkPlayerEventToState("fullscreenChange", "isFullscreen");
   linkPlayerEventToState("volumeChange", "volume");
 
-  player.getImageTrack()
+  fromPlayerEvent("imageTrackUpdate")
+    .distinctUntilChanged()
     .takeUntil($destroy)
+    .map(({ data }) => data)
     .subscribe(images => state.set({ images }));
 
   // use an interval for current position
@@ -86,6 +88,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.availableVideoBitrates = [];
         stateUpdates.availableLanguages = [];
         stateUpdates.availableSubtitles = [];
+        stateUpdates.images = [];
       }
 
       if (arg !== "STOPPED") {
@@ -96,6 +99,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       state.set(stateUpdates);
     });
 
+  // /!\ deprecated
   player.getMetrics()
     .takeUntil($destroy)
     // .map((metric) => metric.value.response)

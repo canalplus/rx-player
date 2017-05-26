@@ -3,7 +3,7 @@ module.exports = [
     "name": "BIF Thumbnail Track example",
     "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
     "transport": "smooth",
-    "images": {
+    "supplementaryImageTracks": {
       "mimeType": "application/bif",
       "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
     },

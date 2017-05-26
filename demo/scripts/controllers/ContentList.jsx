@@ -31,13 +31,19 @@ class ContentList extends React.Component {
       return;
     }
 
-    const { url, transport, autoPlay, images, subtitles } = content;
+    const {
+      url,
+      transport,
+      autoPlay,
+      supplementaryImageTracks,
+      supplementaryTextTracks,
+    } = content;
     loadVideo({
       url,
       transport,
       autoPlay: !(autoPlay === false),
-      images,
-      subtitles,
+      supplementaryImageTracks,
+      supplementaryTextTracks,
     });
   }
 
