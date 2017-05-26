@@ -24,7 +24,7 @@ const config = {
         loader: "babel",
         exclude: /node_modules/,
         query: {
-          "presets": ["es2015-loose"],
+          presets: [["es2015", { loose: true }]],
         },
       },
     ],

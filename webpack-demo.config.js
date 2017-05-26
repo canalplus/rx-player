@@ -14,8 +14,8 @@ module.exports = {
         test: /\.jsx?$/,
         loader: "babel",
         query: {
-          "cacheDirectory": true,
-          "presets": ["react", "es2015-loose"],
+          cacheDirectory: true,
+          presets: ["react", ["es2015", { loose: true }]],
         },
       },
       { test: /\.css$/, loader: "style-loader!css-loader" },
