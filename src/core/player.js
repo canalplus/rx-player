@@ -629,6 +629,7 @@ class Player extends EventEmitter {
       this._manifestNext(value);
     }
     if (type == "pipeline") {
+      // TODO @deprecated
       this.trigger("progress", value.segment);
       const { bufferType, parsed } = value;
       if (bufferType === "image") {
@@ -783,6 +784,17 @@ class Player extends EventEmitter {
         t.wallClockTime = toWallClockTime(t.ts, this.man);
         t.liveGap = getLiveGap(t.ts, this.man);
       }
+      const positionData = {
+        position: t.ts,
+        duration: t.duration,
+        bufferGap: isFinite(t.gap) ? t.gap : 0, // TODO fix higher up
+        liveGap: t.liveGap,
+        playbackRate: t.playback,
+        wallClockTime: t.wallClockTime && t.wallClockTime.getTime() / 1000,
+      };
+      this.trigger("positionUpdate", positionData);
+
+      // TODO @deprecate
       this.trigger("currentTimeChange", t);
     }
   }
@@ -909,7 +921,9 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Returns in seconds the duration of the loaded video on the current range.
+   * Returns in seconds the difference between:
+   *   - the start of the current contiguous loaded range.
+   *   - the current time.
    * @returns {Number}
    */
   getVideoLoadedTime() {
@@ -917,7 +931,9 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Returns in seconds the duration of the played video on the current range.
+   * Returns in seconds the difference between:
+   *   - the start of the current contiguous loaded range.
+   *   - the current time.
    * @returns {Number}
    */
   getVideoPlayedTime() {
@@ -1280,6 +1296,8 @@ class Player extends EventEmitter {
   }
 
   unMute() {
+    // TODO This is not perfect as volume can be set to 0 without being muted.
+    // We should probably reset this.muted once unMute is called.
     const vol = this.getVolume();
     if (vol === 0) {
       this.setVolume(this.muted);
