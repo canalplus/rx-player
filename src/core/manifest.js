@@ -95,7 +95,8 @@ function normalizeManifest(location, manifest, subtitles, images) {
     images = normalizeImageAdaptation(images);
   }
 
-  const periods = manifest.periods.map((period) => normalizePeriod(period, urlBase, subtitles, images));
+  const periods = manifest.periods.map((period) =>
+    normalizePeriod(period, urlBase, subtitles, images));
 
   // TODO(pierre): support multiple periods
   manifest = mergeAndCloneAttributes(manifest, periods[0]);

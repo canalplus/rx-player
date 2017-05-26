@@ -22,6 +22,11 @@ const { resolveURL } = require("../../utils/url");
 const { parseSidx, patchPssh, getMdat } = require("./mp4");
 const { bytesToStr } = require("../../utils/bytes.js");
 
+// TODO Those should already be constructed here
+const { Adaptation } = require("../../manifest/adaptation.js");
+const { Representation } = require("../../manifest/representation.js");
+const { Segment } = require("../../manifest/segment.js");
+
 const request = require("../../request");
 const dashManifestParser = require("./manifest");
 
@@ -100,21 +105,139 @@ function isMP4EmbeddedTrack(segment) {
 
 /**
  * Returns pipelines used for DASH streaming.
- * @param {Object} opts
- * @param {Function} [opts.createXHR] - Optional custom XMLHttpRequest
+ * @param {Object} options
+ * @param {Function} [options.createXHR] - Optional custom XMLHttpRequest
  * implementation. Used for each generated http request.
- * @param {Function} [opts.contentProtectionParser] - Optional parser for the
+ * @param {Function} [options.contentProtectionParser] - Optional parser for the
  * manifest's content Protection.
  * @returns {Object}
  */
-module.exports = function(opts={}) {
-  let { contentProtectionParser } = opts;
+module.exports = function(options={}) {
+  let { contentProtectionParser } = options;
 
   if (!contentProtectionParser) {
     contentProtectionParser = () => {};
   }
 
-  const createXHR = opts.createXHR;
+  const createXHR = options.createXHR;
+
+  const segmentLoader = ({
+    url,
+    segment,
+  }) => {
+    const { range, indexRange } = segment;
+
+    // fire a single time contiguous init and index ranges.
+    if (
+      range && indexRange &&
+      range[1] === indexRange[0] - 1
+    ) {
+      return request({
+        url: url,
+        responseType: "arraybuffer",
+        headers: {
+          Range: byteRange([range[0], indexRange[1]]),
+        },
+        createXHR,
+      });
+    }
+
+    const mediaHeaders = range ?
+      { "Range": byteRange(range) } : null;
+
+    const mediaOrInitRequest = request({
+      url: url,
+      responseType: "arraybuffer",
+      headers: mediaHeaders,
+      createXHR,
+    });
+
+    // If init segment has indexRange metadata, we need to fetch
+    // both the initialization data and the index metadata. We do
+    // this in parallel and send the both blobs into the pipeline.
+    if (indexRange) {
+      const indexRequest = request({
+        url: url,
+        responseType: "arraybuffer",
+        headers: { "Range": byteRange(indexRange) },
+        createXHR,
+      });
+      return merge(mediaOrInitRequest, indexRequest);
+    }
+    else {
+      return mediaOrInitRequest;
+    }
+  };
+
+  const segmentPreLoader = ({ segment }) => {
+    const media = segment.getMedia();
+    const range = segment.getRange();
+    const indexRange = segment.getIndexRange();
+
+    // init segment without initialization media/range/indexRange:
+    // we do nothing on the network
+    if (segment.isInitSegment() && !(media || range || indexRange)) {
+      return empty();
+    }
+
+    // TODO add get helper
+    const customSegmentLoader = options.segmentLoader;
+
+    const path = media ?
+      replaceTokens(media, segment) : "";
+
+    const url = resolveURL(segment.getResolvedURL(), path);
+
+    const args = {
+      adaptation: new Adaptation(segment.getAdaptation()),
+      representation: new Representation(segment.getRepresentation()),
+      segment: new Segment(segment),
+      transport: "smooth",
+      url,
+    };
+
+    if (!customSegmentLoader) {
+      return segmentLoader(args);
+    }
+
+    return Observable.create(obs => {
+      let hasFinished = false;
+      let hasFallbacked = false;
+
+      const resolve = (args = {}) => {
+        if (!hasFallbacked) {
+          hasFinished = true;
+          obs.next({
+            responseData: args.data,
+            size: args.size || 0,
+            duration: args.duration || 0,
+          });
+          obs.complete();
+        }
+      };
+
+      const reject = (err = {}) => {
+        if (!hasFallbacked) {
+          hasFinished = true;
+          obs.error(err);
+        }
+      };
+
+      const fallback = () => {
+        hasFallbacked = true;
+        segmentLoader(args).subscribe(obs);
+      };
+
+      const callbacks = { reject, resolve, fallback };
+      const abort = customSegmentLoader(args, callbacks);
+
+      return () => {
+        if (!hasFinished && !hasFallbacked && typeof abort === "function") {
+          abort();
+        }
+      };
+    });
+  };
 
   const manifestPipeline = {
     loader({ url }) {
@@ -136,61 +259,7 @@ module.exports = function(opts={}) {
 
   const segmentPipeline = {
     loader({ segment }) {
-      const media = segment.getMedia();
-      const range = segment.getRange();
-      const indexRange = segment.getIndexRange();
-
-      // init segment without initialization media/range/indexRange:
-      // we do nothing on the network
-      if (segment.isInitSegment() && !(media || range || indexRange)) {
-        return empty();
-      }
-
-      const path = media ?
-        replaceTokens(media, segment) : "";
-
-      const mediaUrl = resolveURL(segment.getResolvedURL(), path);
-
-      // fire a single time contiguous init and index ranges.
-      if (
-        range && indexRange &&
-        range[1] === indexRange[0] - 1
-      ) {
-        return request({
-          url: mediaUrl,
-          responseType: "arraybuffer",
-          headers: {
-            Range: byteRange([range[0], indexRange[1]]),
-          },
-          createXHR,
-        });
-      }
-
-      const mediaHeaders = range ?
-        { "Range": byteRange(range) } : null;
-
-      const mediaOrInitRequest = request({
-        url: mediaUrl,
-        responseType: "arraybuffer",
-        headers: mediaHeaders,
-        createXHR,
-      });
-
-      // If init segment has indexRange metadata, we need to fetch
-      // both the initialization data and the index metadata. We do
-      // this in parallel and send the both blobs into the pipeline.
-      if (indexRange) {
-        const indexRequest = request({
-          url: mediaUrl,
-          responseType: "arraybuffer",
-          headers: { "Range": byteRange(indexRange) },
-          createXHR,
-        });
-        return merge(mediaOrInitRequest, indexRequest);
-      }
-      else {
-        return mediaOrInitRequest;
-      }
+      return segmentPreLoader({ segment });
     },
 
     parser({ segment, response }) {

@@ -19,6 +19,11 @@ const empty = require("rxjs/observable/EmptyObservable").EmptyObservable.create;
 const { bytesToStr } = require("../../utils/bytes");
 const log = require("../../utils/log");
 
+// TODO Those should already be constructed here
+const { Adaptation } = require("../../manifest/adaptation.js");
+const { Representation } = require("../../manifest/representation.js");
+const { Segment } = require("../../manifest/segment.js");
+
 const request = require("../../request");
 const { RequestResponse } = request;
 const createSmoothStreamingParser = require("./parser");
@@ -170,16 +175,20 @@ module.exports = function(options={}) {
     return { nextSegments, currentSegment };
   }
 
-  const segmentPipeline = {
-    loader({ segment }) {
-      if (segment.isInitSegment()) {
-        const adaptation = segment.getAdaptation();
-        const representation = segment.getRepresentation();
+  /**
+   * Defines the url for the request, load the right loader (custom/default
+   * one).
+   */
+  const segmentPreLoader = ({ segment }) => {
+    if (segment.isInitSegment()) {
+      const adaptation = segment.getAdaptation();
+      const representation = segment.getRepresentation();
 
-        let responseData;
-        const protection = adaptation.smoothProtection || {};
-        switch(adaptation.type) {
-        case "video": responseData = createVideoInitSegment(
+      let responseData = {};
+      const protection = adaptation.smoothProtection || {};
+      switch(adaptation.type) {
+      case "video":
+        responseData = createVideoInitSegment(
           representation.index.timescale,
           representation.width,
           representation.height,
@@ -187,8 +196,10 @@ module.exports = function(options={}) {
           representation.codecPrivateData,
           protection.keyId,     // keyId
           protection.keySystems // pssList
-        ); break;
-        case "audio": responseData = createAudioInitSegment(
+        );
+        break;
+      case "audio":
+        responseData = createAudioInitSegment(
           representation.index.timescale,
           representation.channels,
           representation.bitsPerSample,
@@ -197,35 +208,99 @@ module.exports = function(options={}) {
           representation.codecPrivateData,
           protection.keyId,     // keyId
           protection.keySystems // pssList
-        ); break;
-        }
-
-        return Observable.of(new RequestResponse(
-          200,
-          "",
-          "arraybuffer",
-          Date.now() - 100,
-          Date.now(),
-          responseData.length,
-          responseData
-        ));
+        );
+        break;
       }
-      else {
-        let headers;
 
-        const range = segment.getRange();
-        if (range) {
-          headers = { "Range": byteRange(range) };
-        }
+      return Observable.of(new RequestResponse(
+        200,
+        "",
+        "arraybuffer",
+        Date.now() - 100,
+        Date.now(),
+        responseData.length,
+        responseData
+      ));
+    }
+    else {
+      const customSegmentLoader = options.segmentLoader;
 
-        const url = buildSegmentURL(segment);
-        return request({
-          url,
-          responseType: "arraybuffer",
-          headers,
-          createXHR,
-        });
+      const url = buildSegmentURL(segment);
+
+      const args = {
+        adaptation: new Adaptation(segment.getAdaptation()),
+        representation: new Representation(segment.getRepresentation()),
+        segment: new Segment(segment),
+        transport: "smooth",
+        url,
+      };
+
+      if (!customSegmentLoader) {
+        return segmentLoader(args);
       }
+
+      return Observable.create(obs => {
+        let hasFinished = false;
+        let hasFallbacked = false;
+
+        const resolve = (args = {}) => {
+          if (!hasFallbacked) {
+            hasFinished = true;
+            obs.next({
+              responseData: args.data,
+              size: args.size || 0,
+              duration: args.duration || 0,
+            });
+            obs.complete();
+          }
+        };
+
+        const reject = (err = {}) => {
+          if (!hasFallbacked) {
+            hasFinished = true;
+            obs.error(err);
+          }
+        };
+
+        const fallback = () => {
+          hasFallbacked = true;
+          segmentLoader(args).subscribe(obs);
+        };
+
+        const callbacks = { reject, resolve, fallback };
+        const abort = customSegmentLoader(args, callbacks);
+
+        return () => {
+          if (!hasFinished && !hasFallbacked && typeof abort === "function") {
+            abort();
+          }
+        };
+      });
+    }
+  };
+
+  const segmentLoader = ({
+    url,
+    segment,
+  }) => {
+    let headers;
+    const range = segment.range;
+    if (range) {
+      headers = {
+        Range: byteRange(range),
+      };
+    }
+    return request({
+      url,
+      responseType: "arraybuffer",
+      headers,
+      createXHR,
+    });
+  };
+
+  const segmentPipeline = {
+    loader({ segment }) {
+      return segmentPreLoader({ segment });
     },
 
     parser({ segment, response }) {

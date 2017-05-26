@@ -28,6 +28,9 @@ const {
 const EventEmitter = require("../utils/eventemitter");
 const debugPane = require("../utils/debug");
 const assert = require("../utils/assert");
+const { Manifest } = require("../manifest/manifest.js");
+const { Adaptation } = require("../manifest/adaptation.js");
+const { Representation } = require("../manifest/representation.js");
 
 const {
   HTMLVideoElement_,
@@ -706,6 +709,7 @@ class Player extends EventEmitter {
 
     if (bufferType == "video") {
       this._recordState("videoBitrate", representation && representation.bitrate || -1);
+
     }
 
     if (bufferType == "audio") {
@@ -785,10 +789,44 @@ class Player extends EventEmitter {
    * Returns manifest/playlist object.
    * null if the player is STOPPED.
    * @returns {Object|null}
-   * TODO Define manifest structure in documentation.
    */
   getManifest() {
-    return this.man;
+    if (!this.man){
+      return null;
+    }
+
+    // TODO switch entirely to the Manifest class
+    return new Manifest(this.man);
+  }
+
+  getCurrentAdaptations() {
+    if (!this.man){
+      return null;
+    }
+
+    // TODO switch entirely to the Manifest class
+    const adas = this.adas || [];
+    return Object.keys(adas).reduce((acc, val) => {
+      if (adas[val]) {
+        acc[val] = new Adaptation(adas[val]);
+      }
+      return acc;
+    }, {});
+  }
+
+  getCurrentRepresentations() {
+    if (!this.man){
+      return null;
+    }
+
+    // TODO switch entirely to the Manifest class
+    const reps = this.reps || [];
+    return Object.keys(reps).reduce((acc, val) => {
+      if (reps[val]) {
+        acc[val] = new Representation(reps[val]);
+      }
+      return acc;
+    }, {});
   }
 
   /**
