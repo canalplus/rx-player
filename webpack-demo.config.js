@@ -1,8 +1,11 @@
 /* eslint-env node */
 const path = require("path");
 const webpack = require("webpack");
+const ClosureCompiler = require("webpack-closure-compiler");
 
-module.exports = {
+const shouldMinify = process.env.RXP_DEMO_MINIFY;
+
+const config = {
   entry: "./demo/scripts/index.js",
   output: {
     path: path.join(__dirname, "demo"),
@@ -53,3 +56,15 @@ module.exports = {
     root: path.join(__dirname, "node_modules"),
   },
 };
+
+if (shouldMinify) {
+  config.plugins.push(new ClosureCompiler({
+    options: {
+      compilation_level: "SIMPLE",
+      language_in: "ES5",
+      warning_level: "VERBOSE",
+    },
+  }));
+}
+
+module.exports = config;
