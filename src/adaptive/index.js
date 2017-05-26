@@ -33,8 +33,8 @@ const DEFAULTS = {
   // buffer threshold ratio used as a lower bound
   // margin to find the suitable representation
   defaultBufferThreshold: 0.3,
-  initVideoBitrate: 0,
-  initAudioBitrate: 0,
+  initialVideoBitrate: 0,
+  initialAudioBitrate: 0,
   maxVideoBitrate: Infinity,
   maxAudioBitrate: Infinity,
 };
@@ -167,8 +167,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
     defaultTextTrack,
     defaultBufferSize,
     defaultBufferThreshold,
-    initVideoBitrate,
-    initAudioBitrate,
+    initialVideoBitrate,
+    initialAudioBitrate,
     maxVideoBitrate,
     maxAudioBitrate,
     limitVideoWidth,
@@ -181,8 +181,8 @@ module.exports = function(metrics, deviceEvents, options={}) {
   const $subtitles = new BehaviorSubject(defaultTextTrack);
 
   const $averageBitrates = {
-    audio: new BehaviorSubject(initAudioBitrate),
-    video: new BehaviorSubject(initVideoBitrate),
+    audio: new BehaviorSubject(initialAudioBitrate),
+    video: new BehaviorSubject(initialVideoBitrate),
   };
 
   const averageBitratesConns = [

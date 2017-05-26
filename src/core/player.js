@@ -307,8 +307,8 @@ class Player extends EventEmitter {
     this.metrics = metrics;
 
     this.adaptive = Adaptive(metrics, deviceEvents, {
-      initVideoBitrate: _initialVideoBitrate,
-      initAudioBitrate: _initialAudioBitrate,
+      initialVideoBitrate: _initialVideoBitrate,
+      initialAudioBitrate: _initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
       defaultAudioTrack: normalizeAudioTrack(_defaultAudioTrack),
