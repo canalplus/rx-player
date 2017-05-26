@@ -32,6 +32,18 @@ const ListIndexHelpers = {
     const i = Math.floor(to / duration);
     return !(i >= 0 && i < list.length);
   },
+
+  getLiveEdge() {
+    throw new Error("not implemented");
+  },
+
+  addSegment() {
+    return false;
+  },
+
+  checkDiscontinuity() {
+    return -1;
+  },
 };
 
 module.exports = ListIndexHelpers;

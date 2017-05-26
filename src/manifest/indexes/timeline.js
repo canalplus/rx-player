@@ -129,6 +129,63 @@ const SegmentTimelineHelpers = {
 
     return !(to <= getTimelineRangeEnd(last));
   },
+
+  getEndTime(index) {
+    return this.getLiveEdge(index);
+  },
+
+  getBeginningTime(index) {
+    return index.timeline[0].ts;
+  },
+
+  getLiveEdge(index) {
+    const lastTimelineElement = index.timeline[index.timeline.length - 1];
+    return (getTimelineRangeEnd(lastTimelineElement) / index.timescale);
+      // - manifest.suggestedPresentationDelay // TODO higher up that sh*t
+  },
+
+  /**
+   * Checks if the time given is in a discontinuity. That is:
+   *   - We're on the upper bound of the current range (end of the range - time
+   *     is inferior to the timescale)
+   *   - The next range starts after the end of the current range.
+   * @param {Number} time
+   * @returns {Number} - If a discontinuity is present, this is the Starting ts
+   * for the next (discontinuited) range. If not this is equal to -1.
+   */
+  checkDiscontinuity(index, time) {
+    const { timeline } = index;
+
+    if (time <= 0) {
+      return -1;
+    }
+
+    const segmentIndex = getSegmentIndex(time);
+    if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
+      return -1;
+    }
+
+    const range = timeline[segmentIndex];
+    if (range.d === -1) {
+      return -1;
+    }
+
+    const rangeUp = range.ts;
+    const rangeTo = getTimelineRangeEnd(range);
+    const nextRange = timeline[segmentIndex + 1];
+
+    const timescale = index.timescale || 1;
+    // when we are actually inside the found range and this range has
+    // an explicit discontinuity with the next one
+    if (rangeTo !== nextRange.ts &&
+        time >= rangeUp &&
+        time <= rangeTo &&
+        (rangeTo - time) < timescale) {
+      return nextRange.ts;
+    }
+
+    return -1;
+  },
 };
 
 module.exports = SegmentTimelineHelpers;
