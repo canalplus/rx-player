@@ -124,8 +124,7 @@ body {
 .controls-bar {
   display: flex;
   background-color: #111;
-  height: 55px;
-  margin-top: -5px;
+  height: 45px;
   color: #fff;
   text-align: left;
 }
@@ -154,7 +153,16 @@ body {
   left: 0px;
   border: 1px solid white;
   height: 100px;
+  width: 180px;
+  margin-left: -90px;
   z-index: 100;
+  transform:scaleY(1);
+  animation: fadein 0.6s;
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .image-tip {
@@ -166,14 +174,24 @@ body {
   margin-top: -4px;
 }
 
+.progress-bar-parent {
+  position: relative;
+}
+
 .progress-bar-wrapper {
-  height: 8px;
+  height: 6px;
+  cursor: pointer;
   display: flex;
   position: relative;
   background-color: #000;
-  cursor: pointer;
   width: 100%;
   margin: auto;
+  transition: all 0.2s ease;
+  z-index: 9999;
+}
+
+.progress-bar-wrapper:hover {
+  transform:scaleY(2);
 }
 
 .progress-bar-current {

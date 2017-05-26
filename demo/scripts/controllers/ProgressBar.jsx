@@ -57,24 +57,24 @@ class Progressbar extends React.Component {
 
     return (
       <div
-        className="progress-bar-wrapper"
+        className="progress-bar-parent"
         ref={el => this.wrapperElement = el}
       >
         { imageTipVisible ?
-            <ImageTip
-              className="progress-tip"
-              image={image}
-              xPosition={imageTipPosition - imageTipOffset}
-            /> : null
+          <ImageTip
+            className="progress-tip"
+            image={image}
+            xPosition={imageTipPosition - imageTipOffset}
+          /> : null
         }
-        <ProgressbarComponent
-          seek={seek}
-          onMouseOut={onMouseOut}
-          onMouseMove={onMouseMove}
-          position={currentTime}
-          duration={duration}
-          bufferGap={bufferGap}
-        />
+          <ProgressbarComponent
+            seek={seek}
+            onMouseOut={onMouseOut}
+            onMouseMove={onMouseMove}
+            position={currentTime}
+            duration={duration}
+            bufferGap={bufferGap}
+          />
       </div>
     );
   }

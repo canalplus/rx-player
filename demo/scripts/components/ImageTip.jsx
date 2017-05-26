@@ -58,11 +58,8 @@ class ImageTip extends React.Component {
       return null;
     }
 
-    const elLeft = this.element.offsetWidth;
-
-
     const style = {
-      transform: `translate(${xPosition - (elLeft / 2)}px, -110px)`,
+      transform: `translate(${xPosition}px, -120px)`,
     };
 
     this.positionIsCorrected = true;
