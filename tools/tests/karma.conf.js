@@ -9,14 +9,16 @@ if (coverageIsWanted) {
     webpackConfig.module = {};
   }
 
-  if (!webpackConfig.module.postLoaders) {
-    webpackConfig.module.postLoaders = [];
+  if (!webpackConfig.module.rules) {
+    webpackConfig.module.rules = [];
   }
 
   // add coverage for js files in src
-  webpackConfig.module.postLoaders.push({
+  webpackConfig.module.rules.push({
     test: /\.js$/,
-    include: path.resolve(__dirname, "../src/"),
+    enforce: "post",
+    include: path.resolve(__dirname, "../../src/"),
+    exclude: [/__tests__/],
     loader: "istanbul-instrumenter-loader",
   });
 }
@@ -43,11 +45,11 @@ const karmaConf = {
   },
 
   preprocessors: {
-    "test/index.js": ["webpack"],
+    "tests/index.js": ["webpack"],
   },
 
   files: [
-    "test/index.js",
+    "tests/index.js",
   ],
 
   client: {
@@ -58,7 +60,7 @@ const karmaConf = {
 
   coverageIstanbulReporter: {
     reports: ["html", "lcovonly", "text-summary"],
-    dir: path.resolve(__dirname, "../coverage/%browser%"),
+    dir: path.resolve(__dirname, "coverage/%browser%"),
 
     // if using webpack and pre-loaders, work around webpack breaking the source
     // path

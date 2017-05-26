@@ -6,7 +6,7 @@ const ClosureCompiler = require("webpack-closure-compiler");
 const shouldMinify = process.env.RXP_DEMO_MINIFY;
 
 const config = {
-  entry: "./demo/scripts/index.js",
+  entry: "../demo/scripts/index.js",
   output: {
     path: path.join(__dirname, "demo"),
     filename: "bundle.js",
@@ -34,7 +34,7 @@ const config = {
         ],
       },
       {
-        test: /\.(otf|eot|svg|ttf|woff)/,
+        test: /\.(otf|eot|svg|ttf|woff)$/,
         use: ["url-loader"],
       },
     ],

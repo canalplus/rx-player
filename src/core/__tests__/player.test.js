@@ -1,42 +1,42 @@
 const expect = require("chai").expect;
-const Player = require("../../src/core/player.js");
+const Player = require("../player.js");
 
 describe("main player", function() {
   const transport = { manifestPipeline: {}, segmentPipeline: {}, textTrackPipeline: {} };
 
-  it("has constructor", function() {
+  xit("has constructor", function() {
     expect(new Player({ transport })).to.be.an("object");
   });
 
-  it("is stopped on instanciation", function() {
+  xit("is stopped on instanciation", function() {
     expect(new Player({ transport }).getPlayerState()).to.equal("STOPPED");
   });
 
-  it("check instanceof HTMLVideoElement", function() {
+  xit("check instanceof HTMLVideoElement", function() {
     expect(() => new Player({ videoElement: document.createElement("li") })).to.throw();
   });
 
-  it("can get volume", function() {
+  xit("can get volume", function() {
     expect(new Player({ transport }).getVolume()).to.be.a("number");
     expect(new Player({ transport }).getVolume()).to.equal(1);
   });
 
-  it("can set volume", function() {
+  xit("can set volume", function() {
     const pl = new Player({ transport });
     pl.setVolume(0);
     expect(pl.getVolume()).to.equal(0);
   });
 
-  it("throw error if volume not double", function() {
+  xit("throw error if volume not double", function() {
     expect(() => new Player({ transport }).setVolume("troll")).to.throw();
   });
 
-  it("can mute", function() {
+  xit("can mute", function() {
     const pl = new Player({ transport }); pl.mute();
     expect(pl.getVolume()).to.equal(0);
   });
 
-  it("can unmute", function() {
+  xit("can unmute", function() {
     const pl = new Player({ transport });
     pl.setVolume(0.7);
     expect(pl.getVolume()).to.equal(0.7);
@@ -46,14 +46,14 @@ describe("main player", function() {
     expect(pl.getVolume()).to.equal(0.7);
   });
 
-  it("can unmute a muted player", function() {
+  xit("can unmute a muted player", function() {
     const pl = new Player({ transport });
     pl.setVolume(0);
     pl.unMute();
     expect(pl.getVolume()).to.equal(0.1);
   });
 
-  it("is an eventemitter", function(done) {
+  xit("is an eventemitter", function(done) {
     const player = new Player({ transport });
     expect(player.addEventListener).to.be.a("function");
     expect(player.removeEventListener).to.be.a("function");

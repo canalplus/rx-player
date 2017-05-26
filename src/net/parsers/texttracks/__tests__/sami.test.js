@@ -1,7 +1,7 @@
 const _ = require("lodash");
 const expect = require("chai").expect;
-const smi = require("raw!test/fixtures/captures.smi");
-const { parseSami } = require("../../../src/net/smooth/tt-sami");
+const smi = require("raw-loader!./fixtures/captures.smi");
+const { parseSami } = require("../sami.js");
 
 describe("sami parser", function() {
 

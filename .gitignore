@@ -4,7 +4,7 @@ node_modules
 
 demo/bundle.js
 
-coverage/
+tools/tests/coverage/
 
 dist/*
 !dist/rx-player.js
