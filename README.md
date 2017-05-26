@@ -1,17 +1,53 @@
-rx-player
-===============
+# Rx-player
+
+The Rx-player is a JavaScript library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP) and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming) video player directly on the browser, without plugins. It relies on HTML5 [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions) and [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions).
+
+It is currently used in production for premium services and targets several devices, such as computers, phones, but also set-top-boxes and other peculiar environments.
+
+Its main goals are:
+  - To play live and On Demand Smooth and DASH contents for extended amounts of time, with or without DRM
+  - To offer a first-class user experience (best quality without any buffering, low latency...)
+  - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB integration...)
+  - To be easy to integrate and use as a library in various codebases.
 
 Latest release: v2.0.12
 
-The rx-player is a Javascript library implementic a generic streaming video player using HTML5 Media Source and Encrypted Media extensions. It is entirely written in reactive-programming with ECMAScript 6.
-
-It comes with a support for DASH and SmoothStreaming transports.
-
 ## API
 
-[Read the detailed API](//github.com/canalplus/rx-player/blob/master/API.md).
+We documented the API in every little details in [the API documentation](./doc/api/index.md).
 
-## Why a new player ? Why Rx ?
+## Demo
+
+You can view our online Demo, built from our last version, [here](http://canalplus.github.io/rx-player/).
+
+This demo is a small application written in [React](https://github.com/facebook/react) demonstrating a simple usage of the player.
+
+## How to use it?
+
+The fastest way to use our player directly in your code is to add this repository as a dependency. You can do it via the npm install command:
+```
+npm install --save https://github.com/canalplus/rx-player/
+```
+
+You can then either use directly the `dist/rx-player.min.js` file (which is our last released version, compiled and minified):
+```html
+<script src="node_modules/rx-player/dist/rx-player.min.js"></script>
+```
+
+Or import it in your code with tools like [Browserify](http://browserify.org/) or [Webpack](http://webpack.github.io/):
+```js
+// CommonJS syntax
+const Player = require("rx-player");
+
+// ECMAScript 2015 syntax
+import Player from "rx-player";
+```
+
+## Your questions
+
+You can ask directly your questions about the project on [our gitter](https://gitter.im/rx-player/questions). We will try our best to answer them as quickly as possible.
+
+## Why a new player? Why Rx?
 
 Building a streaming video player in javascript is a complex task due to the numerous interactions with the outside world it has to deal with. Whether they come from the user seeking at a particular moment of its movie, changing the current channel or the network congestion. The video player being the centerpiece of our applications, it needs to adapt very quickly to any of these inputs and stay resilient to various errors.
 
@@ -23,102 +59,60 @@ This allowed us to implement some nice features quite easily. For instance, beca
 
 Another example is the way we abstracted our transport layer into an observable pipeline, allowing us to support different type of streaming systems with its own asynchronous specifities. And because Rx is message-driven, this encapsulation allows us isolate the transport I/O into a WebWorker without any effort, or add an offline support for any pipeline implementation.
 
-### Architecture
+## Contribute
 
-TODO
+You can help and contribute either by:
+  - reporting bugs directly on the [issues tab](https://github.com/canalplus/rx-player/issues) on top of this page.
+  - adding new features / fixing bugs and doing a pull request (please open an issue first for that).
 
-## Demo
+If you have questions first, we have created a [gitter room](https://gitter.im/rx-player/contribute) specifically for that purpose.
 
-The demo is a small application written in [React](https://github.com/facebook/react) demonstrating a simple usage of the player.
+### Install dependencies
 
-To launch the demo yourself, run `make demo` and start a local webserver from the root directory of the repository. For instance:
+As of today, the only dependency to run the player is [RxJS](https://github.com/Reactive-Extensions/RxJS).
 
+You can install it directly via the ``npm install`` command.
 ```sh
-python -m SimpleHTTPServer 8080 # open http://localhost:8080/demo
-```
-[View online Demo](http://canalplus.github.io/rx-player/)
-
-## Installation
-
-The fastest way to use our player is to add this repository as a dependency of
-your `package.json` dependency field:
-
-```
-npm install --save https://github.com/canalplus/rx-player/
+npm install
 ```
 
-You can then either use directly the `dist/rx-player.js` file:
-
-```html
-<script src="node_modules/rx-player/dist/rx-player.js"></script>
-```
-
-Or with tools like [Browserify](http://browserify.org/) or
-[Webpack](http://webpack.github.io/) you can import the player as a CommonJS
-or AMD dependency.
-
-## Dependencies
-
-- [RxJS](https://github.com/Reactive-Extensions/RxJS)
-- [canal-js-utils](https://github.com/canalplus/canal-js-utils)
-- [es6-promise](https://github.com/jakearchibald/es6-promise)
-
-For the demo only:
-
-- Font Awesome by Dave Gandy - http://fontawesome.io
-
-## Build
+### Build the player
 
 A build is directly included at `dist/rx-player.js` directory if you don't
 want to build it yourself.
 
-To bundle the application yourself, we use `make`. The important task to know:
+To bundle the application yourself, you can use npm scripts.
 
+Here are some examples:
 ```sh
-make clean
-# build dist/rx-player.js
-make build
-# build dist/rx-player.min.js
-make min
-# build and watch file change for rebuild
-make dev
+# build the player dist/rx-player.js
+npm run build
+
+# build/re-build automatically the player when file changes
+npm run build:watch
+
 # lint the code with jshint
-make lint
+npm run lint
+
+# build the demo with the current player
+npm run demo
 ```
 
 ## Target support
 
-Here are the supported platform that we plan to target with this player.
+Here is a basic list of supported platforms:
 
-|          |    IE     |  Firefox  |   Chrome  |  Safari   |
-|----------|-----------|-----------|-----------|-----------|
-| Windows  |   >= 11   |  Nightly  |   >= 30   |           |
-| OX X     |           |  Nightly  |   >= 30   |   >= 8    |
-| Linux    |           |  Nightly  |   >= 37   |           |
-| iOS      |           |           |           |           |
-| Android  |           |           |   >= 30   |           |
+|             |  Chrome   |   IE [1]  |  Edge   |  Firefox  |  Safari  |  Opera  |
+|-------------|:---------:|:---------:|:-------:|:---------:|:--------:|:-------:|
+| Windows     |   >= 30   |   >= 11   |  >= 12  |   >= 42   |   >= 8   |  >= 25  |
+| OX X        |   >= 30   |     -     |    -    |   >= 42   |   >= 8   |  >= 25  |
+| Linux       |   >= 37   |     -     |    -    |   >= 42   |    -     |  >= 25  |
+| Android [2] |   >= 30   |     -     |    -    |   >= 42   |    -     |  >= 15  |
+| iOS         |    No     |     -     |    -    |    No     |    No    |    No   |
 
-- Internet Explorer 11 only on Windows >= 8.
-- To test on Firefox, use Firefox Nightly and add in about-config:
-     media.mediasource.enabled        true
-     media.mediasource.ignore_codecs  true
-- Android version >= 4.2
+[1] Only on Windows >= 8.
 
-A good way to know if the browser should be supported by our player is to go
+[2] Android version >= 4.2
+
+And more. A good way to know if the browser should be supported by our player is to go
 on the page https://www.youtube.com/html5 and check support for MSE & H.264.
-
-## Launch tests
-
-
-### Unit Testing
-Tests are only usable from the browser for now due to dependencies on DOM
-elements. We plan to add support for `node` only tests asap.
-
-```sh
-# starts a local webserver, open http://localhost:9999/webpack-dev-server/test
-make test
-```
-
-### Functional Testing
-
-See [this document](./test/func/README.md)

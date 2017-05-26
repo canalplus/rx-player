@@ -769,6 +769,7 @@ function Stream({
       assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
     }
     else if (startTime) {
+      // TODO To re-think for v3.0.0
       startTime = fromWallClockTime(startTime, manifest);
     }
     else {

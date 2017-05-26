@@ -94,6 +94,8 @@ function getClosestBitrate(bitrates, btr, threshold=0) {
  * @returns {Number}
  */
 function getClosestDisplayBitrate(reps, width) {
+  // TODO couldn't we supposedly have a higher width but a lower bitrate?
+  // We should probably filter first and then return the highest bitrate.
   const rep = find(reps, (r) => r.width >= width);
   if (rep) {
     return rep.bitrate;
