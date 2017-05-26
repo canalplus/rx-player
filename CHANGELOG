@@ -4,44 +4,40 @@
 
 ### Added
 
-- position: add getMinimumPosition, getMaximumPosition and startAt loadVideo argument to replace the timeFragment API
-- api: add the positionUpdate event
-- images: add the getImageTrackData method
-- images: add the imageTrackUpdate event
-- position: added getPosition method
-- position: added getWallClockTime method
-- position: added possibility to use relative, absolute and wall-clock time for seekTo
-- transport: added segmentLoader transportOption
-- api: added setMaxAudioBitrate api call
-- api: added setMaxVideoBitrate api call
-- api: added exitFullscreen api call
-- api: added ErrorTypes static property
-- api: added ErrorCodes static property
-- api: added getPosition API call
-- api: added getWallClockTime API call
-- manifest: added getCurrentRepresentations API call
-- manifest: added getCurrentAdaptations API call
-- api: add throttleWhenHidden option to constructor to disable throttling when the current page is hidden for an extended time
-- api: add limitVideoWidth option to constructor to disable throttling to match the video element's width
-- api: added initialAudioBitrate to constructor's options
-- api: added initialVideoBitrate to constructor's options
-- api: added defaultTextTrack to loadVideo and constructor's options
-- api: added defaultAudioTrack to loadVideo and constructor's options
-- languages: getAvailableAudioTracks API has been added with audio description support
-- languages: getAvailableTextTracks API has been added with closed caption support
-- languages: getAudioTrack API has been added with audio description support
-- languages: getTextTrack API has been added with closed caption support
-- languages: setAudioTrack API has been added with audio description support
-- languages: setTextTrack API has been added with closed caption support
-- dash/subtitles: detect audio description in MPD
-- audiotrack: add audio description support
-- dash/subtitles: detect closed captions in MPD
-- subtitles: add closed captions support
-- dash/subtitles: add subtitles support (only ttml for now)
+- images/dash: add BIF support in DASH MPD
+- subtitles/smooth: add support for closed captions in smooth manifest
+- subtitles: add closed caption support in supplementaryTextTracks loadVideo arguments
+- position: add getMinimumPosition and getMaximumPosition methods
+- position: add startAt loadVideo argument (replace the timeFragment API)
+- position: add positionUpdate event
+- images: add getImageTrackData method
+- images: add imageTrackUpdate event
+- position: add possibility to use relative, absolute and wall-clock time on seekTo API
+- transport: add segmentLoader transportOption for constructor and loadVideo API
+- api: add setMaxAudioBitrate and setMaxVideoBitrate method
+- api: add exitFullscreen method
+- api: add ErrorTypes and ErrorCodes static properties
+- api: add getPosition method
+- api: add getWallClockTime method
+- manifest: add getCurrentRepresentations method
+- manifest: add getCurrentAdaptations method
+- api: add throttleWhenHidden option to constructor (to disable throttling when the current page is hidden for an extended time)
+- api: add limitVideoWidth option to constructor (to disable throttling to match the video element's width)
+- api: add initialAudioBitrate and initialVideoBitrate to constructor's options
+- api: add defaultTextTrack and defaultAudioTrack  to loadVideo and constructor's options
+- languages: add getAvailableAudioTracks method with audio description support
+- languages: add getAvailableTextTracks method with closed caption support
+- languages: add getAudioTrack method with audio description support
+- languages: add getTextTrack method with closed caption support
+- languages: add setAudioTrack method with audio description support
+- languages: add setTextTrack method with closed caption support
+- audiotrack/dash: add audio description support in DASH MPD
+- subtitles/dash: add closed captions support in DASH MPD
+- subtitles/dash: add subtitles support in DASH MPD (only ttml for now)
 
 ### Deprecated
 
-- position: the timeFragment API (loadVideo's timeFragment argument, getStartTime, getEndTime and goToStart) is deprecated
+- position: the timeFragment API is deprecated (loadVideo's timeFragment argument, getStartTime, getEndTime and goToStart)
 - api: currentTimeChange event is replaced by the positionUpdate event
 - api: progress event is deprecated and not replaced
 - api: getImageTrack is replaced by the imageTrackUpdate event
@@ -61,12 +57,12 @@
 - api: setVideoMaxBitrate is replaced by setMaxVideoBitrate
 - api: setAudioMaxBitrate is replaced by setMaxAudioBitrate
 - api: using setFullscreen(false) is replaced by exitFullscreen
-- api: getErrorTypes API call has been deprecated in favor of the ErrorTypes property
-- api: getErrorCodes API call has been deprecated in favor of the ErrorCodes property
-- languages: initAudioBitrate option in constructor in favor of initialAudioBitrate
-- languages: initVideoBitrate option in constructor in favor of initialVideoBitrate
-- languages: defaultSubtitle option in constructor and loadVideo in favor of defaultTextTrack
-- languages: defaultLanguage option in constructor and loadVideo in favor of defaultAudioTrack
+- api: getErrorTypes method has been deprecated in favor of the ErrorTypes property
+- api: getErrorCodes method has been deprecated in favor of the ErrorCodes property
+- languages: initAudioBitrate option in constructor is deprecated in favor of initialAudioBitrate
+- languages: initVideoBitrate option in constructor is deprecated in favor of initialVideoBitrate
+- languages: defaultSubtitle option in constructor and loadVideo is deprecated in favor of defaultTextTrack
+- languages: defaultLanguage option in constructor and loadVideo is deprecated in favor of defaultAudioTrack
 - languages: getAvailableLanguages is deprecated in favor of getAvailableAudioTracks
 - languages: getAvailableSubtitles is deprecated in favor of getAvailableTextTracks
 - languages: getLanguage is deprecated in favor of getAudioTrack
@@ -78,14 +74,14 @@
 
 ### Bug fixes
 
-- adaptive: fix a bug where multiple videos representations with the same width could be discriminated
+- adaptive: fix a bug where it was impossible to switch between multiple videos representations with the same width
 - languages: fix bug where the user could switch to a closed caption track unknowngly
 - languages: fix bug where the user could switch to an audio description track unknowngly
 - manifest: improved and documented getManifest's return value
 - manifest: defined and documented a generic manifest object structure (slowly replacing the old object).
 - images: image playlists are now not re-fetched if the request failed (no retry)
 - dash: lowered security time raising the startup time for SegmentTemplate-based contents
-- api: getLanguage/getSubtitle returns the language of the last chunk received, not the last set
+- api: getLanguage/getSubtitle returns now the language of the last chunk received, not the last set
 - manifest: fixed manifest-refreshing logic (mainly for live contents)
 - dash: fixed support for dash SegmentTimeline-based contents
 - api: differentiate unset default languages from empty strings
@@ -99,11 +95,12 @@
 
 ### Other improvements
 
+- documentation: The API documentation has been completely rewritten
 - manifest: The DASH manifest handling has been refactored
 - smooth: Smooth index handling has been completely separated from the DASH logic
-- tests: fix and re-write unit tests
+- tests: fix and re-wrote unit tests
 - documentation: Code documentation has been added
-- demo: The Demo has been updated
+- demo: The Demo has been completely rewritten
 - demo: The bundle has been removed from the code committed.
 
 ## v2.0.0-alpha1 (2016/02/09)
