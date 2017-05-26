@@ -6,9 +6,9 @@ const ClosureCompiler = require("webpack-closure-compiler");
 const shouldMinify = process.env.RXP_DEMO_MINIFY;
 
 const config = {
-  entry: "../demo/scripts/index.js",
+  entry: path.join(__dirname, "../demo/scripts/index.js"),
   output: {
-    path: path.join(__dirname, "demo"),
+    path: path.join(__dirname, "../demo"),
     filename: "bundle.js",
   },
   module: {
