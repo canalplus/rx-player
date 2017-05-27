@@ -96,7 +96,7 @@ class IndexHandler {
    * @returns {Object} - Object with time (current time), up (lower bound)
    * and to (upper bounds) properties, all in the right timescale.
    */
-  normalizeRange(ts, offset, bufSize) {
+  _normalizeRange(ts, offset, bufSize) {
     const presentationOffset = this.index.presentationTimeOffset || 0;
     const timescale = this.index.timescale || 1;
 
@@ -139,7 +139,7 @@ class IndexHandler {
    * of bounds.
    */
   getSegments(ts, offset, bufSize) {
-    const { time, up, to } = this.normalizeRange(ts, offset, bufSize);
+    const { time, up, to } = this._normalizeRange(ts, offset, bufSize);
     if (!this.handler.checkRange(time, up, to)) {
       throw new IndexError("OUT_OF_INDEX_ERROR", this.index.indexType, false);
     }

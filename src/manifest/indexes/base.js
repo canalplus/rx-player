@@ -1,12 +1,19 @@
 import TimelineIndex from "./timeline.js";
+import { getInitSegment, setTimescale, scale } from "./helpers.js";
 
+/**
+ * TODO weird... Reimplement from scratch
+ */
 export default Object.assign({}, TimelineIndex, {
-  getLiveEdge() {
-    throw new Error("not implemented");
-  },
+  getInitSegment,
+  setTimescale,
+  scale,
 
-  addSegment(segmentInfos) {
-    // TODO
-    console.log(segmentInfos);
+  _addSegmentInfos(index, segmentInfos) {
+    index.timeline.push({
+      ts: segmentInfos.time,
+      d: segmentInfos.duration,
+    });
+    return index;
   },
 });

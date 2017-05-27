@@ -1,7 +1,16 @@
 import Segment from "../segment.js";
-import { normalizeRange } from "./helpers.js";
+import {
+  normalizeRange,
+  getInitSegment,
+  setTimescale,
+  scale,
+} from "./helpers.js";
 
 export default {
+  getInitSegment,
+  setTimescale,
+  scale,
+
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
@@ -29,7 +38,23 @@ export default {
     return segments;
   },
 
+  getFirstPosition() {
+    return undefined;
+  },
+
+  getLastPosition() {
+    return undefined;
+  },
+
   shouldRefresh() {
     return false;
+  },
+
+  checkDiscontinuity() {
+    return -1;
+  },
+
+  _addSegmentInfos() {
+    return ;
   },
 };

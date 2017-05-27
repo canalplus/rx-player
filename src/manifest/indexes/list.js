@@ -1,11 +1,34 @@
 import Segment from "../segment.js";
-import { normalizeRange } from "./helpers.js";
+import {
+  normalizeRange,
+  getInitSegment,
+  setTimescale,
+  scale,
+} from "./helpers.js";
+
+/**
+ * NEEDED IN INDEX
+ * duration
+ * list []
+ *   ?range
+ * timescale
+ */
 
 const ListIndexHelpers = {
+  getInitSegment,
+  setTimescale,
+  scale,
+
+  /**
+   * @param {string|Number} repId
+   * @param {Object} index
+   * @param {Number} _up
+   * @param {Number} _to
+   * @returns {Array.<Segment>}
+   */
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
-    // TODO(pierre): use startNumber
     const { duration, list, timescale } = index;
     const length = Math.min(list.length - 1, Math.floor(to / duration));
     const segments = [];
@@ -27,18 +50,36 @@ const ListIndexHelpers = {
     return segments;
   },
 
+  /**
+   * Returns first position in index.
+   * @returns {Number}
+   */
+  getFirstPosition() {
+    return 0;
+  },
+
+  /**
+   * Returns last position in index.
+   * @returns {Number}
+   */
+  getLastPosition(index) {
+    const { duration, list } = index;
+    return (list.length * duration) / index.timescale;
+  },
+
+  /**
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * (If we should re-fetch the manifest)
+   * @returns {Boolean}
+   */
   shouldRefresh(index, time, up, to) {
     const { duration, list } = index;
     const i = Math.floor(to / duration);
     return !(i >= 0 && i < list.length);
   },
 
-  getLiveEdge() {
-    throw new Error("not implemented");
-  },
-
-  addSegment() {
-    return false;
+  _addSegmentInfos() {
+    return ;
   },
 
   checkDiscontinuity() {

@@ -13,8 +13,8 @@ class RepresentationIndex {
     this._indexHelpers = getRightIndexHelpers(this._index);
   }
 
-  getLiveEdge() {
-    return this._indexHelpers.getLiveEdge(this._index);
+  getInitSegment() {
+    return this._indexHelpers.getInitSegment(this._rootId, this._index);
   }
 
   getSegments(up, duration) {
@@ -30,22 +30,45 @@ class RepresentationIndex {
     return this._indexHelpers.shouldRefresh(this._index, time, up, to);
   }
 
-  getBeginningTime() {
-    return this._indexHelpers.getBeginningTime(this._index);
+  getFirstPosition() {
+    return this._indexHelpers.getFirstPosition(this._index);
   }
 
-  getEndTime() {
-    return this._indexHelpers.getEndTime(this._index);
+  getLastPosition() {
+    return this._indexHelpers.getLastPosition(this._index);
   }
 
-  // TODO
-  addSegment(s) {
-    const val = this._indexHelpers.addSegment(s, this._index);
-    return val;
+  checkDiscontinuity(time) {
+    return this._indexHelpers.checkDiscontinuity(this._index, time);
   }
 
-  checkDiscontinuity() {
-    return this._indexHelpers.checkDiscontinuity(this._index);
+  /**
+   * Returns time given scaled into seconds.
+   * @param {Number} time
+   * @returns {Number}
+   */
+  scale(time) {
+    return this._indexHelpers.scale(this._index, time);
+  }
+
+  /**
+   * Update the timescale used (for all segments).
+   * @param {Number} timescale
+   */
+  setTimescale(timescale) {
+    return this._indexHelpers.setTimescale(this._index, timescale);
+  }
+
+  _addSegments(nextSegments, currentSegment) {
+    const addedSegments = [];
+    for (let i = 0; i < nextSegments.length; i++) {
+      if (
+        this._indexHelpers._addSegmentInfos(nextSegments[i], currentSegment)
+      ) {
+        addedSegments.push(nextSegments[i]);
+      }
+    }
+    return addedSegments;
   }
 }
 

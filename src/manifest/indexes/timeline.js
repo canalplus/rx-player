@@ -2,6 +2,9 @@ import Segment from "../segment.js";
 import {
   normalizeRange,
   getTimelineRangeEnd,
+  getInitSegment,
+  setTimescale,
+  scale,
 } from "./helpers.js";
 
 const getSegmentIndex = (index, ts) => {
@@ -51,6 +54,10 @@ const calculateRepeat = (seg, nextSeg) => {
 };
 
 const SegmentTimelineHelpers = {
+  getInitSegment,
+  setTimescale,
+  scale,
+
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
@@ -130,18 +137,19 @@ const SegmentTimelineHelpers = {
     return !(to <= getTimelineRangeEnd(last));
   },
 
-  getEndTime(index) {
-    return this.getLiveEdge(index);
+  getFirstPosition(index) {
+    if (!index.timeline.length) {
+      return undefined;
+    }
+    return index.timeline[0].ts / index.timescale;
   },
 
-  getBeginningTime(index) {
-    return index.timeline[0].ts;
-  },
-
-  getLiveEdge(index) {
+  getLastPosition(index) {
+    if (!index.timeline.length) {
+      return undefined;
+    }
     const lastTimelineElement = index.timeline[index.timeline.length - 1];
     return (getTimelineRangeEnd(lastTimelineElement) / index.timescale);
-      // - manifest.suggestedPresentationDelay // TODO higher up that sh*t
   },
 
   /**
@@ -149,12 +157,13 @@ const SegmentTimelineHelpers = {
    *   - We're on the upper bound of the current range (end of the range - time
    *     is inferior to the timescale)
    *   - The next range starts after the end of the current range.
-   * @param {Number} time
+   * @param {Number} _time
    * @returns {Number} - If a discontinuity is present, this is the Starting ts
    * for the next (discontinuited) range. If not this is equal to -1.
    */
-  checkDiscontinuity(index, time) {
-    const { timeline } = index;
+  checkDiscontinuity(index, _time) {
+    const { timeline, timescale = 1 } = index;
+    const time = _time * timescale;
 
     if (time <= 0) {
       return -1;
@@ -174,17 +183,76 @@ const SegmentTimelineHelpers = {
     const rangeTo = getTimelineRangeEnd(range);
     const nextRange = timeline[segmentIndex + 1];
 
-    const timescale = index.timescale || 1;
     // when we are actually inside the found range and this range has
     // an explicit discontinuity with the next one
     if (rangeTo !== nextRange.ts &&
         time >= rangeUp &&
         time <= rangeTo &&
         (rangeTo - time) < timescale) {
-      return nextRange.ts;
+      return nextRange.ts / timescale;
     }
 
     return -1;
+  },
+
+  _addSegmentInfos(index, newSegment, currentSegment) {
+    const { timeline } = index;
+    const timelineLength = timeline.length;
+    const last = timeline[timelineLength - 1];
+
+    // in some circumstances, the new segment informations are only
+    // duration informations that we can use to deduct the ts of the
+    // next segment. this is the case where the new segment are
+    // associated to a current segment and have the same ts
+    const shouldDeductNextSegment =
+      !!currentSegment && (newSegment.time === currentSegment.time);
+    if (shouldDeductNextSegment) {
+      const newSegmentTs = newSegment.time + newSegment.duration;
+      const lastSegmentTs = (last.ts + last.d * last.r);
+      const tsDiff = newSegmentTs - lastSegmentTs;
+
+      if (tsDiff <= 0) { // same segment / behind the last
+        return ;
+      }
+
+      // try to use the compact notation with @r attribute on the last
+      // to elements of the timeline if we find out they have the same
+      // duration
+      if (last.d === -1) {
+        const prev = timeline[timelineLength - 2];
+        if (prev && prev.d === tsDiff) {
+          prev.r++;
+          timeline.pop();
+        } else {
+          last.d = tsDiff;
+        }
+      }
+
+      index.timeline.push({
+        d: -1,
+        ts: newSegmentTs,
+        r: 0,
+      });
+      return index;
+    }
+
+    // if the given timing has a timestamp after the timeline end we
+    // just need to push a new element in the timeline, or increase
+    // the @r attribute of the last element.
+    else if (newSegment.time >= getTimelineRangeEnd(last)) {
+      if (last.d === newSegment.duration) {
+        last.r++;
+      } else {
+        index.timeline.push({
+          d: newSegment.duration,
+          ts: newSegment.time,
+          r: 0,
+        });
+      }
+      return index;
+    }
+
+    return ;
   },
 };
 
