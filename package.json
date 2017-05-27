@@ -31,6 +31,7 @@
     "karma:firefox": "Launch every tests in a Firefox browser.",
     "lint": "Lint rx-player source files",
     "lint:demo": "Lint demo source files",
+    "start": "Launch the demo on a local server (port 8080)",
     "update-version": "Update the version in the codebase, based on the VERSION file."
   },
   "scripts": {
@@ -47,6 +48,7 @@
     "karma:firefox": "karma start tools/tests/karma.conf.js --browsers Firefox",
     "lint": "eslint ./src/**/*.js",
     "lint:demo": "eslint ./demo/**/*.js",
+    "start": "node ./tools/server.js",
     "update-version": "./tools/bin/update-version"
   },
   "repository": {
@@ -91,6 +93,6 @@
     "url-loader": "^0.5.5",
     "webpack": "^2.6.1",
     "webpack-closure-compiler": "^2.1.4",
-    "webpack-dev-server": "^1.14.1"
+    "webpack-dev-server": "^1.16.5"
   }
 }

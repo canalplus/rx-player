@@ -74,8 +74,8 @@ npm run build
 # lint the code with eslint
 npm run lint
 
-# build the demo with the current player code
-npm run demo
+# launch the demo on a local server (port 8080)
+npm run start
 
 # launch our test suite on various browsers
 npm run karma
