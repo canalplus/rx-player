@@ -495,7 +495,7 @@ _returns_: ``Array.<Object>``
 
 Returns the list of available audio tracks under the form of an array of audiotrack objects.
 
-Each of these have three properties:
+Each of these have the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setAudioTrack``.
   - ``language`` (``string``): The language the audio track is in.
   - ``audioDescription`` (``Boolean``): Whether the track is an audio description (for the visually impaired or not).
@@ -507,7 +507,7 @@ _returns_: ``Array.<Object>``
 
 Returns the list of available text tracks under the form of an array of texttrack objects.
 
-Each of these have three properties:
+Each of these have the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setTextTrack``.
   - ``language`` (``string``): The language the text track is in.
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for the hard of hearing or not.
