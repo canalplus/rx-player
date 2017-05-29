@@ -78,7 +78,7 @@ The list of uris that can be used to refer to the manifest file.
 
 _type_: ``string``
 
-The type of transport used. For now, this can only be equal to either ``dash`` or ``smoothstreaming``.
+The type of transport used. For now, this can only be equal to either ``dash`` or ``smooth``.
 
 ## <a name="adaptation"></a>Structure of an Adaptation Object
 

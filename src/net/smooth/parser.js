@@ -357,7 +357,7 @@ function createSmoothStreamingParser(parserOptions={}) {
     }
 
     return {
-      transportType: "smoothstreaming",
+      transportType: "smooth",
       profiles: "",
       type: isLive ? "dynamic" : "static",
       suggestedPresentationDelay,
