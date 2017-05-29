@@ -703,7 +703,7 @@ function isKnownError(error) {
 
 "use strict";
 
-var isArray_1 = __webpack_require__(16);
+var isArray_1 = __webpack_require__(17);
 var isObject_1 = __webpack_require__(175);
 var isFunction_1 = __webpack_require__(42);
 var tryCatch_1 = __webpack_require__(43);
@@ -2382,7 +2382,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var Observable_1 = __webpack_require__(0);
 var ScalarObservable_1 = __webpack_require__(36);
 var EmptyObservable_1 = __webpack_require__(6);
-var isScheduler_1 = __webpack_require__(17);
+var isScheduler_1 = __webpack_require__(18);
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @extends {Ignored}
@@ -2513,7 +2513,7 @@ exports.merge = merge_1.mergeStatic;
 "use strict";
 
 var root_1 = __webpack_require__(7);
-var isArray_1 = __webpack_require__(16);
+var isArray_1 = __webpack_require__(17);
 var isPromise_1 = __webpack_require__(64);
 var Observable_1 = __webpack_require__(0);
 var iterator_1 = __webpack_require__(39);
@@ -2588,6 +2588,45 @@ exports.subscribeToResult = subscribeToResult;
 
 /***/ }),
 /* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Segment =
+/**
+ * @constructor
+ * @param {Object} [args={}]
+ * @param {string|Number} [args.id]
+ * @param {Number} [args.duration]
+ * @param {Boolean} [args.init=false]
+ * @param {Array.<Number>} [args.range]
+ * @param {Number} [args.time]
+ * @param {Array.<Number>} [args.indexRange]
+ * @param {Number} [args.number]
+ * @param {Number} [args.timescale]
+ * @param {string} [args.media]
+ */
+function Segment() {
+  var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  _classCallCheck(this, Segment);
+
+  this.id = args.id;
+  this.duration = args.duration;
+  this.isInit = !!args.init;
+  this.range = args.range;
+  this.time = args.time;
+  this.indexRange = args.indexRange;
+  this.number = args.number;
+  this.timescale = args.timescale;
+  this.media = args.media;
+};
+
+/* harmony default export */ __webpack_exports__["a"] = (Segment);
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2596,7 +2635,7 @@ exports.isArray = Array.isArray || (function (x) { return x && typeof x.length =
 //# sourceMappingURL=isArray.js.map
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2608,7 +2647,7 @@ exports.isScheduler = isScheduler;
 //# sourceMappingURL=isScheduler.js.map
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3176,32 +3215,88 @@ var BufferedRanges = function () {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Segment; });
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return normalizeRange; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return getTimelineRangeEnd; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getInitSegment; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return setTimescale; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return scale; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_assert_js__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__segment_js__ = __webpack_require__(16);
 
-var Segment = function Segment() {
-  var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-  _classCallCheck(this, Segment);
 
-  this.id = args.id;
-  this.duration = args.duration;
-  this.isInit = !!args.init;
-  this.range = args.range;
-  this.time = args.time;
-  this.indexRange = args.indexRange;
-  this.number = args.number;
-  this.timescale = args.timescale;
+var normalizeRange = function normalizeRange(index, ts, duration) {
+  var pto = index.presentationTimeOffset || 0;
+  var timescale = index.timescale || 1;
+
+  return {
+    up: ts * timescale - pto,
+    to: (ts + duration) * timescale - pto
+  };
+};
+
+var getTimelineRangeEnd = function getTimelineRangeEnd(_ref) {
+  var ts = _ref.ts,
+      d = _ref.d,
+      r = _ref.r;
+
+  if (d === -1) {
+    return ts;
+  } else {
+    return ts + (r + 1) * d;
+  }
+};
+
+var getInitSegment = function getInitSegment(rootId, index) {
+  var _index$initialization = index.initialization,
+      initialization = _index$initialization === undefined ? {} : _index$initialization;
+
+
+  var args = {
+    id: "" + rootId + "_init",
+    init: true,
+    range: initialization.range || null,
+    indexRange: index.indexRage || null,
+    media: initialization.media
+  };
+  return new __WEBPACK_IMPORTED_MODULE_1__segment_js__["a" /* default */](args);
+};
+
+/**
+ * Update the timescale used (for all segments).
+ * TODO This should probably update all previous segments to the newly set
+ * Timescale.
+ * @param {Number} timescale
+ */
+var setTimescale = function setTimescale(index, timescale) {
+  if (false) {
+    assert(typeof timescale == "number");
+    assert(timescale > 0);
+  }
+
+  if (index.timescale !== timescale) {
+    index.timescale = timescale;
+  }
+
+  return index;
+};
+
+var scale = function scale(index, time) {
+  if (false) {
+    assert(index.timescale > 0);
+  }
+
+  return time / index.timescale;
 };
 
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3393,13 +3488,13 @@ var ISO_MAP_3_3 = {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var isScheduler_1 = __webpack_require__(17);
-var isArray_1 = __webpack_require__(16);
+var isScheduler_1 = __webpack_require__(18);
+var isArray_1 = __webpack_require__(17);
 var ArrayObservable_1 = __webpack_require__(13);
 var combineLatest_1 = __webpack_require__(145);
 /* tslint:enable:max-line-length */
@@ -3470,7 +3565,7 @@ exports.combineLatest = combineLatest;
 //# sourceMappingURL=combineLatest.js.map
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3617,11 +3712,10 @@ var InitSegment = function (_Segment) {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Adaptation; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__representation_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_id_js__ = __webpack_require__(32);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -3645,7 +3739,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  */
 
 var Adaptation = function () {
+  /**
+   * @constructor
+   * @param {Object} [args={}]
+   * @param {string|Number} [args.id]
+   * @param {string} args.type
+   * @param {string} [args.lang]
+   * @param {string} [args.language]
+   * @param {Array.<string>} [args.accessibility]
+   * @param {Array.<Object>} args.representations
+   * @param {Boolean} args.manual
+   */
   function Adaptation() {
+    var _this = this;
+
     var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Adaptation);
@@ -3654,7 +3761,7 @@ var Adaptation = function () {
     this.id = args.id == null ? nId : "" + args.id;
     this.type = args.type || "";
     this.representations = Array.isArray(args.representations) ? args.representations.map(function (r) {
-      return new __WEBPACK_IMPORTED_MODULE_0__representation_js__["a" /* Representation */](r);
+      return new __WEBPACK_IMPORTED_MODULE_0__representation_js__["a" /* default */](Object.assign({ rootId: _this.id }, r));
     }).sort(function (a, b) {
       return a.bitrate - b.bitrate;
     }) : [];
@@ -3711,45 +3818,13 @@ var Adaptation = function () {
   return Adaptation;
 }();
 
-
-
-/***/ }),
-/* 24 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return normalizeRange; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getTimelineRangeEnd; });
-var normalizeRange = function normalizeRange(index, ts, duration) {
-  var pto = index.presentationTimeOffset || 0;
-  var timescale = index.timescale || 1;
-
-  return {
-    up: ts * timescale - pto,
-    to: (ts + duration) * timescale - pto
-  };
-};
-
-var getTimelineRangeEnd = function getTimelineRangeEnd(_ref) {
-  var ts = _ref.ts,
-      d = _ref.d,
-      r = _ref.r;
-
-  if (d === -1) {
-    return ts;
-  } else {
-    return ts + (r + 1) * d;
-  }
-};
-
-
+/* harmony default export */ __webpack_exports__["a"] = (Adaptation);
 
 /***/ }),
 /* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Representation; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_id_js__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__representation_index_js__ = __webpack_require__(115);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -3773,13 +3848,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *   - getSegments () => {[]Segment}
  */
 
-var Representation = function Representation() {
+var Representation =
+/**
+ * @constructor
+ * @param {Object} [args={}]
+ * @param {string|Number} [args.rootId]
+ * @param {string|Number} [args.id]
+ * @param {Number} args.bitrate
+ * @param {string} args.codecs
+ * @param {Number} args.height
+ * @param {Number} args.height
+ * @param {string} args.mimeType
+ * @param {Object} args.index
+ */
+function Representation() {
   var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
   _classCallCheck(this, Representation);
 
   var nId = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_id_js__["a" /* default */])();
-  this.id = args.id == null ? nId : "" + args.id;
+  this.id =
+  // (args.rootId == null ? "" : args.rootId + "_") + // TODO uncomment on manifest switch
+  args.id == null ? nId : args.id;
   this.bitrate = args.bitrate;
   this.codec = args.codecs;
 
@@ -3797,7 +3887,8 @@ var Representation = function Representation() {
 
   this.index = new __WEBPACK_IMPORTED_MODULE_1__representation_index_js__["a" /* default */]({
     index: args.index,
-    rootId: this.id
+    // rootId: this.id, // TODO uncomment on manifest switch
+    rootId: (args.rootId == null ? "" : args.rootId + "_") + this.id
   });
 
   // Most of those are for the smooth init segment
@@ -3816,7 +3907,7 @@ var Representation = function Representation() {
   // this._segmentProfiles = args.segmentProfiles;
 };
 
-
+/* harmony default export */ __webpack_exports__["a"] = (Representation);
 
 /***/ }),
 /* 26 */
@@ -3844,7 +3935,7 @@ exports.errorObject = { e: {} };
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment__ = __webpack_require__(23);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -4143,7 +4234,7 @@ var Timeline = function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_url__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compat__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__errors__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_languages__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_languages__ = __webpack_require__(21);
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 /**
@@ -4649,8 +4740,8 @@ function getAvailableTextTracks(manifest) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(20);
 
 
 
@@ -4698,8 +4789,12 @@ var calculateRepeat = function calculateRepeat(seg, nextSeg) {
 };
 
 var SegmentTimelineHelpers = {
+  getInitSegment: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getInitSegment */],
+  setTimescale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* setTimescale */],
+  scale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["c" /* scale */],
+
   getSegments: function getSegments(repId, index, _up, _to) {
-    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* normalizeRange */])(index, _up, _to),
+    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* normalizeRange */])(index, _up, _to),
         up = _normalizeRange.up,
         to = _normalizeRange.to;
 
@@ -4737,7 +4832,7 @@ var SegmentTimelineHelpers = {
             indexRange: null,
             timescale: timescale
           };
-          segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* Segment */](args));
+          segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* default */](args));
         }
         break;
       }
@@ -4756,7 +4851,7 @@ var SegmentTimelineHelpers = {
             indexRange: null,
             timescale: timescale
           };
-          segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* Segment */](_args));
+          segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* default */](_args));
         } else {
           continue loop;
         }
@@ -4780,18 +4875,20 @@ var SegmentTimelineHelpers = {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return !(to <= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getTimelineRangeEnd */])(last));
+    return !(to <= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(last));
   },
-  getEndTime: function getEndTime(index) {
-    return this.getLiveEdge(index);
+  getFirstPosition: function getFirstPosition(index) {
+    if (!index.timeline.length) {
+      return undefined;
+    }
+    return index.timeline[0].ts / index.timescale;
   },
-  getBeginningTime: function getBeginningTime(index) {
-    return index.timeline[0].ts;
-  },
-  getLiveEdge: function getLiveEdge(index) {
+  getLastPosition: function getLastPosition(index) {
+    if (!index.timeline.length) {
+      return undefined;
+    }
     var lastTimelineElement = index.timeline[index.timeline.length - 1];
-    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getTimelineRangeEnd */])(lastTimelineElement) / index.timescale;
-    // - manifest.suggestedPresentationDelay // TODO higher up that sh*t
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(lastTimelineElement) / index.timescale;
   },
 
 
@@ -4800,13 +4897,16 @@ var SegmentTimelineHelpers = {
    *   - We're on the upper bound of the current range (end of the range - time
    *     is inferior to the timescale)
    *   - The next range starts after the end of the current range.
-   * @param {Number} time
+   * @param {Number} _time
    * @returns {Number} - If a discontinuity is present, this is the Starting ts
    * for the next (discontinuited) range. If not this is equal to -1.
    */
-  checkDiscontinuity: function checkDiscontinuity(index, time) {
-    var timeline = index.timeline;
+  checkDiscontinuity: function checkDiscontinuity(index, _time) {
+    var timeline = index.timeline,
+        _index$timescale = index.timescale,
+        timescale = _index$timescale === undefined ? 1 : _index$timescale;
 
+    var time = _time * timescale;
 
     if (time <= 0) {
       return -1;
@@ -4823,17 +4923,76 @@ var SegmentTimelineHelpers = {
     }
 
     var rangeUp = range.ts;
-    var rangeTo = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getTimelineRangeEnd */])(range);
+    var rangeTo = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(range);
     var nextRange = timeline[segmentIndex + 1];
 
-    var timescale = index.timescale || 1;
     // when we are actually inside the found range and this range has
     // an explicit discontinuity with the next one
     if (rangeTo !== nextRange.ts && time >= rangeUp && time <= rangeTo && rangeTo - time < timescale) {
-      return nextRange.ts;
+      return nextRange.ts / timescale;
     }
 
     return -1;
+  },
+  _addSegmentInfos: function _addSegmentInfos(index, newSegment, currentSegment) {
+    var timeline = index.timeline;
+
+    var timelineLength = timeline.length;
+    var last = timeline[timelineLength - 1];
+
+    // in some circumstances, the new segment informations are only
+    // duration informations that we can use to deduct the ts of the
+    // next segment. this is the case where the new segment are
+    // associated to a current segment and have the same ts
+    var shouldDeductNextSegment = !!currentSegment && newSegment.time === currentSegment.time;
+    if (shouldDeductNextSegment) {
+      var newSegmentTs = newSegment.time + newSegment.duration;
+      var lastSegmentTs = last.ts + last.d * last.r;
+      var tsDiff = newSegmentTs - lastSegmentTs;
+
+      if (tsDiff <= 0) {
+        // same segment / behind the last
+        return;
+      }
+
+      // try to use the compact notation with @r attribute on the last
+      // to elements of the timeline if we find out they have the same
+      // duration
+      if (last.d === -1) {
+        var prev = timeline[timelineLength - 2];
+        if (prev && prev.d === tsDiff) {
+          prev.r++;
+          timeline.pop();
+        } else {
+          last.d = tsDiff;
+        }
+      }
+
+      index.timeline.push({
+        d: -1,
+        ts: newSegmentTs,
+        r: 0
+      });
+      return index;
+    }
+
+    // if the given timing has a timestamp after the timeline end we
+    // just need to push a new element in the timeline, or increase
+    // the @r attribute of the last element.
+    else if (newSegment.time >= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(last)) {
+        if (last.d === newSegment.duration) {
+          last.r++;
+        } else {
+          index.timeline.push({
+            d: newSegment.duration,
+            ts: newSegment.time,
+            r: 0
+          });
+        }
+        return index;
+      }
+
+    return;
   }
 };
 
@@ -5580,7 +5739,7 @@ exports.tryCatch = tryCatch;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_observable_EmptyObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_observable_EmptyObservable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_observable_DeferObservable__ = __webpack_require__(53);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_observable_DeferObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_observable_DeferObservable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_observable_combineLatest__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_observable_combineLatest__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_observable_combineLatest___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_rxjs_observable_combineLatest__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_observable_merge__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_observable_merge___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_rxjs_observable_merge__);
@@ -6384,7 +6543,7 @@ function dispose() {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getLiveEdge; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_assert__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__manifest__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__segment__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__segment__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__indexes_template__ = __webpack_require__(103);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__indexes_timeline__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__indexes_list__ = __webpack_require__(101);
@@ -6495,7 +6654,7 @@ var IndexHandler = function () {
    */
 
 
-  IndexHandler.prototype.normalizeRange = function normalizeRange(ts, offset, bufSize) {
+  IndexHandler.prototype._normalizeRange = function _normalizeRange(ts, offset, bufSize) {
     var presentationOffset = this.index.presentationTimeOffset || 0;
     var timescale = this.index.timescale || 1;
 
@@ -6540,10 +6699,10 @@ var IndexHandler = function () {
 
 
   IndexHandler.prototype.getSegments = function getSegments(ts, offset, bufSize) {
-    var _normalizeRange = this.normalizeRange(ts, offset, bufSize),
-        time = _normalizeRange.time,
-        up = _normalizeRange.up,
-        to = _normalizeRange.to;
+    var _normalizeRange2 = this._normalizeRange(ts, offset, bufSize),
+        time = _normalizeRange2.time,
+        up = _normalizeRange2.up,
+        to = _normalizeRange2.to;
 
     if (!this.handler.checkRange(time, up, to)) {
       throw new __WEBPACK_IMPORTED_MODULE_8__errors__["g" /* IndexError */]("OUT_OF_INDEX_ERROR", this.index.indexType, false);
@@ -6615,7 +6774,7 @@ var IndexHandler = function () {
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AbstractSourceBuffer; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_eventemitter__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ranges__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ranges__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_assert__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_rx_utils__ = __webpack_require__(11);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -6765,7 +6924,7 @@ var AbstractSourceBuffer = function (_EventEmitter) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_BehaviorSubject__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_BehaviorSubject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_BehaviorSubject__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ranges__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ranges__ = __webpack_require__(19);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -7033,10 +7192,11 @@ function getMaximumBufferPosition(manifest) {
     return manifest.duration;
   }
 
-  var presentationLiveGap = manifest.presentationLiveGap;
+  var availabilityStartTime = manifest.availabilityStartTime,
+      presentationLiveGap = manifest.presentationLiveGap;
 
   var now = Date.now() / 1000;
-  return now - presentationLiveGap;
+  return now - availabilityStartTime - presentationLiveGap;
 }
 
 function getBufferLimits(manifest) {
@@ -7047,12 +7207,13 @@ function getBufferLimits(manifest) {
     return [0, manifest.duration];
   }
 
-  var presentationLiveGap = manifest.presentationLiveGap,
+  var availabilityStartTime = manifest.availabilityStartTime,
+      presentationLiveGap = manifest.presentationLiveGap,
       timeShiftBufferDepth = manifest.timeShiftBufferDepth;
 
 
   var now = Date.now() / 1000;
-  var max = now - presentationLiveGap;
+  var max = now - availabilityStartTime - presentationLiveGap;
   return [Math.min(max, max - timeShiftBufferDepth + BUFFER_DEPTH_SECURITY), max];
 }
 
@@ -8332,7 +8493,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var isNumeric_1 = __webpack_require__(63);
 var Observable_1 = __webpack_require__(0);
 var async_1 = __webpack_require__(26);
-var isScheduler_1 = __webpack_require__(17);
+var isScheduler_1 = __webpack_require__(18);
 var isDate_1 = __webpack_require__(62);
 /**
  * We need this JSDoc comment for affecting ESDoc.
@@ -8437,7 +8598,7 @@ exports.TimerObservable = TimerObservable;
 
 "use strict";
 
-var isScheduler_1 = __webpack_require__(17);
+var isScheduler_1 = __webpack_require__(18);
 var ArrayObservable_1 = __webpack_require__(13);
 var mergeAll_1 = __webpack_require__(37);
 /* tslint:disable:max-line-length */
@@ -8884,7 +9045,7 @@ exports.isDate = isDate;
 
 "use strict";
 
-var isArray_1 = __webpack_require__(16);
+var isArray_1 = __webpack_require__(17);
 function isNumeric(val) {
     // parseFloat NaNs numeric-cast false positives (null|true|false|"")
     // ...but misinterprets leading-number strings, particularly hex literals ("0x...")
@@ -8931,21 +9092,21 @@ exports.noop = noop;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Subject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_Subject__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_BehaviorSubject__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_BehaviorSubject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_BehaviorSubject__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_observable_combineLatest__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_observable_combineLatest__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_observable_combineLatest___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_observable_combineLatest__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_rx_utils__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_languages__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_languages__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__utils_eventemitter__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__utils_debug__ = __webpack_require__(130);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__utils_assert__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__manifest_manifest_js__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__manifest_adaptation_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__manifest_adaptation_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__manifest_representation_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__compat__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__timings__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__errors__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__cache__ = __webpack_require__(97);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__ranges__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__ranges__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__time_fragment__ = __webpack_require__(107);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__device_events__ = __webpack_require__(98);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__manifest_js__ = __webpack_require__(29);
@@ -9006,7 +9167,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 
-// TODO(pierre): separate transports from main build
 
 
 
@@ -9246,7 +9406,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"2.0.12";
+    _this.version = /*PLAYER_VERSION*/"2.1.0";
     _this.video = videoElement;
 
     // fullscreen change subscription.
@@ -9825,7 +9985,7 @@ var Player = function (_EventEmitter) {
     }
 
     // TODO switch entirely to the Manifest class
-    return new __WEBPACK_IMPORTED_MODULE_10__manifest_manifest_js__["a" /* Manifest */](this.man);
+    return new __WEBPACK_IMPORTED_MODULE_10__manifest_manifest_js__["a" /* default */](this.man);
   };
 
   Player.prototype.getCurrentAdaptations = function getCurrentAdaptations() {
@@ -9837,7 +9997,7 @@ var Player = function (_EventEmitter) {
     var adas = this.adas || [];
     return Object.keys(adas).reduce(function (acc, val) {
       if (adas[val]) {
-        acc[val] = new __WEBPACK_IMPORTED_MODULE_11__manifest_adaptation_js__["a" /* Adaptation */](adas[val]);
+        acc[val] = new __WEBPACK_IMPORTED_MODULE_11__manifest_adaptation_js__["a" /* default */](adas[val]);
       }
       return acc;
     }, {});
@@ -9852,7 +10012,7 @@ var Player = function (_EventEmitter) {
     var reps = this.reps || [];
     return Object.keys(reps).reduce(function (acc, val) {
       if (reps[val]) {
-        acc[val] = new __WEBPACK_IMPORTED_MODULE_12__manifest_representation_js__["a" /* Representation */](reps[val]);
+        acc[val] = new __WEBPACK_IMPORTED_MODULE_12__manifest_representation_js__["a" /* default */](reps[val]);
       }
       return acc;
     }, {});
@@ -11120,10 +11280,10 @@ function ema(a) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Subscription___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Subscription__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_BehaviorSubject__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_BehaviorSubject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_BehaviorSubject__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_observable_combineLatest__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_observable_combineLatest__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_observable_combineLatest___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_observable_combineLatest__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_rx_utils__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_languages__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_languages__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__average_bitrate__ = __webpack_require__(93);
 /**
  * Copyright 2015 CANAL+ Group
@@ -11554,12 +11714,12 @@ function filterByType(stream, selectedType) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return EmptyBuffer; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__buffering_queue__ = __webpack_require__(96);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ranges__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ranges__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Subject__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Subject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_Subject__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_observable_combineLatest__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_observable_combineLatest__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_observable_combineLatest___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_observable_combineLatest__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_observable_merge__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_observable_merge___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_observable_merge__);
@@ -12384,7 +12544,7 @@ var Base = function (_Timeline) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment__ = __webpack_require__(23);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -12543,7 +12703,7 @@ var Smooth = function (_Timeline) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment__ = __webpack_require__(23);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -12886,7 +13046,7 @@ function PipeLines() {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_observable_EmptyObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_observable_EmptyObservable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_observable_merge__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_observable_merge___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_rxjs_observable_merge__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_observable_combineLatest__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_observable_combineLatest__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_observable_combineLatest___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_rxjs_observable_combineLatest__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__compat__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__text_buffer__ = __webpack_require__(106);
@@ -13631,7 +13791,7 @@ function Stream(_ref) {
     var percentage = /^\d*(\.\d+)? ?%$/;
 
     if (startAt) {
-      var _getBufferLimits = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["i" /* getBufferLimits */])(),
+      var _getBufferLimits = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["i" /* getBufferLimits */])(manifest),
           _min = _getBufferLimits[0],
           max = _getBufferLimits[1];
 
@@ -14236,15 +14396,24 @@ if (false) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__timeline_js__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(20);
 
 
+
+/**
+ * TODO weird... Reimplement from scratch
+ */
 /* harmony default export */ __webpack_exports__["a"] = (Object.assign({}, __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */], {
-  getLiveEdge: function getLiveEdge() {
-    throw new Error("not implemented");
-  },
-  addSegment: function addSegment(segmentInfos) {
-    // TODO
-    console.log(segmentInfos);
+  getInitSegment: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getInitSegment */],
+  setTimescale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* setTimescale */],
+  scale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["c" /* scale */],
+
+  _addSegmentInfos: function _addSegmentInfos(index, segmentInfos) {
+    index.timeline.push({
+      ts: segmentInfos.time,
+      d: segmentInfos.duration
+    });
+    return index;
   }
 }));
 
@@ -14289,19 +14458,35 @@ var getRightIndexHelpers = function getRightIndexHelpers(index) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(20);
 
 
+
+/**
+ * NEEDED IN INDEX
+ * duration
+ * list []
+ *   ?range
+ * timescale
+ */
 
 var ListIndexHelpers = {
+  getInitSegment: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getInitSegment */],
+  setTimescale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* setTimescale */],
+  scale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["c" /* scale */],
+
+  /**
+   * @param {string|Number} repId
+   * @param {Object} index
+   * @param {Number} _up
+   * @param {Number} _to
+   * @returns {Array.<Segment>}
+   */
   getSegments: function getSegments(repId, index, _up, _to) {
-    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* normalizeRange */])(index, _up, _to),
+    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* normalizeRange */])(index, _up, _to),
         up = _normalizeRange.up,
         to = _normalizeRange.to;
-
-    // TODO(pierre): use startNumber
-
 
     var duration = index.duration,
         list = index.list,
@@ -14321,11 +14506,39 @@ var ListIndexHelpers = {
         indexRange: null,
         timescale: timescale
       };
-      segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* Segment */](args));
+      segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* default */](args));
       i++;
     }
     return segments;
   },
+
+
+  /**
+   * Returns first position in index.
+   * @returns {Number}
+   */
+  getFirstPosition: function getFirstPosition() {
+    return 0;
+  },
+
+
+  /**
+   * Returns last position in index.
+   * @returns {Number}
+   */
+  getLastPosition: function getLastPosition(index) {
+    var duration = index.duration,
+        list = index.list;
+
+    return list.length * duration / index.timescale;
+  },
+
+
+  /**
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * (If we should re-fetch the manifest)
+   * @returns {Boolean}
+   */
   shouldRefresh: function shouldRefresh(index, time, up, to) {
     var duration = index.duration,
         list = index.list;
@@ -14333,11 +14546,8 @@ var ListIndexHelpers = {
     var i = Math.floor(to / duration);
     return !(i >= 0 && i < list.length);
   },
-  getLiveEdge: function getLiveEdge() {
-    throw new Error("not implemented");
-  },
-  addSegment: function addSegment() {
-    return false;
+  _addSegmentInfos: function _addSegmentInfos() {
+    return;
   },
   checkDiscontinuity: function checkDiscontinuity() {
     return -1;
@@ -14352,12 +14562,17 @@ var ListIndexHelpers = {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__timeline_js__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(20);
 
 
 
 /* harmony default export */ __webpack_exports__["a"] = ({
-  getSegments: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */].getSegments,
+  getSegments: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */].getSegments, // TODO Re-implement?
+  getInitSegment: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getInitSegment */],
+  checkDiscontinuity: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */].checkDiscontinuity, // TODO Re-implement?
+  _addSegmentInfos: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */]._addSegmentInfos,
+  setTimescale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* setTimescale */],
+  scale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["c" /* scale */],
 
   shouldRefresh: function shouldRefresh(index, time) {
     var timeline = index.timeline;
@@ -14371,7 +14586,20 @@ var ListIndexHelpers = {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return time >= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getTimelineRangeEnd */])(last);
+    return time >= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(last);
+  },
+  getFirstPosition: function getFirstPosition(index) {
+    if (!index.timeline.length) {
+      return undefined;
+    }
+    return index.timeline[0].ts / index.timescale;
+  },
+  getLastPosition: function getLastPosition(index) {
+    if (!index.timeline.length) {
+      return undefined;
+    }
+    var lastTimelineElement = index.timeline[index.timeline.length - 1];
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(lastTimelineElement) / index.timescale;
   }
 });
 
@@ -14380,14 +14608,18 @@ var ListIndexHelpers = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(20);
 
 
 
 /* harmony default export */ __webpack_exports__["a"] = ({
+  getInitSegment: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getInitSegment */],
+  setTimescale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* setTimescale */],
+  scale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["c" /* scale */],
+
   getSegments: function getSegments(repId, index, _up, _to) {
-    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* normalizeRange */])(index, _up, _to),
+    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* normalizeRange */])(index, _up, _to),
         up = _normalizeRange.up,
         to = _normalizeRange.to;
 
@@ -14411,13 +14643,25 @@ var ListIndexHelpers = {
         indexRange: null,
         timescale: timescale
       };
-      segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* Segment */](args));
+      segments.push(new __WEBPACK_IMPORTED_MODULE_0__segment_js__["a" /* default */](args));
     }
 
     return segments;
   },
+  getFirstPosition: function getFirstPosition() {
+    return undefined;
+  },
+  getLastPosition: function getLastPosition() {
+    return undefined;
+  },
   shouldRefresh: function shouldRefresh() {
     return false;
+  },
+  checkDiscontinuity: function checkDiscontinuity() {
+    return -1;
+  },
+  _addSegmentInfos: function _addSegmentInfos() {
+    return;
   }
 });
 
@@ -14426,8 +14670,7 @@ var ListIndexHelpers = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Manifest; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__adaptation_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__adaptation_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_id_js__ = __webpack_require__(32);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -14455,6 +14698,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  */
 
 var Manifest = function () {
+  /**
+   * @constructor
+   * @param {Object} [args={}]
+   * @param {string|Number} [args.id]
+   * @param {string} args.transportType
+   * @param {Array.<Object>} args.adaptations
+   * @param {string} args.type
+   * @param {Array.<string>} args.locations
+   * @param {Number} args.duration
+   */
   function Manifest() {
     var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -14465,7 +14718,7 @@ var Manifest = function () {
     this.transport = args.transportType || "";
     this.adaptations = args.adaptations ? Object.keys(args.adaptations).reduce(function (acc, val) {
       acc[val] = args.adaptations[val].map(function (a) {
-        return new __WEBPACK_IMPORTED_MODULE_0__adaptation_js__["a" /* Adaptation */](a);
+        return new __WEBPACK_IMPORTED_MODULE_0__adaptation_js__["a" /* default */](a);
       });
       return acc;
     }, {}) : [];
@@ -14500,7 +14753,7 @@ var Manifest = function () {
   return Manifest;
 }();
 
-
+/* harmony default export */ __webpack_exports__["a"] = (Manifest);
 
 /***/ }),
 /* 115 */
@@ -14513,6 +14766,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
 var RepresentationIndex = function () {
+  /**
+   * @constructor
+   * @param {Object} args
+   * @param {Object} args.index
+   * @param {string|Number} args.rootId
+   */
   function RepresentationIndex(args) {
     _classCallCheck(this, RepresentationIndex);
 
@@ -14521,8 +14780,8 @@ var RepresentationIndex = function () {
     this._indexHelpers = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__indexes_index_js__["a" /* getRightIndexHelpers */])(this._index);
   }
 
-  RepresentationIndex.prototype.getLiveEdge = function getLiveEdge() {
-    return this._indexHelpers.getLiveEdge(this._index);
+  RepresentationIndex.prototype.getInitSegment = function getInitSegment() {
+    return this._indexHelpers.getInitSegment(this._rootId, this._index);
   };
 
   RepresentationIndex.prototype.getSegments = function getSegments(up, duration) {
@@ -14533,24 +14792,47 @@ var RepresentationIndex = function () {
     return this._indexHelpers.shouldRefresh(this._index, time, up, to);
   };
 
-  RepresentationIndex.prototype.getBeginningTime = function getBeginningTime() {
-    return this._indexHelpers.getBeginningTime(this._index);
+  RepresentationIndex.prototype.getFirstPosition = function getFirstPosition() {
+    return this._indexHelpers.getFirstPosition(this._index);
   };
 
-  RepresentationIndex.prototype.getEndTime = function getEndTime() {
-    return this._indexHelpers.getEndTime(this._index);
+  RepresentationIndex.prototype.getLastPosition = function getLastPosition() {
+    return this._indexHelpers.getLastPosition(this._index);
   };
 
-  // TODO
-
-
-  RepresentationIndex.prototype.addSegment = function addSegment(s) {
-    var val = this._indexHelpers.addSegment(s, this._index);
-    return val;
+  RepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity(time) {
+    return this._indexHelpers.checkDiscontinuity(this._index, time);
   };
 
-  RepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity() {
-    return this._indexHelpers.checkDiscontinuity(this._index);
+  /**
+   * Returns time given scaled into seconds.
+   * @param {Number} time
+   * @returns {Number}
+   */
+
+
+  RepresentationIndex.prototype.scale = function scale(time) {
+    return this._indexHelpers.scale(this._index, time);
+  };
+
+  /**
+   * Update the timescale used (for all segments).
+   * @param {Number} timescale
+   */
+
+
+  RepresentationIndex.prototype.setTimescale = function setTimescale(timescale) {
+    return this._indexHelpers.setTimescale(this._index, timescale);
+  };
+
+  RepresentationIndex.prototype._addSegments = function _addSegments(nextSegments, currentSegment) {
+    var addedSegments = [];
+    for (var i = 0; i < nextSegments.length; i++) {
+      if (this._indexHelpers._addSegmentInfos(nextSegments[i], currentSegment)) {
+        addedSegments.push(nextSegments[i]);
+      }
+    }
+    return addedSegments;
   };
 
   return RepresentationIndex;
@@ -14573,9 +14855,9 @@ var RepresentationIndex = function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_url__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__mp4__ = __webpack_require__(121);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_bytes_js__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__manifest_adaptation_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__manifest_adaptation_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__manifest_representation_js__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__manifest_segment_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__manifest_segment_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__request__ = __webpack_require__(51);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__manifest__ = __webpack_require__(119);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__parsers_texttracks_ttml_js__ = __webpack_require__(50);
@@ -14771,10 +15053,10 @@ function isMP4EmbeddedTrack(segment) {
     var url = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils_url__["b" /* resolveURL */])(segment.getResolvedURL(), path);
 
     var args = {
-      adaptation: new __WEBPACK_IMPORTED_MODULE_7__manifest_adaptation_js__["a" /* Adaptation */](segment.getAdaptation()),
-      representation: new __WEBPACK_IMPORTED_MODULE_8__manifest_representation_js__["a" /* Representation */](segment.getRepresentation()),
-      segment: new __WEBPACK_IMPORTED_MODULE_9__manifest_segment_js__["a" /* Segment */](segment),
-      transport: "smooth",
+      adaptation: new __WEBPACK_IMPORTED_MODULE_7__manifest_adaptation_js__["a" /* default */](segment.getAdaptation()),
+      representation: new __WEBPACK_IMPORTED_MODULE_8__manifest_representation_js__["a" /* default */](segment.getRepresentation()),
+      segment: new __WEBPACK_IMPORTED_MODULE_9__manifest_segment_js__["a" /* default */](segment),
+      transport: "dash",
       url: url
     };
 
@@ -15118,7 +15400,7 @@ function isMP4EmbeddedTrack(segment) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_assert_js__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_languages__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_languages__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__helpers_js__ = __webpack_require__(48);
 /**
  * Copyright 2015 CANAL+ Group
@@ -15306,7 +15588,6 @@ var FILTERED_KEYS = {
   // "bitstreamSwitching",
   // "codingDependency",
   // "contentComponent",
-  // "contentProtection",
   // "contentType",
   // "frameRate",
   // "group",
@@ -15326,7 +15607,7 @@ var FILTERED_KEYS = {
   // "segmentAlignment",
   // "segmentProfiles",
   // "subsegmentAlignment",
-  "accessibility", "baseURL", "id", "lang", "representations", "type"],
+  "accessibility", "baseURL", "contentProtection", "id", "lang", "representations", "type"],
 
   /**
    * Every keys in a returned representation (@see parseRepresentation).
@@ -16234,9 +16515,9 @@ function parseSami(smi, lang) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_observable_EmptyObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_observable_EmptyObservable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_bytes__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_log__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__manifest_adaptation_js__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__manifest_adaptation_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__manifest_representation_js__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__manifest_segment_js__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__manifest_segment_js__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__request__ = __webpack_require__(51);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__parser__ = __webpack_require__(127);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__mp4_js__ = __webpack_require__(126);
@@ -16466,9 +16747,9 @@ function buildSegmentURL(segment) {
       var url = buildSegmentURL(segment);
 
       var args = {
-        adaptation: new __WEBPACK_IMPORTED_MODULE_4__manifest_adaptation_js__["a" /* Adaptation */](segment.getAdaptation()),
-        representation: new __WEBPACK_IMPORTED_MODULE_5__manifest_representation_js__["a" /* Representation */](segment.getRepresentation()),
-        segment: new __WEBPACK_IMPORTED_MODULE_6__manifest_segment_js__["a" /* Segment */](segment),
+        adaptation: new __WEBPACK_IMPORTED_MODULE_4__manifest_adaptation_js__["a" /* default */](segment.getAdaptation()),
+        representation: new __WEBPACK_IMPORTED_MODULE_5__manifest_representation_js__["a" /* default */](segment.getRepresentation()),
+        segment: new __WEBPACK_IMPORTED_MODULE_6__manifest_segment_js__["a" /* default */](segment),
         transport: "smooth",
         url: url
       };
@@ -17379,7 +17660,7 @@ function createInitSegment(timescale, type, stsd, mhd, width, height, pssList) {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_bytes__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_assert__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_languages__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_languages__ = __webpack_require__(21);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -17717,7 +17998,7 @@ function createSmoothStreamingParser() {
     }
 
     return {
-      transportType: "smoothstreaming",
+      transportType: "smooth",
       profiles: "",
       type: isLive ? "dynamic" : "static",
       suggestedPresentationDelay: suggestedPresentationDelay,
@@ -17839,7 +18120,7 @@ var SimpleSet = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__core_ranges__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__core_ranges__ = __webpack_require__(19);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -18631,7 +18912,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var isArray_1 = __webpack_require__(16);
+var isArray_1 = __webpack_require__(17);
 var isPromise_1 = __webpack_require__(64);
 var PromiseObservable_1 = __webpack_require__(55);
 var IteratorObservable_1 = __webpack_require__(140);
@@ -19167,7 +19448,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var ArrayObservable_1 = __webpack_require__(13);
-var isArray_1 = __webpack_require__(16);
+var isArray_1 = __webpack_require__(17);
 var OuterSubscriber_1 = __webpack_require__(12);
 var subscribeToResult_1 = __webpack_require__(15);
 var none = {};
@@ -19903,7 +20184,7 @@ var MapToSubscriber = (function (_super) {
 
 var ArrayObservable_1 = __webpack_require__(13);
 var mergeAll_1 = __webpack_require__(37);
-var isScheduler_1 = __webpack_require__(17);
+var isScheduler_1 = __webpack_require__(18);
 /* tslint:disable:max-line-length */
 function merge() {
     var observables = [];
@@ -20256,7 +20537,7 @@ var ArrayObservable_1 = __webpack_require__(13);
 var ScalarObservable_1 = __webpack_require__(36);
 var EmptyObservable_1 = __webpack_require__(6);
 var concat_1 = __webpack_require__(57);
-var isScheduler_1 = __webpack_require__(17);
+var isScheduler_1 = __webpack_require__(18);
 /* tslint:disable:max-line-length */
 function startWith() {
     var array = [];
