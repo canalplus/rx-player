@@ -195,7 +195,7 @@ export default function(options={}) {
       adaptation: new Adaptation(segment.getAdaptation()),
       representation: new Representation(segment.getRepresentation()),
       segment: new Segment(segment),
-      transport: "smooth",
+      transport: "dash",
       url,
     };
 
