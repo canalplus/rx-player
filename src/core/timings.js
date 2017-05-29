@@ -330,9 +330,12 @@ function getMaximumBufferPosition(manifest) {
     return manifest.duration;
   }
 
-  const { presentationLiveGap } = manifest;
+  const {
+    availabilityStartTime,
+    presentationLiveGap,
+  } = manifest;
   const now = Date.now() / 1000;
-  return now - presentationLiveGap;
+  return now - availabilityStartTime - presentationLiveGap;
 }
 
 function getBufferLimits(manifest) {
@@ -344,12 +347,13 @@ function getBufferLimits(manifest) {
   }
 
   const {
+    availabilityStartTime,
     presentationLiveGap,
     timeShiftBufferDepth,
   } = manifest;
 
   const now = Date.now() / 1000;
-  const max = now - presentationLiveGap;
+  const max = now - availabilityStartTime - presentationLiveGap;
   return [
     Math.min(max, max - timeShiftBufferDepth + BUFFER_DEPTH_SECURITY),
     max,

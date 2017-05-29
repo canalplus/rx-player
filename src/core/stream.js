@@ -763,7 +763,7 @@ function Stream({
     const percentage = /^\d*(\.\d+)? ?%$/;
 
     if (startAt) {
-      const [min, max] = getBufferLimits();
+      const [min, max] = getBufferLimits(manifest);
       if (startAt.position != null) {
         startTime = Math.max(Math.min(startAt.position, max), min);
       }
