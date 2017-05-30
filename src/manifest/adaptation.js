@@ -43,6 +43,7 @@ class Adaptation {
       this.language = args.language;
     }
 
+    // XXX TODO choose one or the other
     const { accessibility } = args;
     if (Array.isArray(accessibility)) {
       if (accessibility.includes("audioDescription")) {
@@ -52,6 +53,12 @@ class Adaptation {
       if (accessibility.includes("closedCaption")) {
         this.isClosedCaption = true;
       }
+    }
+    if (args.closedCaption != null) {
+      this.isClosedCaption = args.closedCaption;
+    }
+    if (args.audioDescription != null) {
+      this.isAudioDescription = args.audioDescription;
     }
 
     // TODO rename both protectionData?

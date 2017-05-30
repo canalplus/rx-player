@@ -31,9 +31,7 @@ class Representation {
    */
   constructor(args = {}) {
     const nId = generateNewId();
-    this.id =
-      (args.rootId == null ? "" : args.rootId + "_") +
-      (args.id == null ? nId : args.id);
+    this.id = (args.id == null ? nId : args.id);
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
 

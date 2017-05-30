@@ -28,9 +28,6 @@ import {
 import EventEmitter from "../utils/eventemitter";
 import debugPane from "../utils/debug";
 import assert from "../utils/assert";
-import Manifest from "../manifest/manifest.js";
-import Adaptation from "../manifest/adaptation.js";
-import Representation from "../manifest/representation.js";
 
 import {
   HTMLVideoElement_,
@@ -59,9 +56,8 @@ import { BufferedRanges } from "./ranges";
 import { parseTimeFragment } from "./time-fragment";
 import DeviceEvents from "./device-events";
 import {
-  getAvailableTextTracks,
-  getAvailableAudioTracks,
-  getAdaptationsByType,
+  getTextTracks,
+  getAudioTracks,
 } from "./manifest.js";
 
 import Transports from "../net";
@@ -715,10 +711,7 @@ class Player extends EventEmitter {
     if (bufferType == "text") {
       const track = adaptation && adaptation.language ? {
         language: adaptation.language,
-        closedCaption: !!adaptation.closedCaption,
-
-        // TODO uncomment on manifest switch
-        // closedCaption: !!adaptation.isClosedCaption,
+        closedCaption: !!adaptation.isClosedCaption,
         id: adaptation.id,
       } : null;
       this._recordState("subtitle", track && track.language); // deprecated
@@ -733,10 +726,7 @@ class Player extends EventEmitter {
     if (bufferType == "audio") {
       const track = {
         language: adaptation && adaptation.language || "",
-        audioDescription: !!(adaptation && adaptation.audioDescription),
-
-        // TODO uncomment on manifest switch
-        // audioDescription: !!adaptation.isAudioDescription,
+        audioDescription: !!(adaptation && adaptation.isAudioDescription),
         id: adaptation.id,
       };
       this._recordState("language", track.language); // deprecated
@@ -823,50 +813,21 @@ class Player extends EventEmitter {
    * @returns {Object|null}
    */
   getManifest() {
-    if (!this._manifest){
-      return null;
-    }
-
-    return new Manifest(this._manifest);
-
-    // TODO uncomment on manifest switch
-    // return this._manifest || null;
+    return this._manifest || null;
   }
 
   getCurrentAdaptations() {
     if (!this._manifest){
       return null;
     }
-
-    // TODO switch entirely to the Manifest class
-    const adas = this.adas || [];
-    return Object.keys(adas).reduce((acc, val) => {
-      if (adas[val]) {
-        acc[val] = new Adaptation(adas[val]);
-      }
-      return acc;
-    }, {});
-
-    // TODO uncomment on manifest switch
-    // return this.adas;
+    return this.adas;
   }
 
   getCurrentRepresentations() {
     if (!this._manifest){
       return null;
     }
-
-    // TODO switch entirely to the Manifest class
-    const reps = this.reps || [];
-    return Object.keys(reps).reduce((acc, val) => {
-      if (reps[val]) {
-        acc[val] = new Representation(reps[val]);
-      }
-      return acc;
-    }, {});
-
-    // TODO uncomment on manifest switch
-    // return this.reps;
+    return this.reps;
   }
 
   /**
@@ -925,10 +886,7 @@ class Player extends EventEmitter {
    */
   getUrl() {
     assertMan(this);
-    return this._manifest.locations[0];
-
-    // TODO uncomment on manifest switch
-    // return this._manifest.getUrl();
+    return this._manifest.getUrl();
   }
 
   /**
@@ -1069,7 +1027,7 @@ class Player extends EventEmitter {
       " Use getAvailableAudioTracks instead."
     );
     return this._manifest &&
-      getAvailableAudioTracks(this._manifest).map(l => l.language)
+      getAudioTracks(this._manifest).map(l => l.language)
       || [];
   }
 
@@ -1083,7 +1041,7 @@ class Player extends EventEmitter {
       " Use getAvailableTextTracks instead."
     );
     return this._manifest &&
-      getAvailableTextTracks(this._manifest).map(s =>  s.language)
+      getTextTracks(this._manifest).map(s =>  s.language)
       || [];
   }
 
@@ -1117,22 +1075,14 @@ class Player extends EventEmitter {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() {
-    const video = getAdaptationsByType(this._manifest, "video");
-    return (video[0] && video[0].bitrates.slice()) || [];
-
-    // TODO uncomment on manifest switch
-    // return this.adas.video.getAvailableBitrates();
+    return this.adas.video.getAvailableBitrates();
   }
 
   /**
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() {
-    const audio = this.adas.audio;
-    return (audio && audio.bitrates.slice()) || [];
-
-    // TODO uncomment on manifest switch
-    // return this.adas.audio.getAvailableBitrates();
+    return this.adas.audio.getAvailableBitrates();
   }
 
   /**
@@ -1553,7 +1503,7 @@ class Player extends EventEmitter {
       return null;
     }
 
-    return getAvailableAudioTracks(this._manifest)
+    return getAudioTracks(this._manifest)
       .map(track =>
         Object.assign({}, track, {
           active: currentAudioTrack.id === track.id,
@@ -1571,7 +1521,7 @@ class Player extends EventEmitter {
       return null;
     }
 
-    return getAvailableTextTracks(this._manifest)
+    return getTextTracks(this._manifest)
       .map(track =>
         Object.assign({}, track, {
           active: !!currentTextTrack && currentTextTrack.id === track.id,

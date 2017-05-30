@@ -65,14 +65,10 @@ class IndexHandler {
     this.representation = representation;
     this._isLive = isLive;
 
-    // TODO always access index through this.representation
     this.index = representation.index;
-
-    // TODO uncomment on manifest switch
-    // this.index = representation.index._index;
-    this.handler = new (selectIndexHandler(this.index))(adaptation,
-                                                        representation,
-                                                        this.index);
+    this.handler = new (selectIndexHandler(this.index._index))(adaptation,
+                                                               representation,
+                                                               this.index);
   }
 
   /**
@@ -80,13 +76,13 @@ class IndexHandler {
    * @returns {InitSegment}
    */
   getInitSegment() {
-    const initialization = this.index.initialization || {};
+    const initialization = this.index._index.initialization || {};
     return new InitSegment(
       this.adaptation,
       this.representation,
       initialization.media,
       initialization.range,
-      this.index.indexRange
+      this.index._index.indexRange
     );
   }
 
@@ -101,8 +97,8 @@ class IndexHandler {
    * and to (upper bounds) properties, all in the right timescale.
    */
   _normalizeRange(ts, offset, bufSize) {
-    const presentationOffset = this.index.presentationTimeOffset || 0;
-    const timescale = this.index.timescale || 1;
+    const presentationOffset = this.index._index.presentationTimeOffset || 0;
+    const timescale = this.index._index.timescale || 1;
 
     if (!offset) {
       offset  = 0;
@@ -124,7 +120,7 @@ class IndexHandler {
     if (!this._isLive) {
       return null;
     }
-    const timescale = this.index.timescale || 1;
+    const timescale = this.index._index.timescale || 1;
     const ts = this.handler.checkDiscontinuity(time * timescale);
     if (ts > 0) {
       return { ts: ts / timescale + 1 };
@@ -145,7 +141,7 @@ class IndexHandler {
   getSegments(ts, offset, bufSize) {
     const { time, up, to } = this._normalizeRange(ts, offset, bufSize);
     if (!this.handler.checkRange(time, up, to)) {
-      throw new IndexError("OUT_OF_INDEX_ERROR", this.index.indexType, false);
+      throw new IndexError("OUT_OF_INDEX_ERROR", this.index._index.indexType, false);
     }
 
     return this.handler.getSegments(up, to);
@@ -176,8 +172,8 @@ class IndexHandler {
       assert(timescale > 0);
     }
 
-    if (index.timescale !== timescale) {
-      index.timescale = timescale;
+    if (index._index.timescale !== timescale) {
+      index._index.timescale = timescale;
       return true;
     }
 
@@ -191,10 +187,10 @@ class IndexHandler {
    */
   scale(time) {
     if (__DEV__) {
-      assert(this.index.timescale > 0);
+      assert(this.index._index.timescale > 0);
     }
 
-    return time / this.index.timescale;
+    return time / this.index._index.timescale;
   }
 }
 

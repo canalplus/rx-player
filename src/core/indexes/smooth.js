@@ -18,7 +18,7 @@ import Timeline from "./timeline";
 
 class Smooth extends Timeline {
   checkRange(time) {
-    const { timeline } = this.index;
+    const { timeline } = this.index._index;
     let last = timeline[timeline.length - 1];
     if (!last) {
       return true;

@@ -24,14 +24,14 @@ class InitializationSegmentCache {
   }
 
   add({ segment }, response) {
-    if (segment.isInitSegment()) {
-      this.cache[segment.getId()] = response;
+    if (segment.isInit) {
+      this.cache[segment.id] = response;
     }
   }
 
   get({ segment }) {
-    if (segment.isInitSegment()) {
-      const value = this.cache[segment.getId()];
+    if (segment.isInit) {
+      const value = this.cache[segment.id];
       if (value != null) {
         return value;
       }

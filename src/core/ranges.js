@@ -472,8 +472,8 @@ class BufferedRanges {
    */
   insert(bitrate, start, end) {
     if (__DEV__) {
-      assert(start >= 0);
-      assert(end - start > 0);
+      assert(start >= 0, 1);
+      assert(end - start > 0, 2);
     }
     insertInto(this.ranges, new Range(start, end, bitrate));
     this.length = this.ranges.length;
@@ -487,8 +487,8 @@ class BufferedRanges {
    */
   remove(start, end) {
     if (__DEV__) {
-      assert(start >= 0);
-      assert(end - start > 0);
+      assert(start >= 0, 3);
+      assert(end - start > 0, 4);
     }
     this.intersect(new BufferedRanges([
       new Range(0, start, 0), // from 0 to start
@@ -504,7 +504,7 @@ class BufferedRanges {
    */
   equals(others) {
     if (__DEV__) {
-      assert(others instanceof BufferedRanges);
+      assert(others instanceof BufferedRanges, 5);
     }
 
     return rangesEquals(this.ranges, others.ranges);
@@ -518,7 +518,7 @@ class BufferedRanges {
    */
   intersect(others) {
     if (__DEV__) {
-      assert(others instanceof BufferedRanges);
+      assert(others instanceof BufferedRanges, 6);
     }
 
     rangesIntersect(this.ranges, others.ranges);

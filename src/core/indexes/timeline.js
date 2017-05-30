@@ -52,7 +52,7 @@ class Timeline {
 
   createSegment(time, range, duration) {
     const { adaptation, representation } = this;
-    const { media } = this.index;
+    const { media } = this.index._index;
     return Segment.create(
       adaptation,     /* adaptation */
       representation, /* representation */
@@ -94,7 +94,7 @@ class Timeline {
    * for the next (discontinuited) range. If not this is equal to -1.
    */
   checkDiscontinuity(time) {
-    const { timeline } = this.index;
+    const { timeline } = this.index._index;
 
     if (time <= 0) {
       return -1;
@@ -114,7 +114,7 @@ class Timeline {
     const rangeTo = Timeline.getRangeEnd(range);
     const nextRange = timeline[index + 1];
 
-    const timescale = this.index.timescale || 1;
+    const timescale = this.index._index.timescale || 1;
     // when we are actually inside the found range and this range has
     // an explicit discontinuity with the next one
     if (rangeTo !== nextRange.ts &&
@@ -128,7 +128,7 @@ class Timeline {
   }
 
   checkRange(time, up, to) {
-    const { timeline } = this.index;
+    const { timeline } = this.index._index;
 
     let last = timeline[timeline.length - 1];
     if (!last) {
@@ -143,7 +143,7 @@ class Timeline {
   }
 
   getSegmentIndex(ts) {
-    const { timeline } = this.index;
+    const { timeline } = this.index._index;
 
     let low = 0;
     let high = timeline.length;
@@ -172,7 +172,7 @@ class Timeline {
   }
 
   getSegments(up, to) {
-    const timeline = this.index.timeline;
+    const timeline = this.index._index.timeline;
     const segments = [];
 
     const timelineLength = timeline.length;
@@ -216,7 +216,7 @@ class Timeline {
   }
 
   addSegment(newSegment, currentSegment) {
-    const { timeline } = this.index;
+    const { timeline } = this.index._index;
     const timelineLength = timeline.length;
     const last = timeline[timelineLength - 1];
 

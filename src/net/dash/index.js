@@ -22,11 +22,6 @@ import { resolveURL } from "../../utils/url";
 import { parseSidx, patchPssh, getMdat } from "./mp4";
 import { bytesToStr } from "../../utils/bytes.js";
 
-// TODO Those should already be constructed here
-import Adaptation from "../../manifest/adaptation.js";
-import Representation from "../../manifest/representation.js";
-import Segment from "../../manifest/segment.js";
-
 import request from "../../request";
 import dashManifestParser from "./manifest";
 
@@ -82,37 +77,22 @@ function processFormatedToken(replacer) {
  * @param {Segment} segment
  * @returns {string}
  */
-function replaceTokens(path, segment) {
+function replaceTokens(path, segment, representation) {
   if (path.indexOf("$") === -1) {
     return path;
   } else {
-    const rep = segment.getRepresentation();
     return path
       .replace(/\$\$/g, "$")
-      .replace(/\$RepresentationID\$/g, rep.id)
-      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g, processFormatedToken(rep.bitrate))
-      .replace(/\$Number(|\%0(\d+)d)\$/g, processFormatedToken(segment.getNumber()))
-      .replace(/\$Time(|\%0(\d+)d)\$/g, processFormatedToken(segment.getTime()));
+      .replace(/\$RepresentationID\$/g,
+        representation.id)
+      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
+        processFormatedToken(representation.bitrate))
+      .replace(/\$Number(|\%0(\d+)d)\$/g,
+        processFormatedToken(segment.number))
+      .replace(/\$Time(|\%0(\d+)d)\$/g,
+        processFormatedToken(segment.time));
   }
 }
-
-// TODO uncomment on manifest switch
-// function replaceTokens(path, segment, representation) {
-//   if (path.indexOf("$") === -1) {
-//     return path;
-//   } else {
-//     return path
-//       .replace(/\$\$/g, "$")
-//       .replace(/\$RepresentationID\$/g,
-//         representation.id)
-//       .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
-//         processFormatedToken(representation.bitrate))
-//       .replace(/\$Number(|\%0(\d+)d)\$/g,
-//         processFormatedToken(segment.number))
-//       .replace(/\$Time(|\%0(\d+)d)\$/g,
-//         processFormatedToken(segment.time));
-//   }
-// }
 
 /**
  * Returns true if the given texttrack segment represents a textrack embedded
@@ -190,24 +170,18 @@ export default function(options={}) {
     }
   };
 
-  const segmentPreLoader = ({ segment }) => {
-
-    // TODO uncomment on manifest switch
-    // const segmentPreLoader = ({ segment, adaptation, representation, manifest }) => {
-    const media = segment.getMedia();
-    const range = segment.getRange();
-    const indexRange = segment.getIndexRange();
-    const isInit = segment.isInitSegment();
-    const adaptation = new Adaptation(segment.getAdaptation());
-    const representation = new Representation(segment.getRepresentation());
-
-    // TODO uncomment on manifest switch
-    // const {
-    //   media,
-    //   range,
-    //   indexRange,
-    //   isInit,
-    // } = segment;
+  const segmentPreLoader = ({
+    segment,
+    adaptation,
+    representation,
+    manifest,
+  }) => {
+    const {
+      media,
+      range,
+      indexRange,
+      isInit,
+    } = segment;
 
     // init segment without initialization media/range/indexRange:
     // we do nothing on the network
@@ -219,18 +193,15 @@ export default function(options={}) {
     const customSegmentLoader = options.segmentLoader;
 
     const path = media ?
-      replaceTokens(media, segment) : "";
+      replaceTokens(media, segment, representation) : "";
 
     const url = resolveURL(representation.baseURL, path);
 
     const args = {
       adaptation,
       representation,
-      segment: new Segment(segment),
-
-      // TODO uncomment on manifest switch
-      // segment,
-      // manifest,
+      manifest,
+      segment,
       transport: "dash",
       url,
     };
@@ -297,19 +268,16 @@ export default function(options={}) {
   };
 
   const segmentPipeline = {
-    loader({ segment }) {
-
-      // TODO uncomment on manifest switch
-      // loader({ segment, representation, adaptation, manifest }) {
-      return segmentPreLoader({ segment });
-
-      // TODO uncomment on manifest switch
-      // return segmentPreLoader({ segment, representation, adaptation, manifest });
+    loader({ segment, representation, adaptation, manifest }) {
+      return segmentPreLoader({
+        segment,
+        representation,
+        adaptation,
+        manifest,
+      });
     },
 
-    parser({ segment, response }) {
-      // TODO uncomment on manifest switch
-      // parser({ segment, adaptation, response }) {
+    parser({ segment, adaptation, response }) {
       const responseData = new Uint8Array(response.responseData);
 
       // added segments and timescale informations are extracted from
@@ -318,12 +286,8 @@ export default function(options={}) {
 
       // added index (segments and timescale) informations are
       // extracted from sidx atom
-      const indexRange = segment.getIndexRange();
-      const isInit = segment.isInitSegment();
-
-      // TODO uncomment on manifest switch
-      // const indexRange = segment.indexRange;
-      // const isInit = segment.isInit;
+      const indexRange = segment.indexRange;
+      const isInit = segment.isInit;
       const index = parseSidx(responseData, indexRange ? indexRange[0] : 0);
       if (index) {
         nextSegments = index.segments;
@@ -334,22 +298,13 @@ export default function(options={}) {
         // current segment information may originate from the index
         // itself in which case we don't have to use the index
         // segments.
-        if (segment.getTime() >= 0 &&
-            segment.getDuration() >= 0) {
+        if (segment.time >= 0 &&
+            segment.duration >= 0) {
           currentSegment = {
-            ts: segment.getTime(),
-            d: segment.getDuration(),
+            ts: segment.time,
+            d: segment.duration,
           };
         }
-
-        // TODO uncomment on manifest switch
-        // if (segment.time >= 0 &&
-        //     segment.duration >= 0) {
-        //   currentSegment = {
-        //     ts: segment.time,
-        //     d: segment.duration,
-        //   };
-        // }
         else if (index && index.segments.length === 1) {
           currentSegment = {
             ts: index.segments[0].ts,
@@ -364,8 +319,6 @@ export default function(options={}) {
 
       let segmentData = responseData;
       if (isInit) {
-        // TODO remove on manifest switch
-        const adaptation = segment.getAdaptation();
         if (adaptation.contentProtection) {
           segmentData = patchPssh(responseData, adaptation.contentProtection);
         }
@@ -382,24 +335,13 @@ export default function(options={}) {
 
   const textTrackPipeline = {
     // TODO DRY this (code too similar to segmentPipeline)
-    loader({ segment }) {
-
-      // TODO uncomment on manifest switch
-      // loader({ segment, representation }) {
-
-      const media = segment.getMedia();
-      const range = segment.getRange();
-      const indexRange = segment.getIndexRange();
-      const isInit = segment.isInitSegment();
-      const representation = segment.getRepresentation();
-
-      // TODO uncomment on manifest switch
-      // const {
-      //   media,
-      //   range,
-      //   indexRange,
-      //   isInit,
-      // } = segment;
+    loader({ segment, representation }) {
+      const {
+        media,
+        range,
+        indexRange,
+        isInit,
+      } = segment;
 
       const responseType = isMP4EmbeddedTrack(representation) >= 0 ?
         "arraybuffer" : "text";
@@ -411,7 +353,7 @@ export default function(options={}) {
       }
 
       const path = media ?
-        replaceTokens(media, segment) : "";
+        replaceTokens(media, segment, representation) : "";
 
       const mediaUrl = resolveURL(representation.baseURL, path);
 
@@ -458,22 +400,13 @@ export default function(options={}) {
       }
     },
 
-    parser({ segment, response }) {
-
-      // TODO uncomment on manifest switch
-      // loader({ segment, adaptation, representation }) {
-
-      const representation = segment.getRepresentation();
-      const { language } = segment.getAdaptation();
+    parser({ response, segment, adaptation, representation }) {
+      const { language } = adaptation;
+      const { isInit } = segment;
 
       // added index (segments and timescale) informations are
       // extracted from sidx atom
-      const indexRange = segment.getIndexRange();
-      const isInit = segment.isInitSegment();
-
-      // TODO uncomment on manifest switch
-      // const { language } = adaptation;
-      // const { indexRange } = segment;
+      const { indexRange } = segment;
 
       let responseData;
       let text;
@@ -502,22 +435,13 @@ export default function(options={}) {
         // current segment information may originate from the index
         // itself in which case we don't have to use the index
         // segments.
-        if (segment.getTime() >= 0 &&
-            segment.getDuration() >= 0) {
+        if (segment.time >= 0 &&
+            segment.duration >= 0) {
           currentSegment = {
-            ts: segment.getTime(),
-            d: segment.getDuration(),
+            ts: segment.time,
+            d: segment.duration,
           };
         }
-
-        // TODO uncomment on manifest switch
-        // if (segment.time >= 0 &&
-        //     segment.duration >= 0) {
-        //   currentSegment = {
-        //     ts: segment.time,
-        //     d: segment.duration,
-        //   };
-        // }
         else if (index && index.segments.length === 1) {
           currentSegment = {
             ts: index.segments[0].ts,
@@ -532,12 +456,9 @@ export default function(options={}) {
         // const timescale = (index && index.timescale) ||
         //   representationIndex.timescale;
 
-        const { codecs = "" } = representation;
+        const { codec = "" } = representation;
 
-        // TODO uncomment on manifest switch
-        // const { codec = "" } = representation;
-
-        switch (codecs.toLowerCase()) {
+        switch (codec.toLowerCase()) {
         case "stpp":
           segmentData = parseTTML(text, language, 0);
           break;
@@ -557,27 +478,16 @@ export default function(options={}) {
   };
 
   const imageTrackPipeline = {
-    loader({ segment }) {
-
-      // TODO uncomment on manifest switch
-      // loader({ segment, representation }) {
-
-      const isInit = segment.isInitSegment();
-
-      // TODO uncomment on manifest switch
-      // const { isInit } = segment;
+    loader({ segment, representation }) {
+      const { isInit } = segment;
 
       if (isInit) {
         return empty();
       } else {
-        const media = segment.getMedia();
-        const representation = segment.getRepresentation();
-
-        // TODO uncomment on manifest switch
-        // const { media } = segment;
+        const { media } = segment;
 
         const path = media ?
-          replaceTokens(media, segment) : "";
+          replaceTokens(media, segment, representation) : "";
         const mediaUrl = resolveURL(representation.baseURL, path);
         return request({
           url: mediaUrl,

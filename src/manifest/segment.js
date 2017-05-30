@@ -20,7 +20,7 @@ class Segment {
     this.time = args.time;
     this.indexRange = args.indexRange;
     this.number = args.number;
-    this.timescale = args.timescale;
+    this.timescale = args.timescale == null ? 1 : args.timescale;
     this.media = args.media;
   }
 }

@@ -32,7 +32,7 @@ class List {
   }
 
   checkRange(time, up, to) {
-    const { duration, list } = this.index;
+    const { duration, list } = this.index._index;
     const i = Math.floor(to / duration);
     return (i >= 0 && i < list.length);
   }
@@ -46,7 +46,7 @@ class List {
     const {
       duration,
       list,
-    } = this.index;
+    } = this.index._index;
 
     const segment = list[segmentIndex];
 
@@ -66,7 +66,7 @@ class List {
 
   getSegments(up, to) {
     // TODO(pierre): use startNumber
-    const { duration, list } = this.index;
+    const { duration, list } = this.index._index;
     const length = Math.min(list.length - 1, Math.floor(to / duration));
     const segments = [];
     let i = Math.floor(up / duration);

@@ -20,6 +20,7 @@ import { isCodecSupported } from "./compat";
 import { MediaError } from "../errors";
 import { normalize as normalizeLang } from "../utils/languages";
 import { resolveURL } from "../utils/url";
+import Manifest from "../manifest/manifest.js";
 
 /**
  * Representation keys directly inherited from the adaptation.
@@ -112,7 +113,7 @@ function normalizeManifest(location, manifest, subtitles, images) {
     manifest.availabilityStartTime = manifest.availabilityStartTime || 0;
   }
 
-  return manifest;
+  return new Manifest(manifest);
 }
 
 function _normalizePeriod(period, inherit, subtitles, images) {
@@ -232,6 +233,7 @@ function _normalizeRepresentation(initialRepresentation, inherit, rootURL, baseU
   }
 
   representation.baseURL = resolveURL(rootURL, baseURL, representation.baseURL);
+  representation.codec = representation.codecs;
   return representation;
 }
 
@@ -306,44 +308,6 @@ function _normalizeImageAdaptation(images) {
 }
 
 /**
- * Merge dist Object in source Object.
- * _Deep merge_ Object attributes (excepted when they are Arrays or Date
- * instances in which cases it is a simple merge).
- * Think of it as a deeper Object.assign (with only two arguments).
- *
- * /!\ the source is mutated during this process
- * @param {Object} source
- * @param {Object} dist
- * @returns {Object}
- */
-// TODO remove on manifest switch
-function _deepAssignAttributes(source, dist) {
-  for (const attr in source) {
-    if (!dist.hasOwnProperty(attr)) {
-      continue;
-    }
-
-    const src = source[attr];
-    const dst = dist[attr];
-
-    if (typeof src == "string" ||
-        typeof src == "number" ||
-       (typeof src == "object" && src instanceof Date)) {
-      source[attr] = dst;
-    }
-    else if (Array.isArray(src)) {
-      src.length = 0;
-      Array.prototype.push.apply(src, dst);
-    }
-    else {
-      source[attr] = _deepAssignAttributes(src, dst);
-    }
-  }
-
-  return source;
-}
-
-/**
  * Returns an object which is a merge of all arguments given
  * (Object.assign-like) but with all the corresponding merged attributes
  * cloned (they do not share the same references than the original attributes).
@@ -385,65 +349,28 @@ function _mergeAndCloneAttributes(...args) {
   return res;
 }
 
-/**
- * Merge index objects from every newManifest representations into the
- * oldManifest representations.
- *
- * /!\ mutate oldManifest
- * @param {Object} oldManifest
- * @param {Object} newManifest
- * @returns {Object}
- */
-// TODO remove on manifest switch
-function mergeManifestsIndex(oldManifest, newManifest) {
-  const oldAdaptations = oldManifest.adaptations;
-  const newAdaptations = newManifest.adaptations;
-  for (const type in oldAdaptations) {
-    const oldAdas = oldAdaptations[type];
-    const newAdas = newAdaptations[type];
-    oldAdas.forEach((a, i) => {
-      a.representations.forEach((r, j) => {
-        _deepAssignAttributes(r.index, newAdas[i].representations[j].index);
-      });
+// XXX TODO Check and re-check the id thing
+function updateManifest(oldManifest, newManifest) {
+  const oldAdaptations = oldManifest.getAdaptations();
+  const newAdaptations = newManifest.getAdaptations();
+  oldAdaptations.forEach(oldAdaptation => {
+    const oldRepresentations = oldAdaptation.representations;
+    oldRepresentations.forEach(oldRepresentation => {
+      for (let i = 0; i < newAdaptations.length; i++) {
+        const newRepresentations = newAdaptations[i].representations;
+        for (let j = 0; j < newRepresentations.length; j++) {
+          if (newRepresentations[j].id === oldRepresentation.id) {
+            oldRepresentation.index.update(newRepresentations[j].index);
+            return;
+          }
+        }
+      }
+      console.warn(
+        `manifest: representation "${oldRepresentation.id}" not found when merging.`
+      );
     });
-  }
+  });
   return oldManifest;
-}
-
-// TODO uncomment on manifest switch
-// TODO Check and re-check the id thing
-// function updateManifest(oldManifest, newManifest) {
-//   const oldAdaptations = oldManifest.getAdaptations();
-//   oldAdaptations.forEach(oA => {
-//     const newAdaptation = oA.id != null && newManifest.getAdaptation(oA.id);
-//     if (!newAdaptation) {
-//       console.warn(`manifest: adaptation "${oA.id}" not found when merging.`);
-//       return;
-//     }
-//     oA.representations.forEach(oR => {
-//       const newRepr = oR.id != null && newManifest.getRepresentation(oR.id);
-//       if (!newRepr) {
-//         console.warn(
-//           `manifest: representation "${oR.id}" not found when merging.`
-//         );
-//         return;
-//       }
-//       oR.index.update(newRepr.index);
-//     });
-//   });
-//   return oldManifest;
-// }
-
-/**
- * Add time to a manifest live gap.
- * @param {Object} manifest
- * @param {Number} addedTime
- */
-// TODO remove on manifest switch
-function updateLiveGap(manifest, addedTime) {
-  if (manifest.isLive) {
-    manifest.presentationLiveGap += addedTime;
-  }
 }
 
 /**
@@ -452,39 +379,8 @@ function updateLiveGap(manifest, addedTime) {
  * @returns {string}
  */
 function getCodec(representation) {
-  const { codecs, mimeType } = representation;
-
-  // TODO uncomment on manifest switch
-  // const { codec, mimeType } = representation;
-  return `${mimeType};codecs="${codecs}"`;
-}
-
-/**
- * Get every adaptations parsed in an array of objects with 3 properties:
- *   - type {string}: e.g. audio/video
- *   - adaptation {Object}: the adaptation itself
- *   - codec {string}: the codec string for this adaptation
- * @param {Object} manifest
- * @returns {Array.<Object>}
- */
-// TODO remove on manifest switch
-function getAdaptations(manifest) {
-  const adaptationsByType = manifest.adaptations;
-  if (!adaptationsByType) {
-    return [];
-  }
-
-  const adaptationsList = [];
-  for (const type in adaptationsByType) {
-    const adaptations = adaptationsByType[type];
-    adaptationsList.push({
-      type: type,
-      adaptations: adaptations,
-      codec: getCodec(adaptations[0].representations[0]),
-    });
-  }
-
-  return adaptationsList;
+  const { codec, mimeType } = representation;
+  return `${mimeType};codecs="${codec}"`;
 }
 
 /**
@@ -504,66 +400,37 @@ function getAdaptationsByType(manifest, type) {
   }
 }
 
-// TODO remove on manifest switch
-function getAvailableAudioTracks(manifest) {
-  return getAdaptationsByType(manifest, "audio")
+function getAudioTracks(manifest) {
+  const audioAdaptations = manifest.adaptations.audio;
+  if (!audioAdaptations) {
+    return [];
+  }
+  return audioAdaptations
     .map((adaptation) => ({
       language: normalizeLang(adaptation.language),
-      audioDescription: adaptation.audioDescription,
+      audioDescription: adaptation.isAudioDescription,
       id: adaptation.id,
     }));
 }
 
-// TODO remove on manifest switch
-function getAvailableTextTracks(manifest) {
-  return getAdaptationsByType(manifest, "text")
+function getTextTracks(manifest) {
+  const textAdaptations = manifest.adaptations.text;
+  if (!textAdaptations) {
+    return [];
+  }
+  return textAdaptations
     .map((adaptation) => ({
       language: normalizeLang(adaptation.language),
-      closedCaption: adaptation.closedCaption,
+      closedCaption: adaptation.isClosedCaption,
       id: adaptation.id,
     }));
 }
-
-// TODO uncomment on manifest switch
-// function getAudioTracks(manifest) {
-//   const audioAdaptations = manifest.adaptations.audio;
-//   if (!audioAdaptations) {
-//     return [];
-//   }
-//   return audioAdaptations
-//     .map((adaptation) => ({
-//       language: normalizeLang(adaptation.language),
-//       audioDescription: adaptation.isAudioDescription,
-//       id: adaptation.id,
-//     }));
-// }
-
-// TODO uncomment on manifest switch
-// function getTextTracks(manifest) {
-//   const textAdaptations = manifest.adaptations.text;
-//   if (!textAdaptations) {
-//     return [];
-//   }
-//   return textAdaptations
-//     .map((adaptation) => ({
-//       language: normalizeLang(adaptation.language),
-//       closedCaption: adaptation.isClosedCaption,
-//       id: adaptation.id,
-//     }));
-// }
 
 export {
   normalizeManifest,
-  mergeManifestsIndex,
-  updateLiveGap,
   getCodec,
-  getAdaptations,
   getAdaptationsByType,
-  getAvailableTextTracks,
-  getAvailableAudioTracks,
-
-  // TODO uncomment on manifest switch
-  // updateManifest,
-  // getAudioTracks,
-  // getTextTracks,
+  updateManifest,
+  getAudioTracks,
+  getTextTracks,
 };

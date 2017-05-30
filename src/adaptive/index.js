@@ -128,10 +128,7 @@ function findAdaptationByLang(adaptations, language) {
  */
 function findAudioAdaptation(adaptations, language, audioDescription = false) {
   const filteredAdaptations = adaptations.filter(adaptation =>
-    adaptation.audioDescription == audioDescription
-
-    // TODO uncomment on manifest switch
-    // adaptation.isAudioDescription == audioDescription
+    adaptation.isAudioDescription == audioDescription
   );
   return findAdaptationByLang(filteredAdaptations, language);
 }
@@ -144,10 +141,7 @@ function findAudioAdaptation(adaptations, language, audioDescription = false) {
  */
 function findTextAdaptation(adaptations, language, closedCaption = false) {
   const filteredAdaptations = adaptations.filter(adaptation =>
-    adaptation.closedCaption == closedCaption
-
-    // TODO uncomment on manifest switch
-    // adaptation.isClosedCaption == closedCaption
+    adaptation.isClosedCaption == closedCaption
   );
   return findAdaptationByLang(filteredAdaptations, language);
 }
@@ -285,7 +279,8 @@ export default function(metrics, deviceEvents, options={}) {
    * @returns {Object}
    */
   function getBufferAdapters(adaptation) {
-    const { type, bitrates, representations } = adaptation;
+    const { type, representations } = adaptation;
+    const bitrates = adaptation.getAvailableBitrates();
 
     let representationsObservable;
     if (representations.length > 1) {

@@ -84,7 +84,7 @@ class Manifest {
     const adaptationsList = [];
     for (const type in adaptationsByType) {
       const adaptations = adaptationsByType[type];
-      adaptationsList.push(adaptations);
+      adaptationsList.push(...adaptations);
     }
     return adaptationsList;
   }

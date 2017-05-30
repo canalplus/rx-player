@@ -44,7 +44,7 @@ class Template {
     const {
       startNumber,
       duration,
-    } = this.index;
+    } = this.index._index;
 
     const number = Math.floor(ts / duration) + (startNumber == null ? 1 : startNumber);
     const time = number * duration;
@@ -53,9 +53,9 @@ class Template {
       adaptation,          /* adaptation */
       representation,      /* representation */
       number,              /* id */
-      this.index.media,    /* media */
+      this.index._index.media,    /* media */
       time,                /* time */
-      this.index.duration, /* duration */
+      this.index._index.duration, /* duration */
       number,              /* number */
       null,                /* range */
       null,                /* indexRange */
@@ -64,7 +64,7 @@ class Template {
   }
 
   getSegments(up, to) {
-    const { duration } = this.index;
+    const { duration } = this.index._index;
 
     const segments = [];
     for (let time = up; time <= to; time += duration) {

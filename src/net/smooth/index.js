@@ -15,15 +15,9 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { EmptyObservable } from  "rxjs/observable/EmptyObservable";
 import { bytesToStr } from "../../utils/bytes";
 import log from "../../utils/log";
 import { resolveURL } from "../../utils/url";
-
-// TODO Those should already be constructed here
-import Adaptation from "../../manifest/adaptation.js";
-import Representation from "../../manifest/representation.js";
-import Segment from "../../manifest/segment.js";
 
 import request from "../../request";
 import createSmoothStreamingParser from "./parser";
@@ -52,7 +46,6 @@ const TT_PARSERS = {
 };
 
 const { RequestResponse } = request;
-const empty = EmptyObservable.create;
 
 const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
@@ -107,10 +100,7 @@ function resolveManifest(url) {
 function buildSegmentURL(url, representation, segment) {
   return url
     .replace(/\{bitrate\}/g,    representation.bitrate)
-    .replace(/\{start time\}/g, segment.getTime());
-
-    // TODO uncomment on manifest switch
-    // .replace(/\{start time\}/g, segment.time);
+    .replace(/\{start time\}/g, segment.time);
 }
 
 export default function(options={}) {
@@ -154,17 +144,11 @@ export default function(options={}) {
     },
   };
 
-  function extractTimingsInfos(responseData, segment) {
-
-    // TODO uncomment on manifest switch
-    // function extractTimingsInfos(responseData, segment, isLive) {
+  function extractTimingsInfos(responseData, segment, isLive) {
     let nextSegments;
     let currentSegment;
 
-    if (segment.getAdaptation().isLive) {
-
-      // TODO uncomment on manifest switch
-      // if (isLive) {
+    if (isLive) {
       const traf = getTraf(responseData);
       if (traf) {
         nextSegments = parseTfrf(traf);
@@ -178,15 +162,9 @@ export default function(options={}) {
 
     if (!currentSegment) {
       currentSegment = {
-        d:  segment.getDuration(),
-        ts: segment.getTime(),
+        d:  segment.duration,
+        ts: segment.time,
       };
-
-      // TODO uncomment on manifest switch
-      // currentSegment = {
-      //   d:  segment.duration,
-      //   ts: segment.time,
-      // };
     }
 
     return { nextSegments, currentSegment };
@@ -196,25 +174,16 @@ export default function(options={}) {
    * Defines the url for the request, load the right loader (custom/default
    * one).
    */
-  const segmentPreLoader = ({ segment }) => {
-
-    // TODO uncomment on manifest switch
-    // const segmentPreLoader = ({ segment, representation, adaptation, manifest }) => {
-
-    if (segment.isInitSegment()) {
-
-      // TODO uncomment on manifest switch
-      // if (segment.isInit) {
-
-      // TODO remove on manifest switch
-      const adaptation = segment.getAdaptation();
-      const representation = segment.getRepresentation();
-
+  const segmentPreLoader = ({
+    segment,
+    representation,
+    adaptation,
+    manifest,
+  }) => {
+    if (segment.isInit) {
       let responseData = {};
-      const protection = adaptation.smoothProtection || {};
+      const protection = adaptation._smoothProtection || {};
 
-      // TODO uncomment on manifest switch
-      // const protection = adaptation._smoothProtection || {};
       switch(adaptation.type) {
       case "video":
         responseData = createVideoInitSegment(
@@ -222,45 +191,22 @@ export default function(options={}) {
           representation.width,
           representation.height,
           72, 72, 4, // vRes, hRes, nal
-          representation.codecPrivateData,
+          representation._codecPrivateData,
           protection.keyId,     // keyId
           protection.keySystems // pssList
         );
-
-        // TODO uncomment on manifest switch
-        // responseData = createVideoInitSegment(
-        //   segment.timescale,
-        //   representation.width,
-        //   representation.height,
-        //   72, 72, 4, // vRes, hRes, nal
-        //   representation._codecPrivateData,
-        //   protection.keyId,     // keyId
-        //   protection.keySystems // pssList
-        // );
         break;
       case "audio":
         responseData = createAudioInitSegment(
           segment.timescale,
-          representation.channels,
-          representation.bitsPerSample,
-          representation.packetSize,
-          representation.samplingRate,
-          representation.codecPrivateData,
+          representation._channels,
+          representation._bitsPerSample,
+          representation._packetSize,
+          representation._samplingRate,
+          representation._codecPrivateData,
           protection.keyId,     // keyId
           protection.keySystems // pssList
         );
-
-        // TODO uncomment on manifest switch
-        // responseData = createAudioInitSegment(
-        //   segment.timescale,
-        //   representation._channels,
-        //   representation._bitsPerSample,
-        //   representation._packetSize,
-        //   representation._samplingRate,
-        //   representation._codecPrivateData,
-        //   protection.keyId,     // keyId
-        //   protection.keySystems // pssList
-        // );
         break;
       }
 
@@ -275,30 +221,18 @@ export default function(options={}) {
       ));
     }
     else {
-      // TODO remove on manifest switch
-      const adaptation = segment.getAdaptation();
-      const representation = segment.getRepresentation();
-
       const customSegmentLoader = options.segmentLoader;
 
       const url = buildSegmentURL(resolveURL(representation.baseURL), representation, segment);
 
       const args = {
-        adaptation: new Adaptation(adaptation),
-        representation: new Representation(representation),
-        segment: new Segment(segment),
+        adaptation,
+        representation,
+        segment,
         transport: "smooth",
         url,
+        manifest,
       };
-
-      // TODO uncomment on manifest switch
-      // const args = {
-      //   adaptation,
-      //   representation,
-      //   segment,
-      //   transport: "smooth",
-      //   url,
-      // };
 
       if (!customSegmentLoader) {
         return segmentLoader(args);
@@ -364,27 +298,19 @@ export default function(options={}) {
   };
 
   const segmentPipeline = {
-    loader({ segment }) {
-
-      // TODO uncomment on manifest switch
-      // loader({ segment, representation, adaptation, manifest }) {
-      return segmentPreLoader({ segment });
-
-      // TODO uncomment on manifest switch
-      // return segmentPreLoader({ segment, representation, adaptation, manifest });
+    loader({ segment, representation, adaptation, manifest }) {
+      return segmentPreLoader({
+        segment,
+        representation,
+        adaptation,
+        manifest,
+      });
     },
 
-    parser({ segment, response }) {
-
-      // TODO uncomment on manifest switch
-      // parser({ segment, response, manifest }) {
-
+    parser({ segment, response, manifest }) {
       const { responseData } = response;
 
-      if (segment.isInitSegment()) {
-
-        // TODO uncomment on manifest switch
-        // if (segment.isInit)
+      if (segment.isInit) {
         return Observable.of({
           segmentData: responseData,
           timings: null,
@@ -392,11 +318,8 @@ export default function(options={}) {
       }
 
       const responseBuffer = new Uint8Array(responseData);
-      const { nextSegments, currentSegment } = extractTimingsInfos(responseBuffer, segment);
-
-      // TODO uncomment on manifest switch
-      // const { nextSegments, currentSegment } =
-      //   extractTimingsInfos(responseBuffer, segment, manifest.isLive);
+      const { nextSegments, currentSegment } =
+        extractTimingsInfos(responseBuffer, segment, manifest.isLive);
 
       const segmentData = patchSegment(responseBuffer, currentSegment.ts);
 
@@ -409,24 +332,14 @@ export default function(options={}) {
   };
 
   const textTrackPipeline = {
-    loader({ segment }) {
-      // TODO uncomment on manifest switch
-      // loader({ segment, representation }) {
-
-      if (segment.isInitSegment()) {
-        return empty();
+    loader({ segment, representation }) {
+      if (segment.isInit) {
+        return Observable.empty();
       }
 
-      // TODO uncomment on manifest switch
-      // if (segment.isInit) {
-      //   return empty();
-      // }
-
-      // TODO remove on manifest switch
-      const representation = segment.getRepresentation();
-
       const { mimeType } = representation;
-      const url = buildSegmentURL(resolveURL(representation.baseURL), representation, segment);
+      const base = resolveURL(representation.baseURL);
+      const url = buildSegmentURL(base, representation, segment);
 
       if (mimeType.indexOf("mp4") >= 0) {
         // in case of TTML declared inside playlists, the TTML file is
@@ -437,16 +350,9 @@ export default function(options={}) {
       }
     },
 
-    parser({ response, segment }) {
-      // TODO uncomment on manifest switch
-      // loader({ segment, representation, adaptation }) {
-
-      const { language } = segment.getAdaptation();
-      const { mimeType, index } = segment.getRepresentation();
-
-      // TODO uncomment on manifest switch
-      // const { language } = adaptation;
-      // const { mimeType } = representation;
+    parser({ response, segment, representation, adaptation, manifest }) {
+      const { language } = adaptation;
+      const { mimeType } = representation;
 
       const ttParser = TT_PARSERS[mimeType];
       if (!ttParser) {
@@ -465,14 +371,10 @@ export default function(options={}) {
         text = responseData;
       }
 
-      const { nextSegments, currentSegment } = extractTimingsInfos(responseData, segment);
-      // TODO uncomment on manifest switch
-      // const { nextSegments, currentSegment } =
-      //   extractTimingsInfos(responseData, segment, manifest.isLive);
-      const segmentData = ttParser(text, language, segment.getTime() / index.timescale);
-
-      // TODO uncomment on manifest switch
-      // const segmentData = ttParser(text, language, segment.time / segment.timescale);
+      const { nextSegments, currentSegment } =
+        extractTimingsInfos(responseData, segment, manifest.isLive);
+      const segmentData =
+        ttParser(text, language, segment.time / segment.timescale);
 
       return Observable.of({
         segmentData,
@@ -483,26 +385,16 @@ export default function(options={}) {
   };
 
   const imageTrackPipeline = {
-    loader({ segment }) {
-
-      // TODO uncomment on manifest switch
-      // loader({ segment, representation }) {
-
-      if (segment.isInitSegment()) {
-        return empty();
-
-        // TODO uncomment on manifest switch
-        // if (segment.isInit) {
-        //   return empty();
-
+    loader({ segment, representation }) {
+      if (segment.isInit) {
+        return Observable.empty();
       } else {
-        // TODO remove on manifest switch
-        const representation = segment.getRepresentation();
-
-        const url = buildSegmentURL(resolveURL(representation.baseURL), representation, segment);
+        const baseURL = resolveURL(representation.baseURL);
+        const url = buildSegmentURL(baseURL, representation, segment);
         return request({ url, responseType: "arraybuffer", createXHR });
       }
     },
+
     parser({ response }) {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);

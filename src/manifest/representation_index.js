@@ -72,7 +72,7 @@ class RepresentationIndex {
   }
 
   update(newIndex) {
-    this._index = newIndex;
+    this._index = newIndex._index;
   }
 }
 

@@ -22,7 +22,7 @@ class Base extends Timeline {
   }
 
   addSegment(newSegment) {
-    this.index.timeline.push(newSegment);
+    this.index._index.timeline.push(newSegment);
     return true;
   }
 

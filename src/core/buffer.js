@@ -33,6 +33,9 @@ import {
   ErrorCodes,
 } from "../errors";
 
+// TODO remove on segment switch
+import Segment from "../manifest/segment.js";
+
 const empty = EmptyObservable.create;
 const from = FromObservable.create;
 const timer = TimerObservable.create;
@@ -196,7 +199,7 @@ function Buffer({
 
     if (withInitSegment) {
       log.debug("add init segment", bufferType);
-      initSegment = segmentIndex.getInitSegment();
+      initSegment = new Segment(segmentIndex.getInitSegment());
     }
 
     if (timing.readyState === 0) {
@@ -239,7 +242,8 @@ function Buffer({
     // our pipelines.
     const mediaSegments = segmentIndex.getSegments(timestamp,
                                                    timestampPadding,
-                                                   wantedBufferSize);
+                                                   wantedBufferSize)
+                            .map(s => new Segment(s));
 
     if (initSegment) {
       mediaSegments.unshift(initSegment);
@@ -262,29 +266,19 @@ function Buffer({
      */
     function filterAlreadyLoaded(segment) {
       // if this segment is already in the pipeline
-      const isInQueue = queuedSegments.test(segment.getId());
-
-      // TODO uncomment on manifest switch
-      // const isInQueue = queuedSegments.test(segment.id);
+      const isInQueue = queuedSegments.test(segment.id);
       if (isInQueue) {
         return false;
       }
 
       // segment without time info are usually init segments or some
       // kind of metadata segment that we never filter out
-      if (segment.isInitSegment() || segment.getTime() < 0) {
-
-        // TODO uncomment on manifest switch
-        // if (segment.isInit || segment.time < 0) {
+      if (segment.isInit || segment.time < 0) {
         return true;
       }
 
-      const time     = segmentIndex.scale(segment.getTime());
-      const duration = segmentIndex.scale(segment.getDuration());
-
-      // TODO uncomment on manifest switch
-      // const time     = segment.time / segment.timescale;
-      // const duration = segment.duration / segment.timescale;
+      const time     = segment.time / segment.timescale;
+      const duration = segment.duration / segment.timescale;
 
       const range = ranges.hasRange(time, duration);
       if (range) {
@@ -319,18 +313,15 @@ function Buffer({
       const addedSegments = nextSegments ?
         segmentIndex.insertNewSegments(nextSegments, currentSegment) : [];
 
-      queuedSegments.remove(segment.getId());
-
-      // TODO uncomment on manifest switch
-      // queuedSegments.remove(segment.id);
+      queuedSegments.remove(segment.id);
 
       // current segment timings informations are used to update
       // ranges informations
       if (currentSegment) {
         ranges.insert(
           representation.bitrate,
-          segmentIndex.scale(currentSegment.ts),
-          segmentIndex.scale(currentSegment.ts + currentSegment.d)
+          currentSegment.ts / segment.timescale,
+          (currentSegment.ts + currentSegment.d) / segment.timescale
         );
       }
 
@@ -431,10 +422,7 @@ function Buffer({
 
       // queue all segments injected in the observable
       for (let i = 0; i < injectedSegments.length; i++) {
-        queuedSegments.add(injectedSegments[i].getId());
-
-        // TODO uncomment on manifest switch
-        // queuedSegments.add(injectedSegments[i].id);
+        queuedSegments.add(injectedSegments[i].id);
       }
 
       return injectedSegments;
@@ -446,10 +434,7 @@ function Buffer({
     )
       .mergeMap(getNeededSegments)
       .concatMap((segment) =>
-        pipeline({ segment })
-
-          // TODO uncomment on manifest switch
-          // pipeline({ segment, representation})
+        pipeline({ segment, representation })
           .map((args) => Object.assign({ segment }, args))
       )
       .concatMap(appendDataInBuffer);

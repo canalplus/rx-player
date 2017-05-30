@@ -52,8 +52,7 @@ import {
 
 import {
   normalizeManifest,
-  mergeManifestsIndex,
-  updateLiveGap,
+  updateManifest,
   getCodec,
 } from "./manifest";
 
@@ -113,7 +112,7 @@ function setDurationToMediaSource(mediaSource, duration) {
  */
 function calculateInitialTime(manifest, startAt, timeFragment) {
   // TODO @deprecated
-  const duration = manifest.duration;
+  const duration = manifest.getDuration();
   let startTime = timeFragment.start;
   let endTime = timeFragment.end;
   const percentage = /^\d*(\.\d+)? ?%$/;
@@ -435,8 +434,9 @@ function Stream({
         clonedTiming = timing;
       }
 
-      // TODO see what's up with the -10
-      clonedTiming.liveGap = getMaximumBufferPosition(manifest) - 10 - timing.ts;
+      clonedTiming.liveGap = manifest.isLive ?
+        getMaximumBufferPosition(manifest) - 10 - timing.ts :
+        Infinity;
       return clonedTiming;
     });
 
@@ -486,10 +486,7 @@ function Stream({
                                            supplementaryImageTracks);
 
         if (mediaSource) {
-          setDurationToMediaSource(mediaSource, manifest.duration);
-
-          // TODO uncomment on manifest switch
-          // setDurationToMediaSource(mediaSource, manifest.getDuration());
+          setDurationToMediaSource(mediaSource, manifest.getDuration());
         }
 
         return createStream(mediaSource, manifest);
@@ -525,9 +522,7 @@ function Stream({
     adaptations,
     timings,
     seekings,
-
-    // TODO uncomment on manifest switch
-    // manifest,
+    manifest,
   ) {
     const adaptation$ = adaptive.getAdaptationsChoice(bufferType, adaptations);
 
@@ -545,30 +540,24 @@ function Stream({
       const sourceBuffer =
         createSourceBuffer(videoElement, mediaSource, bufferType, codec);
 
-      const pipeline = pipelines[bufferType];
-
-      // TODO uncomment on manifest switch
-      // const fetchSegment = ({ segment, representation }) => {
-      //   return pipeline[bufferType]({
-      //     segment,
-      //     representation,
-      //     adaptation,
-      //     manifest,
-      //   });
-      // };
+      const fetchSegment = ({ segment, representation }) => {
+        return pipelines[bufferType]({
+          segment,
+          representation,
+          adaptation,
+          manifest,
+        });
+      };
 
       const adapters = adaptive.getBufferAdapters(adaptation);
       const buffer = Buffer({
         bufferType,
         sourceBuffer,
-        pipeline,
         adaptation,
         timings,
         seekings,
         adapters,
-
-        // TODO uncomment on manifest switch
-        // pipeline: fetchSegment
+        pipeline: fetchSegment,
       });
 
       // non native buffer should not impact on the stability of the
@@ -704,14 +693,11 @@ function Stream({
    * @returns {Observable}
    */
   function refreshManifest(manifest) {
-    return fetchManifest({ url: manifest.locations[0]})
-
-    // TODO uncomment on manifest switch
-    // return fetchManifest({ url: manifest.getUrl()})
-
+    return fetchManifest({ url: manifest.getUrl()})
       .map(({ parsed }) => {
-        const newManifest = mergeManifestsIndex(
+        const newManifest = updateManifest(
           manifest,
+          // TODO
           normalizeManifest(
             parsed.url,
             parsed.manifest,
@@ -720,20 +706,6 @@ function Stream({
           )
         );
 
-        // TODO uncomment on manifest switch
-        // const newManifest = updateManifest(
-        //   manifest,
-        //   // TODO
-        //   normalizeManifest(
-        //     parsed.url,
-        //     parsed.manifest,
-        //     supplementaryTextTracks,
-        //     supplementaryImageTracks
-        //   )
-        // );
-
-        // TODO uncomment on manifest switch
-        // const newManifest = updateManifest(manifest, ...);
         return { type: "manifest", value: newManifest };
       });
   }
@@ -754,11 +726,7 @@ function Stream({
     // calibrate the live representation of the player
     // TODO(pierre): smarter converging algorithm
     case "precondition-failed":
-      updateLiveGap(manifest, 1); // go back 1s for now
-
-      // TODO uncomment on manifest switch
-      // manifest.updateLiveGap(1);
-
+      manifest.updateLiveGap(1); // go back 1s for now
       log.warn("precondition failed", manifest.presentationLiveGap);
       break;
 
@@ -810,9 +778,7 @@ function Stream({
           adaptations,
           timings,
           seekings,
-
-          // TODO uncomment on manifest switch
-          // manifest,
+          manifest,
         );
       });
 
