@@ -353,22 +353,31 @@ function _mergeAndCloneAttributes(...args) {
 function updateManifest(oldManifest, newManifest) {
   const oldAdaptations = oldManifest.getAdaptations();
   const newAdaptations = newManifest.getAdaptations();
+  debugger;
   oldAdaptations.forEach(oldAdaptation => {
-    const oldRepresentations = oldAdaptation.representations;
-    oldRepresentations.forEach(oldRepresentation => {
-      for (let i = 0; i < newAdaptations.length; i++) {
-        const newRepresentations = newAdaptations[i].representations;
-        for (let j = 0; j < newRepresentations.length; j++) {
-          if (newRepresentations[j].id === oldRepresentation.id) {
-            oldRepresentation.index.update(newRepresentations[j].index);
-            return;
+    for (let i = 0; i < newAdaptations.length; i++) {
+      if (newAdaptations[i].id === oldAdaptation.id) {
+        const oldRepresentations = oldAdaptation.representations;
+        for (let j = 0; j < oldRepresentations.length; j++) {
+          const oldRepresentation = oldRepresentations[j];
+          const newRepresentations = newAdaptations[i].representations;
+          for (let k = 0; k < newRepresentations.length; k++) {
+            if (newRepresentations[k].id === oldRepresentation.id) {
+              oldRepresentation.index.update(newRepresentations[k].index);
+              return;
+            }
           }
+          console.warn(
+            `manifest: representation "${oldRepresentation.id}" not found when merging.`
+          );
+          return;
         }
       }
-      console.warn(
-        `manifest: representation "${oldRepresentation.id}" not found when merging.`
-      );
-    });
+    }
+    console.warn(
+      `manifest: representation "${oldAdaptation.id}" not found when merging.`
+    );
+    return;
   });
   return oldManifest;
 }

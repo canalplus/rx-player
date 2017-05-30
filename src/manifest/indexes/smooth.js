@@ -15,7 +15,13 @@ export default {
   scale,
 
   shouldRefresh(index, time) {
-    const { timeline } = index;
+    const {
+      timeline,
+      timescale,
+      presentationTimeOffset = 0,
+    } = index;
+
+    const scaledTime = time * timescale - presentationTimeOffset;
     let last = timeline[timeline.length - 1];
     if (!last) {
       return false;
@@ -25,7 +31,7 @@ export default {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return time >= getTimelineRangeEnd(last);
+    return scaledTime >= getTimelineRangeEnd(last);
   },
 
   getFirstPosition(index) {

@@ -26,8 +26,9 @@ const getInitSegment = (rootId, index) => {
     id: "" + rootId + "_init",
     init: true,
     range: initialization.range || null,
-    indexRange: index.indexRage || null,
+    indexRange: index.indexRange || null,
     media: initialization.media,
+    timescale: index.timescale,
   };
   return new Segment(args);
 };

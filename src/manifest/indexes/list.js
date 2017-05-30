@@ -35,6 +35,7 @@ const ListIndexHelpers = {
     let i = Math.floor(up / duration);
     while (i <= length) {
       const range = list[i].range;
+      const media = list[i].media;
       const args = {
         id: "" + repId + "_" + i,
         time: i * duration,
@@ -43,6 +44,7 @@ const ListIndexHelpers = {
         duration: duration,
         indexRange: null,
         timescale,
+        media,
       };
       segments.push(new Segment(args));
       i++;
@@ -73,13 +75,20 @@ const ListIndexHelpers = {
    * @returns {Boolean}
    */
   shouldRefresh(index, time, up, to) {
-    const { duration, list } = index;
-    const i = Math.floor(to / duration);
+    const {
+      timescale,
+      duration,
+      list,
+      presentationTimeOffset = 0,
+    } = index;
+
+    const scaledTo = to * timescale - presentationTimeOffset;
+    const i = Math.floor(scaledTo / duration);
     return !(i >= 0 && i < list.length);
   },
 
   _addSegmentInfos() {
-    return ;
+    return false;
   },
 
   checkDiscontinuity() {

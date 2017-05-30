@@ -14,7 +14,7 @@ export default {
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
-    const { duration, startNumber, timescale } = index;
+    const { duration, startNumber, timescale, media } = index;
 
     const segments = [];
     for (let time = up; time <= to; time += duration) {
@@ -31,6 +31,7 @@ export default {
         range: null,
         indexRange: null,
         timescale,
+        media,
       };
       segments.push(new Segment(args));
     }
@@ -55,6 +56,6 @@ export default {
   },
 
   _addSegmentInfos() {
-    return ;
+    return false;
   },
 };

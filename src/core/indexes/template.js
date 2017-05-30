@@ -74,7 +74,7 @@ class Template {
     return segments;
   }
 
-  addSegment() {
+  _addSegmentInfos() {
     return false;
   }
 }

@@ -26,15 +26,12 @@ import { FromObservable } from "rxjs/observable/FromObservable";
 import { TimerObservable } from "rxjs/observable/TimerObservable";
 
 import { SimpleSet } from "../utils/collections";
-import { IndexHandler } from "./index-handler";
 import {
   MediaError,
   ErrorTypes,
   ErrorCodes,
+  IndexError,
 } from "../errors";
-
-// TODO remove on segment switch
-import Segment from "../manifest/segment.js";
 
 const empty = EmptyObservable.create;
 const from = FromObservable.create;
@@ -176,7 +173,6 @@ function Buffer({
 
   /**
    * Returns every segments currently wanted.
-   * @param {IndexHandler} segmentIndex
    * @param {Object} adaptation - The adaptation concerned (audio/video...)
    * @param {Object} representation - The representation of the chosen adaptation
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
@@ -188,8 +184,7 @@ function Buffer({
    * @throws IndexError - Throws if the current timestamp is considered out
    * of bounds.
    */
-  function getSegmentsListToInject(segmentIndex,
-                                   adaptation,
+  function getSegmentsListToInject(adaptation,
                                    representation,
                                    buffered,
                                    timing,
@@ -199,7 +194,7 @@ function Buffer({
 
     if (withInitSegment) {
       log.debug("add init segment", bufferType);
-      initSegment = new Segment(segmentIndex.getInitSegment());
+      initSegment = representation.index.getInitSegment();
     }
 
     if (timing.readyState === 0) {
@@ -237,13 +232,19 @@ function Buffer({
       }
     }
 
+    const from = timestamp + timestampPadding;
+    const to = timestamp + wantedBufferSize;
+    const duration = to - from;
+    if (representation.index.shouldRefresh(timestamp, from, timestamp + wantedBufferSize)) {
+      throw new IndexError(
+        "OUT_OF_INDEX_ERROR", representation.index.getType(), false);
+    }
+
     // given the current timestamp and the previously calculated time gap and
     // wanted buffer size, we can retrieve the list of segments to inject in
     // our pipelines.
-    const mediaSegments = segmentIndex.getSegments(timestamp,
-                                                   timestampPadding,
-                                                   wantedBufferSize)
-                            .map(s => new Segment(s));
+    const mediaSegments =
+      representation.index.getSegments(from, duration);
 
     if (initSegment) {
       mediaSegments.unshift(initSegment);
@@ -255,7 +256,6 @@ function Buffer({
   function createRepresentationBuffer(representation) {
     log.info("bitrate", bufferType, representation.bitrate);
 
-    const segmentIndex = new IndexHandler(adaptation, representation, isLive);
     const queuedSegments = new SimpleSet();
 
     /**
@@ -304,14 +304,12 @@ function Buffer({
       // parsed segment (SegmentBase)
       // TODO do that higher up?
       if (timescale) {
-        segmentIndex.setTimescale(timescale);
+        representation.index.setTimescale(timescale);
       }
 
-      // addedSegments are values parsed from the segment metadata
-      // that should be added to the segmentIndex.
       // TODO do that higher up?
       const addedSegments = nextSegments ?
-        segmentIndex.insertNewSegments(nextSegments, currentSegment) : [];
+        representation.index._addSegments(nextSegments, currentSegment) : [];
 
       queuedSegments.remove(segment.id);
 
@@ -380,12 +378,14 @@ function Buffer({
       // send a message downstream when bumping on an explicit
       // discontinuity announced in the segment index.
       if (timing.stalled) {
-        const discontinuity = segmentIndex.checkDiscontinuity(timing.ts);
-        if (discontinuity) {
-          messageSubject.next({
-            type: "index-discontinuity",
-            value: discontinuity,
-          });
+        if (isLive) {
+          const discontinuity = representation.index.checkDiscontinuity(timing.ts);
+          if (discontinuity > 0) {
+            messageSubject.next({
+              type: "index-discontinuity",
+              value: { ts: discontinuity + 1 },
+            });
+          }
         }
       }
 
@@ -393,8 +393,7 @@ function Buffer({
       try {
         // filter out already loaded and already queued segments
         const withInitSegment = (injectCount === 0);
-        injectedSegments = getSegmentsListToInject(segmentIndex,
-                                                   adaptation,
+        injectedSegments = getSegmentsListToInject(adaptation,
                                                    representation,
                                                    nativeBufferedRanges,
                                                    timing,

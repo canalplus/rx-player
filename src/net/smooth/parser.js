@@ -318,7 +318,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       "Version should be 2.0, 2.1 or 2.2");
 
     const timescale = +root.getAttribute("Timescale") || 10000000;
-    let adaptationCount = 0;
+    const adaptationIds = [];
 
     const { protection, adaptations } = reduceChildren(root, (res, name, node) => {
       switch (name) {
@@ -326,7 +326,14 @@ function createSmoothStreamingParser(parserOptions={}) {
       case "StreamIndex":
         const ada = parseAdaptation(node, timescale);
         if (ada) {
-          ada.id = adaptationCount++;
+          let i = 0;
+          let id;
+          do {
+            id = ada.type + "_" +
+              (ada.language ? (ada.language + "_") : "") + i++;
+          } while (adaptationIds.includes(id));
+          ada.id = id;
+          adaptationIds.push(id);
           res.adaptations.push(ada);
         }
         break;

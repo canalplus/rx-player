@@ -11,9 +11,15 @@ export default Object.assign({}, TimelineIndex, {
 
   _addSegmentInfos(index, segmentInfos) {
     index.timeline.push({
-      ts: segmentInfos.time,
-      d: segmentInfos.duration,
+      ts: segmentInfos.ts,
+      d: segmentInfos.d,
+      r: segmentInfos.r,
+      range: segmentInfos.range,
     });
-    return index;
+    return true;
+  },
+
+  shouldRefresh() {
+    return false;
   },
 });

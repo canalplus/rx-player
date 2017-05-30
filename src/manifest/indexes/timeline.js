@@ -61,7 +61,7 @@ const SegmentTimelineHelpers = {
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
-    const { timeline, timescale } = index;
+    const { timeline, timescale, media } = index;
     const segments = [];
 
     const timelineLength = timeline.length;
@@ -90,6 +90,7 @@ const SegmentTimelineHelpers = {
             duration: undefined,
             indexRange: null,
             timescale,
+            media,
           };
           segments.push(new Segment(args));
         }
@@ -109,6 +110,7 @@ const SegmentTimelineHelpers = {
             duration: d,
             indexRange: null,
             timescale,
+            media,
           };
           segments.push(new Segment(args));
         } else {
@@ -123,18 +125,24 @@ const SegmentTimelineHelpers = {
   },
 
   shouldRefresh(index, time, up, to) {
-    const { timeline } = index;
+    const {
+      timeline,
+      timescale,
+      presentationTimeOffset = 0,
+    } = index;
+
+    const scaledTo = to * timescale - presentationTimeOffset;
 
     let last = timeline[timeline.length - 1];
     if (!last) {
-      return true;
+      return false;
     }
 
     if (last.d < 0) {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return !(to <= getTimelineRangeEnd(last));
+    return !(scaledTo <= getTimelineRangeEnd(last));
   },
 
   getFirstPosition(index) {
@@ -169,7 +177,7 @@ const SegmentTimelineHelpers = {
       return -1;
     }
 
-    const segmentIndex = getSegmentIndex(time);
+    const segmentIndex = getSegmentIndex(index, time);
     if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
       return -1;
     }
@@ -205,14 +213,14 @@ const SegmentTimelineHelpers = {
     // next segment. this is the case where the new segment are
     // associated to a current segment and have the same ts
     const shouldDeductNextSegment =
-      !!currentSegment && (newSegment.time === currentSegment.time);
+      !!currentSegment && (newSegment.ts === currentSegment.ts);
     if (shouldDeductNextSegment) {
-      const newSegmentTs = newSegment.time + newSegment.duration;
+      const newSegmentTs = newSegment.ts + newSegment.d;
       const lastSegmentTs = (last.ts + last.d * last.r);
       const tsDiff = newSegmentTs - lastSegmentTs;
 
       if (tsDiff <= 0) { // same segment / behind the last
-        return ;
+        return false;
       }
 
       // try to use the compact notation with @r attribute on the last
@@ -233,26 +241,26 @@ const SegmentTimelineHelpers = {
         ts: newSegmentTs,
         r: 0,
       });
-      return index;
+      return true;
     }
 
     // if the given timing has a timestamp after the timeline end we
     // just need to push a new element in the timeline, or increase
     // the @r attribute of the last element.
-    else if (newSegment.time >= getTimelineRangeEnd(last)) {
-      if (last.d === newSegment.duration) {
+    else if (newSegment.ts >= getTimelineRangeEnd(last)) {
+      if (last.d === newSegment.d) {
         last.r++;
       } else {
         index.timeline.push({
-          d: newSegment.duration,
-          ts: newSegment.time,
+          d: newSegment.d,
+          ts: newSegment.ts,
           r: 0,
         });
       }
-      return index;
+      return true;
     }
 
-    return ;
+    return false;
   },
 };
 
