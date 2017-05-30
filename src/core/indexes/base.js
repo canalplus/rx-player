@@ -25,6 +25,10 @@ class Base extends Timeline {
     this.index.timeline.push(newSegment);
     return true;
   }
+
+  checkDiscontinuity() {
+    return -1;
+  }
 }
 
 export default Base;

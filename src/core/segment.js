@@ -77,6 +77,8 @@ class Segment {
     this.range = Array.isArray(range) ? range : null;
     this.indexRange = Array.isArray(indexRange) ? indexRange : null;
     this.init = !!init;
+    this.isInit = this.init;
+    this.timescale = representation.index.timescale;
   }
 
   getId() {

@@ -21,10 +21,11 @@ class Adaptation {
    * @param {Object} [args={}]
    * @param {string|Number} [args.id]
    * @param {string} args.type
-   * @param {string} [args.lang]
+   * @param {string} [args.language]
    * @param {string} [args.language]
    * @param {Array.<string>} [args.accessibility]
    * @param {Array.<Object>} args.representations
+   * @param {Object} [args.contentProtection]
    * @param {Boolean} args.manual
    */
   constructor(args = {}) {
@@ -36,8 +37,8 @@ class Adaptation {
         .map(r => new Representation(Object.assign({ rootId: this.id }, r)))
         .sort((a, b) => a.bitrate - b.bitrate) : [];
 
-    if (args.lang != null) {
-      this.language = args.lang;
+    if (args.language != null) {
+      this.language = args.language;
     } else if (args.language != null) {
       this.language = args.language;
     }
@@ -51,6 +52,14 @@ class Adaptation {
       if (accessibility.includes("closedCaption")) {
         this.isClosedCaption = true;
       }
+    }
+
+    // TODO rename both protectionData?
+    if (args.contentProtection != null) {
+      this.contentProtection = args.contentProtection;
+    }
+    if (args.smoothProtection != null) {
+      this._smoothProtection = args.smoothProtection;
     }
 
     // for manual adaptations (not in the manifest)
@@ -67,6 +76,11 @@ class Adaptation {
   getAvailableBitrates() {
     return this.representations
       .map(r => r.bitrate);
+  }
+
+  getRepresentation(wantedId) {
+    return this.representations
+      .find(({ id }) => wantedId === id);
   }
 
   /**

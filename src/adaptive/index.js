@@ -107,13 +107,13 @@ function getMaxUsefulBitrateforWidth(reps, width) {
 /**
  * Find first adaptation with the corresponding language.
  * @param {Array.<Object>} adaptations
- * @param {string} lang
+ * @param {string} language
  * @returns {Object|null}
  */
-function findAdaptationByLang(adaptations, lang) {
-  const langs = adaptations.map(a => a.lang);
+function findAdaptationByLang(adaptations, language) {
+  const languages = adaptations.map(a => a.language);
 
-  const index = findBetterMatchIndex(langs, lang);
+  const index = findBetterMatchIndex(languages, language);
   if (index >= 0) {
     return adaptations[index];
   }
@@ -122,28 +122,34 @@ function findAdaptationByLang(adaptations, lang) {
 
 /**
  * @param {Array.<Object>} adaptations
- * @param {string} lang
+ * @param {string} language
  * @param {Boolean} [audioDescription=false]
  * @returns {Object|null}
  */
-function findAudioAdaptation(adaptations, lang, audioDescription = false) {
+function findAudioAdaptation(adaptations, language, audioDescription = false) {
   const filteredAdaptations = adaptations.filter(adaptation =>
     adaptation.audioDescription == audioDescription
+
+    // TODO uncomment on manifest switch
+    // adaptation.isAudioDescription == audioDescription
   );
-  return findAdaptationByLang(filteredAdaptations, lang);
+  return findAdaptationByLang(filteredAdaptations, language);
 }
 
 /**
  * @param {Array.<Object>} adaptations
- * @param {string} lang
+ * @param {string} language
  * @param {Boolean} [closedCaption=false]
  * @returns {Object|null}
  */
-function findTextAdaptation(adaptations, lang, closedCaption = false) {
+function findTextAdaptation(adaptations, language, closedCaption = false) {
   const filteredAdaptations = adaptations.filter(adaptation =>
     adaptation.closedCaption == closedCaption
+
+    // TODO uncomment on manifest switch
+    // adaptation.isClosedCaption == closedCaption
   );
-  return findAdaptationByLang(filteredAdaptations, lang);
+  return findAdaptationByLang(filteredAdaptations, language);
 }
 
 /**

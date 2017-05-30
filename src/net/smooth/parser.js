@@ -232,7 +232,7 @@ function createSmoothStreamingParser(parserOptions={}) {
     const type = root.getAttribute("Type");
     const subType = root.getAttribute("Subtype");
     const name = root.getAttribute("Name");
-    const lang = normalizeLang(root.getAttribute("Language"));
+    const language = normalizeLang(root.getAttribute("Language"));
     const baseURL = root.getAttribute("Url");
     const profile = profiles[type];
 
@@ -302,7 +302,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       index,
       representations,
       name,
-      lang,
+      language: language,
       baseURL,
     };
   }

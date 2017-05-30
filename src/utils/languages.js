@@ -9,18 +9,18 @@ const LOSER_MATCH_LEVEL = MATCH_LEVELS.OTHER_SUBLANG_MATCH;
 
 /**
  * Normalize text track Object from a user given input.
- * @param {Object|string} lang
+ * @param {Object|string} _language
  * @returns {Object}
  */
-function normalizeTextTrack(lang) {
-  if (lang != null) {
+function normalizeTextTrack(_language) {
+  if (_language != null) {
     let language, closedCaption;
-    if (typeof lang === "string") {
-      language = lang;
+    if (typeof _language === "string") {
+      language = _language;
       closedCaption = false;
     } else {
-      language = normalize(lang.language);
-      closedCaption = !!lang.closedCaption;
+      language = normalize(_language.language);
+      closedCaption = !!_language.closedCaption;
     }
 
     return { language, closedCaption };
@@ -29,18 +29,18 @@ function normalizeTextTrack(lang) {
 
 /**
  * Normalize audio track Object from a user given input.
- * @param {Object|string} lang
+ * @param {Object|string} _language
  * @returns {Object}
  */
-function normalizeAudioTrack(lang) {
-  if (lang != null) {
+function normalizeAudioTrack(_language) {
+  if (_language != null) {
     let language, audioDescription;
-    if (typeof lang === "string") {
-      language = lang;
+    if (typeof _language === "string") {
+      language = _language;
       audioDescription = false;
     } else {
-      language = normalize(lang.language);
-      audioDescription = !!lang.audioDescription;
+      language = normalize(_language.language);
+      audioDescription = !!_language.audioDescription;
     }
 
     return { language, audioDescription };
@@ -69,17 +69,17 @@ function match(lang1, lang2, level) {
   return false;
 }
 
-function findBetterMatchIndex(langs, lang) {
-  if (!lang) {
+function findBetterMatchIndex(langs, _language) {
+  if (!_language) {
     return -1;
   }
 
-  lang = normalize(lang);
+  _language = normalize(_language);
 
   let level = HIGHER_MATCH_LEVEL;
   for (; level <= LOSER_MATCH_LEVEL; level++) {
     for (let i = 0; i < langs.length; i++) {
-      if (match(normalize(langs[i]), lang, level)) {
+      if (match(normalize(langs[i]), _language, level)) {
         return i;
       }
     }
@@ -94,14 +94,14 @@ function findBetterMatchIndex(langs, lang) {
  *   - converts it to lowercase.
  *   - normalize "base" (what is before the possible first "-") to an ISO639-2
  *     compatible string.
- * @param {string} lang
+ * @param {string} _language
  * @returns {string}
  */
-function normalize(lang) {
-  if (lang == null || lang === "") {
+function normalize(_language) {
+  if (_language == null || _language === "") {
     return "";
   }
-  const fields = (""+lang).toLowerCase().split("-");
+  const fields = (""+_language).toLowerCase().split("-");
   const base = fields[0];
   const normalizedBase = normalizeBase(base);
   if (normalizedBase) {

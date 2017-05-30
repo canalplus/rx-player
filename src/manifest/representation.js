@@ -32,7 +32,7 @@ class Representation {
   constructor(args = {}) {
     const nId = generateNewId();
     this.id =
-      // (args.rootId == null ? "" : args.rootId + "_") + // TODO uncomment on manifest switch
+      (args.rootId == null ? "" : args.rootId + "_") +
       (args.id == null ? nId : args.id);
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
@@ -51,21 +51,32 @@ class Representation {
 
     this.index = new RepresentationIndex({
       index: args.index,
-      // rootId: this.id, // TODO uncomment on manifest switch
-      rootId: (args.rootId == null ? "" : args.rootId + "_") + this.id,
+      rootId: this.id,
     });
 
+    this.baseURL = args.baseURL;
+
     // Most of those are for the smooth init segment
+    if (args.codecPrivateData != null) {
+      this._codecPrivateData = args.codecPrivateData;
+    }
+    if (args.channels != null) {
+      this._channels = args.channels;
+    }
+    if (args.bitsPerSample != null) {
+      this._bitsPerSample = args.bitsPerSample;
+    }
+    if (args.packetSize != null) {
+      this._packetSize = args.packetSize;
+    }
+    if (args.samplingRate != null) {
+      this._samplingRate = args.samplingRate;
+    }
+
     // this._audioSamplingRate = args.audioSamplingRate;
     // this._codingDependency = args.codingDependency;
     // this._frameRate = args.frameRate;
     // this._maxPlayoutRate = args.maxPlayoutRate;
-    // this._channels = args.channels;
-    // this._bitsPerSample = args.bitsPerSample;
-    // this._packetSize = args.packetSize;
-    // this._samplingRate = args.samplingRate;
-    // this._codecPrivateData = args.codecPrivateData;
-    // this._smoothProtection = args.smoothProtection;
     // this._maximumSAPPeriod = args.maximumSAPPeriod;
     // this._profiles = args.profiles;
     // this._segmentProfiles = args.segmentProfiles;

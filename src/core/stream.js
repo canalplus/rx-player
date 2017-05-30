@@ -17,10 +17,10 @@
 import log from "../utils/log";
 import assert from "../utils/assert";
 import {
-  getLiveGap,
   seekingsSampler,
-  fromWallClockTime,
   getBufferLimits,
+  getMaximumBufferPosition,
+  fromWallClockTime,
 } from "./timings";
 import { retryableFuncWithBackoff } from "../utils/retry";
 import { Observable } from "rxjs/Observable";
@@ -40,7 +40,6 @@ import {
 
 import TextSourceBuffer from "./text-buffer";
 import ImageSourceBuffer from "./image-buffer";
-import { getLiveEdge } from "./index-handler";
 import { Buffer, EmptyBuffer } from "./buffer";
 import { createEME, onEncrypted } from "./eme";
 
@@ -54,18 +53,18 @@ import {
 import {
   normalizeManifest,
   mergeManifestsIndex,
-  mutateManifestLiveGap,
-  getAdaptations,
+  updateLiveGap,
+  getCodec,
 } from "./manifest";
 
-const min = Math.min;
 const empty = EmptyObservable.create;
 
 // Stop stream 0.5 second before the end of video
 // It happens often that the video gets stuck 100 to 300 ms before the end, especially on IE11 and Edge
 const END_OF_PLAY = 0.5;
 
-const DISCONTINUITY_THRESHOLD = 1; // discontinuity threshold in seconds
+const DISCONTINUITY_THRESHOLD = 1;
+const DEFAULT_LIVE_GAP = 10;
 
 /**
  * Returns true if the given buffeType is a native buffer, false otherwise.
@@ -73,7 +72,7 @@ const DISCONTINUITY_THRESHOLD = 1; // discontinuity threshold in seconds
  * @param {string} bufferType
  * @returns {Boolean}
  */
-function isNativeBuffer(bufferType) {
+function shouldHaveNativeSourceBuffer(bufferType) {
   return (
     bufferType == "audio" ||
     bufferType == "video"
@@ -104,6 +103,75 @@ function setDurationToMediaSource(mediaSource, duration) {
 }
 
 /**
+ * - if a start time is defined by user, set it as start time
+ * - if video is live, use the live edge
+ * - else set the start time to 0
+ *
+ * @param {Object} manifest
+ * @param {Object} startAt
+ * @returns {Number}
+ */
+function calculateInitialTime(manifest, startAt, timeFragment) {
+  // TODO @deprecated
+  const duration = manifest.duration;
+  let startTime = timeFragment.start;
+  let endTime = timeFragment.end;
+  const percentage = /^\d*(\.\d+)? ?%$/;
+
+  if (startAt) {
+    const [min, max] = getBufferLimits(manifest);
+    if (startAt.position != null) {
+      return Math.max(Math.min(startAt.position, max), min);
+    }
+    else if (startAt.wallClockTime != null) {
+      const position = manifest.isLive ?
+        startAt.wallClockTime - manifest.availabilityStartTime :
+        startAt.wallClockTime;
+
+      return Math.max(Math.min(position, max), min);
+    }
+    else if (startAt.fromFirstPosition != null) {
+      const { fromFirstPosition } = startAt;
+      return fromFirstPosition <= 0 ?
+        min : Math.min(min + fromFirstPosition, max);
+    }
+    else if (startAt.fromLastPosition != null) {
+      const { fromLastPosition } = startAt;
+      return fromLastPosition >= 0 ?
+        max : Math.max(min, max + fromLastPosition);
+    }
+  }
+
+  else { // TODO @deprecated
+    if (typeof startTime == "string" && percentage.test(startTime)) {
+      startTime = (parseFloat(startTime) / 100) * duration;
+    }
+
+    if (typeof endTime == "string" && percentage.test(endTime)) {
+      timeFragment.end = (parseFloat(endTime) / 100) * duration;
+    }
+
+    if (endTime === Infinity || endTime === "100%") {
+      endTime = duration;
+    }
+
+    if (!manifest.isLive) {
+      assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
+    }
+    else if (startTime) {
+      startTime = fromWallClockTime(startTime, manifest);
+    }
+    else {
+      const sgp = manifest.suggestedPresentationDelay;
+      return getMaximumBufferPosition(manifest) -
+        (sgp == null ? DEFAULT_LIVE_GAP : sgp);
+    }
+  }
+
+  return 0;
+}
+
+/**
  * On subscription:
  *  - Creates the MediaSource and attached sourceBuffers instances.
  *  - download the content's manifest
@@ -128,12 +196,8 @@ function Stream({
   autoPlay,
   startAt,
 }) {
-
-  const fragStartTime = timeFragment.start;
-  let fragEndTime = timeFragment.end;
-
   // TODO @deprecate?
-  const fragEndTimeIsFinite = fragEndTime < Infinity;
+  const fragEndTimeIsFinite = timeFragment.end < Infinity;
 
   // throttled to avoid doing multiple simultaneous requests because multiple
   // source buffers are out-of-index
@@ -189,12 +253,10 @@ function Stream({
    * @param {Object} bufferInfos
    * @returns {SourceBuffer|AbstractSourceBuffer}
    */
-  function createSourceBuffer(video, mediaSource, bufferInfos) {
-    const { type, codec } = bufferInfos;
-
+  function createSourceBuffer(video, mediaSource, type, codec) {
     let sourceBuffer;
 
-    if (isNativeBuffer(type)) {
+    if (shouldHaveNativeSourceBuffer(type)) {
       sourceBuffer = addNativeSourceBuffer(mediaSource, type, codec);
     }
     else {
@@ -232,14 +294,12 @@ function Stream({
    * Abort and remove the SourceBuffer given.
    * @param {HTMLMediaElement} video
    * @param {MediaSource} mediaSource
-   * @param {Object} bufferInfos
+   * @param {string} type
    */
-  function disposeSourceBuffer(video, mediaSource, bufferInfos) {
-    const { type } = bufferInfos;
-
+  function disposeSourceBuffer(video, mediaSource, type) {
     let oldSourceBuffer;
 
-    const isNative = isNativeBuffer(type);
+    const isNative = shouldHaveNativeSourceBuffer(type);
     if (isNative) {
       oldSourceBuffer = nativeBuffers[type];
       delete nativeBuffers[type];
@@ -278,7 +338,7 @@ function Stream({
    * This Observable never completes. It can throw if MediaSource is needed but
    * is not available in the current environment.
    *
-   * On unsubscription, the video.src is cleaned, MediaSource sourceBuffers and
+   * On unsubscription, the video.src is cleaned, MediaSource sourcenuffers and
    * customBuffers are aborted and some minor cleaning is done.
    *
    * @param {string} url
@@ -369,12 +429,14 @@ function Stream({
       let clonedTiming;
       if (fragEndTimeIsFinite) {
         clonedTiming = timing.clone();
-        clonedTiming.ts = min(timing.ts, fragEndTime);
-        clonedTiming.duration = min(timing.duration, fragEndTime);
+        clonedTiming.ts = Math.min(timing.ts, timeFragment.end);
+        clonedTiming.duration = Math.min(timing.duration, timeFragment.end);
       } else {
         clonedTiming = timing;
       }
-      clonedTiming.liveGap = getLiveGap(timing.ts, manifest);
+
+      // TODO see what's up with the -10
+      clonedTiming.liveGap = getMaximumBufferPosition(manifest) - 10 - timing.ts;
       return clonedTiming;
     });
 
@@ -394,7 +456,7 @@ function Stream({
   const endOfPlay = timings
     .filter(({ ts, duration }) => (
       duration > 0 &&
-      min(duration, fragEndTime) - ts < END_OF_PLAY
+      Math.min(duration, timeFragment.end) - ts < END_OF_PLAY
     ));
 
   /**
@@ -425,6 +487,9 @@ function Stream({
 
         if (mediaSource) {
           setDurationToMediaSource(mediaSource, manifest.duration);
+
+          // TODO uncomment on manifest switch
+          // setDurationToMediaSource(mediaSource, manifest.getDuration());
         }
 
         return createStream(mediaSource, manifest);
@@ -453,35 +518,63 @@ function Stream({
    * @param {Observable} seekings
    * @returns {Observable}
    */
-  function createBuffer(mediaSource, bufferInfos, timings, seekings) {
-    const { type: bufferType } = bufferInfos;
-    const adaptations = adaptive.getAdaptationsChoice(bufferType, bufferInfos.adaptations);
+  function createBuffer(
+    mediaSource,
+    bufferType,
+    codec,
+    adaptations,
+    timings,
+    seekings,
+
+    // TODO uncomment on manifest switch
+    // manifest,
+  ) {
+    const adaptation$ = adaptive.getAdaptationsChoice(bufferType, adaptations);
 
     if (__DEV__) {
-      assert(pipelines[bufferType], "stream: no pipeline found for type " + bufferType);
+      assert(pipelines[bufferType],
+        "stream: no pipeline found for type " + bufferType);
     }
 
-    return adaptations.switchMap((adaptation) => {
+    return adaptation$.switchMap((adaptation) => {
       if (!adaptation) {
-        disposeSourceBuffer(videoElement, mediaSource, bufferInfos);
+        disposeSourceBuffer(videoElement, mediaSource, bufferType);
         return EmptyBuffer(bufferType);
       }
+
+      const sourceBuffer =
+        createSourceBuffer(videoElement, mediaSource, bufferType, codec);
+
+      const pipeline = pipelines[bufferType];
+
+      // TODO uncomment on manifest switch
+      // const fetchSegment = ({ segment, representation }) => {
+      //   return pipeline[bufferType]({
+      //     segment,
+      //     representation,
+      //     adaptation,
+      //     manifest,
+      //   });
+      // };
 
       const adapters = adaptive.getBufferAdapters(adaptation);
       const buffer = Buffer({
         bufferType,
-        sourceBuffer: createSourceBuffer(videoElement, mediaSource, bufferInfos),
-        pipeline: pipelines[bufferType],
+        sourceBuffer,
+        pipeline,
         adaptation,
         timings,
         seekings,
         adapters,
+
+        // TODO uncomment on manifest switch
+        // pipeline: fetchSegment
       });
 
       // non native buffer should not impact on the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue streaming without any subtitles
-      if (!isNativeBuffer(bufferType)) {
+      if (!shouldHaveNativeSourceBuffer(bufferType)) {
         return buffer.catch((error) => {
           log.error("buffer", bufferType, "has crashed", error);
           errorStream.next(error);
@@ -503,7 +596,15 @@ function Stream({
    */
   function createLoadedMetadata(manifest) {
     const canSeek$ = canSeek(videoElement)
-      .do(() => setInitialTime(manifest));
+      .do(() => {
+        const startTime = calculateInitialTime(manifest, startAt, timeFragment);
+        log.info("set initial time", startTime);
+
+        // reset playbackRate to 1 in case we were at 0 (from a stalled
+        // retry for instance)
+        videoElement.playbackRate = 1;
+        videoElement.currentTime = startTime;
+      });
 
     const canPlay$ = canPlay(videoElement)
       .do(() => {
@@ -604,6 +705,10 @@ function Stream({
    */
   function refreshManifest(manifest) {
     return fetchManifest({ url: manifest.locations[0]})
+
+    // TODO uncomment on manifest switch
+    // return fetchManifest({ url: manifest.getUrl()})
+
       .map(({ parsed }) => {
         const newManifest = mergeManifestsIndex(
           manifest,
@@ -614,6 +719,21 @@ function Stream({
             supplementaryImageTracks
           )
         );
+
+        // TODO uncomment on manifest switch
+        // const newManifest = updateManifest(
+        //   manifest,
+        //   // TODO
+        //   normalizeManifest(
+        //     parsed.url,
+        //     parsed.manifest,
+        //     supplementaryTextTracks,
+        //     supplementaryImageTracks
+        //   )
+        // );
+
+        // TODO uncomment on manifest switch
+        // const newManifest = updateManifest(manifest, ...);
         return { type: "manifest", value: newManifest };
       });
   }
@@ -623,7 +743,7 @@ function Stream({
    * @param {Object} manifest
    * @returns {Observable}
    */
-  function messageHandler(message, manifest) {
+  function liveMessageHandler(message, manifest) {
     switch(message.type) {
     case "index-discontinuity":
       log.warn("explicit discontinuity seek", message.value.ts);
@@ -634,7 +754,11 @@ function Stream({
     // calibrate the live representation of the player
     // TODO(pierre): smarter converging algorithm
     case "precondition-failed":
-      mutateManifestLiveGap(manifest, 1); // go back 1s for now
+      updateLiveGap(manifest, 1); // go back 1s for now
+
+      // TODO uncomment on manifest switch
+      // manifest.updateLiveGap(1);
+
       log.warn("precondition failed", manifest.presentationLiveGap);
       break;
 
@@ -659,26 +783,38 @@ function Stream({
    * @returns {Observable}
    */
   function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
-    const adaptations = getAdaptations(manifest);
+    const adaptationsBuffers = Object.keys(manifest.adaptations)
+      .map((type) => {
+        const adaptations = manifest.adaptations[type];
 
-    // Initialize all native source buffer at the same time. We cannot
-    // lazily create native sourcebuffers since the spec does not
-    // allow adding them during playback.
-    //
-    // From https://w3c.github.io/media-source/#methods
-    //    For example, a user agent may throw a QuotaExceededError
-    //    exception if the media element has reached the HAVE_METADATA
-    //    readyState. This can occur if the user agent's media engine
-    //    does not support adding more tracks during playback.
-    adaptations.forEach(({ type, codec }) => {
-      if (isNativeBuffer(type)) {
-        addNativeSourceBuffer(mediaSource, type, codec);
-      }
-    });
+        // TODO re-check that
+        const codec = getCodec(adaptations[0].representations[0]);
 
-    const adaptationsBuffers = adaptations.map(
-      (adaptation) => createBuffer(mediaSource, adaptation, timings, seekings)
-    );
+        // Initialize all native source buffer at the same time. We cannot
+        // lazily create native sourcebuffers since the spec does not
+        // allow adding them during playback.
+        //
+        // From https://w3c.github.io/media-source/#methods
+        //    For example, a user agent may throw a QuotaExceededError
+        //    exception if the media element has reached the HAVE_METADATA
+        //    readyState. This can occur if the user agent's media engine
+        //    does not support adding more tracks during playback.
+        if (shouldHaveNativeSourceBuffer(type)) {
+          addNativeSourceBuffer(mediaSource, type, codec);
+        }
+
+        return createBuffer(
+          mediaSource,
+          type,
+          codec,
+          adaptations,
+          timings,
+          seekings,
+
+          // TODO uncomment on manifest switch
+          // manifest,
+        );
+      });
 
     const buffers = merge(...adaptationsBuffers);
 
@@ -690,7 +826,7 @@ function Stream({
     // errors thrown when a buffer asks for a segment out of its
     // current index
     return buffers
-      .concatMap((message) => messageHandler(message, manifest));
+      .concatMap((message) => liveMessageHandler(message, manifest));
   }
 
   /**
@@ -741,81 +877,6 @@ function Stream({
                        emeHandler,
                        buffers,
                        mediaError);
-  }
-
-  /**
-   * Side effect to set the initial time of the video:
-   *   - if a start time is defined by user, set it as start time
-   *   - if video is live, use the live edge
-   *   - else set the start time to 0
-   *
-   * This side effect occurs when we receive the "loadedmetadata" event from
-   * the <video>.
-   *
-   * see: createLoadedMetadata(manifest)
-   * @param {Object} manifest
-   * @throws Error - throws if an invalid startTime or fragEndTime was set.
-   */
-  function setInitialTime(manifest) {
-    const duration = manifest.duration;
-    let startTime = fragStartTime;
-    let endTime = fragEndTime;
-    const percentage = /^\d*(\.\d+)? ?%$/;
-
-    if (startAt) {
-      const [min, max] = getBufferLimits(manifest);
-      if (startAt.position != null) {
-        startTime = Math.max(Math.min(startAt.position, max), min);
-      }
-      else if (startAt.wallClockTime != null) {
-        const position = manifest.isLive ?
-          startAt.wallClockTime - manifest.availabilityStartTime :
-          startAt.wallClockTime;
-
-        startTime = Math.max(Math.min(position, max), min);
-      }
-      else if (startAt.fromFirstPosition != null) {
-        const { fromFirstPosition } = startAt;
-        startTime = fromFirstPosition <= 0 ?
-          min : Math.min(min + fromFirstPosition, max);
-      }
-      else if (startAt.fromLastPosition != null) {
-        const { fromLastPosition } = startAt;
-        startTime = fromLastPosition >= 0 ?
-          max : Math.max(min, max + fromLastPosition);
-      }
-    }
-    else { // TODO @deprecated
-      if (typeof startTime == "string" && percentage.test(startTime)) {
-        startTime = (parseFloat(startTime) / 100) * duration;
-      }
-
-      if (typeof endTime == "string" && percentage.test(endTime)) {
-        fragEndTime = (parseFloat(endTime) / 100) * duration;
-      }
-
-      if (endTime === Infinity || endTime === "100%") {
-        endTime = duration;
-      }
-
-      if (!manifest.isLive) {
-        assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
-      }
-      else if (startTime) {
-        startTime = fromWallClockTime(startTime, manifest);
-      }
-      else {
-        // TODO use something akin to getMaximumBufferPosition() -
-        //   (manifest.suggestedPresentationDelay || DEFAULT_LIVE_GAP)
-        startTime = getLiveEdge(manifest);
-      }
-    }
-
-    log.info("set initial time", startTime);
-    // reset playbackRate to 1 in case we were at 0 (from a stalled
-    // retry for instance)
-    videoElement.playbackRate = 1;
-    videoElement.currentTime = startTime;
   }
 }
 

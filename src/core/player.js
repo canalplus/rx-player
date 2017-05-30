@@ -45,7 +45,6 @@ import {
   createTimingsSampler,
   toWallClockTime,
   fromWallClockTime,
-  getLiveGap,
   getMaximumBufferPosition,
   getMinimumBufferPosition,
 } from "./timings";
@@ -152,7 +151,7 @@ function noop() {}
  * @throws Error - Throws if the given player has no manifest loaded.
  */
 function assertMan(player) {
-  assert(player.man, "player: no manifest loaded");
+  assert(player._manifest, "player: no manifest loaded");
 }
 
 /**
@@ -331,7 +330,7 @@ class Player extends EventEmitter {
    * @private
    */
   _resetStates() {
-    this.man = null;
+    this._manifest = null;
     this.reps = { video: null, audio: null, text: null, images: null };
     this.adas = { video: null, audio: null, text: null, images: null };
     this.evts = {};
@@ -697,7 +696,7 @@ class Player extends EventEmitter {
    * @param {Object} manifest
    */
   _manifestNext(manifest) {
-    this.man = manifest;
+    this._manifest = manifest;
     this.trigger("manifestChange", manifest);
   }
 
@@ -714,9 +713,12 @@ class Player extends EventEmitter {
     this.adas[bufferType] = adaptation;
 
     if (bufferType == "text") {
-      const track = adaptation && adaptation.lang ? {
-        language: adaptation.lang,
+      const track = adaptation && adaptation.language ? {
+        language: adaptation.language,
         closedCaption: !!adaptation.closedCaption,
+
+        // TODO uncomment on manifest switch
+        // closedCaption: !!adaptation.isClosedCaption,
         id: adaptation.id,
       } : null;
       this._recordState("subtitle", track && track.language); // deprecated
@@ -730,8 +732,11 @@ class Player extends EventEmitter {
 
     if (bufferType == "audio") {
       const track = {
-        language: adaptation && adaptation.lang || "",
+        language: adaptation && adaptation.language || "",
         audioDescription: !!(adaptation && adaptation.audioDescription),
+
+        // TODO uncomment on manifest switch
+        // audioDescription: !!adaptation.isAudioDescription,
         id: adaptation.id,
       };
       this._recordState("language", track.language); // deprecated
@@ -782,12 +787,12 @@ class Player extends EventEmitter {
    * @param {Object} t
    */
   _triggerTimeChange(t) {
-    if (!this.man || !t) {
+    if (!this._manifest || !t) {
       this.trigger("currentTimeChange", getEmptyTimings());
     } else {
-      if (this.man.isLive && t.ts > 0) {
-        t.wallClockTime = toWallClockTime(t.ts, this.man);
-        t.liveGap = getLiveGap(t.ts, this.man);
+      if (this._manifest.isLive && t.ts > 0) {
+        t.wallClockTime = toWallClockTime(t.ts, this._manifest);
+        t.liveGap = getMaximumBufferPosition(this._manifest) - t.ts;
       }
       const positionData = {
         position: t.ts,
@@ -818,16 +823,18 @@ class Player extends EventEmitter {
    * @returns {Object|null}
    */
   getManifest() {
-    if (!this.man){
+    if (!this._manifest){
       return null;
     }
 
-    // TODO switch entirely to the Manifest class
-    return new Manifest(this.man);
+    return new Manifest(this._manifest);
+
+    // TODO uncomment on manifest switch
+    // return this._manifest || null;
   }
 
   getCurrentAdaptations() {
-    if (!this.man){
+    if (!this._manifest){
       return null;
     }
 
@@ -839,10 +846,13 @@ class Player extends EventEmitter {
       }
       return acc;
     }, {});
+
+    // TODO uncomment on manifest switch
+    // return this.adas;
   }
 
   getCurrentRepresentations() {
-    if (!this.man){
+    if (!this._manifest){
       return null;
     }
 
@@ -854,6 +864,9 @@ class Player extends EventEmitter {
       }
       return acc;
     }, {});
+
+    // TODO uncomment on manifest switch
+    // return this.reps;
   }
 
   /**
@@ -901,7 +914,7 @@ class Player extends EventEmitter {
    */
   isLive() {
     assertMan(this);
-    return this.man.isLive;
+    return this._manifest.isLive;
   }
 
   /**
@@ -912,7 +925,10 @@ class Player extends EventEmitter {
    */
   getUrl() {
     assertMan(this);
-    return this.man.locations[0];
+    return this._manifest.locations[0];
+
+    // TODO uncomment on manifest switch
+    // return this._manifest.getUrl();
   }
 
   /**
@@ -958,13 +974,13 @@ class Player extends EventEmitter {
     //   "getCurrentTime is deprecated and won't be available in the next major version." +
     //   " Use either getWallClockTime or getPosition instead."
     // );
-    if (!this.man) {
+    if (!this._manifest) {
       return 0;
     }
 
     const ct = this.video.currentTime;
-    if (this.man.isLive) {
-      return toWallClockTime(ct, this.man);
+    if (this._manifest.isLive) {
+      return toWallClockTime(ct, this._manifest);
     } else {
       return ct;
     }
@@ -985,12 +1001,12 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getWallClockTime() {
-    if (!this.man) {
+    if (!this._manifest) {
       return 0;
     }
     const ct = this.video.currentTime;
     return this.isLive() ?
-      (+toWallClockTime(ct, this.man) / 1000) : ct;
+      (+toWallClockTime(ct, this._manifest) / 1000) : ct;
   }
 
   /**
@@ -1052,8 +1068,8 @@ class Player extends EventEmitter {
       "getAvailableLanguages is deprecated and won't be available in the next major version." +
       " Use getAvailableAudioTracks instead."
     );
-    return this.man &&
-      getAvailableAudioTracks(this.man).map(l => l.language)
+    return this._manifest &&
+      getAvailableAudioTracks(this._manifest).map(l => l.language)
       || [];
   }
 
@@ -1066,8 +1082,8 @@ class Player extends EventEmitter {
       "getAvailableSubtitles is deprecated and won't be available in the next major version." +
       " Use getAvailableTextTracks instead."
     );
-    return this.man &&
-      getAvailableTextTracks(this.man).map(s =>  s.language)
+    return this._manifest &&
+      getAvailableTextTracks(this._manifest).map(s =>  s.language)
       || [];
   }
 
@@ -1101,8 +1117,11 @@ class Player extends EventEmitter {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() {
-    const video = getAdaptationsByType(this.man, "video");
+    const video = getAdaptationsByType(this._manifest, "video");
     return (video[0] && video[0].bitrates.slice()) || [];
+
+    // TODO uncomment on manifest switch
+    // return this.adas.video.getAvailableBitrates();
   }
 
   /**
@@ -1111,6 +1130,9 @@ class Player extends EventEmitter {
   getAvailableAudioBitrates() {
     const audio = this.adas.audio;
     return (audio && audio.bitrates.slice()) || [];
+
+    // TODO uncomment on manifest switch
+    // return this.adas.audio.getAvailableBitrates();
   }
 
   /**
@@ -1235,7 +1257,7 @@ class Player extends EventEmitter {
    * video tag currentTime.
    */
   seekTo(time) {
-    assert(this.man);
+    assert(this._manifest);
     const currentTs = this.video.currentTime;
 
     // NON-deprecated part
@@ -1250,14 +1272,14 @@ class Player extends EventEmitter {
       }
       else if (time.wallClockTime) {
         this.video.currentTime =
-          fromWallClockTime(time.wallClockTime * 1000, this.man);
+          fromWallClockTime(time.wallClockTime * 1000, this._manifest);
         return;
       }
     }
 
     // deprecated part
-    if (this.man.isLive) {
-      time = fromWallClockTime(time, this.man);
+    if (this._manifest.isLive) {
+      time = fromWallClockTime(time, this._manifest);
     }
     if (time !== currentTs) {
       log.info("seek to", time);
@@ -1527,11 +1549,11 @@ class Player extends EventEmitter {
   getAvailableAudioTracks() {
     const currentAudioTrack = this.getAudioTrack();
 
-    if (!this.man) {
+    if (!this._manifest) {
       return null;
     }
 
-    return getAvailableAudioTracks(this.man)
+    return getAvailableAudioTracks(this._manifest)
       .map(track =>
         Object.assign({}, track, {
           active: currentAudioTrack.id === track.id,
@@ -1545,11 +1567,11 @@ class Player extends EventEmitter {
   getAvailableTextTracks() {
     const currentTextTrack = this.getTextTrack();
 
-    if (!this.man) {
+    if (!this._manifest) {
       return null;
     }
 
-    return getAvailableTextTracks(this.man)
+    return getAvailableTextTracks(this._manifest)
       .map(track =>
         Object.assign({}, track, {
           active: !!currentTextTrack && currentTextTrack.id === track.id,
@@ -1602,7 +1624,7 @@ class Player extends EventEmitter {
   }
 
   getImageTrackData() {
-    if (!this.man) {
+    if (!this._manifest) {
       return null;
     }
 
@@ -1610,19 +1632,19 @@ class Player extends EventEmitter {
   }
 
   getMinimumPosition() {
-    if (!this.man) {
+    if (!this._manifest) {
       return null;
     }
 
-    return getMinimumBufferPosition(this.man);
+    return getMinimumBufferPosition(this._manifest);
   }
 
   getMaximumPosition() {
-    if (!this.man) {
+    if (!this._manifest) {
       return null;
     }
 
-    return getMaximumBufferPosition(this.man);
+    return getMaximumBufferPosition(this._manifest);
   }
 }
 

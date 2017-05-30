@@ -49,16 +49,16 @@ class Manifest {
     ];
 
     this.isLive = args.type === "dynamic";
-    this.uris = args.locations;
+    this.uris = args.locations || [];
 
     // --------- private data
     this._duration = args.duration;
 
     // Will be needed here
-    // this.suggestedPresentationDelay = args.suggestedPresentationDelay;
-    // this.availabilityStartTime = args.availabilityStartTime;
-    // this.presentationLiveGap = args.presentationLiveGap;
-    // this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+    this.suggestedPresentationDelay = args.suggestedPresentationDelay;
+    this.availabilityStartTime = args.availabilityStartTime;
+    this.presentationLiveGap = args.presentationLiveGap;
+    this.timeShiftBufferDepth = args.timeShiftBufferDepth;
   }
 
   /**
@@ -66,6 +66,38 @@ class Manifest {
    */
   getDuration() {
     return this._duration;
+  }
+
+  getUrl() {
+    return this.uris[0];
+  }
+
+  /**
+   * @returns {Array.<Object>}
+   */
+  getAdaptations() {
+    const adaptationsByType = this.adaptations;
+    if (!adaptationsByType) {
+      return [];
+    }
+
+    const adaptationsList = [];
+    for (const type in adaptationsByType) {
+      const adaptations = adaptationsByType[type];
+      adaptationsList.push(adaptations);
+    }
+    return adaptationsList;
+  }
+
+  getAdaptation(wantedId) {
+    return this.getAdaptations()
+      .find(({ id }) => wantedId === id);
+  }
+
+  updateLiveGap(delta) {
+    if (this.isLive) {
+      this.presentationLiveGap += delta;
+    }
   }
 }
 

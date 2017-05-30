@@ -19,6 +19,7 @@ import { normalizeBaseURL } from "../utils/url";
 import { isCodecSupported } from "./compat";
 import { MediaError } from "../errors";
 import { normalize as normalizeLang } from "../utils/languages";
+import { resolveURL } from "../utils/url";
 
 /**
  * Representation keys directly inherited from the adaptation.
@@ -44,7 +45,7 @@ let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 const DEFAULT_PRESENTATION_DELAY = 15; // TODO might lower that limit.
 
-function parseBaseURL(manifest) {
+function _parseBaseURL(manifest) {
   let baseURL = normalizeBaseURL(manifest.locations[0]);
   const period = manifest.periods[0];
   if (period && period.baseURL) {
@@ -77,7 +78,7 @@ function normalizeManifest(location, manifest, subtitles, images) {
 
   manifest.isLive = manifest.type == "dynamic";
 
-  const rootURL = parseBaseURL(manifest);
+  const rootURL = _parseBaseURL(manifest);
 
   // TODO(pierre): support multi-locations/cdns
   const urlBase = {
@@ -88,18 +89,18 @@ function normalizeManifest(location, manifest, subtitles, images) {
   };
 
   if (subtitles) {
-    subtitles = normalizeTextAdaptation(subtitles);
+    subtitles = _normalizeTextAdaptation(subtitles);
   }
 
   if (images) {
-    images = normalizeImageAdaptation(images);
+    images = _normalizeImageAdaptation(images);
   }
 
   const periods = manifest.periods.map((period) =>
-    normalizePeriod(period, urlBase, subtitles, images));
+    _normalizePeriod(period, urlBase, subtitles, images));
 
   // TODO(pierre): support multiple periods
-  manifest = mergeAndCloneAttributes(manifest, periods[0]);
+  manifest = _mergeAndCloneAttributes(manifest, periods[0]);
   manifest.periods = null;
 
   if (!manifest.duration) {
@@ -114,13 +115,13 @@ function normalizeManifest(location, manifest, subtitles, images) {
   return manifest;
 }
 
-function normalizePeriod(period, inherit, subtitles, images) {
+function _normalizePeriod(period, inherit, subtitles, images) {
   period.id = period.id || uniqueId++;
 
   let adaptations = period.adaptations;
   adaptations = adaptations.concat(subtitles || []);
   adaptations = adaptations.concat(images || []);
-  adaptations = adaptations.map((ada) => normalizeAdaptation(ada, inherit));
+  adaptations = adaptations.map((ada) => _normalizeAdaptation(ada, inherit));
   adaptations = adaptations.filter((adaptation) => {
     if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
       log.info("not supported adaptation type", adaptation.type);
@@ -159,12 +160,12 @@ function normalizePeriod(period, inherit, subtitles, images) {
 
 // TODO perform some cleanup like adaptations.index (indexes are
 // in the representations)
-function normalizeAdaptation(initialAdaptation, inherit) {
+function _normalizeAdaptation(initialAdaptation, inherit) {
   if (typeof initialAdaptation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  const adaptation = mergeAndCloneAttributes(inherit, initialAdaptation);
+  const adaptation = _mergeAndCloneAttributes(inherit, initialAdaptation);
 
   const inheritedFromAdaptation = {};
   representationBaseType.forEach((baseType) => {
@@ -174,7 +175,12 @@ function normalizeAdaptation(initialAdaptation, inherit) {
   });
 
   let representations = adaptation.representations.map(
-    (rep) => normalizeRepresentation(rep, inheritedFromAdaptation)
+    (rep) => _normalizeRepresentation(
+      rep,
+      inheritedFromAdaptation,
+      adaptation.rootURL,
+      adaptation.baseURL,
+    )
   )
     .sort((a, b) => a.bitrate - b.bitrate);
 
@@ -202,12 +208,12 @@ function normalizeAdaptation(initialAdaptation, inherit) {
   return adaptation;
 }
 
-function normalizeRepresentation(initialRepresentation, inherit) {
+function _normalizeRepresentation(initialRepresentation, inherit, rootURL, baseURL) {
   if (typeof initialRepresentation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  const representation = mergeAndCloneAttributes(inherit, initialRepresentation);
+  const representation = _mergeAndCloneAttributes(inherit, initialRepresentation);
 
   representation.index = representation.index || {};
   if (!representation.index.timescale) {
@@ -225,6 +231,7 @@ function normalizeRepresentation(initialRepresentation, inherit) {
     representation.codecs = "mp4a.40.2";
   }
 
+  representation.baseURL = resolveURL(rootURL, baseURL, representation.baseURL);
   return representation;
 }
 
@@ -233,7 +240,7 @@ function normalizeRepresentation(initialRepresentation, inherit) {
  * @param {Array.<Object>|Object} subtitles
  * @returns {Array.<Object>}
  */
-function normalizeTextAdaptation(subtitles) {
+function _normalizeTextAdaptation(subtitles) {
   if (!Array.isArray(subtitles)) {
     subtitles = [subtitles];
   }
@@ -249,10 +256,10 @@ function normalizeTextAdaptation(subtitles) {
       languages = [language];
     }
 
-    return allSubs.concat(languages.map((lang) => ({
+    return allSubs.concat(languages.map((language) => ({
       id: uniqueId++,
       type: "text",
-      lang,
+      language: language,
       closedCaption: !!closedCaption,
       baseURL: url,
       representations: [{
@@ -274,7 +281,7 @@ function normalizeTextAdaptation(subtitles) {
  * @param {Array.<Object>|Object} images
  * @returns {Array.<Object>}
  */
-function normalizeImageAdaptation(images) {
+function _normalizeImageAdaptation(images) {
   if (!Array.isArray(images)) {
     images = [images];
   }
@@ -309,7 +316,8 @@ function normalizeImageAdaptation(images) {
  * @param {Object} dist
  * @returns {Object}
  */
-function deepAssignAttributes(source, dist) {
+// TODO remove on manifest switch
+function _deepAssignAttributes(source, dist) {
   for (const attr in source) {
     if (!dist.hasOwnProperty(attr)) {
       continue;
@@ -328,7 +336,7 @@ function deepAssignAttributes(source, dist) {
       Array.prototype.push.apply(src, dst);
     }
     else {
-      source[attr] = deepAssignAttributes(src, dst);
+      source[attr] = _deepAssignAttributes(src, dst);
     }
   }
 
@@ -347,7 +355,7 @@ function deepAssignAttributes(source, dist) {
  * @param {...Object} args
  * @returns {Object}
  */
-function mergeAndCloneAttributes(...args) {
+function _mergeAndCloneAttributes(...args) {
   const res = {};
 
   for (let i = args.length - 1; i >= 0; i--) {
@@ -366,7 +374,7 @@ function mergeAndCloneAttributes(...args) {
           res[attr] = val.slice(0);
         }
         else {
-          res[attr] = mergeAndCloneAttributes(val);
+          res[attr] = _mergeAndCloneAttributes(val);
         }
       } else {
         res[attr] = val;
@@ -386,6 +394,7 @@ function mergeAndCloneAttributes(...args) {
  * @param {Object} newManifest
  * @returns {Object}
  */
+// TODO remove on manifest switch
 function mergeManifestsIndex(oldManifest, newManifest) {
   const oldAdaptations = oldManifest.adaptations;
   const newAdaptations = newManifest.adaptations;
@@ -394,19 +403,44 @@ function mergeManifestsIndex(oldManifest, newManifest) {
     const newAdas = newAdaptations[type];
     oldAdas.forEach((a, i) => {
       a.representations.forEach((r, j) => {
-        deepAssignAttributes(r.index, newAdas[i].representations[j].index);
+        _deepAssignAttributes(r.index, newAdas[i].representations[j].index);
       });
     });
   }
   return oldManifest;
 }
 
+// TODO uncomment on manifest switch
+// TODO Check and re-check the id thing
+// function updateManifest(oldManifest, newManifest) {
+//   const oldAdaptations = oldManifest.getAdaptations();
+//   oldAdaptations.forEach(oA => {
+//     const newAdaptation = oA.id != null && newManifest.getAdaptation(oA.id);
+//     if (!newAdaptation) {
+//       console.warn(`manifest: adaptation "${oA.id}" not found when merging.`);
+//       return;
+//     }
+//     oA.representations.forEach(oR => {
+//       const newRepr = oR.id != null && newManifest.getRepresentation(oR.id);
+//       if (!newRepr) {
+//         console.warn(
+//           `manifest: representation "${oR.id}" not found when merging.`
+//         );
+//         return;
+//       }
+//       oR.index.update(newRepr.index);
+//     });
+//   });
+//   return oldManifest;
+// }
+
 /**
  * Add time to a manifest live gap.
  * @param {Object} manifest
- * @param {Number} [addedTime=1]
+ * @param {Number} addedTime
  */
-function mutateManifestLiveGap(manifest, addedTime=1) {
+// TODO remove on manifest switch
+function updateLiveGap(manifest, addedTime) {
   if (manifest.isLive) {
     manifest.presentationLiveGap += addedTime;
   }
@@ -419,6 +453,9 @@ function mutateManifestLiveGap(manifest, addedTime=1) {
  */
 function getCodec(representation) {
   const { codecs, mimeType } = representation;
+
+  // TODO uncomment on manifest switch
+  // const { codec, mimeType } = representation;
   return `${mimeType};codecs="${codecs}"`;
 }
 
@@ -430,6 +467,7 @@ function getCodec(representation) {
  * @param {Object} manifest
  * @returns {Array.<Object>}
  */
+// TODO remove on manifest switch
 function getAdaptations(manifest) {
   const adaptationsByType = manifest.adaptations;
   if (!adaptationsByType) {
@@ -455,6 +493,7 @@ function getAdaptations(manifest) {
  * @param {string} type
  * @returns {Array.<Object>}
  */
+// TODO still needed? on manifest switch
 function getAdaptationsByType(manifest, type) {
   const { adaptations } = manifest;
   const adaptationsForType = adaptations && adaptations[type];
@@ -465,31 +504,66 @@ function getAdaptationsByType(manifest, type) {
   }
 }
 
+// TODO remove on manifest switch
 function getAvailableAudioTracks(manifest) {
   return getAdaptationsByType(manifest, "audio")
-    .map((ada) => ({
-      language: normalizeLang(ada.lang),
-      audioDescription: ada.audioDescription,
-      id: ada.id,
+    .map((adaptation) => ({
+      language: normalizeLang(adaptation.language),
+      audioDescription: adaptation.audioDescription,
+      id: adaptation.id,
     }));
 }
 
+// TODO remove on manifest switch
 function getAvailableTextTracks(manifest) {
   return getAdaptationsByType(manifest, "text")
-    .map((ada) => ({
-      language: normalizeLang(ada.lang),
-      closedCaption: ada.closedCaption,
-      id: ada.id,
+    .map((adaptation) => ({
+      language: normalizeLang(adaptation.language),
+      closedCaption: adaptation.closedCaption,
+      id: adaptation.id,
     }));
 }
+
+// TODO uncomment on manifest switch
+// function getAudioTracks(manifest) {
+//   const audioAdaptations = manifest.adaptations.audio;
+//   if (!audioAdaptations) {
+//     return [];
+//   }
+//   return audioAdaptations
+//     .map((adaptation) => ({
+//       language: normalizeLang(adaptation.language),
+//       audioDescription: adaptation.isAudioDescription,
+//       id: adaptation.id,
+//     }));
+// }
+
+// TODO uncomment on manifest switch
+// function getTextTracks(manifest) {
+//   const textAdaptations = manifest.adaptations.text;
+//   if (!textAdaptations) {
+//     return [];
+//   }
+//   return textAdaptations
+//     .map((adaptation) => ({
+//       language: normalizeLang(adaptation.language),
+//       closedCaption: adaptation.isClosedCaption,
+//       id: adaptation.id,
+//     }));
+// }
 
 export {
   normalizeManifest,
   mergeManifestsIndex,
-  mutateManifestLiveGap,
+  updateLiveGap,
   getCodec,
   getAdaptations,
   getAdaptationsByType,
   getAvailableTextTracks,
   getAvailableAudioTracks,
+
+  // TODO uncomment on manifest switch
+  // updateManifest,
+  // getAudioTracks,
+  // getTextTracks,
 };

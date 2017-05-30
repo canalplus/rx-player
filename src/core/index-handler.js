@@ -60,12 +60,16 @@ function getLiveEdge(manifest) {
 }
 
 class IndexHandler {
-  constructor(adaptation, representation) {
+  constructor(adaptation, representation, isLive) {
     this.adaptation = adaptation;
     this.representation = representation;
+    this._isLive = isLive;
 
     // TODO always access index through this.representation
     this.index = representation.index;
+
+    // TODO uncomment on manifest switch
+    // this.index = representation.index._index;
     this.handler = new (selectIndexHandler(this.index))(adaptation,
                                                         representation,
                                                         this.index);
@@ -117,7 +121,7 @@ class IndexHandler {
   }
 
   checkDiscontinuity(time) {
-    if (!this.adaptation.isLive) {
+    if (!this._isLive) {
       return null;
     }
     const timescale = this.index.timescale || 1;

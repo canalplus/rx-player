@@ -96,14 +96,32 @@ function replaceTokens(path, segment) {
   }
 }
 
+// TODO uncomment on manifest switch
+// function replaceTokens(path, segment, representation) {
+//   if (path.indexOf("$") === -1) {
+//     return path;
+//   } else {
+//     return path
+//       .replace(/\$\$/g, "$")
+//       .replace(/\$RepresentationID\$/g,
+//         representation.id)
+//       .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
+//         processFormatedToken(representation.bitrate))
+//       .replace(/\$Number(|\%0(\d+)d)\$/g,
+//         processFormatedToken(segment.number))
+//       .replace(/\$Time(|\%0(\d+)d)\$/g,
+//         processFormatedToken(segment.time));
+//   }
+// }
+
 /**
  * Returns true if the given texttrack segment represents a textrack embedded
  * in a mp4 file.
  * @param {Segment} segment - __TextTrack__ segment
  * @returns {Boolean}
  */
-function isMP4EmbeddedTrack(segment) {
-  return segment.getRepresentation().mimeType === "application/mp4";
+function isMP4EmbeddedTrack(representation) {
+  return representation.mimeType === "application/mp4";
 }
 
 /**
@@ -173,13 +191,27 @@ export default function(options={}) {
   };
 
   const segmentPreLoader = ({ segment }) => {
+
+    // TODO uncomment on manifest switch
+    // const segmentPreLoader = ({ segment, adaptation, representation, manifest }) => {
     const media = segment.getMedia();
     const range = segment.getRange();
     const indexRange = segment.getIndexRange();
+    const isInit = segment.isInitSegment();
+    const adaptation = new Adaptation(segment.getAdaptation());
+    const representation = new Representation(segment.getRepresentation());
+
+    // TODO uncomment on manifest switch
+    // const {
+    //   media,
+    //   range,
+    //   indexRange,
+    //   isInit,
+    // } = segment;
 
     // init segment without initialization media/range/indexRange:
     // we do nothing on the network
-    if (segment.isInitSegment() && !(media || range || indexRange)) {
+    if (isInit && !(media || range || indexRange)) {
       return empty();
     }
 
@@ -189,12 +221,16 @@ export default function(options={}) {
     const path = media ?
       replaceTokens(media, segment) : "";
 
-    const url = resolveURL(segment.getResolvedURL(), path);
+    const url = resolveURL(representation.baseURL, path);
 
     const args = {
-      adaptation: new Adaptation(segment.getAdaptation()),
-      representation: new Representation(segment.getRepresentation()),
+      adaptation,
+      representation,
       segment: new Segment(segment),
+
+      // TODO uncomment on manifest switch
+      // segment,
+      // manifest,
       transport: "dash",
       url,
     };
@@ -262,10 +298,18 @@ export default function(options={}) {
 
   const segmentPipeline = {
     loader({ segment }) {
+
+      // TODO uncomment on manifest switch
+      // loader({ segment, representation, adaptation, manifest }) {
       return segmentPreLoader({ segment });
+
+      // TODO uncomment on manifest switch
+      // return segmentPreLoader({ segment, representation, adaptation, manifest });
     },
 
     parser({ segment, response }) {
+      // TODO uncomment on manifest switch
+      // parser({ segment, adaptation, response }) {
       const responseData = new Uint8Array(response.responseData);
 
       // added segments and timescale informations are extracted from
@@ -275,13 +319,18 @@ export default function(options={}) {
       // added index (segments and timescale) informations are
       // extracted from sidx atom
       const indexRange = segment.getIndexRange();
+      const isInit = segment.isInitSegment();
+
+      // TODO uncomment on manifest switch
+      // const indexRange = segment.indexRange;
+      // const isInit = segment.isInit;
       const index = parseSidx(responseData, indexRange ? indexRange[0] : 0);
       if (index) {
         nextSegments = index.segments;
         timescale = index.timescale;
       }
 
-      if (!segment.isInitSegment()) {
+      if (!isInit) {
         // current segment information may originate from the index
         // itself in which case we don't have to use the index
         // segments.
@@ -292,6 +341,15 @@ export default function(options={}) {
             d: segment.getDuration(),
           };
         }
+
+        // TODO uncomment on manifest switch
+        // if (segment.time >= 0 &&
+        //     segment.duration >= 0) {
+        //   currentSegment = {
+        //     ts: segment.time,
+        //     d: segment.duration,
+        //   };
+        // }
         else if (index && index.segments.length === 1) {
           currentSegment = {
             ts: index.segments[0].ts,
@@ -305,7 +363,8 @@ export default function(options={}) {
       }
 
       let segmentData = responseData;
-      if (segment.isInitSegment()) {
+      if (isInit) {
+        // TODO remove on manifest switch
         const adaptation = segment.getAdaptation();
         if (adaptation.contentProtection) {
           segmentData = patchPssh(responseData, adaptation.contentProtection);
@@ -324,23 +383,37 @@ export default function(options={}) {
   const textTrackPipeline = {
     // TODO DRY this (code too similar to segmentPipeline)
     loader({ segment }) {
+
+      // TODO uncomment on manifest switch
+      // loader({ segment, representation }) {
+
       const media = segment.getMedia();
       const range = segment.getRange();
       const indexRange = segment.getIndexRange();
+      const isInit = segment.isInitSegment();
+      const representation = segment.getRepresentation();
 
-      const responseType = isMP4EmbeddedTrack(segment) >= 0 ?
+      // TODO uncomment on manifest switch
+      // const {
+      //   media,
+      //   range,
+      //   indexRange,
+      //   isInit,
+      // } = segment;
+
+      const responseType = isMP4EmbeddedTrack(representation) >= 0 ?
         "arraybuffer" : "text";
 
       // init segment without initialization media/range/indexRange:
       // we do nothing on the network
-      if (segment.isInitSegment() && !(media || range || indexRange)) {
+      if (isInit && !(media || range || indexRange)) {
         return empty();
       }
 
       const path = media ?
         replaceTokens(media, segment) : "";
 
-      const mediaUrl = resolveURL(segment.getResolvedURL(), path);
+      const mediaUrl = resolveURL(representation.baseURL, path);
 
       // fire a single time contiguous init and index ranges.
       if (
@@ -386,12 +459,26 @@ export default function(options={}) {
     },
 
     parser({ segment, response }) {
-      const { lang } = segment.getAdaptation();
+
+      // TODO uncomment on manifest switch
+      // loader({ segment, adaptation, representation }) {
+
+      const representation = segment.getRepresentation();
+      const { language } = segment.getAdaptation();
+
+      // added index (segments and timescale) informations are
+      // extracted from sidx atom
+      const indexRange = segment.getIndexRange();
+      const isInit = segment.isInitSegment();
+
+      // TODO uncomment on manifest switch
+      // const { language } = adaptation;
+      // const { indexRange } = segment;
 
       let responseData;
       let text;
 
-      if (isMP4EmbeddedTrack(segment)) {
+      if (isMP4EmbeddedTrack(representation)) {
         responseData = new Uint8Array(response.responseData);
         text = bytesToStr(getMdat(responseData));
       } else {
@@ -403,9 +490,6 @@ export default function(options={}) {
       // sidx atom
       let nextSegments, timescale, currentSegment;
 
-      // added index (segments and timescale) informations are
-      // extracted from sidx atom
-      const indexRange = segment.getIndexRange();
       const index = parseSidx(responseData, indexRange ? indexRange[0] : 0);
       if (index) {
         nextSegments = index.segments;
@@ -414,7 +498,7 @@ export default function(options={}) {
 
       let segmentData = [];
 
-      if (!segment.isInitSegment()) {
+      if (!isInit) {
         // current segment information may originate from the index
         // itself in which case we don't have to use the index
         // segments.
@@ -425,6 +509,15 @@ export default function(options={}) {
             d: segment.getDuration(),
           };
         }
+
+        // TODO uncomment on manifest switch
+        // if (segment.time >= 0 &&
+        //     segment.duration >= 0) {
+        //   currentSegment = {
+        //     ts: segment.time,
+        //     d: segment.duration,
+        //   };
+        // }
         else if (index && index.segments.length === 1) {
           currentSegment = {
             ts: index.segments[0].ts,
@@ -439,11 +532,14 @@ export default function(options={}) {
         // const timescale = (index && index.timescale) ||
         //   representationIndex.timescale;
 
-        const { codecs = "" } = segment.getRepresentation();
+        const { codecs = "" } = representation;
+
+        // TODO uncomment on manifest switch
+        // const { codec = "" } = representation;
 
         switch (codecs.toLowerCase()) {
         case "stpp":
-          segmentData = parseTTML(text, lang, 0);
+          segmentData = parseTTML(text, language, 0);
           break;
         default:
           console.warn("The codec used for the subtitle is not managed yet.");
@@ -462,13 +558,27 @@ export default function(options={}) {
 
   const imageTrackPipeline = {
     loader({ segment }) {
-      if (segment.init) {
+
+      // TODO uncomment on manifest switch
+      // loader({ segment, representation }) {
+
+      const isInit = segment.isInitSegment();
+
+      // TODO uncomment on manifest switch
+      // const { isInit } = segment;
+
+      if (isInit) {
         return empty();
       } else {
         const media = segment.getMedia();
+        const representation = segment.getRepresentation();
+
+        // TODO uncomment on manifest switch
+        // const { media } = segment;
+
         const path = media ?
           replaceTokens(media, segment) : "";
-        const mediaUrl = resolveURL(segment.getResolvedURL(), path);
+        const mediaUrl = resolveURL(representation.baseURL, path);
         return request({
           url: mediaUrl,
           responseType: "arraybuffer",
@@ -477,7 +587,7 @@ export default function(options={}) {
       }
     },
 
-    parser({ response /*, adaptation, representation, segment */ }) {
+    parser({ response }) {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);
 

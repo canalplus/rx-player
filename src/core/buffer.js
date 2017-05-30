@@ -82,6 +82,7 @@ function Buffer({
   adapters,     // { representations, bufferSizes } observables
   timings,      // Timings observable
   seekings,     // Seekings observable
+  isLive,
 }) {
 
   // will be used to emit messages to the calling function
@@ -250,17 +251,21 @@ function Buffer({
   function createRepresentationBuffer(representation) {
     log.info("bitrate", bufferType, representation.bitrate);
 
-    const segmentIndex = new IndexHandler(adaptation, representation);
+    const segmentIndex = new IndexHandler(adaptation, representation, isLive);
     const queuedSegments = new SimpleSet();
 
     /**
      * Returns true if it considers that the segment given should be loaded.
      * @param {Segment} segment
+     * @param {Number} bitrate
      * @returns {Boolean}
      */
     function filterAlreadyLoaded(segment) {
       // if this segment is already in the pipeline
       const isInQueue = queuedSegments.test(segment.getId());
+
+      // TODO uncomment on manifest switch
+      // const isInQueue = queuedSegments.test(segment.id);
       if (isInQueue) {
         return false;
       }
@@ -268,15 +273,22 @@ function Buffer({
       // segment without time info are usually init segments or some
       // kind of metadata segment that we never filter out
       if (segment.isInitSegment() || segment.getTime() < 0) {
+
+        // TODO uncomment on manifest switch
+        // if (segment.isInit || segment.time < 0) {
         return true;
       }
 
       const time     = segmentIndex.scale(segment.getTime());
       const duration = segmentIndex.scale(segment.getDuration());
 
+      // TODO uncomment on manifest switch
+      // const time     = segment.time / segment.timescale;
+      // const duration = segment.duration / segment.timescale;
+
       const range = ranges.hasRange(time, duration);
       if (range) {
-        const segmentBitrate = segment.getRepresentation().bitrate;
+        const segmentBitrate = representation.bitrate;
         // only re-load comparatively-poor bitrates
         return range.bitrate * BITRATE_REBUFFERING_RATIO < segmentBitrate;
       } else {
@@ -308,6 +320,9 @@ function Buffer({
         segmentIndex.insertNewSegments(nextSegments, currentSegment) : [];
 
       queuedSegments.remove(segment.getId());
+
+      // TODO uncomment on manifest switch
+      // queuedSegments.remove(segment.id);
 
       // current segment timings informations are used to update
       // ranges informations
@@ -417,6 +432,9 @@ function Buffer({
       // queue all segments injected in the observable
       for (let i = 0; i < injectedSegments.length; i++) {
         queuedSegments.add(injectedSegments[i].getId());
+
+        // TODO uncomment on manifest switch
+        // queuedSegments.add(injectedSegments[i].id);
       }
 
       return injectedSegments;
@@ -427,7 +445,13 @@ function Buffer({
       bufferSizes
     )
       .mergeMap(getNeededSegments)
-      .concatMap((segment) => pipeline({ segment }))
+      .concatMap((segment) =>
+        pipeline({ segment })
+
+          // TODO uncomment on manifest switch
+          // pipeline({ segment, representation})
+          .map((args) => Object.assign({ segment }, args))
+      )
       .concatMap(appendDataInBuffer);
 
     return merge(segmentsPipeline, messageSubject).catch((error) => {
@@ -435,7 +459,7 @@ function Buffer({
       // failed errors, ie: we are requesting for segments before they
       // exist
       const isPreconditionFailedError = (
-        adaptation.isLive &&
+        isLive &&
         error.type == ErrorTypes.NETWORK_ERROR &&
         error.isHttpError(412)
       );

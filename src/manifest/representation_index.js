@@ -70,6 +70,10 @@ class RepresentationIndex {
     }
     return addedSegments;
   }
+
+  update(newIndex) {
+    this._index = newIndex;
+  }
 }
 
 export default RepresentationIndex;

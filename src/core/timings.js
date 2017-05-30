@@ -22,11 +22,6 @@ import { BufferedRanges } from "./ranges";
 const SAMPLING_INTERVAL_MEDIASOURCE = 1000;
 const SAMPLING_INTERVAL_NO_MEDIASOURCE = 500;
 
-// time in seconds protecting live buffer to prevent ahead of time
-// buffering
-// XXX Delete this?
-const LIVE_PROTECTION = 10;
-
 // stall gap in seconds
 const STALL_GAP = 0.5;
 const RESUME_GAP = 5;
@@ -296,7 +291,8 @@ function toWallClockTime(ts, manifest) {
  * It should be the exact opposite of ``toWallClockTime``
  */
 function fromWallClockTime(timeInMs, manifest) {
-  return normalizeWallClockTime(timeInMs, manifest) / 1000 - manifest.availabilityStartTime;
+  return normalizeWallClockTime(timeInMs, manifest) / 1000
+    - manifest.availabilityStartTime;
 }
 
 /**
@@ -360,27 +356,11 @@ function getBufferLimits(manifest) {
   ];
 }
 
-
-function getLiveGap(ts, manifest) {
-  if (!manifest.isLive) {
-    return Infinity;
-  }
-
-  const {
-    availabilityStartTime,
-    presentationLiveGap,
-  } = manifest;
-
-  const liveGap = (Date.now() / 1000 - ts);
-  return (liveGap - (availabilityStartTime + presentationLiveGap + LIVE_PROTECTION));
-}
-
 export {
   getEmptyTimings,
   getTimings,
   createTimingsSampler,
   seekingsSampler,
-  getLiveGap,
   toWallClockTime,
   fromWallClockTime,
   getMinimumBufferPosition,
