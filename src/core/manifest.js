@@ -351,34 +351,36 @@ function _mergeAndCloneAttributes(...args) {
 
 // XXX TODO Check and re-check the id thing
 function updateManifest(oldManifest, newManifest) {
+  const findElementFromId = (id, elements) =>
+    elements.find(obj => obj.id === id);
+
   const oldAdaptations = oldManifest.getAdaptations();
   const newAdaptations = newManifest.getAdaptations();
-  debugger;
-  oldAdaptations.forEach(oldAdaptation => {
-    for (let i = 0; i < newAdaptations.length; i++) {
-      if (newAdaptations[i].id === oldAdaptation.id) {
-        const oldRepresentations = oldAdaptation.representations;
-        for (let j = 0; j < oldRepresentations.length; j++) {
-          const oldRepresentation = oldRepresentations[j];
-          const newRepresentations = newAdaptations[i].representations;
-          for (let k = 0; k < newRepresentations.length; k++) {
-            if (newRepresentations[k].id === oldRepresentation.id) {
-              oldRepresentation.index.update(newRepresentations[k].index);
-              return;
-            }
-          }
-          console.warn(
-            `manifest: representation "${oldRepresentation.id}" not found when merging.`
-          );
-          return;
-        }
-      }
+
+  for (let i = 0; i < oldAdaptations.length; i++) {
+    const newAdaptation =
+      findElementFromId(oldAdaptations[i].id, newAdaptations);
+
+    if (!newAdaptation) {
+      console.warn(
+        `manifest: adaptation "${oldAdaptations[i].id}" not found when merging.`
+      );
     }
-    console.warn(
-      `manifest: representation "${oldAdaptation.id}" not found when merging.`
-    );
-    return;
-  });
+
+    const oldRepresentations = oldAdaptations[i].representations;
+    const newRepresentations = newAdaptation.representations;
+    for (let j = 0; j < oldRepresentations.length; j++) {
+      const newRepresentation =
+        findElementFromId(oldRepresentations[j].id, newRepresentations);
+
+      if (!newRepresentation) {
+        console.warn(
+          `manifest: representation "${oldRepresentations[j].id}" not found when merging.`
+        );
+      }
+      oldRepresentations[j].index.update(newRepresentation.index);
+    }
+  }
   return oldManifest;
 }
 
@@ -390,23 +392,6 @@ function updateManifest(oldManifest, newManifest) {
 function getCodec(representation) {
   const { codec, mimeType } = representation;
   return `${mimeType};codecs="${codec}"`;
-}
-
-/**
- * Returns only adaptations for a given type (audio/video/image...).
- * @param {Object} manifest
- * @param {string} type
- * @returns {Array.<Object>}
- */
-// TODO still needed? on manifest switch
-function getAdaptationsByType(manifest, type) {
-  const { adaptations } = manifest;
-  const adaptationsForType = adaptations && adaptations[type];
-  if (adaptationsForType) {
-    return adaptationsForType;
-  } else {
-    return [];
-  }
 }
 
 function getAudioTracks(manifest) {
@@ -438,7 +423,6 @@ function getTextTracks(manifest) {
 export {
   normalizeManifest,
   getCodec,
-  getAdaptationsByType,
   updateManifest,
   getAudioTracks,
   getTextTracks,
