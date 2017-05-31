@@ -63,7 +63,7 @@ const empty = EmptyObservable.create;
 const END_OF_PLAY = 0.5;
 
 const DISCONTINUITY_THRESHOLD = 1;
-const DEFAULT_LIVE_GAP = 10;
+const DEFAULT_LIVE_GAP = 15;
 
 /**
  * Returns true if the given buffeType is a native buffer, false otherwise.
