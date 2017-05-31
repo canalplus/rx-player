@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 const Webpack = require("webpack");
 const WebpackDevServer = require("webpack-dev-server");
 const path = require("path");
