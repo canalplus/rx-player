@@ -42,7 +42,7 @@ const config = {
   plugins: [
     new webpack.DefinePlugin({
       "__DEV__": true,
-      "__LOGGER_LEVEL__": "DEBUG",
+      "__LOGGER_LEVEL__": "\"DEBUG\"",
       "process.env": {
         NODE_ENV: JSON.stringify("production"),
       },

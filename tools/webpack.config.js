@@ -36,7 +36,7 @@ const config = {
   plugins: [
     new webpack.DefinePlugin({
       "__DEV__": RX_PLAYER_ENV === "development",
-      "__LOGGER_LEVEL__": "DEBUG",
+      "__LOGGER_LEVEL__": "\"DEBUG\"",
       "process.env": {
         NODE_ENV: JSON.stringify(RX_PLAYER_ENV),
       },
