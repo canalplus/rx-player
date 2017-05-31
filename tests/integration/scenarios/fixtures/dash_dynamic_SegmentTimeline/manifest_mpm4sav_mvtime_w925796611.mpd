@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns="urn:mpeg:dash:schema:mpd:2011"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+     profiles="urn:mpeg:dash:profile:isoff-live:2011"
+     type="dynamic"
+     minimumUpdatePeriod="PT8.176S" 
+     publishTime="2017-05-31T16:43:32Z" 
+     availabilityStartTime="2017-04-26T16:48:11Z" 
+     timeShiftBufferDepth="PT50.0S"
+     suggestedPresentationDelay="PT15.0S" 
+     minBufferTime="PT6.0S">
+<ProgramInformation>
+    <Title>bigbuckbunny</Title>
+</ProgramInformation>
+<Location>https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd</Location>
+<Period id="0" start="PT0.0S">
+    <AdaptationSet id="0" mimeType="video/mp4" width="512" height="288" par="16:9" frameRate="30" segmentAlignment="true" startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+        <SegmentTemplate timescale="90000" media="chunk_ctvideo_cfm4s_rid$RepresentationID$_cs$Time$_w925796611_mpd.m4s" initialization="chunk_ctvideo_cfm4s_rid$RepresentationID$_cinit_w925796611_mpd.m4s">
+            <SegmentTimeline>
+                <S t="272130436800" d="900000"/>
+                <S d="900000"/>
+                <S d="900000"/>
+                <S d="900000"/>
+                <S d="900000"/>
+            </SegmentTimeline>
+        </SegmentTemplate>
+        <Representation id="p0va0br601392" codecs="avc1.42c015" sar="1:1" bandwidth="601392" />
+    </AdaptationSet>
+    <AdaptationSet id="1" mimeType="audio/mp4" lang="eng" segmentAlignment="true" startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="48000" media="chunk_ctaudio_cfm4s_rid$RepresentationID$_cs$Time$_w925796611_mpd.m4s" initialization="chunk_ctaudio_cfm4s_rid$RepresentationID$_cinit_w925796611_mpd.m4s">
+            <SegmentTimeline>
+                <S t="145136233968" d="479232"/>
+                <S d="480288"/>
+                <S d="480240"/>
+                <S d="480240"/>
+                <S d="479232"/>
+            </SegmentTimeline>
+        </SegmentTemplate>
+        <Representation id="p0aa0br96257" codecs="mp4a.40.2" audioSamplingRate="48000" bandwidth="96257">
+        </Representation>
+    </AdaptationSet>
+</Period>
+</MPD>

@@ -306,7 +306,8 @@ describe("initial idle state", () => {
     });
 
     // TODO remove for v3.0.0
-    it("should return a \"normalized\" language code in normalizeLanguageCode for the most common codes by default", () => {
+    it("should return a \"normalized\" language code in normalizeLanguageCode " +
+       "for the most common codes by default", () => {
       expect(player.normalizeLanguageCode("eng")).to.equal("eng");
       expect(player.normalizeLanguageCode("en")).to.equal("eng");
 
