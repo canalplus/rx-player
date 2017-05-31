@@ -78,7 +78,7 @@ npm run lint
 npm run start
 
 # launch our test suite on various browsers
-npm run karma
+npm run test
 
 # list all available npm scripts
 npm run info

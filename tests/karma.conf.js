@@ -1,8 +1,9 @@
 /* eslint-env node */
 const path = require("path");
-const webpackConfig = require("../webpack.config.js");
+const webpackConfig = require("../tools/webpack.config.js");
 
-const coverageIsWanted = process.env.RXP_COVERAGE;
+const coverageIsWanted = !!process.env.RXP_COVERAGE;
+const singleRun = !process.env.RXP_TESTS_WATCH;
 
 if (coverageIsWanted) {
   if (!webpackConfig.module) {
@@ -17,14 +18,21 @@ if (coverageIsWanted) {
   webpackConfig.module.rules.push({
     test: /\.js$/,
     enforce: "post",
-    include: path.resolve(__dirname, "../../src/"),
+    include: path.resolve(__dirname, "../src/"),
     exclude: [/__tests__/],
-    loader: "istanbul-instrumenter-loader",
+    use: {
+      loader: "istanbul-instrumenter-loader",
+      query: {
+        esModules: true,
+      },
+    },
   });
 }
 
 const karmaConf = {
-  basePath: "..",
+  basePath: ".",
+
+  singleRun,
 
   browsers: [
     "Chrome",
@@ -32,9 +40,8 @@ const karmaConf = {
     "Firefox",
   ],
 
-  singleRun: !!coverageIsWanted,
-
-  reporters: ["mocha", "coverage-istanbul"],
+  reporters: coverageIsWanted ?
+    ["mocha", "coverage"] : ["mocha"],
 
   frameworks: ["mocha"],
 
@@ -45,11 +52,13 @@ const karmaConf = {
   },
 
   preprocessors: {
-    "tests/index.js": ["webpack"],
+    [path.resolve(__dirname, "./integration/index.js")]: "webpack",
+    [path.resolve(__dirname, "./unit/index.js")]: "webpack",
   },
 
   files: [
-    "tests/index.js",
+    path.resolve(__dirname, "./unit/index.js"),
+    path.resolve(__dirname, "./integration/index.js"),
   ],
 
   client: {
