@@ -13,6 +13,7 @@
 
 ### Other improvements
 
+  - tests: integration tests have been added
   - manifest: the manifest object and the management of its index has been refactored for future improvements
 
 ## v2.1.0 (2017/05/29)
