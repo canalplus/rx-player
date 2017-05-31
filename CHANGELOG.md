@@ -1,5 +1,20 @@
 # Changelog
 
+## next version (pending)
+
+### Bug fixes
+
+  - adaptive: setVideoBitrate now throw a more meaningful error if no content is playing
+  - adaptive: setAudioBitrate now throw a more meaningful error if no content is playing
+  - language: setSubtitle now throw a more meaningful error if no content is playing
+  - language: setLanguage now throw a more meaningful error if no content is playing
+  - language: isLanguageAvailable do not throw and return false if no content is playing
+  - language: isSubtitleAvailable do not throw and return false if no content is playing
+
+### Other improvements
+
+  - manifest: the manifest object and the management of its index has been refactored for future improvements
+
 ## v2.1.0 (2017/05/29)
 
 ### Added
