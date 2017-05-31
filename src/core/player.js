@@ -146,7 +146,7 @@ function noop() {}
  * @param {Player} player
  * @throws Error - Throws if the given player has no manifest loaded.
  */
-function assertMan(player) {
+function assertManifest(player) {
   assert(player._manifest, "player: no manifest loaded");
 }
 
@@ -874,7 +874,7 @@ class Player extends EventEmitter {
    * @throws Error - Throws if the given player has no manifest loaded.
    */
   isLive() {
-    assertMan(this);
+    assertManifest(this);
     return this._manifest.isLive;
   }
 
@@ -885,7 +885,7 @@ class Player extends EventEmitter {
    * TODO Do not throw if STOPPED
    */
   getUrl() {
-    assertMan(this);
+    assertManifest(this);
     return this._manifest.getUrl();
   }
 
@@ -1075,14 +1075,14 @@ class Player extends EventEmitter {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() {
-    return this.adas.video.getAvailableBitrates();
+    return this.adas.video && this.adas.video.getAvailableBitrates() || [];
   }
 
   /**
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() {
-    return this.adas.audio.getAvailableBitrates();
+    return this.adas.audio && this.adas.audio.getAvailableBitrates() || [];
   }
 
   /**
@@ -1207,7 +1207,7 @@ class Player extends EventEmitter {
    * video tag currentTime.
    */
   seekTo(time) {
-    assert(this._manifest);
+    assertManifest(this);
     const currentTs = this.video.currentTime;
 
     // NON-deprecated part
@@ -1308,7 +1308,12 @@ class Player extends EventEmitter {
       return false;
     }
 
-    return !!this.getAvailableAudioTracks().find(lng =>
+    const availableTracks = this.getAvailableAudioTracks();
+    if (!availableTracks) {
+      return false;
+    }
+
+    return !!availableTracks.find(lng =>
       lng.language === track.language
     );
   }
@@ -1330,7 +1335,12 @@ class Player extends EventEmitter {
       return false;
     }
 
-    return !!this.getAvailableTextTracks().find(lng =>
+    const availableTracks = this.getAvailableTextTracks();
+    if (!availableTracks) {
+      return false;
+    }
+
+    return !!availableTracks.find(lng =>
       lng.language === track.language
     );
   }
@@ -1345,6 +1355,7 @@ class Player extends EventEmitter {
       "setLanguage is deprecated and won't be available in the next major version." +
       " Use setAudioTrack instead."
     );
+    assertManifest(this);
     const track = normalizeAudioTrack(arg);
     assert(this.isLanguageAvailable(track), "player: unknown language");
     this.adaptive.setAudioTrack(track);
@@ -1360,6 +1371,7 @@ class Player extends EventEmitter {
       "setSubtitle is deprecated and won't be available in the next major version." +
       " Use setTextTrack instead."
     );
+    assertManifest(this);
     if (arg == null) { // deactivate subtitles
       this.adaptive.setTextTrack(null);
       this._recordState("subtitle", null);
@@ -1379,6 +1391,7 @@ class Player extends EventEmitter {
    * TODO Stop throwing, act as a ceil instead
    */
   setVideoBitrate(btr) {
+    assertManifest(this);
     assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
     this.adaptive.setVideoBitrate(btr);
   }
@@ -1391,6 +1404,7 @@ class Player extends EventEmitter {
    * TODO Stop throwing, act as a ceil instead
    */
   setAudioBitrate(btr) {
+    assertManifest(this);
     assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
     this.adaptive.setAudioBitrate(btr);
   }
@@ -1456,7 +1470,7 @@ class Player extends EventEmitter {
 
   /**
    * Returns multiple debugs informations.
-   * TODO Document that
+   * @deprecated
    * @returns {Object}
    */
   getDebug() {
@@ -1465,6 +1479,7 @@ class Player extends EventEmitter {
 
   /**
    * Show debug overlay on the video element.
+   * @deprecated
    */
   showDebug() {
     debugPane.showDebug(this, this.video);
@@ -1472,6 +1487,7 @@ class Player extends EventEmitter {
 
   /**
    * Hide debug overlay from the video element.
+   * @deprecated
    */
   hideDebug() {
     debugPane.hideDebug();
@@ -1479,6 +1495,7 @@ class Player extends EventEmitter {
 
   /**
    * Show/Hide debug overlay from the video element.
+   * @deprecated
    */
   toggleDebug() {
     debugPane.toggleDebug(this,this.video);
@@ -1487,7 +1504,7 @@ class Player extends EventEmitter {
   /**
    * Returns type of current keysystem (e.g. playready, widevine) if the content
    * is encrypted. null otherwise.
-   * @returns {string}
+   * @returns {string|null}
    */
   getCurrentKeySystem() {
     return getCurrentKeySystem();
