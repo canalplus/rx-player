@@ -76,6 +76,8 @@
 
 ### Bug fixes
 
+  - language: getSubtitle / getTextTrack returns now the current text track instead of the language of the last downloaded text segment
+  - language: getLanguage / getAudioTrack returns now the current audio track instead of the language of the last downloaded audio segment
   - hotfix: fixed rxjs imports
   - hotfix: the player can now be imported through a commonjs require
   - hotfix: the player could not play if the video element's width was too short
@@ -89,6 +91,8 @@
 
 ### Other improvements
 
+  - api: deprecated api now only warn once
+  - languages: the language management part of the code has now been separated from the ABR code for easier future improvements.
   - api: deprecated api now only warn once
   - tests: integration tests have been added
   - manifest: the manifest object and the management of its index has been refactored for future improvements
