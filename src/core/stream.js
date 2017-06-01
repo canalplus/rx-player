@@ -25,9 +25,8 @@ import {
 } from "./timings";
 import { retryableFuncWithBackoff } from "../utils/retry";
 import { Observable } from "rxjs/Observable";
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { on, throttle } from "../utils/rx-utils";
-import { merge } from "rxjs/observable/merge";
-import { combineLatest } from "rxjs/observable/combineLatest";
 
 import {
   MediaSource_,
@@ -55,6 +54,8 @@ import {
   updateManifest,
   getCodec,
 } from "./manifest";
+
+import LanguageManager from "./language_manager.js";
 
 // Stop stream 0.5 second before the end of video
 // It happens often that the video gets stuck 100 to 300 ms before the end, especially on IE11 and Edge
@@ -169,6 +170,28 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
   return 0;
 }
 
+const getAdaptationObservable = (type, adaptations, languageManager) => {
+  switch (type) {
+  case "audio":
+    return languageManager.audioAdaptation$;
+  case "text":
+    return languageManager.textAdaptation$;
+
+  default:
+    const adaptationsList = adaptations[type];
+    return new BehaviorSubject(
+      adaptationsList && adaptationsList.length ?
+      adaptationsList[0] : null
+    );
+    // XXX
+    // return Observable.never()
+    //   .startWith(
+    //     adaptationsList && adaptationsList.length ?
+    //     adaptationsList[0] : null
+    //   );
+  }
+};
+
 /**
  * On subscription:
  *  - Creates the MediaSource and attached sourceBuffers instances.
@@ -193,6 +216,8 @@ function Stream({
   videoElement,
   autoPlay,
   startAt,
+  defaultAudioTrack,
+  defaultTextTrack,
 }) {
   // TODO @deprecate?
   const fragEndTimeIsFinite = timeFragment.end < Infinity;
@@ -203,6 +228,8 @@ function Stream({
 
   let nativeBuffers = {}; // SourceBuffers added to the MediaSource
   let customBuffers = {}; // custom SourceBuffers
+
+  let languageManager;
 
   /**
    * Backoff options used given to the backoff retry done with the manifest
@@ -477,7 +504,7 @@ function Stream({
       ? sourceOpen(mediaSource)
       : Observable.of(null);
 
-    return combineLatest(fetchManifest({ url }), sourceOpening)
+    return Observable.combineLatest(fetchManifest({ url }), sourceOpening)
       .mergeMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
@@ -491,10 +518,6 @@ function Stream({
         return createStream(mediaSource, manifest);
       });
   }, retryOptions);
-
-  return createAndPlugMediaSource(url, videoElement)
-    .mergeMap(createAllStream)
-    .takeUntil(endOfPlay);
 
   /**
    * Creates a stream of audio/video/text buffers given a set of
@@ -522,8 +545,9 @@ function Stream({
     timings,
     seekings,
     manifest,
+    adaptation$,
   ) {
-    const adaptation$ = adaptive.getAdaptationsChoice(bufferType, adaptations);
+    // const adaptation$ = adaptive.getAdaptationsChoice(bufferType, adaptations);
 
     if (__DEV__) {
       assert(pipelines[bufferType],
@@ -604,7 +628,7 @@ function Stream({
         autoPlay = true;
       });
 
-    return combineLatest(canSeek$, canPlay$)
+    return Observable.combineLatest(canSeek$, canPlay$)
       .take(1)
       .mapTo({ type: "loaded", value: true });
   }
@@ -706,7 +730,22 @@ function Stream({
           )
         );
 
-        return { type: "manifest", value: newManifest };
+        // return { type: "manifest", value: newManifest };
+
+        if (__DEV__) {
+          assert(languageManager, "Stream: no LanguageManager defined");
+        }
+
+        if (languageManager) {
+          languageManager.updateAdaptations(manifest.adaptations);
+        }
+
+        return {
+          type: "manifestUpdate",
+          value: {
+            manifest: newManifest,
+          },
+        };
       });
   }
 
@@ -750,7 +789,13 @@ function Stream({
    * @param {Observable} seekings
    * @returns {Observable}
    */
-  function createAdaptationsBuffers(mediaSource, manifest, timings, seekings) {
+  function createAdaptationsBuffers(
+    mediaSource,
+    manifest,
+    timings,
+    seekings,
+    languageManager,
+  ) {
     const adaptationsBuffers = Object.keys(manifest.adaptations)
       .map((type) => {
         const adaptations = manifest.adaptations[type];
@@ -771,6 +816,9 @@ function Stream({
           addNativeSourceBuffer(mediaSource, type, codec);
         }
 
+        const adaptation$ =
+          getAdaptationObservable(type, manifest.adaptations, languageManager);
+
         return createBuffer(
           mediaSource,
           type,
@@ -779,10 +827,11 @@ function Stream({
           timings,
           seekings,
           manifest,
+          adaptation$,
         );
       });
 
-    const buffers = merge(...adaptationsBuffers);
+    const buffers = Observable.merge(...adaptationsBuffers);
 
     if (!manifest.isLive) {
       return buffers;
@@ -825,25 +874,47 @@ function Stream({
    */
   function createStream(mediaSource, manifest) {
     const { timings, seekings } = createTimings(manifest);
-    const justManifest = Observable.of({ type: "manifest", value: manifest });
+
+    languageManager = new LanguageManager(manifest.adaptations, {
+      defaultAudioTrack,
+      defaultTextTrack,
+    });
+
+    const manifest$ = Observable.of({
+      type: "manifest",
+      value: {
+        manifest,
+        languageManager,
+      },
+    });
+
     const emeHandler = createEMEIfKeySystems();
     const stalled = createStalled(timings, {
       changePlaybackRate: pipelines.requiresMediaSource(),
     });
     const canPlay = createLoadedMetadata(manifest);
-    const buffers = createAdaptationsBuffers(mediaSource,
-                                             manifest,
-                                             timings,
-                                             seekings);
+    const buffers = createAdaptationsBuffers(
+      mediaSource,
+      manifest,
+      timings,
+      seekings,
+      languageManager,
+    );
     const mediaError = createMediaErrorStream();
 
-    return merge(justManifest,
-                       canPlay,
-                       stalled,
-                       emeHandler,
-                       buffers,
-                       mediaError);
+    return Observable.merge(
+      manifest$,
+      canPlay,
+      stalled,
+      emeHandler,
+      buffers,
+      mediaError
+    ).finally(() => languageManager.dispose());
   }
+
+  return createAndPlugMediaSource(url, videoElement)
+    .mergeMap(createAllStream)
+    .takeUntil(endOfPlay);
 }
 
 export default Stream;

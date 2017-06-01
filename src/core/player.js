@@ -17,13 +17,13 @@
 
 import objectAssign from "object-assign";
 import arrayFind from "array-find";
-import { Subscription } from "rxjs/Subscription";
+import log from "../utils/log";
+import warnOnce from "../utils/warnOnce.js";
+
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
 
-import log from "../utils/log";
-import warnOnce from "../utils/warnOnce.js";
 import { on } from "../utils/rx-utils";
 import {
   normalize as normalizeLang,
@@ -61,10 +61,6 @@ import { InitializationSegmentCache } from "./cache";
 import { BufferedRanges } from "./ranges";
 import { parseTimeFragment } from "./time-fragment";
 import DeviceEvents from "./device-events";
-import {
-  getTextTracks,
-  getAudioTracks,
-} from "./manifest.js";
 
 import Transports from "../net";
 import PipeLines from "./pipelines";
@@ -83,41 +79,6 @@ const PLAYER_BUFFERING = "BUFFERING";
 const PLAYER_SEEKING   = "SEEKING";
 
 /**
- * VERY simple deepEqual function, optimized for the player
- * events.
- * @param {*} prev
- * @param {*} next
- * @returns {Boolean}
- */
-function eventsAreEqual(prev, next) {
-  if (prev === next) {
-    return true;
-  }
-
-  if (typeof prev === "object" && typeof next === "object") {
-    if (prev === null || next === null) {
-      return false;
-    }
-    const prevKeys = Object.keys(prev);
-    if (prevKeys.length !== Object.keys(next).length) {
-      return false;
-    }
-
-    for (const prop of prevKeys) {
-      if (
-        !next.hasOwnProperty(prop) ||
-        !eventsAreEqual(prev[prop], next[prop])
-      ) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  return false;
-}
-
-/**
  * Returns current playback state for the current content.
  * /!\ Only pertinent for a content that is currently loaded and playing
  * (i.e. not loading, ended or stopped).
@@ -127,7 +88,7 @@ function eventsAreEqual(prev, next) {
  *
  * @returns {string}
  */
-function calcPlayerState(isPlaying, stalled) {
+function inferPlayerState(isPlaying, stalled) {
   if (stalled) {
     return (stalled.name == "seeking")
       ? PLAYER_SEEKING
@@ -140,12 +101,6 @@ function calcPlayerState(isPlaying, stalled) {
 
   return PLAYER_PAUSED;
 }
-
-/**
- * Function with no effect. Created as a placeholder function.
- * TODO remove? Might not be needed.
- */
-function noop() {}
 
 /**
  * Assert that a manifest has been loaded (throws otherwise).
@@ -257,15 +212,7 @@ class Player extends EventEmitter {
 
     // --
 
-    // auto-bindings. TODO Needed? Pollute the namespace / Only one use for each
-    this._playPauseNext$ = this._playPauseNext.bind(this);
-    this._textTrackChanges$ = this._textTrackChanges.bind(this);
-    this._setPlayerState$ = this._setPlayerState.bind(this);
-    this._triggerTimeChange$ = this._triggerTimeChange.bind(this);
-    this._streamNext$ = this._streamNext.bind(this);
-    this._streamError$ = this._streamError.bind(this);
-    this._streamFatalError$ = this._streamFatalError.bind(this);
-    this._streamComplete$ = this._streamComplete.bind(this);
+    this._clearLoaded$ = new Subject();
 
     this.defaultTransport = transport;
     this.defaultTransportOptions = transportOptions || {};
@@ -316,6 +263,10 @@ class Player extends EventEmitter {
       throttleWhenHidden,
     });
 
+    // if no default track is provided on loadVideo, use the last one
+    this._lastAudioTrack = undefined;
+    this._lastTextTrack = undefined;
+
     // memorize previous volume when muted - minimum at first
     this.muted = 0.1;
 
@@ -332,6 +283,7 @@ class Player extends EventEmitter {
    */
   _resetStates() {
     this._manifest = null;
+    this._languageManager = null;
     this.reps = { video: null, audio: null, text: null, images: null };
     this.adas = { video: null, audio: null, text: null, images: null };
     this.evts = {};
@@ -347,11 +299,7 @@ class Player extends EventEmitter {
    * @private
    */
   _unsubscribe() {
-    if (this.subscriptions) {
-      const subscriptions = this.subscriptions;
-      this.subscriptions = null;
-      subscriptions.unsubscribe();
-    }
+    this._clearLoaded$.next();
   }
 
   /**
@@ -370,12 +318,14 @@ class Player extends EventEmitter {
    */
   dispose() {
     this.stop();
+    this._clearLoaded$.complete();
     this.metrics.unsubscribe();
     this.adaptive.unsubscribe();
     this.fullscreen.unsubscribe();
     this.stream.unsubscribe(); // @deprecated
     emeDispose();
 
+    this._clearLoaded$ = null;
     this.metrics = null;
     this.adaptive = null;
     this.fullscreen = null;
@@ -393,7 +343,7 @@ class Player extends EventEmitter {
    */
   _recordState(type, value) {
     const prev = this.evts[type];
-    if (!eventsAreEqual(prev, value)) {
+    if (prev !== value) {
       this.evts[type] = value;
       this.trigger(`${type}Change`, value);
     }
@@ -474,6 +424,14 @@ class Player extends EventEmitter {
 
     // ----
 
+    if (_defaultAudioTrack === undefined) {
+      _defaultAudioTrack = this._lastAudioTrack;
+    }
+
+    if (_defaultTextTrack === undefined) {
+      _defaultTextTrack = this._lastTextTrack;
+    }
+
     timeFragment = parseTimeFragment(timeFragment);
 
     // compatibility with directFile api
@@ -548,14 +506,6 @@ class Player extends EventEmitter {
     this.frag = timeFragment;
     this.playing.next(autoPlay);
 
-    if (defaultAudioTrack != null) {
-      this.adaptive.setAudioTrack(normalizeAudioTrack(defaultAudioTrack));
-    }
-
-    if (defaultTextTrack !== undefined) {
-      this.adaptive.setTextTrack(normalizeTextTrack(defaultTextTrack));
-    }
-
     const {
       video: videoElement,
       adaptive,
@@ -585,40 +535,74 @@ class Player extends EventEmitter {
       videoElement,
       autoPlay,
       startAt,
+      defaultAudioTrack,
+      defaultTextTrack,
     })
       .publish();
 
-    const stalled = filterStreamByType(stream, "stalled").startWith(null);
-    const loaded = filterStreamByType(stream, "loaded").take(1).share();
+    const stalled = filterStreamByType(stream, "stalled")
+      .startWith(null);
+
+    const loaded = filterStreamByType(stream, "loaded")
+      .take(1)
+      .share();
 
     const stateChanges = loaded.mapTo(PLAYER_LOADED)
-      .concat(combineLatest(this.playing, stalled, calcPlayerState))
+      .concat(combineLatest(this.playing, stalled, inferPlayerState))
       .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 
     const playChanges = on(videoElement, ["play", "pause"]);
     const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
 
-    const subs = this.subscriptions = new Subscription();
-    subs.add(playChanges.subscribe(this._playPauseNext$, noop));
-    subs.add(textTracksChanges.subscribe(this._textTrackChanges$, noop));
-    subs.add(stateChanges.subscribe(this._setPlayerState$, noop));
-    subs.add(timings.subscribe(this._triggerTimeChange$, noop));
-    subs.add(stream.subscribe(
-      this._streamNext$,
-      this._streamFatalError$,
-      this._streamComplete$
-    ));
-    subs.add(errorStream.subscribe(this._streamError$));
-    subs.add(stream.connect());
+    let streamDisposable;
+    let unsubscribed = false;
 
-    // _unsubscribe may have been called synchronously on early disposable
-    if (!this.subscriptions) {
-      subs.unsubscribe();
-    } else {
-      this._triggerTimeChange();
+    this._clearLoaded$.take(1).subscribe(() => {
+      unsubscribed = true;
+      if (streamDisposable) {
+        streamDisposable.unsubscribe();
+      }
+    });
+
+    playChanges
+      .takeUntil(this._clearLoaded$)
+      .subscribe(x => this._playPauseNext(x), () => {});
+
+    textTracksChanges
+      .takeUntil(this._clearLoaded$)
+      .subscribe(x => this._textTrackChanges(x), () => {});
+
+    stateChanges
+      .takeUntil(this._clearLoaded$)
+      .subscribe(x => this._setPlayerState(x), () => {});
+
+    timings
+      .takeUntil(this._clearLoaded$)
+      .subscribe(x => this._triggerTimeChange(x), () => {});
+
+    stream
+      .takeUntil(this._clearLoaded$)
+      .subscribe(
+        x => this._onStreamNext(x),
+        err => this._onStreamError(err),
+        () => this._onStreamComplete()
+      );
+
+    errorStream
+      .takeUntil(this._clearLoaded$)
+      .subscribe(
+        x => this._onErrorStreamNext(x)
+      );
+
+    // ugly but needed in case the user stops the video on one of the events
+    // declared here
+    if (!unsubscribed) {
+      streamDisposable = stream.connect();
+      if (!unsubscribed) {
+        this._triggerTimeChange();
+      }
     }
-
     return loaded;
   }
 
@@ -627,17 +611,20 @@ class Player extends EventEmitter {
    * @private
    * @param {Object} streamInfos
    */
-  _streamNext(streamInfos) {
+  _onStreamNext(streamInfos) {
     const { type, value } = streamInfos;
 
-    if (type == "buffer") {
-      this._bufferNext(value);
-    }
-    if (type == "manifest") {
-      this._manifestNext(value);
-    }
-    if (type == "pipeline") {
-      // TODO @deprecated
+    switch (type) {
+    case "buffer":
+      this._onBufferNext(value);
+      break;
+    case "manifest":
+      this._onManifestNext(value);
+      break;
+    case "manifestUpdate":
+      this._onManifestUpdateNext(value);
+      break;
+    case "pipeline":
       this.trigger("progress", value.segment);
       const { bufferType, parsed } = value;
       if (bufferType === "image") {
@@ -667,7 +654,7 @@ class Player extends EventEmitter {
    * @private
    * @param {Object} streamInfos
    */
-  _streamError(error) {
+  _onErrorStreamNext(error) {
     this.trigger("warning", error);
 
     // stream could be unset following the previous triggers
@@ -682,7 +669,7 @@ class Player extends EventEmitter {
    * @private
    * @param {Object} streamInfos
    */
-  _streamFatalError(error) {
+  _onStreamError(error) {
     this._resetStates();
     this.error = error;
     this._setPlayerState(PLAYER_STOPPED);
@@ -701,7 +688,7 @@ class Player extends EventEmitter {
    * @private
    * @param {Object} streamInfos
    */
-  _streamComplete() {
+  _onStreamComplete() {
     this._resetStates();
     this._setPlayerState(PLAYER_ENDED);
     this._unsubscribe();
@@ -713,14 +700,56 @@ class Player extends EventEmitter {
     }
   }
 
+  _addLanguageSubscriptions() {
+    assert(this._languageManager, "no languageManager received");
+
+    // listen for audio track change
+    this._languageManager.audioAdaptation$
+      .map(() => this._languageManager.getCurrentAudioTrack())
+      .takeUntil(this._clearLoaded$)
+      .subscribe((track) => {
+        this._lastAudioTrack = track;
+        this.trigger("languageChange", track.language); // deprecated
+        this.trigger("audioTrackChange", track);
+      });
+
+    // listen for text track change
+    this._languageManager.textAdaptation$
+      .map(() => this._languageManager.getCurrentTextTrack())
+      .takeUntil(this._clearLoaded$)
+      .subscribe(track => {
+        this._lastTextTrack = track;
+        this.trigger("subtitleChange", track && track.language); // deprecated
+        this.trigger("textTrackChange", track);
+      });
+  }
+
   /**
-   * Called each time a manifest is downloaded.
+   * Called when the manifest is first downloaded.
    * @private
-   * @param {Object} manifest
+   * @param {Object} value
+   * @param {Manifest} value.manifest
+   * @param {LanguageManager} value.languageManager
    */
-  _manifestNext(manifest) {
-    this._manifest = manifest;
-    this.trigger("manifestChange", manifest);
+  _onManifestNext(value) {
+    if (__DEV__) {
+      assert(value && value.manifest, "no manifest received");
+      assert(value.languageManager, "no languageManager received");
+    }
+
+    this._manifest = value.manifest;
+    this._languageManager = value.languageManager;
+    this.trigger("manifestChange", value.manifest);
+    this._addLanguageSubscriptions();
+  }
+
+  _onManifestUpdateNext(value) {
+    if (__DEV__) {
+      assert(value && value.manifest, "no manifest received");
+    }
+
+    this._manifest = value.manifest;
+    this.trigger("manifestUpdate", value.manifest);
   }
 
   /**
@@ -731,34 +760,19 @@ class Player extends EventEmitter {
    * @param {Object} obj.adaptation
    * @param {Object} obj.representation
    */
-  _bufferNext({ bufferType, adaptation, representation }) {
+  _onBufferNext({ bufferType, adaptation, representation }) {
     this.reps[bufferType] = representation;
     this.adas[bufferType] = adaptation;
 
-    if (bufferType == "text") {
-      const track = adaptation && adaptation.language ? {
-        language: adaptation.language,
-        closedCaption: !!adaptation.isClosedCaption,
-        id: adaptation.id,
-      } : null;
-      this._recordState("subtitle", track && track.language); // deprecated
-      this._recordState("textTrack", track);
-    }
-
     if (bufferType == "video") {
-      this._recordState("videoBitrate", representation && representation.bitrate || -1);
+      this._recordState("videoBitrate",
+        representation && representation.bitrate || -1);
 
     }
 
     if (bufferType == "audio") {
-      const track = {
-        language: adaptation && adaptation.language || "",
-        audioDescription: !!(adaptation && adaptation.isAudioDescription),
-        id: adaptation.id,
-      };
-      this._recordState("language", track.language); // deprecated
-      this._recordState("audioTrack", track);
-      this._recordState("audioBitrate", representation && representation.bitrate || -1);
+      this._recordState("audioBitrate",
+        representation && representation.bitrate || -1);
     }
   }
 
@@ -1066,8 +1080,8 @@ class Player extends EventEmitter {
       "getAvailableLanguages is deprecated and won't be available in the next major version." +
       " Use getAvailableAudioTracks instead."
     );
-    return this._manifest &&
-      getAudioTracks(this._manifest).map(l => l.language)
+    return this._languageManager &&
+      this._languageManager.getAvailableAudioTracks().map(l => l.language)
       || [];
   }
 
@@ -1080,8 +1094,8 @@ class Player extends EventEmitter {
       "getAvailableSubtitles is deprecated and won't be available in the next major version." +
       " Use getAvailableTextTracks instead."
     );
-    return this._manifest &&
-      getTextTracks(this._manifest).map(s =>  s.language)
+    return this._languageManager &&
+      this._languageManager.getAvailableTextTracks().map(s =>  s.language)
       || [];
   }
 
@@ -1095,7 +1109,14 @@ class Player extends EventEmitter {
       "getLanguage is deprecated and won't be available in the next major version." +
       " Use getAudioTrack instead."
     );
-    return this.evts.language;
+
+    if (!this._languageManager) {
+      return undefined;
+    }
+    const currentTrack = this._languageManager.getCurrentAudioTrack();
+
+    return currentTrack ?
+      currentTrack.language : null;
   }
 
   /**
@@ -1108,7 +1129,13 @@ class Player extends EventEmitter {
       "getSubtitle is deprecated and won't be available in the next major version." +
       " Use getTextTrack instead."
     );
-    return this.evts.subtitle;
+
+    if (!this._languageManager) {
+      return undefined;
+    }
+
+    const currentTrack = this._languageManager.getCurrentTextTrack();
+    return currentTrack && currentTrack.language;
   }
 
   /**
@@ -1391,10 +1418,14 @@ class Player extends EventEmitter {
       "setLanguage is deprecated and won't be available in the next major version." +
       " Use setAudioTrack instead."
     );
-    assertManifest(this);
-    const track = normalizeAudioTrack(arg);
-    assert(this.isLanguageAvailable(track), "player: unknown language");
-    this.adaptive.setAudioTrack(track);
+    assert(this._languageManager, "No compatible content launched.");
+
+    try {
+      this._languageManager.setAudioTrackLegacy(arg);
+    }
+    catch (e) {
+      throw new Error("player: unknown language");
+    }
   }
 
   /**
@@ -1407,16 +1438,19 @@ class Player extends EventEmitter {
       "setSubtitle is deprecated and won't be available in the next major version." +
       " Use setTextTrack instead."
     );
-    assertManifest(this);
-    if (arg == null) { // deactivate subtitles
-      this.adaptive.setTextTrack(null);
-      this._recordState("subtitle", null);
+    assert(this._languageManager, "No compatible content launched.");
+
+    if (arg == null) {
+      this._languageManager.disableTextTrack();
       return;
     }
 
-    const track = normalizeTextTrack(arg);
-    assert(this.isSubtitleAvailable(track), "player: unknown subtitle");
-    this.adaptive.setTextTrack(track);
+    try {
+      this._languageManager.setTextTrackLegacy(arg);
+    }
+    catch (e) {
+      throw new Error("player: unknown subtitle");
+    }
   }
 
   /**
@@ -1601,36 +1635,20 @@ class Player extends EventEmitter {
    * @returns {Array.<Object>|null}
    */
   getAvailableAudioTracks() {
-    const currentAudioTrack = this.getAudioTrack();
-
-    if (!this._manifest) {
+    if (!this._languageManager) {
       return null;
     }
-
-    return getAudioTracks(this._manifest)
-      .map(track =>
-        objectAssign({}, track, {
-          active: currentAudioTrack.id === track.id,
-        })
-      );
+    return this._languageManager.getAvailableAudioTracks();
   }
 
   /**
    * @returns {Array.<Object>|null}
    */
   getAvailableTextTracks() {
-    const currentTextTrack = this.getTextTrack();
-
-    if (!this._manifest) {
+    if (!this._languageManager) {
       return null;
     }
-
-    return getTextTracks(this._manifest)
-      .map(track =>
-        objectAssign({}, track, {
-          active: !!currentTextTrack && currentTextTrack.id === track.id,
-        })
-      );
+    return this._languageManager.getAvailableTextTracks();
   }
 
   /**
@@ -1638,7 +1656,10 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getAudioTrack() {
-    return this.evts.audioTrack;
+    if (!this._languageManager) {
+      return undefined;
+    }
+    return this._languageManager.getCurrentAudioTrack();
   }
 
   /**
@@ -1646,7 +1667,10 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getTextTrack() {
-    return this.evts.textTrack;
+    if (!this._languageManager) {
+      return undefined;
+    }
+    return this._languageManager.getCurrentTextTrack();
   }
 
   /**
@@ -1654,10 +1678,13 @@ class Player extends EventEmitter {
    * @param {string} audioId
    */
   setAudioTrack(audioId) {
-    const track = arrayFind(this.getAvailableAudioTracks(),
-      ({ id }) => id === audioId);
-    assert(track, "player: unknown audio track");
-    this.adaptive.setAudioTrack(track);
+    assert(this._languageManager, "No compatible content launched.");
+    try {
+      this._languageManager.setAudioTrack(audioId);
+    }
+    catch (e) {
+      throw new Error("player: unknown audio track");
+    }
   }
 
   /**
@@ -1665,16 +1692,20 @@ class Player extends EventEmitter {
    * @param {string} sub
    */
   setTextTrack(textId) {
-    const track = arrayFind(this.getAvailableTextTracks(),
-      ({ id }) => id === textId);
-    assert(track, "player: unknown text track");
-    this.adaptive.setTextTrack(track);
+    assert(this._languageManager, "No compatible content launched.");
+    try {
+      this._languageManager.setTextTrack(textId);
+    }
+    catch (e) {
+      throw new Error("player: unknown text track");
+    }
   }
 
   disableTextTrack() {
-    this.adaptive.setTextTrack(null);
-    this._recordState("subtitle", null);
-    return;
+    if (!this._languageManager) {
+      return undefined;
+    }
+    return this._languageManager.disableTextTrack();
   }
 
   getImageTrackData() {

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import "rxjs/add/observable/combineLatest";
 import "rxjs/add/observable/empty";
 import "rxjs/add/observable/merge";
+import "rxjs/add/observable/never";
 import "rxjs/add/observable/of";
 import "rxjs/add/observable/throw";
 

@@ -20,16 +20,10 @@ import { Subscription } from "rxjs/Subscription";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
 import { only } from "../utils/rx-utils";
-import { findBetterMatchIndex } from "../utils/languages";
 
 import AverageBitrate from "./average-bitrate";
 
 const DEFAULTS = {
-  defaultAudioTrack: {
-    language: "fra",
-    audioDescription: false,
-  },
-  defaultTextTrack: null,
   // default buffer size in seconds
   defaultWantedBufferAhead: 30,
   defaultMaxBufferBehind: Infinity,
@@ -116,48 +110,6 @@ function getMaxUsefulBitrateforWidth(representations, width) {
 }
 
 /**
- * Find first adaptation with the corresponding language.
- * @param {Array.<Object>} adaptations
- * @param {string} language
- * @returns {Object|null}
- */
-function findAdaptationByLang(adaptations, language) {
-  const languages = adaptations.map(a => a.language);
-
-  const index = findBetterMatchIndex(languages, language);
-  if (index >= 0) {
-    return adaptations[index];
-  }
-  return null;
-}
-
-/**
- * @param {Array.<Object>} adaptations
- * @param {string} language
- * @param {Boolean} [audioDescription=false]
- * @returns {Object|null}
- */
-function findAudioAdaptation(adaptations, language, audioDescription = false) {
-  const filteredAdaptations = adaptations.filter(adaptation =>
-    adaptation.isAudioDescription == audioDescription
-  );
-  return findAdaptationByLang(filteredAdaptations, language);
-}
-
-/**
- * @param {Array.<Object>} adaptations
- * @param {string} language
- * @param {Boolean} [closedCaption=false]
- * @returns {Object|null}
- */
-function findTextAdaptation(adaptations, language, closedCaption = false) {
-  const filteredAdaptations = adaptations.filter(adaptation =>
-    adaptation.isClosedCaption == closedCaption
-  );
-  return findAdaptationByLang(filteredAdaptations, language);
-}
-
-/**
  * Filter the given observable/array to only keep the item with the selected
  * type.
  * @param {Observable|Array.<Object>} stream
@@ -174,8 +126,6 @@ export default function(metrics, deviceEvents, options={}) {
   );
 
   const {
-    defaultAudioTrack,
-    defaultTextTrack,
     defaultWantedBufferAhead,
     defaultMaxBufferBehind,
     defaultMaxBufferAhead,
@@ -189,9 +139,6 @@ export default function(metrics, deviceEvents, options={}) {
   } = objectAssign({}, DEFAULTS, options);
 
   const { videoWidth, inBackground } = deviceEvents;
-
-  const $languages = new BehaviorSubject(defaultAudioTrack);
-  const $subtitles = new BehaviorSubject(defaultTextTrack);
 
   const $averageBitrates = {
     audio: new BehaviorSubject(initialAudioBitrate),
@@ -238,65 +185,6 @@ export default function(metrics, deviceEvents, options={}) {
     video: new BehaviorSubject(defaultMaxBufferAhead),
     text:  new BehaviorSubject(defaultMaxBufferAhead),
   };
-
-  /**
-   * Returns an Observable emitting:
-   *   - first, the current audio adaption
-   *   - the new one each time it changes
-   * @param {Array.<Object>} adaptations - The available audio adaptations
-   * objects.
-   * @returns {Observable}
-   */
-  function audioAdaptationChoice(adaptations) {
-    return $languages.distinctUntilChanged()
-      .map(({ language, audioDescription }) =>
-        findAudioAdaptation(
-          adaptations,
-          language,
-          audioDescription
-        ) || adaptations[0]
-      );
-  }
-
-  /**
-   * Returns an Observable emitting:
-   *   - first, the current text adaption
-   *   - the new one each time it changes
-   * @param {Array.<Object>} adaptations - The available text adaptations
-   * objects.
-   * @returns {Observable}
-   */
-  function textAdaptationChoice(adaptations) {
-    return $subtitles.distinctUntilChanged()
-      .map(arg =>
-        arg ? findTextAdaptation(
-          adaptations,
-          arg.language,
-          arg.closedCaption
-        ) : null
-      );
-  }
-
-  /**
-   * Get the current and new adaptations each time it changes for all
-   * types.
-   * Mostly useful for audio languages and text subtitles to know which one
-   * to choose first and when it changes.
-   * @param {string} type - The adaptation type
-   * @param {Array.<Object>} adaptations
-   * @returns {Observable}
-   */
-  function getAdaptationsChoice(type, adaptations) {
-    if (type == "audio") {
-      return audioAdaptationChoice(adaptations);
-    }
-
-    if (type == "text") {
-      return textAdaptationChoice(adaptations);
-    }
-
-    return only(adaptations[0]);
-  }
 
   /**
    * Returns an object containing two observables:
@@ -385,11 +273,6 @@ export default function(metrics, deviceEvents, options={}) {
   }
 
   return {
-    setAudioTrack(track) { $languages.next(track); },
-    setTextTrack(track)  { $subtitles.next(track); },
-    getAudioTrack()      { return $languages.getValue(); },
-    getTextTrack()       { return $subtitles.getValue(); },
-
     getAverageBitrates() { return $averageBitrates; },
 
     getAudioMaxBitrate() { return $maxBitrates.audio.getValue(); },
@@ -459,7 +342,6 @@ export default function(metrics, deviceEvents, options={}) {
     },
 
     getBufferAdapters,
-    getAdaptationsChoice,
 
     unsubscribe() {
       if (conns) {
