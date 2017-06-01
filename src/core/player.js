@@ -16,6 +16,8 @@
 
 import log from "../utils/log";
 import { Subscription } from "rxjs/Subscription";
+import warnOnce from "../utils/warnOnce.js";
+
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
@@ -172,7 +174,7 @@ class Player extends EventEmitter {
    * @returns {Object}
    */
   static getErrorTypes() {
-    console.warn("getErrorTypes is deprecated. Use the ErrorTypes property instead");
+    warnOnce("getErrorTypes is deprecated. Use the ErrorTypes property instead");
     return ErrorTypes;
   }
 
@@ -188,7 +190,7 @@ class Player extends EventEmitter {
    * @returns {Object}
    */
   static getErrorCodes() {
-    console.warn("getErrorCodes is deprecated. Use the ErrorCodes property instead");
+    warnOnce("getErrorCodes is deprecated. Use the ErrorCodes property instead");
     return ErrorCodes;
   }
 
@@ -233,19 +235,19 @@ class Player extends EventEmitter {
     let _defaultTextTrack = defaultTextTrack;
 
     if (initVideoBitrate != null && initialVideoBitrate == null) {
-      console.warn("initVideoBitrate is deprecated. Use initialVideoBitrate instead");
+      warnOnce("initVideoBitrate is deprecated. Use initialVideoBitrate instead");
       _initialVideoBitrate = initVideoBitrate;
     }
     if (initAudioBitrate != null && initialAudioBitrate == null) {
-      console.warn("initAudioBitrate is deprecated. Use initialAudioBitrate instead");
+      warnOnce("initAudioBitrate is deprecated. Use initialAudioBitrate instead");
       _initialAudioBitrate = initAudioBitrate;
     }
     if (defaultLanguage != null && defaultAudioTrack == null) {
-      console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
+      warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
       _defaultAudioTrack = defaultLanguage;
     }
     if (defaultSubtitle != null && defaultTextTrack == null) {
-      console.warn("defaultSubtitle is deprecated. Use defaultTextTrack instead");
+      warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
       _defaultTextTrack = defaultSubtitle;
     }
 
@@ -443,22 +445,22 @@ class Player extends EventEmitter {
     let _defaultTextTrack = defaultTextTrack;
 
     if (defaultLanguage != null && defaultAudioTrack == null) {
-      console.warn("defaultLanguage is deprecated. Use defaultAudioTrack instead");
+      warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
       _defaultAudioTrack = defaultLanguage;
     }
     if (defaultSubtitle != null && defaultTextTrack == null) {
-      console.warn("defaultSubtitle is deprecated. Use defaultTextTrack instead");
+      warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
       _defaultTextTrack = defaultSubtitle;
     }
 
     if (subtitles !== void 0 && supplementaryTextTracks === void 0) {
-      console.warn(
+      warnOnce(
         "the subtitles option is deprecated. Use supplementaryTextTracks instead"
       );
       supplementaryTextTracks = subtitles;
     }
     if (images !== void 0 && supplementaryImageTracks === void 0) {
-      console.warn(
+      warnOnce(
         "the images option is deprecated. Use supplementaryImageTracks instead"
       );
       supplementaryImageTracks = images;
@@ -477,7 +479,7 @@ class Player extends EventEmitter {
     // manifest url depending on the key system
     assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
     if (manifests) {
-      console.warn(
+      warnOnce(
         "the manifests options is deprecated, use url instead"
       );
       const firstManifest = manifests[0];
@@ -928,10 +930,10 @@ class Player extends EventEmitter {
    * @returns {Number|Date}
    */
   getCurrentTime() {
-    // console.warn(
-    //   "getCurrentTime is deprecated and won't be available in the next major version." +
-    //   " Use either getWallClockTime or getPosition instead."
-    // );
+    warnOnce(
+      "getCurrentTime is deprecated and won't be available in the next major version." +
+      " Use either getWallClockTime or getPosition instead."
+    );
     if (!this._manifest) {
       return 0;
     }
@@ -1022,7 +1024,7 @@ class Player extends EventEmitter {
    * @returns {Array.<string}
    */
   getAvailableLanguages() {
-    console.warn(
+    warnOnce(
       "getAvailableLanguages is deprecated and won't be available in the next major version." +
       " Use getAvailableAudioTracks instead."
     );
@@ -1036,7 +1038,7 @@ class Player extends EventEmitter {
    * @returns {Array.<string}
    */
   getAvailableSubtitles() {
-    console.warn(
+    warnOnce(
       "getAvailableSubtitles is deprecated and won't be available in the next major version." +
       " Use getAvailableTextTracks instead."
     );
@@ -1051,7 +1053,7 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getLanguage() {
-    console.warn(
+    warnOnce(
       "getLanguage is deprecated and won't be available in the next major version." +
       " Use getAudioTrack instead."
     );
@@ -1064,7 +1066,7 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getSubtitle() {
-    console.warn(
+    warnOnce(
       "getSubtitle is deprecated and won't be available in the next major version." +
       " Use getTextTrack instead."
     );
@@ -1107,7 +1109,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoMaxBitrate() {
-    console.warn("getVideoMaxBitrate is deprecated. Use getMaxVideoBitrate instead");
+    warnOnce("getVideoMaxBitrate is deprecated. Use getMaxVideoBitrate instead");
     return this.getMaxVideoBitrate();
   }
 
@@ -1125,7 +1127,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAudioMaxBitrate() {
-    console.warn("getAudioMaxBitrate is deprecated. Use getMaxAudioBitrate instead");
+    warnOnce("getAudioMaxBitrate is deprecated. Use getMaxAudioBitrate instead");
     return this.getMaxAudioBitrate();
   }
 
@@ -1250,7 +1252,7 @@ class Player extends EventEmitter {
    */
   setFullscreen(toggle = true) {
     if (toggle === false) {
-      console.warn("setFullscreen(false) is deprecated. Use exitFullscreen instead");
+      warnOnce("setFullscreen(false) is deprecated. Use exitFullscreen instead");
       exitFullscreen();
     } else {
       requestFullscreen(this.video);
@@ -1299,9 +1301,9 @@ class Player extends EventEmitter {
    * @returns {Boolean}
    */
   isLanguageAvailable(arg) {
-    // console.warn(
-    //   "isLanguageAvailable is deprecated and won't be available in the next major version."
-    // );
+    warnOnce(
+      "isLanguageAvailable is deprecated and won't be available in the next major version."
+    );
     const track = normalizeAudioTrack(arg);
 
     if (!track) {
@@ -1326,9 +1328,9 @@ class Player extends EventEmitter {
    * @returns {Boolean}
    */
   isSubtitleAvailable(arg) {
-    // console.warn(
-    //   "isSubtitleAvailable is deprecated and won't be available in the next major version."
-    // );
+    warnOnce(
+      "isSubtitleAvailable is deprecated and won't be available in the next major version."
+    );
     const track = normalizeTextTrack(arg);
 
     if (!track) {
@@ -1351,7 +1353,7 @@ class Player extends EventEmitter {
    * @param {string|Object} lng
    */
   setLanguage(arg) {
-    console.warn(
+    warnOnce(
       "setLanguage is deprecated and won't be available in the next major version." +
       " Use setAudioTrack instead."
     );
@@ -1367,7 +1369,7 @@ class Player extends EventEmitter {
    * @param {string|Object} sub
    */
   setSubtitle(arg) {
-    console.warn(
+    warnOnce(
       "setSubtitle is deprecated and won't be available in the next major version." +
       " Use setTextTrack instead."
     );
@@ -1415,7 +1417,7 @@ class Player extends EventEmitter {
    * @param {Number} btr
    */
   setVideoMaxBitrate(btr) {
-    console.warn("setVideoMaxBitrate is deprecated. Use setMaxVideoBitrate instead");
+    warnOnce("setVideoMaxBitrate is deprecated. Use setMaxVideoBitrate instead");
     return this.setMaxVideoBitrate(btr);
   }
 
@@ -1433,7 +1435,7 @@ class Player extends EventEmitter {
    * @param {Number} btr
    */
   setAudioMaxBitrate(btr) {
-    console.warn("setAudioMaxBitrate is deprecated. Use setMaxAudioBitrate instead");
+    warnOnce("setAudioMaxBitrate is deprecated. Use setMaxAudioBitrate instead");
     return this.setMaxAudioBitrate(btr);
   }
 
