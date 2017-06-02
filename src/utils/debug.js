@@ -44,7 +44,7 @@ function getDebug(player) {
   avr.audio.take(1).subscribe((a) => avrAudio = a|0);
 
   return {
-    manifest: player.man,
+    manifest: player._manifest,
     version: player.version,
     timeFragment: player.frag,
     currentTime: player.getCurrentTime(),
@@ -84,14 +84,14 @@ function update(player, videoElement) {
 
     if (manifest && video && audio) {
       secureHTML += [
-        `Container: ${escape(manifest.transportType)}`,
+        `Container: ${escape(manifest.transport)}`,
         `Live: ${escape(""+manifest.isLive)}`,
      // `Playing bitrate: ${video.representation.bitrate}/${audio.representation.bitrate}`,
         `Downloading bitrate (Kbit/s):
           ${bpsToKbps(video.representation.bitrate)}/${bpsToKbps(audio.representation.bitrate)}`,
         `Estimated bandwidth (Kbit/s):
           ${bpsToKbps(video.avrBitrate)}/${bpsToKbps(audio.avrBitrate)}`,
-        `Location: ${manifest.locations[0]}`,
+        `Location: ${manifest.uris[0]}`,
       ].join("<br>");
     }
 

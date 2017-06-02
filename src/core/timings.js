@@ -323,7 +323,7 @@ function getMinimumBufferPosition(manifest) {
 
 function getMaximumBufferPosition(manifest) {
   if (!manifest.isLive) {
-    return manifest.duration;
+    return manifest.getDuration();
   }
 
   const {
@@ -339,7 +339,7 @@ function getBufferLimits(manifest) {
   const BUFFER_DEPTH_SECURITY = 5;
 
   if (!manifest.isLive) {
-    return [0, manifest.duration];
+    return [0, manifest.getDuration()];
   }
 
   const {
