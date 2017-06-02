@@ -18,6 +18,7 @@
 import arrayFind from "array-find";
 import log from "../utils/log";
 import warnOnce from "../utils/warnOnce.js";
+import config from "../../config.js";
 
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
@@ -30,7 +31,6 @@ import {
   normalizeTextTrack,
 } from "../../utils/languages";
 import EventEmitter from "../../utils/eventemitter";
-import debugPane from "../../utils/debug";
 import assert from "../../utils/assert";
 
 import {
@@ -131,8 +131,8 @@ class Player extends EventEmitter {
       initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
-      limitVideoWidth = true,
-      throttleWhenHidden = true,
+      limitVideoWidth,
+      throttleWhenHidden,
     } = options;
 
     super();
@@ -211,6 +211,15 @@ class Player extends EventEmitter {
       throttleWhenHidden,
     });
 
+    this._priv.wantedBufferAhead$ =
+      new BehaviorSubject(config.DEFAULT_WANTED_BUFFER_AHEAD);
+
+    this._priv.maxBufferAhead$ =
+      new BehaviorSubject(config.DEFAULT_MAX_BUFFER_AHEAD);
+
+    this._priv.maxBufferBehind$ =
+      new BehaviorSubject(config.DEFAULT_MAX_BUFFER_BEHIND);
+
     this._priv.lastAudioTrack = undefined;
     this._priv.lastTextTrack = undefined;
 
@@ -256,6 +265,16 @@ class Player extends EventEmitter {
     _priv.stream$ = null; // @deprecated
     _priv.errorStream$ = null;
     _priv.createPipelines = null;
+
+    _priv.wantedBufferAhead$.complete();
+    _priv.wantedBufferAhead$ = null;
+
+    _priv.maxBufferAhead$.complete();
+    _priv.maxBufferAhead$ = null;
+
+    _priv.maxBufferBehind$.complete();
+    _priv.maxBufferBehind$ = null;
+
     this.videoElement = null;
   }
 
@@ -295,6 +314,9 @@ class Player extends EventEmitter {
       errorStream$: errorStream,
       createPipelines,
       clearLoaded$,
+      wantedBufferAhead$,
+      maxBufferAhead$,
+      maxBufferBehind$,
     } = this._priv;
 
     const pipelines = createPipelines(transport, {
@@ -305,7 +327,10 @@ class Player extends EventEmitter {
                               // TODO Better adaptive strategy
     });
 
-    const timings = createTimingsSampler(videoElement, { requiresMediaSource: pipelines.requiresMediaSource() });
+    const timings = createTimingsSampler(
+      videoElement,
+      { requiresMediaSource: pipelines.requiresMediaSource() }
+    );
     const stream = Stream({
       url,
       errorStream,
@@ -322,6 +347,9 @@ class Player extends EventEmitter {
       startAt,
       defaultAudioTrack,
       defaultTextTrack,
+      wantedBufferAhead$,
+      maxBufferAhead$,
+      maxBufferBehind$,
     })
       .takeUntil(clearLoaded$)
       .publish();
@@ -749,22 +777,6 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Returns maximum buffer size wanted for video segments, in seconds.
-   * @returns {Number}
-   */
-  getVideoBufferSize() {
-    return this._priv.abrManager.getVideoBufferSize();
-  }
-
-  /**
-   * Returns maximum buffer size wanted for audio segments, in seconds.
-   * @returns {Number}
-   */
-  getAudioBufferSize() {
-    return this._priv.abrManager.getAudioBufferSize();
-  }
-
-  /**
    * Get last calculated average bitrate, from an exponential moving average
    * formula.
    * @returns {Number}
@@ -1064,7 +1076,7 @@ class Player extends EventEmitter {
    * @param {Number} depthInSeconds
    */
   setMaxBufferBehind(depthInSeconds) {
-    this.adaptive.setMaxBufferBehind(depthInSeconds);
+    this._priv.maxBufferBehind$.next(depthInSeconds);
   }
 
   /**
@@ -1073,7 +1085,7 @@ class Player extends EventEmitter {
    * @param {Number} depthInSeconds
    */
   setMaxBufferAhead(depthInSeconds) {
-    this.adaptive.setMaxBufferAhead(depthInSeconds);
+    this._priv.maxBufferAhead$.next(depthInSeconds);
   }
 
   /**
@@ -1082,7 +1094,7 @@ class Player extends EventEmitter {
    * @param {Number} sizeInSeconds
    */
   setWantedBufferAhead(sizeInSeconds) {
-    this.adaptive.setWantedBufferAhead(sizeInSeconds);
+    this._priv.wantedBufferAhead$.next(sizeInSeconds);
   }
 
   /**
@@ -1090,7 +1102,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxBufferBehind() {
-    return this.adaptive.getMaxBufferBehind();
+    return this._priv.maxBufferBehind$.getValue();
   }
 
   /**
@@ -1098,7 +1110,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxBufferAhead() {
-    return this.adaptive.getMaxBufferAhead();
+    return this._priv.maxBufferAhead$.getValue();
   }
 
   /**
@@ -1106,23 +1118,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getWantedBufferAhead() {
-    return this.adaptive.getWantedBufferAhead();
-  }
-
-  /**
-   * Update the maximum buffer size for the video segments, in second
-   * @param {Number} size
-   */
-  setVideoBufferSize(size) {
-    this._priv.abrManager.setVideoBufferSize(size);
-  }
-
-  /**
-   * Update the maximum buffer size for the audio segments, in second
-   * @param {Number} size
-   */
-  setAudioBufferSize(size) {
-    this._priv.abrManager.setAudioBufferSize(size);
+    return this._priv.wantedBufferAhead$.getValue();
   }
 
   /**
@@ -1130,39 +1126,6 @@ class Player extends EventEmitter {
    */
   asObservable() {
     return this._priv.stream$;
-  }
-
-  /**
-   * Returns multiple debugs informations.
-   * @deprecated
-   * @returns {Object}
-   */
-  getDebug() {
-    return debugPane.getDebug(this);
-  }
-
-  /**
-   * Show debug overlay on the video element.
-   * @deprecated
-   */
-  showDebug() {
-    debugPane.showDebug(this, this.videoElement);
-  }
-
-  /**
-   * Hide debug overlay from the video element.
-   * @deprecated
-   */
-  hideDebug() {
-    debugPane.hideDebug();
-  }
-
-  /**
-   * Show/Hide debug overlay from the video element.
-   * @deprecated
-   */
-  toggleDebug() {
-    debugPane.toggleDebug(this,this.videoElement);
   }
 
   /**

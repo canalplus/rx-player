@@ -15,7 +15,6 @@
  */
 
 import arrayFind from "array-find";
-import objectAssign from "object-assign";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 
 import {
@@ -24,13 +23,7 @@ import {
   normalizeTextTrack,
 } from "../utils/languages";
 
-const DEFAULTS = {
-  defaultAudioTrack: {
-    language: "fra",
-    audioDescription: false,
-  },
-  defaultTextTrack: null,
-};
+import config from "../config.js";
 
 const findTextAdaptation = (adaptations, trackConfig) => {
   if (!trackConfig) {
@@ -119,10 +112,11 @@ class LanguageManager {
       options[key] === undefined && delete options[key]
     );
 
-    const {
-      defaultAudioTrack,
-      defaultTextTrack,
-    } = objectAssign({}, DEFAULTS, options);
+    const defaultAudioTrack = options.defaultAudioTrack === undefined ?
+      config.DEFAULT_AUDIO_TRACK : options.defaultAudioTrack;
+
+    const defaultTextTrack = options.defaultTextTrack === undefined ?
+      config.DEFAULT_TEXT_TRACK : options.defaultTextTrack;
 
     const normalizedAudioTrack = normalizeAudioTrack(defaultAudioTrack);
     const normalizedTextTrack = normalizeTextTrack(defaultTextTrack);

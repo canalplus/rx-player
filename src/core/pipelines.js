@@ -16,6 +16,7 @@
 
 import objectAssign from "object-assign";
 
+import config from "../config.js";
 import { Subject } from "rxjs/Subject";
 import { asap } from "rxjs/scheduler/asap";
 import { Observable } from "rxjs/Observable";
@@ -29,12 +30,8 @@ import {
   isKnownError,
 } from "../errors";
 
-/**
- * The default number of times a pipeline request will be re-performed when
- * on error.
- * @type Number
- */
-const DEFAULT_MAXIMUM_RETRY_ON_ERROR = 4;
+const DEFAULT_MAXIMUM_RETRY_ON_ERROR =
+  config.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
 
 /**
  * Generate a new error from the infos given.

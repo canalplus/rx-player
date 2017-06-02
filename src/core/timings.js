@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
+import config from "../config.js";
 import { Observable } from "rxjs/Observable";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { BufferedRanges } from "./ranges";
 
-// time changes interval in milliseconds
-const SAMPLING_INTERVAL_MEDIASOURCE = 1000;
-const SAMPLING_INTERVAL_NO_MEDIASOURCE = 500;
+const {
+  SAMPLING_INTERVAL_MEDIASOURCE,
+  SAMPLING_INTERVAL_NO_MEDIASOURCE,
+} = config;
 
 // stall gap in seconds
 const STALL_GAP = 0.5;

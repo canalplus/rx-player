@@ -1,0 +1,137 @@
+export default {
+  /**
+   * Default audio track configuration, if none is set by the user.
+   * Here in french for legacy reasons.
+   */
+  DEFAULT_AUDIO_TRACK: {
+    language: "fra",
+    audioDescription: false,
+  },
+
+  /**
+   * Default text track configuration, if none is set by the user.
+   */
+  DEFAULT_TEXT_TRACK: null,
+
+  /*
+   * Default buffer goal in seconds
+   */
+  DEFAULT_WANTED_BUFFER_AHEAD: 30,
+
+  /*
+   * Default max buffer size ahead of the current position in seconds.
+   */
+  DEFAULT_MAX_BUFFER_AHEAD: Infinity,
+
+  /*
+   * Default max buffer size ahead of the current position in seconds.
+   */
+  DEFAULT_MAX_BUFFER_BEHIND: Infinity,
+
+  DEFAULT_INITIAL_BITRATES: {
+    audio: 0,
+    video: 0,
+    other: 0,
+  },
+
+  DEFAULT_MAX_BITRATES: {
+    audio: Infinity,
+    video: Infinity,
+    other: Infinity,
+  },
+
+  /**
+   * buffer threshold ratio used as a lower bound
+   * margin to find the suitable representation
+   */
+  DEFAULT_ADAPTIVE_BUFFER_THRESHOLD: 0.3,
+
+  /**
+   * Delay after which, if the page is hidden, the user is considered inactive
+   * on the current video. Allow to enforce specific optimizations when the
+   * page is not shown.
+   * @see DEFAULT_THROTTLE_WHEN_HIDDEN
+   */
+  INACTIVITY_DELAY: 60 * 1000,
+
+  /**
+   * If true, if the player is in a "hidden" state for a delay specified by the
+   * INACTIVITY DELAY config property, we throttle automatically to the video
+   * representation with the lowest bitrate.
+   */
+  DEFAULT_THROTTLE_WHEN_HIDDEN: true,
+
+  /**
+   * If true, the video representations you can switch to in adaptive mode
+   * are limited by the video element's width.
+   */
+  DEFAULT_LIMIT_VIDEO_WIDTH: true,
+
+  /**
+   * Default initial live gap considered if no presentation delay has been
+   * suggested, in seconds.
+   *
+   * TODO this is never used, as every transport techno has a default
+   * suggested presentation delay.
+   */
+  DEFAULT_LIVE_GAP: 15,
+
+  /**
+   * Default value for a manifest's suggested presentation delay if not
+   * specified in the manifest.
+   *
+   * TODO this should not be in a manifest as it does not reflect what is
+   * given server-side.
+   */
+  DEFAULT_SUGGESTED_PRESENTATION_DELAY: {
+    SMOOTH: 20,
+    DASH: 15,
+  },
+
+  /**
+   * Maximum time, in seconds, the player should automatically skip when stalled
+   * because of a discontinuity in the downloaded range.
+   */
+  DISCONTINUITY_THRESHOLD: 1,
+
+  /**
+   * Time before the end of a video (in seconds) at which the player should
+   * automatically stop.
+   * It happens often that the video gets stuck 100 to 300 ms before the end,
+   * especially on IE11 and Edge
+   */
+  END_OF_PLAY: 0.5,
+
+  /**
+   * Ratio used to know if an already loaded segment should be re-buffered.
+   * We re-load the given segment if the current one times that ratio is
+   * inferior to the new one.
+   */
+  BITRATE_REBUFFERING_RATIO: 1.5,
+
+  BUFFER_GC_GAPS: {
+    /**
+     * _Low_ gap (from current position) from which the buffer will be _garbage
+     * collected_ (read removed from the buffer).
+     */
+    CALM: 240,
+
+    /**
+     * _High_ gap (from current position) from which the buffer will be _garbage
+     * collected_ (read removed from the buffer) if the low one does not clean
+     * up any buffer.
+     */
+    BEEFY: 30,
+  },
+
+/**
+ * The default number of times a pipeline request will be re-performed when
+ * on error which justify a retry.
+ * @type Number
+ */
+  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: 4,
+
+  // time changes interval in milliseconds
+  SAMPLING_INTERVAL_MEDIASOURCE: 1000,
+  SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
+};

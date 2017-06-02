@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../../config.js";
 import assert from "../../../utils/assert.js";
 import { normalize as normalizeLang } from "../../../utils/languages";
 import {
@@ -166,7 +167,11 @@ const attributes = {
     { k: "minimumUpdatePeriod",        fn: parseDuration },
     { k: "minBufferTime",              fn: parseDuration },
     { k: "timeShiftBufferDepth",       fn: parseDuration },
-    { k: "suggestedPresentationDelay", fn: parseDuration },
+    {
+      k: "suggestedPresentationDelay",
+      fn: parseDuration,
+      def: config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
+    },
     { k: "maxSegmentDuration",         fn: parseDuration },
     { k: "maxSubsegmentDuration",      fn: parseDuration },
   ],

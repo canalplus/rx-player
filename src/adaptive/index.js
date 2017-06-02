@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import arrayFind from "array-find";
 import { Subscription } from "rxjs/Subscription";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
@@ -22,20 +21,7 @@ import { combineLatest } from "rxjs/observable/combineLatest";
 import { only } from "../utils/rx-utils";
 
 import AverageBitrate from "./average-bitrate";
-
-const DEFAULTS = {
-  // default buffer size in seconds
-  defaultWantedBufferAhead: 30,
-  defaultMaxBufferBehind: Infinity,
-  defaultMaxBufferAhead: Infinity,
-  // buffer threshold ratio used as a lower bound
-  // margin to find the suitable representation
-  defaultBufferThreshold: 0.3,
-  initialVideoBitrate: 0,
-  initialAudioBitrate: 0,
-  maxVideoBitrate: Infinity,
-  maxAudioBitrate: Infinity,
-};
+import config from "../config.js";
 
 /**
  * Simple find function implementation.
@@ -120,29 +106,66 @@ function filterByType(stream, selectedType) {
   return stream.filter(({ type }) => type === selectedType);
 }
 
-export default function(metrics, deviceEvents, options={}) {
-  Object.keys(options).forEach(key =>
-    options[key] === undefined && delete options[key]
-  );
+/**
+ * Parse the arguments given to adaptive and set the right defaults (as set in
+ * the config.
+ * @param {Object} options
+ * @returns {Object}
+ */
+const parseOptions = (options) => {
+  const defaultBufferThreshold = options.defaultBufferThreshold === undefined ?
+    config.DEFAULT_ADAPTIVE_BUFFER_THRESHOLD : options.defaultBufferThreshold;
 
-  const {
-    defaultWantedBufferAhead,
-    defaultMaxBufferBehind,
-    defaultMaxBufferAhead,
+  const limitVideoWidth = options.limitVideoWidth === undefined ?
+    config.DEFAULT_LIMIT_VIDEO_WIDTH : options.limitVideoWidth;
+
+  const throttleWhenHidden = options.throttleWhenHidden === undefined ?
+    config.DEFAULT_THROTTLE_WHEN_HIDDEN : options.throttleWhenHidden;
+
+  const initialBitrates = {
+    audio: options.initialAudioBitrate === undefined ?
+      config.DEFAULT_INITIAL_BITRATES.audio : options.initialAudioBitrate,
+
+    video: options.initialVideoBitrate === undefined ?
+      config.DEFAULT_INITIAL_BITRATES.video : options.initialVideoBitrate,
+
+    other: config.DEFAULT_INITIAL_BITRATES.other,
+  };
+
+  const maxBitrates = {
+    audio: options.initialAudioBitrate === undefined ?
+      config.DEFAULT_MAX_BITRATES.audio : options.initialAudioBitrate,
+
+    video: options.initialVideoBitrate === undefined ?
+      config.DEFAULT_MAX_BITRATES.video : options.initialVideoBitrate,
+
+    other: config.DEFAULT_MAX_BITRATES.other,
+  };
+
+  return {
     defaultBufferThreshold,
-    initialVideoBitrate,
-    initialAudioBitrate,
-    maxVideoBitrate,
-    maxAudioBitrate,
+    initialBitrates,
+    maxBitrates,
     limitVideoWidth,
     throttleWhenHidden,
-  } = objectAssign({}, DEFAULTS, options);
+  };
+};
+
+export default function(metrics, deviceEvents, options={}) {
+  const {
+    defaultBufferThreshold,
+    initialBitrates,
+    maxBitrates,
+    limitVideoWidth,
+    throttleWhenHidden,
+  } = parseOptions(options);
 
   const { videoWidth, inBackground } = deviceEvents;
 
   const $averageBitrates = {
-    audio: new BehaviorSubject(initialAudioBitrate),
-    video: new BehaviorSubject(initialVideoBitrate),
+    audio: new BehaviorSubject(initialBitrates.audio),
+    video: new BehaviorSubject(initialBitrates.video),
+    other: new BehaviorSubject(initialBitrates.other),
   };
 
   const averageBitratesConns = [
@@ -161,49 +184,27 @@ export default function(metrics, deviceEvents, options={}) {
   };
 
   const $maxBitrates = {
-    audio: new BehaviorSubject(maxAudioBitrate),
-    video: new BehaviorSubject(maxVideoBitrate),
-  };
-
-  // TODO add image / other?
-  const $wantedBufferAhead = {
-    audio: new BehaviorSubject(defaultWantedBufferAhead),
-    video: new BehaviorSubject(defaultWantedBufferAhead),
-    text:  new BehaviorSubject(defaultWantedBufferAhead),
-  };
-
-  // TODO add image / other?
-  const $maxBufferBehind = {
-    audio: new BehaviorSubject(defaultMaxBufferBehind),
-    video: new BehaviorSubject(defaultMaxBufferBehind),
-    text:  new BehaviorSubject(defaultMaxBufferBehind),
-  };
-
-  // TODO add image / other?
-  const $maxBufferAhead = {
-    audio: new BehaviorSubject(defaultMaxBufferAhead),
-    video: new BehaviorSubject(defaultMaxBufferAhead),
-    text:  new BehaviorSubject(defaultMaxBufferAhead),
+    audio: new BehaviorSubject(maxBitrates.audio),
+    video: new BehaviorSubject(maxBitrates.video),
+    other: new BehaviorSubject(maxBitrates.other),
   };
 
   /**
-   * Returns an object containing two observables:
-   *   - representations: the chosen best representation for the adaptation
-   *     (correlated from the user, max and average bitrates)
-   *   - bufferSizesAhead: the bufferSize chosen
    * @param {Object} adaptation
-   * @returns {Object}
+   * @returns {Observable}
    */
-  function getBufferAdapters(adaptation) {
+  function getRepresentation$(adaptation) {
     const { type, representations } = adaptation;
     const bitrates = adaptation.getAvailableBitrates();
 
     let representationsObservable;
     if (representations.length > 1) {
       const usrBitrates = $usrBitrates[type];
-      let maxBitrates = $maxBitrates[type];
+      let maxBitrates = $maxBitrates[type] || $maxBitrates["other"];
 
-      const avrBitrates = $averageBitrates[type]
+      const averageBitrate$ =
+        $averageBitrates[type] || $averageBitrates["other"];
+      const avrBitrates = averageBitrate$
         .map((avrBitrate, count) => {
           // no threshold for the first value of the average bitrate
           // stream corresponding to the selected initial video bitrate
@@ -218,7 +219,7 @@ export default function(metrics, deviceEvents, options={}) {
         })
         .distinctUntilChanged()
         .debounceTime(2000)
-        .startWith(getClosestBitrate(bitrates, $averageBitrates[type].getValue(), 0));
+        .startWith(getClosestBitrate(bitrates, averageBitrate$.getValue(), 0));
 
       if (type == "video") {
         // To compute the bitrate upper-bound for video
@@ -261,30 +262,10 @@ export default function(metrics, deviceEvents, options={}) {
       representationsObservable = only(representations[0]);
     }
 
-    return {
-      representations: representationsObservable,
-      wantedBufferAhead: $wantedBufferAhead[type] ||
-        new BehaviorSubject(defaultWantedBufferAhead),
-      maxBufferBehind: $maxBufferBehind[type] ||
-        new BehaviorSubject(defaultMaxBufferBehind),
-      maxBufferAhead: $maxBufferAhead[type] ||
-        new BehaviorSubject(defaultMaxBufferAhead),
-    };
+    return representationsObservable;
   }
 
   return {
-<<<<<<< HEAD
-    getAverageBitrates() { return $averageBitrates; },
-
-    getAudioMaxBitrate() { return $maxBitrates.audio.getValue(); },
-    getVideoMaxBitrate() { return $maxBitrates.video.getValue(); },
-    getAudioBufferSize() { return $wantedBufferAhead.audio.getValue(); },
-    getVideoBufferSize() { return $wantedBufferAhead.video.getValue(); },
-=======
-    getAudioBufferSize() { return $bufSizes.audio.getValue(); },
-    getVideoBufferSize() { return $bufSizes.video.getValue(); },
->>>>>>> api: move all private methods and properties into _priv object
-
     getAverageBitrates() { return $averageBitrates; },
     getAudioMaxBitrate() { return $maxBitrates.audio.getValue(); },
     getVideoMaxBitrate() { return $maxBitrates.video.getValue(); },
@@ -292,65 +273,7 @@ export default function(metrics, deviceEvents, options={}) {
     setVideoBitrate(x)    { $usrBitrates.video.next(def(x, Infinity)); },
     setAudioMaxBitrate(x) { $maxBitrates.audio.next(def(x, Infinity)); },
     setVideoMaxBitrate(x) { $maxBitrates.video.next(def(x, Infinity)); },
-
-    setAudioBufferSize(x) {
-      $wantedBufferAhead.audio.next(def(x, defaultWantedBufferAhead));
-    },
-
-    setVideoBufferSize(x) {
-      $wantedBufferAhead.video.next(def(x, defaultWantedBufferAhead));
-    },
-
-    setMaxBufferBehind(size) {
-      // TODO image?
-      $maxBufferBehind.audio.next(def(size, defaultMaxBufferBehind));
-      $maxBufferBehind.video.next(def(size, defaultMaxBufferBehind));
-      $maxBufferBehind.text.next(def(size, defaultMaxBufferBehind));
-    },
-
-    setMaxBufferAhead(size) {
-      // TODO image?
-      $maxBufferAhead.audio.next(def(size, defaultMaxBufferAhead));
-      $maxBufferAhead.video.next(def(size, defaultMaxBufferAhead));
-      $maxBufferAhead.text.next(def(size, defaultMaxBufferAhead));
-    },
-
-    setWantedBufferAhead(size) {
-      // TODO image?
-      $wantedBufferAhead.audio.next(def(size, defaultMaxBufferBehind));
-      $wantedBufferAhead.video.next(def(size, defaultMaxBufferBehind));
-      $wantedBufferAhead.text.next(def(size, defaultMaxBufferBehind));
-    },
-
-    getMaxBufferBehind() {
-      // TODO image?
-      return Math.min(
-        $maxBufferBehind.audio.getValue(),
-        $maxBufferBehind.video.getValue(),
-        $maxBufferBehind.text.getValue(),
-      );
-    },
-
-    getMaxBufferAhead() {
-      // TODO image?
-      return Math.min(
-        $maxBufferAhead.audio.getValue(),
-        $maxBufferAhead.video.getValue(),
-        $maxBufferAhead.text.getValue(),
-      );
-    },
-
-    getWantedBufferAhead() {
-      // TODO image?
-      return Math.min(
-        $wantedBufferAhead.audio.getValue(),
-        $wantedBufferAhead.video.getValue(),
-        $wantedBufferAhead.text.getValue(),
-      );
-    },
-
-    getBufferAdapters,
-
+    getRepresentation$,
     unsubscribe() {
       if (conns) {
         conns.unsubscribe();

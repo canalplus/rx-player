@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config.js";
 import log from "../utils/log";
 import assert from "../utils/assert";
 import {
@@ -57,12 +58,11 @@ import {
 
 import LanguageManager from "./language_manager.js";
 
-// Stop stream 0.5 second before the end of video
-// It happens often that the video gets stuck 100 to 300 ms before the end, especially on IE11 and Edge
-const END_OF_PLAY = 0.5;
-
-const DISCONTINUITY_THRESHOLD = 1;
-const DEFAULT_LIVE_GAP = 15;
+const {
+  END_OF_PLAY,
+  DISCONTINUITY_THRESHOLD,
+  DEFAULT_LIVE_GAP,
+} = config;
 
 /**
  * Returns true if the given buffeType is a native buffer, false otherwise.
@@ -218,6 +218,9 @@ function Stream({
   startAt,
   defaultAudioTrack,
   defaultTextTrack,
+  wantedBufferAhead$,
+  maxBufferAhead$,
+  maxBufferBehind$,
 }) {
   // TODO @deprecate?
   const fragEndTimeIsFinite = timeFragment.end < Infinity;
@@ -572,7 +575,13 @@ function Stream({
         });
       };
 
-      const adapters = adaptive.getBufferAdapters(adaptation);
+      const adapters = {
+        representations: adaptive.getRepresentation$(adaptation),
+        wantedBufferAhead: wantedBufferAhead$,
+        maxBufferBehind: maxBufferBehind$,
+        maxBufferAhead: maxBufferAhead$,
+      };
+
       const buffer = Buffer({
         bufferType,
         sourceBuffer,

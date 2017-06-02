@@ -47,7 +47,6 @@ const representationBaseType = [
 
 let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
-const DEFAULT_PRESENTATION_DELAY = 15; // TODO might lower that limit.
 
 function _parseBaseURL(manifest) {
   let baseURL = normalizeBaseURL(manifest.locations[0]);
@@ -112,7 +111,9 @@ function normalizeManifest(location, manifest, subtitles, images) {
   }
 
   if (manifest.isLive) {
-    manifest.suggestedPresentationDelay = manifest.suggestedPresentationDelay || DEFAULT_PRESENTATION_DELAY;
+    manifest.suggestedPresentationDelay =
+      manifest.suggestedPresentationDelay || 0;
+
     manifest.availabilityStartTime = manifest.availabilityStartTime || 0;
   }
 

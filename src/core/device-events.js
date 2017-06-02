@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+import config from "../config.js";
 import { merge } from "rxjs/observable/merge";
 import { IntervalObservable } from "rxjs/observable/IntervalObservable";
 import { visibilityChange, videoSizeChange } from "./compat";
 
 const interval = IntervalObservable.create;
 
-const INACTIVITY_DELAY = 60 * 1000;
+const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
 
 const pixelRatio = window.devicePixelRatio || 1;
 

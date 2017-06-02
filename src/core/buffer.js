@@ -15,6 +15,10 @@
  */
 
 import objectAssign from "object-assign";
+import config from "../config.js";
+import log from "../utils/log";
+import { BufferingQueue } from "./buffering-queue";
+import { BufferedRanges } from "./ranges";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { combineLatest } from "rxjs/observable/combineLatest";
@@ -23,9 +27,6 @@ import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { FromObservable } from "rxjs/observable/FromObservable";
 import { TimerObservable } from "rxjs/observable/TimerObservable";
 
-import log from "../utils/log";
-import { BufferingQueue } from "./buffering-queue";
-import { BufferedRanges } from "./ranges";
 import { SimpleSet } from "../utils/collections";
 import {
   MediaError,
@@ -38,25 +39,9 @@ const empty = EmptyObservable.create;
 const from = FromObservable.create;
 const timer = TimerObservable.create;
 
-/**
- * Ratio used to know if an already loaded segment should be re-buffered.
- * We re-load the given segment if the current one times that ratio is inferior
- * to the new one.
- */
-const BITRATE_REBUFFERING_RATIO = 1.5;
-
-/**
- * _Low_ gap (from current position) from which the buffer will be _garbage
- * collected_ (read removed from the buffer).
- */
-const GC_GAP_CALM  = 240;
-
-/**
- * _High_ gap (from current position) from which the buffer will be _garbage
- * collected_ (read removed from the buffer) if the low one does not clean up
- * any buffer.
- */
-const GC_GAP_BEEFY = 30;
+const BITRATE_REBUFFERING_RATIO = config.BITRATE_REBUFFERING_RATIO;
+const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
+const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 
 /**
  * Manage a single buffer:
@@ -185,7 +170,7 @@ function Buffer({
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
    * sourceBuffer
    * @param {Object} timing - The last item emitted from timings
-   * @param {Number} bufferSize - The last item emitted from wantedBufferAhead
+   * @param {Number} bufferGoal - The last item emitted from wantedBufferAhead
    * @param {Boolean} withInitSegment - Whether we're dealing with an init segment.
    * @returns {Array.<Segment>}
    * @throws IndexError - Throws if the current timestamp is considered out
@@ -195,7 +180,7 @@ function Buffer({
                                    representation,
                                    buffered,
                                    timing,
-                                   bufferSize,
+                                   bufferGoal,
                                    withInitSegment) {
     let initSegment = null;
 
@@ -215,7 +200,7 @@ function Buffer({
     // duration and the live gap.
     const endDiff = (timing.duration || Infinity) - timestamp;
     const wantedBufferSize = Math.max(0,
-      Math.min(bufferSize, timing.liveGap, endDiff));
+      Math.min(bufferGoal, timing.liveGap, endDiff));
 
     // the ts padding is the time offset that we want to apply to our current
     // timestamp in order to calculate the starting point of the list of
@@ -371,7 +356,7 @@ function Buffer({
      * @param {Number} injectCount
      * @returns {Observable|Array.<Segment>}
      */
-    function getNeededSegments(timing, bufferSize, injectCount) {
+    function getNeededSegments(timing, bufferGoal, injectCount) {
       const nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
       if (!ranges.equals(nativeBufferedRanges)) {
         ranges.intersect(nativeBufferedRanges);
@@ -399,7 +384,7 @@ function Buffer({
                                                    representation,
                                                    nativeBufferedRanges,
                                                    timing,
-                                                   bufferSize,
+                                                   bufferGoal,
                                                    withInitSegment);
 
         injectedSegments = injectedSegments.filter(filterAlreadyLoaded);

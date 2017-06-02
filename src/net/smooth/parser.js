@@ -15,6 +15,7 @@
  */
 
 import arrayIncludes from "../../utils/array-includes.js";
+import config from "../../config.js";
 import {
   concat,
   strToBytes,
@@ -133,7 +134,11 @@ function getKeySystems(keyIdBytes) {
 
 function createSmoothStreamingParser(parserOptions={}) {
 
-  const SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay || 20;
+  const SUGGESTED_PERSENTATION_DELAY =
+    parserOptions.suggestedPresentationDelay == null ?
+      config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.SMOOTH :
+      parserOptions.suggestedPresentationDelay;
+
   const REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
   const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 190000;
 
