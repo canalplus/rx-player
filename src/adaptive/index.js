@@ -88,18 +88,20 @@ function getClosestBitrate(bitrates, btr, threshold=0) {
 /**
  * Get the highest bitrate from the representations having a width immediately
  * superior or equal to the given one.
- * @param {Array.<Object>} reps - The representations array
+ * @param {Array.<Object>} representations - The representations array
  * @param {Number} width
  * @returns {Number}
  */
-function getMaxUsefulBitrateforWidth(reps, width) {
-  const sortedRepsByWidth = reps.sort((a, b) => a.width - b.width);
+function getMaxUsefulBitrateforWidth(representations, width) {
+  const sortedRepsByWidth = representations.sort((a, b) => a.width - b.width);
   const maxWidth = sortedRepsByWidth.find(r => r.width >= width);
 
   if (maxWidth) {
-    const filteredAdaptations = reps.filter(r => r.width <= maxWidth);
+    const filteredAdaptations = representations.filter(r => r.width <= maxWidth);
     if (filteredAdaptations.length) {
       return filteredAdaptations[filteredAdaptations.length - 1].bitrate;
+    } else {
+      return representations[0];
     }
   }
 
