@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { AbstractSourceBuffer } from "./sourcebuffer";
-import { addTextTrack, isVTTSupported } from "./compat";
+import { AbstractSourceBuffer } from "./abstract.js";
+import { addTextTrack, isVTTSupported } from "../compat";
 import log from "../utils/log";
 
 const Cue = window.VTTCue || window.TextTrackCue;

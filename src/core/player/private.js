@@ -19,7 +19,7 @@ import objectAssign from "object-assign";
 import log from "../../utils/log";
 import assert from "../../utils/assert";
 import warnOnce from "../../utils/warnOnce.js";
-import { parseTimeFragment } from "../time-fragment";
+import { parseTimeFragment } from "./time-fragment";
 import Transports from "../../net";
 
 import {

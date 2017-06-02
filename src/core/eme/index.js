@@ -26,19 +26,20 @@ import log from "../utils/log";
 import assert from "../utils/assert";
 import { tryCatch, castToObservable } from "../utils/rx-utils";
 import { retryWithBackoff } from "../utils/retry";
+
 import {
   KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
   emeEvents,
   shouldRenewMediaKeys,
-} from "./compat";
+} from "../../compat";
 
 import {
   ErrorTypes,
   ErrorCodes,
   EncryptedMediaError,
-} from "../errors";
+} from "../../errors";
 
 const {
   onEncrypted,

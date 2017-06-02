@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import assert from "../../../utils/assert";
+import assert from "../../utils/assert";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;

@@ -40,6 +40,4 @@ class InitializationSegmentCache {
   }
 }
 
-export {
-  InitializationSegmentCache,
-};
+export default InitializationSegmentCache;

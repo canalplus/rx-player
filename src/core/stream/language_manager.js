@@ -21,9 +21,9 @@ import {
   normalize as normalizeLang,
   normalizeAudioTrack,
   normalizeTextTrack,
-} from "../utils/languages";
+} from "../../utils/languages";
 
-import config from "../config.js";
+import config from "../../config.js";
 
 const findTextAdaptation = (adaptations, trackConfig) => {
   if (!trackConfig) {

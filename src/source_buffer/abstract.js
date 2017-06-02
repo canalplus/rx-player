@@ -1,7 +1,7 @@
 import EventEmitter from "../utils/eventemitter";
-import { BufferedRanges } from "./ranges";
 import assert from "../utils/assert";
 import { tryCatch, castToObservable } from "../utils/rx-utils";
+import { BufferedRanges } from "../core/ranges";
 
 /**
  * Abstract class for a custom SourceBuffer implementation.

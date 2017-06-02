@@ -39,7 +39,7 @@ import {
   requestFullscreen,
   isFullscreen,
   onFullscreenChange,
-} from "../compat";
+} from "../../compat";
 
 import {
   createTimingsSampler,
@@ -54,13 +54,14 @@ import {
   ErrorCodes,
 } from "../../errors";
 
-import { InitializationSegmentCache } from "../cache";
+import InitializationSegmentCache
+  from "../../utils/initialization_segment_cache.js";
 import { BufferedRanges } from "../ranges";
-import DeviceEvents from "../device-events";
+import DeviceEvents from "../../compat/device-events.js";
 
 import PipeLines from "../pipelines";
 import Adaptive from "../../adaptive";
-import Stream from "../stream";
+import Stream from "../stream/index.js";
 import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
 
 import { PLAYER_STATES } from "./constants.js";

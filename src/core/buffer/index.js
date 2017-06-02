@@ -27,13 +27,13 @@ import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { FromObservable } from "rxjs/observable/FromObservable";
 import { TimerObservable } from "rxjs/observable/TimerObservable";
 
-import { SimpleSet } from "../utils/collections";
+import { SimpleSet } from "../../utils/collections";
 import {
   MediaError,
   ErrorTypes,
   ErrorCodes,
   IndexError,
-} from "../errors";
+} from "../../errors";
 
 const empty = EmptyObservable.create;
 const from = FromObservable.create;

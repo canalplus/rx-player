@@ -22,11 +22,11 @@ import { resolveURL } from "../../utils/url";
 import { parseSidx, patchPssh, getMdat } from "./mp4";
 import { bytesToStr } from "../../utils/bytes.js";
 
-import request from "../../request";
+import request from "../../utils/request.js";
 import dashManifestParser from "./manifest";
 
-import { parseTTML } from "../parsers/texttracks/ttml.js";
-import { parseBif } from "../parsers/bif.js";
+import { parseTTML } from "../../parsers/texttracks/ttml.js";
+import { parseBif } from "../../parsers/bif.js";
 
 const empty = EmptyObservable.create;
 

@@ -15,7 +15,7 @@
  */
 
 import assert from "../../utils/assert";
-import { isIE } from "../../core/compat";
+import { isIE } from "../../compat";
 import {
   concat,
   strToBytes, bytesToStr,

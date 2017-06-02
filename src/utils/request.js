@@ -1,6 +1,6 @@
 import { Observable } from "rxjs/Observable";
 import { Subscriber } from "rxjs/Subscriber";
-import { RequestError, RequestErrorTypes } from "./errors";
+import { RequestError, RequestErrorTypes } from "../errors";
 
 function createXHRDefault() {
   return new XMLHttpRequest();

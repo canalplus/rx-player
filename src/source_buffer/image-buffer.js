@@ -1,4 +1,4 @@
-import { AbstractSourceBuffer } from "./sourcebuffer";
+import { AbstractSourceBuffer } from "./abstract.js";
 
 class ImageSourceBuffer extends AbstractSourceBuffer {
   _append() {

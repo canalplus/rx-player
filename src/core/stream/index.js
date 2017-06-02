@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import config from "../config.js";
-import log from "../utils/log";
-import assert from "../utils/assert";
+import config from "../../config.js";
+import log from "../../utils/log";
+import assert from "../../utils/assert";
 import {
   seekingsSampler,
   getBufferLimits,
   getMaximumBufferPosition,
   getMaximumSecureBufferPosition,
   fromWallClockTime,
-} from "./timings";
-import { retryableFuncWithBackoff } from "../utils/retry";
+} from "../timings";
+import { retryableFuncWithBackoff } from "../../utils/retry";
 import { Observable } from "rxjs/Observable";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { on, throttle } from "../utils/rx-utils";
+import { on, throttle } from "../../utils/rx-utils";
 
 import {
   MediaSource_,
@@ -36,25 +36,25 @@ import {
   canSeek,
   clearVideoSrc,
   isPlaybackStuck,
-} from "./compat";
+} from "../../compat";
 
-import TextSourceBuffer from "./text-buffer";
-import ImageSourceBuffer from "./image-buffer";
-import { Buffer, EmptyBuffer } from "./buffer";
-import { createEME, onEncrypted } from "./eme";
+import TextSourceBuffer from "../../source_buffer/text-buffer";
+import ImageSourceBuffer from "../../source_buffer/image-buffer";
+import { Buffer, EmptyBuffer } from "../buffer";
+import { createEME, onEncrypted } from "../eme";
 
 import {
   MediaError,
   OtherError,
   EncryptedMediaError,
   isKnownError,
-} from "../errors";
+} from "../../errors";
 
 import {
   normalizeManifest,
   updateManifest,
   getCodec,
-} from "./manifest";
+} from "../manifest";
 
 import LanguageManager from "./language_manager.js";
 

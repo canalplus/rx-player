@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import assert from "../utils/assert";
+import assert from "../../utils/assert";
 
 /**
  * Parse multiple formats of timeFragments for start and end to either:

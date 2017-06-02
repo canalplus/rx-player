@@ -19,13 +19,13 @@ import { bytesToStr } from "../../utils/bytes";
 import log from "../../utils/log";
 import { resolveURL } from "../../utils/url";
 
-import request from "../../request";
+import request from "../../utils/request.js";
 import createSmoothStreamingParser from "./parser";
 
 import mp4Utils from "./mp4.js";
-import { parseBif } from "../parsers/bif";
-import { parseSami } from "../parsers/texttracks/sami.js";
-import { parseTTML } from "../parsers/texttracks/ttml.js";
+import { parseBif } from "../../parsers/bif";
+import { parseSami } from "../../parsers/texttracks/sami.js";
+import { parseTTML } from "../../parsers/texttracks/ttml.js";
 
 const {
   patchSegment,

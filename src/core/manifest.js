@@ -19,11 +19,11 @@ import arrayIncludes from "../utils/array-includes.js";
 
 import log from "../utils/log";
 import { normalizeBaseURL } from "../utils/url";
-import { isCodecSupported } from "./compat";
+import { isCodecSupported } from "../compat";
 import { MediaError } from "../errors";
 import { normalize as normalizeLang } from "../utils/languages";
 import { resolveURL } from "../utils/url";
-import Manifest from "../manifest/manifest.js";
+import Manifest from "../manifest";
 
 /**
  * Representation keys directly inherited from the adaptation.

@@ -17,7 +17,7 @@
 import config from "../config.js";
 import { merge } from "rxjs/observable/merge";
 import { IntervalObservable } from "rxjs/observable/IntervalObservable";
-import { visibilityChange, videoSizeChange } from "./compat";
+import { visibilityChange, videoSizeChange } from "./index.js";
 
 const interval = IntervalObservable.create;
 
