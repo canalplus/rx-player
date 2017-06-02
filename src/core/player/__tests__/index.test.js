@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import Player from "../player";
+import Player from "../index.js";
 
 describe("main player", function() {
   const transport = { manifestPipeline: {}, segmentPipeline: {}, textTrackPipeline: {} };
