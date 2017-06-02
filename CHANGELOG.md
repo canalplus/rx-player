@@ -16,6 +16,7 @@
 
 ### Other improvements
 
+  - api: deprecated api now only warn once
   - tests: integration tests have been added
   - manifest: the manifest object and the management of its index has been refactored for future improvements
 
