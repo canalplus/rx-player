@@ -273,13 +273,21 @@ export default function(metrics, deviceEvents, options={}) {
   }
 
   return {
+<<<<<<< HEAD
     getAverageBitrates() { return $averageBitrates; },
 
     getAudioMaxBitrate() { return $maxBitrates.audio.getValue(); },
     getVideoMaxBitrate() { return $maxBitrates.video.getValue(); },
     getAudioBufferSize() { return $wantedBufferAhead.audio.getValue(); },
     getVideoBufferSize() { return $wantedBufferAhead.video.getValue(); },
+=======
+    getAudioBufferSize() { return $bufSizes.audio.getValue(); },
+    getVideoBufferSize() { return $bufSizes.video.getValue(); },
+>>>>>>> api: move all private methods and properties into _priv object
 
+    getAverageBitrates() { return $averageBitrates; },
+    getAudioMaxBitrate() { return $maxBitrates.audio.getValue(); },
+    getVideoMaxBitrate() { return $maxBitrates.video.getValue(); },
     setAudioBitrate(x)    { $usrBitrates.audio.next(def(x, Infinity)); },
     setVideoBitrate(x)    { $usrBitrates.video.next(def(x, Infinity)); },
     setAudioMaxBitrate(x) { $maxBitrates.audio.next(def(x, Infinity)); },

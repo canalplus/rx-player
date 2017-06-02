@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import arrayFind from "array-find";
 import log from "../utils/log";
 import warnOnce from "../utils/warnOnce.js";
@@ -29,10 +28,10 @@ import {
   normalize as normalizeLang,
   normalizeAudioTrack,
   normalizeTextTrack,
-} from "../utils/languages";
-import EventEmitter from "../utils/eventemitter";
-import debugPane from "../utils/debug";
-import assert from "../utils/assert";
+} from "../../utils/languages";
+import EventEmitter from "../../utils/eventemitter";
+import debugPane from "../../utils/debug";
+import assert from "../../utils/assert";
 
 import {
   HTMLVideoElement_,
@@ -40,217 +39,39 @@ import {
   requestFullscreen,
   isFullscreen,
   onFullscreenChange,
-} from "./compat";
+} from "../compat";
 
 import {
-  getEmptyTimings,
   createTimingsSampler,
   toWallClockTime,
   fromWallClockTime,
   getMaximumBufferPosition,
-  getMaximumSecureBufferPosition,
   getMinimumBufferPosition,
-} from "./timings";
+} from "../timings";
 
 import {
   ErrorTypes,
   ErrorCodes,
-} from "../errors";
+} from "../../errors";
 
-import { InitializationSegmentCache } from "./cache";
-import { BufferedRanges } from "./ranges";
-import { parseTimeFragment } from "./time-fragment";
-import DeviceEvents from "./device-events";
+import { InitializationSegmentCache } from "../cache";
+import { BufferedRanges } from "../ranges";
+import DeviceEvents from "../device-events";
 
-import Transports from "../net";
-import PipeLines from "./pipelines";
-import Adaptive from "../adaptive";
-import Stream from "./stream";
-import { dispose as emeDispose , getCurrentKeySystem } from "./eme";
+import PipeLines from "../pipelines";
+import Adaptive from "../../adaptive";
+import Stream from "../stream";
+import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
 
-// -- PLAYER STATES --
-const PLAYER_STOPPED   = "STOPPED";
-const PLAYER_LOADED    = "LOADED";
-const PLAYER_LOADING   = "LOADING";
-const PLAYER_PLAYING   = "PLAYING";
-const PLAYER_PAUSED    = "PAUSED";
-const PLAYER_ENDED     = "ENDED";
-const PLAYER_BUFFERING = "BUFFERING";
-const PLAYER_SEEKING   = "SEEKING";
+import { PLAYER_STATES } from "./constants.js";
 
-/**
- * Returns current playback state for the current content.
- * /!\ Only pertinent for a content that is currently loaded and playing
- * (i.e. not loading, ended or stopped).
- * @param {Boolean} isPlaying - Whether the player is currently playing
- * (not paused).
- * @param {Boolean} stalled - Whether the player is currently "stalled".
- *
- * @returns {string}
- */
-function inferPlayerState(isPlaying, stalled) {
-  if (stalled) {
-    return (stalled.name == "seeking")
-      ? PLAYER_SEEKING
-      : PLAYER_BUFFERING;
-  }
+import {
+  inferPlayerState,
+  assertManifest,
+  filterStreamByType,
+} from "./helpers.js";
 
-  if (isPlaying) {
-    return PLAYER_PLAYING;
-  }
-
-  return PLAYER_PAUSED;
-}
-
-/**
- * Assert that a manifest has been loaded (throws otherwise).
- * @param {Player} player
- * @throws Error - Throws if the given player has no manifest loaded.
- */
-function assertManifest(player) {
-  assert(player._manifest, "player: no manifest loaded");
-}
-
-/**
- * @param {Observable} stream
- * @param {string} type
- * @returns {Observable}
- */
-function filterStreamByType(stream, type) {
-  return stream
-    .filter((o) => o.type == type)
-    .map((o) => o.value);
-}
-
-/**
- * Parse the options given as arguments to the loadVideo method.
- * @param {Player} player
- * @param {Object} opts
- * @returns {Object}
- */
-function parseLoadVideoOptions(player, opts) {
-  opts = objectAssign({
-    transport: player.defaultTransport,
-    transportOptions: {},
-    keySystems: [],
-    timeFragment: {},
-    textTracks: [],
-    imageTracks: [],
-    autoPlay: false,
-    hideNativeSubtitle: false,
-    directFile: false,
-  }, opts);
-
-  let {
-    transport,
-    url,
-    keySystems,
-    timeFragment,
-    supplementaryTextTracks,
-    supplementaryImageTracks,
-  } = opts;
-
-  const {
-    subtitles,
-    images,
-    transportOptions,
-    manifests,
-    autoPlay,
-    directFile,
-    defaultLanguage,
-    defaultAudioTrack,
-    defaultSubtitle,
-    defaultTextTrack,
-    hideNativeSubtitle, // TODO better name
-    startAt,
-  } = opts;
-
-  // ---- Deprecated calls
-
-  let _defaultAudioTrack = defaultAudioTrack;
-  let _defaultTextTrack = defaultTextTrack;
-
-  if (defaultLanguage != null && defaultAudioTrack == null) {
-    warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
-    _defaultAudioTrack = defaultLanguage;
-  }
-  if (
-    opts.hasOwnProperty("defaultSubtitle") &&
-    !opts.hasOwnProperty("defaultTextTrack")
-  ) {
-    warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
-    _defaultTextTrack = defaultSubtitle;
-  }
-
-  if (subtitles !== void 0 && supplementaryTextTracks === void 0) {
-    warnOnce(
-      "the subtitles option is deprecated. Use supplementaryTextTracks instead"
-    );
-    supplementaryTextTracks = subtitles;
-  }
-  if (images !== void 0 && supplementaryImageTracks === void 0) {
-    warnOnce(
-      "the images option is deprecated. Use supplementaryImageTracks instead"
-    );
-    supplementaryImageTracks = images;
-  }
-
-  // ----
-
-  if (_defaultAudioTrack === undefined) {
-    _defaultAudioTrack = player._lastAudioTrack;
-  }
-
-  if (_defaultTextTrack === undefined) {
-    _defaultTextTrack = player._lastTextTrack;
-  }
-
-  timeFragment = parseTimeFragment(timeFragment);
-
-  // compatibility with directFile api
-  if (directFile) {
-    transport = "directfile";
-  }
-
-  // compatibility with old API authorizing to pass multiple
-  // manifest url depending on the key system
-  assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
-  if (manifests) {
-    warnOnce(
-      "the manifests options is deprecated, use url instead"
-    );
-    const firstManifest = manifests[0];
-    url = firstManifest.url;
-
-    supplementaryTextTracks = firstManifest.subtitles || [];
-    supplementaryImageTracks = firstManifest.images || [];
-    keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
-  }
-
-  if (typeof transport == "string") {
-    transport = Transports[transport];
-  }
-
-  if (typeof transport == "function") {
-    transport = transport(objectAssign({}, player.defaultTransportOptions, transportOptions));
-  }
-
-  assert(transport, "player: transport " + opts.transport + " is not supported");
-
-  return {
-    url,
-    keySystems,
-    supplementaryTextTracks,
-    hideNativeSubtitle,
-    supplementaryImageTracks,
-    timeFragment,
-    autoPlay,
-    defaultAudioTrack: _defaultAudioTrack,
-    defaultTextTrack: _defaultTextTrack,
-    transport,
-    startAt,
-  };
-}
+import attachPrivateMethods from "./private.js";
 
 /**
  * @class Player
@@ -316,6 +137,8 @@ class Player extends EventEmitter {
 
     super();
 
+    this._priv = attachPrivateMethods(this);
+
     // -- Deprecated checks
 
     let _initialVideoBitrate = initialVideoBitrate;
@@ -342,7 +165,9 @@ class Player extends EventEmitter {
 
     // --
 
-    this.defaultTransport = transport;
+    if (transport) {
+      this.defaultTransport = transport;
+    }
     this.defaultTransportOptions = transportOptions || {};
 
     if (!videoElement) {
@@ -359,23 +184,23 @@ class Player extends EventEmitter {
     this.version = /*PLAYER_VERSION*/"2.3.2";
     this.videoElement = videoElement;
 
-    this._fullscreen$ = onFullscreenChange(videoElement)
+    this._priv.fullscreen$ = onFullscreenChange(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
-    this._playing$ = new BehaviorSubject(); // playing state change.
-    this._clearLoaded$ = new Subject(); // clean ressources from loaded content
-    this._stream$ = new Subject(); // multicaster forwarding all streams events
-    this._imageTrack$ = new Subject();
-    this._errorStream = new Subject(); // Emits warnings
+    this._priv.playing$ = new BehaviorSubject(); // playing state change.
+    this._priv.clearLoaded$ = new Subject(); // clean ressources from loaded content
+    this._priv.stream$ = new Subject(); // multicaster forwarding all streams events
+    this._priv.imageTrack$ = new Subject();
+    this._priv.errorStream$ = new Subject(); // Emits warnings
 
     const { createPipelines, metrics } = PipeLines();
 
     const deviceEvents = DeviceEvents(videoElement);
 
-    this._createPipelines = createPipelines;
-    this._metrics = metrics;
+    this._priv.createPipelines = createPipelines;
+    this._priv.metrics = metrics;
 
-    this._abrManager = Adaptive(metrics, deviceEvents, {
+    this._priv.abrManager = Adaptive(metrics, deviceEvents, {
       initialVideoBitrate: _initialVideoBitrate,
       initialAudioBitrate: _initialAudioBitrate,
       maxVideoBitrate,
@@ -386,51 +211,25 @@ class Player extends EventEmitter {
       throttleWhenHidden,
     });
 
-    this._lastAudioTrack = undefined;
-    this._lastTextTrack = undefined;
+    this._priv.lastAudioTrack = undefined;
+    this._priv.lastTextTrack = undefined;
 
-    this._mutedMemory = 0.1; // memorize previous volume when muted
+    this._priv.mutedMemory = 0.1; // memorize previous volume when muted
 
-    this._setPlayerState(PLAYER_STOPPED);
-    this._resetContentState();
+    this._priv.setPlayerState(PLAYER_STATES.STOPPED);
+    this._priv.resetContentState();
 
     this.log = log;
-  }
-
-  /**
-   * Reset all states relative to a playing content.
-   * @private
-   */
-  _resetContentState() {
-    this._manifest = null;
-    this._languageManager = null;
-    this._currentRepresentations = {
-      video: null,
-      audio: null,
-      text: null,
-      images: null,
-    };
-    this._currentAdaptations = {
-      video: null,
-      audio: null,
-      text: null,
-      images: null,
-    };
-    this._recordedEvents = {};
-    this._timeFragment = { start: null, end: null };
-    this._fatalError = null;
-    this._imageTrack$.next(null);
-    this._currentImagePlaylist = null;
   }
 
   /**
    * Stop the player.
    */
   stop() {
-    if (this.state !== PLAYER_STOPPED) {
-      this._resetContentState();
-      this._clearLoaded$.next();
-      this._setPlayerState(PLAYER_STOPPED);
+    if (this.state !== PLAYER_STATES.STOPPED) {
+      this._priv.resetContentState();
+      this._priv.clearLoaded$.next();
+      this._priv.setPlayerState(PLAYER_STATES.STOPPED);
     }
   }
 
@@ -439,37 +238,25 @@ class Player extends EventEmitter {
    */
   dispose() {
     this.stop();
-    this._clearLoaded$.complete();
-    this._metrics.unsubscribe();
-    this._abrManager.unsubscribe();
-    this._fullscreen$.unsubscribe();
-    this._stream$.unsubscribe(); // @deprecated
-    this._errorStream.unsubscribe();
+
+    const { _priv } = this;
+
+    _priv.clearLoaded$.complete();
+    _priv.metrics.unsubscribe();
+    _priv.abrManager.unsubscribe();
+    _priv.fullscreen$.unsubscribe();
+    _priv.stream$.unsubscribe(); // @deprecated
+    _priv.errorStream$.unsubscribe();
     emeDispose();
 
-    this._clearLoaded$ = null;
-    this._metrics = null;
-    this._abrManager = null;
-    this._fullscreen$ = null;
-    this._stream$ = null; // @deprecated
-    this._errorStream = null;
-
-    this._createPipelines = null;
+    _priv.clearLoaded$ = null;
+    _priv.metrics = null;
+    _priv.abrManager = null;
+    _priv.fullscreen$ = null;
+    _priv.stream$ = null; // @deprecated
+    _priv.errorStream$ = null;
+    _priv.createPipelines = null;
     this.videoElement = null;
-  }
-
-  /**
-   * Store and emit new player state (e.g. text track, videoBitrate...).
-   * @private
-   * @param {string} type - the type of the updated state (videoBitrate...)
-   * @param {*} value - its new value
-   */
-  _recordState(type, value) {
-    const prev = this._recordedEvents[type];
-    if (prev !== value) {
-      this._recordedEvents[type] = value;
-      this.trigger(`${type}Change`, value);
-    }
   }
 
   /**
@@ -478,7 +265,7 @@ class Player extends EventEmitter {
    * @returns {Observable}
    */
   loadVideo(options = {}) {
-    options = parseLoadVideoOptions(this, options);
+    options = this._priv.parseLoadVideoOptions(options);
     log.info("loadvideo", options);
 
     const {
@@ -487,7 +274,7 @@ class Player extends EventEmitter {
       supplementaryTextTracks,
       hideNativeSubtitle,
       supplementaryImageTracks,
-      timeFragment,
+      timeFragment, // @deprecated
       autoPlay,
       transport,
       defaultAudioTrack,
@@ -496,16 +283,21 @@ class Player extends EventEmitter {
     } = options;
 
     this.stop();
-    this._timeFragment = timeFragment;
-    this._playing$.next(autoPlay);
+    this._priv.timeFragment = timeFragment; // @deprecated
+    this._priv.playing$.next(autoPlay);
 
     const {
       videoElement: videoElement,
-      _abrManager: adaptive,
-      _errorStream: errorStream,
     } = this;
 
-    const pipelines = this._createPipelines(transport, {
+    const {
+      abrManager: adaptive,
+      errorStream$: errorStream,
+      createPipelines,
+      clearLoaded$,
+    } = this._priv;
+
+    const pipelines = createPipelines(transport, {
       errorStream,
       audio: { cache: new InitializationSegmentCache() },
       video: { cache: new InitializationSegmentCache() },
@@ -522,7 +314,7 @@ class Player extends EventEmitter {
       hideNativeSubtitle,
       timings,
       supplementaryImageTracks,
-      timeFragment,
+      timeFragment, // @deprecated
       adaptive,
       pipelines,
       videoElement,
@@ -531,7 +323,7 @@ class Player extends EventEmitter {
       defaultAudioTrack,
       defaultTextTrack,
     })
-      .takeUntil(this._clearLoaded$)
+      .takeUntil(clearLoaded$)
       .publish();
 
     const stalled = filterStreamByType(stream, "stalled")
@@ -541,10 +333,10 @@ class Player extends EventEmitter {
       .take(1)
       .share();
 
-    const stateChanges = loaded.mapTo(PLAYER_LOADED)
-      .concat(combineLatest(this._playing$, stalled, inferPlayerState))
+    const stateChanges = loaded.mapTo(PLAYER_STATES.LOADED)
+      .concat(combineLatest(this._priv.playing$, stalled, inferPlayerState))
       .distinctUntilChanged()
-      .startWith(PLAYER_LOADING);
+      .startWith(PLAYER_STATES.LOADING);
 
     const playChanges = on(videoElement, ["play", "pause"]);
     const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
@@ -552,7 +344,7 @@ class Player extends EventEmitter {
     let streamDisposable = void 0;
     let unsubscribed = false;
 
-    this._clearLoaded$.take(1).subscribe(() => {
+    clearLoaded$.take(1).subscribe(() => {
       unsubscribed = true;
       if (streamDisposable) {
         streamDisposable.unsubscribe();
@@ -562,30 +354,30 @@ class Player extends EventEmitter {
     const noop = () => {};
 
     playChanges
-      .takeUntil(this._clearLoaded$)
-      .subscribe(x => this._onPlayPauseNext(x), noop);
+      .takeUntil(clearLoaded$)
+      .subscribe(x => this._priv.onPlayPauseNext(x), noop);
 
     textTracksChanges
-      .takeUntil(this._clearLoaded$)
-      .subscribe(x => this._onNativeTextTrackNext(x), noop);
+      .takeUntil(clearLoaded$)
+      .subscribe(x => this._priv.onNativeTextTrackNext(x), noop);
 
     timings
-      .takeUntil(this._clearLoaded$)
-      .subscribe(x => this._triggerTimeChange(x), noop);
+      .takeUntil(clearLoaded$)
+      .subscribe(x => this._priv.triggerTimeChange(x), noop);
 
     stateChanges
-      .subscribe(x => this._setPlayerState(x), noop);
+      .subscribe(x => this._priv.setPlayerState(x), noop);
 
     stream.subscribe(
-      x => this._onStreamNext(x),
-      err => this._onStreamError(err),
-      () => this._onStreamComplete()
+      x => this._priv.onStreamNext(x),
+      err => this._priv.onStreamError(err),
+      () => this._priv.onStreamComplete()
     );
 
     errorStream
-      .takeUntil(this._clearLoaded$)
+      .takeUntil(clearLoaded$)
       .subscribe(
-        x => this._onErrorStreamNext(x)
+        x => this._priv.onErrorStreamNext(x)
       );
 
     streamDisposable = stream.connect();
@@ -594,263 +386,9 @@ class Player extends EventEmitter {
     // declared here
     // TODO delete empty timings?
     if (!unsubscribed) {
-      this._triggerTimeChange();
+      this._priv.triggerTimeChange();
     }
     return loaded;
-  }
-
-  /**
-   * Called each time the Stream instance emits.
-   * @private
-   * @param {Object} streamInfos
-   */
-  _onStreamNext(streamInfos) {
-    const { type, value } = streamInfos;
-
-    switch (type) {
-    case "buffer":
-      this._onBufferNext(value);
-      break;
-    case "manifest":
-      this._onManifestNext(value);
-      break;
-    case "manifestUpdate":
-      this._onManifestUpdateNext(value);
-      break;
-    case "pipeline":
-      this.trigger("progress", value.segment);
-      const { bufferType, parsed } = value;
-      if (bufferType === "image") {
-        const value = parsed.segmentData;
-
-        // TODO merge multiple data from the same track together
-        this._currentImagePlaylist = value;
-        this.trigger("imageTrackUpdate", {
-          data: this._currentImagePlaylist,
-        });
-
-        // TODO @deprecated remove that
-        this._imageTrack$.next(value);
-      }
-    }
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (this._stream$) {
-      this._stream$.next(streamInfos);
-    }
-    this._stream$.next(streamInfos);
-  }
-
-  /**
-   * Called each time the Stream emits through its errorStream (non-fatal
-   * errors).
-   * @private
-   * @param {Object} streamInfos
-   */
-  _onErrorStreamNext(error) {
-    this.trigger("warning", error);
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (this._stream$) {
-      this._stream$.next({ type: "warning", value: error });
-    }
-    this._stream$.next({ type: "warning", value: error });
-  }
-
-  /**
-   * Called when the Stream instance throws (fatal errors).
-   * @private
-   * @param {Object} streamInfos
-   */
-  _onStreamError(error) {
-    this._resetContentState();
-    this._fatalError = error;
-    this._setPlayerState(PLAYER_STOPPED);
-    this._clearLoaded$.next();
-    this.trigger("error", error);
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (this._stream$) {
-      this._stream$.next({ type: "error", value: error });
-    }
-    this._stream$.next({ type: "error", value: error });
-  }
-
-  /**
-   * Called when the Stream instance complete.
-   * @private
-   * @param {Object} streamInfos
-   */
-  _onStreamComplete() {
-    this._resetContentState();
-    this._setPlayerState(PLAYER_ENDED);
-    this._clearLoaded$.next();
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (this._stream$) {
-      this._stream$.next({ type: "ended", value: null });
-    }
-    this._stream$.next({ type: "ended", value: null });
-  }
-
-  /**
-   * Subscribe to audio and text track updates.
-   */
-  _addLanguageSubscriptions() {
-    assert(this._languageManager, "no languageManager received");
-
-    // listen for audio track change
-    this._languageManager.audioAdaptation$
-      .map(() => this._languageManager.getCurrentAudioTrack())
-      .takeUntil(this._clearLoaded$)
-      .subscribe((track) => {
-        this._lastAudioTrack = track;
-        this.trigger("languageChange", track.language); // deprecated
-        this.trigger("audioTrackChange", track);
-      });
-
-    // listen for text track change
-    this._languageManager.textAdaptation$
-      .map(() => this._languageManager.getCurrentTextTrack())
-      .takeUntil(this._clearLoaded$)
-      .subscribe(track => {
-        this._lastTextTrack = track;
-        this.trigger("subtitleChange", track && track.language); // deprecated
-        this.trigger("textTrackChange", track);
-      });
-  }
-
-  /**
-   * Called when the manifest is first downloaded.
-   * @private
-   * @param {Object} value
-   * @param {Manifest} value.manifest
-   * @param {LanguageManager} value.languageManager
-   */
-  _onManifestNext(value) {
-    if (__DEV__) {
-      assert(value && value.manifest, "no manifest received");
-      assert(value.languageManager, "no languageManager received");
-    }
-
-    this._manifest = value.manifest;
-    this._languageManager = value.languageManager;
-    this.trigger("manifestChange", value.manifest);
-    this._addLanguageSubscriptions();
-  }
-
-  _onManifestUpdateNext(value) {
-    if (__DEV__) {
-      assert(value && value.manifest, "no manifest received");
-    }
-
-    this._manifest = value.manifest;
-    this.trigger("manifestUpdate", value.manifest);
-  }
-
-  /**
-   * Called each time the Stream emits a buffer-related event.
-   * @private
-   * @param {Object} obj
-   * @param {string} obj.bufferType
-   * @param {Object} obj.adaptation
-   * @param {Object} obj.representation
-   */
-  _onBufferNext({ bufferType, adaptation, representation }) {
-    this._currentRepresentations[bufferType] = representation;
-    this._currentAdaptations[bufferType] = adaptation;
-
-    if (bufferType == "video") {
-      this._recordState("videoBitrate",
-        representation && representation.bitrate || -1);
-
-    }
-
-    if (bufferType == "audio") {
-      this._recordState("audioBitrate",
-        representation && representation.bitrate || -1);
-    }
-  }
-
-  /**
-   * Called each time the player alternates between play and pause.
-   * @private
-   * @param {Object} evt
-   * @param {string} evt.type
-   */
-  _onPlayPauseNext(evt) {
-    if (this.videoElement.ended !== true) {
-      this._playing$.next(evt.type == "play");
-    }
-  }
-
-  /**
-   * Called each time a textTrack is added to the video DOM Element.
-   * @private
-   * @param {Object} evt
-   * @param {HTMLElement} evt.target
-   */
-  _onNativeTextTrackNext({ target: [trackElement] }) {
-    if (trackElement) {
-      this.trigger("nativeTextTrackChange", trackElement);
-    }
-  }
-
-  /**
-   * Called each time the player state updates.
-   * @private
-   * @param {string} s
-   */
-  _setPlayerState(s) {
-    if (this.state !== s) {
-      this.state = s;
-      log.info("playerStateChange", s);
-      this.trigger("playerStateChange", s);
-    }
-  }
-
-  /**
-   * Called each time a new timing object is emitted.
-   * @param {Object} t
-   */
-  _triggerTimeChange(t) {
-    if (!this._manifest || !t) {
-      this.trigger("currentTimeChange", getEmptyTimings());
-    } else {
-      if (this._manifest.isLive && t.ts > 0) {
-        t.wallClockTime = toWallClockTime(t.ts, this._manifest);
-        t.liveGap = getMaximumBufferPosition(this._manifest) - t.ts;
-      }
-      const positionData = {
-        position: t.ts,
-        duration: t.duration,
-        bufferGap: isFinite(t.gap) ? t.gap : 0, // TODO fix higher up
-        liveGap: t.liveGap,
-        playbackRate: t.playback,
-        wallClockTime: t.wallClockTime && t.wallClockTime.getTime() / 1000,
-
-        // TODO This property should be removed in a next version (after
-        // multiple tests) to only have liveGap
-        // We should be the closest to the live edge when it comes to buffering.
-        // TODO normally, we should also integrate timeFragment.end into this
-        // However. It would be very ugly to do so and keeping compatibility
-        // hard.
-        // As this is a new API, and as timeFragment is deprecated, I let it
-        // pass (do not hit me!)
-        maximumBufferTime: getMaximumSecureBufferPosition(this._manifest),
-      };
-      this.trigger("positionUpdate", positionData);
-
-      // TODO @deprecate
-      // compatibilty with a previous API where the liveGap was about the
-      // last buffer-isable position
-      t.liveGap = positionData.maximumBufferTime - t.ts;
-      this.trigger("currentTimeChange", t);
-    }
   }
 
   /**
@@ -858,7 +396,7 @@ class Player extends EventEmitter {
    * @returns {Object|null}
    */
   getError() {
-    return this._fatalError;
+    return this._priv.fatalError;
   }
 
   /**
@@ -867,21 +405,21 @@ class Player extends EventEmitter {
    * @returns {Object|null}
    */
   getManifest() {
-    return this._manifest || null;
+    return this._priv.manifest || null;
   }
 
   getCurrentAdaptations() {
-    if (!this._manifest){
+    if (!this._priv.manifest){
       return null;
     }
-    return this._currentAdaptations;
+    return this._priv.currentAdaptations;
   }
 
   getCurrentRepresentations() {
-    if (!this._manifest){
+    if (!this._priv.manifest){
       return null;
     }
-    return this._currentRepresentations;
+    return this._priv.currentRepresentations;
   }
 
   /**
@@ -910,7 +448,7 @@ class Player extends EventEmitter {
    * @returns {Observable}
    */
   getImageTrack() {
-    return this._imageTrack$.distinctUntilChanged();
+    return this._priv.imageTrack$.distinctUntilChanged();
   }
 
   /**
@@ -929,7 +467,7 @@ class Player extends EventEmitter {
    */
   isLive() {
     assertManifest(this);
-    return this._manifest.isLive;
+    return this._priv.manifest.isLive;
   }
 
   /**
@@ -940,7 +478,7 @@ class Player extends EventEmitter {
    */
   getUrl() {
     assertManifest(this);
-    return this._manifest.getUrl();
+    return this._priv.manifest.getUrl();
   }
 
   /**
@@ -988,13 +526,13 @@ class Player extends EventEmitter {
       "getCurrentTime is deprecated and won't be available in the next major version." +
       " Use either getWallClockTime or getPosition instead."
     );
-    if (!this._manifest) {
+    if (!this._priv.manifest) {
       return 0;
     }
 
     const ct = this.videoElement.currentTime;
-    if (this._manifest.isLive) {
-      return toWallClockTime(ct, this._manifest);
+    if (this._priv.manifest.isLive) {
+      return toWallClockTime(ct, this._priv.manifest);
     } else {
       return ct;
     }
@@ -1015,12 +553,12 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getWallClockTime() {
-    if (!this._manifest) {
+    if (!this._priv.manifest) {
       return 0;
     }
     const ct = this.videoElement.currentTime;
     return this.isLive() ?
-      (+toWallClockTime(ct, this._manifest) / 1000) : ct;
+      (+toWallClockTime(ct, this._priv.manifest) / 1000) : ct;
   }
 
   /**
@@ -1043,7 +581,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getStartTime() {
-    return this._timeFragment.start;
+    return this._priv.timeFragment.start;
   }
 
   /**
@@ -1051,7 +589,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getEndTime() {
-    return this._timeFragment.end;
+    return this._priv.timeFragment.end;
   }
 
   /**
@@ -1084,8 +622,8 @@ class Player extends EventEmitter {
       "getAvailableLanguages is deprecated and won't be available in the next major version." +
       " Use getAvailableAudioTracks instead."
     );
-    return this._languageManager &&
-      this._languageManager.getAvailableAudioTracks().map(l => l.language)
+    return this._priv.languageManager &&
+      this._priv.languageManager.getAvailableAudioTracks().map(l => l.language)
       || [];
   }
 
@@ -1098,8 +636,8 @@ class Player extends EventEmitter {
       "getAvailableSubtitles is deprecated and won't be available in the next major version." +
       " Use getAvailableTextTracks instead."
     );
-    return this._languageManager &&
-      this._languageManager.getAvailableTextTracks().map(s =>  s.language)
+    return this._priv.languageManager &&
+      this._priv.languageManager.getAvailableTextTracks().map(s =>  s.language)
       || [];
   }
 
@@ -1114,10 +652,10 @@ class Player extends EventEmitter {
       " Use getAudioTrack instead."
     );
 
-    if (!this._languageManager) {
+    if (!this._priv.languageManager) {
       return undefined;
     }
-    const currentTrack = this._languageManager.getCurrentAudioTrack();
+    const currentTrack = this._priv.languageManager.getCurrentAudioTrack();
 
     return currentTrack ?
       currentTrack.language : null;
@@ -1134,11 +672,11 @@ class Player extends EventEmitter {
       " Use getTextTrack instead."
     );
 
-    if (!this._languageManager) {
+    if (!this._priv.languageManager) {
       return undefined;
     }
 
-    const currentTrack = this._languageManager.getCurrentTextTrack();
+    const currentTrack = this._priv.languageManager.getCurrentTextTrack();
     return currentTrack && currentTrack.language;
   }
 
@@ -1146,16 +684,16 @@ class Player extends EventEmitter {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() {
-    return this._currentAdaptations.video &&
-      this._currentAdaptations.video.getAvailableBitrates() || [];
+    return this._priv.currentAdaptations.video &&
+      this._priv.currentAdaptations.video.getAvailableBitrates() || [];
   }
 
   /**
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() {
-    return this._currentAdaptations.audio &&
-      this._currentAdaptations.audio.getAvailableBitrates() || [];
+    return this._priv.currentAdaptations.audio &&
+      this._priv.currentAdaptations.audio.getAvailableBitrates() || [];
   }
 
   /**
@@ -1163,7 +701,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoBitrate() {
-    return this._recordedEvents.videoBitrate;
+    return this._priv.recordedEvents.videoBitrate;
   }
 
   /**
@@ -1171,7 +709,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAudioBitrate() {
-    return this._recordedEvents.audioBitrate;
+    return this._priv.recordedEvents.audioBitrate;
   }
 
   /**
@@ -1189,7 +727,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxVideoBitrate() {
-    return this._abrManager.getVideoMaxBitrate();
+    return this._priv.abrManager.getVideoMaxBitrate();
   }
 
   /**
@@ -1207,7 +745,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxAudioBitrate() {
-    return this._abrManager.getAudioMaxBitrate();
+    return this._priv.abrManager.getAudioMaxBitrate();
   }
 
   /**
@@ -1215,7 +753,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoBufferSize() {
-    return this._abrManager.getVideoBufferSize();
+    return this._priv.abrManager.getVideoBufferSize();
   }
 
   /**
@@ -1223,7 +761,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAudioBufferSize() {
-    return this._abrManager.getAudioBufferSize();
+    return this._priv.abrManager.getAudioBufferSize();
   }
 
   /**
@@ -1232,7 +770,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAverageBitrates() {
-    return this._abrManager.getAverageBitrates();
+    return this._priv.abrManager.getAverageBitrates();
   }
 
   /**
@@ -1240,7 +778,7 @@ class Player extends EventEmitter {
    * @deprecated
    */
   getMetrics() {
-    return this._metrics;
+    return this._priv.metrics;
   }
 
   /**
@@ -1295,14 +833,14 @@ class Player extends EventEmitter {
       }
       else if (time.wallClockTime != null) {
         this.videoElement.currentTime =
-          fromWallClockTime(time.wallClockTime * 1000, this._manifest);
+          fromWallClockTime(time.wallClockTime * 1000, this._priv.manifest);
         return;
       }
     }
 
     // deprecated part
-    if (this._manifest.isLive) {
-      time = fromWallClockTime(time, this._manifest);
+    if (this._priv.manifest.isLive) {
+      time = fromWallClockTime(time, this._priv.manifest);
     }
     if (time !== currentTs) {
       log.info("seek to", time);
@@ -1341,7 +879,7 @@ class Player extends EventEmitter {
   }
 
   mute() {
-    this._mutedMemory = this.getVolume() || 0.1;
+    this._priv.mutedMemory = this.getVolume() || 0.1;
     this.setVolume(0);
   }
 
@@ -1350,7 +888,7 @@ class Player extends EventEmitter {
     // We should probably reset this.muted once unMute is called.
     const vol = this.getVolume();
     if (vol === 0) {
-      this.setVolume(this._mutedMemory);
+      this.setVolume(this._priv.mutedMemory);
     }
   }
 
@@ -1423,10 +961,10 @@ class Player extends EventEmitter {
       "setLanguage is deprecated and won't be available in the next major version." +
       " Use setAudioTrack instead."
     );
-    assert(this._languageManager, "No compatible content launched.");
+    assert(this._priv.languageManager, "No compatible content launched.");
 
     try {
-      this._languageManager.setAudioTrackLegacy(arg);
+      this._priv.languageManager.setAudioTrackLegacy(arg);
     }
     catch (e) {
       throw new Error("player: unknown language");
@@ -1443,15 +981,15 @@ class Player extends EventEmitter {
       "setSubtitle is deprecated and won't be available in the next major version." +
       " Use setTextTrack instead."
     );
-    assert(this._languageManager, "No compatible content launched.");
+    assert(this._priv.languageManager, "No compatible content launched.");
 
     if (arg == null) {
-      this._languageManager.disableTextTrack();
+      this._priv.languageManager.disableTextTrack();
       return;
     }
 
     try {
-      this._languageManager.setTextTrackLegacy(arg);
+      this._priv.languageManager.setTextTrackLegacy(arg);
     }
     catch (e) {
       throw new Error("player: unknown subtitle");
@@ -1468,7 +1006,7 @@ class Player extends EventEmitter {
   setVideoBitrate(btr) {
     assertManifest(this);
     assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
-    this._abrManager.setVideoBitrate(btr);
+    this._priv.abrManager.setVideoBitrate(btr);
   }
 
   /**
@@ -1481,7 +1019,7 @@ class Player extends EventEmitter {
   setAudioBitrate(btr) {
     assertManifest(this);
     assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
-    this._abrManager.setAudioBitrate(btr);
+    this._priv.abrManager.setAudioBitrate(btr);
   }
 
   /**
@@ -1499,7 +1037,7 @@ class Player extends EventEmitter {
    * @param {Number} btr
    */
   setMaxVideoBitrate(btr) {
-    this._abrManager.setVideoMaxBitrate(btr);
+    this._priv.abrManager.setVideoMaxBitrate(btr);
   }
 
   /**
@@ -1517,7 +1055,7 @@ class Player extends EventEmitter {
    * @param {Number} btr
    */
   setMaxAudioBitrate(btr) {
-    this._abrManager.setAudioMaxBitrate(btr);
+    this._priv.abrManager.setAudioMaxBitrate(btr);
   }
 
   /**
@@ -1576,7 +1114,7 @@ class Player extends EventEmitter {
    * @param {Number} size
    */
   setVideoBufferSize(size) {
-    this._abrManager.setVideoBufferSize(size);
+    this._priv.abrManager.setVideoBufferSize(size);
   }
 
   /**
@@ -1584,14 +1122,14 @@ class Player extends EventEmitter {
    * @param {Number} size
    */
   setAudioBufferSize(size) {
-    this._abrManager.setAudioBufferSize(size);
+    this._priv.abrManager.setAudioBufferSize(size);
   }
 
   /**
    * TODO Deprecate this API
    */
   asObservable() {
-    return this._stream$;
+    return this._priv.stream$;
   }
 
   /**
@@ -1640,20 +1178,20 @@ class Player extends EventEmitter {
    * @returns {Array.<Object>|null}
    */
   getAvailableAudioTracks() {
-    if (!this._languageManager) {
+    if (!this._priv.languageManager) {
       return null;
     }
-    return this._languageManager.getAvailableAudioTracks();
+    return this._priv.languageManager.getAvailableAudioTracks();
   }
 
   /**
    * @returns {Array.<Object>|null}
    */
   getAvailableTextTracks() {
-    if (!this._languageManager) {
+    if (!this._priv.languageManager) {
       return null;
     }
-    return this._languageManager.getAvailableTextTracks();
+    return this._priv.languageManager.getAvailableTextTracks();
   }
 
   /**
@@ -1661,10 +1199,10 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getAudioTrack() {
-    if (!this._languageManager) {
+    if (!this._priv.languageManager) {
       return undefined;
     }
-    return this._languageManager.getCurrentAudioTrack();
+    return this._priv.languageManager.getCurrentAudioTrack();
   }
 
   /**
@@ -1672,10 +1210,10 @@ class Player extends EventEmitter {
    * @returns {string}
    */
   getTextTrack() {
-    if (!this._languageManager) {
+    if (!this._priv.languageManager) {
       return undefined;
     }
-    return this._languageManager.getCurrentTextTrack();
+    return this._priv.languageManager.getCurrentTextTrack();
   }
 
   /**
@@ -1683,9 +1221,9 @@ class Player extends EventEmitter {
    * @param {string} audioId
    */
   setAudioTrack(audioId) {
-    assert(this._languageManager, "No compatible content launched.");
+    assert(this._priv.languageManager, "No compatible content launched.");
     try {
-      this._languageManager.setAudioTrack(audioId);
+      this._priv.languageManager.setAudioTrack(audioId);
     }
     catch (e) {
       throw new Error("player: unknown audio track");
@@ -1697,9 +1235,9 @@ class Player extends EventEmitter {
    * @param {string} sub
    */
   setTextTrack(textId) {
-    assert(this._languageManager, "No compatible content launched.");
+    assert(this._priv.languageManager, "No compatible content launched.");
     try {
-      this._languageManager.setTextTrack(textId);
+      this._priv.languageManager.setTextTrack(textId);
     }
     catch (e) {
       throw new Error("player: unknown text track");
@@ -1707,26 +1245,24 @@ class Player extends EventEmitter {
   }
 
   disableTextTrack() {
-    if (!this._languageManager) {
+    if (!this._priv.languageManager) {
       return undefined;
     }
-    return this._languageManager.disableTextTrack();
+    return this._priv.languageManager.disableTextTrack();
   }
 
   getImageTrackData() {
-    if (!this._manifest) {
+    if (!this._priv.manifest) {
       return null;
     }
-
-    return this._currentImagePlaylist;
+    return this._priv.currentImagePlaylist;
   }
 
   getMinimumPosition() {
-    if (!this._manifest) {
+    if (!this._priv.manifest) {
       return null;
     }
-
-    return getMinimumBufferPosition(this._manifest);
+    return getMinimumBufferPosition(this._priv.manifest);
   }
 
   // TODO normally, we should also integrate timeFragment.end into this
@@ -1735,11 +1271,10 @@ class Player extends EventEmitter {
   // As this is a new API, and as timeFragment is deprecated, I let it
   // pass (do not hit me!)
   getMaximumPosition() {
-    if (!this._manifest) {
+    if (!this._priv.manifest) {
       return null;
     }
-
-    return getMaximumBufferPosition(this._manifest);
+    return getMaximumBufferPosition(this._priv.manifest);
   }
 }
 
