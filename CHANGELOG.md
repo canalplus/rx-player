@@ -1,9 +1,12 @@
 # Changelog
 
-## next version (pending)
+## v2.1.1 (2017/06/02)
 
 ### Bug fixes
 
+  - hotfix: the player can now be imported through a commonjs require
+  - hotfix: the player could not play if the video element's width was too short
+  - manifest: segment id were not always the same on a segmentLoader and on the API calls.
   - adaptive: setVideoBitrate now throw a more meaningful error if no content is playing
   - adaptive: setAudioBitrate now throw a more meaningful error if no content is playing
   - language: setSubtitle now throw a more meaningful error if no content is playing
