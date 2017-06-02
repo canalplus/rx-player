@@ -56,4 +56,5 @@ if (typeof Object.assign != "function") {
 if (__DEV__) {
   logger.setLevel(__LOGGER_LEVEL__);
 }
+
 export default Player;
