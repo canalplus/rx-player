@@ -47,9 +47,9 @@
     "update-version": "Update the version in the codebase, based on the VERSION file."
   },
   "scripts": {
-    "build": "webpack --progress --config tools/webpack.config.js src/index.js dist/rx-player.js",
-    "build:min": "RXP_MINIFY=true webpack --progress --config tools/webpack.config.js src/index.js dist/rx-player.min.js",
-    "build:watch": "webpack --progress --config tools/webpack.config.js -w src/index.js dist/rx-player.js",
+    "build": "webpack --progress --config tools/webpack.config.js src/exports.js dist/rx-player.js",
+    "build:min": "RXP_MINIFY=true webpack --progress --config tools/webpack.config.js src/exports.js dist/rx-player.min.js",
+    "build:watch": "webpack --progress --config tools/webpack.config.js -w src/exports.js dist/rx-player.js",
     "demo": "webpack --progress --config tools/webpack-demo.config.js",
     "demo:min": "RXP_DEMO_MINIFY=true webpack --progress --config tools/webpack-demo.config.js",
     "demo:watch": "webpack --progress --config tools/webpack-demo.config.js -w",
