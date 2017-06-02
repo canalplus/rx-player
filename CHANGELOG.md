@@ -4,6 +4,7 @@
 
 ### Bug fixes
 
+  - hotfix: fixed rxjs imports
   - hotfix: the player can now be imported through a commonjs require
   - hotfix: the player could not play if the video element's width was too short
   - manifest: segment id were not always the same on a segmentLoader and on the API calls.
