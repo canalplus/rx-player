@@ -123,6 +123,136 @@ function filterStreamByType(stream, type) {
 }
 
 /**
+ * Parse the options given as arguments to the loadVideo method.
+ * @param {Player} player
+ * @param {Object} opts
+ * @returns {Object}
+ */
+function parseLoadVideoOptions(player, opts) {
+  opts = objectAssign({
+    transport: player.defaultTransport,
+    transportOptions: {},
+    keySystems: [],
+    timeFragment: {},
+    textTracks: [],
+    imageTracks: [],
+    autoPlay: false,
+    hideNativeSubtitle: false,
+    directFile: false,
+  }, opts);
+
+  let {
+    transport,
+    url,
+    keySystems,
+    timeFragment,
+    supplementaryTextTracks,
+    supplementaryImageTracks,
+  } = opts;
+
+  const {
+    subtitles,
+    images,
+    transportOptions,
+    manifests,
+    autoPlay,
+    directFile,
+    defaultLanguage,
+    defaultAudioTrack,
+    defaultSubtitle,
+    defaultTextTrack,
+    hideNativeSubtitle, // TODO better name
+    startAt,
+  } = opts;
+
+  // ---- Deprecated calls
+
+  let _defaultAudioTrack = defaultAudioTrack;
+  let _defaultTextTrack = defaultTextTrack;
+
+  if (defaultLanguage != null && defaultAudioTrack == null) {
+    warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
+    _defaultAudioTrack = defaultLanguage;
+  }
+  if (
+    opts.hasOwnProperty("defaultSubtitle") &&
+    !opts.hasOwnProperty("defaultTextTrack")
+  ) {
+    warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
+    _defaultTextTrack = defaultSubtitle;
+  }
+
+  if (subtitles !== void 0 && supplementaryTextTracks === void 0) {
+    warnOnce(
+      "the subtitles option is deprecated. Use supplementaryTextTracks instead"
+    );
+    supplementaryTextTracks = subtitles;
+  }
+  if (images !== void 0 && supplementaryImageTracks === void 0) {
+    warnOnce(
+      "the images option is deprecated. Use supplementaryImageTracks instead"
+    );
+    supplementaryImageTracks = images;
+  }
+
+  // ----
+
+  if (_defaultAudioTrack === undefined) {
+    _defaultAudioTrack = player._lastAudioTrack;
+  }
+
+  if (_defaultTextTrack === undefined) {
+    _defaultTextTrack = player._lastTextTrack;
+  }
+
+  timeFragment = parseTimeFragment(timeFragment);
+
+  // compatibility with directFile api
+  if (directFile) {
+    transport = "directfile";
+  }
+
+  // compatibility with old API authorizing to pass multiple
+  // manifest url depending on the key system
+  assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
+  if (manifests) {
+    warnOnce(
+      "the manifests options is deprecated, use url instead"
+    );
+    const firstManifest = manifests[0];
+    url = firstManifest.url;
+
+    supplementaryTextTracks = firstManifest.subtitles || [];
+    supplementaryImageTracks = firstManifest.images || [];
+    keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
+  }
+
+  if (typeof transport == "string") {
+    transport = Transports[transport];
+  }
+
+  if (typeof transport == "function") {
+    transport = transport(objectAssign({}, player.defaultTransportOptions, transportOptions));
+  }
+
+  assert(transport, "player: transport " + opts.transport + " is not supported");
+
+  return {
+    url,
+    keySystems,
+    supplementaryTextTracks,
+    hideNativeSubtitle,
+    supplementaryImageTracks,
+    timeFragment,
+    autoPlay,
+    defaultAudioTrack: _defaultAudioTrack,
+    defaultTextTrack: _defaultTextTrack,
+    transport,
+    startAt,
+  };
+}
+
+/**
  * @class Player
  * @extends EventEmitter
  */
@@ -212,8 +342,6 @@ class Player extends EventEmitter {
 
     // --
 
-    this._clearLoaded$ = new Subject();
-
     this.defaultTransport = transport;
     this.defaultTransportOptions = transportOptions || {};
 
@@ -229,30 +357,25 @@ class Player extends EventEmitter {
     videoElement.preload = "auto";
 
     this.version = /*PLAYER_VERSION*/"2.3.2";
-    this.video = videoElement;
+    this.videoElement = videoElement;
 
-    // fullscreen change subscription.
-    // TODO prepend '_' to indicate private status?
-    this.fullscreen = onFullscreenChange(videoElement)
+    this._fullscreen$ = onFullscreenChange(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
-    // playing state change.
-    // TODO prepend '_' to indicate private status?
-    this.playing = new BehaviorSubject();
-
-    // multicaster forwarding all streams events
-    this.stream = new Subject(); // @deprecated
-    this.images = new Subject();
-    this.errorStream = new Subject();
+    this._playing$ = new BehaviorSubject(); // playing state change.
+    this._clearLoaded$ = new Subject(); // clean ressources from loaded content
+    this._stream$ = new Subject(); // multicaster forwarding all streams events
+    this._imageTrack$ = new Subject();
+    this._errorStream = new Subject(); // Emits warnings
 
     const { createPipelines, metrics } = PipeLines();
 
     const deviceEvents = DeviceEvents(videoElement);
 
-    this.createPipelines = createPipelines;
-    this.metrics = metrics;
+    this._createPipelines = createPipelines;
+    this._metrics = metrics;
 
-    this.adaptive = Adaptive(metrics, deviceEvents, {
+    this._abrManager = Adaptive(metrics, deviceEvents, {
       initialVideoBitrate: _initialVideoBitrate,
       initialAudioBitrate: _initialAudioBitrate,
       maxVideoBitrate,
@@ -263,16 +386,13 @@ class Player extends EventEmitter {
       throttleWhenHidden,
     });
 
-    // if no default track is provided on loadVideo, use the last one
     this._lastAudioTrack = undefined;
     this._lastTextTrack = undefined;
 
-    // memorize previous volume when muted - minimum at first
-    this.muted = 0.1;
+    this._mutedMemory = 0.1; // memorize previous volume when muted
 
-    // states
     this._setPlayerState(PLAYER_STOPPED);
-    this._resetStates();
+    this._resetContentState();
 
     this.log = log;
   }
@@ -281,25 +401,26 @@ class Player extends EventEmitter {
    * Reset all states relative to a playing content.
    * @private
    */
-  _resetStates() {
+  _resetContentState() {
     this._manifest = null;
     this._languageManager = null;
-    this.reps = { video: null, audio: null, text: null, images: null };
-    this.adas = { video: null, audio: null, text: null, images: null };
-    this.evts = {};
-    this.frag = { start: null, end: null };
-    this.error = null;
-    this.images.next(null);
+    this._currentRepresentations = {
+      video: null,
+      audio: null,
+      text: null,
+      images: null,
+    };
+    this._currentAdaptations = {
+      video: null,
+      audio: null,
+      text: null,
+      images: null,
+    };
+    this._recordedEvents = {};
+    this._timeFragment = { start: null, end: null };
+    this._fatalError = null;
+    this._imageTrack$.next(null);
     this._currentImagePlaylist = null;
-  }
-
-  /**
-   * Unsubscribe from subscriptions done in loadVideo for the current content.
-   * This also stops the current video as a side-effect.
-   * @private
-   */
-  _unsubscribe() {
-    this._clearLoaded$.next();
   }
 
   /**
@@ -307,8 +428,8 @@ class Player extends EventEmitter {
    */
   stop() {
     if (this.state !== PLAYER_STOPPED) {
-      this._resetStates();
-      this._unsubscribe();
+      this._resetContentState();
+      this._clearLoaded$.next();
       this._setPlayerState(PLAYER_STOPPED);
     }
   }
@@ -319,20 +440,22 @@ class Player extends EventEmitter {
   dispose() {
     this.stop();
     this._clearLoaded$.complete();
-    this.metrics.unsubscribe();
-    this.adaptive.unsubscribe();
-    this.fullscreen.unsubscribe();
-    this.stream.unsubscribe(); // @deprecated
+    this._metrics.unsubscribe();
+    this._abrManager.unsubscribe();
+    this._fullscreen$.unsubscribe();
+    this._stream$.unsubscribe(); // @deprecated
+    this._errorStream.unsubscribe();
     emeDispose();
 
     this._clearLoaded$ = null;
-    this.metrics = null;
-    this.adaptive = null;
-    this.fullscreen = null;
-    this.stream = null; // @deprecated
+    this._metrics = null;
+    this._abrManager = null;
+    this._fullscreen$ = null;
+    this._stream$ = null; // @deprecated
+    this._errorStream = null;
 
-    this.createPipelines = null;
-    this.video = null;
+    this._createPipelines = null;
+    this.videoElement = null;
   }
 
   /**
@@ -342,141 +465,11 @@ class Player extends EventEmitter {
    * @param {*} value - its new value
    */
   _recordState(type, value) {
-    const prev = this.evts[type];
+    const prev = this._recordedEvents[type];
     if (prev !== value) {
-      this.evts[type] = value;
+      this._recordedEvents[type] = value;
       this.trigger(`${type}Change`, value);
     }
-  }
-
-  /**
-   * Parse the options given as arguments to the loadVideo method.
-   * @private
-   * @param {Object} opts
-   * @returns {Object}
-   */
-  _parseOptions(opts) {
-    opts = objectAssign({
-      transport: this.defaultTransport,
-      transportOptions: {},
-      keySystems: [],
-      timeFragment: {},
-      textTracks: [],
-      imageTracks: [],
-      autoPlay: false,
-      hideNativeSubtitle: false,
-      directFile: false,
-    }, opts);
-
-    let {
-      transport,
-      url,
-      keySystems,
-      timeFragment,
-      supplementaryTextTracks,
-      supplementaryImageTracks,
-    } = opts;
-
-    const {
-      subtitles,
-      images,
-      transportOptions,
-      manifests,
-      autoPlay,
-      directFile,
-      defaultLanguage,
-      defaultAudioTrack,
-      defaultSubtitle,
-      defaultTextTrack,
-      hideNativeSubtitle, // TODO better name
-      startAt,
-    } = opts;
-
-    // ---- Deprecated calls
-
-    let _defaultAudioTrack = defaultAudioTrack;
-    let _defaultTextTrack = defaultTextTrack;
-
-    if (defaultLanguage != null && defaultAudioTrack == null) {
-      warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
-      _defaultAudioTrack = defaultLanguage;
-    }
-    if (
-      opts.hasOwnProperty("defaultSubtitle") &&
-      !opts.hasOwnProperty("defaultTextTrack")
-    ) {
-      warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
-      _defaultTextTrack = defaultSubtitle;
-    }
-
-    if (subtitles !== void 0 && supplementaryTextTracks === void 0) {
-      warnOnce(
-        "the subtitles option is deprecated. Use supplementaryTextTracks instead"
-      );
-      supplementaryTextTracks = subtitles;
-    }
-    if (images !== void 0 && supplementaryImageTracks === void 0) {
-      warnOnce(
-        "the images option is deprecated. Use supplementaryImageTracks instead"
-      );
-      supplementaryImageTracks = images;
-    }
-
-    // ----
-
-    if (_defaultAudioTrack === undefined) {
-      _defaultAudioTrack = this._lastAudioTrack;
-    }
-
-    if (_defaultTextTrack === undefined) {
-      _defaultTextTrack = this._lastTextTrack;
-    }
-
-    timeFragment = parseTimeFragment(timeFragment);
-
-    // compatibility with directFile api
-    if (directFile) {
-      transport = "directfile";
-    }
-
-    // compatibility with old API authorizing to pass multiple
-    // manifest url depending on the key system
-    assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
-    if (manifests) {
-      warnOnce(
-        "the manifests options is deprecated, use url instead"
-      );
-      const firstManifest = manifests[0];
-      url = firstManifest.url;
-
-      supplementaryTextTracks = firstManifest.subtitles || [];
-      supplementaryImageTracks = firstManifest.images || [];
-      keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
-    }
-
-    if (typeof transport == "string") {
-      transport = Transports[transport];
-    }
-
-    if (typeof transport == "function") {
-      transport = transport(objectAssign({}, this.defaultTransportOptions, transportOptions));
-    }
-
-    assert(transport, "player: transport " + opts.transport + " is not supported");
-
-    return {
-      url,
-      keySystems,
-      supplementaryTextTracks,
-      hideNativeSubtitle,
-      supplementaryImageTracks,
-      timeFragment,
-      autoPlay,
-      defaultAudioTrack: _defaultAudioTrack,
-      defaultTextTrack: _defaultTextTrack,
-      transport,
-      startAt,
-    };
   }
 
   /**
@@ -485,7 +478,7 @@ class Player extends EventEmitter {
    * @returns {Observable}
    */
   loadVideo(options = {}) {
-    options = this._parseOptions(options);
+    options = parseLoadVideoOptions(this, options);
     log.info("loadvideo", options);
 
     const {
@@ -503,17 +496,17 @@ class Player extends EventEmitter {
     } = options;
 
     this.stop();
-    this.frag = timeFragment;
-    this.playing.next(autoPlay);
+    this._timeFragment = timeFragment;
+    this._playing$.next(autoPlay);
 
     const {
-      video: videoElement,
-      adaptive,
-      errorStream,
+      videoElement: videoElement,
+      _abrManager: adaptive,
+      _errorStream: errorStream,
     } = this;
 
-    const pipelines = this.createPipelines(transport, {
-      errorStream: errorStream,
+    const pipelines = this._createPipelines(transport, {
+      errorStream,
       audio: { cache: new InitializationSegmentCache() },
       video: { cache: new InitializationSegmentCache() },
       image: { maxRetry: 0 }, // Deactivate BIF fetching if it fails
@@ -538,6 +531,7 @@ class Player extends EventEmitter {
       defaultAudioTrack,
       defaultTextTrack,
     })
+      .takeUntil(this._clearLoaded$)
       .publish();
 
     const stalled = filterStreamByType(stream, "stalled")
@@ -548,14 +542,14 @@ class Player extends EventEmitter {
       .share();
 
     const stateChanges = loaded.mapTo(PLAYER_LOADED)
-      .concat(combineLatest(this.playing, stalled, inferPlayerState))
+      .concat(combineLatest(this._playing$, stalled, inferPlayerState))
       .distinctUntilChanged()
       .startWith(PLAYER_LOADING);
 
     const playChanges = on(videoElement, ["play", "pause"]);
     const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
 
-    let streamDisposable;
+    let streamDisposable = void 0;
     let unsubscribed = false;
 
     this._clearLoaded$.take(1).subscribe(() => {
@@ -565,29 +559,28 @@ class Player extends EventEmitter {
       }
     });
 
+    const noop = () => {};
+
     playChanges
       .takeUntil(this._clearLoaded$)
-      .subscribe(x => this._playPauseNext(x), () => {});
+      .subscribe(x => this._onPlayPauseNext(x), noop);
 
     textTracksChanges
       .takeUntil(this._clearLoaded$)
-      .subscribe(x => this._textTrackChanges(x), () => {});
-
-    stateChanges
-      .takeUntil(this._clearLoaded$)
-      .subscribe(x => this._setPlayerState(x), () => {});
+      .subscribe(x => this._onNativeTextTrackNext(x), noop);
 
     timings
       .takeUntil(this._clearLoaded$)
-      .subscribe(x => this._triggerTimeChange(x), () => {});
+      .subscribe(x => this._triggerTimeChange(x), noop);
 
-    stream
-      .takeUntil(this._clearLoaded$)
-      .subscribe(
-        x => this._onStreamNext(x),
-        err => this._onStreamError(err),
-        () => this._onStreamComplete()
-      );
+    stateChanges
+      .subscribe(x => this._setPlayerState(x), noop);
+
+    stream.subscribe(
+      x => this._onStreamNext(x),
+      err => this._onStreamError(err),
+      () => this._onStreamComplete()
+    );
 
     errorStream
       .takeUntil(this._clearLoaded$)
@@ -595,13 +588,13 @@ class Player extends EventEmitter {
         x => this._onErrorStreamNext(x)
       );
 
+    streamDisposable = stream.connect();
+
     // ugly but needed in case the user stops the video on one of the events
     // declared here
+    // TODO delete empty timings?
     if (!unsubscribed) {
-      streamDisposable = stream.connect();
-      if (!unsubscribed) {
-        this._triggerTimeChange();
-      }
+      this._triggerTimeChange();
     }
     return loaded;
   }
@@ -637,15 +630,16 @@ class Player extends EventEmitter {
         });
 
         // TODO @deprecated remove that
-        this.images.next(value);
+        this._imageTrack$.next(value);
       }
     }
 
     // stream could be unset following the previous triggers
     // @deprecated
-    if (this.stream) {
-      this.stream.next(streamInfos);
+    if (this._stream$) {
+      this._stream$.next(streamInfos);
     }
+    this._stream$.next(streamInfos);
   }
 
   /**
@@ -659,9 +653,10 @@ class Player extends EventEmitter {
 
     // stream could be unset following the previous triggers
     // @deprecated
-    if (this.stream) {
-      this.stream.next({ type: "warning", value: error });
+    if (this._stream$) {
+      this._stream$.next({ type: "warning", value: error });
     }
+    this._stream$.next({ type: "warning", value: error });
   }
 
   /**
@@ -670,17 +665,18 @@ class Player extends EventEmitter {
    * @param {Object} streamInfos
    */
   _onStreamError(error) {
-    this._resetStates();
-    this.error = error;
+    this._resetContentState();
+    this._fatalError = error;
     this._setPlayerState(PLAYER_STOPPED);
-    this._unsubscribe();
+    this._clearLoaded$.next();
     this.trigger("error", error);
 
     // stream could be unset following the previous triggers
     // @deprecated
-    if (this.stream) {
-      this.stream.next({ type: "error", value: error });
+    if (this._stream$) {
+      this._stream$.next({ type: "error", value: error });
     }
+    this._stream$.next({ type: "error", value: error });
   }
 
   /**
@@ -689,17 +685,21 @@ class Player extends EventEmitter {
    * @param {Object} streamInfos
    */
   _onStreamComplete() {
-    this._resetStates();
+    this._resetContentState();
     this._setPlayerState(PLAYER_ENDED);
-    this._unsubscribe();
+    this._clearLoaded$.next();
 
     // stream could be unset following the previous triggers
     // @deprecated
-    if (this.stream) {
-      this.stream.next({ type: "ended", value: null });
+    if (this._stream$) {
+      this._stream$.next({ type: "ended", value: null });
     }
+    this._stream$.next({ type: "ended", value: null });
   }
 
+  /**
+   * Subscribe to audio and text track updates.
+   */
   _addLanguageSubscriptions() {
     assert(this._languageManager, "no languageManager received");
 
@@ -761,8 +761,8 @@ class Player extends EventEmitter {
    * @param {Object} obj.representation
    */
   _onBufferNext({ bufferType, adaptation, representation }) {
-    this.reps[bufferType] = representation;
-    this.adas[bufferType] = adaptation;
+    this._currentRepresentations[bufferType] = representation;
+    this._currentAdaptations[bufferType] = adaptation;
 
     if (bufferType == "video") {
       this._recordState("videoBitrate",
@@ -782,9 +782,9 @@ class Player extends EventEmitter {
    * @param {Object} evt
    * @param {string} evt.type
    */
-  _playPauseNext(evt) {
-    if (this.video.ended !== true) {
-      this.playing.next(evt.type == "play");
+  _onPlayPauseNext(evt) {
+    if (this.videoElement.ended !== true) {
+      this._playing$.next(evt.type == "play");
     }
   }
 
@@ -794,7 +794,7 @@ class Player extends EventEmitter {
    * @param {Object} evt
    * @param {HTMLElement} evt.target
    */
-  _textTrackChanges({ target: [trackElement] }) {
+  _onNativeTextTrackNext({ target: [trackElement] }) {
     if (trackElement) {
       this.trigger("nativeTextTrackChange", trackElement);
     }
@@ -858,7 +858,7 @@ class Player extends EventEmitter {
    * @returns {Object|null}
    */
   getError() {
-    return this.error;
+    return this._fatalError;
   }
 
   /**
@@ -874,14 +874,14 @@ class Player extends EventEmitter {
     if (!this._manifest){
       return null;
     }
-    return this.adas;
+    return this._currentAdaptations;
   }
 
   getCurrentRepresentations() {
     if (!this._manifest){
       return null;
     }
-    return this.reps;
+    return this._currentRepresentations;
   }
 
   /**
@@ -889,7 +889,7 @@ class Player extends EventEmitter {
    * @returns {HMTLMediaElement}
    */
   getVideoElement() {
-    return this.video;
+    return this.videoElement;
   }
 
   /**
@@ -897,9 +897,9 @@ class Player extends EventEmitter {
    * @returns {TextTrack}
    */
   getNativeTextTrack() {
-    const textTracks = this.video.textTracks;
+    const textTracks = this.videoElement.textTracks;
     if (textTracks.length > 0) {
-      return this.video.textTracks[0];
+      return this.videoElement.textTracks[0];
     } else {
       return null;
     }
@@ -910,7 +910,7 @@ class Player extends EventEmitter {
    * @returns {Observable}
    */
   getImageTrack() {
-    return this.images.distinctUntilChanged();
+    return this._imageTrack$.distinctUntilChanged();
   }
 
   /**
@@ -950,7 +950,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoDuration() {
-    return this.video.duration;
+    return this.videoElement.duration;
   }
 
   /**
@@ -960,7 +960,8 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoLoadedTime() {
-    return new BufferedRanges(this.video.buffered).getSize(this.video.currentTime);
+    return new BufferedRanges(this.videoElement.buffered)
+      .getSize(this.videoElement.currentTime);
   }
 
   /**
@@ -970,7 +971,8 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoPlayedTime() {
-    return new BufferedRanges(this.video.buffered).getLoaded(this.video.currentTime);
+    return new BufferedRanges(this.videoElement.buffered)
+      .getLoaded(this.videoElement.currentTime);
   }
 
   /**
@@ -990,7 +992,7 @@ class Player extends EventEmitter {
       return 0;
     }
 
-    const ct = this.video.currentTime;
+    const ct = this.videoElement.currentTime;
     if (this._manifest.isLive) {
       return toWallClockTime(ct, this._manifest);
     } else {
@@ -1016,7 +1018,7 @@ class Player extends EventEmitter {
     if (!this._manifest) {
       return 0;
     }
-    const ct = this.video.currentTime;
+    const ct = this.videoElement.currentTime;
     return this.isLive() ?
       (+toWallClockTime(ct, this._manifest) / 1000) : ct;
   }
@@ -1033,35 +1035,37 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getPosition() {
-    return this.video.currentTime;
+    return this.videoElement.currentTime;
   }
 
   /**
+   * @deprecated
    * @returns {Number}
    */
   getStartTime() {
-    return this.frag.start;
+    return this._timeFragment.start;
   }
 
   /**
+   * @deprecated
    * @returns {Number}
    */
   getEndTime() {
-    return this.frag.end;
+    return this._timeFragment.end;
   }
 
   /**
    * @returns {Number}
    */
   getPlaybackRate() {
-    return this.video.playbackRate;
+    return this.videoElement.playbackRate;
   }
 
   /**
    * @returns {Number}
    */
   getVolume() {
-    return this.video.volume;
+    return this.videoElement.volume;
   }
 
   /**
@@ -1142,14 +1146,16 @@ class Player extends EventEmitter {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() {
-    return this.adas.video && this.adas.video.getAvailableBitrates() || [];
+    return this._currentAdaptations.video &&
+      this._currentAdaptations.video.getAvailableBitrates() || [];
   }
 
   /**
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() {
-    return this.adas.audio && this.adas.audio.getAvailableBitrates() || [];
+    return this._currentAdaptations.audio &&
+      this._currentAdaptations.audio.getAvailableBitrates() || [];
   }
 
   /**
@@ -1157,7 +1163,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoBitrate() {
-    return this.evts.videoBitrate;
+    return this._recordedEvents.videoBitrate;
   }
 
   /**
@@ -1165,7 +1171,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAudioBitrate() {
-    return this.evts.audioBitrate;
+    return this._recordedEvents.audioBitrate;
   }
 
   /**
@@ -1183,7 +1189,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxVideoBitrate() {
-    return this.adaptive.getVideoMaxBitrate();
+    return this._abrManager.getVideoMaxBitrate();
   }
 
   /**
@@ -1201,7 +1207,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxAudioBitrate() {
-    return this.adaptive.getAudioMaxBitrate();
+    return this._abrManager.getAudioMaxBitrate();
   }
 
   /**
@@ -1209,7 +1215,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoBufferSize() {
-    return this.adaptive.getVideoBufferSize();
+    return this._abrManager.getVideoBufferSize();
   }
 
   /**
@@ -1217,7 +1223,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAudioBufferSize() {
-    return this.adaptive.getAudioBufferSize();
+    return this._abrManager.getAudioBufferSize();
   }
 
   /**
@@ -1226,7 +1232,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAverageBitrates() {
-    return this.adaptive.getAverageBitrates();
+    return this._abrManager.getAverageBitrates();
   }
 
   /**
@@ -1234,21 +1240,21 @@ class Player extends EventEmitter {
    * @deprecated
    */
   getMetrics() {
-    return this.metrics;
+    return this._metrics;
   }
 
   /**
    * Play/Resume the current video.
    */
   play() {
-    this.video.play();
+    this.videoElement.play();
   }
 
   /**
    * Pause playback of the video.
    */
   pause() {
-    this.video.pause();
+    this.videoElement.pause();
   }
 
   /**
@@ -1256,7 +1262,7 @@ class Player extends EventEmitter {
    * @param {Number} rate
    */
   setPlaybackRate(rate) {
-    this.video.playbackRate = rate;
+    this.videoElement.playbackRate = rate;
   }
 
   /**
@@ -1275,20 +1281,20 @@ class Player extends EventEmitter {
    */
   seekTo(time) {
     assertManifest(this);
-    const currentTs = this.video.currentTime;
+    const currentTs = this.videoElement.currentTime;
 
     // NON-deprecated part
     if (time) {
       if (time.relative != null) {
-        this.video.currentTime = currentTs + time.relative;
+        this.videoElement.currentTime = currentTs + time.relative;
         return;
       }
       else if (time.position != null) {
-        this.video.currentTime = time.position;
+        this.videoElement.currentTime = time.position;
         return;
       }
       else if (time.wallClockTime != null) {
-        this.video.currentTime =
+        this.videoElement.currentTime =
           fromWallClockTime(time.wallClockTime * 1000, this._manifest);
         return;
       }
@@ -1300,7 +1306,7 @@ class Player extends EventEmitter {
     }
     if (time !== currentTs) {
       log.info("seek to", time);
-      return (this.video.currentTime = time);
+      return (this.videoElement.currentTime = time);
     } else {
       return currentTs;
     }
@@ -1320,23 +1326,22 @@ class Player extends EventEmitter {
       warnOnce("setFullscreen(false) is deprecated. Use exitFullscreen instead");
       exitFullscreen();
     } else {
-      requestFullscreen(this.video);
+      requestFullscreen(this.videoElement);
     }
   }
-
 
   /**
    * @param {Number}
    */
   setVolume(volume) {
-    if (volume !== this.video.volume) {
-      this.video.volume = volume;
+    if (volume !== this.videoElement.volume) {
+      this.videoElement.volume = volume;
       this.trigger("volumeChange", volume);
     }
   }
 
   mute() {
-    this.muted = this.getVolume() || 0.1;
+    this._mutedMemory = this.getVolume() || 0.1;
     this.setVolume(0);
   }
 
@@ -1345,7 +1350,7 @@ class Player extends EventEmitter {
     // We should probably reset this.muted once unMute is called.
     const vol = this.getVolume();
     if (vol === 0) {
-      this.setVolume(this.muted);
+      this.setVolume(this._mutedMemory);
     }
   }
 
@@ -1463,7 +1468,7 @@ class Player extends EventEmitter {
   setVideoBitrate(btr) {
     assertManifest(this);
     assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
-    this.adaptive.setVideoBitrate(btr);
+    this._abrManager.setVideoBitrate(btr);
   }
 
   /**
@@ -1476,7 +1481,7 @@ class Player extends EventEmitter {
   setAudioBitrate(btr) {
     assertManifest(this);
     assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
-    this.adaptive.setAudioBitrate(btr);
+    this._abrManager.setAudioBitrate(btr);
   }
 
   /**
@@ -1494,7 +1499,7 @@ class Player extends EventEmitter {
    * @param {Number} btr
    */
   setMaxVideoBitrate(btr) {
-    this.adaptive.setVideoMaxBitrate(btr);
+    this._abrManager.setVideoMaxBitrate(btr);
   }
 
   /**
@@ -1512,7 +1517,7 @@ class Player extends EventEmitter {
    * @param {Number} btr
    */
   setMaxAudioBitrate(btr) {
-    this.adaptive.setAudioMaxBitrate(btr);
+    this._abrManager.setAudioMaxBitrate(btr);
   }
 
   /**
@@ -1571,7 +1576,7 @@ class Player extends EventEmitter {
    * @param {Number} size
    */
   setVideoBufferSize(size) {
-    this.adaptive.setVideoBufferSize(size);
+    this._abrManager.setVideoBufferSize(size);
   }
 
   /**
@@ -1579,14 +1584,14 @@ class Player extends EventEmitter {
    * @param {Number} size
    */
   setAudioBufferSize(size) {
-    this.adaptive.setAudioBufferSize(size);
+    this._abrManager.setAudioBufferSize(size);
   }
 
   /**
    * TODO Deprecate this API
    */
   asObservable() {
-    return this.stream;
+    return this._stream$;
   }
 
   /**
@@ -1603,7 +1608,7 @@ class Player extends EventEmitter {
    * @deprecated
    */
   showDebug() {
-    debugPane.showDebug(this, this.video);
+    debugPane.showDebug(this, this.videoElement);
   }
 
   /**
@@ -1619,7 +1624,7 @@ class Player extends EventEmitter {
    * @deprecated
    */
   toggleDebug() {
-    debugPane.toggleDebug(this,this.video);
+    debugPane.toggleDebug(this,this.videoElement);
   }
 
   /**

@@ -15,6 +15,7 @@
  */
 
 import arrayFind from "array-find";
+import objectAssign from "object-assign";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 
 import {
@@ -121,7 +122,7 @@ class LanguageManager {
     const {
       defaultAudioTrack,
       defaultTextTrack,
-    } = Object.assign({}, DEFAULTS, options);
+    } = objectAssign({}, DEFAULTS, options);
 
     const normalizedAudioTrack = normalizeAudioTrack(defaultAudioTrack);
     const normalizedTextTrack = normalizeTextTrack(defaultTextTrack);
