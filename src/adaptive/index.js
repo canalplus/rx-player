@@ -98,7 +98,9 @@ function getMaxUsefulBitrateforWidth(reps, width) {
 
   if (maxWidth) {
     const filteredAdaptations = reps.filter(r => r.width <= maxWidth);
-    return filteredAdaptations[filteredAdaptations.length - 1].bitrate;
+    if (filteredAdaptations.length) {
+      return filteredAdaptations[filteredAdaptations.length - 1].bitrate;
+    }
   }
 
   return Infinity;
