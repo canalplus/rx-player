@@ -3,7 +3,7 @@
   "author": "Canal+",
   "version": "2.1.0",
   "description": "Canal+ HTML5 Video Player",
-  "main": "./dist/rx-player.min.js",
+  "main": "./dist/rx-player.js",
   "keywords": [
     "video",
     "streaming",
