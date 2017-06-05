@@ -65,7 +65,10 @@ function Buffer({
   sourceBuffer, // SourceBuffer object
   adaptation,   // Adaptation buffered
   pipeline,     // Segment pipeline
-  adapters,     // adaptive observables
+  wantedBufferAhead,
+  maxBufferBehind,
+  maxBufferAhead,
+  representations,
   timings,      // Timings observable
   seekings,     // Seekings observable
   isLive,
@@ -80,12 +83,6 @@ function Buffer({
   const LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
   const HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
 
-  const {
-    representations,
-    wantedBufferAhead,
-    maxBufferBehind,
-    maxBufferAhead,
-  } = adapters;
   const ranges = new BufferedRanges();
   const bufferingQueue = new BufferingQueue(sourceBuffer);
 

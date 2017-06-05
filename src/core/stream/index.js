@@ -575,20 +575,16 @@ function Stream({
         });
       };
 
-      const adapters = {
-        representations: adaptive.getRepresentation$(adaptation),
-        wantedBufferAhead: wantedBufferAhead$,
-        maxBufferBehind: maxBufferBehind$,
-        maxBufferAhead: maxBufferAhead$,
-      };
-
       const buffer = Buffer({
         bufferType,
         sourceBuffer,
         adaptation,
         timings,
         seekings,
-        adapters,
+        representations: adaptive.getRepresentation$(adaptation),
+        wantedBufferAhead: wantedBufferAhead$,
+        maxBufferBehind: maxBufferBehind$,
+        maxBufferAhead: maxBufferAhead$,
         pipeline: fetchSegment,
         isLive: manifest.isLive,
       });
