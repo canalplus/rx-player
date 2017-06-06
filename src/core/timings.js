@@ -108,32 +108,43 @@ class Timings {
 }
 
 function getEmptyTimings() {
-  return new Timings(0,
-                     new BufferedRanges(),
-                     0,
-                     Infinity,
-                     "timeupdate",
-                     1,
-                     null,
-                     0,
-                     null,
-                     null);
+  return new Timings(
+    0, // ts
+    new BufferedRanges(), // buffered
+    0, // duration
+    Infinity, // gap (TODO Why Infinity?)
+    "timeupdate", // name
+    1, // playback
+    null, // range
+    0, // readyState
+    null, // stalled
+    null  // paused
+  );
 }
 
 function getTimings(video, name) {
-  const ts = video.currentTime;
-  const paused = video.paused;
-  const buffered = new BufferedRanges(video.buffered);
-  return new Timings(ts,
-                     buffered,
-                     video.duration,
-                     buffered.getGap(ts),
-                     name,
-                     video.playbackRate,
-                     buffered.getRange(ts),
-                     video.readyState,
-                     null,
-                     paused);
+  const {
+    currentTime,
+    paused,
+    playbackRate,
+    readyState,
+    buffered,
+    duration,
+  } = video;
+  const bufferedRanges = new BufferedRanges(buffered);
+
+  return new Timings(
+    currentTime, // ts
+    bufferedRanges, // buffered
+    duration,
+    bufferedRanges.getGap(currentTime), // gap
+    name,
+    playbackRate,
+    bufferedRanges.getRange(currentTime),
+    readyState,
+    null, // stalled
+    paused
+  );
 }
 
 function scanTimings(prevTimings, currentTimings, requiresMediaSource) {

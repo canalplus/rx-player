@@ -45,32 +45,27 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 
 /**
  * Manage a single buffer:
- *   - load the right segments through the pipeline on normal playback /
+ *   - load the right segments through the downloader on normal playback /
  *     seeking / as the adaptation chosen changes
  *   - add those to the sourceBuffer
  *   - clean up if too much segments have been loaded
- * @param {string} BufferType
- * @param {SourceBuffer} sourceBuffer
- * @param {Object} adaptation - adaptation choice for the given bufferType
- * @param {Object} pipeline - pipeline for the given bufferType
- * @param {Object} adapters - Adaptive observables
- * @param {Observable} timings - Timings observable. Mainly Used to re-trigger
- * a segment loading process.
- * @param {Observable} seekings - Seekings observable. Emit each time the player
- * is seeking.
  * @returns {Observable}
  */
 function Buffer({
+  sourceBuffer,
+  downloader,
+  bufferSize$,
+  switch$,
+
+  // TODO simplify and rename clock$?
+  timings,      // Timings observable
+
+  // XXX Remove that from here
   bufferType,   // Buffer type (audio, video, text, image)
-  sourceBuffer, // SourceBuffer object
   adaptation,   // Adaptation buffered
-  pipeline,     // Segment pipeline
   wantedBufferAhead,
   maxBufferBehind,
   maxBufferAhead,
-  representations,
-  timings,      // Timings observable
-  seekings,     // Seekings observable
   isLive,
 }) {
 
@@ -97,7 +92,7 @@ function Buffer({
    * should consider cleaning up.
    * @returns {Array.<Range>} - Ranges selected for clean up
    */
-  function selectGCedRanges({ts, buffered}, gcGap) {
+  function selectGCedRanges(ts, buffered, gcGap) {
     const innerRange  = buffered.getRange(ts);
     const outerRanges = buffered.getOuterRanges(ts);
 
@@ -146,11 +141,11 @@ function Buffer({
   function bufferGarbageCollector() {
     log.warn("buffer: running garbage collector");
     return timings.take(1).mergeMap((timing) => {
-      let cleanedupRanges = selectGCedRanges(timing, GC_GAP_CALM);
+      let cleanedupRanges = selectGCedRanges(timing.ts, timing.buffered, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean
       if (cleanedupRanges.length === 0) {
-        cleanedupRanges = selectGCedRanges(timing, GC_GAP_BEEFY);
+        cleanedupRanges = selectGCedRanges(timing.ts, timing.buffered, GC_GAP_BEEFY);
       }
 
       log.debug("buffer: gc cleaning", cleanedupRanges);
@@ -508,7 +503,7 @@ function Buffer({
     };
 
     const loadNeededSegments = segment => {
-      return pipeline({ segment, representation })
+      return downloader({ segment, representation })
         .map((args) => objectAssign({ segment }, args));
     };
 
@@ -560,7 +555,7 @@ function Buffer({
       });
   }
 
-  return combineLatest(representations, seekings, (rep) => rep)
+  return switch$
     .switchMap(createRepresentationBuffer)
     .finally(() => bufferingQueue.dispose());
 }

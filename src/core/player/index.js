@@ -206,8 +206,6 @@ class Player extends EventEmitter {
       initialAudioBitrate: _initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
-      defaultAudioTrack: normalizeAudioTrack(_defaultAudioTrack),
-      defaultTextTrack: normalizeTextTrack(_defaultTextTrack),
       limitVideoWidth,
       throttleWhenHidden,
     });
@@ -332,6 +330,7 @@ class Player extends EventEmitter {
       videoElement,
       { requiresMediaSource: pipelines.requiresMediaSource() }
     );
+
     const stream = Stream({
       url,
       errorStream,
@@ -780,6 +779,7 @@ class Player extends EventEmitter {
   /**
    * Get last calculated average bitrate, from an exponential moving average
    * formula.
+   * @deprecated
    * @returns {Number}
    */
   getAverageBitrates() {

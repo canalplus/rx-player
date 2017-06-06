@@ -204,23 +204,34 @@ const getAdaptationObservable = (type, adaptations, languageManager) => {
  */
 function Stream({
   url,
-  errorStream, // subject through which minor errors are emitted
-  keySystems,
-  supplementaryTextTracks, // eventual manually added subtitles
-  hideNativeSubtitle, // Whether TextTracks subtitles should be hidden or not
-  supplementaryImageTracks, // eventual manually added images
-  timings,
-  timeFragment,
-  adaptive,
-  pipelines,
   videoElement,
-  autoPlay,
+  keySystems,
   startAt,
-  defaultAudioTrack,
-  defaultTextTrack,
+  autoPlay,
   wantedBufferAhead$,
   maxBufferAhead$,
   maxBufferBehind$,
+  defaultAudioTrack,
+  defaultTextTrack,
+
+  // XXX
+  // initialBitrates,
+  // maxBitrates,
+  // limitVideoWidth
+  // throttleWhenHidden
+
+  supplementaryTextTracks, // eventual manually added subtitles
+  supplementaryImageTracks, // eventual manually added images
+
+  // XXX
+  // supplementaryTracks?
+
+  timings,
+  hideNativeSubtitle, // Whether TextTracks subtitles should be hidden or not
+  pipelines,
+  errorStream, // subject through which minor errors are emitted
+  adaptive,
+  timeFragment, // @deprecated
 }) {
   // TODO @deprecate?
   const fragEndTimeIsFinite = timeFragment.end < Infinity;
@@ -566,7 +577,7 @@ function Stream({
       const sourceBuffer =
         createSourceBuffer(videoElement, mediaSource, bufferType, codec);
 
-      const fetchSegment = ({ segment, representation }) => {
+      const downloader = ({ segment, representation }) => {
         return pipelines[bufferType]({
           segment,
           representation,
@@ -575,17 +586,23 @@ function Stream({
         });
       };
 
-      const buffer = Buffer({
-        bufferType,
-        sourceBuffer,
-        adaptation,
-        timings,
+      const switchRepresentation$ = Observable.combineLatest(
+        adaptive.getRepresentation$(adaptation),
         seekings,
-        representations: adaptive.getRepresentation$(adaptation),
+      ).map(([representation]) => representation);
+
+      const buffer = Buffer({
+        sourceBuffer,
+        downloader,
+        switch$: switchRepresentation$,
+
+        timings,
         wantedBufferAhead: wantedBufferAhead$,
         maxBufferBehind: maxBufferBehind$,
         maxBufferAhead: maxBufferAhead$,
-        pipeline: fetchSegment,
+
+        bufferType,
+        adaptation,
         isLive: manifest.isLive,
       });
 
