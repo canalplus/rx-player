@@ -29,6 +29,8 @@ function debounce(fn, delay) {
  * @param {Function} [options.errorSelector]
  * @param {Function} [options.onRetry]
  * @returns {Observable}
+ * TODO Take errorSelector out. Should probably be entirely managed in the
+ * calling code via a catch (much simpler to use and to understand).
  */
 function retryWithBackoff(obs, options) {
   const {

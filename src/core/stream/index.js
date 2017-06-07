@@ -234,6 +234,9 @@ function Stream({
   timeFragment, // @deprecated
 
   withMediaSource = true,
+
+  // XXX
+  // fetchManifest,
 }) {
   // TODO @deprecate?
   const fragEndTimeIsFinite = timeFragment.end < Infinity;
@@ -241,6 +244,7 @@ function Stream({
   // throttled to avoid doing multiple simultaneous requests because multiple
   // source buffers are out-of-index
   const fetchManifest = throttle(pipelines.manifest);
+  // const _fetchManifest = throttle(fetchManifest);
 
   let nativeBuffers = {}; // SourceBuffers added to the MediaSource
   let customBuffers = {}; // custom SourceBuffers
@@ -521,6 +525,7 @@ function Stream({
       : Observable.of(null);
 
     return Observable.combineLatest(fetchManifest({ url }), sourceOpening)
+    // return Observable.combineLatest(_fetchManifest({ url }), sourceOpening)
       .mergeMap(([{ parsed }]) => {
         const manifest = normalizeManifest(parsed.url,
                                            parsed.manifest,
@@ -742,6 +747,7 @@ function Stream({
    */
   function refreshManifest(manifest) {
     return fetchManifest({ url: manifest.getUrl()})
+    // return _fetchManifest({ url: manifest.getUrl()})
       .map(({ parsed }) => {
         const newManifest = updateManifest(
           manifest,

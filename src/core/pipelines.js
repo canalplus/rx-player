@@ -76,8 +76,6 @@ function loaderShouldRetry(error) {
   );
 }
 
-const metricsScheduler = asap;
-
 /**
  * Creates the following pipeline:
  *   Infos
@@ -115,13 +113,19 @@ function createPipeline(pipelineType,
   const totalRetry = typeof maxRetry === "number" ?
     maxRetry : DEFAULT_MAXIMUM_RETRY_ON_ERROR;
 
+  const dispatchMetrics = value =>
+    metrics.next(value);
+
+  const schedulMetrics = value => {
+    asap.schedule(dispatchMetrics, 0, value);
+  };
+
   /**
    * Backoff options given to the backoff retry done with the loader function.
    * @see retryWithBackoff
    */
   const loaderBackoffOptions = {
     retryDelay: 200,
-    errorSelector: loaderErrorSelector,
     totalRetry: totalRetry,
     shouldRetry: totalRetry && loaderShouldRetry,
     onRetry: (error) => {
@@ -130,49 +134,33 @@ function createPipeline(pipelineType,
     },
   };
 
-  function resolverErrorSelector(error) {
-    throw errorSelector("PIPELINE_RESOLVE_ERROR", pipelineType, error);
-  }
+  const _resolver = pipelineInputData =>
+    tryCatch(resolver, pipelineInputData)
+      .catch((error) => {
+        throw errorSelector("PIPELINE_RESOLVE_ERROR", pipelineType, error);
+      });
 
-  function loaderErrorSelector(error) {
-    throw errorSelector("PIPELINE_LOAD_ERROR", pipelineType, error);
-  }
+  const _loader = resolvedInfos => {
+    const loaderWithRetry = (resolvedInfos) =>
+      retryWithBackoff(tryCatch(loader, resolvedInfos), loaderBackoffOptions)
+        .catch((error) => {
+          throw errorSelector("PIPELINE_LOAD_ERROR", pipelineType, error);
+        });
 
-  function parserErrorSelector(error) {
-    throw errorSelector("PIPELINE_PARSING_ERROR", pipelineType, error);
-  }
-
-  function dispatchMetrics(value) {
-    metrics.next(value);
-  }
-
-  function schedulMetrics(value) {
-    metricsScheduler.schedule(dispatchMetrics, 0, value);
-  }
-
-  function resolverWithCatch(pipelineInputData) {
-    return tryCatch(resolver, pipelineInputData).catch(resolverErrorSelector);
-  }
-
-  function loaderWithRetry(resolvedInfos) {
-    return retryWithBackoff(tryCatch(loader, resolvedInfos), loaderBackoffOptions);
-  }
-
-  function loaderWithCache(resolvedInfos) {
     const fromCache = cache ? cache.get(resolvedInfos) : null;
-    if (fromCache === null) {
-      return loaderWithRetry(resolvedInfos);
-    } else {
-      return castToObservable(fromCache)
+    return fromCache === null ?
+      loaderWithRetry(resolvedInfos) :
+      castToObservable(fromCache)
         .catch(() => loaderWithRetry(resolvedInfos));
-    }
-  }
+  };
 
-  function parserWithCatch(loadedInfos) {
-    return tryCatch(parser, loadedInfos).catch(parserErrorSelector);
-  }
+  const _parser = loadedInfos =>
+    tryCatch(parser, loadedInfos)
+      .catch((error) => {
+        throw errorSelector("PIPELINE_PARSING_ERROR", pipelineType, error);
+      });
 
-  function extendsResponseAndResolvedInfos(resolvedInfos, response) {
+  const extendsResponseAndResolvedInfos = (resolvedInfos, response) => {
     const loadedInfos = objectAssign({ response }, resolvedInfos);
 
     // add loadedInfos to the pipeline cache
@@ -184,16 +172,15 @@ function createPipeline(pipelineType,
     schedulMetrics({ type: pipelineType, value: loadedInfos });
 
     return loadedInfos;
-  }
+  };
 
-  function extendsParsedAndLoadedInfos(loadedInfos, parsed) {
-    return objectAssign({ parsed }, loadedInfos);
-  }
+  const extendsParsedAndLoadedInfos = (loadedInfos, parsed) =>
+    objectAssign({ parsed }, loadedInfos);
 
   return (pipelineInputData) => {
-    return resolverWithCatch(pipelineInputData)
-      .mergeMap(loaderWithCache, extendsResponseAndResolvedInfos)
-      .mergeMap(parserWithCatch, extendsParsedAndLoadedInfos);
+    return _resolver(pipelineInputData)
+      .mergeMap(_loader, extendsResponseAndResolvedInfos)
+      .mergeMap(_parser, extendsParsedAndLoadedInfos);
   };
 }
 
@@ -211,23 +198,37 @@ function PipeLines() {
   // about loaded responsed in the loader part of pipelines
   const metrics = new Subject();
 
-  const createPipelines = (transport, options={}) => {
-    const pipelines = {};
+  return {
+    // TODO switch to createPipeline entirely?
+    createPipelines(transport, options={}) {
+      const pipelines = {};
 
-    for (const pipelineType in transport) {
-      pipelines[pipelineType] = createPipeline(
-        pipelineType,
-        transport[pipelineType],
-        metrics,
-        options.errorStream,
-        options[pipelineType]
+      for (const pipelineType in transport) {
+        pipelines[pipelineType] = createPipeline(
+          pipelineType,
+          transport[pipelineType],
+          metrics,
+          options.errorStream,
+          options[pipelineType]
+        );
+      }
+
+      return pipelines;
+    },
+
+    // TODO remove pipelineType entirely from here
+    createPipeline(pipelineType, pipeline, options) {
+      return createPipeline(
+        pipelineType, // TODO remove that
+        pipeline,
+        metrics, // TODO remove that
+        options.errorStream, // TODO remove that
+        options
       );
-    }
+    },
 
-    return pipelines;
+    metrics,
   };
-
-  return { createPipelines, metrics };
 }
 
 export default PipeLines;
