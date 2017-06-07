@@ -54,7 +54,6 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 function Buffer({
   sourceBuffer,
   downloader,
-  bufferSize$,
   switch$,
 
   // TODO simplify and rename clock$?

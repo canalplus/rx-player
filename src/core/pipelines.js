@@ -212,18 +212,16 @@ function PipeLines() {
   const metrics = new Subject();
 
   const createPipelines = (transport, options={}) => {
-    const pipelines = {
-      requiresMediaSource() {
-        return transport.directFile !== true;
-      },
-    };
+    const pipelines = {};
 
     for (const pipelineType in transport) {
-      pipelines[pipelineType] = createPipeline(pipelineType,
-                                               transport[pipelineType],
-                                               metrics,
-                                               options.errorStream,
-                                               options[pipelineType]);
+      pipelines[pipelineType] = createPipeline(
+        pipelineType,
+        transport[pipelineType],
+        metrics,
+        options.errorStream,
+        options[pipelineType]
+      );
     }
 
     return pipelines;

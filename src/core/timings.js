@@ -147,7 +147,7 @@ function getTimings(video, name) {
   );
 }
 
-function scanTimings(prevTimings, currentTimings, requiresMediaSource) {
+function scanTimings(prevTimings, currentTimings, withMediaSource) {
   const {
     name: currentName,
     ts: currentTs,
@@ -179,7 +179,7 @@ function scanTimings(prevTimings, currentTimings, requiresMediaSource) {
   // when using a direct file, the video will stall and unstall on its
   // own, so we only try to detect when the video timestamp has not changed
   // between two consecutive timeupdates
-  if (requiresMediaSource) {
+  if (withMediaSource) {
     shouldStall = (
       mayStall &&
       (gap <= STALL_GAP || gap === Infinity || readyState === 1)
@@ -244,7 +244,7 @@ function scanTimings(prevTimings, currentTimings, requiresMediaSource) {
  * @param {Object} options
  * @returns {Observable}
  */
-function createTimingsSampler(video, { requiresMediaSource }) {
+function createTimingsSampler(video, { withMediaSource }) {
   return Observable.create((obs) => {
     let prevTimings = getTimings(video, "init");
 
@@ -256,11 +256,11 @@ function createTimingsSampler(video, { requiresMediaSource }) {
     function emitSample(evt) {
       const timingEventType = evt && evt.type || "timeupdate";
       const currentTimings = getTimings(video, timingEventType);
-      prevTimings = scanTimings(prevTimings, currentTimings, requiresMediaSource);
+      prevTimings = scanTimings(prevTimings, currentTimings, withMediaSource);
       obs.next(prevTimings);
     }
 
-    const samplerTimeInterval = requiresMediaSource
+    const samplerTimeInterval = withMediaSource
       ? SAMPLING_INTERVAL_MEDIASOURCE
       : SAMPLING_INTERVAL_NO_MEDIASOURCE;
 

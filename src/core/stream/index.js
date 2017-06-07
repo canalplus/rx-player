@@ -232,6 +232,8 @@ function Stream({
   errorStream, // subject through which minor errors are emitted
   adaptive,
   timeFragment, // @deprecated
+
+  withMediaSource = true,
 }) {
   // TODO @deprecate?
   const fragEndTimeIsFinite = timeFragment.end < Infinity;
@@ -436,7 +438,7 @@ function Stream({
       // make sure the media has been correctly reset
       resetMediaElement();
 
-      if (pipelines.requiresMediaSource()) {
+      if (withMediaSource) {
         if (!MediaSource_) {
           throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
         }
@@ -912,7 +914,7 @@ function Stream({
 
     const emeHandler = createEMEIfKeySystems();
     const stalled = createStalled(timings, {
-      changePlaybackRate: pipelines.requiresMediaSource(),
+      changePlaybackRate: withMediaSource,
     });
     const canPlay = createLoadedMetadata(manifest);
     const buffers = createAdaptationsBuffers(

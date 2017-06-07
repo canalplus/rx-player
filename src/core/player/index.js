@@ -326,10 +326,8 @@ class Player extends EventEmitter {
                               // TODO Better adaptive strategy
     });
 
-    const timings = createTimingsSampler(
-      videoElement,
-      { requiresMediaSource: pipelines.requiresMediaSource() }
-    );
+    const withMediaSource = !transport.directFile;
+    const timings = createTimingsSampler(videoElement, { withMediaSource });
 
     const stream = Stream({
       url,
@@ -350,6 +348,7 @@ class Player extends EventEmitter {
       wantedBufferAhead$,
       maxBufferAhead$,
       maxBufferBehind$,
+      withMediaSource,
     })
       .takeUntil(clearLoaded$)
       .publish();
