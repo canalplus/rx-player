@@ -389,11 +389,13 @@ export default (self) => ({
     // ----
 
     if (_defaultAudioTrack === undefined) {
-      _defaultAudioTrack = self._priv.lastAudioTrack;
+      _defaultAudioTrack = self._priv.lastAudioTrack === undefined ?
+        self._priv.defaultAudioTrack : self._priv.lastAudioTrack;
     }
 
     if (_defaultTextTrack === undefined) {
-      _defaultTextTrack = self._priv.lastTextTrack;
+      _defaultTextTrack = self._priv.lastTextTrack === undefined ?
+        self._priv.defaultTextTrack : self._priv.lastTextTrack;
     }
 
     timeFragment = parseTimeFragment(timeFragment); // @deprecated

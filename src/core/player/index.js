@@ -200,7 +200,6 @@ class Player extends EventEmitter {
 
     this._priv.createPipelines = createPipelines;
     this._priv.metrics = metrics;
-
     this._priv.abrManager = Adaptive(metrics, deviceEvents, {
       initialVideoBitrate: _initialVideoBitrate,
       initialAudioBitrate: _initialAudioBitrate,
@@ -219,6 +218,8 @@ class Player extends EventEmitter {
     this._priv.maxBufferBehind$ =
       new BehaviorSubject(config.DEFAULT_MAX_BUFFER_BEHIND);
 
+    this._priv.defaultAudioTrack = _defaultAudioTrack;
+    this._priv.defaultTextTrack = _defaultTextTrack;
     this._priv.lastAudioTrack = undefined;
     this._priv.lastTextTrack = undefined;
 
