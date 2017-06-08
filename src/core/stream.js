@@ -558,6 +558,7 @@ function Stream({
         seekings,
         adapters,
         pipeline: fetchSegment,
+        isLive: manifest.isLive,
       });
 
       // non native buffer should not impact on the stability of the
