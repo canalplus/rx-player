@@ -57,11 +57,10 @@ function Buffer({
   switch$,
 
   // TODO simplify and rename clock$?
-  timings,      // Timings observable
+  timings$,      // Timings observable
 
   // XXX Remove that from here
   bufferType,   // Buffer type (audio, video, text, image)
-  adaptation,   // Adaptation buffered
   wantedBufferAhead,
   maxBufferBehind,
   maxBufferAhead,
@@ -139,7 +138,7 @@ function Buffer({
    */
   function bufferGarbageCollector() {
     log.warn("buffer: running garbage collector");
-    return timings.take(1).mergeMap((timing) => {
+    return timings$.take(1).mergeMap((timing) => {
       let cleanedupRanges = selectGCedRanges(timing.ts, timing.buffered, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean
@@ -160,15 +159,15 @@ function Buffer({
    * @param {Object} representation - The representation of the chosen adaptation
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
    * sourceBuffer
-   * @param {Object} timing - The last item emitted from timings
+   * @param {Object} timing - The last item emitted from timings$
    * @param {Number} bufferGoal - The last item emitted from wantedBufferAhead
+   * @param {Number} bufferSize - The last item emitted from bufferSize$
    * @param {Boolean} withInitSegment - Whether we're dealing with an init segment.
    * @returns {Array.<Segment>}
    * @throws IndexError - Throws if the current timestamp is considered out
    * of bounds.
    */
-  function getSegmentsListToInject(adaptation,
-                                   representation,
+  function getSegmentsListToInject(representation,
                                    buffered,
                                    timing,
                                    bufferGoal,
@@ -371,8 +370,7 @@ function Buffer({
       try {
         // filter out already loaded and already queued segments
         const withInitSegment = (injectCount === 0);
-        injectedSegments = getSegmentsListToInject(adaptation,
-                                                   representation,
+        injectedSegments = getSegmentsListToInject(representation,
                                                    nativeBufferedRanges,
                                                    timing,
                                                    bufferGoal,
@@ -518,7 +516,7 @@ function Buffer({
     };
 
     const segmentsPipeline = combineLatest(
-      timings,
+      timings$,
       wantedBufferAhead,
       maxBufferBehind,
       maxBufferAhead,
@@ -549,8 +547,11 @@ function Buffer({
         .concat(createRepresentationBuffer(representation));
     })
       .startWith({
-        type: "buffer",
-        value: { bufferType, adaptation, representation },
+        type: "representationChange",
+        value: {
+          type: bufferType,
+          representation,
+        },
       });
   }
 
@@ -561,10 +562,9 @@ function Buffer({
 
 function EmptyBuffer(bufferType) {
   return Observable.of({
-    type: "buffer",
+    type: "representationChange",
     value: {
-      bufferType,
-      adaptation: null,
+      type: bufferType,
       representation: null,
     },
   });

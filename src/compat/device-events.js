@@ -54,7 +54,7 @@ function DeviceEvents(videoElement) {
     interval(20000),
     videoSizeChange().debounceTime(500)
   )
-    .startWith("init")
+    .startWith("init") // emit on subscription
     .map(() => videoElement.clientWidth * pixelRatio)
     .distinctUntilChanged();
 

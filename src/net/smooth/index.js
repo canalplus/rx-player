@@ -19,7 +19,7 @@ import { bytesToStr } from "../../utils/bytes";
 import log from "../../utils/log";
 import { resolveURL } from "../../utils/url";
 
-import request from "../../utils/request.js";
+import request from "../../utils/request";
 import createSmoothStreamingParser from "./parser";
 
 import mp4Utils from "./mp4.js";
@@ -44,8 +44,6 @@ const TT_PARSERS = {
   "application/ttml+xml+mp4": parseTTML,
   "text/vtt":                 (text) => text,
 };
-
-const { RequestResponse } = request;
 
 const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
@@ -103,9 +101,35 @@ function buildSegmentURL(url, representation, segment) {
     .replace(/\{start time\}/g, segment.time);
 }
 
+function mapRequestResponses({ type, value }) {
+  if (type === "response") {
+    return {
+      type: "response",
+      value: {
+        responseData: value.responseData,
+        size: value.size,
+        duration: value.receivedTime - value.sentTime,
+        url: value.url,
+      },
+    };
+  }
+
+  return {
+    type: "progress",
+    value: {
+      size: value.loadedSize,
+      totalSize: value.totalSize,
+      duration: value.currentTime - value.sentTime,
+      url: value.url,
+    },
+  };
+}
+
+const parsedRequest = requestData =>
+  request(requestData).map(mapRequestResponses);
+
 export default function(options={}) {
   const smoothManifestParser = createSmoothStreamingParser(options);
-  const createXHR = options.createXHR;
 
   const manifestPipeline = {
     resolver({ url }) {
@@ -116,9 +140,9 @@ export default function(options={}) {
         resolving = request({
           url: replaceToken(url, ""),
           responseType: "document",
-          resultSelector: extractISML,
-          createXHR,
-        });
+          resultSelector: extractISML, // XXX to does not work for now
+          ignoreProgressEvents: true,
+        }).map(({ value }) => value);
       }
       else {
         resolving = Observable.of(url);
@@ -129,17 +153,17 @@ export default function(options={}) {
     },
 
     loader({ url }) {
-      return request({
+      return parsedRequest({
         url,
         responseType: "document",
-        createXHR,
       });
     },
 
     parser({ response }) {
+      const manifest = smoothManifestParser(response.responseData);
       return Observable.of({
-        manifest: smoothManifestParser(response.responseData),
-        url:      response.url,
+        manifest,
+        url: response.url,
       });
     },
   };
@@ -210,15 +234,7 @@ export default function(options={}) {
         break;
       }
 
-      return Observable.of(new RequestResponse(
-        200,
-        "",
-        "arraybuffer",
-        Date.now() - 100,
-        Date.now(),
-        responseData.length,
-        responseData
-      ));
+      return Observable.of({ type: "data", value: { responseData } });
     }
     else {
       const customSegmentLoader = options.segmentLoader;
@@ -246,9 +262,12 @@ export default function(options={}) {
           if (!hasFallbacked) {
             hasFinished = true;
             obs.next({
-              responseData: args.data,
-              size: args.size || 0,
-              duration: args.duration || 0,
+              type: "response",
+              value: {
+                responseData: args.data,
+                size: args.size || 0,
+                duration: args.duration || 0,
+              },
             });
             obs.complete();
           }
@@ -289,11 +308,11 @@ export default function(options={}) {
         Range: byteRange(range),
       };
     }
-    return request({
+
+    return parsedRequest({
       url,
       responseType: "arraybuffer",
       headers,
-      createXHR,
     });
   };
 
@@ -307,9 +326,16 @@ export default function(options={}) {
       });
     },
 
-    parser({ segment, response, manifest }) {
+    parser({ representation, adaptation, segment, response, manifest }) {
       const { responseData } = response;
 
+      if (adaptation.type === "video" && representation.bitrate === 750000) {
+        window.toto = window.toto || [];
+        window.toto.push({
+          segment,
+          responseData,
+        });
+      }
       if (segment.isInit) {
         return Observable.of({
           segmentData: responseData,
@@ -320,7 +346,6 @@ export default function(options={}) {
       const responseBuffer = new Uint8Array(responseData);
       const { nextSegments, currentSegment } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
-
       const segmentData = patchSegment(responseBuffer, currentSegment.ts);
 
       return Observable.of({
@@ -344,9 +369,9 @@ export default function(options={}) {
       if (mimeType.indexOf("mp4") >= 0) {
         // in case of TTML declared inside playlists, the TTML file is
         // embededded inside an mp4 fragment.
-        return request({ url, responseType: "arraybuffer", createXHR });
+        return parsedRequest({ url, responseType: "arraybuffer" });
       } else {
-        return request({ url, responseType: "text", createXHR });
+        return parsedRequest({ url, responseType: "text" });
       }
     },
 
@@ -391,7 +416,7 @@ export default function(options={}) {
       } else {
         const baseURL = resolveURL(representation.baseURL);
         const url = buildSegmentURL(baseURL, representation, segment);
-        return request({ url, responseType: "arraybuffer", createXHR });
+        return parsedRequest({ url, responseType: "arraybuffer" });
       }
     },
 

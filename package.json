@@ -80,6 +80,8 @@
   },
   "dependencies": {
     "array-find": "^1.0.0",
+    "array-find-index": "^1.0.2",
+    "deep-equal": "^1.0.1",
     "object-assign": "^4.1.1",
     "rxjs": "^5.4.2"
   },

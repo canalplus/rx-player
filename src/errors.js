@@ -160,9 +160,9 @@ OtherError.prototype = new Error();
 /**
  * @class RequestError
  */
-function RequestError(xhr, request, type) {
+function RequestError(xhr, url, type) {
   this.name = "RequestError";
-  this.url = request.url;
+  this.url = url;
   this.xhr = xhr;
   this.status = xhr.status;
   this.type = type;

@@ -107,18 +107,18 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     });
 
   // /!\ deprecated
-  player.getMetrics()
-    .takeUntil($destroy)
-    // .map((metric) => metric.value.response)
-    // .filter((response) => response.size > 2000)
-    .subscribe((metric = {}) => {
-      const { response } = metric.value;
-      if (response && response.size > 10000) {
-        state.set({
-          bandwidth: (response.size / response.duration) * 0.008, // in mbps
-        });
-      }
-    });
+  // player.getMetrics()
+  //   .takeUntil($destroy)
+  //   // .map((metric) => metric.value.response)
+  //   // .filter((response) => response.size > 2000)
+  //   .subscribe((metric = {}) => {
+  //     const { response } = metric.value;
+  //     if (response && response.size > 10000) {
+  //       state.set({
+  //         bandwidth: (response.size / response.duration) * 0.008, // in mbps
+  //       });
+  //     }
+  //   });
 
   fromPlayerEvent("manifestChange")
     .map(() => player.isLive())

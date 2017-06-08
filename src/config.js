@@ -134,4 +134,29 @@ export default {
   // time changes interval in milliseconds
   SAMPLING_INTERVAL_MEDIASOURCE: 1000,
   SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
+
+  /**
+   * Minimum number of bytes sampled before we trust the estimate.
+   * If we have not sampled much data, our estimate may not be accurate
+   * enough to trust.
+   * If bytesSampled_ is less than minTotalBytes_, we use defaultEstimate_.
+   * This specific value is based on experimentation.
+   * TODO re-calibrate for rx-player usecases?
+   * @type {Number}
+   */
+  ABR_MINIMUM_TOTAL_BYTES: 128e3,
+
+  /**
+   * Minimum number of bytes, under which samples are discarded.
+   * Our models do not include latency information, so connection startup time
+   * (time to first byte) is considered part of the download time.
+   * Because of this, we should ignore very small downloads which would cause our
+   * estimate to be too low.
+   * This specific value is based on experimentation.
+   * TODO re-calibrate for rx-player usecases?
+   * @type {Number}
+   */
+  ABR_MINIMUM_CHUNK_SIZE: 16e3,
+
+  ABR_STARVATION_GAP: 5,
 };

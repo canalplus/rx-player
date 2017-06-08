@@ -15,7 +15,6 @@
  */
 
 import arrayFind from "array-find";
-import { BehaviorSubject } from "rxjs/BehaviorSubject";
 
 import {
   normalize as normalizeLang,
@@ -63,34 +62,6 @@ const findAudioAdaptation = (adaptations, trackConfig) => {
  * Takes in the text and audio adaptations parsed from a manifest and provide
  * various methods and properties to set/get the right adaption based on a
  * language configuration.
- *
- *
- * ## Constructor
- *
- * see class documentation
- *
- *
- * ## Properties
- *
- * ### audioAdaptation$
- *
- * _type_: ``BehaviorSubject``
- *
- * Emit the last chosen audio adaptation (based on the language configuration).
- *
- * ### textAdaptation$
- *
- * _type_: ``BehaviorSubject``
- *
- * Emit the last chosen text adaptation (based on the language configuration).
- *
- * Emit null if no text adaptation is wanted.
- *
- *
- * ## Methods
- *
- * see class documentation
- *
  */
 class LanguageManager {
   /**
@@ -103,15 +74,15 @@ class LanguageManager {
    * @param {Array.<Adaptation>} adaptations.audio
    * @param {Array.<Adaptation>} adaptations.text
    *
+   * @param {Object} adaptations$
+   * @param {Subject} adaptations$.audio$
+   * @param {Subject} adaptations$.text$
+   *
    * @param {Object} [options={}]
    * @param {Object|null} [options.defaultTextTrack]
    * @param {Object|null} [options.defaultAudioTrack]
    */
-  constructor({ text, audio }, options = {}) {
-    Object.keys(options).forEach(key =>
-      options[key] === undefined && delete options[key]
-    );
-
+  constructor({ text, audio }, { text$, audio$ }, options = {}) {
     const defaultAudioTrack = options.defaultAudioTrack === undefined ?
       config.DEFAULT_AUDIO_TRACK : options.defaultAudioTrack;
 
@@ -124,25 +95,39 @@ class LanguageManager {
     const textAdaptations = text || [];
     const audioAdaptations = audio || [];
 
+    // set class context
+    this._currentAudioAdaptation = null;
+    this._currentTextAdaptation = null;
     this._textAdaptations = textAdaptations;
     this._audioAdaptations = audioAdaptations;
+    this._text$ = text$;
+    this._audio$ = audio$;
 
-    this.audioAdaptation$ = new BehaviorSubject(
-      findAudioAdaptation(audioAdaptations, normalizedAudioTrack) ||
-      audioAdaptations[0]
-    );
+    if (audio$) {
+      // emit initial adaptations
+      const initialAudioAdaptation =
+        findAudioAdaptation(audioAdaptations, normalizedAudioTrack) ||
+        audioAdaptations[0];
+      this._currentAudioAdaptation = initialAudioAdaptation;
 
-    this.textAdaptation$ = new BehaviorSubject(
-      findTextAdaptation(textAdaptations, normalizedTextTrack) ||
-      null
-    );
+      audio$.next(initialAudioAdaptation);
+    }
+
+    if (text$) {
+      const initialTextAdaptation =
+        findTextAdaptation(textAdaptations, normalizedTextTrack) ||
+        null;
+      this._currentTextAdaptation = initialTextAdaptation;
+
+      text$.next(initialTextAdaptation);
+    }
   }
 
   updateAdaptations({ audio, text }) {
     this._audioAdaptations = audio || [];
     this._textAdaptations = text || [];
 
-    const currentAudioAdaptation = this.audioAdaptation$.getValue();
+    const currentAudioAdaptation = this._currentAudioAdaptation;
     const currentAudioId = currentAudioAdaptation && currentAudioAdaptation.id;
 
     let audioAdaptationFound;
@@ -158,10 +143,11 @@ class LanguageManager {
           audioDescription: !!currentAudioAdaptation.isAudioDescription,
         });
 
-      this.audioAdaptation$.next(foundTrack || audio[0]);
+      this._currentAudioAdaptation = foundTrack || audio[0];
+      this._audio$.next(this._currentAudioAdaptation);
     }
 
-    const currentTextAdaptation = this.textAdaptation$.getValue();
+    const currentTextAdaptation = this._currentTextAdaptation;
     const currentTextId = currentTextAdaptation && currentTextAdaptation.id;
 
     let textAdaptationFound;
@@ -177,7 +163,8 @@ class LanguageManager {
           closedCaption: !!currentTextAdaptation.isClosedCaption,
         });
 
-      this.textAdaptation$.next(foundTrack || text[0]);
+      this._currentTextAdaptation = foundTrack || text[0];
+      this._text$.next(this._currentTextAdaptation);
     }
   }
 
@@ -194,7 +181,7 @@ class LanguageManager {
       throw new Error("Audio Track not found.");
     }
 
-    this.audioAdaptation$.next(foundTrack);
+    this._audio$.next(foundTrack);
   }
 
   /**
@@ -210,7 +197,7 @@ class LanguageManager {
       throw new Error("Text Track not found.");
     }
 
-    this.textAdaptation$.next(foundTrack);
+    this._text$.next(foundTrack);
   }
 
   setAudioTrack(wantedId) {
@@ -221,7 +208,7 @@ class LanguageManager {
       throw new Error("Audio Track not found.");
     }
 
-    this.audioAdaptation$.next(foundTrack);
+    this._audio$.next(foundTrack);
   }
 
   setTextTrack(wantedId) {
@@ -232,15 +219,15 @@ class LanguageManager {
       throw new Error("Text Track not found.");
     }
 
-    this.textAdaptation$.next(foundTrack);
+    this._text$.next(foundTrack);
   }
 
   disableTextTrack() {
-    this.textAdaptation$.next(null);
+    this._text$.next(null);
   }
 
   getCurrentAudioTrack() {
-    const adaptation = this.audioAdaptation$.getValue();
+    const adaptation = this._currentAudioAdaptation;
     if (!adaptation) {
       return null;
     }
@@ -252,7 +239,7 @@ class LanguageManager {
   }
 
   getCurrentTextTrack() {
-    const adaptation = this.textAdaptation$.getValue();
+    const adaptation = this._currentTextAdaptation;
     if (!adaptation) {
       return null;
     }
@@ -264,7 +251,7 @@ class LanguageManager {
   }
 
   getAvailableAudioTracks() {
-    const currentTrack = this.audioAdaptation$.getValue();
+    const currentTrack = this._currentAudioAdaptation;
     const currentId = currentTrack && currentTrack.id;
     return this._audioAdaptations
       .map((adaptation) => ({
@@ -276,7 +263,7 @@ class LanguageManager {
   }
 
   getAvailableTextTracks() {
-    const currentTrack = this.textAdaptation$.getValue();
+    const currentTrack = this._currentTextAdaptation;
     const currentId = currentTrack && currentTrack.id;
     return this._textAdaptations
       .map((adaptation) => ({
@@ -285,11 +272,6 @@ class LanguageManager {
         id: adaptation.id,
         active: currentId == null ? false : currentId === adaptation.id,
       }));
-  }
-
-  dispose() {
-    this.audioAdaptation$.complete();
-    this.textAdaptation$.complete();
   }
 }
 

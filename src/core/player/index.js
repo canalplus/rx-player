@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
@@ -26,8 +25,6 @@ import config from "../../config.js";
 import { on } from "../../utils/rx-utils";
 import {
   normalize as normalizeLang,
-  normalizeAudioTrack,
-  normalizeTextTrack,
 } from "../../utils/languages";
 import EventEmitter from "../../utils/eventemitter";
 import assert from "../../utils/assert";
@@ -53,13 +50,9 @@ import {
   ErrorCodes,
 } from "../../errors";
 
-import InitializationSegmentCache
-  from "../../utils/initialization_segment_cache.js";
-import { BufferedRanges } from "../ranges";
 import DeviceEvents from "../../compat/device-events.js";
+import { BufferedRanges } from "../ranges";
 
-import PipeLines from "../pipelines";
-import Adaptive from "../../adaptive";
 import Stream from "../stream/index.js";
 import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
 
@@ -78,30 +71,11 @@ import attachPrivateMethods from "./private.js";
  * @extends EventEmitter
  */
 class Player extends EventEmitter {
-
-  /**
-   * @deprecated
-   * @returns {Object}
-   */
-  static getErrorTypes() {
-    warnOnce("getErrorTypes is deprecated. Use the ErrorTypes property instead");
-    return ErrorTypes;
-  }
-
   /**
    * @returns {Object}
    */
   static get ErrorTypes() {
     return ErrorTypes;
-  }
-
-  /**
-   * @deprecated
-   * @returns {Object}
-   */
-  static getErrorCodes() {
-    warnOnce("getErrorCodes is deprecated. Use the ErrorCodes property instead");
-    return ErrorCodes;
   }
 
   /**
@@ -121,13 +95,13 @@ class Player extends EventEmitter {
     const {
       transport,
       transportOptions,
-      defaultLanguage,
-      defaultAudioTrack,
-      defaultSubtitle,
-      defaultTextTrack,
-      initVideoBitrate,
+      defaultLanguage, // @deprecated
+      defaultAudioTrack, // TODO Rename initialAudioTrack
+      defaultSubtitle, // @deprecated
+      defaultTextTrack, // TODO Rename initialTextTrack
+      initVideoBitrate, // @deprecated
       initialVideoBitrate,
-      initAudioBitrate,
+      initAudioBitrate, // @deprecated
       initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
@@ -143,8 +117,8 @@ class Player extends EventEmitter {
 
     let _initialVideoBitrate = initialVideoBitrate;
     let _initialAudioBitrate = initialAudioBitrate;
-    let _defaultAudioTrack = defaultAudioTrack;
-    let _defaultTextTrack = defaultTextTrack;
+    let _initialAudioTrack = defaultAudioTrack;
+    let _initialTextTrack = defaultTextTrack;
 
     if (initVideoBitrate != null && initialVideoBitrate == null) {
       warnOnce("initVideoBitrate is deprecated. Use initialVideoBitrate instead");
@@ -156,11 +130,11 @@ class Player extends EventEmitter {
     }
     if (defaultLanguage != null && defaultAudioTrack == null) {
       warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
-      _defaultAudioTrack = defaultLanguage;
+      _initialAudioTrack = defaultLanguage;
     }
     if (defaultSubtitle != null && defaultTextTrack == null) {
       warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
-      _defaultTextTrack = defaultSubtitle;
+      _initialTextTrack = defaultSubtitle;
     }
 
     // --
@@ -175,7 +149,7 @@ class Player extends EventEmitter {
     }
 
     assert((videoElement instanceof HTMLVideoElement_),
-      "requires an actual HTMLVideoElement");
+      "videoElement needs to be an HTMLVideoElement");
 
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
@@ -184,29 +158,16 @@ class Player extends EventEmitter {
     this.version = /*PLAYER_VERSION*/"2.3.2";
     this.videoElement = videoElement;
 
-    this._priv.fullscreen$ = onFullscreenChange(videoElement)
+    this._priv.fullScreenSubscription = onFullscreenChange(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
     this._priv.playing$ = new BehaviorSubject(); // playing state change.
     this._priv.clearLoaded$ = new Subject(); // clean ressources from loaded content
     this._priv.stream$ = new Subject(); // multicaster forwarding all streams events
     this._priv.imageTrack$ = new Subject();
+
+    // TODO Use regular Stream observable for that
     this._priv.errorStream$ = new Subject(); // Emits warnings
-
-    const { createPipelines, metrics } = PipeLines();
-
-    const deviceEvents = DeviceEvents(videoElement);
-
-    this._priv.createPipelines = createPipelines;
-    this._priv.metrics = metrics;
-    this._priv.abrManager = Adaptive(metrics, deviceEvents, {
-      initialVideoBitrate: _initialVideoBitrate,
-      initialAudioBitrate: _initialAudioBitrate,
-      maxVideoBitrate,
-      maxAudioBitrate,
-      limitVideoWidth,
-      throttleWhenHidden,
-    });
 
     this._priv.wantedBufferAhead$ =
       new BehaviorSubject(config.DEFAULT_WANTED_BUFFER_AHEAD);
@@ -217,17 +178,31 @@ class Player extends EventEmitter {
     this._priv.maxBufferBehind$ =
       new BehaviorSubject(config.DEFAULT_MAX_BUFFER_BEHIND);
 
-    this._priv.defaultAudioTrack = _defaultAudioTrack;
-    this._priv.defaultTextTrack = _defaultTextTrack;
-    this._priv.lastAudioTrack = undefined;
-    this._priv.lastTextTrack = undefined;
+    // keep track of the last set audio/text track
+    this._priv.lastAudioTrack = _initialAudioTrack;
+    this._priv.lastTextTrack = _initialTextTrack;
+
+    // keep track of the last adaptive options
+    this._priv.lastBitrates = {
+      audio: _initialAudioBitrate,
+      video: _initialVideoBitrate,
+    };
+    this._priv.maxAutoBitrates = {
+      audio: maxAudioBitrate,
+      video: maxVideoBitrate,
+    };
+    this._priv.manualBitrates = {};
+
+    // adaptive initial private state
+    this._priv.throttleWhenHidden = throttleWhenHidden;
+    this._priv.limitVideoWidth = limitVideoWidth;
 
     this._priv.mutedMemory = 0.1; // memorize previous volume when muted
 
-    this._priv.setPlayerState(PLAYER_STATES.STOPPED);
     this._priv.resetContentState();
-
     this.log = log;
+
+    this._priv.setPlayerState(PLAYER_STATES.STOPPED);
   }
 
   /**
@@ -250,20 +225,19 @@ class Player extends EventEmitter {
     const { _priv } = this;
 
     _priv.clearLoaded$.complete();
-    _priv.metrics.unsubscribe();
-    _priv.abrManager.unsubscribe();
-    _priv.fullscreen$.unsubscribe();
+    _priv.fullScreenSubscription.unsubscribe();
     _priv.stream$.unsubscribe(); // @deprecated
     _priv.errorStream$.unsubscribe();
     emeDispose();
 
     _priv.clearLoaded$ = null;
-    _priv.metrics = null;
-    _priv.abrManager = null;
-    _priv.fullscreen$ = null;
+    _priv.fullScreenSubscription = null;
     _priv.stream$ = null; // @deprecated
     _priv.errorStream$ = null;
-    _priv.createPipelines = null;
+
+    _priv.lastBitrates = null;
+    _priv.manualBitrates = null;
+    _priv.maxAutoBitrates = null;
 
     _priv.wantedBufferAhead$.complete();
     _priv.wantedBufferAhead$ = null;
@@ -301,54 +275,61 @@ class Player extends EventEmitter {
     } = options;
 
     this.stop();
+
     this._priv.timeFragment = timeFragment; // @deprecated
+    this._priv.initialAudioTrack = defaultAudioTrack;
+    this._priv.initialTextTrack = defaultTextTrack;
+
     this._priv.playing$.next(autoPlay);
 
+    const { videoElement } = this;
     const {
-      videoElement: videoElement,
-    } = this;
-
-    const {
-      abrManager: adaptive,
       errorStream$: errorStream,
-      createPipelines,
       clearLoaded$,
       wantedBufferAhead$,
       maxBufferAhead$,
       maxBufferBehind$,
     } = this._priv;
 
-    const pipelines = createPipelines(transport, {
-      errorStream,
-      audio: { cache: new InitializationSegmentCache() },
-      video: { cache: new InitializationSegmentCache() },
-      image: { maxRetry: 0 }, // Deactivate BIF fetching if it fails
-                              // TODO Better adaptive strategy
-    });
-
     const withMediaSource = !transport.directFile;
-    const timings = createTimingsSampler(videoElement, { withMediaSource });
+    const timings$ = createTimingsSampler(videoElement, { withMediaSource });
+
+    const { videoWidth, inBackground } = DeviceEvents(videoElement);
+
+    const adaptiveOptions = {
+      initialBitrates: this._priv.lastBitrates,
+      manualBitrates: this._priv.manualBitrates,
+      maxAutoBitrates: this._priv.maxAutoBitrates,
+      throttle: this._priv.throttleWhenHidden === false ? void 0 : {
+        video: inBackground
+          .map(isBg => isBg ? 0 : Infinity)
+          .takeUntil(clearLoaded$),
+      },
+      limitWidth: this._priv.limitVideoWidth === false ? void 0 : {
+        video: videoWidth
+          .takeUntil(clearLoaded$),
+      },
+    };
 
     const stream = Stream({
-      url,
-      errorStream,
-      keySystems,
-      supplementaryTextTracks,
-      hideNativeSubtitle,
-      timings,
-      supplementaryImageTracks,
-      timeFragment, // @deprecated
-      adaptive,
-      pipelines,
-      videoElement,
+      adaptiveOptions,
       autoPlay,
+      errorStream,
+      hideNativeSubtitle,
+      keySystems,
       startAt,
-      defaultAudioTrack,
-      defaultTextTrack,
+      timeFragment, // @deprecated
+      timings$,
+      transport,
+      url,
+      videoElement,
       wantedBufferAhead$,
       maxBufferAhead$,
       maxBufferBehind$,
       withMediaSource,
+
+      supplementaryImageTracks,
+      supplementaryTextTracks,
     })
       .takeUntil(clearLoaded$)
       .publish();
@@ -388,7 +369,7 @@ class Player extends EventEmitter {
       .takeUntil(clearLoaded$)
       .subscribe(x => this._priv.onNativeTextTrackNext(x), noop);
 
-    timings
+    timings$
       .takeUntil(clearLoaded$)
       .subscribe(x => this._priv.triggerTimeChange(x), noop);
 
@@ -641,86 +622,29 @@ class Player extends EventEmitter {
   }
 
   /**
-   * @deprecated
-   * @returns {Array.<string}
-   */
-  getAvailableLanguages() {
-    warnOnce(
-      "getAvailableLanguages is deprecated and won't be available in the next major version." +
-      " Use getAvailableAudioTracks instead."
-    );
-    return this._priv.languageManager &&
-      this._priv.languageManager.getAvailableAudioTracks().map(l => l.language)
-      || [];
-  }
-
-  /**
-   * @deprecated
-   * @returns {Array.<string}
-   */
-  getAvailableSubtitles() {
-    warnOnce(
-      "getAvailableSubtitles is deprecated and won't be available in the next major version." +
-      " Use getAvailableTextTracks instead."
-    );
-    return this._priv.languageManager &&
-      this._priv.languageManager.getAvailableTextTracks().map(s =>  s.language)
-      || [];
-  }
-
-  /**
-   * Returns last chosen language.
-   * @deprecated
-   * @returns {string}
-   */
-  getLanguage() {
-    warnOnce(
-      "getLanguage is deprecated and won't be available in the next major version." +
-      " Use getAudioTrack instead."
-    );
-
-    if (!this._priv.languageManager) {
-      return undefined;
-    }
-    const currentTrack = this._priv.languageManager.getCurrentAudioTrack();
-
-    return currentTrack ?
-      currentTrack.language : null;
-  }
-
-  /**
-   * Returns last chosen subtitle.
-   * @deprecated
-   * @returns {string}
-   */
-  getSubtitle() {
-    warnOnce(
-      "getSubtitle is deprecated and won't be available in the next major version." +
-      " Use getTextTrack instead."
-    );
-
-    if (!this._priv.languageManager) {
-      return undefined;
-    }
-
-    const currentTrack = this._priv.languageManager.getCurrentTextTrack();
-    return currentTrack && currentTrack.language;
-  }
-
-  /**
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() {
-    return this._priv.currentAdaptations.video &&
-      this._priv.currentAdaptations.video.getAvailableBitrates() || [];
+    const videoAdaptation = this._priv.currentAdaptations.video;
+    if (!videoAdaptation) {
+      return [];
+    }
+
+    return videoAdaptation.representations
+      .map(({ bitrate }) => bitrate);
   }
 
   /**
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() {
-    return this._priv.currentAdaptations.audio &&
-      this._priv.currentAdaptations.audio.getAvailableBitrates() || [];
+    const audioAdaptation = this._priv.currentAdaptations.audio;
+    if (!audioAdaptation) {
+      return [];
+    }
+
+    return audioAdaptation.representations
+      .map(({ bitrate }) => bitrate);
   }
 
   /**
@@ -741,30 +665,13 @@ class Player extends EventEmitter {
 
   /**
    * Returns max wanted video bitrate currently set.
-   * @deprecated
-   * @returns {Number}
-   */
-  getVideoMaxBitrate() {
-    warnOnce("getVideoMaxBitrate is deprecated. Use getMaxVideoBitrate instead");
-    return this.getMaxVideoBitrate();
-  }
-
-  /**
-   * Returns max wanted video bitrate currently set.
    * @returns {Number}
    */
   getMaxVideoBitrate() {
-    return this._priv.abrManager.getVideoMaxBitrate();
-  }
-
-  /**
-   * Returns max wanted audio bitrate currently set.
-   * @deprecated
-   * @returns {Number}
-   */
-  getAudioMaxBitrate() {
-    warnOnce("getAudioMaxBitrate is deprecated. Use getMaxAudioBitrate instead");
-    return this.getMaxAudioBitrate();
+    if (this._priv.abrManager) {
+      return undefined;
+    }
+    return this._priv.abrManager.getMaxAutoBitrate("video");
   }
 
   /**
@@ -772,7 +679,10 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxAudioBitrate() {
-    return this._priv.abrManager.getAudioMaxBitrate();
+    if (this._priv.abrManager) {
+      return undefined;
+    }
+    return this._priv.abrManager.getMaxAutoBitrate("audio");
   }
 
   /**
@@ -782,15 +692,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getAverageBitrates() {
-    return this._priv.abrManager.getAverageBitrates();
-  }
-
-  /**
-   * Returns metrics used to emit informations about the downloaded segments.
-   * @deprecated
-   */
-  getMetrics() {
-    return this._priv.metrics;
+    // return this._priv.abrManager.getAverageBitrates();
   }
 
   /**
@@ -909,165 +811,56 @@ class Player extends EventEmitter {
    * to the code used by the player.
    * @param {string} lng
    * @returns {string}
+   * @deprecated
    */
   normalizeLanguageCode(lng) {
     return normalizeLang(lng);
   }
 
   /**
-   * Returns true if the corresponding audio language, normalized, is available.
-   * @deprecated
-   * @param {string|Object} lng
-   * @returns {Boolean}
-   */
-  isLanguageAvailable(arg) {
-    warnOnce(
-      "isLanguageAvailable is deprecated and won't be available in the next major version."
-    );
-    const track = normalizeAudioTrack(arg);
-
-    if (!track) {
-      return false;
-    }
-
-    const availableTracks = this.getAvailableAudioTracks();
-    if (!availableTracks) {
-      return false;
-    }
-
-    return !!arrayFind(availableTracks, aT => aT.language === track.language);
-  }
-
-  /**
-   * Returns true if the corresponding subtitles track, normalized,
-   * @deprecated
-   * is available.
-   * @param {string|Object} lng
-   * @returns {Boolean}
-   */
-  isSubtitleAvailable(arg) {
-    warnOnce(
-      "isSubtitleAvailable is deprecated and won't be available in the next major version."
-    );
-    const track = normalizeTextTrack(arg);
-
-    if (!track) {
-      return false;
-    }
-
-    const availableTracks = this.getAvailableTextTracks();
-    if (!availableTracks) {
-      return false;
-    }
-
-    return !!arrayFind(availableTracks, aT => aT.language === track.language);
-  }
-
-  /**
-   * Update the audio language.
-   * @deprecated
-   * @param {string|Object} lng
-   */
-  setLanguage(arg) {
-    warnOnce(
-      "setLanguage is deprecated and won't be available in the next major version." +
-      " Use setAudioTrack instead."
-    );
-    assert(this._priv.languageManager, "No compatible content launched.");
-
-    try {
-      this._priv.languageManager.setAudioTrackLegacy(arg);
-    }
-    catch (e) {
-      throw new Error("player: unknown language");
-    }
-  }
-
-  /**
-   * Update the audio language.
-   * @deprecated
-   * @param {string|Object} sub
-   */
-  setSubtitle(arg) {
-    warnOnce(
-      "setSubtitle is deprecated and won't be available in the next major version." +
-      " Use setTextTrack instead."
-    );
-    assert(this._priv.languageManager, "No compatible content launched.");
-
-    if (arg == null) {
-      this._priv.languageManager.disableTextTrack();
-      return;
-    }
-
-    try {
-      this._priv.languageManager.setTextTrackLegacy(arg);
-    }
-    catch (e) {
-      throw new Error("player: unknown subtitle");
-    }
-  }
-
-  /**
-   * Force the video bitrate to a given value.
-   * Set to 0 or undefined to switch to automatic mode.
-   * @throws Error - The bitrate given is not available as a video bitrate.
+   * Force the video bitrate to a given value. Act as a ceil.
+   * -1 to set it on AUTO Mode
    * @param {Number} btr
-   * TODO Stop throwing, act as a ceil instead
+   * TODO Allow this when no content is playing?
    */
   setVideoBitrate(btr) {
-    assertManifest(this);
-    assert(btr === 0 || this.getAvailableVideoBitrates().indexOf(btr) >= 0, "player: video bitrate unavailable");
-    this._priv.abrManager.setVideoBitrate(btr);
+    assert(this._priv.abrManager);
+    this._priv.manualBitrates.video = btr;
+    this._priv.abrManager.setManualBitrate("video", btr);
   }
 
   /**
-   * Force the audio bitrate to a given value.
-   * Set to 0 or undefined to switch to automatic mode.
-   * @throws Error - The bitrate given is not available as an audio bitrate.
+   * Force the audio bitrate to a given value. Act as a ceil.
+   * -1 to set it on AUTO Mode
    * @param {Number} btr
-   * TODO Stop throwing, act as a ceil instead
+   * TODO Allow this when no content is playing?
    */
   setAudioBitrate(btr) {
-    assertManifest(this);
-    assert(btr === 0 || this.getAvailableAudioBitrates().indexOf(btr) >= 0, "player: audio bitrate unavailable");
-    this._priv.abrManager.setAudioBitrate(btr);
-  }
-
-  /**
-   * Update the maximum video bitrate the user can switch to.
-   * @deprecated
-   * @param {Number} btr
-   */
-  setVideoMaxBitrate(btr) {
-    warnOnce("setVideoMaxBitrate is deprecated. Use setMaxVideoBitrate instead");
-    return this.setMaxVideoBitrate(btr);
+    assert(this._priv.abrManager);
+    this._priv.manualBitrates.audio = btr;
+    this._priv.abrManager.setManualBitrate("audio", btr);
   }
 
   /**
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
+   * TODO Allow this when no content is playing?
    */
   setMaxVideoBitrate(btr) {
-    this._priv.abrManager.setVideoMaxBitrate(btr);
-  }
-
-  /**
-   * Update the maximum video bitrate the user can switch to.
-   * @deprecated
-   * @param {Number} btr
-   */
-  setAudioMaxBitrate(btr) {
-    warnOnce("setAudioMaxBitrate is deprecated. Use setMaxAudioBitrate instead");
-    return this.setMaxAudioBitrate(btr);
+    assert(this._priv.abrManager);
+    this._priv.maxAutoBitrates.video = btr;
+    this._priv.abrManager.setMaxAutoBitrate("video", btr);
   }
 
   /**
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
+   * TODO Allow this when no content is playing?
    */
   setMaxAudioBitrate(btr) {
-    this._priv.abrManager.setAudioMaxBitrate(btr);
+    assert(this._priv.abrManager);
+    this._priv.maxAutoBitrates.audio = btr;
+    this._priv.abrManager.setMaxAutoBitrate("audio", btr);
   }
 
   /**

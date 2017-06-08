@@ -22,7 +22,7 @@ import { resolveURL } from "../../utils/url";
 import { parseSidx, patchPssh, getMdat } from "./mp4";
 import { bytesToStr } from "../../utils/bytes.js";
 
-import request from "../../utils/request.js";
+import request from "../../utils/request";
 import dashManifestParser from "./manifest";
 
 import { parseTTML } from "../../parsers/texttracks/ttml.js";
@@ -104,10 +104,36 @@ function isMP4EmbeddedTrack(representation) {
   return representation.mimeType === "application/mp4";
 }
 
+function mapRequestResponses({ type, value }) {
+  if (type === "response") {
+    return {
+      type: "response",
+      value: {
+        responseData: value.responseData,
+        size: value.size,
+        duration: value.receivedTime - value.sentTime,
+        url: value.url,
+      },
+    };
+  }
+
+  return {
+    type: "progress",
+    value: {
+      size: value.loadedSize,
+      totalSize: value.totalSize,
+      duration: value.currentTime - value.sentTime,
+      url: value.url,
+    },
+  };
+}
+
+const parsedRequest = requestData =>
+  request(requestData).map(mapRequestResponses);
+
 /**
  * Returns pipelines used for DASH streaming.
  * @param {Object} options
- * @param {Function} [options.createXHR] - Optional custom XMLHttpRequest
  * implementation. Used for each generated http request.
  * @param {Function} [options.contentProtectionParser] - Optional parser for the
  * manifest's content Protection.
@@ -120,8 +146,6 @@ export default function(options={}) {
     contentProtectionParser = () => {};
   }
 
-  const createXHR = options.createXHR;
-
   const segmentLoader = ({
     url,
     segment,
@@ -133,35 +157,32 @@ export default function(options={}) {
       range && indexRange &&
       range[1] === indexRange[0] - 1
     ) {
-      return request({
+      return parsedRequest({
         url: url,
         responseType: "arraybuffer",
         headers: {
           Range: byteRange([range[0], indexRange[1]]),
         },
-        createXHR,
       });
     }
 
     const mediaHeaders = range ?
       { "Range": byteRange(range) } : null;
 
-    const mediaOrInitRequest = request({
+    const mediaOrInitRequest = parsedRequest({
       url: url,
       responseType: "arraybuffer",
       headers: mediaHeaders,
-      createXHR,
     });
 
     // If init segment has indexRange metadata, we need to fetch
     // both the initialization data and the index metadata. We do
     // this in parallel and send the both blobs into the pipeline.
     if (indexRange) {
-      const indexRequest = request({
+      const indexRequest = parsedRequest({
         url: url,
         responseType: "arraybuffer",
         headers: { "Range": byteRange(indexRange) },
-        createXHR,
       });
       return merge(mediaOrInitRequest, indexRequest);
     }
@@ -251,10 +272,9 @@ export default function(options={}) {
 
   const manifestPipeline = {
     loader({ url }) {
-      return request({
+      return parsedRequest({
         url,
         responseType: "document",
-        createXHR,
       });
     },
 
@@ -362,36 +382,33 @@ export default function(options={}) {
         range && indexRange &&
         range[1] === indexRange[0] - 1
       ) {
-        return request({
+        return parsedRequest({
           url: mediaUrl,
           responseType,
           headers: {
             Range: byteRange([range[0], indexRange[1]]),
           },
-          createXHR,
         });
       }
 
-      const mediaOrInitRequest = request({
+      const mediaOrInitRequest = parsedRequest({
         url: mediaUrl,
         responseType,
         headers: range ? {
           Range: byteRange(range),
         } : null,
-        createXHR,
       });
 
       // If init segment has indexRange metadata, we need to fetch
       // both the initialization data and the index metadata. We do
       // this in parallel and send the both blobs into the pipeline.
       if (indexRange) {
-        const indexRequest = request({
+        const indexRequest = parsedRequest({
           url: mediaUrl,
           responseType,
           headers: {
             Range: byteRange(indexRange),
           },
-          createXHR,
         });
         return merge(mediaOrInitRequest, indexRequest);
       }
@@ -489,10 +506,9 @@ export default function(options={}) {
         const path = media ?
           replaceTokens(media, segment, representation) : "";
         const mediaUrl = resolveURL(representation.baseURL, path);
-        return request({
+        return parsedRequest({
           url: mediaUrl,
           responseType: "arraybuffer",
-          createXHR,
         });
       }
     },

@@ -15,6 +15,7 @@
  */
 
 import objectAssign from "object-assign";
+import deepEqual from "deep-equal";
 
 import log from "../../utils/log";
 import assert from "../../utils/assert";
@@ -31,26 +32,25 @@ import {
 
 import { PLAYER_STATES } from "./constants.js";
 
+import LanguageManager from "./language_manager.js";
+
 export default (self) => ({
   /**
    * Reset all states relative to a playing content.
    */
   resetContentState() {
-    self._priv.manifest = null;
+    // language management
+    self._priv.initialAudioTrack = undefined;
+    self._priv.initialTextTrack = undefined;
     self._priv.languageManager = null;
-    self._priv.currentRepresentations = {
-      video: null,
-      audio: null,
-      text: null,
-      images: null,
-    };
-    self._priv.currentAdaptations = {
-      video: null,
-      audio: null,
-      text: null,
-      images: null,
-    };
-    self._priv.recordedEvents = {};
+
+    self._priv.abrManager = null;
+
+    self._priv.manifest = null;
+    self._priv.currentRepresentations = {};
+    self._priv.currentAdaptations = {};
+
+    self._priv.recordedEvents = {}; // event memory
 
     self._priv.timeFragment = { start: null, end: null }; // @deprecated
     self._priv.fatalError = null;
@@ -60,33 +60,38 @@ export default (self) => ({
 
   /**
    * Store and emit new player state (e.g. text track, videoBitrate...).
+   * We check for deep equality to avoid emitting 2 consecutive times the same
+   * state.
    * @param {string} type - the type of the updated state (videoBitrate...)
    * @param {*} value - its new value
    */
   recordState(type, value) {
     const prev = self._priv.recordedEvents[type];
-    if (prev !== value) {
+    if (!deepEqual(prev, value)) {
       self._priv.recordedEvents[type] = value;
       self.trigger(`${type}Change`, value);
     }
   },
 
   /**
-   * Called each time the Stream instance emits.
-   * @param {Object} streamInfos
+   * Called each time the Stream Observable emits.
+   * @param {Object} streamInfos - payload emitted
    */
   onStreamNext(streamInfos) {
     const { type, value } = streamInfos;
 
     switch (type) {
-    case "buffer":
-      self._priv.onBufferNext(value);
-      break;
-    case "manifest":
-      self._priv.onManifestNext(value);
+    case "representationChange":
+      self._priv.onRepresentationChange(value);
       break;
     case "manifestUpdate":
-      self._priv.onManifestUpdateNext(value);
+      self._priv.onManifestUpdate(value);
+      break;
+    case "adaptationChange":
+      self._priv.onAdaptationChange(value);
+      break;
+    case "manifestChange":
+      self._priv.onManifestChange(value);
       break;
     case "pipeline":
       self.trigger("progress", value.segment);
@@ -162,79 +167,102 @@ export default (self) => ({
   },
 
   /**
-   * Subscribe to audio and text track updates.
-   */
-  addLanguageSubscriptions() {
-    assert(self._priv.languageManager, "no languageManager received");
-
-    // listen for audio track change
-    self._priv.languageManager.audioAdaptation$
-      .map(() => self._priv.languageManager.getCurrentAudioTrack())
-      .takeUntil(self._priv.clearLoaded$)
-      .subscribe((track) => {
-        self._priv.lastAudioTrack = track;
-        self.trigger("languageChange", track.language); // deprecated
-        self.trigger("audioTrackChange", track);
-      });
-
-    // listen for text track change
-    self._priv.languageManager.textAdaptation$
-      .map(() => self._priv.languageManager.getCurrentTextTrack())
-      .takeUntil(self._priv.clearLoaded$)
-      .subscribe(track => {
-        self._priv.lastTextTrack = track;
-        self.trigger("subtitleChange", track && track.language); // deprecated
-        self.trigger("textTrackChange", track);
-      });
-  },
-
-  /**
    * Called when the manifest is first downloaded.
    * @param {Object} value
-   * @param {Manifest} value.manifest
-   * @param {LanguageManager} value.languageManager
+   * @param {Manifest} value.manifest - The Manifest instance
+   * @param {Subject} value.adaptations$ - Subject to emit the chosen
+   * adaptation for each type.
    */
-  onManifestNext(value) {
+  onManifestChange(value) {
     if (__DEV__) {
       assert(value && value.manifest, "no manifest received");
-      assert(value.languageManager, "no languageManager received");
+      assert(value && value.adaptations$, "no adaptations subject received");
+      assert(value && value.abrManager, "no ABR Manager received");
     }
 
-    self._priv.manifest = value.manifest;
-    self._priv.languageManager = value.languageManager;
-    self.trigger("manifestChange", value.manifest);
-    self._priv.addLanguageSubscriptions();
+    const { manifest, adaptations$ = {} } = value;
+    self._priv.manifest = manifest;
+
+    // set language management for audio and text
+    self._priv.languageManager =
+      new LanguageManager(manifest.adaptations, {
+        audio$: adaptations$.audio,
+        text$: adaptations$.text,
+      }, {
+        defaultAudioTrack: self._priv.initialAudioTrack,
+        defaultTextTrack: self._priv.initialTextTrack,
+      });
+
+    // Set first adaptation for the rest
+    Object.keys(adaptations$).forEach((type) => {
+      // audio and text is already completely managed by the languageManager
+      if (type !== "audio" && type !== "text") {
+        const adaptations = manifest.adaptations[type] || [];
+        adaptations$[type].next(adaptations[0] || null);
+      }
+    });
+
+    self._priv.abrManager = value.abrManager;
+
+    self.trigger("manifestChange", manifest);
   },
 
-  onManifestUpdateNext(value) {
+  onManifestUpdate(value) {
     if (__DEV__) {
       assert(value && value.manifest, "no manifest received");
     }
 
-    self._priv.manifest = value.manifest;
-    self.trigger("manifestUpdate", value.manifest);
+    const { manifest } = value;
+    self._priv.manifest = manifest;
+    self._priv.languageManager.updateAdaptations(manifest.adaptations);
+
+    self.trigger("manifestUpdate", manifest);
   },
 
   /**
-   * Called each time the Stream emits a buffer-related event.
    * @param {Object} obj
-   * @param {string} obj.bufferType
+   * @param {string} obj.type
    * @param {Object} obj.adaptation
+   */
+  onAdaptationChange({ type, adaptation }) {
+    self._priv.currentAdaptations[type] = adaptation;
+
+    // TODO Emit adaptationChange?
+
+    if (!self._priv.languageManager) {
+      return;
+    }
+    if (type === "audio") {
+      const audioTrack = self._priv.languageManager.getCurrentAudioTrack();
+      self._priv.lastAudioTrack = audioTrack;
+      self._priv.recordState("audioTrack", audioTrack);
+    } else if (type === "text") {
+      const textTrack = self._priv.languageManager.getCurrentTextTrack();
+      self._priv.lastTextTrack = textTrack;
+      self._priv.recordState("textTrack", textTrack);
+    }
+  },
+
+  /**
+   * Called each time a representation changes.
+   * @param {Object} obj
+   * @param {string} obj.type
    * @param {Object} obj.representation
    */
-  onBufferNext({ bufferType, adaptation, representation }) {
-    self._priv.currentRepresentations[bufferType] = representation;
-    self._priv.currentAdaptations[bufferType] = adaptation;
+  onRepresentationChange({ type, representation }) {
+    self._priv.currentRepresentations[type] = representation;
 
-    if (bufferType == "video") {
-      self._priv.recordState("videoBitrate",
-        representation && representation.bitrate || -1);
-
+    const bitrate = representation && representation.bitrate;
+    if (bitrate != null) {
+      self._priv.lastBitrates[type] = bitrate;
     }
 
-    if (bufferType == "audio") {
-      self._priv.recordState("audioBitrate",
-        representation && representation.bitrate || -1);
+    // TODO Emit representationChange?
+
+    if (type == "video") {
+      self._priv.recordState("videoBitrate", bitrate != null ? bitrate : -1);
+    } else if (type == "audio") {
+      self._priv.recordState("audioBitrate", bitrate != null ? bitrate : -1);
     }
   },
 
@@ -300,7 +328,7 @@ export default (self) => ({
         // hard.
         // As this is a new API, and as timeFragment is deprecated, I let it
         // pass (do not hit me!)
-        maximumBufferTime: getMaximumSecureBufferPosition(this._manifest),
+        maximumBufferTime: getMaximumSecureBufferPosition(self._priv.manifest),
       };
       self.trigger("positionUpdate", positionData);
 
@@ -389,13 +417,11 @@ export default (self) => ({
     // ----
 
     if (_defaultAudioTrack === undefined) {
-      _defaultAudioTrack = self._priv.lastAudioTrack === undefined ?
-        self._priv.defaultAudioTrack : self._priv.lastAudioTrack;
+      _defaultAudioTrack = self._priv.lastAudioTrack;
     }
 
     if (_defaultTextTrack === undefined) {
-      _defaultTextTrack = self._priv.lastTextTrack === undefined ?
-        self._priv.defaultTextTrack : self._priv.lastTextTrack;
+      _defaultTextTrack = self._priv.lastTextTrack;
     }
 
     timeFragment = parseTimeFragment(timeFragment); // @deprecated
@@ -442,11 +468,11 @@ export default (self) => ({
       supplementaryImageTracks,
       timeFragment, // @deprecated
       autoPlay,
-      defaultAudioTrack: _defaultAudioTrack,
-      defaultTextTrack: _defaultTextTrack,
       transport,
       startAt,
       emeRobustnesses,
+      defaultAudioTrack: _defaultAudioTrack,
+      defaultTextTrack: _defaultTextTrack,
     };
   },
 });
