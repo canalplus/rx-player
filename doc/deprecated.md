@@ -726,6 +726,7 @@ That is, similar to ``currentTimeChange`` but with the following properties remo
   - ``stalled``
   - ``ts`` (replaced by ``position``)
   - ``gap`` (replaced by ``bufferGap``)
+  - ``playback`` (replaced by ``playbackRate``)
 
 And with the following property updated:
   - ``wallClockTime``: will go from a Date object to the same indication in seconds.
