@@ -1219,7 +1219,7 @@ class Player extends EventEmitter {
         return;
       }
       else if (time.position) {
-        this.video.currentTime = time.relative;
+        this.video.currentTime = time.position;
         return;
       }
       else if (time.wallClockTime) {
