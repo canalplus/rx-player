@@ -1214,15 +1214,15 @@ class Player extends EventEmitter {
 
     // NON-deprecated part
     if (time) {
-      if (time.relative) {
+      if (time.relative != null) {
         this.video.currentTime = currentTs + time.relative;
         return;
       }
-      else if (time.position) {
+      else if (time.position != null) {
         this.video.currentTime = time.position;
         return;
       }
-      else if (time.wallClockTime) {
+      else if (time.wallClockTime != null) {
         this.video.currentTime =
           fromWallClockTime(time.wallClockTime * 1000, this._manifest);
         return;
