@@ -48,7 +48,7 @@ The types are the different strings you can have as the ``type`` property of an 
 
 Network-related error (timeout, bad http code).
 
-To give more informations about the problem, those error have a `reason` attribuwith the following properties:
+To give more informations about the problem, those errors have a `reason` attribute with the following properties:
   - ``url`` (``string``): The url the request has been on
   - ``xhr`` (``XMLHttpRequest``): The xhr associated with the request
   - ``status`` (``Number``): Shortcut to the status code of the xhr.
