@@ -290,8 +290,7 @@ class Player extends EventEmitter {
     this.playing = new BehaviorSubject();
 
     // multicaster forwarding all streams events
-    // TODO prepend '_' to indicate private status?
-    this.stream = new Subject();
+    this.stream = new Subject(); // @deprecated
     this.images = new Subject();
     this.errorStream = new Subject();
 
@@ -370,13 +369,13 @@ class Player extends EventEmitter {
     this.metrics.unsubscribe();
     this.adaptive.unsubscribe();
     this.fullscreen.unsubscribe();
-    this.stream.unsubscribe();
+    this.stream.unsubscribe(); // @deprecated
     emeDispose();
 
     this.metrics = null;
     this.adaptive = null;
     this.fullscreen = null;
-    this.stream = null;
+    this.stream = null; // @deprecated
 
     this.createPipelines = null;
     this.video = null;
@@ -648,7 +647,11 @@ class Player extends EventEmitter {
       }
     }
 
-    this.stream.next(streamInfos);
+    // stream could be unset following the previous triggers
+    // @deprecated
+    if (this.stream) {
+      this.stream.next(streamInfos);
+    }
   }
 
   /**
@@ -659,7 +662,12 @@ class Player extends EventEmitter {
    */
   _streamError(error) {
     this.trigger("warning", error);
-    this.stream.next({ type: "warning", value: error });
+
+    // stream could be unset following the previous triggers
+    // @deprecated
+    if (this.stream) {
+      this.stream.next({ type: "warning", value: error });
+    }
   }
 
   /**
@@ -673,7 +681,12 @@ class Player extends EventEmitter {
     this._setPlayerState(PLAYER_STOPPED);
     this._unsubscribe();
     this.trigger("error", error);
-    this.stream.next({ type: "error", value: error });
+
+    // stream could be unset following the previous triggers
+    // @deprecated
+    if (this.stream) {
+      this.stream.next({ type: "error", value: error });
+    }
   }
 
   /**
@@ -685,7 +698,12 @@ class Player extends EventEmitter {
     this._resetStates();
     this._setPlayerState(PLAYER_ENDED);
     this._unsubscribe();
-    this.stream.next({ type: "ended", value: null });
+
+    // stream could be unset following the previous triggers
+    // @deprecated
+    if (this.stream) {
+      this.stream.next({ type: "ended", value: null });
+    }
   }
 
   /**
