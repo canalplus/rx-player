@@ -447,7 +447,10 @@ class Player extends EventEmitter {
       warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
       _defaultAudioTrack = defaultLanguage;
     }
-    if (defaultSubtitle != null && defaultTextTrack == null) {
+    if (
+      opts.hasOwnProperty("defaultSubtitle") &&
+      !opts.hasOwnProperty("defaultTextTrack")
+    ) {
       warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
       _defaultTextTrack = defaultSubtitle;
     }
@@ -545,7 +548,7 @@ class Player extends EventEmitter {
       this.adaptive.setAudioTrack(normalizeAudioTrack(defaultAudioTrack));
     }
 
-    if (defaultTextTrack != null) {
+    if (defaultTextTrack !== undefined) {
       this.adaptive.setTextTrack(normalizeTextTrack(defaultTextTrack));
     }
 

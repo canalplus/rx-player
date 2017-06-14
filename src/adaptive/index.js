@@ -245,7 +245,7 @@ export default function(metrics, deviceEvents, options={}) {
   function textAdaptationChoice(adaptations) {
     return $subtitles.distinctUntilChanged()
       .map(arg =>
-        arg ?  findTextAdaptation(
+        arg ? findTextAdaptation(
           adaptations,
           arg.language,
           arg.closedCaption
