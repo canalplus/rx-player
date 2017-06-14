@@ -74,7 +74,7 @@ npm run build
 # lint the code with eslint
 npm run lint
 
-# launch the demo on a local server (port 8080)
+# launch the demo on a local server (http://127.0.0.1:8000)
 npm run start
 
 # launch our test suite on various browsers
