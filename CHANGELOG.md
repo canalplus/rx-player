@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.2.2 (2017/06/14)
+
+### Bug fixes
+
+  - eme: fix rxjs timeout management which prevented from playing DRM-protected contents
+  - api: add securities to avoid useless errors to be thrown when the player (already) encounter an error
+  - position: fix bug which prevented to seek at the beginning of the content with the new api
+  - position: fix typo which prevented to perform absolute seeks with the new api
+  - buffer: automatically seek if there is discontinuity in a live stream
+  - adaptive: take the lowest bitrate (instead of the initial/default one) when the player is not displayed/too small
+
 ## v2.1.1 (2017/06/02)
 
 ### Bug fixes
