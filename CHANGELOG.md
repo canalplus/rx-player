@@ -4,6 +4,7 @@
 
 ### Bug fixes
 
+  - stream: the BUFFER_APPEND_ERROR error, happening when a SourceBuffer.appendBuffer failed for an unknown reason, is now a fatal error for audio/video segments
   - eme: fix rxjs timeout management which prevented from playing DRM-protected contents
   - api: add securities to avoid useless errors to be thrown when the player (already) encounter an error
   - position: fix bug which prevented to seek at the beginning of the content with the new api
