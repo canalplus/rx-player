@@ -25,7 +25,6 @@ import {
 import { retryableFuncWithBackoff } from "../utils/retry";
 import { Observable } from "rxjs/Observable";
 import { on, throttle } from "../utils/rx-utils";
-import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { merge } from "rxjs/observable/merge";
 import { combineLatest } from "rxjs/observable/combineLatest";
 
@@ -55,8 +54,6 @@ import {
   updateManifest,
   getCodec,
 } from "./manifest";
-
-const empty = EmptyObservable.create;
 
 // Stop stream 0.5 second before the end of video
 // It happens often that the video gets stuck 100 to 300 ms before the end, especially on IE11 and Edge
@@ -561,18 +558,18 @@ function Stream({
         isLive: manifest.isLive,
       });
 
-      // non native buffer should not impact on the stability of the
-      // player. ie: if a text buffer sends an error, we want to
-      // continue streaming without any subtitles
-      if (!shouldHaveNativeSourceBuffer(bufferType)) {
-        return buffer.catch((error) => {
-          log.error("buffer", bufferType, "has crashed", error);
-          errorStream.next(error);
-          return empty();
-        });
-      }
+      return buffer.catch(error => {
+        log.error("buffer", bufferType, "has crashed", error);
 
-      return buffer;
+        // non native buffer should not impact the stability of the
+        // player. ie: if a text buffer sends an error, we want to
+        // continue streaming without any subtitles
+        if (!shouldHaveNativeSourceBuffer(bufferType)) {
+          errorStream.next(error);
+          return Observable.empty();
+        }
+        throw error; // else, throw
+      });
     });
   }
 

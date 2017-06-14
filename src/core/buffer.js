@@ -326,7 +326,7 @@ function Buffer({
       return bufferingQueue.appendBuffer(segmentData)
         .catch((error) => {
           if (error.name != "QuotaExceededError") {
-            throw new MediaError("BUFFER_APPEND_ERROR", error, false);
+            throw new MediaError("BUFFER_APPEND_ERROR", error, true);
           }
 
           // launch our garbage collector and retry on
