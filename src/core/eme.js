@@ -23,6 +23,7 @@ import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { DeferObservable } from "rxjs/observable/DeferObservable";
 import { combineLatest } from "rxjs/observable/combineLatest";
 import { merge } from "rxjs/observable/merge";
+import { TimeoutError } from "rxjs/util/TimeoutError";
 import {
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -758,7 +759,14 @@ function sessionEventsHandler(session, keySystem, errorStream) {
 
       const getLicense = defer(() => {
         return castToObservable(keySystem.getLicense(message, messageType))
-          .timeout(10 * 1000, new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false));
+          .timeout(10 * 1000)
+          .catch(error => {
+            if (error instanceof TimeoutError) {
+              throw new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false);
+            } else {
+              throw error;
+            }
+          });
       });
 
       return retryWithBackoff(getLicense, getLicenseRetryOptions);
