@@ -153,9 +153,10 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
 
     if (!manifest.isLive) {
       assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
+      return startTime ;
     }
     else if (startTime) {
-      startTime = fromWallClockTime(startTime, manifest);
+      return fromWallClockTime(startTime, manifest);
     }
     else {
       const sgp = manifest.suggestedPresentationDelay;
