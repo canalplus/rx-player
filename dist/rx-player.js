@@ -10334,7 +10334,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"2.1.2";
+    _this.version = /*PLAYER_VERSION*/"2.1.3";
     _this.video = videoElement;
 
     // fullscreen change subscription.
@@ -11990,8 +11990,9 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
 
     if (!manifest.isLive) {
       __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_assert__["a" /* default */])(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
+      return startTime;
     } else if (startTime) {
-      startTime = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["e" /* fromWallClockTime */])(startTime, manifest);
+      return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["e" /* fromWallClockTime */])(startTime, manifest);
     } else {
       var sgp = manifest.suggestedPresentationDelay;
       return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["d" /* getMaximumBufferPosition */])(manifest) - (sgp == null ? DEFAULT_LIVE_GAP : sgp);
