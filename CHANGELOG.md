@@ -1,6 +1,12 @@
 # Changelog
 
-## v2.2.2 (2017/06/14)
+## v2.1.3 (2017/06/15)
+
+### Bug fixes
+
+  - api: fix timeFragment.start handling
+
+## v2.1.2 (2017/06/14)
 
 ### Bug fixes
 
