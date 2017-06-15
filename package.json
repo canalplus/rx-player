@@ -1,7 +1,7 @@
 {
   "name": "rx-player",
   "author": "Canal+",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Canal+ HTML5 Video Player",
   "main": "./dist/rx-player.js",
   "keywords": [
