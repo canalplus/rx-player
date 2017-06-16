@@ -20,6 +20,7 @@ import {
   seekingsSampler,
   getBufferLimits,
   getMaximumBufferPosition,
+  getMaximumSecureBufferPosition,
   fromWallClockTime,
 } from "./timings";
 import { retryableFuncWithBackoff } from "../utils/retry";
@@ -433,7 +434,7 @@ function Stream({
       }
 
       clonedTiming.liveGap = manifest.isLive ?
-        getMaximumBufferPosition(manifest) - 10 - timing.ts :
+        getMaximumSecureBufferPosition(manifest) - timing.ts :
         Infinity;
       return clonedTiming;
     });

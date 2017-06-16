@@ -45,6 +45,7 @@ import {
   toWallClockTime,
   fromWallClockTime,
   getMaximumBufferPosition,
+  getMaximumSecureBufferPosition,
   getMinimumBufferPosition,
 } from "./timings";
 
@@ -814,10 +815,18 @@ class Player extends EventEmitter {
         liveGap: t.liveGap,
         playbackRate: t.playback,
         wallClockTime: t.wallClockTime && t.wallClockTime.getTime() / 1000,
+
+        // TODO This property should be removed in a next version (after
+        // multiple tests) to only have liveGap
+        // We should be the closest to the live edge when it comes to buffering.
+        maximumBufferTime: getMaximumSecureBufferPosition(this._manifest),
       };
       this.trigger("positionUpdate", positionData);
 
       // TODO @deprecate
+      // compatibilty with a previous API where the liveGap was about the
+      // last buffer-isable position
+      t.liveGap = positionData.maximumBufferTime - t.ts;
       this.trigger("currentTimeChange", t);
     }
   }

@@ -30,6 +30,16 @@ const RESUME_GAP = 5;
 const SEEK_GAP = 2;
 
 /**
+ * Amount of time substracted from the live edge to prevent buffering ahead
+ * of it.
+ *
+ * TODO This property should be removed in a next version (after multiple
+ * tests).
+ * We should be the closest to the live edge when it comes to buffering.
+ */
+const LIVE_BUFFER_PROTECTION = 10;
+
+/**
  * HTMLMediaElement Events for which timings are calculated and emitted.
  * @type {Array.<string>}
  */
@@ -321,6 +331,11 @@ function getMinimumBufferPosition(manifest) {
   return min;
 }
 
+/**
+ * Get maximum position to which we should be able to construct a buffer.
+ * @param {Manifest} manifest
+ * @returns {Number}
+ */
 function getMaximumBufferPosition(manifest) {
   if (!manifest.isLive) {
     return manifest.getDuration();
@@ -332,6 +347,22 @@ function getMaximumBufferPosition(manifest) {
   } = manifest;
   const now = Date.now() / 1000;
   return now - availabilityStartTime - presentationLiveGap;
+}
+
+/**
+ * Get maximum buffer position with, for live contents, an added security to
+ * prevent buffering ahead of the live edge.
+ *
+ * TODO This method should be removed in a next version (after multiple tests).
+ * We should be the closest to the live edge when it comes to buffering.
+ *
+ * @param {Manifest} manifest
+ * @returns {Number}
+ */
+function getMaximumSecureBufferPosition(manifest) {
+  const maximumBufferPosition = getMaximumBufferPosition(manifest);
+  return manifest.isLive ?
+    maximumBufferPosition - LIVE_BUFFER_PROTECTION : maximumBufferPosition;
 }
 
 function getBufferLimits(manifest) {
@@ -365,5 +396,6 @@ export {
   fromWallClockTime,
   getMinimumBufferPosition,
   getMaximumBufferPosition,
+  getMaximumSecureBufferPosition,
   getBufferLimits,
 };
