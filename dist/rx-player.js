@@ -6054,12 +6054,13 @@ var AbstractSourceBuffer = function (_EventEmitter) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return getEmptyTimings; });
 /* unused harmony export getTimings */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return createTimingsSampler; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return seekingsSampler; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() { return seekingsSampler; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return toWallClockTime; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return fromWallClockTime; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return getMinimumBufferPosition; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return fromWallClockTime; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return getMinimumBufferPosition; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return getMaximumBufferPosition; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return getBufferLimits; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return getMaximumSecureBufferPosition; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() { return getBufferLimits; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_BehaviorSubject__ = __webpack_require__(30);
@@ -6097,6 +6098,16 @@ var RESUME_GAP = 5;
 
 // seek gap in seconds
 var SEEK_GAP = 2;
+
+/**
+ * Amount of time substracted from the live edge to prevent buffering ahead
+ * of it.
+ *
+ * TODO This property should be removed in a next version (after multiple
+ * tests).
+ * We should be the closest to the live edge when it comes to buffering.
+ */
+var LIVE_BUFFER_PROTECTION = 10;
 
 /**
  * HTMLMediaElement Events for which timings are calculated and emitted.
@@ -6322,6 +6333,11 @@ function getMinimumBufferPosition(manifest) {
   return min;
 }
 
+/**
+ * Get maximum position to which we should be able to construct a buffer.
+ * @param {Manifest} manifest
+ * @returns {Number}
+ */
 function getMaximumBufferPosition(manifest) {
   if (!manifest.isLive) {
     return manifest.getDuration();
@@ -6332,6 +6348,21 @@ function getMaximumBufferPosition(manifest) {
 
   var now = Date.now() / 1000;
   return now - availabilityStartTime - presentationLiveGap;
+}
+
+/**
+ * Get maximum buffer position with, for live contents, an added security to
+ * prevent buffering ahead of the live edge.
+ *
+ * TODO This method should be removed in a next version (after multiple tests).
+ * We should be the closest to the live edge when it comes to buffering.
+ *
+ * @param {Manifest} manifest
+ * @returns {Number}
+ */
+function getMaximumSecureBufferPosition(manifest) {
+  var maximumBufferPosition = getMaximumBufferPosition(manifest);
+  return manifest.isLive ? maximumBufferPosition - LIVE_BUFFER_PROTECTION : maximumBufferPosition;
 }
 
 function getBufferLimits(manifest) {
@@ -10334,7 +10365,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"2.1.3";
+    _this.version = /*PLAYER_VERSION*/"2.2.0";
     _this.video = videoElement;
 
     // fullscreen change subscription.
@@ -10901,11 +10932,19 @@ var Player = function (_EventEmitter) {
         bufferGap: isFinite(t.gap) ? t.gap : 0, // TODO fix higher up
         liveGap: t.liveGap,
         playbackRate: t.playback,
-        wallClockTime: t.wallClockTime && t.wallClockTime.getTime() / 1000
+        wallClockTime: t.wallClockTime && t.wallClockTime.getTime() / 1000,
+
+        // TODO This property should be removed in a next version (after
+        // multiple tests) to only have liveGap
+        // We should be the closest to the live edge when it comes to buffering.
+        maximumBufferTime: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_12__timings__["e" /* getMaximumSecureBufferPosition */])(this._manifest)
       };
       this.trigger("positionUpdate", positionData);
 
       // TODO @deprecate
+      // compatibilty with a previous API where the liveGap was about the
+      // last buffer-isable position
+      t.liveGap = positionData.maximumBufferTime - t.ts;
       this.trigger("currentTimeChange", t);
     }
   };
@@ -11394,14 +11433,14 @@ var Player = function (_EventEmitter) {
         this.video.currentTime = time.position;
         return;
       } else if (time.wallClockTime != null) {
-        this.video.currentTime = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_12__timings__["e" /* fromWallClockTime */])(time.wallClockTime * 1000, this._manifest);
+        this.video.currentTime = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_12__timings__["f" /* fromWallClockTime */])(time.wallClockTime * 1000, this._manifest);
         return;
       }
     }
 
     // deprecated part
     if (this._manifest.isLive) {
-      time = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_12__timings__["e" /* fromWallClockTime */])(time, this._manifest);
+      time = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_12__timings__["f" /* fromWallClockTime */])(time, this._manifest);
     }
     if (time !== currentTs) {
       __WEBPACK_IMPORTED_MODULE_0__utils_log__["a" /* default */].info("seek to", time);
@@ -11823,7 +11862,7 @@ var Player = function (_EventEmitter) {
       return null;
     }
 
-    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_12__timings__["f" /* getMinimumBufferPosition */])(this._manifest);
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_12__timings__["g" /* getMinimumBufferPosition */])(this._manifest);
   };
 
   Player.prototype.getMaximumPosition = function getMaximumPosition() {
@@ -11955,7 +11994,7 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
   var percentage = /^\d*(\.\d+)? ?%$/;
 
   if (startAt) {
-    var _getBufferLimits = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["g" /* getBufferLimits */])(manifest),
+    var _getBufferLimits = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["h" /* getBufferLimits */])(manifest),
         min = _getBufferLimits[0],
         max = _getBufferLimits[1];
 
@@ -11992,7 +12031,7 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
       __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_assert__["a" /* default */])(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
       return startTime;
     } else if (startTime) {
-      return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["e" /* fromWallClockTime */])(startTime, manifest);
+      return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["f" /* fromWallClockTime */])(startTime, manifest);
     } else {
       var sgp = manifest.suggestedPresentationDelay;
       return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["d" /* getMaximumBufferPosition */])(manifest) - (sgp == null ? DEFAULT_LIVE_GAP : sgp);
@@ -12265,11 +12304,11 @@ function Stream(_ref) {
         clonedTiming = timing;
       }
 
-      clonedTiming.liveGap = manifest.isLive ? __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["d" /* getMaximumBufferPosition */])(manifest) - 10 - timing.ts : Infinity;
+      clonedTiming.liveGap = manifest.isLive ? __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["e" /* getMaximumSecureBufferPosition */])(manifest) - timing.ts : Infinity;
       return clonedTiming;
     });
 
-    var seekings = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["h" /* seekingsSampler */])(augmentedTimings);
+    var seekings = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["i" /* seekingsSampler */])(augmentedTimings);
 
     return {
       timings: augmentedTimings,
