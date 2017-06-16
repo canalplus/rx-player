@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.2.0 (2017/06/16)
+
+### Added
+
+  - position: add maximumBufferPosition to the positionUpdate event's payload to replace the previous "liveGap" from currentTimeChange event
+
+### Bug fixes
+
+  - position: "liveGap" from currentTimeChange event now means the difference to the maximum "bufferisable" position to keep compatibility with the old API
+
 ## v2.1.3 (2017/06/15)
 
 ### Bug fixes
