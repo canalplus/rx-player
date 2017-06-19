@@ -819,6 +819,11 @@ class Player extends EventEmitter {
         // TODO This property should be removed in a next version (after
         // multiple tests) to only have liveGap
         // We should be the closest to the live edge when it comes to buffering.
+        // TODO normally, we should also integrate timeFragment.end into this
+        // However. It would be very ugly to do so and keeping compatibility
+        // hard.
+        // As this is a new API, and as timeFragment is deprecated, I let it
+        // pass (do not hit me!)
         maximumBufferTime: getMaximumSecureBufferPosition(this._manifest),
       };
       this.trigger("positionUpdate", positionData);
@@ -1638,6 +1643,11 @@ class Player extends EventEmitter {
     return getMinimumBufferPosition(this._manifest);
   }
 
+  // TODO normally, we should also integrate timeFragment.end into this
+  // However. It would be very ugly to do so and keeping compatibility
+  // hard.
+  // As this is a new API, and as timeFragment is deprecated, I let it
+  // pass (do not hit me!)
   getMaximumPosition() {
     if (!this._manifest) {
       return null;
