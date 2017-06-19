@@ -3,6 +3,7 @@ node_modules
 *.keys
 
 demo/bundle.js
+demo/standalone/lib.js
 
 tools/tests/coverage/
 
