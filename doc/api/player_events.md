@@ -50,7 +50,10 @@ The object emitted as the following properties:
   - ``duration`` (``Number``): The duration of the content.
   - ``bufferGap`` (``Number``): The gap, in seconds, between the current position and the end of the current buffered range.
   -  ``playbackRate`` (``Number``): The current playback rate the content is on.
-  - ``liveGap`` (``Number|undefined``): Only for live contents. The gap between the current position and the "live".
+  - ``liveGap`` (``Number|undefined``): Only for live contents. The gap between the current position and the "live edge".
+  - ``maximumBufferTime`` (``Number|undefined``): The maximum time until which the buffer can currently be filled. That is:
+    - for non-live contents, the duration.
+    - for live contents, the live edge minus a security margin we added to avoid buffering ahead of it.
   - ``wallClockTime`` (``Number|undefined``): Only for live contents. The current time converted to wall-clock time in seconds. That is the real live position (and not the position as announced by the video element).
 
 ### <a name="events-audioTrackChange"></a>audioTrackChange
