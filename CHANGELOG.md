@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.2.0 (2017/06/16)
+## v2.2.0 (2017/06/19)
 
 ### Added
 
@@ -8,6 +8,7 @@
 
 ### Bug fixes
 
+  - upgrade to rxjs 5.4.1 to escape memory leak
   - position: "liveGap" from currentTimeChange event now means the difference to the maximum "bufferisable" position to keep compatibility with the old API
 
 ## v2.1.3 (2017/06/15)
