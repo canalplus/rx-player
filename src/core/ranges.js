@@ -258,6 +258,16 @@ class BufferedRanges {
     return null;
   }
 
+  getOuterRanges(time) {
+    const ranges = [];
+    for (var i = 0; i < this.ranges.length; i++) {
+      if (!isPointInRange(this.ranges[i], time)) {
+        ranges.push(this.ranges[i]);
+      }
+    }
+    return ranges;
+  }
+
   /**
    * Returns the time-gap between the buffered
    * end limit and the given timestamp

@@ -72,7 +72,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
-	module.exports = __webpack_require__(33);
+	module.exports = __webpack_require__(32);
 
 /***/ }),
 /* 1 */
@@ -704,7 +704,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
-	module.exports = __webpack_require__(49).Promise;
+	module.exports = __webpack_require__(48).Promise;
 
 /***/ }),
 /* 7 */
@@ -4271,10 +4271,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var getAdaptationsByType = _require.getAdaptationsByType;
 
-	var Template = __webpack_require__(31);
+	var Template = __webpack_require__(30);
 	var Timeline = __webpack_require__(18);
-	var List = __webpack_require__(30);
-	var Base = __webpack_require__(29);
+	var List = __webpack_require__(29);
+	var Base = __webpack_require__(28);
 
 	function OutOfIndexError(type) {
 	  this.name = "OutOfIndexError";
@@ -5029,7 +5029,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  defaultLanguage: "fra",
 	  defaultSubtitle: "",
 	  // default buffer size in seconds
-	  defaultBufferSize: 5,
+	  defaultBufferSize: 30,
 	  // buffer threshold ratio used as a lower bound
 	  // margin to find the suitable representation
 	  defaultBufferThreshold: 0.3
@@ -5306,7 +5306,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var first = _require3.first;
 	var on = _require3.on;
 
-	var _require4 = __webpack_require__(47);
+	var _require4 = __webpack_require__(46);
 
 	var ArraySet = _require4.ArraySet;
 
@@ -5314,8 +5314,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var IndexHandler = _require5.IndexHandler;
 	var OutOfIndexError = _require5.OutOfIndexError;
-
-	var BufferingQueue = __webpack_require__(26);
 
 	var BITRATE_REBUFFERING_RATIO = 1.5;
 
@@ -5335,8 +5333,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var // { representations, bufferSizes } observables
 	  timings = _ref.timings;
 	  var seekings = _ref.seekings;
-
-	  var bufferingQueue = new BufferingQueue(sourceBuffer);
 
 	  var bufferType = adaptation.type;
 	  var isAVBuffer = bufferType == "audio" || bufferType == "video";
@@ -5368,25 +5364,67 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // open updateEnd stream (hackish)
 	  var mutedUpdateEnd = updateEnd.ignoreElements().startWith(true);
 
+	  function appendBuffer(blob) {
+	    sourceBuffer.appendBuffer(blob);
+	    return first(updateEnd);
+	  }
+
+	  function removeBuffer(_ref2) {
+	    var start = _ref2.start;
+	    var end = _ref2.end;
+
+	    sourceBuffer.remove(start, end);
+	    return first(updateEnd);
+	  }
+
+	  function lockedBufferFunction(func) {
+	    return function (data) {
+	      return defer(function () {
+	        if (sourceBuffer.updating) {
+	          return first(updateEnd).flatMap(function () {
+	            return func(data);
+	          });
+	        } else {
+	          return func(data);
+	        }
+	      });
+	    };
+	  }
+
+	  var lockedAppendBuffer = lockedBufferFunction(appendBuffer);
+	  var lockedRemoveBuffer = lockedBufferFunction(removeBuffer);
+
 	  // Buffer garbage collector algorithm. Tries to free up some part of
 	  // the ranges that are distant from the current playing time.
 	  // See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
-	  function selectGCedRanges(_ref2, gcGap) {
-	    var ts = _ref2.ts;
-	    var buffered = _ref2.buffered;
+	  function selectGCedRanges(_ref3, gcGap) {
+	    var ts = _ref3.ts;
+	    var buffered = _ref3.buffered;
 
 	    var innerRange = buffered.getRange(ts);
 	    var outerRanges = buffered.getOuterRanges(ts);
 
 	    var cleanedupRanges = [];
 
-	    cleanedupRanges.push.apply(cleanedupRanges, outerRanges);
+	    // start by trying to remove all ranges that do not contain the
+	    // current time and respect the gcGap
+	    for (var i = 0; i < outerRanges.length; i++) {
+	      var outerRange = outerRanges[i];
+	      if (ts - gcGap < outerRange.end) {
+	        cleanedupRanges.push(outerRange);
+	      } else if (ts + gcGap > outerRange.start) {
+	        cleanedupRanges.push(outerRange);
+	      }
+	    }
 
 	    // try to clean up some space in the current range
 	    if (innerRange) {
 	      log.debug("buffer: gc removing part of inner range", cleanedupRanges);
 	      if (ts - gcGap > innerRange.start) {
 	        cleanedupRanges.push({ start: innerRange.start, end: ts - gcGap });
+	      }
+	      if (ts + gcGap < innerRange.end) {
+	        cleanedupRanges.push({ start: ts + gcGap, end: innerRange.end });
 	      }
 	    }
 
@@ -5404,9 +5442,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      log.debug("buffer: gc cleaning", cleanedupRanges);
-	      return from(cleanedupRanges.map(function (arg) {
-	        return bufferingQueue.removeBuffer(arg);
-	      })).concatAll();
+	      return from(cleanedupRanges.map(lockedRemoveBuffer)).concatAll();
 	    });
 	  }
 
@@ -5484,26 +5520,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var segmentsPipeline = combineLatest(timings, bufferSizes, mutedUpdateEnd, function (timing, bufferSize) {
 	      return { timing: timing, bufferSize: bufferSize };
-	    }).flatMap(function (_ref3) {
-	      var timing = _ref3.timing;
-	      var bufferSize = _ref3.bufferSize;
-
-	      var cleanedupRanges = selectGCedRanges({
-	        ts: timing.ts,
-	        buffered: new BufferedRanges(sourceBuffer.buffered)
-	      }, 5);
-	      return from(cleanedupRanges.map(function (arg) {
-	        return bufferingQueue.removeBuffer(arg);
-	      })).concatAll().ignoreElements().concat(just({ timing: timing, bufferSize: bufferSize }));
-	      // .do(() => {
-	      //   if (sourceBuffer.buffered.length) {
-	      //     console.log(
-	      //       sourceBuffer.buffered.length,
-	      //       sourceBuffer.buffered.start(0),
-	      //       sourceBuffer.buffered.end(0))
-	      //   }
-	      // })
-	    }).flatMap(function (_ref4, count) {
+	    })
+	    // .flatMap(({ timing, bufferSize }) => {
+	    //   const cleanedupRanges = selectGCedRanges(timing, 5);
+	    //   return from(cleanedupRanges.map(lockedRemoveBuffer))
+	    //     .concatAll()
+	    //     .ignoreElements()
+	    //     .concat(just({ timing, bufferSize }));
+	    // })
+	    .flatMap(function (_ref4, count) {
 	      var timing = _ref4.timing;
 	      var bufferSize = _ref4.bufferSize;
 
@@ -5552,12 +5577,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }));
 	    }).concatMap(pipeline).concatMap(function (infos) {
 	      var blob = infos.parsed.blob;
-	      return bufferingQueue.appendBuffer(blob)["catch"](function (err) {
+	      return lockedAppendBuffer(blob)["catch"](function (err) {
 	        // launch our garbage collector and retry on
 	        // QuotaExceededError
 	        if (err.name == "QuotaExceededError") {
 	          return bufferGarbageCollector().flatMap(function () {
-	            return bufferingQueue.appendBuffer(blob);
+	            return lockedAppendBuffer(blob);
 	          });
 	        } else {
 	          throw err;
@@ -5618,128 +5643,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _require = __webpack_require__(3);
-
-	var Subject = _require.Subject;
-
-	var BUFFER_APPEND = "append";
-	var BUFFER_REMOVE = "remove";
-	var BUFFER_STREAM = "stream";
-
-	/**
-	 * Append/Remove from sourceBuffer in a queue.
-	 * Wait for the previous buffer action to be finished (updateend event) to
-	 * perform the next in the queue.
-	 * @class BufferingQueue
-	 */
-	function BufferingQueue(sourceBuffer) {
-	  this.buffer = sourceBuffer;
-	  this.queue = [];
-	  this.flushing = null;
-
-	  this._onUpdate = this.onUpdate.bind(this);
-	  this._onError = this.onError.bind(this);
-	  this._flush = this.flush.bind(this);
-
-	  this.buffer.addEventListener("update", this._onUpdate);
-	  this.buffer.addEventListener("error", this._onError);
-	  this.buffer.addEventListener("updateend", this._flush);
-	};
-
-	BufferingQueue.prototype = {
-	  dispose: function dispose() {
-	    this.buffer.removeEventListener("update", this._onUpdate);
-	    this.buffer.removeEventListener("error", this._onError);
-	    this.buffer.removeEventListener("updateend", this._flush);
-	    this.buffer = null;
-	    this.queue.length = 0;
-	    this.flushing = null;
-	  },
-
-	  onUpdate: function onUpdate(evt) {
-	    if (this.flushing) {
-	      this.flushing.onNext(evt);
-	      this.flushing.onCompleted();
-	      this.flushing = null;
-	    }
-	  },
-
-	  onError: function onError(error) {
-	    if (this.flushing) {
-	      this.flushing.onError(error);
-	      this.flushing = null;
-	    }
-	  },
-
-	  /**
-	   * Queue a new action.
-	   * Begin flushing if no action were previously in the queue.
-	   * @param {string} type
-	   * @param {*} args
-	   * @returns {Subject} - Can be used to follow the buffer action advancement.
-	   */
-	  queueAction: function queueAction(type, args) {
-	    var subj = new Subject();
-	    var length = this.queue.unshift({ type: type, args: args, subj: subj });
-	    if (length === 1) {
-	      this.flush();
-	    }
-	    return subj;
-	  },
-
-	  appendBuffer: function appendBuffer(buffer) {
-	    return this.queueAction(BUFFER_APPEND, buffer);
-	  },
-
-	  removeBuffer: function removeBuffer(_ref) {
-	    var start = _ref.start;
-	    var end = _ref.end;
-
-	    return this.queueAction(BUFFER_REMOVE, { start: start, end: end });
-	  },
-
-	  appendStream: function appendStream(stream) {
-	    return this.queueAction(BUFFER_STREAM, stream);
-	  },
-
-	  /**
-	   * Perform next queued action if one and none are pending.
-	   */
-	  flush: function flush() {
-	    if (this.flushing || this.queue.length === 0 || this.buffer.updating) {
-	      return;
-	    }
-
-	    var _queue$pop = this.queue.pop();
-
-	    var type = _queue$pop.type;
-	    var args = _queue$pop.args;
-	    var subj = _queue$pop.subj;
-
-	    this.flushing = subj;
-	    try {
-	      switch (type) {
-	        case BUFFER_APPEND:
-	          this.buffer.appendBuffer(args);break;
-	        case BUFFER_STREAM:
-	          this.buffer.appendStream(args);break;
-	        case BUFFER_REMOVE:
-	          this.buffer.remove(args.start, args.end);break;
-	      }
-	    } catch (e) {
-	      this.onError(e);
-	    }
-	  }
-	};
-
-	module.exports = BufferingQueue;
-
-/***/ }),
-/* 27 */
 /***/ (function(module, exports) {
 
 	/**
@@ -5799,7 +5702,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -5859,7 +5762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = DeviceEvents;
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -5910,7 +5813,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Base;
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports) {
 
 	/**
@@ -5989,7 +5892,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = List;
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports) {
 
 	/**
@@ -6068,7 +5971,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Template;
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -6201,7 +6104,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = PipeLines;
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -6245,7 +6148,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var on = _require2.on;
 
 	var EventEmitter = __webpack_require__(10);
-	var debugPane = __webpack_require__(48);
+	var debugPane = __webpack_require__(47);
 	var assert = __webpack_require__(2);
 
 	var _require3 = __webpack_require__(8);
@@ -6264,7 +6167,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var fromWallClockTime = _require4.fromWallClockTime;
 	var getLiveGap = _require4.getLiveGap;
 
-	var _require5 = __webpack_require__(27);
+	var _require5 = __webpack_require__(26);
 
 	var InitializationSegmentCache = _require5.InitializationSegmentCache;
 
@@ -6272,17 +6175,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var BufferedRanges = _require6.BufferedRanges;
 
-	var _require7 = __webpack_require__(37);
+	var _require7 = __webpack_require__(36);
 
 	var parseTimeFragment = _require7.parseTimeFragment;
 
-	var DeviceEvents = __webpack_require__(28);
+	var DeviceEvents = __webpack_require__(27);
 	var manifestHelpers = __webpack_require__(12);
 	// TODO(pierre): separate transports from main build
-	var Transports = __webpack_require__(41);
-	var PipeLines = __webpack_require__(32);
+	var Transports = __webpack_require__(40);
+	var PipeLines = __webpack_require__(31);
 	var Adaptive = __webpack_require__(24);
-	var Stream = __webpack_require__(35);
+	var Stream = __webpack_require__(34);
 	var EME = __webpack_require__(16);
 
 	var PLAYER_STOPPED = "STOPPED";
@@ -6923,7 +6826,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Player;
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7010,7 +6913,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = AbstractSourceBuffer;
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -7068,7 +6971,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var canPlay = _require5.canPlay;
 	var loadedMetadata = _require5.loadedMetadata;
 
-	var TextSourceBuffer = __webpack_require__(36);
+	var TextSourceBuffer = __webpack_require__(35);
 
 	var _require6 = __webpack_require__(17);
 
@@ -7598,7 +7501,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Stream;
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -7625,7 +7528,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Promise_ = __webpack_require__(6);
 	var _ = __webpack_require__(1);
-	var AbstractSourceBuffer = __webpack_require__(34);
+	var AbstractSourceBuffer = __webpack_require__(33);
 
 	var Cue = window.VTTCue || window.TextTrackCue;
 
@@ -7716,7 +7619,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = TextSourceBuffer;
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -7914,7 +7817,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { parseTimeFragment: parseTimeFragment };
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -7951,12 +7854,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var resolveURL = _require2.resolveURL;
 
-	var _require3 = __webpack_require__(39);
+	var _require3 = __webpack_require__(38);
 
 	var parseSidx = _require3.parseSidx;
 	var patchPssh = _require3.patchPssh;
 
-	var dashManifestParser = __webpack_require__(40);
+	var dashManifestParser = __webpack_require__(39);
 
 	function byteRange(_ref) {
 	  var start = _ref[0];
@@ -8128,7 +8031,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -8290,7 +8193,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { parseSidx: parseSidx, patchPssh: patchPssh };
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -8665,7 +8568,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = parser;
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -8687,12 +8590,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 
 	module.exports = {
-	  smooth: __webpack_require__(42),
-	  dash: __webpack_require__(38)
+	  smooth: __webpack_require__(41),
+	  dash: __webpack_require__(37)
 	};
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -8733,9 +8636,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var log = __webpack_require__(4);
 
-	var createSmoothStreamingParser = __webpack_require__(44);
+	var createSmoothStreamingParser = __webpack_require__(43);
 
-	var _require4 = __webpack_require__(43);
+	var _require4 = __webpack_require__(42);
 
 	var patchSegment = _require4.patchSegment;
 	var createVideoInitSegment = _require4.createVideoInitSegment;
@@ -8745,11 +8648,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var parseTfrf = _require4.parseTfrf;
 	var parseTfxd = _require4.parseTfxd;
 
-	var _require5 = __webpack_require__(45);
+	var _require5 = __webpack_require__(44);
 
 	var parseSami = _require5.parseSami;
 
-	var _require6 = __webpack_require__(46);
+	var _require6 = __webpack_require__(45);
 
 	var parseTTML = _require6.parseTTML;
 
@@ -9005,7 +8908,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -9641,7 +9544,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ }),
-/* 44 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -9987,7 +9890,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = createSmoothStreamingParser;
 
 /***/ }),
-/* 45 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -10105,7 +10008,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { parseSami: parseSami };
 
 /***/ }),
-/* 46 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -10256,7 +10159,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { parseTTML: parseTTML };
 
 /***/ }),
-/* 47 */
+/* 46 */
 /***/ (function(module, exports) {
 
 	/**
@@ -10301,7 +10204,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { ArraySet: ArraySet };
 
 /***/ }),
-/* 48 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -10475,7 +10378,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ }),
-/* 49 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process, global, module) {/*!
@@ -11430,7 +11333,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    /* global define:true module:true window: true */
-	    if ("function" === 'function' && __webpack_require__(50)['amd']) {
+	    if ("function" === 'function' && __webpack_require__(49)['amd']) {
 	      !(__WEBPACK_AMD_DEFINE_RESULT__ = function() { return es6$promise$umd$$ES6Promise; }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	    } else if (typeof module !== 'undefined' && module['exports']) {
 	      module['exports'] = es6$promise$umd$$ES6Promise;
@@ -11441,7 +11344,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15), (function() { return this; }()), __webpack_require__(22)(module)))
 
 /***/ }),
-/* 50 */
+/* 49 */
 /***/ (function(module, exports) {
 
 	module.exports = function() { throw new Error("define cannot be used indirect"); };

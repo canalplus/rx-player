@@ -26,7 +26,7 @@ var DEFAULTS = {
   defaultLanguage: "fra",
   defaultSubtitle: "",
   // default buffer size in seconds
-  defaultBufferSize: 30,
+  defaultBufferSize: 5,
   // buffer threshold ratio used as a lower bound
   // margin to find the suitable representation
   defaultBufferThreshold: 0.3,

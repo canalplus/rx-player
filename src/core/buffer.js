@@ -25,6 +25,8 @@ var { first, on } = require("canal-js-utils/rx-ext");
 var { ArraySet } = require("../utils/collections");
 var { IndexHandler, OutOfIndexError } = require("./index-handler");
 
+var BufferingQueue = require("./buffering-queue.js");
+
 var BITRATE_REBUFFERING_RATIO = 1.5;
 
 var GC_GAP_CALM  = 240;
@@ -38,6 +40,8 @@ function Buffer({
   timings,      // Timings observable
   seekings      // Seekings observable
 }) {
+
+  var bufferingQueue = new BufferingQueue(sourceBuffer);
 
   var bufferType = adaptation.type;
   var isAVBuffer = (
@@ -75,31 +79,6 @@ function Buffer({
     .ignoreElements()
     .startWith(true);
 
-  function appendBuffer(blob) {
-    sourceBuffer.appendBuffer(blob);
-    return first(updateEnd);
-  }
-
-  function removeBuffer({ start, end }) {
-    sourceBuffer.remove(start, end);
-    return first(updateEnd);
-  }
-
-  function lockedBufferFunction(func) {
-    return function(data) {
-      return defer(() => {
-        if (sourceBuffer.updating) {
-          return first(updateEnd).flatMap(() => func(data));
-        } else {
-          return func(data);
-        }
-      });
-    };
-  }
-
-  var lockedAppendBuffer = lockedBufferFunction(appendBuffer);
-  var lockedRemoveBuffer = lockedBufferFunction(removeBuffer);
-
   // Buffer garbage collector algorithm. Tries to free up some part of
   // the ranges that are distant from the current playing time.
   // See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
@@ -109,26 +88,13 @@ function Buffer({
 
     var cleanedupRanges = [];
 
-    // start by trying to remove all ranges that do not contain the
-    // current time and respect the gcGap
-    for (var i = 0; i < outerRanges.length; i++) {
-      var outerRange = outerRanges[i];
-      if (ts - gcGap < outerRange.end) {
-        cleanedupRanges.push(outerRange);
-      }
-      else if (ts + gcGap > outerRange.start) {
-        cleanedupRanges.push(outerRange);
-      }
-    }
+    cleanedupRanges.push.apply(cleanedupRanges, outerRanges);
 
     // try to clean up some space in the current range
     if (innerRange) {
       log.debug("buffer: gc removing part of inner range", cleanedupRanges);
       if (ts - gcGap > innerRange.start) {
         cleanedupRanges.push({ start: innerRange.start, end: ts - gcGap });
-      }
-      if (ts + gcGap < innerRange.end) {
-        cleanedupRanges.push({ start: ts + gcGap, end: innerRange.end });
       }
     }
 
@@ -146,7 +112,9 @@ function Buffer({
       }
 
       log.debug("buffer: gc cleaning", cleanedupRanges);
-      return from(cleanedupRanges.map(lockedRemoveBuffer)).concatAll();
+      return from(cleanedupRanges
+        .map(arg => bufferingQueue.removeBuffer(arg)))
+        .concatAll();
     });
   }
 
@@ -232,6 +200,25 @@ function Buffer({
       mutedUpdateEnd,
       (timing, bufferSize) => ({ timing, bufferSize })
     )
+      .flatMap(({ timing, bufferSize }) => {
+        const cleanedupRanges = selectGCedRanges({
+          ts: timing.ts,
+          buffered: new BufferedRanges(sourceBuffer.buffered),
+        }, 5);
+        return from(cleanedupRanges
+          .map((arg) => bufferingQueue.removeBuffer(arg)))
+          .concatAll()
+          .ignoreElements()
+          .concat(just({ timing, bufferSize }))
+          // .do(() => {
+          //   if (sourceBuffer.buffered.length) {
+          //     console.log(
+          //       sourceBuffer.buffered.length,
+          //       sourceBuffer.buffered.start(0),
+          //       sourceBuffer.buffered.end(0))
+          //   }
+          // })
+      })
       .flatMap(({ timing, bufferSize }, count) => {
         var nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
 
@@ -282,13 +269,13 @@ function Buffer({
       .concatMap(pipeline)
       .concatMap((infos) => {
         var blob = infos.parsed.blob;
-        return lockedAppendBuffer(blob)
+        return bufferingQueue.appendBuffer(blob)
           .catch((err) => {
             // launch our garbage collector and retry on
             // QuotaExceededError
             if (err.name == "QuotaExceededError") {
               return bufferGarbageCollector().flatMap(
-                () => lockedAppendBuffer(blob));
+                () => bufferingQueue.appendBuffer(blob));
             }
             else {
               throw err;
