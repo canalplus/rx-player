@@ -37,7 +37,7 @@ This chapter describes every event sent by the player. Each event generally come
 
 _payload type_: ``string``
 
-Emit the current state of the player, every time it changes. Find the different possible states [here](./index.md#getPlayerState).
+Emit the current state of the player, every time it changes. Find the different possible states [here](./index.md#meth-getPlayerState).
 
 ### <a name="events-positionUpdate"></a>positionUpdate
 
