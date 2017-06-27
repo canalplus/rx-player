@@ -104,7 +104,7 @@ function getMaxUsefulBitrateforWidth(representations, width) {
       return filteredAdaptations[filteredAdaptations.length - 1].bitrate;
     } else {
       const firstRepresentation = representations[0];
-      return firstRepresentation ? firstRepresentation.bitrate : void 0;
+      return (firstRepresentation && firstRepresentation.bitrate) || 0;
     }
   }
 
