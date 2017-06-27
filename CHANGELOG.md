@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.1 (2017/06/27)
+
+### Bug fixes
+
+  - adaptive: fix width limitation bug. Impacted limitVideoWidth + setMaxVideoBitrate APIs
+
 ## v2.2.0 (2017/06/19)
 
 ### Added
