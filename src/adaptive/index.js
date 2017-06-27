@@ -94,14 +94,17 @@ function getClosestBitrate(bitrates, btr, threshold=0) {
  */
 function getMaxUsefulBitrateforWidth(representations, width) {
   const sortedRepsByWidth = representations.sort((a, b) => a.width - b.width);
-  const maxWidth = sortedRepsByWidth.find(r => r.width >= width);
+  const firstSuperiorRepresentation =
+    sortedRepsByWidth.find(r => r.width >= width);
 
-  if (maxWidth) {
-    const filteredAdaptations = representations.filter(r => r.width <= maxWidth);
+  if (firstSuperiorRepresentation) {
+    const filteredAdaptations = representations
+      .filter(r => r.width <= firstSuperiorRepresentation.width);
     if (filteredAdaptations.length) {
       return filteredAdaptations[filteredAdaptations.length - 1].bitrate;
     } else {
-      return representations[0];
+      const firstRepresentation = representations[0];
+      return firstRepresentation ? firstRepresentation.bitrate : void 0;
     }
   }
 
