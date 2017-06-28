@@ -4,7 +4,8 @@ import TimelineIndex from "./timeline.js";
 import { getInitSegment, setTimescale, scale } from "./helpers.js";
 
 /**
- * TODO weird... Reimplement from scratch
+ * TODO weird that everything is inherited from Timeline...
+ * Reimplement from scratch
  */
 export default objectAssign({}, TimelineIndex, {
   getInitSegment,
