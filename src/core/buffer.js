@@ -80,7 +80,7 @@ function Buffer({
   sourceBuffer, // SourceBuffer object
   adaptation,   // Adaptation buffered
   pipeline,     // Segment pipeline
-  adapters,     // { representations, bufferSizes } observables
+  adapters,     // { representations, bufferAhead, bufferBehind } observables
   timings,      // Timings observable
   seekings,     // Seekings observable
   isLive,
@@ -95,7 +95,7 @@ function Buffer({
   const LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
   const HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
 
-  const { representations, bufferSizes } = adapters;
+  const { representations, bufferAhead, bufferBehind } = adapters;
   const ranges = new BufferedRanges();
   const bufferingQueue = new BufferingQueue(sourceBuffer);
 
@@ -120,7 +120,7 @@ function Buffer({
     // current time and respect the gcGap
     for (let i = 0; i < outerRanges.length; i++) {
       const outerRange = outerRanges[i];
-      if (ts - gcGap < outerRange.end) {
+      if (ts - gcGap < outerRange.end) { // FIXME?
         cleanedupRanges.push(outerRange);
       }
       else if (ts + gcGap > outerRange.start) {
@@ -179,7 +179,7 @@ function Buffer({
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
    * sourceBuffer
    * @param {Object} timing - The last item emitted from timings
-   * @param {Number} bufferSize - The last item emitted from bufferSizes
+   * @param {Number} bufferSize - The last item emitted from bufferAhead
    * @param {Boolean} withInitSegment - Whether we're dealing with an init segment.
    * @returns {Array.<Segment>}
    * @throws IndexError - Throws if the current timestamp is considered out
@@ -350,7 +350,7 @@ function Buffer({
      * @param {Number} injectCount
      * @returns {Observable|Array.<Segment>}
      */
-    function getNeededSegments([timing, bufferSize], injectCount) {
+    function getNeededSegments(timing, bufferSize, injectCount) {
       const nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
 
       // TODO This code didn't work previously (typo in the equals method) but
@@ -425,18 +425,70 @@ function Buffer({
         queuedSegments.add(injectedSegments[i].id);
       }
 
-      return injectedSegments;
+      return Observable.of(...injectedSegments);
     }
+
+    /**
+     * Remove "old" buffer from the browser's memory.
+     * Normally, the browser garbage-collect automatically old-added chunks of
+     * buffer date when memory is scarce. However, you might want to control
+     * the size of memory allocated. This function takes the current position
+     * and a "depth" wanted for the buffer, in seconds.
+     *
+     * Anything older than the depth will be removed from the buffer.
+     * @param {Number} position - The current position
+     * @param {Number} bufferDepth
+     * @returns {Observable}
+     */
+    const cleanOldBuffer = (position, bufferDepth) => {
+      if (!isFinite(bufferDepth)) {
+        return Observable.empty();
+      }
+
+      const buffered = new BufferedRanges(sourceBuffer.buffered);
+      const cleanedupRanges = [];
+
+      const innerRange  = buffered.getRange(position);
+      const outerRanges = buffered.getOuterRanges(position);
+
+      // begin from the oldest
+      for (let i = 0; i < outerRanges.length; i++) {
+        const outerRange = outerRanges[i];
+        if (position - bufferDepth > outerRange.end) {
+          cleanedupRanges.push(outerRange);
+        }
+      }
+      if (innerRange) {
+        if (position - bufferDepth > innerRange.start) {
+          cleanedupRanges.push({
+            start: innerRange.start,
+            end: position - bufferDepth,
+          });
+        }
+      }
+      return from(
+        cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
+      ).concatAll().ignoreElements();
+    };
+
+    const loadNeededSegments = segment => {
+      return pipeline({ segment, representation })
+        .map((args) => objectAssign({ segment }, args));
+    };
+
+    const onClockTick = ([ timing, bufferSize, bufferDepth ], i) =>
+      Observable.merge(
+        getNeededSegments(timing, bufferSize, i)
+          .concatMap(loadNeededSegments),
+        cleanOldBuffer(timing.ts, bufferDepth)
+      );
 
     const segmentsPipeline = combineLatest(
       timings,
-      bufferSizes
+      bufferAhead,
+      bufferBehind
     )
-      .mergeMap(getNeededSegments)
-      .concatMap((segment) =>
-        pipeline({ segment, representation })
-          .map((args) => objectAssign({ segment }, args))
-      )
+      .mergeMap(onClockTick)
       .concatMap(appendDataInBuffer);
 
     return merge(segmentsPipeline, messageSubject).catch((error) => {

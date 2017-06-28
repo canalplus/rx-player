@@ -31,7 +31,8 @@ const DEFAULTS = {
   },
   defaultTextTrack: null,
   // default buffer size in seconds
-  defaultBufferSize: 30,
+  defaultBufferAhead: 30,
+  defaultBufferBehind: Infinity,
   // buffer threshold ratio used as a lower bound
   // margin to find the suitable representation
   defaultBufferThreshold: 0.3,
@@ -174,7 +175,8 @@ export default function(metrics, deviceEvents, options={}) {
   const {
     defaultAudioTrack,
     defaultTextTrack,
-    defaultBufferSize,
+    defaultBufferAhead,
+    defaultBufferBehind,
     defaultBufferThreshold,
     initialVideoBitrate,
     initialAudioBitrate,
@@ -214,10 +216,18 @@ export default function(metrics, deviceEvents, options={}) {
     video: new BehaviorSubject(maxVideoBitrate),
   };
 
-  const $bufSizes = {
-    audio: new BehaviorSubject(defaultBufferSize),
-    video: new BehaviorSubject(defaultBufferSize),
-    text:  new BehaviorSubject(defaultBufferSize),
+  // TODO add image / other?
+  const $bufferSizesAhead = {
+    audio: new BehaviorSubject(defaultBufferAhead),
+    video: new BehaviorSubject(defaultBufferAhead),
+    text:  new BehaviorSubject(defaultBufferAhead),
+  };
+
+  // TODO add image / other?
+  const $bufferSizesBehind = {
+    audio: new BehaviorSubject(defaultBufferBehind),
+    video: new BehaviorSubject(defaultBufferBehind),
+    text:  new BehaviorSubject(defaultBufferBehind),
   };
 
   /**
@@ -283,7 +293,7 @@ export default function(metrics, deviceEvents, options={}) {
    * Returns an object containing two observables:
    *   - representations: the chosen best representation for the adaptation
    *     (correlated from the user, max and average bitrates)
-   *   - bufferSizes: the bufferSize chosen
+   *   - bufferSizesAhead: the bufferSize chosen
    * @param {Object} adaptation
    * @returns {Object}
    */
@@ -356,7 +366,10 @@ export default function(metrics, deviceEvents, options={}) {
 
     return {
       representations: representationsObservable,
-      bufferSizes: $bufSizes[type] || new BehaviorSubject(defaultBufferSize),
+      bufferAhead: $bufferSizesAhead[type] ||
+        new BehaviorSubject(defaultBufferAhead),
+      bufferBehind: $bufferSizesBehind[type] ||
+        new BehaviorSubject(defaultBufferBehind),
     };
   }
 
@@ -370,15 +383,53 @@ export default function(metrics, deviceEvents, options={}) {
 
     getAudioMaxBitrate() { return $maxBitrates.audio.getValue(); },
     getVideoMaxBitrate() { return $maxBitrates.video.getValue(); },
-    getAudioBufferSize() { return $bufSizes.audio.getValue(); },
-    getVideoBufferSize() { return $bufSizes.video.getValue(); },
+    getAudioBufferSize() { return $bufferSizesAhead.audio.getValue(); },
+    getVideoBufferSize() { return $bufferSizesAhead.video.getValue(); },
 
     setAudioBitrate(x)    { $usrBitrates.audio.next(def(x, Infinity)); },
     setVideoBitrate(x)    { $usrBitrates.video.next(def(x, Infinity)); },
     setAudioMaxBitrate(x) { $maxBitrates.audio.next(def(x, Infinity)); },
     setVideoMaxBitrate(x) { $maxBitrates.video.next(def(x, Infinity)); },
-    setAudioBufferSize(x) { $bufSizes.audio.next(def(x, defaultBufferSize)); },
-    setVideoBufferSize(x) { $bufSizes.video.next(def(x, defaultBufferSize)); },
+
+    setAudioBufferSize(x) {
+      $bufferSizesAhead.audio.next(def(x, defaultBufferAhead));
+    },
+
+    setVideoBufferSize(x) {
+      $bufferSizesAhead.video.next(def(x, defaultBufferAhead));
+    },
+
+    setBufferBehind(size) {
+      // TODO XXX image?
+      $bufferSizesBehind.audio.next(def(size, defaultBufferBehind));
+      $bufferSizesBehind.video.next(def(size, defaultBufferBehind));
+      $bufferSizesBehind.text.next(def(size, defaultBufferBehind));
+    },
+
+    setBufferAhead(size) {
+      // TODO XXX image?
+      $bufferSizesAhead.audio.next(def(size, defaultBufferBehind));
+      $bufferSizesAhead.video.next(def(size, defaultBufferBehind));
+      $bufferSizesAhead.text.next(def(size, defaultBufferBehind));
+    },
+
+    getBufferBehind() {
+      // TODO XXX image?
+      return Math.min(
+        $bufferSizesBehind.audio.getValue(),
+        $bufferSizesBehind.video.getValue(),
+        $bufferSizesBehind.text.getValue(),
+      );
+    },
+
+    getBufferAhead() {
+      // TODO XXX image?
+      return Math.min(
+        $bufferSizesAhead.audio.getValue(),
+        $bufferSizesAhead.video.getValue(),
+        $bufferSizesAhead.text.getValue(),
+      );
+    },
 
     getBufferAdapters,
     getAdaptationsChoice,

@@ -1481,6 +1481,40 @@ class Player extends EventEmitter {
   }
 
   /**
+   * Set the max buffer size for the buffer behind the current position.
+   * Every buffer data before will be removed.
+   * @param {Number} depthInSeconds
+   */
+  setWantedBufferBehind(depthInSeconds) {
+    this.adaptive.setBufferBehind(depthInSeconds);
+  }
+
+  /**
+   * Set the max buffer size for the buffer ahead of the current position.
+   * The player will stop downloading chunks when this size is reached.
+   * @param {Number} sizeInSeconds
+   */
+  setWantedBufferAhead(sizeInSeconds) {
+    this.adaptive.setBufferAhead(sizeInSeconds);
+  }
+
+  /**
+   * Returns the max buffer size for the buffer behind the current position.
+   * @returns {Number}
+   */
+  getWantedBufferBehind() {
+    return this.adaptive.getBufferBehind();
+  }
+
+  /**
+   * Returns the max buffer size for the buffer ahead of the current position.
+   * @returns {Number}
+   */
+  getWantedBufferAhead() {
+    return this.adaptive.getBufferAhead();
+  }
+
+  /**
    * Update the maximum buffer size for the video segments, in second
    * @param {Number} size
    */
