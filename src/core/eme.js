@@ -351,7 +351,7 @@ function getCachedKeySystemAccess(keySystems) {
   }
 }
 
-function buildKeySystemConfiguration(keySystem) {
+function buildKeySystemConfigurations(keySystem) {
   const sessionTypes = ["temporary"];
   let persistentState = "optional";
   let distinctiveIdentifier = "optional";
@@ -388,14 +388,22 @@ function buildKeySystemConfiguration(keySystem) {
     });
   });
 
-  return {
+  return [{
     initDataTypes: ["cenc"],
     videoCapabilities,
     audioCapabilities,
     distinctiveIdentifier,
     persistentState,
     sessionTypes,
-  };
+  }, {
+    // add another with no {audio,video}Capabilities for some legacy browsers
+    initDataTypes: ["cenc"],
+    videoCapabilities: undefined,
+    audioCapabilities: undefined,
+    distinctiveIdentifier,
+    persistentState,
+    sessionTypes,
+  }];
 }
 
 function findCompatibleKeySystem(keySystems) {
@@ -426,7 +434,7 @@ function findCompatibleKeySystem(keySystems) {
       }
 
       const { keyType, keySystem } = keySystemsType[index];
-      const keySystemConfigurations = [buildKeySystemConfiguration(keySystem)];
+      const keySystemConfigurations = buildKeySystemConfigurations(keySystem);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +
