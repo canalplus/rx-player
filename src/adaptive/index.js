@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
+import arrayFind from "array-find";
 import { Subscription } from "rxjs/Subscription";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
@@ -95,7 +97,7 @@ function getClosestBitrate(bitrates, btr, threshold=0) {
 function getMaxUsefulBitrateforWidth(representations, width) {
   const sortedRepsByWidth = representations.sort((a, b) => a.width - b.width);
   const firstSuperiorRepresentation =
-    sortedRepsByWidth.find(r => r.width >= width);
+    arrayFind(sortedRepsByWidth, r => r.width >= width);
 
   if (firstSuperiorRepresentation) {
     const filteredAdaptations = representations
@@ -180,7 +182,7 @@ export default function(metrics, deviceEvents, options={}) {
     maxAudioBitrate,
     limitVideoWidth,
     throttleWhenHidden,
-  } = Object.assign({}, DEFAULTS, options);
+  } = objectAssign({}, DEFAULTS, options);
 
   const { videoWidth, inBackground } = deviceEvents;
 

@@ -1,3 +1,5 @@
+import arrayIncludes from "./array-includes.js";
+
 const WARNED_MESSAGES = [];
 
 /**
@@ -8,7 +10,7 @@ const WARNED_MESSAGES = [];
  * @param {string} message
  */
 const warnOnce = (message) => {
-  if (!WARNED_MESSAGES.includes(message)) {
+  if (!arrayIncludes(WARNED_MESSAGES, message)) {
     console.warn(message);
     WARNED_MESSAGES.push(message);
   }

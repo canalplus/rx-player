@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import log from "../utils/log";
+import objectAssign from "object-assign";
+import arrayFind from "array-find";
 import { Subscription } from "rxjs/Subscription";
-import warnOnce from "../utils/warnOnce.js";
-
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
+
+import log from "../utils/log";
+import warnOnce from "../utils/warnOnce.js";
 import { on } from "../utils/rx-utils";
 import {
   normalize as normalizeLang,
@@ -403,7 +405,7 @@ class Player extends EventEmitter {
    * @returns {Object}
    */
   _parseOptions(opts) {
-    opts = Object.assign({
+    opts = objectAssign({
       transport: this.defaultTransport,
       transportOptions: {},
       keySystems: [],
@@ -498,7 +500,7 @@ class Player extends EventEmitter {
     }
 
     if (typeof transport == "function") {
-      transport = transport(Object.assign({}, this.defaultTransportOptions, transportOptions));
+      transport = transport(objectAssign({}, this.defaultTransportOptions, transportOptions));
     }
 
     assert(transport, "player: transport " + opts.transport + " is not supported");
@@ -1350,9 +1352,7 @@ class Player extends EventEmitter {
       return false;
     }
 
-    return !!availableTracks.find(lng =>
-      lng.language === track.language
-    );
+    return !!arrayFind(availableTracks, aT => aT.language === track.language);
   }
 
   /**
@@ -1377,9 +1377,7 @@ class Player extends EventEmitter {
       return false;
     }
 
-    return !!availableTracks.find(lng =>
-      lng.language === track.language
-    );
+    return !!arrayFind(availableTracks, aT => aT.language === track.language);
   }
 
   /**
@@ -1559,7 +1557,7 @@ class Player extends EventEmitter {
 
     return getAudioTracks(this._manifest)
       .map(track =>
-        Object.assign({}, track, {
+        objectAssign({}, track, {
           active: currentAudioTrack.id === track.id,
         })
       );
@@ -1577,7 +1575,7 @@ class Player extends EventEmitter {
 
     return getTextTracks(this._manifest)
       .map(track =>
-        Object.assign({}, track, {
+        objectAssign({}, track, {
           active: !!currentTextTrack && currentTextTrack.id === track.id,
         })
       );
@@ -1604,8 +1602,8 @@ class Player extends EventEmitter {
    * @param {string} audioId
    */
   setAudioTrack(audioId) {
-    const track = this.getAvailableAudioTracks()
-      .find(({ id }) => id === audioId);
+    const track = arrayFind(this.getAvailableAudioTracks(),
+      ({ id }) => id === audioId);
     assert(track, "player: unknown audio track");
     this.adaptive.setAudioTrack(track);
   }
@@ -1615,8 +1613,8 @@ class Player extends EventEmitter {
    * @param {string} sub
    */
   setTextTrack(textId) {
-    const track = this.getAvailableTextTracks()
-      .find(({ id }) => id === textId);
+    const track = arrayFind(this.getAvailableTextTracks(),
+      ({ id }) => id === textId);
     assert(track, "player: unknown text track");
     this.adaptive.setTextTrack(track);
   }

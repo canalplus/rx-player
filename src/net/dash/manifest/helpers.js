@@ -17,6 +17,7 @@
 // XML-Schema
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
+import arrayIncludes from "../../../utils/array-includes.js";
 import assert from "../../../utils/assert";
 
 const iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
@@ -203,7 +204,7 @@ function isVisuallyImpaired(accessibility) {
 function inferAdaptationType(adaptation) {
   const { mimeType = "" } = adaptation;
   const topLevel = mimeType.split("/")[0];
-  if (KNOWN_ADAPTATION_TYPES.includes(topLevel)) {
+  if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
     return topLevel;
   }
 
@@ -234,7 +235,7 @@ function inferAdaptationType(adaptation) {
   if (representations.length) {
     const firstReprMimeType = representations[0].mimeType;
     const topLevel = firstReprMimeType.split("/")[0];
-    if (KNOWN_ADAPTATION_TYPES.includes(topLevel)) {
+    if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
       return topLevel;
     }
   }

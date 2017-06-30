@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-import log from "../utils/log";
-import EventEmitter from "../utils/eventemitter";
-import { bytesToStr, strToBytes } from "../utils/bytes";
-import assert from "../utils/assert";
+import objectAssign from "object-assign";
 import { Observable } from "rxjs/Observable";
 import { merge } from "rxjs/observable/merge";
 import { FromEventObservable } from "rxjs/observable/FromEventObservable";
 import { NeverObservable } from "rxjs/observable/NeverObservable";
 import { DeferObservable } from "rxjs/observable/DeferObservable";
+
+import log from "../utils/log";
+import EventEmitter from "../utils/eventemitter";
+import { bytesToStr, strToBytes } from "../utils/bytes";
+import assert from "../utils/assert";
 import { on, castToObservable } from "../utils/rx-utils";
 import { MediaError } from "../errors";
 
@@ -261,7 +263,7 @@ if (!requestMediaKeySystemAccess && HTMLVideoElement_.prototype.webkitGenerateKe
     ).subscribe((evt) => this.trigger(evt.type, evt));
   };
 
-  MockMediaKeySession.prototype = Object.assign({
+  MockMediaKeySession.prototype = objectAssign({
     generateRequest: function (initDataType, initData) {
       this._vid.webkitGenerateKeyRequest(this._key, initData);
     },
@@ -373,7 +375,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     this._mk = mk;
   };
 
-  SessionProxy.prototype = Object.assign({
+  SessionProxy.prototype = objectAssign({
     generateRequest: function(initDataType, initData) {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
       this._con = merge(

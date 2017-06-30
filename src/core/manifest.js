@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import arrayFind from "array-find";
+import arrayIncludes from "../utils/array-includes.js";
+
 import log from "../utils/log";
 import { normalizeBaseURL } from "../utils/url";
 import { isCodecSupported } from "./compat";
@@ -195,12 +198,13 @@ function _normalizeAdaptation(initialAdaptation, inherit) {
       .filter((rep) => isCodecSupported(getCodec(rep)));
 
     if (type === "audio") {
-      const isAudioDescription = accessibility.includes("visuallyImpaired");
+      const isAudioDescription =
+        arrayIncludes(accessibility, "visuallyImpaired");
       adaptation.audioDescription = isAudioDescription;
     }
   }
   else if (type === "text") {
-    const isHardOfHearing = accessibility.includes("hardOfHearing");
+    const isHardOfHearing = arrayIncludes(accessibility, "hardOfHearing");
     adaptation.closedCaption = isHardOfHearing;
   }
 
@@ -352,7 +356,7 @@ function _mergeAndCloneAttributes(...args) {
 // XXX TODO Check and re-check the id thing
 function updateManifest(oldManifest, newManifest) {
   const findElementFromId = (id, elements) =>
-    elements.find(obj => obj.id === id);
+    arrayFind(elements, obj => obj.id === id);
 
   const oldAdaptations = oldManifest.getAdaptations();
   const newAdaptations = newManifest.getAdaptations();

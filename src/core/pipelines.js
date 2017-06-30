@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
+
 import { Subject } from "rxjs/Subject";
 import { asap } from "rxjs/scheduler/asap";
 import { Observable } from "rxjs/Observable";
@@ -174,7 +176,7 @@ function createPipeline(pipelineType,
   }
 
   function extendsResponseAndResolvedInfos(resolvedInfos, response) {
-    const loadedInfos = Object.assign({ response }, resolvedInfos);
+    const loadedInfos = objectAssign({ response }, resolvedInfos);
 
     // add loadedInfos to the pipeline cache
     if (cache) {
@@ -188,7 +190,7 @@ function createPipeline(pipelineType,
   }
 
   function extendsParsedAndLoadedInfos(loadedInfos, parsed) {
-    return Object.assign({ parsed }, loadedInfos);
+    return objectAssign({ parsed }, loadedInfos);
   }
 
   return (pipelineInputData) => {

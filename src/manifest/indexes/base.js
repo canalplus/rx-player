@@ -1,10 +1,12 @@
+import objectAssign from "object-assign";
+
 import TimelineIndex from "./timeline.js";
 import { getInitSegment, setTimescale, scale } from "./helpers.js";
 
 /**
  * TODO weird... Reimplement from scratch
  */
-export default Object.assign({}, TimelineIndex, {
+export default objectAssign({}, TimelineIndex, {
   getInitSegment,
   setTimescale,
   scale,

@@ -1,3 +1,5 @@
+import arrayFind from "array-find";
+
 import Adaptation from "./adaptation.js";
 import generateNewId from "../utils/id.js";
 
@@ -90,8 +92,7 @@ class Manifest {
   }
 
   getAdaptation(wantedId) {
-    return this.getAdaptations()
-      .find(({ id }) => wantedId === id);
+    return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
 
   updateLiveGap(delta) {

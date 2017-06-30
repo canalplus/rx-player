@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayIncludes from "../../utils/array-includes.js";
 import {
   concat,
   strToBytes,
@@ -331,7 +332,7 @@ function createSmoothStreamingParser(parserOptions={}) {
           do {
             id = ada.type + "_" +
               (ada.language ? (ada.language + "_") : "") + i++;
-          } while (adaptationIds.includes(id));
+          } while (arrayIncludes(adaptationIds, id));
           ada.id = id;
           adaptationIds.push(id);
           res.adaptations.push(ada);

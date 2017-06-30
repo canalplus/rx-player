@@ -1,3 +1,7 @@
+import objectAssign from "object-assign";
+import arrayFind from "array-find";
+import arrayIncludes from "../utils/array-includes.js";
+
 import Representation from "./representation.js";
 import generateNewId from "../utils/id.js";
 
@@ -34,7 +38,7 @@ class Adaptation {
     this.type = args.type || "";
     this.representations = Array.isArray(args.representations) ?
       args.representations
-        .map(r => new Representation(Object.assign({ rootId: this.id }, r)))
+        .map(r => new Representation(objectAssign({ rootId: this.id }, r)))
         .sort((a, b) => a.bitrate - b.bitrate) : [];
 
     if (args.language != null) {
@@ -46,11 +50,11 @@ class Adaptation {
     // XXX TODO choose one or the other
     const { accessibility } = args;
     if (Array.isArray(accessibility)) {
-      if (accessibility.includes("audioDescription")) {
+      if (arrayIncludes(accessibility, "audioDescription")) {
         this.isAudioDescription = true;
       }
 
-      if (accessibility.includes("closedCaption")) {
+      if (arrayIncludes(accessibility, "closedCaption")) {
         this.isClosedCaption = true;
       }
     }
@@ -86,8 +90,7 @@ class Adaptation {
   }
 
   getRepresentation(wantedId) {
-    return this.representations
-      .find(({ id }) => wantedId === id);
+    return arrayFind(this.representations, ({ id }) => wantedId === id);
   }
 
   /**

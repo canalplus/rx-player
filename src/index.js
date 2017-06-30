@@ -42,16 +42,9 @@ import "rxjs/add/operator/take";
 import "rxjs/add/operator/takeUntil";
 import "rxjs/add/operator/timeout";
 
-import objectAssign from "./utils/object-assign.js";
 import logger from "./utils/log.js";
 
 import Player from "./core/player";
-
-if (typeof Object.assign != "function") {
-  (function () {
-    Object.assign = objectAssign;
-  })();
-}
 
 if (__DEV__) {
   logger.setLevel(__LOGGER_LEVEL__);

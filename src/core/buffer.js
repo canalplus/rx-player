@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import log from "../utils/log";
-import { BufferingQueue } from "./buffering-queue";
-import { BufferedRanges } from "./ranges";
+import objectAssign from "object-assign";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { combineLatest } from "rxjs/observable/combineLatest";
@@ -25,6 +23,9 @@ import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { FromObservable } from "rxjs/observable/FromObservable";
 import { TimerObservable } from "rxjs/observable/TimerObservable";
 
+import log from "../utils/log";
+import { BufferingQueue } from "./buffering-queue";
+import { BufferedRanges } from "./ranges";
 import { SimpleSet } from "../utils/collections";
 import {
   MediaError,
@@ -339,7 +340,7 @@ function Buffer({
             });
         }).map(() => ({
           type: "pipeline",
-          value: Object.assign({ bufferType, addedSegments }, pipelineData),
+          value: objectAssign({ bufferType, addedSegments }, pipelineData),
         }));
     }
 
@@ -434,7 +435,7 @@ function Buffer({
       .mergeMap(getNeededSegments)
       .concatMap((segment) =>
         pipeline({ segment, representation })
-          .map((args) => Object.assign({ segment }, args))
+          .map((args) => objectAssign({ segment }, args))
       )
       .concatMap(appendDataInBuffer);
 

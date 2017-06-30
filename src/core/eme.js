@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-import log from "../utils/log";
-import assert from "../utils/assert";
-import { tryCatch, castToObservable } from "../utils/rx-utils";
-import { retryWithBackoff } from "../utils/retry";
+import objectAssign from "object-assign";
 import { Observable } from "rxjs/Observable";
 import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { DeferObservable } from "rxjs/observable/DeferObservable";
 import { combineLatest } from "rxjs/observable/combineLatest";
 import { merge } from "rxjs/observable/merge";
 import { TimeoutError } from "rxjs/util/TimeoutError";
+
+import log from "../utils/log";
+import assert from "../utils/assert";
+import { tryCatch, castToObservable } from "../utils/rx-utils";
+import { retryWithBackoff } from "../utils/retry";
 import {
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -306,7 +308,7 @@ let $keySystem;
 let $videoElement;
 
 function createMessage(name, session, options) {
-  return { type: "eme", value: Object.assign({ name, session }, options) };
+  return { type: "eme", value: objectAssign({ name, session }, options) };
 }
 
 function getCachedKeySystemAccess(keySystems) {
