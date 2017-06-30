@@ -1,5 +1,26 @@
 # Changelog
 
+## pending version
+
+### Added
+
+  - buffer: add {set,get}MaxBufferAhead methods
+  - buffer: add {set,get}MaxBufferBehind methods
+  - buffer: add {set,get}WantedBufferAhead methods replacing the deprecated buffer size methods
+
+### Deprecated
+
+  - setVideoBufferSize has been deprecated in favor of setWantedBufferAhead
+  - getVideoBufferSize has been deprecated in favor of getWantedBufferAhead
+  - setAudioBufferSize has been deprecated in favor of setWantedBufferAhead
+  - getAudioBufferSize has been deprecated in favor of getWantedBufferAhead
+
+### Bug Fixes
+
+  - eme: add eme support for some legacy browser without video or audio capabilities
+  - general: add support for older browsers (which does not support array.prototype.{find,includes})
+  - general: use Object.assign ponyfill instead of the previous polyfill to avoid malicious interferences with other codebases
+
 ## v2.2.1 (2017/06/27)
 
 ### Bug fixes
