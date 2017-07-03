@@ -7,6 +7,10 @@
   - [Why changing the name?](#notes-why)
   - [API change](#notes-api)
 - [Deprecated methods](#meth)
+  - [setVideoBufferSize (replaced/updated)](#meth-setVideoBufferSize)
+  - [setAudioBufferSize (replaced/updated)](#meth-setAudioBufferSize)
+  - [getVideoBufferSize (replaced/updated)](#meth-getVideoBufferSize)
+  - [getAudioBufferSize (replaced/updated)](#meth-getAudioBufferSize)
   - [getStartTime (replaced/updated)](#meth-getStartTime)
   - [getEndTime (replaced/updated)](#meth-getEndTime)
   - [goToStart (replaced/updated)](#meth-goToStart)
@@ -174,6 +178,55 @@ You can either give:
 
 
 ## <a name="meth"></a>Deprecated methods
+
+### <a name="meth-setVideoBufferSize"></a>setVideoBufferSize
+
+``setVideoBufferSize`` will be removed from the API. Its role can eventually be replaced by the new ``setWantedBufferAhaead`` API which will set the buffering goal (buffer size).
+
+The only difference being than this is not type-related (as in audio/video types) anymore.
+
+#### Why?
+
+Same reason than ``getAudioBufferSize``, ``getVideoBufferSize``, ``setAudioBufferSize``:
+
+Many buffer-related APIs have been added, and trying to set everything per-type would bring a much more complicated code / difficult to explain API for not enough advantages. Also, the text buffer could not be modified until then.
+
+### <a name="meth-setAudioBufferSize"></a>setAudioBufferSize
+
+``setAudioBufferSize`` will be removed from the API. Its role can eventually be replaced by the new ``setWantedBufferAhaead`` API which will set the buffering goal (buffer size).
+
+The only difference being than this is not type-related (as in audio/video types) anymore.
+
+#### Why?
+
+Same reason than ``getAudioBufferSize``, ``getVideoBufferSize``, ``setVideoBufferSize``:
+
+Many buffer-related APIs have been added, and trying to set everything per-type would bring a much more complicated code / difficult to explain API for not enough advantages. Also, the text buffer could not be modified until then.
+
+
+### <a name="meth-getVideoBufferSize"></a>getVideoBufferSize
+
+``getVideoBufferSize`` will be removed from the API. Its role can eventually be replaced by the new ``getWantedBufferAhaead`` API which will return the buffering goal (buffer size).
+
+The only difference being than this is not type-related (as in audio/video types) anymore.
+
+#### Why?
+
+Same reason than ``getAudioBufferSize``, ``setAudioBufferSize``, ``setVideoBufferSize``:
+
+Many buffer-related APIs have been added, and trying to set everything per-type would bring a much more complicated code / difficult to explain API for not enough advantages. Also, the text buffer could not be modified until then.
+
+### <a name="meth-getAudioBufferSize"></a>getAudioBufferSize
+
+``getAudioBufferSize`` will be removed from the API. Its role can eventually be replaced by the new ``getWantedBufferAhaead`` API which will return the buffering goal (buffer size).
+
+The only difference being than this is not type-related (as in audio/video types) anymore.
+
+#### Why?
+
+Same reason than ``getVideoBufferSize``, ``setAudioBufferSize``, ``setVideoBufferSize``:
+
+Many buffer-related APIs have been added, and trying to set everything per-type would bring a much more complicated code / difficult to explain API for not enough advantages. Also, the text buffer could not be modified until then.
 
 ### <a name="meth-getStartTime"></a>getStartTime
 

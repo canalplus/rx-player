@@ -33,6 +33,12 @@
     - [getMaxAudioBitrate](#meth-getMaxAudioBitrate)
     - [setVideoBitrate](#meth-setVideoBitrate)
     - [setAudioBitrate](#meth-setAudioBitrate)
+    - [setWantedBufferAhead](#meth-setWantedBufferAhead)
+    - [getWantedBufferAhead](#meth-getWantedBufferAhead)
+    - [setMaxBufferBehind](#meth-setMaxBufferBehind)
+    - [getMaxBufferBehind](#meth-getMaxBufferBehind)
+    - [setMaxBufferAhead](#meth-setMaxBufferAhead)
+    - [getMaxBufferAhead](#meth-getMaxBufferAhead)
     - [setMaxVideoBitrate](#meth-setMaxVideoBitrate)
     - [setMaxAudioBitrate](#meth-setMaxAudioBitrate)
     - [getVideoBufferSize](#meth-getVideoBufferSize)
@@ -441,7 +447,62 @@ player.setMaxAudioBitrate(Infinity);
 
 This only affects adaptive strategies (you can bypass this limit by calling ``setAudioBitrate``).
 
+### <a name="meth-setWantedBufferAhead"></a>setWantedBufferAhead
+
+_arguments_: ``Number``
+
+Set the buffering goal, as a duration ahead of the current position, in seconds.
+Once this size of buffer reached, the player won't try to download new video segments anymore.
+
+### <a name="meth-getWantedBufferAhead"></a>getWantedBufferAhead
+
+_return value_: ``Number``
+_defaults_: ``30``
+
+Returns the buffering goal, as a duration ahead of the current position, in seconds.
+
+### <a name="meth-setMaxBufferBehind"></a>setMaxBufferBehind
+
+_arguments_: ``Number``
+
+Set the maximum kept past buffer, in seconds.
+Everything before that limit (``currentPosition - maxBufferBehind``) will be automatically garbage collected.
+
+This feature is not necessary as the browser is already supposed to deallocate memory from old segments if/when the memory is scarce.
+
+However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.
+
+### <a name="meth-getMaxBufferBehind"></a>getMaxBufferBehind
+
+_return value_: ``Number``
+_defaults_: ``Infinity``
+
+Returns the maximum kept past buffer, in seconds.
+
+### <a name="meth-setMaxBufferAhead"></a>setMaxBufferAhead
+
+_arguments_: ``Number``
+
+Set the maximum kept buffer ahead of the current position, in seconds.
+Everything superior to that limit (``currentPosition + maxBufferAhead``) will be automatically garbage collected. This feature is not necessary as
+the browser is already supposed to deallocate memory from old segments if/when the memory is scarce.
+
+However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.
+
+The minimum value between this one and the one returned by ``getWantedBufferAhead`` will be considered when downloading new segments.
+
+:warning: Bear in mind that a too-low configuration there (e.g. inferior to ``10``) might prevent the browser to play the content at all.
+
+### <a name="meth-getMaxBufferAhead"></a>getMaxBufferAhead
+
+_return value_: ``Number``
+_defaults_: ``Infinity``
+
+Returns the maximum kept buffer ahead of the current position, in seconds.
+
 ### <a name="meth-getVideoBufferSize"></a>getVideoBufferSize
+
+:warning: This call is deprecated. Use [_getWantedBufferAhead_](#meth-getWantedBufferAhead) instead.
 
 _return value_: ``Number``
 _defaults_: ``30``
@@ -450,6 +511,8 @@ Returns the maximum video buffer size, in seconds. Once this size of buffer reac
 
 ### <a name="meth-getAudioBufferSize"></a>getAudioBufferSize
 
+:warning: This call is deprecated. Use [_getWantedBufferAhead_](#meth-getWantedBufferAhead) instead.
+
 _return value_: ``Number``
 _defaults_: ``30``
 
@@ -457,11 +520,15 @@ Returns the maximum audio buffer size, in seconds. Once this size of buffer reac
 
 ### <a name="meth-setVideoBufferSize"></a>setVideoBufferSize
 
+:warning: This call is deprecated. Use [_setWantedBufferAhead_](#meth-setWantedBufferAhead) instead.
+
 _arguments_: ``Number``
 
 Set the maximum video buffer size, in seconds. Once this size of buffer reached, the player won't try to download new video segments anymore.
 
 ### <a name="meth-setAudioBufferSize"></a>setAudioBufferSize
+
+:warning: This call is deprecated. Use [_setWantedBufferAhead_](#meth-setWantedBufferAhead) instead.
 
 _arguments_: ``Number``
 
