@@ -351,6 +351,16 @@ function getCachedKeySystemAccess(keySystems) {
   }
 }
 
+/**
+ * Build configuration for the requestMediaKeySystemAccess EME API, based
+ * on the current keySystem object.
+ * @param {Object} keySystem
+ * @param {Boolean} [keySystem.persistentLicense]
+ * @param {Boolean} [keySystem.persistentStateRequired]
+ * @param {Boolean} [keySystem.distinctiveIdentifierRequired]
+ * @returns {Array.<Object>} - Configuration to give to the
+ * requestMediaKeySystemAccess API.
+ */
 function buildKeySystemConfigurations(keySystem) {
   const sessionTypes = ["temporary"];
   let persistentState = "optional";
@@ -369,13 +379,18 @@ function buildKeySystemConfigurations(keySystem) {
     distinctiveIdentifier = "required";
   }
 
-  // From chrome 58, you must specify at least one videoCapabilities and one audioCapabilities
-  // These capabilities must specify a codec (even though your stream can use a completely
-  // different codec afterward). It is also strongly recommended to specify the required
-  // security robustness. As we do not want to forbide any security level, we specify
-  // every existing security level from highest to lowest so that the best security level is selected.
-  // More details here: https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
-  // TODO: enable the user to specify which codec and robustness he wants
+  // From the W3 EME spec, we have to provide videoCapabilities and
+  // audioCapabilities.
+  // These capabilities must specify a codec (even though your stream can use
+  // a completely different codec afterward).
+  // It is also strongly recommended to specify the required security
+  // robustness. As we do not want to forbide any security level, we specify
+  // every existing security level from highest to lowest so that the best
+  // security level is selected.
+  // More details here:
+  // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
+  // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
+  // TODO: enable the user to specify which codec and robustness he wants?
   const videoCapabilities = [], audioCapabilities = [];
   ROBUSTNESSES.forEach(robustness => {
     videoCapabilities.push({
@@ -396,7 +411,10 @@ function buildKeySystemConfigurations(keySystem) {
     persistentState,
     sessionTypes,
   }, {
-    // add another with no {audio,video}Capabilities for some legacy browsers
+    // add another with no {audio,video}Capabilities for some legacy browsers.
+    // As of today's spec, this should return NotSupported but the first
+    // candidate configuration should be good, so whe should have no downside
+    // doing that.
     initDataTypes: ["cenc"],
     videoCapabilities: undefined,
     audioCapabilities: undefined,
@@ -406,6 +424,24 @@ function buildKeySystemConfigurations(keySystem) {
   }];
 }
 
+/**
+ * Try to find a compatible key system from the keySystems array given.
+ *
+ * Returns an Observable which, when subscribed to, will request a
+ * MediaKeySystemAccess based on the various keySystems provided. This
+ * Observable will:
+ *   - emit the MediaKeySystemAccess and the keySystems as an object, when
+ *     found. The object is under this form:
+ *     {
+ *       keySystemAccess {MediaKeySystemAccess}
+ *       keySystem {Object}
+ *     }
+ *   - complete immediately after emitting.
+ *   - throw if no  compatible key system has been found.
+ *
+ * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @returns {Observable}
+ */
 function findCompatibleKeySystem(keySystems) {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
@@ -415,19 +451,36 @@ function findCompatibleKeySystem(keySystems) {
     return Observable.of(cachedKeySystemAccess);
   }
 
+  /**
+   * Array of set keySystems for this content.
+   * Each item of this array is an object containing two keys:
+   *   - keyType {string}: keySystem type
+   *   - keySystem {Object}: the original keySystem object
+   * @type {Array.<Object>}
+   */
   const keySystemsType = keySystems.reduce(
-    (parent, keySystem) => parent.concat((SYSTEMS[keySystem.type] || []).map((keyType) => ({ keyType, keySystem })))
-  , []);
+    (arr, keySystem) =>
+      arr.concat(
+        (SYSTEMS[keySystem.type] || [])
+          .map((keyType) => ({ keyType, keySystem }))
+      )
+    , []);
 
   return Observable.create((obs) => {
     let disposed = false;
     let sub = null;
 
+    /**
+     * Test the key system as defined in keySystemsType[index].
+     * @param {Number} index
+     */
     function testKeySystem(index) {
+      // completely quit the loop if unsubscribed
       if (disposed) {
         return;
       }
 
+      // if we iterated over the whole keySystemsType Array, quit on error
       if (index >= keySystemsType.length) {
         obs.error(new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS", null, true));
         return;
@@ -468,19 +521,27 @@ function findCompatibleKeySystem(keySystems) {
   });
 }
 
+/**
+ * ...Create and set MediaKeys on the HTMLMediaElement given.
+ * @param {HTMLMediaElement} video
+ * @param {Object} keySystem
+ * @param {MediaKeySystemAccess} keySystemAccess
+ * @returns {Observable}
+ */
 function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
   const oldVideoElement = $videoElement;
   const oldMediaKeys = $mediaKeys;
 
+  // (keySystemAccess should return a promise)
   return castToObservable(keySystemAccess.createMediaKeys())
-    .mergeMap((mk) => {
-      $mediaKeys = mk;
+    .mergeMap(mediaKeys => {
+      $mediaKeys = mediaKeys;
       $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
       $keySystem = keySystem;
       $videoElement = video;
 
-      if (video.mediaKeys === mk) {
-        return Observable.of(mk);
+      if (video.mediaKeys === mediaKeys) {
+        return Observable.of(mediaKeys);
       }
 
       if (oldMediaKeys && oldMediaKeys !== $mediaKeys) {
@@ -493,18 +554,34 @@ function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
       if ((oldVideoElement && oldVideoElement !== $videoElement)) {
         log.debug("eme: unlink old video element and set mediakeys");
         mediaKeysSetter = setMediaKeys(oldVideoElement, null)
-          .concat(setMediaKeys($videoElement, mk));
+          .concat(setMediaKeys($videoElement, mediaKeys));
       }
       else {
         log.debug("eme: set mediakeys");
-        mediaKeysSetter = setMediaKeys($videoElement, mk);
+        mediaKeysSetter = setMediaKeys($videoElement, mediaKeys);
       }
 
-      return mediaKeysSetter.mapTo(mk);
+      return mediaKeysSetter.mapTo(mediaKeys);
     });
 }
 
-function createSession(mediaKeys, sessionType, keySystem, initData, errorStream) {
+/**
+ * Create Key Session and link MediaKeySession events to the right events
+ * handlers.
+ * @param {MediaKeys} mediaKeys
+ * @param {string} sessionType - Either "persistent-license" or "temporary"
+ * @param {Object} keySystem
+ * @param {UInt8Array} initData
+ * @param {Subject} errorStream
+ * @returns {Observable}
+ */
+function createSession(
+  mediaKeys,
+  sessionType,
+  keySystem,
+  initData,
+  errorStream
+) {
   log.debug(`eme: create a new ${sessionType} session`);
   const session = mediaKeys.createSession(sessionType);
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
@@ -517,12 +594,23 @@ function createSession(mediaKeys, sessionType, keySystem, initData, errorStream)
   return { session, sessionEvents };
 }
 
-function createSessionAndKeyRequest(mediaKeys,
-                                    keySystem,
-                                    sessionType,
-                                    initDataType,
-                                    initData,
-                                    errorStream) {
+/**
+ * @param {MediaKeys} mediaKeys
+ * @param {Object} keySystem
+ * @param {string} sessionType - Either "persistent-license" or "temporary"
+ * @param {string} initDataType
+ * @param {UInt8Array} initData
+ * @param {Subject} errorStream
+ * @returns {Observable}
+ */
+function createSessionAndKeyRequest(
+  mediaKeys,
+  keySystem,
+  sessionType,
+  initDataType,
+  initData,
+  errorStream
+) {
   const { session, sessionEvents } = createSession(mediaKeys, sessionType,
                                                    keySystem, initData, errorStream);
 
@@ -546,12 +634,23 @@ function createSessionAndKeyRequest(mediaKeys,
   return merge(sessionEvents, generateRequest);
 }
 
-function createSessionAndKeyRequestWithRetry(mediaKeys,
-                                             keySystem,
-                                             sessionType,
-                                             initDataType,
-                                             initData,
-                                             errorStream) {
+/**
+ * @param {MediaKeys} mediaKeys
+ * @param {Object} keySystem
+ * @param {string} sessionType - Either "persistent-license" or "temporary"
+ * @param {string} initDataType
+ * @param {UInt8Array} initData
+ * @param {Subject} errorStream
+ * @returns {Observable}
+ */
+function createSessionAndKeyRequestWithRetry(
+  mediaKeys,
+  keySystem,
+  sessionType,
+  initDataType,
+  initData,
+  errorStream
+) {
   return createSessionAndKeyRequest(
     mediaKeys,
     keySystem,
@@ -638,12 +737,23 @@ function createPersistentSessionAndLoad(mediaKeys,
     });
 }
 
-function manageSessionCreation(mediaKeys,
-                               mediaKeySystemConfiguration,
-                               keySystem,
-                               initDataType,
-                               initData,
-                               errorStream) {
+/**
+ * @param {MediaKeys} mediaKeys
+ * @param {MediaKeySystemConfiguration} mediaKeySystemConfiguration
+ * @param {Object} keySystem
+ * @param {string} initDataType
+ * @param {UInt8Array} initData
+ * @param {Subject} errorStream
+ * @returns {Observable}
+ */
+function manageSessionCreation(
+  mediaKeys,
+  mediaKeySystemConfiguration,
+  keySystem,
+  initDataType,
+  initData,
+  errorStream
+) {
   // reuse currently loaded sessions without making a new key
   // request
   const loadedSession = $loadedSessions.get(initData);
@@ -692,9 +802,15 @@ function manageSessionCreation(mediaKeys,
   );
 }
 
-// listen to "message" events from session containing a challenge
-// blob and map them to licenses using the getLicense method from
-// selected keySystem
+/*
+ * listen to "message" events from session containing a challenge
+ * blob and map them to licenses using the getLicense method from
+ * selected keySystem.
+ * @param {MediaKeySession} session
+ * @param {Object} keySystem
+ * @param {Subject} errorStream
+ * @returns {Observable}
+ */
 function sessionEventsHandler(session, keySystem, errorStream) {
   log.debug("eme: handle message events", session);
   let sessionId;
@@ -840,6 +956,17 @@ function createEME(video, keySystems, errorStream) {
     }));
   }
 
+  /**
+   * Function triggered when both:
+   *   - the ``encrypted`` event has been received.
+   *   - a compatible key system has been found.
+   *
+   * @param {MediaEncryptedEvent} encryptedEvent
+   * @param {Object} compatibleKeySystem
+   * @param {MediaKeySystemAccess} compatibleKeySystem.keySystemAccess
+   * @param {Object} compatibleKeySystem.keySystem
+   * @returns {Observable}
+   */
   function handleEncryptedEvents(encryptedEvent, { keySystem, keySystemAccess }) {
     if (keySystem.persistentLicense) {
       $storedSessions.setStorage(keySystem.licenseStorage);

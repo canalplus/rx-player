@@ -464,35 +464,46 @@ if (!MediaKeys_) {
   };
 }
 
-function _setMediaKeys(elt, mk) {
-  if (mk instanceof MockMediaKeys) {
-    return mk._setVideo(elt);
+/**
+ * Set the MediaKeys given on the media element.
+ * @param {HTMLMediaElement} elt
+ * @param {Object} mediaKeys
+ * @returns {Promise}
+ */
+function _setMediaKeys(elt, mediaKeys) {
+  if (mediaKeys instanceof MockMediaKeys) {
+    return mediaKeys._setVideo(elt);
   }
 
   if (elt.setMediaKeys) {
-    return elt.setMediaKeys(mk);
+    return elt.setMediaKeys(mediaKeys);
   }
 
-  if (mk === null) {
+  if (mediaKeys === null) {
     return;
   }
 
   if (elt.WebkitSetMediaKeys) {
-    return elt.WebkitSetMediaKeys(mk);
+    return elt.WebkitSetMediaKeys(mediaKeys);
   }
 
   if (elt.mozSetMediaKeys) {
-    return elt.mozSetMediaKeys(mk);
+    return elt.mozSetMediaKeys(mediaKeys);
   }
 
   if (elt.msSetMediaKeys) {
-    return elt.msSetMediaKeys(mk);
+    return elt.msSetMediaKeys(mediaKeys);
   }
 }
 
-const setMediaKeys = (elt, mk) => {
+/**
+ * @param {HTMLMediaElement} elt
+ * @param {Object} mediaKeys
+ * @returns {Observable}
+ */
+const setMediaKeys = (elt, mediaKeys) => {
   return defer(() =>
-    castToObservable(_setMediaKeys(elt, mk))
+    castToObservable(_setMediaKeys(elt, mediaKeys))
   );
 };
 
