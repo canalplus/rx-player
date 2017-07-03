@@ -1485,8 +1485,17 @@ class Player extends EventEmitter {
    * Every buffer data before will be removed.
    * @param {Number} depthInSeconds
    */
-  setWantedBufferBehind(depthInSeconds) {
-    this.adaptive.setBufferBehind(depthInSeconds);
+  setMaxBufferBehind(depthInSeconds) {
+    this.adaptive.setMaxBufferBehind(depthInSeconds);
+  }
+
+  /**
+   * Set the max buffer size for the buffer behind the current position.
+   * Every buffer data before will be removed.
+   * @param {Number} depthInSeconds
+   */
+  setMaxBufferAhead(depthInSeconds) {
+    this.adaptive.setMaxBufferAhead(depthInSeconds);
   }
 
   /**
@@ -1495,15 +1504,23 @@ class Player extends EventEmitter {
    * @param {Number} sizeInSeconds
    */
   setWantedBufferAhead(sizeInSeconds) {
-    this.adaptive.setBufferAhead(sizeInSeconds);
+    this.adaptive.setWantedBufferAhead(sizeInSeconds);
   }
 
   /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
    */
-  getWantedBufferBehind() {
-    return this.adaptive.getBufferBehind();
+  getMaxBufferBehind() {
+    return this.adaptive.getMaxBufferBehind();
+  }
+
+  /**
+   * Returns the max buffer size for the buffer behind the current position.
+   * @returns {Number}
+   */
+  getMaxBufferAhead() {
+    return this.adaptive.getMaxBufferAhead();
   }
 
   /**
@@ -1511,7 +1528,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getWantedBufferAhead() {
-    return this.adaptive.getBufferAhead();
+    return this.adaptive.getWantedBufferAhead();
   }
 
   /**

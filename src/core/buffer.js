@@ -80,7 +80,7 @@ function Buffer({
   sourceBuffer, // SourceBuffer object
   adaptation,   // Adaptation buffered
   pipeline,     // Segment pipeline
-  adapters,     // { representations, bufferAhead, bufferBehind } observables
+  adapters,     // adaptive observables
   timings,      // Timings observable
   seekings,     // Seekings observable
   isLive,
@@ -95,7 +95,12 @@ function Buffer({
   const LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
   const HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
 
-  const { representations, bufferAhead, bufferBehind } = adapters;
+  const {
+    representations,
+    wantedBufferAhead,
+    maxBufferBehind,
+    maxBufferAhead,
+  } = adapters;
   const ranges = new BufferedRanges();
   const bufferingQueue = new BufferingQueue(sourceBuffer);
 
@@ -179,7 +184,7 @@ function Buffer({
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
    * sourceBuffer
    * @param {Object} timing - The last item emitted from timings
-   * @param {Number} bufferSize - The last item emitted from bufferAhead
+   * @param {Number} bufferSize - The last item emitted from wantedBufferAhead
    * @param {Boolean} withInitSegment - Whether we're dealing with an init segment.
    * @returns {Array.<Segment>}
    * @throws IndexError - Throws if the current timestamp is considered out
@@ -429,7 +434,9 @@ function Buffer({
     }
 
     /**
-     * Remove "old" buffer from the browser's memory.
+     * Remove buffer from the browser's memory based on the user's
+     * maxBufferAhead / maxBufferBehind settings.
+     *
      * Normally, the browser garbage-collect automatically old-added chunks of
      * buffer date when memory is scarce. However, you might want to control
      * the size of memory allocated. This function takes the current position
@@ -437,35 +444,66 @@ function Buffer({
      *
      * Anything older than the depth will be removed from the buffer.
      * @param {Number} position - The current position
-     * @param {Number} bufferDepth
+     * @param {Number} maxBufferBehind
      * @returns {Observable}
      */
-    const cleanOldBuffer = (position, bufferDepth) => {
-      if (!isFinite(bufferDepth)) {
+    const cleanBuffer = (position, maxBufferBehind, maxBufferAhead) => {
+      if (!isFinite(maxBufferBehind) && !isFinite(maxBufferAhead)) {
         return Observable.empty();
       }
 
       const buffered = new BufferedRanges(sourceBuffer.buffered);
       const cleanedupRanges = [];
-
       const innerRange  = buffered.getRange(position);
       const outerRanges = buffered.getOuterRanges(position);
 
-      // begin from the oldest
-      for (let i = 0; i < outerRanges.length; i++) {
-        const outerRange = outerRanges[i];
-        if (position - bufferDepth > outerRange.end) {
-          cleanedupRanges.push(outerRange);
+
+      const collectBufferBehind = () => {
+        if (!isFinite(maxBufferBehind)) {
+          return ;
         }
-      }
-      if (innerRange) {
-        if (position - bufferDepth > innerRange.start) {
-          cleanedupRanges.push({
-            start: innerRange.start,
-            end: position - bufferDepth,
-          });
+
+        // begin from the oldest
+        for (let i = 0; i < outerRanges.length; i++) {
+          const outerRange = outerRanges[i];
+          if (position - maxBufferBehind > outerRange.end) {
+            cleanedupRanges.push(outerRange);
+          }
         }
-      }
+        if (innerRange) {
+          if (position - maxBufferBehind > innerRange.start) {
+            cleanedupRanges.push({
+              start: innerRange.start,
+              end: position - maxBufferBehind,
+            });
+          }
+        }
+      };
+
+      const collectBufferAhead = () => {
+        if (!isFinite(maxBufferAhead)) {
+          return ;
+        }
+
+        // begin from the oldest
+        for (let i = 0; i < outerRanges.length; i++) {
+          const outerRange = outerRanges[i];
+          if (position + maxBufferAhead < outerRange.start) {
+            cleanedupRanges.push(outerRange);
+          }
+        }
+        if (innerRange) {
+          if (position + maxBufferAhead < innerRange.start) {
+            cleanedupRanges.push({
+              start: innerRange.start,
+              end: position - maxBufferAhead,
+            });
+          }
+        }
+      };
+
+      collectBufferBehind();
+      collectBufferAhead();
       return from(
         cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
       ).concatAll().ignoreElements();
@@ -476,17 +514,22 @@ function Buffer({
         .map((args) => objectAssign({ segment }, args));
     };
 
-    const onClockTick = ([ timing, bufferSize, bufferDepth ], i) =>
-      Observable.merge(
-        getNeededSegments(timing, bufferSize, i)
+    const onClockTick = ([
+      timing, wantedBufferAhead, maxBufferBehind, maxBufferAhead,
+    ], i) => {
+      const bufferGoal = Math.min(wantedBufferAhead, maxBufferAhead);
+      return Observable.merge(
+        getNeededSegments(timing, bufferGoal, i)
           .concatMap(loadNeededSegments),
-        cleanOldBuffer(timing.ts, bufferDepth)
+        cleanBuffer(timing.ts, maxBufferBehind, maxBufferAhead)
       );
+    };
 
     const segmentsPipeline = combineLatest(
       timings,
-      bufferAhead,
-      bufferBehind
+      wantedBufferAhead,
+      maxBufferBehind,
+      maxBufferAhead,
     )
       .mergeMap(onClockTick)
       .concatMap(appendDataInBuffer);
