@@ -43,6 +43,8 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     isStopped: true,
     language: undefined,
     loadedVideo: null,
+    minimumPosition: undefined,
+    maximumPosition: undefined,
     speed: 0,
     subtitle: undefined,
     videoBitrateAuto: true,
@@ -92,7 +94,7 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     },
 
     SEEK: (position) => {
-      player.seekTo(position);
+      player.seekTo({ position });
     },
 
     MUTE: () => {

@@ -45,7 +45,13 @@ class Progressbar extends React.Component {
 
   render() {
     const { imageTipVisible, imageTipPosition, image } = this.state;
-    const { currentTime, duration, bufferGap, player } = this.props;
+    const {
+      currentTime,
+      minimumPosition,
+      maximumPosition,
+      bufferGap,
+      player,
+    } = this.props;
     const seek = position => player.dispatch("SEEK", position);
     const onMouseOut = () => this.hideImageTip();
     const onMouseMove = (position, event) => {
@@ -72,7 +78,8 @@ class Progressbar extends React.Component {
             onMouseOut={onMouseOut}
             onMouseMove={onMouseMove}
             position={currentTime}
-            duration={duration}
+            minimumPosition={minimumPosition}
+            maximumPosition={maximumPosition}
             bufferGap={bufferGap}
           />
       </div>
@@ -84,7 +91,8 @@ export default withModulesState({
   player: {
     bufferGap: "bufferGap",
     currentTime: "currentTime",
-    duration: "duration",
     images: "images",
+    minimumPosition: "minimumPosition",
+    maximumPosition: "maximumPosition",
   },
 })(Progressbar);
