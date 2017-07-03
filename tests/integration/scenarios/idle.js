@@ -170,6 +170,18 @@ describe("initial idle state", () => {
       expect(player.getMaxAudioBitrate()).to.equal(Infinity);
     });
 
+    it("should return 30 in getWantedBufferAhead by default", () => {
+      expect(player.getWantedBufferAhead()).to.equal(30);
+    });
+
+    it("should return Infinity in getMaxBufferBehind by default", () => {
+      expect(player.getMaxBufferBehind()).to.equal(Infinity);
+    });
+
+    it("should return Infinity in getMaxBufferAhead by default", () => {
+      expect(player.getMaxBufferAhead()).to.equal(Infinity);
+    });
+
     it("should return 30 in getVideoBufferSize by default", () => {
       expect(player.getVideoBufferSize()).to.equal(30);
     });
@@ -417,6 +429,30 @@ describe("initial idle state", () => {
       expect(player.setMaxAudioBitrate(Infinity)).to.equal(undefined);
       expect(player.getAudioMaxBitrate()).to.equal(Infinity);
       expect(player.getMaxAudioBitrate()).to.equal(Infinity);
+    });
+
+    it("should update the max buffer behind through setMaxBufferBehind by default", () => {
+      expect(player.setMaxBufferBehind(50)).to.equal(undefined);
+      expect(player.getMaxBufferBehind()).to.equal(50);
+
+      expect(player.setMaxBufferBehind(Infinity)).to.equal(undefined);
+      expect(player.getMaxBufferBehind()).to.equal(Infinity);
+    });
+
+    it("should update the max buffer behind through setMaxBufferAhead by default", () => {
+      expect(player.setMaxBufferAhead(50)).to.equal(undefined);
+      expect(player.getMaxBufferAhead()).to.equal(50);
+
+      expect(player.setMaxBufferAhead(Infinity)).to.equal(undefined);
+      expect(player.getMaxBufferAhead()).to.equal(Infinity);
+    });
+
+    it("should update the buffer goal through setWantedBufferAhead by default", () => {
+      expect(player.setWantedBufferAhead(50)).to.equal(undefined);
+      expect(player.getWantedBufferAhead()).to.equal(50);
+
+      expect(player.setWantedBufferAhead(Infinity)).to.equal(undefined);
+      expect(player.getWantedBufferAhead()).to.equal(Infinity);
     });
 
     it("should update the video buffer size through setVideoBufferSize by default", () => {
