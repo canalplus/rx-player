@@ -358,10 +358,12 @@ function getCachedKeySystemAccess(keySystems) {
  * @param {Boolean} [keySystem.persistentLicense]
  * @param {Boolean} [keySystem.persistentStateRequired]
  * @param {Boolean} [keySystem.distinctiveIdentifierRequired]
+ * @param {Array.<string>} customRobustnesses - TODO remove/refacto depending on
+ * chromium bug report.
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
-function buildKeySystemConfigurations(keySystem) {
+function buildKeySystemConfigurations(keySystem, customRobustnesses) {
   const sessionTypes = ["temporary"];
   let persistentState = "optional";
   let distinctiveIdentifier = "optional";
@@ -392,7 +394,9 @@ function buildKeySystemConfigurations(keySystem) {
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
   // TODO: enable the user to specify which codec and robustness he wants?
   const videoCapabilities = [], audioCapabilities = [];
-  ROBUSTNESSES.forEach(robustness => {
+
+  // TODO remove/refacto customRobustnesses
+  (customRobustnesses || ROBUSTNESSES).forEach(robustness => {
     videoCapabilities.push({
       contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
       robustness,
@@ -440,9 +444,10 @@ function buildKeySystemConfigurations(keySystem) {
  *   - throw if no  compatible key system has been found.
  *
  * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Array.<string>} customRobustnesses - TODO remove/refacto depending on
  * @returns {Observable}
  */
-function findCompatibleKeySystem(keySystems) {
+function findCompatibleKeySystem(keySystems, customRobustnesses) {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
   const cachedKeySystemAccess = getCachedKeySystemAccess(keySystems);
@@ -487,7 +492,8 @@ function findCompatibleKeySystem(keySystems) {
       }
 
       const { keyType, keySystem } = keySystemsType[index];
-      const keySystemConfigurations = buildKeySystemConfigurations(keySystem);
+      const keySystemConfigurations =
+        buildKeySystemConfigurations(keySystem, customRobustnesses);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +
@@ -946,9 +952,11 @@ function sessionEventsHandler(session, keySystem, errorStream) {
  * @param {HTMLMediaElement} video
  * @param {Object} keySystems
  * @param {Subject} errorStream
+ * @param {Array.<string>} customRobustnesses - TODO remove/refacto depending on
+ * chromium bug report.
  * @returns {Observable}
  */
-function createEME(video, keySystems, errorStream) {
+function createEME(video, keySystems, errorStream, customRobustnesses) {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
@@ -988,7 +996,7 @@ function createEME(video, keySystems, errorStream) {
 
   return combineLatest(
     onEncrypted(video),
-    findCompatibleKeySystem(keySystems)
+    findCompatibleKeySystem(keySystems, customRobustnesses)
   )
     .take(1)
     .mergeMap(([evt, ks]) => handleEncryptedEvents(evt, ks));
