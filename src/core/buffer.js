@@ -123,9 +123,10 @@ function Buffer({
 
     // start by trying to remove all ranges that do not contain the
     // current time and respect the gcGap
+    // respect the gcGap? FIXME?
     for (let i = 0; i < outerRanges.length; i++) {
       const outerRange = outerRanges[i];
-      if (ts - gcGap < outerRange.end) { // FIXME?
+      if (ts - gcGap < outerRange.end) {
         cleanedupRanges.push(outerRange);
       }
       else if (ts + gcGap > outerRange.start) {
