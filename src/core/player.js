@@ -4,6 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -439,7 +440,6 @@ class Player extends EventEmitter {
       defaultTextTrack,
       hideNativeSubtitle, // TODO better name
       startAt,
-      emeOptions,
     } = opts;
 
     // ---- Deprecated calls
@@ -518,7 +518,6 @@ class Player extends EventEmitter {
       defaultTextTrack: _defaultTextTrack,
       transport,
       startAt,
-      emeOptions,
     };
   }
 
@@ -543,7 +542,6 @@ class Player extends EventEmitter {
       defaultAudioTrack,
       defaultTextTrack,
       startAt,
-      emeOptions,
     } = options;
 
     this.stop();
@@ -587,7 +585,6 @@ class Player extends EventEmitter {
       videoElement,
       autoPlay,
       startAt,
-      emeOptions,
     })
       .publish();
 

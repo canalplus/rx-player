@@ -57,7 +57,7 @@ const SYSTEMS = {
 };
 
 // List of all eme security robustnesses from highest to lowest
-const ROBUSTNESSES = [
+const DEFAULT_ROBUSTNESSES = [
   "HW_SECURE_ALL",
   "HW_SECURE_DECODE",
   "HW_SECURE_CRYPTO",
@@ -358,12 +358,10 @@ function getCachedKeySystemAccess(keySystems) {
  * @param {Boolean} [keySystem.persistentLicense]
  * @param {Boolean} [keySystem.persistentStateRequired]
  * @param {Boolean} [keySystem.distinctiveIdentifierRequired]
- * @param {Array.<string>} customRobustnesses - TODO remove/refacto depending on
- * chromium bug report.
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
-function buildKeySystemConfigurations(keySystem, customRobustnesses) {
+function buildKeySystemConfigurations(keySystem) {
   const sessionTypes = ["temporary"];
   let persistentState = "optional";
   let distinctiveIdentifier = "optional";
@@ -381,6 +379,9 @@ function buildKeySystemConfigurations(keySystem, customRobustnesses) {
     distinctiveIdentifier = "required";
   }
 
+  const videoRobustnesses = keySystem.videoRobustnesses || DEFAULT_ROBUSTNESSES;
+  const audioRobustnesses = keySystem.audioRobustnesses || DEFAULT_ROBUSTNESSES;
+
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
   // These capabilities must specify a codec (even though your stream can use
@@ -392,20 +393,14 @@ function buildKeySystemConfigurations(keySystem, customRobustnesses) {
   // More details here:
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
-  // TODO: enable the user to specify which codec and robustness he wants?
-  const videoCapabilities = [], audioCapabilities = [];
-
-  // TODO remove/refacto customRobustnesses
-  (customRobustnesses || ROBUSTNESSES).forEach(robustness => {
-    videoCapabilities.push({
-      contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
-      robustness,
-    });
-    audioCapabilities.push({
-      contentType: "audio/mp4;codecs=\"mp4a.40.2\"", // standard mp4 codec
-      robustness,
-    });
-  });
+  const videoCapabilities = videoRobustnesses.map(robustness => ({
+    contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
+    robustness,
+  }));
+  const audioCapabilities = audioRobustnesses.map(robustness => ({
+    contentType: "audio/mp4;codecs=\"mp4a.40.2\"", // standard mp4 codec
+    robustness,
+  }));
 
   return [{
     initDataTypes: ["cenc"],
@@ -444,10 +439,9 @@ function buildKeySystemConfigurations(keySystem, customRobustnesses) {
  *   - throw if no  compatible key system has been found.
  *
  * @param {Array.<Object>} keySystems - The keySystems you want to test.
- * @param {Array.<string>} customRobustnesses - TODO remove/refacto depending on
  * @returns {Observable}
  */
-function findCompatibleKeySystem(keySystems, customRobustnesses) {
+function findCompatibleKeySystem(keySystems) {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
   const cachedKeySystemAccess = getCachedKeySystemAccess(keySystems);
@@ -493,7 +487,7 @@ function findCompatibleKeySystem(keySystems, customRobustnesses) {
 
       const { keyType, keySystem } = keySystemsType[index];
       const keySystemConfigurations =
-        buildKeySystemConfigurations(keySystem, customRobustnesses);
+        buildKeySystemConfigurations(keySystem);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +
@@ -997,21 +991,15 @@ function trySettingServerCertificate(
  * @param {HTMLMediaElement} video
  * @param {Object} keySystems
  * @param {Subject} errorStream
- * @param {Array.<string>} customRobustnesses - TODO remove/refacto depending on
- * chromium bug report.
  * @returns {Observable}
  */
-function createEME(video, keySystems, errorStream, options = {}) {
+function createEME(video, keySystems, errorStream) {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
       type: "string",
     }));
   }
-
-  const {
-    customRobustnesses,
-  } = options;
 
   /**
    * Function triggered when both:
@@ -1056,7 +1044,7 @@ function createEME(video, keySystems, errorStream, options = {}) {
 
   return combineLatest(
     onEncrypted(video),
-    findCompatibleKeySystem(keySystems, customRobustnesses)
+    findCompatibleKeySystem(keySystems)
   )
     .take(1)
     .mergeMap(([evt, ks]) => handleEncryptedEvents(evt, ks));

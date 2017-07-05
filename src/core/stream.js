@@ -193,7 +193,6 @@ function Stream({
   videoElement,
   autoPlay,
   startAt,
-  emeOptions,
 }) {
   // TODO @deprecate?
   const fragEndTimeIsFinite = timeFragment.end < Infinity;
@@ -616,7 +615,7 @@ function Stream({
    */
   function createEMEIfKeySystems() {
     if (keySystems && keySystems.length) {
-      return createEME(videoElement, keySystems, errorStream, emeOptions);
+      return createEME(videoElement, keySystems, errorStream);
     } else {
       return onEncrypted(videoElement).map(() => {
         log.error("eme: ciphered media and no keySystem passed");
