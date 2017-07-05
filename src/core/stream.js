@@ -193,7 +193,7 @@ function Stream({
   videoElement,
   autoPlay,
   startAt,
-  emeRobustnesses, // TODO remove/refacto according to chromium bug report
+  emeOptions,
 }) {
   // TODO @deprecate?
   const fragEndTimeIsFinite = timeFragment.end < Infinity;
@@ -616,7 +616,7 @@ function Stream({
    */
   function createEMEIfKeySystems() {
     if (keySystems && keySystems.length) {
-      return createEME(videoElement, keySystems, errorStream, emeRobustnesses);
+      return createEME(videoElement, keySystems, errorStream, emeOptions);
     } else {
       return onEncrypted(videoElement).map(() => {
         log.error("eme: ciphered media and no keySystem passed");

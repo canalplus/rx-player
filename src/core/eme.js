@@ -926,6 +926,51 @@ function sessionEventsHandler(session, keySystem, errorStream) {
 }
 
 /**
+ * Call the setServerCertificate API with the given certificate.
+ * Complete when worked, throw when failed.
+ *
+ * TODO Manage success?
+ * From the spec:
+ *   - setServerCertificate resolves with true if everything worked
+ *   - it resolves with false if the CDM does not support server
+ *     certificates.
+ *
+ * @param {MediaKeys} mediaKeys
+ * @param {ArrayBuffer} serverCertificate
+ * @returns {Observable}
+ */
+function setServerCertificate(mediaKeys, serverCertificate) {
+  return castToObservable(
+    mediaKeys.setServerCertificate(serverCertificate)
+  )
+    .ignoreElements()
+    .catch((error) => {
+      throw new
+        EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
+    });
+}
+
+/**
+ * Call the setCertificate API. If it fails just emit the error through the
+ * errorStream and complete.
+ * @param {MediaKeys} mediaKeys
+ * @param {ArrayBuffer} serverCertificate
+ * @returns {Observable}
+ */
+function trySettingServerCertificate(
+  mediaKeys,
+  serverCertificate,
+  errorStream
+) {
+  return setServerCertificate(mediaKeys, serverCertificate)
+    .catch(error => {
+      error.fatal = false;
+      errorStream.next(error);
+      return Observable.empty();
+    });
+}
+
+/**
  * EME abstraction and event handler used to communicate with the Content-
  * Description-Module (CDM).
  *
@@ -956,13 +1001,17 @@ function sessionEventsHandler(session, keySystem, errorStream) {
  * chromium bug report.
  * @returns {Observable}
  */
-function createEME(video, keySystems, errorStream, customRobustnesses) {
+function createEME(video, keySystems, errorStream, options = {}) {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
       type: "string",
     }));
   }
+
+  const {
+    customRobustnesses,
+  } = options;
 
   /**
    * Function triggered when both:
@@ -982,16 +1031,27 @@ function createEME(video, keySystems, errorStream, customRobustnesses) {
 
     log.info("eme: encrypted event", encryptedEvent);
     return createAndSetMediaKeys(video, keySystem, keySystemAccess)
-      .mergeMap((mediaKeys) =>
-        manageSessionCreation(
-          mediaKeys,
-          keySystemAccess.getConfiguration(),
-          keySystem,
-          encryptedEvent.initDataType,
-          new Uint8Array(encryptedEvent.initData),
-          errorStream
-        )
-      );
+      .mergeMap((mediaKeys) => {
+        const { serverCertificate } = keySystem;
+        const setCertificate$ = serverCertificate &&
+          typeof mediaKeys.setServerCertificate === "function" ?
+            trySettingServerCertificate(
+              mediaKeys,
+              serverCertificate,
+              errorStream
+            ) : Observable.empty();
+
+        return setCertificate$.concat(
+          manageSessionCreation(
+            mediaKeys,
+            keySystemAccess.getConfiguration(),
+            keySystem,
+            encryptedEvent.initDataType,
+            new Uint8Array(encryptedEvent.initData),
+            errorStream
+          )
+        );
+      });
   }
 
   return combineLatest(

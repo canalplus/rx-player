@@ -88,6 +88,7 @@ The codes are the string you can have as a ``code`` property in a playback error
   - ``"PIPELINE_PARSING_ERROR"``
   - ``"MANIFEST_PARSE_ERROR"``
   - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``
+  - ``"LICENSE_SERVER_CERTIFICATE_ERROR"``
   - ``"MEDIA_IS_ENCRYPTED_ERROR"``
   - ``"KEY_ERROR"``
   - ``"KEY_STATUS_CHANGE_ERROR"``

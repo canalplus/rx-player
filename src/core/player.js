@@ -439,7 +439,7 @@ class Player extends EventEmitter {
       defaultTextTrack,
       hideNativeSubtitle, // TODO better name
       startAt,
-      emeRobustnesses, // TODO remove/refacto according to chromium bug report
+      emeOptions,
     } = opts;
 
     // ---- Deprecated calls
@@ -518,7 +518,7 @@ class Player extends EventEmitter {
       defaultTextTrack: _defaultTextTrack,
       transport,
       startAt,
-      emeRobustnesses,
+      emeOptions,
     };
   }
 
@@ -543,7 +543,7 @@ class Player extends EventEmitter {
       defaultAudioTrack,
       defaultTextTrack,
       startAt,
-      emeRobustnesses, // TODO remove/refacto according to chromium bug report
+      emeOptions,
     } = options;
 
     this.stop();
@@ -587,7 +587,7 @@ class Player extends EventEmitter {
       videoElement,
       autoPlay,
       startAt,
-      emeRobustnesses,
+      emeOptions,
     })
       .publish();
 
