@@ -70,7 +70,7 @@ _type_: ``Array.<Object>|undefined``
 
 This property is mandatory if the content uses DRM.
 
-This property is an array of objects with the following properties (only ``type`` and ``getLicence`` are mandatory here):
+This property is an array of objects with the following properties (only ``type`` and ``getLicense`` are mandatory here):
   - ``type`` (``string``): the type of keySystem used (e.g. ``"widevine"``, ``"playready"`` ...)
 
   - ``getLicense`` (``Function``): Called as the ``keymessage`` event is received from the browser. Gets two arguments when called:
@@ -80,6 +80,9 @@ This property is an array of objects with the following properties (only ``type`
       This function should return either a Promise or an Observable instance which emits the licence on resolution. Observable instances are preferred as they can be canceled.
 
       We set a 10 seconds timeout on this request.
+
+  - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate used to encrypt messages to the license server.
+    If set, we will try to set this certificate on the CDM. If it fails, we will still continue (albeit a warning will be emitted) to try deciphering the stream (the getLicense API will be triggered etc.).
 
   - ``persistentLicense`` (``Boolean|undefined``)
 
