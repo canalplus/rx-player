@@ -16,15 +16,14 @@
  */
 
 import arrayFind from "array-find";
-import log from "../utils/log";
-import warnOnce from "../utils/warnOnce.js";
-import config from "../../config.js";
-
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
 
-import { on } from "../utils/rx-utils";
+import log from "../../utils/log";
+import warnOnce from "../../utils/warnOnce.js";
+import config from "../../config.js";
+import { on } from "../../utils/rx-utils";
 import {
   normalize as normalizeLang,
   normalizeAudioTrack,

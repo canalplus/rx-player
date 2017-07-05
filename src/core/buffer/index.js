@@ -15,10 +15,10 @@
  */
 
 import objectAssign from "object-assign";
-import config from "../config.js";
-import log from "../utils/log";
+import config from "../../config.js";
+import log from "../../utils/log";
 import { BufferingQueue } from "./buffering-queue";
-import { BufferedRanges } from "./ranges";
+import { BufferedRanges } from "../ranges";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { combineLatest } from "rxjs/observable/combineLatest";

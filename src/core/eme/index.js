@@ -22,10 +22,10 @@ import { combineLatest } from "rxjs/observable/combineLatest";
 import { merge } from "rxjs/observable/merge";
 import { TimeoutError } from "rxjs/util/TimeoutError";
 
-import log from "../utils/log";
-import assert from "../utils/assert";
-import { tryCatch, castToObservable } from "../utils/rx-utils";
-import { retryWithBackoff } from "../utils/retry";
+import log from "../../utils/log";
+import assert from "../../utils/assert";
+import { tryCatch, castToObservable } from "../../utils/rx-utils";
+import { retryWithBackoff } from "../../utils/retry";
 
 import {
   KeySystemAccess,
