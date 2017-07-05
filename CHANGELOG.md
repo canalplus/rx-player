@@ -4,6 +4,9 @@
 
 ### Added
 
+  - eme: add audioRobustnesses to loadVideo's keySystems argument (/!\ undocumented API - can break without official notice)
+  - eme: add videoRobustnesses to loadVideo's keySystems argument (/!\ undocumented API - can break without official notice)
+  - eme: add serverCertificate to loadVideo's keySystems argument
   - buffer: add {set,get}MaxBufferAhead methods
   - buffer: add {set,get}MaxBufferBehind methods
   - buffer: add {set,get}WantedBufferAhead methods replacing the deprecated buffer size methods
@@ -18,7 +21,7 @@
 ### Bug Fixes
 
   - eme: add eme support for some legacy browser without video or audio capabilities
-  - general: add support for older browsers (which does not support array.prototype.{find,includes})
+  - general: add support for older browsers (which does not support array.prototype.{find,findIndex,includes})
   - general: use Object.assign ponyfill instead of the previous polyfill to avoid malicious interferences with other codebases
 
 ## v2.2.1 (2017/06/27)
