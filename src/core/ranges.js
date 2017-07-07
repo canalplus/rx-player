@@ -17,14 +17,13 @@
 import assert from "../utils/assert";
 
 // Factor for rounding errors
-const EPSILON = 1 / 60;
+const DEFAULT_EPSILON = 1 / 60;
+
+// Maximum error delta authorized, in seconds
+const MAXIMUM_EPSILON = 0.9;
 
 function nearlyEqual(a, b) {
-  return Math.abs(a - b) < EPSILON;
-}
-
-function nearlyLt(a, b) {
-  return a - b <= EPSILON;
+  return Math.abs(a - b) < DEFAULT_EPSILON;
 }
 
 /**
@@ -350,14 +349,24 @@ class BufferedRanges {
    * @param {Number} duration
    * @returns {Range|null}
    */
-  hasRange(startTime, duration) {
+  getSegmentRange(startTime, duration) {
     const endTime = startTime + duration;
+
+    // set approximation to know if we seem to have the range already
+    const epsilon = Math.min(duration / 3, MAXIMUM_EPSILON);
+
+    const lessThan = (a, b) => {
+      return a - b <= epsilon;
+    };
+
 
     for (let i = 0; i < this.ranges.length; i++) {
       const { start, end } = this.ranges[i];
 
-      if ((nearlyLt(start, startTime) && nearlyLt(startTime, end)) &&
-          (nearlyLt(start, endTime) && nearlyLt(endTime, end))) {
+      if (
+        (lessThan(start, startTime) && lessThan(startTime, end)) &&
+        (lessThan(start, endTime) && lessThan(endTime, end))
+      ) {
         return this.ranges[i];
       }
     }

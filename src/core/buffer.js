@@ -287,7 +287,7 @@ function Buffer({
       const time     = segment.time / segment.timescale;
       const duration = segment.duration / segment.timescale;
 
-      const range = ranges.hasRange(time, duration);
+      const range = ranges.getSegmentRange(time, duration);
       if (range) {
         const segmentBitrate = representation.bitrate;
         // only re-load comparatively-poor bitrates
@@ -318,21 +318,35 @@ function Buffer({
       const addedSegments = nextSegments ?
         representation.index._addSegments(nextSegments, currentSegment) : [];
 
-      queuedSegments.remove(segment.id);
+      /**
+       * Validate the segment downloaded:
+       *   - remove from the queued segment to re-allow its download
+       *   - insert it in the ranges object
+       */
+      const validateSegment = () => {
+        // Note: we should also clean when canceled/errored
+        // (TODO do it when canceled?)
+        queuedSegments.remove(segment.id);
 
-      // current segment timings informations are used to update
-      // ranges informations
-      if (currentSegment) {
-        ranges.insert(
-          representation.bitrate,
-          currentSegment.ts / segment.timescale,
-          (currentSegment.ts + currentSegment.d) / segment.timescale
-        );
-      }
+        // current segment timings informations are used to update
+        // ranges informations
+        if (currentSegment) {
+          ranges.insert(
+            representation.bitrate,
+            currentSegment.ts / segment.timescale,
+            (currentSegment.ts + currentSegment.d) / segment.timescale
+          );
+        }
+      };
 
-      return bufferingQueue.appendBuffer(segmentData)
+      const appendSegment = () =>
+        bufferingQueue.appendBuffer(segmentData)
+          .do(validateSegment);
+
+      return appendSegment()
         .catch((error) => {
           if (error.name != "QuotaExceededError") {
+            queuedSegments.remove(segment.id);
             throw new MediaError("BUFFER_APPEND_ERROR", error, true);
           }
 
@@ -340,8 +354,9 @@ function Buffer({
           // QuotaExceededError and throw a fatal error if we still have
           // an error.
           return bufferGarbageCollector()
-            .mergeMap(() => bufferingQueue.appendBuffer(segmentData))
+            .mergeMap(appendSegment)
             .catch((error) => {
+              queuedSegments.remove(segment.id);
               throw new MediaError("BUFFER_FULL_ERROR", error, true);
             });
         }).map(() => ({
