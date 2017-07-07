@@ -81,7 +81,7 @@
   "dependencies": {
     "array-find": "^1.0.0",
     "object-assign": "^4.1.1",
-    "rxjs": "^5.4.1"
+    "rxjs": "^5.4.2"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",
