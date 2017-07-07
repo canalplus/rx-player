@@ -1,6 +1,6 @@
 # Changelog
 
-## pending version
+## v2.3.0 (2017/07/07)
 
 ### Added
 
@@ -20,6 +20,7 @@
 
 ### Bug Fixes
 
+  - buffer: avoid some infinite re-buffering by re-calculating buffer ranges at every tick
   - eme: add eme support for some legacy browser without video or audio capabilities
   - general: add support for older browsers (which does not support array.prototype.{find,findIndex,includes})
   - general: use Object.assign ponyfill instead of the previous polyfill to avoid malicious interferences with other codebases
