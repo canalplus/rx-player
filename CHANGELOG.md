@@ -1,5 +1,11 @@
 # Changelog
 
+## pending version
+
+### Bug Fixes
+
+  - buffer: improve buffer ranges "bookeeping" logic to avoid re-downloading the same segments
+
 ## v2.3.0 (2017/07/07)
 
 ### Added
