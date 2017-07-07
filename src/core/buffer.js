@@ -358,29 +358,9 @@ function Buffer({
      */
     function getNeededSegments(timing, bufferSize, injectCount) {
       const nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
-
-      // TODO This code didn't work previously (typo in the equals method) but
-      // cause problems when it does:
-      // nativeBufferedRanges can differ in ms from "ranges" (TODO because of
-      // what?) which is updated with the segment data downloaded.
-      //
-      // Later in the code we need both:
-      //   - nativeBufferedRanges to know until where the player can play (think
-      //     of it as an improved mediaSource.buffered)
-      //   - ranges to know which segments have been downloaded and with
-      //     which bitrate.
-      // For now, I'm keeping both for simplicity, but we should probably
-      // re-think about that.
-
-      // // makes sure our own buffered ranges representation stay in
-      // // sync with the native one.
-      // // If not, only keep the intersection between the two.
-      // if (isAVBuffer) {
-      //   if (!ranges.equals(nativeBufferedRanges)) {
-      //     log.debug("intersect new buffer", bufferType);
-      //     ranges.intersect(nativeBufferedRanges);
-      //   }
-      // }
+      if (!ranges.equals(nativeBufferedRanges)) {
+        ranges.intersect(nativeBufferedRanges);
+      }
 
       // send a message downstream when bumping on an explicit
       // discontinuity announced in the segment index.
@@ -467,8 +447,18 @@ function Buffer({
         // begin from the oldest
         for (let i = 0; i < outerRanges.length; i++) {
           const outerRange = outerRanges[i];
-          if (position - maxBufferBehind > outerRange.end) {
+          if (position - maxBufferBehind >= outerRange.end) {
             cleanedupRanges.push(outerRange);
+          }
+          else if (
+            position >= outerRange.end &&
+            position - maxBufferBehind > outerRange.start &&
+            position - maxBufferBehind < outerRange.end
+          ) {
+            cleanedupRanges.push({
+              start: outerRange.start,
+              end: position - maxBufferBehind,
+            });
           }
         }
         if (innerRange) {
@@ -489,15 +479,25 @@ function Buffer({
         // begin from the oldest
         for (let i = 0; i < outerRanges.length; i++) {
           const outerRange = outerRanges[i];
-          if (position + maxBufferAhead < outerRange.start) {
+          if (position + maxBufferAhead <= outerRange.start) {
             cleanedupRanges.push(outerRange);
+          }
+          else if (
+            position <= outerRange.start &&
+            position + maxBufferAhead < outerRange.end &&
+            position + maxBufferAhead > outerRange.start
+          ) {
+            cleanedupRanges.push({
+              start: position + maxBufferAhead,
+              end: outerRange.end,
+            });
           }
         }
         if (innerRange) {
-          if (position + maxBufferAhead < innerRange.start) {
+          if (position + maxBufferAhead < innerRange.end) {
             cleanedupRanges.push({
-              start: innerRange.start,
-              end: position - maxBufferAhead,
+              start: position + maxBufferAhead,
+              end: innerRange.end,
             });
           }
         }
