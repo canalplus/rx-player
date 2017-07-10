@@ -48,6 +48,8 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       currentTime: player.getWallClockTime(),
       bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
       duration: player.getVideoDuration(),
+      minimumPosition: player.getMinimumPosition(),
+      maximumPosition: player.getMaximumPosition(),
     }))
     .takeUntil($destroy)
     .subscribe(arg => {
@@ -89,6 +91,11 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.availableLanguages = [];
         stateUpdates.availableSubtitles = [];
         stateUpdates.images = [];
+        stateUpdates.currentTime = undefined;
+        stateUpdates.bufferGap = undefined;
+        stateUpdates.duration = undefined;
+        stateUpdates.minimumPosition = undefined;
+        stateUpdates.maximumPosition = undefined;
       }
 
       if (arg !== "STOPPED") {

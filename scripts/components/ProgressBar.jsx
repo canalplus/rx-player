@@ -3,7 +3,8 @@ import React from "react";
 /**
  * Horizontal (left-to-right) progress bar component which:
  *
- *   - represents the current position and the buffer relatively to the duration
+ *   - represents the current position and the buffer relatively to the
+ *     minimum / maximum position.
  *
  *   - triggers a seek function with the clicked position on click
  *
@@ -19,12 +20,15 @@ export default ({
   seek, // seek callback, will be called with the position clicked
   position,
   bufferGap,
-  duration,
+  minimumPosition,
+  maximumPosition,
   onMouseOut, // callback called when the mouse stops hovering
   onMouseMove, // callback called when the mouse starts hovering, with the
                // position and the event in arguments
 }) => {
   let element;
+
+  const duration = Math.max(maximumPosition - minimumPosition, 0);
 
   const getMousePosition = (event) => {
     const rect = element.getBoundingClientRect();
@@ -34,16 +38,18 @@ export default ({
     if (!endPointPx) {
       return 0;
     }
-    return (clickPosPx / endPointPx) * duration;
+    return ((clickPosPx / endPointPx) * duration) + minimumPosition;
   };
 
   // weird rx-player design decision. Should be fixed (or done in the
   // module)
   const bufferGapHotFix = isFinite(bufferGap) ? bufferGap : 0;
+  const relativePosition = Math.max(position - minimumPosition, 0);
   const percentBuffered = Math.min(
-    (bufferGapHotFix + position) / duration
+    (bufferGapHotFix + relativePosition) / duration
     , 1) * 100;
-  const percentPosition = Math.min(position / duration, 1) * 100;
+
+  const percentPosition = Math.min(relativePosition / duration, 1) * 100;
 
   return (
     <div

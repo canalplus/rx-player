@@ -33,7 +33,7 @@ const ControlBar = ({
 
   return (
     <div className="controls-bar-container">
-      { (!displayControls || isLive) ?
+      { (!displayControls) ?
           null : <Progressbar player={player} />
       }
       <div className="controls-bar">
