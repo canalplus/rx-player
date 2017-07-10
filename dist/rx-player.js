@@ -2975,14 +2975,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
 // Factor for rounding errors
-var EPSILON = 1 / 60;
+var DEFAULT_EPSILON = 1 / 60;
+
+// Maximum error delta authorized, in seconds
+var MAXIMUM_EPSILON = 0.9;
 
 function nearlyEqual(a, b) {
-  return Math.abs(a - b) < EPSILON;
-}
-
-function nearlyLt(a, b) {
-  return a - b <= EPSILON;
+  return Math.abs(a - b) < DEFAULT_EPSILON;
 }
 
 /**
@@ -3317,8 +3316,15 @@ var BufferedRanges = function () {
    */
 
 
-  BufferedRanges.prototype.hasRange = function hasRange(startTime, duration) {
+  BufferedRanges.prototype.getSegmentRange = function getSegmentRange(startTime, duration) {
     var endTime = startTime + duration;
+
+    // set approximation to know if we seem to have the range already
+    var epsilon = Math.min(duration / 3, MAXIMUM_EPSILON);
+
+    var lessThan = function lessThan(a, b) {
+      return a - b <= epsilon;
+    };
 
     for (var i = 0; i < this.ranges.length; i++) {
       var _ranges$i = this.ranges[i],
@@ -3326,7 +3332,7 @@ var BufferedRanges = function () {
           end = _ranges$i.end;
 
 
-      if (nearlyLt(start, startTime) && nearlyLt(startTime, end) && nearlyLt(start, endTime) && nearlyLt(endTime, end)) {
+      if (lessThan(start, startTime) && lessThan(startTime, end) && lessThan(start, endTime) && lessThan(endTime, end)) {
         return this.ranges[i];
       }
     }
@@ -10215,7 +10221,7 @@ function Buffer(_ref) {
       var time = segment.time / segment.timescale;
       var duration = segment.duration / segment.timescale;
 
-      var range = ranges.hasRange(time, duration);
+      var range = ranges.getSegmentRange(time, duration);
       if (range) {
         var segmentBitrate = representation.bitrate;
         // only re-load comparatively-poor bitrates
@@ -10250,25 +10256,38 @@ function Buffer(_ref) {
       // TODO do that higher up?
       var addedSegments = nextSegments ? representation.index._addSegments(nextSegments, currentSegment) : [];
 
-      queuedSegments.remove(segment.id);
+      /**
+       * Validate the segment downloaded:
+       *   - remove from the queued segment to re-allow its download
+       *   - insert it in the ranges object
+       */
+      var validateSegment = function validateSegment() {
+        // Note: we should also clean when canceled/errored
+        // (TODO do it when canceled?)
+        queuedSegments.remove(segment.id);
 
-      // current segment timings informations are used to update
-      // ranges informations
-      if (currentSegment) {
-        ranges.insert(representation.bitrate, currentSegment.ts / segment.timescale, (currentSegment.ts + currentSegment.d) / segment.timescale);
-      }
+        // current segment timings informations are used to update
+        // ranges informations
+        if (currentSegment) {
+          ranges.insert(representation.bitrate, currentSegment.ts / segment.timescale, (currentSegment.ts + currentSegment.d) / segment.timescale);
+        }
+      };
 
-      return bufferingQueue.appendBuffer(segmentData).catch(function (error) {
+      var appendSegment = function appendSegment() {
+        return bufferingQueue.appendBuffer(segmentData).do(validateSegment);
+      };
+
+      return appendSegment().catch(function (error) {
         if (error.name != "QuotaExceededError") {
+          queuedSegments.remove(segment.id);
           throw new __WEBPACK_IMPORTED_MODULE_12__errors__["d" /* MediaError */]("BUFFER_APPEND_ERROR", error, true);
         }
 
         // launch our garbage collector and retry on
         // QuotaExceededError and throw a fatal error if we still have
         // an error.
-        return bufferGarbageCollector().mergeMap(function () {
-          return bufferingQueue.appendBuffer(segmentData);
-        }).catch(function (error) {
+        return bufferGarbageCollector().mergeMap(appendSegment).catch(function (error) {
+          queuedSegments.remove(segment.id);
           throw new __WEBPACK_IMPORTED_MODULE_12__errors__["d" /* MediaError */]("BUFFER_FULL_ERROR", error, true);
         });
       }).map(function () {
@@ -11352,7 +11371,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"2.3.0";
+    _this.version = /*PLAYER_VERSION*/"2.3.1";
     _this.video = videoElement;
 
     // fullscreen change subscription.
