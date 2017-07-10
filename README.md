@@ -10,7 +10,7 @@ Its main goals are:
   - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB integration...)
   - To be easy to integrate and use as a library in various codebases.
 
-Latest release: ``v2.3.0``
+Latest release: ``v2.3.1``
 
 ## API
 
@@ -31,7 +31,7 @@ The fastest way to use our player directly in your code is to add this repositor
 npm install --save git+https://git@github.com/canalplus/rx-player.git
 ```
 
-You can then either link directly to the `dist/rx-player.min.js` file (which is our last released version, ``v2.3.0``, compiled and minified):
+You can then either link directly to the `dist/rx-player.min.js` file (which is our last released version, ``v2.3.1``, compiled and minified):
 ```html
 <script src="node_modules/rx-player/dist/rx-player.min.js"></script>
 ```

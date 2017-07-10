@@ -1,6 +1,6 @@
 # Changelog
 
-## pending version
+## v2.3.1 (2017/07/10)
 
 ### Bug Fixes
 
