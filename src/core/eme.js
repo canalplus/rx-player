@@ -528,41 +528,42 @@ function findCompatibleKeySystem(keySystems) {
  * @param {MediaKeySystemAccess} keySystemAccess
  * @returns {Observable}
  */
-function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
+function createMediaKeysObs(keySystemAccess) {
+  // (keySystemAccess should return a promise)
+  return castToObservable(keySystemAccess.createMediaKeys());
+}
+
+function setMediaKeysObs(mediaKeys, video, keySystem, keySystemAccess) {
   const oldVideoElement = $videoElement;
   const oldMediaKeys = $mediaKeys;
 
-  // (keySystemAccess should return a promise)
-  return castToObservable(keySystemAccess.createMediaKeys())
-    .mergeMap(mediaKeys => {
-      $mediaKeys = mediaKeys;
-      $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
-      $keySystem = keySystem;
-      $videoElement = video;
+  $mediaKeys = mediaKeys;
+  $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
+  $keySystem = keySystem;
+  $videoElement = video;
 
-      if (video.mediaKeys === mediaKeys) {
-        return Observable.of(mediaKeys);
-      }
+  if (video.mediaKeys === mediaKeys) {
+    return Observable.of(mediaKeys);
+  }
 
-      if (oldMediaKeys && oldMediaKeys !== $mediaKeys) {
-        // if we change our mediaKeys singleton, we need to dispose all existing
-        // sessions linked to the previous one.
-        $loadedSessions.dispose();
-      }
+  if (oldMediaKeys && oldMediaKeys !== $mediaKeys) {
+    // if we change our mediaKeys singleton, we need to dispose all existing
+    // sessions linked to the previous one.
+    $loadedSessions.dispose();
+  }
 
-      let mediaKeysSetter;
-      if ((oldVideoElement && oldVideoElement !== $videoElement)) {
-        log.debug("eme: unlink old video element and set mediakeys");
-        mediaKeysSetter = setMediaKeys(oldVideoElement, null)
-          .concat(setMediaKeys($videoElement, mediaKeys));
-      }
-      else {
-        log.debug("eme: set mediakeys");
-        mediaKeysSetter = setMediaKeys($videoElement, mediaKeys);
-      }
+  let mediaKeysSetter;
+  if ((oldVideoElement && oldVideoElement !== $videoElement)) {
+    log.debug("eme: unlink old video element and set mediakeys");
+    mediaKeysSetter = setMediaKeys(oldVideoElement, null)
+      .concat(setMediaKeys($videoElement, mediaKeys));
+  }
+  else {
+    log.debug("eme: set mediakeys");
+    mediaKeysSetter = setMediaKeys($videoElement, mediaKeys);
+  }
 
-      return mediaKeysSetter.mapTo(mediaKeys);
-    });
+  return mediaKeysSetter.mapTo(mediaKeys);
 }
 
 /**
@@ -1018,7 +1019,7 @@ function createEME(video, keySystems, errorStream) {
     }
 
     log.info("eme: encrypted event", encryptedEvent);
-    return createAndSetMediaKeys(video, keySystem, keySystemAccess)
+    return createMediaKeysObs(keySystemAccess)
       .mergeMap((mediaKeys) => {
         const { serverCertificate } = keySystem;
         const setCertificate$ = serverCertificate &&
@@ -1030,6 +1031,7 @@ function createEME(video, keySystems, errorStream) {
             ) : Observable.empty();
 
         return setCertificate$.concat(
+          setMediaKeysObs(mediaKeys, video, keySystem, keySystemAccess),
           manageSessionCreation(
             mediaKeys,
             keySystemAccess.getConfiguration(),
