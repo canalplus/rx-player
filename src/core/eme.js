@@ -522,9 +522,7 @@ function findCompatibleKeySystem(keySystems) {
 }
 
 /**
- * ...Create and set MediaKeys on the HTMLMediaElement given.
- * @param {HTMLMediaElement} video
- * @param {Object} keySystem
+ * Call the createMediaKeys API and cast it to an observable.
  * @param {MediaKeySystemAccess} keySystemAccess
  * @returns {Observable}
  */
@@ -533,12 +531,20 @@ function createMediaKeysObs(keySystemAccess) {
   return castToObservable(keySystemAccess.createMediaKeys());
 }
 
-function setMediaKeysObs(mediaKeys, video, keySystem, keySystemAccess) {
+/**
+ * Set the MediaKeys object on the videoElement.
+ * @param {MediaKeys} mediaKeys
+ * @param {Object} mksConfig - MediaKeySystemConfiguration used
+ * @param {HTMLMediaElement} video
+ * @param {Object} keySystem
+ * @returns {Observable}
+ */
+function setMediaKeysObs(mediaKeys, mksConfig, video, keySystem) {
   const oldVideoElement = $videoElement;
   const oldMediaKeys = $mediaKeys;
 
   $mediaKeys = mediaKeys;
-  $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
+  $mediaKeySystemConfiguration = mksConfig;
   $keySystem = keySystem;
   $videoElement = video;
 
@@ -740,7 +746,7 @@ function createPersistentSessionAndLoad(mediaKeys,
 
 /**
  * @param {MediaKeys} mediaKeys
- * @param {MediaKeySystemConfiguration} mediaKeySystemConfiguration
+ * @param {MediaKeySystemConfiguration} mksConfig
  * @param {Object} keySystem
  * @param {string} initDataType
  * @param {UInt8Array} initData
@@ -749,7 +755,7 @@ function createPersistentSessionAndLoad(mediaKeys,
  */
 function manageSessionCreation(
   mediaKeys,
-  mediaKeySystemConfiguration,
+  mksConfig,
   keySystem,
   initDataType,
   initData,
@@ -763,7 +769,7 @@ function manageSessionCreation(
     return Observable.of(createMessage("reuse-session", loadedSession));
   }
 
-  const sessionTypes = mediaKeySystemConfiguration.sessionTypes;
+  const sessionTypes = mksConfig.sessionTypes;
   const persistentLicenseSupported = (
     sessionTypes &&
     sessionTypes.indexOf("persistent-license") >= 0
@@ -1030,17 +1036,18 @@ function createEME(video, keySystems, errorStream) {
               errorStream
             ) : Observable.empty();
 
-        return setCertificate$.concat(
-          setMediaKeysObs(mediaKeys, video, keySystem, keySystemAccess),
-          manageSessionCreation(
-            mediaKeys,
-            keySystemAccess.getConfiguration(),
-            keySystem,
-            encryptedEvent.initDataType,
-            new Uint8Array(encryptedEvent.initData),
-            errorStream
-          )
-        );
+        const mksConfig = keySystemAccess.getConfiguration();
+        return setCertificate$
+          .concat(setMediaKeysObs(mediaKeys, mksConfig, video, keySystem))
+          .concat(manageSessionCreation(
+              mediaKeys,
+              mksConfig,
+              keySystem,
+              encryptedEvent.initDataType,
+              new Uint8Array(encryptedEvent.initData),
+              errorStream
+            )
+          );
       });
   }
 
