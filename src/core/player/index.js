@@ -22,9 +22,6 @@ import log from "../../utils/log";
 import warnOnce from "../../utils/warnOnce.js";
 import config from "../../config.js";
 import { on } from "../../utils/rx-utils";
-import {
-  normalize as normalizeLang,
-} from "../../utils/languages";
 import EventEmitter from "../../utils/eventemitter";
 import assert from "../../utils/assert";
 
@@ -685,16 +682,6 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Get last calculated average bitrate, from an exponential moving average
-   * formula.
-   * @deprecated
-   * @returns {Number}
-   */
-  getAverageBitrates() {
-    // return this._priv.abrManager.getAverageBitrates();
-  }
-
-  /**
    * Play/Resume the current video.
    */
   play() {
@@ -803,17 +790,6 @@ class Player extends EventEmitter {
     if (vol === 0) {
       this.setVolume(this._priv.mutedMemory);
     }
-  }
-
-  /**
-   * Translate a generic language code, like the one defined in a manifest file,
-   * to the code used by the player.
-   * @param {string} lng
-   * @returns {string}
-   * @deprecated
-   */
-  normalizeLanguageCode(lng) {
-    return normalizeLang(lng);
   }
 
   /**
