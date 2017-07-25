@@ -12,6 +12,8 @@
   - adaptive: add strategies for abrupt changes of bandwidth to avoid excessive re-buffering on network fluctuations
   - api: private (undocumented) variables have been isolated on a player instance to a "\_priv" object.
   - code: the code has been re-organized to avoid cumbersome files with 1000+ lines
+  - api: throttleWhenHidden is now set to false as default
+  - api: limitVideoWidth is now set to false as default
 
 ### Removed
 
