@@ -97,13 +97,13 @@ export default {
    * INACTIVITY DELAY config property, we throttle automatically to the video
    * representation with the lowest bitrate.
    */
-  DEFAULT_THROTTLE_WHEN_HIDDEN: true,
+  DEFAULT_THROTTLE_WHEN_HIDDEN: false,
 
   /**
    * If true, the video representations you can switch to in adaptive mode
    * are limited by the video element's width.
    */
-  DEFAULT_LIMIT_VIDEO_WIDTH: true,
+  DEFAULT_LIMIT_VIDEO_WIDTH: false,
 
   /**
    * Default initial live gap considered if no presentation delay has been
