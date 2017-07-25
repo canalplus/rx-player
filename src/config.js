@@ -36,24 +36,46 @@ export default {
 
   /*
    * Default max buffer size ahead of the current position in seconds.
+   * Set to Infinity for no limit.
    */
   DEFAULT_MAX_BUFFER_AHEAD: Infinity,
 
   /*
    * Default max buffer size ahead of the current position in seconds.
+   * Set to Infinity for no limit.
    */
   DEFAULT_MAX_BUFFER_BEHIND: Infinity,
 
+  /**
+   * Default bitrate ceils initially set as the first content begins.
+   *
+   * If no track is found with a bitrate inferior or equal to the
+   * bitrate there, the one with the lowest bitrate will be taken instead.
+   *
+   * Set to 0 for the lowest bitrate, Infinity for the highest.
+   *
+   * These values are only useful for the first content played, as consecutive
+   * play will always take the last set one.
+   */
   DEFAULT_INITIAL_BITRATES: {
     audio: 0,
     video: 0,
-    other: 0,
+    other: 0, // tracks which are not audio/video
   },
 
+  /**
+   * Default bitrate ceil initially set to dictate the maximum bitrate the
+   * ABR manager can automatically switch to.
+   *
+   * If no track is found with a quality inferior or equal to the
+   * bitrate there, the lowest bitrate will be taken instead.
+   *
+   * Set to Infinity to discard any limit in the ABR strategy.
+   */
   DEFAULT_MAX_BITRATES: {
     audio: Infinity,
     video: Infinity,
-    other: Infinity,
+    other: Infinity, // tracks which are not audio/video
   },
 
   /**
@@ -125,26 +147,38 @@ export default {
    */
   BITRATE_REBUFFERING_RATIO: 1.5,
 
+  /**
+   * Those are used when a "QuotaExceededError" error is received after
+   * appending a new segment in the source buffer.
+   *
+   * This error can arise when the browser's buffer is considered full.
+   * In this case, the player goes into manual garbage collection (GC) mode.
+   */
   BUFFER_GC_GAPS: {
     /**
      * _Low_ gap (from current position) from which the buffer will be _garbage
-     * collected_ (read removed from the buffer).
+     * collected_ (read removed from the buffer) when a QuotaExceededError is
+     * received.
+     * In seconds.
+     * @type {Number}
      */
     CALM: 240,
 
     /**
      * _High_ gap (from current position) from which the buffer will be _garbage
-     * collected_ (read removed from the buffer) if the low one does not clean
-     * up any buffer.
+     * collected_ (read removed from the buffer) when a QuotaExceededError is
+     * received, if the low one does not clean up any buffer.
+     * In seconds.
+     * @type {Number}
      */
     BEEFY: 30,
   },
 
-/**
- * The default number of times a pipeline request will be re-performed when
- * on error which justify a retry.
- * @type Number
- */
+  /**
+   * The default number of times a pipeline request will be re-performed when
+   * on error which justify a retry.
+   * @type Number
+   */
   DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: 4,
 
   // time changes interval in milliseconds
@@ -157,7 +191,6 @@ export default {
    * enough to trust.
    * If bytesSampled_ is less than minTotalBytes_, we use defaultEstimate_.
    * This specific value is based on experimentation.
-   * TODO re-calibrate for rx-player usecases?
    * @type {Number}
    */
   ABR_MINIMUM_TOTAL_BYTES: 128e3,
@@ -169,10 +202,19 @@ export default {
    * Because of this, we should ignore very small downloads which would cause our
    * estimate to be too low.
    * This specific value is based on experimentation.
-   * TODO re-calibrate for rx-player usecases?
    * @type {Number}
    */
   ABR_MINIMUM_CHUNK_SIZE: 16e3,
 
+  /**
+   * If a SourceBuffer has less than this amount of seconds ahead of the current
+   * position in its buffer, the ABR manager will go into starvation mode.
+   *
+   * Under this mode, the time the next important request take will be checked
+   * multiple times to detect when/if it takes too much time.
+   * If the request is considered too long, the bitrate will be hastily
+   * re-calculated from this single request.
+   * @type {Number}
+   */
   ABR_STARVATION_GAP: 5,
 };
