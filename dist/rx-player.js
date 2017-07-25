@@ -5680,44 +5680,52 @@ function findCompatibleKeySystem(keySystems) {
 }
 
 /**
- * ...Create and set MediaKeys on the HTMLMediaElement given.
- * @param {HTMLMediaElement} video
- * @param {Object} keySystem
+ * Call the createMediaKeys API and cast it to an observable.
  * @param {MediaKeySystemAccess} keySystemAccess
  * @returns {Observable}
  */
-function createAndSetMediaKeys(video, keySystem, keySystemAccess) {
+function createMediaKeysObs(keySystemAccess) {
+  // (keySystemAccess should return a promise)
+  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__utils_rx_utils__["b" /* castToObservable */])(keySystemAccess.createMediaKeys());
+}
+
+/**
+ * Set the MediaKeys object on the videoElement.
+ * @param {MediaKeys} mediaKeys
+ * @param {Object} mksConfig - MediaKeySystemConfiguration used
+ * @param {HTMLMediaElement} video
+ * @param {Object} keySystem
+ * @returns {Observable}
+ */
+function setMediaKeysObs(mediaKeys, mksConfig, video, keySystem) {
   var oldVideoElement = $videoElement;
   var oldMediaKeys = $mediaKeys;
 
-  // (keySystemAccess should return a promise)
-  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__utils_rx_utils__["b" /* castToObservable */])(keySystemAccess.createMediaKeys()).mergeMap(function (mediaKeys) {
-    $mediaKeys = mediaKeys;
-    $mediaKeySystemConfiguration = keySystemAccess.getConfiguration();
-    $keySystem = keySystem;
-    $videoElement = video;
+  $mediaKeys = mediaKeys;
+  $mediaKeySystemConfiguration = mksConfig;
+  $keySystem = keySystem;
+  $videoElement = video;
 
-    if (video.mediaKeys === mediaKeys) {
-      return __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__["Observable"].of(mediaKeys);
-    }
+  if (video.mediaKeys === mediaKeys) {
+    return __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__["Observable"].of(mediaKeys);
+  }
 
-    if (oldMediaKeys && oldMediaKeys !== $mediaKeys) {
-      // if we change our mediaKeys singleton, we need to dispose all existing
-      // sessions linked to the previous one.
-      $loadedSessions.dispose();
-    }
+  if (oldMediaKeys && oldMediaKeys !== $mediaKeys) {
+    // if we change our mediaKeys singleton, we need to dispose all existing
+    // sessions linked to the previous one.
+    $loadedSessions.dispose();
+  }
 
-    var mediaKeysSetter = void 0;
-    if (oldVideoElement && oldVideoElement !== $videoElement) {
-      __WEBPACK_IMPORTED_MODULE_7__utils_log__["a" /* default */].debug("eme: unlink old video element and set mediakeys");
-      mediaKeysSetter = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_11__compat__["j" /* setMediaKeys */])(oldVideoElement, null).concat(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_11__compat__["j" /* setMediaKeys */])($videoElement, mediaKeys));
-    } else {
-      __WEBPACK_IMPORTED_MODULE_7__utils_log__["a" /* default */].debug("eme: set mediakeys");
-      mediaKeysSetter = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_11__compat__["j" /* setMediaKeys */])($videoElement, mediaKeys);
-    }
+  var mediaKeysSetter = void 0;
+  if (oldVideoElement && oldVideoElement !== $videoElement) {
+    __WEBPACK_IMPORTED_MODULE_7__utils_log__["a" /* default */].debug("eme: unlink old video element and set mediakeys");
+    mediaKeysSetter = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_11__compat__["j" /* setMediaKeys */])(oldVideoElement, null).concat(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_11__compat__["j" /* setMediaKeys */])($videoElement, mediaKeys));
+  } else {
+    __WEBPACK_IMPORTED_MODULE_7__utils_log__["a" /* default */].debug("eme: set mediakeys");
+    mediaKeysSetter = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_11__compat__["j" /* setMediaKeys */])($videoElement, mediaKeys);
+  }
 
-    return mediaKeysSetter.mapTo(mediaKeys);
-  });
+  return mediaKeysSetter.mapTo(mediaKeys);
 }
 
 /**
@@ -5831,14 +5839,14 @@ function createPersistentSessionAndLoad(mediaKeys, keySystem, storedSessionId, i
 
 /**
  * @param {MediaKeys} mediaKeys
- * @param {MediaKeySystemConfiguration} mediaKeySystemConfiguration
+ * @param {MediaKeySystemConfiguration} mksConfig
  * @param {Object} keySystem
  * @param {string} initDataType
  * @param {UInt8Array} initData
  * @param {Subject} errorStream
  * @returns {Observable}
  */
-function manageSessionCreation(mediaKeys, mediaKeySystemConfiguration, keySystem, initDataType, initData, errorStream) {
+function manageSessionCreation(mediaKeys, mksConfig, keySystem, initDataType, initData, errorStream) {
   // reuse currently loaded sessions without making a new key
   // request
   var loadedSession = $loadedSessions.get(initData);
@@ -5847,7 +5855,7 @@ function manageSessionCreation(mediaKeys, mediaKeySystemConfiguration, keySystem
     return __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__["Observable"].of(createMessage("reuse-session", loadedSession));
   }
 
-  var sessionTypes = mediaKeySystemConfiguration.sessionTypes;
+  var sessionTypes = mksConfig.sessionTypes;
   var persistentLicenseSupported = sessionTypes && sessionTypes.indexOf("persistent-license") >= 0;
 
   var sessionType = persistentLicenseSupported && keySystem.persistentLicense ? "persistent-license" : "temporary";
@@ -6067,12 +6075,47 @@ function createEME(video, keySystems, errorStream) {
     }
 
     __WEBPACK_IMPORTED_MODULE_7__utils_log__["a" /* default */].info("eme: encrypted event", encryptedEvent);
-    return createAndSetMediaKeys(video, keySystem, keySystemAccess).mergeMap(function (mediaKeys) {
+    return createMediaKeysObs(keySystemAccess).mergeMap(function (mediaKeys) {
       var serverCertificate = keySystem.serverCertificate;
 
       var setCertificate$ = serverCertificate && typeof mediaKeys.setServerCertificate === "function" ? trySettingServerCertificate(mediaKeys, serverCertificate, errorStream) : __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__["Observable"].empty();
 
-      return setCertificate$.concat(manageSessionCreation(mediaKeys, keySystemAccess.getConfiguration(), keySystem, encryptedEvent.initDataType, new Uint8Array(encryptedEvent.initData), errorStream));
+      var mksConfig = keySystemAccess.getConfiguration();
+
+      // TODO FIXME The code here is ugly. What we should most probably do
+      // is a merge between setMediaKeys and manageSessionCreation as
+      // depending on the device, we might run into a race condition there by
+      // doing them sequentially.
+      //
+      // Here those seem sequential (concat), and were tested as with no
+      // problem, but there is an inherent problem in how those methods are
+      // written: they do not wait for the subscription to begin their
+      // side-effect(s) (like session.load and whatnot).
+      // Thus the next two functions are effectively executed at the same
+      // time, not truly concatenated.
+      // I did not change it to Observable.merge yet as I'm affraid to
+      // run into other issues, the code there works for now!
+      //
+      // This was done for a quick release (v2.3.2), and was not re-updated
+      // because it was tested, worked, and we had not much time to re-do all
+      // the tests with a proper logic. Please re-update and re-test
+      // everything for a later release.
+      return setCertificate$.concat(setMediaKeysObs(mediaKeys, mksConfig, video, keySystem)).concat(manageSessionCreation(mediaKeys, mksConfig, keySystem, encryptedEvent.initDataType, new Uint8Array(encryptedEvent.initData), errorStream));
+
+      // TODO Test this in next Release instead. The previous behavior has a
+      // high chance to not work as expected with future evolutions.
+      // return setCertificate$
+      //   .concat(Observable.merge(
+      //     setMediaKeysObs(mediaKeys, mksConfig, video, keySystem)),
+      //     manageSessionCreation(
+      //       mediaKeys,
+      //       mksConfig,
+      //       keySystem,
+      //       encryptedEvent.initDataType,
+      //       new Uint8Array(encryptedEvent.initData),
+      //       errorStream
+      //     )
+      //   ));
     });
   }
 
@@ -11371,7 +11414,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"2.3.1";
+    _this.version = /*PLAYER_VERSION*/"2.3.2";
     _this.video = videoElement;
 
     // fullscreen change subscription.
