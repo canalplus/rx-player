@@ -1037,6 +1037,25 @@ function createEME(video, keySystems, errorStream) {
             ) : Observable.empty();
 
         const mksConfig = keySystemAccess.getConfiguration();
+
+        // TODO FIXME The code here is ugly. What we should most probably do
+        // is a merge between setMediaKeys and manageSessionCreation as
+        // depending on the device, we might run into a race condition there by
+        // doing them sequentially.
+        //
+        // Here those seem sequential (concat), and were tested as with no
+        // problem, but there is an inherent problem in how those methods are
+        // written: they do not wait for the subscription to begin their
+        // side-effect(s) (like session.load and whatnot).
+        // Thus the next two functions are effectively executed at the same
+        // time, not truly concatenated.
+        // I did not change it to Observable.merge yet as I'm affraid to
+        // run into other issues, the code there works for now!
+        //
+        // This was done for a quick release (v2.3.2), and was not re-updated
+        // because it was tested, worked, and we had not much time to re-do all
+        // the tests with a proper logic. Please re-update and re-test
+        // everything for a later release.
         return setCertificate$
           .concat(setMediaKeysObs(mediaKeys, mksConfig, video, keySystem))
           .concat(manageSessionCreation(
@@ -1048,6 +1067,21 @@ function createEME(video, keySystems, errorStream) {
               errorStream
             )
           );
+
+        // TODO Test this in next Release instead. The previous behavior has a
+        // high chance to not work as expected with future evolutions.
+        // return setCertificate$
+        //   .concat(Observable.merge(
+        //     setMediaKeysObs(mediaKeys, mksConfig, video, keySystem)),
+        //     manageSessionCreation(
+        //       mediaKeys,
+        //       mksConfig,
+        //       keySystem,
+        //       encryptedEvent.initDataType,
+        //       new Uint8Array(encryptedEvent.initData),
+        //       errorStream
+        //     )
+        //   ));
       });
   }
 
