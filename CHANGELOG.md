@@ -1,5 +1,41 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+  - config: a global config file has been created (src/config.js) to easily tweak the player pre-build
+
+### Changed
+
+  - adaptive: improved ABR management to provide a better, faster and more stable bandwidth estimation
+  - adaptive: add strategies for abrupt changes of bandwidth to avoid excessive re-buffering on network fluctuations
+  - api: private (undocumented) variables have been isolated on a player instance to a "\_priv" object.
+  - code: the code has been re-organized to avoid cumbersome files with 1000+ lines
+
+### Removed
+
+  - adaptive: getMetrics has been removed
+  - adaptive: getAverageBitrates has been removed
+  - adaptive: getVideoMaxBitrate has been removed
+  - adaptive: getAudioMaxBitrate has been removed
+  - errors: the static method getErrorTypes has been removed in favor of the static property errorTypes
+  - errors: the static method getErrorCodes has been removed in favor of the static property errorCodes
+  - languages: normalizeLanguageCode has been removed
+  - languages: getAvailableLanguages has been removed
+  - languages: getAvailableSubtitles has been removed
+  - languages: isLanguageAvailable has been removed
+  - languages: isSubtitleAvailable has been removed
+  - languages: getLanguage has been removed
+  - languages: getSubtitle has been removed
+  - languages: setLanguage has been removed
+  - languages: setSubtitle has been removed
+
+### Bug Fixes:
+
+  - languages: getAudioTrack now always returns the currently set audio track
+  - languages: getTextTrack now always returns the currently set text track
+
 ## v2.3.2 (2017/07/25)
 
 ### Bug Fixes
@@ -76,8 +112,6 @@
 
 ### Bug fixes
 
-  - language: getSubtitle / getTextTrack returns now the current text track instead of the language of the last downloaded text segment
-  - language: getLanguage / getAudioTrack returns now the current audio track instead of the language of the last downloaded audio segment
   - hotfix: fixed rxjs imports
   - hotfix: the player can now be imported through a commonjs require
   - hotfix: the player could not play if the video element's width was too short
@@ -91,8 +125,6 @@
 
 ### Other improvements
 
-  - api: deprecated api now only warn once
-  - languages: the language management part of the code has now been separated from the ABR code for easier future improvements.
   - api: deprecated api now only warn once
   - tests: integration tests have been added
   - manifest: the manifest object and the management of its index has been refactored for future improvements
