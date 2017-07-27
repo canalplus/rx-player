@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import objectAssign from "object-assign";
 
 import config from "../../config.js";
 import arrayIncludes from "../../utils/array-includes.js";
@@ -221,7 +222,7 @@ export default function Stream({
    * @param {MediaSource|null} params.mediaSource
    * @returns {Observable}
    */
-  const createAllStream = retryableFuncWithBackoff(({ url, mediaSource }) => {
+  const startStream = retryableFuncWithBackoff(({ url, mediaSource }) => {
     const sourceOpening = mediaSource
       ? sourceOpen(mediaSource)
       : Observable.of(null);
@@ -289,7 +290,7 @@ export default function Stream({
        */
       let currentRepresentation = null;
 
-      const clock$ = timings$
+      const abrClock$ = timings$
         .map(timing => {
           let bitrate, lastIndexPosition;
 
@@ -314,7 +315,7 @@ export default function Stream({
 
       const { representations } = adaptation;
       const representation$ =
-        abrManager.get$(bufferType, clock$, representations)
+        abrManager.get$(bufferType, abrClock$, representations)
           .do(representation => currentRepresentation = representation);
 
       const sourceBuffer = createSourceBuffer(
@@ -387,16 +388,30 @@ export default function Stream({
    * @param {Object} manifest
    * @returns {Observable}
    */
-  function createLoadedObservable(manifest) {
+  function createVideoEventsObservables(manifest, timings) {
+    const startTime = getInitialTime(manifest, startAt, timeFragment);
+
+    /**
+     * Time offset is an offset to add to the timing's current time to have
+     * the "real" position.
+     * For now, this is seen when the video has not yet seeked to its initial
+     * position, the currentTime will most probably be 0 where the effective
+     * starting position will be _startTime_.
+     * Thus we initially set a timeOffset equal to startTime.
+     * TODO That look ugly, find better solution?
+     * @type {Number}
+     */
+    let timeOffset = startTime;
+
     const canSeek$ = canSeek(videoElement)
       .do(() => {
-        const startTime = getInitialTime(manifest, startAt, timeFragment);
         log.info("set initial time", startTime);
 
         // reset playbackRate to 1 in case we were at 0 (from a stalled
         // retry for instance)
         videoElement.playbackRate = 1;
         videoElement.currentTime = startTime;
+        timeOffset = 0;
       });
 
     const canPlay$ = canPlay(videoElement)
@@ -408,9 +423,16 @@ export default function Stream({
         autoPlay = true;
       });
 
-    return Observable.combineLatest(canSeek$, canPlay$)
-      .take(1)
-      .mapTo({ type: "loaded", value: true });
+    return {
+      clock$: timings
+        .map(timing =>
+          objectAssign({ timeOffset }, timing)
+        ),
+
+      loaded$: Observable.combineLatest(canSeek$, canPlay$)
+        .take(1)
+        .mapTo({ type: "loaded", value: true }),
+    };
   }
 
   /**
@@ -555,6 +577,9 @@ export default function Stream({
       manifest, timings$, fragEndTimeIsFinite, timeFragment
     );
 
+    const { loaded$, clock$ } =
+      createVideoEventsObservables(manifest, _timings);
+
     const abrManager = new ABRManager(
       requestsInfos$,
       network$, // emit network metrics such as the observed bandwidth
@@ -583,7 +608,7 @@ export default function Stream({
       }
 
       return createBuffer(
-        mediaSource, type, codec, _timings, seekings,
+        mediaSource, type, codec, clock$, seekings,
         manifest, adaptations$[type], abrManager,
       );
     });
@@ -606,11 +631,10 @@ export default function Stream({
     const stalled = createStalledObservable(_timings, {
       changePlaybackRate: withMediaSource,
     });
-    const canPlay = createLoadedObservable(manifest);
     const mediaError = createMediaErrorStream(videoElement);
 
     return Observable.merge(
-      manifest$, canPlay, stalled, emeHandler, buffers$, mediaError
+      manifest$, loaded$, stalled, emeHandler, buffers$, mediaError
     ).finally(() => abrManager.dispose());
   }
 
@@ -621,6 +645,6 @@ export default function Stream({
     customBuffers,
     nativeBuffers
   )
-    .mergeMap(createAllStream)
+    .mergeMap(startStream)
     .takeUntil(endOfPlay);
 }

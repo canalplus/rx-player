@@ -183,7 +183,7 @@ function Buffer({
       return initSegment ? [initSegment] : [];
     }
 
-    const timestamp = timing.ts;
+    const timestamp = timing.ts + timing.timeOffset;
 
     // wantedBufferSize calculates the size of the buffer we want to ensure,
     // taking into account the min between: the set max buffer size, the
