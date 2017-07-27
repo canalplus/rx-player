@@ -30,8 +30,12 @@ import {
   exitFullscreen,
   requestFullscreen,
   isFullscreen,
-  onFullscreenChange,
 } from "../../compat";
+import {
+  fullscreenChange as fullscreenChange$,
+  inBackground as inBackground$,
+  videoWidth as videoWidth$,
+} from "../../compat/events.js";
 
 import {
   createTimingsSampler,
@@ -46,7 +50,6 @@ import {
   ErrorCodes,
 } from "../../errors";
 
-import DeviceEvents from "../../compat/device-events.js";
 import { BufferedRanges } from "../ranges";
 
 import Stream from "../stream/index.js";
@@ -154,7 +157,7 @@ class Player extends EventEmitter {
     this.version = /*PLAYER_VERSION*/"2.3.2";
     this.videoElement = videoElement;
 
-    this._priv.fullScreenSubscription = onFullscreenChange(videoElement)
+    this._priv.fullScreenSubscription = fullscreenChange$(videoElement)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
     this._priv.playing$ = new BehaviorSubject(); // playing state change.
@@ -290,19 +293,17 @@ class Player extends EventEmitter {
     const withMediaSource = !transport.directFile;
     const timings$ = createTimingsSampler(videoElement, { withMediaSource });
 
-    const { videoWidth, inBackground } = DeviceEvents(videoElement);
-
     const adaptiveOptions = {
       initialBitrates: this._priv.lastBitrates,
       manualBitrates: this._priv.manualBitrates,
       maxAutoBitrates: this._priv.maxAutoBitrates,
       throttle: this._priv.throttleWhenHidden === false ? void 0 : {
-        video: inBackground
+        video: inBackground$()
           .map(isBg => isBg ? 0 : Infinity)
           .takeUntil(clearLoaded$),
       },
       limitWidth: this._priv.limitVideoWidth === false ? void 0 : {
-        video: videoWidth
+        video: videoWidth$(videoElement)
           .takeUntil(clearLoaded$),
       },
     };

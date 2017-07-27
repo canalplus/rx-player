@@ -43,11 +43,11 @@ import InitializationSegmentCache
   from "../../utils/initialization_segment_cache.js";
 
 import {
-  sourceOpen,
+  isPlaybackStuck,
   canPlay,
   canSeek,
-  isPlaybackStuck,
 } from "../../compat";
+import { sourceOpen } from "../../compat/events.js";
 import { Buffer, EmptyBuffer } from "../buffer";
 import { createEME, onEncrypted } from "../eme";
 import {

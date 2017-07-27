@@ -31,22 +31,21 @@ import {
   KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
-  emeEvents,
   shouldRenewMediaKeys,
 } from "../../compat";
+
+import {
+  onEncrypted,
+  onKeyMessage,
+  onKeyError,
+  onKeyStatusesChange,
+} from "../../compat/events.js";
 
 import {
   ErrorTypes,
   ErrorCodes,
   EncryptedMediaError,
 } from "../../errors";
-
-const {
-  onEncrypted,
-  onKeyMessage,
-  onKeyError,
-  onKeyStatusesChange,
-} = emeEvents;
 
 const empty = EmptyObservable.create;
 const defer = DeferObservable.create;
