@@ -14,6 +14,26 @@
  * limitations under the License.
  */
 
+/**
+ * TODO The BufferedRanges class exported here seems to be used for two
+ * different things:
+ *   1. Wrap the buffered browser's API to add sweet methods.
+ *   2. Keep an inventory of downloaded segments, with the bitrate.
+ *
+ * However, they are pretty different:
+ *   - The buffered API does not give any indice about the bitrate/quality.
+ *     Only about the temporality. The inventory does.
+ *
+ *   - The buffered API is the closest we have to the "real" pushed media
+ *     data in terms of temporal correctness.
+ *     The inventory is really more about "what was downloaded from the CDN?".
+ *
+ * We should probably have two different classes to handle those two, and think
+ * about a better interoperability between the two (for example when taking into
+ * account garbage-collected segments in the inventory) which consider the
+ * strength and weaknesses of both.
+ */
+
 import assert from "../utils/assert";
 
 // Factor for rounding errors

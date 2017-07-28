@@ -14,6 +14,23 @@
  * limitations under the License.
  */
 
+/**
+ * TODO That file here should be progressively removed:
+ *   - the net directory contains transport utils which include manifest
+ *     parsers.
+ *
+ *   - the manifest directory defines a common class for manifest and sub-parts
+ *     of a manifest.
+ *
+ * The best may be to have what is returned by net directly fed to the
+ * instanciation of the manifest class.
+ *
+ * Due to that, some parts should be moved to net/, other to manifest/.
+ *
+ * Kept for now, as it just werks, but this might become a problem for
+ * maintability and future evolutions.
+ */
+
 import arrayFind from "array-find";
 import arrayIncludes from "../utils/array-includes.js";
 
