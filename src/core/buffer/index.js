@@ -83,16 +83,15 @@ function Buffer({
    * Buffer garbage collector algorithm. Tries to free up some part of
    * the ranges that are distant from the current playing time.
    * See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
-   * @param {Object} timing
-   * @param {Number} timing.ts - current timestamp
+   * @param {Number} currentTime
    * @param {BufferedRanges} timing.buffered - current buffered ranges
    * @param {Number} gcGap - delta gap from current timestamp from which we
    * should consider cleaning up.
    * @returns {Array.<Range>} - Ranges selected for clean up
    */
-  function selectGCedRanges(ts, buffered, gcGap) {
-    const innerRange  = buffered.getRange(ts);
-    const outerRanges = buffered.getOuterRanges(ts);
+  function selectGCedRanges(currentTime, buffered, gcGap) {
+    const innerRange  = buffered.getRange(currentTime);
+    const outerRanges = buffered.getOuterRanges(currentTime);
 
     const cleanedupRanges = [];
 
@@ -101,10 +100,10 @@ function Buffer({
     // respect the gcGap? FIXME?
     for (let i = 0; i < outerRanges.length; i++) {
       const outerRange = outerRanges[i];
-      if (ts - gcGap < outerRange.end) {
+      if (currentTime - gcGap < outerRange.end) {
         cleanedupRanges.push(outerRange);
       }
-      else if (ts + gcGap > outerRange.start) {
+      else if (currentTime + gcGap > outerRange.start) {
         cleanedupRanges.push(outerRange);
       }
     }
@@ -112,16 +111,16 @@ function Buffer({
     // try to clean up some space in the current range
     if (innerRange) {
       log.debug("buffer: gc removing part of inner range", cleanedupRanges);
-      if (ts - gcGap > innerRange.start) {
+      if (currentTime - gcGap > innerRange.start) {
         cleanedupRanges.push({
           start: innerRange.start,
-          end: ts - gcGap,
+          end: currentTime - gcGap,
         });
       }
 
-      if (ts + gcGap < innerRange.end) {
+      if (currentTime + gcGap < innerRange.end) {
         cleanedupRanges.push({
-          start: ts + gcGap,
+          start: currentTime + gcGap,
           end: innerRange.end,
         });
       }
@@ -139,11 +138,13 @@ function Buffer({
   function bufferGarbageCollector() {
     log.warn("buffer: running garbage collector");
     return timings$.take(1).mergeMap((timing) => {
-      let cleanedupRanges = selectGCedRanges(timing.ts, timing.buffered, GC_GAP_CALM);
+      let cleanedupRanges =
+        selectGCedRanges(timing.currentTime, timing.buffered, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean
       if (cleanedupRanges.length === 0) {
-        cleanedupRanges = selectGCedRanges(timing.ts, timing.buffered, GC_GAP_BEEFY);
+        cleanedupRanges =
+          selectGCedRanges(timing.currentTime, timing.buffered, GC_GAP_BEEFY);
       }
 
       log.debug("buffer: gc cleaning", cleanedupRanges);
@@ -167,11 +168,13 @@ function Buffer({
    * @throws IndexError - Throws if the current timestamp is considered out
    * of bounds.
    */
-  function getSegmentsListToInject(representation,
-                                   buffered,
-                                   timing,
-                                   bufferGoal,
-                                   withInitSegment) {
+  function getSegmentsListToInject(
+    representation,
+    buffered,
+    timing,
+    bufferGoal,
+    withInitSegment
+  ) {
     let initSegment = null;
 
     if (withInitSegment) {
@@ -183,14 +186,16 @@ function Buffer({
       return initSegment ? [initSegment] : [];
     }
 
-    const timestamp = timing.ts + timing.timeOffset;
+    const timestamp = timing.currentTime + timing.timeOffset;
 
     // wantedBufferSize calculates the size of the buffer we want to ensure,
     // taking into account the min between: the set max buffer size, the
     // duration and the live gap.
     const endDiff = (timing.duration || Infinity) - timestamp;
-    const wantedBufferSize = Math.max(0,
-      Math.min(bufferGoal, timing.liveGap, endDiff));
+    const wantedBufferSize = Math.max(0, timing.liveGap == null ?
+      Math.min(bufferGoal, endDiff) :
+      Math.min(bufferGoal, timing.liveGap, endDiff)
+    );
 
     // the ts padding is the time offset that we want to apply to our current
     // timestamp in order to calculate the starting point of the list of
@@ -356,7 +361,8 @@ function Buffer({
       // discontinuity announced in the segment index.
       if (timing.stalled) {
         if (isLive) {
-          const discontinuity = representation.index.checkDiscontinuity(timing.ts);
+          const discontinuity =
+            representation.index.checkDiscontinuity(timing.currentTime);
           if (discontinuity > 0) {
             messageSubject.next({
               type: "index-discontinuity",
@@ -370,11 +376,12 @@ function Buffer({
       try {
         // filter out already loaded and already queued segments
         const withInitSegment = (injectCount === 0);
-        injectedSegments = getSegmentsListToInject(representation,
-                                                   nativeBufferedRanges,
-                                                   timing,
-                                                   bufferGoal,
-                                                   withInitSegment);
+        injectedSegments = getSegmentsListToInject(
+          representation,
+          nativeBufferedRanges,
+          timing,
+          bufferGoal,
+          withInitSegment);
 
         injectedSegments = injectedSegments.filter(filterAlreadyLoaded);
       }
@@ -511,7 +518,7 @@ function Buffer({
       return Observable.merge(
         getNeededSegments(timing, bufferGoal, i)
           .concatMap(loadNeededSegments),
-        cleanBuffer(timing.ts, maxBufferBehind, maxBufferAhead)
+        cleanBuffer(timing.currentTime, maxBufferBehind, maxBufferAhead)
       );
     };
 

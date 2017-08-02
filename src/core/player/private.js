@@ -24,7 +24,6 @@ import { parseTimeFragment } from "./time-fragment";
 import Transports from "../../net";
 
 import {
-  getEmptyTimings,
   toWallClockTime,
   getMaximumBufferPosition,
   getMaximumSecureBufferPosition,
@@ -302,42 +301,39 @@ export default (self) => ({
 
   /**
    * Called each time a new timing object is emitted.
-   * @param {Object} t
+   * @param {Object} timing
    */
-  triggerTimeChange(t) {
-    if (!self._priv.manifest || !t) {
-      self.trigger("currentTimeChange", getEmptyTimings());
-    } else {
-      if (self._priv.manifest.isLive && t.ts > 0) {
-        t.wallClockTime = toWallClockTime(t.ts, self._priv.manifest);
-        t.liveGap = getMaximumBufferPosition(self._priv.manifest) - t.ts;
-      }
-      const positionData = {
-        position: t.ts,
-        duration: t.duration,
-        bufferGap: isFinite(t.gap) ? t.gap : 0, // TODO fix higher up
-        liveGap: t.liveGap,
-        playbackRate: t.playback,
-        wallClockTime: t.wallClockTime && t.wallClockTime.getTime() / 1000,
-
-        // TODO This property should be removed in a next version (after
-        // multiple tests) to only have liveGap
-        // We should be the closest to the live edge when it comes to buffering.
-        // TODO normally, we should also integrate timeFragment.end into this
-        // However. It would be very ugly to do so and keeping compatibility
-        // hard.
-        // As this is a new API, and as timeFragment is deprecated, I let it
-        // pass (do not hit me!)
-        maximumBufferTime: getMaximumSecureBufferPosition(self._priv.manifest),
-      };
-      self.trigger("positionUpdate", positionData);
-
-      // TODO @deprecate
-      // compatibilty with a previous API where the liveGap was about the
-      // last buffer-isable position
-      t.liveGap = positionData.maximumBufferTime - t.ts;
-      self.trigger("currentTimeChange", t);
+  triggerTimeChange(timing) {
+    if (!self._priv.manifest || !timing) {
+      return;
     }
+
+    const positionData = {
+      position: timing.currentTime,
+      duration: timing.duration,
+      bufferGap: isFinite(timing.bufferGap) ? timing.bufferGap : 0, // TODO fix higher up
+      playbackRate: timing.playbackRate,
+
+      // TODO This property should be removed in a next version (after
+      // multiple tests) to only have liveGap
+      // We should be the closest to the live edge when it comes to buffering.
+      // TODO normally, we should also integrate timeFragment.end into this
+      // However. It would be very ugly to do so and keeping compatibility
+      // hard.
+      // As this is a new API, and as timeFragment is deprecated, I let it
+      // pass (do not hit me!)
+      maximumBufferTime: getMaximumSecureBufferPosition(self._priv.manifest),
+    };
+
+    if (self._priv.manifest.isLive && timing.currentTime > 0) {
+      positionData.wallClockTime =
+        toWallClockTime(timing.currentTime, self._priv.manifest)
+          .getTime() / 1000;
+      positionData.liveGap =
+        getMaximumBufferPosition(self._priv.manifest) - timing.currentTime;
+    }
+
+    self.trigger("positionUpdate", positionData);
   },
 
   /**

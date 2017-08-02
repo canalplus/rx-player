@@ -17,6 +17,7 @@
 
 ### Removed
 
+  - position: the currentTimeChange event has been removed in favor of positionUpdate
   - adaptive: getMetrics has been removed
   - adaptive: getAverageBitrates has been removed
   - adaptive: getVideoMaxBitrate has been removed

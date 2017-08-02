@@ -22,14 +22,10 @@ import { BufferedRanges } from "./ranges";
 const {
   SAMPLING_INTERVAL_MEDIASOURCE,
   SAMPLING_INTERVAL_NO_MEDIASOURCE,
+  RESUME_AFTER_SEEKING_GAP,
+  RESUME_AFTER_BUFFERING_GAP,
+  STALL_GAP,
 } = config;
-
-// stall gap in seconds
-const STALL_GAP = 0.5;
-const RESUME_GAP = 5;
-
-// seek gap in seconds
-const SEEK_GAP = 2;
 
 /**
  * Amount of time substracted from the live edge to prevent buffering ahead
@@ -54,74 +50,37 @@ const SCANNED_VIDEO_EVENTS = [
   "loadedmetadata",
 ];
 
-// waiting time differs between a "seeking" stall and
-// a buffering stall
-function resumeGap(stalled) {
-  return (stalled.name == "seeking")
-    ? STALL_GAP
-    : RESUME_GAP;
-}
+/**
+ * Returns the amount of time in seconds the buffer should have ahead of the
+ * current position before resuming playback. Based on the infos of the stall.
+ * Waiting time differs between a "seeking" stall and a buffering stall.
+ * @returns {Boolean}
+ */
+const getResumeGap = stalled =>
+  stalled.state == "seeking"
+    ? RESUME_AFTER_SEEKING_GAP
+    : RESUME_AFTER_BUFFERING_GAP;
 
-function isEnding(gap, range, duration) {
-  if (range) {
-    return (duration - (gap + range.end)) <= STALL_GAP;
-  } else {
-    return false;
-  }
-}
+/**
+ * TODO I just don't get it for this one.
+ * gap + range.end ??? HELP
+ * @param {Number} gap
+ * @param {Object} range
+ * @param {Number} duration
+ * @returns {Boolean}
+ */
+const isEnding = (gap, range, duration) =>
+  !!range && (duration - (gap + range.end)) <= STALL_GAP;
 
-class Timings {
-  constructor(ts,
-              buffered,
-              duration,
-              gap,
-              name,
-              playback,
-              range,
-              readyState,
-              stalled,
-              paused) {
-    this.ts = ts;
-    this.buffered = buffered;
-    this.duration = duration;
-    this.gap = gap;
-    this.name = name;
-    this.playback = playback;
-    this.range = range;
-    this.readyState = readyState;
-    this.stalled = stalled;
-    this.paused = paused;
-  }
-
-  clone() {
-    return new Timings(this.ts,
-                       this.buffered,
-                       this.duration,
-                       this.gap,
-                       this.name,
-                       this.playback,
-                       this.range,
-                       this.readyState,
-                       this.stalled,
-                       this.paused);
-  }
-}
-
-function getEmptyTimings() {
-  return new Timings(
-    0, // ts
-    new BufferedRanges(), // buffered
-    0, // duration
-    Infinity, // gap (TODO Why Infinity?)
-    "timeupdate", // name
-    1, // playback
-    null, // range
-    0, // readyState
-    null, // stalled
-    null  // paused
-  );
-}
-
+/**
+ * Generate a basic timings object from the video element and the eventName
+ * which triggered the request.
+ * TODO stop doing that class move name outside
+ * rename getTimingsBase?
+ * @param {HTMLMediaElement} video
+ * @param {string} name
+ * @returns {Object}
+ */
 function getTimings(video, name) {
   const {
     currentTime,
@@ -133,41 +92,52 @@ function getTimings(video, name) {
   } = video;
   const bufferedRanges = new BufferedRanges(buffered);
 
-  return new Timings(
-    currentTime, // ts
-    bufferedRanges, // buffered
+  return {
+    currentTime,
+    buffered: bufferedRanges, // TODO rename to bufferedRanges
     duration,
-    bufferedRanges.getGap(currentTime), // gap
-    name,
+    bufferGap: bufferedRanges.getGap(currentTime),
+    state: name,
     playbackRate,
-    bufferedRanges.getRange(currentTime),
+    currentRange: bufferedRanges.getRange(currentTime),
     readyState,
-    null, // stalled
-    paused
-  );
+    paused,
+  };
 }
 
-function scanTimings(prevTimings, currentTimings, withMediaSource) {
+/**
+ * Infer stalled status of the video based on:
+ *   - the return of the function getTimings
+ *   - the previous timings object.
+ *
+ * @param {Object} prevTimings - Previous timings object. See function to know
+ * the different properties needed.
+ * @param {Object} currentTimings - Current timings object. This does not need
+ * to have every single infos, see function to know which properties are needed.
+ * @param {Boolean} withMediaSource - False if the directfile API is used.
+ * @returns {Object|null}
+ */
+const getStalledStatus = (prevTimings, currentTimings, withMediaSource) => {
   const {
-    name: currentName,
-    ts: currentTs,
-    gap: gap,
-    range,
+    state: currentName,
+    currentTime: currentTs,
+    bufferGap: gap,
+    currentRange: range,
     duration,
     paused,
     readyState,
-    playback,
+    playbackRate: playback,
   } = currentTimings;
 
   const {
     stalled: prevStalled,
-    name: prevName,
-    ts: prevTs,
+    state: prevName,
+    currentTime: prevTs,
   } = prevTimings;
 
   const ending = isEnding(gap, range, duration);
 
-  const mayStall = (
+  const canStall = (
     readyState >= 1 &&
     currentName != "loadedmetadata" &&
     !prevStalled &&
@@ -176,50 +146,47 @@ function scanTimings(prevTimings, currentTimings, withMediaSource) {
 
   let shouldStall, shouldUnstall;
 
-  // when using a direct file, the video will stall and unstall on its
-  // own, so we only try to detect when the video timestamp has not changed
-  // between two consecutive timeupdates
   if (withMediaSource) {
     shouldStall = (
-      mayStall &&
+      canStall &&
       (gap <= STALL_GAP || gap === Infinity || readyState === 1)
     );
 
     shouldUnstall = (
       prevStalled &&
       readyState > 1 &&
-      gap < Infinity && (gap > resumeGap(prevStalled) || ending)
+      gap < Infinity && (gap > getResumeGap(prevStalled) || ending)
     );
   }
+
+  // when using a direct file, the video will stall and unstall on its
+  // own, so we only try to detect when the video timestamp has not changed
+  // between two consecutive timeupdates
   else {
     shouldStall = (
-      mayStall &&
-      ( !paused && currentName == "timeupdate" && prevName == "timeupdate" && currentTs === prevTs ||
-        currentName == "seeking" && gap === Infinity )
+      canStall &&
+      ( !paused && currentName == "timeupdate" && prevName == "timeupdate" &&
+        currentTs === prevTs || currentName == "seeking" && gap === Infinity )
     );
 
     shouldUnstall = (
       prevStalled &&
       ( currentName != "seeking" && currentTs !== prevTs ||
         currentName == "canplay" ||
-        gap < Infinity && (gap > resumeGap(prevStalled) || ending))
+        gap < Infinity && (gap > getResumeGap(prevStalled) || ending))
     );
   }
 
-  let stalled;
   if (shouldStall) {
-    stalled = { name: currentName, playback };
+    return { state: currentName, playbackRate: playback };
   }
   else if (shouldUnstall) {
-    stalled = null;
+    return null;
   }
   else {
-    stalled = prevStalled;
+    return prevStalled;
   }
-
-  currentTimings.stalled = stalled;
-  return currentTimings;
-}
+};
 
 /**
  * Timings observable.
@@ -256,51 +223,37 @@ function createTimingsSampler(video, { withMediaSource }) {
     function emitSample(evt) {
       const timingEventType = evt && evt.type || "timeupdate";
       const currentTimings = getTimings(video, timingEventType);
-      prevTimings = scanTimings(prevTimings, currentTimings, withMediaSource);
+      currentTimings.stalled =
+        getStalledStatus(prevTimings, currentTimings, withMediaSource);
+      prevTimings = currentTimings;
       obs.next(prevTimings);
     }
 
-    const samplerTimeInterval = withMediaSource
+    const interval = withMediaSource
       ? SAMPLING_INTERVAL_MEDIASOURCE
       : SAMPLING_INTERVAL_NO_MEDIASOURCE;
 
-    const timeUpdateHandler = setInterval(emitSample, samplerTimeInterval);
-    SCANNED_VIDEO_EVENTS.forEach((eventName) => video.addEventListener(eventName, emitSample));
+    const intervalID = setInterval(emitSample, interval);
+    SCANNED_VIDEO_EVENTS.forEach((eventName) =>
+      video.addEventListener(eventName, emitSample));
 
     obs.next(prevTimings);
 
     return () => {
-      clearInterval(timeUpdateHandler);
-      SCANNED_VIDEO_EVENTS.forEach((eventName) => video.removeEventListener(eventName, emitSample));
+      clearInterval(intervalID);
+      SCANNED_VIDEO_EVENTS.forEach((eventName) =>
+        video.removeEventListener(eventName, emitSample));
     };
   })
-    .multicast(() => new BehaviorSubject({ name: "init", stalled: null }))
-    .refCount();
+
+    // XXX timings refacto WHAT? why this initial sh*t? Test it
+    .multicast(() => new BehaviorSubject({ state: "init", stalled: null }))
+    .refCount()
+    .do((e) => console.log("!!!!!!!TIMINGS", e));
 }
 
-/**
- * Observable emitting each time the player is in a true seeking state.
- * That is, the player is seeking and the buffer gap is not big enough to
- * guarantee uninterrupted playback.
- * @param {Observable} timingsSampling - the timings observable emitting every
- * seeking events.
- * @returns {Observable}
- */
-function seekingsSampler(timingsSampling) {
-  return timingsSampling
-    .filter((t) => (
-      t.name == "seeking" &&
-      ( t.gap === Infinity ||
-        t.gap < -SEEK_GAP )
-    ))
-    // skip the first seeking event generated by the set of the
-    // initial seeking time in the video
-    .skip(1)
-    .startWith(true);
-}
-
-function toWallClockTime(ts, manifest) {
-  return new Date((ts + manifest.availabilityStartTime) * 1000);
+function toWallClockTime(position, manifest) {
+  return new Date((position + manifest.availabilityStartTime) * 1000);
 }
 
 /**
@@ -401,10 +354,8 @@ function getBufferLimits(manifest) {
 }
 
 export {
-  getEmptyTimings,
   getTimings,
   createTimingsSampler,
-  seekingsSampler,
   toWallClockTime,
   fromWallClockTime,
   getMinimumBufferPosition,

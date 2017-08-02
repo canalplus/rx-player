@@ -430,7 +430,7 @@ class BufferedRanges {
   /**
    * Returns the time-gap between the buffered end limit and the given
    * timestamp.
-   * Infinity if not buffered.
+   * Infinity if no range contains the current time.
    * @param {Number} time
    * @returns {Number}
    */

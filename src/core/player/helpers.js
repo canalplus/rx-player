@@ -29,7 +29,7 @@ import { PLAYER_STATES } from "./constants.js";
  */
 function inferPlayerState(isPlaying, stalled) {
   if (stalled) {
-    return (stalled.name == "seeking")
+    return (stalled.state == "seeking")
       ? PLAYER_STATES.SEEKING
       : PLAYER_STATES.BUFFERING;
   }

@@ -164,9 +164,10 @@ function isPlaybackStuck(timing) {
   const FREEZE_THRESHOLD = 10; // video freeze threshold in seconds
   return (
     isFirefox &&
-    timing.name === "timeupdate" &&
+    timing.stalled &&
+    timing.state === "timeupdate" &&
     timing.range &&
-    timing.range.end - timing.ts > FREEZE_THRESHOLD
+    timing.range.end - timing.currentTime > FREEZE_THRESHOLD
   );
 }
 

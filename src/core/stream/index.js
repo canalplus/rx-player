@@ -203,9 +203,9 @@ export default function Stream({
    * @type {Observable}
    */
   const endOfPlay = timings$
-    .filter(({ ts, duration }) => (
+    .filter(({ currentTime, duration }) => (
       duration > 0 &&
-      Math.min(duration, timeFragment.end) - ts < END_OF_PLAY
+      Math.min(duration, timeFragment.end) - currentTime < END_OF_PLAY
     ));
 
   /**
@@ -303,9 +303,10 @@ export default function Stream({
             }
           }
 
+          // XXX timings refacto -> time offset?
           return {
-            position: timing.ts,
-            bufferGap: timing.gap,
+            position: timing.currentTime,
+            bufferGap: timing.bufferGap,
             bitrate,
             lastIndexPosition,
             isLive: manifest.isLive,
@@ -475,16 +476,16 @@ export default function Stream({
           isEqual = true;
         } else if (!wasStalled || !isStalled) {
           isEqual = false;
-        } else {
-          isEqual = (wasStalled.name == isStalled.name);
+        } else { // both are stalled
+          isEqual = (wasStalled.state == isStalled.state);
         }
 
         if (!isEqual && changePlaybackRate) {
-          if (wasStalled) {
-            log.info("resume playback", timing.ts, timing.name);
-            videoElement.playbackRate = wasStalled.playback;
-          } else {
-            log.info("stop playback", timing.ts, timing.name);
+          if (wasStalled) { // is not stalled anymore
+            log.info("resume playback", timing.currentTime, timing.state);
+            videoElement.playbackRate = wasStalled.playbackRate;
+          } else { // is stalled
+            log.info("stop playback", timing.currentTime, timing.state);
             videoElement.playbackRate = 0;
           }
         }
@@ -494,15 +495,15 @@ export default function Stream({
         // implementation that might drop an injected segment, or in
         // case of small discontinuity in the stream.
         if (isStalled) {
-          const nextRangeGap = timing.buffered.getNextRangeGap(timing.ts);
+          const nextRangeGap = timing.buffered.getNextRangeGap(timing.currentTime);
 
           if (isPlaybackStuck(timing)) {
-            videoElement.currentTime = timing.ts;
-            log.warn("after freeze seek", timing.ts, timing.range);
+            videoElement.currentTime = timing.currentTime;
+            log.warn("after freeze seek", timing.currentTime, timing.range);
           } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
-            const seekTo = (timing.ts + nextRangeGap + 1/60);
+            const seekTo = (timing.currentTime + nextRangeGap + 1/60);
             videoElement.currentTime = seekTo;
-            log.warn("discontinuity seek", timing.ts, nextRangeGap, seekTo);
+            log.warn("discontinuity seek", timing.currentTime, nextRangeGap, seekTo);
           }
         }
 

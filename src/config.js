@@ -89,6 +89,7 @@ export default {
    * on the current video. Allow to enforce specific optimizations when the
    * page is not shown.
    * @see DEFAULT_THROTTLE_WHEN_HIDDEN
+   * @type {Number}
    */
   INACTIVITY_DELAY: 60 * 1000,
 
@@ -96,12 +97,14 @@ export default {
    * If true, if the player is in a "hidden" state for a delay specified by the
    * INACTIVITY DELAY config property, we throttle automatically to the video
    * representation with the lowest bitrate.
+   * @type {Boolean}
    */
   DEFAULT_THROTTLE_WHEN_HIDDEN: false,
 
   /**
    * If true, the video representations you can switch to in adaptive mode
    * are limited by the video element's width.
+   * @type {Boolean}
    */
   DEFAULT_LIMIT_VIDEO_WIDTH: false,
 
@@ -111,6 +114,7 @@ export default {
    *
    * TODO this is never used, as every transport techno has a default
    * suggested presentation delay.
+   * @type {Number}
    */
   DEFAULT_LIVE_GAP: 15,
 
@@ -120,6 +124,7 @@ export default {
    *
    * TODO this should not be in a manifest as it does not reflect what is
    * given server-side.
+   * @type {Object}
    */
   DEFAULT_SUGGESTED_PRESENTATION_DELAY: {
     SMOOTH: 20,
@@ -137,6 +142,7 @@ export default {
    * automatically stop.
    * It happens often that the video gets stuck 100 to 300 ms before the end,
    * especially on IE11 and Edge
+   * @type {Number}
    */
   END_OF_PLAY: 0.5,
 
@@ -144,6 +150,7 @@ export default {
    * Ratio used to know if an already loaded segment should be re-buffered.
    * We re-load the given segment if the current one times that ratio is
    * inferior to the new one.
+   * @type {Number}
    */
   BITRATE_REBUFFERING_RATIO: 1.5,
 
@@ -153,6 +160,7 @@ export default {
    *
    * This error can arise when the browser's buffer is considered full.
    * In this case, the player goes into manual garbage collection (GC) mode.
+   * @type {Object}
    */
   BUFFER_GC_GAPS: {
     /**
@@ -181,8 +189,29 @@ export default {
    */
   DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: 4,
 
-  // time changes interval in milliseconds
+  /**
+   * Minimum interval at which timeupdate events will be "constructed". This
+   * variable is for the "regular" mediasource strategy (that is, not for the
+   * directfile API.
+   *
+   * Those events are the base of various important mechanisms in the player:
+   *   - set the clock for the buffer.
+   *   - set the clock for the ABR strategy.
+   *   - used to trigger positionUpdate events.
+   *
+   * This common logic is for performance reasons, as we call multiple browser's
+   * APIs which are useful for most of these.
+   *
+   * Keep in mind this is the minimum interval. This logic will also be
+   * triggered when various events of the media element are received.
+   * @type {Number}
+   */
   SAMPLING_INTERVAL_MEDIASOURCE: 1000,
+
+  /**
+   * Same than SAMPLING_INTERVAL_MEDIASOURCE but for the directfile API.
+   * @type {Number}
+   */
   SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
 
   /**
@@ -217,4 +246,28 @@ export default {
    * @type {Number}
    */
   ABR_STARVATION_GAP: 5,
+
+  /**
+   * Number of seconds in the buffer after which playback will resume when
+   * seeking on an unbuffered part of the stream.
+   * @type {Number}
+   */
+  RESUME_AFTER_SEEKING_GAP: 0.5,
+
+  /**
+   * Number of seconds in the buffer after which playback will resume after the
+   * player went through a buffering step.
+   * @type {Number}
+   */
+  RESUME_AFTER_BUFFERING_GAP: 5,
+
+  /**
+   * Maximum number of seconds in the buffer based on which a "stalling"
+   * strategy will be considered:
+   * The player will pause playback to get enough time building a sufficient
+   * buffer. This mostly happen when seeking in an unbuffered part or when
+   * buffering.
+   * @type {Number}
+   */
+  STALL_GAP: 0.5,
 };

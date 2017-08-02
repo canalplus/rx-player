@@ -347,10 +347,7 @@ class Player extends EventEmitter {
     const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
 
     let streamDisposable = void 0;
-    let unsubscribed = false;
-
     clearLoaded$.take(1).subscribe(() => {
-      unsubscribed = true;
       if (streamDisposable) {
         streamDisposable.unsubscribe();
       }
@@ -387,12 +384,6 @@ class Player extends EventEmitter {
 
     streamDisposable = stream.connect();
 
-    // ugly but needed in case the user stops the video on one of the events
-    // declared here
-    // TODO delete empty timings?
-    if (!unsubscribed) {
-      this._priv.triggerTimeChange();
-    }
     return loaded;
   }
 
