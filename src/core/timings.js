@@ -75,8 +75,6 @@ const isEnding = (gap, range, duration) =>
 /**
  * Generate a basic timings object from the video element and the eventName
  * which triggered the request.
- * TODO stop doing that class move name outside
- * rename getTimingsBase?
  * @param {HTMLMediaElement} video
  * @param {string} name
  * @returns {Object}
@@ -213,7 +211,8 @@ const getStalledStatus = (prevTimings, currentTimings, withMediaSource) => {
  */
 function createTimingsSampler(video, { withMediaSource }) {
   return Observable.create((obs) => {
-    let prevTimings = getTimings(video, "init");
+    let lastTimings = getTimings(video, "init");
+    lastTimings.stalled = null;
 
     /**
      * Emit timings sample.
@@ -224,9 +223,9 @@ function createTimingsSampler(video, { withMediaSource }) {
       const timingEventType = evt && evt.type || "timeupdate";
       const currentTimings = getTimings(video, timingEventType);
       currentTimings.stalled =
-        getStalledStatus(prevTimings, currentTimings, withMediaSource);
-      prevTimings = currentTimings;
-      obs.next(prevTimings);
+        getStalledStatus(lastTimings, currentTimings, withMediaSource);
+      lastTimings = currentTimings;
+      obs.next(lastTimings);
     }
 
     const interval = withMediaSource
@@ -237,7 +236,7 @@ function createTimingsSampler(video, { withMediaSource }) {
     SCANNED_VIDEO_EVENTS.forEach((eventName) =>
       video.addEventListener(eventName, emitSample));
 
-    obs.next(prevTimings);
+    obs.next(lastTimings);
 
     return () => {
       clearInterval(intervalID);
@@ -245,11 +244,8 @@ function createTimingsSampler(video, { withMediaSource }) {
         video.removeEventListener(eventName, emitSample));
     };
   })
-
-    // XXX timings refacto WHAT? why this initial sh*t? Test it
-    .multicast(() => new BehaviorSubject({ state: "init", stalled: null }))
-    .refCount()
-    .do((e) => console.log("!!!!!!!TIMINGS", e));
+    .multicast(() => new BehaviorSubject({}))
+    .refCount();
 }
 
 function toWallClockTime(position, manifest) {

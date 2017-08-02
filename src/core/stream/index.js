@@ -96,6 +96,8 @@ const getPipelineOptions = bufferType => {
  *  - give adaptation control to the caller (e.g. to choose a language)
  *  - perform ABR Management
  *  - returns Observable emitting notifications about the stream lifecycle.
+ *
+ * TODO TOO MANY PARAMETERS something is wrong here.
  * @param {Object} args
  * @returns {Observable}
  */
@@ -273,7 +275,7 @@ export default function Stream({
           nativeBuffers,
           customBuffers
         );
-        return EmptyBuffer(bufferType)
+        return EmptyBuffer({ bufferType })
           .startWith({
             type: "adaptationChange",
             value: {
@@ -349,7 +351,7 @@ export default function Stream({
         sourceBuffer,
         downloader,
         switch$: switchRepresentation$,
-        timings$: timings,
+        clock$: timings,
         wantedBufferAhead: wantedBufferAhead$,
         maxBufferBehind: maxBufferBehind$,
         maxBufferAhead: maxBufferAhead$,

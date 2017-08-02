@@ -18,39 +18,77 @@ import { Subject } from "rxjs/Subject";
 
 const BUFFER_APPEND = "append";
 const BUFFER_REMOVE = "remove";
-const BUFFER_STREAM = "stream";
 
 /**
  * Append/Remove from sourceBuffer in a queue.
  * Wait for the previous buffer action to be finished (updateend event) to
  * perform the next in the queue.
- * @class BufferingQueue
+ * @class QueuedSourceBuffer
  */
-class BufferingQueue {
+export default class QueuedSourceBuffer {
+  /**
+   * @constructor
+   * @param {SourceBuffer} sourceBuffer
+   */
   constructor(sourceBuffer) {
     this.buffer = sourceBuffer;
     this.queue = [];
     this.flushing = null;
 
-    this._onUpdate = this.onUpdate.bind(this);
-    this._onError = this.onError.bind(this);
-    this._flush = this.flush.bind(this);
+    this.__onUpdate = this._onUpdate.bind(this);
+    this.__onError = this._onError.bind(this);
+    this.__flush = this._flush.bind(this);
 
-    this.buffer.addEventListener("update", this._onUpdate);
-    this.buffer.addEventListener("error", this._onError);
-    this.buffer.addEventListener("updateend", this._flush);
+    this.buffer.addEventListener("update", this.__onUpdate);
+    this.buffer.addEventListener("error", this.__onError);
+    this.buffer.addEventListener("updateend", this.__flush);
   }
 
+  /**
+   * Append media segment to the attached SourceBuffer, in a FIFO queue.
+   * @param {ArrayBuffer} buffer
+   * @returns {Observable}
+   */
+  appendBuffer(buffer) {
+    return this._queueAction(BUFFER_APPEND, buffer);
+  }
+
+  /**
+   * Remove data from the attached SourceBuffer, in a FIFO queue.
+   * @param {Object} range
+   * @param {Number} range.start - start position, in seconds
+   * @param {Number} range.end - end position, in seconds
+   * @returns {Observable}
+   */
+  removeBuffer({ start, end }) {
+    return this._queueAction(BUFFER_REMOVE, { start, end });
+  }
+
+  /**
+   * Returns the currently buffered data, in a TimeRanges object.
+   * @returns {TimeRanges}
+   */
+  getBuffered() {
+    return this.buffer.buffered;
+  }
+
+  /**
+   * Free up ressources used by this class.
+   */
   dispose() {
-    this.buffer.removeEventListener("update", this._onUpdate);
-    this.buffer.removeEventListener("error", this._onError);
-    this.buffer.removeEventListener("updateend", this._flush);
+    this.buffer.removeEventListener("update", this.__onUpdate);
+    this.buffer.removeEventListener("error", this.__onError);
+    this.buffer.removeEventListener("updateend", this.__flush);
     this.buffer = null;
     this.queue.length = 0;
     this.flushing = null;
   }
 
-  onUpdate(evt) {
+  /**
+   * @private
+   * @param {Event} evt
+   */
+  _onUpdate(evt) {
     if (this.flushing) {
       this.flushing.next(evt);
       this.flushing.complete();
@@ -58,7 +96,11 @@ class BufferingQueue {
     }
   }
 
-  onError(error) {
+  /**
+   * @private
+   * @param {Event} error
+   */
+  _onError(error) {
     if (this.flushing) {
       this.flushing.error(error);
       this.flushing = null;
@@ -68,35 +110,25 @@ class BufferingQueue {
   /**
    * Queue a new action.
    * Begin flushing if no action were previously in the queue.
+   * @private
    * @param {string} type
    * @param {*} args
    * @returns {Subject} - Can be used to follow the buffer action advancement.
    */
-  queueAction(type, args) {
+  _queueAction(type, args) {
     const subj = new Subject();
     const length = this.queue.unshift({ type, args, subj });
     if (length === 1) {
-      this.flush();
+      this._flush();
     }
     return subj;
   }
 
-  appendBuffer(buffer) {
-    return this.queueAction(BUFFER_APPEND, buffer);
-  }
-
-  removeBuffer({ start, end }) {
-    return this.queueAction(BUFFER_REMOVE, { start, end });
-  }
-
-  appendStream(stream) {
-    return this.queueAction(BUFFER_STREAM, stream);
-  }
-
   /**
    * Perform next queued action if one and none are pending.
+   * @private
    */
-  flush() {
+  _flush() {
     if (this.flushing ||
         this.queue.length === 0 ||
         this.buffer.updating) {
@@ -109,17 +141,11 @@ class BufferingQueue {
       switch(type) {
       case BUFFER_APPEND:
         this.buffer.appendBuffer(args); break;
-      case BUFFER_STREAM:
-        this.buffer.appendStream(args); break;
       case BUFFER_REMOVE:
         this.buffer.remove(args.start, args.end); break;
       }
     } catch(e) {
-      this.onError(e);
+      this._onError(e);
     }
   }
 }
-
-export {
-  BufferingQueue,
-};

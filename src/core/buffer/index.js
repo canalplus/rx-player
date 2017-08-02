@@ -17,14 +17,13 @@
 import objectAssign from "object-assign";
 import config from "../../config.js";
 import log from "../../utils/log";
-import { BufferingQueue } from "./buffering-queue";
+import QueuedSourceBuffer from "./queued-source-buffer.js";
 import { BufferedRanges } from "../ranges";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { combineLatest } from "rxjs/observable/combineLatest";
 import { merge } from "rxjs/observable/merge";
 import { EmptyObservable } from "rxjs/observable/EmptyObservable";
-import { FromObservable } from "rxjs/observable/FromObservable";
 import { TimerObservable } from "rxjs/observable/TimerObservable";
 
 import { SimpleSet } from "../../utils/collections";
@@ -35,13 +34,13 @@ import {
   IndexError,
 } from "../../errors";
 
+import launchGarbageCollector from "./gc.js";
+import cleanBuffer from "./cleanBuffer.js";
+
 const empty = EmptyObservable.create;
-const from = FromObservable.create;
 const timer = TimerObservable.create;
 
 const BITRATE_REBUFFERING_RATIO = config.BITRATE_REBUFFERING_RATIO;
-const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
-const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 
 /**
  * Manage a single buffer:
@@ -49,21 +48,21 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  *     seeking / as the adaptation chosen changes
  *   - add those to the sourceBuffer
  *   - clean up if too much segments have been loaded
+ *
+ * TODO too many parameters?
  * @returns {Observable}
  */
 function Buffer({
   sourceBuffer,
   downloader,
   switch$,
-
-  // TODO simplify and rename clock$?
-  timings$,      // Timings observable
-
-  // XXX Remove that from here
-  bufferType,   // Buffer type (audio, video, text, image)
+  clock$,
   wantedBufferAhead,
   maxBufferBehind,
   maxBufferAhead,
+
+  // XXX Remove that from here
+  bufferType,   // Buffer type (audio, video, text, image)
   isLive,
 }) {
 
@@ -77,82 +76,7 @@ function Buffer({
   const HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
 
   const ranges = new BufferedRanges();
-  const bufferingQueue = new BufferingQueue(sourceBuffer);
-
-  /**
-   * Buffer garbage collector algorithm. Tries to free up some part of
-   * the ranges that are distant from the current playing time.
-   * See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
-   * @param {Number} currentTime
-   * @param {BufferedRanges} timing.buffered - current buffered ranges
-   * @param {Number} gcGap - delta gap from current timestamp from which we
-   * should consider cleaning up.
-   * @returns {Array.<Range>} - Ranges selected for clean up
-   */
-  function selectGCedRanges(currentTime, buffered, gcGap) {
-    const innerRange  = buffered.getRange(currentTime);
-    const outerRanges = buffered.getOuterRanges(currentTime);
-
-    const cleanedupRanges = [];
-
-    // start by trying to remove all ranges that do not contain the
-    // current time and respect the gcGap
-    // respect the gcGap? FIXME?
-    for (let i = 0; i < outerRanges.length; i++) {
-      const outerRange = outerRanges[i];
-      if (currentTime - gcGap < outerRange.end) {
-        cleanedupRanges.push(outerRange);
-      }
-      else if (currentTime + gcGap > outerRange.start) {
-        cleanedupRanges.push(outerRange);
-      }
-    }
-
-    // try to clean up some space in the current range
-    if (innerRange) {
-      log.debug("buffer: gc removing part of inner range", cleanedupRanges);
-      if (currentTime - gcGap > innerRange.start) {
-        cleanedupRanges.push({
-          start: innerRange.start,
-          end: currentTime - gcGap,
-        });
-      }
-
-      if (currentTime + gcGap < innerRange.end) {
-        cleanedupRanges.push({
-          start: currentTime + gcGap,
-          end: innerRange.end,
-        });
-      }
-    }
-
-    return cleanedupRanges;
-  }
-
-  /**
-   * Run the garbage collector.
-   * Try to clean up buffered ranges from a low gcGap at first.
-   * If it does not succeed to clean up space, use a higher gcCap.
-   * @returns {Observable}
-   */
-  function bufferGarbageCollector() {
-    log.warn("buffer: running garbage collector");
-    return timings$.take(1).mergeMap((timing) => {
-      let cleanedupRanges =
-        selectGCedRanges(timing.currentTime, timing.buffered, GC_GAP_CALM);
-
-      // more aggressive GC if we could not find any range to clean
-      if (cleanedupRanges.length === 0) {
-        cleanedupRanges =
-          selectGCedRanges(timing.currentTime, timing.buffered, GC_GAP_BEEFY);
-      }
-
-      log.debug("buffer: gc cleaning", cleanedupRanges);
-      return from(
-        cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
-      ).concatAll();
-    });
-  }
+  const bufferingQueue = new QueuedSourceBuffer(sourceBuffer);
 
   /**
    * Returns every segments currently wanted.
@@ -160,7 +84,7 @@ function Buffer({
    * @param {Object} representation - The representation of the chosen adaptation
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
    * sourceBuffer
-   * @param {Object} timing - The last item emitted from timings$
+   * @param {Object} timing - The last item emitted from clock$
    * @param {Number} bufferGoal - The last item emitted from wantedBufferAhead
    * @param {Number} bufferSize - The last item emitted from bufferSize$
    * @param {Boolean} withInitSegment - Whether we're dealing with an init segment.
@@ -251,7 +175,7 @@ function Buffer({
      * @param {Number} bitrate
      * @returns {Boolean}
      */
-    function filterAlreadyLoaded(segment) {
+    function segmentFilter(segment) {
       // if this segment is already in the pipeline
       const isInQueue = queuedSegments.test(segment.id);
       if (isInQueue) {
@@ -330,10 +254,7 @@ function Buffer({
             throw new MediaError("BUFFER_APPEND_ERROR", error, true);
           }
 
-          // launch our garbage collector and retry on
-          // QuotaExceededError and throw a fatal error if we still have
-          // an error.
-          return bufferGarbageCollector()
+          return launchGarbageCollector(clock$, bufferingQueue)
             .mergeMap(appendSegment)
             .catch((error) => {
               queuedSegments.remove(segment.id);
@@ -352,7 +273,8 @@ function Buffer({
      * @returns {Observable|Array.<Segment>}
      */
     function getNeededSegments(timing, bufferGoal, injectCount) {
-      const nativeBufferedRanges = new BufferedRanges(sourceBuffer.buffered);
+      const nativeBufferedRanges =
+        new BufferedRanges(bufferingQueue.getBuffered());
       if (!ranges.equals(nativeBufferedRanges)) {
         ranges.intersect(nativeBufferedRanges);
       }
@@ -383,7 +305,7 @@ function Buffer({
           bufferGoal,
           withInitSegment);
 
-        injectedSegments = injectedSegments.filter(filterAlreadyLoaded);
+        injectedSegments = injectedSegments.filter(segmentFilter);
       }
       catch(error) {
         // catch IndexError errors thrown when we try to access to
@@ -410,102 +332,6 @@ function Buffer({
       return Observable.of(...injectedSegments);
     }
 
-    /**
-     * Remove buffer from the browser's memory based on the user's
-     * maxBufferAhead / maxBufferBehind settings.
-     *
-     * Normally, the browser garbage-collect automatically old-added chunks of
-     * buffer date when memory is scarce. However, you might want to control
-     * the size of memory allocated. This function takes the current position
-     * and a "depth" wanted for the buffer, in seconds.
-     *
-     * Anything older than the depth will be removed from the buffer.
-     * @param {Number} position - The current position
-     * @param {Number} maxBufferBehind
-     * @returns {Observable}
-     */
-    const cleanBuffer = (position, maxBufferBehind, maxBufferAhead) => {
-      if (!isFinite(maxBufferBehind) && !isFinite(maxBufferAhead)) {
-        return Observable.empty();
-      }
-
-      const buffered = new BufferedRanges(sourceBuffer.buffered);
-      const cleanedupRanges = [];
-      const innerRange  = buffered.getRange(position);
-      const outerRanges = buffered.getOuterRanges(position);
-
-
-      const collectBufferBehind = () => {
-        if (!isFinite(maxBufferBehind)) {
-          return ;
-        }
-
-        // begin from the oldest
-        for (let i = 0; i < outerRanges.length; i++) {
-          const outerRange = outerRanges[i];
-          if (position - maxBufferBehind >= outerRange.end) {
-            cleanedupRanges.push(outerRange);
-          }
-          else if (
-            position >= outerRange.end &&
-            position - maxBufferBehind > outerRange.start &&
-            position - maxBufferBehind < outerRange.end
-          ) {
-            cleanedupRanges.push({
-              start: outerRange.start,
-              end: position - maxBufferBehind,
-            });
-          }
-        }
-        if (innerRange) {
-          if (position - maxBufferBehind > innerRange.start) {
-            cleanedupRanges.push({
-              start: innerRange.start,
-              end: position - maxBufferBehind,
-            });
-          }
-        }
-      };
-
-      const collectBufferAhead = () => {
-        if (!isFinite(maxBufferAhead)) {
-          return ;
-        }
-
-        // begin from the oldest
-        for (let i = 0; i < outerRanges.length; i++) {
-          const outerRange = outerRanges[i];
-          if (position + maxBufferAhead <= outerRange.start) {
-            cleanedupRanges.push(outerRange);
-          }
-          else if (
-            position <= outerRange.start &&
-            position + maxBufferAhead < outerRange.end &&
-            position + maxBufferAhead > outerRange.start
-          ) {
-            cleanedupRanges.push({
-              start: position + maxBufferAhead,
-              end: outerRange.end,
-            });
-          }
-        }
-        if (innerRange) {
-          if (position + maxBufferAhead < innerRange.end) {
-            cleanedupRanges.push({
-              start: position + maxBufferAhead,
-              end: innerRange.end,
-            });
-          }
-        }
-      };
-
-      collectBufferBehind();
-      collectBufferAhead();
-      return from(
-        cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
-      ).concatAll().ignoreElements();
-    };
-
     const loadNeededSegments = segment => {
       return downloader({ segment, representation })
         .map((args) => objectAssign({ segment }, args));
@@ -515,15 +341,15 @@ function Buffer({
       timing, wantedBufferAhead, maxBufferBehind, maxBufferAhead,
     ], i) => {
       const bufferGoal = Math.min(wantedBufferAhead, maxBufferAhead);
-      return Observable.merge(
-        getNeededSegments(timing, bufferGoal, i)
-          .concatMap(loadNeededSegments),
-        cleanBuffer(timing.currentTime, maxBufferBehind, maxBufferAhead)
-      );
+      const loadNeeded$ = getNeededSegments(timing, bufferGoal, i)
+        .concatMap(loadNeededSegments);
+      const clean$ = cleanBuffer(
+        bufferingQueue, timing.currentTime, maxBufferBehind, maxBufferAhead);
+      return Observable.merge(loadNeeded$, clean$);
     };
 
     const segmentsPipeline = combineLatest(
-      timings$,
+      clock$,
       wantedBufferAhead,
       maxBufferBehind,
       maxBufferAhead,
@@ -567,7 +393,7 @@ function Buffer({
     .finally(() => bufferingQueue.dispose());
 }
 
-function EmptyBuffer(bufferType) {
+function EmptyBuffer({ bufferType }) {
   return Observable.of({
     type: "representationChange",
     value: {
