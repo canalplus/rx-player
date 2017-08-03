@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "./log";
 import assert from "./assert";
 
 function EventEmitter() {
@@ -59,7 +60,7 @@ EventEmitter.prototype.trigger = function(evt, arg) {
     try {
       listener(arg);
     } catch(e) {
-      console.error(e, e.stack);
+      log.error(e, e.stack);
     }
   });
 };

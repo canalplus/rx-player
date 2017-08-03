@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../utils/log";
 import assert from "../../../utils/assert.js";
 import {
   reduceChildren,
@@ -81,7 +82,7 @@ function parseMPD(root, contentProtectionParser) {
     // if last time not found / something was invalid in the indexes, set a
     // default live time.
     if (!lastRef) {
-      console.warn("Live edge not deduced from manifest, setting a default one");
+      log.warn("Live edge not deduced from manifest, setting a default one");
       lastRef = Date.now() / 1000 - 60;
     }
 

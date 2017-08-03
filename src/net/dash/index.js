@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { merge } from "rxjs/observable/merge";
+import log from "../../utils/log";
 import assert from "../../utils/assert";
 import { resolveURL } from "../../utils/url";
 import { parseSidx, patchPssh, getMdat } from "./mp4";
@@ -480,7 +481,7 @@ export default function(options={}) {
           segmentData = parseTTML(text, language, 0);
           break;
         default:
-          console.warn("The codec used for the subtitle is not managed yet.");
+          log.warn("The codec used for the subtitle is not managed yet.");
         }
       }
 

@@ -367,7 +367,7 @@ function updateManifest(oldManifest, newManifest) {
       findElementFromId(oldAdaptations[i].id, newAdaptations);
 
     if (!newAdaptation) {
-      console.warn(
+      log.warn(
         `manifest: adaptation "${oldAdaptations[i].id}" not found when merging.`
       );
     }
@@ -379,7 +379,7 @@ function updateManifest(oldManifest, newManifest) {
         findElementFromId(oldRepresentations[j].id, newRepresentations);
 
       if (!newRepresentation) {
-        console.warn(
+        log.warn(
           `manifest: representation "${oldRepresentations[j].id}" not found when merging.`
         );
       }
