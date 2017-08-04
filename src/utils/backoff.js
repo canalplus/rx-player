@@ -23,7 +23,7 @@ const FUZZ_FACTOR = 0.3;
  */
 function getFuzzedDelay(retryDelay) {
   const fuzzingFactor = ((Math.random() * 2) - 1) * FUZZ_FACTOR;
-  return retryDelay * (1.0 + fuzzingFactor);
+  return retryDelay * (1.0 + fuzzingFactor); // Max 1.3 Min 0.7
 }
 
 /**
