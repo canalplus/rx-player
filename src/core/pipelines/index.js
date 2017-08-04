@@ -20,18 +20,20 @@ import { Subject } from "rxjs/Subject";
 
 import arrayIncludes from "../../utils/array-includes.js";
 import config from "../../config.js";
-import { retryWithBackoff } from "../../utils/retry";
 import { tryCatch, castToObservable } from "../../utils/rx-utils";
 import {
   RequestError,
   NetworkError,
   OtherError,
-  RequestErrorTypes,
   isKnownError,
 } from "../../errors";
+import downloadingBackoff from "./backoff.js";
 
 const DEFAULT_MAXIMUM_RETRY_ON_ERROR =
   config.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
+
+const DEFAULT_MAXIMUM_RETRY_ON_OFFLINE =
+  config.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
 
 /**
  * Generate a new error from the infos given.
@@ -56,25 +58,6 @@ function errorSelector(code, error, fatal=true) {
 }
 
 /**
- * Called on a pipeline's loader error.
- * Returns whether the loader request should be retried.
- * @param {Error} error
- * @returns {Boolean}
- */
-function loaderShouldRetry(error) {
-  if (!(error instanceof RequestError)) {
-    return false;
-  }
-  if (error.type === RequestErrorTypes.ERROR_HTTP_CODE) {
-    return error.status >= 500 || error.status == 404;
-  }
-  return (
-    error.type === RequestErrorTypes.TIMEOUT ||
-    error.type === RequestErrorTypes.ERROR_EVENT
-  );
-}
-
-/**
  * Returns function allowing to download the wanted transport object through
  * the resolver -> loader -> parser pipeline.
  *
@@ -92,7 +75,7 @@ function loaderShouldRetry(error) {
  *     error as a value.
  *   - Lastly, with the obtained data (type "data").
  *
- * Each of these can be emitted at most one time.
+ * Each of these but "error" can be emitted at most one time.
  *
  * This observable will throw if, following the options given, the request and
  * possible retry all failed.
@@ -130,10 +113,11 @@ export default function createPipeline(
    * Backoff options given to the backoff retry done with the loader function.
    * @see retryWithBackoff
    */
-  const loaderBackoffOptions = {
-    retryDelay: 200,
-    totalRetry,
-    shouldRetry: totalRetry && loaderShouldRetry,
+  const backoffOptions = {
+    baseDelay: 200,
+    maxDelay: 1600,
+    maxRetryRegular: totalRetry,
+    maxRetryOffline: DEFAULT_MAXIMUM_RETRY_ON_OFFLINE,
     onRetry: (error) => {
       retryErrorSubject
         .next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
@@ -148,7 +132,7 @@ export default function createPipeline(
 
   const _loader = (resolvedInfos, pipelineInputData) => {
     const loaderWithRetry = (resolvedInfos) =>
-      retryWithBackoff(tryCatch(loader, resolvedInfos), loaderBackoffOptions)
+      downloadingBackoff(tryCatch(loader, resolvedInfos), backoffOptions)
         .catch((error) => {
           throw errorSelector("PIPELINE_LOAD_ERROR", error);
         })

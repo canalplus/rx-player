@@ -185,9 +185,30 @@ export default {
   /**
    * The default number of times a pipeline request will be re-performed when
    * on error which justify a retry.
+   *
+   * Note that some errors do not use this counter:
+   *   - if the error is not due to the xhr, no retry will be peformed
+   *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
+   *     retry will be performed.
+   *   - if it has a high chance of being due to the user being offline, a
+   *     separate counter is used (see DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE).
    * @type Number
    */
   DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: 4,
+
+  /**
+   * Under some circonstances, we're able to tell that the user is offline (see
+   * the compat files).
+   * When this happens, and xhr requests fails due to an error event (you might
+   * still be able to perform xhr offline, e.g. on localhost), you might want to
+   * retry indefinitely or with a higher number of retry than if the error is
+   * due to a CDN problem.
+   *
+   * A capped exponential backoff will still be used (like for an error code).
+   *
+   * If the same xhr 
+   */
+  DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE: Infinity,
 
   /**
    * Minimum interval at which timeupdate events will be "constructed". This
