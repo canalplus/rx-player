@@ -201,7 +201,8 @@ function clearVideoSrc(video) {
  *   - in some cases, we even might have isOffline at false when we do not have
  *     any connection:
  *       - in browsers that do not support the feature
- *       - in browsers running in some virtualization softwares
+ *       - in browsers running in some virtualization softwares where the
+ *         network adapters are always connected.
  *
  * Use with these cases in mind.
  * @returns {Boolean}
