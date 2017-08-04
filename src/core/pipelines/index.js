@@ -35,6 +35,11 @@ const DEFAULT_MAXIMUM_RETRY_ON_ERROR =
 const DEFAULT_MAXIMUM_RETRY_ON_OFFLINE =
   config.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
 
+const {
+  MAX_BACKOFF_DELAY_BASE,
+  INITIAL_BACKOFF_DELAY_BASE,
+} = config;
+
 /**
  * Generate a new error from the infos given.
  * Also attach the pipeline type (audio/manifest...) to the _pipelineType_
@@ -114,8 +119,8 @@ export default function createPipeline(
    * @see retryWithBackoff
    */
   const backoffOptions = {
-    baseDelay: 200,
-    maxDelay: 1600,
+    baseDelay: INITIAL_BACKOFF_DELAY_BASE,
+    maxDelay: MAX_BACKOFF_DELAY_BASE,
     maxRetryRegular: totalRetry,
     maxRetryOffline: DEFAULT_MAXIMUM_RETRY_ON_OFFLINE,
     onRetry: (error) => {

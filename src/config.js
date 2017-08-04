@@ -194,7 +194,7 @@ export default {
    *     separate counter is used (see DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE).
    * @type Number
    */
-  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: 4,
+  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: Infinity,
 
   /**
    * Under some circonstances, we're able to tell that the user is offline (see
@@ -205,10 +205,30 @@ export default {
    * due to a CDN problem.
    *
    * A capped exponential backoff will still be used (like for an error code).
-   *
-   * If the same xhr 
+   * @type {Number}
    */
   DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE: Infinity,
+
+  /**
+   * Initial backoff delay when a segment / manifest download fails, in
+   * milliseconds.
+   *
+   * This delay will then grow exponentally by power of twos (200, 400, 800
+   * etc.)
+   *
+   * Please note that this delay is not exact, as it will be fuzzed.
+   * @type {Number}
+   */
+  INITIAL_BACKOFF_DELAY_BASE: 200,
+
+  /**
+   * Maximum backoff delay when a segment / manifest download fails, in
+   * milliseconds.
+   *
+   * Please note that this delay is not exact, as it will be fuzzed.
+   * @type {Number}
+   */
+  MAX_BACKOFF_DELAY_BASE: 3000,
 
   /**
    * Minimum interval at which timeupdate events will be "constructed". This
