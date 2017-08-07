@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * This file declares constants useful for every API files
+ */
+
+/**
+ * Player state dictionnary
+ * @type {Object}
+ */
 export const PLAYER_STATES = {
   STOPPED: "STOPPED",
   LOADED: "LOADED",

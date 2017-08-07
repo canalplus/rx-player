@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import assert from "../../utils/assert";
 import { PLAYER_STATES } from "./constants.js";
 
 /**
@@ -27,7 +26,7 @@ import { PLAYER_STATES } from "./constants.js";
  *
  * @returns {string}
  */
-function inferPlayerState(isPlaying, stalled) {
+export default function inferPlayerState(isPlaying, stalled) {
   if (stalled) {
     return (stalled.state == "seeking")
       ? PLAYER_STATES.SEEKING
@@ -40,29 +39,3 @@ function inferPlayerState(isPlaying, stalled) {
 
   return PLAYER_STATES.PAUSED;
 }
-
-/**
- * Assert that a manifest has been loaded (throws otherwise).
- * @param {Player} player
- * @throws Error - Throws if the given player has no manifest loaded.
- */
-function assertManifest(player) {
-  assert(player._priv.manifest, "player: no manifest loaded");
-}
-
-/**
- * @param {Observable} stream
- * @param {string} type
- * @returns {Observable}
- */
-function filterStreamByType(stream, type) {
-  return stream
-    .filter((o) => o.type == type)
-    .map((o) => o.value);
-}
-
-export {
-  inferPlayerState,
-  assertManifest,
-  filterStreamByType,
-};

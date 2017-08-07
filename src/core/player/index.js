@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * This file defines the player API
+ */
+
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
@@ -56,14 +60,28 @@ import Stream from "../stream/index.js";
 import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
 
 import { PLAYER_STATES } from "./constants.js";
-
-import {
-  inferPlayerState,
-  assertManifest,
-  filterStreamByType,
-} from "./helpers.js";
-
 import attachPrivateMethods from "./private.js";
+import inferPlayerState from "./infer_player_state.js";
+
+/**
+ * Assert that a manifest has been loaded (throws otherwise).
+ * @param {Player} player
+ * @throws Error - Throws if the given player has no manifest loaded.
+ */
+function assertManifest(player) {
+  assert(player._priv.manifest, "player: no manifest loaded");
+}
+
+/**
+ * @param {Observable} stream
+ * @param {string} type
+ * @returns {Observable}
+ */
+function filterStreamByType(stream, type) {
+  return stream
+    .filter((o) => o.type == type)
+    .map((o) => o.value);
+}
 
 /**
  * @class Player

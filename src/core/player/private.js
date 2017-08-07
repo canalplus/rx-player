@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * This file defines the private methods of the API.
+ * This is isolated from the rest of the player class for different reasons:
+ *
+ *   - There is many private methods which "pollutes" the namespace, when a
+ *     user wants to experiment the player (e.g. in a console).
+ *
+ *   - The player keeps a lot of state, which can be subject to change with
+ *     future features. Keeping it isolated helps to know which one / convince
+ *     users to not rely on them.
+ */
+
 import objectAssign from "object-assign";
 import deepEqual from "deep-equal";
 

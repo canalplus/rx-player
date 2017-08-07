@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * TODO completely delete the timefragment API?
+ */
+
 import assert from "../../utils/assert";
 
 /**
