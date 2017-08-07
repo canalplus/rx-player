@@ -87,7 +87,12 @@ function errorSelector(code, error, fatal=true) {
  *
  * This observable will complete after emitting the data.
  * @param {Object} transportObject
+ * @param {Function} transportObject.resolver
+ * @param {Function} transportObject.loader
+ * @param {Function} transportObject.parser
  * @param {Object} [options={}]
+ * @param {Number} [options.maxRetry=DEFAULT_MAXIMUM_RETRY_ON_ERROR]
+ * @param {Object} [options.cache]
  * @returns {Function}
  */
 export default function createPipeline(

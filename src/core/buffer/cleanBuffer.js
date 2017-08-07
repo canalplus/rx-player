@@ -24,11 +24,13 @@ import { BufferedRanges } from "../ranges";
  * Normally, the browser garbage-collect automatically old-added chunks of
  * buffer date when memory is scarce. However, you might want to control
  * the size of memory allocated. This function takes the current position
- * and a "depth" wanted for the buffer, in seconds.
+ * and a "depth" behind and ahead wanted for the buffer, in seconds.
  *
  * Anything older than the depth will be removed from the buffer.
+ * @param {QueuedSourceBuffer} qSourceBuffer
  * @param {Number} position - The current position
  * @param {Number} maxBufferBehind
+ * @param {Number} maxBufferAhead
  * @returns {Observable}
  */
 export default function cleanBuffer(

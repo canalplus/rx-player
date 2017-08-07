@@ -75,6 +75,8 @@ function selectGCedRanges(currentTime, buffered, gcGap) {
  * Run the garbage collector.
  * Try to clean up buffered ranges from a low gcGap at first.
  * If it does not succeed to clean up space, use a higher gcCap.
+ * @param {Observable} timings$
+ * @param {QueuedSourceBuffer} bufferingQueue
  * @returns {Observable}
  */
 export default function launchGarbageCollector(timings$, bufferingQueue) {

@@ -50,6 +50,16 @@ const BITRATE_REBUFFERING_RATIO = config.BITRATE_REBUFFERING_RATIO;
  *   - clean up if too much segments have been loaded
  *
  * TODO too many parameters?
+ * @param {Object} opt
+ * @param {SourceBuffer} opt.sourceBuffer
+ * @param {Function} opt.downloader
+ * @param {Observable} opt.switch$
+ * @param {Observable} opt.clock
+ * @param {Number} opt.wantedBufferAhead
+ * @param {Number} opt.maxBufferBehind
+ * @param {Number} opt.maxBufferAhead
+ * @param {string} opt.bufferType
+ * @param {Boolean} opt.isLive
  * @returns {Observable}
  */
 function Buffer({
