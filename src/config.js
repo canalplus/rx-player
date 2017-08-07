@@ -311,4 +311,36 @@ export default {
    * @type {Number}
    */
   STALL_GAP: 0.5,
+
+  /**
+   * Robustnesses used in the {audio,video}Capabilities of the
+   * MediaKeySystemConfiguration (EME).
+   * Defined in order of importance.
+   * @type {Array.<string>}
+   */
+  EME_DEFAULT_ROBUSTNESSES: [
+    "HW_SECURE_ALL",
+    "HW_SECURE_DECODE",
+    "HW_SECURE_CRYPTO",
+    "SW_SECURE_DECODE",
+    "SW_SECURE_CRYPTO",
+  ],
+
+  /**
+   * @type {Object}
+   */
+  EME_KEY_SYSTEMS: {
+    clearkey:  [
+      "webkit-org.w3.clearkey",
+      "org.w3.clearkey",
+    ],
+    widevine:  [
+      "com.widevine.alpha",
+    ],
+    playready: [
+      "com.microsoft.playready",
+      "com.chromecast.playready",
+      "com.youtube.playready",
+    ],
+  },
 };

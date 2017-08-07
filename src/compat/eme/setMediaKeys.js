@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import { DeferObservable } from "rxjs/observable/DeferObservable";
+import { Observable } from "rxjs/Observable";
 import { castToObservable } from "../../utils/rx-utils";
 import { MockMediaKeys } from "./MediaKeys.js";
-
-const defer = DeferObservable.create;
 
 /**
  * Set the MediaKeys given on the media element.
@@ -58,8 +56,7 @@ function _setMediaKeys(elt, mediaKeys) {
  * @returns {Observable}
  */
 export default (elt, mediaKeys) => {
-  return defer(() =>
+  return Observable.defer(() =>
     castToObservable(_setMediaKeys(elt, mediaKeys))
   );
 };
-

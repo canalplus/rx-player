@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-function hashBuffer(buffer) {
-  let hash = 0;
-  let char;
-  for (let i = 0; i < buffer.length; i++) {
-    char = buffer[i];
-    hash = ((hash <<  5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash;
+import {
+  InMemorySessionsSet,
+  PersistedSessionsSet,
+} from "./sessions_set";
+
+const emptyStorage = {
+  load() { return []; },
+  save() {},
+};
+
+const $storedSessions = new PersistedSessionsSet(emptyStorage);
+const $loadedSessions = new InMemorySessionsSet();
+
+if (__DEV__) {
+  window.$loadedSessions = $loadedSessions;
+  window.$storedSessions = $storedSessions;
 }
 
-function hashInitData(initData) {
-  if (typeof initData == "number") {
-    return initData;
-  } else {
-    return hashBuffer(initData);
-  }
-}
-
-export default hashInitData;
+export {
+  $storedSessions,
+  $loadedSessions,
+};
