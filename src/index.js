@@ -50,7 +50,7 @@ import "rxjs/add/operator/timeout";
 
 import logger from "./utils/log.js";
 
-import Player from "./core/player";
+import Player from "./core/api";
 
 if (__DEV__) {
   logger.setLevel(__LOGGER_LEVEL__);
