@@ -15,7 +15,7 @@
  */
 
 import objectAssign from "object-assign";
-import { getMaximumSecureBufferPosition } from "../timings";
+import { getMaximumSecureBufferPosition } from "../../manifest/timings.js";
 
 /**
  * TODO I'm not sure that's useful here.

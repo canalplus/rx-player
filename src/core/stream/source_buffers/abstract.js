@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import EventEmitter from "../utils/eventemitter";
-import assert from "../utils/assert";
-import { tryCatch, castToObservable } from "../utils/rx-utils";
-import { BufferedRanges } from "../core/ranges";
+import EventEmitter from "../../../utils/eventemitter";
+import assert from "../../../utils/assert";
+import { tryCatch, castToObservable } from "../../../utils/rx-utils";
+import { BufferedRanges } from "../../ranges.js";
 
 /**
  * Abstract class for a custom SourceBuffer implementation.

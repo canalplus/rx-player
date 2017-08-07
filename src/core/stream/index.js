@@ -28,7 +28,7 @@ import {
   addNativeSourceBuffer,
   createSourceBuffer,
   disposeSourceBuffer,
-} from "./source_buffers.js";
+} from "./source_buffers";
 import {
   createAndPlugMediaSource,
   setDurationToMediaSource,

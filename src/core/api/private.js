@@ -39,7 +39,7 @@ import {
   toWallClockTime,
   getMaximumBufferPosition,
   getMaximumSecureBufferPosition,
-} from "../timings";
+} from "../../manifest/timings.js";
 
 import { PLAYER_STATES } from "./constants.js";
 

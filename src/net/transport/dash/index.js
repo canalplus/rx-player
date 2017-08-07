@@ -17,13 +17,13 @@
 import { Observable } from "rxjs/Observable";
 import { EmptyObservable } from "rxjs/observable/EmptyObservable";
 import { merge } from "rxjs/observable/merge";
-import log from "../../utils/log";
-import assert from "../../utils/assert";
-import { resolveURL } from "../../utils/url";
+import log from "../../../utils/log";
+import assert from "../../../utils/assert";
+import { resolveURL } from "../../../utils/url";
 import { parseSidx, patchPssh, getMdat } from "./mp4";
-import { bytesToStr } from "../../utils/bytes.js";
+import { bytesToStr } from "../../../utils/bytes.js";
 
-import request from "../../utils/request";
+import request from "../../../utils/request";
 import dashManifestParser from "./manifest";
 
 import { parseTTML } from "../../parsers/texttracks/ttml.js";

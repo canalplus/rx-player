@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import log from "../../utils/log";
+import log from "../../../utils/log";
 
-import TextSourceBuffer from "../../source_buffer/text-buffer";
-import ImageSourceBuffer from "../../source_buffer/image-buffer";
+import TextSourceBuffer from "./text-buffer.js";
+import ImageSourceBuffer from "./image-buffer.js";
 
 /**
  * Returns true if the given buffeType is a native buffer, false otherwise.

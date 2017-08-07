@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import config from "../../../config.js";
-import assert from "../../../utils/assert.js";
-import { normalize as normalizeLang } from "../../../utils/languages";
+import config from "../../../../config.js";
+import assert from "../../../../utils/assert.js";
+import { normalize as normalizeLang } from "../../../../utils/languages";
 import {
   parseString,
   parseFrameRate,

@@ -20,7 +20,7 @@ import {
   getBufferLimits,
   getMaximumBufferPosition,
   fromWallClockTime,
-} from "../timings";
+} from "../../manifest/timings.js";
 
 const { DEFAULT_LIVE_GAP } = config;
 

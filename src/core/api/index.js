@@ -41,13 +41,14 @@ import {
   videoWidth as videoWidth$,
 } from "../../compat/events.js";
 
+import createClock from "./clock.js";
+
 import {
-  createTimingsSampler,
   toWallClockTime,
   fromWallClockTime,
   getMaximumBufferPosition,
   getMinimumBufferPosition,
-} from "../timings";
+} from "../../manifest/timings.js";
 
 import {
   ErrorTypes,
@@ -309,7 +310,7 @@ class Player extends EventEmitter {
     } = this._priv;
 
     const withMediaSource = !transport.directFile;
-    const timings$ = createTimingsSampler(videoElement, { withMediaSource });
+    const timings$ = createClock(videoElement, { withMediaSource });
 
     const adaptiveOptions = {
       initialBitrates: this._priv.lastBitrates,

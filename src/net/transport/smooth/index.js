@@ -15,11 +15,11 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { bytesToStr } from "../../utils/bytes";
-import log from "../../utils/log";
-import { resolveURL } from "../../utils/url";
+import { bytesToStr } from "../../../utils/bytes";
+import log from "../../../utils/log";
+import { resolveURL } from "../../../utils/url";
 
-import request from "../../utils/request";
+import request from "../../../utils/request";
 import createSmoothStreamingParser from "./parser";
 
 import mp4Utils from "./mp4.js";

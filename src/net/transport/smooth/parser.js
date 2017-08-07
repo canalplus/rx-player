@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "../../utils/array-includes.js";
-import config from "../../config.js";
+import arrayIncludes from "../../../utils/array-includes.js";
+import config from "../../../config.js";
 import {
   concat,
   strToBytes,
@@ -25,10 +25,10 @@ import {
   bytesToUTF16Str,
   guidToUuid,
   hexToBytes,
-} from "../../utils/bytes";
+} from "../../../utils/bytes";
 
-import assert from "../../utils/assert";
-import { normalize as normalizeLang } from "../../utils/languages";
+import assert from "../../../utils/assert";
+import { normalize as normalizeLang } from "../../../utils/languages";
 
 const DEFAULT_MIME_TYPES = {
   audio: "audio/mp4",

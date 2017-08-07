@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../utils/log";
-import assert from "../../../utils/assert.js";
+import log from "../../../../utils/log";
+import assert from "../../../../utils/assert.js";
 import {
   reduceChildren,
   getLastLiveTimeReference,

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import smooth from "./smooth";
-import dash from "./dash";
-import directfile from "./directfile";
+import smooth from "./transport/smooth";
+import dash from "./transport/dash";
+import directfile from "./transport/directfile";
 
 export default {
   smooth,
