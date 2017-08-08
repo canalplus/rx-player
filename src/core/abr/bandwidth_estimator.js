@@ -67,7 +67,6 @@ export default class BandwidthEstimator {
     const weight = durationInMs / 1000;
     this._bytesSampled += numberOfBytes;
 
-    // console.log("RxPlayer", weight, bandwidth); // XXX
     this._fast.addSample(weight, bandwidth);
     this._slow.addSample(weight, bandwidth);
   }
@@ -76,8 +75,6 @@ export default class BandwidthEstimator {
     if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
       return;
     }
-
-    // console.log("getEstimate", Math.min(this._fast.getEstimate(), this._slow.getEstimate())); // XXX
 
     // Take the minimum of these two estimates.  This should have the effect of
     // adapting down quickly, but up more slowly.

@@ -149,7 +149,7 @@ function concat() {
 function be2toi(bytes, off) {
   return (
     (bytes[0+off] << 8) +
-    (bytes[1+off] << 0)); // XXX what's '<< 0' for?
+    (bytes[1+off] << 0));
 }
 
 /**

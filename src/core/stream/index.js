@@ -305,7 +305,6 @@ export default function Stream({
             }
           }
 
-          // XXX timings refacto -> time offset?
           return {
             position: timing.currentTime,
             bufferGap: timing.bufferGap,

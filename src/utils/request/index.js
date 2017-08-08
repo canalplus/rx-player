@@ -103,7 +103,6 @@ export default (options) => {
     method: "GET",
     responseType: "json",
     timeout: 30 * 1000,
-    // resultSelector: null, XXX
     body: null,
   };
 
