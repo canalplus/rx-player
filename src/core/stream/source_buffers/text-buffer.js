@@ -55,8 +55,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
         const blob = new Blob([cues], { type: "text/vtt" });
         const url = URL.createObjectURL(blob);
         this.trackElement.src = url;
-        this.buffered.insert(0, Infinity); // XXX wanted?
-        // Surely means 0, 0, infinity here...
+        this.buffered.insert(0, 0, Infinity);
       } else {
         log.warn("vtt subtitles not supported");
       }
