@@ -57,6 +57,9 @@ function byteRange([start, end]) {
   }
 }
 
+/**
+ * TODO Remove this logic completely from the player
+ */
 function extractISML({ responseData }) {
   return responseData.getElementsByTagName("media")[0].getAttribute("src");
 }
@@ -140,9 +143,10 @@ export default function(options={}) {
         resolving = request({
           url: replaceToken(url, ""),
           responseType: "document",
-          resultSelector: extractISML, // XXX to does not work for now
           ignoreProgressEvents: true,
-        }).map(({ value }) => value);
+        })
+          .map(extractISML) // TODO test that or remove completely
+          .map(({ value }) => value);
       }
       else {
         resolving = Observable.of(url);
