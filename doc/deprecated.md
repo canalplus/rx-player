@@ -330,7 +330,7 @@ seekTo takes now an object with either one of those 3 properties:
 
   - ``position`` (``{Number}``): the absolute position, in seconds, you want the video element to seek to.
 
-  - ``wallClock`` (``{Number}``): the wall-clock-time, in seconds you want the video element to seek to.
+  - ``wallClockTime`` (``{Number}``): the wall-clock-time, in seconds you want the video element to seek to.
 
 #### Example
 
@@ -342,7 +342,7 @@ player.seekTo({ relative: -5 });
 player.seekTo({ position: 50 });
 
 // seeking at 30 minute before now on what is broadcasted live
-player.seekTo({ wallClock: Date.now() / 1000 - 30*60});
+player.seekTo({ wallClockTime: Date.now() / 1000 - 30*60});
 ```
 
 #### Why?
