@@ -220,18 +220,34 @@ const SegmentTimelineHelpers = {
   },
 
   _addSegmentInfos(index, newSegment, currentSegment) {
-    const { timeline } = index;
+    const { timeline, timescale } = index;
     const timelineLength = timeline.length;
     const last = timeline[timelineLength - 1];
+
+    const scaledNewSegment = newSegment.timescale === timescale ? {
+      time: newSegment.time,
+      duration: newSegment.duration,
+    } : {
+      time: (newSegment.time / newSegment.timescale) * timescale,
+      duration: (newSegment.duration / newSegment.timescale) * timescale,
+    };
+
+    let scaledCurrentTime;
+
+    if (currentSegment) {
+      scaledCurrentTime = currentSegment.timescale === timescale ?
+        currentSegment.time :
+        (currentSegment.time / currentSegment.timescale) * timescale;
+    }
 
     // in some circumstances, the new segment informations are only
     // duration informations that we can use to deduct the ts of the
     // next segment. this is the case where the new segment are
     // associated to a current segment and have the same ts
-    const shouldDeductNextSegment =
-      !!currentSegment && (newSegment.ts === currentSegment.ts);
+    const shouldDeductNextSegment = scaledCurrentTime != null &&
+      (scaledNewSegment.time === scaledCurrentTime);
     if (shouldDeductNextSegment) {
-      const newSegmentTs = newSegment.ts + newSegment.d;
+      const newSegmentTs = scaledNewSegment.time + scaledNewSegment.duration;
       const lastSegmentTs = (last.ts + last.d * last.r);
       const tsDiff = newSegmentTs - lastSegmentTs;
 
@@ -263,13 +279,13 @@ const SegmentTimelineHelpers = {
     // if the given timing has a timestamp after the timeline end we
     // just need to push a new element in the timeline, or increase
     // the @r attribute of the last element.
-    else if (newSegment.ts >= getTimelineRangeEnd(last)) {
-      if (last.d === newSegment.d) {
+    else if (scaledNewSegment.time >= getTimelineRangeEnd(last)) {
+      if (last.d === scaledNewSegment.duration) {
         last.r++;
       } else {
         index.timeline.push({
-          d: newSegment.d,
-          ts: newSegment.ts,
+          d: scaledNewSegment.duration,
+          ts: scaledNewSegment.time,
           r: 0,
         });
       }

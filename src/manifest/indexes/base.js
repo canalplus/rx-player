@@ -29,12 +29,22 @@ export default objectAssign({}, TimelineIndex, {
   scale,
 
   _addSegmentInfos(index, segmentInfos) {
-    index.timeline.push({
-      ts: segmentInfos.ts,
-      d: segmentInfos.d,
-      r: segmentInfos.r,
-      range: segmentInfos.range,
-    });
+    if (segmentInfos.timescale !== index.timescale) {
+      const { timescale } = index;
+      index.timeline.push({
+        ts: (segmentInfos.time / segmentInfos.timescale) * timescale,
+        d: (segmentInfos.duration / segmentInfos.timescale) * timescale,
+        r: segmentInfos.count,
+        range: segmentInfos.range,
+      });
+    } else {
+      index.timeline.push({
+        ts: segmentInfos.time,
+        d: segmentInfos.duration,
+        r: segmentInfos.count,
+        range: segmentInfos.range,
+      });
+    }
     return true;
   },
 

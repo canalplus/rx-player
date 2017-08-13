@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
-import config from "../../config.js";
-import log from "../../utils/log";
-import QueuedSourceBuffer from "./queued-source-buffer.js";
-import { BufferedRanges } from "../ranges";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { combineLatest } from "rxjs/observable/combineLatest";
-import { merge } from "rxjs/observable/merge";
-import { EmptyObservable } from "rxjs/observable/EmptyObservable";
-import { TimerObservable } from "rxjs/observable/TimerObservable";
+import objectAssign from "object-assign";
 
+import config from "../../config.js";
+import log from "../../utils/log";
 import { SimpleSet } from "../../utils/collections";
+import { getLeftSizeOfRange } from "../../utils/ranges.js";
 import {
   MediaError,
   ErrorTypes,
@@ -34,11 +29,10 @@ import {
   IndexError,
 } from "../../errors";
 
+import SegmentBookkeeper from "./segment_bookkeeper.js";
+import QueuedSourceBuffer from "./queued-source-buffer.js";
 import launchGarbageCollector from "./gc.js";
 import cleanBuffer from "./cleanBuffer.js";
-
-const empty = EmptyObservable.create;
-const timer = TimerObservable.create;
 
 const BITRATE_REBUFFERING_RATIO = config.BITRATE_REBUFFERING_RATIO;
 
@@ -76,6 +70,12 @@ function Buffer({
   isLive,
 }) {
 
+  /**
+   * Saved state of an init segment to give to the downloader.
+   * TODO Re-think that mess for a Buffer refacto.
+   */
+  let initSegmentInfos = null;
+
   // will be used to emit messages to the calling function
   const messageSubject = new Subject();
 
@@ -85,7 +85,7 @@ function Buffer({
   const LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
   const HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
 
-  const ranges = new BufferedRanges();
+  const bookkeeper = new SegmentBookkeeper();
   const bufferingQueue = new QueuedSourceBuffer(sourceBuffer);
 
   /**
@@ -135,22 +135,11 @@ function Buffer({
     // timestamp in order to calculate the starting point of the list of
     // segments to inject.
     let timestampPadding;
-    const bufferGap = buffered.getGap(timestamp);
+    const bufferGap = getLeftSizeOfRange(buffered, timestamp);
     if (bufferGap > LOW_WATER_MARK_PAD && bufferGap < Infinity) {
       timestampPadding = Math.min(bufferGap, HIGH_WATER_MARK_PAD);
     } else {
       timestampPadding = 0;
-    }
-
-    // in case the current buffered range has the same bitrate as the requested
-    // representation, we can optimistically discard all the already buffered
-    // data by setting the timestampPadding to the current range's gap
-    const currentRange = ranges.getRange(timestamp);
-    if (currentRange && currentRange.bitrate === representation.bitrate) {
-      const rangeEndGap = Math.floor(currentRange.end - timestamp);
-      if (rangeEndGap > timestampPadding) {
-        timestampPadding = rangeEndGap;
-      }
     }
 
     const from = timestamp + timestampPadding;
@@ -198,17 +187,14 @@ function Buffer({
         return true;
       }
 
-      const time     = segment.time / segment.timescale;
-      const duration = segment.duration / segment.timescale;
+      const { time, duration, timescale } = segment;
+      const currentSegment =
+        bookkeeper.hasCompleteSegment(time, duration, timescale);
 
-      const range = ranges.getSegmentRange(time, duration);
-      if (range) {
-        const segmentBitrate = representation.bitrate;
-        // only re-load comparatively-poor bitrates
-        return range.bitrate * BITRATE_REBUFFERING_RATIO < segmentBitrate;
-      } else {
-        return true;
-      }
+      // only re-load comparatively-poor bitrates.
+      return !currentSegment ||
+        (currentSegment.bitrate * BITRATE_REBUFFERING_RATIO) <
+        representation.bitrate;
     }
 
     /**
@@ -219,36 +205,39 @@ function Buffer({
      */
     function appendDataInBuffer(pipelineData) {
       const { segment, parsed } = pipelineData;
-      const { segmentData, nextSegments, currentSegment, timescale } = parsed;
+      const { segmentData, nextSegments, segmentInfos } = parsed;
 
-      // change the timescale if one has been extracted from the
-      // parsed segment (SegmentBase)
-      // TODO do that higher up?
-      if (timescale) {
-        representation.index.setTimescale(timescale);
+      if (segment.isInit) {
+        initSegmentInfos = segmentInfos;
       }
 
+      // If we have informations about subsequent segments, add them to the
+      // index.
       // TODO do that higher up?
       const addedSegments = nextSegments ?
-        representation.index._addSegments(nextSegments, currentSegment) : [];
+        representation.index._addSegments(nextSegments, segmentInfos) : [];
 
       /**
        * Validate the segment downloaded:
        *   - remove from the queued segment to re-allow its download
-       *   - insert it in the ranges object
+       *   - insert it in the bufferedRanges object
        */
       const validateSegment = () => {
         // Note: we should also clean when canceled/errored
         // (TODO do it when canceled?)
         queuedSegments.remove(segment.id);
 
-        // current segment timings informations are used to update
-        // ranges informations
-        if (currentSegment) {
-          ranges.insert(
-            representation.bitrate,
-            currentSegment.ts / segment.timescale,
-            (currentSegment.ts + currentSegment.d) / segment.timescale
+        if (!segment.isInit) {
+          const { time, duration, timescale } = segmentInfos ?
+            segmentInfos : segment;
+
+          // current segment timings informations are used to update
+          // bufferedRanges informations
+          bookkeeper.insert(
+            segment,
+            time / timescale, // start
+            (time + duration) / timescale, // end
+            representation.bitrate
           );
         }
       };
@@ -283,11 +272,8 @@ function Buffer({
      * @returns {Observable|Array.<Segment>}
      */
     function getNeededSegments(timing, bufferGoal, injectCount) {
-      const nativeBufferedRanges =
-        new BufferedRanges(bufferingQueue.getBuffered());
-      if (!ranges.equals(nativeBufferedRanges)) {
-        ranges.intersect(nativeBufferedRanges);
-      }
+      const buffered = bufferingQueue.getBuffered();
+      bookkeeper.addBufferedInfos(buffered);
 
       // send a message downstream when bumping on an explicit
       // discontinuity announced in the segment index.
@@ -310,7 +296,7 @@ function Buffer({
         const withInitSegment = (injectCount === 0);
         injectedSegments = getSegmentsListToInject(
           representation,
-          nativeBufferedRanges,
+          buffered,
           timing,
           bufferGoal,
           withInitSegment);
@@ -328,7 +314,7 @@ function Buffer({
 
         if (isOutOfIndexError) {
           messageSubject.next({ type: "out-of-index", value: error });
-          return empty();
+          return Observable.empty();
         }
 
         throw error;
@@ -343,7 +329,7 @@ function Buffer({
     }
 
     const loadNeededSegments = segment => {
-      return downloader({ segment, representation })
+      return downloader({ segment, representation, init: initSegmentInfos })
         .map((args) => objectAssign({ segment }, args));
     };
 
@@ -358,7 +344,7 @@ function Buffer({
       return Observable.merge(loadNeeded$, clean$);
     };
 
-    const segmentsPipeline = combineLatest(
+    const segmentsPipeline = Observable.combineLatest(
       clock$,
       wantedBufferAhead,
       maxBufferBehind,
@@ -367,7 +353,7 @@ function Buffer({
       .mergeMap(onClockTick)
       .concatMap(appendDataInBuffer);
 
-    return merge(segmentsPipeline, messageSubject).catch((error) => {
+    return Observable.merge(segmentsPipeline, messageSubject).catch((error) => {
       // For live adaptations, handle 412 errors as precondition-
       // failed errors, ie: we are requesting for segments before they
       // exist
@@ -386,7 +372,7 @@ function Buffer({
       // "precondition-failed" type. They should be handled re-
       // adapting the live-gap that the player is holding
       return Observable.of({ type: "precondition-failed", value: error })
-        .concat(timer(2000))
+        .concat(Observable.timer(2000))
         .concat(createRepresentationBuffer(representation));
     })
       .startWith({

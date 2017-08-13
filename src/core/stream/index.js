@@ -42,6 +42,7 @@ import { retryableFuncWithBackoff } from "../../utils/retry";
 import { throttle } from "../../utils/rx-utils";
 import InitializationSegmentCache
   from "../../utils/initialization_segment_cache.js";
+import { getNextRangeGap } from "../../utils/ranges.js";
 
 import {
   isPlaybackStuck,
@@ -330,12 +331,13 @@ export default function Stream({
         { hideNativeSubtitle }
       );
 
-      const downloader = ({ segment, representation }) => {
+      const downloader = ({ segment, representation, init }) => {
         const pipeline$ = Pipeline(transport[bufferType], pipelineOptions)({
           segment,
           representation,
           adaptation,
           manifest,
+          init,
         });
         return processPipeline(
           bufferType, pipeline$, network$, requestsInfos$, errorStream);
@@ -496,15 +498,16 @@ export default function Stream({
         // implementation that might drop an injected segment, or in
         // case of small discontinuity in the stream.
         if (isStalled) {
-          const nextRangeGap = timing.buffered.getNextRangeGap(timing.currentTime);
+          const { buffered, currentTime } = timing;
+          const nextRangeGap = getNextRangeGap(buffered, currentTime);
 
           if (isPlaybackStuck(timing)) {
-            videoElement.currentTime = timing.currentTime;
-            log.warn("after freeze seek", timing.currentTime, timing.range);
+            videoElement.currentTime = currentTime;
+            log.warn("after freeze seek", currentTime, timing.range);
           } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
-            const seekTo = (timing.currentTime + nextRangeGap + 1/60);
+            const seekTo = (currentTime + nextRangeGap + 1/60);
             videoElement.currentTime = seekTo;
-            log.warn("discontinuity seek", timing.currentTime, nextRangeGap, seekTo);
+            log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
           }
         }
 

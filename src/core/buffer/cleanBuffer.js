@@ -15,7 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { BufferedRanges } from "../ranges";
+import { getInnerAndOuterTimeRanges } from "../../utils/ranges.js";
 
 /**
  * Remove buffer from the browser's memory based on the user's
@@ -40,11 +40,11 @@ export default function cleanBuffer(
     return Observable.empty();
   }
 
-  const buffered = new BufferedRanges(qSourceBuffer.getBuffered());
   const cleanedupRanges = [];
-  const innerRange  = buffered.getRange(position);
-  const outerRanges = buffered.getOuterRanges(position);
-
+  const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
+    qSourceBuffer.getBuffered(),
+    position
+  );
 
   const collectBufferBehind = () => {
     if (!isFinite(maxBufferBehind)) {

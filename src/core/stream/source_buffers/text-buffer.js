@@ -55,7 +55,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
         const blob = new Blob([cues], { type: "text/vtt" });
         const url = URL.createObjectURL(blob);
         this.trackElement.src = url;
-        this.buffered.insert(0, 0, Infinity);
+        this.buffered.insert(0, Number.MAX_VALUE);
       } else {
         log.warn("vtt subtitles not supported");
       }
@@ -71,13 +71,15 @@ class TextSourceBuffer extends AbstractSourceBuffer {
         // IE/Edge.
         const currentCues = this.track.cues;
         if (currentCues.length > 0) {
-          if (firstCue.startTime < currentCues[currentCues.length - 1].startTime) {
+          if (
+            firstCue.startTime < currentCues[currentCues.length - 1].startTime
+          ) {
             this._remove(firstCue.startTime, +Infinity);
           }
         }
 
         newCues.forEach((cue) => this.track.addCue(cue));
-        this.buffered.insert(0, firstCue.startTime, lastCue.endTime);
+        this.buffered.insert(firstCue.startTime, lastCue.endTime);
       }
     }
   }

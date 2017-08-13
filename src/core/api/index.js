@@ -55,14 +55,18 @@ import {
   ErrorCodes,
 } from "../../errors";
 
-import { BufferedRanges } from "../ranges";
-
 import Stream from "../stream/index.js";
 import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
 
 import { PLAYER_STATES } from "./constants.js";
 import attachPrivateMethods from "./private.js";
 import inferPlayerState from "./infer_player_state.js";
+
+import {
+  getSizeOfRange,
+  getPlayedSizeOfRange,
+} from "../../utils/ranges.js";
+
 
 /**
  * Assert that a manifest has been loaded (throws otherwise).
@@ -509,12 +513,14 @@ class Player extends EventEmitter {
   /**
    * Returns in seconds the difference between:
    *   - the start of the current contiguous loaded range.
-   *   - the current time.
+   *   - the end of the current contiguous loaded range.
    * @returns {Number}
    */
   getVideoLoadedTime() {
-    return new BufferedRanges(this.videoElement.buffered)
-      .getSize(this.videoElement.currentTime);
+    return getSizeOfRange(
+      this.videoElement.buffered,
+      this.videoElement.currentTime
+    );
   }
 
   /**
@@ -524,8 +530,10 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getVideoPlayedTime() {
-    return new BufferedRanges(this.videoElement.buffered)
-      .getLoaded(this.videoElement.currentTime);
+    return getPlayedSizeOfRange(
+      this.videoElement.buffered,
+      this.videoElement.currentTime
+    );
   }
 
   /**

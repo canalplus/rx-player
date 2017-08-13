@@ -18,7 +18,7 @@ import { Observable } from "rxjs/Observable";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 
 import config from "../../config.js";
-import { BufferedRanges } from "../ranges.js";
+import { getLeftSizeOfRange, getRange } from "../../utils/ranges.js";
 
 const {
   SAMPLING_INTERVAL_MEDIASOURCE,
@@ -79,16 +79,15 @@ function getTimings(video, name) {
     buffered,
     duration,
   } = video;
-  const bufferedRanges = new BufferedRanges(buffered);
 
   return {
     currentTime,
-    buffered: bufferedRanges, // TODO rename to bufferedRanges
+    buffered,
     duration,
-    bufferGap: bufferedRanges.getGap(currentTime),
+    bufferGap: getLeftSizeOfRange(buffered, currentTime),
     state: name,
     playbackRate,
-    currentRange: bufferedRanges.getRange(currentTime),
+    currentRange: getRange(buffered, currentTime),
     readyState,
     paused,
   };

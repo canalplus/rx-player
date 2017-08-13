@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import config from "../../config.js";
 import log from "../../utils/log";
+import { getInnerAndOuterTimeRanges } from "../../utils/ranges.js";
 
 const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
 const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
@@ -26,14 +27,16 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  * the ranges that are distant from the current playing time.
  * See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
  * @param {Number} currentTime
- * @param {BufferedRanges} timing.buffered - current buffered ranges
+ * @param {TimeRanges} buffered - current buffered ranges
  * @param {Number} gcGap - delta gap from current timestamp from which we
  * should consider cleaning up.
  * @returns {Array.<Range>} - Ranges selected for clean up
  */
 function selectGCedRanges(currentTime, buffered, gcGap) {
-  const innerRange  = buffered.getRange(currentTime);
-  const outerRanges = buffered.getOuterRanges(currentTime);
+  const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
+    buffered,
+    currentTime
+  );
 
   const cleanedupRanges = [];
 
@@ -84,13 +87,14 @@ export default function launchGarbageCollector(timings$, bufferingQueue) {
 
   // wait for next timing event
   return timings$.take(1).mergeMap((timing) => {
+    const buffered = bufferingQueue.getBuffered();
     let cleanedupRanges =
-      selectGCedRanges(timing.currentTime, timing.buffered, GC_GAP_CALM);
+      selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
 
     // more aggressive GC if we could not find any range to clean
     if (cleanedupRanges.length === 0) {
       cleanedupRanges =
-        selectGCedRanges(timing.currentTime, timing.buffered, GC_GAP_BEEFY);
+        selectGCedRanges(timing.currentTime, buffered, GC_GAP_BEEFY);
     }
 
     log.debug("buffer: gc cleaning", cleanedupRanges);

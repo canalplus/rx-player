@@ -17,7 +17,7 @@
 import EventEmitter from "../../../utils/eventemitter";
 import assert from "../../../utils/assert";
 import { tryCatch, castToObservable } from "../../../utils/rx-utils";
-import { BufferedRanges } from "../../ranges.js";
+import ManualTimeRanges from "./time_ranges.js";
 
 /**
  * Abstract class for a custom SourceBuffer implementation.
@@ -30,7 +30,7 @@ class AbstractSourceBuffer extends EventEmitter {
     this.codec = codec;
     this.updating = false;
     this.readyState = "opened";
-    this.buffered = new BufferedRanges();
+    this.buffered = new ManualTimeRanges();
   }
 
   /**

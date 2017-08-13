@@ -595,15 +595,18 @@ export default {
     const version = tfrf[0];
     const fragCount = tfrf[4];
     for (let i = 0; i < fragCount; i++) {
-      let d, ts;
+      let duration, time;
       if (version == 1) {
-        ts = be8toi(tfrf, 16 * i + 5);
-        d  = be8toi(tfrf, 16 * i + 5 + 8);
+        time = be8toi(tfrf, 16 * i + 5);
+        duration  = be8toi(tfrf, 16 * i + 5 + 8);
       } else {
-        ts = be4toi(tfrf, 8 * i + 5);
-        d  = be4toi(tfrf, 8 * i + 5 + 4);
+        time = be4toi(tfrf, 8 * i + 5);
+        duration  = be4toi(tfrf, 8 * i + 5 + 4);
       }
-      frags.push({ ts, d });
+      frags.push({
+        time: time,
+        duration: duration,
+      });
     }
     return frags;
   },
@@ -612,8 +615,8 @@ export default {
     const tfxd = reads.tfxd(traf);
     if (tfxd) {
       return {
-        d:  be8toi(tfxd, 12),
-        ts: be8toi(tfxd,  4),
+        duration:  be8toi(tfxd, 12),
+        time: be8toi(tfxd,  4),
       };
     }
   },
@@ -723,6 +726,9 @@ export default {
     return createInitSegment(timescale, "audio", stsd, atoms.smhd(), 0, 0, pssList);
   },
 
+  /**
+   * Add decodeTime info in a segment (tfdt box)
+   */
   patchSegment(segment, decodeTime) {
     if (__DEV__) {
       // TODO handle segments with styp/free...

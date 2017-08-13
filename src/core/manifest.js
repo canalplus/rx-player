@@ -291,7 +291,7 @@ function _normalizeTextAdaptation(subtitles) {
         mimeType,
         index: {
           indexType: "template",
-          duration: Number.MAX_VALUE, // XXX why not Infinity?
+          duration: Number.MAX_VALUE,
           timescale: 1,
           startNumber: 0,
         },
@@ -320,7 +320,7 @@ function _normalizeImageAdaptation(images) {
         mimeType,
         index: {
           indexType: "template",
-          duration: Number.MAX_VALUE, // XXX why not Infinity?
+          duration: Number.MAX_VALUE,
           timescale: 1,
           startNumber: 0,
         },

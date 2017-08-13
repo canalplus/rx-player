@@ -153,6 +153,20 @@ function be2toi(bytes, off) {
 }
 
 /**
+ * Translate groups of 3 big-endian bytes to Integer.
+ * @param {TypedArray} bytes
+ * @param {Number} off - The offset (from the start of the given array)
+ * @returns {Number}
+ */
+function be3toi(bytes, off) {
+  return (
+    (bytes[0+off] * 0x0010000) +
+    (bytes[1+off] * 0x0000100) +
+    (bytes[2+off])
+  );
+}
+
+/**
  * Translate groups of 4 big-endian bytes to Integer.
  * @param {TypedArray} bytes
  * @param {Number} off - The offset (from the start of the given array)
@@ -378,7 +392,7 @@ export {
   hexToBytes,
   bytesToHex,
   concat,
-  be2toi, be4toi, be8toi,
+  be2toi, be3toi, be4toi, be8toi,
   le2toi, le4toi, le8toi,
   itobe2, itobe4, itobe8,
   itole2, itole4, itole8,

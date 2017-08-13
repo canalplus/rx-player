@@ -15,122 +15,107 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { EmptyObservable } from "rxjs/observable/EmptyObservable";
-import { merge } from "rxjs/observable/merge";
+
 import log from "../../../utils/log";
-import assert from "../../../utils/assert";
 import { resolveURL } from "../../../utils/url";
-import { parseSidx, patchPssh, getMdat } from "./mp4";
 import { bytesToStr } from "../../../utils/bytes.js";
 
-import request from "../../../utils/request";
-import dashManifestParser from "./manifest";
-
+import {
+  parseSidx,
+  patchPssh,
+  getMdat,
+  getMDHDTimescale,
+} from "../../parsers/isobmff.js";
 import { parseTTML } from "../../parsers/texttracks/ttml.js";
 import { parseBif } from "../../parsers/bif.js";
 
-const empty = EmptyObservable.create;
+import dashManifestParser from "./manifest";
+import getISOBMFFTimingInfos from "./isobmff_timing_infos.js";
+import request from "./request.js";
+import {
+  byteRange,
+  replaceTokens,
+  isMP4EmbeddedTrack,
+} from "./utils.js";
+import generateSegmentLoader from "./segment_loader.js";
+
+// TODO Put that doc elsewhere for all transports
+// TODO Separate manifest pipeline from other pipelines?
+// TODO delete resolver (or move some segment logic into a resolver)?
+// TODO merge loader and parser? (DASH xlink)
 
 /**
- * Pad with 0 in the left of the given n argument to reach l length
- * @param {Number|string} n
- * @param {Number} l
- * @returns {string}
+ * The object returned by the observable of a resolver has the following key:
+ *   - url {string}: the url on which the request should be done.
  */
-function pad(n, l) {
-  n = n.toString();
-  if (n.length >= l) {
-    return n;
-  }
-  const arr = new Array(l + 1).join("0") + n;
-  return arr.slice(-l);
-}
 
 /**
- * Returns text-formatted byteRange (`bytes=$start-$end?)`
- * @param {Array.<string|Number>}
- * @returns {string}
+ * The objects returned by the observable of a loader are linked to a request.
+ * They can be under two forms:
+ *   - 0+ progress reports
+ *   - 1 response (always the last object emitted)
+ *
+ * Those objects have two keys: type {string} and value {Object}. _type_ allows to
+ * know which type of object we have:
+ *   - "progress": means it is a progress report
+ *   - "response" means it is a response
+ *
+ * The _value_ object differs depending on the type.
+ *
+ * For progress reports, _value_ has the following keys:
+ *   - size {Number}: number of bytes currently loaded
+ *   - totalSize {Number|undefined}: number of bytes to download in total
+ *   - duration {Number}: amount of time since the beginning of the request, in
+ *     ms
+ *   - url {string}: the url on which the request was done
+ *
+ * For a _response_, _value_ has the following keys:
+ *   - size {Number|undefined}: number of bytes of the response
+ *   - duration {Number}: total amount of time for the request, in ms
+ *   - url {string}: the url on which the request was done
+ *   - responseData {*}: the response, its value depends on the responseType
+ *     header.
  */
-function byteRange([start, end]) {
-  if (!end || end === Infinity) {
-    return "bytes=" + (+start) + "-";
-  } else {
-    return "bytes=" + (+start) + "-" + (+end);
-  }
-}
 
 /**
- * Add formatting when asked in a token (add padding to numbers).
- * @param {string|Number} replacer - the token value
- * @returns {Function} - @see replaceTokens
+ * The object returned by the observable of the manifest parser has the
+ * following keys:
+ *   - manifest {Object}: The parsed manifest
+ *   - url {string}: url at which the manifest was downloaded
  */
-function processFormatedToken(replacer) {
-  return (match, format, widthStr) => {
-    const width = widthStr ? parseInt(widthStr, 10) : 1;
-    return pad(""+replacer, width);
-  };
-}
 
 /**
- * Replace "tokens" written in a given path (e.g. $Time$) by the corresponding
- * infos, taken from the given segment.
- * @param {string} path
- * @param {Segment} segment
- * @returns {string}
+ * The object returned by the observable of the audio, video, text and image's
+ * parser has the following keys:
+ *
+ *   - segmentData {*}: The raw exploitable data of the downloaded segment.
+ *     The type of data depends on the type of pipeline concerned (audio/video
+ *     returns an ArrayBuffer, image an object, text an Array).
+ *
+ *   - segmentInfos {Object|undefined}: Informations about the parsed segment.
+ *     Contains the following keys:
+ *
+ *       - time {Number}: initial start time for that segment, in the segment
+ *         timescale.
+ *         Can be -1 if the segment is not meant to be played (e.g. init
+ *         segments).
+ *
+ *       - duration {Number}: duration for that segment, in the segment
+ *         timescale. Can be 0 if the segment has no duration (e.g init
+ *         segments).
+ *
+ *       - timescale {Number|undefined}: timescale in which the duration
+ *         and time of this same object are defined. For init segments, this
+ *         value can be undefined.
+ *
+ *     For init segments, this object can be important for subsequent download
+ *     of "regular" segments. As such, it should be re-fed as an "init" object
+ *     to the load function of the corresponding pipeline, for segments linked
+ *     to this init segment (the pipelines here do not save any state).
+ *
+ *   - nextSegments {Array.<Object>|undefined}: Supplementary informations on
+ *   subsequent segment. TODO documentation of nextSegments.
  */
-function replaceTokens(path, segment, representation) {
-  if (path.indexOf("$") === -1) {
-    return path;
-  } else {
-    return path
-      .replace(/\$\$/g, "$")
-      .replace(/\$RepresentationID\$/g,
-        representation.id)
-      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
-        processFormatedToken(representation.bitrate))
-      .replace(/\$Number(|\%0(\d+)d)\$/g,
-        processFormatedToken(segment.number))
-      .replace(/\$Time(|\%0(\d+)d)\$/g,
-        processFormatedToken(segment.time));
-  }
-}
-
-/**
- * Returns true if the given texttrack segment represents a textrack embedded
- * in a mp4 file.
- * @param {Segment} segment - __TextTrack__ segment
- * @returns {Boolean}
- */
-function isMP4EmbeddedTrack(representation) {
-  return representation.mimeType === "application/mp4";
-}
-
-function mapRequestResponses({ type, value }) {
-  if (type === "response") {
-    return {
-      type: "response",
-      value: {
-        responseData: value.responseData,
-        size: value.size,
-        duration: value.receivedTime - value.sentTime,
-        url: value.url,
-      },
-    };
-  }
-
-  return {
-    type: "progress",
-    value: {
-      size: value.loadedSize,
-      totalSize: value.totalSize,
-      duration: value.currentTime - value.sentTime,
-      url: value.url,
-    },
-  };
-}
-
-const parsedRequest = requestData =>
-  request(requestData).map(mapRequestResponses);
 
 /**
  * Returns pipelines used for DASH streaming.
@@ -141,139 +126,16 @@ const parsedRequest = requestData =>
  * @returns {Object}
  */
 export default function(options={}) {
+  const segmentLoader = generateSegmentLoader(options.segmentLoader);
   let { contentProtectionParser } = options;
 
   if (!contentProtectionParser) {
     contentProtectionParser = () => {};
   }
 
-  const segmentLoader = ({
-    url,
-    segment,
-  }) => {
-    const { range, indexRange } = segment;
-
-    // fire a single time contiguous init and index ranges.
-    if (
-      range && indexRange &&
-      range[1] === indexRange[0] - 1
-    ) {
-      return parsedRequest({
-        url: url,
-        responseType: "arraybuffer",
-        headers: {
-          Range: byteRange([range[0], indexRange[1]]),
-        },
-      });
-    }
-
-    const mediaHeaders = range ?
-      { "Range": byteRange(range) } : null;
-
-    const mediaOrInitRequest = parsedRequest({
-      url: url,
-      responseType: "arraybuffer",
-      headers: mediaHeaders,
-    });
-
-    // If init segment has indexRange metadata, we need to fetch
-    // both the initialization data and the index metadata. We do
-    // this in parallel and send the both blobs into the pipeline.
-    if (indexRange) {
-      const indexRequest = parsedRequest({
-        url: url,
-        responseType: "arraybuffer",
-        headers: { "Range": byteRange(indexRange) },
-      });
-      return merge(mediaOrInitRequest, indexRequest);
-    }
-    else {
-      return mediaOrInitRequest;
-    }
-  };
-
-  const segmentPreLoader = ({
-    segment,
-    adaptation,
-    representation,
-    manifest,
-  }) => {
-    const {
-      media,
-      range,
-      indexRange,
-      isInit,
-    } = segment;
-
-    // init segment without initialization media/range/indexRange:
-    // we do nothing on the network
-    if (isInit && !(media || range || indexRange)) {
-      return empty();
-    }
-
-    // TODO add get helper
-    const customSegmentLoader = options.segmentLoader;
-
-    const path = media ?
-      replaceTokens(media, segment, representation) : "";
-
-    const url = resolveURL(representation.baseURL, path);
-
-    const args = {
-      adaptation,
-      representation,
-      manifest,
-      segment,
-      transport: "dash",
-      url,
-    };
-
-    if (!customSegmentLoader) {
-      return segmentLoader(args);
-    }
-
-    return Observable.create(obs => {
-      let hasFinished = false;
-      let hasFallbacked = false;
-
-      const resolve = (args = {}) => {
-        if (!hasFallbacked) {
-          hasFinished = true;
-          obs.next({
-            responseData: args.data,
-            size: args.size || 0,
-            duration: args.duration || 0,
-          });
-          obs.complete();
-        }
-      };
-
-      const reject = (err = {}) => {
-        if (!hasFallbacked) {
-          hasFinished = true;
-          obs.error(err);
-        }
-      };
-
-      const fallback = () => {
-        hasFallbacked = true;
-        segmentLoader(args).subscribe(obs);
-      };
-
-      const callbacks = { reject, resolve, fallback };
-      const abort = customSegmentLoader(args, callbacks);
-
-      return () => {
-        if (!hasFinished && !hasFallbacked && typeof abort === "function") {
-          abort();
-        }
-      };
-    });
-  };
-
   const manifestPipeline = {
     loader({ url }) {
-      return parsedRequest({
+      return request({
         url,
         responseType: "document",
       });
@@ -290,7 +152,7 @@ export default function(options={}) {
 
   const segmentPipeline = {
     loader({ segment, representation, adaptation, manifest }) {
-      return segmentPreLoader({
+      return segmentLoader({
         segment,
         representation,
         adaptation,
@@ -298,59 +160,33 @@ export default function(options={}) {
       });
     },
 
-    parser({ segment, adaptation, response }) {
+    parser({ segment, adaptation, response, init }) {
       const responseData = new Uint8Array(response.responseData);
-
-      // added segments and timescale informations are extracted from
-      // sidx atom
-      let nextSegments, timescale, currentSegment;
-
-      // added index (segments and timescale) informations are
-      // extracted from sidx atom
-      const indexRange = segment.indexRange;
-      const isInit = segment.isInit;
-      const index = parseSidx(responseData, indexRange ? indexRange[0] : 0);
-      if (index) {
-        nextSegments = index.segments;
-        timescale = index.timescale;
-      }
-
-      if (!isInit) {
-        // current segment information may originate from the index
-        // itself in which case we don't have to use the index
-        // segments.
-        if (segment.time >= 0 &&
-            segment.duration >= 0) {
-          currentSegment = {
-            ts: segment.time,
-            d: segment.duration,
-          };
-        }
-        else if (index && index.segments.length === 1) {
-          currentSegment = {
-            ts: index.segments[0].ts,
-            d:  index.segments[0].d,
-          };
-        }
-
-        if (__DEV__) {
-          assert(currentSegment);
-        }
-      }
-
+      let nextSegments, segmentInfos;
       let segmentData = responseData;
-      if (isInit) {
+
+      if (segment.isInit) {
+        segmentInfos = { time: -1, duration: 0 };
+        const timescale = getMDHDTimescale(responseData);
+        if (timescale > 0) {
+          segmentInfos.timescale = timescale;
+        }
         if (adaptation.contentProtection) {
           segmentData = patchPssh(responseData, adaptation.contentProtection);
         }
+      } else {
+        const indexRange = segment.indexRange;
+        const sidxSegments =
+          parseSidx(responseData, indexRange ? indexRange[0] : 0);
+        if (sidxSegments) {
+          nextSegments = sidxSegments;
+        }
+
+        segmentInfos =
+          getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
       }
 
-      return Observable.of({
-        segmentData,
-        currentSegment,
-        nextSegments,
-        timescale,
-      });
+      return Observable.of({ segmentData, segmentInfos, nextSegments });
     },
   };
 
@@ -370,7 +206,7 @@ export default function(options={}) {
       // init segment without initialization media/range/indexRange:
       // we do nothing on the network
       if (isInit && !(media || range || indexRange)) {
-        return empty();
+        return Observable.empty();
       }
 
       const path = media ?
@@ -383,7 +219,7 @@ export default function(options={}) {
         range && indexRange &&
         range[1] === indexRange[0] - 1
       ) {
-        return parsedRequest({
+        return request({
           url: mediaUrl,
           responseType,
           headers: {
@@ -392,7 +228,7 @@ export default function(options={}) {
         });
       }
 
-      const mediaOrInitRequest = parsedRequest({
+      const mediaOrInitRequest = request({
         url: mediaUrl,
         responseType,
         headers: range ? {
@@ -404,75 +240,52 @@ export default function(options={}) {
       // both the initialization data and the index metadata. We do
       // this in parallel and send the both blobs into the pipeline.
       if (indexRange) {
-        const indexRequest = parsedRequest({
+        const indexRequest = request({
           url: mediaUrl,
           responseType,
           headers: {
             Range: byteRange(indexRange),
           },
         });
-        return merge(mediaOrInitRequest, indexRequest);
+        return Observable.merge(mediaOrInitRequest, indexRequest);
       }
       else {
         return mediaOrInitRequest;
       }
     },
 
-    parser({ response, segment, adaptation, representation }) {
+    parser({ response, segment, adaptation, representation, init }) {
       const { language } = adaptation;
-      const { isInit } = segment;
-
-      // added index (segments and timescale) informations are
-      // extracted from sidx atom
-      const { indexRange } = segment;
-
-      let responseData;
-      let text;
-
-      if (isMP4EmbeddedTrack(representation)) {
-        responseData = new Uint8Array(response.responseData);
-        text = bytesToStr(getMdat(responseData));
-      } else {
-        responseData = response.responseData;
-        text = responseData;
-      }
-
-      // added segments and timescale informations are extracted from
-      // sidx atom
-      let nextSegments, timescale, currentSegment;
-
-      const index = parseSidx(responseData, indexRange ? indexRange[0] : 0);
-      if (index) {
-        nextSegments = index.segments;
-        timescale = index.timescale;
-      }
-
+      const { isInit, indexRange } = segment;
+      const isMP4 = isMP4EmbeddedTrack(representation);
+      const responseData = isMP4 ?
+        new Uint8Array(response.responseData) : response.responseData;
+      let nextSegments, segmentInfos;
       let segmentData = [];
 
-      if (!isInit) {
-        // current segment information may originate from the index
-        // itself in which case we don't have to use the index
-        // segments.
-        if (segment.time >= 0 &&
-            segment.duration >= 0) {
-          currentSegment = {
-            ts: segment.time,
-            d: segment.duration,
-          };
+      if (isInit) {
+        segmentInfos = { time: -1, duration: 0 };
+        if (isMP4) {
+          const timescale = getMDHDTimescale(responseData);
+          if (timescale > 0) {
+            segmentInfos.timescale = timescale;
+          }
         }
-        else if (index && index.segments.length === 1) {
-          currentSegment = {
-            ts: index.segments[0].ts,
-            d:  index.segments[0].d,
-          };
-        }
+      } else {
+        let text;
+        if (isMP4) {
+          text = bytesToStr(getMdat(responseData));
+          const sidxSegments =
+            parseSidx(responseData, indexRange ? indexRange[0] : 0);
 
-        if (__DEV__) {
-          assert(currentSegment);
+          if (sidxSegments) {
+            nextSegments = sidxSegments;
+          }
+          segmentInfos =
+            getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
+        } else {
+          text = responseData;
         }
-
-        // const timescale = (index && index.timescale) ||
-        //   representationIndex.timescale;
 
         const { codec = "" } = representation;
 
@@ -484,13 +297,7 @@ export default function(options={}) {
           log.warn("The codec used for the subtitle is not managed yet.");
         }
       }
-
-      return Observable.of({
-        segmentData,
-        currentSegment,
-        nextSegments,
-        timescale,
-      });
+      return Observable.of({ segmentData, segmentInfos, nextSegments });
     },
 
   };
@@ -500,14 +307,14 @@ export default function(options={}) {
       const { isInit } = segment;
 
       if (isInit) {
-        return empty();
+        return Observable.empty();
       } else {
         const { media } = segment;
 
         const path = media ?
           replaceTokens(media, segment, representation) : "";
         const mediaUrl = resolveURL(representation.baseURL, path);
-        return parsedRequest({
+        return request({
           url: mediaUrl,
           responseType: "arraybuffer",
         });
@@ -518,31 +325,28 @@ export default function(options={}) {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);
 
-      const currentSegment = {
-        ts: 0,
-        d:  Infinity,
+      const segmentInfos = {
+        time: 0,
+        duration:  Number.MAX_VALUE,
       };
 
-      let segmentData, timescale;
+      let segmentData;
       if (blob) {
         const bif = parseBif(blob);
         segmentData = bif.thumbs;
-        timescale   = bif.timescale;
+        segmentInfos.timescale = bif.timescale;
 
+        // TODO
         // var firstThumb = blob[0];
         // var lastThumb  = blob[blob.length - 1];
 
-        // currentSegment = {
-        //   ts: firstThumb.ts,
-        //   d:  lastThumb.ts
+        // segmentInfos = {
+        //   time: firstThumb.ts,
+        //   duration:  lastThumb.ts
         // };
       }
 
-      return Observable.of({
-        segmentData,
-        currentSegment,
-        timescale,
-      });
+      return Observable.of({ segmentData, segmentInfos });
     },
   };
 

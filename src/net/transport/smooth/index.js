@@ -15,26 +15,31 @@
  */
 
 import { Observable } from "rxjs/Observable";
+
 import { bytesToStr } from "../../../utils/bytes";
-import log from "../../../utils/log";
 import { resolveURL } from "../../../utils/url";
-
 import request from "../../../utils/request";
-import createSmoothStreamingParser from "./parser";
 
-import mp4Utils from "./mp4.js";
+import createSmoothStreamingParser from "./parser";
 import { parseBif } from "../../parsers/bif";
 import { parseSami } from "../../parsers/texttracks/sami.js";
 import { parseTTML } from "../../parsers/texttracks/ttml.js";
 
+import mp4Utils from "./mp4.js";
+import parsedRequest from "./request.js";
+import {
+  extractISML,
+  extractToken,
+  replaceToken,
+  resolveManifest,
+  buildSegmentURL,
+} from "./utils.js";
+import extractTimingsInfos from "./isobmff_timings_infos.js";
+import generateSegmentLoader from "./segment_loader.js";
+
 const {
   patchSegment,
-  createVideoInitSegment,
-  createAudioInitSegment,
   getMdat,
-  getTraf,
-  parseTfrf,
-  parseTfxd,
 } = mp4Utils;
 
 const TT_PARSERS = {
@@ -45,100 +50,18 @@ const TT_PARSERS = {
   "text/vtt":                 (text) => text,
 };
 
-const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
-const TOKEN_REG = /\?token=(\S+)/;
-
-function byteRange([start, end]) {
-  if (!end || end === Infinity) {
-    return "bytes=" + (+start) + "-";
-  } else {
-    return "bytes=" + (+start) + "-" + (+end);
-  }
-}
-
-/**
- * TODO Remove this logic completely from the player
- */
-function extractISML({ responseData }) {
-  return responseData.getElementsByTagName("media")[0].getAttribute("src");
-}
-
-/**
- * Returns string corresponding to the token contained in the url's querystring.
- * Empty string if no token is found.
- * @param {string} url
- * @returns {string}
- */
-function extractToken(url) {
-  const tokenMatch = url.match(TOKEN_REG);
-  return (tokenMatch && tokenMatch[1]) || "";
-}
-
-/**
- * Replace/Remove token from the url's querystring
- * @param {string} url
- * @param {string} [token]
- * @returns {string}
- */
-function replaceToken(url, token) {
-  if (token) {
-    return url.replace(TOKEN_REG, "?token=" + token);
-  } else {
-    return url.replace(TOKEN_REG, "");
-  }
-}
-
-function resolveManifest(url) {
-  const ismMatch = url.match(ISM_REG);
-  if (ismMatch) {
-    return url.replace(ismMatch[1], ismMatch[1] + "/manifest");
-  } else {
-    return url;
-  }
-}
-
-function buildSegmentURL(url, representation, segment) {
-  return url
-    .replace(/\{bitrate\}/g,    representation.bitrate)
-    .replace(/\{start time\}/g, segment.time);
-}
-
-function mapRequestResponses({ type, value }) {
-  if (type === "response") {
-    return {
-      type: "response",
-      value: {
-        responseData: value.responseData,
-        size: value.size,
-        duration: value.receivedTime - value.sentTime,
-        url: value.url,
-      },
-    };
-  }
-
-  return {
-    type: "progress",
-    value: {
-      size: value.loadedSize,
-      totalSize: value.totalSize,
-      duration: value.currentTime - value.sentTime,
-      url: value.url,
-    },
-  };
-}
-
-const parsedRequest = requestData =>
-  request(requestData).map(mapRequestResponses);
 
 export default function(options={}) {
   const smoothManifestParser = createSmoothStreamingParser(options);
+  const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
   const manifestPipeline = {
     resolver({ url }) {
       let resolving;
       const token = extractToken(url);
 
+      // TODO Remove WSX logic
       if (WSX_REG.test(url)) {
         resolving = request({
           url: replaceToken(url, ""),
@@ -165,164 +88,14 @@ export default function(options={}) {
 
     parser({ response }) {
       const manifest = smoothManifestParser(response.responseData);
-      return Observable.of({
-        manifest,
-        url: response.url,
-      });
+      return Observable.of({ manifest, url: response.url });
     },
   };
 
-  function extractTimingsInfos(responseData, segment, isLive) {
-    let nextSegments;
-    let currentSegment;
-
-    if (isLive) {
-      const traf = getTraf(responseData);
-      if (traf) {
-        nextSegments = parseTfrf(traf);
-        currentSegment = parseTfxd(traf);
-      } else {
-        log.warn("smooth: could not find traf atom");
-      }
-    } else {
-      nextSegments = null;
-    }
-
-    if (!currentSegment) {
-      currentSegment = {
-        d:  segment.duration,
-        ts: segment.time,
-      };
-    }
-
-    return { nextSegments, currentSegment };
-  }
-
-  /**
-   * Defines the url for the request, load the right loader (custom/default
-   * one).
-   */
-  const segmentPreLoader = ({
-    segment,
-    representation,
-    adaptation,
-    manifest,
-  }) => {
-    if (segment.isInit) {
-      let responseData = {};
-      const protection = adaptation._smoothProtection || {};
-
-      switch(adaptation.type) {
-      case "video":
-        responseData = createVideoInitSegment(
-          segment.timescale,
-          representation.width,
-          representation.height,
-          72, 72, 4, // vRes, hRes, nal
-          representation._codecPrivateData,
-          protection.keyId,     // keyId
-          protection.keySystems // pssList
-        );
-        break;
-      case "audio":
-        responseData = createAudioInitSegment(
-          segment.timescale,
-          representation._channels,
-          representation._bitsPerSample,
-          representation._packetSize,
-          representation._samplingRate,
-          representation._codecPrivateData,
-          protection.keyId,     // keyId
-          protection.keySystems // pssList
-        );
-        break;
-      }
-
-      return Observable.of({ type: "data", value: { responseData } });
-    }
-    else {
-      const customSegmentLoader = options.segmentLoader;
-
-      const url = buildSegmentURL(resolveURL(representation.baseURL), representation, segment);
-
-      const args = {
-        adaptation,
-        representation,
-        segment,
-        transport: "smooth",
-        url,
-        manifest,
-      };
-
-      if (!customSegmentLoader) {
-        return segmentLoader(args);
-      }
-
-      return Observable.create(obs => {
-        let hasFinished = false;
-        let hasFallbacked = false;
-
-        const resolve = (args = {}) => {
-          if (!hasFallbacked) {
-            hasFinished = true;
-            obs.next({
-              type: "response",
-              value: {
-                responseData: args.data,
-                size: args.size || 0,
-                duration: args.duration || 0,
-              },
-            });
-            obs.complete();
-          }
-        };
-
-        const reject = (err = {}) => {
-          if (!hasFallbacked) {
-            hasFinished = true;
-            obs.error(err);
-          }
-        };
-
-        const fallback = () => {
-          hasFallbacked = true;
-          segmentLoader(args).subscribe(obs);
-        };
-
-        const callbacks = { reject, resolve, fallback };
-        const abort = customSegmentLoader(args, callbacks);
-
-        return () => {
-          if (!hasFinished && !hasFallbacked && typeof abort === "function") {
-            abort();
-          }
-        };
-      });
-    }
-  };
-
-  const segmentLoader = ({
-    url,
-    segment,
-  }) => {
-    let headers;
-    const range = segment.range;
-    if (range) {
-      headers = {
-        Range: byteRange(range),
-      };
-    }
-
-    return parsedRequest({
-      url,
-      responseType: "arraybuffer",
-      headers,
-    });
-  };
 
   const segmentPipeline = {
     loader({ segment, representation, adaptation, manifest }) {
-      return segmentPreLoader({
+      return segmentLoader({
         segment,
         representation,
         adaptation,
@@ -334,22 +107,21 @@ export default function(options={}) {
       const { responseData } = response;
 
       if (segment.isInit) {
-        return Observable.of({
-          segmentData: responseData,
-          timings: null,
-        });
+        // smooth init segments are crafted by hand. Their timescale is the one
+        // from the manifest.
+        const segmentInfos = {
+          timescale: segment.timescale,
+          time: -1,
+          duration: 0,
+        };
+        return Observable.of({ segmentData: responseData, segmentInfos });
       }
 
       const responseBuffer = new Uint8Array(responseData);
-      const { nextSegments, currentSegment } =
+      const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
-      const segmentData = patchSegment(responseBuffer, currentSegment.ts);
-
-      return Observable.of({
-        segmentData,
-        nextSegments,
-        currentSegment,
-      });
+      const segmentData = patchSegment(responseBuffer, segmentInfos.time);
+      return Observable.of({ segmentData, segmentInfos, nextSegments });
     },
   };
 
@@ -378,7 +150,9 @@ export default function(options={}) {
 
       const ttParser = TT_PARSERS[mimeType];
       if (!ttParser) {
-        throw new Error(`could not find a text-track parser for the type ${mimeType}`);
+        throw new Error(
+          `could not find a text-track parser for the type ${mimeType}`
+        );
       }
 
       let responseData = response.responseData;
@@ -393,16 +167,12 @@ export default function(options={}) {
         text = responseData;
       }
 
-      const { nextSegments, currentSegment } =
+      const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseData, segment, manifest.isLive);
       const segmentData =
         ttParser(text, language, segment.time / segment.timescale);
 
-      return Observable.of({
-        segmentData,
-        currentSegment,
-        nextSegments,
-      });
+      return Observable.of({ segmentData, segmentInfos, nextSegments });
     },
   };
 
@@ -421,31 +191,27 @@ export default function(options={}) {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);
 
-      const currentSegment = {
-        ts: 0,
-        d:  Infinity,
+      const segmentInfos = {
+        time: 0,
+        duration: Number.MAX_VALUE,
       };
 
-      let segmentData, timescale;
+      let segmentData;
       if (blob) {
         const bif = parseBif(blob);
         segmentData = bif.thumbs;
-        timescale   = bif.timescale;
+        segmentInfos.timescale = bif.timescale;
 
         // var firstThumb = blob[0];
         // var lastThumb  = blob[blob.length - 1];
 
-        // currentSegment = {
-        //   ts: firstThumb.ts,
-        //   d:  lastThumb.ts
+        // segmentInfos = {
+        //   time: firstThumb.ts,
+        //   duration: lastThumb.ts
         // };
       }
 
-      return Observable.of({
-        segmentData,
-        currentSegment,
-        timescale,
-      });
+      return Observable.of({ segmentData, segmentInfos });
     },
   };
 

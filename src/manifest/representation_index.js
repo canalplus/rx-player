@@ -79,7 +79,11 @@ class RepresentationIndex {
     const addedSegments = [];
     for (let i = 0; i < nextSegments.length; i++) {
       if (
-        this._indexHelpers._addSegmentInfos(this._index, nextSegments[i], currentSegment)
+        this._indexHelpers._addSegmentInfos(
+          this._index,
+          nextSegments[i],
+          currentSegment
+        )
       ) {
         addedSegments.push(nextSegments[i]);
       }
