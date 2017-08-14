@@ -33,6 +33,7 @@
 
 ### Bug Fixes:
 
+  - buffer: avoid multiple causes of infinite player rebuffering by managing segment garbage collection
   - languages: getAudioTrack now always returns the currently set audio track
   - languages: getTextTrack now always returns the currently set text track
 
