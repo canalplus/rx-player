@@ -330,16 +330,9 @@ export default function(options={}) {
       });
     },
 
-    parser({ representation, adaptation, segment, response, manifest }) {
+    parser({ segment, response, manifest }) {
       const { responseData } = response;
 
-      if (adaptation.type === "video" && representation.bitrate === 750000) {
-        window.toto = window.toto || [];
-        window.toto.push({
-          segment,
-          responseData,
-        });
-      }
       if (segment.isInit) {
         return Observable.of({
           segmentData: responseData,
