@@ -20,7 +20,38 @@ import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import objectAssign from "object-assign";
 
 import config from "../../config.js";
+
 import arrayIncludes from "../../utils/array-includes.js";
+import log from "../../utils/log";
+import assert from "../../utils/assert";
+import { retryableFuncWithBackoff } from "../../utils/retry";
+import { throttle } from "../../utils/rx-utils";
+import InitializationSegmentCache
+  from "../../utils/initialization_segment_cache.js";
+import { getNextRangeGap } from "../../utils/ranges.js";
+
+import {
+  OtherError,
+  EncryptedMediaError,
+  isKnownError,
+} from "../../errors";
+import {
+  isPlaybackStuck,
+  canPlay,
+  canSeek,
+} from "../../compat";
+import { sourceOpen } from "../../compat/events.js";
+
+import {
+  normalizeManifest,
+  updateManifest,
+  getCodec,
+} from "../manifest";
+import { Buffer, EmptyBuffer } from "../buffer";
+import { createEME, onEncrypted } from "../eme";
+import Pipeline from "../pipelines/index.js";
+import ABRManager from "../abr";
+import { getBufferLimits } from "../../manifest/timings.js";
 
 import getInitialTime from "./initial_time.js";
 import {
@@ -35,36 +66,6 @@ import {
 } from "./media_source.js";
 import createTimings from "./timings.js";
 import createMediaErrorStream from "./error_stream.js";
-
-import log from "../../utils/log";
-import assert from "../../utils/assert";
-import { retryableFuncWithBackoff } from "../../utils/retry";
-import { throttle } from "../../utils/rx-utils";
-import InitializationSegmentCache
-  from "../../utils/initialization_segment_cache.js";
-import { getNextRangeGap } from "../../utils/ranges.js";
-
-import {
-  isPlaybackStuck,
-  canPlay,
-  canSeek,
-} from "../../compat";
-import { sourceOpen } from "../../compat/events.js";
-import { Buffer, EmptyBuffer } from "../buffer";
-import { createEME, onEncrypted } from "../eme";
-import {
-  OtherError,
-  EncryptedMediaError,
-  isKnownError,
-} from "../../errors";
-import {
-  normalizeManifest,
-  updateManifest,
-  getCodec,
-} from "../manifest";
-import Pipeline from "../pipelines/index.js";
-
-import ABRManager from "../abr";
 import processPipeline from "./process_pipeline.js";
 
 const {
@@ -105,9 +106,7 @@ const getPipelineOptions = bufferType => {
 export default function Stream({
   adaptiveOptions,
   autoPlay,
-  wantedBufferAhead$,
-  maxBufferAhead$,
-  maxBufferBehind$,
+  bufferOptions,
   keySystems,
   startAt,
   url,
@@ -118,13 +117,19 @@ export default function Stream({
 
   timings$,
   hideNativeSubtitle, // Whether TextTracks subtitles should be hidden or not
-  errorStream, // subject through which minor errors are emitted
+  errorStream, // subject through which minor errors are emitted TODO Remove?
   timeFragment, // @deprecated
 
   withMediaSource = true,
 
   transport,
 }) {
+
+  const {
+    wantedBufferAhead$,
+    maxBufferAhead$,
+    maxBufferBehind$,
+  } = bufferOptions;
   /**
    * Subject through which network metrics will be sent to the ABR manager.
    */

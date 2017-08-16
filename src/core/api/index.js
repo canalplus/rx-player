@@ -331,9 +331,16 @@ class Player extends EventEmitter {
       },
     };
 
+    const bufferOptions = {
+      wantedBufferAhead$,
+      maxBufferAhead$,
+      maxBufferBehind$,
+    };
+
     const stream = Stream({
       adaptiveOptions,
       autoPlay,
+      bufferOptions,
       errorStream,
       hideNativeSubtitle,
       keySystems,
@@ -343,9 +350,6 @@ class Player extends EventEmitter {
       transport,
       url,
       videoElement,
-      wantedBufferAhead$,
-      maxBufferAhead$,
-      maxBufferBehind$,
       withMediaSource,
 
       supplementaryImageTracks,
