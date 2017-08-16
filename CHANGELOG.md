@@ -4,6 +4,7 @@
 
 ### Added
 
+  - position: the player will now automatically seek close to the buffer depth if stalled because it's waiting on too old segments.
   - config: a global config file has been created (src/config.js) to easily tweak the player pre-build
 
 ### Changed
