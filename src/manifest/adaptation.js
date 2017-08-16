@@ -16,7 +16,6 @@
 
 import objectAssign from "object-assign";
 import arrayFind from "array-find";
-import arrayIncludes from "../utils/array-includes.js";
 
 import Representation from "./representation.js";
 import generateNewId from "../utils/id.js";
@@ -43,9 +42,9 @@ class Adaptation {
    * @param {string} args.type
    * @param {string} [args.language]
    * @param {string} [args.language]
-   * @param {Array.<string>} [args.accessibility]
    * @param {Array.<Object>} args.representations
-   * @param {Object} [args.contentProtection]
+   * @param {Boolean} [args.closedCaption]
+   * @param {Boolean} [args.audioDescription]
    * @param {Boolean} args.manual
    */
   constructor(args = {}) {
@@ -63,17 +62,6 @@ class Adaptation {
       this.language = args.language;
     }
 
-    // XXX TODO choose one or the other
-    const { accessibility } = args;
-    if (Array.isArray(accessibility)) {
-      if (arrayIncludes(accessibility, "audioDescription")) {
-        this.isAudioDescription = true;
-      }
-
-      if (arrayIncludes(accessibility, "closedCaption")) {
-        this.isClosedCaption = true;
-      }
-    }
     if (args.closedCaption != null) {
       this.isClosedCaption = args.closedCaption;
     }
