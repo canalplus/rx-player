@@ -468,7 +468,7 @@ export default function Stream({
    * @param {Boolean} [options.changePlaybackRate=true]
    * @returns {Observable}
    */
-  function createStalledObservable(timings, { changePlaybackRate=true }) {
+  function createStalledObservable(manifest, timings, { changePlaybackRate=true }) {
     return timings
       .distinctUntilChanged((prevTiming, timing) => {
         const isStalled = timing.stalled;
@@ -493,14 +493,19 @@ export default function Stream({
           }
         }
 
-        // Discontinuity check in case we are close a buffer but still
-        // calculate a stalled state. This is useful for some
-        // implementation that might drop an injected segment, or in
-        // case of small discontinuity in the stream.
+        // Perform various checks to try to get out of the stalled state:
+        //   1. is it a browser bug? -> force seek at the same current time
+        //   2. is it a short discontinuity? -> Seek at the beginning of the
+        //                                      next range
+        //   3. are we before the buffer depth? -> Seek a little after it
         if (isStalled) {
           const { buffered, currentTime } = timing;
           const nextRangeGap = getNextRangeGap(buffered, currentTime);
 
+          // Discontinuity check in case we are close a buffer but still
+          // calculate a stalled state. This is useful for some
+          // implementation that might drop an injected segment, or in
+          // case of small discontinuity in the stream.
           if (isPlaybackStuck(timing)) {
             videoElement.currentTime = currentTime;
             log.warn("after freeze seek", currentTime, timing.range);
@@ -508,6 +513,31 @@ export default function Stream({
             const seekTo = (currentTime + nextRangeGap + 1/60);
             videoElement.currentTime = seekTo;
             log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
+          } else {
+            const [
+              minBufferPosition,
+              maxBufferPosition,
+            ] = getBufferLimits(manifest);
+            const bufferDepth = maxBufferPosition - minBufferPosition;
+
+            if (bufferDepth && bufferDepth > 5) {
+              const minimumPosition = Math.min(
+                minBufferPosition + 3,
+                minBufferPosition + (bufferDepth / 10),
+                maxBufferPosition - 5
+              );
+
+              if (currentTime < minimumPosition) {
+                const newPosition = minimumPosition + 5;
+                const diff = newPosition - currentTime;
+                videoElement.currentTime = newPosition;
+                log.warn("buffer depth seek", currentTime, diff, newPosition);
+              }
+            } else if (bufferDepth && currentTime < minBufferPosition) {
+              const diff = maxBufferPosition - currentTime;
+              videoElement.currentTime = maxBufferPosition;
+              log.warn("buffer depth seek", currentTime, diff, maxBufferPosition);
+            }
           }
         }
 
@@ -633,7 +663,7 @@ export default function Stream({
     });
 
     const emeHandler = createEMEIfKeySystems();
-    const stalled = createStalledObservable(_timings, {
+    const stalled = createStalledObservable(manifest, _timings, {
       changePlaybackRate: withMediaSource,
     });
     const mediaError = createMediaErrorStream(videoElement);
