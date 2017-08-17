@@ -145,9 +145,12 @@ function Buffer({
     const from = timestamp + timestampPadding;
     const to = timestamp + wantedBufferSize;
     const duration = to - from;
-    if (representation.index.shouldRefresh(timestamp, from, timestamp + wantedBufferSize)) {
-      throw new IndexError(
+    const shouldRefresh = representation.index
+        .shouldRefresh(timestamp, from, timestamp + wantedBufferSize);
+    if (shouldRefresh) {
+      const error = new IndexError(
         "OUT_OF_INDEX_ERROR", representation.index.getType(), false);
+      messageSubject.next({ type: "out-of-index", value: error });
     }
 
     // given the current timestamp and the previously calculated time gap and
@@ -291,34 +294,17 @@ function Buffer({
       }
 
       let injectedSegments;
-      try {
-        // filter out already loaded and already queued segments
-        const withInitSegment = (injectCount === 0);
-        injectedSegments = getSegmentsListToInject(
-          representation,
-          buffered,
-          timing,
-          bufferGoal,
-          withInitSegment);
 
-        injectedSegments = injectedSegments.filter(segmentFilter);
-      }
-      catch(error) {
-        // catch IndexError errors thrown when we try to access to
-        // non available segments. Reinject this error into the main
-        // buffer observable so that it can be treated upstream
-        const isOutOfIndexError = (
-          error.type === ErrorTypes.INDEX_ERROR &&
-          error.code === ErrorCodes.OUT_OF_INDEX_ERROR
-        );
+      // filter out already loaded and already queued segments
+      const withInitSegment = (injectCount === 0);
+      injectedSegments = getSegmentsListToInject(
+        representation,
+        buffered,
+        timing,
+        bufferGoal,
+        withInitSegment);
 
-        if (isOutOfIndexError) {
-          messageSubject.next({ type: "out-of-index", value: error });
-          return Observable.empty();
-        }
-
-        throw error;
-      }
+      injectedSegments = injectedSegments.filter(segmentFilter);
 
       // queue all segments injected in the observable
       for (let i = 0; i < injectedSegments.length; i++) {
