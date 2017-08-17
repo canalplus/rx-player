@@ -147,10 +147,9 @@ export default function createPipeline(
         .catch((error) => {
           throw errorSelector("PIPELINE_LOAD_ERROR", error);
         })
-        .do(response => {
-          // add loadedInfos to the pipeline cache
-          if (cache) {
-            cache.add(resolvedInfos, response);
+        .do(({ type, value }) => {
+          if (type === "response" && cache) {
+            cache.add(resolvedInfos, value);
           }
         })
         .startWith({
@@ -162,11 +161,12 @@ export default function createPipeline(
     return fromCache === null ?
       loaderWithRetry(resolvedInfos) :
       castToObservable(fromCache)
-        .map(response => ({
+      .map(response => {
+        return {
           type: "cache",
           value: response,
-        }))
-        .catch(() => loaderWithRetry(resolvedInfos));
+        };
+      }).catch(() => loaderWithRetry(resolvedInfos));
   };
 
   const _parser = loadedInfos =>
@@ -201,10 +201,14 @@ export default function createPipeline(
               return metrics
                 .concat(
                   _parser(loadedInfos)
-                    .map(parserResponse => ({
+                  .map(parserResponse => {
+                    return {
                       type: "data",
-                      value: objectAssign({ parsed: parserResponse }, loadedInfos),
-                    }))
+                      value: objectAssign({
+                        parsed: parserResponse,
+                      }, loadedInfos),
+                    };
+                  })
                 );
             } else {
               return Observable.of({ type, value });

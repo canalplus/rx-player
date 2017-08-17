@@ -105,7 +105,9 @@ export default function processPipeline(
         });
       }
     })
-    .map(({ value }) => value) // take only value from data events
+    .map(({ value }) => {
+      return value;
+    }) // take only value from data/cache events
     .finally(() => {
       if (request$) {
         if (segmentId != null) {
