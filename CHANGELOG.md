@@ -4,6 +4,7 @@
 
 ### Added
 
+  - api: add getVideoBufferGap method
   - position: the player will now automatically seek close to the buffer depth if stalled because it's waiting on too old segments.
   - config: a global config file has been created (src/config.js) to easily tweak the player pre-build
 
@@ -15,6 +16,11 @@
 
 ### Removed
 
+  - api: the asObservable method as been removed
+  - api: the constructor option initVideoBitrate has been removed in favor of initialVideoBitrate
+  - api: the constructor option initAudioBitrate has been removed in favor of initialVideoBitrate
+  - api: the constructor option defaultLanguage has been removed in favor of defaultAudioTrack
+  - api: the constructor option defaultSubtitle has been removed in favor of defaultTextTrack
   - position: the currentTimeChange event has been removed in favor of positionUpdate
   - adaptive: getMetrics has been removed
   - adaptive: getAverageBitrates has been removed
@@ -34,6 +40,7 @@
 
 ### Bug Fixes:
 
+  - speed: fix playback rate bug when setting it while the player is stalled
   - buffer: avoid multiple causes of infinite player rebuffering by managing segment garbage collection
   - languages: getAudioTrack now always returns the currently set audio track
   - languages: getTextTrack now always returns the currently set text track
@@ -43,6 +50,7 @@
   - network: the backoff algorithm has been refactored for better network error resilience
   - adaptive: improved ABR management to provide a better, faster and more stable bandwidth estimation
   - adaptive: add strategies for abrupt changes of bandwidth to avoid excessive re-buffering on network fluctuations
+  - adaptive: the adaptive algorithm now take into account the current playback rate
 
 ## v2.3.2 (2017/07/25)
 
