@@ -94,7 +94,7 @@ function StallingManager(
     .distinctUntilChanged((wasStalled, isStalled) => {
       return !wasStalled && !isStalled ||
         (wasStalled && isStalled && wasStalled.state === isStalled.state);
-    }).do(t => console.log("!!!!", t));
+    });
 }
 
 export default StallingManager;
