@@ -63,6 +63,7 @@ import attachPrivateMethods from "./private.js";
 import inferPlayerState from "./infer_player_state.js";
 
 import {
+  getLeftSizeOfRange,
   getSizeOfRange,
   getPlayedSizeOfRange,
 } from "../../utils/ranges.js";
@@ -514,8 +515,21 @@ class Player extends EventEmitter {
 
   /**
    * Returns in seconds the difference between:
-   *   - the start of the current contiguous loaded range.
    *   - the end of the current contiguous loaded range.
+   *   - the current time
+   * @returns {Number}
+   */
+  getVideoBufferGap() {
+    return getLeftSizeOfRange(
+      this.videoElement.buffered,
+      this.videoElement.currentTime
+    );
+  }
+
+  /**
+   * Returns in seconds the difference between:
+   *   - the end of the current contiguous loaded range.
+   *   - the start of the current contiguous loaded range.
    * @returns {Number}
    */
   getVideoLoadedTime() {
@@ -527,8 +541,8 @@ class Player extends EventEmitter {
 
   /**
    * Returns in seconds the difference between:
-   *   - the start of the current contiguous loaded range.
    *   - the current time.
+   *   - the start of the current contiguous loaded range.
    * @returns {Number}
    */
   getVideoPlayedTime() {
