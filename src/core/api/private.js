@@ -120,12 +120,6 @@ export default (self) => ({
         self._priv.imageTrack$.next(value);
       }
     }
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (self._priv.stream$) {
-      self._priv.stream$.next(streamInfos);
-    }
   },
 
   /**
@@ -135,12 +129,6 @@ export default (self) => ({
    */
   onErrorStreamNext(error) {
     self.trigger("warning", error);
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (self._priv.stream$) {
-      self._priv.stream$.next({ type: "warning", value: error });
-    }
   },
 
   /**
@@ -151,14 +139,8 @@ export default (self) => ({
     self._priv.resetContentState();
     self._priv.fatalError = error;
     self._priv.setPlayerState(PLAYER_STATES.STOPPED);
-    self._priv.clearLoaded$.next();
+    self._priv.clearLoadedContent$.next();
     self.trigger("error", error);
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (self._priv.stream$) {
-      self._priv.stream$.next({ type: "error", value: error });
-    }
   },
 
   /**
@@ -168,13 +150,7 @@ export default (self) => ({
   onStreamComplete() {
     self._priv.resetContentState();
     self._priv.setPlayerState(PLAYER_STATES.ENDED);
-    self._priv.clearLoaded$.next();
-
-    // stream could be unset following the previous triggers
-    // @deprecated
-    if (self._priv.stream$) {
-      self._priv.stream$.next({ type: "ended", value: null });
-    }
+    self._priv.clearLoadedContent$.next();
   },
 
   /**

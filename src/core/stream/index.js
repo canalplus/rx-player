@@ -28,15 +28,12 @@ import { retryableFuncWithBackoff } from "../../utils/retry";
 import { throttle } from "../../utils/rx-utils";
 import InitializationSegmentCache
   from "../../utils/initialization_segment_cache.js";
-import { getNextRangeGap } from "../../utils/ranges.js";
 
 import {
   OtherError,
-  EncryptedMediaError,
   isKnownError,
 } from "../../errors";
 import {
-  isPlaybackStuck,
   canPlay,
   canSeek,
 } from "../../compat";
@@ -48,10 +45,8 @@ import {
   getCodec,
 } from "../manifest";
 import { Buffer, EmptyBuffer } from "../buffer";
-import { createEME, onEncrypted } from "../eme";
 import Pipeline from "../pipelines/index.js";
 import ABRManager from "../abr";
-import { getBufferLimits } from "../../manifest/timings.js";
 
 import getInitialTime from "./initial_time.js";
 import {
@@ -67,11 +62,11 @@ import {
 import createTimings from "./timings.js";
 import createMediaErrorStream from "./error_stream.js";
 import processPipeline from "./process_pipeline.js";
+import SpeedManager from "./speed_manager.js";
+import StallingManager from "./stalling_obs.js";
+import EMEManager from "./eme.js";
 
-const {
-  END_OF_PLAY,
-  DISCONTINUITY_THRESHOLD,
-} = config;
+const { END_OF_PLAY } = config;
 
 /**
  * Returns the pipeline options depending on the type of pipeline concerned.
@@ -111,6 +106,7 @@ export default function Stream({
   startAt,
   url,
   videoElement,
+  speed$,
 
   supplementaryTextTracks, // eventual manually added subtitles
   supplementaryImageTracks, // eventual manually added images
@@ -312,12 +308,13 @@ export default function Stream({
           }
 
           return {
-            position: timing.currentTime,
-            bufferGap: timing.bufferGap,
             bitrate,
-            lastIndexPosition,
-            isLive: manifest.isLive,
+            bufferGap: timing.bufferGap,
             duration: timing.duration,
+            isLive: manifest.isLive,
+            lastIndexPosition,
+            position: timing.currentTime,
+            speed: speed$.getValue(),
           };
         });
 
@@ -445,115 +442,6 @@ export default function Stream({
   }
 
   /**
-   * Perform EME management if needed.
-   * @returns {Observable}
-   */
-  function createEMEIfKeySystems() {
-    if (keySystems && keySystems.length) {
-      return createEME(videoElement, keySystems, errorStream);
-    } else {
-      return onEncrypted(videoElement).map(() => {
-        log.error("eme: ciphered media and no keySystem passed");
-        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-      });
-    }
-  }
-
-  /**
-   * Extracted stalled info changing over-time from timings. This
-   * stream has a side-effect of the <video> playbackRate and
-   * currentTime properties.
-   *
-   * It mutates the playbackRate value to stop the video when buffer is too
-   * low, or resume the video when the buffer has regained a decent size.
-   *
-   * It mutates the currentTime in case of a discontinuity in the stream.
-   * @param {Observable} timings
-   * @param {Object} options
-   * @param {Boolean} [options.changePlaybackRate=true]
-   * @returns {Observable}
-   */
-  function createStalledObservable(manifest, timings, { changePlaybackRate=true }) {
-    return timings
-      .distinctUntilChanged((prevTiming, timing) => {
-        const isStalled = timing.stalled;
-        const wasStalled = prevTiming.stalled;
-
-        let isEqual;
-        if (!wasStalled && !isStalled) {
-          isEqual = true;
-        } else if (!wasStalled || !isStalled) {
-          isEqual = false;
-        } else { // both are stalled
-          isEqual = (wasStalled.state == isStalled.state);
-        }
-
-        if (!isEqual && changePlaybackRate) {
-          if (wasStalled) { // is not stalled anymore
-            log.info("resume playback", timing.currentTime, timing.state);
-            videoElement.playbackRate = wasStalled.playbackRate;
-          } else { // is stalled
-            log.info("stop playback", timing.currentTime, timing.state);
-            videoElement.playbackRate = 0;
-          }
-        }
-
-        // Perform various checks to try to get out of the stalled state:
-        //   1. is it a browser bug? -> force seek at the same current time
-        //   2. is it a short discontinuity? -> Seek at the beginning of the
-        //                                      next range
-        //   3. are we before the buffer depth? -> Seek a little after it
-        if (isStalled) {
-          const { buffered, currentTime } = timing;
-          const nextRangeGap = getNextRangeGap(buffered, currentTime);
-
-          // Discontinuity check in case we are close a buffer but still
-          // calculate a stalled state. This is useful for some
-          // implementation that might drop an injected segment, or in
-          // case of small discontinuity in the stream.
-          if (isPlaybackStuck(timing)) {
-            videoElement.currentTime = currentTime;
-            log.warn("after freeze seek", currentTime, timing.range);
-          } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
-            const seekTo = (currentTime + nextRangeGap + 1/60);
-            videoElement.currentTime = seekTo;
-            log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
-          } else {
-            const [
-              minBufferPosition,
-              maxBufferPosition,
-            ] = getBufferLimits(manifest);
-            const bufferDepth = maxBufferPosition - minBufferPosition;
-
-            if (bufferDepth && bufferDepth > 5) {
-              const minimumPosition = Math.min(
-                minBufferPosition + 3,
-                minBufferPosition + (bufferDepth / 10),
-                maxBufferPosition - 5
-              );
-
-              if (currentTime < minimumPosition) {
-                const newPosition = minimumPosition + 5;
-                const diff = newPosition - currentTime;
-                videoElement.currentTime = newPosition;
-                log.warn("buffer depth seek", currentTime, diff, newPosition);
-              }
-            } else if (bufferDepth && currentTime < minBufferPosition) {
-              const diff = maxBufferPosition - currentTime;
-              videoElement.currentTime = maxBufferPosition;
-              log.warn("buffer depth seek", currentTime, diff, maxBufferPosition);
-            }
-          }
-        }
-
-        return isEqual;
-      })
-      .map((timing) => {
-        return { type: "stalled", value: timing.stalled };
-      });
-  }
-
-  /**
    * Re-fetch the manifest and merge it with the previous version.
    * @param {Object} manifest
    * @returns {Observable}
@@ -572,6 +460,7 @@ export default function Stream({
   }
 
   /**
+   * Handle events happening only in live contexts.
    * @param {Object} message
    * @param {Object} manifest
    * @returns {Observable}
@@ -667,14 +556,25 @@ export default function Stream({
       },
     });
 
-    const emeHandler = createEMEIfKeySystems();
-    const stalled = createStalledObservable(manifest, _timings, {
+    const emeManager$ = EMEManager(videoElement, keySystems, errorStream);
+
+    const speedManager$ = SpeedManager(videoElement, speed$, _timings, {
       changePlaybackRate: withMediaSource,
-    });
-    const mediaError = createMediaErrorStream(videoElement);
+    }).map(newSpeed => ({ type: "speed", value: newSpeed }));
+
+    const stallingManager$ = StallingManager(videoElement, manifest, _timings)
+      .map(stalledStatus => ({ type: "stalled", value: stalledStatus }));
+
+    const mediaErrorManager$ = createMediaErrorStream(videoElement);
 
     return Observable.merge(
-      manifest$, loaded$, stalled, emeHandler, buffers$, mediaError
+      buffers$,
+      emeManager$,
+      loaded$,
+      manifest$,
+      mediaErrorManager$,
+      speedManager$,
+      stallingManager$
     ).finally(() => abrManager.dispose());
   }
 

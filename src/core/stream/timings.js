@@ -58,7 +58,7 @@ function seekingsSampler(timingsSampling) {
  * @param {Object} manifest
  * @returns {Object}
  */
-export default function createTimingsAndSeekingsObservables(
+function createTimingsAndSeekingsObservables(
   manifest,
   timings,
   fragEndTimeIsFinite,
@@ -88,3 +88,5 @@ export default function createTimingsAndSeekingsObservables(
     seekings,
   };
 }
+
+export default createTimingsAndSeekingsObservables;

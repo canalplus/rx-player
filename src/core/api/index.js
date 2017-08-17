@@ -108,6 +108,8 @@ class Player extends EventEmitter {
   }
 
   /**
+   * Note: as the private state from this class can be pretty heavy, every
+   * private properties should be initialized here for better visibility.
    * @param {Object} [options={}]
    * @param {HTMLVideoElement_} options.videoElement
    */
@@ -117,13 +119,9 @@ class Player extends EventEmitter {
     const {
       transport,
       transportOptions,
-      defaultLanguage, // @deprecated
-      defaultAudioTrack, // TODO Rename initialAudioTrack
-      defaultSubtitle, // @deprecated
-      defaultTextTrack, // TODO Rename initialTextTrack
-      initVideoBitrate, // @deprecated
+      defaultAudioTrack, // XXX TODO Rename initialAudioTrack?
+      defaultTextTrack, // XXX TODO Rename initialTextTrack?
       initialVideoBitrate,
-      initAudioBitrate, // @deprecated
       initialAudioBitrate,
       maxVideoBitrate,
       maxAudioBitrate,
@@ -132,64 +130,48 @@ class Player extends EventEmitter {
     } = options;
 
     super();
-
-    this._priv = attachPrivateMethods(this);
-
-    // -- Deprecated checks
-
-    let _initialVideoBitrate = initialVideoBitrate;
-    let _initialAudioBitrate = initialAudioBitrate;
-    let _initialAudioTrack = defaultAudioTrack;
-    let _initialTextTrack = defaultTextTrack;
-
-    if (initVideoBitrate != null && initialVideoBitrate == null) {
-      warnOnce("initVideoBitrate is deprecated. Use initialVideoBitrate instead");
-      _initialVideoBitrate = initVideoBitrate;
-    }
-    if (initAudioBitrate != null && initialAudioBitrate == null) {
-      warnOnce("initAudioBitrate is deprecated. Use initialAudioBitrate instead");
-      _initialAudioBitrate = initAudioBitrate;
-    }
-    if (defaultLanguage != null && defaultAudioTrack == null) {
-      warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
-      _initialAudioTrack = defaultLanguage;
-    }
-    if (defaultSubtitle != null && defaultTextTrack == null) {
-      warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
-      _initialTextTrack = defaultSubtitle;
-    }
-
-    // --
-
+    this.version = /*PLAYER_VERSION*/"2.3.2";
+    this.log = log;
+    this.state = undefined;
     if (transport) {
       this.defaultTransport = transport;
     }
     this.defaultTransportOptions = transportOptions || {};
-
     if (!videoElement) {
       videoElement = document.createElement("video");
     }
-
     assert((videoElement instanceof HTMLVideoElement_),
       "videoElement needs to be an HTMLVideoElement");
 
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-
-    this.version = /*PLAYER_VERSION*/"2.3.2";
     this.videoElement = videoElement;
 
+    this._priv = attachPrivateMethods(this);
+
+    this._priv.destroy$ = new Subject();
     this._priv.fullScreenSubscription = fullscreenChange$(videoElement)
+      .takeUntil(this._priv.destroy$)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
-    this._priv.playing$ = new BehaviorSubject(); // playing state change.
-    this._priv.clearLoaded$ = new Subject(); // clean ressources from loaded content
-    this._priv.stream$ = new Subject(); // multicaster forwarding all streams events
-    this._priv.imageTrack$ = new Subject();
-
     // TODO Use regular Stream observable for that
-    this._priv.errorStream$ = new Subject(); // Emits warnings
+    this._priv.errorStream$ = new Subject() // Emits warnings
+      .takeUntil(this._priv.destroy$);
+
+    // emit true when the player plays, false when it pauses
+    this._priv.playing$ = new BehaviorSubject();
+
+    // last speed set by the user
+    this._priv.speed$ = new BehaviorSubject(videoElement.playbackRate);
+
+    // clean ressources from loaded content
+    this._priv.clearLoadedContent$ = new Subject()
+      .takeUntil(this._priv.destroy$);
+
+    // @deprecated
+    this._priv.imageTrack$ = new Subject()
+      .takeUntil(this._priv.destroy$);
 
     this._priv.wantedBufferAhead$ =
       new BehaviorSubject(config.DEFAULT_WANTED_BUFFER_AHEAD);
@@ -201,13 +183,13 @@ class Player extends EventEmitter {
       new BehaviorSubject(config.DEFAULT_MAX_BUFFER_BEHIND);
 
     // keep track of the last set audio/text track
-    this._priv.lastAudioTrack = _initialAudioTrack;
-    this._priv.lastTextTrack = _initialTextTrack;
+    this._priv.lastAudioTrack = defaultAudioTrack;
+    this._priv.lastTextTrack = defaultTextTrack;
 
     // keep track of the last adaptive options
     this._priv.lastBitrates = {
-      audio: _initialAudioBitrate,
-      video: _initialVideoBitrate,
+      audio: initialAudioBitrate,
+      video: initialVideoBitrate,
     };
     this._priv.maxAutoBitrates = {
       audio: maxAudioBitrate,
@@ -221,8 +203,18 @@ class Player extends EventEmitter {
 
     this._priv.mutedMemory = 0.1; // memorize previous volume when muted
 
+    // private state set later
+    [
+      "abrManager", "currentAdaptations", "currentImagePlaylist",
+      "currentRepresentations", "fatalError", "initialAudioTrack",
+      "initialTextTrack", "languageManager", "manifest", "recordedEvents",
+      "timeFragment",
+    ].forEach(key => {
+      this._priv[key] = undefined;
+    });
+
+    // populate initial values for content-related state
     this._priv.resetContentState();
-    this.log = log;
 
     this._priv.setPlayerState(PLAYER_STATES.STOPPED);
   }
@@ -233,7 +225,7 @@ class Player extends EventEmitter {
   stop() {
     if (this.state !== PLAYER_STATES.STOPPED) {
       this._priv.resetContentState();
-      this._priv.clearLoaded$.next();
+      this._priv.clearLoadedContent$.next();
       this._priv.setPlayerState(PLAYER_STATES.STOPPED);
     }
   }
@@ -242,34 +234,38 @@ class Player extends EventEmitter {
    * Free the resources used by the player.
    */
   dispose() {
+    // free resources linked to the loaded content
     this.stop();
+
+    // free resources used for EME management
+    emeDispose();
 
     const { _priv } = this;
 
-    _priv.clearLoaded$.complete();
-    _priv.fullScreenSubscription.unsubscribe();
-    _priv.stream$.unsubscribe(); // @deprecated
-    _priv.errorStream$.unsubscribe();
-    emeDispose();
+    // free resources linked to the Player instance
+    _priv.destroy$.next();
+    _priv.destroy$.complete();
 
-    _priv.clearLoaded$ = null;
+    // clean up BehaviorSubjects
+    _priv.playing$.complete();
+    _priv.speed$.complete();
+    _priv.wantedBufferAhead$.complete();
+    _priv.maxBufferAhead$.complete();
+    _priv.maxBufferBehind$.complete();
+
+    // clean up potentially heavy objects
+    _priv.playing$ = null;
+    _priv.speed$ = null;
+    _priv.wantedBufferAhead$ = null;
+    _priv.maxBufferAhead$ = null;
+    _priv.maxBufferBehind$ = null;
+    _priv.clearLoadedContent$ = null;
+    _priv.imageTrack$ = null;
     _priv.fullScreenSubscription = null;
-    _priv.stream$ = null; // @deprecated
     _priv.errorStream$ = null;
-
     _priv.lastBitrates = null;
     _priv.manualBitrates = null;
     _priv.maxAutoBitrates = null;
-
-    _priv.wantedBufferAhead$.complete();
-    _priv.wantedBufferAhead$ = null;
-
-    _priv.maxBufferAhead$.complete();
-    _priv.maxBufferAhead$ = null;
-
-    _priv.maxBufferBehind$.complete();
-    _priv.maxBufferBehind$ = null;
-
     this.videoElement = null;
   }
 
@@ -307,7 +303,7 @@ class Player extends EventEmitter {
     const { videoElement } = this;
     const {
       errorStream$: errorStream,
-      clearLoaded$,
+      clearLoadedContent$,
       wantedBufferAhead$,
       maxBufferAhead$,
       maxBufferBehind$,
@@ -323,11 +319,11 @@ class Player extends EventEmitter {
       throttle: this._priv.throttleWhenHidden === false ? void 0 : {
         video: inBackground$()
           .map(isBg => isBg ? 0 : Infinity)
-          .takeUntil(clearLoaded$),
+          .takeUntil(clearLoadedContent$),
       },
       limitWidth: this._priv.limitVideoWidth === false ? void 0 : {
         video: videoWidth$(videoElement)
-          .takeUntil(clearLoaded$),
+          .takeUntil(clearLoadedContent$),
       },
     };
 
@@ -344,6 +340,7 @@ class Player extends EventEmitter {
       errorStream,
       hideNativeSubtitle,
       keySystems,
+      speed$: this._priv.speed$,
       startAt,
       timeFragment, // @deprecated
       timings$,
@@ -355,10 +352,10 @@ class Player extends EventEmitter {
       supplementaryImageTracks,
       supplementaryTextTracks,
     })
-      .takeUntil(clearLoaded$)
+      .takeUntil(clearLoadedContent$)
       .publish();
 
-    const stalled = filterStreamByType(stream, "stalled")
+    const stalled$ = filterStreamByType(stream, "stalled")
       .startWith(null);
 
     const loaded = filterStreamByType(stream, "loaded")
@@ -366,7 +363,7 @@ class Player extends EventEmitter {
       .share();
 
     const stateChanges = loaded.mapTo(PLAYER_STATES.LOADED)
-      .concat(combineLatest(this._priv.playing$, stalled, inferPlayerState))
+      .concat(combineLatest(this._priv.playing$, stalled$, inferPlayerState))
       .distinctUntilChanged()
       .startWith(PLAYER_STATES.LOADING);
 
@@ -374,7 +371,7 @@ class Player extends EventEmitter {
     const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
 
     let streamDisposable = void 0;
-    clearLoaded$.take(1).subscribe(() => {
+    clearLoadedContent$.take(1).subscribe(() => {
       if (streamDisposable) {
         streamDisposable.unsubscribe();
       }
@@ -383,18 +380,19 @@ class Player extends EventEmitter {
     const noop = () => {};
 
     playChanges
-      .takeUntil(clearLoaded$)
+      .takeUntil(clearLoadedContent$)
       .subscribe(x => this._priv.onPlayPauseNext(x), noop);
 
     textTracksChanges
-      .takeUntil(clearLoaded$)
+      .takeUntil(clearLoadedContent$)
       .subscribe(x => this._priv.onNativeTextTrackNext(x), noop);
 
     timings$
-      .takeUntil(clearLoaded$)
+      .takeUntil(clearLoadedContent$)
       .subscribe(x => this._priv.triggerTimeChange(x), noop);
 
     stateChanges
+      .takeUntil(clearLoadedContent$)
       .subscribe(x => this._priv.setPlayerState(x), noop);
 
     stream.subscribe(
@@ -404,7 +402,7 @@ class Player extends EventEmitter {
     );
 
     errorStream
-      .takeUntil(clearLoaded$)
+      .takeUntil(clearLoadedContent$)
       .subscribe(
         x => this._priv.onErrorStreamNext(x)
       );
@@ -623,7 +621,7 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getPlaybackRate() {
-    return this.videoElement.playbackRate;
+    return this._priv.speed$.getValue();
   }
 
   /**
@@ -723,7 +721,7 @@ class Player extends EventEmitter {
    * @param {Number} rate
    */
   setPlaybackRate(rate) {
-    this.videoElement.playbackRate = rate;
+    this._priv.speed$.next(rate);
   }
 
   /**
@@ -910,13 +908,6 @@ class Player extends EventEmitter {
    */
   getWantedBufferAhead() {
     return this._priv.wantedBufferAhead$.getValue();
-  }
-
-  /**
-   * TODO Deprecate this API
-   */
-  asObservable() {
-    return this._priv.stream$;
   }
 
   /**

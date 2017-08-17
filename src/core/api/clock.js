@@ -114,7 +114,7 @@ const getStalledStatus = (prevTimings, currentTimings, withMediaSource) => {
     duration,
     paused,
     readyState,
-    playbackRate: playback,
+    playbackRate,
   } = currentTimings;
 
   const {
@@ -166,7 +166,7 @@ const getStalledStatus = (prevTimings, currentTimings, withMediaSource) => {
   }
 
   if (shouldStall) {
-    return { state: currentName, playbackRate: playback };
+    return { state: currentName, playbackRate };
   }
   else if (shouldUnstall) {
     return null;

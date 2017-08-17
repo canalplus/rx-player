@@ -19,7 +19,7 @@ import { on } from "../../utils/rx-utils";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
- * event is received through the videoElement
+ * event is received through the videoElement.
  * @see MediaError
  * @returns {Observable}
  */

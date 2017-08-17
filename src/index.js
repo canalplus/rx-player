@@ -39,6 +39,7 @@ import "rxjs/add/operator/mapTo";
 import "rxjs/add/operator/merge";
 import "rxjs/add/operator/mergeMap";
 import "rxjs/add/operator/multicast";
+import "rxjs/add/operator/pairwise";
 import "rxjs/add/operator/publish";
 import "rxjs/add/operator/scan";
 import "rxjs/add/operator/share";
