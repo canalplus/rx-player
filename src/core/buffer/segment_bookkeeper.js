@@ -249,19 +249,22 @@ export default class SegmentBookkeeper {
       }
 
       // update the bufferedEnd of the last segment in that range
+      // Note: lastSegmentInRange can be undefined
       const lastSegmentInRange = _inventory[inventoryIndex - 1];
-      if (
-        lastSegmentInRange.bufferedEnd != null &&
-        lastSegmentInRange.bufferedEnd > rangeEnd
-      ) {
-        // the segment appears to have been partially garbage collected.
-        // Update bufferedEnd
-        lastSegmentInRange.bufferedEnd = rangeEnd;
-      } else if (lastSegmentInRange.bufferedEnd == null) {
-        if (rangeEnd - lastSegmentInRange.end <= MAX_BUFFERED_DISTANCE) {
+      if (lastSegmentInRange) {
+        if (
+          lastSegmentInRange.bufferedEnd != null &&
+          lastSegmentInRange.bufferedEnd > rangeEnd
+        ) {
+          // the segment appears to have been partially garbage collected.
+          // Update bufferedEnd
           lastSegmentInRange.bufferedEnd = rangeEnd;
-        } else {
-          lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
+        } else if (lastSegmentInRange.bufferedEnd == null) {
+          if (rangeEnd - lastSegmentInRange.end <= MAX_BUFFERED_DISTANCE) {
+            lastSegmentInRange.bufferedEnd = rangeEnd;
+          } else {
+            lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
+          }
         }
       }
     }
