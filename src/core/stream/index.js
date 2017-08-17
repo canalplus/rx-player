@@ -70,6 +70,8 @@ const { END_OF_PLAY } = config;
 
 /**
  * Returns the pipeline options depending on the type of pipeline concerned.
+ * @param {string} bufferType - e.g. "audio"|"text"...
+ * @returns {Object} - Options to give to the Pipeline
  */
 const getPipelineOptions = bufferType => {
   const downloaderOptions = {};
@@ -78,7 +80,7 @@ const getPipelineOptions = bufferType => {
   } else if (bufferType === "image") {
     downloaderOptions.maxRetry = 0; // Deactivate BIF fetching if it fails
   }
-  return;
+  return downloaderOptions;
 };
 
 /**
