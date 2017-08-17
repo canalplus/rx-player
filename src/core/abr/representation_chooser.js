@@ -302,6 +302,10 @@ export default class RepresentationChooser {
             );
           }
 
+          if (clock.speed > 1) {
+            nextBitrate /= clock.speed;
+          }
+
           const _representations =
             getFilteredRepresentations(representations, deviceEvents);
 
