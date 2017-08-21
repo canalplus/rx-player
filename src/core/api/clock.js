@@ -60,8 +60,8 @@ const getResumeGap = stalled =>
  * @param {Number} duration
  * @returns {Boolean}
  */
-const isEnding = (gap, range, duration) =>
-  !!range && (duration - (gap + range.end)) <= STALL_GAP;
+const isEnding = (bufferGap, currentRange, duration) =>
+  currentRange && (duration - (bufferGap + currentRange.end)) <= STALL_GAP;
 
 /**
  * Generate a basic timings object from the video element and the eventName
@@ -107,27 +107,26 @@ function getTimings(video, name) {
  */
 const getStalledStatus = (prevTimings, currentTimings, withMediaSource) => {
   const {
-    state: currentName,
-    currentTime: currentTs,
-    bufferGap: gap,
-    currentRange: range,
+    state: currentState,
+    currentTime,
+    bufferGap,
+    currentRange,
     duration,
     paused,
     readyState,
-    playbackRate,
   } = currentTimings;
 
   const {
     stalled: prevStalled,
-    state: prevName,
-    currentTime: prevTs,
+    state: prevState,
+    currentTime: prevTime,
   } = prevTimings;
 
-  const ending = isEnding(gap, range, duration);
+  const ending = isEnding(bufferGap, currentRange, duration);
 
   const canStall = (
     readyState >= 1 &&
-    currentName != "loadedmetadata" &&
+    currentState != "loadedmetadata" &&
     !prevStalled &&
     !ending
   );
@@ -135,38 +134,43 @@ const getStalledStatus = (prevTimings, currentTimings, withMediaSource) => {
   let shouldStall, shouldUnstall;
 
   if (withMediaSource) {
-    shouldStall = (
+    if (
       canStall &&
-      (gap <= STALL_GAP || gap === Infinity || readyState === 1)
-    );
-
-    shouldUnstall = (
+      (bufferGap <= STALL_GAP || bufferGap === Infinity || readyState === 1)
+    ) {
+      shouldStall = true;
+    } else if (
       prevStalled &&
       readyState > 1 &&
-      gap < Infinity && (gap > getResumeGap(prevStalled) || ending)
-    );
+      bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending)
+    ) {
+      shouldUnstall = true;
+    }
   }
 
   // when using a direct file, the video will stall and unstall on its
   // own, so we only try to detect when the video timestamp has not changed
   // between two consecutive timeupdates
   else {
-    shouldStall = (
+    if (
       canStall &&
-      ( !paused && currentName == "timeupdate" && prevName == "timeupdate" &&
-        currentTs === prevTs || currentName == "seeking" && gap === Infinity )
-    );
-
-    shouldUnstall = (
+      ( !paused && currentState == "timeupdate" && prevState == "timeupdate" &&
+        currentTime === prevTime || currentState == "seeking" &&
+        bufferGap === Infinity )
+    ) {
+      shouldStall = true;
+    } else if (
       prevStalled &&
-      ( currentName != "seeking" && currentTs !== prevTs ||
-        currentName == "canplay" ||
-        gap < Infinity && (gap > getResumeGap(prevStalled) || ending))
-    );
+      ( currentState != "seeking" && currentTime !== prevTime ||
+        currentState == "canplay" ||
+        bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending))
+    ) {
+      shouldUnstall = true;
+    }
   }
 
   if (shouldStall) {
-    return { state: currentName, playbackRate };
+    return { state: currentState, timestamp: Date.now() };
   }
   else if (shouldUnstall) {
     return null;
@@ -239,4 +243,3 @@ function createTimingsSampler(video, { withMediaSource }) {
 }
 
 export default createTimingsSampler;
-
