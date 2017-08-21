@@ -20,7 +20,6 @@ import log from "../../utils/log";
 import { getNextRangeGap } from "../../utils/ranges.js";
 
 import { isPlaybackStuck } from "../../compat";
-import { getBufferLimits } from "../../manifest/timings.js";
 
 const { DISCONTINUITY_THRESHOLD } = config;
 
@@ -62,31 +61,6 @@ function StallingManager(
         const seekTo = (currentTime + nextRangeGap + 1/60);
         log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
         videoElement.currentTime = seekTo;
-      } else {
-        const [
-          minBufferPosition,
-          maxBufferPosition,
-        ] = getBufferLimits(manifest);
-        const bufferDepth = maxBufferPosition - minBufferPosition;
-
-        if (bufferDepth && bufferDepth > 5) {
-          const minimumPosition = Math.min(
-            minBufferPosition + 3,
-            minBufferPosition + (bufferDepth / 10),
-            maxBufferPosition - 5
-          );
-
-          if (currentTime < minimumPosition) {
-            const newPosition = minimumPosition + 5;
-            const diff = newPosition - currentTime;
-            log.warn("buffer depth seek", currentTime, diff, newPosition);
-            videoElement.currentTime = newPosition;
-          }
-        } else if (bufferDepth && currentTime < minBufferPosition) {
-          const diff = maxBufferPosition - currentTime;
-          log.warn("buffer depth seek", currentTime, diff, maxBufferPosition);
-          videoElement.currentTime = maxBufferPosition;
-        }
       }
     })
     .share()
