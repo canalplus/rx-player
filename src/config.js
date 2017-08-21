@@ -194,7 +194,7 @@ export default {
    *     separate counter is used (see DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE).
    * @type Number
    */
-  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: Infinity,
+  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR: 4,
 
   /**
    * Under some circonstances, we're able to tell that the user is offline (see
