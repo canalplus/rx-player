@@ -5,14 +5,13 @@
 ### Added
 
   - api: add getVideoBufferGap method
-  - position: the player will now automatically seek close to the buffer depth if stalled because it's waiting on too old segments.
   - config: a global config file has been created (src/config.js) to easily tweak the player pre-build
 
 ### Changed
 
   - api: private (undocumented) variables have been isolated on a player instance to a "\_priv" object.
-  - api: throttleWhenHidden is now set to false as default
-  - api: limitVideoWidth is now set to false as default
+  - api: throttleWhenHidden is now set to false by default
+  - api: limitVideoWidth is now set to false by default
 
 ### Removed
 
@@ -24,8 +23,8 @@
   - position: the currentTimeChange event has been removed in favor of positionUpdate
   - adaptive: getMetrics has been removed
   - adaptive: getAverageBitrates has been removed
-  - adaptive: getVideoMaxBitrate has been removed
-  - adaptive: getAudioMaxBitrate has been removed
+  - adaptive: getVideoMaxBitrate has been removed in favor of getMaxVideoBitrate
+  - adaptive: getAudioMaxBitrate has been removed in favor of getMaxAudioBitrate
   - errors: the static method getErrorTypes has been removed in favor of the static property errorTypes
   - errors: the static method getErrorCodes has been removed in favor of the static property errorCodes
   - languages: normalizeLanguageCode has been removed
@@ -41,6 +40,7 @@
 ### Bug Fixes:
 
   - speed: fix playback rate bug when setting it while the player is stalled
+  - buffer: avoid infinite player rebuffering when the manifest is not exactly aligned with the real duration of the content
   - buffer: avoid multiple causes of infinite player rebuffering by managing segment garbage collection
   - languages: getAudioTrack now always returns the currently set audio track
   - languages: getTextTrack now always returns the currently set text track
