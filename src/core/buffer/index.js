@@ -25,7 +25,6 @@ import { getLeftSizeOfRange } from "../../utils/ranges.js";
 import {
   MediaError,
   ErrorTypes,
-  ErrorCodes,
   IndexError,
 } from "../../errors";
 
