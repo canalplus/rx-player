@@ -25,14 +25,12 @@ class InitializationSegmentCache {
 
   add({ segment }, response) {
     if (segment.isInit) {
-      console.error("adding to cache", segment.id);
       this.cache[segment.id] = response;
     }
   }
 
   get({ segment }) {
     if (segment.isInit) {
-      console.error("current cache", Object.keys(this.cache));
       const value = this.cache[segment.id];
       if (value != null) {
         return value;
