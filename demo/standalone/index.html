@@ -1,27 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <title>CANAL+ PLAYER DEMO (stand-alone)</title>
-  </head>
-  <body>
-    <div id="toto" style="height:30px; width:300px; background-color:red" id="video" preload="auto" src="blob:http://127.0.0.1:8003/df2aa552-3e95-48ed-9b1b-656f2e72b364">
-      <video id="video"></video>
+    <head>
+      <meta charset="UTF-8">
+      <title>CANAL+ PLAYER DEMO (stand-alone)</title>
+    </head>
+    <body>
+      <video id="video"></div>
       <script type="text/javascript" src="./lib.js" charset="utf-8"></script>
       <script charset="utf-8">
-setTimeout(function() {
-    document.getElementById("toto").style.backgroundColor = "green";
-          window.player = new window.RxPlayer({
-            videoElement: document.getElementById("video")
-          });
-    document.getElementById("toto").style.backgroundColor = "blue";
-
-          player.loadVideo({
-            url: "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd",
-            transport: "dash",
-            autoPlay: true,
-          });
-  }, 7000);
+        window.player = new window.RxPlayer({
+          videoElement: document.getElementById("video")
+        });
       </script>
-  </body>
+    </body>
+
 </html>
