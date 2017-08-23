@@ -5,7 +5,7 @@ const webpackConfig = require("../../tools/webpack.config.js");
 const singleRun = !process.env.RXP_TESTS_WATCH;
 
 const karmaConf = {
-  basePath: "..",
+  basePath: ".",
 
   browsers: [
     "Chrome",

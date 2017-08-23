@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-// import { expect } from "chai";
-// import Player from "../index.js";
-
-// describe("api", function() {
-//   it("has constructor", function() {
-//     expect(new Player()).to.be.an("object");
-//   });
-
-//   it("is stopped on instanciation", function() {
-//     expect(new Player().getPlayerState()).to.equal("STOPPED");
-//   });
-
-//   it("check instanceof HTMLVideoElement", function() {
-//     expect(() => new Player({ videoElement: document.createElement("li") })).to.throw();
-//   });
-// });
+/**
+ * Returns the first argument given different from undefined.
+ * @param {...*} args
+ * @returns {*}
+ */
+export default (...args) => {
+  let i = 0;
+  const len = args.length;
+  while (i < len) {
+    if (args[i] !== undefined) {
+      return args[i];
+    }
+    i++;
+  }
+};

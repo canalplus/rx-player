@@ -15,7 +15,7 @@
  */
 
 import objectAssign from "object-assign";
-import { getMaximumSecureBufferPosition } from "../../manifest/timings.js";
+import { getMaximumBufferPosition } from "../../manifest/timings.js";
 
 /**
  * TODO I'm not sure that's useful here.
@@ -76,7 +76,7 @@ function createTimingsAndSeekingsObservables(
 
     // TODO remove liveGap for non-live?
     clonedTiming.liveGap = manifest.isLive ?
-      getMaximumSecureBufferPosition(manifest) - timing.currentTime :
+      getMaximumBufferPosition(manifest) - timing.currentTime :
       Infinity;
     return clonedTiming;
   });

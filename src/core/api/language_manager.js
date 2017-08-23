@@ -22,8 +22,6 @@ import {
   normalizeTextTrack,
 } from "../../utils/languages";
 
-import config from "../../config.js";
-
 const findTextAdaptation = (adaptations, trackConfig) => {
   if (!trackConfig) {
     return null;
@@ -71,26 +69,39 @@ class LanguageManager {
    * @constructor
    *
    * @param {Object} adaptations
-   * @param {Array.<Adaptation>} adaptations.audio
-   * @param {Array.<Adaptation>} adaptations.text
+   * @param {Array.<Adaptation>} adaptations.audio - The different audio
+   * adaptations available right now.
+   * Can be updated through the updateAdaptations method.
+   * @param {Array.<Adaptation>} adaptations.text - The different text
+   * adaptations available right now.
+   * Can be updated through the updateAdaptations method.
    *
    * @param {Object} adaptations$
-   * @param {Subject} adaptations$.audio$
-   * @param {Subject} adaptations$.text$
+   * @param {Subject} adaptations$.audio$ - Subject through which the chosen
+   * audio adaptation will be emitted.
+   * Will emit the first choice before the constructor finish.
+   * @param {Subject} adaptations$.text$ - Subject through which the chosen
+   * text adaptation will be emitted
+   * Will emit the first choice before the constructor finish.
    *
    * @param {Object} [options={}]
-   * @param {Object|null} [options.defaultTextTrack]
-   * @param {Object|null} [options.defaultAudioTrack]
+   * @param {Object} [options.defaultTextTrack] - The language and closedCaption
+   * status of the text track chosen by default. If not set, the first
+   * adaptation will be taken instead.
+   * @param {Object} [options.defaultAudioTrack] - The language and
+   * audiodescription status of the audio track chosen by default.
+   * If not set, the first adaptation will be taken instead.
    */
   constructor({ text, audio }, { text$, audio$ }, options = {}) {
-    const defaultAudioTrack = options.defaultAudioTrack === undefined ?
-      config.DEFAULT_AUDIO_TRACK : options.defaultAudioTrack;
+    const {
+      defaultAudioTrack,
+      defaultTextTrack,
+    } = options;
 
-    const defaultTextTrack = options.defaultTextTrack === undefined ?
-      config.DEFAULT_TEXT_TRACK : options.defaultTextTrack;
-
-    const normalizedAudioTrack = normalizeAudioTrack(defaultAudioTrack);
-    const normalizedTextTrack = normalizeTextTrack(defaultTextTrack);
+    const normalizedAudioTrack = defaultAudioTrack &&
+      normalizeAudioTrack(defaultAudioTrack);
+    const normalizedTextTrack = defaultTextTrack &&
+      normalizeTextTrack(defaultTextTrack);
 
     const textAdaptations = text || [];
     const audioAdaptations = audio || [];
@@ -105,21 +116,21 @@ class LanguageManager {
 
     if (audio$) {
       // emit initial adaptations
-      const initialAudioAdaptation =
+      const initialAudioAdaptation = normalizedAudioTrack ?
         findAudioAdaptation(audioAdaptations, normalizedAudioTrack) ||
-        audioAdaptations[0];
+        audioAdaptations[0] : audioAdaptations[0];
       this._currentAudioAdaptation = initialAudioAdaptation;
 
-      audio$.next(initialAudioAdaptation);
+      audio$.next(this._currentAudioAdaptation);
     }
 
     if (text$) {
-      const initialTextAdaptation =
+      const initialTextAdaptation = normalizedTextTrack ?
         findTextAdaptation(textAdaptations, normalizedTextTrack) ||
-        null;
+        null : null;
       this._currentTextAdaptation = initialTextAdaptation;
 
-      text$.next(initialTextAdaptation);
+      text$.next(this._currentTextAdaptation);
     }
   }
 
@@ -137,11 +148,10 @@ class LanguageManager {
     }
 
     if (!audioAdaptationFound) {
-      const foundTrack =
-        findAudioAdaptation(audio, {
-          language: currentAudioAdaptation.language,
-          audioDescription: !!currentAudioAdaptation.isAudioDescription,
-        });
+      const foundTrack = findAudioAdaptation(audio, {
+        language: currentAudioAdaptation.language,
+        audioDescription: !!currentAudioAdaptation.isAudioDescription,
+      });
 
       this._currentAudioAdaptation = foundTrack || audio[0];
       this._audio$.next(this._currentAudioAdaptation);
@@ -168,38 +178,6 @@ class LanguageManager {
     }
   }
 
-  /**
-   * @deprecated
-   */
-  setAudioTrackLegacy(trackConfig) {
-    const foundTrack = findAudioAdaptation(
-      this._audioAdaptations,
-      normalizeAudioTrack(trackConfig)
-    );
-
-    if (!foundTrack) {
-      throw new Error("Audio Track not found.");
-    }
-
-    this._audio$.next(foundTrack);
-  }
-
-  /**
-   * @deprecated
-   */
-  setTextTrackLegacy(trackConfig) {
-    const foundTrack = findTextAdaptation(
-      this._textAdaptations,
-      normalizeTextTrack(trackConfig)
-    );
-
-    if (foundTrack === undefined) {
-      throw new Error("Text Track not found.");
-    }
-
-    this._text$.next(foundTrack);
-  }
-
   setAudioTrack(wantedId) {
     const foundTrack = arrayFind(this._audioAdaptations, ({ id }) =>
       id === wantedId);
@@ -208,7 +186,8 @@ class LanguageManager {
       throw new Error("Audio Track not found.");
     }
 
-    this._audio$.next(foundTrack);
+    this._currentAudioAdaptation = foundTrack;
+    this._audio$.next(this._currentAudioAdaptation);
   }
 
   setTextTrack(wantedId) {
@@ -219,11 +198,13 @@ class LanguageManager {
       throw new Error("Text Track not found.");
     }
 
-    this._text$.next(foundTrack);
+    this._currentTextAdaptation = foundTrack;
+    this._text$.next(this._currentTextAdaptation);
   }
 
   disableTextTrack() {
-    this._text$.next(null);
+    this._currentTextAdaptation = null;
+    this._text$.next(this._currentTextAdaptation);
   }
 
   getCurrentAudioTrack() {

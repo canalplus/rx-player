@@ -5,21 +5,53 @@
 ### Added
 
   - api: add getVideoBufferGap method
+  - api: add isMute method
+  - api: add getManualAudioBitrate method
+  - api: add getManualVideoBitrate method
   - config: a global config file has been created (src/config.js) to easily tweak the player pre-build
 
 ### Changed
 
+  - api: setMaxVideoBitrate can now be called even when no content is playing
+  - api: setMaxAudioBitrate can now be called even when no content is playing
+  - api: setVideoBitrate can now be called even when no content is playing
+  - api: setAudioBitrate can now be called even when no content is playing
+  - api: calling setFullscreen with a boolean to false does not exit fullscreen anymore
+  - api: giving a number to seekTo now has the same effect than setting the position option
+  - api: getUrl now do not throw if no content is playing
+  - api: isLive now do not throw if no content is playing
+  - api: loadVideo does not return anything anymore
+  - api: the wantedBufferAhead constructor option has been added
+  - api: the maxBufferAhead constructor option has been added
+  - api: the maxBufferBehind constructor option has been added
   - api: private (undocumented) variables have been isolated on a player instance to a "\_priv" object.
   - api: throttleWhenHidden is now set to false by default
   - api: limitVideoWidth is now set to false by default
 
 ### Removed
 
+  - api: toggleDebug has been removed
+  - api: hideDebug has been removed
+  - api: showDebug has been removed
+  - api: getDebug has been removed
+  - api: getImageTrack has been removed
+  - api: setVideoBufferSize has been removed in favor of setWantedBufferAhead
+  - api: getVideoBufferSize has been removed in favor of getWantedBufferAhead
+  - api: setAudioBufferSize has been removed in favor of setWantedBufferAhead
+  - api: getAudioBufferSize has been removed in favor of getWantedBufferAhead
+  - api: the maximumBufferTime property has been removed from positionUpdate events
+  - api: the getCurrentime method has been removed
   - api: the asObservable method as been removed
+  - api: the loadVideo option manifests has been removed in favor of url and keySystems
+  - api: the loadVideo option subtitles has been removed in favor of supplementaryTextTracks
+  - api: the loadVideo option images has been removed in favor of supplementaryImageTracks
   - api: the constructor option initVideoBitrate has been removed in favor of initialVideoBitrate
   - api: the constructor option initAudioBitrate has been removed in favor of initialVideoBitrate
   - api: the constructor option defaultLanguage has been removed in favor of defaultAudioTrack
   - api: the constructor option defaultSubtitle has been removed in favor of defaultTextTrack
+  - position: the subtitleChange event has been removed
+  - position: the languageChange event has been removed
+  - position: the progress event has been removed
   - position: the currentTimeChange event has been removed in favor of positionUpdate
   - adaptive: getMetrics has been removed
   - adaptive: getAverageBitrates has been removed
@@ -39,6 +71,8 @@
 
 ### Bug Fixes:
 
+  - smooth: fix some minor risks of infinite rebuffering for live contents, when the isobmff's tfrf box is not well parsed.
+  - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
   - speed: fix playback rate bug when setting it while the player is stalled
   - buffer: avoid infinite player rebuffering when the manifest is not exactly aligned with the real duration of the content
   - buffer: avoid multiple causes of infinite player rebuffering by managing segment garbage collection
@@ -47,6 +81,7 @@
 
 ### Other improvements
 
+  - smooth: begin to play arround 10s before the live edge instead of 20 seconds for smooth contents
   - network: the backoff algorithm has been refactored for better network error resilience
   - adaptive: improved ABR management to provide a better, faster and more stable bandwidth estimation
   - adaptive: add strategies for abrupt changes of bandwidth to avoid excessive re-buffering on network fluctuations

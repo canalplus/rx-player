@@ -2,6 +2,8 @@ import { expect } from "chai";
 import sinon from "sinon";
 import RxPlayer from "../../../src";
 
+// TODO Use config file
+
 const fakeManifest = require("raw-loader!./fixtures/dash_dynamic_SegmentTimeline/manifest_mpm4sav_mvtime_w925796611.mpd");
 const fakeAudioInit = require("raw-loader!./fixtures/dash_dynamic_SegmentTimeline/chunk_ctaudio_cfm4s_ridp0aa0br96257_cinit_w925796611_mpd.m4s");
 const fakeVideoInit = require("raw-loader!./fixtures/dash_dynamic_SegmentTimeline/chunk_ctvideo_cfm4s_ridp0va0br601392_cinit_w925796611_mpd.m4s");
@@ -166,9 +168,6 @@ describe("dash live SegmentTimeline content", function () {
     await sleep(1);
     fakeServer.respond();
     await sleep(1);
-
-    expect(player.getAvailableLanguages()).to.eql(["eng"]);
-    expect(player.getAvailableSubtitles()).to.eql([]);
 
     const audioTracks = player.getAvailableAudioTracks();
     const textTracks = player.getAvailableTextTracks();

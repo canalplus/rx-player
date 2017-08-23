@@ -20,6 +20,10 @@ import {
   bytesToStr,
 } from "../../utils/bytes";
 
+/**
+ * @param {UInt8Array} buf
+ * @returns {Object}
+ */
 function parseBif(buf) {
   let pos = 0;
 

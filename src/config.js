@@ -16,8 +16,18 @@
 
 export default {
   /**
+   * Volume set on unMute if the volume is set to 0 and either:
+   *   - mute has never been called before
+   *   - mute has last been called while the volume was already set to 0 (either
+   *     via setVolume, or a previous mute call)
+   * @type {Number}
+   */
+  DEFAULT_UNMUTED_VOLUME: 0.1,
+
+  /**
    * Default audio track configuration, if none is set by the user.
    * Here in french for legacy reasons.
+   * @type {Object}
    */
   DEFAULT_AUDIO_TRACK: {
     language: "fra",
@@ -26,8 +36,17 @@ export default {
 
   /**
    * Default text track configuration, if none is set by the user.
+   * @type {Object|null}
    */
   DEFAULT_TEXT_TRACK: null,
+
+  /**
+   * If set to true, video through loadVideo will auto play by default
+   * (au
+   */
+  DEFAULT_AUTO_PLAY: false,
+
+  DEFAULT_SHOW_SUBTITLE: true,
 
   /*
    * Default buffer goal in seconds
@@ -111,9 +130,6 @@ export default {
   /**
    * Default initial live gap considered if no presentation delay has been
    * suggested, in seconds.
-   *
-   * TODO this is never used, as every transport techno has a default
-   * suggested presentation delay.
    * @type {Number}
    */
   DEFAULT_LIVE_GAP: 15,
@@ -121,19 +137,17 @@ export default {
   /**
    * Default value for a manifest's suggested presentation delay if not
    * specified in the manifest.
-   *
-   * TODO this should not be in a manifest as it does not reflect what is
-   * given server-side.
    * @type {Object}
    */
   DEFAULT_SUGGESTED_PRESENTATION_DELAY: {
-    SMOOTH: 20,
+    SMOOTH: 10,
     DASH: 15,
   },
 
   /**
    * Maximum time, in seconds, the player should automatically skip when stalled
    * because of a discontinuity in the downloaded range.
+   * @type {Number}
    */
   DISCONTINUITY_THRESHOLD: 1,
 
@@ -289,15 +303,15 @@ export default {
   ABR_STARVATION_GAP: 5,
 
   /**
-   * Number of seconds in the buffer after which playback will resume when
+   * Number of seconds ahead in the buffer after which playback will resume when
    * seeking on an unbuffered part of the stream.
    * @type {Number}
    */
   RESUME_AFTER_SEEKING_GAP: 0.5,
 
   /**
-   * Number of seconds in the buffer after which playback will resume after the
-   * player went through a buffering step.
+   * Number of seconds ahead in the buffer after which playback will resume
+   * after the player went through a buffering step.
    * @type {Number}
    */
   RESUME_AFTER_BUFFERING_GAP: 5,

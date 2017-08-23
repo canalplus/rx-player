@@ -18,6 +18,6 @@ const requireAll = function(requireContext) {
   return requireContext.keys().forEach(requireContext);
 };
 
-// require all modules ending in "-test.js" from the
+// require all modules ending in ".test.js" from the
 // core directory and all subdirectories
 requireAll(require.context("../../src", true, /\.test\.js$/));

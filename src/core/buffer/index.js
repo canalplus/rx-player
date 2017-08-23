@@ -33,7 +33,48 @@ import QueuedSourceBuffer from "./queued-source-buffer.js";
 import launchGarbageCollector from "./gc.js";
 import cleanBuffer from "./cleanBuffer.js";
 
-const BITRATE_REBUFFERING_RATIO = config.BITRATE_REBUFFERING_RATIO;
+const { BITRATE_REBUFFERING_RATIO } = config;
+
+/**
+ * Calculate start and end timestamps of the wanted buffer.
+ * @param {TimeRanges} buffered - TimeRanges coming from the concerned
+ * SourceBuffer
+ * @param {Object} clock
+ * @param {Number} bufferGoal
+ * @param {Object} paddings
+ * @param {Number} paddings.low
+ * @param {Number} paddings.high
+ * @returns {Object} - Start and end timestamps, in seconds, under an object
+ * form with two properties:
+ *   - start {Number}
+ *   - end {Number}
+ */
+function getWantedBufferRange(buffered, clock, bufferGoal, paddings) {
+  const { low: lowPadding, high: highPadding } = paddings;
+  const timestamp = clock.currentTime + clock.timeOffset;
+
+  // wantedBufferSize calculates the size of the buffer we want to ensure,
+  // taking into account the min between: the set max buffer size, the
+  // duration and the live gap.
+  const endDiff = (clock.duration || Infinity) - timestamp;
+  const wantedBufferSize = Math.max(0, clock.liveGap == null ?
+    Math.min(bufferGoal, endDiff) :
+    Math.min(bufferGoal, clock.liveGap, endDiff)
+  );
+
+  const bufferGap = getLeftSizeOfRange(buffered, timestamp);
+
+  // the ts padding is the time offset that we want to apply to our current
+  // timestamp in order to calculate the starting point of the list of
+  // segments to inject.
+  const timestampPadding = bufferGap > lowPadding && bufferGap < Infinity ?
+    Math.min(bufferGap, highPadding) : 0;
+
+  return {
+    start: timestamp + timestampPadding,
+    end: timestamp + wantedBufferSize,
+  };
+}
 
 /**
  * Manage a single buffer:
@@ -81,8 +122,8 @@ function Buffer({
   // safety level (low and high water mark) size of buffer that won't
   // be flushed when switching representation for smooth transitions
   // and avoiding buffer underflows
-  const LOW_WATER_MARK_PAD  = bufferType == "video" ? 4 : 1;
-  const HIGH_WATER_MARK_PAD = bufferType == "video" ? 6 : 1;
+  const LOW_PADDING  = bufferType == "video" ? 4 : 1;
+  const HIGH_PADDING = bufferType == "video" ? 6 : 1;
 
   const bookkeeper = new SegmentBookkeeper();
   const bufferingQueue = new QueuedSourceBuffer(sourceBuffer);
@@ -119,33 +160,53 @@ function Buffer({
       return initSegment ? [initSegment] : [];
     }
 
+    const { start, end } = getWantedBufferRange(buffered, timing, bufferGoal, {
+      low: LOW_PADDING,
+      high: HIGH_PADDING,
+    });
+    const duration = end - start;
+
+    /**
+     * TODO This is an ugly hack for now.
+     * shouldRefresh returns true if, from the informations given and the type
+     * of index used in the manifest, we infer that we have to refresh the
+     * manifest (to get informations about subsequent needed segments).
+     *
+     * The problem with shouldRefresh is that depending on the type of techno,
+     * we want different things:
+     *
+     *   - for smooth contents, index informations about a segment n is present
+     *     in the container of the segment n-1. Thus, shouldRefresh should
+     *     return true there if the segment n-1 has been parsed but we still
+     *     miss informations about the segment n (this happens).
+     *
+     *   - for dash contents, we prefer to fetch the manifest as soon as we
+     *     miss the informations about even one distant segment in the future.
+     *     Thus, shouldRefresh should return true there if the end of the
+     *     wanted range is not yet in the index.
+     *
+     * Doing the DASH usecase does not cause much problem (though the precision
+     * of the range end could be improved).
+     * The smooth usecase is however difficult to implement with the current
+     * code (we have to know that we parsed the last segment from the index and
+     * that we need the next segment, for which we have no information).
+     * As a quick and dirty hack, we take the current time instead. If the
+     * current time is well into the last segment and our range indicates
+     * that we need another segment, we should refresh. However, this is not
+     * efficient:
+     *   - we have a high chance of rebuffering when this happens. It would
+     *     be best to know that we have the last segment (one other problem is
+     *     that this segment could be in another representation) before
+     *     actually playing it.
+     *   - the player stops usually some milliseconds before the end of the
+     *     last segment, but this is not an exact thing. So we have to add
+     *     rounding and infer the fact that we're well into the last segment.
+     *   - for readability, it makes no sense that shouldRefresh might need
+     *     the current time of playback.
+     */
     const timestamp = timing.currentTime + timing.timeOffset;
-
-    // wantedBufferSize calculates the size of the buffer we want to ensure,
-    // taking into account the min between: the set max buffer size, the
-    // duration and the live gap.
-    const endDiff = (timing.duration || Infinity) - timestamp;
-    const wantedBufferSize = Math.max(0, timing.liveGap == null ?
-      Math.min(bufferGoal, endDiff) :
-      Math.min(bufferGoal, timing.liveGap, endDiff)
-    );
-
-    // the ts padding is the time offset that we want to apply to our current
-    // timestamp in order to calculate the starting point of the list of
-    // segments to inject.
-    let timestampPadding;
-    const bufferGap = getLeftSizeOfRange(buffered, timestamp);
-    if (bufferGap > LOW_WATER_MARK_PAD && bufferGap < Infinity) {
-      timestampPadding = Math.min(bufferGap, HIGH_WATER_MARK_PAD);
-    } else {
-      timestampPadding = 0;
-    }
-
-    const from = timestamp + timestampPadding;
-    const to = timestamp + wantedBufferSize;
-    const duration = to - from;
     const shouldRefresh = representation.index
-        .shouldRefresh(timestamp, from, timestamp + wantedBufferSize);
+      .shouldRefresh(timestamp, start, end);
     if (shouldRefresh) {
       const error = new IndexError(
         "OUT_OF_INDEX_ERROR", representation.index.getType(), false);
@@ -155,8 +216,7 @@ function Buffer({
     // given the current timestamp and the previously calculated time gap and
     // wanted buffer size, we can retrieve the list of segments to inject in
     // our pipelines.
-    const mediaSegments =
-      representation.index.getSegments(from, duration);
+    const mediaSegments = representation.index.getSegments(start, duration);
 
     if (initSegment) {
       mediaSegments.unshift(initSegment);

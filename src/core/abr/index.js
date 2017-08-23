@@ -17,9 +17,7 @@
 import { Subject } from "rxjs/Subject";
 
 import arrayIncludes from "../../utils/array-includes.js";
-import config from "../../config.js";
 import assert from "../../utils/assert.js";
-import takeFirstSet from "../../utils/takeFirstSet.js";
 
 import RepresentationChooser from "./representation_chooser.js";
 
@@ -42,24 +40,13 @@ const assertType = type =>
  * @returns {Observable} - The RepresentationChooser instance
  */
 const createChooser = (type, options) => {
-  /**
-   * First bitrate set
-   * @type {Number}
-   */
-  const initialBitrate = takeFirstSet(
-    options.initialBitrates[type],
-    config.DEFAULT_INITIAL_BITRATES[type],
-    config.DEFAULT_INITIAL_BITRATES.other
-  );
-
-  const instanceOptions = {
+  return new RepresentationChooser({
     limitWidth$: options.limitWidth[type],
     throttle$: options.throttle[type],
-    initialBitrate,
+    initialBitrate: options.initialBitrates[type],
     manualBitrate: options.manualBitrates[type],
     maxAutoBitrate: options.maxAutoBitrates[type],
-  };
-  return new RepresentationChooser(instanceOptions);
+  });
 };
 
 /**
@@ -143,13 +130,13 @@ export default class ABRManager {
    *     - size {Number}: size of the downloaded chunks, in bytes.
    *
    * @param {Object} [options={}]
-   * @param {Object} [options.initialBitrates]
-   * @param {Object} [options.manualBitrates]
-   * @param {Object} [options.maxAutoBitrates]
-   * @param {Object} [options.throttle]
-   * @param {Object} [options.limitWidth]
+   * @param {Object} [options.initialBitrates={}]
+   * @param {Object} [options.manualBitrates={}]
+   * @param {Object} [options.maxAutoBitrates={}]
+   * @param {Object} [options.throttle={}]
+   * @param {Object} [options.limitWidth={}]
    */
-  constructor(requests$, metrics$, options) {
+  constructor(requests$, metrics$, options = {}) {
     // Subject emitting and completing on dispose.
     // Used to clean up every created observables.
     this._dispose$ = new Subject();
@@ -162,26 +149,13 @@ export default class ABRManager {
 
     // Will contain options used when (lazily) instantiating a
     // RepresentationChooser
-    this._chooserInstanceOptions = options;
-
-    if (!this._chooserInstanceOptions.initialBitrates) {
-      this._chooserInstanceOptions.initialBitrates =
-        config.DEFAULT_INITIAL_BITRATES || {};
-    }
-    if (!this._chooserInstanceOptions.manualBitrates) {
-      this._chooserInstanceOptions.manualBitrates =
-        config.DEFAULT_MANUAL_BITRATES || {};
-    }
-    if (!this._chooserInstanceOptions.maxAutoBitrates) {
-      this._chooserInstanceOptions.maxAutoBitrates =
-        config.DEFAULT_MAX_AUTO_BITRATES || {};
-    }
-    if (!this._chooserInstanceOptions.throttle) {
-      this._chooserInstanceOptions.throttle = {};
-    }
-    if (!this._chooserInstanceOptions.limitWidth) {
-      this._chooserInstanceOptions.limitWidth = {};
-    }
+    this._chooserInstanceOptions = {
+      initialBitrates: options.initialBitrates || {},
+      manualBitrates: options.manualBitrates || {},
+      maxAutoBitrates: options.maxAutoBitrates || {},
+      throttle: options.throttle || {},
+      limitWidth: options.limitWidth || {},
+    };
 
     metrics$
       .takeUntil(this._dispose$)

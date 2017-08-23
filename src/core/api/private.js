@@ -26,19 +26,14 @@
  *     users to not rely on them.
  */
 
-import objectAssign from "object-assign";
 import deepEqual from "deep-equal";
 
 import log from "../../utils/log";
 import assert from "../../utils/assert";
-import warnOnce from "../../utils/warnOnce.js";
-import { parseTimeFragment } from "./time-fragment";
-import Transports from "../../net";
 
 import {
   toWallClockTime,
   getMaximumBufferPosition,
-  getMaximumSecureBufferPosition,
 } from "../../manifest/timings.js";
 
 import { PLAYER_STATES } from "./constants.js";
@@ -105,7 +100,6 @@ export default (self) => ({
       self._priv.onManifestChange(value);
       break;
     case "pipeline":
-      self.trigger("progress", value.segment);
       const { bufferType, parsed } = value;
       if (bufferType === "image") {
         const value = parsed.segmentData;
@@ -299,18 +293,10 @@ export default (self) => ({
     const positionData = {
       position: timing.currentTime,
       duration: timing.duration,
-      bufferGap: isFinite(timing.bufferGap) ? timing.bufferGap : 0, // TODO fix higher up
       playbackRate: timing.playbackRate,
 
-      // TODO This property should be removed in a next version (after
-      // multiple tests) to only have liveGap
-      // We should be the closest to the live edge when it comes to buffering.
-      // TODO normally, we should also integrate timeFragment.end into this
-      // However. It would be very ugly to do so and keeping compatibility
-      // hard.
-      // As this is a new API, and as timeFragment is deprecated, I let it
-      // pass (do not hit me!)
-      maximumBufferTime: getMaximumSecureBufferPosition(self._priv.manifest),
+      // TODO fix higher up?
+      bufferGap: isFinite(timing.bufferGap) ? timing.bufferGap : 0,
     };
 
     if (self._priv.manifest.isLive && timing.currentTime > 0) {
@@ -322,141 +308,5 @@ export default (self) => ({
     }
 
     self.trigger("positionUpdate", positionData);
-  },
-
-  /**
-   * Parse the options given as arguments to the loadVideo method.
-   * @param {Player} player
-   * @param {Object} opts
-   * @returns {Object}
-   */
-  parseLoadVideoOptions(opts) {
-    opts = objectAssign({
-      transport: self.defaultTransport,
-      transportOptions: {},
-      keySystems: [],
-      timeFragment: {}, // @deprecated
-      textTracks: [],
-      imageTracks: [],
-      autoPlay: false,
-      hideNativeSubtitle: false,
-      directFile: false,
-    }, opts);
-
-    let {
-      transport,
-      url,
-      keySystems,
-      timeFragment, // @deprecated
-      supplementaryTextTracks,
-      supplementaryImageTracks,
-    } = opts;
-
-    const {
-      subtitles,
-      images,
-      transportOptions,
-      manifests,
-      autoPlay,
-      directFile,
-      defaultLanguage,
-      defaultAudioTrack,
-      defaultSubtitle,
-      defaultTextTrack,
-      hideNativeSubtitle, // TODO better name
-      startAt,
-      emeRobustnesses,
-    } = opts;
-
-    // ---- Deprecated calls
-
-    let _defaultAudioTrack = defaultAudioTrack;
-    let _defaultTextTrack = defaultTextTrack;
-
-    if (defaultLanguage != null && defaultAudioTrack == null) {
-      warnOnce("defaultLanguage is deprecated. Use defaultAudioTrack instead");
-      _defaultAudioTrack = defaultLanguage;
-    }
-    if (
-      opts.hasOwnProperty("defaultSubtitle") &&
-      !opts.hasOwnProperty("defaultTextTrack")
-    ) {
-      warnOnce("defaultSubtitle is deprecated. Use defaultTextTrack instead");
-      _defaultTextTrack = defaultSubtitle;
-    }
-
-    if (subtitles !== void 0 && supplementaryTextTracks === void 0) {
-      warnOnce(
-        "the subtitles option is deprecated. Use supplementaryTextTracks instead"
-      );
-      supplementaryTextTracks = subtitles;
-    }
-    if (images !== void 0 && supplementaryImageTracks === void 0) {
-      warnOnce(
-        "the images option is deprecated. Use supplementaryImageTracks instead"
-      );
-      supplementaryImageTracks = images;
-    }
-
-    // ----
-
-    if (_defaultAudioTrack === undefined) {
-      _defaultAudioTrack = self._priv.lastAudioTrack;
-    }
-
-    if (_defaultTextTrack === undefined) {
-      _defaultTextTrack = self._priv.lastTextTrack;
-    }
-
-    timeFragment = parseTimeFragment(timeFragment); // @deprecated
-
-    // compatibility with directFile api
-    if (directFile) {
-      transport = "directfile";
-    }
-
-    // compatibility with old API authorizing to pass multiple
-    // manifest url depending on the key system
-    assert(!!manifests ^ !!url, "player: you have to pass either a url or a list of manifests");
-    if (manifests) {
-      warnOnce(
-        "the manifests options is deprecated, use url instead"
-      );
-      const firstManifest = manifests[0];
-      url = firstManifest.url;
-
-      supplementaryTextTracks = firstManifest.subtitles || [];
-      supplementaryImageTracks = firstManifest.images || [];
-      keySystems = manifests.map((man) => man.keySystem).filter(Boolean);
-    }
-
-    if (typeof transport == "string") {
-      transport = Transports[transport];
-    }
-
-    if (typeof transport == "function") {
-      transport = transport(objectAssign(
-        {},
-        self.defaultTransportOptions,
-        transportOptions
-      ));
-    }
-
-    assert(transport, "player: transport " + opts.transport + " is not supported");
-
-    return {
-      url,
-      keySystems,
-      supplementaryTextTracks,
-      hideNativeSubtitle,
-      supplementaryImageTracks,
-      timeFragment, // @deprecated
-      autoPlay,
-      transport,
-      startAt,
-      emeRobustnesses,
-      defaultAudioTrack: _defaultAudioTrack,
-      defaultTextTrack: _defaultTextTrack,
-    };
   },
 });

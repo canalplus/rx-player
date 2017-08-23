@@ -165,6 +165,13 @@ export default function(options={}) {
       let nextSegments, segmentInfos;
       let segmentData = responseData;
 
+      const indexRange = segment.indexRange;
+      const sidxSegments =
+        parseSidx(responseData, indexRange ? indexRange[0] : 0);
+      if (sidxSegments) {
+        nextSegments = sidxSegments;
+      }
+
       if (segment.isInit) {
         segmentInfos = { time: -1, duration: 0 };
         const timescale = getMDHDTimescale(responseData);
@@ -175,13 +182,6 @@ export default function(options={}) {
           segmentData = patchPssh(responseData, adaptation.contentProtection);
         }
       } else {
-        const indexRange = segment.indexRange;
-        const sidxSegments =
-          parseSidx(responseData, indexRange ? indexRange[0] : 0);
-        if (sidxSegments) {
-          nextSegments = sidxSegments;
-        }
-
         segmentInfos =
           getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
       }
@@ -257,11 +257,29 @@ export default function(options={}) {
     parser({ response, segment, adaptation, representation, init }) {
       const { language } = adaptation;
       const { isInit, indexRange } = segment;
-      const isMP4 = isMP4EmbeddedTrack(representation);
-      const responseData = isMP4 ?
-        new Uint8Array(response.responseData) : response.responseData;
+      let responseData;
+      let text;
       let nextSegments, segmentInfos;
       let segmentData = [];
+
+      const isMP4 = isMP4EmbeddedTrack(representation);
+      if (isMP4) {
+        responseData = new Uint8Array(response.responseData);
+        text = bytesToStr(getMdat(responseData));
+
+        const sidxSegments =
+          parseSidx(responseData, indexRange ? indexRange[0] : 0);
+
+        if (sidxSegments) {
+          nextSegments = sidxSegments;
+        }
+        if (!isInit) {
+          segmentInfos =
+            getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
+        }
+      } else {
+        responseData = text = response.responseData;
+      }
 
       if (isInit) {
         segmentInfos = { time: -1, duration: 0 };
@@ -272,21 +290,6 @@ export default function(options={}) {
           }
         }
       } else {
-        let text;
-        if (isMP4) {
-          text = bytesToStr(getMdat(responseData));
-          const sidxSegments =
-            parseSidx(responseData, indexRange ? indexRange[0] : 0);
-
-          if (sidxSegments) {
-            nextSegments = sidxSegments;
-          }
-          segmentInfos =
-            getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
-        } else {
-          text = responseData;
-        }
-
         const { codec = "" } = representation;
 
         switch (codec.toLowerCase()) {

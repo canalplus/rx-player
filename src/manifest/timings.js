@@ -18,16 +18,6 @@
  * TODO methods of manifest class?
  */
 
-/**
- * Amount of time substracted from the live edge to prevent buffering ahead
- * of it.
- *
- * TODO This property should be removed in a next version (after multiple
- * tests).
- * We should be the closest to the live edge when it comes to buffering.
- */
-const LIVE_BUFFER_PROTECTION = 10;
-
 function toWallClockTime(position, manifest) {
   return new Date((position + manifest.availabilityStartTime) * 1000);
 }
@@ -91,22 +81,6 @@ function getMaximumBufferPosition(manifest) {
   return now - availabilityStartTime - presentationLiveGap;
 }
 
-/**
- * Get maximum buffer position with, for live contents, an added security to
- * prevent buffering ahead of the live edge.
- *
- * TODO This method should be removed in a next version (after multiple tests).
- * We should be the closest to the live edge when it comes to buffering.
- *
- * @param {Manifest} manifest
- * @returns {Number}
- */
-function getMaximumSecureBufferPosition(manifest) {
-  const maximumBufferPosition = getMaximumBufferPosition(manifest);
-  return manifest.isLive ?
-    maximumBufferPosition - LIVE_BUFFER_PROTECTION : maximumBufferPosition;
-}
-
 function getBufferLimits(manifest) {
   // TODO use RTT for the manifest request + 3 or something
   const BUFFER_DEPTH_SECURITY = 5;
@@ -134,6 +108,5 @@ export {
   fromWallClockTime,
   getMinimumBufferPosition,
   getMaximumBufferPosition,
-  getMaximumSecureBufferPosition,
   getBufferLimits,
 };

@@ -68,8 +68,8 @@ export default function(options={}) {
           responseType: "document",
           ignoreProgressEvents: true,
         })
-          .map(extractISML) // TODO test that or remove completely
-          .map(({ value }) => value);
+          .map(({ value }) => value)
+          .map(extractISML); // TODO remove completely
       }
       else {
         resolving = Observable.of(url);

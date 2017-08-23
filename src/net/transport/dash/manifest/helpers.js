@@ -27,18 +27,19 @@ const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 
 /**
- * Calculate the last time for the last video index, in s.
- * TODO(pierre): support more than juste timeline index type
  * @param {Object} index
  * @returns {Number}
  */
 function calculateIndexLastLiveTimeReference(index) {
   if (index.indexType === "timeline") {
     const { ts, r, d } = index.timeline[index.timeline.length - 1];
-    return ((ts + (r+1)*d) / index.timescale);
+
+    // TODO FIXME does that make sense?
+    const securityTime = Math.min(Math.max(d / index.timescale, 5), 10);
+    return ((ts + (r+1)*d) / index.timescale) - securityTime;
   }
-  // By default (e.g. for templates), live Edge is right now
-  return Date.now() / 1000;
+  // By default (e.g. for templates), live Edge is right now - 5s
+  return Date.now() / 1000 - 5;
 }
 
 /**

@@ -30,7 +30,7 @@ export default {
   setTimescale,
   scale,
 
-  shouldRefresh(index, time) {
+  shouldRefresh(index, time, from, to) {
     const {
       timeline,
       timescale,
@@ -47,7 +47,15 @@ export default {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return scaledTime >= getTimelineRangeEnd(last);
+    const lastEnd = getTimelineRangeEnd(last);
+    const scaledTo = to * timescale - presentationTimeOffset;
+
+    // TODO This is an ugly hack, see buffer code.
+    // What we do here is to check if we are currently close to the end
+    // of the index and if we still have no informations about the next
+    // segments.
+    // If that's the case we have to refresh.
+    return (lastEnd - scaledTime) / timescale <= 1 && scaledTo > lastEnd;
   },
 
   getFirstPosition(index) {

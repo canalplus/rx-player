@@ -27,13 +27,11 @@ const normalizeRange = (index, ts, duration) => {
   };
 };
 
-const getTimelineRangeEnd = ({ ts, d, r }) => {
-  if (d === -1) {
-    return ts;
-  } else {
-    return ts + (r+1) * d;
-  }
-};
+const getTimelineRangeStart = ({ ts, d, r }) =>
+  d === -1 ? ts : ts + r * d ;
+
+const getTimelineRangeEnd = ({ ts, d, r }) =>
+  d === -1 ? ts : ts + (r+1) * d;
 
 const getInitSegment = (rootId, index) => {
   const { initialization = {} } = index;
@@ -78,6 +76,7 @@ const scale = (index, time)  => {
 
 export {
   normalizeRange,
+  getTimelineRangeStart,
   getTimelineRangeEnd,
   getInitSegment,
   setTimescale,

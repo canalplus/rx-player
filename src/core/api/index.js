@@ -15,19 +15,24 @@
  */
 
 /**
- * This file defines the player API
+ * This file defines the public player API
  */
 
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
 
-import log from "../../utils/log";
-import warnOnce from "../../utils/warnOnce.js";
 import config from "../../config.js";
+
+import log from "../../utils/log";
 import { on } from "../../utils/rx-utils";
 import EventEmitter from "../../utils/eventemitter";
 import assert from "../../utils/assert";
+import {
+  getLeftSizeOfRange,
+  getSizeOfRange,
+  getPlayedSizeOfRange,
+} from "../../utils/ranges.js";
 
 import {
   HTMLVideoElement_,
@@ -40,16 +45,13 @@ import {
   inBackground as inBackground$,
   videoWidth as videoWidth$,
 } from "../../compat/events.js";
-
-import createClock from "./clock.js";
-
+import Transports from "../../net";
 import {
   toWallClockTime,
   fromWallClockTime,
   getMaximumBufferPosition,
   getMinimumBufferPosition,
 } from "../../manifest/timings.js";
-
 import {
   ErrorTypes,
   ErrorCodes,
@@ -59,24 +61,17 @@ import Stream from "../stream/index.js";
 import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
 
 import { PLAYER_STATES } from "./constants.js";
+import createClock from "./clock.js";
 import attachPrivateMethods from "./private.js";
 import inferPlayerState from "./infer_player_state.js";
-
 import {
-  getLeftSizeOfRange,
-  getSizeOfRange,
-  getPlayedSizeOfRange,
-} from "../../utils/ranges.js";
+  parseConstructorOptions,
+  parseLoadVideoOptions,
+} from "./option_parsers.js";
 
-
-/**
- * Assert that a manifest has been loaded (throws otherwise).
- * @param {Player} player
- * @throws Error - Throws if the given player has no manifest loaded.
- */
-function assertManifest(player) {
-  assert(player._priv.manifest, "player: no manifest loaded");
-}
+const {
+  DEFAULT_UNMUTED_VOLUME,
+} = config;
 
 /**
  * @param {Observable} stream
@@ -111,42 +106,40 @@ class Player extends EventEmitter {
   /**
    * Note: as the private state from this class can be pretty heavy, every
    * private properties should be initialized here for better visibility.
-   * @param {Object} [options={}]
+   * @param {Object} options
    * @param {HTMLVideoElement_} options.videoElement
    */
-  constructor(options = {}) {
-    let { videoElement } = options;
-
+  constructor(options) {
+    super();
     const {
+      defaultAudioTrack,
+      defaultTextTrack,
+      initialAudioBitrate,
+      initialVideoBitrate,
+      limitVideoWidth,
+      maxAudioBitrate,
+      maxBufferAhead,
+      maxBufferBehind,
+      maxVideoBitrate,
+      throttleWhenHidden,
       transport,
       transportOptions,
-      defaultAudioTrack, // XXX TODO Rename initialAudioTrack?
-      defaultTextTrack, // XXX TODO Rename initialTextTrack?
-      initialVideoBitrate,
-      initialAudioBitrate,
-      maxVideoBitrate,
-      maxAudioBitrate,
-      limitVideoWidth,
-      throttleWhenHidden,
-    } = options;
+      videoElement,
+      wantedBufferAhead,
+    } = parseConstructorOptions(options);
 
-    super();
-    this.version = /*PLAYER_VERSION*/"2.3.2";
-    this.log = log;
-    this.state = undefined;
-    if (transport) {
-      this.defaultTransport = transport;
-    }
-    this.defaultTransportOptions = transportOptions || {};
-    if (!videoElement) {
-      videoElement = document.createElement("video");
-    }
     assert((videoElement instanceof HTMLVideoElement_),
       "videoElement needs to be an HTMLVideoElement");
 
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
+
+    this.version = /*PLAYER_VERSION*/"2.3.2";
+    this.log = log;
+    this.state = undefined;
+    this.defaultTransport = transport;
+    this.defaultTransportOptions = transportOptions;
     this.videoElement = videoElement;
 
     this._priv = attachPrivateMethods(this);
@@ -174,14 +167,9 @@ class Player extends EventEmitter {
     this._priv.imageTrack$ = new Subject()
       .takeUntil(this._priv.destroy$);
 
-    this._priv.wantedBufferAhead$ =
-      new BehaviorSubject(config.DEFAULT_WANTED_BUFFER_AHEAD);
-
-    this._priv.maxBufferAhead$ =
-      new BehaviorSubject(config.DEFAULT_MAX_BUFFER_AHEAD);
-
-    this._priv.maxBufferBehind$ =
-      new BehaviorSubject(config.DEFAULT_MAX_BUFFER_BEHIND);
+    this._priv.wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
+    this._priv.maxBufferAhead$ = new BehaviorSubject(maxBufferAhead);
+    this._priv.maxBufferBehind$ = new BehaviorSubject(maxBufferBehind);
 
     // keep track of the last set audio/text track
     this._priv.lastAudioTrack = defaultAudioTrack;
@@ -192,17 +180,20 @@ class Player extends EventEmitter {
       audio: initialAudioBitrate,
       video: initialVideoBitrate,
     };
-    this._priv.maxAutoBitrates = {
+    this._priv.initialMaxAutoBitrates = {
       audio: maxAudioBitrate,
       video: maxVideoBitrate,
     };
-    this._priv.manualBitrates = {};
+    this._priv.manualBitrates = {
+      audio: -1,
+      video: -1,
+    };
 
     // adaptive initial private state
     this._priv.throttleWhenHidden = throttleWhenHidden;
     this._priv.limitVideoWidth = limitVideoWidth;
 
-    this._priv.mutedMemory = 0.1; // memorize previous volume when muted
+    this._priv.mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
     // private state set later
     [
@@ -266,7 +257,7 @@ class Player extends EventEmitter {
     _priv.errorStream$ = null;
     _priv.lastBitrates = null;
     _priv.manualBitrates = null;
-    _priv.maxAutoBitrates = null;
+    _priv.initialMaxAutoBitrates = null;
     this.videoElement = null;
   }
 
@@ -274,24 +265,36 @@ class Player extends EventEmitter {
    * Load a new video.
    * @param {Object} options
    * @returns {Observable}
+   * @throws Error - throws if no url is given.
+   * @throws Error - throws if no transport is given and no default transport
+   * has been set.
+   * @throws Error - throws if the asked transport does not exist
    */
   loadVideo(options = {}) {
-    options = this._priv.parseLoadVideoOptions(options);
+    options = parseLoadVideoOptions(options, this);
     log.info("loadvideo", options);
 
     const {
-      url,
-      keySystems,
-      supplementaryTextTracks,
-      hideNativeSubtitle,
-      supplementaryImageTracks,
-      timeFragment, // @deprecated
       autoPlay,
-      transport,
       defaultAudioTrack,
       defaultTextTrack,
+      hideNativeSubtitle,
+      keySystems,
       startAt,
+      supplementaryImageTracks,
+      supplementaryTextTracks,
+      timeFragment, // @deprecated
+      transport,
+      transportOptions,
+      url,
     } = options;
+
+    assert(url, "you have to give an url");
+    assert(transport, "you have to set the transport type");
+
+    const Transport = Transports[transport];
+    assert(Transport, `transport "${transport}" not supported`);
+    const transportObj = Transport(transportOptions);
 
     this.stop();
 
@@ -316,13 +319,13 @@ class Player extends EventEmitter {
     const adaptiveOptions = {
       initialBitrates: this._priv.lastBitrates,
       manualBitrates: this._priv.manualBitrates,
-      maxAutoBitrates: this._priv.maxAutoBitrates,
-      throttle: this._priv.throttleWhenHidden === false ? void 0 : {
+      maxAutoBitrates: this._priv.initialMaxAutoBitrates,
+      throttle: this._priv.throttleWhenHidden && {
         video: inBackground$()
           .map(isBg => isBg ? 0 : Infinity)
           .takeUntil(clearLoadedContent$),
       },
-      limitWidth: this._priv.limitVideoWidth === false ? void 0 : {
+      limitWidth: this._priv.limitVideoWidth && {
         video: videoWidth$(videoElement)
           .takeUntil(clearLoadedContent$),
       },
@@ -345,7 +348,7 @@ class Player extends EventEmitter {
       startAt,
       timeFragment, // @deprecated
       timings$,
-      transport,
+      transport: transportObj,
       url,
       videoElement,
       withMediaSource,
@@ -410,7 +413,32 @@ class Player extends EventEmitter {
 
     streamDisposable = stream.connect();
 
-    return loaded;
+    // TODO Return promise here?
+    // Not done for now because the unhandled promise rejection warnings can
+    // be an annoyance.
+    // return new Promise((resolve, reject) => {
+    //   const _loaded$ = loaded
+    //     .map(() => ({ type: "loaded" }));
+
+    //   const _canceled$ = clearLoadedContent$
+    //     .map(() => ({ type: "canceled" }));
+
+    //   const _errored$ = stream.ignoreElements()
+    //     .catch((error) => ({ type: "error", error }));
+
+    //   Observable.merge(_loaded$, _canceled$, _errored$)
+    //     .take(1)
+    //     .subscribe((item) => {
+    //       switch(item.type) {
+    //       case "loaded":
+    //         resolve(item);
+    //         break;
+    //       case "canceled":
+    //       case "error":
+    //         reject(item);
+    //       }
+    //     });
+    // });
   }
 
   /**
@@ -424,12 +452,17 @@ class Player extends EventEmitter {
   /**
    * Returns manifest/playlist object.
    * null if the player is STOPPED.
-   * @returns {Object|null}
+   * @returns {Manifest|null}
    */
   getManifest() {
     return this._priv.manifest || null;
   }
 
+  /**
+   * Returns adaptations (tracks) for every currently playing type
+   * (audio/video/text...).
+   * @returns {Object|null}
+   */
   getCurrentAdaptations() {
     if (!this._priv.manifest){
       return null;
@@ -437,6 +470,11 @@ class Player extends EventEmitter {
     return this._priv.currentAdaptations;
   }
 
+  /**
+   * Returns representations (qualities) for every currently playing type
+   * (audio/video/text...).
+   * @returns {Object|null}
+   */
   getCurrentRepresentations() {
     if (!this._priv.manifest){
       return null;
@@ -446,6 +484,8 @@ class Player extends EventEmitter {
 
   /**
    * Returns the video DOM element used by the player.
+   * You should not its HTML5 API directly and use the player's method instead,
+   * to ensure a well-behaved player.
    * @returns {HMTLMediaElement}
    */
   getVideoElement() {
@@ -466,14 +506,6 @@ class Player extends EventEmitter {
   }
 
   /**
-   * @deprecate
-   * @returns {Observable}
-   */
-  getImageTrack() {
-    return this._priv.imageTrack$.distinctUntilChanged();
-  }
-
-  /**
    * Returns the player's current state.
    * @returns {string}
    */
@@ -482,31 +514,32 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Returns true if the content is a live content.
+   * Returns true if:
+   *   - a content is loaded
+   *   - the content is a live content
    * @returns {Boolean}
-   * TODO Do not throw if STOPPED
-   * @throws Error - Throws if the given player has no manifest loaded.
    */
   isLive() {
-    assertManifest(this);
+    if (!this._priv.manifest) {
+      return false;
+    }
     return this._priv.manifest.isLive;
   }
 
   /**
    * Returns the url of the content's manifest
-   * @returns {string}
-   * @throws Error - Throws if the given player has no manifest loaded.
-   * TODO Do not throw if STOPPED
+   * @returns {string"undefined}
    */
   getUrl() {
-    assertManifest(this);
+    if (!this._priv.manifest) {
+      return;
+    }
     return this._priv.manifest.getUrl();
   }
 
   /**
    * Returns the video duration, in seconds.
    * NaN if no video is playing.
-   * Infinity if a live content is playing.
    * @returns {Number}
    */
   getVideoDuration() {
@@ -550,31 +583,6 @@ class Player extends EventEmitter {
       this.videoElement.buffered,
       this.videoElement.currentTime
     );
-  }
-
-  /**
-   * Returns the current playback position :
-   *   - 0 if no manifest is currently loaded
-   *   - in seconds for an on-demand content
-   *   - with a Date object for live content.
-   * @deprecated
-   * @returns {Number|Date}
-   */
-  getCurrentTime() {
-    warnOnce(
-      "getCurrentTime is deprecated and won't be available in the next major version." +
-      " Use either getWallClockTime or getPosition instead."
-    );
-    if (!this._priv.manifest) {
-      return 0;
-    }
-
-    const ct = this.videoElement.currentTime;
-    if (this._priv.manifest.isLive) {
-      return toWallClockTime(ct, this._priv.manifest);
-    } else {
-      return ct;
-    }
   }
 
   /**
@@ -632,6 +640,7 @@ class Player extends EventEmitter {
   }
 
   /**
+   * Returns the current speed at which the video plays.
    * @returns {Number}
    */
   getPlaybackRate() {
@@ -679,8 +688,24 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Returns currently considered bitrate for video segments.
+   * Returns the manual audio bitrate set. -1 if in AUTO mode.
    * @returns {Number}
+   */
+  getManualAudioBitrate() {
+    return this._priv.manualBitrates.audio;
+  }
+
+  /**
+   * Returns the manual video bitrate set. -1 if in AUTO mode.
+   * @returns {Number}
+   */
+  getManualVideoBitrate() {
+    return this._priv.manualBitrates.video;
+  }
+
+  /**
+   * Returns currently considered bitrate for video segments.
+   * @returns {Number|undefined}
    */
   getVideoBitrate() {
     return this._priv.recordedEvents.videoBitrate;
@@ -688,7 +713,7 @@ class Player extends EventEmitter {
 
   /**
    * Returns currently considered bitrate for audio segments.
-   * @returns {Number}
+   * @returns {Number|undefined}
    */
   getAudioBitrate() {
     return this._priv.recordedEvents.audioBitrate;
@@ -699,8 +724,8 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxVideoBitrate() {
-    if (this._priv.abrManager) {
-      return undefined;
+    if (!this._priv.abrManager) {
+      return this._priv.initialMaxAutoBitrates.video;
     }
     return this._priv.abrManager.getMaxAutoBitrate("video");
   }
@@ -710,8 +735,8 @@ class Player extends EventEmitter {
    * @returns {Number}
    */
   getMaxAudioBitrate() {
-    if (this._priv.abrManager) {
-      return undefined;
+    if (!this._priv.abrManager) {
+      return this._priv.initialMaxAutoBitrates.audio;
     }
     return this._priv.abrManager.getMaxAutoBitrate("audio");
   }
@@ -731,7 +756,7 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Update the playback rate of the video (TODO adapt this with ABR).
+   * Update the playback rate of the video.
    * @param {Number} rate
    */
   setPlaybackRate(rate) {
@@ -748,41 +773,39 @@ class Player extends EventEmitter {
   /**
    * Seek to a given absolute position.
    * Refer to getCurrentTime to give relative positions.
-   * @param {Number} time
-   * @returns {Number} - The time the player has seek to, relatively to the
-   * video tag currentTime.
+   * @param {Number|Object} time
+   * @returns {Number} - The time the player has seek to
    */
   seekTo(time) {
-    assertManifest(this);
-    const currentTs = this.videoElement.currentTime;
+    assert(this._priv.manifest, "player: no manifest loaded");
 
-    // NON-deprecated part
-    if (time) {
+    let positionWanted;
+    const type = typeof time;
+
+    if (type === "number") {
+      positionWanted = time;
+    } else if (type === "object") {
+      const currentTs = this.videoElement.currentTime;
       if (time.relative != null) {
-        this.videoElement.currentTime = currentTs + time.relative;
-        return;
-      }
-      else if (time.position != null) {
-        this.videoElement.currentTime = time.position;
-        return;
-      }
-      else if (time.wallClockTime != null) {
-        this.videoElement.currentTime =
+        positionWanted = currentTs + time.relative;
+      } else if (time.position != null) {
+        positionWanted = time.position;
+      } else if (time.wallClockTime) {
+        positionWanted =
           fromWallClockTime(time.wallClockTime * 1000, this._priv.manifest);
-        return;
+      } else {
+        throw new Error("invalid time object. You must set one of the " +
+          "following properties: \"relative\", \"position\" or " +
+          "\"wallClockTime\"");
       }
     }
 
-    // deprecated part
-    if (this._priv.manifest.isLive) {
-      time = fromWallClockTime(time, this._priv.manifest);
+    if (positionWanted === undefined) {
+      throw new Error("invalid time given");
     }
-    if (time !== currentTs) {
-      log.info("seek to", time);
-      return (this.videoElement.currentTime = time);
-    } else {
-      return currentTs;
-    }
+
+    this.videoElement.currentTime = positionWanted;
+    return positionWanted;
   }
 
   exitFullscreen() {
@@ -794,16 +817,12 @@ class Player extends EventEmitter {
    * @deprecated
    * @param {Boolean} [toggle=true] - if false, exit full screen.
    */
-  setFullscreen(toggle = true) {
-    if (toggle === false) {
-      warnOnce("setFullscreen(false) is deprecated. Use exitFullscreen instead");
-      exitFullscreen();
-    } else {
-      requestFullscreen(this.videoElement);
-    }
+  setFullscreen() {
+    requestFullscreen(this.videoElement);
   }
 
   /**
+   * Set the player's volume. From 0 (muted volume) to 1 (maximum volume).
    * @param {Number}
    */
   setVolume(volume) {
@@ -813,17 +832,30 @@ class Player extends EventEmitter {
     }
   }
 
+  /**
+   * Returns true if the volume is set to 0. false otherwise.
+   * @returns {Boolean}
+   */
+  isMute() {
+    return !this.getVolume();
+  }
+
+  /**
+   * Set the volume to 0 and save current one for when unmuted.
+   */
   mute() {
-    this._priv.mutedMemory = this.getVolume() || 0.1;
+    this._priv.mutedMemory = this.getVolume();
     this.setVolume(0);
   }
 
+  /**
+   * Set the volume back to when it was when mute was last called.
+   * If the volume was set to 0, set a default volume instead (see config).
+   */
   unMute() {
-    // TODO This is not perfect as volume can be set to 0 without being muted.
-    // We should probably reset this.muted once unMute is called.
     const vol = this.getVolume();
     if (vol === 0) {
-      this.setVolume(this._priv.mutedMemory);
+      this.setVolume(this._priv.mutedMemory || DEFAULT_UNMUTED_VOLUME);
     }
   }
 
@@ -831,46 +863,52 @@ class Player extends EventEmitter {
    * Force the video bitrate to a given value. Act as a ceil.
    * -1 to set it on AUTO Mode
    * @param {Number} btr
-   * TODO Allow this when no content is playing?
    */
   setVideoBitrate(btr) {
-    assert(this._priv.abrManager);
     this._priv.manualBitrates.video = btr;
-    this._priv.abrManager.setManualBitrate("video", btr);
+    if (this._priv.abrManager) {
+      this._priv.abrManager.setManualBitrate("video", btr);
+    }
   }
 
   /**
    * Force the audio bitrate to a given value. Act as a ceil.
    * -1 to set it on AUTO Mode
    * @param {Number} btr
-   * TODO Allow this when no content is playing?
    */
   setAudioBitrate(btr) {
-    assert(this._priv.abrManager);
     this._priv.manualBitrates.audio = btr;
-    this._priv.abrManager.setManualBitrate("audio", btr);
+    if (this._priv.abrManager) {
+      this._priv.abrManager.setManualBitrate("audio", btr);
+    }
   }
 
   /**
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
-   * TODO Allow this when no content is playing?
    */
   setMaxVideoBitrate(btr) {
-    assert(this._priv.abrManager);
-    this._priv.maxAutoBitrates.video = btr;
-    this._priv.abrManager.setMaxAutoBitrate("video", btr);
+    // set it for the next content loaded
+    this._priv.initialMaxAutoBitrates.video = btr;
+
+    // set it for the current if one is loaded
+    if (this._priv.abrManager) {
+      this._priv.abrManager.setMaxAutoBitrate("video", btr);
+    }
   }
 
   /**
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
-   * TODO Allow this when no content is playing?
    */
   setMaxAudioBitrate(btr) {
-    assert(this._priv.abrManager);
-    this._priv.maxAutoBitrates.audio = btr;
-    this._priv.abrManager.setMaxAutoBitrate("audio", btr);
+    // set it for the next content loaded
+    this._priv.initialMaxAutoBitrates.audio = btr;
+
+    // set it for the current if one is loaded
+    if (this._priv.abrManager) {
+      this._priv.abrManager.setMaxAutoBitrate("audio", btr);
+    }
   }
 
   /**

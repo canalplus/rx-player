@@ -150,7 +150,7 @@ function createEME(video, keySystems, errorStream) {
 function dispose() {
   // Remove MediaKey before to prevent MediaKey error
   // if other instance is creating after dispose
-  disposeMediaKeys(instanceInfos.$videoElement).subscibe(() => {});
+  disposeMediaKeys(instanceInfos.$videoElement).subscribe(() => {});
   instanceInfos.$mediaKeys = null;
   instanceInfos.$keySystem = null;
   instanceInfos.$videoElement = null;
