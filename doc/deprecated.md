@@ -181,7 +181,7 @@ You can either give:
 
 ### <a name="meth-setVideoBufferSize"></a>setVideoBufferSize
 
-``setVideoBufferSize`` will be removed from the API. Its role can eventually be replaced by the new ``setWantedBufferAhaead`` API which will set the buffering goal (buffer size).
+``setVideoBufferSize`` will be removed from the API. Its role can eventually be replaced by the new ``setWantedBufferAhead`` API which will set the buffering goal (buffer size).
 
 The only difference being than this is not type-related (as in audio/video types) anymore.
 
