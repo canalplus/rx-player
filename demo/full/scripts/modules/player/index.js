@@ -6,7 +6,7 @@
  * application.
  */
 
-import RxPlayer from "../../../../src";
+import RxPlayer from "../../../../../src";
 import { linkPlayerEventsToState } from "./events.js";
 
 const PLAYER = ({ $destroy, state }, { videoElement }) => {

@@ -2,7 +2,7 @@ node_modules
 *.log
 *.keys
 
-demo/bundle.js
+demo/full/bundle.js
 demo/standalone/lib.js
 
 tools/tests/coverage/

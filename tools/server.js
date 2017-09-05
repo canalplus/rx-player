@@ -8,7 +8,7 @@ const webpackConfig = require("./webpack-demo.config.js");
 
 const compiler = Webpack(webpackConfig);
 const server = new WebpackDevServer(compiler, {
-  contentBase: path.join(__dirname, "../demo"),
+  contentBase: path.join(__dirname, "../demo/full"),
   compress: true,
 });
 
