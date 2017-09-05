@@ -58,7 +58,6 @@ export default (self) => ({
 
     self._priv.recordedEvents = {}; // event memory
 
-    self._priv.timeFragment = { start: null, end: null }; // @deprecated
     self._priv.fatalError = null;
     self._priv.imageTrack$.next(null); // @deprecated
     self._priv.currentImagePlaylist = null;

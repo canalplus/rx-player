@@ -116,7 +116,6 @@ export default function Stream({
   timings$,
   hideNativeSubtitle, // Whether TextTracks subtitles should be hidden or not
   errorStream, // subject through which minor errors are emitted TODO Remove?
-  timeFragment, // @deprecated
 
   withMediaSource = true,
 
@@ -174,9 +173,6 @@ export default function Stream({
     );
   });
 
-  // TODO @deprecate?
-  const fragEndTimeIsFinite = timeFragment.end < Infinity;
-
   const nativeBuffers = {}; // SourceBuffers added to the MediaSource
   const customBuffers = {}; // custom SourceBuffers
 
@@ -210,8 +206,7 @@ export default function Stream({
    */
   const endOfPlay = timings$
     .filter(({ currentTime, duration }) => (
-      duration > 0 &&
-      Math.min(duration, timeFragment.end) - currentTime < END_OF_PLAY
+      duration > 0 && duration - currentTime < END_OF_PLAY
     ));
 
   /**
@@ -397,7 +392,7 @@ export default function Stream({
    * @returns {Observable}
    */
   function createVideoEventsObservables(manifest, timings) {
-    const startTime = getInitialTime(manifest, startAt, timeFragment);
+    const startTime = getInitialTime(manifest, startAt);
 
     /**
      * Time offset is an offset to add to the timing's current time to have
@@ -504,10 +499,7 @@ export default function Stream({
       setDurationToMediaSource(mediaSource, manifest.getDuration());
     }
 
-    const { timings: _timings, seekings } = createTimings(
-      manifest, timings$, fragEndTimeIsFinite, timeFragment
-    );
-
+    const { timings: _timings, seekings } = createTimings(manifest, timings$);
     const { loaded$, clock$ } =
       createVideoEventsObservables(manifest, _timings);
 

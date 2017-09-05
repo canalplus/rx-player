@@ -15,11 +15,9 @@
  */
 
 import config from "../../config.js";
-import assert from "../../utils/assert";
 import {
   getBufferLimits,
   getMaximumBufferPosition,
-  fromWallClockTime,
 } from "../../manifest/timings.js";
 
 const { DEFAULT_LIVE_GAP } = config;
@@ -33,16 +31,9 @@ const { DEFAULT_LIVE_GAP } = config;
  *
  * @param {Manifest} manifest
  * @param {Object} startAt
- * @param {Object} timeFragment
  * @returns {Number}
  */
-export default function getInitialTime(manifest, startAt, timeFragment) {
-  // TODO @deprecated
-  const duration = manifest.getDuration();
-  let startTime = timeFragment.start;
-  let endTime = timeFragment.end;
-  const percentage = /^\d*(\.\d+)? ?%$/;
-
+export default function getInitialTime(manifest, startAt) {
   if (startAt) {
     const [min, max] = getBufferLimits(manifest);
     if (startAt.position != null) {
@@ -67,32 +58,10 @@ export default function getInitialTime(manifest, startAt, timeFragment) {
     }
   }
 
-  else { // TODO @deprecated
-    if (typeof startTime == "string" && percentage.test(startTime)) {
-      startTime = (parseFloat(startTime) / 100) * duration;
-    }
-
-    if (typeof endTime == "string" && percentage.test(endTime)) {
-      timeFragment.end = (parseFloat(endTime) / 100) * duration;
-    }
-
-    if (endTime === Infinity || endTime === "100%") {
-      endTime = duration;
-    }
-
-    if (!manifest.isLive) {
-      assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
-      return startTime;
-    }
-    else if (startTime) {
-      return fromWallClockTime(startTime, manifest);
-    }
-    else {
-      const sgp = manifest.suggestedPresentationDelay;
-      return getMaximumBufferPosition(manifest) -
-        (sgp == null ? DEFAULT_LIVE_GAP : sgp);
-    }
+  if (manifest.isLive) {
+    const sgp = manifest.suggestedPresentationDelay;
+    return getMaximumBufferPosition(manifest) -
+      (sgp == null ? DEFAULT_LIVE_GAP : sgp);
   }
-
   return 0;
 }

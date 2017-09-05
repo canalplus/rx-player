@@ -58,21 +58,9 @@ function seekingsSampler(timingsSampling) {
  * @param {Object} manifest
  * @returns {Object}
  */
-function createTimingsAndSeekingsObservables(
-  manifest,
-  timings,
-  fragEndTimeIsFinite,
-  timeFragment
-) {
+function createTimingsAndSeekingsObservables(manifest, timings) {
   const augmentedTimings = timings.map((timing) => {
-    let clonedTiming;
-    if (fragEndTimeIsFinite) {
-      clonedTiming = objectAssign({}, timing);
-      clonedTiming.currentTime = Math.min(timing.currentTime, timeFragment.end);
-      clonedTiming.duration = Math.min(timing.duration, timeFragment.end);
-    } else {
-      clonedTiming = timing;
-    }
+    const clonedTiming = objectAssign({}, timing);
 
     // TODO remove liveGap for non-live?
     clonedTiming.liveGap = manifest.isLive ?

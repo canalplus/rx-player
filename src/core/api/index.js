@@ -200,7 +200,6 @@ class Player extends EventEmitter {
       "abrManager", "currentAdaptations", "currentImagePlaylist",
       "currentRepresentations", "fatalError", "initialAudioTrack",
       "initialTextTrack", "languageManager", "manifest", "recordedEvents",
-      "timeFragment",
     ].forEach(key => {
       this._priv[key] = undefined;
     });
@@ -283,7 +282,6 @@ class Player extends EventEmitter {
       startAt,
       supplementaryImageTracks,
       supplementaryTextTracks,
-      timeFragment, // @deprecated
       transport,
       transportOptions,
       url,
@@ -298,7 +296,6 @@ class Player extends EventEmitter {
 
     this.stop();
 
-    this._priv.timeFragment = timeFragment; // @deprecated
     this._priv.initialAudioTrack = defaultAudioTrack;
     this._priv.initialTextTrack = defaultTextTrack;
 
@@ -346,7 +343,6 @@ class Player extends EventEmitter {
       keySystems,
       speed$: this._priv.speed$,
       startAt,
-      timeFragment, // @deprecated
       timings$,
       transport: transportObj,
       url,
@@ -621,22 +617,6 @@ class Player extends EventEmitter {
    */
   getPosition() {
     return this.videoElement.currentTime;
-  }
-
-  /**
-   * @deprecated
-   * @returns {Number}
-   */
-  getStartTime() {
-    return this._priv.timeFragment.start;
-  }
-
-  /**
-   * @deprecated
-   * @returns {Number}
-   */
-  getEndTime() {
-    return this._priv.timeFragment.end;
   }
 
   /**
@@ -1062,11 +1042,6 @@ class Player extends EventEmitter {
     return getMinimumBufferPosition(this._priv.manifest);
   }
 
-  // TODO normally, we should also integrate timeFragment.end into this
-  // However. It would be very ugly to do so and keeping compatibility
-  // hard.
-  // As this is a new API, and as timeFragment is deprecated, I let it
-  // pass (do not hit me!)
   getMaximumPosition() {
     if (!this._priv.manifest) {
       return null;

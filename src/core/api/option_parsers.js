@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { parseTimeFragment } from "./time-fragment";
 import config from "../../config.js";
 import takeFirstDefined from "../../utils/takeFirstDefined.js";
 
@@ -128,12 +127,6 @@ function parseLoadVideoOptions(options = {}, ctx) {
     supplementaryTextTracks: def(options.supplementaryTextTracks, []),
     supplementaryImageTracks: def(options.supplementaryImageTracks, []),
   };
-
-  // @deprecated
-  {
-    const timeFragmentOption = def(options.timeFragment, {});
-    parsed.timeFragment = parseTimeFragment(timeFragmentOption);
-  }
 
   if (options.directFile) {
     parsed.transport = "directfile";
