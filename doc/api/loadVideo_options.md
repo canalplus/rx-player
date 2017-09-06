@@ -212,7 +212,7 @@ Note that this option can also be set in the constructor. If both set in the con
 
 ### <a name="prop-supplementaryTextTracks"></a>supplementaryTextTracks
 
-_type_: ``Array.<Object>|undefined``
+_type_: ``Array.<Object>|Object|undefined``
 _defaults_: ``[]``
 
 This option allows to specify informations about supplementary text tracks you might want to
@@ -235,15 +235,20 @@ const supplementaryTextTracks = [{
   closedCaption: false // {Boolean} Whether the text track is a closed caption
                        // for the hard of hearing
 
-  mimeType: "application/ttml+xml", // {string} A mimeType used to describe
-                                    // the text format.
+  mimeType: "application/mp4", // {string} A mimeType used to describe
+                               // the text format.
+
+  codecs: "stpp"               // {string|undefined} Depending on the mimeType,
+                               // you might need to add codec information.
+                               // Here the mimeType is too generic, the codec
+                               // helps us understand this is ttml in an mp4
+                               // container
 }];
 ```
-This API is not ideal (for the ``mimeType`` part) and will be refactored for the release 3.0.0.
 
 ### <a name="prop-supplementaryImageTracks"></a>supplementaryImageTracks
 
-_type_: ``Array.<Object>|undefined``
+_type_: ``Array.<Object>|Object|undefined``
 _defaults_: ``[]``
 
 This option allows to specify informations about supplementary image tracks you might want to
@@ -264,7 +269,6 @@ const supplementaryImageTracks = [{
                                // the image format.
 }];
 ```
-This API is not ideal (for the ``mimeType`` part) and will be refactored for the release 3.0.0.
 
 ### <a name="prop-hideNativeSubtitle"></a>hideNativeSubtitle
 
