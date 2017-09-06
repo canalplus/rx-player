@@ -5,16 +5,19 @@
   - [Overview](#overview)
   - [Properties](#prop)
     - [videoElement](#prop-videoElement)
-    - [transport](#prop-transport)
-    - [transportOptions](#prop-transportOptions)
-    - [defaultAudioTrack](#prop-defaultAudioTrack)
-    - [defaultTextTrack](#prop-defaultTextTrack)
-    - [initialVideoBitrate](#prop-initialVideoBitrate)
-    - [initialAudioBitrate](#prop-initialAudioBitrate)
-    - [maxVideoBitrate](#prop-maxVideoBitrate)
-    - [maxAudioBitrate](#prop-maxAudioBitrate)
-    - [limitVideoWidth](#prop-limitVideoWidth)
-    - [throttleWhenHidden](#prop-throttleWhenHidden)
+      - [transport](#prop-transport)
+      - [transportOptions](#prop-transportOptions)
+      - [defaultAudioTrack](#prop-defaultAudioTrack)
+      - [defaultTextTrack](#prop-defaultTextTrack)
+      - [initialVideoBitrate](#prop-initialVideoBitrate)
+      - [initialAudioBitrate](#prop-initialAudioBitrate)
+      - [maxVideoBitrate](#prop-maxVideoBitrate)
+      - [maxAudioBitrate](#prop-maxAudioBitrate)
+      - [limitVideoWidth](#prop-limitVideoWidth)
+      - [throttleWhenHidden](#prop-throttleWhenHidden)
+      - [wantedBufferAhead](#prop-wantedBufferAhead)
+      - [maxBufferAhead](#prop-maxBufferAhead)
+      - [maxBufferBehind](#prop-maxBufferBehind)
 
 ## <a name="overview"></a>Overview
 
@@ -109,7 +112,7 @@ const player = new Player({
 });
 ```
 
-Giving a string instead of an object is the same as setting an object with ``audioDescription`` set to false (``"fr" == { language: "fr", audioDescription: false }``).
+Giving a string instead of an object is the same as setting an object with ``audioDescription`` set to ``false`` (``"fr" == { language: "fr", audioDescription: false }``).
 
 You can still set a default audio track per-content with the ``loadVideo`` method.
 
@@ -141,7 +144,7 @@ const player = new Player({
 });
 ```
 
-Giving a string instead of an object is the same as setting an object with ``closedCaption`` set to false (``"fr" == { language: "fr", closedCaption: false }``).
+Giving a string instead of an object is the same as setting an object with ``closedCaption`` set to ``false`` (``"fr" == { language: "fr", closedCaption: false }``).
 
 By default, text tracks are deactivated (``null`` value as ``defaultTextTrack``).
 
@@ -225,16 +228,17 @@ This limit can be removed by setting it to ``Infinity`` (which is the default va
 
 _type_: ``Boolean``
 
-_defaults_: ``true``
+_defaults_: ``false``
 
 As a default, the possible video representations (qualities) considered are filtered by width:
 The maximum width considered is the closest superior or equal to the video element's width.
 
 This is done because the other, "superior" representations will not have any difference in terms of pixels (as in most case, the display limits the maximum resolution displayable). It thus save bandwidth with no visible difference.
 
-For some reasons (displaying directly a good quality when switching to fullscreen, specific environments), you might want to deactivate this limit.
+To activate this feature, set it to ``true``.
 
-To do so, you can set ``limitVideoWidth`` to ``false``.
+For some reasons (displaying directly a good quality when switching to fullscreen, specific environments), you might want to not activate this limit.
+
 
 ```js
 const player = Player({
@@ -247,11 +251,11 @@ const player = Player({
 
 _type_: ``Boolean``
 
-_defaults_: ``true``
+_defaults_: ``false``
 
 The player has a specific feature which throttle the video to the minimum bitrate when the current page is hidden for more than a minute (based on ``document.hidden``).
 
-If this usecase does not matter to you, you might want to deactivate this feature by setting ``throttleWhenHidden`` to ``false``.
+To activate this feature, set it to ``true``.
 
 ```js
 const player = Player({
@@ -259,3 +263,39 @@ const player = Player({
   throttleWhenHidden: false
 });
 ```
+
+### <a name="prop-wantedBufferAhead"></a>wantedBufferAhead
+
+_type_: ``Number|undefined``
+
+_defaults_: ``30``
+
+Set the default buffering goal, as a duration ahead of the current position, in seconds.
+Once this size of buffer reached, the player won't try to download new video segments anymore.
+
+### <a name="prop-maxBufferAhead"></a>maxBufferAhead
+
+_type_: ``Number|undefined``
+
+_defaults_: ``Infinity``
+
+Set the default maximum kept buffer ahead of the current position, in seconds.
+Everything superior to that limit (``currentPosition + maxBufferAhead``) will be automatically garbage collected. This feature is not necessary as
+the browser is already supposed to deallocate memory from old segments if/when the memory is scarce.
+
+However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.
+
+:warning: Bear in mind that a too-low configuration there (e.g. inferior to ``10``) might prevent the browser to play the content at all.
+
+### <a name="prop-maxBufferBehind"></a>maxBufferBehind
+
+_type_: ``Number|undefined``
+
+_defaults_: ``Infinity``
+
+Set the default maximum kept past buffer, in seconds.
+Everything before that limit (``currentPosition - maxBufferBehind``) will be automatically garbage collected.
+
+This feature is not necessary as the browser is already supposed to deallocate memory from old segments if/when the memory is scarce.
+
+However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.

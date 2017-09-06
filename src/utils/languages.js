@@ -135,10 +135,10 @@ function normalize(_language) {
 function normalizeBase(base) {
   let result;
   if (base.length === 2) {
-    result = ISO_MAP_2_3[base];
+    result = ISO_MAP_1_2[base];
   }
   else if (base.length === 3) {
-    result = ISO_MAP_3_3[base];
+    result = ISO_MAP_2_2[base];
   }
   return result || base;
 }
@@ -147,7 +147,7 @@ function normalizeBase(base) {
  * Link ISO639-1 languages into their ISO639-2 three-letters counterparts.
  * TODO use ISO639-3 instead? They do not have synonyms.
  */
-const ISO_MAP_2_3 = {
+const ISO_MAP_1_2 = {
   "aa": "aar", "ab": "abk", "ae": "ave", "af": "afr", "ak": "aka", "am": "amh",
   "an": "arg", "ar": "ara", "as": "asm", "av": "ava", "ay": "aym", "az": "aze",
   "ba": "bak", "be": "bel", "bg": "bul", "bh": "bih", "bi": "bis", "bm": "bam",
@@ -185,7 +185,7 @@ const ISO_MAP_2_3 = {
  * Link synonymous ISO639-2 three-letters languages to normalize them.
  * TODO use ISO639-3 instead? They do not have synonyms.
  */
-const ISO_MAP_3_3 = {
+const ISO_MAP_2_2 = {
   "tib": "bod", "cze": "ces", "wel": "cym", "ger": "deu", "gre": "ell",
   "eus": "baq", "per": "fas", "fra": "fre", "hye": "arm", "isl": "ice",
   "kat": "geo", "mri": "mao", "mkd": "mac", "msa": "may", "mya": "bur",

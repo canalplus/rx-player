@@ -33,6 +33,8 @@
     - [getMaxAudioBitrate](#meth-getMaxAudioBitrate)
     - [setVideoBitrate](#meth-setVideoBitrate)
     - [setAudioBitrate](#meth-setAudioBitrate)
+    - [getForcedVideoBitrate](#meth-getForcedVideoBitrate)
+    - [getForcedAudioBitrate](#meth-getForcedAudioBitrate)
     - [setWantedBufferAhead](#meth-setWantedBufferAhead)
     - [getWantedBufferAhead](#meth-getWantedBufferAhead)
     - [setMaxBufferBehind](#meth-setMaxBufferBehind)
@@ -50,6 +52,7 @@
     - [setVolume](#meth-setVolume)
     - [mute](#meth-mute)
     - [unMute](#meth-unMute)
+    - [isMute](#meth-isMute)
     - [getAvailableAudioTracks](#meth-getAvailableAudioTracks)
     - [getAvailableTextTracks](#meth-getAvailableTextTracks)
     - [getAudioTrack](#meth-getAudioTrack)
@@ -64,6 +67,7 @@
     - [getNativeTextTrack](#meth-getNativeTextTrack)
     - [getVideoLoadedTime](#meth-getVideoLoadedTime)
     - [getVideoPlayedTime](#meth-getVideoPlayedTime)
+    - [getVideoBufferGap](#meth-getVideoBufferGap)
     - [getPlaybackRate](#meth-getPlaybackRate)
     - [setPlaybackRate](#meth-setPlaybackRate)
     - [getCurrentKeySystem](#meth-getCurrentKeySystem)
@@ -419,6 +423,20 @@ Set the current audio adaptation to the one with a bitrate equal to the set valu
 
 Use ``getAvailableAudioBitrates`` to get the list of available bitrates you can set.
 
+### <a name="meth-getForcedVideoBitrate"></a>getForcedVideoBitrate
+
+_arguments_: ``Number``
+
+Get the last video bitrate manually set. Either via ``setVideoBitrate`` or via the ``initialVideoBitrate`` constructor option.
+
+``-1``
+
+### <a name="meth-getForcedAudioBitrate"></a>getForcedAudioBitrate
+
+_arguments_: ``Number``
+
+Get the last audio bitrate manually set. Either via ``setAudioBitrate`` or via the ``initialAudioBitrate`` constructor option.
+
 ### <a name="meth-setMaxVideoBitrate"></a>setMaxVideoBitrate
 
 _arguments_: ``Number``
@@ -556,6 +574,12 @@ Cut the volume. Basically set the volume to 0 while keeping in memory the previo
 
 Restore the volume when it has been muted, to the one previous the ``mute`` call.
 
+### <a name="meth-isMute"></a>isMute
+
+_returns_: ``Boolean``
+
+Returns true if the volume is muted i.e., set to 0.
+
 ### <a name="meth-getAvailableAudioTracks"></a>getAvailableAudioTracks
 
 _returns_: ``Array.<Object>``
@@ -673,6 +697,14 @@ _return value_: ``Number``
 Returns in seconds the difference between:
   - the start of the current contiguous loaded range.
   - the current time.
+
+### <a name="meth-getVideoBufferGap"></a>getVideoBufferGap
+
+_return value_: ``Number``
+
+Returns in seconds the difference between:
+  - the current time.
+  - the end of the current contiguous loaded range.
 
 ### <a name="meth-getPlaybackRate"></a>getPlaybackRate
 

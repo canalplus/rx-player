@@ -15,6 +15,8 @@
 
   - api: setVideoBitrate can now be called even when no content is playing
   - api: setAudioBitrate can now be called even when no content is playing
+  - api: setVideoBitrate can now be called even when no video track has the exact same bitrate
+  - api: setAudioBitrate can now be called even when no audio track has the exact same bitrate
   - api: calling setFullscreen with a boolean to false does not exit fullscreen anymore
   - api: giving a number to seekTo now has the same effect than setting the position option
   - api: getUrl now do not throw if no content is playing
