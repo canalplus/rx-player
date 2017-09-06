@@ -7,8 +7,8 @@
   - loadVideo: added "codecs" property to supplementaryTextTracks
   - api: add getVideoBufferGap method
   - api: add isMute method
-  - api: add getManualAudioBitrate method
-  - api: add getManualVideoBitrate method
+  - api: add getForcedAudioBitrate method
+  - api: add getForcedVideoBitrate method
   - config: a global config file has been created (src/config.js) to easily tweak the player pre-build
 
 ### Changed
