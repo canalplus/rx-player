@@ -271,6 +271,7 @@ function _normalizeTextAdaptation(subtitles) {
 
   return subtitles.reduce((allSubs, {
     mimeType,
+    codecs,
     url,
     language,
     languages,
@@ -289,6 +290,7 @@ function _normalizeTextAdaptation(subtitles) {
       representations: [{
         id: uniqueId++,
         mimeType,
+        codecs,
         index: {
           indexType: "template",
           duration: Number.MAX_VALUE,

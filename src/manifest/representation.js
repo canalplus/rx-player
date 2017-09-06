@@ -41,7 +41,7 @@ class Representation {
    * @param {Number} args.bitrate
    * @param {string} args.codecs
    * @param {Number} args.height
-   * @param {Number} args.height
+   * @param {Number} args.width
    * @param {string} args.mimeType
    * @param {Object} args.index
    */

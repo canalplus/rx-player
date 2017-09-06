@@ -752,7 +752,6 @@ class Player extends EventEmitter {
 
   /**
    * Seek to a given absolute position.
-   * Refer to getCurrentTime to give relative positions.
    * @param {Number|Object} time
    * @returns {Number} - The time the player has seek to
    */
