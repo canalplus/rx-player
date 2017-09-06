@@ -4,6 +4,7 @@
 
 ### Added
 
+  - loadVideo: added "codecs" property to supplementaryTextTracks
   - api: add getVideoBufferGap method
   - api: add isMute method
   - api: add getManualAudioBitrate method
@@ -12,8 +13,6 @@
 
 ### Changed
 
-  - api: setMaxVideoBitrate can now be called even when no content is playing
-  - api: setMaxAudioBitrate can now be called even when no content is playing
   - api: setVideoBitrate can now be called even when no content is playing
   - api: setAudioBitrate can now be called even when no content is playing
   - api: calling setFullscreen with a boolean to false does not exit fullscreen anymore
@@ -40,7 +39,7 @@
   - api: setAudioBufferSize has been removed in favor of setWantedBufferAhead
   - api: getAudioBufferSize has been removed in favor of getWantedBufferAhead
   - api: the maximumBufferTime property has been removed from positionUpdate events
-  - api: the getCurrentime method has been removed
+  - api: the getCurrentTime method has been removed
   - api: the asObservable method as been removed
   - api: the loadVideo option manifests has been removed in favor of url and keySystems
   - api: the loadVideo option subtitles has been removed in favor of supplementaryTextTracks
