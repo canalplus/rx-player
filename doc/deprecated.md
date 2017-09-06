@@ -66,7 +66,7 @@ Currently, a large part of the API is deprecated, this is due to several facts:
 
 I understand that replacing otherwise functional code is not "fun", the current state is exceptional and will not be repeated to that extent.
 
-Please note, that everything listed here still works until the next major release (v3.0.0).
+Please note, that everything listed here works until the release ``v3.0.0``.
 
 ## <a name="notes"></a>A note about the Subtitle and Language APIs
 
@@ -330,7 +330,7 @@ seekTo takes now an object with either one of those 3 properties:
 
   - ``position`` (``{Number}``): the absolute position, in seconds, you want the video element to seek to.
 
-  - ``wallClockTime`` (``{Number}``): the wall-clock-time, in seconds you want the video element to seek to.
+  - ``wallClockTime`` (``{Number}``): the wall-clock time, in seconds you want the video element to seek to.
 
 #### Example
 
@@ -761,7 +761,7 @@ The ``subtitles`` option was not indicative enough of what the option is for. Mo
 
 ### <a name="events-currentTimeChange"></a>currentTimeChange
 
-The ``currentTimeChange`` payload will be replaced by the ``positionUpdate`` event in the next major version (``3.0.0``).
+The ``currentTimeChange`` payload will be replaced by the ``positionUpdate`` event.
 
 The following properties are considered for it:
   - ``position`` (``Number``): The current position in the video, in seconds.
