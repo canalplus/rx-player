@@ -41,7 +41,7 @@ const SubtitlesKnobBase = ({
   return (
     <Knob
       name="Subtitles"
-      disabled={availableSubtitles.length < 2}
+      disabled={!availableSubtitles.length}
       onChange={onLanguageChange}
       options={options}
       selected={currentLanguageIndex}
