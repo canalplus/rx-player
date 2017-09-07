@@ -103,6 +103,7 @@ const FILTERED_KEYS = {
     "contentProtection",
     "id",
     "language",
+    "normalizedLanguage",
     "representations",
     "type",
   ],

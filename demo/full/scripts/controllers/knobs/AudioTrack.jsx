@@ -1,20 +1,9 @@
 import React from "react";
+import translateLanguageCode from "../../lib/language.js";
 import withModulesState from "../../lib/withModulesState.jsx";
 import Knob from "../../components/Knob.jsx";
 
 const AUDIO_DESCRIPTION_ICON = "(AD)"; // String.fromCharCode(0xf29e);
-const LANG_CODE_TO_LANG = {
-  eng: "english",
-  fre: "french",
-  und: "unknown",
-};
-
-const translateLanguage = langCode => {
-  if (!langCode) {
-    return "unknown";
-  }
-  return LANG_CODE_TO_LANG[langCode] || langCode;
-};
 
 const findLanguageIndex = (language, languages) => {
   return languages.findIndex(ln => ln.id === language.id);
@@ -28,7 +17,7 @@ const AudioTrackKnobBase = ({
 
   const options = availableLanguages
     .map(language => {
-      return translateLanguage(language.language) +
+      return translateLanguageCode(language.normalized) +
         (language.audioDescription ?
           (" " + AUDIO_DESCRIPTION_ICON) : "");
     });

@@ -20,6 +20,8 @@ If you don't know if you were using documented APIs, you can still check if the 
 ## Table of Contents
 
 - [General changes](#general)
+    - [Features disabled by default](#general-feat)
+    - [Normalized language codes](#general-lang)
 - [Constructor options](#cons)
     - [defaultLanguage](#cons-defaultLanguage)
     - [defaultLanguage](#cons-defaultSubtitle)
@@ -70,6 +72,10 @@ If you don't know if you were using documented APIs, you can still check if the 
 
 ## <a name="general"></a>General Changes
 
+### <a name="general-feat"></a>Features disabled by default
+
+#### What Changed
+
 Two features, previously activated by default, are now disabled by default.
 
 Those features are:
@@ -104,6 +110,98 @@ player = new RxPlayer({
 
 // becomes
 player = new RxPlayer();
+```
+
+### <a name="general-lang"></a>Normalized language codes
+
+#### What Changed
+
+Previously, every language set in the manifest went through a translation step to be translated into an ISO 639-2 language code.
+
+This led the following APIs:
+  - ``getAvailableAudioTracks``
+  - ``getAvailableTextTracks``
+  - ``getAudioTrack``
+  - ``getTextTrack``
+  - ``getManifest``
+  - ``getCurrentAdaptations``
+
+To not reflect exactly the language as set in the manifest (just one of the ISO 639-2 translation of it). For example, ``"fra"`` was translated to ``"fre"`` (even though both are valid ISO 639-2 language codes for the same language).
+
+Because this behavior hide the true language value and ISO 639-2 language codes have synonyms, we decided to:
+  1. switch to ISO 639-3 language codes instead. This standard has more languages and does not have synonyms.
+  2. keep both the information of what is set in the manifest and the result of our ISO 639-3 translation in two different properties
+
+Now, the tracks returned by:
+  - ``getAvailableAudioTracks``
+  - ``getAvailableTextTracks``
+  - ``getAudioTrack``
+  - ``getTextTrack``
+
+Will:
+  1. keep the ``language`` property, though this time it is the exact same one than set in the manifest
+  2. will also have a ``normalized`` property, which is the ISO 639-3 translation attempt. If the translation attempt fails (no corresponding ISO 639-3 language code is found), ``normalized`` will equal the value of ``language``.
+
+Likewise for the adaptations with a language set returned by:
+  - ``getManifest``
+  - ``getCurrentAdaptations``
+
+They will have both a ``language`` and a ``normalizedLanguage`` property, which follow the same rule.
+
+#### Difference between the previous and new language codes used
+
+In most cases, if you were manually checking language codes in your codebase you could just replace here the key ``language`` with its normalized counterpart (either ``normalized`` or ``normalizedLanguage`` depending on the API you're using, see previous chapter).
+
+However, while switching from ISO 639-2 to ISO 639-3, some language codes have changed (all were synonyms in ISO 639-2):
+  - ``"alb"`` became ``"sqi"`` (for Albanian)
+  - ``"arm"`` became ``"hye"`` (for Armenian)
+  - ``"baq"`` became ``"eus"`` (for Basque)
+  - ``"bur"`` became ``"mya"`` (for Burmese)
+  - ``"chi"`` became ``"zho"`` (for Chinese)
+  - ``"dut"`` became ``"nld"`` (for Dutch, Flemish)
+  - ``"fre"`` became ``"fra"`` (for French)
+  - ``"geo"`` became ``"kat"`` (for Georgian)
+  - ``"ice"`` became ``"isl"`` (for Icelandic)
+  - ``"mac"`` became ``"mkd"`` (for Macedonian)
+  - ``"mao"`` became ``"mri"`` (for Maori)
+  - ``"may"`` became ``"msa"`` (for Malay)
+
+#### Example
+```js
+console.log(player.getAvailableAudioTrack());
+
+// For a manifest with two audiotracks: "fr" and "en" without audio description
+
+// -- in the old version --:
+const oldVersionResult = [
+  {
+    language: "fre", // translated from "fr"
+    audioDescription: false,
+    id: "audio_1"
+  },
+  {
+    language: "eng", // translated from "en"
+    audioDescription: false,
+    id: "audio_2"
+  }
+];
+
+// -- became --:
+const result = [
+  {
+    language: "fr", // stays the same than in the manifest
+    normalized: "fra", // translated from "fr"
+                       // (notice that it's not "fre" like before)
+    audioDescription: false,
+    id: "audio_1"
+  },
+  {
+    language: "en", // stays the same than in the manifest
+    normalized: "eng", // translated from "en"
+    audioDescription: false,
+    id: "audio_2"
+  }
+];
 ```
 
 ## <a name="cons"></a>Constructor options
@@ -552,7 +650,7 @@ bufferSize = player.setWantedBufferAhead();
 
 #### What Changed
 
-This method now has been completely replaced by ``getAvailableAudioTracks`` which add audio description support. See the API documentation for more infos.
+This method now has been completely replaced by ``getAvailableAudioTracks`` which add audio description support. See [the API documentation](./api/index.md) for more infos.
 
 #### Replacement example
 
@@ -582,7 +680,7 @@ if (audioTracks && audioTracks.length) {
 
 #### What Changed
 
-This method now has been completely replaced by ``getAvailableTextTracks`` which add closed caption support. See the API documentation for more infos.
+This method now has been completely replaced by ``getAvailableTextTracks`` which add closed caption support. See [the API documentation](./api/index.md) for more infos.
 
 #### Replacement example
 

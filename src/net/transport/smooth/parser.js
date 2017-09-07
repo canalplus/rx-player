@@ -238,7 +238,8 @@ function createSmoothStreamingParser(parserOptions={}) {
     const type = root.getAttribute("Type");
     const subType = root.getAttribute("Subtype");
     const name = root.getAttribute("Name");
-    const language = normalizeLang(root.getAttribute("Language"));
+    const language = root.getAttribute("Language");
+    const normalizedLanguage = normalizeLang(language);
     const baseURL = root.getAttribute("Url");
     const profile = profiles[type];
 
@@ -308,7 +309,8 @@ function createSmoothStreamingParser(parserOptions={}) {
       index,
       representations,
       name,
-      language: language,
+      language,
+      normalizedLanguage,
       baseURL,
     };
   }

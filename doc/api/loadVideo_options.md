@@ -183,7 +183,8 @@ The starting default audio track.
 This can be under the form of an object with the following properties:
 ```js
 const defaultAudioTrack = {
-  language: "fr", // {string} The wanted language, (ISO639-1 or ISO639-2 string)
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
   audioDescription: false // {Boolean} Whether the audio track should be an
                           // audio description for the visually impaired
 };
@@ -201,7 +202,8 @@ The starting default text track.
 This can be under the form of an object with the following properties:
 ```js
 const defaultTextTrack = {
-  language: "fr", // {string} The wanted language, (ISO639-1 or ISO639-2 string)
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
   closedCaption: false // {Boolean} Whether the text track should be a closed
                        // caption for the hard of hearing
 };
@@ -229,8 +231,8 @@ const supplementaryTextTracks = [{
   url: textTrackURL, // {string} The url on which the complete text track can be
                      // obtained
 
-  language: "en", // {string} The language the text track is in
-                  // (ISO639-1 or ISO639-2 string)
+  language: "eng", // {string} The language the text track is in
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
 
   closedCaption: false // {Boolean} Whether the text track is a closed caption
                        // for the hard of hearing

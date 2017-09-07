@@ -119,7 +119,8 @@ const attributes = {
 
   "ContentComponent": [
     { k: "id",          fn: parseString },
-    { k: "lang",        fn: normalizeLang, n: "language" },
+    { k: "lang",        fn: parseString, n: "language" },
+    { k: "lang",        fn: normalizeLang, n: "normalizedLanguage" },
     { k: "contentType", fn: parseString },
     { k: "par",         fn: parseRatio },
   ],
@@ -133,7 +134,8 @@ const attributes = {
   "AdaptationSet": RepresentationBaseType.concat([
     { k: "id",                  fn: parseString },
     { k: "group",               fn: parseInt },
-    { k: "lang",                fn: normalizeLang, n: "language" },
+    { k: "lang",                fn: parseString, n: "language" },
+    { k: "lang",                fn: normalizeLang, n: "normalizedLanguage" },
     { k: "contentType",         fn: parseString },
     { k: "par",                 fn: parseRatio },
     { k: "minBandwidth",        fn: parseInt, n: "minBitrate" },

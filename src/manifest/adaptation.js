@@ -27,6 +27,7 @@ import generateNewId from "../utils/id.js";
  *   - id {string|Number}:
  *   - type {string}
  *   - language {string|undefined}
+ *   - normalizedLanguage {string|undefined}
  *   - isAudioDescription {Boolean|undefined}
  *   - isClosedCaption {Boolean|undefined}
  *   - representations {[]Representation}
@@ -41,7 +42,7 @@ class Adaptation {
    * @param {string|Number} [args.id]
    * @param {string} args.type
    * @param {string} [args.language]
-   * @param {string} [args.language]
+   * @param {string} [args.normalizedLanguage]
    * @param {Array.<Object>} args.representations
    * @param {Boolean} [args.closedCaption]
    * @param {Boolean} [args.audioDescription]
@@ -58,8 +59,10 @@ class Adaptation {
 
     if (args.language != null) {
       this.language = args.language;
-    } else if (args.language != null) {
-      this.language = args.language;
+    }
+
+    if (args.normalizedLanguage != null) {
+      this.normalizedLanguage = args.normalizedLanguage;
     }
 
     if (args.closedCaption != null) {

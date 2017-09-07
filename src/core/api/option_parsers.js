@@ -16,6 +16,10 @@
 
 import config from "../../config.js";
 import takeFirstDefined from "../../utils/takeFirstDefined.js";
+import {
+  normalizeAudioTrack,
+  normalizeTextTrack,
+} from "../../utils/languages";
 
 const {
   DEFAULT_AUTO_PLAY,
@@ -46,11 +50,17 @@ function parseConstructorOptions(options = {}) {
   const parsed = {
     transport: options.transport,
     transportOptions: def(options.transportOptions, {}),
-    defaultAudioTrack: def(options.defaultAudioTrack, DEFAULT_AUDIO_TRACK),
-    defaultTextTrack: def(options.defaultTextTrack, DEFAULT_TEXT_TRACK),
     maxBufferAhead: def(options.maxBufferAhead, DEFAULT_MAX_BUFFER_AHEAD),
     maxBufferBehind: def(options.maxBufferBehind, DEFAULT_MAX_BUFFER_BEHIND),
     limitVideoWidth: def(options.limitVideoWidth, DEFAULT_LIMIT_VIDEO_WIDTH),
+
+    defaultAudioTrack: normalizeAudioTrack(
+      def(options.defaultAudioTrack, DEFAULT_AUDIO_TRACK),
+    ),
+
+    defaultTextTrack: normalizeTextTrack(
+      def(options.defaultTextTrack, DEFAULT_TEXT_TRACK),
+    ),
 
     wantedBufferAhead: def(
       options.wantedBufferAhead,
@@ -120,12 +130,18 @@ function parseLoadVideoOptions(options = {}, ctx) {
     transport: def(options.transport, defaultTransport),
     autoPlay: def(options.autoPlay, DEFAULT_AUTO_PLAY),
     keySystems: def(options.keySystems, []),
-    defaultAudioTrack: def(options.defaultAudioTrack, lastAudioTrack),
-    defaultTextTrack: def(options.defaultTextTrack, lastTextTrack),
     transportOptions: def(options.transportOptions, defaultTransportOptions),
     hideNativeSubtitle: def(options.hideNativeSubtitle, !DEFAULT_SHOW_SUBTITLE),
     supplementaryTextTracks: def(options.supplementaryTextTracks, []),
     supplementaryImageTracks: def(options.supplementaryImageTracks, []),
+
+    defaultAudioTrack: normalizeAudioTrack(
+      def(options.defaultAudioTrack, lastAudioTrack),
+    ),
+
+    defaultTextTrack: normalizeTextTrack(
+      def(options.defaultTextTrack, lastTextTrack),
+    ),
   };
 
   if (options.directFile) {

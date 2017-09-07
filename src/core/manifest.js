@@ -284,7 +284,8 @@ function _normalizeTextAdaptation(subtitles) {
     return allSubs.concat(languages.map((language) => ({
       id: uniqueId++,
       type: "text",
-      language: language,
+      language,
+      normalizedLanguage: normalizeLang(language),
       closedCaption: !!closedCaption,
       baseURL: url,
       representations: [{
@@ -418,36 +419,8 @@ function getCodec(representation) {
   return `${mimeType};codecs="${codec}"`;
 }
 
-function getAudioTracks(manifest) {
-  const audioAdaptations = manifest.adaptations.audio;
-  if (!audioAdaptations) {
-    return [];
-  }
-  return audioAdaptations
-    .map((adaptation) => ({
-      language: normalizeLang(adaptation.language),
-      audioDescription: adaptation.isAudioDescription,
-      id: adaptation.id,
-    }));
-}
-
-function getTextTracks(manifest) {
-  const textAdaptations = manifest.adaptations.text;
-  if (!textAdaptations) {
-    return [];
-  }
-  return textAdaptations
-    .map((adaptation) => ({
-      language: normalizeLang(adaptation.language),
-      closedCaption: adaptation.isClosedCaption,
-      id: adaptation.id,
-    }));
-}
-
 export {
   normalizeManifest,
   getCodec,
   updateManifest,
-  getAudioTracks,
-  getTextTracks,
 };

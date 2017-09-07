@@ -91,14 +91,15 @@ _type_: ``Object|string|undefined``
 _defaults_: ``"fra"``
 
 The default language for the audio track.
-The specified language should be an [ISO639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) or [ISO639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) string (we will soon switch to ISO639-3).
+
+The specified language can be an [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), an [ISO 639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) or an [ISO 639-3](https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes) language code (if the language given is not in any of those language sets, it will still be checked against the manifest).
 
 You can set it as an object with two properties:
 ```js
 const player = new Player({
   // ...
   defaultAudioTrack: {
-    language: "fr",        // {string} The language wanted
+    language: "fra",       // {string} The language wanted
     audioDescription: true // {Boolean} Whether the track should be an audio
                            // description for the visually impaired
   }
@@ -108,11 +109,11 @@ Or just as a string instead:
 ```js
 const player = new Player({
   // ...
-  defaultAudioTrack: "fr"
+  defaultAudioTrack: "fra"
 });
 ```
 
-Giving a string instead of an object is the same as setting an object with ``audioDescription`` set to ``false`` (``"fr" == { language: "fr", audioDescription: false }``).
+Giving a string instead of an object is the same as setting an object with ``audioDescription`` set to ``false`` (``"fra" == { language: "fra", audioDescription: false }``).
 
 You can still set a default audio track per-content with the ``loadVideo`` method.
 
@@ -123,14 +124,16 @@ _type_: ``Object|string|undefined``
 _defaults_: ``null``
 
 The default language for the text track.
-The specified language should be an [ISO639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) or [ISO639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) string (we will soon switch to ISO639-3).
+
+The specified language can be an [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), an [ISO 639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) or an [ISO 639-3](https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes) language code (if the language given is not in any of those language sets, it will still be checked against the manifest).
+
 
 You can set it as an object with two properties:
 ```js
 const player = new Player({
   // ...
   defaultTextTrack: {
-    language: "fr",     // {string} The language wanted
+    language: "fra",    // {string} The language wanted
     closedCaption: true // {Boolean} Whether the track should be a closed
                         // caption for the hard-of-hearing
   }
@@ -140,11 +143,11 @@ Or just as a string instead:
 ```js
 const player = new Player({
   // ...
-  defaultTextTrack: "fr"
+  defaultTextTrack: "fra"
 });
 ```
 
-Giving a string instead of an object is the same as setting an object with ``closedCaption`` set to ``false`` (``"fr" == { language: "fr", closedCaption: false }``).
+Giving a string instead of an object is the same as setting an object with ``closedCaption`` set to ``false`` (``"fra" == { language: "fra", closedCaption: false }``).
 
 By default, text tracks are deactivated (``null`` value as ``defaultTextTrack``).
 

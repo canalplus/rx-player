@@ -588,7 +588,8 @@ Returns the list of available audio tracks under the form of an array of audiotr
 
 Each of these have the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setAudioTrack``.
-  - ``language`` (``string``): The language the audio track is in.
+  - ``language`` (``string``): The language the audio track is in, as set in the manifest.
+  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``audioDescription`` (``Boolean``): Whether the track is an audio description (for the visually impaired or not).
   - ``active`` (``Boolean``): Whether the track is the one currently active or not.
 
@@ -600,7 +601,8 @@ Returns the list of available text tracks under the form of an array of texttrac
 
 Each of these have the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setTextTrack``.
-  - ``language`` (``string``): The language the text track is in.
+  - ``language`` (``string``): The language the text track is in, as set in the manifest.
+  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for the hard of hearing or not.
   - ``active`` (``Boolean``): Whether the track is the one currently active or not.
 
@@ -612,7 +614,8 @@ Get the audio track from the last downloaded audio segment.
 
 The track is an object with the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setAudioTrack``.
-  - ``language`` (``string``): The language the audio track is in.
+  - ``language`` (``string``): The language the audio track is in, as set in the manifest.
+  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``audioDescription`` (``Boolean``): Whether the track is an audio description (for the visually impaired or not).
 
 ### <a name="meth-getTextTrack"></a>getTextTrack
@@ -623,7 +626,8 @@ Get the audio track from the last downloaded audio segment.
 
 The track is an object with the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setTextTrack``.
-  - ``language`` (``string``): The language the text track is in.
+  - ``language`` (``string``): The language the text track is in, as set in the manifest.
+  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for the hard of hearing or not.
 
 ### <a name="meth-setAudioTrack"></a>setAudioTrack

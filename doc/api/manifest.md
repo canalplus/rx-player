@@ -112,6 +112,14 @@ The language of the adaptation. This is particularly useful for audio and text a
 
 Note that this property is not always present in an Adaptation.
 
+#### normalizedLanguage
+
+_type_: ``string|undefined``
+
+An attempt to translate the language of the adaptation into an ISO 639-3 code. If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
+
+Note that this property is not always present in an Adaptation.
+
 #### isAudioDescription
 
 _type_: ``Boolean|undefined``

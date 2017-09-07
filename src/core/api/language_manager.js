@@ -16,12 +16,19 @@
 
 import arrayFind from "array-find";
 
-import {
-  normalize as normalizeLang,
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../../utils/languages";
-
+/**
+ * Try to find the given track config in the adaptations given:
+ *
+ * If no track config return null.
+ * If no adaptation are found return undefined.
+ *
+ * @param {Array.<Object>} adaptations
+ * @param {Object} trackConfig
+ * @param {string} trackConfig.language
+ * @param {string} trackConfig.normalized
+ * @param {string} trackConfig.closedCaption
+ * @return {null|undefined|Object}
+ */
 const findTextAdaptation = (adaptations, trackConfig) => {
   if (!trackConfig) {
     return null;
@@ -32,21 +39,33 @@ const findTextAdaptation = (adaptations, trackConfig) => {
   }
 
   const foundTextTrack = arrayFind(adaptations, (textAdaptation) =>
-    normalizeLang(trackConfig.language) ===
-      normalizeLang(textAdaptation.language) &&
+    trackConfig.normalized === textAdaptation.normalizedLanguage &&
     trackConfig.closedCaption === textAdaptation.isClosedCaption
   );
+
   return foundTextTrack;
 };
 
+/**
+ * Try to find the given track config in the adaptations given:
+ *
+ * If no track config return null.
+ * If no adaptation are found return undefined.
+ *
+ * @param {Array.<Object>} adaptations
+ * @param {Object} trackConfig
+ * @param {string} trackConfig.language
+ * @param {string} trackConfig.normalized
+ * @param {string} trackConfig.audioDescription
+ * @return {null|undefined|Object}
+ */
 const findAudioAdaptation = (adaptations, trackConfig) => {
   if (!adaptations.length || !trackConfig) {
     return undefined;
   }
 
   const foundAudioTrack = arrayFind(adaptations, (audioAdaptation) =>
-    normalizeLang(trackConfig.language) ===
-      normalizeLang(audioAdaptation.language) &&
+    trackConfig.normalized === audioAdaptation.normalizedLanguage &&
     trackConfig.audioDescription === audioAdaptation.isAudioDescription
   );
   return foundAudioTrack;
@@ -98,11 +117,6 @@ class LanguageManager {
       defaultTextTrack,
     } = options;
 
-    const normalizedAudioTrack = defaultAudioTrack &&
-      normalizeAudioTrack(defaultAudioTrack);
-    const normalizedTextTrack = defaultTextTrack &&
-      normalizeTextTrack(defaultTextTrack);
-
     const textAdaptations = text || [];
     const audioAdaptations = audio || [];
 
@@ -116,8 +130,8 @@ class LanguageManager {
 
     if (audio$) {
       // emit initial adaptations
-      const initialAudioAdaptation = normalizedAudioTrack ?
-        findAudioAdaptation(audioAdaptations, normalizedAudioTrack) ||
+      const initialAudioAdaptation = defaultAudioTrack ?
+        findAudioAdaptation(audioAdaptations, defaultAudioTrack) ||
         audioAdaptations[0] : audioAdaptations[0];
       this._currentAudioAdaptation = initialAudioAdaptation;
 
@@ -125,8 +139,8 @@ class LanguageManager {
     }
 
     if (text$) {
-      const initialTextAdaptation = normalizedTextTrack ?
-        findTextAdaptation(textAdaptations, normalizedTextTrack) ||
+      const initialTextAdaptation = defaultTextTrack ?
+        findTextAdaptation(textAdaptations, defaultTextTrack) ||
         null : null;
       this._currentTextAdaptation = initialTextAdaptation;
 
@@ -213,7 +227,8 @@ class LanguageManager {
       return null;
     }
     return {
-      language: normalizeLang(adaptation.language),
+      language: adaptation.language,
+      normalized: adaptation.normalizedLanguage,
       audioDescription: adaptation.isAudioDescription,
       id: adaptation.id,
     };
@@ -225,7 +240,8 @@ class LanguageManager {
       return null;
     }
     return {
-      language: normalizeLang(adaptation.language),
+      language: adaptation.language,
+      normalized: adaptation.normalizedLanguage,
       closedCaption: adaptation.isClosedCaption,
       id: adaptation.id,
     };
@@ -236,7 +252,8 @@ class LanguageManager {
     const currentId = currentTrack && currentTrack.id;
     return this._audioAdaptations
       .map((adaptation) => ({
-        language: normalizeLang(adaptation.language),
+        language: adaptation.language,
+        normalized: adaptation.normalizedLanguage,
         audioDescription: adaptation.isAudioDescription,
         id: adaptation.id,
         active: currentId == null ? false : currentId === adaptation.id,
@@ -248,7 +265,8 @@ class LanguageManager {
     const currentId = currentTrack && currentTrack.id;
     return this._textAdaptations
       .map((adaptation) => ({
-        language: normalizeLang(adaptation.language),
+        language: adaptation.language,
+        normalized: adaptation.normalizedLanguage,
         closedCaption: adaptation.isClosedCaption,
         id: adaptation.id,
         active: currentId == null ? false : currentId === adaptation.id,
