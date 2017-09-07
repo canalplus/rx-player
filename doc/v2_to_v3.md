@@ -474,7 +474,7 @@ The ``timeFragment`` parameter has been completely removed.
 
 If you want to start at a precize point in the stream, you can use the ``startAt`` parameter instead, documented [here](./loadVideo_options.md#prop-startAt).
 
-If you want to end at a precize point in the stream, this has not been re-implemented has I do not know for now any usecase for that. Please open an issue if you need that feature.
+If you want to end at a precize point in the stream, this has not been re-implemented as I do not know for now any usecase for that. Please open an issue if you need that feature.
 
 ### <a name="load-manifests">manifests parameter
 
