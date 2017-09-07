@@ -65,7 +65,7 @@ const representationBaseType = [
 let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 
-function _parseBaseURL(manifest) {
+function parseBaseURL(manifest) {
   let baseURL = normalizeBaseURL(manifest.locations[0]);
   const period = manifest.periods[0];
   if (period && period.baseURL) {
@@ -75,52 +75,71 @@ function _parseBaseURL(manifest) {
 }
 
 /**
- * @param {string} location - the manifest's url
+ * @param {string} url - the manifest's url
  * @param {Object} manifest - the parsed manifest
- * @param {Array.<Object>|Object} subtitles - Will be added to the manifest,
- * as an adaptation.
- * @param {Array.<Object>|Object} images - Will be added to the manifest,
- * as an adaptation.
+ * @param {Array.<Object>|Object} externalTextTracks - Will be added to the
+ * manifest as an adaptation.
+ * @param {Array.<Object>|Object} externalImageTracks - Will be added to the
+ * manifest as an adaptation.
+ *
+ * @throws MediaError - throw if the manifest has no transportType set
+ * @throws MediaError - Throws if one of the periods has no id property defined
+ *
+ * @throws MediaError - Throws if one of the periods has no adaptation in the
+ * types understood by the RxPlayer
+ *
+ * @throws MediaError - Throws if one of the periods has no representation in a
+ * codec supported by the browser
+ *
+ * @throws MediaError - Throws if one of the adaptations has no id property
+ * defined
+ *
+ * @throws MediaError - Throws if one of the adaptations does not have any type
+ *
+ * @throws MediaError - Throws if one of the representations has no id property
+ * defined
+ *
  * @returns {Object}
  */
-function normalizeManifest(location, manifest, subtitles, images) {
+function normalizeManifest(
+  url,
+  manifest,
+  externalTextTracks,
+  externalImageTracks
+) {
+  // transportType == "smooth"|"dash"
   if (!manifest.transportType) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  manifest.id = manifest.id || uniqueId++;
+  // TODO cleaner ID
+  manifest.id = manifest.id || "gen-manifest-" + uniqueId++;
+
+  // "static"|"dynamic"
   manifest.type = manifest.type || "static";
+  manifest.isLive = manifest.type == "dynamic";
 
   const locations = manifest.locations;
   if (!locations || !locations.length) {
-    manifest.locations = [location];
+    manifest.locations = [url];
   }
 
-  manifest.isLive = manifest.type == "dynamic";
-
-  const rootURL = _parseBaseURL(manifest);
+  const rootURL = parseBaseURL(manifest);
 
   // TODO(pierre): support multi-locations/cdns
-  const urlBase = {
-    rootURL,
+  const inherit = {
+    rootURL, // TODO needed for inheritance?
     baseURL: manifest.baseURL, // TODO so manifest.baseURL is more important
                                // than manifest.periods[0].baseURL?
-    isLive: manifest.isLive,
+                               // TODO needed for inheritance?
+    isLive: manifest.isLive, // TODO needed for inheritance?
   };
 
-  if (subtitles) {
-    subtitles = _normalizeTextAdaptation(subtitles);
-  }
-
-  if (images) {
-    images = _normalizeImageAdaptation(images);
-  }
-
   const periods = manifest.periods.map((period) =>
-    _normalizePeriod(period, urlBase, subtitles, images));
+    normalizePeriod(period, inherit, externalTextTracks, externalImageTracks));
 
   // TODO(pierre): support multiple periods
-  manifest = _mergeAndCloneAttributes(manifest, periods[0]);
+  manifest = assignAndClone(manifest, periods[0]);
   manifest.periods = null;
 
   if (!manifest.duration) {
@@ -137,14 +156,181 @@ function normalizeManifest(location, manifest, subtitles, images) {
   return new Manifest(manifest);
 }
 
-function _normalizePeriod(period, inherit, subtitles, images) {
-  period.id = period.id || uniqueId++;
+// /**
+//  * Put every IDs from the manifest in an array.
+//  * It collects the ID from:
+//  *   - the manifest
+//  *   - the periods
+//  *   - the adaptations
+//  *   - the representations
+//  *
+//  * Can be used to ensure a newly created ID is not yet already defined.
+//  *
+//  * @param {Object} manifest
+//  * @param {Array.<string|Number>}
+//  */
+// function collectEveryIDs(manifest) {
+//   const currentIDs = [];
 
-  let adaptations = period.adaptations;
-  adaptations = adaptations.concat(subtitles || []);
-  adaptations = adaptations.concat(images || []);
-  adaptations = adaptations.map((ada) => _normalizeAdaptation(ada, inherit));
-  adaptations = adaptations.filter((adaptation) => {
+//   if (manifest.id != null) {
+//     currentIDs.push(manifest.id);
+//   }
+
+//   manifest.periods.forEach(period => {
+//     if (period.id != null) {
+//       currentIDs.push(period.id);
+//     }
+//     period.adaptations.forEach(adaptation => {
+//       if (adaptation.id != null) {
+//         currentIDs.push(adaptation.id);
+//       }
+//       adaptation.representation.forEach(representation => {
+//         if (representation.id != null) {
+//           currentIDs.push(representation.id);
+//         }
+//       });
+//     });
+//   });
+
+//   return currentIDs;
+// }
+
+// /**
+//  * Set IDs if they are not found for:
+//  */
+// function setMissingIDs(manifest) {
+//   const currentIDs = [];
+
+//   if (manifest.id != null) {
+//     currentIDs.push(manifest.id);
+//   }
+
+//   manifest.periods.forEach(period => {
+//     if (period.id != null) {
+//       currentIDs.push(period.id);
+//     }
+//     period.adaptations.forEach(adaptation => {
+//       if (adaptation.id != null) {
+//         currentIDs.push(adaptation.id);
+//       }
+//       adaptation.representation.forEach(representation => {
+//         if (representation.id != null) {
+//           currentIDs.push(representation.id);
+//         }
+//       });
+//     });
+//   });
+
+//   if (manifest.id == null) {
+//     let IDBase = 0;
+//     const basename = "manifest-";
+//     while (currentIDs.include(basename + ++IDBase)) {
+//       if (IDBase === Number.MAX_VALUE) {
+//         throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+//       }
+//     }
+//     manifest.id = basename + IDBase;
+//     currentIDs.push(manifest.id);
+//   }
+
+//   manifest.periods.forEach(period => {
+//     if (period.id == null) {
+//       let IDBase = 0;
+//       const basename = "period-";
+//       while (currentIDs.include(basename + ++IDBase)) {
+//         if (IDBase === Number.MAX_VALUE) {
+//           throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+//         }
+//       }
+//       period.id = basename + IDBase;
+//       currentIDs.push(period.id);
+//     }
+//     period.adaptations.forEach(adaptation => {
+//       if (adaptation.id == null) {
+//         let IDBase = 0;
+//         const basename = "adaptation-";
+//         while (currentIDs.include(basename + ++IDBase)) {
+//           if (IDBase === Number.MAX_VALUE) {
+//             throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+//           }
+//         }
+//         adaptation.id = basename + IDBase;
+//         currentIDs.push(adaptation.id);
+//       }
+//       adaptation.representation.forEach(representation => {
+//         if (representation.id == null) {
+//           let IDBase = 0;
+//           const basename = "representation-";
+//           while (currentIDs.include(basename + ++IDBase)) {
+//             if (IDBase === Number.MAX_VALUE) {
+//               throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+//             }
+//           }
+//           representation.id = basename + IDBase;
+//           currentIDs.push(representation.id);
+//         }
+//       });
+//     });
+//   });
+// }
+
+/**
+ * @param {Object} period
+ * @param {Object} inherit
+ * @param {Array.<Object>|Object} [addedTextTracks]
+ * @param {Array.<Object>|Object} [addedImageTracks]
+ *
+ * @throws MediaError - Throws if the period has no id property defined
+ *
+ * @throws MediaError - Throws if the period has no adaptation in the types
+ * understood by the RxPlayer
+ *
+ * @throws MediaError - Throws if the period has no representation in a codec
+ * supported by the browser
+ *
+ * @throws MediaError - Throws if one of the adaptations has no id property
+ * defined
+ *
+ * @throws MediaError - Throws if one of the adaptations does not have any type
+ *
+ * @throws MediaError - Throws if one of the representations has no id property
+ * defined
+ *
+ * @returns {Object} period
+ */
+function normalizePeriod(
+  period,
+  inherit,
+  externalTextTracks,
+  externalImageTracks
+) {
+  if (typeof period.id == "undefined") {
+    // TODO cleaner ID
+    period.id = "gen-period-" + uniqueId++;
+
+    // TODO Generate ID higher and throw here?
+    // throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+  }
+
+  const adaptations = period.adaptations
+    .map((adaptation) => normalizeAdaptation(adaptation, inherit));
+
+  if (externalTextTracks) {
+    adaptations.push(
+      ...normalizeSupplementaryTextTracks(externalTextTracks)
+        .map(adaptation => normalizeAdaptation(adaptation, inherit))
+    );
+  }
+
+  if (externalImageTracks) {
+    adaptations.push(
+      ...normalizeSupplementaryImageTracks(externalImageTracks)
+        .map(adaptation => normalizeAdaptation(adaptation, inherit))
+    );
+  }
+
+  // filter out adaptations from unsupported types
+  const filteredAdaptations = adaptations.filter((adaptation) => {
     if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
       log.info("not supported adaptation type", adaptation.type);
       return false;
@@ -153,16 +339,21 @@ function _normalizePeriod(period, inherit, subtitles, images) {
     }
   });
 
-  if (adaptations.length === 0) {
+  if (filteredAdaptations.length === 0) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
   const adaptationsByType = {};
-  for (let i = 0; i < adaptations.length; i++) {
-    const adaptation = adaptations[i];
-    const adaptationType = adaptation.type;
+
+  // construct adaptationsByType object
+  for (let i = 0; i < filteredAdaptations.length; i++) {
+    const adaptation = filteredAdaptations[i];
     const adaptationReps = adaptation.representations;
-    adaptationsByType[adaptationType] = adaptationsByType[adaptationType] || [];
+    const adaptationType = adaptation.type;
+
+    if (!adaptationsByType[adaptationType]) {
+      adaptationsByType[adaptationType] = [];
+    }
 
     // only keep adaptations that have at least one representation
     if (adaptationReps.length > 0) {
@@ -170,6 +361,8 @@ function _normalizePeriod(period, inherit, subtitles, images) {
     }
   }
 
+  // TODO Throwing this way is ugly and could not work with future improvements
+  // Find better way to really detect if the codecs are incompatible
   for (const adaptationType in adaptationsByType) {
     if (adaptationsByType[adaptationType].length === 0) {
       throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, true);
@@ -180,31 +373,44 @@ function _normalizePeriod(period, inherit, subtitles, images) {
   return period;
 }
 
-// TODO perform some cleanup like adaptations.index (indexes are
-// in the representations)
-function _normalizeAdaptation(initialAdaptation, inherit) {
+/**
+ * TODO perform some cleanup like adaptations.index (indexes are
+ * in the representations)
+ *
+ * @param {Object} initialAdaptation
+ * @param {Object} inherit
+ *
+ * @throws MediaError - Throws if the adaptation has no id property defined
+ * @throws MediaError - Throws if the adaptation does not have any type
+ * @throws MediaError - Throws if one of the representations has no id property
+ * defined
+ *
+ * @returns {Object} adaptation
+ */
+function normalizeAdaptation(initialAdaptation, inherit) {
   if (typeof initialAdaptation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  const adaptation = _mergeAndCloneAttributes(inherit, initialAdaptation);
+  const adaptation = assignAndClone(inherit, initialAdaptation);
 
-  const inheritedFromAdaptation = {};
+  // representations in this adaptation will inherit the props of this object
+  const toInheritFromAdaptation = {};
   representationBaseType.forEach((baseType) => {
     if (baseType in adaptation) {
-      inheritedFromAdaptation[baseType] = adaptation[baseType];
+      toInheritFromAdaptation[baseType] = adaptation[baseType];
     }
   });
 
-  let representations = adaptation.representations.map(
-    (rep) => _normalizeRepresentation(
-      rep,
-      inheritedFromAdaptation,
-      adaptation.rootURL,
-      adaptation.baseURL,
-    )
-  )
-    .sort((a, b) => a.bitrate - b.bitrate);
+  let representations = adaptation.representations
+    .map((representation) =>
+      normalizeRepresentation(
+        representation,
+        toInheritFromAdaptation,
+        adaptation.rootURL,
+        adaptation.baseURL,
+      )
+    ).sort((a, b) => a.bitrate - b.bitrate); // bitrate ascending
 
   const { type, accessibility = [] } = adaptation;
   if (!type) {
@@ -213,7 +419,7 @@ function _normalizeAdaptation(initialAdaptation, inherit) {
 
   if (type == "video" || type == "audio") {
     representations = representations
-      .filter((rep) => isCodecSupported(getCodec(rep)));
+      .filter((representation) => isCodecSupported(getCodec(representation)));
 
     if (type === "audio") {
       const isAudioDescription =
@@ -231,12 +437,22 @@ function _normalizeAdaptation(initialAdaptation, inherit) {
   return adaptation;
 }
 
-function _normalizeRepresentation(initialRepresentation, inherit, rootURL, baseURL) {
+  /**
+   * @param {Object} initialRepresentation
+   * @param {Object} inherit
+   * @param {string} [rootURL]
+   * @param {string} [baseURL]
+   *
+ * @throws MediaError - Throws if the representation has no id property defined
+ *
+   * @returns {Object}
+   */
+function normalizeRepresentation(initialRepresentation, inherit, rootURL, baseURL) {
   if (typeof initialRepresentation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  const representation = _mergeAndCloneAttributes(inherit, initialRepresentation);
+  const representation = assignAndClone(inherit, initialRepresentation);
 
   representation.index = representation.index || {};
   if (!representation.index.timescale) {
@@ -260,16 +476,13 @@ function _normalizeRepresentation(initialRepresentation, inherit, rootURL, baseU
 }
 
 /**
- * Normalize subtitles Object/Array to include it in a normalized manifest.
+ * Normalize text tracks Object/Array to a normalized manifest adaptation.
  * @param {Array.<Object>|Object} subtitles
  * @returns {Array.<Object>}
  */
-function _normalizeTextAdaptation(subtitles) {
-  if (!Array.isArray(subtitles)) {
-    subtitles = [subtitles];
-  }
-
-  return subtitles.reduce((allSubs, {
+function normalizeSupplementaryTextTracks(textTracks) {
+  const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
+  return _textTracks.reduce((allSubs, {
     mimeType,
     codecs,
     url,
@@ -282,14 +495,16 @@ function _normalizeTextAdaptation(subtitles) {
     }
 
     return allSubs.concat(languages.map((language) => ({
-      id: uniqueId++,
+      // TODO cleaner ID
+      id: "gen-text-ada-" + uniqueId++,
       type: "text",
       language,
       normalizedLanguage: normalizeLang(language),
       closedCaption: !!closedCaption,
       baseURL: url,
       representations: [{
-        id: uniqueId++,
+        // TODO cleaner ID
+        id: "gen-text-rep-" + uniqueId++,
         mimeType,
         codecs,
         index: {
@@ -304,22 +519,21 @@ function _normalizeTextAdaptation(subtitles) {
 }
 
 /**
- * Normalize images Object/Array to include it in a normalized manifest.
+ * Normalize image tracks Object/Array to a normalized manifest adaptation.
  * @param {Array.<Object>|Object} images
  * @returns {Array.<Object>}
  */
-function _normalizeImageAdaptation(images) {
-  if (!Array.isArray(images)) {
-    images = [images];
-  }
-
-  return images.map(({ mimeType, url /*, size */ }) => {
+function normalizeSupplementaryImageTracks(imageTracks) {
+  const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
+  return _imageTracks.map(({ mimeType, url /*, size */ }) => {
     return {
-      id: uniqueId++,
+      // TODO cleaner ID
+      id: "gen-image-ada-" + uniqueId++,
       type: "image",
       baseURL: url,
       representations: [{
-        id: uniqueId++,
+        // TODO cleaner ID
+        id: "gen-image-rep-" + uniqueId++,
         mimeType,
         index: {
           indexType: "template",
@@ -344,7 +558,7 @@ function _normalizeImageAdaptation(images) {
  * @param {...Object} args
  * @returns {Object}
  */
-function _mergeAndCloneAttributes(...args) {
+function assignAndClone(...args) {
   const res = {};
 
   for (let i = args.length - 1; i >= 0; i--) {
@@ -363,7 +577,7 @@ function _mergeAndCloneAttributes(...args) {
           res[attr] = val.slice(0);
         }
         else {
-          res[attr] = _mergeAndCloneAttributes(val);
+          res[attr] = assignAndClone(val);
         }
       } else {
         res[attr] = val;
@@ -390,20 +604,21 @@ function updateManifest(oldManifest, newManifest) {
       log.warn(
         `manifest: adaptation "${oldAdaptations[i].id}" not found when merging.`
       );
-    }
+    } else {
+      const oldRepresentations = oldAdaptations[i].representations;
+      const newRepresentations = newAdaptation.representations;
+      for (let j = 0; j < oldRepresentations.length; j++) {
+        const newRepresentation =
+          findElementFromId(oldRepresentations[j].id, newRepresentations);
 
-    const oldRepresentations = oldAdaptations[i].representations;
-    const newRepresentations = newAdaptation.representations;
-    for (let j = 0; j < oldRepresentations.length; j++) {
-      const newRepresentation =
-        findElementFromId(oldRepresentations[j].id, newRepresentations);
-
-      if (!newRepresentation) {
-        log.warn(
-          `manifest: representation "${oldRepresentations[j].id}" not found when merging.`
-        );
+        if (!newRepresentation) {
+          log.warn(
+            `manifest: representation "${oldRepresentations[j].id}" not found when merging.`
+          );
+        } else {
+          oldRepresentations[j].index.update(newRepresentation.index);
+        }
       }
-      oldRepresentations[j].index.update(newRepresentation.index);
     }
   }
   return oldManifest;
