@@ -157,18 +157,23 @@ export default function(options={}) {
 
       let responseData = response.responseData;
       let text;
+      let nextSegments, segmentInfos;
+
       // in case of TTML declared inside playlists, the TTML file is
       // embededded inside an mp4 fragment.
       if (mimeType.indexOf("mp4") >= 0) {
         responseData = new Uint8Array(responseData);
         text = bytesToStr(getMdat(responseData));
+        const timings =
+          extractTimingsInfos(responseData, segment, manifest.isLive);
+
+        nextSegments = timings.nextSegments;
+        segmentInfos = timings.segmentInfos;
       } else {
         // vod is simple WebVTT or TTML text
         text = responseData;
       }
 
-      const { nextSegments, segmentInfos } =
-        extractTimingsInfos(responseData, segment, manifest.isLive);
       const segmentData =
         ttParser(text, language, segment.time / segment.timescale);
 
