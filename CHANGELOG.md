@@ -4,71 +4,75 @@
 
 ### Added
 
-  - loadVideo: added "codecs" property to supplementaryTextTracks
-  - api: add getVideoBufferGap method
-  - api: add isMute method
-  - api: add getForcedAudioBitrate method
-  - api: add getForcedVideoBitrate method
-  - config: a global config file has been created (src/config.js) to easily tweak the player pre-build
+  - languages: add ``normalizedLanguage`` property in manifest-related-APIs to expose the ISO 639-3 language code of the audio and text tracks
+  - languages: add ``normalized`` property in language-related-API to expose the ISO 639-3 language code of the audio and text tracks
+  - loadVideo: add ``codecs`` property to supplementaryTextTracks
+  - api: add ``wantedBufferAhead`` constructor option
+  - api: add ``maxBufferAhead`` constructor option
+  - api: add ``maxBufferBehind`` constructor option
+  - api: add ``getVideoBufferGap`` method
+  - api: add ``isMute`` method
+  - api: add ``getForcedAudioBitrate`` method
+  - api: add ``getForcedVideoBitrate`` method
+  - config: add a global config file (src/config.js) to easily tweak the player pre-build
 
 ### Changed
 
-  - api: setVideoBitrate can now be called even when no content is playing
-  - api: setAudioBitrate can now be called even when no content is playing
-  - api: setVideoBitrate can now be called even when no video track has the exact same bitrate
-  - api: setAudioBitrate can now be called even when no audio track has the exact same bitrate
-  - api: calling setFullscreen with a boolean to false does not exit fullscreen anymore
-  - api: giving a number to seekTo now has the same effect than setting the position option
-  - api: getUrl now do not throw if no content is playing
-  - api: isLive now do not throw if no content is playing
-  - api: loadVideo does not return anything anymore
-  - api: the wantedBufferAhead constructor option has been added
-  - api: the maxBufferAhead constructor option has been added
-  - api: the maxBufferBehind constructor option has been added
-  - api: private (undocumented) variables have been isolated on a player instance to a "\_priv" object.
-  - api: throttleWhenHidden is now set to false by default
-  - api: limitVideoWidth is now set to false by default
+  - languages: switch from ISO 639-2 to ISO 639-3 language codes in various APIs
+  - languages: the ``language`` property returned by language and manifest related APIs now reflect the exact language as set in the manifest
+  - api: ``setVideoBitrate`` can now be called even when no content is playing
+  - api: ``setAudioBitrate`` can now be called even when no content is playing
+  - api: ``setVideoBitrate`` can now be called even when no video track has the exact same bitrate
+  - api: ``setAudioBitrate`` can now be called even when no audio track has the exact same bitrate
+  - api: calling ``setFullscreen`` with a boolean to false does not exit fullscreen anymore
+  - api: giving a number to ``seekTo`` now has the same effect than setting the position option
+  - api: ``getUrl`` now do not throw if no content is playing
+  - api: ``isLive`` now do not throw if no content is playing
+  - api: ``loadVideo`` does not return anything anymore
+  - api: private (undocumented) variables have been isolated on a player instance to a ``_priv`` object.
+  - api: ``throttleWhenHidden`` is now set to false by default
+  - api: ``limitVideoWidth`` is now set to false by default
 
 ### Removed
 
-  - api: toggleDebug has been removed
-  - api: hideDebug has been removed
-  - api: showDebug has been removed
-  - api: getDebug has been removed
-  - api: getImageTrack has been removed
-  - api: setVideoBufferSize has been removed in favor of setWantedBufferAhead
-  - api: getVideoBufferSize has been removed in favor of getWantedBufferAhead
-  - api: setAudioBufferSize has been removed in favor of setWantedBufferAhead
-  - api: getAudioBufferSize has been removed in favor of getWantedBufferAhead
-  - api: the maximumBufferTime property has been removed from positionUpdate events
-  - api: the getCurrentTime method has been removed
-  - api: the asObservable method as been removed
-  - api: the loadVideo option manifests has been removed in favor of url and keySystems
-  - api: the loadVideo option subtitles has been removed in favor of supplementaryTextTracks
-  - api: the loadVideo option images has been removed in favor of supplementaryImageTracks
-  - api: the constructor option initVideoBitrate has been removed in favor of initialVideoBitrate
-  - api: the constructor option initAudioBitrate has been removed in favor of initialVideoBitrate
-  - api: the constructor option defaultLanguage has been removed in favor of defaultAudioTrack
-  - api: the constructor option defaultSubtitle has been removed in favor of defaultTextTrack
-  - position: the subtitleChange event has been removed
-  - position: the languageChange event has been removed
-  - position: the progress event has been removed
-  - position: the currentTimeChange event has been removed in favor of positionUpdate
-  - adaptive: getMetrics has been removed
-  - adaptive: getAverageBitrates has been removed
-  - adaptive: getVideoMaxBitrate has been removed in favor of getMaxVideoBitrate
-  - adaptive: getAudioMaxBitrate has been removed in favor of getMaxAudioBitrate
-  - errors: the static method getErrorTypes has been removed in favor of the static property errorTypes
-  - errors: the static method getErrorCodes has been removed in favor of the static property errorCodes
-  - languages: normalizeLanguageCode has been removed
-  - languages: getAvailableLanguages has been removed
-  - languages: getAvailableSubtitles has been removed
-  - languages: isLanguageAvailable has been removed
-  - languages: isSubtitleAvailable has been removed
-  - languages: getLanguage has been removed
-  - languages: getSubtitle has been removed
-  - languages: setLanguage has been removed
-  - languages: setSubtitle has been removed
+  - api: remove ``toggleDebug`` method
+  - api: remove ``hideDebug`` method
+  - api: remove ``showDebug`` method
+  - api: remove ``getDebug`` method
+  - api: remove ``getImageTrack`` method
+  - api: remove ``setVideoBufferSize`` method in favor of ``setWantedBufferAhead`` method
+  - api: remove ``getVideoBufferSize`` method in favor of ``getWantedBufferAhead`` method
+  - api: remove ``setAudioBufferSize`` method in favor of ``setWantedBufferAhead`` method
+  - api: remove ``getAudioBufferSize`` method in favor of ``getWantedBufferAhead`` method
+  - api: remove ``maximumBufferTime`` property has been removed from positionUpdate events
+  - api: remove ``getCurrentTime`` method
+  - api: remove ``asObservable`` method
+  - api: remove ``loadVideo`` option ``manifests`` in favor of ``url`` and ``keySystems`` options
+  - api: remove ``loadVideo`` option ``subtitles`` in favor of ``supplementaryTextTracks`` option
+  - api: remove ``loadVideo`` option ``images`` in favor of ``supplementaryImageTracks`` option
+  - api: remove constructor option ``initVideoBitrate`` in favor of ``initialVideoBitrate`` option
+  - api: remove constructor option ``initAudioBitrate`` in favor of ``initialVideoBitrate`` option
+  - api: remove constructor option ``defaultLanguage`` in favor of ``defaultAudioTrack`` option
+  - api: remove constructor option ``defaultSubtitle`` in favor of ``defaultTextTrack`` option
+  - position: remove ``subtitleChange`` event
+  - position: remove ``languageChange`` event
+  - position: remove ``progress`` event
+  - position: remove ``currentTimeChange`` event in favor of ``positionUpdate`` event
+  - adaptive: remove ``getMetrics`` method
+  - adaptive: remove ``getAverageBitrates`` method
+  - adaptive: remove ``getVideoMaxBitrate`` method in favor of ``getMaxVideoBitrate`` method
+  - adaptive: remove ``getAudioMaxBitrate`` method in favor of ``getMaxAudioBitrate`` method
+  - errors: remove static method ``getErrorTypes`` in favor of the static property ``errorTypes``
+  - errors: remove static method ``getErrorCodes`` in favor of the static property ``errorCodes``
+  - languages: remove ``normalizeLanguageCode`` method
+  - languages: remove ``getAvailableLanguages`` method
+  - languages: remove ``getAvailableSubtitles`` method
+  - languages: remove ``isLanguageAvailable`` method
+  - languages: remove ``isSubtitleAvailable`` method
+  - languages: remove ``getLanguage`` method
+  - languages: remove ``getSubtitle`` method
+  - languages: remove ``setLanguage`` method
+  - languages: remove ``setSubtitle`` method
 
 ### Bug Fixes:
 
