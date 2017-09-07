@@ -58,7 +58,7 @@ function _normalizeUrl(url) {
  *   - The last arguments that contains a scheme (e.g. "http://") is the base
  *     of the url.
  *   - every subsequent string arguments are concatened to it.
- * @param {...string} args
+ * @param {...string|undefined} args
  * @returns {string}
  */
 function resolveURL(...args) {

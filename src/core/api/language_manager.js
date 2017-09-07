@@ -192,6 +192,10 @@ class LanguageManager {
     }
   }
 
+  /**
+   * @param {string|Number} wantedId - adaptation id of the wanted track
+   * @throws Error - Throws if the given id is not found in any audio adaptation
+   */
   setAudioTrack(wantedId) {
     const foundTrack = arrayFind(this._audioAdaptations, ({ id }) =>
       id === wantedId);
@@ -204,6 +208,10 @@ class LanguageManager {
     this._audio$.next(this._currentAudioAdaptation);
   }
 
+  /**
+   * @param {string|Number} wantedId - adaptation id of the wanted track
+   * @throws Error - Throws if the given id is not found in any text adaptation
+   */
   setTextTrack(wantedId) {
     const foundTrack = arrayFind(this._textAdaptations, ({ id }) =>
       id === wantedId);
