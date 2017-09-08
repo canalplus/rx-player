@@ -44,7 +44,7 @@
   - api: remove ``getVideoBufferSize`` method in favor of ``getWantedBufferAhead`` method
   - api: remove ``setAudioBufferSize`` method in favor of ``setWantedBufferAhead`` method
   - api: remove ``getAudioBufferSize`` method in favor of ``getWantedBufferAhead`` method
-  - api: remove ``maximumBufferTime`` property has been removed from positionUpdate events
+  - api: remove ``maximumBufferTime`` property from ``positionUpdate`` events
   - api: remove ``getCurrentTime`` method
   - api: remove ``asObservable`` method
   - api: remove ``loadVideo`` option ``manifests`` in favor of ``url`` and ``keySystems`` options

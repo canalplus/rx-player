@@ -13,11 +13,11 @@
       - [initialAudioBitrate](#prop-initialAudioBitrate)
       - [maxVideoBitrate](#prop-maxVideoBitrate)
       - [maxAudioBitrate](#prop-maxAudioBitrate)
-      - [limitVideoWidth](#prop-limitVideoWidth)
-      - [throttleWhenHidden](#prop-throttleWhenHidden)
       - [wantedBufferAhead](#prop-wantedBufferAhead)
       - [maxBufferAhead](#prop-maxBufferAhead)
       - [maxBufferBehind](#prop-maxBufferBehind)
+      - [limitVideoWidth](#prop-limitVideoWidth)
+      - [throttleWhenHidden](#prop-throttleWhenHidden)
 
 ## <a name="overview"></a>Overview
 
@@ -31,14 +31,21 @@ None of them are mandatory. For most usecase though, you might want to set at le
 
 _type_: ``HTMLMediaElement|undefined``
 
-The video element the player will use. If not defined, a new video element will be
-created.
+The video element the player will use.
 
 ```js
 // Instantiate the player with the first video element in the DOM
 const player = new Player({
   videoElement: document.getElementsByTagName("VIDEO")[0]
 });
+```
+
+If not defined, a new video element will be created without being inserted in the document, you will have to do it yourself through the ``getVideoElement`` method:
+```js
+const player = new Player();
+
+const videoElement = player.getVideoElement();
+document.appendChild(videoElement);
 ```
 
 ### <a name="prop-transport"></a>transport
@@ -92,7 +99,7 @@ _defaults_: ``"fra"``
 
 The default language for the audio track.
 
-The specified language can be an [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), an [ISO 639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) or an [ISO 639-3](https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes) language code (if the language given is not in any of those language sets, it will still be checked against the manifest).
+The specified language can be an [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), an [ISO 639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) or an [ISO 639-3](https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes) language code (if the language given is not in any of those language sets, it will still be checked against the first manifest).
 
 You can set it as an object with two properties:
 ```js
@@ -125,7 +132,7 @@ _defaults_: ``null``
 
 The default language for the text track.
 
-The specified language can be an [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), an [ISO 639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) or an [ISO 639-3](https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes) language code (if the language given is not in any of those language sets, it will still be checked against the manifest).
+The specified language can be an [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), an [ISO 639-2](https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) or an [ISO 639-3](https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes) language code (if the language given is not in any of those language sets, it will still be checked against the first manifest).
 
 
 You can set it as an object with two properties:
@@ -227,46 +234,6 @@ You can update this limit at any moment with the ``setMaxAudioBitrate`` API call
 
 This limit can be removed by setting it to ``Infinity`` (which is the default value).
 
-### <a name="prop-limitVideoWidth"></a>limitVideoWidth
-
-_type_: ``Boolean``
-
-_defaults_: ``false``
-
-As a default, the possible video representations (qualities) considered are filtered by width:
-The maximum width considered is the closest superior or equal to the video element's width.
-
-This is done because the other, "superior" representations will not have any difference in terms of pixels (as in most case, the display limits the maximum resolution displayable). It thus save bandwidth with no visible difference.
-
-To activate this feature, set it to ``true``.
-
-For some reasons (displaying directly a good quality when switching to fullscreen, specific environments), you might want to not activate this limit.
-
-
-```js
-const player = Player({
-  // ...
-  limitVideoWidth: false
-});
-```
-
-### <a name="prop-throttleWhenHidden"></a>throttleWhenHidden
-
-_type_: ``Boolean``
-
-_defaults_: ``false``
-
-The player has a specific feature which throttle the video to the minimum bitrate when the current page is hidden for more than a minute (based on ``document.hidden``).
-
-To activate this feature, set it to ``true``.
-
-```js
-const player = Player({
-  // ...
-  throttleWhenHidden: false
-});
-```
-
 ### <a name="prop-wantedBufferAhead"></a>wantedBufferAhead
 
 _type_: ``Number|undefined``
@@ -274,7 +241,8 @@ _type_: ``Number|undefined``
 _defaults_: ``30``
 
 Set the default buffering goal, as a duration ahead of the current position, in seconds.
-Once this size of buffer reached, the player won't try to download new video segments anymore.
+
+Once this size of buffer is reached, the player won't try to download new video segments anymore.
 
 ### <a name="prop-maxBufferAhead"></a>maxBufferAhead
 
@@ -302,3 +270,42 @@ Everything before that limit (``currentPosition - maxBufferBehind``) will be aut
 This feature is not necessary as the browser is already supposed to deallocate memory from old segments if/when the memory is scarce.
 
 However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.
+
+### <a name="prop-limitVideoWidth"></a>limitVideoWidth
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+With this feature, the possible video representations (qualities) considered are filtered by width:
+The maximum width considered is the closest superior or equal to the video element's width.
+
+This is done because the other, "superior" representations will not have any difference in terms of pixels (as in most case, the display limits the maximum resolution displayable). It thus save bandwidth with no visible difference.
+
+To activate this feature, set it to ``true``.
+
+For some reasons (displaying directly a good quality when switching to fullscreen, specific environments), you might want to not activate this limit.
+
+```js
+const player = Player({
+  // ...
+  limitVideoWidth: false
+});
+```
+
+### <a name="prop-throttleWhenHidden"></a>throttleWhenHidden
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+The player has a specific feature which throttle the video to the minimum bitrate when the current page is hidden for more than a minute (based on ``document.hidden``).
+
+To activate this feature, set it to ``true``.
+
+```js
+const player = Player({
+  // ...
+  throttleWhenHidden: false
+});
+```
