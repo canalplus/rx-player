@@ -447,7 +447,12 @@ function normalizeAdaptation(initialAdaptation, inherit) {
  *
    * @returns {Object}
    */
-function normalizeRepresentation(initialRepresentation, inherit, rootURL, baseURL) {
+function normalizeRepresentation(
+  initialRepresentation,
+  inherit,
+  rootURL,
+  baseURL
+) {
   if (typeof initialRepresentation.id == "undefined") {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
@@ -500,7 +505,7 @@ function normalizeSupplementaryTextTracks(textTracks) {
       type: "text",
       language,
       normalizedLanguage: normalizeLang(language),
-      closedCaption: !!closedCaption,
+      accessibility: closedCaption ? ["hardOfHearing"] : [],
       baseURL: url,
       representations: [{
         // TODO cleaner ID
