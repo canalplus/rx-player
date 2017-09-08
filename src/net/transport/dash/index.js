@@ -55,8 +55,8 @@ import generateSegmentLoader from "./segment_loader.js";
  *   - 0+ progress reports
  *   - 1 response (always the last object emitted)
  *
- * Those objects have two keys: type {string} and value {Object}. _type_ allows to
- * know which type of object we have:
+ * Those objects have two keys: type {string} and value {Object}. _type_ allows
+ * to know which type of object we have:
  *   - "progress": means it is a progress report
  *   - "response" means it is a response
  *
