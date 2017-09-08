@@ -167,7 +167,7 @@ export default (options) => {
           const totalSize = event.total;
           const status = xhr.status;
           const responseType = xhr.responseType;
-          const url = xhr.responseURL || url;
+          const _url = xhr.responseURL || url;
 
           let responseData;
           if (responseType === "json") {
@@ -183,7 +183,7 @@ export default (options) => {
 
           if (responseData == null) {
             const errorCode = RequestErrorTypes.PARSE_ERROR;
-            obs.error(new RequestError(xhr, url, errorCode));
+            obs.error(new RequestError(xhr, _url, errorCode));
             return;
           }
 
@@ -191,7 +191,7 @@ export default (options) => {
             type: "response",
             value: {
               status,
-              url,
+              url: _url,
               responseType,
               sentTime,
               receivedTime,
