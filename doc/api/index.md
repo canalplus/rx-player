@@ -16,8 +16,8 @@
     - [play](#meth-play)
     - [pause](#meth-pause)
     - [stop](#meth-stop)
-    - [getWallClockTime](#meth-getWallClockTime)
     - [getPosition](#meth-getPosition)
+    - [getWallClockTime](#meth-getWallClockTime)
     - [getVideoDuration](#meth-getVideoDuration)
     - [getVolume](#meth-getVolume)
     - [getError](#meth-getError)
@@ -43,10 +43,6 @@
     - [getMaxBufferAhead](#meth-getMaxBufferAhead)
     - [setMaxVideoBitrate](#meth-setMaxVideoBitrate)
     - [setMaxAudioBitrate](#meth-setMaxAudioBitrate)
-    - [getVideoBufferSize](#meth-getVideoBufferSize)
-    - [getAudioBufferSize](#meth-getAudioBufferSize)
-    - [setVideoBufferSize](#meth-setVideoBufferSize)
-    - [setAudioBufferSize](#meth-setAudioBufferSize)
     - [setFullscreen](#meth-setFullscreen)
     - [exitFullscreen](#meth-exitFullscreen)
     - [setVolume](#meth-setVolume)
@@ -294,6 +290,14 @@ const stopVideo = () => {
 };
 ```
 
+### <a name="meth-getPosition"></a>getPosition
+
+_return value_: ``Number``
+
+Returns the video element's current position, in seconds.
+
+The difference with the ``getWallClockTime`` method is that for live contents the position is not re-calculated to match a live timestamp.
+
 ### <a name="meth-getWallClockTime"></a>getWallClockTime
 
 _return value_: ``Number``
@@ -305,14 +309,6 @@ That is:
   - for static content, returns the position from beginning, also in seconds.
 
 Use this method to display the current position to the user.
-
-### <a name="meth-getPosition"></a>getPosition
-
-_return value_: ``Number``
-
-Returns the video element's current position, in seconds.
-
-The difference with getWallClockTime is that for live contents the position is not re-calculated to match a live timestamp.
 
 ### <a name="meth-getVideoDuration"></a>getVideoDuration
 
@@ -336,14 +332,16 @@ See [the Player Error documentation](./errors.md) for more informations.
 
 ### <a name="meth-seekTo"></a>seekTo
 
-_arguments_: ``Object``
+_arguments_: ``Object|Number``
 
 Seek in the current content.
 
-The argument is an object with a single ``Number`` property, either:
+The argument can be an object with a single ``Number`` property, either:
   - ``relative``: seek relatively to the current position
   - ``position``: seek to the given absolute position (equivalent to ``player.getVideoElement().currentTime = newPosition``)
   - ``wallClockTime``: seek to the given wallClock position, as returned by ``getWallClockTime``.
+
+The argument can also just be a ``Number`` property, which will have the same effect than the ``position`` property (absolute position).
 
 ### <a name="meth-isLive"></a>isLive
 
@@ -351,15 +349,15 @@ _return value_: ``Boolean``
 
 Returns ``true`` if the content is "live". ``false`` otherwise.
 
-Throws if no content is loaded yet.
+Also ``false`` if no content is loaded yet.
 
 ### <a name="meth-getUrl"></a>getUrl
 
-_return value_: ``string``
+_return value_: ``string|undefined``
 
 Returns the URL of the downloaded manifest.
 
-Throws if no content is loaded yet.
+Returns undefined if no content is loaded yet.
 
 ### <a name="meth-isFullscreen"></a>isFullscreen
 
@@ -411,17 +409,43 @@ This only affects adaptive strategies (you can bypass this limit by calling ``se
 
 _arguments_: ``Number``
 
-Set the current video adaptation to the one with a bitrate equal to the set value.
+Force the current video track to be of a certain bitrate.
 
-Use ``getAvailableVideoBitrates`` to get the list of available bitrates you can set.
+If a video representation is found with the exact same bitrate, this representation will be set.
+
+If no video representation is found with the exact same bitrate, either:
+  - the video representation immediately inferior to it will be chosen instead (the closest inferior)
+  - if no video representation has a bitrate lower than that value, the video representation with the lowest bitrate will be chosen instead.
+
+Set to ``-1`` to deactivate (and thus re-activate adaptive streaming for video tracks).
+
+When active (called with a positive value), adaptive streaming for video tracks will be disabled to stay in the chosen representation.
+
+You can use ``getAvailableVideoBitrates`` to get the list of available bitrates you can set on the current content.
+
+Note that the value set is persistent between ``loadVideo`` calls.
+As such, this method can also be called when no content is playing (the same rules apply for future contents).
 
 ### <a name="meth-setAudioBitrate"></a>setAudioBitrate
 
 _arguments_: ``Number``
 
-Set the current audio adaptation to the one with a bitrate equal to the set value.
+Force the current audio track to be of a certain bitrate.
 
-Use ``getAvailableAudioBitrates`` to get the list of available bitrates you can set.
+If an audio representation (in the current audio adaptation) is found with the exact same bitrate, this representation will be set.
+
+If no audio representation is found with the exact same bitrate, either:
+  - the audio representation immediately inferior to it will be chosen instead (the closest inferior)
+  - if no audio representation has a bitrate lower than that value, the audio representation with the lowest bitrate will be chosen instead.
+
+Set to ``-1`` to deactivate (and thus re-activate adaptive streaming for audio tracks).
+
+When active (called with a positive value), adaptive streaming for audio tracks will be disabled to stay in the chosen representation.
+
+You can use ``getAvailableAudioBitrates`` to get the list of available bitrates you can set on the current content.
+
+Note that the value set is persistent between ``loadVideo`` calls.
+As such, this method can also be called when no content is playing (the same rules apply for future contents).
 
 ### <a name="meth-getForcedVideoBitrate"></a>getForcedVideoBitrate
 
@@ -429,13 +453,23 @@ _arguments_: ``Number``
 
 Get the last video bitrate manually set. Either via ``setVideoBitrate`` or via the ``initialVideoBitrate`` constructor option.
 
-``-1``
+This value can be different than the one returned by ``getVideoBitrate``:
+  - ``getForcedVideoBitrate`` returns the last bitrate set manually by the user
+  - ``getVideoBitrate`` returns the actual bitrate of the current video track
+
+``-1`` when no video bitrate is forced.
 
 ### <a name="meth-getForcedAudioBitrate"></a>getForcedAudioBitrate
 
 _arguments_: ``Number``
 
 Get the last audio bitrate manually set. Either via ``setAudioBitrate`` or via the ``initialAudioBitrate`` constructor option.
+
+This value can be different than the one returned by ``getAudioBitrate``:
+  - ``getForcedAudioBitrate`` returns the last bitrate set manually by the user
+  - ``getAudioBitrate`` returns the actual bitrate of the current audio track
+
+``-1`` when no audio bitrate is forced.
 
 ### <a name="meth-setMaxVideoBitrate"></a>setMaxVideoBitrate
 
@@ -518,40 +552,6 @@ _defaults_: ``Infinity``
 
 Returns the maximum kept buffer ahead of the current position, in seconds.
 
-### <a name="meth-getVideoBufferSize"></a>getVideoBufferSize
-
-:warning: This call is deprecated. Use [_getWantedBufferAhead_](#meth-getWantedBufferAhead) instead.
-
-_return value_: ``Number``
-_defaults_: ``30``
-
-Returns the maximum video buffer size, in seconds. Once this size of buffer reached, the player won't try to download new video segments anymore.
-
-### <a name="meth-getAudioBufferSize"></a>getAudioBufferSize
-
-:warning: This call is deprecated. Use [_getWantedBufferAhead_](#meth-getWantedBufferAhead) instead.
-
-_return value_: ``Number``
-_defaults_: ``30``
-
-Returns the maximum audio buffer size, in seconds. Once this size of buffer reached, the player won't try to download new audio segments anymore.
-
-### <a name="meth-setVideoBufferSize"></a>setVideoBufferSize
-
-:warning: This call is deprecated. Use [_setWantedBufferAhead_](#meth-setWantedBufferAhead) instead.
-
-_arguments_: ``Number``
-
-Set the maximum video buffer size, in seconds. Once this size of buffer reached, the player won't try to download new video segments anymore.
-
-### <a name="meth-setAudioBufferSize"></a>setAudioBufferSize
-
-:warning: This call is deprecated. Use [_setWantedBufferAhead_](#meth-setWantedBufferAhead) instead.
-
-_arguments_: ``Number``
-
-Set the maximum audio buffer size, in seconds. Once this size of buffer reached, the player won't try to download new audio segments anymore.
-
 ### <a name="meth-setFullscreen"></a>setFullscreen
 
 Switch to fullscreen mode.
@@ -584,12 +584,12 @@ Returns true if the volume is muted i.e., set to 0.
 
 _returns_: ``Array.<Object>``
 
-Returns the list of available audio tracks under the form of an array of audiotrack objects.
+Returns the list of available audio tracks for the current content.
 
-Each of these have the following properties:
+Each of the objects in the returned array have the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setAudioTrack``.
   - ``language`` (``string``): The language the audio track is in, as set in the manifest.
-  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
+  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-2 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``audioDescription`` (``Boolean``): Whether the track is an audio description (for the visually impaired or not).
   - ``active`` (``Boolean``): Whether the track is the one currently active or not.
 
@@ -597,12 +597,12 @@ Each of these have the following properties:
 
 _returns_: ``Array.<Object>``
 
-Returns the list of available text tracks under the form of an array of texttrack objects.
+Returns the list of available text tracks (subtitles) for the current content.
 
-Each of these have the following properties:
+Each of the objects in the returned array have the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setTextTrack``.
   - ``language`` (``string``): The language the text track is in, as set in the manifest.
-  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
+  - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-2 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for the hard of hearing or not.
   - ``active`` (``Boolean``): Whether the track is the one currently active or not.
 
@@ -610,7 +610,7 @@ Each of these have the following properties:
 
 _returns_: ``Object``
 
-Get the audio track from the last downloaded audio segment.
+Get the audio track currently set.
 
 The track is an object with the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setAudioTrack``.
@@ -620,9 +620,9 @@ The track is an object with the following properties:
 
 ### <a name="meth-getTextTrack"></a>getTextTrack
 
-_returns_: ``Object``
+_returns_: ``Object|null``
 
-Get the audio track from the last downloaded audio segment.
+Get the audio track currently set. ``null`` if no text track is enabled right now.
 
 The track is an object with the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setTextTrack``.
@@ -773,3 +773,4 @@ This method allows thus to seek directly at the live edge of the content.
 player.seekTo({
   position: player.getMaximumPosition()
 });
+```
