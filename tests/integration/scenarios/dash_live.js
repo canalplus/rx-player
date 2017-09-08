@@ -1,10 +1,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import RxPlayer from "../../../src";
-import {
-  mockManifestRequest,
-  mockAllRequests,
-} from "../utils/mock_requests.js";
+import { mockManifestRequest } from "../utils/mock_requests.js";
 import Mock from "../mocks/dash_dynamic_SegmentTimeline.js";
 
 const sleep = time => new Promise(res => setTimeout(res, time));
@@ -174,35 +171,6 @@ describe("dash live SegmentTimeline content", function () {
     expect(audioTracks[0].active).to.equal(true);
 
     expect(textTracks.length).to.equal(0);
-
-    done();
-  });
-
-  // TODO own scenario
-  // TODO switch to a content with real data
-  xit("should update the state when beginning to play", async function (done) {
-    mockAllRequests(fakeServer, Mock);
-
-    let lastEvent;
-    player.addEventListener("playerStateChange", newState =>
-      lastEvent = newState
-    );
-    expect(player.getPlayerState()).to.equal("STOPPED");
-
-    player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
-    });
-
-    expect(player.getPlayerState()).to.equal("LOADING");
-    expect(lastEvent).to.equal("LOADING");
-
-    await sleep(1);
-    fakeServer.respond();
-    await sleep(1);
-
-    expect(player.getPlayerState()).to.equal("LOADED");
-    expect(lastEvent).to.equal("LOADED");
 
     done();
   });
