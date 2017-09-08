@@ -103,7 +103,7 @@ export default (options) => {
     method: "GET",
     responseType: "json",
     timeout: 30 * 1000,
-    body: null,
+    body: undefined,
   };
 
   for (const prop in request) {
