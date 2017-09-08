@@ -1,16 +1,11 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import RxPlayer from "../../../src";
-
-// TODO Use config file
-
-const fakeManifest = require("raw-loader!./fixtures/dash_dynamic_SegmentTimeline/manifest_mpm4sav_mvtime_w925796611.mpd");
-const fakeAudioInit = require("raw-loader!./fixtures/dash_dynamic_SegmentTimeline/chunk_ctaudio_cfm4s_ridp0aa0br96257_cinit_w925796611_mpd.m4s");
-const fakeVideoInit = require("raw-loader!./fixtures/dash_dynamic_SegmentTimeline/chunk_ctvideo_cfm4s_ridp0va0br601392_cinit_w925796611_mpd.m4s");
-
-const manifestUrl = "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd";
-const audioInitUrl = "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctaudio_cfm4s_ridp0aa0br96257_cinit_w925796611_mpd.m4s";
-const videoInitUrl = "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctvideo_cfm4s_ridp0va0br601392_cinit_w925796611_mpd.m4s";
+import {
+  mockManifestRequest,
+  mockAllRequests,
+} from "../utils/mock_requests.js";
+import Mock from "../mocks/dash_dynamic_SegmentTimeline.js";
 
 const sleep = time => new Promise(res => setTimeout(res, time));
 
@@ -29,11 +24,8 @@ describe("dash live SegmentTimeline content", function () {
   });
 
   it("should fetch and parse the manifest", async function (done) {
-    fakeServer.respondWith("GET", manifestUrl,
-      [200, { "Content-Type": "application/dash+xml" }, fakeManifest]
-    );
-
-    player.loadVideo({ url: manifestUrl, transport: "dash" });
+    mockManifestRequest(fakeServer, Mock);
+    player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
     expect(fakeServer.requests.length).to.equal(1);
 
@@ -50,7 +42,7 @@ describe("dash live SegmentTimeline content", function () {
     expect(manifest.isLive).to.equal(true);
     expect(manifest.suggestedPresentationDelay).to.equal(15);
     expect(manifest.timeShiftBufferDepth).to.equal(50);
-    expect(manifest.getUrl()).to.equal(manifestUrl);
+    expect(manifest.getUrl()).to.equal(Mock.manifest.url);
     expect(manifest.availabilityStartTime).to.equal(1493225291);
 
     const adaptations = manifest.adaptations;
@@ -58,6 +50,7 @@ describe("dash live SegmentTimeline content", function () {
     expect(adaptations.audio.length).to.equal(1);
     expect(adaptations.audio[0].isAudioDescription).to.equal(false);
     expect(adaptations.audio[0].language).to.equal("eng");
+    expect(adaptations.audio[0].normalizedLanguage).to.equal("eng");
     expect(adaptations.audio[0].type).to.equal("audio");
     expect(typeof adaptations.audio[0].id).to.equal("string");
     expect(adaptations.audio[0].id).to.not.equal(adaptations.video[0].id);
@@ -95,8 +88,10 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextAudioSegment2[1].time).to.equal(145136713200);
     expect(nextAudioSegment2[1].timescale).to.equal(48000);
 
-    expect(audioRepresentationIndex.getSegments(3023671, 41).length).to.equal(5);
-    expect(audioRepresentationIndex.getSegments(3023671, 300000000000).length).to.equal(5);
+    expect(audioRepresentationIndex.getSegments(3023671, 41).length)
+      .to.equal(5);
+    expect(audioRepresentationIndex.getSegments(3023671, 300000000000).length)
+      .to.equal(5);
 
     const videoRepresentation = adaptations.video[0].representations[0];
     expect(videoRepresentation.baseURL).to.equal("https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/");
@@ -127,8 +122,10 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextVideoSegment2[1].time).to.equal(272131336800);
     expect(nextVideoSegment2[1].timescale).to.equal(90000);
 
-    expect(videoRepresentationIndex.getSegments(3023671, 41).length).to.equal(5);
-    expect(videoRepresentationIndex.getSegments(3023671, 300000000000).length).to.equal(5);
+    expect(videoRepresentationIndex.getSegments(3023671, 41).length)
+      .to.equal(5);
+    expect(videoRepresentationIndex.getSegments(3023671, 300000000000).length)
+      .to.equal(5);
 
 
     expect(fakeServer.requests.length).to.equal(3);
@@ -138,16 +135,14 @@ describe("dash live SegmentTimeline content", function () {
       fakeServer.requests[2].url,
     ];
 
-    expect(requestsDone).to.include(audioInitUrl);
-    expect(requestsDone).to.include(videoInitUrl);
+    expect(requestsDone).to.include(Mock.audio[0].init.url);
+    expect(requestsDone).to.include(Mock.video[0].init.url);
     done();
   });
 
   it("should list the right bitrates", async function (done) {
-    fakeServer.respondWith("GET", manifestUrl,
-      [200, { "Content-Type": "application/dash+xml" }, fakeManifest ]);
-
-    player.loadVideo({ url: manifestUrl, transport: "dash" });
+    mockManifestRequest(fakeServer, Mock);
+    player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
     await sleep(1);
     fakeServer.respond();
@@ -160,10 +155,8 @@ describe("dash live SegmentTimeline content", function () {
   });
 
   it("should list the right languages", async function (done) {
-    fakeServer.respondWith("GET", manifestUrl,
-      [200, { "Content-Type": "application/dash+xml" }, fakeManifest ]);
-
-    player.loadVideo({ url: manifestUrl, transport: "dash" });
+    mockManifestRequest(fakeServer, Mock);
+    player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
     await sleep(1);
     fakeServer.respond();
@@ -174,6 +167,7 @@ describe("dash live SegmentTimeline content", function () {
 
     expect(audioTracks.length).to.equal(1);
     expect(audioTracks[0].language).to.equal("eng");
+    expect(audioTracks[0].normalized).to.equal("eng");
     expect(audioTracks[0].audioDescription).to.equal(false);
     expect(typeof audioTracks[0].id).to.equal("string");
     expect(audioTracks[0].id).to.not.equal("");
@@ -184,106 +178,10 @@ describe("dash live SegmentTimeline content", function () {
     done();
   });
 
-  it("should retry to download the manifest 4 times", async function (done) {
-    const clock = sinon.useFakeTimers();
-
-    fakeServer.respondWith("GET", manifestUrl,
-      [500, { "Content-Type": "application/dash+xml" }, fakeManifest ]);
-
-    player.loadVideo({
-      url: manifestUrl,
-      transport: "dash",
-    });
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-
-    const error = player.getError();
-    expect(error).not.to.equal(null);
-    expect(error.type).to.equal(RxPlayer.ErrorTypes.NETWORK_ERROR);
-    expect(error.code).to.equal(RxPlayer.ErrorCodes.PIPELINE_LOAD_ERROR);
-    clock.restore();
-    done();
-  });
-
-  it("should parse the manifest if it works the fourth time", (done) => {
-    const clock = sinon.useFakeTimers();
-
-    let requestCounter = 0;
-    fakeServer.respondWith("GET", manifestUrl, (xhr) => {
-      return ++requestCounter >= 5 ?
-        xhr.respond(
-          200,
-          { "Content-Type": "application/dash+xml" },
-          fakeManifest
-        ) :
-        xhr.respond(
-          500,
-          { "Content-Type": "application/dash+xml" }
-        );
-    });
-
-    player.loadVideo({
-      url: manifestUrl,
-      transport: "dash",
-    });
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-    fakeServer.respond();
-
-    expect(typeof player.getManifest()).to.equal("object");
-    expect(player.getError()).to.equal(null);
-
-    clock.restore();
-    done();
-  });
-
+  // TODO own scenario
+  // TODO switch to a content with real data
   xit("should update the state when beginning to play", async function (done) {
-    fakeServer.respondWith("GET", manifestUrl,
-      [200, { "Content-Type": "application/dash+xml" }, fakeManifest ]);
-    fakeServer.respondWith("GET", audioInitUrl,
-      [200, { "Content-Type": "audio/mp4" }, fakeAudioInit]);
-    fakeServer.respondWith("GET", videoInitUrl,
-      [200, { "Content-Type": "video/mp4" }, fakeVideoInit]);
+    mockAllRequests(fakeServer, Mock);
 
     let lastEvent;
     player.addEventListener("playerStateChange", newState =>
@@ -292,7 +190,7 @@ describe("dash live SegmentTimeline content", function () {
     expect(player.getPlayerState()).to.equal("STOPPED");
 
     player.loadVideo({
-      url: manifestUrl,
+      url: Mock.manifest.url,
       transport: "dash",
     });
 

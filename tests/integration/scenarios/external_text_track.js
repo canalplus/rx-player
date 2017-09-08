@@ -1,0 +1,344 @@
+import { expect } from "chai";
+import sinon from "sinon";
+import RxPlayer from "../../../src";
+import { mockManifestRequest } from "../utils/mock_requests.js";
+import Mock from "../mocks/dash_static_SegmentTimeline.js";
+
+const sleep = time => new Promise(res => setTimeout(res, time));
+
+describe("external text track", function () {
+  let player;
+  let fakeServer;
+
+  beforeEach(() => {
+    player = new RxPlayer();
+    fakeServer = sinon.fakeServer.create();
+  });
+
+  afterEach(() => {
+    player.dispose();
+    fakeServer.restore();
+  });
+
+  it("should be able to add an external text track", async function (done) {
+    mockManifestRequest(fakeServer, Mock);
+
+    player.loadVideo({
+      transport: "dash",
+      url: Mock.manifest.url,
+      supplementaryTextTracks: {
+        url: "http://fakeURL",
+        language: "en",
+        closedCaption: false,
+        mimeType: "text/vtt",
+      },
+    });
+
+    await sleep(1);
+    fakeServer.respond();
+    await sleep(1);
+
+    const textTracks = player.getAvailableTextTracks();
+    expect(textTracks.length).to.equal(1);
+    expect(textTracks[0].language).to.equal("en");
+    expect(textTracks[0].normalized).to.equal("eng");
+    expect(textTracks[0].closedCaption).to.equal(false);
+    expect(typeof textTracks[0].id).to.equal("string");
+    expect(textTracks[0].id).to.not.equal("");
+    expect(textTracks[0].active).to.equal(false);
+
+    done();
+  });
+
+  it("should be able to add a closed caption text track", async function (done) {
+    mockManifestRequest(fakeServer, Mock);
+
+    player.loadVideo({
+      transport: "dash",
+      url: Mock.manifest.url,
+      supplementaryTextTracks: {
+        url: "http://fakeURL",
+        language: "arm",
+        closedCaption: true,
+        mimeType: "text/vtt",
+      },
+    });
+
+    await sleep(1);
+    fakeServer.respond();
+    await sleep(1);
+
+    const textTracks = player.getAvailableTextTracks();
+    expect(textTracks.length).to.equal(1);
+    expect(textTracks[0].language).to.equal("arm");
+    expect(textTracks[0].normalized).to.equal("hye");
+    expect(textTracks[0].closedCaption).to.equal(true);
+    expect(typeof textTracks[0].id).to.equal("string");
+    expect(textTracks[0].id).to.not.equal("");
+    expect(textTracks[0].active).to.equal(false);
+
+    done();
+  });
+
+  it("should be able to add multiple external text tracks", async function (done) {
+    mockManifestRequest(fakeServer, Mock);
+
+    player.loadVideo({
+      transport: "dash",
+      url: Mock.manifest.url,
+      supplementaryTextTracks: [
+        {
+          url: "http://fakeURL1",
+          language: "en",
+          closedCaption: false,
+          mimeType: "text/vtt",
+        },
+        {
+          url: "http://fakeURL2",
+          language: "fr",
+          closedCaption: false,
+          mimeType: "text/vtt",
+        },
+        {
+          url: "http://fakeURL3",
+          language: "ger",
+          closedCaption: true,
+          mimeType: "text/vtt",
+        },
+      ],
+    });
+
+    await sleep(1);
+    fakeServer.respond();
+    await sleep(1);
+
+    const textTracks = player.getAvailableTextTracks();
+    expect(textTracks.length).to.equal(3);
+
+    expect(textTracks[0].language).to.equal("en");
+    expect(textTracks[0].normalized).to.equal("eng");
+    expect(textTracks[0].closedCaption).to.equal(false);
+    expect(typeof textTracks[0].id).to.equal("string");
+    expect(textTracks[0].id).to.not.equal("");
+    expect(textTracks[0].active).to.equal(false);
+
+    expect(textTracks[1].language).to.equal("fr");
+    expect(textTracks[1].normalized).to.equal("fra");
+    expect(textTracks[1].closedCaption).to.equal(false);
+    expect(typeof textTracks[1].id).to.equal("string");
+    expect(textTracks[1].id).to.not.equal("");
+    expect(textTracks[1].active).to.equal(false);
+
+    expect(textTracks[2].language).to.equal("ger");
+    expect(textTracks[2].normalized).to.equal("deu");
+    expect(textTracks[2].closedCaption).to.equal(true);
+    expect(typeof textTracks[2].id).to.equal("string");
+    expect(textTracks[2].id).to.not.equal("");
+    expect(textTracks[2].active).to.equal(false);
+
+    done();
+  });
+
+  it("should switch initially to external text track if set as default language", async function (done) {
+    mockManifestRequest(fakeServer, Mock);
+
+    const waysOfWritingDefaultTextTrack = [
+      "en",
+      "eng",
+      { language: "en" },
+      { language: "eng" },
+      { language: "en", closedCaption: false },
+      { language: "eng", closedCaption: false },
+    ];
+
+    for (const defaultTextTrack of waysOfWritingDefaultTextTrack) {
+      player.loadVideo({
+        transport: "dash",
+        url: Mock.manifest.url,
+        supplementaryTextTracks: {
+          url: "http://fakeURL",
+          language: "en",
+          closedCaption: false,
+          mimeType: "text/vtt",
+        },
+        defaultTextTrack,
+      });
+
+      await sleep(0);
+      fakeServer.respond();
+      await sleep(0);
+
+      const textTracks1 = player.getAvailableTextTracks();
+      expect(textTracks1[0].active).to.equal(true);
+
+      player.loadVideo({
+        transport: "dash",
+        url: Mock.manifest.url,
+        supplementaryTextTracks: [
+          {
+            url: "http://fakeURL1",
+            language: "en",
+            closedCaption: false,
+            mimeType: "text/vtt",
+          },
+          {
+            url: "http://fakeURL2",
+            language: "fr",
+            closedCaption: false,
+            mimeType: "text/vtt",
+          },
+          {
+            url: "http://fakeURL3",
+            language: "ger",
+            closedCaption: true,
+            mimeType: "text/vtt",
+          },
+        ],
+        defaultTextTrack,
+      });
+
+      await sleep(0);
+      fakeServer.respond();
+      await sleep(0);
+
+      const textTracks2 = player.getAvailableTextTracks();
+      expect(textTracks2[0].active).to.equal(true);
+    }
+
+    done();
+  });
+
+  it("should switch initially to a closed caption external text track if set as default language", async function (done) {
+    mockManifestRequest(fakeServer, Mock);
+
+    const waysOfWritingDefaultTextTrack = [
+      { language: "en", closedCaption: true },
+      { language: "eng", closedCaption: true },
+    ];
+
+    for (const defaultTextTrack of waysOfWritingDefaultTextTrack) {
+      player.loadVideo({
+        transport: "dash",
+        url: Mock.manifest.url,
+        supplementaryTextTracks: {
+          url: "http://fakeURL",
+          language: "en",
+          closedCaption: true,
+          mimeType: "text/vtt",
+        },
+        defaultTextTrack,
+      });
+
+      await sleep(0);
+      fakeServer.respond();
+      await sleep(0);
+
+      const textTracks1 = player.getAvailableTextTracks();
+      expect(textTracks1[0].active).to.equal(true);
+
+      player.loadVideo({
+        transport: "dash",
+        url: Mock.manifest.url,
+        supplementaryTextTracks: [
+          {
+            url: "http://fakeURL1",
+            language: "en",
+            closedCaption: true,
+            mimeType: "text/vtt",
+          },
+          {
+            url: "http://fakeURL2",
+            language: "fr",
+            closedCaption: false,
+            mimeType: "text/vtt",
+          },
+          {
+            url: "http://fakeURL3",
+            language: "ger",
+            closedCaption: true,
+            mimeType: "text/vtt",
+          },
+        ],
+        defaultTextTrack,
+      });
+
+      await sleep(0);
+      fakeServer.respond();
+      await sleep(0);
+
+      const textTracks2 = player.getAvailableTextTracks();
+      expect(textTracks2[0].active).to.equal(true);
+    }
+
+    done();
+  });
+
+  it("should not switch initially to external text track if not set as default language", async function (done) {
+    mockManifestRequest(fakeServer, Mock);
+
+    const waysOfWritingDefaultTextTrack = [
+      "fr",
+      undefined,
+      null,
+      { language: "english" },
+      { language: "en", closedCaption: true },
+      { language: "eng", closedCaption: true },
+    ];
+
+    for (const defaultTextTrack of waysOfWritingDefaultTextTrack) {
+      player.loadVideo({
+        transport: "dash",
+        url: Mock.manifest.url,
+        supplementaryTextTracks: {
+          url: "http://fakeURL",
+          language: "en",
+          closedCaption: false,
+          mimeType: "text/vtt",
+        },
+        defaultTextTrack,
+      });
+
+      await sleep(0);
+      fakeServer.respond();
+      await sleep(0);
+
+      const textTracks1 = player.getAvailableTextTracks();
+      expect(textTracks1[0].active).to.equal(false);
+
+      player.loadVideo({
+        transport: "dash",
+        url: Mock.manifest.url,
+        supplementaryTextTracks: [
+          {
+            url: "http://fakeURL1",
+            language: "en",
+            closedCaption: false,
+            mimeType: "text/vtt",
+          },
+          {
+            url: "http://fakeURL2",
+            language: "fr",
+            closedCaption: false,
+            mimeType: "text/vtt",
+          },
+          {
+            url: "http://fakeURL3",
+            language: "ger",
+            closedCaption: true,
+            mimeType: "text/vtt",
+          },
+        ],
+        defaultTextTrack,
+      });
+
+      await sleep(0);
+      fakeServer.respond();
+      await sleep(0);
+
+      const textTracks2 = player.getAvailableTextTracks();
+      expect(textTracks2[0].active).to.equal(false);
+    }
+
+    done();
+  });
+});

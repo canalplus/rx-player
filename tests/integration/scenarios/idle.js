@@ -96,14 +96,6 @@ describe("initial idle state", () => {
       expect(player.getPosition()).to.equal(0);
     });
 
-    it("should return null in getStartTime by default", () => {
-      expect(player.getStartTime()).to.equal(null);
-    });
-
-    it("should return null in getEndTime by default", () => {
-      expect(player.getEndTime()).to.equal(null);
-    });
-
     it("should return 1 in getPlaybackRate by default", () => {
       expect(player.getPlaybackRate()).to.equal(1);
     });
