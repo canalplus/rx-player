@@ -88,9 +88,9 @@ const MAX_BUFFERED_DISTANCE = 0.1;
  * wrongly linked to the next or previous range it is truly linked too (if those
  * ranges are too close).
  *
- * TODO As of now, this limits the minimum size a segment can be. A better logic
- * would be to also consider the duration of a segment. Though this logic could
- * lead to bugs with the current code.
+ * TODO As of now, this limits the minimum size a complete segment can be. A
+ * better logic would be to also consider the duration of a segment. Though
+ * this logic could lead to bugs with the current code.
  * @type {Number}
  */
 const MINIMUM_SEGMENT_SIZE = 0.3;

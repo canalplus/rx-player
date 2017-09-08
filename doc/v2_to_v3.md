@@ -24,7 +24,7 @@ If you don't know if you were using documented APIs, you can still check if the 
     - [Normalized language codes](#general-lang)
 - [Constructor options](#cons)
     - [defaultLanguage](#cons-defaultLanguage)
-    - [defaultLanguage](#cons-defaultSubtitle)
+    - [defaultSubtitle](#cons-defaultSubtitle)
     - [initVideoBitrate / initAudioBitrate](#cons-initVideoBitrate)
 - [loadVideo](#load)
     - [Return value](#load-return)
