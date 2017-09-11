@@ -31,6 +31,7 @@ import EWMA from "./ewma.js";
 
 const {
   ABR_STARVATION_GAP,
+  OUT_OF_STARVATION_GAP,
 } = config;
 
 /**
@@ -154,7 +155,7 @@ const getFilteredRepresentations = (representations, filters) => {
  * @returns {Boolean}
  */
 const requestTakesTime = (durationOfRequest, chunkDuration) => {
-  return durationOfRequest > 2 + chunkDuration * 1.3;
+  return durationOfRequest > 1 + chunkDuration * 1.2;
 };
 
 /**
@@ -248,19 +249,26 @@ export default class RepresentationChooser {
       }
 
       // AUTO mode
+      let inStarvationMode = false;
       return Observable.combineLatest(clock$, maxAutoBitrate$, deviceEvents$)
         .map(([ clock, maxAutoBitrate, deviceEvents ]) => {
 
           let nextBitrate;
+          const { bufferGap } = clock;
 
-          // 1 - Check for starvation == not much left to play
-          // If that's the case, check if the request for the next segment
+          // Check for starvation == not much left to play
+          if (bufferGap <= ABR_STARVATION_GAP) {
+            inStarvationMode = true;
+          } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+            inStarvationMode = false;
+          }
+
+          // If in starvation mode, check if the request for the next segment
           // takes too much time relatively to the chunk's duration.
           // If that's the case, re-calculate the bandwidth urgently based on
           // this single request.
-          if (clock.bufferGap <= ABR_STARVATION_GAP) {
+          if (inStarvationMode) {
             const {
-              bufferGap,
               position,
               bitrate,
             } = clock;
@@ -286,6 +294,9 @@ export default class RepresentationChooser {
 
                 if (estimate) {
                   // Reset all estimations to zero
+                  // Note: this is weird to do this type of "global" side effect
+                  // (for this class) in an observable, not too comfortable with
+                  // that.
                   this.resetEstimate();
                   nextBitrate = Math.min(estimate, bitrate, maxAutoBitrate);
                 }
@@ -295,7 +306,11 @@ export default class RepresentationChooser {
 
           // if nextBitrate is not yet defined, do the normal estimation
           if (nextBitrate == null) {
-            const estimate = this.estimator.getEstimate();
+            const baseEstimate = this.estimator.getEstimate();
+
+            const estimate = clock.bufferGap <= inStarvationMode ?
+              baseEstimate * 0.95 : baseEstimate;
+
             nextBitrate = Math.min(
               estimate == null ? lastBitrate : estimate,
               maxAutoBitrate

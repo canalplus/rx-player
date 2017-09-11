@@ -283,8 +283,8 @@ export default {
    * Minimum number of bytes, under which samples are discarded.
    * Our models do not include latency information, so connection startup time
    * (time to first byte) is considered part of the download time.
-   * Because of this, we should ignore very small downloads which would cause our
-   * estimate to be too low.
+   * Because of this, we should ignore very small downloads which would cause
+   * our estimate to be too low.
    * This specific value is based on experimentation.
    * @type {Number}
    */
@@ -294,13 +294,20 @@ export default {
    * If a SourceBuffer has less than this amount of seconds ahead of the current
    * position in its buffer, the ABR manager will go into starvation mode.
    *
-   * Under this mode, the time the next important request take will be checked
-   * multiple times to detect when/if it takes too much time.
-   * If the request is considered too long, the bitrate will be hastily
-   * re-calculated from this single request.
+   * It gets out of starvation mode when the OUT_OF_STARVATION_GAP value is
+   * reached.
+   *
+   * Under this mode:
+   *   - the bandwidth considered will be a little lower than the one estimated
+   *   - the time the next important request take will be checked
+   *     multiple times to detect when/if it takes too much time.
+   *     If the request is considered too long, the bitrate will be hastily
+   *     re-calculated from this single request.
    * @type {Number}
    */
   ABR_STARVATION_GAP: 5,
+
+  OUT_OF_STARVATION_GAP: 7,
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume when

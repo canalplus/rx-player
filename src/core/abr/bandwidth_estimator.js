@@ -17,6 +17,9 @@
 import EWMA from "./ewma.js";
 import config from "../../config.js";
 
+const FAST_HALF_LIFE  = 2;
+const SLOW_HALF_LIFE  = 10;
+
 const {
   ABR_MINIMUM_TOTAL_BYTES,
   ABR_MINIMUM_CHUNK_SIZE,
@@ -35,13 +38,13 @@ export default class BandwidthEstimator {
      * A fast-moving average.
      * @private
      */
-    this._fast = new EWMA(2);
+    this._fast = new EWMA(FAST_HALF_LIFE);
 
     /**
      * A slow-moving average.
      * @private
      */
-    this._slow = new EWMA(7);
+    this._slow = new EWMA(SLOW_HALF_LIFE);
 
     /**
      * Number of bytes sampled.
@@ -85,8 +88,8 @@ export default class BandwidthEstimator {
    * Reset the bandwidth estimation.
    */
   reset() {
-    this._fast = new EWMA(2);
-    this._slow = new EWMA(5);
+    this._fast = new EWMA(FAST_HALF_LIFE);
+    this._slow = new EWMA(SLOW_HALF_LIFE);
     this._bytesSampled = 0;
   }
 }
