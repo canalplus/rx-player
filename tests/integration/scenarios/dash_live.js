@@ -2,9 +2,8 @@ import { expect } from "chai";
 import sinon from "sinon";
 import RxPlayer from "../../../src";
 import { mockManifestRequest } from "../utils/mock_requests.js";
+import sleep from "../utils/sleep.js";
 import Mock from "../mocks/dash_dynamic_SegmentTimeline.js";
-
-const sleep = time => new Promise(res => setTimeout(res, time));
 
 describe("dash live SegmentTimeline content", function () {
   let player;
@@ -155,9 +154,9 @@ describe("dash live SegmentTimeline content", function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
-    await sleep(1);
+    await sleep(0);
     fakeServer.respond();
-    await sleep(1);
+    await sleep(0);
 
     const audioTracks = player.getAvailableAudioTracks();
     const textTracks = player.getAvailableTextTracks();

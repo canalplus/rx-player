@@ -35,8 +35,9 @@ const karmaConf = {
   singleRun,
 
   browsers: [
-    "Chrome",
-    "ChromeCanary",
+    // "Chrome",
+    "ChromeHeadless",
+    // "ChromeCanary",
     "Firefox",
   ],
 

@@ -1,7 +1,12 @@
 import { expect } from "chai";
 import RxPlayer from "../../../src";
 
-// TODO Use config file
+/**
+ * Test every player at an initial, idle state.
+ *
+ * Breaking a test here will means with an high confidence that the API contract
+ * is broken.
+ */
 
 describe("initial idle state", () => {
   describe("constructor", () => {

@@ -5,9 +5,8 @@ import {
   mockManifestRequest,
   mockAllRequests,
 } from "../utils/mock_requests.js";
+import sleep from "../utils/sleep.js";
 import Mock from "../mocks/dash_static_SegmentTimeline.js";
-
-const sleep = time => new Promise(res => setTimeout(res, time));
 
 describe("dash static SegmentTimeline content", function () {
   let player;
@@ -209,10 +208,11 @@ describe("dash static SegmentTimeline content", function () {
   xit("should update the state when beginning to play", async function (done) {
     mockAllRequests(fakeServer, Mock);
 
-    let lastEvent;
+    let lastPlayerState;
     player.addEventListener("playerStateChange", newState =>
-      lastEvent = newState
+      lastPlayerState = newState
     );
+
     expect(player.getPlayerState()).to.equal("STOPPED");
 
     player.loadVideo({
@@ -221,14 +221,14 @@ describe("dash static SegmentTimeline content", function () {
     });
 
     expect(player.getPlayerState()).to.equal("LOADING");
-    expect(lastEvent).to.equal("LOADING");
+    expect(lastPlayerState).to.equal("LOADING");
 
     await sleep(1);
     fakeServer.respond();
     await sleep(1);
 
     expect(player.getPlayerState()).to.equal("LOADED");
-    expect(lastEvent).to.equal("LOADED");
+    expect(lastPlayerState).to.equal("LOADED");
 
     done();
   });

@@ -8,8 +8,9 @@ const karmaConf = {
   basePath: ".",
 
   browsers: [
-    "Chrome",
-    "ChromeCanary",
+    // "Chrome",
+    "ChromeHeadless",
+    // "ChromeCanary",
     "Firefox",
   ],
 

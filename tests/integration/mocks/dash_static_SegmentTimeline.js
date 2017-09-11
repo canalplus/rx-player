@@ -1,5 +1,8 @@
 /**
  * Data worth a little more than 15s of playback audio+video
+ *
+ * Note: the same actual low-bitrate segments are used for every video tracks to
+ * avoid being too heavy.
  */
 
 const baseURL = "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/";

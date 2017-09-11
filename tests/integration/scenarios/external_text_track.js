@@ -1,10 +1,13 @@
 import { expect } from "chai";
 import sinon from "sinon";
-import RxPlayer from "../../../src";
 import { mockManifestRequest } from "../utils/mock_requests.js";
+import sleep from "../utils/sleep.js";
 import Mock from "../mocks/dash_static_SegmentTimeline.js";
+import RxPlayer from "../../../src";
 
-const sleep = time => new Promise(res => setTimeout(res, time));
+/**
+ * Test ability to add an external text track when loading a video.
+ */
 
 describe("external text track", function () {
   let player;

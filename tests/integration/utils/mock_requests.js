@@ -1,3 +1,8 @@
+/**
+ * Mock manifest request as defined by the mock structure given.
+ * @param {Object} fakeServer
+ * @param {Object} mock
+ */
 function mockManifestRequest(fakeServer, mock) {
   fakeServer.respondWith("GET", mock.manifest.url,
     [200, {
@@ -5,6 +10,11 @@ function mockManifestRequest(fakeServer, mock) {
     }, mock.manifest.data]);
 }
 
+/**
+ * Mock every requests defined in the mock structure given.
+ * @param {Object} fakeServer
+ * @param {Object} mock
+ */
 function mockAllRequests(fakeServer, mock) {
   mockManifestRequest(fakeServer, mock);
 
