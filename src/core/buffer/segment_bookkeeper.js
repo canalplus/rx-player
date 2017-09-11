@@ -140,6 +140,8 @@ export default class SegmentBookkeeper {
    * Infer each segment's bufferedStart and bufferedEnd from the TimeRanges
    * given (coming from the source buffer).
    * @param {TimeRanges}
+   *
+   * TODO implement management of segments whose end is not known
    */
   addBufferedInfos(buffered) {
     const ranges = convertToRanges(buffered);
@@ -286,9 +288,20 @@ export default class SegmentBookkeeper {
    * Note: As new segments can "replace" partially or completely old ones, we
    * have to perform a complex logic and might update previously added segments.
    * @param {Segment} segment
-   * @param {Number} bitrate
+   * @param {Number} start - start time of the segment, in seconds
+   * @param {Number|undefined} end - end time of the segment, in seconds. Can
+   * be undefined in some rate cases
+   * @param {Number} bitrate - bitrate of the representation the segment is in
    */
   insert(segment, start, end, bitrate) {
+    // TODO manage segments whose end is unknown (rare but could happen)
+    // This should be properly managed in this method, but it is not in some
+    // other methods of this class, so I decided to not one of those to the
+    // inventory by security
+    if (end == null) {
+      return;
+    }
+
     const { _inventory } = this;
 
     // infer start and end from the segment data
@@ -323,10 +336,9 @@ export default class SegmentBookkeeper {
           //   newSegment   :          |======|
           this._inventory.splice(i+1, 0, newSegment);
           return;
-        } else {
+        } else { // /!\ also goes here if end is undefined
           if (segmentI.start >= (start/* - SEGMENT_EPSILON */)) {
-            // our segment is either the same or bigger, replace
-            //
+            // In those cases, replace
             // Case 1:
             //  segmentI     : |=======|
             //  newSegment   : |=======|
@@ -334,6 +346,20 @@ export default class SegmentBookkeeper {
             // Case 2:
             //  segmentI     : |=======|
             //  newSegment   : |==========|
+            //
+            // Case 3:
+            //  segmentI     : |=======|
+            //  newSegment   : |???*
+            //
+            // Case 4:
+            //  segmentI     : |???*
+            //  newSegment   : |======|
+            //
+            // Case 5:
+            //  segmentI     : |???*
+            //  newSegment   : |???*
+            //
+            // *|??? = unknown end
             this._inventory.splice(i, 1, newSegment);
             return;
           } else {
@@ -347,7 +373,26 @@ export default class SegmentBookkeeper {
             // Case 2:
             //  segmentI     : |=======|
             //  newSegment   :    |====|
-            segmentI.end = start;
+            //
+            // Case 3:
+            //  segmentI     : |=======|
+            //  newSegment   :    |???*
+            //
+            // Case 4:
+            //  segmentI     : |???*
+            //  newSegment   :    |====|
+            //
+            // Case 5:
+            //  segmentI     : |???*
+            //  newSegment   :    |???*
+            //
+            // *|??? = unknown end
+
+            // (if segment's end is not known yet, it could perfectly
+            // end before the one we're adding now)
+            if (segmentI.end != null) {
+              segmentI.end = start;
+            }
             this._inventory.splice(i+1, 0, newSegment);
             return;
           }
@@ -358,13 +403,61 @@ export default class SegmentBookkeeper {
     // if we got here, we are the first segment
     // check bounds of the previous first segment
     const firstSegment = this._inventory[0];
-    if (!firstSegment) {
+    if (!firstSegment) { // we do not have any segment yet
       this._inventory.push(newSegment);
       return;
     }
 
-    // I can see three left cases here
-    if ((firstSegment.end/* - SEGMENT_EPSILON */) < segment.end) {
+    if (segment.end == null) {
+      if (firstSegment.start === start) {
+        // same beginning, unknown end, just replace
+        // Case 1:
+        //  firstSegment : |=======|
+        //  newSegment   : |???*
+        //
+        // Case 2:
+        //  firstSegment : |???*
+        //  newSegment   : |???*
+        //
+        // *|??? = unknown end
+        this._inventory.splice(0, 1, newSegment);
+      } else {
+        // our segment begins before this one, push at the beginning
+        // Case 1:
+        // firstSegment :   |=======|
+        // newSegment   : |???*
+        //
+        // Case 2:
+        // firstSegment :   |???*
+        // newSegment   : |???*
+        //
+        // *|??? = unknown end
+        this._inventory.splice(0, 0, newSegment);
+      }
+      return;
+    }
+
+    if (firstSegment.start >= segment.end) {
+      // our segment is before, put it before
+      // Case 1:
+      //  firstSegment :      |====|
+      //  newSegment   : |====|
+      //
+      // Case 2:
+      //  firstSegment :        |====|
+      //  newSegment   : |====|
+      //
+      // Case 3:
+      //  firstSegment :        |???*
+      //  newSegment   : |====|
+      //
+      // Case 4:
+      //  firstSegment :      |???*
+      //  newSegment   : |====|
+      //
+      // *|??? = unknown end
+      this._inventory.splice(0, 0, newSegment);
+    } else if ((firstSegment.end/* - SEGMENT_EPSILON */) <= segment.end) {
       // Our segment is bigger, replace the first
       // Case 1:
       //  firstSegment :   |===|
@@ -377,10 +470,15 @@ export default class SegmentBookkeeper {
     } else {
       // our segment has a "complex" relation with the first one,
       // update the old one start and add this one before it.
-      //
       // Case 1:
       //  firstSegment :    |======|
       //  newSegment   : |======|
+      //
+      // Case 2:
+      // firstSegment :   |???*
+      // newSegment   : |=====|
+      //
+      // *|??? = unknown end
       firstSegment.start = segment.end;
       this._inventory.splice(0, 0, newSegment);
     }
@@ -461,8 +559,10 @@ export default class SegmentBookkeeper {
         }
 
         if (
-          !nextSegmentI ||
-          nextSegmentI.bufferedStart > segmentI.bufferedEnd
+          segmentI.end != null && (
+            !nextSegmentI ||
+            nextSegmentI.bufferedStart > segmentI.bufferedEnd
+          )
         ) {
           const timeDiff = segmentI.end - segmentI.bufferedEnd;
           if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
