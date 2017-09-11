@@ -671,7 +671,7 @@ class Player extends EventEmitter {
    * Returns the manual audio bitrate set. -1 if in AUTO mode.
    * @returns {Number}
    */
-  getForcedAudioBitrate() {
+  getManualAudioBitrate() {
     return this._priv.manualBitrates.audio;
   }
 
@@ -679,7 +679,7 @@ class Player extends EventEmitter {
    * Returns the manual video bitrate set. -1 if in AUTO mode.
    * @returns {Number}
    */
-  getForcedVideoBitrate() {
+  getManualVideoBitrate() {
     return this._priv.manualBitrates.video;
   }
 

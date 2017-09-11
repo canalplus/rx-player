@@ -12,8 +12,8 @@
   - api: add ``maxBufferBehind`` constructor option
   - api: add ``getVideoBufferGap`` method
   - api: add ``isMute`` method
-  - api: add ``getForcedAudioBitrate`` method
-  - api: add ``getForcedVideoBitrate`` method
+  - api: add ``getManualAudioBitrate`` method
+  - api: add ``getManualVideoBitrate`` method
   - config: add a global config file (src/config.js) to easily tweak the player pre-build
 
 ### Changed

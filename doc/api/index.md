@@ -33,8 +33,8 @@
     - [getMaxAudioBitrate](#meth-getMaxAudioBitrate)
     - [setVideoBitrate](#meth-setVideoBitrate)
     - [setAudioBitrate](#meth-setAudioBitrate)
-    - [getForcedVideoBitrate](#meth-getForcedVideoBitrate)
-    - [getForcedAudioBitrate](#meth-getForcedAudioBitrate)
+    - [getManualVideoBitrate](#meth-getManualVideoBitrate)
+    - [getManualAudioBitrate](#meth-getManualAudioBitrate)
     - [setWantedBufferAhead](#meth-setWantedBufferAhead)
     - [getWantedBufferAhead](#meth-getWantedBufferAhead)
     - [setMaxBufferBehind](#meth-setMaxBufferBehind)
@@ -447,26 +447,26 @@ You can use ``getAvailableAudioBitrates`` to get the list of available bitrates 
 Note that the value set is persistent between ``loadVideo`` calls.
 As such, this method can also be called when no content is playing (the same rules apply for future contents).
 
-### <a name="meth-getForcedVideoBitrate"></a>getForcedVideoBitrate
+### <a name="meth-getManualVideoBitrate"></a>getManualVideoBitrate
 
 _arguments_: ``Number``
 
 Get the last video bitrate manually set. Either via ``setVideoBitrate`` or via the ``initialVideoBitrate`` constructor option.
 
 This value can be different than the one returned by ``getVideoBitrate``:
-  - ``getForcedVideoBitrate`` returns the last bitrate set manually by the user
+  - ``getManualVideoBitrate`` returns the last bitrate set manually by the user
   - ``getVideoBitrate`` returns the actual bitrate of the current video track
 
 ``-1`` when no video bitrate is forced.
 
-### <a name="meth-getForcedAudioBitrate"></a>getForcedAudioBitrate
+### <a name="meth-getManualAudioBitrate"></a>getManualAudioBitrate
 
 _arguments_: ``Number``
 
 Get the last audio bitrate manually set. Either via ``setAudioBitrate`` or via the ``initialAudioBitrate`` constructor option.
 
 This value can be different than the one returned by ``getAudioBitrate``:
-  - ``getForcedAudioBitrate`` returns the last bitrate set manually by the user
+  - ``getManualAudioBitrate`` returns the last bitrate set manually by the user
   - ``getAudioBitrate`` returns the actual bitrate of the current audio track
 
 ``-1`` when no audio bitrate is forced.

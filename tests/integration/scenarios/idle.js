@@ -256,45 +256,45 @@ describe("initial idle state", () => {
     });
 
     it("should have a -1 manual audio bitrate by default", () => {
-      expect(player.getForcedAudioBitrate()).to.equal(-1);
+      expect(player.getManualAudioBitrate()).to.equal(-1);
     });
 
     it("should have a -1 manual video bitrate by default", () => {
-      expect(player.getForcedVideoBitrate()).to.equal(-1);
+      expect(player.getManualVideoBitrate()).to.equal(-1);
     });
 
     it("should update manual video bitrate when calling setVideoBitrate", () => {
-      const oldForced = player.getForcedVideoBitrate();
+      const oldManual = player.getManualVideoBitrate();
 
       player.setVideoBitrate(84);
-      expect(player.getForcedVideoBitrate()).to.equal(84);
+      expect(player.getManualVideoBitrate()).to.equal(84);
 
       player.setVideoBitrate(-1);
-      expect(player.getForcedVideoBitrate()).to.equal(-1);
+      expect(player.getManualVideoBitrate()).to.equal(-1);
 
       player.setVideoBitrate(0);
-      expect(player.getForcedVideoBitrate()).to.equal(0);
+      expect(player.getManualVideoBitrate()).to.equal(0);
 
-      player.setVideoBitrate(oldForced);
-      expect(player.getForcedVideoBitrate()).to.equal(oldForced);
+      player.setVideoBitrate(oldManual);
+      expect(player.getManualVideoBitrate()).to.equal(oldManual);
     });
 
     it("should update manual audio bitrate when calling setAudioBitrate", () => {
-      const oldForced = player.getForcedAudioBitrate();
+      const oldManual = player.getManualAudioBitrate();
 
       player.setAudioBitrate(84);
-      expect(player.getForcedAudioBitrate()).to.equal(84);
+      expect(player.getManualAudioBitrate()).to.equal(84);
       player.setAudioBitrate(-1);
-      expect(player.getForcedAudioBitrate()).to.equal(-1);
+      expect(player.getManualAudioBitrate()).to.equal(-1);
       player.setAudioBitrate(0);
-      expect(player.getForcedAudioBitrate()).to.equal(0);
+      expect(player.getManualAudioBitrate()).to.equal(0);
 
-      player.setAudioBitrate(oldForced);
-      expect(player.getForcedAudioBitrate()).to.equal(oldForced);
+      player.setAudioBitrate(oldManual);
+      expect(player.getManualAudioBitrate()).to.equal(oldManual);
     });
 
     it("should update the maximum video bitrate when calling setMaxVideoBitrate by default", () => {
-      const oldMax = player.getForcedVideoBitrate();
+      const oldMax = player.getManualVideoBitrate();
 
       expect(player.setMaxVideoBitrate(Infinity)).to.equal(undefined);
       expect(player.getMaxVideoBitrate()).to.equal(Infinity);
@@ -313,7 +313,7 @@ describe("initial idle state", () => {
     });
 
     it("should update the maximum audio bitrate when calling setMaxAudioBitrate by default", () => {
-      const oldMax = player.getForcedAudioBitrate();
+      const oldMax = player.getManualAudioBitrate();
 
       expect(player.setMaxAudioBitrate(Infinity)).to.equal(undefined);
       expect(player.getMaxAudioBitrate()).to.equal(Infinity);
