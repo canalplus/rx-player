@@ -554,11 +554,18 @@ Returns the maximum kept buffer ahead of the current position, in seconds.
 
 ### <a name="meth-setFullscreen"></a>setFullscreen
 
-Switch to fullscreen mode.
+_arguments_: ``Boolean``
+
+Switch or exit fullscreen mode. The argument is an optional boolean:
+  - if set:
+    - ``true``: enters fullscreen
+    - ``false``: exit fullscreen
+
+  - if not set: enter fullscreen
 
 ### <a name="meth-exitFullscreen"></a>exitFullscreen
 
-Exit fullscreen mode.
+Exit fullscreen mode. Same than ``setFullscreen(false)``.
 
 ### <a name="meth-setVolume"></a>setVolume
 

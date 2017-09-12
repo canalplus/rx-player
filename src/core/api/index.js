@@ -793,11 +793,14 @@ class Player extends EventEmitter {
 
   /**
    * Set/exit fullScreen.
-   * @deprecated
-   * @param {Boolean} [toggle=true] - if false, exit full screen.
+   * @param {Boolean} [goFull=true] - if false, exit full screen.
    */
-  setFullscreen() {
-    requestFullscreen(this.videoElement);
+  setFullscreen(goFull = true) {
+    if (goFull) {
+      requestFullscreen(this.videoElement);
+    } else {
+      exitFullscreen();
+    }
   }
 
   /**

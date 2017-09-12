@@ -58,7 +58,6 @@ If you don't know if you were using documented APIs, you can still check if the 
     - [setSubtitle](#rem-setSubtitle)
 - [Changed methods](#chan)
     - [seekTo](#chan-seekTo)
-    - [setFullscreen](#chan-setFullscreen)
     - [setVideoBitrate / setAudioBitrate](#chan-setVideoBitrate)
     - [getUrl](#chan-getUrl)
     - [isLive](#chan-isLive)
@@ -1052,33 +1051,6 @@ player.seekTo(10);
 
 // becomes
 player.seekTo(10);
-```
-
-### <a name="chan-setFullscreen"></a>setFullscreen
-
-#### What Changed
-
-It's not possible to do ``setFullscreen(false)`` to exit fullscreen mode now. To exit fullscreen mode, you have to call the ``exitFullscreen`` method.
-
-``setFullscreen`` is still the idiomatic way to set the fullscreen mode however.
-
-#### Example
-
-```js
-// In the previous version:
-player.setFullscreen(false);
-
-// becomes
-player.exitFullscreen();
-```
-
-``setFullscreen`` still stays this way:
-```js
-// In the previous version:
-player.setFullscreen();
-
-// stays
-player.setFullscreen();
 ```
 
 ### <a name="chan-setVideoBitrate"></a>setVideoBitrate / setAudioBitrate

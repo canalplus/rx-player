@@ -34,6 +34,8 @@ function requestFullscreen(elt) {
 
 /**
  * Exit fullscreen if an element is currently in fullscreen.
+ * TODO this exit fullscreen mode even if any element in the document is in
+ * fullscreen, is it really what we want?
  */
 function exitFullscreen() {
   if (isFullscreen()) {
@@ -50,7 +52,8 @@ function exitFullscreen() {
 }
 
 /**
- * Returns true if the document is being displayed in fullscreen mode;
+ * Returns true if an element in the document is being displayed in fullscreen
+ * mode;
  * otherwise it's false.
  * @returns {boolean}
  */

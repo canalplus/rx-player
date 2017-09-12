@@ -106,11 +106,11 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     },
 
     SET_FULL_SCREEN: () => {
-      player.setFullscreen();
+      player.setFullscreen(true);
     },
 
     EXIT_FULL_SCREEN: () => {
-      player.exitFullscreen();
+      player.setFullscreen(false);
     },
 
     SET_AUDIO_BITRATE: (bitrate) => {
