@@ -859,7 +859,7 @@ var SafeSubscriber = (function (_super) {
    * suggested, in seconds.
    * @type {Number}
    */
-  DEFAULT_LIVE_GAP: 15,
+  DEFAULT_LIVE_GAP: 10,
 
   /**
    * Default value for a manifest's suggested presentation delay if not
@@ -868,7 +868,7 @@ var SafeSubscriber = (function (_super) {
    */
   DEFAULT_SUGGESTED_PRESENTATION_DELAY: {
     SMOOTH: 10,
-    DASH: 15
+    DASH: 10
   },
 
   /**
@@ -1536,7 +1536,9 @@ function NetworkError(code, reason, fatal) {
     this.message = errorMessage(this.name, this.code, this.reason);
   } else {
     var reasonMessage = "" + this.reqType + (this.status > 0 ? "(" + this.status + ")" : "") + " on " + this.url;
-    this.message = errorMessage(this.name, this.code, { message: reasonMessage });
+    this.message = errorMessage(this.name, this.code, {
+      message: reasonMessage
+    });
   }
 }
 NetworkError.prototype = new Error();
@@ -5162,9 +5164,30 @@ function patchPssh(buf, pssList) {
 
 
 
-var FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+/**
+ * Sampling frequencies defined in MPEG-4 Audio.
+ * @type {Array.<Number>}
+ */
+var SAMPLING_FREQUENCIES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
 
+/**
+ * Speed up string to bytes conversion by memorizing the result
+ *
+ * The keys here are ISOBMFF box names. The values are the corresponding
+ * bytes conversion for putting as an ISOBMFF boxes.
+ *
+ * Used by the boxName method.
+ * @type {Object}
+ */
 var boxNamesMem = {};
+
+/**
+ * Convert the string name of an ISOBMFF box into the corresponding bytes.
+ * Has a memorization mechanism to speed-up if you want to translate the
+ * same string multiple times.
+ * @param {string} str
+ * @returns {Uint8Array}
+ */
 function boxName(str) {
   if (boxNamesMem[str]) {
     return boxNamesMem[str];
@@ -5175,6 +5198,13 @@ function boxName(str) {
   return nameInBytes;
 }
 
+/**
+ * Create a new ISOBMFF "box" with the given name.
+ * @param {string} name - name of the box you want to create, must always
+ * be 4 characters (uuid boxes not supported)
+ * @param {Uint8Array} buff - content of the box
+ * @returns {Uint8Array} - The entire ISOBMFF box (length+name+content)
+ */
 function Atom(name, buff) {
   if (false) {
     assert(name.length === 4);
@@ -5228,15 +5258,16 @@ var atoms = {
 
 
   /**
-   * {String}     name ("avc1" or "encv")
-   * {Number}     drefIdx (shall be 1)
-   * {Number}     width
-   * {Number}     height
-   * {Number}     hRes (horizontal resolution, eg 72)
-   * {Number}     vRes (horizontal resolution, eg 72)
-   * {Number}     colorDepth (eg 24)
-   * {Uint8Array} avcc (Uint8Array representing the avcC atom)
-   * {Uint8Array} sinf (Uint8Array representing the sinf atom, only if name == "encv")
+   * @param {string} name - "avc1" or "encv"
+   * @param {Number} drefIdx - shall be 1
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Number} hRes - horizontal resolution, eg 72
+   * @param {Number} vRes - horizontal resolution, eg 72
+   * @param {Number} colorDepth - eg 24
+   * @param {Uint8Array} avcc - Uint8Array representing the avcC atom
+   * @param {Uint8Array} sinf - Uint8Array representing the sinf atom,
+   * only if name == "encv"
    */
   avc1encv: function avc1encv(name, drefIdx, width, height, hRes, vRes, encName, colorDepth, avcc, sinf) {
     if (false) {
@@ -5259,10 +5290,11 @@ var atoms = {
 
 
   /**
-   * {String} spsHex
-   * {String} ppsHex
-   * {Number} nalLen (NAL Unit length: 1, 2 or 4 bytes)
-   * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0", 1, "68ef3880")
+   * @param {string} spsHex
+   * @param {string} ppsHex
+   * @param {Number} nalLen - NAL Unit length: 1, 2 or 4 bytes
+   * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0",
+   * 1, "68ef3880")
    */
   avcc: function avcc(sps, pps, nalLen) {
     var nal = nalLen === 2 ? 0x1 : nalLen === 4 ? 0x3 : 0x0;
@@ -5281,8 +5313,8 @@ var atoms = {
 
 
   /**
-   * {Number} stream
-   * {String} codecPrivateData (hex string)
+   * @param {Number} stream
+   * @param {string} codecPrivateData - hex string
    * eg: esds(1, 98800, "1190")
    */
   esds: function esds(stream, codecPrivateData) {
@@ -5291,7 +5323,7 @@ var atoms = {
 
 
   /**
-   * {String} dataFormat, four letters (eg "avc1")
+   * @param {string} dataFormat - four letters (eg "avc1")
    */
   frma: function frma(dataFormat) {
     if (false) {
@@ -5308,7 +5340,7 @@ var atoms = {
 
 
   /**
-   * {String} type ("video" or "audio")
+   * @param {string} type - "video" or "audio"
    */
   hdlr: function hdlr(type) {
     var name = void 0,
@@ -5341,14 +5373,15 @@ var atoms = {
 
 
   /**
-   * {String}     name ("mp4a" or "enca")
-   * {Number}     drefIdx
-   * {Number}     channelsCount
-   * {Number}     sampleSize
-   * {Number}     packetSize
-   * {Number}     sampleRate
-   * {Uint8Array} esds (Uint8Array representing the esds atom)
-   * {Uint8Array} sinf (Uint8Array representing the sinf atom, only if name == "enca")
+   * @param {string} name - "mp4a" or "enca"
+   * @param {Number} drefIdx
+   * @param {Number} channelsCount
+   * @param {Number} sampleSize
+   * @param {Number} packetSize
+   * @param {Number} sampleRate
+   * @param {Uint8Array} esds - Uint8Array representing the esds atom
+   * @param {Uint8Array} sinf Uint8Array representing the sinf atom,
+   * only if name == "enca"
    */
   mp4aenca: function mp4aenca(name, drefIdx, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf) {
     return Atom(name, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["i" /* concat */])(6, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["n" /* itobe2 */])(drefIdx), 8, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["n" /* itobe2 */])(channelsCount), __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["n" /* itobe2 */])(sampleSize), 2, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["n" /* itobe2 */])(packetSize), __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["n" /* itobe2 */])(sampleRate), 2, esds, name === "enca" ? sinf : []));
@@ -5364,7 +5397,7 @@ var atoms = {
 
 
   /**
-   * @param {String} systemId - Hex string representing the CDM, 16 bytes.
+   * @param {string} systemId - Hex string representing the CDM, 16 bytes.
    * @param {Uint8Array} privateData - Data associated to protection specific
    * system.
    * @param {[]Uint8Array} keyIds - List of key ids contained in the PSSH
@@ -5397,7 +5430,7 @@ var atoms = {
 
 
   /**
-   * {Uint8Array} sencData (including 8 bytes flags and entries count)
+   * @param {Uint8Array} sencData - including 8 bytes flags and entries count
    */
   saiz: function saiz(senc) {
     if (senc.length === 0) {
@@ -5434,8 +5467,8 @@ var atoms = {
 
 
   /**
-   * {String} schemeType, four letters (eg "cenc" for Common Encryption)
-   * {Number} schemeVersion (eg 65536)
+   * @param {string} schemeType - four letters (eg "cenc" for Common Encryption)
+   * @param {Number} schemeVersion - eg 65536
    */
   schm: function schm(schemeType, schemeVersion) {
     if (false) {
@@ -5452,14 +5485,17 @@ var atoms = {
 
 
   /**
-   * {Array} representations (arrays of Uint8Array, typically [avc1] or [encv, avc1])
+   * @param {Array} representations - arrays of Uint8Array, typically [avc1]
+   * or [encv, avc1]
+   * @returns {Uint8Array}
    */
   stsd: function stsd(reps) {
     // only one description here... FIXME
     return Atom("stsd", __WEBPACK_IMPORTED_MODULE_2__utils_bytes__["i" /* concat */].apply(null, [7, [reps.length]].concat(reps)));
   },
   tkhd: function tkhd(width, height, trackId) {
-    return Atom("tkhd", __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["i" /* concat */])(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["j" /* itobe4 */])(1 + 2 + 4), 8, // we assume track is enabled, in media and in preview.
+    return Atom("tkhd", __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["i" /* concat */])(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["j" /* itobe4 */])(1 + 2 + 4), 8, // we assume track is enabled,
+    // in media and in preview.
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["j" /* itobe4 */])(trackId), 20, // we assume trackId = 1;
     [1, 0, 0, 0], // we assume volume = 100%;
     [0, 1, 0, 0], 12, // default matrix
@@ -5479,9 +5515,9 @@ var atoms = {
 
 
   /**
-   * {Number} algId (eg 1)
-   * {Number} ivSize (eg 8)
-   * {String} keyId Hex KID 93789920e8d6520098577df8f2dd5546
+   * @param {Number} algId - eg 1
+   * @param {Number} ivSize - eg 8
+   * @param {string} keyId - Hex KID 93789920e8d6520098577df8f2dd5546
    */
   tenc: function tenc(algId, ivSize, keyId) {
     if (false) {
@@ -5506,7 +5542,8 @@ var atoms = {
     // If no dataoffset is present, we change the headers and add one
     var trun = new Uint8Array(oldtrun.length + 4);
     trun.set(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_bytes__["j" /* itobe4 */])(oldtrun.length + 4), 0);
-    trun.set(oldtrun.subarray(4, 16), 4); // name + (version + headers) + samplecount
+    trun.set(oldtrun.subarray(4, 16), 4); // name + (version + headers) +
+    // samplecount
     trun[11] = trun[11] | 0x01; // add data offset header info
     trun.set([0, 0, 0, 0], 16); // data offset
     trun.set(oldtrun.subarray(16, oldtrun.length), 20);
@@ -5532,7 +5569,7 @@ var reads = {
 
   /**
    * Extract senc data (derived from UUID MS Atom)
-   * {Uint8Array} traf
+   * @param {Uint8Array} traf
    */
   senc: function senc(traf) {
     return readUuid(traf, 0xA2394F52, 0x5A9B4F14, 0xA2446C42, 0x7C648DF4);
@@ -5541,7 +5578,7 @@ var reads = {
 
   /**
    * Extract tfxd data (derived from UUID MS Atom)
-   * {Uint8Array} traf
+   * @param {Uint8Array} traf
    */
   tfxd: function tfxd(traf) {
     return readUuid(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
@@ -5550,7 +5587,7 @@ var reads = {
 
   /**
    * Extract tfrf data (derived from UUID MS Atom)
-   * {Uint8Array} traf
+   * @param {Uint8Array} traf
    */
   tfrf: function tfrf(traf) {
     return readUuid(traf, 0xD4807EF2, 0XCA394695, 0X8E5426CB, 0X9E46A79F);
@@ -5563,15 +5600,15 @@ var reads = {
 /**
  * Return AAC ES Header (hexstr form)
  *
- * {Number} type
+ * @param {Number} type
  *          1 = AAC Main
  *          2 = AAC LC
  *          cf http://wiki.multimedia.cx/index.php?title=MPEG-4_Audio
- * {Number} frequency
- * {Number} chans (1 or 2)
+ * @param {Number} frequency
+ * @param {Number} chans (1 or 2)
  */
 function aacesHeader(type, frequency, chans) {
-  var freq = FREQS.indexOf(frequency);
+  var freq = SAMPLING_FREQUENCIES.indexOf(frequency);
   if (false) {
     assert(freq >= 0, "non supported frequency"); // TODO : handle Idx = 15...
   }
@@ -5616,6 +5653,17 @@ function patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) {
   return segment;
 }
 
+/**
+ * @param {Number} timescale
+ * @param {string} type
+ * @param {Uint8Array} stsd
+ * @param {Uint8Array} mhd
+ * @param {Number} width
+ * @param {Number} height
+ * @param {Array.<Object>} [pssList] - List of dict, example:
+ * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
+ * @returns {Uint8Array}
+ */
 function createInitSegment(timescale, type, stsd, mhd, width, height, pssList) {
 
   var stbl = atoms.mult("stbl", [stsd, Atom("stts", new Uint8Array(0x08)), Atom("stsc", new Uint8Array(0x08)), Atom("stsz", new Uint8Array(0x0c)), Atom("stco", new Uint8Array(0x08))]);
@@ -5631,7 +5679,8 @@ function createInitSegment(timescale, type, stsd, mhd, width, height, pssList) {
   var trak = atoms.mult("trak", [tkhd, mdia]);
   var trex = atoms.trex(1);
   var mvex = atoms.mult("mvex", [trex]);
-  var mvhd = atoms.mvhd(timescale, 1); // in fact, we don"t give a shit about this value ;)
+  var mvhd = atoms.mvhd(timescale, 1); // in fact, we don't give a sh** about
+  // this value :O
 
   var moov = atoms.mult("moov", moovChildren(mvhd, mvex, trak, pssList));
   var ftyp = atoms.ftyp("isom", ["isom", "iso2", "iso6", "avc1", "dash"]);
@@ -5684,18 +5733,19 @@ function createInitSegment(timescale, type, stsd, mhd, width, height, pssList) {
   /**
    * Return full Init segment as Uint8Array
    *
-   * Number   timescale (lowest number, this one will be set into mdhd, *10000 in mvhd) Eg 1000
-   * Number   width
-   * Number   height
-   * Number   hRes
-   * Number   vRes
-   * Number   nalLength (1, 2 or 4)
-   * String   SPShexstr
-   * String   PPShexstr
-   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
-   * String   keyId (hex string representing the key Id, 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b)
-   *
-   *
+   * @param {Number} timescale - lowest number, this one will be set into mdhd
+   * *10000 in mvhd, e.g. 1000
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Number} hRes
+   * @param {Number} vRes
+   * @param {Number} nalLength (1, 2 or 4)
+   * @param {string} codecPrivateData
+   * @param {string} keyId - hex string representing the key Id,
+   * 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b
+   * @param {Array.<Object>} [pssList] - List of dict, example:
+   * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
+   * @returns {Uint8Array}
    */
   createVideoInitSegment: function createVideoInitSegment(timescale, width, height, hRes, vRes, nalLength, codecPrivateData, keyId, pssList) {
 
@@ -5714,7 +5764,11 @@ function createInitSegment(timescale, type, stsd, mhd, width, height, pssList) {
     var avcc = atoms.avcc(sps, pps, nalLength);
     var stsd = void 0;
     if (!pssList.length) {
-      var avc1 = atoms.avc1encv("avc1", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc);
+      var avc1 = atoms.avc1encv("avc1", // name
+      1, // drefIdx
+      width, height, hRes, vRes, "AVC Coding", // encName
+      24, // color depth
+      avcc);
       stsd = atoms.stsd([avc1]);
     } else {
       var tenc = atoms.tenc(1, 8, keyId);
@@ -5733,15 +5787,16 @@ function createInitSegment(timescale, type, stsd, mhd, width, height, pssList) {
   /**
    * Return full Init segment as Uint8Array
    *
-   * Number   channelsCount
-   * Number   sampleSize
-   * Number   packetSize
-   * Number   sampleRate
-   * String   codecPrivateData
-   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"}
-   * String   keyId (hex string representing the key Id, 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b)
-   *
-   *
+   * @param {Number} channelsCount
+   * @param {Number} sampleSize
+   * @param {Number} packetSize
+   * @param {Number} sampleRate
+   * @param {string} codecPrivateData
+   * @param {Array } [pssList] - List of dict, example:
+   * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"}
+   * @param {string} keyId - hex string representing the key Id, 32 chars.
+   * eg. a800dbed49c12c4cb8e0b25643844b9b
+   * @returns {Uint8Array}
    */
   createAudioInitSegment: function createAudioInitSegment(timescale, channelsCount, sampleSize, packetSize, sampleRate, codecPrivateData, keyId, pssList) {
 
@@ -7551,8 +7606,10 @@ function parseNode(node, parentOffset, siblingOffset) {
     innerHTML = new DOMParser().parseFromString(serializedXML, "text/html").body.firstChild.innerHTML;
   }
 
-  // Trim left and right whitespace from text and convert non-explicit line breaks.
-  // Using deprecated escape all together with decodeURIComponent to convert unicode characters
+  // Trim left and right whitespace from text and convert non-explicit line
+  // breaks.
+  // Using deprecated escape all together with decodeURIComponent to convert
+  // unicode characters
   innerHTML = window.escape(innerHTML.replace(rBr, "\r\n"));
 
   // TODO(guillaume): find out if we have an encoding issue when
@@ -10014,6 +10071,8 @@ function requestFullscreen(elt) {
 
 /**
  * Exit fullscreen if an element is currently in fullscreen.
+ * TODO this exit fullscreen mode even if any element in the document is in
+ * fullscreen, is it really what we want?
  */
 function exitFullscreen() {
   if (isFullscreen()) {
@@ -10030,7 +10089,8 @@ function exitFullscreen() {
 }
 
 /**
- * Returns true if the document is being displayed in fullscreen mode;
+ * Returns true if an element in the document is being displayed in fullscreen
+ * mode;
  * otherwise it's false.
  * @returns {boolean}
  */
@@ -10158,6 +10218,7 @@ var BandwidthEstimator = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = filterByBitrate;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find_index__ = __webpack_require__(49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find_index___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_array_find_index__);
 /**
@@ -10183,7 +10244,7 @@ var BandwidthEstimator = function () {
  * @param {Number} bitrate
  * @returns {Array.<Object>}
  */
-/* harmony default export */ __webpack_exports__["a"] = (function (representations, bitrate) {
+function filterByBitrate(representations, bitrate) {
   var firstSuperiorBitrate = __WEBPACK_IMPORTED_MODULE_0_array_find_index___default()(representations, function (r) {
     return r.bitrate > bitrate;
   });
@@ -10192,13 +10253,14 @@ var BandwidthEstimator = function () {
     return representations;
   }
   return representations.slice(0, firstSuperiorBitrate);
-});
+}
 
 /***/ }),
 /* 89 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = filterByWidth;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_array_find__);
 /**
@@ -10224,7 +10286,7 @@ var BandwidthEstimator = function () {
  * @param {Number} width
  * @returns {Array.<Object>}
  */
-/* harmony default export */ __webpack_exports__["a"] = (function (representations, width) {
+function filterByWidth(representations, width) {
   var sortedRepsByWidth = representations.sort(function (a, b) {
     return a.width - b.width;
   });
@@ -10238,13 +10300,14 @@ var BandwidthEstimator = function () {
     });
   }
   return representations;
-});
+}
 
 /***/ }),
 /* 90 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = fromBitrateCeil;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find_index__ = __webpack_require__(49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find_index___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_array_find_index__);
 /**
@@ -10270,7 +10333,7 @@ var BandwidthEstimator = function () {
  * @param {Number} bitrate
  * @returns {Array.<Representation>}
  */
-/* harmony default export */ __webpack_exports__["a"] = (function (representations, bitrate) {
+function fromBitrateCeil(representations, bitrate) {
   var tooHighIndex = __WEBPACK_IMPORTED_MODULE_0_array_find_index___default()(representations, function (representation) {
     return representation.bitrate > bitrate;
   });
@@ -10278,7 +10341,7 @@ var BandwidthEstimator = function () {
     return representations[representations.length - 1];
   }
   return representations[tooHighIndex - 1];
-});
+}
 
 /***/ }),
 /* 91 */
@@ -11434,7 +11497,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha3";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha4";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
@@ -12142,13 +12205,18 @@ var Player = function (_EventEmitter) {
 
   /**
    * Set/exit fullScreen.
-   * @deprecated
-   * @param {Boolean} [toggle=true] - if false, exit full screen.
+   * @param {Boolean} [goFull=true] - if false, exit full screen.
    */
 
 
   Player.prototype.setFullscreen = function setFullscreen() {
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__compat__["d" /* requestFullscreen */])(this.videoElement);
+    var goFull = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+    if (goFull) {
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__compat__["d" /* requestFullscreen */])(this.videoElement);
+    } else {
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__compat__["c" /* exitFullscreen */])();
+    }
   };
 
   /**
@@ -12895,7 +12963,7 @@ function parseConstructorOptions() {
 }
 
 /**
- * Parse options given to the API constructor and set default options as found
+ * Parse options given to loadVideo and set default options as found
  * in the config.
  *
  * Do not mutate anything, only cross the given options and sane default options
@@ -12915,7 +12983,6 @@ function parseLoadVideoOptions() {
 
 
   var parsed = {
-    startAt: options.startAt,
     url: options.url,
     transport: def(options.transport, defaultTransport),
     autoPlay: def(options.autoPlay, DEFAULT_AUTO_PLAY),
@@ -13671,13 +13738,15 @@ function Buffer(_ref) {
   /**
    * Returns every segments currently wanted.
    * @param {Object} adaptation - The adaptation concerned (audio/video...)
-   * @param {Object} representation - The representation of the chosen adaptation
+   * @param {Object} representation - The representation of the chosen
+   * adaptation
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
    * sourceBuffer
    * @param {Object} timing - The last item emitted from clock$
    * @param {Number} bufferGoal - The last item emitted from wantedBufferAhead
    * @param {Number} bufferSize - The last item emitted from bufferSize$
-   * @param {Boolean} withInitSegment - Whether we're dealing with an init segment.
+   * @param {Boolean} withInitSegment - Whether we're dealing with an init
+   * segment.
    * @returns {Array.<Segment>}
    * @throws IndexError - Throws if the current timestamp is considered out
    * of bounds.
