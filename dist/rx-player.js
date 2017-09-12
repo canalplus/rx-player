@@ -11434,7 +11434,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha2";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha3";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
@@ -12815,7 +12815,9 @@ var LanguageManager = function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return parseLoadVideoOptions; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__config_js__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_takeFirstDefined_js__ = __webpack_require__(156);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_languages__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_object_assign__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_object_assign___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_object_assign__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_languages__ = __webpack_require__(28);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -12831,6 +12833,7 @@ var LanguageManager = function () {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -12870,9 +12873,9 @@ function parseConstructorOptions() {
     maxBufferBehind: def(options.maxBufferBehind, DEFAULT_MAX_BUFFER_BEHIND),
     limitVideoWidth: def(options.limitVideoWidth, DEFAULT_LIMIT_VIDEO_WIDTH),
 
-    defaultAudioTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_languages__["b" /* normalizeAudioTrack */])(def(options.defaultAudioTrack, DEFAULT_AUDIO_TRACK)),
+    defaultAudioTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_languages__["b" /* normalizeAudioTrack */])(def(options.defaultAudioTrack, DEFAULT_AUDIO_TRACK)),
 
-    defaultTextTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_languages__["c" /* normalizeTextTrack */])(def(options.defaultTextTrack, DEFAULT_TEXT_TRACK)),
+    defaultTextTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_languages__["c" /* normalizeTextTrack */])(def(options.defaultTextTrack, DEFAULT_TEXT_TRACK)),
 
     wantedBufferAhead: def(options.wantedBufferAhead, DEFAULT_WANTED_BUFFER_AHEAD),
 
@@ -12922,10 +12925,18 @@ function parseLoadVideoOptions() {
     supplementaryTextTracks: def(options.supplementaryTextTracks, []),
     supplementaryImageTracks: def(options.supplementaryImageTracks, []),
 
-    defaultAudioTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_languages__["b" /* normalizeAudioTrack */])(def(options.defaultAudioTrack, lastAudioTrack)),
+    defaultAudioTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_languages__["b" /* normalizeAudioTrack */])(def(options.defaultAudioTrack, lastAudioTrack)),
 
-    defaultTextTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_languages__["c" /* normalizeTextTrack */])(def(options.defaultTextTrack, lastTextTrack))
+    defaultTextTrack: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_languages__["c" /* normalizeTextTrack */])(def(options.defaultTextTrack, lastTextTrack))
   };
+
+  if (options.startAt && options.startAt.wallClockTime instanceof Date) {
+    parsed.startAt = __WEBPACK_IMPORTED_MODULE_2_object_assign___default()({}, options.startAt, {
+      wallClockTime: options.startAt.wallClockTime / 1000
+    });
+  } else {
+    parsed.startAt = options.startAt;
+  }
 
   if (options.directFile) {
     parsed.transport = "directfile";
