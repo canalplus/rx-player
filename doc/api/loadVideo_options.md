@@ -114,7 +114,7 @@ This option is only defining the starting position, not the beginning of the con
 
 If defined, this property must be an object containing a single key. This key can be either:
   - ``position`` (``Number``): The starting position, in seconds.
-  - ``wallClockTime`` (``Number``): The starting wall-clock time (re-scaled position from manifest informations to obtain a timestamp on live contents), in seconds. Useful to use the type of time returned by the ``getWallClockTime`` API for live contents.
+  - ``wallClockTime`` (``Number|Date``): The starting wall-clock time (re-scaled position from manifest informations to obtain a timestamp on live contents), in seconds. Useful to use the type of time returned by the ``getWallClockTime`` API for live contents. If a Date object is given, it will automatically be converted into seconds.
   - ``fromFirstPosition`` (``Number``): relative position from the minimum possible one, in seconds.
     That is:
       - for live contents, from the beginning of the buffer depth (as defined by the manifest).

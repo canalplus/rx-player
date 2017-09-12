@@ -16,6 +16,7 @@
 
 import config from "../../config.js";
 import takeFirstDefined from "../../utils/takeFirstDefined.js";
+import objectAssign from "object-assign";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
@@ -143,6 +144,14 @@ function parseLoadVideoOptions(options = {}, ctx) {
       def(options.defaultTextTrack, lastTextTrack),
     ),
   };
+
+  if (options.startAt && options.startAt.wallClockTime instanceof Date) {
+    parsed.startAt = objectAssign({}, options.startAt, {
+      wallClockTime: options.startAt.wallClockTime / 1000,
+    });
+  } else {
+    parsed.startAt = options.startAt;
+  }
 
   if (options.directFile) {
     parsed.transport = "directfile";
