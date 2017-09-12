@@ -126,7 +126,6 @@ function parseLoadVideoOptions(options = {}, ctx) {
   } = _priv;
 
   const parsed = {
-    startAt: options.startAt,
     url: options.url,
     transport: def(options.transport, defaultTransport),
     autoPlay: def(options.autoPlay, DEFAULT_AUTO_PLAY),
