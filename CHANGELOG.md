@@ -35,6 +35,9 @@
 
 ### Removed
 
+  - api: remove ``goToStart`` method
+  - api: remove ``getStartTime`` method
+  - api: remove ``getEndTime`` method
   - api: remove ``toggleDebug`` method
   - api: remove ``hideDebug`` method
   - api: remove ``showDebug`` method
