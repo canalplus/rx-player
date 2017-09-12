@@ -132,7 +132,7 @@ export default {
    * suggested, in seconds.
    * @type {Number}
    */
-  DEFAULT_LIVE_GAP: 15,
+  DEFAULT_LIVE_GAP: 10,
 
   /**
    * Default value for a manifest's suggested presentation delay if not
@@ -141,7 +141,7 @@ export default {
    */
   DEFAULT_SUGGESTED_PRESENTATION_DELAY: {
     SMOOTH: 10,
-    DASH: 15,
+    DASH: 10,
   },
 
   /**
