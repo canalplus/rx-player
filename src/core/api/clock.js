@@ -163,7 +163,9 @@ const getStalledStatus = (prevTimings, currentTimings, withMediaSource) => {
       prevStalled &&
       ( currentState != "seeking" && currentTime !== prevTime ||
         currentState == "canplay" ||
-        bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending))
+        bufferGap < Infinity &&
+        (bufferGap > getResumeGap(prevStalled) || ending)
+      )
     ) {
       shouldUnstall = true;
     }

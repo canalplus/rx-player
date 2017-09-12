@@ -110,7 +110,10 @@ function sessionEventsHandler(session, keySystem, errorStream) {
       }
 
       const license = tryCatch(() =>
-        castToObservable(keySystem.onKeyStatusesChange(keyStatusesEvent, session)));
+        castToObservable(
+          keySystem.onKeyStatusesChange(keyStatusesEvent, session)
+        )
+      );
 
       return license.catch((error) => {
         throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
@@ -212,8 +215,10 @@ function createSessionAndKeyRequest(
   initData,
   errorStream
 ) {
-  const { session, sessionEvents } = createSession(mediaKeys, sessionType,
-                                                   keySystem, initData, errorStream);
+  const {
+    session,
+    sessionEvents,
+  } = createSession(mediaKeys, sessionType, keySystem, initData, errorStream);
 
   $loadedSessions.add(initData, session, sessionEvents);
 
@@ -297,8 +302,10 @@ function createPersistentSessionAndLoad(mediaKeys,
   log.debug("eme: load persisted session", storedSessionId);
 
   const sessionType = "persistent-license";
-  const { session, sessionEvents } = createSession(mediaKeys, sessionType,
-                                                   keySystem, initData, errorStream);
+  const {
+    session,
+    sessionEvents,
+  } = createSession(mediaKeys, sessionType, keySystem, initData, errorStream);
 
   return castToObservable(
     session.load(storedSessionId)

@@ -139,8 +139,10 @@ function createSmoothStreamingParser(parserOptions={}) {
       config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.SMOOTH :
       parserOptions.suggestedPresentationDelay;
 
-  const REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
-  const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 190000;
+  const REFERENCE_DATE_TIME = parserOptions.referenceDateTime ||
+    Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
+  const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate ||
+    190000;
 
   const keySystems = parserOptions.keySystems || getKeySystems;
 
@@ -249,7 +251,10 @@ function createSmoothStreamingParser(parserOptions={}) {
 
     let representationCount = 0;
 
-    const { representations, index } = reduceChildren(root, (res, name, node) => {
+    const {
+      representations,
+      index,
+    } = reduceChildren(root, (res, name, node) => {
       switch (name) {
       case "QualityLevel":
         const rep = parseQualityLevel(node, profile);
@@ -285,10 +290,14 @@ function createSmoothStreamingParser(parserOptions={}) {
     assert(representations.length, "adaptation should have at least one representation");
 
     // apply default codec if non-supported
-    representations.forEach((rep) => rep.codecs = rep.codecs || DEFAULT_CODECS[type]);
+    representations.forEach((rep) =>
+      rep.codecs = rep.codecs || DEFAULT_CODECS[type]
+    );
 
     // apply default mimetype if non-supported
-    representations.forEach((rep) => rep.mimeType = rep.mimeType || DEFAULT_MIME_TYPES[type]);
+    representations.forEach((rep) =>
+      rep.mimeType = rep.mimeType || DEFAULT_MIME_TYPES[type]
+    );
 
     // TODO(pierre): real ad-insert support
     if (subType == "ADVT") {
@@ -328,7 +337,10 @@ function createSmoothStreamingParser(parserOptions={}) {
     const timescale = +root.getAttribute("Timescale") || 10000000;
     const adaptationIds = [];
 
-    const { protection, adaptations } = reduceChildren(root, (res, name, node) => {
+    const {
+      protection,
+      adaptations,
+    } = reduceChildren(root, (res, name, node) => {
       switch (name) {
       case "Protection":  res.protection = parseProtection(node);  break;
       case "StreamIndex":
@@ -368,7 +380,8 @@ function createSmoothStreamingParser(parserOptions={}) {
       const video = adaptations.filter((a) => a.type == "video")[0];
       const audio = adaptations.filter((a) => a.type == "audio")[0];
       const lastRef = Math.min(calcLastRef(video), calcLastRef(audio));
-      presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
+      presentationLiveGap = Date.now() / 1000 -
+        (lastRef + availabilityStartTime);
     }
 
     return {

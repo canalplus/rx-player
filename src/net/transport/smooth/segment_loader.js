@@ -87,7 +87,11 @@ const  segmentLoader = (customSegmentLoader) => ({
     return Observable.of({ type: "data", value: { responseData } });
   }
   else {
-    const url = buildSegmentURL(resolveURL(representation.baseURL), representation, segment);
+    const url = buildSegmentURL(
+      resolveURL(representation.baseURL),
+      representation,
+      segment
+    );
 
     const args = {
       adaptation,

@@ -321,10 +321,14 @@ describe("utils - bytes", () => {
   describe("itole4", () => {
     it("should return a little-endian style Uint8Array of length 4 translated from the number given", () => {
       const values = [ 33489666, 130819, 511, 1 ];
-      expect(bytes.itole4(values[0])).to.deep.equal(new Uint8Array([2, 3, 255, 1]));
-      expect(bytes.itole4(values[1])).to.deep.equal(new Uint8Array([3, 255, 1, 0]));
-      expect(bytes.itole4(values[2])).to.deep.equal(new Uint8Array([255, 1, 0, 0]));
-      expect(bytes.itole4(values[3])).to.deep.equal(new Uint8Array([1, 0, 0, 0]));
+      expect(bytes.itole4(values[0]))
+        .to.deep.equal(new Uint8Array([2, 3, 255, 1]));
+      expect(bytes.itole4(values[1]))
+        .to.deep.equal(new Uint8Array([3, 255, 1, 0]));
+      expect(bytes.itole4(values[2]))
+        .to.deep.equal(new Uint8Array([255, 1, 0, 0]));
+      expect(bytes.itole4(values[3]))
+        .to.deep.equal(new Uint8Array([1, 0, 0, 0]));
     });
   });
 

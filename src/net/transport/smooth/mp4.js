@@ -25,9 +25,44 @@ import {
   be8toi, itobe8,
 } from "../../../utils/bytes";
 
-const FREQS = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+/**
+ * Sampling frequencies defined in MPEG-4 Audio.
+ * @type {Array.<Number>}
+ */
+const SAMPLING_FREQUENCIES = [
+  96000,
+  88200,
+  64000,
+  48000,
+  44100,
+  32000,
+  24000,
+  22050,
+  16000,
+  12000,
+  11025,
+  8000,
+  7350,
+];
 
+/**
+ * Speed up string to bytes conversion by memorizing the result
+ *
+ * The keys here are ISOBMFF box names. The values are the corresponding
+ * bytes conversion for putting as an ISOBMFF boxes.
+ *
+ * Used by the boxName method.
+ * @type {Object}
+ */
 const boxNamesMem = {};
+
+/**
+ * Convert the string name of an ISOBMFF box into the corresponding bytes.
+ * Has a memorization mechanism to speed-up if you want to translate the
+ * same string multiple times.
+ * @param {string} str
+ * @returns {Uint8Array}
+ */
 function boxName(str) {
   if (boxNamesMem[str]) {
     return boxNamesMem[str];
@@ -38,6 +73,13 @@ function boxName(str) {
   return nameInBytes;
 }
 
+/**
+ * Create a new ISOBMFF "box" with the given name.
+ * @param {string} name - name of the box you want to create, must always
+ * be 4 characters (uuid boxes not supported)
+ * @param {Uint8Array} buff - content of the box
+ * @returns {Uint8Array} - The entire ISOBMFF box (length+name+content)
+ */
 function Atom(name, buff) {
   if (__DEV__) {
     assert(name.length === 4);
@@ -95,17 +137,20 @@ const atoms = {
   },
 
   /**
-   * {String}     name ("avc1" or "encv")
-   * {Number}     drefIdx (shall be 1)
-   * {Number}     width
-   * {Number}     height
-   * {Number}     hRes (horizontal resolution, eg 72)
-   * {Number}     vRes (horizontal resolution, eg 72)
-   * {Number}     colorDepth (eg 24)
-   * {Uint8Array} avcc (Uint8Array representing the avcC atom)
-   * {Uint8Array} sinf (Uint8Array representing the sinf atom, only if name == "encv")
+   * @param {string} name - "avc1" or "encv"
+   * @param {Number} drefIdx - shall be 1
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Number} hRes - horizontal resolution, eg 72
+   * @param {Number} vRes - horizontal resolution, eg 72
+   * @param {Number} colorDepth - eg 24
+   * @param {Uint8Array} avcc - Uint8Array representing the avcC atom
+   * @param {Uint8Array} sinf - Uint8Array representing the sinf atom,
+   * only if name == "encv"
    */
-  avc1encv(name, drefIdx, width, height, hRes, vRes, encName, colorDepth, avcc, sinf) {
+  avc1encv(
+    name, drefIdx, width, height, hRes, vRes, encName, colorDepth, avcc, sinf
+  ) {
     if (__DEV__) {
       assert(name === "avc1" || name === "encv", "should be avc1 or encv atom");
     }
@@ -127,10 +172,11 @@ const atoms = {
   },
 
   /**
-   * {String} spsHex
-   * {String} ppsHex
-   * {Number} nalLen (NAL Unit length: 1, 2 or 4 bytes)
-   * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0", 1, "68ef3880")
+   * @param {string} spsHex
+   * @param {string} ppsHex
+   * @param {Number} nalLen - NAL Unit length: 1, 2 or 4 bytes
+   * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0",
+   * 1, "68ef3880")
    */
   avcc(sps, pps, nalLen) {
     const nal = (nalLen === 2) ?
@@ -143,7 +189,14 @@ const atoms = {
     const h264Level = sps[3];
 
     return Atom("avcC", concat(
-      [1, h264Profile, h264CompatibleProfile, h264Level, (0x3F << 2 | nal), (0xE0 | 1)],
+      [
+        1,
+        h264Profile,
+        h264CompatibleProfile,
+        h264Level,
+        (0x3F << 2 | nal),
+        (0xE0 | 1),
+      ],
       itobe2(sps.length), sps, [1],
       itobe2(pps.length), pps
     ));
@@ -155,8 +208,8 @@ const atoms = {
   },
 
   /**
-   * {Number} stream
-   * {String} codecPrivateData (hex string)
+   * @param {Number} stream
+   * @param {string} codecPrivateData - hex string
    * eg: esds(1, 98800, "1190")
    */
   esds(stream, codecPrivateData) {
@@ -172,7 +225,7 @@ const atoms = {
   },
 
   /**
-   * {String} dataFormat, four letters (eg "avc1")
+   * @param {string} dataFormat - four letters (eg "avc1")
    */
   frma(dataFormat) {
     if (__DEV__) {
@@ -186,11 +239,14 @@ const atoms = {
   },
 
   ftyp(majorBrand, brands) {
-    return Atom("ftyp", concat.apply(null, [strToBytes(majorBrand), [0, 0, 0, 1]].concat(brands.map(strToBytes))));
+    return Atom("ftyp", concat.apply(null, [
+      strToBytes(majorBrand),
+      [0, 0, 0, 1],
+    ].concat(brands.map(strToBytes))));
   },
 
   /**
-   * {String} type ("video" or "audio")
+   * @param {string} type - "video" or "audio"
    */
   hdlr(type) {
     let name, handlerName;
@@ -213,7 +269,8 @@ const atoms = {
     return Atom("hdlr", concat(
       8,
       strToBytes(name), 12,
-      strToBytes(handlerName), 1 // handler name is C-style string (0 terminated)
+      strToBytes(handlerName),
+      1 // handler name is C-style string (0 terminated)
     ));
   },
 
@@ -226,16 +283,19 @@ const atoms = {
   },
 
   /**
-   * {String}     name ("mp4a" or "enca")
-   * {Number}     drefIdx
-   * {Number}     channelsCount
-   * {Number}     sampleSize
-   * {Number}     packetSize
-   * {Number}     sampleRate
-   * {Uint8Array} esds (Uint8Array representing the esds atom)
-   * {Uint8Array} sinf (Uint8Array representing the sinf atom, only if name == "enca")
+   * @param {string} name - "mp4a" or "enca"
+   * @param {Number} drefIdx
+   * @param {Number} channelsCount
+   * @param {Number} sampleSize
+   * @param {Number} packetSize
+   * @param {Number} sampleRate
+   * @param {Uint8Array} esds - Uint8Array representing the esds atom
+   * @param {Uint8Array} sinf Uint8Array representing the sinf atom,
+   * only if name == "enca"
    */
-  mp4aenca(name, drefIdx, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf) {
+  mp4aenca(
+    name, drefIdx, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf
+  ) {
     return Atom(name, concat(
       6,
       itobe2(drefIdx), 8,
@@ -262,7 +322,7 @@ const atoms = {
   },
 
   /**
-   * @param {String} systemId - Hex string representing the CDM, 16 bytes.
+   * @param {string} systemId - Hex string representing the CDM, 16 bytes.
    * @param {Uint8Array} privateData - Data associated to protection specific
    * system.
    * @param {[]Uint8Array} keyIds - List of key ids contained in the PSSH
@@ -296,12 +356,18 @@ const atoms = {
   saio(mfhd, tfhd, tfdt, trun) {
     return Atom("saio", concat(
       4, [0, 0, 0, 1], // ??
-      itobe4(mfhd.length + tfhd.length + tfdt.length + trun.length + 8 + 8 + 8 + 8)
+      itobe4(
+        mfhd.length +
+        tfhd.length +
+        tfdt.length +
+        trun.length +
+        8 + 8 + 8 + 8
+      )
     ));
   },
 
   /**
-   * {Uint8Array} sencData (including 8 bytes flags and entries count)
+   * @param {Uint8Array} sencData - including 8 bytes flags and entries count
    */
   saiz(senc) {
     if (senc.length === 0) {
@@ -337,8 +403,8 @@ const atoms = {
   },
 
   /**
-   * {String} schemeType, four letters (eg "cenc" for Common Encryption)
-   * {Number} schemeVersion (eg 65536)
+   * @param {string} schemeType - four letters (eg "cenc" for Common Encryption)
+   * @param {Number} schemeVersion - eg 65536
    */
   schm(schemeType, schemeVersion) {
     if (__DEV__) {
@@ -360,7 +426,9 @@ const atoms = {
   },
 
   /**
-   * {Array} representations (arrays of Uint8Array, typically [avc1] or [encv, avc1])
+   * @param {Array} representations - arrays of Uint8Array, typically [avc1]
+   * or [encv, avc1]
+   * @returns {Uint8Array}
    */
   stsd(reps) {
     // only one description here... FIXME
@@ -369,7 +437,8 @@ const atoms = {
 
   tkhd(width, height, trackId) {
     return Atom("tkhd", concat(
-      itobe4(1 + 2 + 4), 8, // we assume track is enabled, in media and in preview.
+      itobe4(1 + 2 + 4), 8, // we assume track is enabled,
+                            // in media and in preview.
       itobe4(trackId),  20, // we assume trackId = 1;
       [1, 0, 0, 0],         // we assume volume = 100%;
       [0, 1, 0, 0], 12,     // default matrix
@@ -397,9 +466,9 @@ const atoms = {
   },
 
   /**
-   * {Number} algId (eg 1)
-   * {Number} ivSize (eg 8)
-   * {String} keyId Hex KID 93789920e8d6520098577df8f2dd5546
+   * @param {Number} algId - eg 1
+   * @param {Number} ivSize - eg 8
+   * @param {string} keyId - Hex KID 93789920e8d6520098577df8f2dd5546
    */
   tenc(algId, ivSize, keyId) {
     if (__DEV__) {
@@ -434,7 +503,8 @@ const atoms = {
     // If no dataoffset is present, we change the headers and add one
     const trun = new Uint8Array(oldtrun.length + 4);
     trun.set(itobe4(oldtrun.length + 4), 0);
-    trun.set(oldtrun.subarray(4, 16), 4); // name + (version + headers) + samplecount
+    trun.set(oldtrun.subarray(4, 16), 4); // name + (version + headers) +
+                                          // samplecount
     trun[11] = trun[11] | 0x01;        // add data offset header info
     trun.set([0,0,0,0], 16);           // data offset
     trun.set(oldtrun.subarray(16, oldtrun.length), 20);
@@ -460,7 +530,7 @@ const reads = {
 
   /**
    * Extract senc data (derived from UUID MS Atom)
-   * {Uint8Array} traf
+   * @param {Uint8Array} traf
    */
   senc(traf) {
     return readUuid(traf, 0xA2394F52, 0x5A9B4F14, 0xA2446C42, 0x7C648DF4);
@@ -468,7 +538,7 @@ const reads = {
 
   /**
    * Extract tfxd data (derived from UUID MS Atom)
-   * {Uint8Array} traf
+   * @param {Uint8Array} traf
    */
   tfxd(traf) {
     return readUuid(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
@@ -476,7 +546,7 @@ const reads = {
 
   /**
    * Extract tfrf data (derived from UUID MS Atom)
-   * {Uint8Array} traf
+   * @param {Uint8Array} traf
    */
   tfrf(traf) {
     return readUuid(traf, 0xD4807EF2, 0XCA394695, 0X8E5426CB, 0X9E46A79F);
@@ -490,15 +560,15 @@ const reads = {
 /**
  * Return AAC ES Header (hexstr form)
  *
- * {Number} type
+ * @param {Number} type
  *          1 = AAC Main
  *          2 = AAC LC
  *          cf http://wiki.multimedia.cx/index.php?title=MPEG-4_Audio
- * {Number} frequency
- * {Number} chans (1 or 2)
+ * @param {Number} frequency
+ * @param {Number} chans (1 or 2)
  */
 function aacesHeader(type, frequency, chans) {
-  const freq = FREQS.indexOf(frequency);
+  const freq = SAMPLING_FREQUENCIES.indexOf(frequency);
   if (__DEV__) {
     assert(freq >= 0, "non supported frequency"); // TODO : handle Idx = 15...
   }
@@ -543,6 +613,17 @@ function patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) {
   return segment;
 }
 
+/**
+ * @param {Number} timescale
+ * @param {string} type
+ * @param {Uint8Array} stsd
+ * @param {Uint8Array} mhd
+ * @param {Number} width
+ * @param {Number} height
+ * @param {Array.<Object>} [pssList] - List of dict, example:
+ * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
+ * @returns {Uint8Array}
+ */
 function createInitSegment(
   timescale,
   type,
@@ -572,7 +653,8 @@ function createInitSegment(
   const trak = atoms.mult("trak", [tkhd, mdia]);
   const trex = atoms.trex(1);
   const mvex = atoms.mult("mvex", [trex]);
-  const mvhd = atoms.mvhd(timescale, 1); // in fact, we don"t give a shit about this value ;)
+  const mvhd = atoms.mvhd(timescale, 1); // in fact, we don't give a sh** about
+                                         // this value :O
 
   const moov = atoms.mult("moov", moovChildren(mvhd, mvex, trak, pssList));
   const ftyp = atoms.ftyp("isom", ["isom", "iso2", "iso6", "avc1", "dash"]);
@@ -624,18 +706,19 @@ export default {
   /**
    * Return full Init segment as Uint8Array
    *
-   * Number   timescale (lowest number, this one will be set into mdhd, *10000 in mvhd) Eg 1000
-   * Number   width
-   * Number   height
-   * Number   hRes
-   * Number   vRes
-   * Number   nalLength (1, 2 or 4)
-   * String   SPShexstr
-   * String   PPShexstr
-   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
-   * String   keyId (hex string representing the key Id, 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b)
-   *
-   *
+   * @param {Number} timescale - lowest number, this one will be set into mdhd
+   * *10000 in mvhd, e.g. 1000
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Number} hRes
+   * @param {Number} vRes
+   * @param {Number} nalLength (1, 2 or 4)
+   * @param {string} codecPrivateData
+   * @param {string} keyId - hex string representing the key Id,
+   * 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b
+   * @param {Array.<Object>} [pssList] - List of dict, example:
+   * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
+   * @returns {Uint8Array}
    */
   createVideoInitSegment(
     timescale,
@@ -660,7 +743,17 @@ export default {
     const avcc = atoms.avcc(sps, pps, nalLength);
     let stsd;
     if (!pssList.length) {
-      const avc1 = atoms.avc1encv("avc1", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc);
+      const avc1 = atoms.avc1encv(
+        "avc1", // name
+        1, // drefIdx
+        width,
+        height,
+        hRes,
+        vRes,
+        "AVC Coding", // encName
+        24, // color depth
+        avcc
+      );
       stsd = atoms.stsd([avc1]);
     }
     else {
@@ -669,25 +762,39 @@ export default {
       const schm = atoms.schm("cenc", 65536);
       const frma = atoms.frma("avc1");
       const sinf = atoms.mult("sinf", [frma, schm, schi]);
-      const encv = atoms.avc1encv("encv", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc, sinf);
+      const encv = atoms.avc1encv(
+        "encv",
+        1,
+        width,
+        height,
+        hRes,
+        vRes,
+        "AVC Coding",
+        24,
+        avcc,
+        sinf
+      );
       stsd = atoms.stsd([encv]);
     }
 
-    return createInitSegment(timescale, "video", stsd, atoms.vmhd(), width, height, pssList);
+    return createInitSegment(
+      timescale, "video", stsd, atoms.vmhd(), width, height, pssList
+    );
   },
 
   /**
    * Return full Init segment as Uint8Array
    *
-   * Number   channelsCount
-   * Number   sampleSize
-   * Number   packetSize
-   * Number   sampleRate
-   * String   codecPrivateData
-   * Array    (optional) pssList. List of dict {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"}
-   * String   keyId (hex string representing the key Id, 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b)
-   *
-   *
+   * @param {Number} channelsCount
+   * @param {Number} sampleSize
+   * @param {Number} packetSize
+   * @param {Number} sampleRate
+   * @param {string} codecPrivateData
+   * @param {Array } [pssList] - List of dict, example:
+   * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"}
+   * @param {string} keyId - hex string representing the key Id, 32 chars.
+   * eg. a800dbed49c12c4cb8e0b25643844b9b
+   * @returns {Uint8Array}
    */
   createAudioInitSegment(
     timescale,
@@ -710,7 +817,15 @@ export default {
     const esds = atoms.esds(1, codecPrivateData);
     let stsd;
     if (!pssList.length) {
-      const mp4a = atoms.mp4aenca("mp4a", 1, channelsCount, sampleSize, packetSize, sampleRate, esds);
+      const mp4a = atoms.mp4aenca(
+        "mp4a",
+        1,
+        channelsCount,
+        sampleSize,
+        packetSize,
+        sampleRate,
+        esds
+      );
       stsd = atoms.stsd([mp4a]);
     }
     else {
@@ -719,11 +834,22 @@ export default {
       const schm = atoms.schm("cenc", 65536);
       const frma = atoms.frma("mp4a");
       const sinf = atoms.mult("sinf", [frma, schm, schi]);
-      const enca = atoms.mp4aenca("enca", 1, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf);
+      const enca = atoms.mp4aenca(
+        "enca",
+        1,
+        channelsCount,
+        sampleSize,
+        packetSize,
+        sampleRate,
+        esds,
+        sinf
+      );
       stsd = atoms.stsd([enca]);
     }
 
-    return createInitSegment(timescale, "audio", stsd, atoms.smhd(), 0, 0, pssList);
+    return createInitSegment(
+      timescale, "audio", stsd, atoms.smhd(), 0, 0, pssList
+    );
   },
 
   /**
@@ -746,7 +872,8 @@ export default {
     const tfhdlen = be4toi(oldmoof, 8 + mfhdlen + 8);
     const trunlen = be4toi(oldmoof, 8 + mfhdlen + 8 + tfhdlen);
     const oldmfhd = oldmoof.subarray(8, 8 + mfhdlen);
-    const oldtraf = oldmoof.subarray(8 + mfhdlen + 8, 8 + mfhdlen + 8 + traflen - 8);
+    const oldtraf = oldmoof
+      .subarray(8 + mfhdlen + 8, 8 + mfhdlen + 8 + traflen - 8);
     const oldtfhd = oldtraf.subarray(0, tfhdlen);
     const oldtrun = oldtraf.subarray(tfhdlen, tfhdlen + trunlen);
 

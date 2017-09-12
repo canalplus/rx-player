@@ -126,8 +126,10 @@ function parseNode(node, parentOffset, siblingOffset) {
     innerHTML = new DOMParser().parseFromString(serializedXML, "text/html").body.firstChild.innerHTML;
   }
 
-  // Trim left and right whitespace from text and convert non-explicit line breaks.
-  // Using deprecated escape all together with decodeURIComponent to convert unicode characters
+  // Trim left and right whitespace from text and convert non-explicit line
+  // breaks.
+  // Using deprecated escape all together with decodeURIComponent to convert
+  // unicode characters
   innerHTML = window.escape(innerHTML.replace(rBr, "\r\n"));
 
   // TODO(guillaume): find out if we have an encoding issue when

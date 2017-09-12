@@ -68,7 +68,8 @@ const createSourceBuffer = (
   let sourceBuffer;
 
   if (shouldHaveNativeSourceBuffer(type)) {
-    sourceBuffer = addNativeSourceBuffer(mediaSource, type, codec, nativeBuffers);
+    sourceBuffer =
+      addNativeSourceBuffer(mediaSource, type, codec, nativeBuffers);
   }
   else {
     const oldSourceBuffer = customBuffers[type];
@@ -84,7 +85,8 @@ const createSourceBuffer = (
 
     if (type == "text") {
       log.info("add text sourcebuffer", codec);
-      sourceBuffer = new TextSourceBuffer(video, codec, options.hideNativeSubtitle);
+      sourceBuffer =
+        new TextSourceBuffer(video, codec, options.hideNativeSubtitle);
     }
     else if (type == "image") {
       log.info("add image sourcebuffer", codec);

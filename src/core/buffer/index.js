@@ -131,13 +131,15 @@ function Buffer({
   /**
    * Returns every segments currently wanted.
    * @param {Object} adaptation - The adaptation concerned (audio/video...)
-   * @param {Object} representation - The representation of the chosen adaptation
+   * @param {Object} representation - The representation of the chosen
+   * adaptation
    * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
    * sourceBuffer
    * @param {Object} timing - The last item emitted from clock$
    * @param {Number} bufferGoal - The last item emitted from wantedBufferAhead
    * @param {Number} bufferSize - The last item emitted from bufferSize$
-   * @param {Boolean} withInitSegment - Whether we're dealing with an init segment.
+   * @param {Boolean} withInitSegment - Whether we're dealing with an init
+   * segment.
    * @returns {Array.<Segment>}
    * @throws IndexError - Throws if the current timestamp is considered out
    * of bounds.

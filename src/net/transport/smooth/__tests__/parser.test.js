@@ -96,8 +96,10 @@ describe("smooth parser", function() {
 
     beforeEach(function() {
       this.json = {};
-      // this.json = parser.parseFromString(require("raw!test/fixtures/isml.protection.xml"));
-      this.smoothProtection = this.json.periods[0].adaptations[0].smoothProtection;
+      // this.json = parser
+      //   .parseFromString(require("raw!test/fixtures/isml.protection.xml"));
+      this.smoothProtection = this.json
+        .periods[0].adaptations[0].smoothProtection;
     });
 
     xit("has a smoothProtection attribute", function() {
@@ -115,13 +117,17 @@ describe("smooth parser", function() {
     });
 
     xit("has a playReady keySystem", function() {
-      const playReady = _.find(this.smoothProtection.keySystems, { systemId: "9a04f079-9840-4286-ab92-e65be0885f95" });
+      const playReady = _.find(this.smoothProtection.keySystems, {
+        systemId: "9a04f079-9840-4286-ab92-e65be0885f95",
+      });
       expect(playReady).to.be.ok;
       expect(playReady.privateData).to.be.instanceOf(Uint8Array);
     });
 
     xit("has a widevine keySystem", function() {
-      const widevine = _.find(this.smoothProtection.keySystems, { systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" });
+      const widevine = _.find(this.smoothProtection.keySystems, {
+        systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+      });
       expect(widevine).to.be.ok;
       expect(widevine.privateData).to.be.instanceOf(Uint8Array);
     });
@@ -130,7 +136,8 @@ describe("smooth parser", function() {
   describe("Stream", function() {
     beforeEach(function() {
       this.json = {};
-      // this.json = parser.parseFromString(require("raw!test/fixtures/isml.xml"), new Date);
+      // this.json = parser
+      //   .parseFromString(require("raw!test/fixtures/isml.xml"), new Date);
     });
 
     xit("has duration", function() {

@@ -102,24 +102,25 @@ function parseMPD(root, contentProtectionParser) {
  * @returns {Object}
  */
 function parsePeriod(root, contentProtectionParser) {
-  const parsed = feedAttributes(root, reduceChildren(root, (res, name, node) => {
-    switch(name) {
+  const parsed =
+    feedAttributes(root, reduceChildren(root, (res, name, node) => {
+      switch(name) {
 
-    case "BaseURL":
-      res.baseURL = node.textContent;
-      break;
+      case "BaseURL":
+        res.baseURL = node.textContent;
+        break;
 
-    case "AdaptationSet":
-      const ada = parseAdaptationSet(node, contentProtectionParser);
-      if (ada.id == null) {
-        ada.id = res.adaptations.length;
+      case "AdaptationSet":
+        const ada = parseAdaptationSet(node, contentProtectionParser);
+        if (ada.id == null) {
+          ada.id = res.adaptations.length;
+        }
+        res.adaptations.push(ada);
+        break;
+
       }
-      res.adaptations.push(ada);
-      break;
-
-    }
-    return res;
-  }, { adaptations: [] }));
+      return res;
+    }, { adaptations: [] }));
 
   return filterPeriod(parsed);
 }

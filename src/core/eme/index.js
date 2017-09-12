@@ -98,7 +98,10 @@ function createEME(video, keySystems, errorStream) {
    * @param {Object} compatibleKeySystem.keySystem
    * @returns {Observable}
    */
-  function handleEncryptedEvents(encryptedEvent, { keySystem, keySystemAccess }) {
+  function handleEncryptedEvents(encryptedEvent, {
+    keySystem,
+    keySystemAccess,
+  }) {
     if (keySystem.persistentLicense) {
       $storedSessions.setStorage(keySystem.licenseStorage);
     }
