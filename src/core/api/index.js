@@ -744,13 +744,6 @@ class Player extends EventEmitter {
   }
 
   /**
-   * Seek to the start of the content.
-   */
-  goToStart() {
-    return this.seekTo(this.getStartTime());
-  }
-
-  /**
    * Seek to a given absolute position.
    * @param {Number|Object} time
    * @returns {Number} - The time the player has seek to
