@@ -104,7 +104,7 @@ function parseConstructorOptions(options = {}) {
 }
 
 /**
- * Parse options given to the API constructor and set default options as found
+ * Parse options given to loadVideo and set default options as found
  * in the config.
  *
  * Do not mutate anything, only cross the given options and sane default options

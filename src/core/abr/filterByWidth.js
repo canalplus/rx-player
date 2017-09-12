@@ -21,7 +21,7 @@ import arrayFind from "array-find";
  * @param {Number} width
  * @returns {Array.<Object>}
  */
-export default (representations, width) => {
+export default function filterByWidth (representations, width) {
   const sortedRepsByWidth = representations.sort((a, b) => a.width - b.width);
   const maxWidth = arrayFind(sortedRepsByWidth, r => r.width >= width);
 
@@ -29,4 +29,4 @@ export default (representations, width) => {
     return representations.filter(r => r.width <= maxWidth);
   }
   return representations;
-};
+}

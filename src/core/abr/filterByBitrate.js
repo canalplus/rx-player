@@ -21,7 +21,7 @@ import arrayFindIndex from "array-find-index";
  * @param {Number} bitrate
  * @returns {Array.<Object>}
  */
-export default (representations, bitrate) => {
+export default function filterByBitrate (representations, bitrate) {
   const firstSuperiorBitrate = arrayFindIndex(representations, r =>
     r.bitrate > bitrate);
 
@@ -29,4 +29,4 @@ export default (representations, bitrate) => {
     return representations;
   }
   return representations.slice(0, firstSuperiorBitrate);
-};
+}

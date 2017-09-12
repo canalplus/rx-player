@@ -21,7 +21,7 @@ import arrayFindIndex from "array-find-index";
  * @param {Number} bitrate
  * @returns {Array.<Representation>}
  */
-export default (representations, bitrate) => {
+export default function fromBitrateCeil (representations, bitrate) {
   const tooHighIndex = arrayFindIndex(representations, representation =>
     representation.bitrate > bitrate
   );
@@ -29,4 +29,4 @@ export default (representations, bitrate) => {
     return representations[representations.length - 1];
   }
   return representations[tooHighIndex - 1];
-};
+}
