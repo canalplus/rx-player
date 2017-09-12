@@ -25,9 +25,11 @@ const { DEFAULT_LIVE_GAP } = config;
 /**
  * Returns the calculated initial time for the stream described by the given
  * manifest:
- *   - if a start time is defined by user, set it as start time
- *   - if video is live, use the live edge
- *   - else set the start time to 0
+ *   1. if a start time is defined by user, calculate video starting time from
+ *      the manifest informations
+ *   2. else if the video is live, use the live edge and suggested delays from
+ *      it
+ *   3. else returns 0 (beginning)
  *
  * @param {Manifest} manifest
  * @param {Object} startAt
