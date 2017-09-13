@@ -25,13 +25,13 @@
   - api: ``setAudioBitrate`` can now be called even when no content is playing
   - api: ``setVideoBitrate`` can now be called even when no video track has the exact same bitrate
   - api: ``setAudioBitrate`` can now be called even when no audio track has the exact same bitrate
-  - api: giving a number to ``seekTo`` now has the same effect than setting the position option
+  - api: giving a number to ``seekTo`` now has the same effect than setting a position option in argument (``seekTo({ position }) === seekTo(position)``)
   - api: ``getUrl`` now do not throw if no content is playing
   - api: ``isLive`` now do not throw if no content is playing
   - api: ``loadVideo`` does not return anything anymore
   - api: private (undocumented) variables have been isolated on a player instance to a ``_priv`` object.
-  - api: ``throttleWhenHidden`` is now set to false by default
-  - api: ``limitVideoWidth`` is now set to false by default
+  - api: the constructor option ``throttleWhenHidden`` is now set to false by default
+  - api: the constructor option ``limitVideoWidth`` is now set to false by default
 
 ### Removed
 
@@ -89,11 +89,13 @@
 
 ### Other improvements
 
+  - manifest: improve manifest refreshing logic, by not downloading it when unnecessary
   - smooth: begin to play arround 10s before the live edge instead of 20 seconds for smooth contents
   - network: the backoff algorithm has been refactored for better network error resilience
   - adaptive: improved ABR management to provide a better, faster and more stable bandwidth estimation
   - adaptive: add strategies for abrupt changes of bandwidth to avoid excessive re-buffering on network fluctuations
   - adaptive: the adaptive algorithm now take into account the current playback rate
+  - doc: added file architecture documentation
 
 ## v2.3.2 (2017/07/25)
 
