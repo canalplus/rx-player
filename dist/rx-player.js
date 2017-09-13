@@ -3402,9 +3402,9 @@ module.exports = find;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return normalizeRange; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return normalizeRange; });
 /* unused harmony export getTimelineRangeStart */
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return getTimelineRangeEnd; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return getTimelineRangeEnd; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getInitSegment; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return setTimescale; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return scale; });
@@ -4317,6 +4317,7 @@ if (false) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(22);
 /**
@@ -4415,7 +4416,7 @@ var SegmentTimelineHelpers = {
    * @returns {Array.<Segment>}
    */
   getSegments: function getSegments(repId, index, _up, _to) {
-    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* normalizeRange */])(index, _up, _to),
+    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* normalizeRange */])(index, _up, _to),
         up = _normalizeRange.up,
         to = _normalizeRange.to;
 
@@ -4514,7 +4515,7 @@ var SegmentTimelineHelpers = {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    return !(scaledTo <= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(last));
+    return !(scaledTo <= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* getTimelineRangeEnd */])(last));
   },
 
 
@@ -4541,7 +4542,7 @@ var SegmentTimelineHelpers = {
       return undefined;
     }
     var lastTimelineElement = index.timeline[index.timeline.length - 1];
-    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(lastTimelineElement) / index.timescale;
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* getTimelineRangeEnd */])(lastTimelineElement) / index.timescale;
   },
 
 
@@ -4577,7 +4578,7 @@ var SegmentTimelineHelpers = {
     }
 
     var rangeUp = range.ts;
-    var rangeTo = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(range);
+    var rangeTo = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* getTimelineRangeEnd */])(range);
     var nextRange = timeline[segmentIndex + 1];
 
     // when we are actually inside the found range and this range has
@@ -4664,7 +4665,7 @@ var SegmentTimelineHelpers = {
     // if the given timing has a timestamp after the timeline end we
     // just need to push a new element in the timeline, or increase
     // the @r attribute of the last element.
-    else if (scaledNewSegment.time >= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(last)) {
+    else if (scaledNewSegment.time >= __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* getTimelineRangeEnd */])(last)) {
         if (last.d === scaledNewSegment.duration) {
           last.r++;
         } else {
@@ -4681,7 +4682,7 @@ var SegmentTimelineHelpers = {
   }
 };
 
-/* harmony default export */ __webpack_exports__["a"] = (SegmentTimelineHelpers);
+/* harmony default export */ __webpack_exports__["default"] = (SegmentTimelineHelpers);
 
 /***/ }),
 /* 37 */
@@ -11069,7 +11070,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha6";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha7";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
@@ -18434,6 +18435,7 @@ var Manifest = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_object_assign__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_object_assign___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_object_assign__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__timeline_js__ = __webpack_require__(36);
@@ -18465,7 +18467,7 @@ var Manifest = function () {
  * TODO weird that everything is inherited from Timeline...
  * Reimplement from scratch
  */
-/* harmony default export */ __webpack_exports__["a"] = (__WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, __WEBPACK_IMPORTED_MODULE_1__timeline_js__["a" /* default */], {
+/* harmony default export */ __webpack_exports__["default"] = (__WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, __WEBPACK_IMPORTED_MODULE_1__timeline_js__["default"], {
   getInitSegment: __WEBPACK_IMPORTED_MODULE_2__helpers_js__["a" /* getInitSegment */],
   setTimescale: __WEBPACK_IMPORTED_MODULE_2__helpers_js__["b" /* setTimescale */],
   scale: __WEBPACK_IMPORTED_MODULE_2__helpers_js__["c" /* scale */],
@@ -18518,11 +18520,6 @@ var Manifest = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__timeline_js__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__list_js__ = __webpack_require__(130);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__template_js__ = __webpack_require__(132);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__smooth_js__ = __webpack_require__(131);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__base_js__ = __webpack_require__(128);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -18539,33 +18536,26 @@ var Manifest = function () {
  * limitations under the License.
  */
 
+var indexes = {};
 
-
-
-
-
+if (true) {
+  indexes.smooth = __webpack_require__(131).default;
+}
+if (true) {
+  indexes.timeline = __webpack_require__(36).default;
+  indexes.template = __webpack_require__(132).default;
+  indexes.list = __webpack_require__(130).default;
+  indexes.base = __webpack_require__(128).default;
+}
 
 /**
  * Indexes have multiple "flavors" depending on the manifest concerned.
  * Here we returns the helpers best adapted to the given index.
  * @param {Object} index
- * @returns {Object}
+ * @returns {Object|undefined}
  */
 var getRightIndexHelpers = function getRightIndexHelpers(index) {
-  switch (index.indexType) {
-    case "timeline":
-      return __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */];
-    case "list":
-      return __WEBPACK_IMPORTED_MODULE_1__list_js__["a" /* default */];
-    case "template":
-      return __WEBPACK_IMPORTED_MODULE_2__template_js__["a" /* default */];
-    case "smooth":
-      return __WEBPACK_IMPORTED_MODULE_3__smooth_js__["a" /* default */];
-    case "base":
-      return __WEBPACK_IMPORTED_MODULE_4__base_js__["a" /* default */];
-    default:
-      return __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */];
-  }
+  return indexes[index.indexType];
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (getRightIndexHelpers);
@@ -18575,6 +18565,7 @@ var getRightIndexHelpers = function getRightIndexHelpers(index) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(22);
 /**
@@ -18621,7 +18612,7 @@ var ListIndexHelpers = {
    * @returns {Array.<Segment>}
    */
   getSegments: function getSegments(repId, index, _up, _to) {
-    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* normalizeRange */])(index, _up, _to),
+    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* normalizeRange */])(index, _up, _to),
         up = _normalizeRange.up,
         to = _normalizeRange.to;
 
@@ -18715,13 +18706,14 @@ var ListIndexHelpers = {
   }
 };
 
-/* harmony default export */ __webpack_exports__["a"] = (ListIndexHelpers);
+/* harmony default export */ __webpack_exports__["default"] = (ListIndexHelpers);
 
 /***/ }),
 /* 131 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__timeline_js__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(22);
 /**
@@ -18743,11 +18735,11 @@ var ListIndexHelpers = {
 
 
 
-/* harmony default export */ __webpack_exports__["a"] = ({
-  getSegments: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */].getSegments, // TODO Re-implement?
+/* harmony default export */ __webpack_exports__["default"] = ({
+  getSegments: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["default"].getSegments, // TODO Re-implement?
   getInitSegment: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getInitSegment */],
-  checkDiscontinuity: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */].checkDiscontinuity, // TODO Re-implement?
-  _addSegmentInfos: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["a" /* default */]._addSegmentInfos,
+  checkDiscontinuity: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["default"].checkDiscontinuity, // TODO Re-implement?
+  _addSegmentInfos: __WEBPACK_IMPORTED_MODULE_0__timeline_js__["default"]._addSegmentInfos,
   setTimescale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* setTimescale */],
   scale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["c" /* scale */],
 
@@ -18777,7 +18769,7 @@ var ListIndexHelpers = {
       last = { ts: last.ts, d: 0, r: last.r };
     }
 
-    var lastEnd = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(last);
+    var lastEnd = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* getTimelineRangeEnd */])(last);
     var scaledTo = to * timescale - presentationTimeOffset;
 
     // TODO This is an ugly hack, see buffer code.
@@ -18812,7 +18804,7 @@ var ListIndexHelpers = {
       return undefined;
     }
     var lastTimelineElement = index.timeline[index.timeline.length - 1];
-    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* getTimelineRangeEnd */])(lastTimelineElement) / index.timescale;
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* getTimelineRangeEnd */])(lastTimelineElement) / index.timescale;
   }
 });
 
@@ -18821,6 +18813,7 @@ var ListIndexHelpers = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__segment_js__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__helpers_js__ = __webpack_require__(22);
 /**
@@ -18842,7 +18835,7 @@ var ListIndexHelpers = {
 
 
 
-/* harmony default export */ __webpack_exports__["a"] = ({
+/* harmony default export */ __webpack_exports__["default"] = ({
   getInitSegment: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["a" /* getInitSegment */],
   setTimescale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["b" /* setTimescale */],
   scale: __WEBPACK_IMPORTED_MODULE_1__helpers_js__["c" /* scale */],
@@ -18855,7 +18848,7 @@ var ListIndexHelpers = {
    * @returns {Array.<Segment>}
    */
   getSegments: function getSegments(repId, index, _up, _to) {
-    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["e" /* normalizeRange */])(index, _up, _to),
+    var _normalizeRange = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__helpers_js__["d" /* normalizeRange */])(index, _up, _to),
         up = _normalizeRange.up,
         to = _normalizeRange.to;
 
@@ -19162,9 +19155,6 @@ var RepresentationIndex = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__transport_smooth__ = __webpack_require__(145);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__transport_dash__ = __webpack_require__(137);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__transport_directfile__ = __webpack_require__(144);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -19181,15 +19171,18 @@ var RepresentationIndex = function () {
  * limitations under the License.
  */
 
+var exported = {};
+if (true) {
+  exported.smooth = __webpack_require__(145).default;
+}
+if (true) {
+  exported.dash = __webpack_require__(137).default;
+}
+if (true) {
+  exported.directfile = __webpack_require__(144).default;
+}
 
-
-
-
-/* harmony default export */ __webpack_exports__["a"] = ({
-  smooth: __WEBPACK_IMPORTED_MODULE_0__transport_smooth__["a" /* default */],
-  dash: __WEBPACK_IMPORTED_MODULE_1__transport_dash__["a" /* default */],
-  directfile: __WEBPACK_IMPORTED_MODULE_2__transport_directfile__["a" /* default */]
-});
+/* harmony default export */ __webpack_exports__["a"] = (exported);
 
 /***/ }),
 /* 136 */
@@ -19329,6 +19322,7 @@ function parseSami(smi, lang) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(1);
@@ -19460,7 +19454,7 @@ function parseSami(smi, lang) {
  * manifest's content Protection.
  * @returns {Object}
  */
-/* harmony default export */ __webpack_exports__["a"] = (function () {
+/* harmony default export */ __webpack_exports__["default"] = (function () {
   var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
   var segmentLoader = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_11__segment_loader_js__["a" /* default */])(options.segmentLoader);
@@ -20670,6 +20664,7 @@ var segmentPreLoader = function segmentPreLoader(customSegmentLoader) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /**
@@ -20707,7 +20702,7 @@ var manifestPipeline = {
   }
 };
 
-/* harmony default export */ __webpack_exports__["a"] = ({
+/* harmony default export */ __webpack_exports__["default"] = ({
   directFile: true,
   manifest: manifestPipeline
 });
@@ -20717,6 +20712,7 @@ var manifestPipeline = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_bytes__ = __webpack_require__(12);
@@ -20780,7 +20776,7 @@ var TT_PARSERS = {
 
 var WSX_REG = /\.wsx?(\?token=\S+)?/;
 
-/* harmony default export */ __webpack_exports__["a"] = (function () {
+/* harmony default export */ __webpack_exports__["default"] = (function () {
   var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
   var smoothManifestParser = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__parser__["a" /* default */])(options);
