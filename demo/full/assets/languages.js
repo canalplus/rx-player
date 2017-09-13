@@ -5438,6 +5438,8 @@ export default {
   pyx: "Pyu (Myanmar)",
   pyy: "Pyen",
   pzn: "Para Naga",
+  qaa: "Original audio",
+  qad: "Audio Description",
   qua: "Quapaw",
   qub: "Huallaga Huánuco Quechua",
   quc: "K'iche'",
