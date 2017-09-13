@@ -18,9 +18,9 @@
  * This file defines the public player API
  */
 
+import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { combineLatest } from "rxjs/observable/combineLatest";
 
 import config from "../../config.js";
 
@@ -363,7 +363,11 @@ class Player extends EventEmitter {
       .share();
 
     const stateChanges = loaded.mapTo(PLAYER_STATES.LOADED)
-      .concat(combineLatest(this._priv.playing$, stalled$, inferPlayerState))
+      .concat(Observable.combineLatest(
+        this._priv.playing$,
+        stalled$,
+        inferPlayerState
+      ))
       .distinctUntilChanged()
       .startWith(PLAYER_STATES.LOADING);
 

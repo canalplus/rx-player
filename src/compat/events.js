@@ -19,23 +19,17 @@
  * RxJS Observables
  */
 
+import { Observable } from "rxjs/Observable";
+
+import config from "../config.js";
+
+import log from "../utils/log";
+import onEvent from "../utils/rx-onEvent.js";
+
 import {
   HTMLElement_,
   BROWSER_PREFIXES,
 } from "./constants.js";
-
-import config from "../config.js";
-import { merge } from "rxjs/observable/merge";
-import { IntervalObservable } from "rxjs/observable/IntervalObservable";
-
-import log from "../utils/log";
-import { FromEventObservable } from "rxjs/observable/FromEventObservable";
-import { NeverObservable } from "rxjs/observable/NeverObservable";
-import onEvent from "../utils/rx-onEvent.js";
-
-const fromEvent = FromEventObservable.create;
-const never = NeverObservable.create;
-const interval = IntervalObservable.create;
 
 const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
 const pixelRatio = window.devicePixelRatio || 1;
@@ -75,14 +69,14 @@ function compatibleListener(eventNames, prefixes) {
       }
 
       if (mem) {
-        return fromEvent(element, mem);
+        return Observable.fromEvent(element, mem);
       } else {
         if (__DEV__) {
           log.warn(
             `compat: element <${element.tagName}> does not support any of these events: ${eventNames.join(", ")}`
           );
         }
-        return never();
+        return Observable.never();
       }
     }
 
@@ -127,12 +121,12 @@ const isHidden = visibilityChange()
   .debounceTime(INACTIVITY_DELAY)
   .filter((x) => x === true);
 
-const inBackground = () => merge(isVisible, isHidden)
+const inBackground = () => Observable.merge(isVisible, isHidden)
   .startWith(false);
 
 const videoWidth = videoElement => {
-  return merge(
-    interval(20000),
+  return Observable.merge(
+    Observable.interval(20000),
     videoSizeChange().debounceTime(500)
   )
     .startWith("init") // emit on subscription

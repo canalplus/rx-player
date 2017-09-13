@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
+import { Observable } from "rxjs/Observable";
 import { getBackedoffDelay } from "./backoff";
-import { TimerObservable } from "rxjs/observable/TimerObservable";
-
-const timer = TimerObservable.create;
 
 /**
  * Simple debounce implementation.
@@ -97,7 +95,7 @@ function retryWithBackoff(obs$, options) {
     }
 
     const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-    return timer(fuzzedDelay).mergeMap(() => {
+    return Observable.timer(fuzzedDelay).mergeMap(() => {
       debounceRetryCount && debounceRetryCount();
       return source;
     });
@@ -151,7 +149,7 @@ function retryableFuncWithBackoff(fn, options) {
       }
 
       const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return timer(fuzzedDelay).mergeMap(() => {
+      return Observable.timer(fuzzedDelay).mergeMap(() => {
         debounceRetryCount && debounceRetryCount();
         return doRetry(...args);
       });

@@ -16,7 +16,6 @@
 
 import objectAssign from "object-assign";
 import { Observable } from "rxjs/Observable";
-import { merge } from "rxjs/observable/merge";
 
 import EventEmitter from "../../utils/eventemitter";
 import { bytesToStr, strToBytes } from "../../utils/bytes";
@@ -59,7 +58,7 @@ function wrapUpdate(memUpdate, sessionObj) {
 
     try {
       memUpdate.call(this, license, sessionId);
-      return merge(keys, errs).take(1);
+      return Observable.merge(keys, errs).take(1);
     } catch(e) {
       return Observable.throw(e);
     }
@@ -92,7 +91,7 @@ if (
     this.sessionId = "";
     this._vid = video;
     this._key = keySystem;
-    this._con = merge(
+    this._con = Observable.merge(
       events.onKeyMessage(video),
       events.onKeyAdded(video),
       events.onKeyError(video)
@@ -216,7 +215,7 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
   SessionProxy.prototype = objectAssign({
     generateRequest: function(initDataType, initData) {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
-      this._con = merge(
+      this._con = Observable.merge(
         events.onKeyMessage(this._ss),
         events.onKeyAdded(this._ss),
         events.onKeyError(this._ss)
