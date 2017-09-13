@@ -15,7 +15,7 @@
   - api: add ``isMute`` method
   - api: add ``getManualAudioBitrate`` method
   - api: add ``getManualVideoBitrate`` method
-  - config: add a global config file (src/config.js) to easily tweak the player pre-build
+  - config: add a global config file (src/config.js) to easily tweak the player behavior
 
 ### Changed
 
@@ -96,6 +96,7 @@
   - adaptive: add strategies for abrupt changes of bandwidth to avoid excessive re-buffering on network fluctuations
   - adaptive: the adaptive algorithm now take into account the current playback rate
   - doc: added file architecture documentation
+  - demo: the demo now manages most languages defined by in the ISO 639-3 standard
 
 ## v2.3.2 (2017/07/25)
 
