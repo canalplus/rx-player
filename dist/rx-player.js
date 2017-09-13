@@ -11497,7 +11497,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha4";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha5";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
@@ -12152,15 +12152,6 @@ var Player = function (_EventEmitter) {
 
   Player.prototype.setPlaybackRate = function setPlaybackRate(rate) {
     this._priv.speed$.next(rate);
-  };
-
-  /**
-   * Seek to the start of the content.
-   */
-
-
-  Player.prototype.goToStart = function goToStart() {
-    return this.seekTo(this.getStartTime());
   };
 
   /**
@@ -17495,7 +17486,7 @@ function Stream(_ref) {
       return createBuffer(mediaSource, type, codec, clock$, seekings, manifest, adaptations$[type], abrManager);
     });
 
-    var buffers$ = manifest.isLive ? __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge.apply(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"], _buffersArray).concatMap(function (message) {
+    var buffers$ = manifest.isLive ? __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge.apply(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"], _buffersArray).mergeMap(function (message) {
       return liveMessageHandler(message, manifest);
     }) : __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge.apply(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"], _buffersArray);
 
@@ -17562,9 +17553,11 @@ var DEFAULT_LIVE_GAP = __WEBPACK_IMPORTED_MODULE_0__config_js__["a" /* default *
 /**
  * Returns the calculated initial time for the stream described by the given
  * manifest:
- *   - if a start time is defined by user, set it as start time
- *   - if video is live, use the live edge
- *   - else set the start time to 0
+ *   1. if a start time is defined by user, calculate video starting time from
+ *      the manifest informations
+ *   2. else if the video is live, use the live edge and suggested delays from
+ *      it
+ *   3. else returns 0 (beginning)
  *
  * @param {Manifest} manifest
  * @param {Object} startAt
