@@ -538,7 +538,7 @@ export default function Stream({
 
     const buffers$ = manifest.isLive ?
       Observable.merge(..._buffersArray)
-        .concatMap(message => liveMessageHandler(message, manifest)) :
+        .mergeMap(message => liveMessageHandler(message, manifest)) :
       Observable.merge(..._buffersArray);
 
     const manifest$ = Observable.of({
