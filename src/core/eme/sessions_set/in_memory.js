@@ -17,7 +17,7 @@
 import { Observable } from "rxjs/Observable";
 
 import log from "../../../utils/log";
-import { castToObservable } from "../../../utils/rx-utils";
+import castToObservable from "../../../utils/castToObservable.js";
 import SessionSet from "./abstract.js";
 import hashInitData from "./hash_init_data.js";
 

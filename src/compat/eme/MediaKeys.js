@@ -21,7 +21,7 @@ import { merge } from "rxjs/observable/merge";
 import EventEmitter from "../../utils/eventemitter";
 import { bytesToStr, strToBytes } from "../../utils/bytes";
 import assert from "../../utils/assert";
-import { castToObservable } from "../../utils/rx-utils";
+import castToObservable from "../../utils/castToObservable.js";
 
 import {
   HTMLVideoElement_,

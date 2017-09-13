@@ -17,7 +17,7 @@
 import { Observable } from "rxjs/Observable";
 
 import log from "../../utils/log";
-import { castToObservable } from "../../utils/rx-utils";
+import castToObservable from "../../utils/castToObservable.js";
 import assert from "../../utils/assert";
 
 import { onEncrypted } from "../../compat/events.js";

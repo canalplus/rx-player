@@ -31,7 +31,7 @@ import { IntervalObservable } from "rxjs/observable/IntervalObservable";
 import log from "../utils/log";
 import { FromEventObservable } from "rxjs/observable/FromEventObservable";
 import { NeverObservable } from "rxjs/observable/NeverObservable";
-import { on } from "../utils/rx-utils";
+import onEvent from "../utils/rx-onEvent.js";
 
 const fromEvent = FromEventObservable.create;
 const never = NeverObservable.create;
@@ -88,7 +88,7 @@ function compatibleListener(eventNames, prefixes) {
 
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
-    return on(element, eventNames);
+    return onEvent(element, eventNames);
   };
 }
 
@@ -113,11 +113,11 @@ const visibilityChange = () => {
   const hidden = prefix ? prefix + "Hidden" : "hidden";
   const visibilityChangeEvent = prefix + "visibilitychange";
 
-  return on(document, visibilityChangeEvent)
+  return onEvent(document, visibilityChangeEvent)
     .map(() => document[hidden]);
 };
 
-const videoSizeChange = () => on(window, "resize");
+const videoSizeChange = () => onEvent(window, "resize");
 
 const isVisible = visibilityChange() // emit false when visible
   .filter((x) => x === false);

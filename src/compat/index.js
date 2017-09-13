@@ -16,7 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 
-import { on } from "../utils/rx-utils";
+import onEvent from "../utils/rx-onEvent.js";
 import EventEmitter from "../utils/eventemitter";
 import {
   HTMLVideoElement_,
@@ -82,7 +82,7 @@ function canPlay(videoElement) {
   if (videoElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
     return Observable.of(null);
   } else {
-    return on(videoElement, "canplay").take(1);
+    return onEvent(videoElement, "canplay").take(1);
   }
 }
 

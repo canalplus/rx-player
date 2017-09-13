@@ -15,7 +15,7 @@
  */
 
 import log from "../../utils/log";
-import { on } from "../../utils/rx-utils";
+import onEvent from "../../utils/rx-onEvent.js";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
@@ -24,7 +24,7 @@ import { on } from "../../utils/rx-utils";
  * @returns {Observable}
  */
 export default function createMediaErrorStream(videoElement) {
-  return on(videoElement, "error").mergeMap(() => {
+  return onEvent(videoElement, "error").mergeMap(() => {
     const errorCode = videoElement.error.code;
     let errorDetail;
     switch(errorCode) {

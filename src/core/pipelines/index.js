@@ -18,15 +18,18 @@ import objectAssign from "object-assign";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 
-import arrayIncludes from "../../utils/array-includes.js";
 import config from "../../config.js";
-import { tryCatch, castToObservable } from "../../utils/rx-utils";
 import {
   RequestError,
   NetworkError,
   OtherError,
   isKnownError,
 } from "../../errors";
+
+import arrayIncludes from "../../utils/array-includes.js";
+import tryCatch from "../../utils/rx-tryCatch.js";
+import castToObservable from "../../utils/castToObservable.js";
+
 import downloadingBackoff from "./backoff.js";
 
 const DEFAULT_MAXIMUM_RETRY_ON_ERROR =

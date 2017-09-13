@@ -25,7 +25,7 @@ import arrayIncludes from "../../utils/array-includes.js";
 import log from "../../utils/log";
 import assert from "../../utils/assert";
 import { retryableFuncWithBackoff } from "../../utils/retry";
-import { throttle } from "../../utils/rx-utils";
+import throttle from "../../utils/rx-throttle.js";
 import InitializationSegmentCache
   from "../../utils/initialization_segment_cache.js";
 

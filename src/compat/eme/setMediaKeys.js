@@ -15,7 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { castToObservable } from "../../utils/rx-utils";
+import castToObservable from "../../utils/castToObservable.js";
 import { MockMediaKeys } from "./MediaKeys.js";
 
 /**

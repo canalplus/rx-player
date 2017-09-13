@@ -18,9 +18,9 @@ import objectAssign from "object-assign";
 import { Observable } from "rxjs/Observable";
 import { TimeoutError } from "rxjs/util/TimeoutError";
 
-import { tryCatch, castToObservable } from "../../utils/rx-utils";
+import tryCatch from "../../utils/rx-tryCatch.js";
+import castToObservable from "../../utils/castToObservable.js";
 import { retryWithBackoff } from "../../utils/retry";
-
 
 import {
   onKeyMessage,

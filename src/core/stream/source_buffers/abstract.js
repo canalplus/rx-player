@@ -16,7 +16,8 @@
 
 import EventEmitter from "../../../utils/eventemitter";
 import assert from "../../../utils/assert";
-import { tryCatch, castToObservable } from "../../../utils/rx-utils";
+import tryCatch from "../../../utils/rx-tryCatch.js";
+import castToObservable from "../../../utils/castToObservable.js";
 import ManualTimeRanges from "./time_ranges.js";
 
 /**

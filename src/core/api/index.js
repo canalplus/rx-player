@@ -25,7 +25,7 @@ import { combineLatest } from "rxjs/observable/combineLatest";
 import config from "../../config.js";
 
 import log from "../../utils/log";
-import { on } from "../../utils/rx-utils";
+import onEvent from "../../utils/rx-onEvent.js";
 import EventEmitter from "../../utils/eventemitter";
 import assert from "../../utils/assert";
 import {
@@ -367,8 +367,8 @@ class Player extends EventEmitter {
       .distinctUntilChanged()
       .startWith(PLAYER_STATES.LOADING);
 
-    const playChanges = on(videoElement, ["play", "pause"]);
-    const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
+    const playChanges = onEvent(videoElement, ["play", "pause"]);
+    const textTracksChanges = onEvent(videoElement.textTracks, ["addtrack"]);
 
     let streamDisposable = void 0;
     clearLoadedContent$.take(1).subscribe(() => {
