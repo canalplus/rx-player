@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getRightIndexHelpers } from "./indexes/index.js";
+import getRightIndexHelpers from "./indexes/index.js";
 
 class RepresentationIndex {
   /**

@@ -30,6 +30,15 @@ export default {
   setTimescale,
   scale,
 
+  /**
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * (If we should re-fetch the manifest)
+   * @param {Object} index
+   * @param {Number} time
+   * @param {Number} from
+   * @param {Number} to
+   * @returns {Boolean}
+   */
   shouldRefresh(index, time, from, to) {
     const {
       timeline,
@@ -58,6 +67,11 @@ export default {
     return (lastEnd - scaledTime) / timescale <= 1 && scaledTo > lastEnd;
   },
 
+  /**
+   * Returns first position in index.
+   * @param {Object} index
+   * @returns {Number}
+   */
   getFirstPosition(index) {
     if (!index.timeline.length) {
       return undefined;
@@ -65,6 +79,11 @@ export default {
     return index.timeline[0].ts / index.timescale;
   },
 
+  /**
+   * Returns last position in index.
+   * @param {Object} index
+   * @returns {Number}
+   */
   getLastPosition(index) {
     if (!index.timeline.length) {
       return undefined;

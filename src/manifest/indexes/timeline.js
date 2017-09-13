@@ -23,6 +23,12 @@ import {
   scale,
 } from "./helpers.js";
 
+/**
+ * Get index of the segment containing the given timescaled timestamp.
+ * @param {Object} index
+ * @param {Number} ts
+ * @returns {Number}
+ */
 const getSegmentIndex = (index, ts) => {
   const { timeline } = index;
 
@@ -43,6 +49,12 @@ const getSegmentIndex = (index, ts) => {
     : low;
 };
 
+/**
+ * @param {Number} ts
+ * @param {Number} up
+ * @param {Number} duration
+ * @returns {Number}
+ */
 const getSegmentNumber = (ts, up, duration) => {
   const diff = up - ts;
   if (diff > 0) {
@@ -52,6 +64,15 @@ const getSegmentNumber = (ts, up, duration) => {
   }
 };
 
+/**
+ * Calculate the number of times a segment repeat based on the next segment.
+ * @param {Object} seg
+ * @param {Number} seg.ts - beginning timescaled timestamp
+ * @param {Number} seg.d - timescaled duration of the segment
+ * @param {Object} nextSeg
+ * @param {Number} nextSeg.t - TODO check that one
+ * @returns {Number}
+ */
 const calculateRepeat = (seg, nextSeg) => {
   let rep = seg.r || 0;
 
@@ -74,6 +95,13 @@ const SegmentTimelineHelpers = {
   setTimescale,
   scale,
 
+  /**
+   * @param {string|Number} repId
+   * @param {Object} index
+   * @param {Number} _up
+   * @param {Number} _to
+   * @returns {Array.<Segment>}
+   */
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
@@ -140,6 +168,14 @@ const SegmentTimelineHelpers = {
     return segments;
   },
 
+  /**
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * @param {Object} index
+   * @param {Number} time
+   * @param {Number} up
+   * @param {Number} to
+   * @returns {Boolean}
+   */
   shouldRefresh(index, time, up, to) {
     const {
       timeline,
@@ -161,6 +197,11 @@ const SegmentTimelineHelpers = {
     return !(scaledTo <= getTimelineRangeEnd(last));
   },
 
+  /**
+   * Returns first position in index.
+   * @param {Object} index
+   * @returns {Number}
+   */
   getFirstPosition(index) {
     if (!index.timeline.length) {
       return undefined;
@@ -168,6 +209,11 @@ const SegmentTimelineHelpers = {
     return index.timeline[0].ts / index.timescale;
   },
 
+  /**
+   * Returns last position in index.
+   * @param {Object} index
+   * @returns {Number}
+   */
   getLastPosition(index) {
     if (!index.timeline.length) {
       return undefined;
@@ -181,6 +227,7 @@ const SegmentTimelineHelpers = {
    *   - We're on the upper bound of the current range (end of the range - time
    *     is inferior to the timescale)
    *   - The next range starts after the end of the current range.
+   * @param {Object} index
    * @param {Number} _time
    * @returns {Number} - If a discontinuity is present, this is the Starting ts
    * for the next (discontinuited) range. If not this is equal to -1.
@@ -219,6 +266,20 @@ const SegmentTimelineHelpers = {
     return -1;
   },
 
+  /**
+   * Add a new segment to the index.
+   *
+   * /!\ Mutate the given index
+   * @param {Object} index
+   * @param {Object} newSegment
+   * @param {Number} newSegment.timescale
+   * @param {Number} newSegment.time
+   * @param {Number} newSegment.duration
+   * @param {Object} currentSegment
+   * @param {Number} currentSegment.timescale
+   * @param {Number} currentSegment.time
+   * @returns {Boolean} - true if the segment has been added
+   */
   _addSegmentInfos(index, newSegment, currentSegment) {
     const { timeline, timescale } = index;
     const timelineLength = timeline.length;

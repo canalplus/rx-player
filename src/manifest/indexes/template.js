@@ -27,6 +27,13 @@ export default {
   setTimescale,
   scale,
 
+  /**
+   * @param {string|Number} repId
+   * @param {Object} index
+   * @param {Number} _up
+   * @param {Number} _to
+   * @returns {Array.<Segment>}
+   */
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
 
@@ -54,22 +61,44 @@ export default {
     return segments;
   },
 
+  /**
+   * Returns first position in index.
+   * @returns {undefined}
+   */
   getFirstPosition() {
     return undefined;
   },
 
+  /**
+   * Returns last position in index.
+   * @returns {undefined}
+   */
   getLastPosition() {
     return undefined;
   },
 
+  /**
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * We never have to refresh a SegmentTemplate-based manifest.
+   * @returns {Boolean}
+   */
   shouldRefresh() {
     return false;
   },
 
+  /**
+   * We cannot check for discontinuity in SegmentTemplate-based indexes.
+   * @returns {Number}
+   */
   checkDiscontinuity() {
     return -1;
   },
 
+  /**
+   * We do not have to add new segments to SegmentList-based indexes.
+   * Return false in any case.
+   * @returns {Boolean}
+   */
   _addSegmentInfos() {
     return false;
   },

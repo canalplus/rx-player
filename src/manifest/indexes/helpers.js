@@ -17,6 +17,16 @@
 import assert from "../../utils/assert.js";
 import Segment from "../segment.js";
 
+/**
+ * Convert second-based start time and duration to the timescale of the
+ * manifest's index.
+ * @param {Object} index
+ * @param {Number} ts
+ * @param {Number} duration
+ * @returns {Object} - Object with two properties:
+ *   - up {Number}: timescaled timestamp of the beginning time
+ *   - to {Number}: timescaled timestamp of the end time (start time + duration)
+ */
 const normalizeRange = (index, ts, duration) => {
   const pto = index.presentationTimeOffset || 0;
   const timescale = index.timescale || 1;
@@ -27,12 +37,41 @@ const normalizeRange = (index, ts, duration) => {
   };
 };
 
+/**
+ * Get start of the given index range, timescaled.
+ * @param {Object} range
+ * @param {Number} range.ts - the range's start time
+ * @param {Number} range.d - the range's duration
+ * @param {Number} range.r - the range's count. 0 for a single element, 1 for
+ * 2 elements etc.
+ * @returns {Number} - absolute start time of the range
+ */
 const getTimelineRangeStart = ({ ts, d, r }) =>
   d === -1 ? ts : ts + r * d ;
 
+/**
+ * Get end of the given index range, timescaled.
+ * @param {Object} range
+ * @param {Number} range.ts - the range's start time
+ * @param {Number} range.d - the range's duration
+ * @param {Number} range.r - the range's count. 0 for a single element, 1 for
+ * 2 elements etc.
+ * @returns {Number} - absolute end time of the range
+ */
 const getTimelineRangeEnd = ({ ts, d, r }) =>
   d === -1 ? ts : ts + (r+1) * d;
 
+/**
+ * Construct init segment for the given index.
+ * @param {string} rootId
+ * @param {Object} index
+ * @param {Number} index.timescale
+ * @param {Object} [index.initialization={}]
+ * @param {Array.<Number>|null} [index.initialization.range=null]
+ * @param {Array.<Number>|null} [index.initialization.indexRange=null]
+ * @param {string} [index.initialization.media]
+ * @returns {Segment}
+ */
 const getInitSegment = (rootId, index) => {
   const { initialization = {} } = index;
 
@@ -51,7 +90,11 @@ const getInitSegment = (rootId, index) => {
  * Update the timescale used (for all segments).
  * TODO This should probably update all previous segments to the newly set
  * Timescale.
+ *
+ * /!\ Mutates the given index
+ * @param {Object} index
  * @param {Number} timescale
+ * @returns {Object}
  */
 const setTimescale = (index, timescale) => {
   if (__DEV__) {
@@ -66,6 +109,12 @@ const setTimescale = (index, timescale) => {
   return index;
 };
 
+/**
+ * Re-scale a given time from timescaled information to second-based.
+ * @param {Object} index
+ * @param {Number} time
+ * @returns {Number}
+ */
 const scale = (index, time)  => {
   if (__DEV__) {
     assert(index.timescale > 0);

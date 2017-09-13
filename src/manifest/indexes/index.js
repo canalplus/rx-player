@@ -20,6 +20,12 @@ import TemplateIndex from "./template.js";
 import SmoothIndex from "./smooth.js";
 import BaseIndex from "./base.js";
 
+/**
+ * Indexes have multiple "flavors" depending on the manifest concerned.
+ * Here we returns the helpers best adapted to the given index.
+ * @param {Object} index
+ * @returns {Object}
+ */
 const getRightIndexHelpers = index => {
   switch (index.indexType) {
   case "timeline":
@@ -37,6 +43,4 @@ const getRightIndexHelpers = index => {
   }
 };
 
-export {
-  getRightIndexHelpers,
-};
+export default getRightIndexHelpers;

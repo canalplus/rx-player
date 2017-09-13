@@ -30,6 +30,10 @@ import {
  * timescale
  */
 
+/**
+ * Provide helpers for SegmentList-based indexes.
+ * @type {Object}
+ */
 const ListIndexHelpers = {
   getInitSegment,
   setTimescale,
@@ -78,6 +82,7 @@ const ListIndexHelpers = {
 
   /**
    * Returns last position in index.
+   * @param {Object} index
    * @returns {Number}
    */
   getLastPosition(index) {
@@ -88,6 +93,9 @@ const ListIndexHelpers = {
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
+   * @param {Object} index
+   * @param {Number} up
+   * @param {Number} to
    * @returns {Boolean}
    */
   shouldRefresh(index, time, up, to) {
@@ -103,10 +111,19 @@ const ListIndexHelpers = {
     return !(i >= 0 && i < list.length);
   },
 
+  /**
+   * We do not have to add new segments to SegmentList-based indexes.
+   * Return false in any case.
+   * @returns {Boolean}
+   */
   _addSegmentInfos() {
     return false;
   },
 
+  /**
+   * We do not check for discontinuity in SegmentList-based indexes.
+   * @returns {Number}
+   */
   checkDiscontinuity() {
     return -1;
   },
