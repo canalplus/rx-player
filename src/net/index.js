@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import smooth from "./transport/smooth";
-import dash from "./transport/dash";
-import directfile from "./transport/directfile";
+const exported = {};
+if (__FEATURES__.SMOOTH) {
+  exported.smooth = require("./transport/smooth/index.js").default;
+}
+if (__FEATURES__.DASH) {
+  exported.dash = require("./transport/dash/index.js").default;
+}
+if (__FEATURES__.DIRECTFILE) {
+  exported.directfile = require("./transport/directfile/index.js").default;
+}
 
-export default {
-  smooth,
-  dash,
-  directfile,
-};
+export default exported;

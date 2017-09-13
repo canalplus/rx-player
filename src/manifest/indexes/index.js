@@ -14,33 +14,26 @@
  * limitations under the License.
  */
 
-import TimelineIndex from "./timeline.js";
-import ListIndex from "./list.js";
-import TemplateIndex from "./template.js";
-import SmoothIndex from "./smooth.js";
-import BaseIndex from "./base.js";
+const indexes = {};
+
+if (__FEATURES__.SMOOTH) {
+  indexes.smooth = require("./smooth.js").default;
+}
+if (__FEATURES__.DASH) {
+  indexes.timeline = require("./timeline.js").default;
+  indexes.template = require("./template.js").default;
+  indexes.list = require("./list.js").default;
+  indexes.base = require("./base.js").default;
+}
 
 /**
  * Indexes have multiple "flavors" depending on the manifest concerned.
  * Here we returns the helpers best adapted to the given index.
  * @param {Object} index
- * @returns {Object}
+ * @returns {Object|undefined}
  */
 const getRightIndexHelpers = index => {
-  switch (index.indexType) {
-  case "timeline":
-    return TimelineIndex;
-  case "list":
-    return ListIndex;
-  case "template":
-    return TemplateIndex;
-  case "smooth":
-    return SmoothIndex;
-  case "base":
-    return BaseIndex;
-  default:
-    return TimelineIndex;
-  }
+  return indexes[index.indexType];
 };
 
 export default getRightIndexHelpers;

@@ -41,6 +41,16 @@ const config = {
   },
   plugins: [
     new webpack.DefinePlugin({
+      "__FEATURES__": {
+        SMOOTH: true,
+        DASH: true,
+        DIRECTFILE: true,
+
+        // TODO
+        // TTML: true,
+        // SAMI: true,
+        // BIF: true,
+      },
       "__DEV__": true,
       "__LOGGER_LEVEL__": "\"DEBUG\"",
       "process.env": {
