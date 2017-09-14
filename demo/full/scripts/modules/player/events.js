@@ -45,7 +45,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   Observable
     .interval(POSITION_UPDATES_INTERVAL)
     .map(() => ({
-      currentTime: player.getWallClockTime(),
+      currentTime: player.getPosition(),
       bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
       duration: player.getVideoDuration(),
       minimumPosition: player.getMinimumPosition(),
