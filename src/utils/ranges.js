@@ -129,7 +129,7 @@ function isTimeInRange({ start, end }, time) {
  */
 function areRangesOverlapping(range1, range2) {
   return isTimeInRange(range1, range2.start) ||
-    isTimeInRange(range1, range2.end) ||
+    range1.start < range2.end && range2.end < range1.end ||
     isTimeInRange(range2, range1.start);
 }
 
