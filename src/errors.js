@@ -14,21 +14,7 @@
  * limitations under the License.
  */
 
-/**
- * Transform an array of strings into an Object with the key and value
- * mirrored.
- * @param {Array.<string>} list
- * @returns {Object}
- */
-function listToMap(list) {
-  const map = list.reduce((map, name) => {
-    map[name] = name;
-    return map;
-  }, {});
-
-  map.keys = list;
-  return map;
-}
+import listToMap from "./utils/listToMap.js";
 
 const ErrorTypes = listToMap([
   "NETWORK_ERROR",
