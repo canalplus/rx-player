@@ -79,9 +79,11 @@
 
 ### Bug Fixes:
 
-  - smooth: fix some minor risks of infinite rebuffering for live contents, when the isobmff's tfrf box is not well parsed.
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
+  - languages: fix bug which led the text buffer to _crash_ when the ``wantedBufferBehind`` option is set
+  - languages: fix bug which led to TextTracks chunks being re-downloaded multiple times
   - speed: fix playback rate bug when setting it while the player is stalled
+  - smooth: fix some minor risks of infinite rebuffering for live contents, when the isobmff's tfrf box is not well parsed.
   - buffer: avoid infinite player rebuffering when the manifest is not exactly aligned with the real duration of the content
   - buffer: avoid multiple causes of infinite player rebuffering by managing segment garbage collection
   - languages: getAudioTrack now always returns the currently set audio track
