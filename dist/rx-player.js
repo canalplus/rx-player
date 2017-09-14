@@ -1964,7 +1964,7 @@ function isTimeInRange(_ref, time) {
  * @returns {Boolean}
  */
 function areRangesOverlapping(range1, range2) {
-  return isTimeInRange(range1, range2.start) || isTimeInRange(range1, range2.end) || isTimeInRange(range2, range1.start);
+  return isTimeInRange(range1, range2.start) || range1.start < range2.end && range2.end < range1.end || isTimeInRange(range2, range1.start);
 }
 
 /**
@@ -11070,7 +11070,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha7";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha8";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
@@ -17677,6 +17677,60 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var Cue = window.VTTCue || window.TextTrackCue;
 
+/**
+ * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
+ * @param {Array.<Object>} - Objects containing the start, end and text.
+ * @returns {Array.<Cue>}
+ */
+function createCuesFromArray(cuesArray) {
+  var nativeCues = [];
+  for (var i = 0; i < cuesArray.length; i++) {
+    var _cuesArray$i = cuesArray[i],
+        start = _cuesArray$i.start,
+        end = _cuesArray$i.end,
+        text = _cuesArray$i.text;
+
+    if (text) {
+      nativeCues.push(new Cue(start, end, text));
+    }
+  }
+  return nativeCues;
+}
+
+/**
+ * Implementation of a SourceBuffer used for TextTracks.
+ *
+ * The data appended through ``appendBuffer`` should be an object with the
+ * following keys:
+ *
+ *   - data {*}: The texttrack data
+ *
+ *   - timescale {Number}: the timescale. That is, the number of time units that
+ *     pass in one second. For example, a time coordinate system that measures
+ *     time in sixtieths of a second has a timescale of 60.
+ *
+ *   - start {Number}: The start time, timescaled, those texttracks are for.
+ *     Note that this value is different than the start of the first cue:
+ *       - the start of the first cue is the time at which the first cue in the
+ *         data given should begin to be displayed.
+ *       - ``start`` is the absolute start time for which the data apply.
+ *     That means, if the given data is for a segment that begins with 10s
+ *     without any cue, the ``start`` value should be 10s (timescaled) inferior
+ *     to the start of the first cue.
+ *     This is useful to copy the behavior of "native" SourceBuffer to indicate
+ *     which segments have been "buffered".
+ *
+ *   - end {Number|undefined}: The end time, timescaled, those texttracks are
+ *     for.
+ *     Check ``start`` for more informations about the difference between this
+ *     value and the end of the last cue in the data.
+ *     This number can be undefined to raise the error resilience. In that case,
+ *     the end time will be defined from the last text track in the data.
+ *
+ * @class TextSourceBuffer
+ * @extends AbstractSourceBuffer
+ */
+
 var TextSourceBuffer = function (_AbstractSourceBuffer) {
   _inherits(TextSourceBuffer, _AbstractSourceBuffer);
 
@@ -17685,63 +17739,59 @@ var TextSourceBuffer = function (_AbstractSourceBuffer) {
 
     var _this = _possibleConstructorReturn(this, _AbstractSourceBuffer.call(this, codec));
 
-    _this.video = video;
-    _this.codec = codec;
-    _this.isVTT = /^text\/vtt/.test(codec);
-
     var _addTextTrack = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__compat__["n" /* addTextTrack */])(video, hideNativeSubtitle),
         track = _addTextTrack.track,
         trackElement = _addTextTrack.trackElement;
 
-    _this.track = track;
-    _this.trackElement = trackElement;
+    _this._videoElement = video;
+    _this._isVtt = /^text\/vtt/.test(codec);
+    _this._track = track;
+    _this._trackElement = trackElement;
     return _this;
   }
 
   /**
-   * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
-   * @param {Array.<Object>} - Objects containing the start, end and text.
-   * @returns {Array.<Cue>}
+   * Append text tracks.
+   * @param {Object} data
+   * @param {*} data.data
+   * @param {Number} data.timescale
+   * @param {Number} data.start
+   * @param {Number|undefined} data.end
    */
 
 
-  TextSourceBuffer.prototype.createCuesFromArray = function createCuesFromArray(cues) {
-    var nativeCues = [];
-    for (var i = 0; i < cues.length; i++) {
-      var _cues$i = cues[i],
-          start = _cues$i.start,
-          end = _cues$i.end,
-          text = _cues$i.text;
-
-      if (text) {
-        nativeCues.push(new Cue(start, end, text));
-      }
-    }
-    return nativeCues;
-  };
-
-  TextSourceBuffer.prototype._append = function _append(cues) {
+  TextSourceBuffer.prototype._append = function _append(data) {
     var _this2 = this;
 
-    if (this.isVTT) {
-      if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__compat__["o" /* isVTTSupported */])() && this.trackElement) {
+    var timescale = data.timescale,
+        timescaledStart = data.start,
+        timescaledEnd = data.end,
+        cues = data.data;
+
+    if (timescaledEnd - timescaledStart <= 0) {
+      return;
+    }
+    var startTime = timescaledStart / timescale;
+    var endTime = timescaledEnd != null ? timescaledEnd / timescale : undefined;
+
+    if (this._isVtt) {
+      if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__compat__["o" /* isVTTSupported */])() && this._trackElement) {
         var blob = new Blob([cues], { type: "text/vtt" });
         var url = URL.createObjectURL(blob);
-        this.trackElement.src = url;
-        this.buffered.insert(0, Number.MAX_VALUE);
+        this._trackElement.src = url;
+        this.buffered.insert(startTime, endTime != null ? endTime : Number.MAX_VALUE);
       } else {
         __WEBPACK_IMPORTED_MODULE_2__utils_log__["a" /* default */].warn("vtt subtitles not supported");
       }
     } else {
-      var newCues = this.createCuesFromArray(cues);
+      var newCues = createCuesFromArray(cues);
       if (newCues.length > 0) {
         var firstCue = newCues[0];
-        var lastCue = newCues[newCues.length - 1];
 
         // NOTE(compat): cleanup all current cues if the newly added
         // ones are in the past. this is supposed to fix an issue on
         // IE/Edge.
-        var currentCues = this.track.cues;
+        var currentCues = this._track.cues;
         if (currentCues.length > 0) {
           if (firstCue.startTime < currentCues[currentCues.length - 1].startTime) {
             this._remove(firstCue.startTime, +Infinity);
@@ -17749,15 +17799,21 @@ var TextSourceBuffer = function (_AbstractSourceBuffer) {
         }
 
         newCues.forEach(function (cue) {
-          return _this2.track.addCue(cue);
+          return _this2._track.addCue(cue);
         });
-        this.buffered.insert(firstCue.startTime, lastCue.endTime);
+        this.buffered.insert(startTime, endTime != null ? endTime : newCues[newCues.length - 1].endTime);
       }
     }
   };
 
+  /**
+   * @param {Number} from
+   * @param {Number} to
+   */
+
+
   TextSourceBuffer.prototype._remove = function _remove(from, to) {
-    var track = this.track;
+    var track = this._track;
     var cues = track.cues;
     for (var i = cues.length - 1; i >= 0; i--) {
       var cue = cues[i];
@@ -17772,17 +17828,17 @@ var TextSourceBuffer = function (_AbstractSourceBuffer) {
   };
 
   TextSourceBuffer.prototype._abort = function _abort() {
-    var trackElement = this.trackElement,
-        video = this.video;
+    var _trackElement = this._trackElement,
+        _videoElement = this._videoElement;
 
-    if (trackElement && video && video.hasChildNodes(trackElement)) {
-      video.removeChild(trackElement);
+    if (_trackElement && _videoElement && _videoElement.hasChildNodes(_trackElement)) {
+      _videoElement.removeChild(_trackElement);
     }
-    this.track.mode = "disabled";
+    this._track.mode = "disabled";
     this.size = 0;
-    this.trackElement = null;
-    this.track = null;
-    this.video = null;
+    this._trackElement = null;
+    this._track = null;
+    this._videoElement = null;
   };
 
   return TextSourceBuffer;
@@ -17847,7 +17903,14 @@ var ManualTimeRanges = function () {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
     }
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_ranges_js__["f" /* keepRangeIntersection */])(this._ranges, [{ start: 0, end: start }, { start: end, end: Infinity }]);
+    var rangesToIntersect = [];
+    if (start > 0) {
+      rangesToIntersect.push({ start: 0, end: start });
+    }
+    if (end < Infinity) {
+      rangesToIntersect.push({ start: end, end: Infinity });
+    }
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_ranges_js__["f" /* keepRangeIntersection */])(this._ranges, rangesToIntersect);
     this.length = this._ranges.length;
   };
 
@@ -19447,6 +19510,35 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
  */
 
 /**
+ * More specifically, the text parser's segmentData should be an object, with
+ * the following keys:
+ *
+ *   - data {*}: The texttrack data TODO explain
+ *
+ *   - timescale {Number}: the timescale. That is, the number of time units that
+ *     pass in one second. For example, a time coordinate system that measures
+ *     time in sixtieths of a second has a timescale of 60.
+ *
+ *   - start {Number}: The start time, timescaled, those texttracks are for.
+ *     Note that this value is different than the start of the first cue:
+ *       - the start of the first cue is the time at which the first cue in the
+ *         data given should begin to be displayed.
+ *       - ``start`` is the absolute start time for which the data apply.
+ *     That means, if the given data is for a segment that begins with 10s
+ *     without any cue, the ``start`` value should be 10s (timescaled) inferior
+ *     to the start of the first cue.
+ *     This is useful to copy the behavior of "native" SourceBuffer to indicate
+ *     which segments have been "buffered".
+ *
+ *   - end {Number|undefined}: The end time, timescaled, those texttracks are
+ *     for.
+ *     Check ``start`` for more informations about the difference between this
+ *     value and the end of the last cue in the data.
+ *     This number can be undefined to raise the error resilience. In that case,
+ *     the end time will be defined from the last text track in the data.
+ */
+
+/**
  * Returns pipelines used for DASH streaming.
  * @param {Object} options
  * implementation. Used for each generated http request.
@@ -19605,7 +19697,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       var text = void 0;
       var nextSegments = void 0,
           segmentInfos = void 0;
-      var segmentData = [];
+      var segmentData = void 0;
 
       var isMP4 = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_10__utils_js__["a" /* isMP4EmbeddedTrack */])(representation);
       if (isMP4) {
@@ -19632,6 +19724,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             segmentInfos.timescale = timescale;
           }
         }
+
+        // void data
+        segmentData = {
+          start: 0,
+          end: 0,
+          timescale: segmentInfos.timescale || 0,
+          data: []
+        };
       } else {
         var _representation$codec = representation.codec,
             codec = _representation$codec === undefined ? "" : _representation$codec;
@@ -19639,7 +19739,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
         switch (codec.toLowerCase()) {
           case "stpp":
-            segmentData = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__parsers_texttracks_ttml_js__["a" /* parseTTML */])(text, language, 0);
+            segmentData = {
+              start: segmentInfos.time,
+              end: segmentInfos.time + segmentInfos.duration,
+              timescale: segmentInfos.timescale,
+              data: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__parsers_texttracks_ttml_js__["a" /* parseTTML */])(text, language, 0)
+            };
             break;
           default:
             __WEBPACK_IMPORTED_MODULE_1__utils_log__["a" /* default */].warn("The codec used for the subtitle is not managed yet.");
@@ -20907,6 +21012,7 @@ var WSX_REG = /\.wsx?(\?token=\S+)?/;
       var text = void 0;
       var nextSegments = void 0,
           segmentInfos = void 0;
+      var segmentData = {};
 
       // in case of TTML declared inside playlists, the TTML file is
       // embededded inside an mp4 fragment.
@@ -20917,12 +21023,18 @@ var WSX_REG = /\.wsx?(\?token=\S+)?/;
 
         nextSegments = timings.nextSegments;
         segmentInfos = timings.segmentInfos;
+        segmentData.start = segmentInfos.start;
+        segmentData.end = segmentInfos.duration != null ? segmentInfos.start + segmentInfos.duration : undefined;
+        segmentData.timescale = segmentInfos.timescale;
       } else {
         // vod is simple WebVTT or TTML text
         text = responseData;
+        segmentData.start = segment.time;
+        segmentData.end = segment.duration != null ? segment.time + segment.duration : undefined;
+        segmentData.timescale = segment.timescale;
       }
 
-      var segmentData = ttParser(text, language, segment.time / segment.timescale);
+      segmentData.data = ttParser(text, language, segment.time / segment.timescale);
 
       return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].of({ segmentData: segmentData, segmentInfos: segmentInfos, nextSegments: nextSegments });
     }
