@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
+import config from "../../config.js";
 import log from "../../utils/log";
+import assert from "../../utils/assert.js";
 import takeFirstSet from "../../utils/takeFirstSet.js";
 import { convertToRanges } from "../../utils/ranges.js";
 
+const {
+  MAX_MISSING_FROM_COMPLETE_SEGMENT,
+  MAX_BUFFERED_DISTANCE,
+  MINIMUM_SEGMENT_SIZE,
+} = config;
+
 /**
+ * TODO Find what to do with that one empirically. Either delete or uncomment.
+ *
  * Tolerated margin when comparing segments.
  * If the absolute difference between two segment's start time is inferior or
  * equal to this margin, we infer that they begin at the exact same time, same
@@ -31,75 +41,10 @@ import { convertToRanges } from "../../utils/ranges.js";
 // const SEGMENT_EPSILON = 0.3;
 
 /**
- * Maximum difference allowed between a segment anounced start and its effective
- * current starting time in the source buffer, in seconds, until the segment is
- * considered "incomplete".
- * Same for the ending time announced and its effective end time in the source
- * buffer.
- *
- * If the difference is bigger than this value the segment will be considered
- * incomplete and as such might be re-downloaded.
- *
- * Keeping a too high value might lead to incomplete segments being wrongly
- * considered as complete (and thus not be re-downloaded, this could lead the
- * player to stall).
- * Note that in a worst-case scenario this can happen for the end of a segment
- * and the start of the contiguous segment, leading to a discontinuity two times
- * this value. This case SHOULD be handled properly elsewhere (by for example
- * checking that all segments seem to have been downloaded when stalled).
- *
- * Keeping a too low value might lead to re-downloading the same segment
- * multiple times (when the start and end times are badly estimated) as they
- * will wrongly believed to be partially garbage-collected.
- *
- * If a segment has a perfect continuity with a previous/following one in the
- * source buffer the start/end of it will not be checked. This allows to limit
- * the number of time this error-prone logic is applied.
- * @type {Number}
- *
- * TODO We do not put the real duration of a segment in the equation here.
- */
-const MAX_MISSING_FROM_COMPLETE_SEGMENT = 0.12;
-
-/**
- * The maximum time, in seconds, the real buffered time can be superior to the
- * announced time (the "real" buffered start inferior to the announced start and
- * the "real" buffered end superior to the announced end).
- * This limit allows to avoid resizing too much downloaded segments because
- * no other segment is linked to a buffered part.
- *
- * Setting a value too high can lead to parts of the source buffer being linked
- * to the wrong segments.
- * Setting a value too low can lead to parts of the source buffer not being
- * linked to the concerned segment.
- * @type {Number}
- */
-const MAX_BUFFERED_DISTANCE = 0.1;
-
-/**
- * Minimum duration in seconds a segment should be into a range to be considered
- * as part of that range.
- * Segments which have less than this amount of time "linked" to a buffered
- * range will be deleted.
- *
- * Setting a value too high can lead to part of the buffer not being assigned
- * any segment.
- * Setting a value too low can lead in worst-case scenarios to segments being
- * wrongly linked to the next or previous range it is truly linked too (if those
- * ranges are too close).
- *
- * TODO As of now, this limits the minimum size a complete segment can be. A
- * better logic would be to also consider the duration of a segment. Though
- * this logic could lead to bugs with the current code.
- * @type {Number}
- */
-const MINIMUM_SEGMENT_SIZE = 0.3;
-
-/**
  * Keep track of every segment downloaded and currently in the browser's memory.
  *
  * The main point of this class is to know which CDN segments are already
- * downloaded, at which bitrate, and which have been garbage collected since
+ * downloaded, at which bitrate, and which have been garbage-collected since
  * by the browser (and thus should be re-downloaded).
  *
  * @class SegmentBookkeeper
@@ -281,24 +226,27 @@ export default class SegmentBookkeeper {
   /**
    * Add a new segment in the inventory.
    *
-   * /!\ We do not know there where the segment truly begin and end in the
-   * sourcebuffer (we could add a logic for that) so we infer it from the
-   * segment data, which are not exact values.
-   *
    * Note: As new segments can "replace" partially or completely old ones, we
    * have to perform a complex logic and might update previously added segments.
+   *
    * @param {Segment} segment
    * @param {Number} start - start time of the segment, in seconds
    * @param {Number|undefined} end - end time of the segment, in seconds. Can
-   * be undefined in some rate cases
+   * be undefined in some rare cases
    * @param {Number} bitrate - bitrate of the representation the segment is in
    */
   insert(segment, start, end, bitrate) {
-    // TODO manage segments whose end is unknown (rare but could happen)
+    // TODO (*very* low-priority) manage segments whose end is unknown (rare but
+    // could eventually happen).
     // This should be properly managed in this method, but it is not in some
     // other methods of this class, so I decided to not one of those to the
     // inventory by security
-    if (end == null) {
+    if (__DEV__) {
+      assert(
+        end != null, "SegmentBookkeeper: ending time of the segment not defined"
+      );
+    } else if (end == null) {
+      // This leads to excessive re-downloads of segment without an ending time.
       return;
     }
 
@@ -497,8 +445,8 @@ export default class SegmentBookkeeper {
    * downloaded (or re-downloaded).
    *
    * /!\ Make sure that this class is synchronized with the sourceBuffer
-   * (see addBufferedInfos) before calling this method, as it depends on it
-   * to categorize "incomplete" from "complete" segments.
+   * (see addBufferedInfos method of the same class) before calling this method,
+   * as it depends on it to categorize "incomplete" from "complete" segments.
    *
    * @param {Number} time
    * @param {Number} duration

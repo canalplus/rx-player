@@ -42,26 +42,36 @@ export default {
 
   /**
    * If set to true, video through loadVideo will auto play by default
-   * (au
+   * @type {Boolean}
    */
   DEFAULT_AUTO_PLAY: false,
 
+  /**
+   * If set to false, subtitles will be hidden by default.
+   * @type {Boolean}
+   */
   DEFAULT_SHOW_SUBTITLE: true,
 
   /*
-   * Default buffer goal in seconds
+   * Default buffer goal in seconds. Once this amount of time reached ahead in
+   * the buffer, the player won't automatically download segments.
+   * @type {Number}
    */
   DEFAULT_WANTED_BUFFER_AHEAD: 30,
 
   /*
    * Default max buffer size ahead of the current position in seconds.
+   * The buffer _after_ this limit will be garbage collected.
    * Set to Infinity for no limit.
+   * @type {Number}
    */
   DEFAULT_MAX_BUFFER_AHEAD: Infinity,
 
   /*
    * Default max buffer size ahead of the current position in seconds.
+   * The buffer _before_ this limit will be garbage collected.
    * Set to Infinity for no limit.
+   * @type {Number}
    */
   DEFAULT_MAX_BUFFER_BEHIND: Infinity,
 
@@ -75,11 +85,14 @@ export default {
    *
    * These values are only useful for the first content played, as consecutive
    * play will always take the last set one.
+   * @type {Object}
    */
   DEFAULT_INITIAL_BITRATES: {
-    audio: 0,
-    video: 0,
-    other: 0, // tracks which are not audio/video
+    audio: 0, // only "audio" segments
+    video: 0, // only "video" segments
+    other: 0, // tracks which are not audio/video (text images).
+              // Though those are generally at a single bitrate, so no adaptive
+              // mechanism is triggered for them.
   },
 
   /**
@@ -90,16 +103,20 @@ export default {
    * bitrate there, the lowest bitrate will be taken instead.
    *
    * Set to Infinity to discard any limit in the ABR strategy.
+   * @type {Object}
    */
   DEFAULT_MAX_BITRATES: {
-    audio: Infinity,
-    video: Infinity,
+    audio: Infinity, // only "audio" segments
+    video: Infinity, // only "video" segments
     other: Infinity, // tracks which are not audio/video
+                     // Though those are generally at a single bitrate, so no
+                     // adaptive mechanism is triggered for them.
   },
 
   /**
-   * buffer threshold ratio used as a lower bound
-   * margin to find the suitable representation
+   * Buffer threshold ratio used as a lower bound margin to find the suitable
+   * representation.
+   * @param {Number}
    */
   DEFAULT_ADAPTIVE_BUFFER_THRESHOLD: 0.3,
 
@@ -332,6 +349,80 @@ export default {
    * @type {Number}
    */
   STALL_GAP: 0.5,
+
+  /**
+   * Maximum difference allowed between a segment _announced_ start (what the
+   * rx-player infers to be the starting time) and its _real_  current starting
+   * time in the source buffer, in seconds, until the segment is considered
+   * "incomplete".
+   * Same for the ending time announced and its effective end time in the source
+   * buffer.
+   *
+   * If the difference is bigger than this value, the segment will be considered
+   * incomplete (e.g. considered as partially garbage-collected) and as such
+   * might be re-downloaded.
+   *
+   * Keeping a too high value might lead to incomplete segments being wrongly
+   * considered as complete (and thus not be re-downloaded, this could lead the
+   * player to stall).
+   * Note that in a worst-case scenario this can happen for the end of a segment
+   * and the start of the contiguous segment, leading to a discontinuity two
+   * times this value.
+   *
+   * Keeping a too low value might lead to re-downloading the same segment
+   * multiple times (when the start and end times are badly estimated) as they
+   * will wrongly believed to be partially garbage-collected.
+   *
+   * If a segment has a perfect continuity with a previous/following one in the
+   * source buffer the start/end of it will not be checked. This allows to limit
+   * the number of time this error-prone logic is applied.
+   *
+   * Note that in most cases, the rx-player's start and end times estimations
+   * are __really__ close to what they really are in the sourcebuffer (we
+   * usually have a difference in the order of 10^-7), as time information is
+   * most of the time directly parsed from the media container.
+   *
+   * TODO A maybe cleaner way would be to also consider the real duration of a
+   * segment in the equation here.
+   * @type {Number}
+   */
+  MAX_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
+
+  /**
+   * The maximum time, in seconds, the real buffered time in the sourcebuffer
+   * can be superior to the time inferred by the rx-player (the "real" buffered
+   * start inferior to the inferred start and the "real" buffered end superior
+   * to the inferred end).
+   * This limit allows to avoid resizing too much downloaded segments because
+   * no other segment is linked to a buffered part.
+   *
+   * Setting a value too high can lead to parts of the source buffer being
+   * linked to the wrong segments.
+   * Setting a value too low can lead to parts of the source buffer not being
+   * linked to the concerned segment.
+   * @type {Number}
+   */
+  MAX_BUFFERED_DISTANCE: 0.1,
+
+  /**
+   * Minimum duration in seconds a segment should be into a buffered range to be
+   * considered as part of that range.
+   * Segments which have less than this amount of time "linked" to a buffered
+   * range will be deleted.
+   *
+   * Setting a value too low can lead in worst-case scenarios to segments being
+   * wrongly linked to the next or previous range it is truly linked too (if
+   * those ranges are too close).
+   *
+   * Setting a value too high can lead to part of the buffer not being assigned
+   * any segment. It also limits the minimum duration a segment can be.
+   *
+   * TODO As of now, this limits the minimum size a complete segment can be. A
+   * better logic would be to also consider the duration of a segment. Though
+   * this logic could lead to bugs with the current code.
+   * @type {Number}
+   */
+  MINIMUM_SEGMENT_SIZE: 0.3,
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
