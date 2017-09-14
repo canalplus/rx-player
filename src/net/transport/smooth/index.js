@@ -158,6 +158,7 @@ export default function(options={}) {
       let responseData = response.responseData;
       let text;
       let nextSegments, segmentInfos;
+      const segmentData = {};
 
       // in case of TTML declared inside playlists, the TTML file is
       // embededded inside an mp4 fragment.
@@ -169,12 +170,20 @@ export default function(options={}) {
 
         nextSegments = timings.nextSegments;
         segmentInfos = timings.segmentInfos;
+        segmentData.start = segmentInfos.start;
+        segmentData.end = segmentInfos.duration != null ?
+          segmentInfos.start + segmentInfos.duration : undefined;
+        segmentData.timescale = segmentInfos.timescale;
       } else {
         // vod is simple WebVTT or TTML text
         text = responseData;
+        segmentData.start = segment.time;
+        segmentData.end = segment.duration != null ?
+          segment.time + segment.duration : undefined;
+        segmentData.timescale = segment.timescale;
       }
 
-      const segmentData =
+      segmentData.data =
         ttParser(text, language, segment.time / segment.timescale);
 
       return Observable.of({ segmentData, segmentInfos, nextSegments });

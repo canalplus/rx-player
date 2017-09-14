@@ -118,6 +118,35 @@ import generateSegmentLoader from "./segment_loader.js";
  */
 
 /**
+ * More specifically, the text parser's segmentData should be an object, with
+ * the following keys:
+ *
+ *   - data {*}: The texttrack data TODO explain
+ *
+ *   - timescale {Number}: the timescale. That is, the number of time units that
+ *     pass in one second. For example, a time coordinate system that measures
+ *     time in sixtieths of a second has a timescale of 60.
+ *
+ *   - start {Number}: The start time, timescaled, those texttracks are for.
+ *     Note that this value is different than the start of the first cue:
+ *       - the start of the first cue is the time at which the first cue in the
+ *         data given should begin to be displayed.
+ *       - ``start`` is the absolute start time for which the data apply.
+ *     That means, if the given data is for a segment that begins with 10s
+ *     without any cue, the ``start`` value should be 10s (timescaled) inferior
+ *     to the start of the first cue.
+ *     This is useful to copy the behavior of "native" SourceBuffer to indicate
+ *     which segments have been "buffered".
+ *
+ *   - end {Number|undefined}: The end time, timescaled, those texttracks are
+ *     for.
+ *     Check ``start`` for more informations about the difference between this
+ *     value and the end of the last cue in the data.
+ *     This number can be undefined to raise the error resilience. In that case,
+ *     the end time will be defined from the last text track in the data.
+ */
+
+/**
  * Returns pipelines used for DASH streaming.
  * @param {Object} options
  * implementation. Used for each generated http request.
@@ -260,7 +289,7 @@ export default function(options={}) {
       let responseData;
       let text;
       let nextSegments, segmentInfos;
-      let segmentData = [];
+      let segmentData;
 
       const isMP4 = isMP4EmbeddedTrack(representation);
       if (isMP4) {
@@ -289,12 +318,25 @@ export default function(options={}) {
             segmentInfos.timescale = timescale;
           }
         }
+
+        // void data
+        segmentData = {
+          start: 0,
+          end: 0,
+          timescale: segmentInfos.timescale || 0,
+          data: [],
+        };
       } else {
         const { codec = "" } = representation;
 
         switch (codec.toLowerCase()) {
         case "stpp":
-          segmentData = parseTTML(text, language, 0);
+          segmentData = {
+            start: segmentInfos.time,
+            end: segmentInfos.time + segmentInfos.duration,
+            timescale: segmentInfos.timescale,
+            data: parseTTML(text, language, 0),
+          };
           break;
         default:
           log.warn("The codec used for the subtitle is not managed yet.");

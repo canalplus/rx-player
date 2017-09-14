@@ -46,10 +46,14 @@ export default class ManualTimeRanges {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
     }
-    keepRangeIntersection(
-      this._ranges,
-      [ { start: 0, end: start }, { start: end, end: Infinity } ]
-    );
+    const rangesToIntersect = [];
+    if (start > 0) {
+      rangesToIntersect.push({ start: 0, end: start });
+    }
+    if (end < Infinity) {
+      rangesToIntersect.push({ start: end, end: Infinity });
+    }
+    keepRangeIntersection(this._ranges, rangesToIntersect);
     this.length = this._ranges.length;
   }
 
