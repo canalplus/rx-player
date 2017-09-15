@@ -55,7 +55,7 @@ You can help and contribute either by:
   - reporting bugs directly on the [issues tab](https://github.com/canalplus/rx-player/issues) on top of this page.
   - adding new features / fixing bugs and doing a pull request (please open an issue first for that).
 
-If you have any questions about contributing, you can ask it in our [gitter room](https://gitter.im/canalplus/rx-player).
+If you have any questions about contributing, you can ask it in our [gitter room](https://gitter.im/canalplus/rx-player). We also began to add a little architecture documentation (at the moment only about the file organization [here](./doc/architecture/files.md)). More is coming soon!
 
 ### Dependencies
 
@@ -88,15 +88,13 @@ Builds are included in the ``dist/`` directory (builds based on the last version
 
 ## Why a new player? Why Rx?
 
-Building a streaming video player in javascript is a complex task due to the numerous interactions with the outside world it has to deal with. Whether they come from the user seeking at a particular moment of its movie, changing the current channel or the network congestion. The video player being the centerpiece of our applications, it needs to adapt very quickly to any of these inputs and stay resilient to various errors.
+Building a streaming video player in javascript is a complex task due to the numerous interactions with the outside world it has to deal with. Whether they come from the user providing an input, network interactions or browser capabilities. If you add the speed with which browsers APIs are changed and added, you end up with a really important (both in the significant and large sense) piece of software. The video player being the centerpiece of our applications, it needs to adapt very quickly and stay resilient to various errors.
 
-Many current video player implementations rely on classical object-oriented hierarchy and imperative event callbacks with shared mutable objects to manage all these asynchronous tasks and states. We found this approach to be the wrong abstraction to handle the complexity of a video player.
+Many current video player implementations rely mostly on classical object-oriented hierarchy and imperative event callbacks with shared mutable objects to manage all these asynchronous tasks and states. We found that we could profit a lot more from adding a reactive-programming approach, with most notably the help of the [RxJS library](#https://github.com/ReactiveX/rxjs).
 
-Rx on the contrary provides gracious interfaces and operators to compose asynchronous tasks together by representating changing states as observable stream of values. It also comes with a **cancelation** contract so that every asynchronous side-effect can be properly disposed when discarded by the system (this is still [a controversial issue in the JS community](https://github.com/whatwg/fetch/issues/27)).
+RxJS provides gracious interfaces and operators to compose asynchronous tasks together by representating changing states as observable stream of values. It also comes with a **cancelation** contract so that every asynchronous side-effect can be properly disposed when discarded by the system. This change of paradigm answers gracefully to most of our needs.
 
-This allowed us to implement some nice features quite easily. For instance, because in the rx-player all asynchronous tasks are encapsulated in observable data-structures, we were able to add a transparent [retry system](https://github.com/canalplus/canal-js-utils/blob/master/rx-ext.js#L73-L100) with a simple observable operator to declaratively handle any failure and replay the whole process.
-
-Another example is the way we abstracted our transport layer into an observable pipeline, allowing us to support different type of streaming systems with its own asynchronous specifities. And because Rx is message-driven, this encapsulation allows us isolate the transport I/O into a WebWorker without any effort, or add an offline support for any pipeline implementation.
+This helps us to build what we think is a _maintainable_ and _evolutive_ codebase, allowing us to adapt quickly to very active standards.
 
 ## Target support
 
