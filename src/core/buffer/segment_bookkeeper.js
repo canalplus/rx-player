@@ -15,7 +15,6 @@
  */
 
 import config from "../../config.js";
-import log from "../../utils/log";
 import assert from "../../utils/assert.js";
 import takeFirstSet from "../../utils/takeFirstSet.js";
 import { convertToRanges } from "../../utils/ranges.js";
@@ -98,7 +97,8 @@ export default class SegmentBookkeeper {
 
     for (let i = 0; i <= maxI; i++) {
       if (!thisSegment) {
-        log.warn("Some buffered ranges do not link to any segment");
+        // Those buffered do not link to any segment here.
+        // It may be linked to another adaptation, for example
         return;
       }
 
@@ -137,7 +137,6 @@ export default class SegmentBookkeeper {
 
       // if no segment left for that range (or any other one), quit
       if (!thisSegment) {
-        log.warn("Some buffered ranges do not link to any segment");
         return;
       }
 
