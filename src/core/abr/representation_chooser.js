@@ -308,7 +308,8 @@ export default class RepresentationChooser {
           if (nextBitrate == null) {
             const baseEstimate = this.estimator.getEstimate();
 
-            const estimate = clock.bufferGap <= inStarvationMode ?
+            const estimate = baseEstimate != null &&
+              clock.bufferGap <= inStarvationMode ?
               baseEstimate * 0.95 : baseEstimate;
 
             nextBitrate = Math.min(
