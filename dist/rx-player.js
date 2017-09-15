@@ -86,7 +86,7 @@ var root_1 = __webpack_require__(11);
 var toSubscriber_1 = __webpack_require__(259);
 var observable_1 = __webpack_require__(48);
 /**
- * A representation of any set of values over any amount of time. This the most basic building block
+ * A representation of any set of values over any amount of time. This is the most basic building block
  * of RxJS.
  *
  * @class Observable<T>
@@ -94,7 +94,7 @@ var observable_1 = __webpack_require__(48);
 var Observable = (function () {
     /**
      * @constructor
-     * @param {Function} subscribe the function that is  called when the Observable is
+     * @param {Function} subscribe the function that is called when the Observable is
      * initially subscribed to. This function is given a Subscriber, to which new values
      * can be `next`ed, or an `error` method can be called to raise an error, or
      * `complete` can be called to notify of a successful completion.
@@ -123,7 +123,7 @@ var Observable = (function () {
      *
      * <span class="informal">Use it when you have all these Observables, but still nothing is happening.</span>
      *
-     * `subscribe` is not a regular operator, but a method that calls Observables internal `subscribe` function. It
+     * `subscribe` is not a regular operator, but a method that calls Observable's internal `subscribe` function. It
      * might be for example a function that you passed to a {@link create} static factory, but most of the time it is
      * a library implementation, which defines what and when will be emitted by an Observable. This means that calling
      * `subscribe` is actually the moment when Observable starts its work, not when it is created, as it is often
@@ -165,7 +165,7 @@ var Observable = (function () {
      *     console.log('Adding: ' + value);
      *     this.sum = this.sum + value;
      *   },
-     *   error() { // We actually could just remote this method,
+     *   error() { // We actually could just remove this method,
      *   },        // since we do not really care about errors right now.
      *   complete() {
      *     console.log('Sum equals: ' + this.sum);
@@ -220,7 +220,7 @@ var Observable = (function () {
      * // Logs:
      * // 0 after 1s
      * // 1 after 2s
-     * // "unsubscribed!" after 2,5s
+     * // "unsubscribed!" after 2.5s
      *
      *
      * @param {Observer|Function} observerOrNext (optional) Either an observer with methods to be called,
@@ -11133,7 +11133,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha10";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-rc1";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
@@ -13859,10 +13859,9 @@ var QueuedSourceBuffer = function () {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__config_js__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_assert_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_takeFirstSet_js__ = __webpack_require__(164);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_ranges_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_assert_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__ = __webpack_require__(164);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_ranges_js__ = __webpack_require__(10);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -13880,7 +13879,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -13959,7 +13957,7 @@ var SegmentBookkeeper = function () {
 
 
   SegmentBookkeeper.prototype.addBufferedInfos = function addBufferedInfos(buffered) {
-    var ranges = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils_ranges_js__["h" /* convertToRanges */])(buffered);
+    var ranges = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_ranges_js__["h" /* convertToRanges */])(buffered);
     var maxI = ranges.length - 1;
 
     var _inventory = this._inventory;
@@ -13969,7 +13967,8 @@ var SegmentBookkeeper = function () {
 
     for (var i = 0; i <= maxI; i++) {
       if (!thisSegment) {
-        __WEBPACK_IMPORTED_MODULE_1__utils_log__["a" /* default */].warn("Some buffered ranges do not link to any segment");
+        // Those buffered do not link to any segment here.
+        // It may be linked to another adaptation, for example
         return;
       }
 
@@ -13986,7 +13985,7 @@ var SegmentBookkeeper = function () {
 
       // skip until first segment with at least MINIMUM_SEGMENT_SIZE past the
       // start of that range.
-      while (thisSegment && __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedEnd, thisSegment.end) - rangeStart < MINIMUM_SEGMENT_SIZE) {
+      while (thisSegment && __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedEnd, thisSegment.end) - rangeStart < MINIMUM_SEGMENT_SIZE) {
         thisSegment = _inventory[++inventoryIndex];
       }
 
@@ -13998,20 +13997,19 @@ var SegmentBookkeeper = function () {
       var numberOfSegmentToDelete = inventoryIndex - indexBefore;
       if (numberOfSegmentToDelete) {
         var lastDeletedSegment = _inventory[indexBefore + numberOfSegmentToDelete - 1];
-        lastDeletedSegmentEnd = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_takeFirstSet_js__["a" /* default */])(lastDeletedSegment.bufferedEnd, lastDeletedSegment.end);
+        lastDeletedSegmentEnd = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(lastDeletedSegment.bufferedEnd, lastDeletedSegment.end);
         _inventory.splice(indexBefore, numberOfSegmentToDelete);
         inventoryIndex = indexBefore;
       }
 
       // if no segment left for that range (or any other one), quit
       if (!thisSegment) {
-        __WEBPACK_IMPORTED_MODULE_1__utils_log__["a" /* default */].warn("Some buffered ranges do not link to any segment");
         return;
       }
 
       // if the first segment past the start is actually outside that range,
       // skip the following part
-      if (rangeEnd - __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
+      if (rangeEnd - __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
 
         // set the bufferedStart of the first segment in that range
         if (thisSegment.bufferedStart != null && thisSegment.bufferedStart < rangeStart) {
@@ -14036,7 +14034,7 @@ var SegmentBookkeeper = function () {
       // make contiguous until first segment outside that range
       // (i.e until the start of the next segment can not constitute a segment
       // in that range == less than MINIMUM_SEGMENT_SIZE into that range)
-      while (thisSegment && rangeEnd - __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
+      while (thisSegment && rangeEnd - __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
         var prevSegment = _inventory[inventoryIndex - 1];
 
         // those segments are contiguous, we have no way to infer their real end
@@ -25632,7 +25630,6 @@ var FilterSubscriber = (function (_super) {
         this.predicate = predicate;
         this.thisArg = thisArg;
         this.count = 0;
-        this.predicate = predicate;
     }
     // the try catch block below is left specifically for
     // optimization and perf reasons. a tryCatcher is not necessary here.
@@ -26750,9 +26747,67 @@ var isDate_1 = __webpack_require__(77);
 var Subscriber_1 = __webpack_require__(3);
 var TimeoutError_1 = __webpack_require__(75);
 /**
- * @param {number} due
- * @param {Scheduler} [scheduler]
- * @return {Observable<R>|WebSocketSubject<T>|Observable<T>}
+ *
+ * Errors if Observable does not emit a value in given time span.
+ *
+ * <span class="informal">Timeouts on Observable that doesn't emit values fast enough.</span>
+ *
+ * <img src="./img/timeout.png" width="100%">
+ *
+ * `timeout` operator accepts as an argument either a number or a Date.
+ *
+ * If number was provided, it returns an Observable that behaves like a source
+ * Observable, unless there is a period of time where there is no value emitted.
+ * So if you provide `100` as argument and first value comes after 50ms from
+ * the moment of subscription, this value will be simply re-emitted by the resulting
+ * Observable. If however after that 100ms passes without a second value being emitted,
+ * stream will end with an error and source Observable will be unsubscribed.
+ * These checks are performed throughout whole lifecycle of Observable - from the moment
+ * it was subscribed to, until it completes or errors itself. Thus every value must be
+ * emitted within specified period since previous value.
+ *
+ * If provided argument was Date, returned Observable behaves differently. It throws
+ * if Observable did not complete before provided Date. This means that periods between
+ * emission of particular values do not matter in this case. If Observable did not complete
+ * before provided Date, source Observable will be unsubscribed. Other than that, resulting
+ * stream behaves just as source Observable.
+ *
+ * `timeout` accepts also a Scheduler as a second parameter. It is used to schedule moment (or moments)
+ * when returned Observable will check if source stream emitted value or completed.
+ *
+ * @example <caption>Check if ticks are emitted within certain timespan</caption>
+ * const seconds = Rx.Observable.interval(1000);
+ *
+ * seconds.timeout(1100) // Let's use bigger timespan to be safe,
+ *                       // since `interval` might fire a bit later then scheduled.
+ * .subscribe(
+ *     value => console.log(value), // Will emit numbers just as regular `interval` would.
+ *     err => console.log(err) // Will never be called.
+ * );
+ *
+ * seconds.timeout(900).subscribe(
+ *     value => console.log(value), // Will never be called.
+ *     err => console.log(err) // Will emit error before even first value is emitted,
+ *                             // since it did not arrive within 900ms period.
+ * );
+ *
+ * @example <caption>Use Date to check if Observable completed</caption>
+ * const seconds = Rx.Observable.interval(1000);
+ *
+ * seconds.timeout(new Date("December 17, 2020 03:24:00"))
+ * .subscribe(
+ *     value => console.log(value), // Will emit values as regular `interval` would
+ *                                  // until December 17, 2020 at 03:24:00.
+ *     err => console.log(err) // On December 17, 2020 at 03:24:00 it will emit an error,
+ *                             // since Observable did not complete by then.
+ * );
+ *
+ * @see {@link timeoutWith}
+ *
+ * @param {number|Date} due Number specifying period within which Observable must emit values
+ *                          or Date specifying before when Observable should complete
+ * @param {Scheduler} [scheduler] Scheduler controlling when timeout checks occur.
+ * @return {Observable<T>} Observable that mirrors behaviour of source, unless timeout checks fail.
  * @method timeout
  * @owner Observable
  */
