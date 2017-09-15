@@ -9758,8 +9758,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
 
-// const 2  = 2;
-// const 7  = 10;
+var FAST_EMA = 2;
+var SLOW_EMA = 10;
 
 var ABR_MINIMUM_TOTAL_BYTES = __WEBPACK_IMPORTED_MODULE_1__config_js__["a" /* default */].ABR_MINIMUM_TOTAL_BYTES,
     ABR_MINIMUM_CHUNK_SIZE = __WEBPACK_IMPORTED_MODULE_1__config_js__["a" /* default */].ABR_MINIMUM_CHUNK_SIZE;
@@ -9780,13 +9780,13 @@ var BandwidthEstimator = function () {
      * A fast-moving average.
      * @private
      */
-    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](2);
+    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](FAST_EMA);
 
     /**
      * A slow-moving average.
      * @private
      */
-    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](7);
+    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](SLOW_EMA);
 
     /**
      * Number of bytes sampled.
@@ -9839,8 +9839,8 @@ var BandwidthEstimator = function () {
 
 
   BandwidthEstimator.prototype.reset = function reset() {
-    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](2);
-    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](7);
+    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](FAST_EMA);
+    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](SLOW_EMA);
     this._bytesSampled = 0;
   };
 
@@ -10534,7 +10534,10 @@ var RepresentationChooser = function () {
     var _this = this;
 
     if (representations.length < 2) {
-      return __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].of(representations.length ? representations[0] : null).concat(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].never()).takeUntil(this._dispose$);
+      return __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].of({
+        bitrate: undefined,
+        representation: representations.length ? representations[0] : null
+      }).concat(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].never()).takeUntil(this._dispose$);
     }
 
     var lastBitrate = this.initialBitrate;
@@ -10635,17 +10638,17 @@ var RepresentationChooser = function () {
 
         var _representations = getFilteredRepresentations(representations, deviceEvents);
 
-        return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__fromBitrateCeil_js__["a" /* default */])(_representations, nextBitrate) || representations[0];
-      }).do(function (representation) {
-        if (representation) {
-          lastBitrate = representation.bitrate;
-        }
-      });
-    })
+        return {
+          bitrate: nextBitrate,
+          representation: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__fromBitrateCeil_js__["a" /* default */])(_representations, nextBitrate) || representations[0]
+        };
+      }).do(function (_ref2) {
+        var bitrate = _ref2.bitrate;
 
-    // Do not reemit if same bitrate and same id
-    .distinctUntilChanged(function (a, b) {
-      return (a && a.bitrate) === (b && b.bitrate) && (a && a.id) === (b && b.id);
+        if (bitrate != null) {
+          lastBitrate = bitrate;
+        }
+      }).share();
     });
   };
 
@@ -11133,7 +11136,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-rc1";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-rc2";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
@@ -12752,6 +12755,9 @@ function parseLoadVideoOptions() {
         case "adaptationChange":
           self._priv.onAdaptationChange(value);
           break;
+        case "bitrateEstimationChange":
+          self._priv.onBitrateEstimationChange(value);
+          break;
         case "manifestChange":
           self._priv.onManifestChange(value);
           break;
@@ -12918,6 +12924,16 @@ function parseLoadVideoOptions() {
         self._priv.recordState("audioBitrate", bitrate != null ? bitrate : -1);
       }
     },
+    onBitrateEstimationChange: function onBitrateEstimationChange(_ref3) {
+      var type = _ref3.type,
+          bitrate = _ref3.bitrate;
+
+      if (false) {
+        assert(type != null);
+        assert(bitrate != null);
+      }
+      self._priv.recordState("bitrateEstimation", { type: type, bitrate: bitrate });
+    },
 
 
     /**
@@ -12937,9 +12953,9 @@ function parseLoadVideoOptions() {
      * @param {Object} evt
      * @param {HTMLElement} evt.target
      */
-    onNativeTextTrackNext: function onNativeTextTrackNext(_ref3) {
-      var _ref3$target = _ref3.target,
-          trackElement = _ref3$target[0];
+    onNativeTextTrackNext: function onNativeTextTrackNext(_ref4) {
+      var _ref4$target = _ref4.target,
+          trackElement = _ref4$target[0];
 
       if (trackElement) {
         self.trigger("nativeTextTrackChange", trackElement);
@@ -16485,6 +16501,9 @@ function createPipeline(_ref) {
 
 /**
  * Perform EME management if needed.
+ * @param {HTMLMediaElement} videoElement
+ * @param {Array.<Object>} [keySystems]
+ * @param {Subject} errorStream
  * @returns {Observable}
  */
 function createEMEIfKeySystems(videoElement, keySystems, errorStream) {
@@ -16868,16 +16887,23 @@ function Stream(_ref) {
 
       var representations = adaptation.representations;
 
-      var representation$ = abrManager.get$(bufferType, abrClock$, representations).do(function (representation) {
+
+      var abr$ = abrManager.get$(bufferType, abrClock$, representations);
+      var representation$ = abr$.map(function (_ref6) {
+        var representation = _ref6.representation;
+        return representation;
+      }).distinctUntilChanged(function (a, b) {
+        return (a && a.bitrate) === (b && b.bitrate) && (a && a.id) === (b && b.id);
+      }).do(function (representation) {
         return currentRepresentation = representation;
       });
 
       var sourceBuffer = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_19__source_buffers__["b" /* createSourceBuffer */])(videoElement, mediaSource, bufferType, codec, nativeBuffers, customBuffers, { hideNativeSubtitle: hideNativeSubtitle });
 
-      var downloader = function downloader(_ref6) {
-        var segment = _ref6.segment,
-            representation = _ref6.representation,
-            init = _ref6.init;
+      var downloader = function downloader(_ref7) {
+        var segment = _ref7.segment,
+            representation = _ref7.representation,
+            init = _ref7.init;
 
         var pipeline$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_16__pipelines_index_js__["a" /* default */])(transport[bufferType], pipelineOptions)({
           segment: segment,
@@ -16889,12 +16915,12 @@ function Stream(_ref) {
         return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_23__process_pipeline_js__["a" /* default */])(bufferType, pipeline$, network$, requestsInfos$, errorStream);
       };
 
-      var switchRepresentation$ = __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].combineLatest(representation$, seekings).map(function (_ref7) {
-        var representation = _ref7[0];
+      var switchRepresentation$ = __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].combineLatest(representation$, seekings).map(function (_ref8) {
+        var representation = _ref8[0];
         return representation;
       });
 
-      var buffer = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_15__buffer__["b" /* Buffer */])({
+      var buffer$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_15__buffer__["b" /* Buffer */])({
         sourceBuffer: sourceBuffer,
         downloader: downloader,
         switch$: switchRepresentation$,
@@ -16904,9 +16930,7 @@ function Stream(_ref) {
         maxBufferAhead: maxBufferAhead$,
         bufferType: bufferType,
         isLive: manifest.isLive
-      });
-
-      return buffer.startWith({
+      }).startWith({
         type: "adaptationChange",
         value: {
           type: bufferType,
@@ -16924,6 +16948,23 @@ function Stream(_ref) {
         }
         throw error; // else, throw
       });
+
+      var bitrateEstimate$ = abr$.filter(function (_ref9) {
+        var bitrate = _ref9.bitrate;
+        return bitrate != null;
+      }).map(function (_ref10) {
+        var bitrate = _ref10.bitrate;
+
+        return {
+          type: "bitrateEstimationChange",
+          value: {
+            type: bufferType,
+            bitrate: bitrate
+          }
+        };
+      });
+
+      return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge(buffer$, bitrateEstimate$);
     });
   }
 
