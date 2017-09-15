@@ -134,8 +134,8 @@ export default (self) => ({
   onStreamError(error) {
     self._priv.resetContentState();
     self._priv.fatalError = error;
-    self._priv.setPlayerState(PLAYER_STATES.STOPPED);
     self._priv.clearLoadedContent$.next();
+    self._priv.setPlayerState(PLAYER_STATES.STOPPED);
     self.trigger("error", error);
   },
 
@@ -145,8 +145,8 @@ export default (self) => ({
    */
   onStreamComplete() {
     self._priv.resetContentState();
-    self._priv.setPlayerState(PLAYER_STATES.ENDED);
     self._priv.clearLoadedContent$.next();
+    self._priv.setPlayerState(PLAYER_STATES.ENDED);
   },
 
   /**
