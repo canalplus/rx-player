@@ -10,6 +10,7 @@ This page describes how the player files are organized. Each chapter go through 
 - [src/: the source code](#src)
   - [src/compat/: The compatibility files](#src-compat)
   - [src/core/: The core files](#src-core)
+  - [src/errors/: Error definitions](#src-errors)
   - [src/manifest/: The Manifest class](#src-manifest)
   - [src/net/: The networking and parsing files](#src-net)
   - [src/utils/: The utils](#src-utils)
@@ -72,6 +73,10 @@ That's where:
   - ABR strategies are set
 
 This directory contains other subdirectories which are listed in the next chapter.
+
+### <a name="src-errors"></a>src/errors/: Error definitions
+
+Contains the definition of the error classes used in the rx-player and accessible through the API.
 
 ### <a name="src-manifest"></a>src/manifest/: The Manifest class
 
