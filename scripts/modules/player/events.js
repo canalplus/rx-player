@@ -45,7 +45,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   Observable
     .interval(POSITION_UPDATES_INTERVAL)
     .map(() => ({
-      currentTime: player.getWallClockTime(),
+      currentTime: player.getPosition(),
       bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
       duration: player.getVideoDuration(),
       minimumPosition: player.getMinimumPosition(),
@@ -104,20 +104,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       }
 
       state.set(stateUpdates);
-    });
-
-  // /!\ deprecated
-  player.getMetrics()
-    .takeUntil($destroy)
-    // .map((metric) => metric.value.response)
-    // .filter((response) => response.size > 2000)
-    .subscribe((metric = {}) => {
-      const { response } = metric.value;
-      if (response && response.size > 10000) {
-        state.set({
-          bandwidth: (response.size / response.duration) * 0.008, // in mbps
-        });
-      }
     });
 
   fromPlayerEvent("manifestChange")

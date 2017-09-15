@@ -6,7 +6,7 @@
  * application.
  */
 
-import RxPlayer from "../../../../src";
+import RxPlayer from "../../../../../src";
 import { linkPlayerEventsToState } from "./events.js";
 
 const PLAYER = ({ $destroy, state }, { videoElement }) => {
@@ -106,22 +106,22 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     },
 
     SET_FULL_SCREEN: () => {
-      player.setFullscreen();
+      player.setFullscreen(true);
     },
 
     EXIT_FULL_SCREEN: () => {
-      player.exitFullscreen();
+      player.setFullscreen(false);
     },
 
     SET_AUDIO_BITRATE: (bitrate) => {
-      player.setAudioBitrate(bitrate || 0);
+      player.setAudioBitrate(bitrate || -1);
       state.set({
         audioBitrateAuto: !bitrate,
       });
     },
 
     SET_VIDEO_BITRATE: (bitrate) => {
-      player.setVideoBitrate(bitrate || 0);
+      player.setVideoBitrate(bitrate || -1);
       state.set({
         videoBitrateAuto: !bitrate,
       });

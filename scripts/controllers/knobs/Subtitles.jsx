@@ -1,20 +1,9 @@
 import React from "react";
+import translateLanguageCode from "../../lib/language.js";
 import withModulesState from "../../lib/withModulesState.jsx";
 import Knob from "../../components/Knob.jsx";
 
 const CLOSED_CAPTION_ICON = "(CC)"; // String.fromCharCode(0xf2a4);
-const LANG_CODE_TO_LANG = {
-  eng: "english",
-  fre: "french",
-  und: "unknown",
-};
-
-const translateLanguage = langCode => {
-  if (!langCode) {
-    return "unknown";
-  }
-  return LANG_CODE_TO_LANG[langCode] || langCode;
-};
 
 const findLanguageIndex = (currentSubtitle, languages) => {
   return languages.findIndex(ln => ln.id === currentSubtitle.id);
@@ -29,7 +18,7 @@ const SubtitlesKnobBase = ({
     "no subtitles",
     ...availableSubtitles
       .map(subtitle => {
-        return translateLanguage(subtitle.language) +
+        return translateLanguageCode(subtitle.normalized) +
           (subtitle.closedCaption ?
             (" " + CLOSED_CAPTION_ICON) : "");
       }),
@@ -52,7 +41,7 @@ const SubtitlesKnobBase = ({
   return (
     <Knob
       name="Subtitles"
-      disabled={availableSubtitles.length < 2}
+      disabled={!availableSubtitles.length}
       onChange={onLanguageChange}
       options={options}
       selected={currentLanguageIndex}
