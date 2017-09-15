@@ -95,6 +95,9 @@ export default (self) => ({
     case "adaptationChange":
       self._priv.onAdaptationChange(value);
       break;
+    case "bitrateEstimationChange":
+      self._priv.onBitrateEstimationChange(value);
+      break;
     case "manifestChange":
       self._priv.onManifestChange(value);
       break;
@@ -244,6 +247,14 @@ export default (self) => ({
     } else if (type == "audio") {
       self._priv.recordState("audioBitrate", bitrate != null ? bitrate : -1);
     }
+  },
+
+  onBitrateEstimationChange({ type, bitrate }) {
+    if (__DEV__) {
+      assert(type != null);
+      assert(bitrate != null);
+    }
+    self._priv.recordState("bitrateEstimation", { type, bitrate });
   },
 
   /**

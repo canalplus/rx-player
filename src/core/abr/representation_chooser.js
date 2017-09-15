@@ -213,9 +213,11 @@ export default class RepresentationChooser {
 
   get$(clock$, representations) {
     if (representations.length < 2) {
-      return Observable.of(
-        representations.length ? representations[0] : null
-      ).concat(Observable.never())
+      return Observable.of({
+        bitrate: undefined,
+        representation: representations.length ?
+          representations[0] : null,
+      }).concat(Observable.never())
       .takeUntil(this._dispose$);
     }
 
@@ -325,21 +327,18 @@ export default class RepresentationChooser {
           const _representations =
             getFilteredRepresentations(representations, deviceEvents);
 
-          return fromBitrateCeil(_representations, nextBitrate) ||
-            representations[0];
+          return {
+            bitrate: nextBitrate,
+            representation: fromBitrateCeil(_representations, nextBitrate) ||
+            representations[0],
+          };
 
-        }).do((representation) => {
-          if (representation) {
-            lastBitrate = representation.bitrate;
+        }).do(({ bitrate }) => {
+          if (bitrate != null) {
+            lastBitrate = bitrate;
           }
-        });
-    })
-
-      // Do not reemit if same bitrate and same id
-      .distinctUntilChanged((a, b) =>
-        (a && a.bitrate) === (b && b.bitrate) &&
-        (a && a.id) === (b && b.id)
-      );
+        }).share();
+    });
   }
 
   /**

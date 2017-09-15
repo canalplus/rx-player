@@ -12,6 +12,7 @@
     - [videoBitrateChange](#events-videoBitrateChange)
     - [imageTrackUpdate](#events-imageTrackUpdate)
     - [fullscreenChange](#events-fullscreenChange)
+    - [bitrateEstimationChange](#events-bitrateEstimationChange)
     - [warning](#events-warning)
     - [error](#events-error)
     - [nativeTextTrackChange](#events-nativeTextTrackChange)
@@ -108,6 +109,18 @@ _payload type_: ``Boolean``
 Triggered each time the video player goes/exits fullscreen mode.
 
 The payload is ``true`` if the player entered fullscreen, ``false`` if it exited it.
+
+### <a name="events-bitrateEstimationChange"></a>bitrateEstimationChange
+
+_payload type_: ``Object``
+
+Information about the last bitrate estimation performed, by type of buffer (``audio``, ``video`` etc.).
+
+Note that this event is sent only if the corresponding buffer type has multiple representation for the given content (as bitrate estimations are only useful in that case).
+
+The payload is an object with the following properties:
+  - ``type`` (``string``): The buffer type
+  - ``bitrate`` (``Number``): The last estimated bandwidth for this buffer type, in bits per seconds. This bitrate is smoothed by doing a (complex) mean on an extended period of time, so it often does not link directly to the current calculated bitrate.
 
 ### <a name="events-warning"></a>warning
 

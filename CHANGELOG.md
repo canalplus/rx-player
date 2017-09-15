@@ -4,6 +4,7 @@
 
 ### Added
 
+  - abr: add ``bitrateEstimationChange`` event
   - api: a Date object can now be given to the ``loadVideo`` argument ``startAt.wallClockTime``. It will be automatically converted into seconds.
   - languages: add ``normalizedLanguage`` property in manifest-related-APIs to expose the ISO 639-3 language code of the audio and text tracks
   - languages: add ``normalized`` property in language-related-API to expose the ISO 639-3 language code of the audio and text tracks
