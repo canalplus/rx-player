@@ -16,8 +16,6 @@ Latest release: ``v3.0.0-rc1``
 
 We documented the API in every little details in [the API documentation](./doc/api/index.md).
 
-This project follows [semver](http://semver.org/). If you're already using our API, please make sure you're not using [deprecated methods or options](./doc/deprecated.md). Those will be removed on the next major version.
-
 ## Demo
 
 You can view our online Demo, built from our last version, [here](http://canalplus.github.io/rx-player/).
@@ -90,7 +88,7 @@ Builds are included in the ``dist/`` directory (builds based on the last version
 
 Building a streaming video player in javascript is a complex task due to the numerous interactions with the outside world it has to deal with. Whether they come from the user providing an input, network interactions or browser capabilities. If you add the speed with which browsers APIs are changed and added, you end up with a really important (both in the significant and large sense) piece of software. The video player being the centerpiece of our applications, it needs to adapt very quickly and stay resilient to various errors.
 
-Many current video player implementations rely mostly on classical object-oriented hierarchy and imperative event callbacks with shared mutable objects to manage all these asynchronous tasks and states. We found that we could profit a lot more from adding a reactive-programming approach, with most notably the help of the [RxJS library](#https://github.com/ReactiveX/rxjs).
+Many current video player implementations rely mostly on classical object-oriented hierarchy and imperative event callbacks with shared mutable objects to manage all these asynchronous tasks and states. We found that we could profit a lot more from adding a reactive-programming approach, with most notably the help of [the RxJS library](https://github.com/ReactiveX/rxjs).
 
 RxJS provides gracious interfaces and operators to compose asynchronous tasks together by representating changing states as observable stream of values. It also comes with a **cancelation** contract so that every asynchronous side-effect can be properly disposed when discarded by the system. This change of paradigm answers gracefully to most of our needs.
 
