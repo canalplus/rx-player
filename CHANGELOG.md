@@ -81,6 +81,7 @@
 ### Bug Fixes:
 
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
+  - api: fix infinite loading bug when a new content is launched as the previous one is ended or fell on error
   - languages: fix bug which led the text buffer to _crash_ when the ``wantedBufferBehind`` option is set
   - languages: fix bug which led to TextTracks chunks being re-downloaded multiple times
   - speed: fix playback rate bug when setting it while the player is stalled
