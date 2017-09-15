@@ -316,8 +316,14 @@ export default function Stream({
         });
 
       const { representations } = adaptation;
-      const representation$ =
-        abrManager.get$(bufferType, abrClock$, representations)
+
+      const abr$ = abrManager.get$(bufferType, abrClock$, representations);
+      const representation$ = abr$
+          .map(({ representation }) => representation)
+          .distinctUntilChanged((a, b) =>
+            (a && a.bitrate) === (b && b.bitrate) &&
+            (a && a.id) === (b && b.id)
+          )
           .do(representation => currentRepresentation = representation);
 
       const sourceBuffer = createSourceBuffer(
@@ -347,7 +353,7 @@ export default function Stream({
         seekings,
       ).map(([representation]) => representation);
 
-      const buffer = Buffer({
+      const buffer$ = Buffer({
         sourceBuffer,
         downloader,
         switch$: switchRepresentation$,
@@ -357,9 +363,7 @@ export default function Stream({
         maxBufferAhead: maxBufferAhead$,
         bufferType,
         isLive: manifest.isLive,
-      });
-
-      return buffer
+      })
         .startWith({
           type: "adaptationChange",
           value: {
@@ -379,6 +383,20 @@ export default function Stream({
           }
           throw error; // else, throw
         });
+
+      const bitrateEstimate$ = abr$
+        .filter(({ bitrate }) => bitrate != null)
+        .map(({ bitrate }) => {
+          return {
+            type: "bitrateEstimationChange",
+            value: {
+              type: bufferType,
+              bitrate,
+            },
+          };
+        });
+
+      return Observable.merge(buffer$, bitrateEstimate$);
     });
   }
 
