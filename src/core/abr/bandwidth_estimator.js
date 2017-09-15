@@ -17,8 +17,8 @@
 import EWMA from "./ewma.js";
 import config from "../../config.js";
 
-// const 2  = 2;
-// const 7  = 10;
+const FAST_EMA  = 2;
+const SLOW_EMA  = 10;
 
 const {
   ABR_MINIMUM_TOTAL_BYTES,
@@ -38,13 +38,13 @@ export default class BandwidthEstimator {
      * A fast-moving average.
      * @private
      */
-    this._fast = new EWMA(2);
+    this._fast = new EWMA(FAST_EMA);
 
     /**
      * A slow-moving average.
      * @private
      */
-    this._slow = new EWMA(7);
+    this._slow = new EWMA(SLOW_EMA);
 
     /**
      * Number of bytes sampled.
@@ -92,8 +92,8 @@ export default class BandwidthEstimator {
    * Reset the bandwidth estimation.
    */
   reset() {
-    this._fast = new EWMA(2);
-    this._slow = new EWMA(7);
+    this._fast = new EWMA(FAST_EMA);
+    this._slow = new EWMA(SLOW_EMA);
     this._bytesSampled = 0;
   }
 }
