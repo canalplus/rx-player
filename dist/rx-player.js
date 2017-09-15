@@ -9758,8 +9758,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
 
-var FAST_HALF_LIFE = 2;
-var SLOW_HALF_LIFE = 10;
+// const 2  = 2;
+// const 7  = 10;
 
 var ABR_MINIMUM_TOTAL_BYTES = __WEBPACK_IMPORTED_MODULE_1__config_js__["a" /* default */].ABR_MINIMUM_TOTAL_BYTES,
     ABR_MINIMUM_CHUNK_SIZE = __WEBPACK_IMPORTED_MODULE_1__config_js__["a" /* default */].ABR_MINIMUM_CHUNK_SIZE;
@@ -9780,13 +9780,13 @@ var BandwidthEstimator = function () {
      * A fast-moving average.
      * @private
      */
-    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](FAST_HALF_LIFE);
+    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](2);
 
     /**
      * A slow-moving average.
      * @private
      */
-    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](SLOW_HALF_LIFE);
+    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](7);
 
     /**
      * Number of bytes sampled.
@@ -9817,6 +9817,12 @@ var BandwidthEstimator = function () {
     this._slow.addSample(weight, bandwidth);
   };
 
+  /**
+   * Get estimate of the bandwidth, in bits per seconds.
+   * @returns {Number}
+   */
+
+
   BandwidthEstimator.prototype.getEstimate = function getEstimate() {
     if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
       return;
@@ -9833,8 +9839,8 @@ var BandwidthEstimator = function () {
 
 
   BandwidthEstimator.prototype.reset = function reset() {
-    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](FAST_HALF_LIFE);
-    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](SLOW_HALF_LIFE);
+    this._fast = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](2);
+    this._slow = new __WEBPACK_IMPORTED_MODULE_0__ewma_js__["a" /* default */](7);
     this._bytesSampled = 0;
   };
 
@@ -10618,7 +10624,7 @@ var RepresentationChooser = function () {
         if (nextBitrate == null) {
           var baseEstimate = _this.estimator.getEstimate();
 
-          var _estimate = clock.bufferGap <= inStarvationMode ? baseEstimate * 0.95 : baseEstimate;
+          var _estimate = baseEstimate != null && clock.bufferGap <= inStarvationMode ? baseEstimate * 0.95 : baseEstimate;
 
           nextBitrate = Math.min(_estimate == null ? lastBitrate : _estimate, maxAutoBitrate);
         }
@@ -11127,7 +11133,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha9";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-alpha10";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
