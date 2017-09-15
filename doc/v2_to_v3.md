@@ -709,7 +709,7 @@ if (subtitleTracks && subtitleTracks.length) {
 
 #### What Changed
 
-``getAverageBitrates`` is deleted and not yet replaced. This is due to the fact that the ABR (adaptive bitrate) strategy completely changed, and re-implementing this method is not straightforward.
+``getAverageBitrates`` is deleted. It can normally be completely replaced by the [bitrateEstimationChange event](./api/player_events.md#events-bitrateEstimationChange) which can be listened thanks to the [addEventListener method](./api/index.md#meth-addEventListener).
 
 ### <a name="rem-getCurrentTime"></a>getCurrentTime
 
