@@ -59,7 +59,6 @@ export default (self) => ({
     self._priv.recordedEvents = {}; // event memory
 
     self._priv.fatalError = null;
-    self._priv.imageTrack$.next(null); // @deprecated
     self._priv.currentImagePlaylist = null;
   },
 
@@ -111,9 +110,6 @@ export default (self) => ({
         self.trigger("imageTrackUpdate", {
           data: self._priv.currentImagePlaylist,
         });
-
-        // TODO @deprecated remove that
-        self._priv.imageTrack$.next(value);
       }
     }
   },

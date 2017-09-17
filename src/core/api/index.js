@@ -163,10 +163,6 @@ class Player extends EventEmitter {
     this._priv.clearLoadedContent$ = new Subject()
       .takeUntil(this._priv.destroy$);
 
-    // @deprecated
-    this._priv.imageTrack$ = new Subject()
-      .takeUntil(this._priv.destroy$);
-
     this._priv.wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
     this._priv.maxBufferAhead$ = new BehaviorSubject(maxBufferAhead);
     this._priv.maxBufferBehind$ = new BehaviorSubject(maxBufferBehind);
@@ -251,7 +247,6 @@ class Player extends EventEmitter {
     _priv.maxBufferAhead$ = null;
     _priv.maxBufferBehind$ = null;
     _priv.clearLoadedContent$ = null;
-    _priv.imageTrack$ = null;
     _priv.fullScreenSubscription = null;
     _priv.errorStream$ = null;
     _priv.lastBitrates = null;
