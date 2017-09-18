@@ -15,34 +15,16 @@
  */
 
 import  { expect } from "chai";
-import * as _filterByWidth from "../filterByWidth.js";
 import * as _filterByBitrate from "../filterByBitrate.js";
 
-describe("core - abr - filters", () => {
+describe("core - abr - filterByBitrate", () => {
 
   const fakeReps = [
-    { width : 100, bitrate : 100 },
-    { width : 1000, bitrate : 1000 },
-    { width : 10000, bitrate : 10000 },
-    { width : 100000, bitrate : 100000 },
+    { bitrate : 100 },
+    { bitrate : 1000 },
+    { bitrate : 10000 },
+    { bitrate : 100000 },
   ];
-
-  const expectedWidthReps = [
-    { width : 100,  bitrate : 100 },
-    { width : 1000,  bitrate : 1000 },
-  ];
-
-  describe("filterByWith", () => {
-    it("should properly filter representations whose width is < 900", () => {
-      expect(_filterByWidth.default(fakeReps, 999))
-        .to.deep.equal(expectedWidthReps);
-    });
-
-    it("should properly filter representations when specified width is over maxWidth", () => {
-      expect(_filterByWidth.default(fakeReps, 1000000))
-        .to.deep.equal(fakeReps);
-    });
-  });
 
   describe("filterByBitrate", () => {
     it("should return all representations when specified bitrate is infinite", () => {
