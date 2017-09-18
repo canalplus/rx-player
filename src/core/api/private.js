@@ -132,7 +132,17 @@ export default (self) => ({
     self._priv.fatalError = error;
     self._priv.clearLoadedContent$.next();
     self._priv.setPlayerState(PLAYER_STATES.STOPPED);
-    self.trigger("error", error);
+
+    // TODO This condition is here because the eventual callback called when the
+    // player state is updated can launch a new content, thus the error will not
+    // be here anymore, in which case triggering the "error" event is unwanted.
+    // This is not perfect however as technically, this condition could be true
+    // even for a new content (I cannot see it happen with the current code but
+    // that's not a reason). In that case, "error" would be triggered 2 times.
+    // Find a better solution.
+    if (self._priv.fatalError === error) {
+      self.trigger("error", error);
+    }
   },
 
   /**
