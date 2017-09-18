@@ -58,7 +58,7 @@ describe("core - abr - filterByWidth", () => {
     });
 
     it("should return no representation when specified array is empty", () => {
-      expect(_filterByWidth.default( [], 0))
+      expect(_filterByWidth.default([], 0))
       .to.deep.equal([]);
     });
   });
