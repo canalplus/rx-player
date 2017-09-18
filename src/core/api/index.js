@@ -160,11 +160,7 @@ class Player extends EventEmitter {
     this._priv.speed$ = new BehaviorSubject(videoElement.playbackRate);
 
     // clean ressources from loaded content
-    this._priv.clearLoadedContent$ = new Subject()
-      .takeUntil(this._priv.destroy$);
-
-    // @deprecated
-    this._priv.imageTrack$ = new Subject()
+    this._priv.unsubscribeLoadedVideo$ = new Subject()
       .takeUntil(this._priv.destroy$);
 
     this._priv.wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
@@ -216,7 +212,7 @@ class Player extends EventEmitter {
   stop() {
     if (this.state !== PLAYER_STATES.STOPPED) {
       this._priv.resetContentState();
-      this._priv.clearLoadedContent$.next();
+      this._priv.unsubscribeLoadedVideo$.next();
       this._priv.setPlayerState(PLAYER_STATES.STOPPED);
     }
   }
@@ -250,8 +246,7 @@ class Player extends EventEmitter {
     _priv.wantedBufferAhead$ = null;
     _priv.maxBufferAhead$ = null;
     _priv.maxBufferBehind$ = null;
-    _priv.clearLoadedContent$ = null;
-    _priv.imageTrack$ = null;
+    _priv.unsubscribeLoadedVideo$ = null;
     _priv.fullScreenSubscription = null;
     _priv.errorStream$ = null;
     _priv.lastBitrates = null;
@@ -304,7 +299,7 @@ class Player extends EventEmitter {
     const { videoElement } = this;
     const {
       errorStream$: errorStream,
-      clearLoadedContent$,
+      unsubscribeLoadedVideo$,
       wantedBufferAhead$,
       maxBufferAhead$,
       maxBufferBehind$,
@@ -320,11 +315,11 @@ class Player extends EventEmitter {
       throttle: this._priv.throttleWhenHidden && {
         video: inBackground$()
           .map(isBg => isBg ? 0 : Infinity)
-          .takeUntil(clearLoadedContent$),
+          .takeUntil(unsubscribeLoadedVideo$),
       },
       limitWidth: this._priv.limitVideoWidth && {
         video: videoWidth$(videoElement)
-          .takeUntil(clearLoadedContent$),
+          .takeUntil(unsubscribeLoadedVideo$),
       },
     };
 
@@ -352,7 +347,7 @@ class Player extends EventEmitter {
       supplementaryImageTracks,
       supplementaryTextTracks,
     })
-      .takeUntil(clearLoadedContent$)
+      .takeUntil(unsubscribeLoadedVideo$)
       .publish();
 
     const stalled$ = filterStreamByType(stream, "stalled")
@@ -375,7 +370,7 @@ class Player extends EventEmitter {
     const textTracksChanges = onEvent(videoElement.textTracks, ["addtrack"]);
 
     let streamDisposable = void 0;
-    clearLoadedContent$.take(1).subscribe(() => {
+    unsubscribeLoadedVideo$.take(1).subscribe(() => {
       if (streamDisposable) {
         streamDisposable.unsubscribe();
       }
@@ -384,19 +379,19 @@ class Player extends EventEmitter {
     const noop = () => {};
 
     playChanges
-      .takeUntil(clearLoadedContent$)
+      .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.onPlayPauseNext(x), noop);
 
     textTracksChanges
-      .takeUntil(clearLoadedContent$)
+      .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.onNativeTextTrackNext(x), noop);
 
     timings$
-      .takeUntil(clearLoadedContent$)
+      .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.triggerTimeChange(x), noop);
 
     stateChanges
-      .takeUntil(clearLoadedContent$)
+      .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.setPlayerState(x), noop);
 
     stream.subscribe(
@@ -406,7 +401,7 @@ class Player extends EventEmitter {
     );
 
     errorStream
-      .takeUntil(clearLoadedContent$)
+      .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(
         x => this._priv.onErrorStreamNext(x)
       );
@@ -420,7 +415,7 @@ class Player extends EventEmitter {
     //   const _loaded$ = loaded
     //     .map(() => ({ type: "loaded" }));
 
-    //   const _canceled$ = clearLoadedContent$
+    //   const _canceled$ = unsubscribeLoadedVideo$
     //     .map(() => ({ type: "canceled" }));
 
     //   const _errored$ = stream.ignoreElements()
