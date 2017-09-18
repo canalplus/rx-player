@@ -130,7 +130,7 @@ export default (self) => ({
   onStreamError(error) {
     self._priv.resetContentState();
     self._priv.fatalError = error;
-    self._priv.clearLoadedContent$.next();
+    self._priv.unsubscribeLoadedVideo$.next();
     self._priv.setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the
@@ -151,7 +151,7 @@ export default (self) => ({
    */
   onStreamComplete() {
     self._priv.resetContentState();
-    self._priv.clearLoadedContent$.next();
+    self._priv.unsubscribeLoadedVideo$.next();
     self._priv.setPlayerState(PLAYER_STATES.ENDED);
   },
 
