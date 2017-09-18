@@ -46,6 +46,11 @@ describe("core - abr - filterByBitrate", () => {
       expect(_filterByBitrate.default(fakeReps, 1010))
       .to.deep.equal(expectedFilteredReps);
     });
+
+    it("should return all representation when specified bitrate is undefined", () => {
+      expect(_filterByBitrate.default(fakeReps, undefined))
+      .to.deep.equal(fakeReps);
+    });
   });
 
 });

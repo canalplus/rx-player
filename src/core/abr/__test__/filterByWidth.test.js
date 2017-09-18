@@ -51,6 +51,16 @@ describe("core - abr - filterByWidth", () => {
       expect(_filterByWidth.default(fakeReps, 0))
         .to.deep.equal([{ width: 100 }]);
     });
+
+    it("should return all representation when specified width is undefined", () => {
+      expect(_filterByWidth.default(fakeReps, undefined))
+      .to.deep.equal(fakeReps);
+    });
+
+    it("should return no representation when specified array is empty", () => {
+      expect(_filterByWidth.default( [], 0))
+      .to.deep.equal([]);
+    });
   });
 
 });
