@@ -229,7 +229,7 @@ export default function(options={}) {
         isInit,
       } = segment;
 
-      const responseType = isMP4EmbeddedTrack(representation) >= 0 ?
+      const responseType = isMP4EmbeddedTrack(representation) ?
         "arraybuffer" : "text";
 
       // init segment without initialization media/range/indexRange:
@@ -308,6 +308,11 @@ export default function(options={}) {
         }
       } else {
         responseData = text = response.responseData;
+        segmentInfos = {
+          time: segment.time,
+          duration: segment.duration,
+          timescale: segment.timescale,
+        };
       }
 
       if (isInit) {
