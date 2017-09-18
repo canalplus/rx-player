@@ -26,6 +26,11 @@ describe("core - abr - filterByBitrate", () => {
     { bitrate : 100000 },
   ];
 
+  const expectedFilteredReps = [
+    { bitrate : 100 },
+    { bitrate : 1000 },
+  ];
+
   describe("filterByBitrate", () => {
     it("should return all representations when specified bitrate is infinite", () => {
       expect(_filterByBitrate.default(fakeReps, Infinity))
@@ -35,6 +40,11 @@ describe("core - abr - filterByBitrate", () => {
     it("should return no representation when specified bitrate is 0", () => {
       expect(_filterByBitrate.default(fakeReps, 0))
       .to.deep.equal([]);
+    });
+
+    it("should filter representation when specified bitrate is 999", () => {
+      expect(_filterByBitrate.default(fakeReps, 1010))
+      .to.deep.equal(expectedFilteredReps);
     });
   });
 

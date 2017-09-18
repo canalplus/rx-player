@@ -37,9 +37,19 @@ describe("core - abr - filterByWidth", () => {
         .to.deep.equal(expectedWidthReps);
     });
 
-    it("should properly filter representations when specified width is over maxWidth", () => {
+    it("should return all representations when specified width is over maxWidth", () => {
       expect(_filterByWidth.default(fakeReps, 1000000))
         .to.deep.equal(fakeReps);
+    });
+
+    it("should return all representations when specified width is infinite", () => {
+      expect(_filterByWidth.default(fakeReps, Infinity))
+        .to.deep.equal(fakeReps);
+    });
+
+    it("should return first representation when specified width is 0", () => {
+      expect(_filterByWidth.default(fakeReps, 0))
+        .to.deep.equal([{ width: 100 }]);
     });
   });
 
