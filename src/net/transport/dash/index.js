@@ -26,6 +26,7 @@ import {
   getMdat,
   getMDHDTimescale,
 } from "../../parsers/isobmff.js";
+import { parseSami } from "../../parsers/texttracks/sami.js";
 import { parseTTML } from "../../parsers/texttracks/ttml.js";
 import { parseBif } from "../../parsers/bif.js";
 
@@ -229,7 +230,7 @@ export default function(options={}) {
         isInit,
       } = segment;
 
-      const responseType = isMP4EmbeddedTrack(representation) >= 0 ?
+      const responseType = isMP4EmbeddedTrack(representation) ?
         "arraybuffer" : "text";
 
       // init segment without initialization media/range/indexRange:
@@ -308,6 +309,11 @@ export default function(options={}) {
         }
       } else {
         responseData = text = response.responseData;
+        segmentInfos = {
+          time: segment.time,
+          duration: segment.duration,
+          timescale: segment.timescale,
+        };
       }
 
       if (isInit) {
@@ -326,7 +332,7 @@ export default function(options={}) {
           timescale: segmentInfos.timescale || 0,
           data: [],
         };
-      } else {
+      } else if (isMP4) {
         const { codec = "" } = representation;
 
         switch (codec.toLowerCase()) {
@@ -336,6 +342,36 @@ export default function(options={}) {
             end: segmentInfos.time + segmentInfos.duration,
             timescale: segmentInfos.timescale,
             data: parseTTML(text, language, 0),
+          };
+          break;
+        default:
+          log.warn("The codec used for the subtitle is not managed yet.");
+        }
+      } else {
+        switch (representation.mimeType) {
+        case "application/ttml+xml":
+          segmentData = {
+            start: segmentInfos.time,
+            end: segmentInfos.time + segmentInfos.duration,
+            timescale: segmentInfos.timescale,
+            data: parseTTML(text, language, 0),
+          };
+          break;
+        case "application/x-sami":
+        case "application/smil":
+          segmentData = {
+            start: segmentInfos.time,
+            end: segmentInfos.time + segmentInfos.duration,
+            timescale: segmentInfos.timescale,
+            data: parseSami(text, language, 0),
+          };
+          break;
+        case "text/vtt":
+          segmentData = {
+            start: segmentInfos.time,
+            end: segmentInfos.time + segmentInfos.duration,
+            timescale: segmentInfos.timescale,
+            data: text,
           };
           break;
         default:
