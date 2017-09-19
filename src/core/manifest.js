@@ -35,11 +35,13 @@ import arrayFind from "array-find";
 import arrayIncludes from "../utils/array-includes.js";
 
 import log from "../utils/log";
-import { normalizeBaseURL } from "../utils/url";
+import {
+  normalizeBaseURL,
+  resolveURL,
+} from "../utils/url";
 import { isCodecSupported } from "../compat";
 import { MediaError } from "../errors";
 import { normalize as normalizeLang } from "../utils/languages";
-import { resolveURL } from "../utils/url";
 import Manifest from "../manifest";
 
 /**
@@ -66,10 +68,10 @@ let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 
 function parseBaseURL(manifest) {
-  let baseURL = normalizeBaseURL(manifest.locations[0]);
+  const baseURL = normalizeBaseURL(manifest.locations[0]);
   const period = manifest.periods[0];
   if (period && period.baseURL) {
-    baseURL += "" + period.baseURL;
+    return resolveURL(baseURL, period.baseURL);
   }
   return baseURL;
 }
