@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { makeCue } from "../../../compat";
 import assert from "../../../utils/assert";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
@@ -21,6 +22,25 @@ const BR = /<br>/gi;
 const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
 const PARAG = /\s*<p class=([^>]+)>(.*)/i;
 const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
+
+/**
+ * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
+ * @param {Array.<Object>} - Objects containing the start, end and text.
+ * @returns {Array.<VTTCue>}
+ */
+function createCuesFromArray(cuesArray) {
+  const nativeCues = [];
+  for (let i = 0; i < cuesArray.length; i++) {
+    const { start, end, text } = cuesArray[i];
+    if (text) {
+      const cue = makeCue(start, end, text);
+      if (cue != null) {
+        nativeCues.push(cue);
+      }
+    }
+  }
+  return nativeCues;
+}
 
 // Really basic CSS parsers using regular-expressions.
 function rulesCss(str) {
@@ -47,11 +67,16 @@ function decodeEntities(text) {
     .replace(HTML_ENTITIES, ($0, $1) => String.fromCharCode($1));
 }
 
-// Because sami is not really html... we have to use
-// some kind of regular expressions to parse it...
-// the cthulhu way :)
-// The specification being quite clunky, this parser
-// may not work for every sami input.
+/**
+ * Because sami is not really html... we have to use
+ * some kind of regular expressions to parse it...
+ * the cthulhu way :)
+ * The specification being quite clunky, this parser
+ * may not work for every sami input.
+ *
+ * @param {string} smi
+ * @param {string} lang
+ */
 function parseSami(smi, lang) {
   const syncOp = /<sync[ >]/ig;
   const syncCl = /<sync[ >]|<\/body>/ig;
@@ -89,7 +114,7 @@ function parseSami(smi, lang) {
     appendSub(subs, str.split("\n"), start / 1000);
   }
 
-  return subs;
+  return createCuesFromArray(subs);
 
   function appendSub(subs, lines, start) {
     let i = lines.length, m;
@@ -114,4 +139,4 @@ function parseSami(smi, lang) {
   }
 }
 
-export { parseSami };
+export default parseSami;

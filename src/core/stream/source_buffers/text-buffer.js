@@ -15,25 +15,21 @@
  */
 
 import { AbstractSourceBuffer } from "./abstract.js";
-import { addTextTrack, isVTTSupported } from "../../../compat";
+import {
+  addTextTrack,
+  isVTTSupported,
+} from "../../../compat";
 import log from "../../../utils/log";
 
-const Cue = window.VTTCue || window.TextTrackCue;
 
 /**
- * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
- * @param {Array.<Object>} - Objects containing the start, end and text.
- * @returns {Array.<Cue>}
+ * Returns true if the given codec is for a WebVTT text track.
+ * @param {string} codec
+ * @returns {Boolean}
  */
-function createCuesFromArray(cuesArray) {
-  const nativeCues = [];
-  for (let i = 0; i < cuesArray.length; i++) {
-    const { start, end, text } = cuesArray[i];
-    if (text) {
-      nativeCues.push(new Cue(start, end, text));
-    }
-  }
-  return nativeCues;
+function isVTT(codec) {
+  return /^text\/vtt/.test(codec) || // plain vtt file
+    codec === "application/mp4;codecs=\"wvtt\""; // vtt in MP4
 }
 
 /**
@@ -73,10 +69,13 @@ class TextSourceBuffer extends AbstractSourceBuffer {
 
   constructor(video, codec, hideNativeSubtitle) {
     super(codec);
-    const { track, trackElement } = addTextTrack(video, hideNativeSubtitle);
+    const {
+      track,
+      trackElement,
+    } = addTextTrack(video, hideNativeSubtitle);
 
     this._videoElement = video;
-    this._isVtt = /^text\/vtt/.test(codec);
+    this._isVtt = isVTT(codec);
     this._track = track;
     this._trackElement = trackElement;
   }
@@ -117,7 +116,7 @@ class TextSourceBuffer extends AbstractSourceBuffer {
       }
     }
     else {
-      const newCues = createCuesFromArray(cues);
+      const newCues = cues; // createCuesFromArray(cues);
       if (newCues.length > 0) {
         const firstCue = newCues[0];
 
@@ -170,7 +169,6 @@ class TextSourceBuffer extends AbstractSourceBuffer {
       _videoElement.removeChild(_trackElement);
     }
     this._track.mode = "disabled";
-    this.size = 0;
     this._trackElement = null;
     this._track = null;
     this._videoElement = null;

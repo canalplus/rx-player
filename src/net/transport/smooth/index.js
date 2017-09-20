@@ -16,14 +16,14 @@
 
 import { Observable } from "rxjs/Observable";
 
-import { bytesToStr } from "../../../utils/bytes";
 import { resolveURL } from "../../../utils/url";
+import { stringFromUTF8 } from "../../../utils/strings.js";
 import request from "../../../utils/request";
 
-import createSmoothStreamingParser from "./parser";
-import { parseBif } from "../../parsers/bif";
-import { parseSami } from "../../parsers/texttracks/sami.js";
-import { parseTTML } from "../../parsers/texttracks/ttml.js";
+import createHSSManifestParser from "./parser";
+import parseBif from "../../parsers/bif";
+import parseSAMIToVTT from "../../parsers/texttracks/sami.js";
+import parseTTMLToVTT from "../../parsers/texttracks/ttml/ttml_to_vtt.js";
 
 import mp4Utils from "./mp4.js";
 import parsedRequest from "./request.js";
@@ -42,18 +42,46 @@ const {
   getMdat,
 } = mp4Utils;
 
-const TT_PARSERS = {
-  "application/x-sami":       parseSami,
-  "application/smil":         parseSami,
-  "application/ttml+xml":     parseTTML,
-  "application/ttml+xml+mp4": parseTTML,
-  "text/vtt":                 (text) => text,
-};
+function getTextTrackParser(mimeType = "", codec = "") {
+  function fromTTMLInMP4(data) {
+    const str = stringFromUTF8(getMdat(data));
+    return parseTTMLToVTT(str);
+  }
+
+  function fromWebVTTInMP4(data) {
+    return stringFromUTF8(getMdat(data));
+  }
+
+  switch (mimeType) {
+
+  case "application/x-sami":
+  case "application/smil":
+    return parseSAMIToVTT;
+
+  case "application/ttml+xml":
+    return parseTTMLToVTT;
+
+  case "application/ttml+xml+mp4":
+    return fromTTMLInMP4;
+
+  case "text/vtt":
+    return (text) => text;
+
+  case "application/mp4":
+    const lcCodec = codec.toLowerCase();
+    if (lcCodec === "stpp") {
+      return fromTTMLInMP4;
+
+    } else if (lcCodec === "wvtt") {
+      return fromWebVTTInMP4;
+    }
+  }
+}
 
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
 
 export default function(options={}) {
-  const smoothManifestParser = createSmoothStreamingParser(options);
+  const smoothManifestParser = createHSSManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
   const manifestPipeline = {
@@ -146,9 +174,12 @@ export default function(options={}) {
 
     parser({ response, segment, representation, adaptation, manifest }) {
       const { language } = adaptation;
-      const { mimeType } = representation;
+      const {
+        mimeType,
+        codec,
+      } = representation;
 
-      const ttParser = TT_PARSERS[mimeType];
+      const ttParser = getTextTrackParser(mimeType, codec);
       if (!ttParser) {
         throw new Error(
           `could not find a text-track parser for the type ${mimeType}`
@@ -156,7 +187,6 @@ export default function(options={}) {
       }
 
       let responseData = response.responseData;
-      let text;
       let nextSegments, segmentInfos;
       const segmentData = {};
 
@@ -164,7 +194,6 @@ export default function(options={}) {
       // embededded inside an mp4 fragment.
       if (mimeType.indexOf("mp4") >= 0) {
         responseData = new Uint8Array(responseData);
-        text = bytesToStr(getMdat(responseData));
         const timings =
           extractTimingsInfos(responseData, segment, manifest.isLive);
 
@@ -176,7 +205,6 @@ export default function(options={}) {
         segmentData.timescale = segmentInfos.timescale;
       } else {
         // vod is simple WebVTT or TTML text
-        text = responseData;
         segmentData.start = segment.time;
         segmentData.end = segment.duration != null ?
           segment.time + segment.duration : undefined;
@@ -184,7 +212,11 @@ export default function(options={}) {
       }
 
       segmentData.data =
-        ttParser(text, language, segment.time / segment.timescale);
+        ttParser(
+          responseData,
+          language /* ,
+          segment.time / segment.timescale */ // TODO check that one
+        );
 
       return Observable.of({ segmentData, segmentInfos, nextSegments });
     },

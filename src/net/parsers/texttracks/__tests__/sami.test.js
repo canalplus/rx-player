@@ -17,7 +17,7 @@
 import _ from "lodash";
 import { expect } from "chai";
 import smi from "raw-loader!./fixtures/captures.smi";
-import { parseSami } from "../sami.js";
+import parseSami from "../sami.js";
 
 describe("sami parser", function() {
 

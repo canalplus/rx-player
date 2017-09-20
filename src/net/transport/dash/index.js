@@ -16,29 +16,24 @@
 
 import { Observable } from "rxjs/Observable";
 
-import log from "../../../utils/log";
 import { resolveURL } from "../../../utils/url";
-import { bytesToStr } from "../../../utils/bytes.js";
 
 import {
   parseSidx,
   patchPssh,
-  getMdat,
   getMDHDTimescale,
 } from "../../parsers/isobmff.js";
-import { parseSami } from "../../parsers/texttracks/sami.js";
-import { parseTTML } from "../../parsers/texttracks/ttml.js";
-import { parseBif } from "../../parsers/bif.js";
+import parseBif from "../../parsers/bif.js";
 
 import dashManifestParser from "./manifest";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos.js";
 import request from "./request.js";
-import {
-  byteRange,
-  replaceTokens,
-  isMP4EmbeddedTrack,
-} from "./utils.js";
+import { replaceTokens } from "./utils.js";
 import generateSegmentLoader from "./segment_loader.js";
+import {
+  loader as TextTrackLoader,
+  parser as TextTrackParser,
+} from "./texttracks.js";
 
 // TODO Put that doc elsewhere for all transports
 // TODO Separate manifest pipeline from other pipelines?
@@ -221,166 +216,8 @@ export default function(options={}) {
   };
 
   const textTrackPipeline = {
-    // TODO DRY this (code too similar to segmentPipeline)
-    loader({ segment, representation }) {
-      const {
-        media,
-        range,
-        indexRange,
-        isInit,
-      } = segment;
-
-      const responseType = isMP4EmbeddedTrack(representation) ?
-        "arraybuffer" : "text";
-
-      // init segment without initialization media/range/indexRange:
-      // we do nothing on the network
-      if (isInit && !(media || range || indexRange)) {
-        return Observable.empty();
-      }
-
-      const path = media ?
-        replaceTokens(media, segment, representation) : "";
-
-      const mediaUrl = resolveURL(representation.baseURL, path);
-
-      // fire a single time contiguous init and index ranges.
-      if (
-        range && indexRange &&
-        range[1] === indexRange[0] - 1
-      ) {
-        return request({
-          url: mediaUrl,
-          responseType,
-          headers: {
-            Range: byteRange([range[0], indexRange[1]]),
-          },
-        });
-      }
-
-      const mediaOrInitRequest = request({
-        url: mediaUrl,
-        responseType,
-        headers: range ? {
-          Range: byteRange(range),
-        } : null,
-      });
-
-      // If init segment has indexRange metadata, we need to fetch
-      // both the initialization data and the index metadata. We do
-      // this in parallel and send the both blobs into the pipeline.
-      if (indexRange) {
-        const indexRequest = request({
-          url: mediaUrl,
-          responseType,
-          headers: {
-            Range: byteRange(indexRange),
-          },
-        });
-        return Observable.merge(mediaOrInitRequest, indexRequest);
-      }
-      else {
-        return mediaOrInitRequest;
-      }
-    },
-
-    parser({ response, segment, adaptation, representation, init }) {
-      const { language } = adaptation;
-      const { isInit, indexRange } = segment;
-      let responseData;
-      let text;
-      let nextSegments, segmentInfos;
-      let segmentData;
-
-      const isMP4 = isMP4EmbeddedTrack(representation);
-      if (isMP4) {
-        responseData = new Uint8Array(response.responseData);
-        text = bytesToStr(getMdat(responseData));
-
-        const sidxSegments =
-          parseSidx(responseData, indexRange ? indexRange[0] : 0);
-
-        if (sidxSegments) {
-          nextSegments = sidxSegments;
-        }
-        if (!isInit) {
-          segmentInfos =
-            getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
-        }
-      } else {
-        responseData = text = response.responseData;
-        segmentInfos = {
-          time: segment.time,
-          duration: segment.duration,
-          timescale: segment.timescale,
-        };
-      }
-
-      if (isInit) {
-        segmentInfos = { time: -1, duration: 0 };
-        if (isMP4) {
-          const timescale = getMDHDTimescale(responseData);
-          if (timescale > 0) {
-            segmentInfos.timescale = timescale;
-          }
-        }
-
-        // void data
-        segmentData = {
-          start: 0,
-          end: 0,
-          timescale: segmentInfos.timescale || 0,
-          data: [],
-        };
-      } else if (isMP4) {
-        const { codec = "" } = representation;
-
-        switch (codec.toLowerCase()) {
-        case "stpp":
-          segmentData = {
-            start: segmentInfos.time,
-            end: segmentInfos.time + segmentInfos.duration,
-            timescale: segmentInfos.timescale,
-            data: parseTTML(text, language, 0),
-          };
-          break;
-        default:
-          log.warn("The codec used for the subtitle is not managed yet.");
-        }
-      } else {
-        switch (representation.mimeType) {
-        case "application/ttml+xml":
-          segmentData = {
-            start: segmentInfos.time,
-            end: segmentInfos.time + segmentInfos.duration,
-            timescale: segmentInfos.timescale,
-            data: parseTTML(text, language, 0),
-          };
-          break;
-        case "application/x-sami":
-        case "application/smil":
-          segmentData = {
-            start: segmentInfos.time,
-            end: segmentInfos.time + segmentInfos.duration,
-            timescale: segmentInfos.timescale,
-            data: parseSami(text, language, 0),
-          };
-          break;
-        case "text/vtt":
-          segmentData = {
-            start: segmentInfos.time,
-            end: segmentInfos.time + segmentInfos.duration,
-            timescale: segmentInfos.timescale,
-            data: text,
-          };
-          break;
-        default:
-          log.warn("The codec used for the subtitle is not managed yet.");
-        }
-      }
-      return Observable.of({ segmentData, segmentInfos, nextSegments });
-    },
-
+    loader: TextTrackLoader,
+    parser: TextTrackParser,
   };
 
   const imageTrackPipeline = {

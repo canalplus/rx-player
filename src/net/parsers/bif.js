@@ -98,6 +98,4 @@ function parseBif(buf) {
   };
 }
 
-export {
-  parseBif,
-};
+export default parseBif;

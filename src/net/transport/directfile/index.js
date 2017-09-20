@@ -17,6 +17,10 @@
 import { Observable } from "rxjs/Observable";
 
 const manifestPipeline = {
+  loader({ url }) {
+    debugger;
+    return Observable.of({ url });
+  },
   parser({ url }) {
     const manifest = {
       transportType: "directfile",
@@ -31,7 +35,7 @@ const manifestPipeline = {
   },
 };
 
-export default {
+export default () => ({
   directFile: true,
   manifest: manifestPipeline,
-};
+});
