@@ -29,7 +29,7 @@ import {
 } from "../../errors";
 
 const {
-  EME_DEFAULT_ROBUSTNESSES,
+  EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
   EME_KEY_SYSTEMS,
 } = config;
 
@@ -107,10 +107,12 @@ function buildKeySystemConfigurations(keySystem) {
     distinctiveIdentifier = "required";
   }
 
+  // TODO Widevine robustnesses should only be indicated for... Widevine-based
+  // encryption
   const videoRobustnesses = keySystem.videoRobustnesses ||
-    EME_DEFAULT_ROBUSTNESSES;
+    EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
   const audioRobustnesses = keySystem.audioRobustnesses ||
-    EME_DEFAULT_ROBUSTNESSES;
+    EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
 
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.

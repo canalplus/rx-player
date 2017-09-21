@@ -430,7 +430,7 @@ export default {
    * Defined in order of importance.
    * @type {Array.<string>}
    */
-  EME_DEFAULT_ROBUSTNESSES: [
+  EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [
     "HW_SECURE_ALL",
     "HW_SECURE_DECODE",
     "HW_SECURE_CRYPTO",
