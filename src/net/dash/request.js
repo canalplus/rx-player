@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import request from "../../../utils/request";
+import request from "../../utils/request";
 
 function mapRequestResponses({ type, value }) {
   if (type === "response") {

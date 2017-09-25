@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import assert from "../../../../utils/assert";
+import assert from "../../../utils/assert";
 import { parseMPD } from "./parsers.js";
 
 /**

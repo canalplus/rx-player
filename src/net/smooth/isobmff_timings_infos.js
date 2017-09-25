@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import log from "../../../utils/log";
+import log from "../../utils/log";
 import { getDurationFromTrun } from "../../parsers/isobmff.js";
 import mp4Utils from "./mp4.js";
 

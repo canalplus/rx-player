@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import assert from "../../../utils/assert";
-import { isIE } from "../../../compat";
+import { isIE } from "../../compat";
+
+import assert from "../../utils/assert";
 import {
   concat,
   strToBytes, bytesToStr,
@@ -23,7 +24,7 @@ import {
   be2toi, itobe2,
   be4toi, itobe4,
   be8toi, itobe8,
-} from "../../../utils/bytes";
+} from "../../utils/bytes";
 
 /**
  * Sampling frequencies defined in MPEG-4 Audio.

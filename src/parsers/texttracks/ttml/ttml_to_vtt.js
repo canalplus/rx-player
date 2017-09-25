@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import assert from "../../../../utils/assert.js";
-
-import { makeCue } from "../../../../compat";
+import { makeCue } from "../../../compat";
+import assert from "../../../utils/assert.js";
 import {
   REGXP_PERCENT_VALUES,
   TEXT_ALIGN_TO_LIGN_ALIGN,

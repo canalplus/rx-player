@@ -16,9 +16,9 @@
 
 import { Observable } from "rxjs/Observable";
 
-import { resolveURL } from "../../../utils/url";
-import { stringFromUTF8 } from "../../../utils/strings.js";
-import request from "../../../utils/request";
+import { resolveURL } from "../../utils/url";
+import { stringFromUTF8 } from "../../utils/strings.js";
+import request from "../../utils/request";
 
 import createHSSManifestParser from "./parser";
 import parseBif from "../../parsers/bif";

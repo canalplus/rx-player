@@ -15,7 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { resolveURL } from "../../../utils/url";
+import { resolveURL } from "../../utils/url";
 import mp4Utils from "./mp4.js";
 import parsedRequest from "./request.js";
 import {

@@ -16,13 +16,13 @@
 
 const exported = {};
 if (__FEATURES__.SMOOTH) {
-  exported.smooth = require("./transport/smooth/index.js").default;
+  exported.smooth = require("./smooth/index.js").default;
 }
 if (__FEATURES__.DASH) {
-  exported.dash = require("./transport/dash/index.js").default;
+  exported.dash = require("./dash/index.js").default;
 }
 if (__FEATURES__.DIRECTFILE) {
-  exported.directfile = require("./transport/directfile/index.js").default;
+  exported.directfile = require("./directfile/index.js").default;
 }
 
 export default exported;

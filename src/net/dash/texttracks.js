@@ -17,9 +17,9 @@
 import objectAssign from "object-assign";
 import { Observable } from "rxjs/Observable";
 
-import log from "../../../utils/log";
-import { resolveURL } from "../../../utils/url";
-import { stringFromUTF8 } from "../../../utils/strings.js";
+import log from "../../utils/log";
+import { resolveURL } from "../../utils/url";
+import { stringFromUTF8 } from "../../utils/strings.js";
 
 import {
   parseSidx,

@@ -16,7 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 
-import { resolveURL } from "../../../utils/url";
+import { resolveURL } from "../../utils/url";
 
 import request from "./request.js";
 import {

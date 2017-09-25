@@ -17,8 +17,8 @@
 // XML-Schema
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
-import arrayIncludes from "../../../../utils/array-includes.js";
-import assert from "../../../../utils/assert";
+import arrayIncludes from "../../../utils/array-includes.js";
+import assert from "../../../utils/assert";
 
 const iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
