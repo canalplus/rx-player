@@ -126,33 +126,53 @@ function buildKeySystemConfigurations(keySystem) {
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
   const videoCapabilities = videoRobustnesses.map(robustness => ({
-    contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
+    contentType: "video/mp4; codecs=\"avc1.42E01E\"", // standard mp4 codec
     robustness,
   }));
+
   const audioCapabilities = audioRobustnesses.map(robustness => ({
     contentType: "audio/mp4;codecs=\"mp4a.40.2\"", // standard mp4 codec
     robustness,
   }));
 
-  return [{
-    initDataTypes: ["cenc"],
-    videoCapabilities,
-    audioCapabilities,
-    distinctiveIdentifier,
-    persistentState,
-    sessionTypes,
-  }, {
+  const basicVideoCapabilities = [
+    { contentType: "video/mp4; codecs=\"avc1.42E01E\"" },
+    { contentType: "video/webm; codecs=\"vp8\"" },
+  ];
+
+  const basicConfig = {
+    videoCapabilities: basicVideoCapabilities,
+  };
+
+  const offlineConfig = {
+    videoCapabilities: basicVideoCapabilities,
+    persistentState: "required",
+    sessionTypes: ["persistent-license"],
+  };
+
+  return [
+    {
+      label: "",
+      initDataTypes: ["cenc"],
+      videoCapabilities,
+      audioCapabilities,
+      distinctiveIdentifier,
+      persistentState,
+    }, {
     // add another with no {audio,video}Capabilities for some legacy browsers.
     // As of today's spec, this should return NotSupported but the first
     // candidate configuration should be good, so whe should have no downside
     // doing that.
-    initDataTypes: ["cenc"],
-    videoCapabilities: undefined,
-    audioCapabilities: undefined,
-    distinctiveIdentifier,
-    persistentState,
-    sessionTypes,
-  }];
+      label: "",
+      initDataTypes: ["cenc"],
+      videoCapabilities: undefined,
+      audioCapabilities: undefined,
+      distinctiveIdentifier,
+      persistentState,
+    },
+    offlineConfig,
+    basicConfig
+  ];
 }
 
 /**
@@ -211,7 +231,6 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
       if (disposed) {
         return;
       }
-
       // if we iterated over the whole keySystemsType Array, quit on error
       if (index >= keySystemsType.length) {
         obs.error(new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS", null, true));
