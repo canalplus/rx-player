@@ -52,17 +52,6 @@ function findAtom(buf, atomName) {
   return i;
 }
 
-// /**
-//  * Parse ISOBMFF and try to find the initial time and the duration of the
-//  * segments from different boxes.
-//  *
-//  */
-// function getSegmentTimeInformations(segment, offset) {
-//   const sidxContent = parseSidx(segment, offset);
-//   if (!sidxContent) {
-//   }
-// }
-
 /**
  * Parse the sidx part (segment index) of the isobmff.
  * Returns null if not found.
@@ -300,6 +289,8 @@ function getDurationFromTrun(buffer) {
 /**
  * Get various informations from a movie header box. Found in init segments.
  * null if not found or not parsed.
+ *
+ * This timescale is the default timescale used for segments.
  * @param {Uint8Array} buffer
  * @returns {Number}
  */
@@ -341,7 +332,7 @@ function getMDHDTimescale(buffer) {
  * @param {Uint8Array} buf - the isobmff structure
  * @param {Number} atomName - the 'name' of the box (e.g. 'sidx' or 'moov'),
  * hexa encoded
- * @returns {UInt8Array}
+ * @returns {UInt8Array|null}
  */
 function getAtomContent(buf, atomName) {
   const l = buf.length;
@@ -366,6 +357,10 @@ function getAtomContent(buf, atomName) {
   }
 }
 
+/**
+ * @param {Uint8Array} buf - The isobmff
+ * @returns {Uint8Array|null} - Content of the mdat atom, null if not found
+ */
 function getMdat(buf) {
   return getAtomContent(buf, 0x6D646174 /* "mdat" */);
 }
