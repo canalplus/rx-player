@@ -77,9 +77,13 @@ This property is an array of objects with the following properties (only ``type`
       1. the message (``Uint8Array``): The message from the CDM. Messages are Key System-specific.
       2. the messageType (``string``): The possible message types are all defined in [the w3c specification](https://w3c.github.io/encrypted-media/#idl-def-mediakeymessagetype).
 
-      This function should return either a Promise or an Observable instance which emits the licence on resolution. Observable instances are preferred as they can be canceled.
+      This function should return either synchronously the license, or a Promise which:
+        - resolves if the license was fetched with the licence in argument
+        - reject if an error was encountered
 
-      We set a 10 seconds timeout on this request.
+      In any case, the license provided by this function should be of a ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
+
+      Note: We set a 10 seconds timeout on this request. If the returned Promise do not resolve or reject under this limit, the player will stop with an error. If this limit is problematic for you, please open an issue.
 
   - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate used to encrypt messages to the license server.
     If set, we will try to set this certificate on the CDM. If it fails, we will still continue (albeit a warning will be emitted) to try deciphering the stream (the getLicense API will be triggered etc.).
