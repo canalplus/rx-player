@@ -15,7 +15,7 @@
  */
 
 import log from "../../utils/log";
-import { getDurationFromTrun } from "../../parsers/isobmff.js";
+import { getDurationFromTrun } from "../../parsers/containers/isobmff.js";
 import mp4Utils from "./mp4.js";
 
 const {

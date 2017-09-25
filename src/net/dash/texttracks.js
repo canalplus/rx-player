@@ -25,7 +25,7 @@ import {
   parseSidx,
   getMdat,
   getMDHDTimescale,
-} from "../../parsers/isobmff.js";
+} from "../../parsers/containers/isobmff.js";
 import parseSAMIToVTT from "../../parsers/texttracks/sami.js";
 import parseTTMLToVTT from "../../parsers/texttracks/ttml/ttml_to_vtt.js";
 

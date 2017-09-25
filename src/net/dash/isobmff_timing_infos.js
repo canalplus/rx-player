@@ -18,7 +18,7 @@ import assert from "../../utils/assert";
 import {
   parseTfdt,
   getDurationFromTrun,
-} from "../../parsers/isobmff.js";
+} from "../../parsers/containers/isobmff.js";
 
 /**
  * Get precize start and duration of a segment from ISOBMFF.

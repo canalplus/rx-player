@@ -22,7 +22,7 @@ import {
   parseSidx,
   patchPssh,
   getMDHDTimescale,
-} from "../../parsers/isobmff.js";
+} from "../../parsers/containers/isobmff.js";
 import parseBif from "../../parsers/bif.js";
 
 import dashManifestParser from "./manifest";
