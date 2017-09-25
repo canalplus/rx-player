@@ -58,6 +58,10 @@ const REGXP_TIME_HMS =
  */
 const REGXP_PERCENT_VALUES = /^(\d{1,2}|100)% (\d{1,2}|100)%$/;
 
+const REGXP_8_HEX_COLOR =
+  /^#([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})$/;
+const REGXP_4_HEX_COLOR = /^#([0-9A-f])([0-9A-f])([0-9A-f])([0-9A-f])$/;
+
 /**
  * @type {Object}
  */
@@ -88,4 +92,6 @@ export {
   REGXP_TIME_TICK,
   TEXT_ALIGN_TO_LIGN_ALIGN,
   TEXT_ALIGN_TO_POSITION_ALIGN,
+  REGXP_4_HEX_COLOR,
+  REGXP_8_HEX_COLOR,
 };

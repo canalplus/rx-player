@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { AbstractSourceBuffer } from "./abstract.js";
+import { AbstractSourceBuffer } from "../abstract.js";
 
 class ImageSourceBuffer extends AbstractSourceBuffer {
   _append() {

@@ -23,17 +23,18 @@ import {
 } from "../../utils/languages";
 
 const {
-  DEFAULT_AUTO_PLAY,
-  DEFAULT_SHOW_SUBTITLE,
   DEFAULT_AUDIO_TRACK,
-  DEFAULT_TEXT_TRACK,
-  DEFAULT_WANTED_BUFFER_AHEAD,
+  DEFAULT_AUTO_PLAY,
+  DEFAULT_INITIAL_BITRATES,
+  DEFAULT_LIMIT_VIDEO_WIDTH,
+  DEFAULT_MAX_BITRATES,
   DEFAULT_MAX_BUFFER_AHEAD,
   DEFAULT_MAX_BUFFER_BEHIND,
-  DEFAULT_INITIAL_BITRATES,
-  DEFAULT_MAX_BITRATES,
+  DEFAULT_SHOW_NATIVE_SUBTITLE,
+  DEFAULT_TEXT_TRACK,
+  DEFAULT_TEXT_TRACK_MODE,
   DEFAULT_THROTTLE_WHEN_HIDDEN,
-  DEFAULT_LIMIT_VIDEO_WIDTH,
+  DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
 
 const def = takeFirstDefined;
@@ -54,6 +55,7 @@ function parseConstructorOptions(options = {}) {
     maxBufferAhead: def(options.maxBufferAhead, DEFAULT_MAX_BUFFER_AHEAD),
     maxBufferBehind: def(options.maxBufferBehind, DEFAULT_MAX_BUFFER_BEHIND),
     limitVideoWidth: def(options.limitVideoWidth, DEFAULT_LIMIT_VIDEO_WIDTH),
+    videoElement: options.videoElement || document.createElement("video"),
 
     defaultAudioTrack: normalizeAudioTrack(
       def(options.defaultAudioTrack, DEFAULT_AUDIO_TRACK),
@@ -72,9 +74,6 @@ function parseConstructorOptions(options = {}) {
       options.throttleWhenHidden,
       DEFAULT_THROTTLE_WHEN_HIDDEN
     ),
-
-    videoElement: options.videoElement ?
-      options.videoElement : document.createElement("video"),
   };
 
   const defaultInitialBitrates = DEFAULT_INITIAL_BITRATES || {};
@@ -131,9 +130,12 @@ function parseLoadVideoOptions(options = {}, ctx) {
     autoPlay: def(options.autoPlay, DEFAULT_AUTO_PLAY),
     keySystems: def(options.keySystems, []),
     transportOptions: def(options.transportOptions, defaultTransportOptions),
-    hideNativeSubtitle: def(options.hideNativeSubtitle, !DEFAULT_SHOW_SUBTITLE),
     supplementaryTextTracks: def(options.supplementaryTextTracks, []),
     supplementaryImageTracks: def(options.supplementaryImageTracks, []),
+    textTrackMode: def(options.textTrackMode, DEFAULT_TEXT_TRACK_MODE),
+
+    hideNativeSubtitle:
+      def(options.hideNativeSubtitle, !DEFAULT_SHOW_NATIVE_SUBTITLE),
 
     defaultAudioTrack: normalizeAudioTrack(
       def(options.defaultAudioTrack, lastAudioTrack),
@@ -143,6 +145,10 @@ function parseLoadVideoOptions(options = {}, ctx) {
       def(options.defaultTextTrack, lastTextTrack),
     ),
   };
+
+  if (options.textTrackMode === "html") {
+    parsed.textTrackElement = options.textTrackElement;
+  }
 
   if (options.startAt && options.startAt.wallClockTime instanceof Date) {
     parsed.startAt = objectAssign({}, options.startAt, {

@@ -121,10 +121,10 @@ const isHidden = visibilityChange()
   .debounceTime(INACTIVITY_DELAY)
   .filter((x) => x === true);
 
-const inBackground = () => Observable.merge(isVisible, isHidden)
+const isInBackground$ = () => Observable.merge(isVisible, isHidden)
   .startWith(false);
 
-const videoWidth = videoElement => {
+const videoWidth$ = videoElement => {
   return Observable.merge(
     Observable.interval(20000),
     videoSizeChange().debounceTime(500)
@@ -135,35 +135,43 @@ const videoWidth = videoElement => {
 
 };
 
-const loadedMetadata = compatibleListener(["loadedmetadata"]);
-const fullscreenChange = compatibleListener(
+const onLoadedMetadata$ = compatibleListener(["loadedmetadata"]);
+const onSeeking$ = compatibleListener(["seeking"]);
+const onSeeked$ = compatibleListener(["seeked"]);
+const onEnded$ = compatibleListener(["ended"]);
+const onTimeUpdate$ = compatibleListener(["timeupdate"]);
+const onFullscreenChange$ = compatibleListener(
   ["fullscreenchange", "FullscreenChange"],
 
   // On IE11, fullscreen change events is called MSFullscreenChange
   BROWSER_PREFIXES.concat("MS")
 );
 
-const playChanges = compatibleListener(["play", "pause"]);
-const textTracksChanges = compatibleListener(["addtrack", "removetrack"]);
+const onPlayPause$ = compatibleListener(["play", "pause"]);
+const onTextTrackChanges$ = compatibleListener(["addtrack", "removetrack"]);
 
-const sourceOpen = compatibleListener(["sourceopen", "webkitsourceopen"]);
-const onEncrypted = compatibleListener(["encrypted", "needkey"]);
-const onKeyMessage = compatibleListener(["keymessage", "message"]);
-const onKeyAdded = compatibleListener(["keyadded", "ready"]);
-const onKeyError = compatibleListener(["keyerror", "error"]);
-const onKeyStatusesChange = compatibleListener(["keystatuseschange"]);
+const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
+const onEncrypted$ = compatibleListener(["encrypted", "needkey"]);
+const onKeyMessage$ = compatibleListener(["keymessage", "message"]);
+const onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
+const onKeyError$ = compatibleListener(["keyerror", "error"]);
+const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 export {
-  inBackground,
-  videoWidth,
-  loadedMetadata,
-  fullscreenChange,
-  playChanges,
-  textTracksChanges,
-  sourceOpen,
-  onEncrypted,
-  onKeyMessage,
-  onKeyAdded,
-  onKeyError,
-  onKeyStatusesChange,
+  isInBackground$,
+  videoWidth$,
+  onPlayPause$,
+  onTextTrackChanges$,
+  onLoadedMetadata$,
+  onSeeking$,
+  onSeeked$,
+  onEnded$,
+  onTimeUpdate$,
+  onFullscreenChange$,
+  onSourceOpen$,
+  onEncrypted$,
+  onKeyMessage$,
+  onKeyAdded$,
+  onKeyError$,
+  onKeyStatusesChange$,
 };

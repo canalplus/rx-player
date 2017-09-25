@@ -41,16 +41,26 @@ export default {
   DEFAULT_TEXT_TRACK: null,
 
   /**
+   * Can be either:
+   *   - "native": Subtitles are all displayed in a <track> element
+   *   - "html": Subtitles are all displayed in a <div> separated from the video
+   *     element. Can be useful to display richer TTML subtitles, for example.
+   * @type {Object|null}
+   */
+  DEFAULT_TEXT_TRACK_MODE: "native",
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */
   DEFAULT_AUTO_PLAY: false,
 
   /**
-   * If set to false, subtitles will be hidden by default.
+   * If set to false, "native" subtitles (in a <track> element) will be hidden
+   * by default.
    * @type {Boolean}
    */
-  DEFAULT_SHOW_SUBTITLE: true,
+  DEFAULT_SHOW_NATIVE_SUBTITLE: true,
 
   /*
    * Default buffer goal in seconds. Once this amount of time reached ahead in

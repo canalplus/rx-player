@@ -21,6 +21,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { ReplaySubject } from "rxjs/ReplaySubject";
 
 import config from "../../config.js";
 
@@ -40,11 +41,11 @@ import {
   isFullscreen,
 } from "../../compat";
 import {
-  fullscreenChange as fullscreenChange$,
-  playChanges as playChanges$,
-  textTracksChanges as textTracksChanges$,
-  inBackground as inBackground$,
-  videoWidth as videoWidth$,
+  onPlayPause$,
+  onTextTrackChanges$,
+  onFullscreenChange$,
+  isInBackground$,
+  videoWidth$,
 } from "../../compat/events.js";
 import Transports from "../../net";
 import {
@@ -105,6 +106,26 @@ class Player extends EventEmitter {
   }
 
   /**
+   * @returns {string} - current log level
+   */
+  static get LogLevel() {
+    return log.getLevel();
+  }
+
+  /**
+   * @param {string} logLevel - should be either (by verbosity ascending):
+   *   - "NONE"
+   *   - "ERROR"
+   *   - "WARNING"
+   *   - "INFO"
+   *   - "DEBUG"
+   * Any other value will be translated to "NONE".
+   */
+  static set LogLevel(logLevel) {
+    log.setLevel(logLevel);
+  }
+
+  /**
    * Note: as the private state from this class can be pretty heavy, every
    * private properties should be initialized here for better visibility.
    * @param {Object} options
@@ -146,11 +167,12 @@ class Player extends EventEmitter {
     this._priv = attachPrivateMethods(this);
 
     this._priv.destroy$ = new Subject();
-    fullscreenChange$(videoElement)
+
+    onFullscreenChange$(videoElement)
       .takeUntil(this._priv.destroy$)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
-    textTracksChanges$(videoElement.textTracks)
+    onTextTrackChanges$(videoElement.textTracks)
       .takeUntil(this._priv.destroy$)
       .map(({ target }) => { // prepare TextTrack array
         const arr = [];
@@ -181,8 +203,11 @@ class Player extends EventEmitter {
     this._priv.errorStream$ = new Subject() // Emits warnings
       .takeUntil(this._priv.destroy$);
 
-    // emit true when the player plays, false when it pauses
-    this._priv.playing$ = new BehaviorSubject();
+    /**
+     * Emit false when the player is in a "paused" state, false otherwise)
+     * @type {Observable.<Boolean}
+     */
+    this._priv.playing$ = new ReplaySubject(1);
 
     // last speed set by the user
     this._priv.speed$ = new BehaviorSubject(videoElement.playbackRate);
@@ -304,68 +329,114 @@ class Player extends EventEmitter {
       startAt,
       supplementaryImageTracks,
       supplementaryTextTracks,
+      textTrackElement,
+      textTrackMode,
       transport,
       transportOptions,
       url,
     } = options;
 
-    assert(url, "you have to give an url");
-    assert(transport, "you have to set the transport type");
+    // Perform multiple checks on the given options
+    assert(url, "you have to set at least an url");
+    assert(transport,
+      "you have to set the transport type (e.g. \"smooth\", \"dash\")");
+    assert(textTrackMode !== "html" || textTrackElement instanceof Element,
+      "textTrackElement needs to be specified as an Element in \"html\"" +
+      " textTrackMode.");
 
     const Transport = Transports[transport];
     assert(Transport, `transport "${transport}" not supported`);
     const transportObj = Transport(transportOptions);
 
+    // now that every check has passed, stop previous content
     this.stop();
 
+    // prepare initial tracks played
     this._priv.initialAudioTrack = defaultAudioTrack;
     this._priv.initialTextTrack = defaultTextTrack;
 
     this._priv.playing$.next(autoPlay);
 
+    // get every properties used from context for clarity
     const { videoElement } = this;
     const {
-      errorStream$: errorStream,
-      unsubscribeLoadedVideo$,
-      wantedBufferAhead$,
+      errorStream$,
+      initialMaxAutoBitrates,
+      lastBitrates,
+      limitVideoWidth,
+      manualBitrates,
       maxBufferAhead$,
       maxBufferBehind$,
+      playing$,
+      speed$,
+      throttleWhenHidden,
+      unsubscribeLoadedVideo$,
+      wantedBufferAhead$,
     } = this._priv;
 
+    // TODO either ditch or repair directFile playback
+    /** @type {Boolean} */
     const withMediaSource = !transport.directFile;
-    const timings$ = createClock(videoElement, { withMediaSource });
 
+    /**
+     * Global clock used for the whole application.
+     * @type {Observable.<Object>}
+     */
+    const clock$ = createClock(videoElement, { withMediaSource });
+
+    /**
+     * Options used by the ABR Manager.
+     * @type {Object}
+     */
     const adaptiveOptions = {
-      initialBitrates: this._priv.lastBitrates,
-      manualBitrates: this._priv.manualBitrates,
-      maxAutoBitrates: this._priv.initialMaxAutoBitrates,
-      throttle: this._priv.throttleWhenHidden && {
-        video: inBackground$()
+      initialBitrates: lastBitrates,
+      manualBitrates: manualBitrates,
+      maxAutoBitrates: initialMaxAutoBitrates,
+      throttle: throttleWhenHidden && {
+        video: isInBackground$()
           .map(isBg => isBg ? 0 : Infinity)
           .takeUntil(unsubscribeLoadedVideo$),
       },
-      limitWidth: this._priv.limitVideoWidth && {
+      limitWidth: limitVideoWidth && {
         video: videoWidth$(videoElement)
           .takeUntil(unsubscribeLoadedVideo$),
       },
     };
 
+    /**
+     * Options used by the Buffer(s)
+     * @type {Object}
+     */
     const bufferOptions = {
       wantedBufferAhead$,
       maxBufferAhead$,
       maxBufferBehind$,
     };
 
+    /**
+     * Options used by the TextTrack SourceBuffer
+     * @type {Object}
+     */
+    const textTrackOptions = {
+      textTrackMode,
+      textTrackElement,
+      hideNativeSubtitle,
+    };
+
+    /**
+     * Stream Observable, through which the content will be launched.
+     * @type {Observable.<Object>}
+     */
     const stream = Stream({
       adaptiveOptions,
       autoPlay,
       bufferOptions,
-      errorStream,
-      hideNativeSubtitle,
+      errorStream: errorStream$, // TODO
       keySystems,
-      speed$: this._priv.speed$,
+      speed$,
       startAt,
-      timings$,
+      textTrackOptions,
+      timings$: clock$,
       transport: transportObj,
       url,
       videoElement,
@@ -377,23 +448,38 @@ class Player extends EventEmitter {
       .takeUntil(unsubscribeLoadedVideo$)
       .publish();
 
+    /**
+     * Emit a truthy value when the player stalls, a falsy value as it unstalls.
+     * TODO Observable of boolean
+     * @type {Observable}
+     */
     const stalled$ = filterStreamByType(stream, "stalled")
       .startWith(null);
 
+    /**
+     * Emit when the stream is considered "loaded".
+     * @type {Observable}
+     */
     const loaded = filterStreamByType(stream, "loaded")
       .take(1)
       .share();
 
-    const stateChanges = loaded.mapTo(PLAYER_STATES.LOADED)
-      .concat(Observable.combineLatest(
-        this._priv.playing$,
-        stalled$,
-        inferPlayerState
-      ))
+    /**
+     * Emit the player state as it changes.
+     * TODO only way to call setPlayerState?
+     * @type {Observable.<string>}
+     */
+    const stateChanges$ = loaded.mapTo(PLAYER_STATES.LOADED)
+      .concat(Observable.combineLatest(playing$, stalled$, inferPlayerState))
       .distinctUntilChanged()
       .startWith(PLAYER_STATES.LOADING);
 
-    const playChanges = playChanges$(videoElement);
+    /**
+     * Emit true each time the player goes into a "play" state.
+     * @type {Observable.<Boolean>}
+     */
+    const videoPlays$ = onPlayPause$(videoElement)
+      .map(evt => evt.type === "play");
 
     let streamDisposable = void 0;
     unsubscribeLoadedVideo$.take(1).subscribe(() => {
@@ -402,17 +488,20 @@ class Player extends EventEmitter {
       }
     });
 
+    // This is needed to avoid a weird behavior when the second callback of RxJS
+    // Observables (onError) is not specified
+    // TODO investigate
     const noop = () => {};
 
-    playChanges
+    videoPlays$
       .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.onPlayPauseNext(x), noop);
 
-    timings$
+    clock$
       .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.triggerTimeChange(x), noop);
 
-    stateChanges
+    stateChanges$
       .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.setPlayerState(x), noop);
 
@@ -422,40 +511,13 @@ class Player extends EventEmitter {
       () => this._priv.onStreamComplete()
     );
 
-    errorStream
+    errorStream$
       .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(
         x => this._priv.onErrorStreamNext(x)
       );
 
     streamDisposable = stream.connect();
-
-    // TODO Return promise here?
-    // Not done for now because the unhandled promise rejection warnings can
-    // be an annoyance.
-    // return new Promise((resolve, reject) => {
-    //   const _loaded$ = loaded
-    //     .map(() => ({ type: "loaded" }));
-
-    //   const _canceled$ = unsubscribeLoadedVideo$
-    //     .map(() => ({ type: "canceled" }));
-
-    //   const _errored$ = stream.ignoreElements()
-    //     .catch((error) => ({ type: "error", error }));
-
-    //   Observable.merge(_loaded$, _canceled$, _errored$)
-    //     .take(1)
-    //     .subscribe((item) => {
-    //       switch(item.type) {
-    //       case "loaded":
-    //         resolve(item);
-    //         break;
-    //       case "canceled":
-    //       case "error":
-    //         reject(item);
-    //       }
-    //     });
-    // });
   }
 
   /**

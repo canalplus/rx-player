@@ -145,7 +145,7 @@ export default function createPipeline(
 
   const _loader = (resolvedInfos, pipelineInputData) => {
     const loaderWithRetry = (resolvedInfos) =>
-      // XXX do something about bufferdepth to avoid infinite errors?
+      // TODO do something about bufferdepth to avoid infinite errors?
       downloadingBackoff(tryCatch(loader, resolvedInfos), backoffOptions)
         .catch((error) => {
           throw errorSelector("PIPELINE_LOAD_ERROR", error);

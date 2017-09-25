@@ -24,9 +24,9 @@ import castToObservable from "../../utils/castToObservable.js";
 import { retryWithBackoff } from "../../utils/retry";
 
 import {
-  onKeyMessage,
-  onKeyError,
-  onKeyStatusesChange,
+  onKeyMessage$,
+  onKeyError$,
+  onKeyStatusesChange$,
 } from "../../compat/events.js";
 
 import {
@@ -91,11 +91,11 @@ function sessionEventsHandler(session, keySystem, errorStream) {
     onRetry: (error) => errorStream.next(licenseErrorSelector(error, false)),
   };
 
-  const keyErrors = onKeyError(session).map((error) => {
+  const keyErrors = onKeyError$(session).map((error) => {
     throw new EncryptedMediaError("KEY_ERROR", error, true);
   });
 
-  const keyStatusesChanges = onKeyStatusesChange(session)
+  const keyStatusesChanges = onKeyStatusesChange$(session)
     .mergeMap((keyStatusesEvent) => {
       sessionId = keyStatusesEvent.sessionId;
       log.debug(
@@ -135,7 +135,7 @@ function sessionEventsHandler(session, keySystem, errorStream) {
       });
     });
 
-  const keyMessages = onKeyMessage(session)
+  const keyMessages = onKeyMessage$(session)
     .mergeMap((messageEvent) => {
       sessionId = messageEvent.sessionId;
 

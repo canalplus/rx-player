@@ -22,8 +22,6 @@ import request from "../../utils/request";
 
 import createHSSManifestParser from "./parser";
 import parseBif from "../../parsers/bif";
-import parseSAMIToVTT from "../../parsers/texttracks/sami.js";
-import parseTTMLToVTT from "../../parsers/texttracks/ttml/ttml_to_vtt.js";
 
 import mp4Utils from "./mp4.js";
 import parsedRequest from "./request.js";
@@ -41,42 +39,6 @@ const {
   patchSegment,
   getMdat,
 } = mp4Utils;
-
-function getTextTrackParser(mimeType = "", codec = "") {
-  function fromTTMLInMP4(data) {
-    const str = stringFromUTF8(getMdat(data));
-    return parseTTMLToVTT(str);
-  }
-
-  function fromWebVTTInMP4(data) {
-    return stringFromUTF8(getMdat(data));
-  }
-
-  switch (mimeType) {
-
-  case "application/x-sami":
-  case "application/smil":
-    return parseSAMIToVTT;
-
-  case "application/ttml+xml":
-    return parseTTMLToVTT;
-
-  case "application/ttml+xml+mp4":
-    return fromTTMLInMP4;
-
-  case "text/vtt":
-    return (text) => text;
-
-  case "application/mp4":
-    const lcCodec = codec.toLowerCase();
-    if (lcCodec === "stpp") {
-      return fromTTMLInMP4;
-
-    } else if (lcCodec === "wvtt") {
-      return fromWebVTTInMP4;
-    }
-  }
-}
 
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
 
@@ -163,42 +125,32 @@ export default function(options={}) {
       const base = resolveURL(representation.baseURL);
       const url = buildSegmentURL(base, representation, segment);
 
-      if (mimeType.indexOf("mp4") >= 0) {
-        // in case of TTML declared inside playlists, the TTML file is
-        // embededded inside an mp4 fragment.
-        return parsedRequest({ url, responseType: "arraybuffer" });
-      } else {
-        return parsedRequest({ url, responseType: "text" });
-      }
+      return parsedRequest({
+        url,
+        responseType: mimeType.indexOf("mp4") >= 0 ?
+          "arraybuffer" : "text",
+      });
     },
 
     parser({ response, segment, representation, adaptation, manifest }) {
       const { language } = adaptation;
       const {
-        mimeType,
-        codec,
+        mimeType = "",
+        codec = "",
       } = representation;
-
-      const ttParser = getTextTrackParser(mimeType, codec);
-      if (!ttParser) {
-        throw new Error(
-          `could not find a text-track parser for the type ${mimeType}`
-        );
-      }
 
       let responseData = response.responseData;
       let nextSegments, segmentInfos;
-      const segmentData = {};
+      const segmentData = { language };
+      const isMP4 = mimeType.indexOf("mp4") >= 0;
 
-      // in case of TTML declared inside playlists, the TTML file is
-      // embededded inside an mp4 fragment.
-      if (mimeType.indexOf("mp4") >= 0) {
+      if (isMP4) {
         responseData = new Uint8Array(responseData);
         const timings =
           extractTimingsInfos(responseData, segment, manifest.isLive);
 
         nextSegments = timings.nextSegments;
-        segmentInfos = timings.segmentInfos;
+        segmentInfos = timings.segmentInfos || {};
         segmentData.start = segmentInfos.time;
         segmentData.end = segmentInfos.duration != null ?
           segmentInfos.time + segmentInfos.duration : undefined;
@@ -211,12 +163,38 @@ export default function(options={}) {
         segmentData.timescale = segment.timescale;
       }
 
-      segmentData.data =
-        ttParser(
-          responseData,
-          language /* ,
-          segment.time / segment.timescale */ // TODO check that one
-        );
+      if (isMP4) {
+        const lcCodec = codec.toLowerCase();
+        if (mimeType === "application/ttml+xml+mp4" || lcCodec === "stpp") {
+          segmentData.type = "ttml";
+        } else if (lcCodec === "wvtt") {
+          segmentData.type = "wvtt";
+        } else {
+          throw new Error(
+            `could not find a text-track parser for the type ${mimeType}`);
+        }
+        segmentData.data = stringFromUTF8(getMdat(responseData));
+      } else {
+        switch (mimeType) {
+        case "application/x-sami":
+          segmentData.type = "sami";
+          break;
+        case "application/smil":
+          segmentData.type = "smil";
+          break;
+        case "application/ttml+xml":
+          segmentData.type = "ttml";
+          break;
+        case "text/vtt":
+          segmentData.type = "vtt";
+          break;
+        }
+        if (!segmentData.type) {
+          throw new Error(
+            `could not find a text-track parser for the type ${mimeType}`);
+        }
+        segmentData.data = responseData;
+      }
 
       return Observable.of({ segmentData, segmentInfos, nextSegments });
     },

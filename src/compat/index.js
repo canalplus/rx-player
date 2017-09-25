@@ -53,11 +53,11 @@ function shouldRenewMediaKeys() {
  * @param {MediaSource}
  * @returns {Observable}
  */
-function sourceOpen(mediaSource) {
+function onSourceOpen$(mediaSource) {
   if (mediaSource.readyState == "open") {
     return Observable.of(null);
   } else {
-    return events.sourceOpen(mediaSource).take(1);
+    return events.onSourceOpen$(mediaSource).take(1);
   }
 }
 
@@ -71,7 +71,7 @@ function canSeek(videoElement) {
   if (videoElement.readyState >= READY_STATES.HAVE_METADATA) {
     return Observable.of(null);
   } else {
-    return events.loadedMetadata(videoElement).take(1);
+    return events.onLoadedMetadata$(videoElement).take(1);
   }
 }
 
@@ -256,5 +256,5 @@ export {
   requestMediaKeySystemAccess,
   setMediaKeys,
   shouldRenewMediaKeys,
-  sourceOpen,
+  onSourceOpen$,
 };

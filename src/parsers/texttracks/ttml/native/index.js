@@ -14,86 +14,51 @@
  * limitations under the License.
  */
 
-import { makeCue } from "../../../compat";
-import assert from "../../../utils/assert.js";
+import { makeCue } from "../../../../compat";
+
+import getRateInfos from "../getRateInfos.js";
+import getElementToApplyFromCollection from "../getElementToApplyFromCollection.js";
 import {
   REGXP_PERCENT_VALUES,
   TEXT_ALIGN_TO_LIGN_ALIGN,
   TEXT_ALIGN_TO_POSITION_ALIGN,
-} from "./constants.js";
-import parseTime from "./time_parsing.js";
-
-/**
- * XXX Delete
- */
-const arr = [];
-window.arr = arr;
+} from "../constants.js";
+import parseTime from "../time_parsing.js";
+import getLeafNodes from "../getLeafNodes.js";
+import getParameters from "../getParameters.js";
+import {
+  getStyleNodes,
+  getRegionNodes,
+  getTextNodes,
+} from "../nodes.js";
 
 function parseTTMLStringToVTT(str) {
-  arr.push(str);
   const ret = [];
-  const parser = new DOMParser();
-  let xml = null;
-
-  try {
-    xml = parser.parseFromString(str, "text/xml");
-  } catch (exception) {
-    throw exception;
-    // throw new shaka.util.Error(
-    //   shaka.util.Error.Severity.CRITICAL,
-    //   shaka.util.Error.Category.TEXT,
-    //   shaka.util.Error.Code.INVALID_XML);
-  }
+  const xml = new DOMParser().parseFromString(str, "text/xml");
 
   if (xml) {
-    // Try to get the framerate, subFrameRate and frameRateMultiplier
-    // if applicable
-    let frameRate = null;
-    let subFrameRate = null;
-    let frameRateMultiplier = null;
-    let tickRate = null;
-    let spaceStyle = null;
     const tts = xml.getElementsByTagName("tt");
     const tt = tts[0];
-    // TTML should always have tt element
     if (!tt) {
       throw new Error("invalid XML");
-      // throw new shaka.util.Error(
-      //   shaka.util.Error.Severity.CRITICAL,
-      //   shaka.util.Error.Category.TEXT,
-      //   shaka.util.Error.Code.INVALID_XML);
-    } else {
-      frameRate = tt.getAttribute("ttp:frameRate");
-      subFrameRate = tt.getAttribute("ttp:subFrameRate");
-      frameRateMultiplier = tt.getAttribute("ttp:frameRateMultiplier");
-      tickRate = tt.getAttribute("ttp:tickRate");
-      spaceStyle = tt.getAttribute("xml:space") || "default";
     }
 
-    if (spaceStyle != "default" && spaceStyle != "preserve") {
-      throw new Error("invalid XML");
-      // throw new shaka.util.Error(
-      //   shaka.util.Error.Severity.CRITICAL,
-      //   shaka.util.Error.Category.TEXT,
-      //   shaka.util.Error.Code.INVALID_XML);
-    }
-    const whitespaceTrim = spaceStyle == "default";
+    const params = getParameters(tt);
+    const shouldTrimWhiteSpace = params.spaceStyle == "default";
+    const rateInfo = getRateInfos(params);
 
-    const rateInfo = getRateInfos(
-      frameRate, subFrameRate, frameRateMultiplier, tickRate);
-
-    const styles = getLeafNodes(tt.getElementsByTagName("styling")[0]);
-    const regions = getLeafNodes(tt.getElementsByTagName("layout")[0]);
-    const textNodes = getLeafNodes(tt.getElementsByTagName("body")[0]);
+    const styles = getStyleNodes(tt);
+    const regions = getRegionNodes(tt);
+    const textNodes = getTextNodes(tt);
 
     for (let i = 0; i < textNodes.length; i++) {
       const cue = parseCue(
-        textNodes[i], // cueElement
-        0 /* time.periodStart */, // offset
+        textNodes[i],
+        0, // offset
         rateInfo,
         styles,
         regions,
-        whitespaceTrim
+        shouldTrimWhiteSpace
       );
       if (cue) {
         ret.push(cue);
@@ -102,47 +67,6 @@ function parseTTMLStringToVTT(str) {
   }
 
   return ret;
-}
-
-/**
- * Gets leaf nodes of the xml node tree. Ignores the text, br elements
- * and the spans positioned inside paragraphs
- *
- * @param {Element} element
- * @throws Error - Throws if one of the childNode is not an element instance.
- * @throws Error - Throws if a children Element has no leaf.
- * @returns {Array.<Element>}
- */
-function getLeafNodes(element) {
-  let result = [];
-  if (!element) {
-    return result;
-  }
-
-  const childNodes = element.childNodes;
-  for (let i = 0; i < childNodes.length; i++) {
-    // TODO Currently we don't support styles applicable to span
-    // elements, so they are ignored
-    const isSpanChildOfP = childNodes[i].nodeName == "span" &&
-      element.nodeName == "p";
-
-    if (childNodes[i].nodeType == Node.ELEMENT_NODE &&
-      childNodes[i].nodeName != "br" && !isSpanChildOfP) {
-      // Get the leafs the child might contain
-      assert(childNodes[i] instanceof Element,
-        "Node should be Element!");
-      const leafChildren = getLeafNodes(childNodes[i]);
-      assert(leafChildren.length > 0,
-        "Only a null Element should return no leaves");
-      result = result.concat(leafChildren);
-    }
-  }
-
-  // if no result at this point, the element itself must be a leaf
-  if (!result.length) {
-    result.push(element);
-  }
-  return result;
 }
 
 /**
@@ -229,7 +153,7 @@ function parseCue(
   }
 
   // Get other properties if available
-  const region = getElementFromCollection(cueElement, "region", regions);
+  const region = getElementToApplyFromCollection("region", cueElement, regions);
   addStyle(cue, cueElement, region, styles);
 
   return cue;
@@ -328,109 +252,12 @@ function getStyleAttribute(cueElement, region, styles, attribute) {
     }
   }
 
-  const style = getElementFromCollection(region, "style", styles) ||
-    getElementFromCollection(cueElement, "style", styles);
+  const style = getElementToApplyFromCollection("style", region, styles) ||
+    getElementToApplyFromCollection("style", cueElement, styles);
   if (style) {
     return style.getAttribute(attribute);
   }
   return null;
-}
-
-/**
- * Selects an item from |collection| whose id matches |attributeName|
- * from |element|.
- * @param {Element} element
- * @param {string} attributeName
- * @param {Array.<Element>} collection
- * @returns {Element|null}
- */
-function getElementFromCollection(element, attributeName, collection) {
-  if (!element || collection.length < 1) {
-    return null;
-  }
-  let item = null;
-  const itemName = getInheritedAttribute(element, attributeName);
-  if (itemName) {
-    for (let i = 0; i < collection.length; i++) {
-      if (collection[i].getAttribute("xml:id") == itemName) {
-        item = collection[i];
-        break;
-      }
-    }
-  }
-
-  return item;
-}
-
-/**
- * Traverses upwards from a given node until a given attribute is found.
- * @param {Element} element
- * @param {string} attributeName
- * @returns {string|null}
- */
-function getInheritedAttribute(element, attributeName) {
-  let ret = null;
-  while (element) {
-    ret = element.getAttribute(attributeName);
-    if (ret) {
-      break;
-    }
-
-    // Element.parentNode can lead to XMLDocument, which is not an Element and
-    // has no getAttribute().
-    const parentNode = element.parentNode;
-    if (parentNode instanceof Element) {
-      element = parentNode;
-    } else {
-      break;
-    }
-  }
-  return ret;
-}
-
-/**
- * Returns information about frame/subframe rate and frame rate multiplier for
- * time in frame format.
- * ex. 01:02:03:04(4 frames) or 01:02:03:04.1(4 frames, 1 subframe)
- *
- * The returned variable is an object with the following properties:
- *   - frameRate {Number}
- *   - subFrameRate {Number}
- *   - tickRate {Number}
- * @param {string} [frameRate]
- * @param {string} [subFrameRate]
- * @param {string} [frameRateMultiplier]
- * @param {string} [tickRate]
- * @returns {Object}
- */
-function getRateInfos(frameRate, subFrameRate, frameRateMultiplier, tickRate) {
-  const nbFrameRate = Number(frameRate) || 30;
-  const nbSubFrameRate = Number(subFrameRate) || 1;
-  const nbTickRate = Number(tickRate);
-
-  const ret = {
-    subFrameRate: nbSubFrameRate,
-  };
-
-  if (nbTickRate == 0) {
-    ret.tickRate === nbFrameRate ? nbFrameRate * nbSubFrameRate : 1;
-  }
-
-  if (frameRateMultiplier) {
-    const multiplierResults = /^(\d+) (\d+)$/g.exec(frameRateMultiplier);
-    if (multiplierResults) {
-      const numerator = multiplierResults[1];
-      const denominator = multiplierResults[2];
-      const multiplierNum = numerator / denominator;
-      ret.frameRate = nbFrameRate * multiplierNum;
-    } else {
-      ret.frameRate = nbFrameRate;
-    }
-  } else {
-    ret.frameRate = nbFrameRate;
-  }
-
-  return ret;
 }
 
 export default parseTTMLStringToVTT;

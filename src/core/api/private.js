@@ -265,12 +265,11 @@ export default (self) => ({
 
   /**
    * Called each time the player alternates between play and pause.
-   * @param {Object} evt
-   * @param {string} evt.type
+   * @param {Boolean} isPlaying
    */
-  onPlayPauseNext(evt) {
+  onPlayPauseNext(isPlaying) {
     if (self.videoElement.ended !== true) {
-      self._priv.playing$.next(evt.type == "play");
+      self._priv.playing$.next(isPlaying);
     }
   },
 
