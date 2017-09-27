@@ -16,7 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { ReplaySubject } from "rxjs/ReplaySubject";
 import objectAssign from "object-assign";
 
 import config from "../../config.js";
@@ -529,7 +529,7 @@ export default function Stream({
 
     const adaptations$ = {};
     const _buffersArray = Object.keys(manifest.adaptations).map(type => {
-      adaptations$[type] = new BehaviorSubject();
+      adaptations$[type] = new ReplaySubject(1);
 
       // TODO re-check that
       const codec = getCodec(manifest.adaptations[type][0]
