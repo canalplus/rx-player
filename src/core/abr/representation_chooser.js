@@ -46,8 +46,10 @@ const setManualRepresentation = (representations, bitrate) => {
     fromBitrateCeil(representations, bitrate) ||
     representations[0];
 
-  return Observable.of(chosenRepresentation)
-    .concat(Observable.never());
+  return Observable.of({
+    bitrate: undefined, // Bitrate estimation is deactivated here
+    representation: chosenRepresentation,
+  }).concat(Observable.never());
 };
 
 /**
@@ -214,7 +216,7 @@ export default class RepresentationChooser {
   get$(clock$, representations) {
     if (representations.length < 2) {
       return Observable.of({
-        bitrate: undefined,
+        bitrate: undefined, // Bitrate estimation is deactivated here
         representation: representations.length ?
           representations[0] : null,
       }).concat(Observable.never())
