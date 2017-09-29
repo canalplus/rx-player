@@ -73,13 +73,16 @@ This property is mandatory if the content uses DRM.
 This property is an array of objects with the following properties (only ``type`` and ``getLicense`` are mandatory here):
   - ``type`` (``string``): the type of keySystem used (e.g. ``"widevine"``, ``"playready"`` ...)
 
-  - ``getLicense`` (``Function``): Called as the ``keymessage`` event is received from the browser. Gets two arguments when called:
-      1. the message (``Uint8Array``): The message from the CDM. Messages are Key System-specific.
-      2. the messageType (``string``): The possible message types are all defined in [the w3c specification](https://w3c.github.io/encrypted-media/#idl-def-mediakeymessagetype).
+  - ``getLicense`` (``Function``): Callback which will be triggered everytime a message is sent by the Content Decryption Module (CDM), usually to fetch/renew the license.
+
+    Gets two arguments when called:
+      1. the message (``Uint8Array``): The message, formatted to an Array of bytes.
+      2. the messageType (``string``): String describing the type of message received. There is only 4 possible message types, all defined in [the w3c specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
 
       This function should return either synchronously the license, or a Promise which:
-        - resolves if the license was fetched with the licence in argument
-        - reject if an error was encountered
+      - resolves if the license was fetched, with the licence in argument
+
+      - reject if an error was encountered
 
       In any case, the license provided by this function should be of a ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
 
