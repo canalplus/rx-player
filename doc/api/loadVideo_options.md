@@ -101,6 +101,27 @@ This property is an array of objects with the following properties (only ``type`
 
   - ``onKeyStatusesChange``: (``Function|undefined``)
 
+#### Example
+
+Example of a simple DRM configuration for widevine and playready DRMs:
+```js
+player.loadVideo({
+  url: manifestURL,
+  transport: "dash", // or "smooth"
+  keySystems: [{
+    type: "widevine",
+    getLicense(challenge) {
+      return ajaxPromise(widevineLicenseServer, challenge);
+    }
+  }, {
+    type: "playready",
+    getLicense(challenge) {
+      return ajaxPromise(playreadyLicenseServer, challenge);
+    }
+  }]
+})
+```
+
 ### <a name="prop-autoPlay"></a>autoPlay
 
 _type_: ``Array.<Boolean>|undefined``
