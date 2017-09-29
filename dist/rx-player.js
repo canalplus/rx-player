@@ -10880,7 +10880,10 @@ var ABR_STARVATION_GAP = __WEBPACK_IMPORTED_MODULE_4__config_js__["a" /* default
 var setManualRepresentation = function setManualRepresentation(representations, bitrate) {
   var chosenRepresentation = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__fromBitrateCeil_js__["a" /* default */])(representations, bitrate) || representations[0];
 
-  return __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].of(chosenRepresentation).concat(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].never());
+  return __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].of({
+    bitrate: undefined, // Bitrate estimation is deactivated here
+    representation: chosenRepresentation
+  }).concat(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].never());
 };
 
 /**
@@ -11043,7 +11046,7 @@ var RepresentationChooser = function () {
 
     if (representations.length < 2) {
       return __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].of({
-        bitrate: undefined,
+        bitrate: undefined, // Bitrate estimation is deactivated here
         representation: representations.length ? representations[0] : null
       }).concat(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__["Observable"].never()).takeUntil(this._dispose$);
     }
@@ -11644,7 +11647,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-rc4";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-rc5";
     _this.log = __WEBPACK_IMPORTED_MODULE_4__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.defaultTransport = transport;
