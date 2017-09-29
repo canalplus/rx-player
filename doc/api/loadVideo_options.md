@@ -97,7 +97,7 @@ This property is an array of objects with the following properties (only ``type`
 
   - ``persistentStateRequired`` (``Boolean|undefined``)
 
-  - ``distinctiveIdentifierRequired`` (``Boolean|undefined``)
+  - ``distinctiveIdentifierRequired`` (``Boolean|undefined``): When set to ``true``, the use of [Distinctive Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier) or [Distinctive Permanent Identifier(s)](https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers) will be required. This is not needed for most usecases.
 
   - ``onKeyStatusesChange``: (``Function|undefined``)
 
@@ -305,5 +305,10 @@ const supplementaryImageTracks = [{
 _type_: ``Array.<Boolean>|undefined``
 _defaults_: ``false``
 
-If set to ``true``, the eventual subtitles will be put on mode ``hidden`` when added
-to the video element, so the subtitles won't be displayed by it.
+If set to ``true``, the eventual <track> element will be put on mode ``hidden`` when added to the video element, so it won't actually display the subtitles the rx-player add to it.
+
+This has an effect only if:
+  - a text track is currently active
+  - the text track format is understood by the rx-player
+
+This option can be useful if you want to set your own logic to display the video subtitles. In that case, you can just take the <track> element (``getNativeTextTrack`` method or ``nativeTextTrackChange`` event) and 
