@@ -311,4 +311,4 @@ This has an effect only if:
   - a text track is currently active
   - the text track format is understood by the rx-player
 
-This option can be useful if you want to set your own logic to display the video subtitles. In that case, you can just take the <track> element (``getNativeTextTrack`` method or ``nativeTextTrackChange`` event) and 
+This option can be useful if you want to set your own logic to display the video subtitles. In that case, you can just use the <track> element (``getNativeTextTrack`` method or ``nativeTextTrackChange`` event) and its events.
