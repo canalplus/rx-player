@@ -160,7 +160,7 @@ export default function(options={}) {
   let { contentProtectionParser } = options;
 
   if (!contentProtectionParser) {
-    contentProtectionParser = () => {};
+    contentProtectionParser = (res) => res;
   }
 
   const manifestPipeline = {
