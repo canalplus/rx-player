@@ -28,11 +28,24 @@ import hashInitData from "./hash_init_data.js";
  * supported.
  */
 export default class PersistedSessionsSet extends SessionSet {
+  /*
+   * @param {Object} storage
+   * @param {Function} storage.load
+   * @param {Function} storage.save
+   */
   constructor(storage) {
     super();
     this.setStorage(storage);
   }
 
+  /**
+   * Set a new storage System.
+   * storages are user-provided objects which allow to save and load given
+   * informations.
+   * @param {Object} storage
+   * @param {Function} storage.load
+   * @param {Function} storage.save
+   */
   setStorage(storage) {
     if (this._storage === storage) {
       return;
@@ -58,12 +71,22 @@ export default class PersistedSessionsSet extends SessionSet {
     }
   }
 
+  /**
+   * Retrieve entry (sessionId + initData) based on its initData.
+   * @param {Array|TypedArray|Number}  initData
+   * @returns {Object|null}
+   */
   get(initData) {
     initData = hashInitData(initData);
     const entry = this.find((e) => e.initData === initData);
     return entry || null;
   }
 
+  /**
+   * Add a new entry in the storage.
+   * @param {Array|TypedArray|Number}  initData
+   * @param {MediaKeySession} session
+   */
   add(initData, session) {
     const sessionId = session && session.sessionId;
     if (!sessionId) {
@@ -74,9 +97,7 @@ export default class PersistedSessionsSet extends SessionSet {
     const currentEntry = this.get(initData);
     if (currentEntry && currentEntry.sessionId === sessionId) {
       return;
-    }
-
-    if (currentEntry) {
+    } else if (currentEntry) { // currentEntry has a different sessionId
       this.delete(initData);
     }
 
@@ -85,6 +106,11 @@ export default class PersistedSessionsSet extends SessionSet {
     this._save();
   }
 
+  /**
+   * Delete entry (sessionId + initData) based on its initData.
+   * @param {Array|TypedArray|Number}  initData
+   * @returns {Object|null}
+   */
   delete(initData) {
     initData = hashInitData(initData);
 
@@ -98,11 +124,17 @@ export default class PersistedSessionsSet extends SessionSet {
     }
   }
 
+  /**
+   * Delete all saved entries.
+   */
   dispose() {
     this._entries = [];
     this._save();
   }
 
+  /**
+   * Use the given storage to store the current entries.
+   */
   _save() {
     try {
       this._storage.save(this._entries);

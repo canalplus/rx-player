@@ -26,9 +26,10 @@ import hashInitData from "./hash_init_data.js";
  * MediaKeySessions. This set allow to reuse sessions without re-
  * negotiating a license exchange if the key is already used in a
  * loaded session.
+ * @class InMemorySessionsSet
+ * @extends SessionSet
  */
 export default class InMemorySessionsSet extends SessionSet {
-
   getFirst() {
     if (this._entries.length > 0) {
       return this._entries[0].session;

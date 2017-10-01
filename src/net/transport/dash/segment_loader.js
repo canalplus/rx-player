@@ -24,6 +24,13 @@ import {
   replaceTokens,
 } from "./utils.js";
 
+/**
+ * Segment loader triggered if there was no custom-defined one in the API.
+ * @param {Object} opt
+ * @param {string} opt.url
+ * @param {Segment} opt.segment
+ * @returns {Observable}
+ */
 function regularSegmentLoader({ url, segment }) {
   const { range, indexRange } = segment;
 
@@ -66,6 +73,11 @@ function regularSegmentLoader({ url, segment }) {
   }
 }
 
+/**
+ * Generate a segment loader for the application
+ * @param {Function} [customSegmentLoader]
+ * @returns {Function}
+ */
 const segmentPreLoader = (customSegmentLoader) => ({
   segment,
   adaptation,
@@ -85,6 +97,7 @@ const segmentPreLoader = (customSegmentLoader) => ({
     return Observable.empty();
   }
 
+  // construct url for the segment
   const path = media ? replaceTokens(media, segment, representation) : "";
   const url = resolveURL(representation.baseURL, path);
 
@@ -105,6 +118,13 @@ const segmentPreLoader = (customSegmentLoader) => ({
     let hasFinished = false;
     let hasFallbacked = false;
 
+    /**
+     * Callback triggered when the custom segment loader has a response.
+     * @param {Object} args
+     * @param {*} args.data - The segment data
+     * @param {Number} args.size - The segment size
+     * @param {Number} args.duration - The duration of the request, in ms
+     */
     const resolve = (args = {}) => {
       if (!hasFallbacked) {
         hasFinished = true;
@@ -117,6 +137,10 @@ const segmentPreLoader = (customSegmentLoader) => ({
       }
     };
 
+    /**
+     * Callback triggered when the custom segment loader fails
+     * @param {*} [err={}] - The corresponding error encountered
+     */
     const reject = (err = {}) => {
       if (!hasFallbacked) {
         hasFinished = true;
@@ -124,6 +148,10 @@ const segmentPreLoader = (customSegmentLoader) => ({
       }
     };
 
+    /**
+     * Callback triggered when the custom segment loader wants to fallback to
+     * the "regular" implementation
+     */
     const fallback = () => {
       hasFallbacked = true;
       regularSegmentLoader(args).subscribe(obs);
@@ -139,6 +167,5 @@ const segmentPreLoader = (customSegmentLoader) => ({
     };
   });
 };
-
 
 export default segmentPreLoader;
