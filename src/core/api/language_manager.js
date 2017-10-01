@@ -15,6 +15,7 @@
  */
 
 import arrayFind from "array-find";
+import nextTick from "next-tick";
 
 /**
  * Try to find the given track config in the adaptations given:
@@ -98,10 +99,8 @@ class LanguageManager {
    * @param {Object} adaptations$
    * @param {Subject} adaptations$.audio$ - Subject through which the chosen
    * audio adaptation will be emitted.
-   * Will emit the first choice before the constructor finish.
    * @param {Subject} adaptations$.text$ - Subject through which the chosen
    * text adaptation will be emitted
-   * Will emit the first choice before the constructor finish.
    *
    * @param {Object} [options={}]
    * @param {Object} [options.defaultTextTrack] - The language and closedCaption
@@ -135,7 +134,10 @@ class LanguageManager {
         audioAdaptations[0] : audioAdaptations[0];
       this._currentAudioAdaptation = initialAudioAdaptation;
 
-      audio$.next(this._currentAudioAdaptation);
+      // wait for the constructor to finish before emitting the chosen track
+      nextTick(() => {
+        audio$.next(this._currentAudioAdaptation);
+      });
     }
 
     if (text$) {
@@ -144,7 +146,10 @@ class LanguageManager {
         null : null;
       this._currentTextAdaptation = initialTextAdaptation;
 
-      text$.next(this._currentTextAdaptation);
+      // wait for the constructor to finish before emitting the chosen track
+      nextTick(() => {
+        text$.next(this._currentTextAdaptation);
+      });
     }
   }
 
