@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * Convert given buffer to a 32bit integer hash
+ * @param {Array|TypedArray} buffer
+ * @returns {Number}
+ */
 function hashBuffer(buffer) {
   let hash = 0;
   let char;
@@ -25,6 +30,11 @@ function hashBuffer(buffer) {
   return hash;
 }
 
+/**
+ * Convert given init data to a 32bit integer hash
+ * @param {Array|TypedArray|number} buffer
+ * @returns {Number}
+ */
 function hashInitData(initData) {
   if (typeof initData == "number") {
     return initData;
