@@ -1,55 +1,149 @@
 import { expect } from "chai";
-import sinon from "sinon";
 import RxPlayer from "../../../src";
 import sleep from "../utils/sleep.js";
-import {
-  mockManifestRequest,
-  mockAllRequests,
-} from "../utils/mock_requests.js";
-import Mock from "../mocks/dash_static_SegmentTimeline.js";
-import { Observable } from "rxjs/Observable";
+import { getContentFromURL } from "../utils/mock_requests.js";
+import { XHRmock } from "../utils/mock_XHR.js";
 
-describe("plays", function () {
+describe("video player", function () {
 
   let player;
-  let fakeServer;
-  let video;
-
-  var isPlaying = function() {
-    return video.currentTime > 0
-            && !video.paused
-            && !video.ended
-            && video.readyState > 2;
-  };
-
   beforeEach(() => {
     player = new RxPlayer();
-    video = player.getVideoElement();
-    fakeServer = sinon.fakeServer.create({
-      autoRespond: true,
-    });
+    XHRmock.startXHRmock(getContentFromURL);
   });
 
   afterEach(() => {
     player.dispose();
-    fakeServer.restore();
+    XHRmock.restoreXHRmock();
   });
 
-  it("should begin playback", async function () {
+  it("should begin playback", async function (done) {
 
-    mockAllRequests(fakeServer, Mock);
+    player.loadVideo({url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd", transport: "dash"});
 
-    player.addEventListener("playerStateChange", newState => {
-      console.log(newState);
+    await new Promise(function(resolve) {
+      player.getVideoElement().addEventListener("loadeddata", function() {
+        resolve();
+      }, false);
     });
 
-    player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
-    expect(video.currentTime).to.equal(0);
+    player.play();
 
-    // player.play();
-    // await sleep(1);
-    // expect(video.currentTime).to.be.above(0)
+    await sleep(100);
 
+    expect(player.getPosition()).to.be.above(0);
+    expect(player.getVideoLoadedTime()).to.be.above(0);
+    expect(player.getVideoPlayedTime()).to.be.above(0);
+
+    done();
 
   });
+
+  it("should seek and continue playing", async function (done) {
+
+    player.loadVideo({url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd", transport: "dash"});
+
+    await new Promise(function(resolve) {
+      player.getVideoElement().addEventListener("loadeddata", function() {
+        resolve();
+      }, false);
+    });
+
+    player.seekTo(2);
+    expect(player.getPosition()).to.equal(2);
+
+    player.play();
+    await sleep(100);
+
+    expect(player.getPosition()).to.be.above(2);
+
+    done();
+  });
+
+  it("should seek to maximum position if manual seek is higher than maximum", async function (done) {
+
+    player.loadVideo({url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd", transport: "dash"});
+
+    await new Promise(function(resolve) {
+      player.getVideoElement().addEventListener("loadeddata", function() {
+        resolve();
+      }, false);
+    });
+
+    player.play();
+    await sleep(100);
+    player.seekTo(200);
+
+    expect(player.getPosition()).to.equal(player.getMaximumPosition());
+
+    done();
+  });
+
+  it("should download first segment when wanted buffer ahead is under first segment duration", async function (done) {
+
+    player.setWantedBufferAhead(2);
+
+    player.loadVideo({url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd", transport: "dash"});
+    await sleep(100);
+
+    expect(player.getVideoLoadedTime()).to.equal(player.getCurrentRepresentations().video.index._index.timeline[0].d / 1000);
+
+    done();
+  });
+
+  it("should continue downloading when seek to wanter buffer ahead", async function(done) {
+
+    let state;
+
+    player.setWantedBufferAhead(2);
+
+    player.addEventListener("playerStateChange", function(newState){
+      if (newState === "PLAYING") {state = newState;}
+    });
+
+    player.loadVideo({url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd", transport: "dash"});
+    await sleep(100);
+
+    const loadedVideo = player.getVideoLoadedTime();
+
+    player.seekTo(loadedVideo);
+    await sleep(100);
+
+    expect(player.getVideoLoadedTime()).to.be.above(loadedVideo);
+
+    player.play();
+    await sleep(100);
+
+    expect(state).to.equal("PLAYING");
+
+    done();
+  });
+
+  it("should not load more than defined max buffer ahead", async function(done) {
+
+    player.setMaxBufferAhead(2);
+
+    player.loadVideo({url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd", transport: "dash"});
+    await sleep(100);
+
+    expect(Math.round(player.getVideoLoadedTime())).to.equal(2);
+
+    done();
+  });
+
+  it("should delete buffer behind", async function(done) {
+
+    player.setMaxBufferBehind(2);
+
+    player.loadVideo({url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd", transport: "dash"});
+    await sleep(100);
+
+    player.seekTo(8);
+    await sleep(100);
+
+    expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(8);
+
+    done();
+  });
+
 });
