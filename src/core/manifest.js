@@ -461,8 +461,17 @@ function normalizeRepresentation(
 
   const representation = assignAndClone(inherit, initialRepresentation);
 
-  representation.index = representation.index || {};
-  if (!representation.index.timescale) {
+  if (!representation.index) {
+    // if we have no index, it must mean the whole file is directly accessible
+    // as is. Simulate a "template" for now as it is the most straightforward.
+    // TODO own indexType
+    representation.index = {
+      indexType: "template",
+      duration: Number.MAX_VALUE,
+      timescale: 1,
+      startNumber: 0,
+    };
+  } else if (!representation.index.timescale) {
     representation.index.timescale = 1;
   }
 

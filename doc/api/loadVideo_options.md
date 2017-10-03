@@ -73,13 +73,16 @@ This property is mandatory if the content uses DRM.
 This property is an array of objects with the following properties (only ``type`` and ``getLicense`` are mandatory here):
   - ``type`` (``string``): the type of keySystem used (e.g. ``"widevine"``, ``"playready"`` ...)
 
-  - ``getLicense`` (``Function``): Called as the ``keymessage`` event is received from the browser. Gets two arguments when called:
-      1. the message (``Uint8Array``): The message from the CDM. Messages are Key System-specific.
-      2. the messageType (``string``): The possible message types are all defined in [the w3c specification](https://w3c.github.io/encrypted-media/#idl-def-mediakeymessagetype).
+  - ``getLicense`` (``Function``): Callback which will be triggered everytime a message is sent by the Content Decryption Module (CDM), usually to fetch/renew the license.
+
+    Gets two arguments when called:
+      1. the message (``Uint8Array``): The message, formatted to an Array of bytes.
+      2. the messageType (``string``): String describing the type of message received. There is only 4 possible message types, all defined in [the w3c specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
 
       This function should return either synchronously the license, or a Promise which:
-        - resolves if the license was fetched with the licence in argument
-        - reject if an error was encountered
+      - resolves if the license was fetched, with the licence in argument
+
+      - reject if an error was encountered
 
       In any case, the license provided by this function should be of a ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
 
@@ -94,9 +97,30 @@ This property is an array of objects with the following properties (only ``type`
 
   - ``persistentStateRequired`` (``Boolean|undefined``)
 
-  - ``distinctiveIdentifierRequired`` (``Boolean|undefined``)
+  - ``distinctiveIdentifierRequired`` (``Boolean|undefined``): When set to ``true``, the use of [Distinctive Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier) or [Distinctive Permanent Identifier(s)](https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers) will be required. This is not needed for most usecases.
 
   - ``onKeyStatusesChange``: (``Function|undefined``)
+
+#### Example
+
+Example of a simple DRM configuration for widevine and playready DRMs:
+```js
+player.loadVideo({
+  url: manifestURL,
+  transport: "dash", // or "smooth"
+  keySystems: [{
+    type: "widevine",
+    getLicense(challenge) {
+      return ajaxPromise(widevineLicenseServer, challenge);
+    }
+  }, {
+    type: "playready",
+    getLicense(challenge) {
+      return ajaxPromise(playreadyLicenseServer, challenge);
+    }
+  }]
+})
+```
 
 ### <a name="prop-autoPlay"></a>autoPlay
 
@@ -281,5 +305,10 @@ const supplementaryImageTracks = [{
 _type_: ``Array.<Boolean>|undefined``
 _defaults_: ``false``
 
-If set to ``true``, the eventual subtitles will be put on mode ``hidden`` when added
-to the video element, so the subtitles won't be displayed by it.
+If set to ``true``, the eventual <track> element will be put on mode ``hidden`` when added to the video element, so it won't actually display the subtitles the rx-player add to it.
+
+This has an effect only if:
+  - a text track is currently active
+  - the text track format is understood by the rx-player
+
+This option can be useful if you want to set your own logic to display the video subtitles. In that case, you can just use the <track> element (``getNativeTextTrack`` method or ``nativeTextTrackChange`` event) and its events.
