@@ -1,3 +1,5 @@
+import parseXML from "../utils/parsing.js"
+
 /**
  * Mock manifest request as defined by the mock structure given.
  * @param {Object} fakeServer
@@ -53,7 +55,54 @@ function mockAllRequests(fakeServer, mock) {
   }
 }
 
+/**
+ * Mock every content defined in the mock structure given.
+ * @param {Object} mock
+ */
+function getContentFromURL(mock, url) {
+  if(mock) {
+    for (const type of Object.keys(mock)) {
+      if (type !== "manifest") {
+        const contents = mock[type];
+        if (contents && contents.length) {
+          for (const content of contents) {
+            if (content && content.init) {
+              if(content.init.url === url) {return {
+                data: content.init.data,
+                type: content.init.contentType,
+                size: content.init.data.length,
+              };
+              }
+              if (content && content.segments) {
+                for (const segment of content.segments) {
+                  if (segment.url === url) {return {
+                    data: segment.data,
+                    type: segment.contentType,
+                    size: segment.data.length,
+                  };
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else {
+        const manifest = mock["manifest"];
+        if (url === manifest.url) {
+          return {
+            data: parseXML(manifest.data),
+            type: manifest.contentType,
+            size: manifest.data.length,
+          }
+           ;}
+      }
+    }
+    return "";
+  }
+}
+
 export {
   mockManifestRequest,
   mockAllRequests,
+  getContentFromURL,
 };
