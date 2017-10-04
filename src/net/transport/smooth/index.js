@@ -170,9 +170,9 @@ export default function(options={}) {
 
         nextSegments = timings.nextSegments;
         segmentInfos = timings.segmentInfos;
-        segmentData.start = segmentInfos.start;
+        segmentData.start = segmentInfos.time;
         segmentData.end = segmentInfos.duration != null ?
-          segmentInfos.start + segmentInfos.duration : undefined;
+          segmentInfos.time + segmentInfos.duration : undefined;
         segmentData.timescale = segmentInfos.timescale;
       } else {
         // vod is simple WebVTT or TTML text

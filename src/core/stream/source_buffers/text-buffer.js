@@ -138,6 +138,8 @@ class TextSourceBuffer extends AbstractSourceBuffer {
           startTime,
           endTime != null ? endTime : newCues[newCues.length - 1].endTime
         );
+      } else if (endTime != null) {
+        this.buffered.insert(startTime, endTime);
       }
     }
   }
