@@ -110,7 +110,6 @@ function sessionEventsHandler(session, keySystem, errorStream) {
         // TODO: remove this hack present because the order of the
         // arguments has changed in spec and is not the same between
         // Edge and Chrome.
-
         const reason = KEY_STATUS_ERRORS[keyStatus] ? keyStatus : keyId;
         const isKeyStatusError = KEY_STATUS_ERRORS[reason];
         if (isKeyStatusError) {
