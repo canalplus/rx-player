@@ -111,11 +111,11 @@ function sessionEventsHandler(session, keySystem, errorStream) {
         // arguments has changed in spec and is not the same between
         // Edge and Chrome.
 
-        const status = KEY_STATUS_ERRORS[keyStatus] ? keyStatus : keyId;
-        const reason = KEY_STATUS_ERRORS[status];
-        if (reason) {
+        const reason = KEY_STATUS_ERRORS[keyStatus] ? keyStatus : keyId;
+        const isKeyStatusError = KEY_STATUS_ERRORS[reason];
+        if (isKeyStatusError) {
           throw new
-            EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", status, true);
+            EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", reason, true);
         }
       });
 
