@@ -110,10 +110,12 @@ function sessionEventsHandler(session, keySystem, errorStream) {
         // TODO: remove this hack present because the order of the
         // arguments has changed in spec and is not the same between
         // Edge and Chrome.
-        const reason = KEY_STATUS_ERRORS[keyStatus] || KEY_STATUS_ERRORS[keyId];
+
+        const status = KEY_STATUS_ERRORS[keyStatus] ? keyStatus : keyId;
+        const reason = KEY_STATUS_ERRORS[status];
         if (reason) {
           throw new
-            EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
+            EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", status, true);
         }
       });
 
