@@ -150,6 +150,7 @@ If defined, this property must be an object containing a single key. This key ca
   - ``fromLastPosition`` (``Number``): relative position from the maximum possible one, in seconds. Should be a negative number:
       - for live contents, it is the difference between the starting position and the live edge (as defined by the manifest)
       - for non-live contents, it is the difference between the starting position and the end position of the content.
+  - ``percentage`` (``Number``): percentage of the wanted position. ``0`` being the minimum position possible (0 for static content, buffer depth for live contents) and ``100`` being the maximum position possible (``duration`` for static content, live edge for live contents).
 
 Note: Only one of those properties will be considered, in the same order of priority they are written here.
 
