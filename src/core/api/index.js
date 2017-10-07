@@ -130,6 +130,7 @@ class Player extends EventEmitter {
    * private properties should be initialized here for better visibility.
    * @param {Object} options
    * @param {HTMLVideoElement_} options.videoElement
+   * TODO this._priv.defaultTextTrackElement?
    */
   constructor(options) {
     super();
