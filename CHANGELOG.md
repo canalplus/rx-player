@@ -84,6 +84,7 @@
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
   - api: fix infinite loading bug when a new content is launched as the previous one is ended or fell on error
   - dash: allow absolute BaseURL in Periods
+  - eme: do not set widevine robustnesses for non-widevine key systems
   - languages: fix bug which led the text buffer to _crash_ when the ``wantedBufferBehind`` option is set
   - languages: fix bug which led to TextTracks chunks being re-downloaded multiple times
   - languages/dash: allow plain text TTML, SAMI and VTT subtitles in DASH manifest

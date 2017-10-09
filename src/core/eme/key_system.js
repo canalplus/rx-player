@@ -82,6 +82,8 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
 /**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
+ * @param {string} [ksName] - Generic name for the key system. e.g. "clearkey",
+ * "widevine", "playready". Can be used to make exceptions depending on it.
  * @param {Object} keySystem
  * @param {Boolean} [keySystem.persistentLicense]
  * @param {Boolean} [keySystem.persistentStateRequired]
@@ -89,7 +91,7 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
-function buildKeySystemConfigurations(keySystem) {
+function buildKeySystemConfigurations(ksName, keySystem) {
   const sessionTypes = ["temporary"];
   let persistentState = "optional";
   let distinctiveIdentifier = "optional";
@@ -107,12 +109,23 @@ function buildKeySystemConfigurations(keySystem) {
     distinctiveIdentifier = "required";
   }
 
-  // TODO Widevine robustnesses should only be indicated for... Widevine-based
-  // encryption
+  // Set robustness, in order of consideration:
+  //   1. the user specified its own robustnesses
+  //   2. a "widevine" key system is used, in that case set the default widevine
+  //      robustnesses as defined in the config
+  //   3. set an undefined robustness
   const videoRobustnesses = keySystem.videoRobustnesses ||
-    EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES : []);
   const audioRobustnesses = keySystem.audioRobustnesses ||
-    EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES : []);
+
+  if (!videoRobustnesses.length) {
+    videoRobustnesses.push(undefined);
+  }
+
+  if (!audioRobustnesses.length) {
+    audioRobustnesses.push(undefined);
+  }
 
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
@@ -142,16 +155,19 @@ function buildKeySystemConfigurations(keySystem) {
     persistentState,
     sessionTypes,
   }, {
+    // TODO Re-test with a set contentType but an undefined robustness on the
+    // STBs on which this problem was found.
+    //
     // add another with no {audio,video}Capabilities for some legacy browsers.
     // As of today's spec, this should return NotSupported but the first
-    // candidate configuration should be good, so whe should have no downside
+    // candidate configuration should be good, so we should have no downside
     // doing that.
-    initDataTypes: ["cenc"],
-    videoCapabilities: undefined,
-    audioCapabilities: undefined,
-    distinctiveIdentifier,
-    persistentState,
-    sessionTypes,
+    // initDataTypes: ["cenc"],
+    // videoCapabilities: undefined,
+    // audioCapabilities: undefined,
+    // distinctiveIdentifier,
+    // persistentState,
+    // sessionTypes,
   }];
 }
 
@@ -219,8 +235,26 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
       }
 
       const { keyType, keySystem } = keySystemsType[index];
+
+      /**
+       * As our buildKeySystemConfigurations can make exceptions depending on
+       * the key system used (for example, specific default configurations for
+       * clearkey or widevine key systems, which all could have multiple
+       * different reverse domain names), I found it cleaner to take out the
+       * _canonical name_ (e.g. "widevine") here. This could thus allows people
+       * to set a key system through the specific reverse domain name option
+       * and for us to still categorize it as what it is in ``ksCanonicalName``
+       * (it's cleaner to do this check here).
+       * E.g. people would put com.widevine.alpha instead of widevine, and we
+       * would still be able to tell it's a widevine key system.
+       *
+       * TODO ATM, the notion of setting by hand the reverse domain name is
+       * pending but could be needed for the support of future STBs. Find out
+       * what to do here when time comes.
+       */
+      const ksCanonicalName = keySystem.type;
       const keySystemConfigurations =
-        buildKeySystemConfigurations(keySystem);
+        buildKeySystemConfigurations(ksCanonicalName, keySystem);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +
