@@ -142,6 +142,6 @@ The payload is the corresponding error. See [the Player Error documentation](./e
 
 _payload type_: ``HTMLElement``
 
-Triggered each times a text track is added to the video DOM element.
+Triggered each times the video DOM element text track changes.
 
-The payload is the corresponding TextTrack element.
+The payload is either the added TextTrack element or a null element if track is removed.
