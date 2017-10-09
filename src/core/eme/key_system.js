@@ -80,6 +80,19 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
 }
 
 /**
+* Find key system canonical name from key system type.
+* @param {string} ksType -- Obtained via inversion
+* @returns {string} -- Either the canonical name, or undefined.
+*/
+function findKeySystemName(ksType) {
+  for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
+    if(EME_KEY_SYSTEMS[ksName].includes(ksType))
+      {return ksName;}
+  }
+  return;
+}
+
+/**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
  * @param {string} [ksName] - Generic name for the key system. e.g. "clearkey",
@@ -206,10 +219,30 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
    *   - keySystem {Object}: the original keySystem object
    * @type {Array.<Object>}
    */
-  const keySystemsType = keySystems.reduce(
+  const keySystemsType =
+    keySystems.reduce(
+      (arr, keySystem) => {
+        if (keySystem.type) {
+          const keyName = keySystem.name || findKeySystemName(keySystem.type);
+          const keyType = keySystem.type;
+          return arr.concat([{keyName, keyType, keySystem}]);
+        }
+        else if(keySystem.name) {
+          return arr.concat(
+            (EME_KEY_SYSTEMS[keySystem.name] || [])
+              .map((keyType) => {
+                const keyName = keySystem.name;
+                return { keyName, keyType, keySystem };
+              })
+          );
+        }
+      }, []);
+
+
+  keySystems.reduce(
     (arr, keySystem) =>
       arr.concat(
-        (EME_KEY_SYSTEMS[keySystem.type] || [])
+        (EME_KEY_SYSTEMS[keySystem.name] || [])
           .map((keyType) => ({ keyType, keySystem }))
       )
     , []);
@@ -234,7 +267,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
         return;
       }
 
-      const { keyType, keySystem } = keySystemsType[index];
+      const { keyName, keyType, keySystem } = keySystemsType[index];
 
       /**
        * As our buildKeySystemConfigurations can make exceptions depending on
@@ -252,9 +285,9 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
        * pending but could be needed for the support of future STBs. Find out
        * what to do here when time comes.
        */
-      const ksCanonicalName = keySystem.type;
+      debugger;
       const keySystemConfigurations =
-        buildKeySystemConfigurations(ksCanonicalName, keySystem);
+        buildKeySystemConfigurations(keyName, keySystem);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +

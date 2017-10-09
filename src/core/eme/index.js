@@ -110,6 +110,7 @@ function createEME(video, keySystems, errorStream) {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
+      name: "string",
       type: "string",
     }));
   }
