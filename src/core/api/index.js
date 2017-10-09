@@ -367,7 +367,9 @@ class Player extends EventEmitter {
       .startWith(PLAYER_STATES.LOADING);
 
     const playChanges = onEvent(videoElement, ["play", "pause"]);
-    const textTracksChanges = onEvent(videoElement.textTracks, ["addtrack"]);
+
+    const textTracksChanges = onEvent(videoElement.textTracks, ["addtrack", "removetrack"])
+        .filter(event => event.type === "removetrack" ? event.target.length === 0 : true);
 
     let streamDisposable = void 0;
     unsubscribeLoadedVideo$.take(1).subscribe(() => {

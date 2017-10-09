@@ -280,9 +280,7 @@ export default (self) => ({
    * @param {HTMLElement} evt.target
    */
   onNativeTextTrackNext({ target: [trackElement] }) {
-    if (trackElement) {
-      self.trigger("nativeTextTrackChange", trackElement);
-    }
+    self.trigger("nativeTextTrackChange", trackElement ? trackElement : null );
   },
 
   /**
