@@ -144,4 +144,4 @@ _payload type_: ``HTMLElement``
 
 Triggered each times the video DOM element text track changes.
 
-The payload is either the added TextTrack element or a null element if track is removed.
+The payload is either the corresponding TextTrack element or a null element if no track is set.
