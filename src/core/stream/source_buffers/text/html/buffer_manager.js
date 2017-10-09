@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import assert from "../../../../utils/assert.js";
+import assert from "../../../../../utils/assert.js";
 
 /**
- * Maximum time difference, in seconds, for two text segment's start times
+ * Maximum time difference, in seconds, between two text segment's start times
  * and/or end times for them to be considered the same in the custom text's
  * source buffer used for the "html" textTrackMode.
  *
@@ -57,7 +57,9 @@ const MAX_DELTA_BUFFER_TIME = 0.2;
  * @param {Number} b
  * @returns {Boolean}
  */
-const areNearlyEqual = (a, b) => Math.abs(a - b) <= MAX_DELTA_BUFFER_TIME;
+function areNearlyEqual(a, b) {
+  return Math.abs(a - b) <= MAX_DELTA_BUFFER_TIME;
+}
 
 /**
  * Get cue corresponding to the given time in an array of cues.
@@ -66,10 +68,10 @@ const areNearlyEqual = (a, b) => Math.abs(a - b) <= MAX_DELTA_BUFFER_TIME;
  * @returns {Object|undefined}
  */
 function getCueInCues(currentTime, cues) {
-  for (let i = 0; i < cues.length; i++) {
+  for (let i = cues.length - 1; i >= 0; i--) {
     const cue = cues[i];
-    if (currentTime < cue.end) {
-      if (currentTime >= cue.start) {
+    if (currentTime >= cue.start) {
+      if (currentTime < cue.end) {
         return cue;
       } else {
         return;
@@ -132,17 +134,8 @@ function removeCuesInfosBetween(cuesInfos, start, end) {
 }
 
 /**
- * Manage the buffer of the text sourcebuffer.
- * Allows to add and recuperate cues in a given buffer.
- *
- * Also manage overlapping cues groups.
- *
- * The immutability of individual Cue elements inserted is guaranteed.
- * That is, if the get method returns the same cue's reference, its properties
- * are guaranteed to have the exact same values than before. The inverse is
- * true, if the values are the same than before, the reference will stay the
- * same (this is useful to easily check if the DOM should be updated, for
- * example).
+ * Manage the buffer of the HTML text Sourcebuffer.
+ * Allows to add, remove and recuperate cues at given times.
  * @class TextBufferManager
  */
 export default class TextBufferManager {
@@ -152,7 +145,7 @@ export default class TextBufferManager {
      *  {
      *     start: Number,
      *     end: Number,
-     *     cues: [
+     *     cues: [  // Cues Group
      *      {
      *        start: Number,
      *        end: Number,
@@ -172,15 +165,27 @@ export default class TextBufferManager {
    *   - start {Number}: start time for which the cue should be displayed.
    *   - end {Number}: end time for which the cue should be displayed.
    *   - element {HTMLElement}: The cue to diplay
+   *
+   * We do not mutate individual cue here.
+   * That is, if the ``get`` method returns the same cue's reference than a
+   * previous ``get`` call, its properties are guaranteed to have the exact same
+   * values than before, if you did not mutate it on your side.
+   * The inverse is true, if the values are the same than before, the reference
+   * will stay the same (this is useful to easily check if the DOM should be
+   * updated, for example).
+   *
    * @param {Number} time
-   * @returns {Object|undefined}
+   * @returns {HTMLElement|undefined} - The cue to display
    */
   get(time) {
     const cuesBuffer = this._cuesBuffer;
-    for (let i = 0; i < cuesBuffer.length; i++) {
+
+    // begins at the end as most of the time the player will ask for the last
+    // CuesGroup
+    for (let i = cuesBuffer.length - 1; i >= 0; i--) {
       const cuesInfos = cuesBuffer[i];
-      if (time < cuesInfos.end) {
-        if (time >= cuesInfos.start) {
+      if (time >= cuesInfos.start) {
+        if (time < cuesInfos.end) {
           return getCueInCues(time, cuesInfos.cues);
         } else {
           return;
@@ -198,8 +203,8 @@ export default class TextBufferManager {
   remove(from, _to) {
     if (__DEV__) {
       assert(from >= 0);
-      assert(to >= 0);
-      assert(from > to);
+      assert(_to >= 0);
+      assert(_to > from);
     }
 
     const to = Math.max(from, _to);
@@ -241,9 +246,26 @@ export default class TextBufferManager {
    *   - start {Number}: start time for which the cue should be displayed.
    *   - end {Number}: end time for which the cue should be displayed.
    *   - element {HTMLElement}: The cue to diplay
-   * @param {Array.<Object>} cues
-   * @param {Number} start
-   * @param {Number} end
+   *
+   * @param {Array.<Object>} cues - CuesGroups, array of objects with the
+   * following properties:
+   *   - start {Number}: the time at which the cue will start to be displayed
+   *   - end {Number}: the time at which the cue will end to be displayed
+   *   - cue {HTMLElement}: The cue
+   * @param {Number} start - Start time at which the CuesGroup applies.
+   * This is different than the start of the first cue to display in it, this
+   * has more to do with the time at which the _text segment_ starts.
+   * @param {Number} end - End time at which the CuesGroup applies.
+   * This is different than the end of the last cue to display in it, this
+   * has more to do with the time at which the _text segment_ ends.
+   *
+   * TODO add securities to ensure that:
+   *   - the start of a CuesGroup is inferior or equal to the start of the first
+   *     cue in it
+   *   - the end of a CuesGroup is superior or equal to the end of the last
+   *     cue in it
+   * If those requirements are not met, we could delete some cues when adding
+   * a CuesGroup before/after. Find a solution.
    */
   insert(cues, start, end) {
     const cuesBuffer = this._cuesBuffer;

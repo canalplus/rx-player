@@ -47,6 +47,7 @@ const config = {
         DIRECTFILE: true,
         NATIVE_TTML: true,
         NATIVE_SAMI: true,
+        NATIVE_VTT: true,
         HTML_TTML: true,
       },
       "__DEV__": true,

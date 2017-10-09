@@ -16,7 +16,10 @@
 
 import log from "../../../utils/log";
 
-import TextSourceBuffer from "./text";
+import {
+  HTMLTextSourceBuffer,
+  NativeTextSourceBuffer,
+} from "./text";
 import ImageSourceBuffer from "./image";
 
 /**
@@ -85,15 +88,23 @@ function createSourceBuffer(
       }
     }
 
-    if (type == "text") {
+    if (type === "text") {
       log.info("add text sourcebuffer", codec);
-      sourceBuffer = new TextSourceBuffer(video, codec, {
-        mode: options.textTrackMode,
-        hideNativeSubtitle: options.hideNativeSubtitle,
-        textTrackElement: options.textTrackElement,
-      });
+      if (options.textTrackMode === "html") {
+        sourceBuffer = new HTMLTextSourceBuffer(
+          codec,
+          video,
+          options.textTrackElement
+        );
+      } else {
+        sourceBuffer = new NativeTextSourceBuffer(
+          codec,
+          video,
+          options.hideNativeSubtitle
+        );
+      }
     }
-    else if (type == "image") {
+    else if (type === "image") {
       log.info("add image sourcebuffer", codec);
       sourceBuffer = new ImageSourceBuffer(codec);
     }

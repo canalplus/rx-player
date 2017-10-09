@@ -57,6 +57,12 @@
 //   (If RXP_BAREBONE was set to "true", you have to explicitely set this value
 //   to "true" to include this feature in the build.)
 //
+//   - RXP_NATIVE_VTT
+//   If set to "false", all code relative to VTT parsing for native text tracks
+//   will be ignored during a build.
+//   (If RXP_BAREBONE was set to "true", you have to explicitely set this value
+//   to "true" to include this feature in the build.)
+//
 //   - RXP_HTML_TTML
 //   If set to "false", all code relative to TTML parsing for html text tracks*
 //   will be ignored during a build.
@@ -124,6 +130,10 @@ const config = {
         NATIVE_SAMI: isBarebone ?
           process.env.RXP_NATIVE_SAMI === "true" :
           process.env.RXP_NATIVE_SAMI !== "false",
+
+        NATIVE_VTT: isBarebone ?
+          process.env.RXP_NATIVE_VTT === "true" :
+          process.env.RXP_NATIVE_VTT !== "false",
 
         HTML_TTML: isBarebone ?
           process.env.RXP_HTML_TTML === "true" :
