@@ -179,6 +179,11 @@ class TextSourceBuffer extends AbstractSourceBuffer {
           } else if (this._currentElement === cue.element) {
             return;
           }
+          if (this._currentElement) {
+            try {
+              textTrackElement.removeChild(this._currentElement);
+            } catch (e) {}
+          }
           this._currentElement = cue.element;
           textTrackElement.appendChild(this._currentElement);
         });
@@ -276,13 +281,15 @@ class TextSourceBuffer extends AbstractSourceBuffer {
    * @param {Number} to
    */
   _remove(from, to) {
-    const track = this._track;
-    const cues = track.cues;
-    for (let i = cues.length - 1; i >= 0; i--) {
-      const cue = cues[i];
-      const { startTime, endTime } = cue;
-      if (startTime >= from && startTime <= to && endTime <= to) {
-        track.removeCue(cue);
+    if (this._mode === "native" && this._track) {
+      const track = this._track;
+      const cues = track.cues;
+      for (let i = cues.length - 1; i >= 0; i--) {
+        const cue = cues[i];
+        const { startTime, endTime } = cue;
+        if (startTime >= from && startTime <= to && endTime <= to) {
+          track.removeCue(cue);
+        }
       }
     }
     this.buffered.remove(from, to);

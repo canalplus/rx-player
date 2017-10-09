@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import assert from "../../../../utils/assert.js";
+
 /**
  * Maximum time difference, in seconds, for two text segment's start times
  * and/or end times for them to be considered the same in the custom text's
@@ -77,35 +79,56 @@ function getCueInCues(currentTime, cues) {
 }
 
 /**
- * Remove cue(s) in an array of cues which comes after a given time.
- * @param {Array.<Object>} cues
+ * Get all cues strictly before the given time.
+ * @param {Object} cues
  * @param {Number} time
+ * @returns {Array.<Object>}
  */
-function removeInCuesAfter(cues, time) {
+function getCuesBefore(cues, time) {
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
-    if (time > cue.start) {
-      cues.splice(i, cues.length - i);
-      return;
+    if (time < cue.end) {
+      return cues.slice(0, i);
     }
   }
-  return;
+  return cues.slice();
 }
 
 /**
- * Remove cue(s) in an array of cues which comes before a given time.
- * @param {Array.<Object>} cues
+ * Get all cues strictly after the given time.
+ * @param {Object} cues
  * @param {Number} time
+ * @returns {Array.<Object>}
  */
-function removeInCuesBefore(cues, time) {
-  for (let i = cues.length - 1; i >= 0; i--) {
+function getCuesAfter(cues, time) {
+  for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
-    if (time > cue.start) {
-      cues.splice(0, i);
-      return;
+    if (time < cue.end) {
+      return cues.slice(i + 1, cues.length);
     }
   }
-  return;
+  return [];
+}
+
+/**
+ * @param {Object} cuesInfos
+ * @param {Number} start
+ * @param {Number} end
+ * @returns {Array.<Object>}
+ */
+function removeCuesInfosBetween(cuesInfos, start, end) {
+  const cuesInfos1 = {
+    start: cuesInfos.start,
+    end: start,
+    cues: getCuesBefore(cuesInfos.cues, start),
+  };
+
+  const cuesInfos2 = {
+    start: end,
+    end: cuesInfos.end,
+    cues: getCuesAfter(cuesInfos.cues, end),
+  };
+  return [cuesInfos1, cuesInfos2];
 }
 
 /**
@@ -168,6 +191,51 @@ export default class TextBufferManager {
   }
 
   /**
+   * Remove cue from a certain range of time.
+   * @param {Number} from
+   * @param {Number} to
+   */
+  remove(from, _to) {
+    if (__DEV__) {
+      assert(from >= 0);
+      assert(to >= 0);
+      assert(from > to);
+    }
+
+    const to = Math.max(from, _to);
+    const cuesBuffer = this._cuesBuffer;
+    const len = cuesBuffer.length;
+    for (let i = 0; i < len; i++) {
+      const startCuesInfos = cuesBuffer[i];
+
+      if (startCuesInfos.end >= to) {
+        const [
+          cuesInfos1,
+          cuesInfos2,
+        ] = removeCuesInfosBetween(startCuesInfos, from, to);
+        this._cuesBuffer[i] = cuesInfos1;
+        cuesBuffer.splice(i + 1, 0, cuesInfos2);
+        return;
+      } else {
+        startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
+        startCuesInfos.end = from;
+      }
+
+      for (let j = i + 1; j < len; j++) {
+        const endCuesInfos = cuesBuffer[i];
+        if (to < endCuesInfos.end) {
+          cuesBuffer.splice(i + 1, j - (i + 1));
+          endCuesInfos.cues = getCuesAfter(endCuesInfos.cues, to);
+          endCuesInfos.start = to;
+          return;
+        }
+      }
+      cuesBuffer.splice(i + 1, cuesBuffer.length - (i + 1));
+      return;
+    }
+  }
+
+  /**
    * Insert new cues in our text buffer.
    * cues is an array of objects with three properties:
    *   - start {Number}: start time for which the cue should be displayed.
@@ -202,7 +270,7 @@ export default class TextBufferManager {
             //   1. remove some cues at the start of the current one
             //   2. update start of current one
             //   3. add ours before the current one
-            removeInCuesBefore(cuesInfos, end);
+            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
             cuesInfos.start = end;
             cuesBuffer.splice(i, 0, cuesInfosToInsert);
             return;
@@ -227,7 +295,10 @@ export default class TextBufferManager {
             return;
           }
           // else -> end < cuesInfos.end (overlapping case)
-          removeInCuesBefore(cuesInfos.cues, end);
+          //   ours:            |AAAAA|
+          //   the current one: |BBBBBBBB|
+          //   Result:          |AAAAABBB|
+          cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
           cuesInfos.start = end;
           cuesBuffer.splice(i, 0, cuesInfosToInsert);
           return;
@@ -261,7 +332,7 @@ export default class TextBufferManager {
           //   1. remove some cues at the start of the current one
           //   2. update start of current one
           //   3. add ours before the current one
-          removeInCuesBefore(cuesInfos.cues, end); // overlapping
+          cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
           cuesInfos.start = end;
           cuesBuffer.splice(i, 0, cuesInfosToInsert);
           return;
@@ -280,9 +351,9 @@ export default class TextBufferManager {
           //   1. remove some cues at the end of the current one
           //   2. update end of current one
           //   3. add ours after current one
-          removeInCuesAfter(cuesInfos.cues, start); // overlapping
+          cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
           cuesInfos.end = start;
-          cuesBuffer.splice(i+1, 0, cuesInfosToInsert);
+          cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
           return;
         }
         // else -> end < cuesInfos.end
@@ -293,10 +364,13 @@ export default class TextBufferManager {
         // Which means:
         //   1. split current one in two parts based on our cue.
         //   2. insert our cue into it.
-        // TODO For now just replaced as:
-        //   - 1: This will never happen
-        //   - 2: 2lazy
-        cuesBuffer[i] = cuesInfosToInsert;
+        const [
+          cuesInfos1,
+          cuesInfos2,
+        ] = removeCuesInfosBetween(cuesInfos, start, end);
+        this._cuesBuffer[i] = cuesInfos1;
+        cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
+        cuesBuffer.splice(i + 2, 0, cuesInfos2);
         return;
       }
     }
