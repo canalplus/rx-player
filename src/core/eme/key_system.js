@@ -80,6 +80,19 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
 }
 
 /**
+* Find key system canonical name from key system type.
+* @param {string} ksType -- Obtained via inversion
+* @returns {string} -- Either the canonical name, or undefined.
+*/
+function findKeySystemCanonicalName(ksType) {
+  for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
+    if(EME_KEY_SYSTEMS[ksName].includes(ksType))
+      {return ksName;}
+  }
+  return;
+}
+
+/**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
  * @param {string} [ksName] - Generic name for the key system. e.g. "clearkey",
@@ -202,6 +215,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
   /**
    * Array of set keySystems for this content.
    * Each item of this array is an object containing two keys:
+   *   - keyName {string}: keySystem canonical name
    *   - keyType {string}: keySystem type
    *   - keySystem {Object}: the original keySystem object
    * @type {Array.<Object>}
@@ -209,9 +223,21 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
   const keySystemsType = keySystems.reduce(
     (arr, keySystem) =>
       arr.concat(
-        (EME_KEY_SYSTEMS[keySystem.type] || [])
-          .map((keyType) => ({ keyType, keySystem }))
+        (EME_KEY_SYSTEMS[keySystem.type] ?
+          EME_KEY_SYSTEMS[keySystem.type].map((keyType) =>
+          {
+            const keyName = keySystem.type;
+            return { keyName, keyType, keySystem };
+          }
+        )
+        :
+        [{
+          keyName: findKeySystemCanonicalName(keySystem.type),
+          keyType: keySystem.type,
+          keySystem,
+        }]
       )
+    )
     , []);
 
   return Observable.create((obs) => {
@@ -234,27 +260,17 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
         return;
       }
 
-      const { keyType, keySystem } = keySystemsType[index];
+      const { keyName, keyType, keySystem } = keySystemsType[index];
 
       /**
        * As our buildKeySystemConfigurations can make exceptions depending on
        * the key system used (for example, specific default configurations for
        * clearkey or widevine key systems, which all could have multiple
        * different reverse domain names), I found it cleaner to take out the
-       * _canonical name_ (e.g. "widevine") here. This could thus allows people
-       * to set a key system through the specific reverse domain name option
-       * and for us to still categorize it as what it is in ``ksCanonicalName``
-       * (it's cleaner to do this check here).
-       * E.g. people would put com.widevine.alpha instead of widevine, and we
-       * would still be able to tell it's a widevine key system.
-       *
-       * TODO ATM, the notion of setting by hand the reverse domain name is
-       * pending but could be needed for the support of future STBs. Find out
-       * what to do here when time comes.
+       * _canonical name_ (e.g. "widevine") here.
        */
-      const ksCanonicalName = keySystem.type;
       const keySystemConfigurations =
-        buildKeySystemConfigurations(ksCanonicalName, keySystem);
+        buildKeySystemConfigurations(keyName, keySystem);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +

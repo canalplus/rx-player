@@ -71,7 +71,7 @@ _type_: ``Array.<Object>|undefined``
 This property is mandatory if the content uses DRM.
 
 This property is an array of objects with the following properties (only ``type`` and ``getLicense`` are mandatory here):
-  - ``type`` (``string``): the type of keySystem used (e.g. ``"widevine"``, ``"playready"`` ...)
+  - ``type`` (``string``): either the canonical name of keySystem used (e.g. ``"widevine"``, ``"playready"`` ...), or the type (reversed domain name) of the keySystem (e.g. ``"com.widevine.alpha"``, ``"com.microsoft.playready"`` ...).
 
   - ``getLicense`` (``Function``): Callback which will be triggered everytime a message is sent by the Content Decryption Module (CDM), usually to fetch/renew the license.
 
