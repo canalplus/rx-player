@@ -15,13 +15,17 @@
  */
 
  export default function errorMessage(name, code, reason) {
-   if(!reason){
+   if (!reason) {
      return `${name} (${code})`;
    }
    else {
      switch(typeof reason) {
-     case "string": return `${name} (${code}) ${reason}`;
-     default: return `${name} (${code}) ${reason.message}`;
+
+     case "string":
+       return `${name} (${code}) ${reason}`;
+
+     default:
+       return `${name} (${code}) ${reason.message}`;
      }
    }
  }
