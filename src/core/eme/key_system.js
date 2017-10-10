@@ -86,8 +86,9 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
 */
 function findKeySystemName(ksType) {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
-    if(EME_KEY_SYSTEMS[ksName].includes(ksType))
-      {return ksName;}
+    if(EME_KEY_SYSTEMS[ksName].includes(ksType)) {
+      return ksName;
+    }
   }
   return;
 }
@@ -215,6 +216,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
   /**
    * Array of set keySystems for this content.
    * Each item of this array is an object containing two keys:
+   *   - keyName {string}: keySystem canonical name
    *   - keyType {string}: keySystem type
    *   - keySystem {Object}: the original keySystem object
    * @type {Array.<Object>}
@@ -222,30 +224,24 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
   const keySystemsType =
     keySystems.reduce(
       (arr, keySystem) => {
+
+        let ksType;
+
         if (keySystem.type) {
           const keyName = keySystem.name || findKeySystemName(keySystem.type);
           const keyType = keySystem.type;
-          return arr.concat([{keyName, keyType, keySystem}]);
+          ksType = [{keyName, keyType, keySystem}];
         }
         else if(keySystem.name) {
-          return arr.concat(
-            (EME_KEY_SYSTEMS[keySystem.name] || [])
+          ksType = (EME_KEY_SYSTEMS[keySystem.name] || [])
               .map((keyType) => {
                 const keyName = keySystem.name;
                 return { keyName, keyType, keySystem };
-              })
-          );
+              });
         }
+
+        return arr.concat(ksType);
       }, []);
-
-
-  keySystems.reduce(
-    (arr, keySystem) =>
-      arr.concat(
-        (EME_KEY_SYSTEMS[keySystem.name] || [])
-          .map((keyType) => ({ keyType, keySystem }))
-      )
-    , []);
 
   return Observable.create((obs) => {
     let disposed = false;
@@ -285,7 +281,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
        * pending but could be needed for the support of future STBs. Find out
        * what to do here when time comes.
        */
-      debugger;
+debugger;
       const keySystemConfigurations =
         buildKeySystemConfigurations(keyName, keySystem);
 

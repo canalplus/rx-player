@@ -461,5 +461,8 @@ export default {
       "com.chromecast.playready",
       "com.youtube.playready",
     ],
+    nagra: [
+      "com.nagra.prm",
+    ],
   },
 };
