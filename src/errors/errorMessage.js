@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/**
+ * Generate a normalized error message.
+ * @param {string} name
+ * @param {string} code
+ * @param {Error|string} [reason]
+ * @returns {string}
+ */
  export default function errorMessage(name, code, reason) {
    if (!reason) {
      return `${name} (${code})`;
