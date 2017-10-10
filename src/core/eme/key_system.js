@@ -86,8 +86,9 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
 */
 function findKeySystemCanonicalName(ksType) {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
-    if(EME_KEY_SYSTEMS[ksName].includes(ksType))
-      {return ksName;}
+    if(EME_KEY_SYSTEMS[ksName].includes(ksType)) {
+      return ksName;
+    }
   }
   return;
 }
@@ -221,23 +222,25 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
    * @type {Array.<Object>}
    */
   const keySystemsType = keySystems.reduce(
-    (arr, keySystem) =>
-      arr.concat(
-        (EME_KEY_SYSTEMS[keySystem.type] ?
-          EME_KEY_SYSTEMS[keySystem.type].map((keyType) =>
-          {
-            const keyName = keySystem.type;
-            return { keyName, keyType, keySystem };
-          }
-        )
-        :
-        [{
-          keyName: findKeySystemCanonicalName(keySystem.type),
-          keyType: keySystem.type,
-          keySystem,
-        }]
-      )
-    )
+    (arr, keySystem) => {
+
+      let ksType;
+
+      if (EME_KEY_SYSTEMS[keySystem.type]) {
+        ksType = EME_KEY_SYSTEMS[keySystem.type].map((keyType) => {
+          const keyName = keySystem.type;
+          return { keyName, keyType, keySystem };
+        }
+        );
+      }
+      else {
+        const keyName = findKeySystemCanonicalName(keySystem.type);
+        const keyType = keySystem.type;
+        ksType = [{ keyName, keyType, keySystem }];
+      }
+
+      return arr.concat(ksType);
+    }
     , []);
 
   return Observable.create((obs) => {
@@ -269,6 +272,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
        * different reverse domain names), I found it cleaner to take out the
        * _canonical name_ (e.g. "widevine") here.
        */
+
       const keySystemConfigurations =
         buildKeySystemConfigurations(keyName, keySystem);
 
