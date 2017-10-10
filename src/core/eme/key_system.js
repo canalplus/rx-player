@@ -270,18 +270,9 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
        * the key system used (for example, specific default configurations for
        * clearkey or widevine key systems, which all could have multiple
        * different reverse domain names), I found it cleaner to take out the
-       * _canonical name_ (e.g. "widevine") here. This could thus allows people
-       * to set a key system through the specific reverse domain name option
-       * and for us to still categorize it as what it is in ``ksCanonicalName``
-       * (it's cleaner to do this check here).
-       * E.g. people would put com.widevine.alpha instead of widevine, and we
-       * would still be able to tell it's a widevine key system.
-       *
-       * TODO ATM, the notion of setting by hand the reverse domain name is
-       * pending but could be needed for the support of future STBs. Find out
-       * what to do here when time comes.
+       * _canonical name_ (e.g. "widevine") here.
        */
-debugger;
+       
       const keySystemConfigurations =
         buildKeySystemConfigurations(keyName, keySystem);
 
