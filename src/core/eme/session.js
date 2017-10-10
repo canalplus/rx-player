@@ -106,12 +106,13 @@ function sessionEventsHandler(session, keySystem, errorStream) {
       );
 
       // find out possible errors associated with this event
-      session.keyStatuses.forEach((keyId, keyStatus) => {
-        // TODO: remove this hack present because the order of the
-        // arguments has changed in spec and is not the same between
-        // Edge and Chrome.
-        const reason = KEY_STATUS_ERRORS[keyStatus] || KEY_STATUS_ERRORS[keyId];
-        if (reason) {
+      session.keyStatuses.forEach((keyStatus, keyId) => {
+        // Hack present because the order of the arguments has changed in spec
+        // and is not the same between some versions of Edge and Chrome.
+        if (KEY_STATUS_ERRORS[keyId]) {
+          throw new
+            EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
+        } else if (KEY_STATUS_ERRORS[keyStatus]) {
           throw new
             EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
         }
