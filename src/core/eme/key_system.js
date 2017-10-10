@@ -230,7 +230,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
         if (keySystem.type) {
           const keyName = keySystem.name || findKeySystemName(keySystem.type);
           const keyType = keySystem.type;
-          ksType = [{keyName, keyType, keySystem}];
+          ksType = [{ keyName, keyType, keySystem }];
         }
         else if(keySystem.name) {
           ksType = (EME_KEY_SYSTEMS[keySystem.name] || [])
