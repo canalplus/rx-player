@@ -43,10 +43,10 @@ export default function getParameters(tt) {
   const nbSubFrameRate = Number(parsedSubFrameRate) || 1;
   const nbTickRate = Number(parsedTickRate) || 0;
 
-  let tickRate;
-  let frameRate;
-  const subFrameRate = nbSubFrameRate;
-  const spaceStyle = parsedSpaceStyle || "default";
+  let tickRate = nbTickRate;
+  let frameRate = nbFrameRate;
+  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate : undefined;
+  const spaceStyle = (parsedSpaceStyle || "default");
 
   if (nbTickRate === 0) {
     tickRate = parsedFrameRate ? nbFrameRate * nbSubFrameRate : 1;
@@ -55,8 +55,8 @@ export default function getParameters(tt) {
   if (parsedFrameRateMultiplier) {
     const multiplierResults = /^(\d+) (\d+)$/g.exec(parsedFrameRateMultiplier);
     if (multiplierResults) {
-      const numerator = multiplierResults[1];
-      const denominator = multiplierResults[2];
+      const numerator = Number(multiplierResults[1]);
+      const denominator = Number(multiplierResults[2]);
       const multiplierNum = numerator / denominator;
       frameRate = nbFrameRate * multiplierNum;
     }
