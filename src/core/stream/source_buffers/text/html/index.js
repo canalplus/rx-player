@@ -81,6 +81,7 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
       .takeUntil(this._destroy$)
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
+          this._currentElement = null;
           textTrackElement.innerHTML = "";
           return;
         }
