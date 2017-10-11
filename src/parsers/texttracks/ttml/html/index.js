@@ -15,7 +15,6 @@
  */
 
 import getParameters from "../getParameters.js";
-import getRateInfos from "../getRateInfos.js";
 import {
   getStyleNodes,
   getRegionNodes,
@@ -48,28 +47,23 @@ export default function parseTTMLStringToDIV(str) {
       throw new Error("invalid XML");
     }
 
-    const params = getParameters(tt);
-    const shouldTrimWhiteSpace = params.spaceStyle == "default";
-    const rateInfo = getRateInfos(params);
-
     const styles = getStyleNodes(tt);
     const regions = getRegionNodes(tt);
     const textNodes = getTextNodes(tt);
+    const params = getParameters(tt);
 
     for (let i = 0; i < textNodes.length; i++) {
       const cue = parseCue(
         textNodes[i],
         0, // offset
-        rateInfo,
         styles,
         regions,
-        shouldTrimWhiteSpace
+        params
       );
       if (cue) {
         ret.push(cue);
       }
     }
   }
-
   return ret;
 }

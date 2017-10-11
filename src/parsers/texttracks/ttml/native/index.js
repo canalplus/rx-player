@@ -16,21 +16,39 @@
 
 import { makeCue } from "../../../../compat";
 
-import getRateInfos from "../getRateInfos.js";
-import getElementToApplyFromCollection from "../getElementToApplyFromCollection.js";
 import {
   REGXP_PERCENT_VALUES,
-  TEXT_ALIGN_TO_LIGN_ALIGN,
-  TEXT_ALIGN_TO_POSITION_ALIGN,
-} from "../constants.js";
-import parseTime from "../time_parsing.js";
-import getLeafNodes from "../getLeafNodes.js";
-import getParameters from "../getParameters.js";
+} from "../regexps.js";
 import {
   getStyleNodes,
   getRegionNodes,
   getTextNodes,
 } from "../nodes.js";
+import getParameters from "../getParameters.js";
+import getParentElementsByTagName from "../getParentElementsByTagName.js";
+import parseTime from "../time_parsing.js";
+import getStyleValue from "../getStyleValue.js";
+
+/**
+ * @type {Object}
+ */
+const TEXT_ALIGN_TO_LIGN_ALIGN = {
+  left: "start",
+  center: "center",
+  right: "end",
+  start: "start",
+  end: "end",
+};
+
+/**
+ * @type {Object}
+ */
+const TEXT_ALIGN_TO_POSITION_ALIGN = {
+  left: "line-left",
+  center: "center",
+  right: "line-right",
+};
+
 
 function parseTTMLStringToVTT(str) {
   const ret = [];
@@ -43,22 +61,18 @@ function parseTTMLStringToVTT(str) {
       throw new Error("invalid XML");
     }
 
-    const params = getParameters(tt);
-    const shouldTrimWhiteSpace = params.spaceStyle == "default";
-    const rateInfo = getRateInfos(params);
-
     const styles = getStyleNodes(tt);
     const regions = getRegionNodes(tt);
     const textNodes = getTextNodes(tt);
+    const params = getParameters(tt);
 
     for (let i = 0; i < textNodes.length; i++) {
       const cue = parseCue(
         textNodes[i],
         0, // offset
-        rateInfo,
         styles,
         regions,
-        shouldTrimWhiteSpace
+        params
       );
       if (cue) {
         ret.push(cue);
@@ -67,6 +81,67 @@ function parseTTMLStringToVTT(str) {
   }
 
   return ret;
+}
+
+/**
+ * Parses an Element into a TextTrackCue or VTTCue.
+ * /!\ Mutates the given cueElement Element
+ * @param {Element} cueElement
+ * @param {Number} offset
+ * @param {Object} rateInfo
+ * @param {Array.<Element>} styles
+ * @param {Array.<Element>} regions
+ * @param {Boolean} whitespaceTrim
+ * @returns {TextTrackCue|null}
+ */
+function parseCue(
+  cueElement,
+  offset,
+  styles,
+  regions,
+  params
+) {
+  // Disregard empty elements:
+  // TTML allows for empty elements like <div></div>.
+  // If cueElement has neither time attributes, nor
+  // non-whitespace text, don't try to make a cue out of it.
+  if (!cueElement.hasAttribute("begin") &&
+    !cueElement.hasAttribute("end") &&
+    /^\s*$/.test(cueElement.textContent)) {
+    return null;
+  }
+
+  // /!\ Mutates cueElement
+  addNewLines(cueElement, params.shouldTrimWhiteSpace);
+
+  // Get time
+  let start = parseTime(cueElement.getAttribute("begin"), params);
+  let end = parseTime(cueElement.getAttribute("end"), params);
+  const duration = parseTime(cueElement.getAttribute("dur"), params);
+  const payload = cueElement.textContent;
+
+  if (end == null && duration != null) {
+    end = start + duration;
+  }
+
+  if (start == null || end == null) {
+    throw new Error("Invalid text cue");
+  }
+
+  start += offset;
+  end += offset;
+
+  const cue = makeCue(start, end, payload);
+  if (!cue) {
+    return null;
+  }
+
+  // Get other properties if available
+  const divs = getParentElementsByTagName(cueElement, "div");
+  const bodies = getParentElementsByTagName(cueElement, "body");
+  addStyle(cue, cueElement, divs, bodies, regions, styles);
+
+  return cue;
 }
 
 /**
@@ -95,71 +170,6 @@ function addNewLines(element, whitespaceTrim) {
 }
 
 /**
- * Parses an Element into a TextTrackCue or VTTCue.
- * /!\ Mutates the given cueElement Element
- * @param {Element} cueElement
- * @param {Number} offset
- * @param {Object} rateInfo
- * @param {Array.<Element>} styles
- * @param {Array.<Element>} regions
- * @param {Boolean} whitespaceTrim
- * @returns {TextTrackCue|null}
- */
-function parseCue(
-  cueElement,
-  offset,
-  rateInfo,
-  styles,
-  regions,
-  whitespaceTrim
-) {
-  // Disregard empty elements:
-  // TTML allows for empty elements like <div></div>.
-  // If cueElement has neither time attributes, nor
-  // non-whitespace text, don't try to make a cue out of it.
-  if (!cueElement.hasAttribute("begin") &&
-    !cueElement.hasAttribute("end") &&
-    /^\s*$/.test(cueElement.textContent)) {
-    return null;
-  }
-
-  // /!\ Mutates cueElement
-  addNewLines(cueElement, whitespaceTrim);
-
-  // Get time
-  let start = parseTime(cueElement.getAttribute("begin"), rateInfo);
-  let end = parseTime(cueElement.getAttribute("end"), rateInfo);
-  const duration = parseTime(cueElement.getAttribute("dur"), rateInfo);
-  const payload = cueElement.textContent;
-
-  if (end == null && duration != null) {
-    end = start + duration;
-  }
-
-  if (start == null || end == null) {
-    throw new Error("Invalid text cue");
-    // throw new shaka.util.Error(
-    //   shaka.util.Error.Severity.CRITICAL,
-    //   shaka.util.Error.Category.TEXT,
-    //   shaka.util.Error.Code.INVALID_TEXT_CUE);
-  }
-
-  start += offset;
-  end += offset;
-
-  const cue = makeCue(start, end, payload);
-  if (!cue) {
-    return null;
-  }
-
-  // Get other properties if available
-  const region = getElementToApplyFromCollection("region", cueElement, regions);
-  addStyle(cue, cueElement, region, styles);
-
-  return cue;
-}
-
-/**
  * Adds applicable style properties to a cue.
  * /!\ Mutates cue argument.
  * @param {TextTrackCue} cue
@@ -167,9 +177,12 @@ function parseCue(
  * @param {Element} region
  * @param {Array.<!Element>} styles
  */
-function addStyle(cue, cueElement, region, styles) {
+function addStyle(cue, cueElement, divs, bodies, regions, styles) {
   let results = null;
-  const extent = getStyleAttribute(cueElement, region, styles, "tts:extent");
+
+  const areasToLookForStyle = [cueElement, ...divs, ...bodies];
+
+  const extent = getStyleValue("extent", styles, regions, areasToLookForStyle);
   if (extent) {
     results = REGXP_PERCENT_VALUES.exec(extent);
     if (results != null) {
@@ -179,8 +192,8 @@ function addStyle(cue, cueElement, region, styles) {
     }
   }
 
-  const writingMode = getStyleAttribute(
-    cueElement, region, styles, "tts:writingMode");
+  const writingMode =
+    getStyleValue("writingMode", styles, regions, areasToLookForStyle);
   let isVerticalText = true;
   if (writingMode == "tb" || writingMode == "tblr") {
     cue.vertical = "lr";
@@ -190,7 +203,7 @@ function addStyle(cue, cueElement, region, styles) {
     isVerticalText = false;
   }
 
-  const origin = getStyleAttribute(cueElement, region, styles, "tts:origin");
+  const origin = getStyleValue("origin", styles, regions, areasToLookForStyle);
   if (origin) {
     results = REGXP_PERCENT_VALUES.exec(origin);
     if (results != null) {
@@ -216,7 +229,7 @@ function addStyle(cue, cueElement, region, styles) {
     }
   }
 
-  const align = getStyleAttribute(cueElement, region, styles, "tts:textAlign");
+  const align = getStyleValue("align", styles, regions, areasToLookForStyle);
   if (align) {
     cue.align = align;
     if (align == "center") {
@@ -230,34 +243,6 @@ function addStyle(cue, cueElement, region, styles) {
     cue.positionAlign = TEXT_ALIGN_TO_POSITION_ALIGN[align];
     cue.lineAlign = TEXT_ALIGN_TO_LIGN_ALIGN[align];
   }
-}
-
-/**
- * Finds a specified attribute on either the original cue element or its
- * associated region and returns the value if the attribute was found.
- * @param {Element} cueElement
- * @param {Element} region
- * @param {Array.<!Element>} styles
- * @param {string} attribute
- * @returns {string|null}
- */
-function getStyleAttribute(cueElement, region, styles, attribute) {
-  // An attribute can be specified on region level or in a styling block
-  // associated with the region or original element.
-  const regionChildren = getLeafNodes(region);
-  for (let i = 0; i < regionChildren.length; i++) {
-    const attr = regionChildren[i].getAttribute(attribute);
-    if (attr) {
-      return attr;
-    }
-  }
-
-  const style = getElementToApplyFromCollection("style", region, styles) ||
-    getElementToApplyFromCollection("style", cueElement, styles);
-  if (style) {
-    return style.getAttribute(attribute);
-  }
-  return null;
 }
 
 export default parseTTMLStringToVTT;

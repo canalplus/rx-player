@@ -62,26 +62,6 @@ const REGXP_8_HEX_COLOR =
   /^#([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})$/;
 const REGXP_4_HEX_COLOR = /^#([0-9A-f])([0-9A-f])([0-9A-f])([0-9A-f])$/;
 
-/**
- * @type {Object}
- */
-const TEXT_ALIGN_TO_LIGN_ALIGN = {
-  left: "start",
-  center: "center",
-  right: "end",
-  start: "start",
-  end: "end",
-};
-
-/**
- * @type {Object}
- */
-const TEXT_ALIGN_TO_POSITION_ALIGN = {
-  left: "line-left",
-  center: "center",
-  right: "line-right",
-};
-
 export {
   REGXP_PERCENT_VALUES,
   REGXP_TIME_COLON,
@@ -90,8 +70,6 @@ export {
   REGXP_TIME_FRAMES,
   REGXP_TIME_HMS,
   REGXP_TIME_TICK,
-  TEXT_ALIGN_TO_LIGN_ALIGN,
-  TEXT_ALIGN_TO_POSITION_ALIGN,
   REGXP_4_HEX_COLOR,
   REGXP_8_HEX_COLOR,
 };

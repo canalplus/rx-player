@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-import getElementToApplyFromCollection
-  from "../getElementToApplyFromCollection.js";
 import parseTime from "../time_parsing.js";
 import createElement from "./createElement.js";
 
-function getTimeDelimiters(cueElement, rateInfo) {
-  const start = parseTime(cueElement.getAttribute("begin"), rateInfo);
-  const duration = parseTime(cueElement.getAttribute("dur"), rateInfo);
-  const parsedEnd = parseTime(cueElement.getAttribute("end"), rateInfo);
+/**
+ * Get start and end time of a paragraph.
+ * @param {Element} paragraph
+ * @param {Object} ttParams
+ * @returns {Object}
+ */
+function getTimeDelimiters(paragraph, ttParams) {
+  const start = parseTime(paragraph.getAttribute("begin"), ttParams);
+  const duration = parseTime(paragraph.getAttribute("dur"), ttParams);
+  const parsedEnd = parseTime(paragraph.getAttribute("end"), ttParams);
   if (start == null || (parsedEnd == null && duration == null)) {
     throw new Error("Invalid text cue");
   }
@@ -31,37 +35,34 @@ function getTimeDelimiters(cueElement, rateInfo) {
 }
 
 /**
- * @param {Element} cueElement
+ * @param {Element} paragraph
  * @param {Number} offset
- * @param {Object} rateInfo
  * @param {Array.<Element>} styles
  * @param {Array.<Element>} regions
- * @param {Boolean} shouldTrimWhiteSpace
- * @returns {Object}
+ * @param {Object} ttParams
+ * @returns {Object|null}
  */
 export default function parseCue(
-  cueElement,
+  paragraph,
   offset,
-  rateInfo,
   styles,
   regions,
-  shouldTrimWhiteSpace
+  ttParams
 ) {
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
-  // If cueElement has neither time attributes, nor
+  // If paragraph has neither time attributes, nor
   // non-whitespace text, don't try to make a cue out of it.
-  if (!cueElement.hasAttribute("begin") && !cueElement.hasAttribute("end") &&
-    /^\s*$/.test(cueElement.textContent)
+  if (!paragraph.hasAttribute("begin") && !paragraph.hasAttribute("end") &&
+    /^\s*$/.test(paragraph.textContent)
   ) {
     return null;
   }
 
-  const { start, end } = getTimeDelimiters(cueElement, rateInfo);
-  const region = getElementToApplyFromCollection("region", cueElement, regions);
+  const { start, end } = getTimeDelimiters(paragraph, ttParams);
   return {
     start: start + offset,
     end: end + offset,
-    element: createElement(cueElement, region, styles, shouldTrimWhiteSpace),
+    element: createElement(paragraph, regions, styles, ttParams),
   };
 }

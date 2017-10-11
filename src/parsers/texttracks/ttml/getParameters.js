@@ -19,19 +19,53 @@
  * TODO Missing parameters.
  * @param {Node} tt - <tt> node
  * @throws Error - Throws if the spacing style is invalid.
- * @returns {Object}
+ * @returns {Object} params
+ * @returns {Number} params.frameRate
+ * @returns {Number} params.subFrameRate
+ * @returns {Number} params.tickRate
+ * @returns {string} params.spaceStyle
  */
 export default function getParameters(tt) {
-  const params = {
-    frameRate: tt.getAttribute("ttp:frameRate"),
-    frameRateMultiplier: tt.getAttribute("ttp:frameRateMultiplier"),
-    subFramRate: tt.getAttribute("ttp:subFramRate"),
-    tickRate: tt.getAttribute("ttp:tickRate"),
-    spaceStyle: tt.getAttribute("ttp:tickRate")|| "default",
-  };
+  const parsedFrameRate = tt.getAttribute("ttp:frameRate");
+  const parsedSubFrameRate = tt.getAttribute("ttp:subFramRate");
+  const parsedTickRate = tt.getAttribute("ttp:tickRate");
+  const parsedFrameRateMultiplier = tt.getAttribute("ttp:frameRateMultiplier");
+  const parsedSpaceStyle = tt.getAttribute("xml:space");
 
-  if (params.spaceStyle != "default" && params.spaceStyle != "preserve") {
-    throw new Error("invalid XML");
+  if (
+    parsedSpaceStyle && parsedSpaceStyle !== "default" &&
+    parsedSpaceStyle !== "preserve"
+  ) {
+    throw new Error("Invalid spacing style");
   }
-  return params;
+
+  const nbFrameRate = Number(parsedFrameRate) || 30;
+  const nbSubFrameRate = Number(parsedSubFrameRate) || 1;
+  const nbTickRate = Number(parsedTickRate) || 0;
+
+  let tickRate;
+  let frameRate;
+  const subFrameRate = nbSubFrameRate;
+  const spaceStyle = parsedSpaceStyle || "default";
+
+  if (nbTickRate === 0) {
+    tickRate = parsedFrameRate ? nbFrameRate * nbSubFrameRate : 1;
+  }
+
+  if (parsedFrameRateMultiplier) {
+    const multiplierResults = /^(\d+) (\d+)$/g.exec(parsedFrameRateMultiplier);
+    if (multiplierResults) {
+      const numerator = multiplierResults[1];
+      const denominator = multiplierResults[2];
+      const multiplierNum = numerator / denominator;
+      frameRate = nbFrameRate * multiplierNum;
+    }
+  }
+
+  return {
+    tickRate,
+    frameRate,
+    subFrameRate,
+    spaceStyle,
+  };
 }

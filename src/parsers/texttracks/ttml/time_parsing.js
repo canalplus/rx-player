@@ -28,7 +28,7 @@ import {
   REGXP_TIME_FRAMES,
   REGXP_TIME_HMS,
   REGXP_TIME_TICK,
-} from "./constants.js";
+} from "./regexps.js";
 
 /**
  * Parses a TTML time into seconds.
