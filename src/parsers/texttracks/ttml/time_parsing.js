@@ -33,12 +33,12 @@ import {
 /**
  * Parses a TTML time into seconds.
  * @param {string} text
- * @param {Object} rateInfo
+ * @param {Object} ttParams
  * @returns {Number|undefined}
  */
-function parseTime(text, rateInfo) {
+function parseTime(text, ttParams) {
   if (REGXP_TIME_COLON_FRAMES.test(text)) {
-    return parseColonTimeWithFrames(rateInfo, text);
+    return parseColonTimeWithFrames(ttParams, text);
 
   } else if (REGXP_TIME_COLON.test(text)) {
     return parseTimeFromRegExp(REGXP_TIME_COLON, text);
@@ -47,10 +47,10 @@ function parseTime(text, rateInfo) {
     return parseTimeFromRegExp(REGXP_TIME_COLON_MS, text);
 
   } else if (REGXP_TIME_FRAMES.test(text)) {
-    return parseFramesTime(rateInfo, text);
+    return parseFramesTime(ttParams, text);
 
   } else if (REGXP_TIME_TICK.test(text)) {
-    return parseTickTime(rateInfo, text);
+    return parseTickTime(ttParams, text);
 
   } else if (REGXP_TIME_HMS.test(text)) {
     return parseTimeFromRegExp(REGXP_TIME_HMS, text);
@@ -59,37 +59,37 @@ function parseTime(text, rateInfo) {
 
 /**
  * Parses a TTML time in frame format
- * @param {Object} rateInfo
+ * @param {Object} ttParams
  * @param {string} text
  * @returns {Number}
  */
-function parseFramesTime(rateInfo, text) {
+function parseFramesTime(ttParams, text) {
   // 75f or 75.5f
   const results = REGXP_TIME_FRAMES.exec(text);
   const frames = Number(results[1]);
-  return frames / rateInfo.frameRate;
+  return frames / ttParams.frameRate;
 }
 
 /**
  * Parses a TTML time in tick format
- * @param {Object} rateInfo
+ * @param {Object} ttParams
  * @param {string} text
  * @returns {Number}
  */
-function parseTickTime(rateInfo, text) {
+function parseTickTime(ttParams, text) {
   // 50t or 50.5t
   const results = REGXP_TIME_TICK.exec(text);
   const ticks = Number(results[1]);
-  return ticks / rateInfo.tickRate;
+  return ticks / ttParams.tickRate;
 }
 
 /**
  * Parses a TTML colon formatted time containing frames
- * @param {Object} rateInfo
+ * @param {Object} ttParams
  * @param {string} text
  * @returns {Number}
  */
-function parseColonTimeWithFrames(rateInfo, text) {
+function parseColonTimeWithFrames(ttParams, text) {
   // 01:02:43:07 ("07" is frames) or 01:02:43:07.1 (subframes)
   const results = REGXP_TIME_COLON_FRAMES.exec(text);
 
@@ -99,8 +99,8 @@ function parseColonTimeWithFrames(rateInfo, text) {
   let frames = Number(results[4]);
   const subframes = Number(results[5]) || 0;
 
-  frames += subframes / rateInfo.subFrameRate;
-  seconds += frames / rateInfo.frameRate;
+  frames += subframes / ttParams.subFrameRate;
+  seconds += frames / ttParams.frameRate;
 
   return seconds + (minutes * 60) + (hours * 3600);
 }
@@ -115,7 +115,7 @@ function parseColonTimeWithFrames(rateInfo, text) {
  */
 function parseTimeFromRegExp(regex, text) {
   const results = regex.exec(text);
-  if (results == null || results[0] == "") {
+  if (results === null || results[0] === "") {
     return null;
   }
   // This capture is optional, but will still be in the array as undefined,

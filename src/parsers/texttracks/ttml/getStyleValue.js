@@ -104,7 +104,7 @@ export default function getStyleValue(
 
       // 2. the style is referenced on a "style" attribute
       const style = getReferencedStyle(element, styles);
-      if (style && style != element) {
+      if (style && style !== element) {
         // TODO hasAttribute?
         const attrValue = style.getAttribute("tts:" + attribute);
         if (attrValue != null) {

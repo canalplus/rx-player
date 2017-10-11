@@ -38,7 +38,7 @@ import ttmlColorToCSSColor from "./ttmlColorToCSSColor.js";
 
 /**
  * Apply style set for a singular text span of the current cue.
- * @param {Element} element - The text span
+ * @param {HTMLElement} element - The text span
  * @param {Array.<Element>} elementsToInherit - The various elements our text
  * span can inherit styling from, in order of importance.
  * @param {Array.<Element>} regions - <region> tags our element can depend on
@@ -156,7 +156,7 @@ function applyTextStyle(element, elementsToInherit, styles, regions) {
 
 /**
  * Apply style for the general text track div.
- * @param {Element} element - The <div> the style will be applied on.
+ * @param {HTMLElement} element - The <div> the style will be applied on.
  * @param {Array.<Element>} elementsToInherit - The different elements the style
  * can be inherited from. In order of importance.
  * @param {Array.<Element>} regions - <region> tags our element can depend on
@@ -288,7 +288,7 @@ function applyGeneralStyle(element, elementsToInherit, regions, styles) {
 function createTextElement(el, spans, p, divs, body, regions, styles) {
   const wrapperElement = document.createElement("span");
   const textElement = document.createElement("span");
-  textElement.innerHTML = el.textContent;
+  textElement.innerHTML = el.textContent || "";
   wrapperElement.appendChild(textElement);
 
   // Styles at span levels (which only apply to the given span)
@@ -349,7 +349,7 @@ function generateTextContent(
       } else if (shouldTrimWhiteSpace) {
         // 1. Trim leading and trailing whitespace.
         // 2. Collapse multiple spaces into one.
-        let trimmed = childNodes[i].textContent.trim();
+        let trimmed = (childNodes[i].textContent || "").trim();
         trimmed = trimmed.replace(/\s+/g, " ");
         childNodes[i].textContent = trimmed;
       }
@@ -375,7 +375,7 @@ export default function createElement(
   paragraph,
   regions,
   styles,
-   { shouldTrimWhiteSpace = true } = {}
+  { shouldTrimWhiteSpace = true } = {}
 ) {
   const body = getParentElementsByTagName(paragraph, "body")[0];
   const divs = getParentElementsByTagName(paragraph, "div");

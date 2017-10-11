@@ -14,25 +14,8 @@
  * limitations under the License.
  */
 
-import parseTime from "../time_parsing.js";
+import getTimeDelimiters from "../getTimeDelimiters.js";
 import createElement from "./createElement.js";
-
-/**
- * Get start and end time of a paragraph.
- * @param {Element} paragraph
- * @param {Object} ttParams
- * @returns {Object}
- */
-function getTimeDelimiters(paragraph, ttParams) {
-  const start = parseTime(paragraph.getAttribute("begin"), ttParams);
-  const duration = parseTime(paragraph.getAttribute("dur"), ttParams);
-  const parsedEnd = parseTime(paragraph.getAttribute("end"), ttParams);
-  if (start == null || (parsedEnd == null && duration == null)) {
-    throw new Error("Invalid text cue");
-  }
-  const end = parsedEnd == null ? start + duration : parsedEnd;
-  return { start, end };
-}
 
 /**
  * @param {Element} paragraph
@@ -54,15 +37,18 @@ export default function parseCue(
   // If paragraph has neither time attributes, nor
   // non-whitespace text, don't try to make a cue out of it.
   if (!paragraph.hasAttribute("begin") && !paragraph.hasAttribute("end") &&
-    /^\s*$/.test(paragraph.textContent)
+    /^\s*$/.test(paragraph.textContent || "")
   ) {
     return null;
   }
 
+  const options = {
+    shouldTrimWhiteSpace: ttParams.spaceStyle === "default",
+  };
   const { start, end } = getTimeDelimiters(paragraph, ttParams);
   return {
     start: start + offset,
     end: end + offset,
-    element: createElement(paragraph, regions, styles, ttParams),
+    element: createElement(paragraph, regions, styles, options),
   };
 }

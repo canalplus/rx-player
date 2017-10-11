@@ -230,7 +230,7 @@ function makeCue(startTime, endTime, payload) {
     return null;
   }
 
-  return new VTTCue(startTime, endTime, payload);
+  return new VTTCue_(startTime, endTime, payload);
 }
 
 export {

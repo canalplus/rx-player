@@ -45,7 +45,7 @@ export default function getParameters(tt) {
 
   let tickRate = nbTickRate;
   let frameRate = nbFrameRate;
-  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate : undefined;
+  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate : 1;
   const spaceStyle = (parsedSpaceStyle || "default");
 
   if (nbTickRate === 0) {

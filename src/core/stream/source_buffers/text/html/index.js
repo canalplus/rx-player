@@ -75,7 +75,6 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
     this._buffer = new TextBufferManager();
     this._currentElement = null;
     this._track = null;
-    this._trackElement = textTrackElement;
 
     generateClock(this._videoElement)
       .takeUntil(this._destroy$)

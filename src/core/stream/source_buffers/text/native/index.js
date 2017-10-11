@@ -38,8 +38,8 @@ function isVTTFile(codec) {
  */
 export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
   /**
-   * @param {HTMLMediaElement} videoElement
    * @param {string} codec
+   * @param {HTMLMediaElement} videoElement
    * @param {Boolean} hideNativeSubtitle
    */
   constructor(codec, videoElement, hideNativeSubtitle) {
@@ -148,9 +148,11 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
     const { _trackElement, _videoElement } = this;
     if (
       _trackElement && _videoElement &&
-      _videoElement.hasChildNodes(_trackElement)
+      _videoElement.hasChildNodes()
     ) {
-      _videoElement.removeChild(_trackElement);
+      try {
+        _videoElement.removeChild(_trackElement);
+      } catch (e) {}
     }
 
     if (this._track) {

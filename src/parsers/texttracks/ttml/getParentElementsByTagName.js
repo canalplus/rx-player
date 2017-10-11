@@ -17,26 +17,27 @@
 /**
  * Returns the parent elements which have the given tagName, by order of
  * closeness relative to our element.
- * @param {Element} element
+ * @param {Element|Node} element
  * @param {string} tagName
  * @returns {Array.<Element>}
  */
 export default function getParentElementsByTagName(element, tagName) {
-  const elements = [];
-  let parentElement = element.parentNode;
-  while (parentElement) {
-    if (parentElement.tagName.toLowerCase() === tagName.toLowerCase()) {
-      elements.push(parentElement);
+  if (!(element.parentNode instanceof Element)) {
+    return [];
+  }
+
+  function constructArray(_element) {
+    const elements = [];
+    if (_element.tagName.toLowerCase() === tagName.toLowerCase()) {
+      elements.push(_element);
     }
 
-    // Element.parentNode can lead to XMLDocument, which is not an Element and
-    // has no getAttribute().
-    const parentNode = parentElement.parentNode;
+    const parentNode = _element.parentNode;
     if (parentNode instanceof Element) {
-      parentElement = parentNode;
-    } else {
-      break;
+      elements.push(...constructArray(parentNode));
     }
+
+    return elements;
   }
-  return elements;
+  return constructArray(element.parentNode);
 }

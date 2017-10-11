@@ -35,11 +35,11 @@ function getLeafNodes(element) {
   const childNodes = element.childNodes;
   for (let i = 0; i < childNodes.length; i++) {
     // <span> elements are pushed with their corresponding <p> elements
-    const isSpanChildOfP = childNodes[i].nodeName == "span" &&
-      element.nodeName == "p";
+    const isSpanChildOfP = childNodes[i].nodeName === "span" &&
+      element.nodeName === "p";
 
-    if (childNodes[i].nodeType == Node.ELEMENT_NODE &&
-      childNodes[i].nodeName != "br" && !isSpanChildOfP) {
+    if (childNodes[i].nodeType === Node.ELEMENT_NODE &&
+      childNodes[i].nodeName !== "br" && !isSpanChildOfP) {
       // Get the leafs the child might contain
       assert(childNodes[i] instanceof Element,
         "Node should be Element!");

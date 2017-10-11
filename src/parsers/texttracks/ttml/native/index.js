@@ -18,16 +18,16 @@ import { makeCue } from "../../../../compat";
 
 import {
   REGXP_PERCENT_VALUES,
-} from "../regexps.js";
+} from "../regexps";
 import {
   getStyleNodes,
   getRegionNodes,
   getTextNodes,
-} from "../nodes.js";
-import getParameters from "../getParameters.js";
-import getParentElementsByTagName from "../getParentElementsByTagName.js";
-import parseTime from "../time_parsing.js";
-import getStyleValue from "../getStyleValue.js";
+} from "../nodes";
+import getParameters from "../getParameters";
+import getParentElementsByTagName from "../getParentElementsByTagName";
+import getStyleValue from "../getStyleValue";
+import getTimeDelimiters from "../getTimeDelimiters";
 
 /**
  * @type {Object}
@@ -48,7 +48,6 @@ const TEXT_ALIGN_TO_POSITION_ALIGN = {
   center: "center",
   right: "line-right",
 };
-
 
 function parseTTMLStringToVTT(str) {
   const ret = [];
@@ -88,50 +87,28 @@ function parseTTMLStringToVTT(str) {
  * /!\ Mutates the given cueElement Element
  * @param {Element} cueElement
  * @param {Number} offset
- * @param {Object} rateInfo
  * @param {Array.<Element>} styles
  * @param {Array.<Element>} regions
- * @param {Boolean} whitespaceTrim
+ * @param {Object} params
  * @returns {TextTrackCue|null}
  */
-function parseCue(
-  cueElement,
-  offset,
-  styles,
-  regions,
-  params
-) {
+function parseCue(cueElement, offset, styles, regions, params) {
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
   // If cueElement has neither time attributes, nor
   // non-whitespace text, don't try to make a cue out of it.
+  const content = cueElement.textContent || "";
   if (!cueElement.hasAttribute("begin") &&
-    !cueElement.hasAttribute("end") &&
-    /^\s*$/.test(cueElement.textContent)) {
+    !cueElement.hasAttribute("end") && /^\s*$/.test(content)
+  ) {
     return null;
   }
 
   // /!\ Mutates cueElement
-  addNewLines(cueElement, params.shouldTrimWhiteSpace);
+  addNewLines(cueElement, params.spaceStyle === "default");
 
-  // Get time
-  let start = parseTime(cueElement.getAttribute("begin"), params);
-  let end = parseTime(cueElement.getAttribute("end"), params);
-  const duration = parseTime(cueElement.getAttribute("dur"), params);
-  const payload = cueElement.textContent;
-
-  if (end == null && duration != null) {
-    end = start + duration;
-  }
-
-  if (start == null || end == null) {
-    throw new Error("Invalid text cue");
-  }
-
-  start += offset;
-  end += offset;
-
-  const cue = makeCue(start, end, payload);
+  const { start, end } = getTimeDelimiters(cueElement, params);
+  const cue = makeCue(start + offset, end + offset, content);
   if (!cue) {
     return null;
   }
@@ -154,13 +131,13 @@ function addNewLines(element, whitespaceTrim) {
   const childNodes = element.childNodes;
 
   for (let i = 0; i < childNodes.length; i++) {
-    if (childNodes[i].nodeName == "br" && i > 0) {
+    if (childNodes[i].nodeName === "br" && i > 0) {
       childNodes[i - 1].textContent += "\n";
     } else if (childNodes[i].childNodes.length > 0) {
       addNewLines(childNodes[i], whitespaceTrim);
     } else if (whitespaceTrim) {
       // Trim leading and trailing whitespace.
-      let trimmed = childNodes[i].textContent.trim();
+      let trimmed = (childNodes[i].textContent || "").trim();
       // Collapse multiple spaces into one.
       trimmed = trimmed.replace(/\s+/g, " ");
 
@@ -174,8 +151,10 @@ function addNewLines(element, whitespaceTrim) {
  * /!\ Mutates cue argument.
  * @param {TextTrackCue} cue
  * @param {Element} cueElement
- * @param {Element} region
- * @param {Array.<!Element>} styles
+ * @param {Array.<Element>} divs
+ * @param {Array.<Element>} bodies
+ * @param {Array.<Element>} regions
+ * @param {Array.<Element>} styles
  */
 function addStyle(cue, cueElement, divs, bodies, regions, styles) {
   let results = null;
@@ -195,9 +174,9 @@ function addStyle(cue, cueElement, divs, bodies, regions, styles) {
   const writingMode =
     getStyleValue("writingMode", styles, regions, areasToLookForStyle);
   let isVerticalText = true;
-  if (writingMode == "tb" || writingMode == "tblr") {
+  if (writingMode === "tb" || writingMode === "tblr") {
     cue.vertical = "lr";
-  } else if (writingMode == "tbrl") {
+  } else if (writingMode === "tbrl") {
     cue.vertical = "rl";
   } else {
     isVerticalText = false;
@@ -232,16 +211,16 @@ function addStyle(cue, cueElement, divs, bodies, regions, styles) {
   const align = getStyleValue("align", styles, regions, areasToLookForStyle);
   if (align) {
     cue.align = align;
-    if (align == "center") {
-      if (cue.align != "center") {
+    if (align === "center") {
+      if (cue.align !== "center") {
         // Workaround for a Chrome bug http://crbug.com/663797
         // Chrome does not support align = "center"
         cue.align = "middle";
       }
       cue.position = "auto";
     }
-    cue.positionAlign = TEXT_ALIGN_TO_POSITION_ALIGN[align];
-    cue.lineAlign = TEXT_ALIGN_TO_LIGN_ALIGN[align];
+    cue.positionAlign = TEXT_ALIGN_TO_POSITION_ALIGN[align] || "";
+    cue.lineAlign = TEXT_ALIGN_TO_LIGN_ALIGN[align] || "";
   }
 }
 
