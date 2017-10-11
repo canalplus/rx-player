@@ -115,6 +115,7 @@ function Buffer({
    * TODO Re-think that mess for a Buffer refacto.
    */
   let initSegmentInfos = null;
+  let wantedRange = null;
 
   // will be used to emit messages to the calling function
   const messageSubject = new Subject();
@@ -166,6 +167,9 @@ function Buffer({
       low: LOW_PADDING,
       high: HIGH_PADDING,
     });
+
+    wantedRange = { start, end };
+
     const duration = end - start;
 
     /**
@@ -263,7 +267,7 @@ function Buffer({
       // You can repeat this bug easily by setting the maxBufferBehind or
       // maxBufferAhead option for a supplementaryTextTrack
       const currentSegment =
-        bookkeeper.hasCompleteSegment(time, duration, timescale);
+        bookkeeper.hasPlayableSegment(wantedRange, time, duration, timescale);
 
       // only re-load comparatively-poor bitrates.
       return !currentSegment ||

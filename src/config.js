@@ -386,7 +386,8 @@ export default {
    * segment in the equation here.
    * @type {Number}
    */
-  MAX_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
+  MAX_MISSING_FROM_PLAYABLE_SEGMENT: 0.12,
+
 
   /**
    * The maximum time, in seconds, the real buffered time in the sourcebuffer

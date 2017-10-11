@@ -20,7 +20,7 @@ import takeFirstSet from "../../utils/takeFirstSet.js";
 import { convertToRanges } from "../../utils/ranges.js";
 
 const {
-  MAX_MISSING_FROM_COMPLETE_SEGMENT,
+  MAX_MISSING_FROM_PLAYABLE_SEGMENT,
   MAX_BUFFERED_DISTANCE,
   MINIMUM_SEGMENT_SIZE,
 } = config;
@@ -431,6 +431,7 @@ export default class SegmentBookkeeper {
     }
   }
 
+
   /**
    * Returns segment infos for a segment corresponding to the given time,
    * duration and timescale.
@@ -438,7 +439,9 @@ export default class SegmentBookkeeper {
    * Returns null if either:
    *   - no segment can be linked exactly to the given time/duration
    *   - a segment is linked to this information, but is currently considered
-   *     "incomplete" in the sourceBuffer.
+   *     "incomplete" to be playable, in the sourceBuffer. First, we check if
+   *      the segment is complete. If not, we check if loaded data is enough to
+   *      be played.
    *
    * The main purpose of this method is to know if the segment asked should be
    * downloaded (or re-downloaded).
@@ -447,16 +450,106 @@ export default class SegmentBookkeeper {
    * (see addBufferedInfos method of the same class) before calling this method,
    * as it depends on it to categorize "incomplete" from "complete" segments.
    *
+   * @param {number} wantedStart
+   * @param {number} wantedEnd
    * @param {Number} time
    * @param {Number} duration
    * @param {Number} timescale
    * @returns {Object|null}
    */
-  hasCompleteSegment(time, duration, timescale) {
+  hasPlayableSegment(wantedRange, time, duration, timescale) {
+
     const { _inventory } = this;
+
+    let currentSegmentI;
+    let currentPrevSegmentI;
+    let currentNextSegmentI;
+
+    /*
+    * Check if segment completion can be evaluated.
+    *
+    */
+    function hasElligibleSegment(){
+
+      if ((currentPrevSegmentI && currentPrevSegmentI.bufferedEnd == null) ||
+      currentSegmentI.bufferedStart == null) {
+        // false negatives are better than false positives here.
+        // When impossible to know, say the segment is not complete
+        return false;
+      }
+
+      if ((currentNextSegmentI && currentNextSegmentI.bufferedStart == null) ||
+      currentSegmentI.bufferedEnd == null) {
+        // false negatives are better than false positives here.
+        // When impossible to know, say the segment is not complete
+        return false;
+      }
+
+      return true;
+    }
+
+    /*
+    * If segment is not completed, we check if data was downloaded for the
+    * current range to play.
+    *
+    * It is done here because it still need infos from buffered data and
+    * contiguous segments
+    */
+    function hasPartialSegment(wantedRange) {
+
+      let timeDiff = wantedRange.start - currentSegmentI.bufferedStart;
+      if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+        return null;
+      }
+
+      timeDiff = currentSegmentI.bufferedEnd - wantedRange.end;
+      if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+        return null;
+      }
+
+      return currentSegmentI;
+    }
+
+    /* check complete-ness of the segment:
+    *  - check that the real start and end is contiguous with the
+    *    previous/next one.
+    *  - if that's not the case for at least one of them, check the
+    *    difference between what is announced and what seems to be
+    *    in the sourcebuffer.
+    */
+    function hasCompleteSegment(){
+
+      if (
+      !currentPrevSegmentI ||
+      currentPrevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
+    ) {
+        const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
+        if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          return null;
+        }
+      }
+
+      if (
+      currentSegmentI.end != null && (
+        !currentNextSegmentI ||
+        currentNextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
+      )
+    ) {
+        const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
+        if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          return null;
+        }
+      }
+
+      return currentSegmentI;
+    }
+
     for (let i = _inventory.length - 1; i >= 0; i--) {
-      const segmentI = _inventory[i];
-      const segment = segmentI.segment;
+      currentSegmentI = _inventory[i];
+      currentPrevSegmentI = _inventory[i - 1];
+      currentNextSegmentI = _inventory[i + 1];
+
+      const segment = currentSegmentI.segment;
 
       let _time = time;
       let _duration = duration;
@@ -467,57 +560,9 @@ export default class SegmentBookkeeper {
       }
 
       if (segment.time === _time && segment.duration === _duration) {
-        // check complete-ness of the segment:
-        //   - check that the real start and end is contiguous with the
-        //     previous/next one.
-        //   - if that's not the case for at least one of them, check the
-        //     difference between what is announced and what seems to be
-        //     in the sourcebuffer.
-
-        const prevSegmentI = _inventory[i - 1];
-
-        if (
-          (prevSegmentI && prevSegmentI.bufferedEnd == null) ||
-          segmentI.bufferedStart == null
-        ) {
-          // false negatives are better than false positives here.
-          // When impossible to know, say the segment is not complete
-          return null;
+        if(hasElligibleSegment()) {
+          return hasCompleteSegment() || hasPartialSegment();
         }
-
-        if (
-          !prevSegmentI ||
-          prevSegmentI.bufferedEnd < segmentI.bufferedStart
-        ) {
-          const timeDiff = segmentI.bufferedStart - segmentI.start;
-          if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
-            return null;
-          }
-        }
-
-        const nextSegmentI = _inventory[i + 1];
-        if (
-          (nextSegmentI && nextSegmentI.bufferedStart == null) ||
-          segmentI.bufferedEnd == null
-        ) {
-          // false negatives are better than false positives here.
-          // When impossible to know, say the segment is not complete
-          return null;
-        }
-
-        if (
-          segmentI.end != null && (
-            !nextSegmentI ||
-            nextSegmentI.bufferedStart > segmentI.bufferedEnd
-          )
-        ) {
-          const timeDiff = segmentI.end - segmentI.bufferedEnd;
-          if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
-            return null;
-          }
-        }
-
-        return segmentI;
       }
     }
     return null;
