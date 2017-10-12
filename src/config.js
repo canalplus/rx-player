@@ -427,7 +427,10 @@ export default {
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (EME).
-   * Defined in order of importance.
+   *
+   * Only used for widevine keysystems.
+   *
+   * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
   EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [
@@ -439,6 +442,10 @@ export default {
   ],
 
   /**
+   * Link canonical key systems names to their respective reverse domain name,
+   * used in the EME APIs.
+   * This allows to have a simpler API, where users just need to set "widevine"
+   * or "playready" as a keySystem.
    * @type {Object}
    */
   EME_KEY_SYSTEMS: {

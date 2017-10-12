@@ -4,6 +4,7 @@
 
 ### Added
 
+  - eme: it is now possible to directly set the reverse domain name of the wanted key system in the ``type`` property of ``loadVideo``'s ``keySystems`` option.
   - api: add property ``percentage`` to the ``startAt`` argument of ``loadVideo``.
   - abr: add ``bitrateEstimationChange`` event
   - api: a Date object can now be given to the ``loadVideo`` argument ``startAt.wallClockTime``. It will be automatically converted into seconds.
@@ -85,6 +86,7 @@
   - api: fix infinite loading bug when a new content is launched as the previous one is ended or fell on error
   - dash: allow absolute BaseURL in Periods
   - eme: the ``reason`` for the eme error ``KEY_STATUS_CHANGE_ERROR`` is now correctly filled in
+  - eme: do not set widevine robustnesses for non-widevine key systems
   - languages: fix bug which led the text buffer to _crash_ when the ``wantedBufferBehind`` option is set
   - languages: fix bug which led to TextTracks chunks being re-downloaded multiple times
   - languages/dash: allow plain text TTML, SAMI and VTT subtitles in DASH manifest
