@@ -432,7 +432,6 @@ export default class SegmentBookkeeper {
     }
   }
 
-
   /**
    * Returns segment infos for a segment corresponding to the given time,
    * duration and timescale.
@@ -441,8 +440,8 @@ export default class SegmentBookkeeper {
    *   - no segment can be linked exactly to the given time/duration
    *   - a segment is linked to this information, but is currently considered
    *     "incomplete" to be playable, in the sourceBuffer. First, we check if
-   *      the segment is complete. If not, we check if loaded data is enough to
-   *      be played.
+   *      the segment is complete. If not, we check if all needed data for
+   *      playback (from wanted range) is loaded.
    *
    * The main purpose of this method is to know if the segment asked should be
    * downloaded (or re-downloaded).
