@@ -457,30 +457,56 @@ export default class SegmentBookkeeper {
    * @returns {Object|null}
    */
   hasPlayableSegment(wantedRange, time, duration, timescale) {
-
     const { _inventory } = this;
 
-    let currentSegmentI;
-    let currentPrevSegmentI;
-    let currentNextSegmentI;
+    for (let i = _inventory.length - 1; i >= 0; i--) {
+      const currentSegmentI = _inventory[i];
+      const prevSegmentI = _inventory[i - 1];
+      const nextSegmentI = _inventory[i + 1];
+
+      const segment = currentSegmentI.segment;
+
+      let _time = time;
+      let _duration = duration;
+      if (segment.timescale !== timescale) {
+        // Note: we could get rounding errors here
+        _time = (time * segment.timescale) / timescale;
+        _duration = (duration * segment.timescale) / timescale;
+      }
+
+      if (segment.time === _time && segment.duration === _duration) {
+        // false negatives are better than false positives here.
+        // When impossible to know, say the segment is not complete
+        if(hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI)) {
+          if (isSegmentComplete(currentSegmentI, prevSegmentI, nextSegmentI)) {
+            return currentSegmentI;
+          } else if (hasWantedRange(currentSegmentI, wantedRange)) {
+            return currentSegmentI;
+          }
+        }
+      }
+    }
+    return null;
+
+    // -- Helpers
 
     /*
     * Check if segment completion can be evaluated.
-    *
+    * @param {Object} currentSegmentI
+    * @param {Object} prevSegmentI
+    * @param {Object} nextSegmentI
+    * @returns {Boolean}
     */
-    function hasElligibleSegment(){
-
-      if ((currentPrevSegmentI && currentPrevSegmentI.bufferedEnd == null) ||
-      currentSegmentI.bufferedStart == null) {
-        // false negatives are better than false positives here.
-        // When impossible to know, say the segment is not complete
+    function hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI) {
+      if ((prevSegmentI && prevSegmentI.bufferedEnd == null) ||
+        currentSegmentI.bufferedStart == null
+      ) {
         return false;
       }
 
-      if ((currentNextSegmentI && currentNextSegmentI.bufferedStart == null) ||
-      currentSegmentI.bufferedEnd == null) {
-        // false negatives are better than false positives here.
-        // When impossible to know, say the segment is not complete
+      if ((nextSegmentI && nextSegmentI.bufferedStart == null) ||
+        currentSegmentI.bufferedEnd == null
+      ) {
         return false;
       }
 
@@ -488,14 +514,12 @@ export default class SegmentBookkeeper {
     }
 
     /*
-    * If segment is not completed, we check if data was downloaded for the
-    * current range to play.
-    *
-    * It is done here because it still need infos from buffered data and
-    * contiguous segments
-    */
-    function hasPartialSegment(wantedRange) {
-
+     * Returns true if the segment given can be played for the wanted range.
+     * @param {Object} currentSegmentI
+     * @param {Array.<number>} wantedRange
+     * @returns {Boolean}
+     */
+    function hasWantedRange(wantedRange, currentSegmentI) {
       const startTimeDiff = wantedRange.start - currentSegmentI.bufferedStart;
       if (startTimeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
         return false;
@@ -515,13 +539,16 @@ export default class SegmentBookkeeper {
     *  - if that's not the case for at least one of them, check the
     *    difference between what is announced and what seems to be
     *    in the sourcebuffer.
+    * @param {Object} currentSegmentI
+    * @param {Object} prevSegmentI
+    * @param {Object} nextSegmentI
+    * @returns {Boolean}
     */
-    function hasCompleteSegment(){
-
+    function isSegmentComplete(currentSegmentI, prevSegmentI, nextSegmentI){
       if (
-      !currentPrevSegmentI ||
-      currentPrevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
-    ) {
+        !prevSegmentI ||
+        prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
+      ) {
         const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
         if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
           return false;
@@ -529,11 +556,11 @@ export default class SegmentBookkeeper {
       }
 
       if (
-      currentSegmentI.end != null && (
-        !currentNextSegmentI ||
-        currentNextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
-      )
-    ) {
+        currentSegmentI.end != null && (
+          !nextSegmentI ||
+          nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
+        )
+      ) {
         const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
         if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
           return false;
@@ -542,33 +569,5 @@ export default class SegmentBookkeeper {
 
       return true;
     }
-
-    for (let i = _inventory.length - 1; i >= 0; i--) {
-      currentSegmentI = _inventory[i];
-      currentPrevSegmentI = _inventory[i - 1];
-      currentNextSegmentI = _inventory[i + 1];
-
-      const segment = currentSegmentI.segment;
-
-      let _time = time;
-      let _duration = duration;
-      if (segment.timescale !== timescale) {
-        // Note: we could get rounding errors here
-        _time = (time * segment.timescale) / timescale;
-        _duration = (duration * segment.timescale) / timescale;
-      }
-
-      if (segment.time === _time && segment.duration === _duration) {
-        if(hasElligibleSegment()) {
-          if (hasCompleteSegment()) {
-            return currentSegmentI;
-          }
-          else if (hasPartialSegment(wantedRange)) {
-            return currentSegmentI;
-          }
-        }
-      }
-    }
-    return null;
   }
 }

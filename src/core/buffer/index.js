@@ -146,8 +146,7 @@ function Buffer({
    */
   function getSegmentsListToInject(
     representation,
-    start,
-    end,
+    range,
     timing,
     withInitSegment
   ) {
@@ -162,6 +161,7 @@ function Buffer({
       return initSegment ? [initSegment] : [];
     }
 
+    const { start, end } = range;
     const duration = end - start;
 
     /**
@@ -231,13 +231,10 @@ function Buffer({
     /**
      * Returns true if it considers that the segment given should be loaded.
      * @param {Segment} segment
-     * @param {Number} bitrate
+     * @param {Array.<number>} wantedRange
      * @returns {Boolean}
      */
-    function segmentFilter(segment, start, end) {
-
-      const wantedRange = { start, end };
-
+    function segmentFilter(segment, wantedRange) {
       // if this segment is already in the pipeline
       const isInQueue = queuedSegments.test(segment.id);
       if (isInQueue) {
@@ -364,34 +361,27 @@ function Buffer({
         }
       }
 
-      let injectedSegments;
-
       // filter out already loaded and already queued segments
       const withInitSegment = (injectCount === 0);
 
-      const { start, end } =
-        getWantedBufferRange(buffered, timing, bufferGoal, {
-          low: LOW_PADDING,
-          high: HIGH_PADDING,
-        });
+      const wantedRange = getWantedBufferRange(buffered, timing, bufferGoal, {
+        low: LOW_PADDING,
+        high: HIGH_PADDING,
+      });
 
-      injectedSegments = getSegmentsListToInject(
+      const neededSegments = getSegmentsListToInject(
         representation,
-        start,
-        end,
+        wantedRange,
         timing,
-        withInitSegment);
-
-      injectedSegments =
-        injectedSegments
-          .filter((segment) => segmentFilter(segment, start, end));
+        withInitSegment
+      ).filter((segment) => segmentFilter(segment, wantedRange));
 
       // queue all segments injected in the observable
-      for (let i = 0; i < injectedSegments.length; i++) {
-        queuedSegments.add(injectedSegments[i].id);
+      for (let i = 0; i < neededSegments.length; i++) {
+        queuedSegments.add(neededSegments[i].id);
       }
 
-      return Observable.of(...injectedSegments);
+      return Observable.of(...neededSegments);
     }
 
     const loadNeededSegments = segment => {
