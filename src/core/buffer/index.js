@@ -115,7 +115,6 @@ function Buffer({
    * TODO Re-think that mess for a Buffer refacto.
    */
   let initSegmentInfos = null;
-  let wantedRange = null;
 
   // will be used to emit messages to the calling function
   const messageSubject = new Subject();
@@ -147,9 +146,9 @@ function Buffer({
    */
   function getSegmentsListToInject(
     representation,
-    buffered,
+    start,
+    end,
     timing,
-    bufferGoal,
     withInitSegment
   ) {
     let initSegment = null;
@@ -162,13 +161,6 @@ function Buffer({
     if (timing.readyState === 0) {
       return initSegment ? [initSegment] : [];
     }
-
-    const { start, end } = getWantedBufferRange(buffered, timing, bufferGoal, {
-      low: LOW_PADDING,
-      high: HIGH_PADDING,
-    });
-
-    wantedRange = { start, end };
 
     const duration = end - start;
 
@@ -242,7 +234,10 @@ function Buffer({
      * @param {Number} bitrate
      * @returns {Boolean}
      */
-    function segmentFilter(segment) {
+    function segmentFilter(segment, start, end) {
+
+      const wantedRange = { start, end };
+
       // if this segment is already in the pipeline
       const isInQueue = queuedSegments.test(segment.id);
       if (isInQueue) {
@@ -266,6 +261,7 @@ function Buffer({
       //
       // You can repeat this bug easily by setting the maxBufferBehind or
       // maxBufferAhead option for a supplementaryTextTrack
+
       const currentSegment =
         bookkeeper.hasPlayableSegment(wantedRange, time, duration, timescale);
 
@@ -372,14 +368,23 @@ function Buffer({
 
       // filter out already loaded and already queued segments
       const withInitSegment = (injectCount === 0);
+
+      const { start, end } =
+        getWantedBufferRange(buffered, timing, bufferGoal, {
+          low: LOW_PADDING,
+          high: HIGH_PADDING,
+        });
+
       injectedSegments = getSegmentsListToInject(
         representation,
-        buffered,
+        start,
+        end,
         timing,
-        bufferGoal,
         withInitSegment);
 
-      injectedSegments = injectedSegments.filter(segmentFilter);
+      injectedSegments =
+        injectedSegments
+          .filter((segment) => segmentFilter(segment, start, end));
 
       // queue all segments injected in the observable
       for (let i = 0; i < injectedSegments.length; i++) {
