@@ -1,0 +1,55 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "jsRules": {},
+    "rules": {
+      "variable-name": {
+        "severity": "warning",
+        "options": [
+          "allow-leading-underscore",
+          "allow-trailing-underscore"
+        ]
+      },
+      "typedef-whitespace": ["onespace", "onespace"],
+      "object-literal-sort-keys": false,
+      "no-bitwise": false,
+      "one-line": {
+        "severity": "warning"
+      },
+      "no-angle-bracket-type-assertion": {
+        "severity": "none"
+      },
+      "forin": {
+        "severity": "warning"
+      },
+      "ordered-imports": false,
+      "no-empty": false,
+      "arrow-parens": false,
+      "only-arrow-functions": false,
+      "prefer-for-of": false,
+      "no-console": false,
+      "no-var-requires": false,
+      "no-conditional-assignment": false,
+      "max-classes-per-file": false,
+      "interface-name": false,
+      "member-access": false,
+      "import-spacing": false,
+      "variable-name": false,
+      "max-line-length": { "severity": "warning", "options": 90 },
+      "trailing-comma": [
+        true,
+        {
+          "multiline": {
+            "objects": "always",
+            "arrays": "always",
+            "functions": "never",
+            "typeLiterals": "ignore"
+          }
+        }
+      ]
+
+    },
+    "rulesDirectory": []
+}

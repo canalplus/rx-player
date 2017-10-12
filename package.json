@@ -50,9 +50,9 @@
     "update-version": "Update the version in the codebase, based on the VERSION file."
   },
   "scripts": {
-    "build": "webpack --progress --config tools/webpack.config.js src/exports.js dist/rx-player.js",
-    "build:min": "RXP_MINIFY=true webpack --progress --config tools/webpack.config.js src/exports.js dist/rx-player.min.js",
-    "build:watch": "webpack --progress --config tools/webpack.config.js -w src/exports.js dist/rx-player.js",
+    "build": "webpack --progress --config tools/webpack.config.js src/exports.ts dist/rx-player.js",
+    "build:min": "RXP_MINIFY=true webpack --progress --config tools/webpack.config.js src/exports.ts dist/rx-player.min.js",
+    "build:watch": "webpack --progress --config tools/webpack.config.js -w src/exports.ts dist/rx-player.js",
     "demo": "webpack --progress --config tools/webpack-demo.config.js",
     "demo:min": "RXP_DEMO_MINIFY=true webpack --progress --config tools/webpack-demo.config.js",
     "demo:watch": "webpack --progress --config tools/webpack-demo.config.js -w",
@@ -83,14 +83,18 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
+    "@types/deep-equal": "^1.0.1",
     "array-find": "^1.0.0",
     "array-find-index": "^1.0.2",
     "deep-equal": "^1.0.1",
     "next-tick": "^1.0.0",
     "object-assign": "^4.1.1",
-    "rxjs": "^5.4.2"
+    "rxjs": "^5.4.3"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.43",
+    "@types/node": "^8.0.33",
     "arraybuffer-loader": "^0.2.2",
     "babel-core": "^6.25.0",
     "babel-loader": "^6.2.1",
@@ -125,6 +129,9 @@
     "sinon": "^2.3.4",
     "sinon-chai": "^2.11.0",
     "style-loader": "^0.13.0",
+    "ts-loader": "^2.3.7",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.1",
     "url-loader": "^0.5.9",
     "webpack": "^2.6.1",
     "webpack-closure-compiler": "^2.1.4",
