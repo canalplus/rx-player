@@ -15,7 +15,7 @@
     - [bitrateEstimationChange](#events-bitrateEstimationChange)
     - [warning](#events-warning)
     - [error](#events-error)
-    - [nativeTextTrackChange](#events-nativeTextTrackChange)
+    - [nativeTextTracksChange](#events-nativeTextTracksChange)
 
 ## <a name="overview"></a>Overview
 
@@ -138,10 +138,10 @@ Triggered each time a fatal (for content playback) error happened.
 
 The payload is the corresponding error. See [the Player Error documentation](./errors.md) for more informations.
 
-### <a name="events-nativeTextTrackChange"></a>nativeTextTrackChange
+### <a name="events-nativeTextTracksChange"></a>nativeTextTracksChange
 
-_payload type_: ``HTMLElement``
+_payload type_: ``Array<TextTrackElement>``
 
-Triggered each times a text track is added to the video DOM element.
+Triggered each times a new ``<track>`` element is removed or added to the video element.
 
-The payload is the corresponding TextTrack element.
+The payload is the array of ``TextTrack`` elements. The RxPlayer will only set a single ``<track>`` when a text track is set.
