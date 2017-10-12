@@ -25,7 +25,6 @@ import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import config from "../../config.js";
 
 import log from "../../utils/log";
-import onEvent from "../../utils/rx-onEvent.js";
 import EventEmitter from "../../utils/eventemitter";
 import assert from "../../utils/assert";
 import {
@@ -42,6 +41,8 @@ import {
 } from "../../compat";
 import {
   fullscreenChange as fullscreenChange$,
+  playChanges as playChanges$,
+  textTracksChanges as textTracksChanges$,
   inBackground as inBackground$,
   videoWidth as videoWidth$,
 } from "../../compat/events.js";
@@ -145,9 +146,36 @@ class Player extends EventEmitter {
     this._priv = attachPrivateMethods(this);
 
     this._priv.destroy$ = new Subject();
-    this._priv.fullScreenSubscription = fullscreenChange$(videoElement)
+    fullscreenChange$(videoElement)
       .takeUntil(this._priv.destroy$)
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
+
+    textTracksChanges$(videoElement.textTracks)
+      .takeUntil(this._priv.destroy$)
+      .map(({ target }) => { // prepare TextTrack array
+        const arr = [];
+        for (const textTrack of target) {
+          arr.push(textTrack);
+        }
+        return arr;
+      })
+
+      // We can have two consecutive textTrackChanges with the exact same
+      // payload when we perform multiple texttrack operations before the event
+      // loop is freed.
+      // In that case we only want to fire one time the observable.
+      .distinctUntilChanged((textTracksA, textTracksB) => {
+        if (textTracksA.length !== textTracksB.length) {
+          return false;
+        }
+        for (let i = 0; i < textTracksA.length; i++) {
+          if (textTracksA[i] !== textTracksB[i]) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .subscribe(x => this._priv.onNativeTextTracksNext(x));
 
     // TODO Use regular Stream observable for that
     this._priv.errorStream$ = new Subject() // Emits warnings
@@ -247,7 +275,6 @@ class Player extends EventEmitter {
     _priv.maxBufferAhead$ = null;
     _priv.maxBufferBehind$ = null;
     _priv.unsubscribeLoadedVideo$ = null;
-    _priv.fullScreenSubscription = null;
     _priv.errorStream$ = null;
     _priv.lastBitrates = null;
     _priv.manualBitrates = null;
@@ -366,10 +393,7 @@ class Player extends EventEmitter {
       .distinctUntilChanged()
       .startWith(PLAYER_STATES.LOADING);
 
-    const playChanges = onEvent(videoElement, ["play", "pause"]);
-
-    const textTracksChanges = onEvent(videoElement.textTracks, ["addtrack", "removetrack"])
-      .map(({ target }) => target);
+    const playChanges = playChanges$(videoElement);
 
     let streamDisposable = void 0;
     unsubscribeLoadedVideo$.take(1).subscribe(() => {
@@ -383,10 +407,6 @@ class Player extends EventEmitter {
     playChanges
       .takeUntil(unsubscribeLoadedVideo$)
       .subscribe(x => this._priv.onPlayPauseNext(x), noop);
-
-    textTracksChanges
-      .takeUntil(unsubscribeLoadedVideo$)
-      .subscribe(x => this._priv.onNativeTextTracksNext(x), noop);
 
     timings$
       .takeUntil(unsubscribeLoadedVideo$)

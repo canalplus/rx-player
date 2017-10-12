@@ -144,4 +144,4 @@ _payload type_: ``Array<TextTrackElement>``
 
 Triggered each times a new ``<track>`` element is removed or added to the video element.
 
-The payload is the ``TextTrackList`` which can be interpreted as an Array of elements. The RxPlayer will only set a single ``<track>`` when a text track is set.
+The payload is the array of ``TextTrack`` elements. The RxPlayer will only set a single ``<track>`` when a text track is set.

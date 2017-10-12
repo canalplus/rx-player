@@ -1157,11 +1157,12 @@ player.addEventListener("textTrackChange", (track) => {
 
 ``nativeTextTrackChange`` is replace by the ``nativeTextTracksChange`` (notice the supplementary "s") event.
 
-Two things have changed comparatively:
-  - The payload of this event now is a ``TextTrackList`` element, which can be seen as an array of ``TextTrackElement``. Previously, it was directly a ``TextTrackElement``.
+Three things have changed comparatively:
+  - The payload of this event now is an array of ``TextTrack`` element. Previously, it was a single ``TextTrackElement`` (which correspond to the first in the array).
   - The event is also triggered when a ``TextTrackElement`` is removed from the ``<video>`` tag. Previously, it was only when added.
+  - The event is fired even if no content is playing
 
-This is to support edge cases where the ``<track>`` element could be modified by the user of our library, in which case the RxPlayer could give false informations. Also, this allows to signal when a ``TextTrackElement`` has been removed from the DOM to help you free up ressources on your side.
+This is to support edge cases where the ``<track>`` element could be modified by the user of our library, in which case the RxPlayer could give false informations. Also, this allows to signal when a ``TextTrack`` has been removed from the DOM to help you free up ressources on your side.
 
 #### Replacement example
 

@@ -142,6 +142,10 @@ const fullscreenChange = compatibleListener(
   // On IE11, fullscreen change events is called MSFullscreenChange
   BROWSER_PREFIXES.concat("MS")
 );
+
+const playChanges = compatibleListener(["play", "pause"]);
+const textTracksChanges = compatibleListener(["addtrack", "removetrack"]);
+
 const sourceOpen = compatibleListener(["sourceopen", "webkitsourceopen"]);
 const onEncrypted = compatibleListener(["encrypted", "needkey"]);
 const onKeyMessage = compatibleListener(["keymessage", "message"]);
@@ -154,6 +158,8 @@ export {
   videoWidth,
   loadedMetadata,
   fullscreenChange,
+  playChanges,
+  textTracksChanges,
   sourceOpen,
   onEncrypted,
   onKeyMessage,
