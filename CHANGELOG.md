@@ -4,6 +4,7 @@
 
 ### Added
 
+  - api: add ``nativeTextTracksChange`` event
   - eme: it is now possible to directly set the reverse domain name of the wanted key system in the ``type`` property of ``loadVideo``'s ``keySystems`` option.
   - api: add property ``percentage`` to the ``startAt`` argument of ``loadVideo``.
   - abr: add ``bitrateEstimationChange`` event
@@ -38,6 +39,7 @@
 
 ### Removed
 
+  - api: remove ``nativeTextTrackChange`` event in favor of ``nativeTextTracksChange`` event (notice the "s")
   - api: remove ``goToStart`` method
   - api: remove ``getStartTime`` method
   - api: remove ``getEndTime`` method
