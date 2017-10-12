@@ -4,6 +4,7 @@
 
 ### Added
 
+  - eme: it is now possible to directly set the reverse domain name of the wanted key system in the ``type`` property of ``loadVideo``'s ``keySystems`` option.
   - api: add property ``percentage`` to the ``startAt`` argument of ``loadVideo``.
   - abr: add ``bitrateEstimationChange`` event
   - api: a Date object can now be given to the ``loadVideo`` argument ``startAt.wallClockTime``. It will be automatically converted into seconds.
