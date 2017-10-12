@@ -1,23 +1,22 @@
 import { expect } from "chai";
 import RxPlayer from "../../../src";
 import sleep from "../utils/sleep.js";
-import { getContentFromURL } from "../utils/mock_requests.js";
-import MockXHR from "../utils/mock_XHR.js";
+import TemporaryMockXHR from "../utils/temporary_mock_XHR.js";
 import Mock from "../mocks/dash_static_SegmentTimeline.js";
 
 describe("media player instance", function () {
 
   let player;
-  let mockXHR = new MockXHR(getContentFromURL, Mock);
+  const temporaryXHRMock = new TemporaryMockXHR(Mock);
 
   beforeEach(() => {
     player = new RxPlayer();
-    mockXHR.startMock();
+    temporaryXHRMock.start();
   });
 
   afterEach(() => {
     player.dispose();
-    mockXHR.restoreMock();
+    temporaryXHRMock.restore();
   });
 
   it("should begin playback", async function (done) {
