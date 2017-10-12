@@ -81,8 +81,8 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
 
 /**
 * Find key system canonical name from key system type.
-* @param {string} ksType -- Obtained via inversion
-* @returns {string} -- Either the canonical name, or undefined.
+* @param {string} ksType - Obtained via inversion
+* @returns {string} - Either the canonical name, or undefined.
 */
 function findKeySystemCanonicalName(ksType) {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
@@ -215,9 +215,9 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
 
   /**
    * Array of set keySystems for this content.
-   * Each item of this array is an object containing two keys:
-   *   - keyName {string}: keySystem canonical name
-   *   - keyType {string}: keySystem type
+   * Each item of this array is an object containing the following keys:
+   *   - keyName {string}: keySystem canonical name (e.g. "widevine")
+   *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
    *   - keySystem {Object}: the original keySystem object
    * @type {Array.<Object>}
    */
@@ -264,15 +264,6 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
       }
 
       const { keyName, keyType, keySystem } = keySystemsType[index];
-
-      /**
-       * As our buildKeySystemConfigurations can make exceptions depending on
-       * the key system used (for example, specific default configurations for
-       * clearkey or widevine key systems, which all could have multiple
-       * different reverse domain names), I found it cleaner to take out the
-       * _canonical name_ (e.g. "widevine") here.
-       */
-
       const keySystemConfigurations =
         buildKeySystemConfigurations(keyName, keySystem);
 
