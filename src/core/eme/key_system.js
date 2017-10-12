@@ -80,8 +80,24 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
 }
 
 /**
+* Find key system canonical name from key system type.
+* @param {string} ksType - Obtained via inversion
+* @returns {string} - Either the canonical name, or undefined.
+*/
+function findKeySystemName(ksType) {
+  for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
+    if(EME_KEY_SYSTEMS[ksName].includes(ksType)) {
+      return ksName;
+    }
+  }
+  return;
+}
+
+/**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
+ * @param {string} [ksName] - Generic name for the key system. e.g. "clearkey",
+ * "widevine", "playready". Can be used to make exceptions depending on it.
  * @param {Object} keySystem
  * @param {Boolean} [keySystem.persistentLicense]
  * @param {Boolean} [keySystem.persistentStateRequired]
@@ -89,7 +105,7 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
-function buildKeySystemConfigurations(keySystem) {
+function buildKeySystemConfigurations(ksName, keySystem) {
   const sessionTypes = ["temporary"];
   let persistentState = "optional";
   let distinctiveIdentifier = "optional";
@@ -107,12 +123,23 @@ function buildKeySystemConfigurations(keySystem) {
     distinctiveIdentifier = "required";
   }
 
-  // TODO Widevine robustnesses should only be indicated for... Widevine-based
-  // encryption
+  // Set robustness, in order of consideration:
+  //   1. the user specified its own robustnesses
+  //   2. a "widevine" key system is used, in that case set the default widevine
+  //      robustnesses as defined in the config
+  //   3. set an undefined robustness
   const videoRobustnesses = keySystem.videoRobustnesses ||
-    EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES : []);
   const audioRobustnesses = keySystem.audioRobustnesses ||
-    EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES : []);
+
+  if (!videoRobustnesses.length) {
+    videoRobustnesses.push(undefined);
+  }
+
+  if (!audioRobustnesses.length) {
+    audioRobustnesses.push(undefined);
+  }
 
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
@@ -142,16 +169,19 @@ function buildKeySystemConfigurations(keySystem) {
     persistentState,
     sessionTypes,
   }, {
+    // TODO Re-test with a set contentType but an undefined robustness on the
+    // STBs on which this problem was found.
+    //
     // add another with no {audio,video}Capabilities for some legacy browsers.
     // As of today's spec, this should return NotSupported but the first
-    // candidate configuration should be good, so whe should have no downside
+    // candidate configuration should be good, so we should have no downside
     // doing that.
-    initDataTypes: ["cenc"],
-    videoCapabilities: undefined,
-    audioCapabilities: undefined,
-    distinctiveIdentifier,
-    persistentState,
-    sessionTypes,
+    // initDataTypes: ["cenc"],
+    // videoCapabilities: undefined,
+    // audioCapabilities: undefined,
+    // distinctiveIdentifier,
+    // persistentState,
+    // sessionTypes,
   }];
 }
 
@@ -185,18 +215,32 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
 
   /**
    * Array of set keySystems for this content.
-   * Each item of this array is an object containing two keys:
-   *   - keyType {string}: keySystem type
+   * Each item of this array is an object containing the following keys:
+   *   - keyName {string}: keySystem canonical name (e.g. "widevine")
+   *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
    *   - keySystem {Object}: the original keySystem object
    * @type {Array.<Object>}
    */
-  const keySystemsType = keySystems.reduce(
-    (arr, keySystem) =>
-      arr.concat(
-        (EME_KEY_SYSTEMS[keySystem.type] || [])
-          .map((keyType) => ({ keyType, keySystem }))
-      )
-    , []);
+  const keySystemsType =
+    keySystems.reduce(
+      (arr, keySystem) => {
+
+        let ksType = [];
+
+        if (keySystem.type) {
+          const keyName = keySystem.name || findKeySystemName(keySystem.type);
+          const keyType = keySystem.type;
+          ksType = [{ keyName, keyType, keySystem }];
+        }
+        else if(keySystem.name) {
+          ksType = (EME_KEY_SYSTEMS[keySystem.name] || [])
+              .map((keyType) => {
+                const keyName = keySystem.name;
+                return { keyName, keyType, keySystem };
+              });
+        }
+        return arr.concat(ksType);
+      }, []);
 
   return Observable.create((obs) => {
     let disposed = false;
@@ -218,9 +262,9 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
         return;
       }
 
-      const { keyType, keySystem } = keySystemsType[index];
+      const { keyName, keyType, keySystem } = keySystemsType[index];
       const keySystemConfigurations =
-        buildKeySystemConfigurations(keySystem);
+        buildKeySystemConfigurations(keyName, keySystem);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +
