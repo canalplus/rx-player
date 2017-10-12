@@ -66,6 +66,7 @@ If you don't know if you were using documented APIs, you can still check if the 
     - [progress](#remev-progress)
     - [languageChange](#remev-languageChange)
     - [subtitleChange](#remev-subtitleChange)
+    - [nativeTextTrackChange](#remev-nativeTextTrackChange)
 - [Changed events](#chanev)
     - [positionUpdate](#chanev-positionUpdate)
 
@@ -1147,6 +1148,38 @@ player.addEventListener("subtitleChange", (lang) => {
 player.addEventListener("textTrackChange", (track) => {
   const { language, id, closedCaption } = track;
   console.log("language changed to", language);
+});
+```
+
+### <a name="remev-nativeTextTrackChange"></a>nativeTextTrackChange
+
+#### What Changed
+
+``nativeTextTrackChange`` is replace by the ``nativeTextTracksChange`` (notice the supplementary "s") event.
+
+Two things have changed comparatively:
+  - The payload of this event now is a ``TextTrackList`` element, which can be seen as an array of ``TextTrackElement``. Previously, it was directly a ``TextTrackElement``.
+  - The event is also triggered when a ``TextTrackElement`` is removed from the ``<video>`` tag. Previously, it was only when added.
+
+This is to support edge cases where the ``<track>`` element could be modified by the user of our library, in which case the RxPlayer could give false informations. Also, this allows to signal when a ``TextTrackElement`` has been removed from the DOM to help you free up ressources on your side.
+
+#### Replacement example
+
+```js
+// In the previous version
+player.addEventListener("nativeTextTrackChange", (track) => {
+  console.log("the track changed:", track);
+});
+
+// becomes
+player.addEventListener("nativeTextTracksChange", (tracks) => {
+  if (tracks.length === 0) {
+    console.log("no active track!");
+  } else {
+    // in most usecases you can just check the first element.
+    // (this will have the exact same effect than the previous event)
+    console.log("the track changed:", tracks[0]);
+  }
 });
 ```
 

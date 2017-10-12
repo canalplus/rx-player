@@ -276,11 +276,10 @@ export default (self) => ({
 
   /**
    * Called each time a textTrack is added to the video DOM Element.
-   * @param {Object} evt
-   * @param {HTMLElement} evt.target
+   * @param {Array.<TextTrackElement} tracks
    */
-  onNativeTextTrackNext({ target: [trackElement] }) {
-    self.trigger("nativeTextTrackChange", trackElement || null );
+  onNativeTextTracksNext(tracks) {
+    self.trigger("nativeTextTracksChange", tracks);
   },
 
   /**

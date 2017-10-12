@@ -369,7 +369,7 @@ class Player extends EventEmitter {
     const playChanges = onEvent(videoElement, ["play", "pause"]);
 
     const textTracksChanges = onEvent(videoElement.textTracks, ["addtrack", "removetrack"])
-        .filter(event => event.type === "removetrack" ? event.target.length === 0 : true);
+      .map(({ target }) => target);
 
     let streamDisposable = void 0;
     unsubscribeLoadedVideo$.take(1).subscribe(() => {
@@ -386,7 +386,7 @@ class Player extends EventEmitter {
 
     textTracksChanges
       .takeUntil(unsubscribeLoadedVideo$)
-      .subscribe(x => this._priv.onNativeTextTrackNext(x), noop);
+      .subscribe(x => this._priv.onNativeTextTracksNext(x), noop);
 
     timings$
       .takeUntil(unsubscribeLoadedVideo$)
