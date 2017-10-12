@@ -386,8 +386,19 @@ export default {
    * segment in the equation here.
    * @type {Number}
    */
-  MAX_MISSING_FROM_PLAYABLE_SEGMENT: 0.12,
+  MAX_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
 
+  /*
+  * Defines the maximum spread between the buffered start and end from the
+  * segment associated with current time, and the wanted start and end of
+  * current playback.
+  *
+  * Logic is the same that with MAX_MISSING_FROM_COMPLETE_SEGMENT, except that
+  * the indicator is greater than it. Considering wanted playback ranges to be
+  * respected, the spread tolerance should be lower.
+  *
+  */
+  MAX_MISSING_FROM_PLAYABLE_SEGMENT: 0.3,
 
   /**
    * The maximum time, in seconds, the real buffered time in the sourcebuffer

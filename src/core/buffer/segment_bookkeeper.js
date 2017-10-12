@@ -20,6 +20,7 @@ import takeFirstSet from "../../utils/takeFirstSet.js";
 import { convertToRanges } from "../../utils/ranges.js";
 
 const {
+  MAX_MISSING_FROM_COMPLETE_SEGMENT,
   MAX_MISSING_FROM_PLAYABLE_SEGMENT,
   MAX_BUFFERED_DISTANCE,
   MINIMUM_SEGMENT_SIZE,
@@ -450,8 +451,7 @@ export default class SegmentBookkeeper {
    * (see addBufferedInfos method of the same class) before calling this method,
    * as it depends on it to categorize "incomplete" from "complete" segments.
    *
-   * @param {number} wantedStart
-   * @param {number} wantedEnd
+   * @param {Object} wantedRange
    * @param {Number} time
    * @param {Number} duration
    * @param {Number} timescale
@@ -497,17 +497,17 @@ export default class SegmentBookkeeper {
     */
     function hasPartialSegment(wantedRange) {
 
-      let timeDiff = wantedRange.start - currentSegmentI.bufferedStart;
-      if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
-        return null;
+      const startTimeDiff = wantedRange.start - currentSegmentI.bufferedStart;
+      if (startTimeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+        return false;
       }
 
-      timeDiff = currentSegmentI.bufferedEnd - wantedRange.end;
-      if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
-        return null;
+      const endTimeDiff = currentSegmentI.bufferedEnd - wantedRange.end;
+      if (endTimeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+        return false;
       }
 
-      return currentSegmentI;
+      return true;
     }
 
     /* check complete-ness of the segment:
@@ -524,8 +524,8 @@ export default class SegmentBookkeeper {
       currentPrevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
     ) {
         const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
-        if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
-          return null;
+        if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
+          return false;
         }
       }
 
@@ -536,12 +536,12 @@ export default class SegmentBookkeeper {
       )
     ) {
         const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
-        if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
-          return null;
+        if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
+          return false;
         }
       }
 
-      return currentSegmentI;
+      return true;
     }
 
     for (let i = _inventory.length - 1; i >= 0; i--) {
@@ -561,7 +561,12 @@ export default class SegmentBookkeeper {
 
       if (segment.time === _time && segment.duration === _duration) {
         if(hasElligibleSegment()) {
-          return hasCompleteSegment() || hasPartialSegment();
+          if (hasCompleteSegment()) {
+            return currentSegmentI;
+          }
+          else if (hasPartialSegment(wantedRange)) {
+            return currentSegmentI;
+          }
         }
       }
     }
