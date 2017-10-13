@@ -478,9 +478,7 @@ export default class SegmentBookkeeper {
         // false negatives are better than false positives here.
         // When impossible to know, say the segment is not complete
         if(hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI)) {
-          if (isSegmentComplete(currentSegmentI, prevSegmentI, nextSegmentI)) {
-            return currentSegmentI;
-          } else if (hasWantedRange(currentSegmentI, wantedRange)) {
+          if (hasWantedRange(wantedRange, currentSegmentI, prevSegmentI, nextSegmentI)) {
             return currentSegmentI;
           }
         }
@@ -513,45 +511,22 @@ export default class SegmentBookkeeper {
       return true;
     }
 
-    /*
-     * Returns true if the segment given can be played for the wanted range.
-     * @param {Object} currentSegmentI
-     * @param {Array.<number>} wantedRange
-     * @returns {Boolean}
-     */
-    function hasWantedRange(wantedRange, currentSegmentI) {
-      const startTimeDiff = wantedRange.start - currentSegmentI.bufferedStart;
-      if (startTimeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
-        return false;
-      }
-
-      const endTimeDiff = currentSegmentI.bufferedEnd - wantedRange.end;
-      if (endTimeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
-        return false;
-      }
-
-      return true;
-    }
-
-    /* check complete-ness of the segment:
-    *  - check that the real start and end is contiguous with the
-    *    previous/next one.
-    *  - if that's not the case for at least one of them, check the
-    *    difference between what is announced and what seems to be
-    *    in the sourcebuffer.
+    /* Returns true if the segment given can be played for the wanted range.
     * @param {Object} currentSegmentI
     * @param {Object} prevSegmentI
     * @param {Object} nextSegmentI
     * @returns {Boolean}
     */
-    function isSegmentComplete(currentSegmentI, prevSegmentI, nextSegmentI){
+    function hasWantedRange(wantedRange, currentSegmentI, prevSegmentI, nextSegmentI) {
+
       if (
         !prevSegmentI ||
         prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
       ) {
-        const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
-        if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
-          return false;
+        if (wantedRange.end < currentSegmentI.end) {
+          if (wantedRange.end >= currentSegmentI.bufferedEnd) {
+            return false;
+          }
         }
       }
 
@@ -561,9 +536,10 @@ export default class SegmentBookkeeper {
           nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
         )
       ) {
-        const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
-        if (timeDiff > MAX_MISSING_FROM_COMPLETE_SEGMENT) {
-          return false;
+        if (wantedRange.start > currentSegmentI.start) {
+          if (wantedRange.start <= currentSegmentI.bufferedStart) {
+            return false;
+          }
         }
       }
 
