@@ -351,54 +351,21 @@ export default {
   STALL_GAP: 0.5,
 
   /**
-   * Maximum difference allowed between a segment _announced_ start (what the
-   * rx-player infers to be the starting time) and its _real_  current starting
-   * time in the source buffer, in seconds, until the segment is considered
-   * "incomplete".
+   * Maximum difference allowed between a segment _buffered_ start and the wanted 
+   * playback range start.
    * Same for the ending time announced and its effective end time in the source
    * buffer.
-   *
+   * 
    * If the difference is bigger than this value, the segment will be considered
-   * incomplete (e.g. considered as partially garbage-collected) and as such
-   * might be re-downloaded.
+   * to be not playable.
    *
    * Keeping a too high value might lead to incomplete segments being wrongly
-   * considered as complete (and thus not be re-downloaded, this could lead the
+   * considered as playable (and thus not be re-downloaded, this could lead the
    * player to stall).
-   * Note that in a worst-case scenario this can happen for the end of a segment
-   * and the start of the contiguous segment, leading to a discontinuity two
-   * times this value.
-   *
-   * Keeping a too low value might lead to re-downloading the same segment
-   * multiple times (when the start and end times are badly estimated) as they
-   * will wrongly believed to be partially garbage-collected.
-   *
-   * If a segment has a perfect continuity with a previous/following one in the
-   * source buffer the start/end of it will not be checked. This allows to limit
-   * the number of time this error-prone logic is applied.
-   *
-   * Note that in most cases, the rx-player's start and end times estimations
-   * are __really__ close to what they really are in the sourcebuffer (we
-   * usually have a difference in the order of 10^-7), as time information is
-   * most of the time directly parsed from the media container.
-   *
-   * TODO A maybe cleaner way would be to also consider the real duration of a
-   * segment in the equation here.
+   * 
    * @type {Number}
    */
-  MAX_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
-
-  /*
-  * Defines the maximum difference between the buffered start and end from the
-  * segment associated with current time, and the wanted start and end of
-  * current playback.
-  *
-  * Logic is the same that with MAX_MISSING_FROM_COMPLETE_SEGMENT, except that
-  * the indicator may be greater. Considering wanted playback ranges to
-  * be respected, the difference tolerance should be lower.
-  *
-  */
-  MAX_MISSING_FROM_PLAYABLE_SEGMENT: 0.3,
+  MAX_MISSING_FROM_PLAYABLE_SEGMENT: 0.12,
 
   /**
    * The maximum time, in seconds, the real buffered time in the sourcebuffer

@@ -20,7 +20,6 @@ import takeFirstSet from "../../utils/takeFirstSet.js";
 import { convertToRanges } from "../../utils/ranges.js";
 
 const {
-  MAX_MISSING_FROM_COMPLETE_SEGMENT,
   MAX_MISSING_FROM_PLAYABLE_SEGMENT,
   MAX_BUFFERED_DISTANCE,
   MINIMUM_SEGMENT_SIZE,
@@ -439,8 +438,7 @@ export default class SegmentBookkeeper {
    * Returns null if either:
    *   - no segment can be linked exactly to the given time/duration
    *   - a segment is linked to this information, but is currently considered
-   *     "incomplete" to be playable, in the sourceBuffer. First, we check if
-   *      the segment is complete. If not, we check if all needed data for
+   *     "incomplete" to be playable, in the sourceBuffer. We check if all needed data for
    *      playback (from wanted range) is loaded.
    *
    * The main purpose of this method is to know if the segment asked should be
@@ -489,7 +487,7 @@ export default class SegmentBookkeeper {
     // -- Helpers
 
     /*
-    * Check if segment completion can be evaluated.
+    * Check if segment can be evaluated.
     * @param {Object} currentSegmentI
     * @param {Object} prevSegmentI
     * @param {Object} nextSegmentI
@@ -523,8 +521,14 @@ export default class SegmentBookkeeper {
         !prevSegmentI ||
         prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
       ) {
-        if (wantedRange.end < currentSegmentI.end) {
-          if (wantedRange.end >= currentSegmentI.bufferedEnd) {
+        if (wantedRange.start > currentSegmentI.start) {
+          const timeDiff = wantedRange.start - currentSegmentI.bufferedStart;
+          if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+            return false;
+          }
+        } else {
+          const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
+          if (timeDiff >= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
             return false;
           }
         }
@@ -536,12 +540,19 @@ export default class SegmentBookkeeper {
           nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
         )
       ) {
-        if (wantedRange.start > currentSegmentI.start) {
-          if (wantedRange.start <= currentSegmentI.bufferedStart) {
+        if (wantedRange.end < currentSegmentI.end) {
+          const timeDiff = currentSegmentI.bufferedEnd - wantedRange.end;
+          if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
             return false;
           }
+        } else {
+          const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
+          if(timeDiff >= MAX_MISSING_FROM_PLAYABLE_SEGMENT)
+            return false;
         }
       }
+
+
 
       return true;
     }
