@@ -522,13 +522,13 @@ export default class SegmentBookkeeper {
         prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
       ) {
         if (wantedRange.start > currentSegmentI.start) {
-          const timeDiff = wantedRange.start - currentSegmentI.bufferedStart;
-          if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          const timeDiff = currentSegmentI.bufferedStart - wantedRange.start;
+          if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
             return false;
           }
         } else {
           const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
-          if (timeDiff >= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
             return false;
           }
         }
@@ -541,13 +541,13 @@ export default class SegmentBookkeeper {
         )
       ) {
         if (wantedRange.end < currentSegmentI.end) {
-          const timeDiff = currentSegmentI.bufferedEnd - wantedRange.end;
-          if (timeDiff <= MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          const timeDiff = wantedRange.end - currentSegmentI.bufferedEnd;
+          if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
             return false;
           }
         } else {
           const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
-          if(timeDiff >= MAX_MISSING_FROM_PLAYABLE_SEGMENT)
+          if(timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT)
             return false;
         }
       }
