@@ -351,21 +351,24 @@ export default {
   STALL_GAP: 0.5,
 
   /**
-   * Maximum difference allowed between a segment _buffered_ start and the wanted 
-   * playback range start.
+   * Maximum difference allowed between a segment _buffered_ start and the
+   * wanted playback range start.
    * Same for the ending time announced and its effective end time in the source
    * buffer.
-   * 
-   * If the difference is bigger than this value, the segment will be considered
-   * to be not playable.
    *
-   * Keeping a too high value might lead to incomplete segments being wrongly
+   * If the difference is bigger than this value, the segment will be
+   * re-downloaded.
+   *
+   * Setting a value too high might lead to incomplete segments being wrongly
    * considered as playable (and thus not be re-downloaded, this could lead the
    * player to stall).
-   * 
+   *
+   * Setting a value too low might lead to complete segment being wrongly
+   * considered as incomplete and re-downloaded.
+   *
    * @type {Number}
    */
-  MAX_MISSING_FROM_PLAYABLE_SEGMENT: 0.12,
+  MAX_TIME_MISSING_FROM_WANTED_SEGMENT: 0.12,
 
   /**
    * The maximum time, in seconds, the real buffered time in the sourcebuffer

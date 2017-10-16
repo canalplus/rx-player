@@ -20,7 +20,7 @@ import takeFirstSet from "../../utils/takeFirstSet.js";
 import { convertToRanges } from "../../utils/ranges.js";
 
 const {
-  MAX_MISSING_FROM_PLAYABLE_SEGMENT,
+  MAX_TIME_MISSING_FROM_WANTED_SEGMENT,
   MAX_BUFFERED_DISTANCE,
   MINIMUM_SEGMENT_SIZE,
 } = config;
@@ -438,8 +438,8 @@ export default class SegmentBookkeeper {
    * Returns null if either:
    *   - no segment can be linked exactly to the given time/duration
    *   - a segment is linked to this information, but is currently considered
-   *     "incomplete" to be playable, in the sourceBuffer. We check if all needed data for
-   *      playback (from wanted range) is loaded.
+   *     "incomplete" to be playable, in the sourceBuffer. We check if all
+   *     needed data for playback (from wanted range) is loaded.
    *
    * The main purpose of this method is to know if the segment asked should be
    * downloaded (or re-downloaded).
@@ -476,7 +476,14 @@ export default class SegmentBookkeeper {
         // false negatives are better than false positives here.
         // When impossible to know, say the segment is not complete
         if(hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI)) {
-          if (hasWantedRange(wantedRange, currentSegmentI, prevSegmentI, nextSegmentI)) {
+          if (
+            hasWantedRange(
+              wantedRange,
+              currentSegmentI,
+              prevSegmentI,
+              nextSegmentI
+            )
+          ) {
             return currentSegmentI;
           }
         }
@@ -515,7 +522,12 @@ export default class SegmentBookkeeper {
     * @param {Object} nextSegmentI
     * @returns {Boolean}
     */
-    function hasWantedRange(wantedRange, currentSegmentI, prevSegmentI, nextSegmentI) {
+    function hasWantedRange(
+      wantedRange,
+      currentSegmentI,
+      prevSegmentI,
+      nextSegmentI
+    ) {
 
       if (
         !prevSegmentI ||
@@ -523,12 +535,13 @@ export default class SegmentBookkeeper {
       ) {
         if (wantedRange.start > currentSegmentI.start) {
           const timeDiff = currentSegmentI.bufferedStart - wantedRange.start;
-          if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          if (timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
             return false;
           }
         } else {
-          const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
-          if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          const timeDiff =
+            currentSegmentI.bufferedStart - currentSegmentI.start;
+          if (timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
             return false;
           }
         }
@@ -542,18 +555,16 @@ export default class SegmentBookkeeper {
       ) {
         if (wantedRange.end < currentSegmentI.end) {
           const timeDiff = wantedRange.end - currentSegmentI.bufferedEnd;
-          if (timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT) {
+          if (timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
             return false;
           }
         } else {
           const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
-          if(timeDiff > MAX_MISSING_FROM_PLAYABLE_SEGMENT)
+          if(timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
             return false;
+          }
         }
       }
-
-
-
       return true;
     }
   }
