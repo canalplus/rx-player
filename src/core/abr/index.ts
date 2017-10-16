@@ -15,16 +15,35 @@
  */
 
 import { Subject } from "rxjs/Subject";
+import { Observable  } from "rxjs/Observable";
 
 import arrayIncludes from "../../utils/array-includes";
 import assert from "../../utils/assert";
 
 import RepresentationChooser from "./representation_chooser";
+import {
+  IRequest,
+  ChooserOptions,
+} from "./representation_chooser";
+import Representation from "../../manifest/representation";
+
+interface IMetric {
+  duration: number;
+  size: number;
+}
 
 /**
  * Types of chunks accepted by the ABR logic.
  */
 const KNOWN_TYPES = ["audio", "video", "text", "image"];
+
+const defaultChooserOptions = {
+  limitWidth: {},
+  throttle: {},
+  initialBitrates: {},
+  manualBitrates: {},
+  maxAutoBitrates: {},
+};
 
 /**
  * @param {string} type
@@ -36,10 +55,10 @@ const assertType = (type : string) =>
 /**
  * Create the right RepresentationChooser instance, from the given data.
  * @param {string} type
- * @param {Object} options
- * @returns {Observable} - The RepresentationChooser instance
+ * @param {ChooserOptions} options
+ * @returns {RepresentationChooser} - The RepresentationChooser instance
  */
-const createChooser = (type : string, options : any) => {
+const createChooser = (type : string, options : ChooserOptions): RepresentationChooser => {
   return new RepresentationChooser({
     limitWidth$: options.limitWidth[type],
     throttle$: options.throttle[type],
@@ -71,10 +90,10 @@ const lazilyAttachChooser = (instce : ABRManager, bufferType : string) => {
  */
 export default class ABRManager {
   // TODO privatize
-  public _choosers;
-  public _chooserInstanceOptions;
+  public _choosers:  Dictionary<RepresentationChooser>;
+  public _chooserInstanceOptions: ChooserOptions;
 
-  private _dispose$;
+  private _dispose$: Subject<void>;
 
   /**
    * @param {Observable} requests$ - Emit requests infos as they begin, progress
@@ -107,23 +126,23 @@ export default class ABRManager {
    *     received:
    *       - for "requestBegin" events, it should be an object with the
    *         following keys:
-   *           - id {Number|String}: The id of this particular request.
-   *           - duration {Number}: duration, in seconds of the asked segment.
-   *           - time {Number}: The start time, in seconds of the asked segment.
-   *           - requestTimestamp {Number}: the timestamp at which the request
+   *           - id {number|String}: The id of this particular request.
+   *           - duration {number}: duration, in seconds of the asked segment.
+   *           - time {number}: The start time, in seconds of the asked segment.
+   *           - requestTimestamp {number}: the timestamp at which the request
    *             was sent, in ms.
    *
    *       - for "progress" events, it should be an object with the following
    *         keys:
-   *           - id {Number|String}: The id of this particular request.
-   *           - size {Number}: amount currently downloaded, in bytes
-   *           - timestamp {Number}: timestamp at which the progress event was
+   *           - id {number|String}: The id of this particular request.
+   *           - size {number}: amount currently downloaded, in bytes
+   *           - timestamp {number}: timestamp at which the progress event was
    *             received, in ms
    *         Those events SHOULD be received in order (that is, in increasing
    *         order for both size and timestamp).
    *
    *       - for "requestEnd" events:
-   *           - id {Number|String}: The id of this particular request.
+   *           - id {number|String}: The id of this particular request.
    *
    * @param {Observable} metrics$ - Emit each times the network downloaded
    * a new segment for a given buffer type. Allows to obtain informations about
@@ -132,17 +151,15 @@ export default class ABRManager {
    * The items emitted are object with the following keys:
    *   - type {string}: the buffer type (example: "video")
    *   - value {Object}:
-   *     - duration {Number}: duration of the request, in seconds.
-   *     - size {Number}: size of the downloaded chunks, in bytes.
+   *     - duration {number}: duration of the request, in seconds.
+   *     - size {number}: size of the downloaded chunks, in bytes.
    *
-   * @param {Object} [options={}]
-   * @param {Object} [options.initialBitrates={}]
-   * @param {Object} [options.manualBitrates={}]
-   * @param {Object} [options.maxAutoBitrates={}]
-   * @param {Object} [options.throttle={}]
-   * @param {Object} [options.limitWidth={}]
+   * @param {ChooserOption} [options={}]
    */
-  constructor(requests$, metrics$, options : any = {}) {
+  constructor(
+    requests$: Observable<IRequest[]>,
+    metrics$: Observable<{ type: string, value: IMetric }>,
+    options : ChooserOptions = defaultChooserOptions) {
     // Subject emitting and completing on dispose.
     // Used to clean up every created observables.
     this._dispose$ = new Subject();
@@ -155,6 +172,7 @@ export default class ABRManager {
 
     // Will contain options used when (lazily) instantiating a
     // RepresentationChooser
+
     this._chooserInstanceOptions = {
       initialBitrates: options.initialBitrates || {},
       manualBitrates: options.manualBitrates || {},
@@ -182,27 +200,28 @@ export default class ABRManager {
       // requests$ emits observables which are subscribed to
       .mergeMap(request$ => request$)
       .takeUntil(this._dispose$)
-      .subscribe(({ type, event, value }) => {
+      .subscribe((request) => {
+        const { type, value } = request;
         if (__DEV__) {
           assertType(type);
         }
 
         lazilyAttachChooser(this, type);
-        switch (event) {
-          case "requestBegin":
+        switch (request.event) {
+        case "requestBegin":
           // use the id of the segment as in any case, we should only have at
           // most one active download for the same segment.
           // This might be not optimal if this changes however. The best I think
           // for now is to just throw/warn in DEV mode when two pending ids
           // are identical
-            this._choosers[type].addPendingRequest(value.id, value);
-            break;
-          case "requestEnd":
-            this._choosers[type].removePendingRequest(value.id);
-            break;
-          case "progress":
-            this._choosers[type].addRequestProgress(value.id, value);
-            break;
+          this._choosers[type].addPendingRequest(value.id, request);
+          break;
+        case "requestEnd":
+          this._choosers[type].removePendingRequest(value.id);
+          break;
+        case "progress":
+          this._choosers[type].addRequestProgress(value.id, request);
+          break;
         }
       });
   }
@@ -216,7 +235,11 @@ export default class ABRManager {
    * @param {Array.<Representation>} [representations=[]]
    * @returns {Observable}
    */
-  public get$(type : string, clock$, representations = []) {
+  public get$(
+    type : string,
+    clock$: Observable<any>,
+    representations: Representation[] = []
+  ): Observable<{bitrate: undefined|number, representation: Representation|null}> {
     if (__DEV__) {
       assertType(type);
     }
@@ -234,9 +257,9 @@ export default class ABRManager {
    *   with the lowest bitrate.
    *
    * @param {string} type
-   * @param {Number} bitrate
+   * @param {number} bitrate
    */
-  public setManualBitrate(type : string, bitrate : number) {
+  public setManualBitrate(type : string, bitrate : number): void {
     if (__DEV__) {
       assertType(type);
     }
@@ -251,7 +274,7 @@ export default class ABRManager {
     }
   }
 
-  public setMaxAutoBitrate(type : string, bitrate : number) {
+  public setMaxAutoBitrate(type : string, bitrate : number): void {
     if (__DEV__) {
       assertType(type);
     }
@@ -266,7 +289,7 @@ export default class ABRManager {
     }
   }
 
-  public getManualBitrate(type : string) {
+  public getManualBitrate(type : string): number {
     if (__DEV__) {
       assertType(type);
     }
@@ -276,7 +299,7 @@ export default class ABRManager {
       this._chooserInstanceOptions.manualBitrates[type];
   }
 
-  public getMaxAutoBitrate(type : string) {
+  public getMaxAutoBitrate(type : string): number {
     if (__DEV__) {
       assertType(type);
     }
@@ -286,12 +309,12 @@ export default class ABRManager {
       this._chooserInstanceOptions.maxAutoBitrates[type];
   }
 
-  public dispose() {
+  public dispose(): void {
     Object.keys(this._choosers).forEach(type => {
       this._choosers[type].dispose();
     });
-    this._chooserInstanceOptions = null;
-    this._choosers = null;
+    this._chooserInstanceOptions = defaultChooserOptions;
+    this._choosers = {};
     this._dispose$.next();
     this._dispose$.complete();
   }
