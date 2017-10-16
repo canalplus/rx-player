@@ -389,18 +389,34 @@ export default function createElement(
     if (bodyBackgroundColor) {
       parentElement.style.backgroundColor =
         ttmlColorToCSSColor(bodyBackgroundColor);
+      parentElement.className = "rxp-texttrack-region";
     }
   }
+
+  let containerElement;
 
   // flexbox - we need to add a parent
   const flexElement = document.createElement("DIV");
 
-  // TODO Manage backgroundColor applied to a <p> or a <div>
+  // TODO Manage backgroundColor applied to a <div>
+  const paragraphBackgroundColor = getStyleValue(
+    "backgroundColor", styles, regions, [paragraph, ...divs, body]);
+  if (paragraphBackgroundColor) {
+    const pElement = document.createElement("DIV");
+    pElement.className = "rxp-texttrack-ttml-p";
+    pElement.style.backgroundColor =
+      ttmlColorToCSSColor(paragraphBackgroundColor);
+    pElement.style.display = "inline-block";
+    flexElement.appendChild(pElement);
+    containerElement = pElement;
+  } else {
+    containerElement = flexElement;
+  }
 
   generateTextContent(
     paragraph, divs, body, regions, styles, shouldTrimWhiteSpace)
     .forEach((contentElement) => {
-      flexElement.appendChild(contentElement);
+      containerElement.appendChild(contentElement);
     });
   parentElement.appendChild(flexElement);
   return parentElement;
