@@ -40,7 +40,7 @@ function regularSegmentLoader({ url, segment }) {
     range[1] === indexRange[0] - 1
   ) {
     return request({
-      url: url,
+      url,
       responseType: "arraybuffer",
       headers: {
         Range: byteRange([range[0], indexRange[1]]),
@@ -49,10 +49,10 @@ function regularSegmentLoader({ url, segment }) {
   }
 
   const mediaHeaders = range ?
-    { "Range": byteRange(range) } : null;
+    { Range: byteRange(range) } : null;
 
   const mediaOrInitRequest = request({
-    url: url,
+    url,
     responseType: "arraybuffer",
     headers: mediaHeaders,
   });
@@ -62,7 +62,7 @@ function regularSegmentLoader({ url, segment }) {
   // this in parallel and send the both blobs into the pipeline.
   if (indexRange) {
     const indexRequest = request({
-      url: url,
+      url,
       responseType: "arraybuffer",
       headers: { "Range": byteRange(indexRange) },
     });

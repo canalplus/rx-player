@@ -134,7 +134,7 @@ const  segmentLoader = (customSegmentLoader) => ({
 
       const fallback = () => {
         hasFallbacked = true;
-        segmentLoader(args).subscribe(obs);
+        regularSegmentLoader(args).subscribe(obs);
       };
 
       const callbacks = { reject, resolve, fallback };
