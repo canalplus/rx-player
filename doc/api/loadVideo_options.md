@@ -267,7 +267,9 @@ const supplementaryTextTracks = [{
                        // for the hard of hearing
 
   mimeType: "application/mp4", // {string} A mimeType used to describe
-                               // the text format.
+                               // the text format. Can be "application/mp4" when
+                               // encapsulated in an mp4 file. In that case, the
+                               // "codecs" argument will be needed.
 
   codecs: "stpp"               // {string|undefined} Depending on the mimeType,
                                // you might need to add codec information.

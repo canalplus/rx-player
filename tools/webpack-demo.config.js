@@ -45,11 +45,10 @@ const config = {
         SMOOTH: true,
         DASH: true,
         DIRECTFILE: true,
-
-        // TODO
-        // TTML: true,
-        // SAMI: true,
-        // BIF: true,
+        NATIVE_TTML: true,
+        NATIVE_SAMI: true,
+        NATIVE_VTT: true,
+        HTML_TTML: true,
       },
       "__DEV__": true,
       "__LOGGER_LEVEL__": "\"DEBUG\"",

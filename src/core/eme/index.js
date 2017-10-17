@@ -20,7 +20,7 @@ import log from "../../utils/log";
 import castToObservable from "../../utils/castToObservable.js";
 import assert from "../../utils/assert";
 
-import { onEncrypted } from "../../compat/events.js";
+import { onEncrypted$ } from "../../compat/events.js";
 
 import {
   $storedSessions,
@@ -115,7 +115,7 @@ function createEME(video, keySystems, errorStream) {
   }
 
   return Observable.combineLatest(
-    onEncrypted(video), // wait for "encrypted" event
+    onEncrypted$(video), // wait for "encrypted" event
     findCompatibleKeySystem(keySystems, instanceInfos)
   )
     .take(1)
@@ -149,6 +149,5 @@ function getCurrentKeySystem() {
 export {
   createEME,
   getCurrentKeySystem,
-  onEncrypted, // TODO just import the one from compat everywhere
   dispose,
 };

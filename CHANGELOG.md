@@ -8,6 +8,7 @@
   - eme: it is now possible to directly set the reverse domain name of the wanted key system in the ``type`` property of ``loadVideo``'s ``keySystems`` option.
   - api: add property ``percentage`` to the ``startAt`` argument of ``loadVideo``.
   - abr: add ``bitrateEstimationChange`` event
+  - api: add ``LogLevel`` static property
   - api: a Date object can now be given to the ``loadVideo`` argument ``startAt.wallClockTime``. It will be automatically converted into seconds.
   - languages: add ``normalizedLanguage`` property in manifest-related-APIs to expose the ISO 639-3 language code of the audio and text tracks
   - languages: add ``normalized`` property in language-related-API to expose the ISO 639-3 language code of the audio and text tracks

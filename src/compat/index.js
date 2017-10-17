@@ -18,9 +18,11 @@ import { Observable } from "rxjs/Observable";
 
 import onEvent from "../utils/rx-onEvent.js";
 import EventEmitter from "../utils/eventemitter";
+import log from "../utils/log.js";
 import {
   HTMLVideoElement_,
   MediaSource_,
+  VTTCue_,
   isIE,
   isFirefox,
   READY_STATES,
@@ -51,11 +53,11 @@ function shouldRenewMediaKeys() {
  * @param {MediaSource}
  * @returns {Observable}
  */
-function sourceOpen(mediaSource) {
+function onSourceOpen$(mediaSource) {
   if (mediaSource.readyState == "open") {
     return Observable.of(null);
   } else {
-    return events.sourceOpen(mediaSource).take(1);
+    return events.onSourceOpen$(mediaSource).take(1);
   }
 }
 
@@ -69,7 +71,7 @@ function canSeek(videoElement) {
   if (videoElement.readyState >= READY_STATES.HAVE_METADATA) {
     return Observable.of(null);
   } else {
-    return events.loadedMetadata(videoElement).take(1);
+    return events.onLoadedMetadata$(videoElement).take(1);
   }
 }
 
@@ -211,10 +213,31 @@ function isOffline() {
   return navigator.onLine === false;
 }
 
+/**
+ * Creates a cue using the best platform-specific interface available.
+ *
+ * @param {Number} startTime
+ * @param {Number} endTime
+ * @param {string} payload
+ * @returns {TextTrackCue} or null if the parameters were invalid.
+ */
+function makeCue(startTime, endTime, payload) {
+  if (startTime >= endTime) {
+
+    // IE/Edge will throw in this case.
+    // See issue #501
+    log.warn("Invalid cue times: " + startTime + " - " + endTime);
+    return null;
+  }
+
+  return new VTTCue_(startTime, endTime, payload);
+}
+
 export {
   HTMLVideoElement_,
   KeySystemAccess,
   MediaSource_,
+  VTTCue_,
   addTextTrack,
   canPlay,
   canSeek,
@@ -228,9 +251,10 @@ export {
   isOffline,
   isPlaybackStuck,
   isVTTSupported,
+  makeCue,
   requestFullscreen,
   requestMediaKeySystemAccess,
   setMediaKeys,
   shouldRenewMediaKeys,
-  sourceOpen,
+  onSourceOpen$,
 };
