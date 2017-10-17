@@ -21,7 +21,7 @@ import { stringFromUTF8 } from "../../utils/strings.js";
 import request from "../../utils/request";
 
 import createHSSManifestParser from "./parser";
-import parseBif from "../../parsers/bif";
+import parseBif from "../../parsers/images/bif.js";
 
 import mp4Utils from "./mp4.js";
 import parsedRequest from "./request.js";

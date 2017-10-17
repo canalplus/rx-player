@@ -18,7 +18,7 @@ import {
   le2toi,
   le4toi,
   bytesToStr,
-} from "../utils/bytes";
+} from "../../utils/bytes";
 
 /**
  * @param {UInt8Array} buf

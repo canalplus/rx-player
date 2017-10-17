@@ -23,7 +23,7 @@ import {
   patchPssh,
   getMDHDTimescale,
 } from "../../parsers/containers/isobmff.js";
-import parseBif from "../../parsers/bif.js";
+import parseBif from "../../parsers/images/bif.js";
 
 import dashManifestParser from "./manifest";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos.js";

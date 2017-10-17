@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { makeCue } from "../../compat";
-import assert from "../../utils/assert";
+import { makeCue } from "../../../compat";
+import assert from "../../../utils/assert";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;

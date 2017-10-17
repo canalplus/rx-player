@@ -23,7 +23,7 @@ if (__FEATURES__.NATIVE_TTML) {
 
 if (__FEATURES__.NATIVE_SAMI) {
   nativeParsers.sami =
-    require("../../../../../parsers/texttracks/sami.js").default;
+    require("../../../../../parsers/texttracks/sami/native.js").default;
   nativeParsers.smil = nativeParsers.sami;
 }
 
