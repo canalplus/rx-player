@@ -208,26 +208,6 @@ function applyGeneralStyle(element, elementsToInherit, regions, styles) {
     }
   }
 
-  // applies to p
-  const lineHeight = getInheritedStyle("lineHeight");
-  if (lineHeight) {
-    element.style.lineHeight = lineHeight;
-  }
-
-  // applies to p
-  const textAlign = getInheritedStyle("textAlign");
-  if (textAlign) {
-    if (textAlign === "center") {
-      element.style.textAlign = "center";
-    } else if (textAlign === "left" || textAlign === "start") {
-      // TODO check what start means (difference with left, writing direction?)
-      element.style.textAlign = "left";
-    } else if (textAlign === "right" || textAlign === "end") {
-      // TODO check what end means (difference with right, writing direction?)
-      element.style.textAlign = "right";
-    }
-  }
-
   // applies to region
   const displayAlign = getInheritedStyle("displayAlign");
   element.style.display = "flex";
@@ -270,6 +250,47 @@ function applyGeneralStyle(element, elementsToInherit, regions, styles) {
 }
 
 /**
+ * Apply style set for a <p> element
+ * @param {HTMLElement} element - The <p> element
+ * @param {Array.<Element>} elementsToInherit - The various elements our element
+ * can inherit styling from, in order of importance.
+ * @param {Array.<Element>} regions - <region> tags our element can depend on
+ * @param {Array.<Element>} styles - <style> tags our element can depend on
+ */
+function applyPStyle(element, elementsToInherit, regions, styles) {
+  function getInheritedStyle(styleName) {
+    return getStyleValue(styleName, styles, regions, elementsToInherit);
+  }
+
+  // applies to body, div, p, region, span
+  const paragraphBackgroundColor = getInheritedStyle("backgroundColor");
+  if (paragraphBackgroundColor) {
+    element.style.backgroundColor =
+      ttmlColorToCSSColor(paragraphBackgroundColor);
+  }
+
+  // applies to p
+  const lineHeight = getInheritedStyle("lineHeight");
+  if (lineHeight) {
+    element.style.lineHeight = lineHeight;
+  }
+
+  // applies to p
+  const textAlign = getInheritedStyle("textAlign");
+  if (textAlign) {
+    if (textAlign === "center") {
+      element.style.textAlign = "center";
+    } else if (textAlign === "left" || textAlign === "start") {
+      // TODO check what start means (difference with left, writing direction?)
+      element.style.textAlign = "left";
+    } else if (textAlign === "right" || textAlign === "end") {
+      // TODO check what end means (difference with right, writing direction?)
+      element.style.textAlign = "right";
+    }
+  }
+}
+
+/**
  * Creates span of text for the given #text element, with the right style.
  * @param {Element} el - the #text element, which text content should be
  * displayed
@@ -286,10 +307,9 @@ function applyGeneralStyle(element, elementsToInherit, regions, styles) {
  * @returns {HTMLElement}
  */
 function createTextElement(el, spans, p, divs, body, regions, styles) {
-  const wrapperElement = document.createElement("span");
   const textElement = document.createElement("span");
   textElement.innerHTML = el.textContent || "";
-  wrapperElement.appendChild(textElement);
+  textElement.className = "rxp-texttrack-ttml-span";
 
   // Styles at span levels (which only apply to the given span)
   if (spans.length) {
@@ -309,8 +329,8 @@ function createTextElement(el, spans, p, divs, body, regions, styles) {
   if (body) {
     elementsToInherit.push(body);
   }
-  applyTextStyle(wrapperElement, elementsToInherit, styles, regions);
-  return wrapperElement;
+  applyTextStyle(textElement, elementsToInherit, styles, regions);
+  return textElement;
 }
 
 /**
@@ -381,43 +401,54 @@ export default function createElement(
   const divs = getParentElementsByTagName(paragraph, "div");
 
   const parentElement = document.createElement("DIV");
+  parentElement.className = "rxp-texttrack-ttml-region";
+
   const elementsToInherit = [paragraph, ...divs, body];
   applyGeneralStyle(parentElement, elementsToInherit, regions, styles);
   if (body) {
+    // applies to body, div, p, region, span
     const bodyBackgroundColor =
       getStyleValue("backgroundColor", styles, regions, [...divs, body]);
     if (bodyBackgroundColor) {
       parentElement.style.backgroundColor =
         ttmlColorToCSSColor(bodyBackgroundColor);
-      parentElement.className = "rxp-texttrack-region";
     }
   }
 
-  let containerElement;
-
-  // flexbox - we need to add a parent
-  const flexElement = document.createElement("DIV");
-
-  // TODO Manage backgroundColor applied to a <div>
-  const paragraphBackgroundColor = getStyleValue(
-    "backgroundColor", styles, regions, [paragraph, ...divs, body]);
-  if (paragraphBackgroundColor) {
-    const pElement = document.createElement("DIV");
-    pElement.className = "rxp-texttrack-ttml-p";
-    pElement.style.backgroundColor =
-      ttmlColorToCSSColor(paragraphBackgroundColor);
-    pElement.style.display = "inline-block";
-    flexElement.appendChild(pElement);
-    containerElement = pElement;
-  } else {
-    containerElement = flexElement;
-  }
+  const pElement = document.createElement("p");
+  pElement.className = "rxp-texttrack-ttml-p";
+  applyPStyle(pElement, elementsToInherit, regions, styles);
 
   generateTextContent(
     paragraph, divs, body, regions, styles, shouldTrimWhiteSpace)
     .forEach((contentElement) => {
-      containerElement.appendChild(contentElement);
+      pElement.appendChild(contentElement);
     });
-  parentElement.appendChild(flexElement);
+
+  // NOTE:
+  // The following code is for the inclusion of div elements. This has no
+  // advantage for now, and might only with future evolutions.
+  // This is only an indication of what the base of the code could look like.
+  // if (divs.length) {
+  //   let container = parentElement;
+  //   for (let i = divs.length - 1; i >= 0; i--) {
+  //     // TODO manage style at div level?
+  //     // They are: visibility, display and backgroundColor
+  //     // All these do not have any difference if applied to the <p> element
+  //     // instead of the div.
+  //     // The advantage might only be for multiple <p> elements dispatched
+  //     // in multiple div Which we do not manage anyway for now.
+  //     const divEl = document.createElement("DIV");
+  //     divEl.className = "rxp-texttrack-ttml-div";
+  //     container.appendChild(divEl);
+  //     container = divEl;
+  //   }
+  //   container.appendChild(pElement);
+  //   parentElement.appendChild(container);
+  // } else {
+  //   parentElement.appendChild(pElement);
+  // }
+
+  parentElement.appendChild(pElement);
   return parentElement;
 }
