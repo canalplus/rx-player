@@ -93,6 +93,7 @@
   - languages: fix bug which led to TextTracks chunks being re-downloaded multiple times
   - languages/dash: allow plain text TTML, SAMI and VTT subtitles in DASH manifest
   - speed: fix playback rate bug when setting it while the player is stalled
+  - smooth: fix "fallback" callback in the segmentLoader API for smooth contents.
   - smooth: fix some minor risks of infinite rebuffering for live contents, when the isobmff's tfrf box is not well parsed.
   - buffer: avoid infinite player rebuffering when the manifest is not exactly aligned with the real duration of the content
   - buffer: avoid multiple causes of infinite player rebuffering by managing segment garbage collection
