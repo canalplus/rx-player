@@ -5,8 +5,6 @@
   - [Overview](#overview)
   - [Properties](#prop)
     - [videoElement](#prop-videoElement)
-      - [transport](#prop-transport)
-      - [transportOptions](#prop-transportOptions)
       - [defaultAudioTrack](#prop-defaultAudioTrack)
       - [defaultTextTrack](#prop-defaultTextTrack)
       - [initialVideoBitrate](#prop-initialVideoBitrate)
@@ -46,49 +44,6 @@ const player = new Player();
 
 const videoElement = player.getVideoElement();
 document.appendChild(videoElement);
-```
-
-### <a name="prop-transport"></a>transport
-
-_type_: ``string|undefined``
-
-The default transport used. Can be either:
-  - ``"dash"`` - for DASH streams
-  - ``"smooth"`` - for Microsoft Smooth Streaming streams
-
-You can still set the transport per-content with the ``loadVideo`` method. This method only set a default value.
-
-```js
-// this player will play smooth streaming streams most of the time
-const player = new Player({
-  // ...
-  transport: "smooth"
-});
-```
-
-### <a name="prop-transportOptions"></a>transportOptions
-
-_type_: ``Object|undefined``
-
-Options concerning the "transport".
-That is, the part of the code:
-  - performing manifest and segment requests
-  - parsing the manifest and parsing/updating/creating segments
-
-This Object can contain multiple properties. Only those documented here are considered stable:
-  - ``segmentLoader`` (``Function``): defines a custom segment loader. More info on it can be found [here](./plugins.md#segmentLoader).
-
-
-Note that ``transportOptions`` can also be set when loading a video. Only set it on instantiation if you know this will be your default implementation.
-
-```js
-const player = new Player({
-  transportOptions: {
-    segmentLoader (/* args, callbacks */) => {
-      // ...
-    }
-  }
-});
 ```
 
 ### <a name="prop-defaultAudioTrack"></a>defaultAudioTrack

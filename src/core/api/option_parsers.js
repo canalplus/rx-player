@@ -50,8 +50,6 @@ const def = takeFirstDefined;
  */
 function parseConstructorOptions(options = {}) {
   const parsed = {
-    transport: options.transport,
-    transportOptions: def(options.transportOptions, {}),
     maxBufferAhead: def(options.maxBufferAhead, DEFAULT_MAX_BUFFER_AHEAD),
     maxBufferBehind: def(options.maxBufferBehind, DEFAULT_MAX_BUFFER_BEHIND),
     limitVideoWidth: def(options.limitVideoWidth, DEFAULT_LIMIT_VIDEO_WIDTH),
@@ -114,22 +112,16 @@ function parseConstructorOptions(options = {}) {
  */
 function parseLoadVideoOptions(options = {}, ctx) {
   const {
-    defaultTransport,
-    defaultTransportOptions,
-    _priv,
-  } = ctx;
-
-  const {
     lastTextTrack,
     lastAudioTrack,
-  } = _priv;
+  } = ctx._priv;
 
   const parsed = {
     url: options.url,
-    transport: def(options.transport, defaultTransport),
+    transport: options.transport,
     autoPlay: def(options.autoPlay, DEFAULT_AUTO_PLAY),
     keySystems: def(options.keySystems, []),
-    transportOptions: def(options.transportOptions, defaultTransportOptions),
+    transportOptions: options.transportOptions,
     supplementaryTextTracks: def(options.supplementaryTextTracks, []),
     supplementaryImageTracks: def(options.supplementaryImageTracks, []),
     textTrackMode: def(options.textTrackMode, DEFAULT_TEXT_TRACK_MODE),

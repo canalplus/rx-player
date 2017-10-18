@@ -25,8 +25,6 @@ This page describes the options given to the ``loadVideo`` method, which is the 
 These options take the form of a single objects with multiple properties, like this:
 ```js
 // Setting the only two mandatory keys for a clear content (without DRM).
-// (NOTE: if a transport has already been set on instantiation, it is not
-// mandatory here anymore)
 const options = {
   url: myManifestUrl,
   transport: "dash"
@@ -51,7 +49,7 @@ The transport used for this content. Can be either:
   - ``"dash"`` - for DASH streams
   - ``"smooth"`` - for Microsoft Smooth Streaming streams
 
-This property is mandatory only if no default ``transport`` property was set on instantiation.
+This property is mandatory.
 
 ### <a name="prop-transportOptions"></a>transportOptions
 
@@ -247,16 +245,18 @@ Note that this option can also be set in the constructor. If both set in the con
 ### <a name="prop-textTrackMode"></a>textTrackMode
 
 _type_: ``string``
+
 _defaults_: ``"native"``
 
 This option allows to specify how the text tracks should be displayed.
-There is two values possible:
+
+There is two possible values:
   - ``"native"``
   - ``"html"``
 
-In ``"native"`` mode, which is the default mode, a ``<track>`` HTML element will be created on the video and the subtitles will be displayed by it, with a minimal style.
+In the default ``"native"`` mode, a ``<track>`` element will be created on the video and the subtitles will be displayed by it, with a minimal style. There is no action on your side, the subtitles will be correctly displayed at the right time.
 
-In ``"html"`` mode, the text tracks will be displayed on a specific HTML element you provided, with the [textTrackElement option](#prop-textTrackMode). This mode allows us to do much more stylisation, such as TTML styling attributes or SAMI's CSS. It is particularly useful to correctly manage complex closed captions (closed captions with multiple colors, positionning, etc.).
+In ``"html"`` mode, the text tracks will be displayed on a specific HTML element. This mode allows us to do much more stylisation, such as the one defined by TTML styling attributes or SAMI's CSS. It is particularly useful to correctly manage complex closed captions (with multiple colors, positionning etc.). With this mode, you will need to provide a wrapper HTML element with the [textTrackElement option](#prop-textTrackMode).
 
 All text track formats supported in ``"native"`` mode also work in ``"html"`` mode.
 

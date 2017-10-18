@@ -145,8 +145,6 @@ class Player extends EventEmitter {
       maxBufferBehind,
       maxVideoBitrate,
       throttleWhenHidden,
-      transport,
-      transportOptions,
       videoElement,
       wantedBufferAhead,
     } = parseConstructorOptions(options);
@@ -161,8 +159,6 @@ class Player extends EventEmitter {
     this.version = /*PLAYER_VERSION*/"3.0.0-rc5";
     this.log = log;
     this.state = undefined;
-    this.defaultTransport = transport;
-    this.defaultTransportOptions = transportOptions;
     this.videoElement = videoElement;
 
     this._priv = attachPrivateMethods(this);
