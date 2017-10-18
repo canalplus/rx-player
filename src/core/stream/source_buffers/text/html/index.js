@@ -59,6 +59,18 @@ function generateClock(videoElement) {
 }
 
 /**
+ * @param {Element} element
+ * @param {Element|null} [child]
+ */
+function safelyRemoveChild(element, child) {
+  if (child) {
+    try {
+      element.removeChild(child);
+    } catch (e) {}
+  }
+}
+
+/**
  * Source buffer to display TextTracks in the given HTML element.
  * @class HTMLTextTrackSourceBuffer
  */
@@ -80,8 +92,8 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
       .takeUntil(this._destroy$)
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
+          safelyRemoveChild(textTrackElement, this._currentElement);
           this._currentElement = null;
-          textTrackElement.innerHTML = "";
           return;
         }
 
@@ -92,17 +104,13 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
           MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 3000, 0);
         const cue = this._buffer.get(time);
         if (!cue) {
+          safelyRemoveChild(textTrackElement, this._currentElement);
           this._currentElement = null;
-          textTrackElement.innerHTML = "";
           return;
         } else if (this._currentElement === cue.element) {
           return;
         }
-        if (this._currentElement) {
-          try {
-            textTrackElement.removeChild(this._currentElement);
-          } catch (e) {}
-        }
+        safelyRemoveChild(textTrackElement, this._currentElement);
         this._currentElement = cue.element;
         textTrackElement.appendChild(this._currentElement);
       });
@@ -156,10 +164,6 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
   _abort() {
     this._destroy$.next();
     this._destroy$.complete();
-    if (this._currentElement) {
-      try {
-        this._textTrackElement.removeChild(this._currentElement);
-      } catch (e) {}
-    }
+    safelyRemoveChild(this._textTrackElement, this._currentElement);
   }
 }
