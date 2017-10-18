@@ -43,6 +43,8 @@
 
 ### Removed
 
+  - api: remove ``transportOptions`` constructor option
+  - api: remove ``transport`` constructor option
   - api: remove ``nativeTextTrackChange`` event in favor of ``nativeTextTracksChange`` event (notice the "s")
   - api: remove ``goToStart`` method
   - api: remove ``getStartTime`` method
