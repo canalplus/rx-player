@@ -177,10 +177,8 @@ export default function(options={}) {
       } else {
         switch (mimeType) {
         case "application/x-sami":
+        case "application/smil": // TODO SMIL should be its own format, no?
           segmentData.type = "sami";
-          break;
-        case "application/smil":
-          segmentData.type = "smil";
           break;
         case "application/ttml+xml":
           segmentData.type = "ttml";

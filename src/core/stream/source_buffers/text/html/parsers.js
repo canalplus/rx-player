@@ -16,8 +16,12 @@
 
 const htmlParsers = {};
 
-// TODO manage webvtt. (How is the format for segments?)
-// TODO manage sami and smil.
+// TODO manage webvtt
+
+if (__FEATURES__.HTML_SAMI) {
+  htmlParsers.sami =
+    require("../../../../../parsers/texttracks/sami/html.js").default;
+}
 
 if (__FEATURES__.HTML_TTML) {
   htmlParsers.ttml =

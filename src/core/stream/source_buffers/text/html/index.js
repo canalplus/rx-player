@@ -84,7 +84,12 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
           textTrackElement.innerHTML = "";
           return;
         }
-        const time = this._videoElement.currentTime;
+
+        // to spread the time error, we divide the regular chosen interval.
+        // As the clock is also based on real video events, we cannot just
+        // divide by two the regular interval.
+        const time = Math.max(this._videoElement.currentTime -
+          MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 3000, 0);
         const cue = this._buffer.get(time);
         if (!cue) {
           this._currentElement = null;

@@ -170,7 +170,7 @@ More specifically, the ``text`` parser's ``segmentData`` should be an object, wi
 the following keys:
 
   - type {string}: type of subtitles.
-    Can be either "ttml", "vtt", "sami" or "smil" for the moment.
+    Can be either "ttml", "vtt" or "sami" for the moment.
 
   - data {string} The texttrack data.
 

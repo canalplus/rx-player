@@ -223,10 +223,8 @@ function TextTrackParser({
         type = "ttml";
         break;
       case "application/x-sami":
-        type = "sami";
-        break;
       case "application/smil":
-        type = "smil";
+        type = "sami";
         break;
       case "text/vtt":
         type = "vtt";

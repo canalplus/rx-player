@@ -63,6 +63,15 @@
 //   (If RXP_BAREBONE was set to "true", you have to explicitely set this value
 //   to "true" to include this feature in the build.)
 //
+//   - RXP_HTML_SAMI
+//   If set to "false", all code relative to SAMI parsing for html text tracks*
+//   will be ignored during a build.
+//   *html text tracks are tracks which are added to a DOM element instead of a
+//   <track> (the latter here being called "native") tag for a richer
+//   formatting.
+//   (If RXP_BAREBONE was set to "true", you have to explicitely set this value
+//   to "true" to include this feature in the build.)
+//
 //   - RXP_HTML_TTML
 //   If set to "false", all code relative to TTML parsing for html text tracks*
 //   will be ignored during a build.
@@ -139,18 +148,18 @@ const config = {
           process.env.RXP_HTML_TTML === "true" :
           process.env.RXP_HTML_TTML !== "false",
 
-        // TODO
-        // BIF: isBarebone ?
-        //   process.env.RXP_BIF === "true" :
-        //   process.env.RXP_BIF !== "false",
-
-        // HTML_SAMI: isBarebone ?
-        //   process.env.RXP_HTML_SAMI === "true" :
-        //   process.env.RXP_HTML_SAMI !== "false",
+        HTML_SAMI: isBarebone ?
+          process.env.RXP_HTML_SAMI === "true" :
+          process.env.RXP_HTML_SAMI !== "false",
 
         // HTML_VTT: isBarebone ?
         //   process.env.RXP_HTML_VTT === "true" :
         //   process.env.RXP_HTML_VTT !== "false",
+
+        // TODO
+        // BIF: isBarebone ?
+        //   process.env.RXP_BIF === "true" :
+        //   process.env.RXP_BIF !== "false",
       },
       "__DEV__": RXP_ENV === "development",
       "__LOGGER_LEVEL__": "\"DEBUG\"",

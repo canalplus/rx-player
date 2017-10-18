@@ -48,6 +48,7 @@ const config = {
         NATIVE_TTML: true,
         NATIVE_SAMI: true,
         NATIVE_VTT: true,
+        HTML_SAMI: true,
         HTML_TTML: true,
       },
       "__DEV__": true,

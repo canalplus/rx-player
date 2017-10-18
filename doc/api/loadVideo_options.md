@@ -263,6 +263,14 @@ const supplementaryTextTracks = [{
   language: "eng", // {string} The language the text track is in
                    // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
 
+                   // Note for SAMI subtitles:
+                   // For SAMI subtitles, you have to provide the same language
+                   // string than the one indicated in the CSS and p elements.
+                   // It usually follows the ISO639-ISO3166 naming conventions
+                   // (e.g. en-US or fr-FR).
+                   // If we cannot find the provided language in the downloaded
+                   // SAMI text track, it won't be displayed.
+
   closedCaption: false // {Boolean} Whether the text track is a closed caption
                        // for the hard of hearing
 
