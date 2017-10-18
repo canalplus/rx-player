@@ -14,20 +14,32 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import { makeCue } from "../../../../compat";
 
 import {
   REGXP_PERCENT_VALUES,
 } from "../regexps";
 import {
+  getBodyNode,
   getStyleNodes,
   getRegionNodes,
   getTextNodes,
 } from "../nodes";
 import getParameters from "../getParameters";
+import { getStylingAttributes, getStylingFromElement } from "../style";
 import getParentElementsByTagName from "../getParentElementsByTagName";
-import getStyleValue from "../getStyleValue";
 import getTimeDelimiters from "../getTimeDelimiters";
+
+/**
+ * Style attributes currently used.
+ */
+const WANTED_STYLE_ATTRIBUTES = [
+  "extent",
+  "writingMode",
+  "origin",
+  "align",
+];
 
 /**
  * @type {Object}
@@ -60,17 +72,61 @@ function parseTTMLStringToVTT(str) {
       throw new Error("invalid XML");
     }
 
-    const styles = getStyleNodes(tt);
-    const regions = getRegionNodes(tt);
+    const body = getBodyNode(tt);
+    const styleNodes = getStyleNodes(tt);
+    const regionNodes = getRegionNodes(tt);
     const textNodes = getTextNodes(tt);
     const params = getParameters(tt);
 
+    // construct styles array based on the xml as an optimization
+    const styles = [];
+    for (let i = 0; i <= styleNodes.length - 1; i++) {
+      // TODO styles referencing other styles
+      styles.push({
+        id: styleNodes[i].getAttribute("xml:id"),
+        style: getStylingFromElement(styleNodes[i]),
+      });
+    }
+
+    // construct regions array based on the xml as an optimization
+    const regions = [];
+    for (let i = 0; i <= regionNodes.length - 1; i++) {
+      const regionId = regionNodes[i].getAttribute("xml:id");
+      let regionStyle = getStylingFromElement(regionNodes[i]);
+
+      const associatedStyle = regionNodes[i].getAttribute("style");
+      if (associatedStyle) {
+        const style = styles.find((x) => x.id === associatedStyle);
+        if (style) {
+          regionStyle = objectAssign({}, style.style, regionStyle);
+        }
+      }
+      regions.push({
+        id: regionId,
+        style: regionStyle,
+      });
+    }
+
+    // Computing the style takes a lot of ressources.
+    // To avoid too much re-computation, let's compute the body style right
+    // now and do the rest progressively.
+    const bodyStyle = getStylingAttributes(
+      WANTED_STYLE_ATTRIBUTES, [body], styles, regions);
+
     for (let i = 0; i < textNodes.length; i++) {
+      const paragraph = textNodes[i];
+      const divs = getParentElementsByTagName(paragraph , "div");
+      const paragraphStyle = objectAssign({}, bodyStyle,
+        getStylingAttributes(
+          WANTED_STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
+      );
+
       const cue = parseCue(
-        textNodes[i],
+        paragraph,
         0, // offset
         styles,
         regions,
+        paragraphStyle,
         params
       );
       if (cue) {
@@ -85,85 +141,94 @@ function parseTTMLStringToVTT(str) {
 /**
  * Parses an Element into a TextTrackCue or VTTCue.
  * /!\ Mutates the given cueElement Element
- * @param {Element} cueElement
+ * @param {Element} paragraph
  * @param {Number} offset
- * @param {Array.<Element>} styles
- * @param {Array.<Element>} regions
+ * @param {Array.<Object>} styles
+ * @param {Array.<Object>} regions
+ * @param {Object} paragraphStyle
  * @param {Object} params
  * @returns {TextTrackCue|null}
  */
-function parseCue(cueElement, offset, styles, regions, params) {
+function parseCue(paragraph, offset, styles, regions, paragraphStyle, params) {
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
-  // If cueElement has neither time attributes, nor
+  // If paragraph has neither time attributes, nor
   // non-whitespace text, don't try to make a cue out of it.
-  const content = cueElement.textContent || "";
-  if (!cueElement.hasAttribute("begin") &&
-    !cueElement.hasAttribute("end") && /^\s*$/.test(content)
+  if (!paragraph.hasAttribute("begin") && !paragraph.hasAttribute("end") &&
+    /^\s*$/.test(paragraph.textContent || "")
   ) {
     return null;
   }
 
-  // /!\ Mutates cueElement
-  addNewLines(cueElement, params.spaceStyle === "default");
-
-  const { start, end } = getTimeDelimiters(cueElement, params);
-  const cue = makeCue(start + offset, end + offset, content);
+  const { start, end } = getTimeDelimiters(paragraph, params);
+  const text = generateTextContent(paragraph, params.spaceStyle === "default");
+  const cue = makeCue(start + offset, end + offset, text);
   if (!cue) {
     return null;
   }
-
-  // Get other properties if available
-  const divs = getParentElementsByTagName(cueElement, "div");
-  const bodies = getParentElementsByTagName(cueElement, "body");
-  addStyle(cue, cueElement, divs, bodies, regions, styles);
-
+  addStyle(cue, paragraphStyle);
   return cue;
 }
 
 /**
- * Insert \n where <br> tags are found
- * /!\ Mutates the given element
- * @param {Node} element
- * @param {boolean} whitespaceTrim
+ * Generate text to display for a given paragraph.
+ * @param {Element} paragraph - The <p> tag.
+ * @param {Boolean} shouldTrimWhiteSpace
+ * @returns {string}
  */
-function addNewLines(element, whitespaceTrim) {
-  const childNodes = element.childNodes;
+function generateTextContent(paragraph, shouldTrimWhiteSpace) {
+  /**
+   * Recursive function, taking a node in argument and returning the
+   * corresponding string.
+   * @param {Node} node - the node in question
+   * @returns {string}
+   */
+  function loop(node) {
+    const childNodes = node.childNodes;
+    let text = "";
+    for (let i = 0; i < childNodes.length; i++) {
+      const currentNode = childNodes[i];
+      if (currentNode.nodeName === "#text") {
+        let textContent = currentNode.textContent;
 
-  for (let i = 0; i < childNodes.length; i++) {
-    if (childNodes[i].nodeName === "br" && i > 0) {
-      childNodes[i - 1].textContent += "\n";
-    } else if (childNodes[i].childNodes.length > 0) {
-      addNewLines(childNodes[i], whitespaceTrim);
-    } else if (whitespaceTrim) {
-      // Trim leading and trailing whitespace.
-      let trimmed = (childNodes[i].textContent || "").trim();
-      // Collapse multiple spaces into one.
-      trimmed = trimmed.replace(/\s+/g, " ");
-
-      childNodes[i].textContent = trimmed;
+        // TODO Also parse it from parent elements
+        // const spaceAttr = getAttribute("xml:space", [
+        //   ...spans, p, ...divs, body,
+        // ]);
+        // const shouldTrimWhiteSpace = spaceAttr ?
+        //   spaceAttr === "default" : shouldTrimWhiteSpaceParam;
+        if (shouldTrimWhiteSpace) {
+          // 1. Trim leading and trailing whitespace.
+          // 2. Collapse multiple spaces into one.
+          let trimmed = textContent.trim();
+          trimmed = trimmed.replace(/\s+/g, " ");
+          textContent = trimmed;
+        }
+        text += textContent;
+      } else if (currentNode.nodeName === "br") {
+        text += "\n";
+      } else if (
+        currentNode.nodeName === "span" &&
+        currentNode.childNodes.length > 0
+      ) {
+        text += loop(currentNode);
+      }
     }
+    return text;
   }
+  return loop(paragraph);
 }
 
 /**
  * Adds applicable style properties to a cue.
  * /!\ Mutates cue argument.
- * @param {TextTrackCue} cue
- * @param {Element} cueElement
- * @param {Array.<Element>} divs
- * @param {Array.<Element>} bodies
- * @param {Array.<Element>} regions
- * @param {Array.<Element>} styles
+ * @param {VTTCue} cue
+ * @param {Object} style
  */
-function addStyle(cue, cueElement, divs, bodies, regions, styles) {
-  let results = null;
-
-  const areasToLookForStyle = [cueElement, ...divs, ...bodies];
-
-  const extent = getStyleValue("extent", styles, regions, areasToLookForStyle);
+function addStyle(cue, style) {
+  const extent = style.extent;
   if (extent) {
-    results = REGXP_PERCENT_VALUES.exec(extent);
+    const results = REGXP_PERCENT_VALUES.exec(extent);
     if (results != null) {
       // Use width value of the extent attribute for size.
       // Height value is ignored.
@@ -171,8 +236,7 @@ function addStyle(cue, cueElement, divs, bodies, regions, styles) {
     }
   }
 
-  const writingMode =
-    getStyleValue("writingMode", styles, regions, areasToLookForStyle);
+  const writingMode = style.writingMode;
   let isVerticalText = true;
   if (writingMode === "tb" || writingMode === "tblr") {
     cue.vertical = "lr";
@@ -182,9 +246,9 @@ function addStyle(cue, cueElement, divs, bodies, regions, styles) {
     isVerticalText = false;
   }
 
-  const origin = getStyleValue("origin", styles, regions, areasToLookForStyle);
+  const origin = style.origin;
   if (origin) {
-    results = REGXP_PERCENT_VALUES.exec(origin);
+    const results = REGXP_PERCENT_VALUES.exec(origin);
     if (results != null) {
       // for vertical text use first coordinate of tts:origin
       // to represent line of the cue and second - for position.
@@ -208,7 +272,7 @@ function addStyle(cue, cueElement, divs, bodies, regions, styles) {
     }
   }
 
-  const align = getStyleValue("align", styles, regions, areasToLookForStyle);
+  const align = style.align;
   if (align) {
     cue.align = align;
     if (align === "center") {

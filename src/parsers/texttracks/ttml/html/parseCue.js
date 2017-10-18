@@ -20,8 +20,8 @@ import createElement from "./createElement.js";
 /**
  * @param {Element} paragraph
  * @param {Number} offset
- * @param {Array.<Element>} styles
- * @param {Array.<Element>} regions
+ * @param {Array.<Object>} styles
+ * @param {Array.<Object>} regions
  * @param {Object} ttParams
  * @returns {Object|null}
  */
@@ -30,6 +30,8 @@ export default function parseCue(
   offset,
   styles,
   regions,
+  body,
+  styleBase,
   ttParams
 ) {
   // Disregard empty elements:
@@ -42,13 +44,18 @@ export default function parseCue(
     return null;
   }
 
-  const options = {
-    shouldTrimWhiteSpace: ttParams.spaceStyle === "default",
-  };
   const { start, end } = getTimeDelimiters(paragraph, ttParams);
+  const element = createElement(
+    paragraph,
+    body,
+    regions,
+    styles,
+    styleBase,
+    ttParams.spaceStyle === "default"
+  );
   return {
     start: start + offset,
     end: end + offset,
-    element: createElement(paragraph, regions, styles, options),
+    element,
   };
 }

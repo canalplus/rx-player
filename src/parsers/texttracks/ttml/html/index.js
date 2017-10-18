@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import getParameters from "../getParameters.js";
 import {
+  getBodyNode,
   getStyleNodes,
   getRegionNodes,
   getTextNodes,
 } from "../nodes.js";
+import getParentElementsByTagName from "../getParentElementsByTagName.js";
 
+import { STYLE_ATTRIBUTES } from "./constants.js";
+import { getStylingAttributes, getStylingFromElement } from "../style.js";
 import parseCue from "./parseCue.js";
 
 /**
@@ -33,9 +38,12 @@ import parseCue from "./parseCue.js";
  *   - element {HTMLElement}: <div> element representing the cue, with the
  *     right style. This div should then be appended to an element having
  *     the exact size of the wanted region the text track provide cues for.
+ *
+ * TODO TTML parsing is still pretty heavy on the CPU.
+ * Optimizations have been done, principally to avoid using too much XML APIs,
+ * but we can still do better.
  * @param {string} str
- * @returns {Array.<Object>}
- */
+ * @returns {Array.<Object>} */
 export default function parseTTMLStringToDIV(str) {
   const ret = [];
   const xml = new DOMParser().parseFromString(str, "text/xml");
@@ -47,17 +55,62 @@ export default function parseTTMLStringToDIV(str) {
       throw new Error("invalid XML");
     }
 
-    const styles = getStyleNodes(tt);
-    const regions = getRegionNodes(tt);
+    const body = getBodyNode(tt);
+    const styleNodes = getStyleNodes(tt);
+    const regionNodes = getRegionNodes(tt);
     const textNodes = getTextNodes(tt);
     const params = getParameters(tt);
 
+    // construct styles array based on the xml as an optimization
+    const styles = [];
+    for (let i = 0; i <= styleNodes.length - 1; i++) {
+      // TODO styles referencing other styles
+      styles.push({
+        id: styleNodes[i].getAttribute("xml:id"),
+        style: getStylingFromElement(styleNodes[i]),
+      });
+    }
+
+    // construct regions array based on the xml as an optimization
+    const regions = [];
+    for (let i = 0; i <= regionNodes.length - 1; i++) {
+      const regionId = regionNodes[i].getAttribute("xml:id");
+      let regionStyle =
+        getStylingFromElement(regionNodes[i]);
+
+      const associatedStyle = regionNodes[i].getAttribute("style");
+      if (associatedStyle) {
+        const style = styles.find((x) => x.id === associatedStyle);
+        if (style) {
+          regionStyle = objectAssign({}, style.style, regionStyle);
+        }
+      }
+      regions.push({
+        id: regionId,
+        style: regionStyle,
+      });
+    }
+
+    // Computing the style takes a lot of ressources.
+    // To avoid too much re-computation, let's compute the body style right
+    // now and do the rest progressively.
+    const bodyStyle = getStylingAttributes(
+      STYLE_ATTRIBUTES, [body], styles, regions);
     for (let i = 0; i < textNodes.length; i++) {
+      const paragraph = textNodes[i];
+      const divs = getParentElementsByTagName(paragraph , "div");
+      const paragraphStyle = objectAssign({}, bodyStyle,
+        getStylingAttributes(
+          STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
+      );
+
       const cue = parseCue(
-        textNodes[i],
+        paragraph,
         0, // offset
         styles,
         regions,
+        body,
+        paragraphStyle,
         params
       );
       if (cue) {
