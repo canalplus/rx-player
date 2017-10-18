@@ -12,6 +12,8 @@
     - [startAt](#prop-startAt)
     - [defaultAudioTrack](#prop-defaultAudioTrack)
     - [defaultTextTrack](#prop-defaultTextTrack)
+    - [textTrackMode](#prop-textTrackMode)
+    - [textTrackElement](#prop-textTrackElement)
     - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
@@ -240,6 +242,33 @@ const defaultTextTrack = {
 or under the form of the language string directly, in which case the ``"closedCaption"`` option is inferred to be false.
 
 Note that this option can also be set in the constructor. If both set in the constructor and for ``loadVideo``, the ``loadVideo`` option will be used.
+
+
+### <a name="prop-textTrackMode"></a>textTrackMode
+
+_type_: ``string``
+_defaults_: ``"native"``
+
+This option allows to specify how the text tracks should be displayed.
+There is two values possible:
+  - ``"native"``
+  - ``"html"``
+
+In ``"native"`` mode, which is the default mode, a ``<track>`` HTML element will be created on the video and the subtitles will be displayed by it, with a minimal style.
+
+In ``"html"`` mode, the text tracks will be displayed on a specific HTML element you provided, with the [textTrackElement option](#prop-textTrackMode). This mode allows us to do much more stylisation, such as TTML styling attributes or SAMI's CSS. It is particularly useful to correctly manage complex closed captions (closed captions with multiple colors, positionning, etc.).
+
+All text track formats supported in ``"native"`` mode also work in ``"html"`` mode.
+
+
+### <a name="prop-textTrackElement"></a>textTrackElement
+
+_type_: ``HTMLElement``
+
+``textTrackElement`` is only used if you provided a ``"html"`` [textTrackMode](#prop-textTrackMode), it is even required in that case.
+
+This property will be the element on which text tracks will be set, as child elements, at the right time. We expect that this element is the exact same size than the media element it applies to. You can however re-size or update the style of it as you wish, to better suit your UI needs.
+
 
 ### <a name="prop-supplementaryTextTracks"></a>supplementaryTextTracks
 
