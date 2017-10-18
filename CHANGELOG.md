@@ -4,6 +4,9 @@
 
 ### Added
 
+  - languages: add possibility to show TTML and SAMI text tracks in HTML tags for richer stylisation.
+  - api: add ``textTrackElement`` option to ``loadVideo``
+  - api: add ``textTrackMode`` option to ``loadVideo``
   - api: add ``nativeTextTracksChange`` event
   - eme: it is now possible to directly set the reverse domain name of the wanted key system in the ``type`` property of ``loadVideo``'s ``keySystems`` option.
   - api: add property ``percentage`` to the ``startAt`` argument of ``loadVideo``.
