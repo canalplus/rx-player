@@ -16,13 +16,13 @@ export const STYLE_ATTRIBUTES = [
   "padding",
   "textAlign",
   "textDecoration",
+  "textOutline",
   "unicodeBidi",
   "visibility",
+  "wrapOption",
   "writingMode",
 
   // Not managed anywhere for now
   // "showBackground",
-  // "textOutline",
-  // "wrapOption",
   // "zIndex",
 ];

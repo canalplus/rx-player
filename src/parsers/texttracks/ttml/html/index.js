@@ -45,6 +45,7 @@ import parseCue from "./parseCue.js";
  * @param {string} str
  * @returns {Array.<Object>} */
 export default function parseTTMLStringToDIV(str) {
+  console.time("toto");
   const ret = [];
   const xml = new DOMParser().parseFromString(str, "text/xml");
 
@@ -94,6 +95,10 @@ export default function parseTTMLStringToDIV(str) {
     // Computing the style takes a lot of ressources.
     // To avoid too much re-computation, let's compute the body style right
     // now and do the rest progressively.
+
+    // TODO Compute corresponding CSS style here (as soon as we now the TTML
+    // style) to speed up the process even
+    // more.
     const bodyStyle = getStylingAttributes(
       STYLE_ATTRIBUTES, [body], styles, regions);
     for (let i = 0; i < textNodes.length; i++) {
@@ -118,5 +123,6 @@ export default function parseTTMLStringToDIV(str) {
       }
     }
   }
+  console.timeEnd("toto");
   return ret;
 }

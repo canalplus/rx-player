@@ -17,12 +17,12 @@
 import objectAssign from "object-assign";
 import {
   REGXP_PERCENT_VALUES,
+  REGXP_4_HEX_COLOR,
+  REGXP_8_HEX_COLOR,
 } from "../regexps.js";
 import getParentElementsByTagName from "../getParentElementsByTagName.js";
 import { getStylingAttributes } from "../style.js";
 // import getAttributeInElements from "../getAttributeInElements.js";
-
-import ttmlColorToCSSColor from "./ttmlColorToCSSColor.js";
 
 // Styling which can be applied to <span> from any level upper.
 // Added here as an optimization
@@ -35,22 +35,59 @@ const SPAN_LEVEL_ATTRIBUTES = [
   "fontStyle",
   "fontWeight",
   "textDecoration",
+  "textOutline",
   "unicodeBidi",
   "visibility",
+  "wrapOption",
 ];
+
+/**
+ * Translate a color indicated in TTML-style to a CSS-style color.
+ * @param {string} color
+ * @returns {string} color
+ */
+function ttmlColorToCSSColor(color) {
+  // TODO check all possible color fomats
+  let regRes;
+  regRes = REGXP_8_HEX_COLOR.exec(color);
+  if (regRes != null) {
+    return "rgba(" +
+      parseInt(regRes[1], 16) + "," +
+      parseInt(regRes[2], 16) + "," +
+      parseInt(regRes[3], 16) + "," +
+      parseInt(regRes[4], 16) / 255 + ")";
+  }
+  regRes = REGXP_4_HEX_COLOR.exec(color);
+
+  if (regRes != null) {
+    return "rgba(" +
+      parseInt(regRes[1] + regRes[1], 16) + "," +
+      parseInt(regRes[2] + regRes[2], 16) + "," +
+      parseInt(regRes[3] + regRes[3], 16) + "," +
+      parseInt(regRes[4] + regRes[4], 16) / 255 + ")";
+  }
+  return color;
+}
+
+/**
+ * Try to replicate the textOutline TTML style property into CSS.
+ *
+ * We mock it throught the text-shadow property, translating the TTML thickness
+ * into blur radius and the blur-radius into... nothing.
+ *
+ * @param {string} color
+ * @param {string|number} thickness
+ * @returns {string}
+ */
+function generateCSSTextOutline(color, thickness) {
+  return `-1px -1px ${thickness} ${color},` +
+    `1px -1px ${thickness} ${color},` +
+    `-1px 1px ${thickness} ${color},` +
+    `1px 1px ${thickness} ${color}`;
+}
 
 // TODO
 // tts:showBackground (applies to region)
-//
-// tts:textOutline (applies to span)
-// // use text-shadow?
-// text-shadow: -1px -1px 0 #000,
-//              1px -1px 0 #000,
-//              -1px 1px 0 #000,
-//              1px 1px 0 #000;
-//
-// tts:wrapOption (applies to span)
-//
 // tts:zIndex (applies to region)
 
 /**
@@ -69,6 +106,44 @@ function applyTextStyle(element, style) {
   const backgroundColor = style.backgroundColor;
   if (backgroundColor) {
     element.style.backgroundColor = ttmlColorToCSSColor(backgroundColor);
+  }
+
+  // applies to span
+  const wrapOption = style.wrapOption;
+  if (wrapOption && wrapOption === "noWrap") {
+    element.style.whiteSpace = "nowrap";
+  }
+
+  // applies to span
+  const textOutline = style.textOutline;
+  if (textOutline) {
+    const outlineData = textOutline.trim().replace(/\s+/g, " ").split(" ");
+    const len = outlineData.length;
+    if (len === 3) {
+      const outlineColor = ttmlColorToCSSColor(outlineData[0]);
+      const thickness = outlineData[1];
+      element.style.textShadow =
+        generateCSSTextOutline(outlineColor, thickness);
+    } else if (color && len === 1) {
+      const thickness = outlineData[0];
+      element.style.textShadow = generateCSSTextOutline(color, thickness);
+    } else if (len === 2) {
+      const isFirstArgAColor = /^[#A-Z]/i.test(outlineData[0]);
+      const isFirstArgANumber = /^[0-9]/.test(outlineData[0]);
+
+      // XOR-ing to be sure we get what we have
+      if (isFirstArgAColor ^ isFirstArgANumber) {
+        if (isFirstArgAColor) {
+          const outlineColor = ttmlColorToCSSColor(outlineData[0]);
+          const thickness = outlineData[1];
+          element.style.textShadow =
+            generateCSSTextOutline(outlineColor, thickness);
+        } else if (color) {
+          const thickness = outlineData[0];
+          element.style.textShadow = generateCSSTextOutline(color, thickness);
+        }
+      }
+    }
   }
 
   // applies to span
@@ -196,6 +271,8 @@ function applyGeneralStyle(element, style) {
   const overflow = style.overflow;
   if (overflow) {
     element.style.overflow = overflow;
+  } else {
+    element.style.overflow = "hidden";
   }
 
   // applies to region
@@ -222,10 +299,6 @@ function applyGeneralStyle(element, style) {
   element.style.display = "flex";
   element.style.flexDirection = "column";
   if (displayAlign) {
-    // TODO:
-    //   Before: at the top of the bloc vertically
-    //   center: at the center of the bloc vertically
-    //   after: at the end of the bloc vertically
     switch (displayAlign) {
     case "before":
       element.style.justifyContent = "flex-start";
@@ -446,7 +519,7 @@ export default function createElement(
   // NOTE:
   // The following code is for the inclusion of div elements. This has no
   // advantage for now, and might only with future evolutions.
-  // This is only an indication of what the base of the code could look like.
+  // (This is only an indication of what the base of the code could look like).
   // if (divs.length) {
   //   let container = parentElement;
   //   for (let i = divs.length - 1; i >= 0; i--) {
