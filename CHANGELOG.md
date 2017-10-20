@@ -4,7 +4,11 @@
 
 ### Added
 
-  - languages: add possibility to show TTML and SAMI text tracks in HTML tags for richer stylisation.
+  - misc: add possibility to do custom builds through environment variables, to remove unwanted features from minified code.
+  - languages/dash: allow plain text TTML, SAMI, SRT and VTT subtitles in DASH and Smooth manifests
+  - languages: add possibility to show fragmented VTT text tracks in <track> element, even for browser that do not support webvtt
+  - languages: add possibility to show TTML, SRT, VTT and SAMI text tracks in HTML tags for richer stylisation.
+  - languages: add SRT texttrack support in <track> elements ("native" textTrackMode)
   - api: add ``textTrackElement`` option to ``loadVideo``
   - api: add ``textTrackMode`` option to ``loadVideo``
   - api: add ``nativeTextTracksChange`` event
@@ -97,7 +101,6 @@
   - eme: do not set widevine robustnesses for non-widevine key systems
   - languages: fix bug which led the text buffer to _crash_ when the ``wantedBufferBehind`` option is set
   - languages: fix bug which led to TextTracks chunks being re-downloaded multiple times
-  - languages/dash: allow plain text TTML, SAMI and VTT subtitles in DASH manifest
   - speed: fix playback rate bug when setting it while the player is stalled
   - smooth: fix "fallback" callback in the segmentLoader API for smooth contents.
   - smooth: fix some minor risks of infinite rebuffering for live contents, when the isobmff's tfrf box is not well parsed.
