@@ -408,7 +408,7 @@ function createTextElement(el, style, shouldTrimWhiteSpaceParam) {
   }
 
   textElement.innerHTML = textContent;
-  textElement.className = "rxp-texttrack-ttml-span";
+  textElement.className = "rxp-texttrack-span";
 
   applyTextStyle(textElement, style);
   return textElement;
@@ -492,7 +492,7 @@ export default function createElement(
   const divs = getParentElementsByTagName(paragraph, "div");
 
   const parentElement = document.createElement("DIV");
-  parentElement.className = "rxp-texttrack-ttml-region";
+  parentElement.className = "rxp-texttrack-region";
 
   applyGeneralStyle(parentElement, paragraphStyle);
   if (body) {
@@ -506,7 +506,7 @@ export default function createElement(
   }
 
   const pElement = document.createElement("p");
-  pElement.className = "rxp-texttrack-ttml-p";
+  pElement.className = "rxp-texttrack-p";
   applyPStyle(pElement, paragraphStyle);
 
   const textContent = generateTextContent(
@@ -530,7 +530,7 @@ export default function createElement(
   //     // The advantage might only be for multiple <p> elements dispatched
   //     // in multiple div Which we do not manage anyway for now.
   //     const divEl = document.createElement("DIV");
-  //     divEl.className = "rxp-texttrack-ttml-div";
+  //     divEl.className = "rxp-texttrack-div";
   //     container.appendChild(divEl);
   //     container = divEl;
   //   }
