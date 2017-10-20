@@ -25,22 +25,6 @@ export default {
   DEFAULT_UNMUTED_VOLUME: 0.1,
 
   /**
-   * Default audio track configuration, if none is set by the user.
-   * Here in french for legacy reasons.
-   * @type {Object}
-   */
-  DEFAULT_AUDIO_TRACK: {
-    language: "fra",
-    audioDescription: false,
-  },
-
-  /**
-   * Default text track configuration, if none is set by the user.
-   * @type {Object|null}
-   */
-  DEFAULT_TEXT_TRACK: null,
-
-  /**
    * Can be either:
    *   - "native": Subtitles are all displayed in a <track> element
    *   - "html": Subtitles are all displayed in a <div> separated from the video
