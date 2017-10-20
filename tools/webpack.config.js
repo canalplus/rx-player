@@ -20,7 +20,12 @@
 //     - DirectFile Streaming
 //     - Native TTML
 //     - Native SAMI
+//     - Native VTT
+//     - Native SRT
 //     - TTML in "html" mode
+//     - SAMI in "html" mode
+//     - VTT in "html" mode
+//     - SRT in "html" mode
 //    Any of those can then be added through their specific environment
 //    variables.
 //    /!\ With RXP_BAREBONE and no feature activated, the Rx-Player won't be
@@ -171,15 +176,18 @@ const config = {
           process.env.RXP_HTML_SAMI === "true" :
           process.env.RXP_HTML_SAMI !== "false",
 
+        HTML_VTT: isBarebone ?
+          process.env.RXP_HTML_VTT === "true" :
+          process.env.RXP_HTML_VTT !== "false",
+
         HTML_SRT: isBarebone ?
           process.env.RXP_HTML_SRT === "true" :
           process.env.RXP_HTML_SRT !== "false",
 
-        // HTML_VTT: isBarebone ?
-        //   process.env.RXP_HTML_VTT === "true" :
-        //   process.env.RXP_HTML_VTT !== "false",
-
         // TODO
+        // EME: isBarebone ?
+        //   process.env.RXP_EME === "true" :
+        //   process.env.RXP_EME !== "false",
         // BIF: isBarebone ?
         //   process.env.RXP_BIF === "true" :
         //   process.env.RXP_BIF !== "false",

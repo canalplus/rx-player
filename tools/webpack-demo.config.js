@@ -52,6 +52,7 @@ const config = {
         HTML_SAMI: true,
         HTML_TTML: true,
         HTML_SRT: true,
+        HTML_VTT: true,
       },
       "__DEV__": true,
       "__LOGGER_LEVEL__": "\"DEBUG\"",
