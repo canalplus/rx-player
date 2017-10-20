@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
+import log from "../../../../../utils/log.js";
 import {
   addTextTrack,
-  isVTTSupported,
 } from "../../../../../compat";
 import { AbstractSourceBuffer } from "../../abstract.js";
 import parseTextTrackToCues from "./parsers.js";
-
-/**
- * Returns true if the given codec is for a WebVTT text track.
- * @param {string} codec
- * @returns {Boolean}
- */
-function isVTTFile(codec) {
-  return /^text\/vtt/.test(codec);
-}
 
 /**
  * Source buffer to display TextTracks in a <track> element, in the given
@@ -44,13 +35,12 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
    */
   constructor(codec, videoElement, hideNativeSubtitle) {
     super(codec);
-    this._videoElement = videoElement;
-    this._shouldBeCompleteVTTFile = isVTTFile(codec);
-
     const {
       track,
       trackElement,
-    } = addTextTrack(this._videoElement, hideNativeSubtitle);
+    } = addTextTrack(videoElement, hideNativeSubtitle);
+
+    this._videoElement = videoElement;
     this._track = track;
     this._trackElement = trackElement;
   }
@@ -73,8 +63,10 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
       type, // type of texttracks (e.g. "ttml" or "vtt")
       language, // language the texttrack is in
     } = data;
+
     if (timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
+      log.warn("Invalid subtitles appended");
       return;
     }
 
@@ -82,48 +74,29 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
     const endTime = timescaledEnd != null ?
       timescaledEnd / timescale : undefined;
 
-    if (this._shouldBeCompleteVTTFile) {
-      if (type !== "vtt") {
-        throw new Error("did not receive a vtt file in vtt mode.");
+    const cues = parseTextTrackToCues(type, dataString, language);
+    if (cues.length > 0) {
+      const firstCue = cues[0];
 
-      } else if (isVTTSupported() && this._trackElement) {
-        const blob = new Blob([dataString], { type: "text/vtt" });
-        const url = URL.createObjectURL(blob);
-        this._trackElement.src = url;
-        this.buffered.insert(
-          startTime,
-          endTime != null ? endTime : Number.MAX_VALUE
-        );
-
-      } else {
-        throw new Error("vtt subtitles not supported in vtt mode.");
-
-      }
-    } else { // native mode in non-vtt mode
-      const cues = parseTextTrackToCues(type, dataString, language);
-      if (cues.length > 0) {
-        const firstCue = cues[0];
-
-        // NOTE(compat): cleanup all current cues if the newly added
-        // ones are in the past. this is supposed to fix an issue on
-        // IE/Edge.
-        const currentCues = this._track.cues;
-        if (currentCues.length > 0) {
-          if (
-            firstCue.startTime < currentCues[currentCues.length - 1].startTime
-          ) {
-            this._remove(firstCue.startTime, +Infinity);
-          }
+      // NOTE(compat): cleanup all current cues if the newly added
+      // ones are in the past. this is supposed to fix an issue on
+      // IE/Edge.
+      const currentCues = this._track.cues;
+      if (currentCues.length > 0) {
+        if (
+          firstCue.startTime < currentCues[currentCues.length - 1].startTime
+        ) {
+          this._remove(firstCue.startTime, +Infinity);
         }
-
-        cues.forEach((cue) => this._track.addCue(cue));
-        this.buffered.insert(
-          startTime,
-          endTime != null ? endTime : cues[cues.length - 1].endTime
-        );
-      } else if (endTime != null) {
-        this.buffered.insert(startTime, endTime);
       }
+
+      cues.forEach((cue) => this._track.addCue(cue));
+      this.buffered.insert(
+        startTime,
+        endTime != null ? endTime : cues[cues.length - 1].endTime
+      );
+    } else if (endTime != null) {
+      this.buffered.insert(startTime, endTime);
     }
   }
 
@@ -145,7 +118,11 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
   }
 
   _abort() {
-    const { _trackElement, _videoElement } = this;
+    const {
+      _trackElement,
+      _videoElement,
+    } = this;
+
     if (
       _trackElement && _videoElement &&
       _videoElement.hasChildNodes()

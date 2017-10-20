@@ -149,14 +149,6 @@ function addTextTrack(video, hidden) {
 }
 
 /**
- * Returns true if video text tracks (vtt) are supported in the current browser.
- * @returns {Boolean}
- */
-function isVTTSupported() {
-  return !isIE;
-}
-
-/**
  * firefox fix: sometimes the stream can be stalled, even if we are in a
  * buffer.
  * @param {Object} timing
@@ -250,7 +242,6 @@ export {
   isIE,
   isOffline,
   isPlaybackStuck,
-  isVTTSupported,
   makeCue,
   requestFullscreen,
   requestMediaKeySystemAccess,

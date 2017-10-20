@@ -16,6 +16,11 @@
 
 const nativeParsers = {};
 
+if (__FEATURES__.NATIVE_VTT) {
+  nativeParsers.vtt =
+    require("../../../../../parsers/texttracks/webvtt/native.js").default;
+}
+
 if (__FEATURES__.NATIVE_TTML) {
   nativeParsers.ttml =
     require("../../../../../parsers/texttracks/ttml/native/index.js").default;

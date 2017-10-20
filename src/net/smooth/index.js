@@ -168,7 +168,7 @@ export default function(options={}) {
         if (mimeType === "application/ttml+xml+mp4" || lcCodec === "stpp") {
           segmentData.type = "ttml";
         } else if (lcCodec === "wvtt") {
-          segmentData.type = "wvtt";
+          segmentData.type = "vtt";
         } else {
           throw new Error(
             `could not find a text-track parser for the type ${mimeType}`);
