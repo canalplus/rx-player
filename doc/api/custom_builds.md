@@ -10,7 +10,7 @@ This customization is done through environment variables. The code will be remov
 
 For example, the following will remove all code related to Microsoft Smooth Streaming from the build:
 ```sh
-RXP_SMOOTH=false nr build:min
+RXP_SMOOTH=false npm run build:min
 ```
 
 ## Environment variables
