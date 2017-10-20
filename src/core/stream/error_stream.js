@@ -29,18 +29,18 @@ export default function createMediaErrorStream(videoElement) {
     const errorCode = videoElement.error.code;
     let errorDetail;
     switch(errorCode) {
-    case 1:
-      errorDetail = "MEDIA_ERR_ABORTED";
-      break;
-    case 2:
-      errorDetail = "MEDIA_ERR_NETWORK";
-      break;
-    case 3:
-      errorDetail = "MEDIA_ERR_DECODE";
-      break;
-    case 4:
-      errorDetail = "MEDIA_ERR_SRC_NOT_SUPPORTED";
-      break;
+      case 1:
+        errorDetail = "MEDIA_ERR_ABORTED";
+        break;
+      case 2:
+        errorDetail = "MEDIA_ERR_NETWORK";
+        break;
+      case 3:
+        errorDetail = "MEDIA_ERR_DECODE";
+        break;
+      case 4:
+        errorDetail = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+        break;
     }
     log.error(`stream: video element MEDIA_ERR(${errorDetail})`);
     throw new MediaError(errorDetail, null, true);

@@ -256,23 +256,23 @@ function createSmoothStreamingParser(parserOptions={}) {
       index,
     } = reduceChildren(root, (res, name, node) => {
       switch (name) {
-      case "QualityLevel":
-        const rep = parseQualityLevel(node, profile);
+        case "QualityLevel":
+          const rep = parseQualityLevel(node, profile);
 
-        if (type == "audio") {
-          const fourCC = node.getAttribute("FourCC") || "";
-          rep.codecs = extractAudioCodecs(fourCC, rep.codecPrivateData);
-        }
+          if (type == "audio") {
+            const fourCC = node.getAttribute("FourCC") || "";
+            rep.codecs = extractAudioCodecs(fourCC, rep.codecPrivateData);
+          }
 
         // filter out video representations with small bitrates
-        if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
-          rep.id = representationCount++;
-          res.representations.push(rep);
-        }
-        break;
-      case "c":
-        res.index.timeline = parseC(node, res.index.timeline);
-        break;
+          if (type != "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
+            rep.id = representationCount++;
+            res.representations.push(rep);
+          }
+          break;
+        case "c":
+          res.index.timeline = parseC(node, res.index.timeline);
+          break;
       }
       return res;
     }, {
@@ -342,21 +342,21 @@ function createSmoothStreamingParser(parserOptions={}) {
       adaptations,
     } = reduceChildren(root, (res, name, node) => {
       switch (name) {
-      case "Protection":  res.protection = parseProtection(node);  break;
-      case "StreamIndex":
-        const ada = parseAdaptation(node, timescale);
-        if (ada) {
-          let i = 0;
-          let id;
-          do {
-            id = ada.type + "_" +
+        case "Protection":  res.protection = parseProtection(node);  break;
+        case "StreamIndex":
+          const ada = parseAdaptation(node, timescale);
+          if (ada) {
+            let i = 0;
+            let id;
+            do {
+              id = ada.type + "_" +
               (ada.language ? (ada.language + "_") : "") + i++;
-          } while (arrayIncludes(adaptationIds, id));
-          ada.id = id;
-          adaptationIds.push(id);
-          res.adaptations.push(ada);
-        }
-        break;
+            } while (arrayIncludes(adaptationIds, id));
+            ada.id = id;
+            adaptationIds.push(id);
+            res.adaptations.push(ada);
+          }
+          break;
       }
       return res;
     }, {

@@ -166,29 +166,29 @@ function applyTextStyle(element, style) {
   if (fontFamily) {
     switch (fontFamily) {
 
-    case "proportionalSansSerif":
-      element.style.fontFamily =
+      case "proportionalSansSerif":
+        element.style.fontFamily =
           "Arial, Helvetica, Liberation Sans, sans-serif";
-      break;
+        break;
 
     // TODO monospace or sans-serif or font with both?
-    case "monospaceSansSerif":
-    case "sansSerif":
-      element.style.fontFamily = "sans-serif";
-      break;
+      case "monospaceSansSerif":
+      case "sansSerif":
+        element.style.fontFamily = "sans-serif";
+        break;
 
-    case "monospaceSerif":
-    case "default":
-      element.style.fontFamily = "Courier New, Liberation Mono, monospace";
-      break;
+      case "monospaceSerif":
+      case "default":
+        element.style.fontFamily = "Courier New, Liberation Mono, monospace";
+        break;
 
     // TODO font with both?
-    case "proportionalSerif":
-      element.style.fontFamily = "serif";
-      break;
+      case "proportionalSerif":
+        element.style.fontFamily = "serif";
+        break;
 
-    default:
-      element.style.fontFamily = fontFamily;
+      default:
+        element.style.fontFamily = fontFamily;
     }
   }
 
@@ -221,14 +221,14 @@ function applyTextStyle(element, style) {
   const unicodeBidi = style.unicodeBidi;
   if (unicodeBidi) {
     switch (unicodeBidi) {
-    case "bidiOverride":
-      element.style.unicodeBidi = "bidi-override";
-      break;
-    case "embed":
-      element.style.unicodeBidi = "embed";
-      break;
-    default:
-      element.style.unicodeBidi = "normal";
+      case "bidiOverride":
+        element.style.unicodeBidi = "bidi-override";
+        break;
+      case "embed":
+        element.style.unicodeBidi = "embed";
+        break;
+      default:
+        element.style.unicodeBidi = "normal";
     }
   }
 
@@ -300,15 +300,15 @@ function applyGeneralStyle(element, style) {
   element.style.flexDirection = "column";
   if (displayAlign) {
     switch (displayAlign) {
-    case "before":
-      element.style.justifyContent = "flex-start";
-      break;
-    case "center":
-      element.style.justifyContent = "center";
-      break;
-    case "after":
-      element.style.justifyContent = "flex-end";
-      break;
+      case "before":
+        element.style.justifyContent = "flex-start";
+        break;
+      case "center":
+        element.style.justifyContent = "center";
+        break;
+      case "after":
+        element.style.justifyContent = "flex-end";
+        break;
     }
   }
 

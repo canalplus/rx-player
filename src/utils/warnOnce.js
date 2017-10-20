@@ -27,7 +27,9 @@ const WARNED_MESSAGES = [];
  */
 const warnOnce = (message) => {
   if (!arrayIncludes(WARNED_MESSAGES, message)) {
+    /* eslint-disable no-console */
     console.warn(message);
+    /* eslint-enable no-console */
     WARNED_MESSAGES.push(message);
   }
 };

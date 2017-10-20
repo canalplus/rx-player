@@ -176,16 +176,16 @@ export default function(options={}) {
         segmentData.data = stringFromUTF8(getMdat(responseData));
       } else {
         switch (mimeType) {
-        case "application/x-sami":
-        case "application/smil": // TODO SMIL should be its own format, no?
-          segmentData.type = "sami";
-          break;
-        case "application/ttml+xml":
-          segmentData.type = "ttml";
-          break;
-        case "text/vtt":
-          segmentData.type = "vtt";
-          break;
+          case "application/x-sami":
+          case "application/smil": // TODO SMIL should be its own format, no?
+            segmentData.type = "sami";
+            break;
+          case "application/ttml+xml":
+            segmentData.type = "ttml";
+            break;
+          case "text/vtt":
+            segmentData.type = "vtt";
+            break;
         }
         if (!segmentData.type) {
           const lcCodec = codec.toLowerCase();

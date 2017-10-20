@@ -44,6 +44,7 @@ log.setLevel = function(levelStr) {
     currentLevel = "NONE";
   }
 
+  /* eslint-disable no-console */
   log.error = (level >= Levels.ERROR) ?
     console.error.bind(console) : noop;
   log.warn = (level >= Levels.WARNING) ?
@@ -52,6 +53,7 @@ log.setLevel = function(levelStr) {
     console.info.bind(console) : noop;
   log.debug = (level >= Levels.DEBUG) ?
     console.log.bind(console) : noop;
+  /* eslint-enable no-console */
 };
 
 log.getLevel = function() {

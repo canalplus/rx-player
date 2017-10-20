@@ -495,24 +495,24 @@ export default function Stream({
    */
   function liveMessageHandler(message, manifest) {
     switch(message.type) {
-    case "index-discontinuity":
-      log.warn("explicit discontinuity seek", message.value.ts);
-      videoElement.currentTime = message.value.ts;
-      break;
+      case "index-discontinuity":
+        log.warn("explicit discontinuity seek", message.value.ts);
+        videoElement.currentTime = message.value.ts;
+        break;
 
     // precondition-failed messages require a change of live-gap to
     // calibrate the live representation of the player
     // TODO(pierre): smarter converging algorithm
-    case "precondition-failed":
-      manifest.updateLiveGap(1); // go back 1s for now
-      log.warn("precondition failed", manifest.presentationLiveGap);
-      break;
+      case "precondition-failed":
+        manifest.updateLiveGap(1); // go back 1s for now
+        log.warn("precondition failed", manifest.presentationLiveGap);
+        break;
 
-    case "out-of-index":
+      case "out-of-index":
       // out-of-index messages require a complete reloading of the
       // manifest to refresh the current index
-      log.info("out of index");
-      return refreshManifest(manifest);
+        log.info("out of index");
+        return refreshManifest(manifest);
     }
 
     return Observable.of(message);

@@ -59,8 +59,8 @@ const  segmentLoader = (customSegmentLoader) => ({
     const protection = adaptation._smoothProtection || {};
 
     switch(adaptation.type) {
-    case "video":
-      responseData = createVideoInitSegment(
+      case "video":
+        responseData = createVideoInitSegment(
         segment.timescale,
         representation.width,
         representation.height,
@@ -69,9 +69,9 @@ const  segmentLoader = (customSegmentLoader) => ({
         protection.keyId,     // keyId
         protection.keySystems // pssList
       );
-      break;
-    case "audio":
-      responseData = createAudioInitSegment(
+        break;
+      case "audio":
+        responseData = createAudioInitSegment(
         segment.timescale,
         representation._channels,
         representation._bitsPerSample,
@@ -81,7 +81,7 @@ const  segmentLoader = (customSegmentLoader) => ({
         protection.keyId,     // keyId
         protection.keySystems // pssList
       );
-      break;
+        break;
     }
 
     return Observable.of({ type: "data", value: { responseData } });

@@ -183,20 +183,20 @@ export default class ABRManager {
 
         lazilyAttachChooser(this, type);
         switch (event) {
-        case "requestBegin":
+          case "requestBegin":
           // use the id of the segment as in any case, we should only have at
           // most one active download for the same segment.
           // This might be not optimal if this changes however. The best I think
           // for now is to just throw/warn in DEV mode when two pending ids
           // are identical
-          this._choosers[type].addPendingRequest(value.id, value);
-          break;
-        case "requestEnd":
-          this._choosers[type].removePendingRequest(value.id);
-          break;
-        case "progress":
-          this._choosers[type].addRequestProgress(value.id, value);
-          break;
+            this._choosers[type].addPendingRequest(value.id, value);
+            break;
+          case "requestEnd":
+            this._choosers[type].removePendingRequest(value.id);
+            break;
+          case "progress":
+            this._choosers[type].addRequestProgress(value.id, value);
+            break;
         }
       });
   }

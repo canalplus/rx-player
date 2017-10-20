@@ -45,17 +45,17 @@ function parseMPD(root, contentProtectionParser) {
   const parser = reduceChildren(root, (res, name, node) => {
     switch(name) {
 
-    case "BaseURL":
-      res.baseURL = node.textContent;
-      break;
+      case "BaseURL":
+        res.baseURL = node.textContent;
+        break;
 
-    case "Location":
-      res.locations.push(node.textContent);
-      break;
+      case "Location":
+        res.locations.push(node.textContent);
+        break;
 
-    case "Period":
-      res.periods.push(parsePeriod(node, contentProtectionParser));
-      break;
+      case "Period":
+        res.periods.push(parsePeriod(node, contentProtectionParser));
+        break;
     }
 
     return res;
@@ -106,17 +106,17 @@ function parsePeriod(root, contentProtectionParser) {
     feedAttributes(root, reduceChildren(root, (res, name, node) => {
       switch(name) {
 
-      case "BaseURL":
-        res.baseURL = node.textContent;
-        break;
+        case "BaseURL":
+          res.baseURL = node.textContent;
+          break;
 
-      case "AdaptationSet":
-        const ada = parseAdaptationSet(node, contentProtectionParser);
-        if (ada.id == null) {
-          ada.id = res.adaptations.length;
-        }
-        res.adaptations.push(ada);
-        break;
+        case "AdaptationSet":
+          const ada = parseAdaptationSet(node, contentProtectionParser);
+          if (ada.id == null) {
+            ada.id = res.adaptations.length;
+          }
+          res.adaptations.push(ada);
+          break;
 
       }
       return res;
@@ -132,47 +132,47 @@ function parseAdaptationSet(root, contentProtectionParser) {
     // case "Rating": break;
     // case "Viewpoint": break;
 
-    case "Accessibility":
-      accessibility = parseAccessibility(node);
-      break;
+      case "Accessibility":
+        accessibility = parseAccessibility(node);
+        break;
 
-    case "BaseURL":
-      res.baseURL = node.textContent;
-      break;
-
-    // TODO seems to be unused
-    case "ContentComponent":
-      res.contentComponent = parseContentComponent(node);
-      break;
+      case "BaseURL":
+        res.baseURL = node.textContent;
+        break;
 
     // TODO seems to be unused
-    case "ContentProtection":
-      res.contentProtection =
+      case "ContentComponent":
+        res.contentComponent = parseContentComponent(node);
+        break;
+
+    // TODO seems to be unused
+      case "ContentProtection":
+        res.contentProtection =
         parseContentProtection(node, contentProtectionParser);
-      break;
+        break;
 
-    case "Representation":
-      const rep = parseRepresentation(node);
-      if (rep.id == null) {
-        rep.id = res.representations.length;
-      }
-      res.representations.push(rep); break;
+      case "Representation":
+        const rep = parseRepresentation(node);
+        if (rep.id == null) {
+          rep.id = res.representations.length;
+        }
+        res.representations.push(rep); break;
 
-    case "Role":
-      res.role = parseRole(node);
-      break;
+      case "Role":
+        res.role = parseRole(node);
+        break;
 
-    case "SegmentBase":
-      res.index = parseSegmentBase(node);
-      break;
+      case "SegmentBase":
+        res.index = parseSegmentBase(node);
+        break;
 
-    case "SegmentList":
-      res.index = parseSegmentList(node);
-      break;
+      case "SegmentList":
+        res.index = parseSegmentList(node);
+        break;
 
-    case "SegmentTemplate":
-      res.index = parseSegmentTemplate(node);
-      break;
+      case "SegmentTemplate":
+        res.index = parseSegmentTemplate(node);
+        break;
     }
 
     return res;
@@ -224,21 +224,21 @@ function parseRepresentation(root) {
     // case "InbandEventStream": break;
     // case "SubRepresentation": break;
 
-    case "BaseURL":
-      res.baseURL = node.textContent;
-      break;
+      case "BaseURL":
+        res.baseURL = node.textContent;
+        break;
 
-    case "SegmentBase":
-      res.index = parseSegmentBase(node);
-      break;
+      case "SegmentBase":
+        res.index = parseSegmentBase(node);
+        break;
 
-    case "SegmentList":
-      res.index = parseSegmentList(node);
-      break;
+      case "SegmentList":
+        res.index = parseSegmentList(node);
+        break;
 
-    case "SegmentTemplate":
-      res.index = parseSegmentTemplate(node);
-      break;
+      case "SegmentTemplate":
+        res.index = parseSegmentTemplate(node);
+        break;
     }
     return res;
   }, {});
