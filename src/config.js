@@ -351,24 +351,40 @@ export default {
   STALL_GAP: 0.5,
 
   /**
-   * Maximum difference allowed between a segment _buffered_ start and the
-   * wanted playback range start.
+   * Maximum difference allowed between a segment _announced_ start (what the
+   * rx-player infers to be the starting time) and its _real_  current starting
+   * time in the source buffer, in seconds, until the segment is considered
+   * "incomplete".
    * Same for the ending time announced and its effective end time in the source
    * buffer.
    *
-   * If the difference is bigger than this value, the segment will be
-   * re-downloaded.
+   * If the difference is bigger than this value, the segment will be considered
+   * incomplete (e.g. considered as partially garbage-collected) and as such
+   * might be re-downloaded.
    *
-   * Setting a value too high might lead to incomplete segments being wrongly
-   * considered as playable (and thus not be re-downloaded, this could lead the
+   * Keeping a too high value might lead to incomplete segments being wrongly
+   * considered as complete (and thus not be re-downloaded, this could lead the
    * player to stall).
+   * Note that in a worst-case scenario this can happen for the end of a segment
+   * and the start of the contiguous segment, leading to a discontinuity two
+   * times this value.
    *
-   * Setting a value too low might lead to complete segment being wrongly
-   * considered as incomplete and re-downloaded.
+   * Keeping a too low value might lead to re-downloading the same segment
+   * multiple times (when the start and end times are badly estimated) as they
+   * will wrongly believed to be partially garbage-collected.
+   *
+   * If a segment has a perfect continuity with a previous/following one in the
+   * source buffer the start/end of it will not be checked. This allows to limit
+   * the number of time this error-prone logic is applied.
+   *
+   * Note that in most cases, the rx-player's start and end times estimations
+   * are __really__ close to what they really are in the sourcebuffer (we
+   * usually have a difference in the order of 10^-7), as time information is
+   * most of the time directly parsed from the media container.
    *
    * @type {Number}
    */
-  MAX_TIME_MISSING_FROM_WANTED_SEGMENT: 0.12,
+  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
 
   /**
    * The maximum time, in seconds, the real buffered time in the sourcebuffer

@@ -20,7 +20,7 @@ import takeFirstSet from "../../utils/takeFirstSet.js";
 import { convertToRanges } from "../../utils/ranges.js";
 
 const {
-  MAX_TIME_MISSING_FROM_WANTED_SEGMENT,
+  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
   MAX_BUFFERED_DISTANCE,
   MINIMUM_SEGMENT_SIZE,
 } = config;
@@ -535,13 +535,13 @@ export default class SegmentBookkeeper {
       ) {
         if (wantedRange.start > currentSegmentI.start) {
           const timeDiff = currentSegmentI.bufferedStart - wantedRange.start;
-          if (timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
+          if (timeDiff > 0) {
             return false;
           }
         } else {
           const timeDiff =
             currentSegmentI.bufferedStart - currentSegmentI.start;
-          if (timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
+          if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
         }
@@ -555,12 +555,12 @@ export default class SegmentBookkeeper {
       ) {
         if (wantedRange.end < currentSegmentI.end) {
           const timeDiff = wantedRange.end - currentSegmentI.bufferedEnd;
-          if (timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
+          if (timeDiff > 0) {
             return false;
           }
         } else {
           const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
-          if(timeDiff > MAX_TIME_MISSING_FROM_WANTED_SEGMENT) {
+          if(timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
         }
