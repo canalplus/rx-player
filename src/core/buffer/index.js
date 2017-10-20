@@ -105,7 +105,7 @@ function Buffer({
   maxBufferBehind,
   maxBufferAhead,
 
-  // XXX Remove that from here
+  // TODO Remove that from here
   bufferType,   // Buffer type (audio, video, text, image)
   isLive,
 }) {
@@ -252,6 +252,16 @@ function Buffer({
       }
 
       const { time, duration, timescale } = segment;
+
+      // TODO If the segment is too big, and is garbage collected immediately
+      // when appended, it will be downloaded in loop, even if we have enough
+      // of it to continue regular playback.
+      // To avoid this behavior, we should probably indicate the wanted start
+      // and end time here, and only re-download it if the segment is missing
+      // part(s) of it.
+      //
+      // You can repeat this bug easily by setting the maxBufferBehind or
+      // maxBufferAhead option for a supplementaryTextTrack
       const currentSegment =
         bookkeeper.hasCompleteSegment(time, duration, timescale);
 

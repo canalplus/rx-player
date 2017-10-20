@@ -4,11 +4,11 @@
 
 To allow the player to be extended, a system of "plugins" has been added.
 
-Those plugins are often under the form of functions passed as an argument to the player constructor or the ``loadVideo`` API call.
+Those plugins are often under the form of functions passed as an argument to the ``loadVideo`` API call.
 
 ## <a name="segmentLoader"></a>segmentLoader
 
-The segmentLoader is a function that can be included in the ``transportOptions`` of both the constructor and the ``loadVideo`` API call.
+The segmentLoader is a function that can be included in the ``transportOptions`` of the ``loadVideo`` API call.
 
 A segmentLoader allows to define a custom audio/video segment loader (it might on the future work for other types of segments, so always check the type if you only want those two).
 

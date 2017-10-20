@@ -16,8 +16,11 @@
 
 import log from "../../../utils/log";
 
-import TextSourceBuffer from "./text-buffer.js";
-import ImageSourceBuffer from "./image-buffer.js";
+import {
+  HTMLTextSourceBuffer,
+  NativeTextSourceBuffer,
+} from "./text";
+import ImageSourceBuffer from "./image";
 
 /**
  * Returns true if the given buffeType is a native buffer, false otherwise.
@@ -34,16 +37,17 @@ const shouldHaveNativeSourceBuffer = (bufferType) =>
  * @param {MediaSource} mediaSource
  * @param {string} type - The "type" of SourceBuffer (audio/video...)
  * @param {string} codec
- * @param {Object} nativeBuffers
+ * @param {Object} sourceBufferMemory
+ * @param {Object} sourceBufferMemory.native
  * @returns {SourceBuffer}
  */
-const addNativeSourceBuffer = (mediaSource, type, codec, nativeBuffers) => {
-  if (!nativeBuffers[type]) {
+function addNativeSourceBuffer(mediaSource, type, codec, { native }) {
+  if (!native[type]) {
     log.info("add sourcebuffer", codec);
-    nativeBuffers[type] = mediaSource.addSourceBuffer(codec);
+    native[type] = mediaSource.addSourceBuffer(codec);
   }
-  return nativeBuffers[type];
-};
+  return native[type];
+}
 
 /**
  * Creates a new SourceBuffer.
@@ -53,42 +57,54 @@ const addNativeSourceBuffer = (mediaSource, type, codec, nativeBuffers) => {
  * @param {MediaSource} mediaSource
  * @param {string} type
  * @param {string} codex
- * @param {Object} customBuffers
+ * @param {Object} custom
+ * @param {Object} custom
  * @returns {SourceBuffer|AbstractSourceBuffer}
  */
-const createSourceBuffer = (
+function createSourceBuffer(
   video,
   mediaSource,
   type,
   codec,
-  nativeBuffers,
-  customBuffers,
+  sourceBufferMemory,
   options = {},
-) => {
+) {
   let sourceBuffer;
 
   if (shouldHaveNativeSourceBuffer(type)) {
     sourceBuffer =
-      addNativeSourceBuffer(mediaSource, type, codec, nativeBuffers);
+      addNativeSourceBuffer(mediaSource, type, codec, sourceBufferMemory);
   }
   else {
-    const oldSourceBuffer = customBuffers[type];
+    const { custom } = sourceBufferMemory;
+    const oldSourceBuffer = custom[type];
     if (oldSourceBuffer) {
       try {
         oldSourceBuffer.abort();
       } catch(e) {
         log.warn(e);
       } finally {
-        delete customBuffers[type];
+        delete custom[type];
       }
     }
 
-    if (type == "text") {
+    if (type === "text") {
       log.info("add text sourcebuffer", codec);
-      sourceBuffer =
-        new TextSourceBuffer(video, codec, options.hideNativeSubtitle);
+      if (options.textTrackMode === "html") {
+        sourceBuffer = new HTMLTextSourceBuffer(
+          codec,
+          video,
+          options.textTrackElement
+        );
+      } else {
+        sourceBuffer = new NativeTextSourceBuffer(
+          codec,
+          video,
+          options.hideNativeSubtitle
+        );
+      }
     }
-    else if (type == "image") {
+    else if (type === "image") {
       log.info("add image sourcebuffer", codec);
       sourceBuffer = new ImageSourceBuffer(codec);
     }
@@ -97,35 +113,37 @@ const createSourceBuffer = (
       throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
     }
 
-    customBuffers[type] = sourceBuffer;
+    custom[type] = sourceBuffer;
   }
 
   return sourceBuffer;
-};
+}
 
 /**
  * Abort and remove the SourceBuffer given.
  * @param {HTMLMediaElement} video
  * @param {MediaSource} mediaSource
  * @param {string} type
+ * @param {Object} sourceBufferMemory
+ * @param {Object} sourceBufferMemory.native
+ * @param {Object} sourceBufferMemory.custom
  */
-const disposeSourceBuffer = (
-  video,
-  mediaSource,
-  type,
-  nativeBuffers,
-  customBuffers
-) => {
+function disposeSourceBuffer(video, mediaSource, type, sourceBufferMemory) {
+  const {
+    native,
+    custom,
+  } = sourceBufferMemory;
+
   let oldSourceBuffer;
 
   const isNative = shouldHaveNativeSourceBuffer(type);
   if (isNative) {
-    oldSourceBuffer = nativeBuffers[type];
-    delete nativeBuffers[type];
+    oldSourceBuffer = native[type];
+    delete native[type];
   }
   else {
-    oldSourceBuffer = customBuffers[type];
-    delete customBuffers[type];
+    oldSourceBuffer = custom[type];
+    delete custom[type];
   }
 
   if (oldSourceBuffer) {
@@ -140,7 +158,7 @@ const disposeSourceBuffer = (
       log.warn(e);
     }
   }
-};
+}
 
 export {
   shouldHaveNativeSourceBuffer,

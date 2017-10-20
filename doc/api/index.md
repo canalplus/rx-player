@@ -7,6 +7,7 @@
 - [Static properties](#static)
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
+    - [LogLevel](#static-LogLevel)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -114,6 +115,23 @@ _type_: ``Object``
 The different Error "codes" you can get on playback error,
 
 See [the Player Error documentation](./errors.md) for more informations.
+
+### <a name="static-ErrorCodes"></a>LogLevel
+
+_type_: ``string``
+_default_: ``"NONE"``
+
+The current level of verbosity for the RxPlayer logs. Those logs all use the console.
+
+From the less verbose to the most:
+  - ``"NONE"``: no log
+  - ``"ERROR"``: unexpected errors (via ``console.error``)
+  - ``"WARNING"``: The previous level + minor problems encountered (via ``console.warn``)
+  - ``"INFO"``: The previous levels + noteworthy events (via ``console.info``)
+  - ``"DEBUG"``: The previous levels + normal events of the player (via ``console.log``)
+
+If the value set to this property is different than those, it will be automatically set
+to ``"NONE"``.
 
 ## <a name="meth"></a>Methods
 

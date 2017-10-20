@@ -15,7 +15,7 @@
  */
 
 import  { expect } from "chai";
-import * as _filterByWidth from "../filterByWidth.js";
+import _filterByWidth from "../filterByWidth.js";
 
 describe("core - abr - filterByWidth", () => {
 
@@ -33,32 +33,32 @@ describe("core - abr - filterByWidth", () => {
 
   describe("filterByWidth", () => {
     it("should properly filter representations whose width is < 900", () => {
-      expect(_filterByWidth.default(fakeReps, 999))
+      expect(_filterByWidth(fakeReps, 999))
         .to.deep.equal(expectedWidthReps);
     });
 
     it("should return all representations when specified width is over maxWidth", () => {
-      expect(_filterByWidth.default(fakeReps, 1000000))
+      expect(_filterByWidth(fakeReps, 1000000))
         .to.deep.equal(fakeReps);
     });
 
     it("should return all representations when specified width is infinite", () => {
-      expect(_filterByWidth.default(fakeReps, Infinity))
+      expect(_filterByWidth(fakeReps, Infinity))
         .to.deep.equal(fakeReps);
     });
 
     it("should return first representation when specified width is 0", () => {
-      expect(_filterByWidth.default(fakeReps, 0))
+      expect(_filterByWidth(fakeReps, 0))
         .to.deep.equal([{ width: 100 }]);
     });
 
     it("should return all representation when specified width is undefined", () => {
-      expect(_filterByWidth.default(fakeReps, undefined))
+      expect(_filterByWidth(fakeReps, undefined))
       .to.deep.equal(fakeReps);
     });
 
     it("should return no representation when specified array is empty", () => {
-      expect(_filterByWidth.default([], 0))
+      expect(_filterByWidth([], 0))
       .to.deep.equal([]);
     });
   });

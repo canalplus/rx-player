@@ -4,7 +4,18 @@
 
 ### Added
 
+  - misc: add possibility to do custom builds through environment variables, to remove unwanted features from minified code.
+  - languages/dash: allow plain text TTML, SAMI, SRT and VTT subtitles in DASH and Smooth manifests
+  - languages: add possibility to show fragmented VTT text tracks in <track> element, even for browser that do not support webvtt
+  - languages: add possibility to show TTML, SRT, VTT and SAMI text tracks in HTML tags for richer stylisation.
+  - languages: add SRT texttrack support in <track> elements ("native" textTrackMode)
+  - api: add ``textTrackElement`` option to ``loadVideo``
+  - api: add ``textTrackMode`` option to ``loadVideo``
+  - api: add ``nativeTextTracksChange`` event
+  - eme: it is now possible to directly set the reverse domain name of the wanted key system in the ``type`` property of ``loadVideo``'s ``keySystems`` option.
+  - api: add property ``percentage`` to the ``startAt`` argument of ``loadVideo``.
   - abr: add ``bitrateEstimationChange`` event
+  - api: add ``LogLevel`` static property
   - api: a Date object can now be given to the ``loadVideo`` argument ``startAt.wallClockTime``. It will be automatically converted into seconds.
   - languages: add ``normalizedLanguage`` property in manifest-related-APIs to expose the ISO 639-3 language code of the audio and text tracks
   - languages: add ``normalized`` property in language-related-API to expose the ISO 639-3 language code of the audio and text tracks
@@ -36,6 +47,11 @@
 
 ### Removed
 
+  - api: remove ``defaultAudioTrack`` constructor option
+  - api: remove ``defaultTextTrack`` constructor option
+  - api: remove ``transportOptions`` constructor option
+  - api: remove ``transport`` constructor option
+  - api: remove ``nativeTextTrackChange`` event in favor of ``nativeTextTracksChange`` event (notice the "s")
   - api: remove ``goToStart`` method
   - api: remove ``getStartTime`` method
   - api: remove ``getEndTime`` method
@@ -83,10 +99,12 @@
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
   - api: fix infinite loading bug when a new content is launched as the previous one is ended or fell on error
   - dash: allow absolute BaseURL in Periods
+  - eme: the ``reason`` for the eme error ``KEY_STATUS_CHANGE_ERROR`` is now correctly filled in
+  - eme: do not set widevine robustnesses for non-widevine key systems
   - languages: fix bug which led the text buffer to _crash_ when the ``wantedBufferBehind`` option is set
   - languages: fix bug which led to TextTracks chunks being re-downloaded multiple times
-  - languages/dash: allow plain text TTML, SAMI and VTT subtitles in DASH manifest
   - speed: fix playback rate bug when setting it while the player is stalled
+  - smooth: fix "fallback" callback in the segmentLoader API for smooth contents.
   - smooth: fix some minor risks of infinite rebuffering for live contents, when the isobmff's tfrf box is not well parsed.
   - buffer: avoid infinite player rebuffering when the manifest is not exactly aligned with the real duration of the content
   - buffer: avoid multiple causes of infinite player rebuffering by managing segment garbage collection

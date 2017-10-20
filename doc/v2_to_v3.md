@@ -26,6 +26,10 @@ If you don't know if you were using documented APIs, you can still check if the 
     - [defaultLanguage](#cons-defaultLanguage)
     - [defaultSubtitle](#cons-defaultSubtitle)
     - [initVideoBitrate / initAudioBitrate](#cons-initVideoBitrate)
+    - [defaultAudioTrack](#cons-defaultAudioTrack)
+    - [defaultTexTrack](#cons-defaultTexTrack)
+    - [transport](#cons-transport)
+    - [transportOptions](#cons-transportOptions)
 - [loadVideo](#load)
     - [Return value](#load-return)
     - [defaultLanguage parameter](#load-defaultLanguage)
@@ -66,6 +70,7 @@ If you don't know if you were using documented APIs, you can still check if the 
     - [progress](#remev-progress)
     - [languageChange](#remev-languageChange)
     - [subtitleChange](#remev-subtitleChange)
+    - [nativeTextTrackChange](#remev-nativeTextTrackChange)
 - [Changed events](#chanev)
     - [positionUpdate](#chanev-positionUpdate)
 
@@ -296,6 +301,30 @@ player = new RxPlayer({
   initialAudioBitrateBitrate: 2e4
 });
 ```
+
+### <a name="cons-defaultAudioTrack"></a>defaultAudioTrack
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``defaultAudioTrack`` option, which has the exact same format.
+
+### <a name="cons-defaultTextTrack"></a>defaultTextTrack
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``defaultTextTrack`` option, which has the exact same format.
+
+### <a name="cons-transport"></a>transport
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``transport`` option, which has the exact same format.
+
+### <a name="cons-transportOptions"></a>transportOptions
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport options per-``loadVideo`` calls via its ``transportOptions`` option, which has the exact same format.
 
 ## <a name="load"></a>loadVideo
 
@@ -1147,6 +1176,39 @@ player.addEventListener("subtitleChange", (lang) => {
 player.addEventListener("textTrackChange", (track) => {
   const { language, id, closedCaption } = track;
   console.log("language changed to", language);
+});
+```
+
+### <a name="remev-nativeTextTrackChange"></a>nativeTextTrackChange
+
+#### What Changed
+
+``nativeTextTrackChange`` is replace by the ``nativeTextTracksChange`` (notice the supplementary "s") event.
+
+Three things have changed comparatively:
+  - The payload of this event now is an array of ``TextTrack`` element. Previously, it was a single ``TextTrackElement`` (which correspond to the first in the array).
+  - The event is also triggered when a ``TextTrackElement`` is removed from the ``<video>`` tag. Previously, it was only when added.
+  - The event is fired even if no content is playing
+
+This is to support edge cases where the ``<track>`` element could be modified by the user of our library, in which case the RxPlayer could give false informations. Also, this allows to signal when a ``TextTrack`` has been removed from the DOM to help you free up ressources on your side.
+
+#### Replacement example
+
+```js
+// In the previous version
+player.addEventListener("nativeTextTrackChange", (track) => {
+  console.log("the track changed:", track);
+});
+
+// becomes
+player.addEventListener("nativeTextTracksChange", (tracks) => {
+  if (tracks.length === 0) {
+    console.log("no active track!");
+  } else {
+    // in most usecases you can just check the first element.
+    // (this will have the exact same effect than the previous event)
+    console.log("the track changed:", tracks[0]);
+  }
 });
 ```
 
