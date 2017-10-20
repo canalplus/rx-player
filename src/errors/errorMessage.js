@@ -14,6 +14,25 @@
  * limitations under the License.
  */
 
-export default function errorMessage(name, code, reason) {
-  return `${name}(${code})${reason ? ": " + reason.message : ""}`;
-}
+/**
+ * Generate a normalized error message.
+ * @param {string} name
+ * @param {string} code
+ * @param {Error|string} [reason]
+ * @returns {string}
+ */
+ export default function errorMessage(name, code, reason) {
+   if (!reason) {
+     return `${name} (${code})`;
+   }
+   else {
+     switch(typeof reason) {
+
+     case "string":
+       return `${name} (${code}) ${reason}`;
+
+     default:
+       return `${name} (${code}) ${reason.message}`;
+     }
+   }
+ }

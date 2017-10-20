@@ -73,7 +73,7 @@ const toJSONForIE = data => {
  *                       responseType.
  *   }
  *
- * For any succesful request you should have 0+ "request" events and 1
+ * For any succesful request you should have 0+ "progress" events and 1
  * "response" event.
  *
  * ## Errors

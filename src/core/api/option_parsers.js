@@ -24,16 +24,15 @@ import {
 
 const {
   DEFAULT_AUTO_PLAY,
-  DEFAULT_SHOW_SUBTITLE,
-  DEFAULT_AUDIO_TRACK,
-  DEFAULT_TEXT_TRACK,
-  DEFAULT_WANTED_BUFFER_AHEAD,
+  DEFAULT_INITIAL_BITRATES,
+  DEFAULT_LIMIT_VIDEO_WIDTH,
+  DEFAULT_MAX_BITRATES,
   DEFAULT_MAX_BUFFER_AHEAD,
   DEFAULT_MAX_BUFFER_BEHIND,
-  DEFAULT_INITIAL_BITRATES,
-  DEFAULT_MAX_BITRATES,
+  DEFAULT_SHOW_NATIVE_SUBTITLE,
+  DEFAULT_TEXT_TRACK_MODE,
   DEFAULT_THROTTLE_WHEN_HIDDEN,
-  DEFAULT_LIMIT_VIDEO_WIDTH,
+  DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
 
 const def = takeFirstDefined;
@@ -49,20 +48,10 @@ const def = takeFirstDefined;
  */
 function parseConstructorOptions(options = {}) {
   const parsed = {
-    transport: options.transport,
-    transportOptions: def(options.transportOptions, {}),
     maxBufferAhead: def(options.maxBufferAhead, DEFAULT_MAX_BUFFER_AHEAD),
     maxBufferBehind: def(options.maxBufferBehind, DEFAULT_MAX_BUFFER_BEHIND),
     limitVideoWidth: def(options.limitVideoWidth, DEFAULT_LIMIT_VIDEO_WIDTH),
-
-    defaultAudioTrack: normalizeAudioTrack(
-      def(options.defaultAudioTrack, DEFAULT_AUDIO_TRACK),
-    ),
-
-    defaultTextTrack: normalizeTextTrack(
-      def(options.defaultTextTrack, DEFAULT_TEXT_TRACK),
-    ),
-
+    videoElement: options.videoElement || document.createElement("video"),
     wantedBufferAhead: def(
       options.wantedBufferAhead,
       DEFAULT_WANTED_BUFFER_AHEAD
@@ -72,9 +61,6 @@ function parseConstructorOptions(options = {}) {
       options.throttleWhenHidden,
       DEFAULT_THROTTLE_WHEN_HIDDEN
     ),
-
-    videoElement: options.videoElement ?
-      options.videoElement : document.createElement("video"),
   };
 
   const defaultInitialBitrates = DEFAULT_INITIAL_BITRATES || {};
@@ -113,36 +99,27 @@ function parseConstructorOptions(options = {}) {
  * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */
-function parseLoadVideoOptions(options = {}, ctx) {
-  const {
-    defaultTransport,
-    defaultTransportOptions,
-    _priv,
-  } = ctx;
-
-  const {
-    lastTextTrack,
-    lastAudioTrack,
-  } = _priv;
-
+function parseLoadVideoOptions(options = {}) {
   const parsed = {
     url: options.url,
-    transport: def(options.transport, defaultTransport),
+    transport: options.transport,
     autoPlay: def(options.autoPlay, DEFAULT_AUTO_PLAY),
     keySystems: def(options.keySystems, []),
-    transportOptions: def(options.transportOptions, defaultTransportOptions),
-    hideNativeSubtitle: def(options.hideNativeSubtitle, !DEFAULT_SHOW_SUBTITLE),
+    transportOptions: options.transportOptions,
     supplementaryTextTracks: def(options.supplementaryTextTracks, []),
     supplementaryImageTracks: def(options.supplementaryImageTracks, []),
+    textTrackMode: def(options.textTrackMode, DEFAULT_TEXT_TRACK_MODE),
+    defaultAudioTrack: normalizeAudioTrack(options.defaultAudioTrack),
+    defaultTextTrack: normalizeTextTrack(options.defaultTextTrack),
 
-    defaultAudioTrack: normalizeAudioTrack(
-      def(options.defaultAudioTrack, lastAudioTrack),
-    ),
+    hideNativeSubtitle:
+      def(options.hideNativeSubtitle, !DEFAULT_SHOW_NATIVE_SUBTITLE),
 
-    defaultTextTrack: normalizeTextTrack(
-      def(options.defaultTextTrack, lastTextTrack),
-    ),
   };
+
+  if (options.textTrackMode === "html") {
+    parsed.textTrackElement = options.textTrackElement;
+  }
 
   if (options.startAt && options.startAt.wallClockTime instanceof Date) {
     parsed.startAt = objectAssign({}, options.startAt, {

@@ -41,16 +41,26 @@ export default {
   DEFAULT_TEXT_TRACK: null,
 
   /**
+   * Can be either:
+   *   - "native": Subtitles are all displayed in a <track> element
+   *   - "html": Subtitles are all displayed in a <div> separated from the video
+   *     element. Can be useful to display richer TTML subtitles, for example.
+   * @type {Object|null}
+   */
+  DEFAULT_TEXT_TRACK_MODE: "native",
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */
   DEFAULT_AUTO_PLAY: false,
 
   /**
-   * If set to false, subtitles will be hidden by default.
+   * If set to false, "native" subtitles (in a <track> element) will be hidden
+   * by default.
    * @type {Boolean}
    */
-  DEFAULT_SHOW_SUBTITLE: true,
+  DEFAULT_SHOW_NATIVE_SUBTITLE: true,
 
   /*
    * Default buffer goal in seconds. Once this amount of time reached ahead in
@@ -425,9 +435,30 @@ export default {
   MINIMUM_SEGMENT_SIZE: 0.3,
 
   /**
+   * Maximum interval at which text tracks are refreshed in an "html"
+   * textTrackMode.
+   *
+   * The text tracks are also refreshed on various video events, this interval
+   * will only trigger a refresh if none of those events was received during
+   * that timespan.
+   *
+   * Note that if the TextTrack cue did not change between two intervals or
+   * events, the DOM won't be refreshed.
+   * The TextTrack cues structure is also optimized for fast retrieval.
+   * We should thus not have much of a performance impact here if we set a low
+   * interval.
+   *
+   * @type {Number}
+   */
+  MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 100,
+
+  /**
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (EME).
-   * Defined in order of importance.
+   *
+   * Only used for widevine keysystems.
+   *
+   * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
   EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [
@@ -439,6 +470,10 @@ export default {
   ],
 
   /**
+   * Link canonical key systems names to their respective reverse domain name,
+   * used in the EME APIs.
+   * This allows to have a simpler API, where users just need to set "widevine"
+   * or "playready" as a keySystem.
    * @type {Object}
    */
   EME_KEY_SYSTEMS: {

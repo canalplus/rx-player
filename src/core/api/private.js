@@ -223,11 +223,9 @@ export default (self) => ({
     }
     if (type === "audio") {
       const audioTrack = self._priv.languageManager.getCurrentAudioTrack();
-      self._priv.lastAudioTrack = audioTrack;
       self._priv.recordState("audioTrack", audioTrack);
     } else if (type === "text") {
       const textTrack = self._priv.languageManager.getCurrentTextTrack();
-      self._priv.lastTextTrack = textTrack;
       self._priv.recordState("textTrack", textTrack);
     }
   },
@@ -265,24 +263,20 @@ export default (self) => ({
 
   /**
    * Called each time the player alternates between play and pause.
-   * @param {Object} evt
-   * @param {string} evt.type
+   * @param {Boolean} isPlaying
    */
-  onPlayPauseNext(evt) {
+  onPlayPauseNext(isPlaying) {
     if (self.videoElement.ended !== true) {
-      self._priv.playing$.next(evt.type == "play");
+      self._priv.playing$.next(isPlaying);
     }
   },
 
   /**
    * Called each time a textTrack is added to the video DOM Element.
-   * @param {Object} evt
-   * @param {HTMLElement} evt.target
+   * @param {Array.<TextTrackElement} tracks
    */
-  onNativeTextTrackNext({ target: [trackElement] }) {
-    if (trackElement) {
-      self.trigger("nativeTextTrackChange", trackElement);
-    }
+  onNativeTextTracksNext(tracks) {
+    self.trigger("nativeTextTracksChange", tracks);
   },
 
   /**

@@ -41,6 +41,7 @@ describe("dash static SegmentTimeline content", function () {
     fakeServer.respond();
     await sleep(0);
 
+
     // ---- General Manifest Data ----
 
     const manifest = player.getManifest();
@@ -77,8 +78,12 @@ describe("dash static SegmentTimeline content", function () {
     expect(adaptations.video[0].getAvailableBitrates()).to.eql(
       [400000, 795000, 1193000, 1996000]
     );
+    expect(adaptations.video[0].representations.length).to.equal(4);
+    expect(adaptations.video[0].getRepresentationsForBitrate(400000).length)
+      .to.eql(1);
 
     // ---- Audio Adaptations / Representations / Segments ----
+
 
     const audioRepresentation = adaptations.audio[0].representations[0];
     expect(audioRepresentation.baseURL).to.equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/");
@@ -89,6 +94,10 @@ describe("dash static SegmentTimeline content", function () {
     expect(typeof audioRepresentation.index).to.equal("object");
 
     const audioRepresentationIndex = audioRepresentation.index;
+    const initAudioSegment = audioRepresentationIndex.getInitSegment();
+    expect(initAudioSegment.media).to.equal("ateam-$RepresentationID$.dash");
+    expect(initAudioSegment.id).to.equal("audio=128000_init");
+
     const nextAudioSegment1 = audioRepresentationIndex.getSegments(0, 4);
     expect(nextAudioSegment1.length).to.equal(1);
     expect(nextAudioSegment1[0].duration).to.equal(177341);
@@ -128,6 +137,10 @@ describe("dash static SegmentTimeline content", function () {
     expect(typeof videoRepresentation.index).to.equal("object");
 
     const videoRepresentationIndex = videoRepresentation.index;
+    const initVideoSegment = videoRepresentationIndex.getInitSegment();
+    expect(initVideoSegment.media).to.equal("ateam-$RepresentationID$.dash");
+    expect(initVideoSegment.id).to.equal("video=400000_init");
+
     const nextVideoSegment1 = videoRepresentationIndex.getSegments(0, 4);
     expect(nextVideoSegment1.length).to.equal(1);
     expect(nextVideoSegment1[0].duration).to.equal(4004);
