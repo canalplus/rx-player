@@ -15,11 +15,17 @@
  */
 
 // Feature switching the HTML TextTrack implementation
-const HAS_HTML_MODE = __FEATURES__.HTML_TTML;
+const HAS_HTML_MODE =
+  __FEATURES__.HTML_VTT ||
+  __FEATURES__.HTML_SAMI ||
+  __FEATURES__.HTML_TTML ||
+  __FEATURES__.HTML_SRT;
+
 const HAS_NATIVE_MODE =
   __FEATURES__.NATIVE_VTT ||
   __FEATURES__.NATIVE_SAMI ||
-  __FEATURES__.NATIVE_TTML;
+  __FEATURES__.NATIVE_TTML ||
+  __FEATURES__.NATIVE_SRT;
 
 const HTMLTextSourceBuffer = HAS_HTML_MODE ?
   require("./html/index.js").default :
