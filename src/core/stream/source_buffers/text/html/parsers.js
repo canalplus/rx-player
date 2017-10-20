@@ -28,6 +28,11 @@ if (__FEATURES__.HTML_TTML) {
     require("../../../../../parsers/texttracks/ttml/html/index.js").default;
 }
 
+if (__FEATURES__.HTML_SRT) {
+  htmlParsers.srt =
+    require("../../../../../parsers/texttracks/srt/html.js").default;
+}
+
 /**
  * @param {string} type
  * @param {string} data

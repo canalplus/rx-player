@@ -188,8 +188,13 @@ export default function(options={}) {
           break;
         }
         if (!segmentData.type) {
-          throw new Error(
-            `could not find a text-track parser for the type ${mimeType}`);
+          const lcCodec = codec.toLowerCase();
+          if (lcCodec === "srt") {
+            segmentData.type = "srt";
+          } else {
+            throw new Error(
+              `could not find a text-track parser for the type ${mimeType}`);
+          }
         }
         segmentData.data = responseData;
       }

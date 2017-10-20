@@ -31,6 +31,11 @@ if (__FEATURES__.NATIVE_SAMI) {
     require("../../../../../parsers/texttracks/sami/native.js").default;
 }
 
+if (__FEATURES__.NATIVE_SRT) {
+  nativeParsers.srt =
+    require("../../../../../parsers/texttracks/srt/native.js").default;
+}
+
 /**
  * @param {string} type
  * @param {string} data

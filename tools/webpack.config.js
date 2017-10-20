@@ -63,6 +63,12 @@
 //   (If RXP_BAREBONE was set to "true", you have to explicitely set this value
 //   to "true" to include this feature in the build.)
 //
+//   - RXP_NATIVE_SRT
+//   If set to "false", all code relative to SRT parsing for native text tracks
+//   will be ignored during a build.
+//   (If RXP_BAREBONE was set to "true", you have to explicitely set this value
+//   to "true" to include this feature in the build.)
+//
 //   - RXP_HTML_SAMI
 //   If set to "false", all code relative to SAMI parsing for html text tracks*
 //   will be ignored during a build.
@@ -74,6 +80,15 @@
 //
 //   - RXP_HTML_TTML
 //   If set to "false", all code relative to TTML parsing for html text tracks*
+//   will be ignored during a build.
+//   *html text tracks are tracks which are added to a DOM element instead of a
+//   <track> (the latter here being called "native") tag for a richer
+//   formatting.
+//   (If RXP_BAREBONE was set to "true", you have to explicitely set this value
+//   to "true" to include this feature in the build.)
+//
+//   - RXP_HTML_SRT
+//   If set to "false", all code relative to SRT parsing for html text tracks*
 //   will be ignored during a build.
 //   *html text tracks are tracks which are added to a DOM element instead of a
 //   <track> (the latter here being called "native") tag for a richer
@@ -144,6 +159,10 @@ const config = {
           process.env.RXP_NATIVE_VTT === "true" :
           process.env.RXP_NATIVE_VTT !== "false",
 
+        NATIVE_SRT: isBarebone ?
+          process.env.RXP_NATIVE_SRT === "true" :
+          process.env.RXP_NATIVE_SRT !== "false",
+
         HTML_TTML: isBarebone ?
           process.env.RXP_HTML_TTML === "true" :
           process.env.RXP_HTML_TTML !== "false",
@@ -151,6 +170,10 @@ const config = {
         HTML_SAMI: isBarebone ?
           process.env.RXP_HTML_SAMI === "true" :
           process.env.RXP_HTML_SAMI !== "false",
+
+        HTML_SRT: isBarebone ?
+          process.env.RXP_HTML_SRT === "true" :
+          process.env.RXP_HTML_SRT !== "false",
 
         // HTML_VTT: isBarebone ?
         //   process.env.RXP_HTML_VTT === "true" :

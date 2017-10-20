@@ -231,8 +231,14 @@ function TextTrackParser({
       }
 
       if (!type) {
-        throw new Error(
-          `could not find a text-track parser for the type ${mimeType}`);
+        const { codec = "" } = representation;
+        const codeLC = codec.toLowerCase();
+        if (codeLC === "srt") {
+          type = "srt";
+        } else {
+          throw new Error(
+            `could not find a text-track parser for the type ${mimeType}`);
+        }
       }
 
       segmentData = objectAssign({
