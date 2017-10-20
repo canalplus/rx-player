@@ -33,6 +33,11 @@ if (__FEATURES__.HTML_SRT) {
     require("../../../../../parsers/texttracks/srt/html.js").default;
 }
 
+if (__FEATURES__.HTML_VTT) {
+  htmlParsers.vtt =
+    require("../../../../../parsers/texttracks/webvtt/html.js").default;
+}
+
 /**
  * @param {string} type
  * @param {string} data

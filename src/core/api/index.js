@@ -24,7 +24,7 @@ import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 
 import config from "../../config.js";
-import webvtt from "../../net/parsers/texttracks/webvtt";
+
 import log from "../../utils/log";
 import EventEmitter from "../../utils/eventemitter";
 import assert from "../../utils/assert";

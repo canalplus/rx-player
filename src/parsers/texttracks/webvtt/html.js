@@ -51,7 +51,7 @@ export default function parseWebVTT(text) {
       }
     }
   }
-
+debugger;
   return cuesArray;
 }
 
@@ -176,13 +176,13 @@ function parseCue(index, linified, styleElements) {
   region.appendChild(pElement) ;
   pElement.appendChild(spanElement);
 
-  return { start: range.start, end: range.end, content: region };
+  return { start: range.start, end: range.end, element: region };
 }
 
 function parseTimeCode(text) {
   const splittedText = text.split(/(?:\ |\t)-->(?:\ |\t)/g);
   const start = parseTimestamp(splittedText[0]);
-  const end = parseTimestamp(splittedText[1]);
+  const end = parseTimestamp(splittedText[1].split(" ")[0]);
 
   return { start, end };
 }
