@@ -16,7 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import castToObservable from "../../utils/castToObservable.js";
-import { EncryptedMediaError } from "../../errors";
+import EncryptedMediaError from "../../errors/EncryptedMediaError.js";
 
 /**
  * Call the setServerCertificate API with the given certificate.
