@@ -220,7 +220,6 @@ const defaultAudioTrack = {
 ```
 or under the form of the language string directly, in which case the ``"audioDescription"`` option is inferred to be false.
 
-Note that this option can also be set in the constructor. If both set in the constructor and for ``loadVideo``, the ``loadVideo`` option will be used.
 
 ### <a name="prop-defaultTextTrack"></a>defaultTextTrack
 
@@ -238,8 +237,6 @@ const defaultTextTrack = {
 };
 ```
 or under the form of the language string directly, in which case the ``"closedCaption"`` option is inferred to be false.
-
-Note that this option can also be set in the constructor. If both set in the constructor and for ``loadVideo``, the ``loadVideo`` option will be used.
 
 
 ### <a name="prop-textTrackMode"></a>textTrackMode

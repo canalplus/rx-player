@@ -130,13 +130,10 @@ class Player extends EventEmitter {
    * private properties should be initialized here for better visibility.
    * @param {Object} options
    * @param {HTMLVideoElement_} options.videoElement
-   * TODO this._priv.defaultTextTrackElement?
    */
   constructor(options) {
     super();
     const {
-      defaultAudioTrack,
-      defaultTextTrack,
       initialAudioBitrate,
       initialVideoBitrate,
       limitVideoWidth,
@@ -216,10 +213,6 @@ class Player extends EventEmitter {
     this._priv.wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
     this._priv.maxBufferAhead$ = new BehaviorSubject(maxBufferAhead);
     this._priv.maxBufferBehind$ = new BehaviorSubject(maxBufferBehind);
-
-    // keep track of the last set audio/text track
-    this._priv.lastAudioTrack = defaultAudioTrack;
-    this._priv.lastTextTrack = defaultTextTrack;
 
     // keep track of the last adaptive options
     this._priv.lastBitrates = {

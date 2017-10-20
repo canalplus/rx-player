@@ -223,11 +223,9 @@ export default (self) => ({
     }
     if (type === "audio") {
       const audioTrack = self._priv.languageManager.getCurrentAudioTrack();
-      self._priv.lastAudioTrack = audioTrack;
       self._priv.recordState("audioTrack", audioTrack);
     } else if (type === "text") {
       const textTrack = self._priv.languageManager.getCurrentTextTrack();
-      self._priv.lastTextTrack = textTrack;
       self._priv.recordState("textTrack", textTrack);
     }
   },

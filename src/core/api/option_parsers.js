@@ -23,7 +23,6 @@ import {
 } from "../../utils/languages";
 
 const {
-  DEFAULT_AUDIO_TRACK,
   DEFAULT_AUTO_PLAY,
   DEFAULT_INITIAL_BITRATES,
   DEFAULT_LIMIT_VIDEO_WIDTH,
@@ -31,7 +30,6 @@ const {
   DEFAULT_MAX_BUFFER_AHEAD,
   DEFAULT_MAX_BUFFER_BEHIND,
   DEFAULT_SHOW_NATIVE_SUBTITLE,
-  DEFAULT_TEXT_TRACK,
   DEFAULT_TEXT_TRACK_MODE,
   DEFAULT_THROTTLE_WHEN_HIDDEN,
   DEFAULT_WANTED_BUFFER_AHEAD,
@@ -54,15 +52,6 @@ function parseConstructorOptions(options = {}) {
     maxBufferBehind: def(options.maxBufferBehind, DEFAULT_MAX_BUFFER_BEHIND),
     limitVideoWidth: def(options.limitVideoWidth, DEFAULT_LIMIT_VIDEO_WIDTH),
     videoElement: options.videoElement || document.createElement("video"),
-
-    defaultAudioTrack: normalizeAudioTrack(
-      def(options.defaultAudioTrack, DEFAULT_AUDIO_TRACK),
-    ),
-
-    defaultTextTrack: normalizeTextTrack(
-      def(options.defaultTextTrack, DEFAULT_TEXT_TRACK),
-    ),
-
     wantedBufferAhead: def(
       options.wantedBufferAhead,
       DEFAULT_WANTED_BUFFER_AHEAD
@@ -110,12 +99,7 @@ function parseConstructorOptions(options = {}) {
  * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */
-function parseLoadVideoOptions(options = {}, ctx) {
-  const {
-    lastTextTrack,
-    lastAudioTrack,
-  } = ctx._priv;
-
+function parseLoadVideoOptions(options = {}) {
   const parsed = {
     url: options.url,
     transport: options.transport,
@@ -125,17 +109,12 @@ function parseLoadVideoOptions(options = {}, ctx) {
     supplementaryTextTracks: def(options.supplementaryTextTracks, []),
     supplementaryImageTracks: def(options.supplementaryImageTracks, []),
     textTrackMode: def(options.textTrackMode, DEFAULT_TEXT_TRACK_MODE),
+    defaultAudioTrack: normalizeAudioTrack(options.defaultAudioTrack),
+    defaultTextTrack: normalizeTextTrack(options.defaultTextTrack),
 
     hideNativeSubtitle:
       def(options.hideNativeSubtitle, !DEFAULT_SHOW_NATIVE_SUBTITLE),
 
-    defaultAudioTrack: normalizeAudioTrack(
-      def(options.defaultAudioTrack, lastAudioTrack),
-    ),
-
-    defaultTextTrack: normalizeTextTrack(
-      def(options.defaultTextTrack, lastTextTrack),
-    ),
   };
 
   if (options.textTrackMode === "html") {

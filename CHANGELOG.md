@@ -47,6 +47,8 @@
 
 ### Removed
 
+  - api: remove ``defaultAudioTrack`` constructor option
+  - api: remove ``defaultTextTrack`` constructor option
   - api: remove ``transportOptions`` constructor option
   - api: remove ``transport`` constructor option
   - api: remove ``nativeTextTrackChange`` event in favor of ``nativeTextTracksChange`` event (notice the "s")
