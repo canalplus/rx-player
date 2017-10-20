@@ -242,6 +242,10 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     },
   }, EventEmitter.prototype);
 
+  if (!MediaKeys_.prototype) {
+    MediaKeys_.prototype = {};
+  }
+
   // on IE11, each created session needs to be created on a new
   // MediaKeys object
   MediaKeys_.prototype.alwaysRenew = true;
