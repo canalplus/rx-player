@@ -8,39 +8,39 @@
 * Specific style is parsed and applied to class element. 
 *
 * @param {string} text
-* @return {Array<Object>}
+* @return {Array.<Object>}
 */
 export default function parseWebVTT(text) {
-  const newLineChar = /\n|\s{2,}/g;
+  const newLineChar = /\r\n|\n|\r/g;
   const linified = text.split(newLineChar);
   const cuesArray = [];
   const styleElements = [];
 
-  if (!linified[0].match(/^WEBVTT.*/)) {
-    console.log("Can't parse WebVTT: Non valid file.");
-    return;
+  if (!linified[0].match(/^WEBVTT(\ |\t|\n|\r|$)/)) {
+    throw new Error("Can't parse WebVTT: Invalid File.");
   }
 
-  let i = 0;
+  for (let i = 1; i < linified.length; i++) {
+    if (isStartOfStyleBlock(linified[i])) {
+      const startOfStyleBlock = i;
+      i++;
 
-  // Find every style element into WebVTT, and collect style 
-  // associated with class / tags
-  for (i = 1; i<linified.length; i++) {
-    if (!(linified[i].match(/^\r/) || linified[i].length === 0)) {
-      if(findElementType(linified[i]) === "style"){
-        parseStyle(i+1, linified, styleElements);        
-      }
-      while (linified[i] 
-        && !(linified[i].match(/^\r/) || linified[i].length === 0)) {
+      // continue incrementing i until either:
+      //   - empty line
+      //   - end of file
+      while(!(linified[i].match(/^\r/) || linified[i].length === 0)) {
         i++;
       }
+      const styleBlock = linified.slice(startOfStyleBlock, i);
+      const parsedStyles = parseStyleBlock(styleBlock);
+      styleElements.push(...parsedStyles);
     }
   }
 
   // Parse cues, format and apply style.
-  for (i = 1; i < linified.length; i++) {
+  for (let i = 1; i < linified.length; i++) {
     if (!(linified[i].match(/^\r/) || linified[i].length === 0)) {
-      if (findElementType(linified[i]) === "cue") {
+      if (isStartOfCueBlock(linified[i])) {
         cuesArray.push(parseCue(i, linified, styleElements));
       }
       while (linified[i] 
@@ -53,82 +53,79 @@ export default function parseWebVTT(text) {
   return cuesArray;
 }
 
-/**
- * Finds from supposed first line of element 
- * (WebVTT is line based format) the type of it. It can be:
- * - note: A comment
- * - style: A style indication, about all cues, or specific cues.
- * - cue: The subtitle content.
- * - region: Informations about wrapping area of subtitle
- * @param {string} text 
- */
-function findElementType(text) {
-  if (text.match(/^NOTE.*?/g)) {
-    return "note";
-  }
-  else if (text.match(/^STYLE.*?/g)) {
-    return "style";
-  }
-  else if (text.match(/^REGION.*?/g)) {
-    return "style";
-  }
-  else if(text.length !== 0){
-    return "cue";
-  }
+function isStartOfStyleBlock(text) {
+  return text.match(/^STYLE.*?/g);
+}
+
+function isStartOfNoteBlock(text) {
+  return text.match(/^NOTE.*?/g);
+}
+
+function isStartOfRegionBlock(text) {
+  return text.match(/^REGION.*?/g);
+}
+
+function isStartOfCueBlock(text) {
+  return (!isStartOfNoteBlock(text) &&
+   !isStartOfStyleBlock(text) &&
+   !isStartOfRegionBlock(text));
 }
 
 /**
  * 
  * Parse style element from WebVTT.
  * @param {number} index 
- * @param {Array<string>} linified 
- * @param {Array<Object>} styleElements 
+ * @param {Array.<string>} linified 
  */
-function parseStyle(index, linified, styleElements) {
+function parseStyleBlock(styleBlock) {
 
+  const styleElements = [];
+  let index = 1;
   const className = [];
-  const cueClassLine = linified[index].match(/cue\(\.{0,1}(.*?)\)/);
+  const cueClassLine = styleBlock[index].match(/cue\(\.{0,1}(.*?)\)/);
   className.push(cueClassLine ? cueClassLine[1] : "cue");
 
   index++;
 
-  while(linified[index].match(/cue\(\.{0,1}(.*?)\)/)) {
-    const cueClassLine = linified[index].match(/cue\(\.{0,1}(.*?)\)/);
+  while( styleBlock[index].match(/cue\(\.{0,1}(.*?)\)/)) {
+    const cueClassLine =  styleBlock[index].match(/cue\(\.{0,1}(.*?)\)/);
     className.push(cueClassLine ? cueClassLine[1] : "cue");
     index++;
   }
 
   let styleContent = "";
 
-  while (!(linified[index].match(/}/))) {
-    styleContent += linified[index];
+  while (!( styleBlock[index].match(/}/))) {
+    styleContent +=  styleBlock[index];
     index++;
   }
-
   className.forEach(c => {
     styleElements.push({
       className: c,
       styleContent: styleContent.replace(/\s/g,""),
     });
   });
+
+  return styleElements;
 }
 
 /**
  * 
  * @param {number} index 
- * @param {Array<string>} linified 
- * @param {Array<Object>} styleElements 
+ * @param {Array.<string>} linified 
+ * @param {Array.<Object>} styleElements 
+ * @returns {Object}
  */
 function parseCue(index, linified, styleElements) {
   const region = document.createElement("div");
   const regionAttr = document.createAttribute("style");
   regionAttr.value = 
-  "width:100%; \
-  height:100%; \
-  display:flex; \
-  flex-direction:column; \
-  justify-content:flex-end; \
-  align-items:center;";
+    "width:100%; \
+    height:100%; \
+    display:flex; \
+    flex-direction:column; \
+    justify-content:flex-end; \
+    align-items:center;";
   region.setAttributeNode(regionAttr);
 
   // Get Header. It may be a class name associated with cue.
@@ -157,7 +154,7 @@ function parseCue(index, linified, styleElements) {
   .filter(f => f.className === header || f.className === "cue")
   .map(f => f.styleContent);
   if(styles) {
-    attr.value += styles.join;
+    attr.value += styles.join();
     spanElement.setAttributeNode(attr);
   }
 
@@ -181,15 +178,17 @@ function parseCue(index, linified, styleElements) {
 }
 
 function parseTimeCode(text) {
-  const both = text.split(" --> ");
+  const splittedText = text.split(/(?:\ |\t)-->(?:\ |\t)/g);
+  const startArray = splittedText[0]
+     .split(":")
+     .map(val => parseFloat(val));
+  const endArray = splittedText[1]
+    .split(" ")[0]
+    .split(":")
+    .map(val => parseFloat(val));
 
-  const s = both[0]
-        .split(":").map(val => parseFloat(val));
-  const e = both[1].split(" ")[0].split(":")
-        .map(val => parseFloat(val));
-
-  const start = s[2] + s[1] * 60 + s[0] * 60 * 60;
-  const end = e[2] + e[1] * 60 + e[0] * 60 * 60;
+  const start = startArray[2] + startArray[1] * 60 + startArray[0] * 60 * 60;
+  const end = endArray[2] + endArray[1] * 60 + endArray[0] * 60 * 60;
 
   return { start, end };
 }
@@ -206,16 +205,15 @@ function parseTimeCode(text) {
   */
 function formatWebVTTtoHTML(text, styleElements){
 
-  const classes = ["U","I","B"];
-  const styleClasses = styleElements.map(f => f.className.toUpperCase());
+  const HTMLTags = ["u","i","b"];
+  const webVTTTags = ["u","i","b","c","#text"];
+  const styleClasses = styleElements.map(f => f.className);
   const filtered = text
     // Remove timestamp tags
     .replace(/<[0-9]{2}:[0-9]{2}.[0-9]{3}>/, "")
     // Remove tag content or attributes (e.g. <b dfgfdg> => <b>)
     .replace(/<([u,i,b,c])((?:\.){0,1}.*?)( .*?){0,1}>(.*?)<\/\1>/g, 
-      "<$1$2>$4</$1$2>")
-    // Remove all unauthorised tags (u,i,b,c.)
-    .replace(/<([^u,i,b,c])((?:\.){0,1}.*?)( .*?){0,1}>(.*?)<\/\1>/g, "$4");
+      "<$1$2>$4</$1$2>");
 
   const parser = new DOMParser();
   const parsedWebVTT = parser.parseFromString(filtered, "text/html");
@@ -233,8 +231,7 @@ function formatWebVTTtoHTML(text, styleElements){
     const parsedNodeArray = [];
     let i = 0;
     for(i = 0; i < nodeToParse.length; i++){
-      parsedNodeArray[i] = setStyleForNode(nodeToParse);
-
+      parsedNodeArray[i] = setStyleForNode(nodeToParse[i]);
       // Parse again node if there is there are inner elements,
       // other than text elements.
       if(parsedNodeArray[i] && parsedNodeArray[i].childNodes.length > 1){
@@ -269,35 +266,49 @@ function formatWebVTTtoHTML(text, styleElements){
       }
     }, []);
 
-    function setStyleForNode(nodeToParse){
+    function setStyleForNode(nodeToStyle){
+      const mainTag = nodeToStyle.nodeName.toLowerCase().split(".")[0];
       let nodeWithStyle;
 
-      const nodeClasses = nodeToParse[i].nodeName.split(".");
-      const classIndexes = [];
-      nodeClasses.forEach(nodeClass => {
-        if(styleClasses.indexOf(nodeClass) !== -1) {
-          classIndexes.push(styleClasses.indexOf(nodeClass));
-        }
-      });
-
-      if(classIndexes.length !== 0) {
-        const attr = document.createAttribute("style");
-        classIndexes.forEach(index => {
-          attr.value += styleElements[index].styleContent;
+      if(webVTTTags.includes(mainTag)) { // If element accepted
+        const nodeClasses = nodeToStyle.nodeName.toLowerCase().split(".");
+        const classIndexes = [];
+        nodeClasses.forEach(nodeClass => {
+          if(styleClasses.indexOf(nodeClass) !== -1) {
+            classIndexes.push(styleClasses.indexOf(nodeClass));
+          }
         });
-        const nameClass = classes[nodeClasses[0]] || "span";
-        const element = document.createElement(nameClass);
-        element.setAttributeNode(attr);
-        element.appendChild(document.createTextNode(nodeToParse[i].innerText));
-        nodeWithStyle = element;
+        if(classIndexes.length !== 0) { // If style must be applied
+          const attr = document.createAttribute("style");
+          classIndexes.forEach(index => {
+            attr.value += styleElements[index].styleContent;
+          });
+          const nameClass = HTMLTags.includes(mainTag) ? mainTag: "span";
+          nodeWithStyle = document.createElement(nameClass);
+          nodeWithStyle.setAttributeNode(attr);
+          for (let j = 0; j < nodeToStyle.childNodes.length; j++) {
+            const child = nodeToStyle.childNodes[j].cloneNode(true);
+            nodeWithStyle.appendChild(child);
+          }
+        } else { // If style must NOT be applied. Rebuild element with tag name
+          const elementTag = (!HTMLTags.includes(mainTag) 
+          && mainTag !== "#text") ? "span" : mainTag;
+          if(elementTag === "#text") {
+            nodeWithStyle = document.createTextNode(nodeToStyle.wholeText);
+          } else {
+            nodeWithStyle = document.createElement(elementTag);
+            for (let j = 0; j < nodeToStyle.childNodes.length; j++) {
+              const child = nodeToStyle.childNodes[j].cloneNode(true);
+              nodeWithStyle.appendChild(child);
+            }
+          }
+        }
       } else {
-        if(!classes.includes(nodeClasses[0]) 
-          && nodeToParse[i].nodeName !== "#text") {
-          const element = document.createTextNode(nodeToParse[i].innerText);
-          nodeWithStyle = element;
-        } else {
-          nodeWithStyle = nodeToParse[i];
-        }      
+        nodeWithStyle = document.createElement("span");
+        for (let j = 0; j < nodeToStyle.childNodes.length; j++) {
+          const child = nodeToStyle.childNodes[j].cloneNode(true);
+          nodeWithStyle.appendChild(child);
+        }
       }
 
       return nodeWithStyle;
@@ -307,5 +318,4 @@ function formatWebVTTtoHTML(text, styleElements){
   }
 
   return parseNode(nodes);
- 
 }
