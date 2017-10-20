@@ -97,13 +97,13 @@ For different streaming technologies.
 
 As in most of the code of the rx-player, everything used in the other parts of the code is exported in the index.js file at the root of this directory.
 
-### <a name="src-parsers"></a>src/parsers/: The parsing and files
+### <a name="src-parsers"></a>src/parsers/: The parsing files
 
-Offers helper functions to parse given formats (isobmff, ttml, sami etc.).
+Functions to parse given formats (isobmff, ttml, sami etc.).
 
 ### <a name="src-utils"></a>src/utils/: The utils
 
-This directory contains a lot of helpers which are used in different parts of the rx-player code.
+This directory contains general helpers which are used in different parts of the rx-player code.
 
 ## <a name="core"></a>The src/core/ directory
 
@@ -125,7 +125,7 @@ Defines the rx-player API. This is the part the library user will directly inter
 
 ### <a name="core-buffer"></a>src/core/buffer/: The Buffer management
 
-Defines the part of the core directly handling the sourceBuffer management logic.
+Defines the part of the core directly handling the SourceBuffer management logic.
 
 The code there calculate which segments should be downloaded, ask for their download and push the segments into the sourceBuffers.
 
@@ -149,7 +149,7 @@ This is the central part which download manifests, initialize MSE and EME APIs, 
 
 The rx-player contains both integration (test the whole player) and unit (test parts of the code) tests.
 
-Integration tests are entirely written in the ``tests/integration`` subdirectory. As for unit tests, they are written alongside the code, this directory only contains the configuration files to launch them.
+Integration tests are entirely written in the ``tests/integration`` subdirectory. As for unit tests, they are written alongside the code, in ``__tests__`` directories, the ``tests/unit`` directory only contains the configuration files to launch them.
 
 ## <a name="tools"></a>The tools/ directory: Tools and scripts
 
