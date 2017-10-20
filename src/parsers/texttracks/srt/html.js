@@ -97,8 +97,15 @@ function parseCue(cueLines) {
 }
 
 /**
- * Take a single srt line and convert it into a span with the right style,
- * while avoiding XSS.
+ * Take a single srt line and convert it into a span with the right style while
+ * avoiding XSS.
+ * What we do is set a whitelist of authorized tags, and recreate the
+ * corresponding tag from scratch.
+ * Supported tags:
+ *   - <b>: make content bold
+ *   - <i>: make content italic
+ *   - <u>: draw underline on content
+ *   - <font color="x">: add color x to the content
  * @param {string} text
  * @returns {HTMLElement}
  */
