@@ -1,3 +1,5 @@
+import parseTimestamp from "../utils/parseTimestamp";
+
 /** 
 * Parse WebVTT from text. Returns an array with:
 * - start : start of current cue, in seconds
@@ -179,16 +181,8 @@ function parseCue(index, linified, styleElements) {
 
 function parseTimeCode(text) {
   const splittedText = text.split(/(?:\ |\t)-->(?:\ |\t)/g);
-  const startArray = splittedText[0]
-     .split(":")
-     .map(val => parseFloat(val));
-  const endArray = splittedText[1]
-    .split(" ")[0]
-    .split(":")
-    .map(val => parseFloat(val));
-
-  const start = startArray[2] + startArray[1] * 60 + startArray[0] * 60 * 60;
-  const end = endArray[2] + endArray[1] * 60 + endArray[0] * 60 * 60;
+  const start = parseTimestamp(splittedText[0]);
+  const end = parseTimestamp(splittedText[1]);
 
   return { start, end };
 }

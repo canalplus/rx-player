@@ -20,11 +20,12 @@
  * @returns {Number}
  */
 export default function parseTimestamp(timestampString) {
-  const splittedTS = timestampString.split(":");
-  if (splittedTS[2]) {
-    const hours = parseInt(splittedTS[0], 10);
+  const splittedTS = timestampString.split(":").reverse();
+  
+  if (splittedTS[2] || splittedTS[1]) {
+    const hours = splittedTS[2] ? parseInt(splittedTS[2], 10) : 0;
     const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[2].replace(",", "."), 10);
+    const seconds = parseFloat(splittedTS[0].replace(",", "."), 10);
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }

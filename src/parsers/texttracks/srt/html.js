@@ -19,7 +19,7 @@
 // Done for fun. Understand <b>, <i>, <u> and <font color="#ff0000" /> type
 // of tags.
 
-import parseTimestamp from "./parseTimestamp.js";
+import parseTimestamp from "../utils/parseTimestamp.js";
 
 /**
  * @param {string}
