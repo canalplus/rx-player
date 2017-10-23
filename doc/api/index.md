@@ -263,23 +263,9 @@ The callback given is optional: if not given, _every_ registered callback to tha
 
 Play/resume the current video. Equivalent to a video element's play method.
 
-Note that a content can be paused even if its current state is ``BUFFERING`` or ``SEEKING``.
-
 #### Example
 ```js
-const resumePausedContent = () => {
-  if (player.getPlayerState() === "PAUSED") {
-    player.play();
-  }
-};
-
-const playLoadedContent = () => {
-  if (player.getPlayerState() === "LOADED") {
-    player.play();
-  }
-};
-
-const justPlayContent = () => {
+const resumeContent = () => {
   player.play();
 };
 ```
@@ -574,12 +560,14 @@ Returns the maximum kept buffer ahead of the current position, in seconds.
 
 _arguments_: ``Boolean``
 
-Switch or exit fullscreen mode. The argument is an optional boolean:
+Switch or exit the ``<video>`` element to fullscreen mode. The argument is an optional boolean:
   - if set:
     - ``true``: enters fullscreen
     - ``false``: exit fullscreen
 
   - if not set: enter fullscreen
+
+Note that __only the video element will be set to fullscreen mode__. You might prefer to implement your own method to include your controls in the final UI.
 
 ### <a name="meth-exitFullscreen"></a>exitFullscreen
 
