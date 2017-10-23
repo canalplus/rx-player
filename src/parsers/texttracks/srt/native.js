@@ -18,7 +18,7 @@
 // Heavily inspired from the WebVTT implementation
 
 import { makeCue } from "../../../compat/index.js";
-import parseTimestamp from "../utils/parseTimestamp.js";
+import parseTimestamp from "./parseTimestamp.js";
 
 /**
  * Parse whole srt file into an array of cues, to be inserted in a video's
