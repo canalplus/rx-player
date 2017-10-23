@@ -105,7 +105,7 @@ function Buffer({
   maxBufferBehind,
   maxBufferAhead,
 
-  // XXX Remove that from here
+  // TODO Remove that from here
   bufferType,   // Buffer type (audio, video, text, image)
   isLive,
 }) {

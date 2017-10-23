@@ -43,6 +43,8 @@ const Player = require("rx-player");
 import Player from "rx-player";
 ```
 
+You can also perform your own [custom build](./doc/api/custom_builds.md) with only the features you need to reduce the file size.
+
 ## Your questions
 
 You can ask directly your questions about the project on [our gitter](https://gitter.im/canalplus/rx-player). We will try our best to answer them as quickly as possible.

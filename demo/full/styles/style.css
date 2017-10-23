@@ -95,6 +95,13 @@ body {
   position: relative;
 }
 
+.text-track {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 100;
+}
+
 .video-player-spinner {
   z-index: 1000;
   position: absolute;

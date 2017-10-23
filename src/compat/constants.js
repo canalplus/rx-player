@@ -20,6 +20,7 @@ const win = window;
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 const HTMLElement_      = win.HTMLElement;
 const HTMLVideoElement_ = win.HTMLVideoElement;
+const VTTCue_ = win.VTTCue || win.TextTrackCue;
 
 const MediaSource_ = (
   win.MediaSource ||
@@ -71,4 +72,5 @@ export {
   isIE,
   isFirefox,
   READY_STATES,
+  VTTCue_,
 };

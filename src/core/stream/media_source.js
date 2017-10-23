@@ -68,18 +68,23 @@ const setDurationToMediaSource = (mediaSource, duration) => {
  * @param {HTMLMediaElement} video
  * @param {Boolean} withMediaSource
  * @param {Object} customBuffers
- * @param {Object} nativeBuffers
+ * @param {Object} sourceBufferMemory
+ * @param {Object} sourceBufferMemory.custom
+ * @param {Object} sourceBufferMemory.native
  * @returns {Observable}
  */
 const createAndPlugMediaSource = (
   url,
   video,
   withMediaSource,
-  customBuffers,
-  nativeBuffers
+  sourceBufferMemory
 ) =>
   Observable.create((observer) => {
     let mediaSource, objectURL;
+    const {
+      native: nativeBuffers,
+      custom: customBuffers,
+    } = sourceBufferMemory;
 
     function resetMediaElement() {
       if (mediaSource && mediaSource.readyState != "closed") {

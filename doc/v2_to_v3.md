@@ -26,6 +26,10 @@ If you don't know if you were using documented APIs, you can still check if the 
     - [defaultLanguage](#cons-defaultLanguage)
     - [defaultSubtitle](#cons-defaultSubtitle)
     - [initVideoBitrate / initAudioBitrate](#cons-initVideoBitrate)
+    - [defaultAudioTrack](#cons-defaultAudioTrack)
+    - [defaultTexTrack](#cons-defaultTexTrack)
+    - [transport](#cons-transport)
+    - [transportOptions](#cons-transportOptions)
 - [loadVideo](#load)
     - [Return value](#load-return)
     - [defaultLanguage parameter](#load-defaultLanguage)
@@ -297,6 +301,30 @@ player = new RxPlayer({
   initialAudioBitrateBitrate: 2e4
 });
 ```
+
+### <a name="cons-defaultAudioTrack"></a>defaultAudioTrack
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``defaultAudioTrack`` option, which has the exact same format.
+
+### <a name="cons-defaultTextTrack"></a>defaultTextTrack
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``defaultTextTrack`` option, which has the exact same format.
+
+### <a name="cons-transport"></a>transport
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``transport`` option, which has the exact same format.
+
+### <a name="cons-transportOptions"></a>transportOptions
+
+#### What changed
+
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport options per-``loadVideo`` calls via its ``transportOptions`` option, which has the exact same format.
 
 ## <a name="load"></a>loadVideo
 
