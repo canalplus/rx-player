@@ -45,7 +45,6 @@ import parseCue from "./parseCue.js";
  * @param {string} str
  * @returns {Array.<Object>} */
 export default function parseTTMLStringToDIV(str) {
-  console.time("toto");
   const ret = [];
   const xml = new DOMParser().parseFromString(str, "text/xml");
 
@@ -123,6 +122,5 @@ export default function parseTTMLStringToDIV(str) {
       }
     }
   }
-  console.timeEnd("toto");
   return ret;
 }

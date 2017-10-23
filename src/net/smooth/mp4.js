@@ -253,18 +253,18 @@ const atoms = {
     let name, handlerName;
 
     switch (type) {
-    case "video":
-      name = "vide";
-      handlerName = "VideoHandler";
-      break;
-    case "audio":
-      name = "soun";
-      handlerName = "SoundHandler";
-      break;
-    default:
-      name = "hint";
-      handlerName = "";
-      break;
+      case "video":
+        name = "vide";
+        handlerName = "VideoHandler";
+        break;
+      case "audio":
+        name = "soun";
+        handlerName = "SoundHandler";
+        break;
+      default:
+        name = "hint";
+        handlerName = "";
+        break;
     }
 
     return Atom("hdlr", concat(

@@ -197,11 +197,11 @@ function TextTrackParser({
       let type;
 
       switch (codec.toLowerCase()) {
-      case "stpp": // stpp === TTML in MP4
-        type = "ttml";
-        break;
-      case "wvtt": // wvtt === WebVTT in MP4
-        type = "vtt";
+        case "stpp": // stpp === TTML in MP4
+          type = "ttml";
+          break;
+        case "wvtt": // wvtt === WebVTT in MP4
+          type = "vtt";
       }
 
       if (!type) {
@@ -219,15 +219,15 @@ function TextTrackParser({
 
       const { mimeType = "" } = representation.mimeType;
       switch (representation.mimeType) {
-      case "application/ttml+xml":
-        type = "ttml";
-        break;
-      case "application/x-sami":
-      case "application/smil":
-        type = "sami";
-        break;
-      case "text/vtt":
-        type = "vtt";
+        case "application/ttml+xml":
+          type = "ttml";
+          break;
+        case "application/x-sami":
+        case "application/smil":
+          type = "sami";
+          break;
+        case "text/vtt":
+          type = "vtt";
       }
 
       if (!type) {

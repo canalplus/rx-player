@@ -85,32 +85,32 @@ export default (self) => ({
     const { type, value } = streamInfos;
 
     switch (type) {
-    case "representationChange":
-      self._priv.onRepresentationChange(value);
-      break;
-    case "manifestUpdate":
-      self._priv.onManifestUpdate(value);
-      break;
-    case "adaptationChange":
-      self._priv.onAdaptationChange(value);
-      break;
-    case "bitrateEstimationChange":
-      self._priv.onBitrateEstimationChange(value);
-      break;
-    case "manifestChange":
-      self._priv.onManifestChange(value);
-      break;
-    case "pipeline":
-      const { bufferType, parsed } = value;
-      if (bufferType === "image") {
-        const value = parsed.segmentData;
+      case "representationChange":
+        self._priv.onRepresentationChange(value);
+        break;
+      case "manifestUpdate":
+        self._priv.onManifestUpdate(value);
+        break;
+      case "adaptationChange":
+        self._priv.onAdaptationChange(value);
+        break;
+      case "bitrateEstimationChange":
+        self._priv.onBitrateEstimationChange(value);
+        break;
+      case "manifestChange":
+        self._priv.onManifestChange(value);
+        break;
+      case "pipeline":
+        const { bufferType, parsed } = value;
+        if (bufferType === "image") {
+          const value = parsed.segmentData;
 
         // TODO merge multiple data from the same track together
-        self._priv.currentImagePlaylist = value;
-        self.trigger("imageTrackUpdate", {
-          data: self._priv.currentImagePlaylist,
-        });
-      }
+          self._priv.currentImagePlaylist = value;
+          self.trigger("imageTrackUpdate", {
+            data: self._priv.currentImagePlaylist,
+          });
+        }
     }
   },
 

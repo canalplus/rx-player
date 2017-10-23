@@ -28,11 +28,11 @@
    else {
      switch(typeof reason) {
 
-     case "string":
-       return `${name} (${code}) ${reason}`;
+       case "string":
+         return `${name} (${code}) ${reason}`;
 
-     default:
-       return `${name} (${code}) ${reason.message}`;
+       default:
+         return `${name} (${code}) ${reason.message}`;
      }
    }
  }
