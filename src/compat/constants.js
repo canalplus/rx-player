@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import MediaError from "../errors/MediaError.js";
+
 const win = window;
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 const HTMLElement_      = win.HTMLElement;

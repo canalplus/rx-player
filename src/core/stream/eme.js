@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { EncryptedMediaError } from "../../errors";
+import EncryptedMediaError from "../../errors/EncryptedMediaError.js";
 import log from "../../utils/log";
 import { createEME, onEncrypted } from "../eme";
 

@@ -16,6 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 
+import MediaError from "../../errors/MediaError.js";
 import log from "../../utils/log";
 import {
   MediaSource_,

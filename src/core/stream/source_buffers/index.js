@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import MediaError from "../../../errors/MediaError.js";
 import log from "../../../utils/log";
 
 import TextSourceBuffer from "./text-buffer.js";
