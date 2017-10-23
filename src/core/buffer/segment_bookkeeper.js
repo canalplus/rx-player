@@ -528,12 +528,15 @@ export default class SegmentBookkeeper {
       prevSegmentI,
       nextSegmentI
     ) {
-
       if (
         !prevSegmentI ||
         prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
       ) {
-        if (wantedRange.start > currentSegmentI.start) {
+        const incertitudeBefore = prevSegmentI ? 
+          Math.max(prevSegmentI.end - MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT, 0) :
+          0;
+        if (wantedRange.start > currentSegmentI.start 
+          || wantedRange.start > incertitudeBefore) {
           const timeDiff = currentSegmentI.bufferedStart - wantedRange.start;
           if (timeDiff > 0) {
             return false;
@@ -553,7 +556,11 @@ export default class SegmentBookkeeper {
           nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
         )
       ) {
-        if (wantedRange.end < currentSegmentI.end) {
+        const incertitudeAfter = nextSegmentI ?
+          (nextSegmentI.start + MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) :
+          Infinity;
+        if (wantedRange.end < currentSegmentI.end || 
+          wantedRange.end < incertitudeAfter) {
           const timeDiff = wantedRange.end - currentSegmentI.bufferedEnd;
           if (timeDiff > 0) {
             return false;
