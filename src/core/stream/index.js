@@ -333,12 +333,12 @@ export default function Stream({
 
       const abr$ = abrManager.get$(bufferType, abrClock$, representations);
       const representation$ = abr$
-          .map(({ representation }) => representation)
-          .distinctUntilChanged((a, b) =>
-            (a && a.bitrate) === (b && b.bitrate) &&
-            (a && a.id) === (b && b.id)
-          )
-          .do(representation => currentRepresentation = representation);
+        .map(({ representation }) => representation)
+        .distinctUntilChanged((a, b) =>
+          (a && a.bitrate) === (b && b.bitrate) &&
+          (a && a.id) === (b && b.id)
+        )
+        .do(representation => currentRepresentation = representation);
 
       const sourceBuffer = createSourceBuffer(
         videoElement,
