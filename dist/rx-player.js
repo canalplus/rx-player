@@ -24198,6 +24198,7 @@ function parseSami(smi, lang) {
         divEl.style.position = "absolute";
         divEl.style.bottom = 0;
         divEl.style.width = "100%";
+        divEl.style.color = "#fff";
         divEl.style.textShadow = "-1px -1px 0 #000," + "1px -1px 0 #000," + "-1px 1px 0 #000," + "1px 1px 0 #000";
 
         var pEl = document.createElement("div");
