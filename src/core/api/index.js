@@ -1068,7 +1068,7 @@ class Player extends EventEmitter {
   setAudioTrack(audioId) {
     assert(this._priv.languageManager, "No compatible content launched.");
     try {
-      this._priv.languageManager.setAudioTrack(audioId);
+      this._priv.languageManager.setAudioTrackByID(audioId);
     }
     catch (e) {
       throw new Error("player: unknown audio track");
@@ -1082,7 +1082,7 @@ class Player extends EventEmitter {
   setTextTrack(textId) {
     assert(this._priv.languageManager, "No compatible content launched.");
     try {
-      this._priv.languageManager.setTextTrack(textId);
+      this._priv.languageManager.setTextTrackByID(textId);
     }
     catch (e) {
       throw new Error("player: unknown text track");

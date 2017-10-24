@@ -535,7 +535,7 @@ export default class SegmentBookkeeper {
         const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
         if (wantedRange.start > currentSegmentI.start) {
           const wantedDiff = currentSegmentI.bufferedStart - wantedRange.start;
-          if (wantedDiff > 0 && timeDiff 
+          if (wantedDiff > 0 && timeDiff
             > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
@@ -543,11 +543,11 @@ export default class SegmentBookkeeper {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
-        } 
+        }
       }
 
       if (currentSegmentI.end === null) {
-        return false;  
+        return false;
       } else if (
           !nextSegmentI ||
           nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
@@ -555,7 +555,7 @@ export default class SegmentBookkeeper {
         const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
         if (wantedRange.end < currentSegmentI.end) {
           const wantedDiff = wantedRange.end - currentSegmentI.bufferedEnd;
-          if (wantedDiff > 0 && timeDiff 
+          if (wantedDiff > 0 && timeDiff
             > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
@@ -564,7 +564,7 @@ export default class SegmentBookkeeper {
             return false;
           }
         }
-      } 
+      }
       return true;
     }
   }

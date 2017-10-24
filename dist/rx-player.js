@@ -83,7 +83,7 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 var root_1 = __webpack_require__(15);
-var toSubscriber_1 = __webpack_require__(291);
+var toSubscriber_1 = __webpack_require__(290);
 var observable_1 = __webpack_require__(56);
 /**
  * A representation of any set of values over any amount of time. This is the most basic building block
@@ -2518,7 +2518,7 @@ var isObject_1 = __webpack_require__(94);
 var isFunction_1 = __webpack_require__(59);
 var tryCatch_1 = __webpack_require__(60);
 var errorObject_1 = __webpack_require__(34);
-var UnsubscriptionError_1 = __webpack_require__(290);
+var UnsubscriptionError_1 = __webpack_require__(289);
 /**
  * Represents a disposable resource, such as the execution of an Observable. A
  * Subscription has one important method, `unsubscribe`, that takes no argument
@@ -2730,7 +2730,7 @@ exports.root = _root;
     }
 })();
 //# sourceMappingURL=root.js.map
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(292)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(291)))
 
 /***/ }),
 /* 16 */
@@ -2744,7 +2744,7 @@ var isPromise_1 = __webpack_require__(95);
 var isObject_1 = __webpack_require__(94);
 var Observable_1 = __webpack_require__(0);
 var iterator_1 = __webpack_require__(55);
-var InnerSubscriber_1 = __webpack_require__(199);
+var InnerSubscriber_1 = __webpack_require__(198);
 var observable_1 = __webpack_require__(56);
 function subscribeToResult(outerSubscriber, result, outerValue, outerIndex) {
     var destination = new InnerSubscriber_1.InnerSubscriber(outerSubscriber, outerValue, outerIndex);
@@ -7193,7 +7193,7 @@ exports.MergeAllSubscriber = MergeAllSubscriber;
 
 "use strict";
 
-var ConnectableObservable_1 = __webpack_require__(241);
+var ConnectableObservable_1 = __webpack_require__(240);
 /* tslint:enable:max-line-length */
 /**
  * Returns an Observable that emits the results of invoking a specified selector on items
@@ -9389,7 +9389,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Subject_1 = __webpack_require__(7);
-var queue_1 = __webpack_require__(288);
+var queue_1 = __webpack_require__(287);
 var Subscription_1 = __webpack_require__(14);
 var observeOn_1 = __webpack_require__(87);
 var ObjectUnsubscribedError_1 = __webpack_require__(58);
@@ -10178,7 +10178,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Subscriber_1 = __webpack_require__(3);
-var Notification_1 = __webpack_require__(200);
+var Notification_1 = __webpack_require__(199);
 /**
  *
  * Re-emits all notifications from source Observable with specified scheduler.
@@ -10297,7 +10297,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var root_1 = __webpack_require__(15);
-var Action_1 = __webpack_require__(285);
+var Action_1 = __webpack_require__(284);
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -10444,7 +10444,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var Scheduler_1 = __webpack_require__(201);
+var Scheduler_1 = __webpack_require__(200);
 var AsyncScheduler = (function (_super) {
     __extends(AsyncScheduler, _super);
     function AsyncScheduler() {
@@ -10601,81 +10601,81 @@ exports.noop = noop;
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_add_observable_combineLatest__ = __webpack_require__(202);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_add_observable_combineLatest__ = __webpack_require__(201);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_add_observable_combineLatest___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_add_observable_combineLatest__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_add_observable_defer__ = __webpack_require__(203);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_add_observable_defer__ = __webpack_require__(202);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_add_observable_defer___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_add_observable_defer__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_observable_empty__ = __webpack_require__(204);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_observable_empty__ = __webpack_require__(203);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_observable_empty___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_add_observable_empty__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_add_observable_from__ = __webpack_require__(205);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_add_observable_from__ = __webpack_require__(204);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_add_observable_from___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_add_observable_from__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromEvent__ = __webpack_require__(206);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromEvent__ = __webpack_require__(205);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromEvent___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromEvent__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_add_observable_fromPromise__ = __webpack_require__(207);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_add_observable_fromPromise__ = __webpack_require__(206);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_add_observable_fromPromise___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_add_observable_fromPromise__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_interval__ = __webpack_require__(208);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_interval__ = __webpack_require__(207);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_interval___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_add_observable_interval__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_add_observable_merge__ = __webpack_require__(209);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_add_observable_merge__ = __webpack_require__(208);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_rxjs_add_observable_merge___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_rxjs_add_observable_merge__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_add_observable_never__ = __webpack_require__(210);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_add_observable_never__ = __webpack_require__(209);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_rxjs_add_observable_never___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_rxjs_add_observable_never__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_rxjs_add_observable_of__ = __webpack_require__(211);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_rxjs_add_observable_of__ = __webpack_require__(210);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_rxjs_add_observable_of___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9_rxjs_add_observable_of__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_rxjs_add_observable_throw__ = __webpack_require__(212);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_rxjs_add_observable_throw__ = __webpack_require__(211);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_rxjs_add_observable_throw___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_10_rxjs_add_observable_throw__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_rxjs_add_observable_timer__ = __webpack_require__(213);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_rxjs_add_observable_timer__ = __webpack_require__(212);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_rxjs_add_observable_timer___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_11_rxjs_add_observable_timer__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_rxjs_add_operator_catch__ = __webpack_require__(214);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_rxjs_add_operator_catch__ = __webpack_require__(213);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_rxjs_add_operator_catch___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_12_rxjs_add_operator_catch__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_rxjs_add_operator_concat__ = __webpack_require__(215);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_rxjs_add_operator_concat__ = __webpack_require__(214);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_rxjs_add_operator_concat___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_13_rxjs_add_operator_concat__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14_rxjs_add_operator_concatAll__ = __webpack_require__(216);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14_rxjs_add_operator_concatAll__ = __webpack_require__(215);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14_rxjs_add_operator_concatAll___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_14_rxjs_add_operator_concatAll__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15_rxjs_add_operator_concatMap__ = __webpack_require__(217);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15_rxjs_add_operator_concatMap__ = __webpack_require__(216);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_15_rxjs_add_operator_concatMap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_15_rxjs_add_operator_concatMap__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16_rxjs_add_operator_debounceTime__ = __webpack_require__(218);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16_rxjs_add_operator_debounceTime__ = __webpack_require__(217);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16_rxjs_add_operator_debounceTime___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_16_rxjs_add_operator_debounceTime__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17_rxjs_add_operator_distinctUntilChanged__ = __webpack_require__(219);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17_rxjs_add_operator_distinctUntilChanged__ = __webpack_require__(218);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_17_rxjs_add_operator_distinctUntilChanged___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_17_rxjs_add_operator_distinctUntilChanged__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18_rxjs_add_operator_do__ = __webpack_require__(220);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18_rxjs_add_operator_do__ = __webpack_require__(219);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_18_rxjs_add_operator_do___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_18_rxjs_add_operator_do__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19_rxjs_add_operator_filter__ = __webpack_require__(221);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19_rxjs_add_operator_filter__ = __webpack_require__(220);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_19_rxjs_add_operator_filter___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_19_rxjs_add_operator_filter__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20_rxjs_add_operator_finally__ = __webpack_require__(222);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20_rxjs_add_operator_finally__ = __webpack_require__(221);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_20_rxjs_add_operator_finally___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_20_rxjs_add_operator_finally__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21_rxjs_add_operator_ignoreElements__ = __webpack_require__(223);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21_rxjs_add_operator_ignoreElements__ = __webpack_require__(222);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_21_rxjs_add_operator_ignoreElements___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_21_rxjs_add_operator_ignoreElements__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22_rxjs_add_operator_map__ = __webpack_require__(224);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22_rxjs_add_operator_map__ = __webpack_require__(223);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_22_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_22_rxjs_add_operator_map__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23_rxjs_add_operator_mapTo__ = __webpack_require__(225);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23_rxjs_add_operator_mapTo__ = __webpack_require__(224);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_23_rxjs_add_operator_mapTo___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_23_rxjs_add_operator_mapTo__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24_rxjs_add_operator_merge__ = __webpack_require__(226);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24_rxjs_add_operator_merge__ = __webpack_require__(225);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_24_rxjs_add_operator_merge___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_24_rxjs_add_operator_merge__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25_rxjs_add_operator_mergeMap__ = __webpack_require__(227);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25_rxjs_add_operator_mergeMap__ = __webpack_require__(226);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_25_rxjs_add_operator_mergeMap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_25_rxjs_add_operator_mergeMap__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26_rxjs_add_operator_multicast__ = __webpack_require__(228);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26_rxjs_add_operator_multicast__ = __webpack_require__(227);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_26_rxjs_add_operator_multicast___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_26_rxjs_add_operator_multicast__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27_rxjs_add_operator_pairwise__ = __webpack_require__(229);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27_rxjs_add_operator_pairwise__ = __webpack_require__(228);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_27_rxjs_add_operator_pairwise___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_27_rxjs_add_operator_pairwise__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28_rxjs_add_operator_publish__ = __webpack_require__(230);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28_rxjs_add_operator_publish__ = __webpack_require__(229);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_28_rxjs_add_operator_publish___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_28_rxjs_add_operator_publish__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_29_rxjs_add_operator_scan__ = __webpack_require__(231);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_29_rxjs_add_operator_scan__ = __webpack_require__(230);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_29_rxjs_add_operator_scan___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_29_rxjs_add_operator_scan__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30_rxjs_add_operator_share__ = __webpack_require__(232);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_30_rxjs_add_operator_share__ = __webpack_require__(231);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_30_rxjs_add_operator_share___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_30_rxjs_add_operator_share__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31_rxjs_add_operator_skip__ = __webpack_require__(233);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31_rxjs_add_operator_skip__ = __webpack_require__(232);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_31_rxjs_add_operator_skip___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_31_rxjs_add_operator_skip__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32_rxjs_add_operator_startWith__ = __webpack_require__(234);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_32_rxjs_add_operator_startWith__ = __webpack_require__(233);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_32_rxjs_add_operator_startWith___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_32_rxjs_add_operator_startWith__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_33_rxjs_add_operator_switchMap__ = __webpack_require__(235);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_33_rxjs_add_operator_switchMap__ = __webpack_require__(234);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_33_rxjs_add_operator_switchMap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_33_rxjs_add_operator_switchMap__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_34_rxjs_add_operator_switchMapTo__ = __webpack_require__(236);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_34_rxjs_add_operator_switchMapTo__ = __webpack_require__(235);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_34_rxjs_add_operator_switchMapTo___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_34_rxjs_add_operator_switchMapTo__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_35_rxjs_add_operator_take__ = __webpack_require__(237);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_35_rxjs_add_operator_take__ = __webpack_require__(236);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_35_rxjs_add_operator_take___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_35_rxjs_add_operator_take__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_36_rxjs_add_operator_takeUntil__ = __webpack_require__(238);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_36_rxjs_add_operator_takeUntil__ = __webpack_require__(237);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_36_rxjs_add_operator_takeUntil___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_36_rxjs_add_operator_takeUntil__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_37_rxjs_add_operator_timeout__ = __webpack_require__(239);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_37_rxjs_add_operator_timeout__ = __webpack_require__(238);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_37_rxjs_add_operator_timeout___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_37_rxjs_add_operator_timeout__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_38__utils_log_js__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__core_api__ = __webpack_require__(108);
@@ -13383,7 +13383,7 @@ var Player = function (_EventEmitter) {
   Player.prototype.setAudioTrack = function setAudioTrack(audioId) {
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_7__utils_assert__["a" /* default */])(this._priv.languageManager, "No compatible content launched.");
     try {
-      this._priv.languageManager.setAudioTrack(audioId);
+      this._priv.languageManager.setAudioTrackByID(audioId);
     } catch (e) {
       throw new Error("player: unknown audio track");
     }
@@ -13398,7 +13398,7 @@ var Player = function (_EventEmitter) {
   Player.prototype.setTextTrack = function setTextTrack(textId) {
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_7__utils_assert__["a" /* default */])(this._priv.languageManager, "No compatible content launched.");
     try {
-      this._priv.languageManager.setTextTrack(textId);
+      this._priv.languageManager.setTextTrackByID(textId);
     } catch (e) {
       throw new Error("player: unknown text track");
     }
@@ -13491,8 +13491,6 @@ function inferPlayerState(isPlaying, stalled) {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_array_find__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_next_tick__ = __webpack_require__(198);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_next_tick___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_next_tick__);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -13513,7 +13511,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
 
-
 /**
  * Try to find the given track config in the adaptations given:
  *
@@ -13524,7 +13521,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * @param {Object} trackConfig
  * @param {string} trackConfig.language
  * @param {string} trackConfig.normalized
- * @param {string} trackConfig.closedCaption
+ * @param {Boolean} trackConfig.closedCaption
  * @return {null|undefined|Object}
  */
 var findTextAdaptation = function findTextAdaptation(adaptations, trackConfig) {
@@ -13579,9 +13576,6 @@ var findAudioAdaptation = function findAudioAdaptation(adaptations, trackConfig)
 
 var LanguageManager = function () {
   /**
-   * Set the adaptations from where to choose from and find the default
-   * audio/text track.
-   *
    * @constructor
    *
    * @param {Object} adaptations
@@ -13597,62 +13591,24 @@ var LanguageManager = function () {
    * audio adaptation will be emitted.
    * @param {Subject} adaptations$.text$ - Subject through which the chosen
    * text adaptation will be emitted
-   *
-   * @param {Object} [options={}]
-   * @param {Object} [options.defaultTextTrack] - The language and closedCaption
-   * status of the text track chosen by default. If not set, the first
-   * adaptation will be taken instead.
-   * @param {Object} [options.defaultAudioTrack] - The language and
-   * audiodescription status of the audio track chosen by default.
-   * If not set, the first adaptation will be taken instead.
    */
   function LanguageManager(_ref, _ref2) {
     var text = _ref.text,
         audio = _ref.audio;
-
-    var _this = this;
-
     var text$ = _ref2.text$,
         audio$ = _ref2.audio$;
-    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
     _classCallCheck(this, LanguageManager);
-
-    var defaultAudioTrack = options.defaultAudioTrack,
-        defaultTextTrack = options.defaultTextTrack;
-
 
     var textAdaptations = text || [];
     var audioAdaptations = audio || [];
 
-    // set class context
-    this._currentAudioAdaptation = null;
-    this._currentTextAdaptation = null;
+    this._currentAudioAdaptation = undefined;
+    this._currentTextAdaptation = undefined;
     this._textAdaptations = textAdaptations;
     this._audioAdaptations = audioAdaptations;
     this._text$ = text$;
     this._audio$ = audio$;
-
-    if (audio$) {
-      // emit initial adaptations
-      var initialAudioAdaptation = defaultAudioTrack ? findAudioAdaptation(audioAdaptations, defaultAudioTrack) || audioAdaptations[0] : audioAdaptations[0];
-      this._currentAudioAdaptation = initialAudioAdaptation;
-
-      // wait for the constructor to finish before emitting the chosen track
-      __WEBPACK_IMPORTED_MODULE_1_next_tick___default()(function () {
-        audio$.next(_this._currentAudioAdaptation);
-      });
-    }
-
-    if (text$) {
-      var initialTextAdaptation = defaultTextTrack ? findTextAdaptation(textAdaptations, defaultTextTrack) || null : null;
-      this._currentTextAdaptation = initialTextAdaptation;
-
-      // wait for the constructor to finish before emitting the chosen track
-      __WEBPACK_IMPORTED_MODULE_1_next_tick___default()(function () {
-        text$.next(_this._currentTextAdaptation);
-      });
-    }
   }
 
   LanguageManager.prototype.updateAdaptations = function updateAdaptations(_ref3) {
@@ -13679,8 +13635,11 @@ var LanguageManager = function () {
         audioDescription: !!currentAudioAdaptation.isAudioDescription
       });
 
-      this._currentAudioAdaptation = foundTrack || audio[0];
-      this._audio$.next(this._currentAudioAdaptation);
+      var chosenTrack = foundTrack || audio[0] || null;
+      if (this._currentAudioAdaptation !== chosenTrack) {
+        this._currentAudioAdaptation = chosenTrack;
+        this._audio$.next(this._currentAudioAdaptation);
+      }
     }
 
     var currentTextAdaptation = this._currentTextAdaptation;
@@ -13700,7 +13659,52 @@ var LanguageManager = function () {
         closedCaption: !!currentTextAdaptation.isClosedCaption
       });
 
-      this._currentTextAdaptation = _foundTrack || text[0];
+      var _chosenTrack = _foundTrack || text[0];
+      if (this._currentTextAdaptation !== _chosenTrack) {
+        this._currentTextAdaptation = _chosenTrack;
+        this._text$.next(this._currentTextAdaptation);
+      }
+    }
+  };
+
+  /**
+   * Set the audio track based on its configuration.
+   * @param {Object} wantedTrack
+   * @param {string} wantedTrack.language
+   * @param {string} wantedTrack.normalized
+   * @param {Boolean} wantedTrack.audioDescription
+   */
+
+
+  LanguageManager.prototype.setAudioTrackByConfiguration = function setAudioTrackByConfiguration(wantedTrack) {
+    var chosenAdaptation = wantedTrack ? findAudioAdaptation(this._audioAdaptations, wantedTrack) || this._audioAdaptations[0] : this._audioAdaptations[0];
+
+    if (chosenAdaptation === undefined) {
+      throw new Error("Audio Track not found.");
+    }
+    if (chosenAdaptation !== this._currentAudioAdaptation) {
+      this._currentAudioAdaptation = chosenAdaptation;
+      this._audio$.next(this._currentAudioAdaptation);
+    }
+  };
+
+  /**
+   * Set the text track based on its configuration.
+   * @param {Object} wantedTrack
+   * @param {string} wantedTrack.language
+   * @param {string} wantedTrack.normalized
+   * @param {Boolean} wantedTrack.closedCaption
+   */
+
+
+  LanguageManager.prototype.setTextTrackByConfiguration = function setTextTrackByConfiguration(wantedTrack) {
+    var chosenAdaptation = wantedTrack ? findTextAdaptation(this._textAdaptations, wantedTrack) || null : null;
+
+    if (chosenAdaptation === undefined) {
+      throw new Error("Text Track not found.");
+    }
+    if (chosenAdaptation !== this._currentTextAdaptation) {
+      this._currentTextAdaptation = chosenAdaptation;
       this._text$.next(this._currentTextAdaptation);
     }
   };
@@ -13711,7 +13715,7 @@ var LanguageManager = function () {
    */
 
 
-  LanguageManager.prototype.setAudioTrack = function setAudioTrack(wantedId) {
+  LanguageManager.prototype.setAudioTrackByID = function setAudioTrackByID(wantedId) {
     var foundTrack = __WEBPACK_IMPORTED_MODULE_0_array_find___default()(this._audioAdaptations, function (_ref6) {
       var id = _ref6.id;
       return id === wantedId;
@@ -13721,8 +13725,10 @@ var LanguageManager = function () {
       throw new Error("Audio Track not found.");
     }
 
-    this._currentAudioAdaptation = foundTrack;
-    this._audio$.next(this._currentAudioAdaptation);
+    if (this._currentAudioAdaptation !== foundTrack) {
+      this._currentAudioAdaptation = foundTrack;
+      this._audio$.next(this._currentAudioAdaptation);
+    }
   };
 
   /**
@@ -13731,7 +13737,7 @@ var LanguageManager = function () {
    */
 
 
-  LanguageManager.prototype.setTextTrack = function setTextTrack(wantedId) {
+  LanguageManager.prototype.setTextTrackByID = function setTextTrackByID(wantedId) {
     var foundTrack = __WEBPACK_IMPORTED_MODULE_0_array_find___default()(this._textAdaptations, function (_ref7) {
       var id = _ref7.id;
       return id === wantedId;
@@ -13741,11 +13747,16 @@ var LanguageManager = function () {
       throw new Error("Text Track not found.");
     }
 
-    this._currentTextAdaptation = foundTrack;
-    this._text$.next(this._currentTextAdaptation);
+    if (this._currentTextAdaptation !== foundTrack) {
+      this._currentTextAdaptation = foundTrack;
+      this._text$.next(this._currentTextAdaptation);
+    }
   };
 
   LanguageManager.prototype.disableTextTrack = function disableTextTrack() {
+    if (this._currentTextAdaptation === null) {
+      return;
+    }
     this._currentTextAdaptation = null;
     this._text$.next(this._currentTextAdaptation);
   };
@@ -14139,15 +14150,16 @@ function parseLoadVideoOptions() {
       self._priv.languageManager = new __WEBPACK_IMPORTED_MODULE_5__language_manager_js__["a" /* default */](manifest.adaptations, {
         audio$: adaptations$.audio,
         text$: adaptations$.text
-      }, {
-        defaultAudioTrack: self._priv.initialAudioTrack,
-        defaultTextTrack: self._priv.initialTextTrack
       });
 
-      // Set first adaptation for the rest
+      // Set first adaptation chosen
       Object.keys(adaptations$).forEach(function (type) {
-        // audio and text is already completely managed by the languageManager
-        if (type !== "audio" && type !== "text") {
+        // audio and text are completely managed by the languageManager
+        if (type === "audio") {
+          self._priv.languageManager.setAudioTrackByConfiguration(self._priv.initialAudioTrack);
+        } else if (type === "text") {
+          self._priv.languageManager.setTextTrackByConfiguration(self._priv.initialTextTrack);
+        } else {
           var adaptations = manifest.adaptations[type] || [];
           adaptations$[type].next(adaptations[0] || null);
         }
@@ -27150,84 +27162,6 @@ function shim (obj) {
 
 "use strict";
 
-
-var callable, byObserver;
-
-callable = function (fn) {
-	if (typeof fn !== 'function') throw new TypeError(fn + " is not a function");
-	return fn;
-};
-
-byObserver = function (Observer) {
-	var node = document.createTextNode(''), queue, currentQueue, i = 0;
-	new Observer(function () {
-		var callback;
-		if (!queue) {
-			if (!currentQueue) return;
-			queue = currentQueue;
-		} else if (currentQueue) {
-			queue = currentQueue.concat(queue);
-		}
-		currentQueue = queue;
-		queue = null;
-		if (typeof currentQueue === 'function') {
-			callback = currentQueue;
-			currentQueue = null;
-			callback();
-			return;
-		}
-		node.data = (i = ++i % 2); // Invoke other batch, to handle leftover callbacks in case of crash
-		while (currentQueue) {
-			callback = currentQueue.shift();
-			if (!currentQueue.length) currentQueue = null;
-			callback();
-		}
-	}).observe(node, { characterData: true });
-	return function (fn) {
-		callable(fn);
-		if (queue) {
-			if (typeof queue === 'function') queue = [queue, fn];
-			else queue.push(fn);
-			return;
-		}
-		queue = fn;
-		node.data = (i = ++i % 2);
-	};
-};
-
-module.exports = (function () {
-	// Node.js
-	if ((typeof process === 'object') && process && (typeof process.nextTick === 'function')) {
-		return process.nextTick;
-	}
-
-	// MutationObserver
-	if ((typeof document === 'object') && document) {
-		if (typeof MutationObserver === 'function') return byObserver(MutationObserver);
-		if (typeof WebKitMutationObserver === 'function') return byObserver(WebKitMutationObserver);
-	}
-
-	// W3C Draft
-	// http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/setImmediate/Overview.html
-	if (typeof setImmediate === 'function') {
-		return function (cb) { setImmediate(callable(cb)); };
-	}
-
-	// Wide available standard
-	if ((typeof setTimeout === 'function') || (typeof setTimeout === 'object')) {
-		return function (cb) { setTimeout(callable(cb), 0); };
-	}
-
-	return null;
-}());
-
-
-/***/ }),
-/* 199 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -27265,7 +27199,7 @@ exports.InnerSubscriber = InnerSubscriber;
 //# sourceMappingURL=InnerSubscriber.js.map
 
 /***/ }),
-/* 200 */
+/* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27398,7 +27332,7 @@ exports.Notification = Notification;
 //# sourceMappingURL=Notification.js.map
 
 /***/ }),
-/* 201 */
+/* 200 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27453,15 +27387,26 @@ exports.Scheduler = Scheduler;
 //# sourceMappingURL=Scheduler.js.map
 
 /***/ }),
+/* 201 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Observable_1 = __webpack_require__(0);
+var combineLatest_1 = __webpack_require__(249);
+Observable_1.Observable.combineLatest = combineLatest_1.combineLatest;
+//# sourceMappingURL=combineLatest.js.map
+
+/***/ }),
 /* 202 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var combineLatest_1 = __webpack_require__(250);
-Observable_1.Observable.combineLatest = combineLatest_1.combineLatest;
-//# sourceMappingURL=combineLatest.js.map
+var defer_1 = __webpack_require__(250);
+Observable_1.Observable.defer = defer_1.defer;
+//# sourceMappingURL=defer.js.map
 
 /***/ }),
 /* 203 */
@@ -27470,9 +27415,9 @@ Observable_1.Observable.combineLatest = combineLatest_1.combineLatest;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var defer_1 = __webpack_require__(251);
-Observable_1.Observable.defer = defer_1.defer;
-//# sourceMappingURL=defer.js.map
+var empty_1 = __webpack_require__(251);
+Observable_1.Observable.empty = empty_1.empty;
+//# sourceMappingURL=empty.js.map
 
 /***/ }),
 /* 204 */
@@ -27481,9 +27426,9 @@ Observable_1.Observable.defer = defer_1.defer;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var empty_1 = __webpack_require__(252);
-Observable_1.Observable.empty = empty_1.empty;
-//# sourceMappingURL=empty.js.map
+var from_1 = __webpack_require__(252);
+Observable_1.Observable.from = from_1.from;
+//# sourceMappingURL=from.js.map
 
 /***/ }),
 /* 205 */
@@ -27492,9 +27437,9 @@ Observable_1.Observable.empty = empty_1.empty;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var from_1 = __webpack_require__(253);
-Observable_1.Observable.from = from_1.from;
-//# sourceMappingURL=from.js.map
+var fromEvent_1 = __webpack_require__(253);
+Observable_1.Observable.fromEvent = fromEvent_1.fromEvent;
+//# sourceMappingURL=fromEvent.js.map
 
 /***/ }),
 /* 206 */
@@ -27503,9 +27448,9 @@ Observable_1.Observable.from = from_1.from;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var fromEvent_1 = __webpack_require__(254);
-Observable_1.Observable.fromEvent = fromEvent_1.fromEvent;
-//# sourceMappingURL=fromEvent.js.map
+var fromPromise_1 = __webpack_require__(254);
+Observable_1.Observable.fromPromise = fromPromise_1.fromPromise;
+//# sourceMappingURL=fromPromise.js.map
 
 /***/ }),
 /* 207 */
@@ -27514,9 +27459,9 @@ Observable_1.Observable.fromEvent = fromEvent_1.fromEvent;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var fromPromise_1 = __webpack_require__(255);
-Observable_1.Observable.fromPromise = fromPromise_1.fromPromise;
-//# sourceMappingURL=fromPromise.js.map
+var interval_1 = __webpack_require__(255);
+Observable_1.Observable.interval = interval_1.interval;
+//# sourceMappingURL=interval.js.map
 
 /***/ }),
 /* 208 */
@@ -27525,9 +27470,9 @@ Observable_1.Observable.fromPromise = fromPromise_1.fromPromise;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var interval_1 = __webpack_require__(256);
-Observable_1.Observable.interval = interval_1.interval;
-//# sourceMappingURL=interval.js.map
+var merge_1 = __webpack_require__(256);
+Observable_1.Observable.merge = merge_1.merge;
+//# sourceMappingURL=merge.js.map
 
 /***/ }),
 /* 209 */
@@ -27536,9 +27481,9 @@ Observable_1.Observable.interval = interval_1.interval;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var merge_1 = __webpack_require__(257);
-Observable_1.Observable.merge = merge_1.merge;
-//# sourceMappingURL=merge.js.map
+var never_1 = __webpack_require__(257);
+Observable_1.Observable.never = never_1.never;
+//# sourceMappingURL=never.js.map
 
 /***/ }),
 /* 210 */
@@ -27547,9 +27492,9 @@ Observable_1.Observable.merge = merge_1.merge;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var never_1 = __webpack_require__(258);
-Observable_1.Observable.never = never_1.never;
-//# sourceMappingURL=never.js.map
+var of_1 = __webpack_require__(258);
+Observable_1.Observable.of = of_1.of;
+//# sourceMappingURL=of.js.map
 
 /***/ }),
 /* 211 */
@@ -27558,9 +27503,9 @@ Observable_1.Observable.never = never_1.never;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var of_1 = __webpack_require__(259);
-Observable_1.Observable.of = of_1.of;
-//# sourceMappingURL=of.js.map
+var throw_1 = __webpack_require__(259);
+Observable_1.Observable.throw = throw_1._throw;
+//# sourceMappingURL=throw.js.map
 
 /***/ }),
 /* 212 */
@@ -27569,9 +27514,9 @@ Observable_1.Observable.of = of_1.of;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var throw_1 = __webpack_require__(260);
-Observable_1.Observable.throw = throw_1._throw;
-//# sourceMappingURL=throw.js.map
+var timer_1 = __webpack_require__(260);
+Observable_1.Observable.timer = timer_1.timer;
+//# sourceMappingURL=timer.js.map
 
 /***/ }),
 /* 213 */
@@ -27580,24 +27525,13 @@ Observable_1.Observable.throw = throw_1._throw;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var timer_1 = __webpack_require__(261);
-Observable_1.Observable.timer = timer_1.timer;
-//# sourceMappingURL=timer.js.map
-
-/***/ }),
-/* 214 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var Observable_1 = __webpack_require__(0);
-var catch_1 = __webpack_require__(262);
+var catch_1 = __webpack_require__(261);
 Observable_1.Observable.prototype.catch = catch_1._catch;
 Observable_1.Observable.prototype._catch = catch_1._catch;
 //# sourceMappingURL=catch.js.map
 
 /***/ }),
-/* 215 */
+/* 214 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27608,15 +27542,26 @@ Observable_1.Observable.prototype.concat = concat_1.concat;
 //# sourceMappingURL=concat.js.map
 
 /***/ }),
+/* 215 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Observable_1 = __webpack_require__(0);
+var concatAll_1 = __webpack_require__(263);
+Observable_1.Observable.prototype.concatAll = concatAll_1.concatAll;
+//# sourceMappingURL=concatAll.js.map
+
+/***/ }),
 /* 216 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var concatAll_1 = __webpack_require__(264);
-Observable_1.Observable.prototype.concatAll = concatAll_1.concatAll;
-//# sourceMappingURL=concatAll.js.map
+var concatMap_1 = __webpack_require__(264);
+Observable_1.Observable.prototype.concatMap = concatMap_1.concatMap;
+//# sourceMappingURL=concatMap.js.map
 
 /***/ }),
 /* 217 */
@@ -27625,9 +27570,9 @@ Observable_1.Observable.prototype.concatAll = concatAll_1.concatAll;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var concatMap_1 = __webpack_require__(265);
-Observable_1.Observable.prototype.concatMap = concatMap_1.concatMap;
-//# sourceMappingURL=concatMap.js.map
+var debounceTime_1 = __webpack_require__(265);
+Observable_1.Observable.prototype.debounceTime = debounceTime_1.debounceTime;
+//# sourceMappingURL=debounceTime.js.map
 
 /***/ }),
 /* 218 */
@@ -27636,9 +27581,9 @@ Observable_1.Observable.prototype.concatMap = concatMap_1.concatMap;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var debounceTime_1 = __webpack_require__(266);
-Observable_1.Observable.prototype.debounceTime = debounceTime_1.debounceTime;
-//# sourceMappingURL=debounceTime.js.map
+var distinctUntilChanged_1 = __webpack_require__(266);
+Observable_1.Observable.prototype.distinctUntilChanged = distinctUntilChanged_1.distinctUntilChanged;
+//# sourceMappingURL=distinctUntilChanged.js.map
 
 /***/ }),
 /* 219 */
@@ -27647,9 +27592,10 @@ Observable_1.Observable.prototype.debounceTime = debounceTime_1.debounceTime;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var distinctUntilChanged_1 = __webpack_require__(267);
-Observable_1.Observable.prototype.distinctUntilChanged = distinctUntilChanged_1.distinctUntilChanged;
-//# sourceMappingURL=distinctUntilChanged.js.map
+var do_1 = __webpack_require__(267);
+Observable_1.Observable.prototype.do = do_1._do;
+Observable_1.Observable.prototype._do = do_1._do;
+//# sourceMappingURL=do.js.map
 
 /***/ }),
 /* 220 */
@@ -27658,10 +27604,9 @@ Observable_1.Observable.prototype.distinctUntilChanged = distinctUntilChanged_1.
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var do_1 = __webpack_require__(268);
-Observable_1.Observable.prototype.do = do_1._do;
-Observable_1.Observable.prototype._do = do_1._do;
-//# sourceMappingURL=do.js.map
+var filter_1 = __webpack_require__(268);
+Observable_1.Observable.prototype.filter = filter_1.filter;
+//# sourceMappingURL=filter.js.map
 
 /***/ }),
 /* 221 */
@@ -27670,9 +27615,10 @@ Observable_1.Observable.prototype._do = do_1._do;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var filter_1 = __webpack_require__(269);
-Observable_1.Observable.prototype.filter = filter_1.filter;
-//# sourceMappingURL=filter.js.map
+var finally_1 = __webpack_require__(269);
+Observable_1.Observable.prototype.finally = finally_1._finally;
+Observable_1.Observable.prototype._finally = finally_1._finally;
+//# sourceMappingURL=finally.js.map
 
 /***/ }),
 /* 222 */
@@ -27681,10 +27627,9 @@ Observable_1.Observable.prototype.filter = filter_1.filter;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var finally_1 = __webpack_require__(270);
-Observable_1.Observable.prototype.finally = finally_1._finally;
-Observable_1.Observable.prototype._finally = finally_1._finally;
-//# sourceMappingURL=finally.js.map
+var ignoreElements_1 = __webpack_require__(270);
+Observable_1.Observable.prototype.ignoreElements = ignoreElements_1.ignoreElements;
+//# sourceMappingURL=ignoreElements.js.map
 
 /***/ }),
 /* 223 */
@@ -27693,9 +27638,9 @@ Observable_1.Observable.prototype._finally = finally_1._finally;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var ignoreElements_1 = __webpack_require__(271);
-Observable_1.Observable.prototype.ignoreElements = ignoreElements_1.ignoreElements;
-//# sourceMappingURL=ignoreElements.js.map
+var map_1 = __webpack_require__(271);
+Observable_1.Observable.prototype.map = map_1.map;
+//# sourceMappingURL=map.js.map
 
 /***/ }),
 /* 224 */
@@ -27704,23 +27649,12 @@ Observable_1.Observable.prototype.ignoreElements = ignoreElements_1.ignoreElemen
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var map_1 = __webpack_require__(272);
-Observable_1.Observable.prototype.map = map_1.map;
-//# sourceMappingURL=map.js.map
-
-/***/ }),
-/* 225 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var Observable_1 = __webpack_require__(0);
-var mapTo_1 = __webpack_require__(273);
+var mapTo_1 = __webpack_require__(272);
 Observable_1.Observable.prototype.mapTo = mapTo_1.mapTo;
 //# sourceMappingURL=mapTo.js.map
 
 /***/ }),
-/* 226 */
+/* 225 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27731,7 +27665,7 @@ Observable_1.Observable.prototype.merge = merge_1.merge;
 //# sourceMappingURL=merge.js.map
 
 /***/ }),
-/* 227 */
+/* 226 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27743,7 +27677,7 @@ Observable_1.Observable.prototype.flatMap = mergeMap_1.mergeMap;
 //# sourceMappingURL=mergeMap.js.map
 
 /***/ }),
-/* 228 */
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27754,15 +27688,26 @@ Observable_1.Observable.prototype.multicast = multicast_1.multicast;
 //# sourceMappingURL=multicast.js.map
 
 /***/ }),
+/* 228 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Observable_1 = __webpack_require__(0);
+var pairwise_1 = __webpack_require__(273);
+Observable_1.Observable.prototype.pairwise = pairwise_1.pairwise;
+//# sourceMappingURL=pairwise.js.map
+
+/***/ }),
 /* 229 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var pairwise_1 = __webpack_require__(274);
-Observable_1.Observable.prototype.pairwise = pairwise_1.pairwise;
-//# sourceMappingURL=pairwise.js.map
+var publish_1 = __webpack_require__(274);
+Observable_1.Observable.prototype.publish = publish_1.publish;
+//# sourceMappingURL=publish.js.map
 
 /***/ }),
 /* 230 */
@@ -27771,9 +27716,9 @@ Observable_1.Observable.prototype.pairwise = pairwise_1.pairwise;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var publish_1 = __webpack_require__(275);
-Observable_1.Observable.prototype.publish = publish_1.publish;
-//# sourceMappingURL=publish.js.map
+var scan_1 = __webpack_require__(275);
+Observable_1.Observable.prototype.scan = scan_1.scan;
+//# sourceMappingURL=scan.js.map
 
 /***/ }),
 /* 231 */
@@ -27782,9 +27727,9 @@ Observable_1.Observable.prototype.publish = publish_1.publish;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var scan_1 = __webpack_require__(276);
-Observable_1.Observable.prototype.scan = scan_1.scan;
-//# sourceMappingURL=scan.js.map
+var share_1 = __webpack_require__(276);
+Observable_1.Observable.prototype.share = share_1.share;
+//# sourceMappingURL=share.js.map
 
 /***/ }),
 /* 232 */
@@ -27793,9 +27738,9 @@ Observable_1.Observable.prototype.scan = scan_1.scan;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var share_1 = __webpack_require__(277);
-Observable_1.Observable.prototype.share = share_1.share;
-//# sourceMappingURL=share.js.map
+var skip_1 = __webpack_require__(277);
+Observable_1.Observable.prototype.skip = skip_1.skip;
+//# sourceMappingURL=skip.js.map
 
 /***/ }),
 /* 233 */
@@ -27804,9 +27749,9 @@ Observable_1.Observable.prototype.share = share_1.share;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var skip_1 = __webpack_require__(278);
-Observable_1.Observable.prototype.skip = skip_1.skip;
-//# sourceMappingURL=skip.js.map
+var startWith_1 = __webpack_require__(278);
+Observable_1.Observable.prototype.startWith = startWith_1.startWith;
+//# sourceMappingURL=startWith.js.map
 
 /***/ }),
 /* 234 */
@@ -27815,9 +27760,9 @@ Observable_1.Observable.prototype.skip = skip_1.skip;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var startWith_1 = __webpack_require__(279);
-Observable_1.Observable.prototype.startWith = startWith_1.startWith;
-//# sourceMappingURL=startWith.js.map
+var switchMap_1 = __webpack_require__(279);
+Observable_1.Observable.prototype.switchMap = switchMap_1.switchMap;
+//# sourceMappingURL=switchMap.js.map
 
 /***/ }),
 /* 235 */
@@ -27826,9 +27771,9 @@ Observable_1.Observable.prototype.startWith = startWith_1.startWith;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var switchMap_1 = __webpack_require__(280);
-Observable_1.Observable.prototype.switchMap = switchMap_1.switchMap;
-//# sourceMappingURL=switchMap.js.map
+var switchMapTo_1 = __webpack_require__(280);
+Observable_1.Observable.prototype.switchMapTo = switchMapTo_1.switchMapTo;
+//# sourceMappingURL=switchMapTo.js.map
 
 /***/ }),
 /* 236 */
@@ -27837,9 +27782,9 @@ Observable_1.Observable.prototype.switchMap = switchMap_1.switchMap;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var switchMapTo_1 = __webpack_require__(281);
-Observable_1.Observable.prototype.switchMapTo = switchMapTo_1.switchMapTo;
-//# sourceMappingURL=switchMapTo.js.map
+var take_1 = __webpack_require__(281);
+Observable_1.Observable.prototype.take = take_1.take;
+//# sourceMappingURL=take.js.map
 
 /***/ }),
 /* 237 */
@@ -27848,9 +27793,9 @@ Observable_1.Observable.prototype.switchMapTo = switchMapTo_1.switchMapTo;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var take_1 = __webpack_require__(282);
-Observable_1.Observable.prototype.take = take_1.take;
-//# sourceMappingURL=take.js.map
+var takeUntil_1 = __webpack_require__(282);
+Observable_1.Observable.prototype.takeUntil = takeUntil_1.takeUntil;
+//# sourceMappingURL=takeUntil.js.map
 
 /***/ }),
 /* 238 */
@@ -27859,23 +27804,12 @@ Observable_1.Observable.prototype.take = take_1.take;
 "use strict";
 
 var Observable_1 = __webpack_require__(0);
-var takeUntil_1 = __webpack_require__(283);
-Observable_1.Observable.prototype.takeUntil = takeUntil_1.takeUntil;
-//# sourceMappingURL=takeUntil.js.map
-
-/***/ }),
-/* 239 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var Observable_1 = __webpack_require__(0);
-var timeout_1 = __webpack_require__(284);
+var timeout_1 = __webpack_require__(283);
 Observable_1.Observable.prototype.timeout = timeout_1.timeout;
 //# sourceMappingURL=timeout.js.map
 
 /***/ }),
-/* 240 */
+/* 239 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27951,7 +27885,7 @@ exports.ArrayLikeObservable = ArrayLikeObservable;
 //# sourceMappingURL=ArrayLikeObservable.js.map
 
 /***/ }),
-/* 241 */
+/* 240 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28126,7 +28060,7 @@ var RefCountSubscriber = (function (_super) {
 //# sourceMappingURL=ConnectableObservable.js.map
 
 /***/ }),
-/* 242 */
+/* 241 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28231,7 +28165,7 @@ var DeferSubscriber = (function (_super) {
 //# sourceMappingURL=DeferObservable.js.map
 
 /***/ }),
-/* 243 */
+/* 242 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28320,7 +28254,7 @@ exports.ErrorObservable = ErrorObservable;
 //# sourceMappingURL=ErrorObservable.js.map
 
 /***/ }),
-/* 244 */
+/* 243 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28466,7 +28400,7 @@ exports.FromEventObservable = FromEventObservable;
 //# sourceMappingURL=FromEventObservable.js.map
 
 /***/ }),
-/* 245 */
+/* 244 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28480,9 +28414,9 @@ var isArray_1 = __webpack_require__(27);
 var isArrayLike_1 = __webpack_require__(91);
 var isPromise_1 = __webpack_require__(95);
 var PromiseObservable_1 = __webpack_require__(83);
-var IteratorObservable_1 = __webpack_require__(247);
+var IteratorObservable_1 = __webpack_require__(246);
 var ArrayObservable_1 = __webpack_require__(17);
-var ArrayLikeObservable_1 = __webpack_require__(240);
+var ArrayLikeObservable_1 = __webpack_require__(239);
 var iterator_1 = __webpack_require__(55);
 var Observable_1 = __webpack_require__(0);
 var observeOn_1 = __webpack_require__(87);
@@ -28594,7 +28528,7 @@ exports.FromObservable = FromObservable;
 //# sourceMappingURL=FromObservable.js.map
 
 /***/ }),
-/* 246 */
+/* 245 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28688,7 +28622,7 @@ exports.IntervalObservable = IntervalObservable;
 //# sourceMappingURL=IntervalObservable.js.map
 
 /***/ }),
-/* 247 */
+/* 246 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28857,7 +28791,7 @@ function sign(value) {
 //# sourceMappingURL=IteratorObservable.js.map
 
 /***/ }),
-/* 248 */
+/* 247 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -28922,7 +28856,7 @@ exports.NeverObservable = NeverObservable;
 //# sourceMappingURL=NeverObservable.js.map
 
 /***/ }),
-/* 249 */
+/* 248 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29035,7 +28969,7 @@ exports.TimerObservable = TimerObservable;
 //# sourceMappingURL=TimerObservable.js.map
 
 /***/ }),
-/* 250 */
+/* 249 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29043,7 +28977,7 @@ exports.TimerObservable = TimerObservable;
 var isScheduler_1 = __webpack_require__(21);
 var isArray_1 = __webpack_require__(27);
 var ArrayObservable_1 = __webpack_require__(17);
-var combineLatest_1 = __webpack_require__(263);
+var combineLatest_1 = __webpack_require__(262);
 /* tslint:enable:max-line-length */
 /**
  * Combines multiple Observables to create an Observable whose values are
@@ -29177,17 +29111,17 @@ exports.combineLatest = combineLatest;
 //# sourceMappingURL=combineLatest.js.map
 
 /***/ }),
-/* 251 */
+/* 250 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var DeferObservable_1 = __webpack_require__(242);
+var DeferObservable_1 = __webpack_require__(241);
 exports.defer = DeferObservable_1.DeferObservable.create;
 //# sourceMappingURL=defer.js.map
 
 /***/ }),
-/* 252 */
+/* 251 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29197,27 +29131,27 @@ exports.empty = EmptyObservable_1.EmptyObservable.create;
 //# sourceMappingURL=empty.js.map
 
 /***/ }),
+/* 252 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var FromObservable_1 = __webpack_require__(244);
+exports.from = FromObservable_1.FromObservable.create;
+//# sourceMappingURL=from.js.map
+
+/***/ }),
 /* 253 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var FromObservable_1 = __webpack_require__(245);
-exports.from = FromObservable_1.FromObservable.create;
-//# sourceMappingURL=from.js.map
-
-/***/ }),
-/* 254 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var FromEventObservable_1 = __webpack_require__(244);
+var FromEventObservable_1 = __webpack_require__(243);
 exports.fromEvent = FromEventObservable_1.FromEventObservable.create;
 //# sourceMappingURL=fromEvent.js.map
 
 /***/ }),
-/* 255 */
+/* 254 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29227,17 +29161,17 @@ exports.fromPromise = PromiseObservable_1.PromiseObservable.create;
 //# sourceMappingURL=fromPromise.js.map
 
 /***/ }),
-/* 256 */
+/* 255 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var IntervalObservable_1 = __webpack_require__(246);
+var IntervalObservable_1 = __webpack_require__(245);
 exports.interval = IntervalObservable_1.IntervalObservable.create;
 //# sourceMappingURL=interval.js.map
 
 /***/ }),
-/* 257 */
+/* 256 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29247,17 +29181,17 @@ exports.merge = merge_1.mergeStatic;
 //# sourceMappingURL=merge.js.map
 
 /***/ }),
-/* 258 */
+/* 257 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var NeverObservable_1 = __webpack_require__(248);
+var NeverObservable_1 = __webpack_require__(247);
 exports.never = NeverObservable_1.NeverObservable.create;
 //# sourceMappingURL=never.js.map
 
 /***/ }),
-/* 259 */
+/* 258 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29267,27 +29201,27 @@ exports.of = ArrayObservable_1.ArrayObservable.of;
 //# sourceMappingURL=of.js.map
 
 /***/ }),
+/* 259 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ErrorObservable_1 = __webpack_require__(242);
+exports._throw = ErrorObservable_1.ErrorObservable.create;
+//# sourceMappingURL=throw.js.map
+
+/***/ }),
 /* 260 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ErrorObservable_1 = __webpack_require__(243);
-exports._throw = ErrorObservable_1.ErrorObservable.create;
-//# sourceMappingURL=throw.js.map
-
-/***/ }),
-/* 261 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var TimerObservable_1 = __webpack_require__(249);
+var TimerObservable_1 = __webpack_require__(248);
 exports.timer = TimerObservable_1.TimerObservable.create;
 //# sourceMappingURL=timer.js.map
 
 /***/ }),
-/* 262 */
+/* 261 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29409,7 +29343,7 @@ var CatchSubscriber = (function (_super) {
 //# sourceMappingURL=catch.js.map
 
 /***/ }),
-/* 263 */
+/* 262 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29567,7 +29501,7 @@ exports.CombineLatestSubscriber = CombineLatestSubscriber;
 //# sourceMappingURL=combineLatest.js.map
 
 /***/ }),
-/* 264 */
+/* 263 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29629,7 +29563,7 @@ exports.concatAll = concatAll;
 //# sourceMappingURL=concatAll.js.map
 
 /***/ }),
-/* 265 */
+/* 264 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29702,7 +29636,7 @@ exports.concatMap = concatMap;
 //# sourceMappingURL=concatMap.js.map
 
 /***/ }),
-/* 266 */
+/* 265 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29824,7 +29758,7 @@ function dispatchNext(subscriber) {
 //# sourceMappingURL=debounceTime.js.map
 
 /***/ }),
-/* 267 */
+/* 266 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29938,7 +29872,7 @@ var DistinctUntilChangedSubscriber = (function (_super) {
 //# sourceMappingURL=distinctUntilChanged.js.map
 
 /***/ }),
-/* 268 */
+/* 267 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30057,7 +29991,7 @@ var DoSubscriber = (function (_super) {
 //# sourceMappingURL=do.js.map
 
 /***/ }),
-/* 269 */
+/* 268 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30155,7 +30089,7 @@ var FilterSubscriber = (function (_super) {
 //# sourceMappingURL=filter.js.map
 
 /***/ }),
-/* 270 */
+/* 269 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30204,7 +30138,7 @@ var FinallySubscriber = (function (_super) {
 //# sourceMappingURL=finally.js.map
 
 /***/ }),
-/* 271 */
+/* 270 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30257,7 +30191,7 @@ var IgnoreElementsSubscriber = (function (_super) {
 //# sourceMappingURL=ignoreElements.js.map
 
 /***/ }),
-/* 272 */
+/* 271 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30350,7 +30284,7 @@ var MapSubscriber = (function (_super) {
 //# sourceMappingURL=map.js.map
 
 /***/ }),
-/* 273 */
+/* 272 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30419,7 +30353,7 @@ var MapToSubscriber = (function (_super) {
 //# sourceMappingURL=mapTo.js.map
 
 /***/ }),
-/* 274 */
+/* 273 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30502,7 +30436,7 @@ var PairwiseSubscriber = (function (_super) {
 //# sourceMappingURL=pairwise.js.map
 
 /***/ }),
-/* 275 */
+/* 274 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30531,7 +30465,7 @@ exports.publish = publish;
 //# sourceMappingURL=publish.js.map
 
 /***/ }),
-/* 276 */
+/* 275 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30656,7 +30590,7 @@ var ScanSubscriber = (function (_super) {
 //# sourceMappingURL=scan.js.map
 
 /***/ }),
-/* 277 */
+/* 276 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30686,7 +30620,7 @@ exports.share = share;
 //# sourceMappingURL=share.js.map
 
 /***/ }),
-/* 278 */
+/* 277 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30743,7 +30677,7 @@ var SkipSubscriber = (function (_super) {
 //# sourceMappingURL=skip.js.map
 
 /***/ }),
-/* 279 */
+/* 278 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30795,7 +30729,7 @@ exports.startWith = startWith;
 //# sourceMappingURL=startWith.js.map
 
 /***/ }),
-/* 280 */
+/* 279 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30941,7 +30875,7 @@ var SwitchMapSubscriber = (function (_super) {
 //# sourceMappingURL=switchMap.js.map
 
 /***/ }),
-/* 281 */
+/* 280 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31072,7 +31006,7 @@ var SwitchMapToSubscriber = (function (_super) {
 //# sourceMappingURL=switchMapTo.js.map
 
 /***/ }),
-/* 282 */
+/* 281 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31083,7 +31017,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var Subscriber_1 = __webpack_require__(3);
-var ArgumentOutOfRangeError_1 = __webpack_require__(289);
+var ArgumentOutOfRangeError_1 = __webpack_require__(288);
 var EmptyObservable_1 = __webpack_require__(26);
 /**
  * Emits only the first `count` values emitted by the source Observable.
@@ -31167,7 +31101,7 @@ var TakeSubscriber = (function (_super) {
 //# sourceMappingURL=take.js.map
 
 /***/ }),
-/* 283 */
+/* 282 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31248,7 +31182,7 @@ var TakeUntilSubscriber = (function (_super) {
 //# sourceMappingURL=takeUntil.js.map
 
 /***/ }),
-/* 284 */
+/* 283 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31395,7 +31329,7 @@ var TimeoutSubscriber = (function (_super) {
 //# sourceMappingURL=timeout.js.map
 
 /***/ }),
-/* 285 */
+/* 284 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31445,7 +31379,7 @@ exports.Action = Action;
 //# sourceMappingURL=Action.js.map
 
 /***/ }),
-/* 286 */
+/* 285 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31500,7 +31434,7 @@ exports.QueueAction = QueueAction;
 //# sourceMappingURL=QueueAction.js.map
 
 /***/ }),
-/* 287 */
+/* 286 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31522,13 +31456,13 @@ exports.QueueScheduler = QueueScheduler;
 //# sourceMappingURL=QueueScheduler.js.map
 
 /***/ }),
-/* 288 */
+/* 287 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var QueueAction_1 = __webpack_require__(286);
-var QueueScheduler_1 = __webpack_require__(287);
+var QueueAction_1 = __webpack_require__(285);
+var QueueScheduler_1 = __webpack_require__(286);
 /**
  *
  * Queue Scheduler
@@ -31594,7 +31528,7 @@ exports.queue = new QueueScheduler_1.QueueScheduler(QueueAction_1.QueueAction);
 //# sourceMappingURL=queue.js.map
 
 /***/ }),
-/* 289 */
+/* 288 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31628,7 +31562,7 @@ exports.ArgumentOutOfRangeError = ArgumentOutOfRangeError;
 //# sourceMappingURL=ArgumentOutOfRangeError.js.map
 
 /***/ }),
-/* 290 */
+/* 289 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31659,7 +31593,7 @@ exports.UnsubscriptionError = UnsubscriptionError;
 //# sourceMappingURL=UnsubscriptionError.js.map
 
 /***/ }),
-/* 291 */
+/* 290 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31685,7 +31619,7 @@ exports.toSubscriber = toSubscriber;
 //# sourceMappingURL=toSubscriber.js.map
 
 /***/ }),
-/* 292 */
+/* 291 */
 /***/ (function(module, exports) {
 
 var g;

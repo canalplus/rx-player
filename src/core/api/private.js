@@ -177,15 +177,18 @@ export default (self) => ({
       new LanguageManager(manifest.adaptations, {
         audio$: adaptations$.audio,
         text$: adaptations$.text,
-      }, {
-        defaultAudioTrack: self._priv.initialAudioTrack,
-        defaultTextTrack: self._priv.initialTextTrack,
       });
 
-    // Set first adaptation for the rest
+    // Set first adaptation chosen
     Object.keys(adaptations$).forEach((type) => {
-      // audio and text is already completely managed by the languageManager
-      if (type !== "audio" && type !== "text") {
+      // audio and text are completely managed by the languageManager
+      if (type === "audio") {
+        self._priv.languageManager
+          .setAudioTrackByConfiguration(self._priv.initialAudioTrack);
+      } else if (type === "text") {
+        self._priv.languageManager
+          .setTextTrackByConfiguration(self._priv.initialTextTrack);
+      } else {
         const adaptations = manifest.adaptations[type] || [];
         adaptations$[type].next(adaptations[0] || null);
       }

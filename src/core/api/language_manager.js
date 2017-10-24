@@ -15,7 +15,6 @@
  */
 
 import arrayFind from "array-find";
-import nextTick from "next-tick";
 
 /**
  * Try to find the given track config in the adaptations given:
@@ -27,7 +26,7 @@ import nextTick from "next-tick";
  * @param {Object} trackConfig
  * @param {string} trackConfig.language
  * @param {string} trackConfig.normalized
- * @param {string} trackConfig.closedCaption
+ * @param {Boolean} trackConfig.closedCaption
  * @return {null|undefined|Object}
  */
 const findTextAdaptation = (adaptations, trackConfig) => {
@@ -83,9 +82,6 @@ const findAudioAdaptation = (adaptations, trackConfig) => {
  */
 class LanguageManager {
   /**
-   * Set the adaptations from where to choose from and find the default
-   * audio/text track.
-   *
    * @constructor
    *
    * @param {Object} adaptations
@@ -101,56 +97,17 @@ class LanguageManager {
    * audio adaptation will be emitted.
    * @param {Subject} adaptations$.text$ - Subject through which the chosen
    * text adaptation will be emitted
-   *
-   * @param {Object} [options={}]
-   * @param {Object} [options.defaultTextTrack] - The language and closedCaption
-   * status of the text track chosen by default. If not set, the first
-   * adaptation will be taken instead.
-   * @param {Object} [options.defaultAudioTrack] - The language and
-   * audiodescription status of the audio track chosen by default.
-   * If not set, the first adaptation will be taken instead.
    */
-  constructor({ text, audio }, { text$, audio$ }, options = {}) {
-    const {
-      defaultAudioTrack,
-      defaultTextTrack,
-    } = options;
-
+  constructor({ text, audio }, { text$, audio$ }) {
     const textAdaptations = text || [];
     const audioAdaptations = audio || [];
 
-    // set class context
-    this._currentAudioAdaptation = null;
-    this._currentTextAdaptation = null;
+    this._currentAudioAdaptation = undefined;
+    this._currentTextAdaptation = undefined;
     this._textAdaptations = textAdaptations;
     this._audioAdaptations = audioAdaptations;
     this._text$ = text$;
     this._audio$ = audio$;
-
-    if (audio$) {
-      // emit initial adaptations
-      const initialAudioAdaptation = defaultAudioTrack ?
-        findAudioAdaptation(audioAdaptations, defaultAudioTrack) ||
-        audioAdaptations[0] : audioAdaptations[0];
-      this._currentAudioAdaptation = initialAudioAdaptation;
-
-      // wait for the constructor to finish before emitting the chosen track
-      nextTick(() => {
-        audio$.next(this._currentAudioAdaptation);
-      });
-    }
-
-    if (text$) {
-      const initialTextAdaptation = defaultTextTrack ?
-        findTextAdaptation(textAdaptations, defaultTextTrack) ||
-        null : null;
-      this._currentTextAdaptation = initialTextAdaptation;
-
-      // wait for the constructor to finish before emitting the chosen track
-      nextTick(() => {
-        text$.next(this._currentTextAdaptation);
-      });
-    }
   }
 
   updateAdaptations({ audio, text }) {
@@ -172,8 +129,11 @@ class LanguageManager {
         audioDescription: !!currentAudioAdaptation.isAudioDescription,
       });
 
-      this._currentAudioAdaptation = foundTrack || audio[0];
-      this._audio$.next(this._currentAudioAdaptation);
+      const chosenTrack = foundTrack || audio[0] || null;
+      if (this._currentAudioAdaptation !== chosenTrack) {
+        this._currentAudioAdaptation = chosenTrack;
+        this._audio$.next(this._currentAudioAdaptation);
+      }
     }
 
     const currentTextAdaptation = this._currentTextAdaptation;
@@ -192,7 +152,52 @@ class LanguageManager {
           closedCaption: !!currentTextAdaptation.isClosedCaption,
         });
 
-      this._currentTextAdaptation = foundTrack || text[0];
+      const chosenTrack = foundTrack || text[0];
+      if (this._currentTextAdaptation !== chosenTrack) {
+        this._currentTextAdaptation = chosenTrack;
+        this._text$.next(this._currentTextAdaptation);
+      }
+    }
+  }
+
+  /**
+   * Set the audio track based on its configuration.
+   * @param {Object} wantedTrack
+   * @param {string} wantedTrack.language
+   * @param {string} wantedTrack.normalized
+   * @param {Boolean} wantedTrack.audioDescription
+   */
+  setAudioTrackByConfiguration(wantedTrack) {
+    const chosenAdaptation = wantedTrack ?
+      findAudioAdaptation(this._audioAdaptations, wantedTrack) ||
+      this._audioAdaptations[0] : this._audioAdaptations[0];
+
+    if (chosenAdaptation === undefined) {
+      throw new Error("Audio Track not found.");
+    }
+    if (chosenAdaptation !== this._currentAudioAdaptation) {
+      this._currentAudioAdaptation = chosenAdaptation;
+      this._audio$.next(this._currentAudioAdaptation);
+    }
+  }
+
+  /**
+   * Set the text track based on its configuration.
+   * @param {Object} wantedTrack
+   * @param {string} wantedTrack.language
+   * @param {string} wantedTrack.normalized
+   * @param {Boolean} wantedTrack.closedCaption
+   */
+  setTextTrackByConfiguration(wantedTrack) {
+    const chosenAdaptation = wantedTrack ?
+      findTextAdaptation(this._textAdaptations, wantedTrack) ||
+      null : null;
+
+    if (chosenAdaptation === undefined) {
+      throw new Error("Text Track not found.");
+    }
+    if (chosenAdaptation !== this._currentTextAdaptation) {
+      this._currentTextAdaptation = chosenAdaptation;
       this._text$.next(this._currentTextAdaptation);
     }
   }
@@ -201,7 +206,7 @@ class LanguageManager {
    * @param {string|Number} wantedId - adaptation id of the wanted track
    * @throws Error - Throws if the given id is not found in any audio adaptation
    */
-  setAudioTrack(wantedId) {
+  setAudioTrackByID(wantedId) {
     const foundTrack = arrayFind(this._audioAdaptations, ({ id }) =>
       id === wantedId);
 
@@ -209,15 +214,17 @@ class LanguageManager {
       throw new Error("Audio Track not found.");
     }
 
-    this._currentAudioAdaptation = foundTrack;
-    this._audio$.next(this._currentAudioAdaptation);
+    if (this._currentAudioAdaptation !== foundTrack) {
+      this._currentAudioAdaptation = foundTrack;
+      this._audio$.next(this._currentAudioAdaptation);
+    }
   }
 
   /**
    * @param {string|Number} wantedId - adaptation id of the wanted track
    * @throws Error - Throws if the given id is not found in any text adaptation
    */
-  setTextTrack(wantedId) {
+  setTextTrackByID(wantedId) {
     const foundTrack = arrayFind(this._textAdaptations, ({ id }) =>
       id === wantedId);
 
@@ -225,11 +232,16 @@ class LanguageManager {
       throw new Error("Text Track not found.");
     }
 
-    this._currentTextAdaptation = foundTrack;
-    this._text$.next(this._currentTextAdaptation);
+    if (this._currentTextAdaptation !== foundTrack) {
+      this._currentTextAdaptation = foundTrack;
+      this._text$.next(this._currentTextAdaptation);
+    }
   }
 
   disableTextTrack() {
+    if (this._currentTextAdaptation === null) {
+      return;
+    }
     this._currentTextAdaptation = null;
     this._text$.next(this._currentTextAdaptation);
   }
