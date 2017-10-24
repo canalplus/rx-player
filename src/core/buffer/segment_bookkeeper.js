@@ -565,6 +565,9 @@ export default class SegmentBookkeeper {
           }
         }
       }
+      else if (currentSegmentI.end === null) {
+        return false;
+      }
       return true;
     }
   }
