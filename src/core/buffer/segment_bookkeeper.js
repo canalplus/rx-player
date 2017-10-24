@@ -546,11 +546,11 @@ export default class SegmentBookkeeper {
         } 
       }
 
-      if (
-        currentSegmentI.end != null && (
+      if (currentSegmentI.end === null) {
+        return false;  
+      } else if (
           !nextSegmentI ||
           nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
-        )
       ) {
         const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
         if (wantedRange.end < currentSegmentI.end) {
@@ -564,10 +564,7 @@ export default class SegmentBookkeeper {
             return false;
           }
         }
-      }
-      else if (currentSegmentI.end === null) {
-        return false;
-      }
+      } 
       return true;
     }
   }
