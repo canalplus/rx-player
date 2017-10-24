@@ -376,11 +376,9 @@ export default {
    * usually have a difference in the order of 10^-7), as time information is
    * most of the time directly parsed from the media container.
    *
-   * TODO A maybe cleaner way would be to also consider the real duration of a
-   * segment in the equation here.
    * @type {Number}
    */
-  MAX_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
+  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
 
   /**
    * The maximum time, in seconds, the real buffered time in the sourcebuffer
