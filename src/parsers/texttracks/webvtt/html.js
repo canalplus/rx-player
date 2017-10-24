@@ -1,13 +1,13 @@
 import parseTimestamp from "./parseTimestamp.js";
 
-/** 
+/**
 * Parse WebVTT from text. Returns an array with:
 * - start : start of current cue, in seconds
 * - end : end of current cue, in seconds
 * - content : HTML formatted cue.
 *
-* Global style is parsed and applied to div element. 
-* Specific style is parsed and applied to class element. 
+* Global style is parsed and applied to div element.
+* Specific style is parsed and applied to class element.
 *
 * @param {string} text
 * @return {Array.<Object>}
@@ -17,7 +17,7 @@ export default function parseWebVTT(text) {
   const linified = text.split(newLineChar);
   const cuesArray = [];
   const styleElements = [];
-  if (!linified[0].match(/^WEBVTT(\ |\t|\n|\r|$)/)) {
+  if (!linified[0].match(/^WEBVTT( |\t|\n|\r|$)/)) {
     throw new Error("Can't parse WebVTT: Invalid File.");
   }
 
@@ -42,11 +42,23 @@ export default function parseWebVTT(text) {
   for (let i = 1; i < linified.length; i++) {
     if (!(linified[i].length === 0)) {
       if (isStartOfCueBlock(linified[i])) {
-        cuesArray.push(parseCue(i, linified, styleElements));
-      }
-      while (linified[i] 
-        && !(linified[i].length === 0)) {
+        const startOfCueBlock = i;
         i++;
+        // continue incrementing i until either:
+        //   - empty line
+        //   - end of file
+        while(!(linified[i].length === 0)) {
+          i++;
+        }
+        const cueBlock = linified.slice(startOfCueBlock, i);
+        const cue = parseCue(cueBlock, styleElements);
+        if (cue) {
+          cuesArray.push(cue);
+        }
+      } else {
+        while(!(linified[i].length === 0)) {
+          i++;
+        }
       }
     }
   }
@@ -73,11 +85,11 @@ function isStartOfCueBlock(text) {
 }
 
 /**
- * 
+ *
  * Parse style element from WebVTT.
  * @param {Array.<string>} styleBlock
- * @return {Array.<Object>} styleElements 
- */ 
+ * @return {Array.<Object>} styleElements
+ */
 function parseStyleBlock(styleBlock) {
 
   const styleElements = [];
@@ -85,11 +97,11 @@ function parseStyleBlock(styleBlock) {
   const classNames = [];
   if(styleBlock[index].match(/::cue {/)){
     classNames.push({isGlobalStyle: true});
-    index++;    
+    index++;
   } else {
-    while(styleBlock[index].match(/::cue\(\.{0,1}(.*?)\)(?:,| {)/)) {
+    while(styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
       const cueClassLine = styleBlock[index]
-        .match(/::cue\(\.{0,1}(.*?)\)(?:,| {)/);
+        .match(/::cue\(\.?(.*?)\)(?:,| {)/);
       classNames.push({className: cueClassLine[1], isGlobalStyle: false});
       index++;
     }
@@ -97,7 +109,7 @@ function parseStyleBlock(styleBlock) {
 
   let styleContent = "";
 
-  while (!(styleBlock[index].match(/}/) 
+  while (!(styleBlock[index].match(/}/)
         || styleBlock[index].length === 0)) {
     styleContent +=  styleBlock[index];
     index++;
@@ -113,16 +125,17 @@ function parseStyleBlock(styleBlock) {
 }
 
 /**
- * 
- * @param {number} index 
- * @param {Array.<string>} linified 
- * @param {Array.<Object>} styleElements 
+ *
+ * @param {number} index
+ * @param {Array.<string>} linified
+ * @param {Array.<Object>} styleElements
  * @returns {Object}
  */
-function parseCue(index, linified, styleElements) {
+function parseCue(cueBlock, styleElements) {
   const region = document.createElement("div");
   const regionAttr = document.createAttribute("style");
-  regionAttr.value = 
+  let index = 0;
+  regionAttr.value =
     "width:100%; \
     height:100%; \
     display:flex; \
@@ -132,12 +145,15 @@ function parseCue(index, linified, styleElements) {
   region.setAttributeNode(regionAttr);
 
   // Get Header. It may be a class name associated with cue.
-  const header = linified[index];
+  const header = cueBlock[index];
   index++;
 
   // Get time ranges.
-  const timeCodes = linified[index];
+  const timeCodes = cueBlock[index];
   const range = parseTimeCode(timeCodes);
+  if(!range) {
+    return;
+  }
   index++;
 
   // Get content, format and apply style.
@@ -148,14 +164,14 @@ function parseCue(index, linified, styleElements) {
 
   const spanElement = document.createElement("span");
   const attr = document.createAttribute("style");
-  attr.value = 
+  attr.value =
   "background-color:rgba(0,0,0,0.8); \
   color:white;";
   spanElement.setAttributeNode(attr);
 
   const styles = styleElements
-  .filter(styleElement => 
-      (styleElement.className === header 
+  .filter(styleElement =>
+      (styleElement.className === header
       && !styleElement.isGlobalStyle)
       || styleElement.isGlobalStyle)
   .map(styleElement => styleElement.styleContent);
@@ -164,12 +180,13 @@ function parseCue(index, linified, styleElements) {
     spanElement.setAttributeNode(attr);
   }
 
-  while (!(linified[index].length === 0)) {
+  while (cueBlock[index]) {
 
     if(spanElement.childNodes.length != 0) {
-      spanElement.appendChild(document.createElement("br"));}
-    
-    formatWebVTTtoHTML(linified[index], styleElements)
+      spanElement.appendChild(document.createElement("br"));
+    }
+
+    formatWebVTTtoHTML(cueBlock[index], styleElements)
       .forEach(child =>{
         spanElement.appendChild(child);
       });
@@ -184,16 +201,17 @@ function parseCue(index, linified, styleElements) {
 }
 
 function parseTimeCode(text) {
-  const tsRegex = "((?:[0-9]{2}\:{0,1})[0-9]{2}:[0-9]{2}.[0-9]{2,3})";
+  const tsRegex = "((?:[0-9]{2}\:?)[0-9]{2}:[0-9]{2}.[0-9]{2,3})";
   const startEndRegex = tsRegex+"(?:\ |\t)-->(?:\ |\t)"+tsRegex;
   const ranges = text.match(startEndRegex);
-  
-  const start = parseTimestamp(ranges[1]);
-  const end =  parseTimestamp(ranges[2]);
+  if(startEndRegex) {
+    const start = parseTimestamp(ranges[1]);
+    const end =  parseTimestamp(ranges[2]);
 
-  return { start, end };
+    return { start, end };
+  }
 }
- 
+
   /**
   * Format WebVTT tags and classes into usual HTML.
   * <b *> => <b>
@@ -201,19 +219,19 @@ function parseTimeCode(text) {
   * <i *> => <i>
   * <c.class *> => <c.class>
   * Style is inserted if associated to tag or class.
-  * @param {string} text 
+  * @param {string} text
   * @param {Array<Object>} styleElements
   */
 function formatWebVTTtoHTML(text, styleElements){
   const HTMLTags = ["u","i","b"];
   const webVTTTags = ["u","i","b","c","#text"];
-  const styleClasses = 
+  const styleClasses =
     styleElements.map(styleElement => styleElement.className);
   const filtered = text
     // Remove timestamp tags
     .replace(/<[0-9]{2}:[0-9]{2}.[0-9]{3}>/, "")
     // Remove tag content or attributes (e.g. <b dfgfdg> => <b>)
-    .replace(/<([u,i,b,c])(\..*?){0,1}(?: .*?){0,1}>(.*?)<\/\1>/g, 
+    .replace(/<([u,i,b,c])(\..*?)?(?: .*?)?>(.*?)<\/\1>/g,
       "<$1$2>$3</$1$2>");
 
   const parser = new DOMParser();
@@ -221,27 +239,27 @@ function formatWebVTTtoHTML(text, styleElements){
   const nodes = parsedWebVTT.body.childNodes;
 
     /**
-   * Apply styles to specifig tag in children nodes. 
+   * Apply styles to specifig tag in children nodes.
    * (e.g. If class "b" has style, then : <b style="content">
    * )
    * Change class tags into span with associated style, or text*
-   * First it was: <c.class>...</c>. Then <class></class>. 
+   * First it was: <c.class>...</c>. Then <class></class>.
    * Finally <span style="content"></span> or text.
    */
   function parseNode(nodeToParse) {
     const parsedNodeArray = [];
     for(let i = 0; i < nodeToParse.length; i++){
-      parsedNodeArray[i] = setStyleForNode(nodeToParse[i]);
+      parsedNodeArray[i] = createStyleElement(nodeToParse[i]);
     }
 
-    function setStyleForNode(nodeToStyle){
-      const mainTag = nodeToStyle.nodeName.toLowerCase().split(".")[0];
+    function createStyleElement(baseNode){
+      const mainTag = baseNode.nodeName.toLowerCase().split(".")[0];
       let nodeWithStyle;
       if(webVTTTags.includes(mainTag)) { // If element accepted
         if(mainTag === "#text") {
-          nodeWithStyle = document.createTextNode(nodeToStyle.wholeText);
+          nodeWithStyle = document.createTextNode(baseNode.wholeText);
         } else {
-          const nodeClasses = nodeToStyle.nodeName.toLowerCase().split(".");
+          const nodeClasses = baseNode.nodeName.toLowerCase().split(".");
           const classIndexes = [];
           nodeClasses.forEach(nodeClass => {
             if(styleClasses.indexOf(nodeClass) !== -1) {
@@ -260,16 +278,16 @@ function formatWebVTTtoHTML(text, styleElements){
             const elementTag = (!HTMLTags.includes(mainTag)) ? "span" : mainTag;
             nodeWithStyle = document.createElement(elementTag);
           }
-          for (let j = 0; j < nodeToStyle.childNodes.length; j++) {
+          for (let j = 0; j < baseNode.childNodes.length; j++) {
             nodeWithStyle.appendChild(
-              setStyleForNode(nodeToStyle.childNodes[j]));
+              createStyleElement(baseNode.childNodes[j]));
           }
         }
       } else {
         nodeWithStyle = document.createElement("span");
-        for (let j = 0; j < nodeToStyle.childNodes.length; j++) {
+        for (let j = 0; j < baseNode.childNodes.length; j++) {
           nodeWithStyle.appendChild(
-            setStyleForNode(nodeToStyle.childNodes[j]));
+            createStyleElement(baseNode.childNodes[j]));
         }
       }
 
