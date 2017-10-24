@@ -288,7 +288,7 @@ export default {
    * This specific value is based on experimentation.
    * @type {Number}
    */
-  ABR_MINIMUM_TOTAL_BYTES: 128e3,
+  ABR_MINIMUM_TOTAL_BYTES: 200e3,
 
   /**
    * Minimum number of bytes, under which samples are discarded.
@@ -300,6 +300,20 @@ export default {
    * @type {Number}
    */
   ABR_MINIMUM_CHUNK_SIZE: 16e3,
+
+  /**
+   * Factor with which is multiplied the bandwidth estimate when the ABR is in
+   * starvation mode.
+   * @type {Number}
+   */
+  ABR_STARVATION_FACTOR: 0.85,
+
+  /**
+   * Factor with which is multiplied the bandwidth estimate when the ABR is not
+   * in starvation mode.
+   * @type {Number}
+   */
+  ABR_REGULAR_FACTOR: 0.98,
 
   /**
    * If a SourceBuffer has less than this amount of seconds ahead of the current
