@@ -17,19 +17,19 @@
 /**
  * Parse a single srt timestamp into seconds
  * @param {string} timestampString
- * @returns {Number}
+ * @returns {Number|undefined}
  */
 export default function parseTimestamp(timestampString) {
-    const splittedTS = timestampString.split(":").reverse();
-    
-    if (splittedTS[2] || splittedTS[1]) {
-      const hours = splittedTS[2] ? parseInt(splittedTS[2], 10) : 0;
-      const minutes = parseInt(splittedTS[1], 10);
-      const seconds = parseFloat(splittedTS[0].replace(",", "."), 10);
-      if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-        return;
-      }
-      return hours * 60 * 60 + minutes * 60 + seconds;
+  const splittedTS = timestampString.split(":").reverse();
+
+  if (splittedTS[2] || splittedTS[1]) {
+    const hours = splittedTS[2] ? parseInt(splittedTS[2], 10) : 0;
+    const minutes = parseInt(splittedTS[1], 10);
+    const seconds = parseFloat(splittedTS[0].replace(",", "."), 10);
+    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+      return;
     }
+    return hours * 60 * 60 + minutes * 60 + seconds;
   }
-  
+}
+

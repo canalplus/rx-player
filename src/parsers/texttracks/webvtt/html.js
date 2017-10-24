@@ -1,3 +1,20 @@
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import log from "../../../utils/log.js";
 import parseTimestamp from "./parseTimestamp.js";
 
 /**
@@ -11,6 +28,7 @@ import parseTimestamp from "./parseTimestamp.js";
 *
 * @param {string} text
 * @return {Array.<Object>}
+* @throws Error - Throws if the given WebVTT string is invalid.
 */
 export default function parseWebVTT(text) {
   const newLineChar = /\r\n|\n|\r/g;
@@ -65,18 +83,38 @@ export default function parseWebVTT(text) {
   return cuesArray;
 }
 
+/**
+ * Returns true if the given line looks like the beginning of a Style block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
 function isStartOfStyleBlock(text) {
   return text.match(/^STYLE.*?/g);
 }
 
+/**
+ * Returns true if the given line looks like the beginning of a comment block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
 function isStartOfNoteBlock(text) {
   return text.match(/^NOTE.*?/g);
 }
 
+/**
+ * Returns true if the given line looks like the beginning of a region block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
 function isStartOfRegionBlock(text) {
   return text.match(/^REGION.*?/g);
 }
 
+/**
+ * Returns true if the given line looks like the beginning of a cue block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
 function isStartOfCueBlock(text) {
   return (!isStartOfNoteBlock(text) &&
    !isStartOfStyleBlock(text) &&
@@ -91,18 +129,20 @@ function isStartOfCueBlock(text) {
  * @return {Array.<Object>} styleElements
  */
 function parseStyleBlock(styleBlock) {
-
   const styleElements = [];
   let index = 1;
   const classNames = [];
-  if(styleBlock[index].match(/::cue {/)){
-    classNames.push({isGlobalStyle: true});
+  if(styleBlock[index].match(/::cue {/)) {
+    classNames.push({ isGlobalStyle: true });
     index++;
   } else {
     while(styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
       const cueClassLine = styleBlock[index]
         .match(/::cue\(\.?(.*?)\)(?:,| {)/);
-      classNames.push({className: cueClassLine[1], isGlobalStyle: false});
+      classNames.push({
+        className: cueClassLine[1],
+        isGlobalStyle: false,
+      });
       index++;
     }
   }
@@ -125,11 +165,16 @@ function parseStyleBlock(styleBlock) {
 }
 
 /**
+ * Parse cue block into an object with the following properties:
+ *   - start {number}: start time at which the cue should be displayed
+ *   - end {number}: end time at which the cue should be displayed
+ *   - element {HTMLElement}: the cue text, translated into an HTMLElement
  *
+ * Returns undefined if the cue block could not be parsed.
  * @param {number} index
  * @param {Array.<string>} linified
  * @param {Array.<Object>} styleElements
- * @returns {Object}
+ * @returns {Object|undefined}
  */
 function parseCue(cueBlock, styleElements) {
   const region = document.createElement("div");
@@ -151,9 +196,11 @@ function parseCue(cueBlock, styleElements) {
   // Get time ranges.
   const timeCodes = cueBlock[index];
   const range = parseTimeCode(timeCodes);
-  if(!range) {
-    return;
+  if (!range || range.start == null || range.end == null) {
+    log.warn("VTT: Invalid cue, the timecode line could not be parsed.");
+    return; // cancel if we do not find the start or end of this cue
   }
+
   index++;
 
   // Get content, format and apply style.
@@ -164,17 +211,20 @@ function parseCue(cueBlock, styleElements) {
 
   const spanElement = document.createElement("span");
   const attr = document.createAttribute("style");
+
+  // set color and background-color default values, as indicated in:
+  // https://www.w3.org/TR/webvtt1/#applying-css-properties
   attr.value =
-  "background-color:rgba(0,0,0,0.8); \
-  color:white;";
+    "background-color:rgba(0,0,0,0.8); \
+    color:white;";
   spanElement.setAttributeNode(attr);
 
   const styles = styleElements
-  .filter(styleElement =>
-      (styleElement.className === header
-      && !styleElement.isGlobalStyle)
-      || styleElement.isGlobalStyle)
-  .map(styleElement => styleElement.styleContent);
+    .filter(styleElement =>
+      (styleElement.className === header && !styleElement.isGlobalStyle) ||
+      styleElement.isGlobalStyle
+    ).map(styleElement => styleElement.styleContent);
+
   if(styles) {
     attr.value += styles.join();
     spanElement.setAttributeNode(attr);
@@ -187,7 +237,7 @@ function parseCue(cueBlock, styleElements) {
     }
 
     formatWebVTTtoHTML(cueBlock[index], styleElements)
-      .forEach(child =>{
+      .forEach(child => {
         spanElement.appendChild(child);
       });
 
@@ -197,12 +247,32 @@ function parseCue(cueBlock, styleElements) {
   region.appendChild(pElement) ;
   pElement.appendChild(spanElement);
 
-  return { start: range.start, end: range.end, element: region };
+  return {
+    start: range.start,
+    end: range.end,
+    element: region,
+  };
 }
 
+/**
+ * Parse the VTT timecode line given and construct an object with two
+ * properties:
+ *   - start {Number|undefined}: the corresponding start time in seconds
+ *   - end {Number|undefined}: the corresponding end time in seconds
+ * @example
+ * ```js
+ * parseTimeCode("00:02:30 -> 00:03:00");
+ * // -> {
+ * //      start: 150,
+ * //      end: 180,
+ * //    }
+ * ```
+ * @param {string} text
+ * @returns {Object|undefined}
+ */
 function parseTimeCode(text) {
   const tsRegex = "((?:[0-9]{2}\:?)[0-9]{2}:[0-9]{2}.[0-9]{2,3})";
-  const startEndRegex = tsRegex+"(?:\ |\t)-->(?:\ |\t)"+tsRegex;
+  const startEndRegex = tsRegex + "(?:\ |\t)-->(?:\ |\t)" + tsRegex;
   const ranges = text.match(startEndRegex);
   if(startEndRegex) {
     const start = parseTimestamp(ranges[1]);
@@ -220,9 +290,10 @@ function parseTimeCode(text) {
   * <c.class *> => <c.class>
   * Style is inserted if associated to tag or class.
   * @param {string} text
-  * @param {Array<Object>} styleElements
+  * @param {Array.<Object>} styleElements
+  * @returns {Array.<Node>}
   */
-function formatWebVTTtoHTML(text, styleElements){
+function formatWebVTTtoHTML(text, styleElements) {
   const HTMLTags = ["u","i","b"];
   const webVTTTags = ["u","i","b","c","#text"];
   const styleClasses =
@@ -245,13 +316,21 @@ function formatWebVTTtoHTML(text, styleElements){
    * Change class tags into span with associated style, or text*
    * First it was: <c.class>...</c>. Then <class></class>.
    * Finally <span style="content"></span> or text.
+   * @param {Array.<Node>} childNodes
+   * @returns {Array.<Node>}
    */
   function parseNode(nodeToParse) {
     const parsedNodeArray = [];
-    for(let i = 0; i < nodeToParse.length; i++){
+    for(let i = 0; i < nodeToParse.length; i++) {
       parsedNodeArray[i] = createStyleElement(nodeToParse[i]);
     }
 
+    /**
+     * Construct an HTMLElement/TextNode representing the given node and apply
+     * the right styling on it.
+     * @param {Node} baseNode
+     * @returns {Node}
+     */
     function createStyleElement(baseNode){
       const mainTag = baseNode.nodeName.toLowerCase().split(".")[0];
       let nodeWithStyle;
