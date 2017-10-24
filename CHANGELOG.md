@@ -99,6 +99,7 @@
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
   - api: fix infinite loading bug when a new content is launched as the previous one is ended or fell on error
   - dash: allow absolute BaseURL in Periods
+  - languages: avoid excessive re-downloads if a ``supplementaryTextTracks`` is provided and either a ``maxBufferBehind`` or a ``maxBufferAhead`` is set.
   - eme: the ``reason`` for the eme error ``KEY_STATUS_CHANGE_ERROR`` is now correctly filled in
   - eme: do not set widevine robustnesses for non-widevine key systems
   - languages: fix bug which led the text buffer to _crash_ when the ``wantedBufferBehind`` option is set
