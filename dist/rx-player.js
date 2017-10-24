@@ -24479,6 +24479,7 @@ function parseCue(cueLines) {
   pEl.style.bottom = "5%";
   pEl.style.width = "100%";
   pEl.style.textAlign = "center";
+  pEl.style.color = "#fff";
   pEl.style.textShadow = "-1px -1px 2px #000," + "1px -1px 2px #000," + "-1px 1px 2px #000," + "1px 1px 2px #000";
 
   for (var i = 0; i < payloadLines.length; i++) {
