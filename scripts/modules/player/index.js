@@ -9,7 +9,7 @@
 import RxPlayer from "../../../../../src";
 import { linkPlayerEventsToState } from "./events.js";
 
-const PLAYER = ({ $destroy, state }, { videoElement }) => {
+const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   const player = new RxPlayer({
     limitVideoWidth: false,
     throttleWhenHidden: true,
@@ -67,7 +67,11 @@ const PLAYER = ({ $destroy, state }, { videoElement }) => {
     },
 
     LOAD: (arg) => {
-      player.loadVideo(arg);
+      if (arg.textTrackMode === "html") {
+        player.loadVideo(Object.assign({ textTrackElement }, arg));
+      } else {
+        player.loadVideo(arg);
+      }
       state.set({ loadedVideo: arg });
     },
 
