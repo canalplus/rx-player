@@ -113,6 +113,7 @@
     "lodash": "4.11.1",
     "mocha": "^2.5.3",
     "mocha-loader": "^0.7.0",
+    "nise": "^1.2.0",
     "npm-scripts-info": "^0.3.6",
     "raw-loader": "^0.5.1",
     "react": "^16",

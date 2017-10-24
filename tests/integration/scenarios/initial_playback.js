@@ -1,22 +1,26 @@
 import { expect } from "chai";
+import nise from "nise";
 import RxPlayer from "../../../src";
 import sleep from "../utils/sleep.js";
-import TemporaryMockXHR from "../utils/temporary_mock_XHR.js";
 import Mock from "../mocks/dash_static_SegmentTimeline.js";
+import { mockAllRequests } from "../utils/mock_requests";
 
 describe("media player instance", function () {
 
   let player;
-  const temporaryXHRMock = new TemporaryMockXHR(Mock);
+  const fakeServer = nise.fakeServer;
+  let server;
 
   beforeEach(() => {
     player = new RxPlayer();
-    temporaryXHRMock.start();
+    server = fakeServer.create();
+    server.autoRespond = true;
+    mockAllRequests(server, Mock);
   });
 
   afterEach(() => {
     player.dispose();
-    temporaryXHRMock.restore();
+    server.restore();
   });
 
   it("should begin playback", async function (done) {
