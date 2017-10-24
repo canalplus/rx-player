@@ -532,19 +532,18 @@ export default class SegmentBookkeeper {
         !prevSegmentI ||
         prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
       ) {
-        const timeDiff =
-        currentSegmentI.bufferedStart - currentSegmentI.start;
+        const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
         if (wantedRange.start > currentSegmentI.start) {
           const wantedDiff = currentSegmentI.bufferedStart - wantedRange.start;
           if (wantedDiff > 0 && timeDiff 
-            >= MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+            > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
         } else {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
-        }
+        } 
       }
 
       if (
@@ -557,7 +556,7 @@ export default class SegmentBookkeeper {
         if (wantedRange.end < currentSegmentI.end) {
           const wantedDiff = wantedRange.end - currentSegmentI.bufferedEnd;
           if (wantedDiff > 0 && timeDiff 
-            >= MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+            > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
         } else {
