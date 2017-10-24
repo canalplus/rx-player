@@ -12,6 +12,8 @@
     - [startAt](#prop-startAt)
     - [defaultAudioTrack](#prop-defaultAudioTrack)
     - [defaultTextTrack](#prop-defaultTextTrack)
+    - [textTrackMode](#prop-textTrackMode)
+    - [textTrackElement](#prop-textTrackElement)
     - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
@@ -23,8 +25,6 @@ This page describes the options given to the ``loadVideo`` method, which is the 
 These options take the form of a single objects with multiple properties, like this:
 ```js
 // Setting the only two mandatory keys for a clear content (without DRM).
-// (NOTE: if a transport has already been set on instantiation, it is not
-// mandatory here anymore)
 const options = {
   url: myManifestUrl,
   transport: "dash"
@@ -39,7 +39,9 @@ player.loadVideo(options);
 
 _type_: ``string|undefined``
 
-Url of the smooth/DASH manifest. This is the only mandatory property if a ``transport`` has been set on instantiation. Else, ``url`` and ``transport`` are the only two needed properties to play a content without DRM.
+Url of the Smooth or DASH manifest.
+
+This property is mandatory.
 
 ### <a name="prop-transport"></a>transport
 
@@ -49,7 +51,7 @@ The transport used for this content. Can be either:
   - ``"dash"`` - for DASH streams
   - ``"smooth"`` - for Microsoft Smooth Streaming streams
 
-This property is mandatory only if no default ``transport`` property was set on instantiation.
+This property is mandatory.
 
 ### <a name="prop-transportOptions"></a>transportOptions
 
@@ -71,7 +73,7 @@ _type_: ``Array.<Object>|undefined``
 This property is mandatory if the content uses DRM.
 
 This property is an array of objects with the following properties (only ``type`` and ``getLicense`` are mandatory here):
-  - ``type`` (``string``): the type of keySystem used (e.g. ``"widevine"``, ``"playready"`` ...)
+  - ``type`` (``string``): either the canonical name of keySystem used (e.g. ``"widevine"``, ``"playready"`` ...), or the type (reversed domain name) of the keySystem (e.g. ``"com.widevine.alpha"``, ``"com.microsoft.playready"`` ...).
 
   - ``getLicense`` (``Function``): Callback which will be triggered everytime a message is sent by the Content Decryption Module (CDM), usually to fetch/renew the license.
 
@@ -91,15 +93,21 @@ This property is an array of objects with the following properties (only ``type`
   - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate used to encrypt messages to the license server.
     If set, we will try to set this certificate on the CDM. If it fails, we will still continue (albeit a warning will be emitted) to try deciphering the stream (the getLicense API will be triggered etc.).
 
-  - ``persistentLicense`` (``Boolean|undefined``)
+  - ``persistentLicense`` (``Boolean|undefined``): Set it to ``true`` if you want the ability to persist the license for later retrieval. In that case, you will also need to set the ``licenseStorage`` attribute to be able to persist the license through your preferred method. This is not needed for most usecases.
 
-  - ``licenseStorage`` (``Object|undefined``): Required if ``persistentLicense`` has been set to ``true``. It's an object containing two functions ``load`` and ``save``.
+  - ``licenseStorage`` (``Object|undefined``): Required only if ``persistentLicense`` has been set to ``true``. It's an object containing two functions ``load`` and ``save``:
+      - ``save``: take into argument an ``Array.<Object>`` which will be the set of sessionId to save. No return value needed.
+      - ``load``: take no argument and returns the stored ``Array.<Object>`` (the last given to ``save``) synchronously.
 
-  - ``persistentStateRequired`` (``Boolean|undefined``)
+  - ``persistentStateRequired`` (``Boolean|undefined``): Set it to ``true`` if the chosen CDM should have the ability to persist a license, ``false`` if you don't care. This is not needed for most usecases. ``false`` by default. You do not have to set it to ``true`` if the ``persistentLicense`` option is set.
 
-  - ``distinctiveIdentifierRequired`` (``Boolean|undefined``): When set to ``true``, the use of [Distinctive Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier) or [Distinctive Permanent Identifier(s)](https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers) will be required. This is not needed for most usecases.
+  - ``distinctiveIdentifierRequired`` (``Boolean|undefined``): When set to ``true``, the use of [Distinctive Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier) or [Distinctive Permanent Identifier(s)](https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers) will be required. This is not needed for most usecases. ``false`` if you do not care. ``false`` by default.
 
-  - ``onKeyStatusesChange``: (``Function|undefined``)
+  - ``onKeyStatusesChange``: (``Function|undefined``): Not needed for most usecases. Triggered each time the key statuses of the current session changes, except for the following statuses (which throws immediately): ``expired`` and ``internal-error``. Takes 2 arguments:
+    1. The keystatuseschange event ``{Event}``
+    2. The session associated with the event ``{MediaKeySession}``
+
+    Like ``getLicense``, this function should return a promise which emit a license when resolved.
 
 #### Example
 
@@ -107,7 +115,7 @@ Example of a simple DRM configuration for widevine and playready DRMs:
 ```js
 player.loadVideo({
   url: manifestURL,
-  transport: "dash", // or "smooth"
+  transport: "dash",
   keySystems: [{
     type: "widevine",
     getLicense(challenge) {
@@ -130,8 +138,6 @@ _defaults_: ``false``
 
 If set to ``true``, the video will play immediately after being loaded.
 
-The player state will also go consecutively from ``"LOADED"`` to ``"PLAYING"``.
-
 ### <a name="prop-startAt"></a>startAt
 
 _type_: ``Object|undefined``
@@ -150,6 +156,7 @@ If defined, this property must be an object containing a single key. This key ca
   - ``fromLastPosition`` (``Number``): relative position from the maximum possible one, in seconds. Should be a negative number:
       - for live contents, it is the difference between the starting position and the live edge (as defined by the manifest)
       - for non-live contents, it is the difference between the starting position and the end position of the content.
+  - ``percentage`` (``Number``): percentage of the wanted position. ``0`` being the minimum position possible (0 for static content, buffer depth for live contents) and ``100`` being the maximum position possible (``duration`` for static content, live edge for live contents).
 
 Note: Only one of those properties will be considered, in the same order of priority they are written here.
 
@@ -218,8 +225,13 @@ const defaultAudioTrack = {
 };
 ```
 or under the form of the language string directly, in which case the ``"audioDescription"`` option is inferred to be false.
+```js
+// equivalent to the previous example
+const defaultAudioTrack = "fra";
+```
 
-Note that this option can also be set in the constructor. If both set in the constructor and for ``loadVideo``, the ``loadVideo`` option will be used.
+If the corresponding audio track is not found, the first track defined will be taken instead.
+
 
 ### <a name="prop-defaultTextTrack"></a>defaultTextTrack
 
@@ -236,9 +248,42 @@ const defaultTextTrack = {
                        // caption for the hard of hearing
 };
 ```
-or under the form of the language string directly, in which case the ``"closedCaption"`` option is inferred to be false.
+or under the form of the language string directly, in which case the ``"closedCaption"`` option is inferred to be false:
+```js
+// equivalent to the previous example
+const defaultTextTrack = "fra";
+```
 
-Note that this option can also be set in the constructor. If both set in the constructor and for ``loadVideo``, the ``loadVideo`` option will be used.
+If the corresponding text track is not found, the first track defined will be taken instead.
+
+
+### <a name="prop-textTrackMode"></a>textTrackMode
+
+_type_: ``string``
+
+_defaults_: ``"native"``
+
+This option allows to specify how the text tracks should be displayed.
+
+There is two possible values:
+  - ``"native"``
+  - ``"html"``
+
+In the default ``"native"`` mode, a ``<track>`` element will be created on the video and the subtitles will be displayed by it, with a minimal style. There is no action on your side, the subtitles will be correctly displayed at the right time.
+
+In ``"html"`` mode, the text tracks will be displayed on a specific HTML element. This mode allows us to do much more stylisation, such as the one defined by TTML styling attributes or SAMI's CSS. It is particularly useful to correctly manage complex closed captions (with multiple colors, positionning etc.). With this mode, you will need to provide a wrapper HTML element with the [textTrackElement option](#prop-textTrackMode).
+
+All text track formats supported in ``"native"`` mode also work in ``"html"`` mode.
+
+
+### <a name="prop-textTrackElement"></a>textTrackElement
+
+_type_: ``HTMLElement``
+
+``textTrackElement`` is only required and used if you provided a ``"html"`` [textTrackMode](#prop-textTrackMode).
+
+This property will be the element on which text tracks will be set, as child elements, at the right time. We expect that this element is the exact same size than the media element it applies to (this allows us to properly place the subtitles position without polling where the video is in your UI). You can however re-size or update the style of it as you wish, to better suit your UI needs.
+
 
 ### <a name="prop-supplementaryTextTracks"></a>supplementaryTextTracks
 
@@ -262,11 +307,21 @@ const supplementaryTextTracks = [{
   language: "eng", // {string} The language the text track is in
                    // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
 
+                   // Note for SAMI subtitles:
+                   // For SAMI subtitles, you have to provide the same language
+                   // string than the one indicated in the CSS and p elements.
+                   // It usually follows the ISO639-ISO3166 naming conventions
+                   // (e.g. en-US or fr-FR).
+                   // If we cannot find the provided language in the downloaded
+                   // SAMI text track, it won't be displayed.
+
   closedCaption: false // {Boolean} Whether the text track is a closed caption
                        // for the hard of hearing
 
   mimeType: "application/mp4", // {string} A mimeType used to describe
-                               // the text format.
+                               // the text format. Can be "application/mp4" when
+                               // encapsulated in an mp4 file. In that case, the
+                               // "codecs" argument will be needed.
 
   codecs: "stpp"               // {string|undefined} Depending on the mimeType,
                                // you might need to add codec information.
@@ -308,7 +363,6 @@ _defaults_: ``false``
 If set to ``true``, the eventual <track> element will be put on mode ``hidden`` when added to the video element, so it won't actually display the subtitles the rx-player add to it.
 
 This has an effect only if:
+  - the current ``textTrackMode`` is native (see [textTrackMode option](#prop-textTrackMode))
   - a text track is currently active
   - the text track format is understood by the rx-player
-
-This option can be useful if you want to set your own logic to display the video subtitles. In that case, you can just use the <track> element (``getNativeTextTrack`` method or ``nativeTextTrackChange`` event) and its events.

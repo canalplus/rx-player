@@ -238,7 +238,7 @@ Basically, divide any of those by the timescale to obtain seconds.
 
 #### duration
 
-_type_: ``Number``
+_type_: ``Number|undefined``
 
 The duration, timescaled, of the Segments in s.
 
@@ -270,4 +270,4 @@ If defined, it means that a segment index is defined in a certain byte range rem
 
 _type_: ``Number|undefined``
 
-If defined, it means that the segment is numbered, useful with certain types of index.
+The number of the segment (if numbered), useful with certain types of index.

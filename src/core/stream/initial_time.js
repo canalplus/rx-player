@@ -57,6 +57,16 @@ export default function getInitialTime(manifest, startAt) {
       const { fromLastPosition } = startAt;
       return fromLastPosition >= 0 ?
         max : Math.max(min, max + fromLastPosition);
+    } else if (startAt.percentage != null) {
+      const { percentage } = startAt;
+      if (percentage > 100) {
+        return max;
+      } else if (percentage < 0) {
+        return min;
+      }
+      const ratio = +percentage / 100;
+      const extent = max - min;
+      return min + extent * ratio;
     }
   }
 

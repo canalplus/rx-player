@@ -10,7 +10,7 @@ Its main goals are:
   - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB integration...)
   - To be easy to integrate and use as a library in various codebases.
 
-Latest release: ``v3.0.0-rc5``
+Latest release: ``v3.0.0-rc6``
 
 ## API
 
@@ -29,7 +29,7 @@ The fastest way to use our player directly in your code is to add this repositor
 npm install --save git+https://git@github.com/canalplus/rx-player.git
 ```
 
-You can then either link directly to the `dist/rx-player.min.js` file (which is our last released version, ``v3.0.0-rc5``, compiled and minified):
+You can then either link directly to the `dist/rx-player.min.js` file (which is our last released version, ``v3.0.0-rc6``, compiled and minified):
 ```html
 <script src="node_modules/rx-player/dist/rx-player.min.js"></script>
 ```
@@ -42,6 +42,8 @@ const Player = require("rx-player");
 // ECMAScript 2015 syntax
 import Player from "rx-player";
 ```
+
+You can also perform your own [custom build](./doc/api/custom_builds.md) with only the features you need to reduce the file size.
 
 ## Your questions
 
@@ -101,7 +103,7 @@ Here is a basic list of supported platforms:
 |             |  Chrome   |   IE [1]  |  Edge   |  Firefox  |  Safari  |  Opera  |
 |-------------|:---------:|:---------:|:-------:|:---------:|:--------:|:-------:|
 | Windows     |   >= 30   |   >= 11   |  >= 12  |   >= 42   |   >= 8   |  >= 25  |
-| OX X        |   >= 30   |     -     |    -    |   >= 42   |   >= 8   |  >= 25  |
+| OSX         |   >= 30   |     -     |    -    |   >= 42   |   >= 8   |  >= 25  |
 | Linux       |   >= 37   |     -     |    -    |   >= 42   |    -     |  >= 25  |
 | Android [2] |   >= 30   |     -     |    -    |   >= 42   |    -     |  >= 15  |
 | iOS         |    No     |     -     |    -    |    No     |    No    |    No   |

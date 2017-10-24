@@ -139,10 +139,10 @@ export default class QueuedSourceBuffer {
     this.flushing = subj;
     try {
       switch(type) {
-      case BUFFER_APPEND:
-        this.buffer.appendBuffer(args); break;
-      case BUFFER_REMOVE:
-        this.buffer.remove(args.start, args.end); break;
+        case BUFFER_APPEND:
+          this.buffer.appendBuffer(args); break;
+        case BUFFER_REMOVE:
+          this.buffer.remove(args.start, args.end); break;
       }
     } catch(e) {
       this._onError(e);

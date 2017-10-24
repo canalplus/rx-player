@@ -37,7 +37,7 @@ import {
   canPlay,
   canSeek,
 } from "../../compat";
-import { sourceOpen } from "../../compat/events.js";
+import { onSourceOpen$ } from "../../compat/events.js";
 
 import {
   normalizeManifest,
@@ -113,8 +113,8 @@ export default function Stream({
   supplementaryTextTracks, // eventual manually added subtitles
   supplementaryImageTracks, // eventual manually added images
 
+  textTrackOptions,
   timings$,
-  hideNativeSubtitle, // Whether TextTracks subtitles should be hidden or not
   errorStream, // subject through which minor errors are emitted TODO Remove?
 
   withMediaSource = true,
@@ -173,8 +173,23 @@ export default function Stream({
     );
   });
 
-  const nativeBuffers = {}; // SourceBuffers added to the MediaSource
-  const customBuffers = {}; // custom SourceBuffers
+  /**
+   * Map the "type" of a sourceBuffer (example "audio" or "video") to a
+   * SourceBuffer.
+   *
+   * Allow to avoid creating multiple sourceBuffers for the same type.
+   * TODO Is this compatible with codec switching?
+   *
+   * There is 2 "native" SourceBuffers: "audio" and "video" as they are the
+   * only one added to the MediaSource.
+   *
+   * All other SourceBuffers are "custom"
+   * @type Object
+   */
+  const sourceBufferMemory = {
+    native: {}, // SourceBuffers added to the MediaSource
+    custom: {}, // custom SourceBuffers managed entirely in the Rx-PLayer
+  };
 
   /**
    * Backoff options used given to the backoff retry done with the manifest
@@ -224,11 +239,11 @@ export default function Stream({
    * @returns {Observable}
    */
   const startStream = retryableFuncWithBackoff(({ url, mediaSource }) => {
-    const sourceOpening = mediaSource
-      ? sourceOpen(mediaSource)
+    const sourceOpening$ = mediaSource
+      ? onSourceOpen$(mediaSource)
       : Observable.of(null);
 
-    return Observable.combineLatest(fetchManifest(url), sourceOpening)
+    return Observable.combineLatest(fetchManifest(url), sourceOpening$)
       .mergeMap(([manifest]) => createStream(mediaSource, manifest));
   }, retryOptions);
 
@@ -271,8 +286,7 @@ export default function Stream({
           videoElement,
           mediaSource,
           bufferType,
-          nativeBuffers,
-          customBuffers
+          sourceBufferMemory
         );
         return EmptyBuffer({ bufferType })
           .startWith({
@@ -319,21 +333,20 @@ export default function Stream({
 
       const abr$ = abrManager.get$(bufferType, abrClock$, representations);
       const representation$ = abr$
-          .map(({ representation }) => representation)
-          .distinctUntilChanged((a, b) =>
-            (a && a.bitrate) === (b && b.bitrate) &&
-            (a && a.id) === (b && b.id)
-          )
-          .do(representation => currentRepresentation = representation);
+        .map(({ representation }) => representation)
+        .distinctUntilChanged((a, b) =>
+          (a && a.bitrate) === (b && b.bitrate) &&
+          (a && a.id) === (b && b.id)
+        )
+        .do(representation => currentRepresentation = representation);
 
       const sourceBuffer = createSourceBuffer(
         videoElement,
         mediaSource,
         bufferType,
         codec,
-        nativeBuffers,
-        customBuffers,
-        { hideNativeSubtitle }
+        sourceBufferMemory,
+        bufferType === "text" ? textTrackOptions : {},
       );
 
       const downloader = ({ segment, representation, init }) => {
@@ -482,24 +495,24 @@ export default function Stream({
    */
   function liveMessageHandler(message, manifest) {
     switch(message.type) {
-    case "index-discontinuity":
-      log.warn("explicit discontinuity seek", message.value.ts);
-      videoElement.currentTime = message.value.ts;
-      break;
+      case "index-discontinuity":
+        log.warn("explicit discontinuity seek", message.value.ts);
+        videoElement.currentTime = message.value.ts;
+        break;
 
     // precondition-failed messages require a change of live-gap to
     // calibrate the live representation of the player
     // TODO(pierre): smarter converging algorithm
-    case "precondition-failed":
-      manifest.updateLiveGap(1); // go back 1s for now
-      log.warn("precondition failed", manifest.presentationLiveGap);
-      break;
+      case "precondition-failed":
+        manifest.updateLiveGap(1); // go back 1s for now
+        log.warn("precondition failed", manifest.presentationLiveGap);
+        break;
 
-    case "out-of-index":
+      case "out-of-index":
       // out-of-index messages require a complete reloading of the
       // manifest to refresh the current index
-      log.info("out of index");
-      return refreshManifest(manifest);
+        log.info("out of index");
+        return refreshManifest(manifest);
     }
 
     return Observable.of(message);
@@ -545,7 +558,7 @@ export default function Stream({
       //    readyState. This can occur if the user agent's media engine
       //    does not support adding more tracks during playback.
       if (shouldHaveNativeSourceBuffer(type)) {
-        addNativeSourceBuffer(mediaSource, type, codec, nativeBuffers);
+        addNativeSourceBuffer(mediaSource, type, codec, sourceBufferMemory);
       }
 
       return createBuffer(
@@ -594,8 +607,7 @@ export default function Stream({
     url,
     videoElement,
     withMediaSource,
-    customBuffers,
-    nativeBuffers
+    sourceBufferMemory
   )
     .mergeMap(startStream)
     .takeUntil(endOfPlay);

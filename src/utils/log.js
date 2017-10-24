@@ -21,22 +21,43 @@ const Levels = {
   INFO: 3,
   DEBUG: 4,
 };
-const noop = function() {};
 
 function log() {}
+function noop() {}
+
+let currentLevel = 0;
+
+log.LEVELS = Object.keys(Levels);
 log.error = noop;
 log.warn = noop;
 log.info = noop;
 log.debug = noop;
-log.setLevel = function(level) {
-  if (typeof level == "string") {
-    level = Levels[level];
+
+log.setLevel = function(levelStr) {
+  let level;
+  const foundLevel = Levels[levelStr];
+  if (foundLevel) {
+    level = foundLevel;
+    currentLevel = levelStr;
+  } else { // either 0 or not found
+    level = 0;
+    currentLevel = "NONE";
   }
 
-  log.error = (level >= Levels.ERROR) ? console.error.bind(console) : noop;
-  log.warn = (level >= Levels.WARNING) ? console.warn.bind(console) : noop;
-  log.info = (level >= Levels.INFO) ? console.info.bind(console) : noop;
-  log.debug = (level >= Levels.DEBUG) ? console.log.bind(console) : noop;
+  /* eslint-disable no-console */
+  log.error = (level >= Levels.ERROR) ?
+    console.error.bind(console) : noop;
+  log.warn = (level >= Levels.WARNING) ?
+    console.warn.bind(console) : noop;
+  log.info = (level >= Levels.INFO) ?
+    console.info.bind(console) : noop;
+  log.debug = (level >= Levels.DEBUG) ?
+    console.log.bind(console) : noop;
+  /* eslint-enable no-console */
+};
+
+log.getLevel = function() {
+  return currentLevel;
 };
 
 export default log;

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import { EncryptedMediaError } from "../../errors";
+import EncryptedMediaError from "../../errors/EncryptedMediaError.js";
 import log from "../../utils/log";
-import { createEME, onEncrypted } from "../eme";
+import { onEncrypted$ } from "../../compat/events.js";
+import { createEME } from "../eme";
 
 /**
  * Perform EME management if needed.
@@ -29,7 +30,7 @@ function createEMEIfKeySystems(videoElement, keySystems, errorStream) {
   if (keySystems && keySystems.length) {
     return createEME(videoElement, keySystems, errorStream);
   } else {
-    return onEncrypted(videoElement).map(() => {
+    return onEncrypted$(videoElement).map(() => {
       log.error("eme: ciphered media and no keySystem passed");
       throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
     });

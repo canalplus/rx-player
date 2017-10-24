@@ -105,7 +105,7 @@ function Buffer({
   maxBufferBehind,
   maxBufferAhead,
 
-  // XXX Remove that from here
+  // TODO Remove that from here
   bufferType,   // Buffer type (audio, video, text, image)
   isLive,
 }) {
@@ -146,9 +146,8 @@ function Buffer({
    */
   function getSegmentsListToInject(
     representation,
-    buffered,
+    range,
     timing,
-    bufferGoal,
     withInitSegment
   ) {
     let initSegment = null;
@@ -162,10 +161,7 @@ function Buffer({
       return initSegment ? [initSegment] : [];
     }
 
-    const { start, end } = getWantedBufferRange(buffered, timing, bufferGoal, {
-      low: LOW_PADDING,
-      high: HIGH_PADDING,
-    });
+    const { start, end } = range;
     const duration = end - start;
 
     /**
@@ -235,10 +231,10 @@ function Buffer({
     /**
      * Returns true if it considers that the segment given should be loaded.
      * @param {Segment} segment
-     * @param {Number} bitrate
+     * @param {Array.<number>} wantedRange
      * @returns {Boolean}
      */
-    function segmentFilter(segment) {
+    function segmentFilter(segment, wantedRange) {
       // if this segment is already in the pipeline
       const isInQueue = queuedSegments.test(segment.id);
       if (isInQueue) {
@@ -252,8 +248,19 @@ function Buffer({
       }
 
       const { time, duration, timescale } = segment;
+
+      // TODO If the segment is too big, and is garbage collected immediately
+      // when appended, it will be downloaded in loop, even if we have enough
+      // of it to continue regular playback.
+      // To avoid this behavior, we should probably indicate the wanted start
+      // and end time here, and only re-download it if the segment is missing
+      // part(s) of it.
+      //
+      // You can repeat this bug easily by setting the maxBufferBehind or
+      // maxBufferAhead option for a supplementaryTextTrack
+
       const currentSegment =
-        bookkeeper.hasCompleteSegment(time, duration, timescale);
+        bookkeeper.hasPlayableSegment(wantedRange, time, duration, timescale);
 
       // only re-load comparatively-poor bitrates.
       return !currentSegment ||
@@ -354,25 +361,27 @@ function Buffer({
         }
       }
 
-      let injectedSegments;
-
       // filter out already loaded and already queued segments
       const withInitSegment = (injectCount === 0);
-      injectedSegments = getSegmentsListToInject(
-        representation,
-        buffered,
-        timing,
-        bufferGoal,
-        withInitSegment);
 
-      injectedSegments = injectedSegments.filter(segmentFilter);
+      const wantedRange = getWantedBufferRange(buffered, timing, bufferGoal, {
+        low: LOW_PADDING,
+        high: HIGH_PADDING,
+      });
+
+      const neededSegments = getSegmentsListToInject(
+        representation,
+        wantedRange,
+        timing,
+        withInitSegment
+      ).filter((segment) => segmentFilter(segment, wantedRange));
 
       // queue all segments injected in the observable
-      for (let i = 0; i < injectedSegments.length; i++) {
-        queuedSegments.add(injectedSegments[i].id);
+      for (let i = 0; i < neededSegments.length; i++) {
+        queuedSegments.add(neededSegments[i].id);
       }
 
-      return Observable.of(...injectedSegments);
+      return Observable.of(...neededSegments);
     }
 
     const loadNeededSegments = segment => {

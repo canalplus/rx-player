@@ -7,6 +7,7 @@
 - [Static properties](#static)
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
+    - [LogLevel](#static-LogLevel)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -114,6 +115,23 @@ _type_: ``Object``
 The different Error "codes" you can get on playback error,
 
 See [the Player Error documentation](./errors.md) for more informations.
+
+### <a name="static-ErrorCodes"></a>LogLevel
+
+_type_: ``string``
+_default_: ``"NONE"``
+
+The current level of verbosity for the RxPlayer logs. Those logs all use the console.
+
+From the less verbose to the most:
+  - ``"NONE"``: no log
+  - ``"ERROR"``: unexpected errors (via ``console.error``)
+  - ``"WARNING"``: The previous level + minor problems encountered (via ``console.warn``)
+  - ``"INFO"``: The previous levels + noteworthy events (via ``console.info``)
+  - ``"DEBUG"``: The previous levels + normal events of the player (via ``console.log``)
+
+If the value set to this property is different than those, it will be automatically set
+to ``"NONE"``.
 
 ## <a name="meth"></a>Methods
 
@@ -245,23 +263,9 @@ The callback given is optional: if not given, _every_ registered callback to tha
 
 Play/resume the current video. Equivalent to a video element's play method.
 
-Note that a content can be paused even if its current state is ``BUFFERING`` or ``SEEKING``.
-
 #### Example
 ```js
-const resumePausedContent = () => {
-  if (player.getPlayerState() === "PAUSED") {
-    player.play();
-  }
-};
-
-const playLoadedContent = () => {
-  if (player.getPlayerState() === "LOADED") {
-    player.play();
-  }
-};
-
-const justPlayContent = () => {
+const resumeContent = () => {
   player.play();
 };
 ```
@@ -556,12 +560,14 @@ Returns the maximum kept buffer ahead of the current position, in seconds.
 
 _arguments_: ``Boolean``
 
-Switch or exit fullscreen mode. The argument is an optional boolean:
+Switch or exit the ``<video>`` element to fullscreen mode. The argument is an optional boolean:
   - if set:
     - ``true``: enters fullscreen
     - ``false``: exit fullscreen
 
   - if not set: enter fullscreen
+
+Note that __only the video element will be set to fullscreen mode__. You might prefer to implement your own method to include your controls in the final UI.
 
 ### <a name="meth-exitFullscreen"></a>exitFullscreen
 

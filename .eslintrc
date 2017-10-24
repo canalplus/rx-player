@@ -33,7 +33,7 @@
     // equivalent to jshint boss
     "no-cond-assign": 0,
     // equivalent to jshint devel
-    "no-console": 0,
+    "no-console": 1,
     // prohibits things like `while (true)`
     "no-constant-condition": 0,
     // we need to be able to match these
@@ -57,7 +57,7 @@
     // parens may be used to improve clarity, equivalent to jshint W068
     'no-extra-parens': [1, 'functions'],
     // equivalent to jshint W032
-    'no-extra-semi': 1,
+    'no-extra-semi': 2,
     // a function delaration shouldn't be rewritable
     'no-func-assign': 2,
     // babel and es6 allow block-scoped functions
@@ -84,12 +84,13 @@
     'valid-typeof': 2,
     // we already require semicolons
     'no-unexpected-multiline': 0,
+    'no-trailing-spaces': 2,
+    'no-multiple-empty-lines': 1,
 
     // Best Practices <http://eslint.org/docs/rules/#best-practices>
     // probably a bug, we shouldn't actually even use this yet, because of IE8
     'accessor-pairs': [1, {setWithoutGet: true}],
-    // probably too noisy ATM
-    'block-scoped-var': 0,
+    'block-scoped-var': 1,
     // cyclomatic complexity, we're too far gone
     'complexity': 0,
     // style guide: Always use brackets, even when optional.
@@ -108,7 +109,9 @@
       }
     ],
 
-    "indent": [1, 2],
+    "indent": [1, 2, {
+      "SwitchCase": 1,
+    }],
     "quotes": [1, "double"],
     "linebreak-style": [1, "unix"],
     "semi": [1, "always"],

@@ -1,7 +1,7 @@
 {
   "name": "rx-player",
   "author": "Canal+",
-  "version": "3.0.0-rc5",
+  "version": "3.0.0-rc6",
   "description": "Canal+ HTML5 Video Player",
   "main": "./dist/rx-player.js",
   "keywords": [
@@ -87,6 +87,7 @@
     "rxjs": "^5.4.2"
   },
   "devDependencies": {
+    "arraybuffer-loader": "^0.2.2",
     "babel-core": "^6.25.0",
     "babel-loader": "^6.2.1",
     "babel-polyfill": "^6.23.0",
@@ -112,6 +113,7 @@
     "lodash": "4.11.1",
     "mocha": "^2.5.3",
     "mocha-loader": "^0.7.0",
+    "nise": "^1.2.0",
     "npm-scripts-info": "^0.3.6",
     "raw-loader": "^0.5.1",
     "react": "^16",

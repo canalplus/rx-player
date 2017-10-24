@@ -51,8 +51,8 @@ function wrapUpdate(memUpdate, sessionObj) {
       ? sessionObj.call(this)
       : this;
 
-    const keys = events.onKeyAdded(session);
-    const errs = events.onKeyError(session).map((evt) => {
+    const keys = events.onKeyAdded$(session);
+    const errs = events.onKeyError$(session).map((evt) => {
       throw new KeySessionError(session.error || evt);
     });
 
@@ -92,9 +92,9 @@ if (
     this._vid = video;
     this._key = keySystem;
     this._con = Observable.merge(
-      events.onKeyMessage(video),
-      events.onKeyAdded(video),
-      events.onKeyError(video)
+      events.onKeyMessage$(video),
+      events.onKeyAdded$(video),
+      events.onKeyError$(video)
     ).subscribe((evt) => this.trigger(evt.type, evt));
   };
 
@@ -216,9 +216,9 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
     generateRequest: function(initDataType, initData) {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
       this._con = Observable.merge(
-        events.onKeyMessage(this._ss),
-        events.onKeyAdded(this._ss),
-        events.onKeyError(this._ss)
+        events.onKeyMessage$(this._ss),
+        events.onKeyAdded$(this._ss),
+        events.onKeyError$(this._ss)
       ).subscribe((evt) => this.trigger(evt.type, evt));
     },
 
@@ -241,6 +241,10 @@ else if (MediaKeys_ && !requestMediaKeySystemAccess) {
       }
     },
   }, EventEmitter.prototype);
+
+  if (!MediaKeys_.prototype) {
+    MediaKeys_.prototype = {};
+  }
 
   // on IE11, each created session needs to be created on a new
   // MediaKeys object

@@ -85,32 +85,32 @@ export default (self) => ({
     const { type, value } = streamInfos;
 
     switch (type) {
-    case "representationChange":
-      self._priv.onRepresentationChange(value);
-      break;
-    case "manifestUpdate":
-      self._priv.onManifestUpdate(value);
-      break;
-    case "adaptationChange":
-      self._priv.onAdaptationChange(value);
-      break;
-    case "bitrateEstimationChange":
-      self._priv.onBitrateEstimationChange(value);
-      break;
-    case "manifestChange":
-      self._priv.onManifestChange(value);
-      break;
-    case "pipeline":
-      const { bufferType, parsed } = value;
-      if (bufferType === "image") {
-        const value = parsed.segmentData;
+      case "representationChange":
+        self._priv.onRepresentationChange(value);
+        break;
+      case "manifestUpdate":
+        self._priv.onManifestUpdate(value);
+        break;
+      case "adaptationChange":
+        self._priv.onAdaptationChange(value);
+        break;
+      case "bitrateEstimationChange":
+        self._priv.onBitrateEstimationChange(value);
+        break;
+      case "manifestChange":
+        self._priv.onManifestChange(value);
+        break;
+      case "pipeline":
+        const { bufferType, parsed } = value;
+        if (bufferType === "image") {
+          const value = parsed.segmentData;
 
         // TODO merge multiple data from the same track together
-        self._priv.currentImagePlaylist = value;
-        self.trigger("imageTrackUpdate", {
-          data: self._priv.currentImagePlaylist,
-        });
-      }
+          self._priv.currentImagePlaylist = value;
+          self.trigger("imageTrackUpdate", {
+            data: self._priv.currentImagePlaylist,
+          });
+        }
     }
   },
 
@@ -177,15 +177,18 @@ export default (self) => ({
       new LanguageManager(manifest.adaptations, {
         audio$: adaptations$.audio,
         text$: adaptations$.text,
-      }, {
-        defaultAudioTrack: self._priv.initialAudioTrack,
-        defaultTextTrack: self._priv.initialTextTrack,
       });
 
-    // Set first adaptation for the rest
+    // Set first adaptation chosen
     Object.keys(adaptations$).forEach((type) => {
-      // audio and text is already completely managed by the languageManager
-      if (type !== "audio" && type !== "text") {
+      // audio and text are completely managed by the languageManager
+      if (type === "audio") {
+        self._priv.languageManager
+          .setAudioTrackByConfiguration(self._priv.initialAudioTrack);
+      } else if (type === "text") {
+        self._priv.languageManager
+          .setTextTrackByConfiguration(self._priv.initialTextTrack);
+      } else {
         const adaptations = manifest.adaptations[type] || [];
         adaptations$[type].next(adaptations[0] || null);
       }
@@ -223,11 +226,9 @@ export default (self) => ({
     }
     if (type === "audio") {
       const audioTrack = self._priv.languageManager.getCurrentAudioTrack();
-      self._priv.lastAudioTrack = audioTrack;
       self._priv.recordState("audioTrack", audioTrack);
     } else if (type === "text") {
       const textTrack = self._priv.languageManager.getCurrentTextTrack();
-      self._priv.lastTextTrack = textTrack;
       self._priv.recordState("textTrack", textTrack);
     }
   },
@@ -265,24 +266,20 @@ export default (self) => ({
 
   /**
    * Called each time the player alternates between play and pause.
-   * @param {Object} evt
-   * @param {string} evt.type
+   * @param {Boolean} isPlaying
    */
-  onPlayPauseNext(evt) {
+  onPlayPauseNext(isPlaying) {
     if (self.videoElement.ended !== true) {
-      self._priv.playing$.next(evt.type == "play");
+      self._priv.playing$.next(isPlaying);
     }
   },
 
   /**
    * Called each time a textTrack is added to the video DOM Element.
-   * @param {Object} evt
-   * @param {HTMLElement} evt.target
+   * @param {Array.<TextTrackElement} tracks
    */
-  onNativeTextTrackNext({ target: [trackElement] }) {
-    if (trackElement) {
-      self.trigger("nativeTextTrackChange", trackElement);
-    }
+  onNativeTextTracksNext(tracks) {
+    self.trigger("nativeTextTracksChange", tracks);
   },
 
   /**

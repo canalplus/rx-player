@@ -15,7 +15,7 @@
  */
 
 import  { expect } from "chai";
-import * as _filterByBitrate from "../filterByBitrate.js";
+import _filterByBitrate from "../filterByBitrate.js";
 
 describe("core - abr - filterByBitrate", () => {
 
@@ -33,22 +33,22 @@ describe("core - abr - filterByBitrate", () => {
 
   describe("filterByBitrate", () => {
     it("should return all representations when specified bitrate is infinite", () => {
-      expect(_filterByBitrate.default(fakeReps, Infinity))
+      expect(_filterByBitrate(fakeReps, Infinity))
       .to.deep.equal(fakeReps);
     });
 
     it("should return no representation when specified bitrate is 0", () => {
-      expect(_filterByBitrate.default(fakeReps, 0))
+      expect(_filterByBitrate(fakeReps, 0))
       .to.deep.equal([]);
     });
 
     it("should filter representation when specified bitrate is 999", () => {
-      expect(_filterByBitrate.default(fakeReps, 1010))
+      expect(_filterByBitrate(fakeReps, 1010))
       .to.deep.equal(expectedFilteredReps);
     });
 
     it("should return all representation when specified bitrate is undefined", () => {
-      expect(_filterByBitrate.default(fakeReps, undefined))
+      expect(_filterByBitrate(fakeReps, undefined))
       .to.deep.equal(fakeReps);
     });
   });

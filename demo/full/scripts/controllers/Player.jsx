@@ -25,6 +25,7 @@ class Player extends React.Component {
   componentDidMount() {
     const player = createModule(PlayerModule, {
       videoElement: this.videoElement,
+      textTrackElement: this.textTrackElement,
     });
 
     this._$destroySubject = new Subject();
@@ -105,6 +106,10 @@ class Player extends React.Component {
                     className="video-player-spinner"
                   /> : null
               }
+              <div
+                className="text-track"
+                ref={element => this.textTrackElement = element }
+              />
               <video
                 ref={element => this.videoElement = element }
               />

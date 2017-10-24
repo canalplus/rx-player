@@ -604,7 +604,7 @@ function assignAndClone(...args) {
   return res;
 }
 
-// XXX TODO Check and re-check the id thing
+// TODO Check and re-check the id thing
 function updateManifest(oldManifest, newManifest) {
   const findElementFromId = (id, elements) =>
     arrayFind(elements, obj => obj.id === id);

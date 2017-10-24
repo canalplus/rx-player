@@ -32,6 +32,8 @@ import EWMA from "./ewma.js";
 const {
   ABR_STARVATION_GAP,
   OUT_OF_STARVATION_GAP,
+  ABR_STARVATION_FACTOR,
+  ABR_REGULAR_FACTOR,
 } = config;
 
 /**
@@ -223,11 +225,10 @@ export default class RepresentationChooser {
       .takeUntil(this._dispose$);
     }
 
-    let lastBitrate = this.initialBitrate;
-
     const {
       manualBitrate$,
       maxAutoBitrate$,
+      initialBitrate,
     }  = this;
 
     const _deviceEventsArray = [];
@@ -246,6 +247,7 @@ export default class RepresentationChooser {
       Observable.combineLatest(..._deviceEventsArray)
         .map((args) => objectAssign({}, ...args)) : Observable.of({});
 
+    let lastEstimatedBitrate;
     return manualBitrate$.switchMap(manualBitrate => {
       if (manualBitrate >= 0) {
         // MANUAL mode
@@ -258,6 +260,7 @@ export default class RepresentationChooser {
         .map(([ clock, maxAutoBitrate, deviceEvents ]) => {
 
           let nextBitrate;
+          let bandwidthEstimate;
           const { bufferGap } = clock;
 
           // Check for starvation == not much left to play
@@ -293,16 +296,20 @@ export default class RepresentationChooser {
                 chunkDuration &&
                 requestTakesTime(requestTimeInSeconds, chunkDuration)
               ) {
-                const estimate = estimateRequestBandwidth(
+                bandwidthEstimate = estimateRequestBandwidth(
                   request, requestTimeInSeconds, bitrate);
 
-                if (estimate) {
+                if (bandwidthEstimate != null) {
                   // Reset all estimations to zero
                   // Note: this is weird to do this type of "global" side effect
                   // (for this class) in an observable, not too comfortable with
                   // that.
                   this.resetEstimate();
-                  nextBitrate = Math.min(estimate, bitrate, maxAutoBitrate);
+                  nextBitrate = Math.min(
+                    bandwidthEstimate,
+                    bitrate,
+                    maxAutoBitrate
+                  );
                 }
               }
             }
@@ -310,16 +317,21 @@ export default class RepresentationChooser {
 
           // if nextBitrate is not yet defined, do the normal estimation
           if (nextBitrate == null) {
-            const baseEstimate = this.estimator.getEstimate();
+            bandwidthEstimate = this.estimator.getEstimate();
 
-            const estimate = baseEstimate != null &&
-              clock.bufferGap <= inStarvationMode ?
-              baseEstimate * 0.95 : baseEstimate;
-
-            nextBitrate = Math.min(
-              estimate == null ? lastBitrate : estimate,
-              maxAutoBitrate
-            );
+            let nextEstimate;
+            if (bandwidthEstimate != null) {
+              nextEstimate = clock.bufferGap <= inStarvationMode ?
+                bandwidthEstimate * ABR_STARVATION_FACTOR :
+                bandwidthEstimate * ABR_REGULAR_FACTOR;
+            } else if (lastEstimatedBitrate != null) {
+              nextEstimate =  clock.bufferGap <= inStarvationMode ?
+                lastEstimatedBitrate * ABR_STARVATION_FACTOR :
+                lastEstimatedBitrate * ABR_REGULAR_FACTOR;
+            } else {
+              nextEstimate = initialBitrate;
+            }
+            nextBitrate = Math.min(nextEstimate, maxAutoBitrate);
           }
 
           if (clock.speed > 1) {
@@ -330,14 +342,14 @@ export default class RepresentationChooser {
             getFilteredRepresentations(representations, deviceEvents);
 
           return {
-            bitrate: nextBitrate,
+            bitrate: bandwidthEstimate,
             representation: fromBitrateCeil(_representations, nextBitrate) ||
             representations[0],
           };
 
         }).do(({ bitrate }) => {
           if (bitrate != null) {
-            lastBitrate = bitrate;
+            lastEstimatedBitrate = bitrate;
           }
         }).share();
     });

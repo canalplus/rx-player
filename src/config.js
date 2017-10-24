@@ -25,20 +25,13 @@ export default {
   DEFAULT_UNMUTED_VOLUME: 0.1,
 
   /**
-   * Default audio track configuration, if none is set by the user.
-   * Here in french for legacy reasons.
-   * @type {Object}
-   */
-  DEFAULT_AUDIO_TRACK: {
-    language: "fra",
-    audioDescription: false,
-  },
-
-  /**
-   * Default text track configuration, if none is set by the user.
+   * Can be either:
+   *   - "native": Subtitles are all displayed in a <track> element
+   *   - "html": Subtitles are all displayed in a <div> separated from the video
+   *     element. Can be useful to display richer TTML subtitles, for example.
    * @type {Object|null}
    */
-  DEFAULT_TEXT_TRACK: null,
+  DEFAULT_TEXT_TRACK_MODE: "native",
 
   /**
    * If set to true, video through loadVideo will auto play by default
@@ -47,10 +40,11 @@ export default {
   DEFAULT_AUTO_PLAY: false,
 
   /**
-   * If set to false, subtitles will be hidden by default.
+   * If set to false, "native" subtitles (in a <track> element) will be hidden
+   * by default.
    * @type {Boolean}
    */
-  DEFAULT_SHOW_SUBTITLE: true,
+  DEFAULT_SHOW_NATIVE_SUBTITLE: true,
 
   /*
    * Default buffer goal in seconds. Once this amount of time reached ahead in
@@ -294,7 +288,7 @@ export default {
    * This specific value is based on experimentation.
    * @type {Number}
    */
-  ABR_MINIMUM_TOTAL_BYTES: 128e3,
+  ABR_MINIMUM_TOTAL_BYTES: 200e3,
 
   /**
    * Minimum number of bytes, under which samples are discarded.
@@ -306,6 +300,20 @@ export default {
    * @type {Number}
    */
   ABR_MINIMUM_CHUNK_SIZE: 16e3,
+
+  /**
+   * Factor with which is multiplied the bandwidth estimate when the ABR is in
+   * starvation mode.
+   * @type {Number}
+   */
+  ABR_STARVATION_FACTOR: 0.85,
+
+  /**
+   * Factor with which is multiplied the bandwidth estimate when the ABR is not
+   * in starvation mode.
+   * @type {Number}
+   */
+  ABR_REGULAR_FACTOR: 0.98,
 
   /**
    * If a SourceBuffer has less than this amount of seconds ahead of the current
@@ -382,11 +390,9 @@ export default {
    * usually have a difference in the order of 10^-7), as time information is
    * most of the time directly parsed from the media container.
    *
-   * TODO A maybe cleaner way would be to also consider the real duration of a
-   * segment in the equation here.
    * @type {Number}
    */
-  MAX_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
+  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
 
   /**
    * The maximum time, in seconds, the real buffered time in the sourcebuffer
@@ -425,9 +431,30 @@ export default {
   MINIMUM_SEGMENT_SIZE: 0.3,
 
   /**
+   * Maximum interval at which text tracks are refreshed in an "html"
+   * textTrackMode.
+   *
+   * The text tracks are also refreshed on various video events, this interval
+   * will only trigger a refresh if none of those events was received during
+   * that timespan.
+   *
+   * Note that if the TextTrack cue did not change between two intervals or
+   * events, the DOM won't be refreshed.
+   * The TextTrack cues structure is also optimized for fast retrieval.
+   * We should thus not have much of a performance impact here if we set a low
+   * interval.
+   *
+   * @type {Number}
+   */
+  MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 100,
+
+  /**
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (EME).
-   * Defined in order of importance.
+   *
+   * Only used for widevine keysystems.
+   *
+   * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
   EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [
@@ -439,6 +466,10 @@ export default {
   ],
 
   /**
+   * Link canonical key systems names to their respective reverse domain name,
+   * used in the EME APIs.
+   * This allows to have a simpler API, where users just need to set "widevine"
+   * or "playready" as a keySystem.
    * @type {Object}
    */
   EME_KEY_SYSTEMS: {
