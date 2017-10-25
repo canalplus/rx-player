@@ -75,26 +75,6 @@ const {
 } = config;
 
 /**
- * Returns current playback state for the current content.
- * /!\ Only pertinent for a content currently playing.
- * (i.e. began to play, and not ended or stopped).
- * @param {Boolean} isPlaying - Whether the player is currently playing
- * (not paused).
- * @param {Boolean} stalled - Whether the player is currently "stalled".
- * @returns {string}
- */
-function inferStartedPlayerState(isPlaying, stalled) {
-  if (stalled) {
-    return (stalled.state == "seeking")
-      ? PLAYER_STATES.SEEKING
-      : PLAYER_STATES.BUFFERING;
-  }
-
-  return isPlaying ?
-    PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
-}
-
-/**
  * @param {Observable} stream
  * @param {string} type
  * @returns {Observable}
@@ -482,9 +462,14 @@ class Player extends EventEmitter {
     const stateChanges$ = loaded.mapTo(PLAYER_STATES.LOADED)
       .concat(
         Observable.combineLatest(playing$, stalled$)
-          .map(([isPlaying, stalledStatus]) =>
-            inferStartedPlayerState(isPlaying, stalledStatus)
-          )
+          .map(([isPlaying, stalledStatus]) => {
+            if (stalledStatus) {
+              return (stalledStatus.state == "seeking") ?
+                PLAYER_STATES.SEEKING : PLAYER_STATES.BUFFERING;
+            }
+            return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
+          })
+
           // begin emitting those only when the content start to play
           .skipUntil(playing$.filter(isPlaying => isPlaying === true))
       )
