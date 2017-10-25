@@ -357,7 +357,8 @@ const supplementaryImageTracks = [{
 
 ### <a name="prop-hideNativeSubtitle"></a>hideNativeSubtitle
 
-_type_: ``Array.<Boolean>|undefined``
+_type_: ``Boolean``
+
 _defaults_: ``false``
 
 If set to ``true``, the eventual <track> element will be put on mode ``hidden`` when added to the video element, so it won't actually display the subtitles the rx-player add to it.
