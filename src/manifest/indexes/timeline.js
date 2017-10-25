@@ -104,29 +104,34 @@ const SegmentTimelineHelpers = {
    */
   getSegments(repId, index, _up, _to) {
     const { up, to } = normalizeRange(index, _up, _to);
+    const { timeline, timescale, media, startNumber } = index;
 
-    const { timeline, timescale, media } = index;
+    const hasNumbering = startNumber != null;
+    let currentNumber = hasNumbering ? startNumber : undefined;
+
     const segments = [];
 
     const timelineLength = timeline.length;
-    let timelineIndex = getSegmentIndex(index, up) - 1;
+
+    // if we need to add a number, we have to parse the timeline from the
+    // beginning to know which segment we're talking of.
+    // If not, we can optimize to know where the first interesting timeline
+    // index might be
+    const initialIndex = hasNumbering ? 0 : getSegmentIndex(index, up) - 1;
+
     // TODO(pierre): use @maxSegmentDuration if possible
-    let maxDuration = (timeline.length && timeline[0].d) || 0;
+    let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
 
-    loop:
-    for(;;) {
-      if (++timelineIndex >= timelineLength) {
-        break;
-      }
-
-      const segmentRange = timeline[timelineIndex];
+    for (let i = initialIndex; i < timelineLength; i++) {
+      const segmentRange = timeline[i];
       const { d, ts, range } = segmentRange;
-      maxDuration = Math.max(maxDuration, d);
+
+      maxEncounteredDuration = Math.max(maxEncounteredDuration, d);
 
       // live-added segments have @d attribute equals to -1
       if (d < 0) {
-        if (ts + maxDuration < to) {
-          const args = {
+        if (ts + maxEncounteredDuration < to) { // TODO what?
+          const segment = new Segment({
             id: "" + repId + "_" + ts,
             time: ts,
             init: false,
@@ -135,34 +140,44 @@ const SegmentTimelineHelpers = {
             indexRange: null,
             timescale,
             media,
-          };
-          segments.push(new Segment(args));
+            number: hasNumbering ? currentNumber : undefined,
+          });
+          segments.push(segment);
         }
-        break;
+        return segments;
       }
 
-      const repeat = calculateRepeat(segmentRange, timeline[timelineIndex + 1]);
-      let segmentNumber = getSegmentNumber(ts, up, d);
-      let segmentTime;
-      while ((segmentTime = ts + segmentNumber * d) < to) {
-        if (segmentNumber++ <= repeat) {
-          const args = {
-            id: "" + repId + "_" + segmentTime,
-            time: segmentTime,
-            init: false,
-            range: range,
-            duration: d,
-            indexRange: null,
-            timescale,
-            media,
-          };
-          segments.push(new Segment(args));
-        } else {
-          continue loop;
-        }
+      const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
+      let segmentNumberInCurrentRange = getSegmentNumber(ts, up, d);
+      let segmentTime = ts + segmentNumberInCurrentRange * d;
+      while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
+        const segment = new Segment({
+          id: "" + repId + "_" + segmentTime,
+          time: segmentTime,
+          init: false,
+          range: range,
+          duration: d,
+          indexRange: null,
+          timescale,
+          media,
+          number: hasNumbering ?
+            currentNumber + segmentNumberInCurrentRange : undefined,
+        });
+        segments.push(segment);
+
+        // update segment number and segment time for the next segment
+        segmentNumberInCurrentRange++;
+        segmentTime = ts + segmentNumberInCurrentRange * d;
       }
 
-      break;
+      if (segmentTime >= to) {
+        // we reached ``to``, we're done
+        return segments;
+      }
+
+      if (hasNumbering) {
+        currentNumber += repeat + 1;
+      }
     }
 
     return segments;
