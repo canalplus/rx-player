@@ -364,6 +364,6 @@ _defaults_: ``false``
 If set to ``true``, the eventual <track> element will be put on mode ``hidden`` when added to the video element, so it won't actually display the subtitles the rx-player add to it.
 
 This has an effect only if:
-  - the current ``textTrackMode`` is native (see [textTrackMode option](#prop-textTrackMode))
+  - the current ``textTrackMode`` is equal to ``"native"`` (see [textTrackMode option](#prop-textTrackMode))
   - a text track is currently active
   - the text track format is understood by the rx-player
