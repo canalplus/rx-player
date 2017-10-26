@@ -8,7 +8,7 @@
   - languages: add support for segmented VTT subtitles
   - languages/dash: add support for plain text TTML, SAMI, SRT, VTT and MP4-embedded VTT subtitles in DASH manifests
   - languages/smooth: add support for MP4-embedded VTT subtitles in Smooth manifests
-  - languages: add possibility to show fragmented or not TTML, SAMI, SRT and VTT text tracks in <track> element for browser that do not support webvtt
+  - languages: add possibility to show fragmented or not TTML, SAMI, SRT and VTT text tracks in a <track> element, even for browser that do not support the VTTCue API
   - languages: add possibility to show TTML, SRT, VTT and SAMI text tracks in HTML tags for richer stylisation.
   - api: add ``textTrackElement`` option to ``loadVideo``
   - api: add ``textTrackMode`` option to ``loadVideo``
