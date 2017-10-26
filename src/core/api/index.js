@@ -65,7 +65,6 @@ import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
 import { PLAYER_STATES } from "./constants.js";
 import createClock from "./clock.js";
 import attachPrivateMethods from "./private.js";
-import inferPlayerState from "./infer_player_state.js";
 import {
   parseConstructorOptions,
   parseLoadVideoOptions,
@@ -345,7 +344,8 @@ class Player extends EventEmitter {
     this._priv.initialAudioTrack = defaultAudioTrack;
     this._priv.initialTextTrack = defaultTextTrack;
 
-    this._priv.playing$.next(autoPlay);
+    // inilialize to false
+    this._priv.playing$.next(false);
 
     // get every properties used from context for clarity
     const { videoElement } = this;
@@ -460,7 +460,19 @@ class Player extends EventEmitter {
      * @type {Observable.<string>}
      */
     const stateChanges$ = loaded.mapTo(PLAYER_STATES.LOADED)
-      .concat(Observable.combineLatest(playing$, stalled$, inferPlayerState))
+      .concat(
+        Observable.combineLatest(playing$, stalled$)
+          .map(([isPlaying, stalledStatus]) => {
+            if (stalledStatus) {
+              return (stalledStatus.state == "seeking") ?
+                PLAYER_STATES.SEEKING : PLAYER_STATES.BUFFERING;
+            }
+            return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
+          })
+
+          // begin emitting those only when the content start to play
+          .skipUntil(playing$.filter(isPlaying => isPlaying === true))
+      )
       .distinctUntilChanged()
       .startWith(PLAYER_STATES.LOADING);
 
