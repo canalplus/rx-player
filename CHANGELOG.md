@@ -98,9 +98,9 @@
 ### Bug Fixes:
 
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
-  - dash: it's now possible to play DASH' SegmentTimeline-based content with a numbering scheme
+  - dash: it's now possible to play SegmentTimeline-based contents with a numbering scheme
   - api: The state of the player when ready to play with autoPlay === false is now ``"LOADED"`` and not ``"PAUSED"``
-  - api: fix infinite loading bug when a new content is launched as the previous one is ended or fell on error
+  - api: fix infinite loading bug when a new content is synchronously launched as soon as the previous one is ended or fell on error
   - dash: allow absolute BaseURL in Periods
   - languages: avoid excessive re-downloads if a ``supplementaryTextTracks`` is provided and either a ``maxBufferBehind`` or a ``maxBufferAhead`` is set.
   - eme: the ``reason`` for the eme error ``KEY_STATUS_CHANGE_ERROR`` is now correctly filled in
