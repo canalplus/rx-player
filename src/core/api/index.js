@@ -60,7 +60,10 @@ import {
 } from "../../errors";
 
 import Stream from "../stream/index.js";
-import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
+import {
+  dispose as emeDispose,
+  getCurrentKeySystem,
+} from "../eme";
 
 import { PLAYER_STATES } from "./constants.js";
 import createClock from "./clock.js";
