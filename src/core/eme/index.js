@@ -144,9 +144,12 @@ function dispose() {
  */
 function clearEME() {
   if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
-    disposeMediaKeys(instanceInfos.$videoElement).subscribe(() => { });
-    instanceInfos.$videoElement = null;
+    return disposeMediaKeys(instanceInfos.$videoElement)
+      .finally(() => {
+        instanceInfos.$videoElement = null;
+      });
   }
+  return Observable.empty();
 }
 
 /**

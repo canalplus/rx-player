@@ -602,10 +602,15 @@ export default function Stream({
       mediaErrorManager$,
       speedManager$,
       stallingManager$
-    ).finally(() => {
-      abrManager.dispose();
-      clearEME();
-    });
+    )
+      .catch((error) =>
+        clearEME()
+          .concat(Observable.throw(error))
+      )
+
+      .concat(clearEME())
+
+      .finally(() => { abrManager.dispose(); });
   }
 
   return createAndPlugMediaSource(
