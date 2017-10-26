@@ -184,10 +184,10 @@ export default (self) => ({
       // audio and text are completely managed by the languageManager
       if (type === "audio") {
         self._priv.languageManager
-          .setAudioTrackByConfiguration(self._priv.initialAudioTrack);
+          .setInitialAudioTrack(self._priv.initialAudioTrack);
       } else if (type === "text") {
         self._priv.languageManager
-          .setTextTrackByConfiguration(self._priv.initialTextTrack);
+          .setInitialTextTrack(self._priv.initialTextTrack);
       } else {
         const adaptations = manifest.adaptations[type] || [];
         adaptations$[type].next(adaptations[0] || null);
