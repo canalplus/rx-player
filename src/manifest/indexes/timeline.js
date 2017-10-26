@@ -113,16 +113,10 @@ const SegmentTimelineHelpers = {
 
     const timelineLength = timeline.length;
 
-    // if we need to add a number, we have to parse the timeline from the
-    // beginning to know which segment we're talking of.
-    // If not, we can optimize to know where the first interesting timeline
-    // index might be
-    const initialIndex = hasNumbering ? 0 : getSegmentIndex(index, up) - 1;
-
     // TODO(pierre): use @maxSegmentDuration if possible
     let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
 
-    for (let i = initialIndex; i < timelineLength; i++) {
+    for (let i = 0; i < timelineLength; i++) {
       const segmentRange = timeline[i];
       const { d, ts, range } = segmentRange;
 
@@ -130,7 +124,9 @@ const SegmentTimelineHelpers = {
 
       // live-added segments have @d attribute equals to -1
       if (d < 0) {
-        if (ts + maxEncounteredDuration < to) { // TODO what?
+        // TODO what? May be to play it safe and avoid adding segments which are
+        // not completely generated
+        if (ts + maxEncounteredDuration < to) {
           const segment = new Segment({
             id: "" + repId + "_" + ts,
             time: ts,
