@@ -5,10 +5,11 @@
 ### Added
 
   - misc: add possibility to do custom builds through environment variables, to remove unwanted features from minified code.
-  - languages/dash: allow plain text TTML, SAMI, SRT and VTT subtitles in DASH and Smooth manifests
-  - languages: add possibility to show fragmented VTT text tracks in <track> element, even for browser that do not support webvtt
+  - languages: add support for segmented VTT subtitles
+  - languages/dash: add support for plain text TTML, SAMI, SRT, VTT and MP4-embedded VTT subtitles in DASH manifests
+  - languages/smooth: add support for MP4-embedded VTT subtitles in Smooth manifests
+  - languages: add possibility to show fragmented or not TTML, SAMI, SRT and VTT text tracks in <track> element for browser that do not support webvtt
   - languages: add possibility to show TTML, SRT, VTT and SAMI text tracks in HTML tags for richer stylisation.
-  - languages: add SRT texttrack support in <track> elements ("native" textTrackMode)
   - api: add ``textTrackElement`` option to ``loadVideo``
   - api: add ``textTrackMode`` option to ``loadVideo``
   - api: add ``nativeTextTracksChange`` event
@@ -97,6 +98,8 @@
 ### Bug Fixes:
 
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
+  - dash: it's now possible to play DASH' SegmentTimeline-based content with a numbering scheme
+  - api: The state of the player when ready to play with autoPlay === false is now ``"LOADED"`` and not ``"PAUSED"``
   - api: fix infinite loading bug when a new content is launched as the previous one is ended or fell on error
   - dash: allow absolute BaseURL in Periods
   - languages: avoid excessive re-downloads if a ``supplementaryTextTracks`` is provided and either a ``maxBufferBehind`` or a ``maxBufferAhead`` is set.
@@ -121,6 +124,7 @@
   - adaptive: add strategies for abrupt changes of bandwidth to avoid excessive re-buffering on network fluctuations
   - adaptive: the adaptive algorithm now take into account the current playback rate
   - doc: added file architecture documentation
+  - tests: fixed and added integration tests
   - demo: the demo now manages most languages defined by in the ISO 639-3 standard
 
 ## v2.3.2 (2017/07/25)
