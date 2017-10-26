@@ -48,6 +48,16 @@ function shouldRenewMediaKeys() {
 }
 
 /**
+ * Returns true if the mediakeys associated to a video element should be
+ * unset once the content is stopped.
+ * Depends on the target.
+ * @returns {Boolean}
+ */
+function shouldUnsetMediaKeys() {
+  return isIE;
+}
+
+/**
  * Wait for the MediaSource's sourceopen event and emit. Emit immediatelly if
  * already received.
  * @param {MediaSource}
@@ -247,5 +257,6 @@ export {
   requestMediaKeySystemAccess,
   setMediaKeys,
   shouldRenewMediaKeys,
+  shouldUnsetMediaKeys,
   onSourceOpen$,
 };
