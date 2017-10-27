@@ -27,7 +27,7 @@ If you don't know if you were using documented APIs, you can still check if the 
     - [defaultSubtitle](#cons-defaultSubtitle)
     - [initVideoBitrate / initAudioBitrate](#cons-initVideoBitrate)
     - [defaultAudioTrack](#cons-defaultAudioTrack)
-    - [defaultTexTrack](#cons-defaultTexTrack)
+    - [defaultTextTrack](#cons-defaultTextTrack)
     - [transport](#cons-transport)
     - [transportOptions](#cons-transportOptions)
 - [loadVideo](#load)
