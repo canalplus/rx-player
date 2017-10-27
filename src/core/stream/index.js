@@ -48,8 +48,6 @@ import { Buffer, EmptyBuffer } from "../buffer";
 import Pipeline from "../pipelines/index.js";
 import ABRManager from "../abr";
 
-import { clearEME } from "../eme";
-
 import getInitialTime from "./initial_time.js";
 import {
   shouldHaveNativeSourceBuffer,
@@ -602,15 +600,7 @@ export default function Stream({
       mediaErrorManager$,
       speedManager$,
       stallingManager$
-    )
-      .catch((error) =>
-        clearEME()
-          .concat(Observable.throw(error))
-      )
-
-      .concat(clearEME())
-
-      .finally(() => { abrManager.dispose(); });
+    );
   }
 
   return createAndPlugMediaSource(
