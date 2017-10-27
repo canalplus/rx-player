@@ -20,6 +20,7 @@ import log from "../../utils/log";
 import castToObservable from "../../utils/castToObservable.js";
 import assert from "../../utils/assert";
 
+import { shouldUnsetMediaKeys } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events.js";
 
 import {
@@ -139,6 +140,21 @@ function dispose() {
 }
 
 /**
+ * Clear EME ressources as the current content stops its playback.
+ */
+function clearEME() {
+  return Observable.defer(() => {
+    if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
+      return disposeMediaKeys(instanceInfos.$videoElement)
+        .finally(() => {
+          instanceInfos.$videoElement = null;
+        });
+    }
+    return Observable.empty();
+  });
+}
+
+/**
  * Returns the name of the current key system used.
  * @returns {string}
  */
@@ -148,6 +164,7 @@ function getCurrentKeySystem() {
 
 export {
   createEME,
+  clearEME,
   getCurrentKeySystem,
   dispose,
 };

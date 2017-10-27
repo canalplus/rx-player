@@ -60,12 +60,14 @@ import {
 } from "../../errors";
 
 import Stream from "../stream/index.js";
-import { dispose as emeDispose , getCurrentKeySystem } from "../eme";
+import {
+  dispose as emeDispose,
+  getCurrentKeySystem,
+} from "../eme";
 
 import { PLAYER_STATES } from "./constants.js";
 import createClock from "./clock.js";
 import attachPrivateMethods from "./private.js";
-import inferPlayerState from "./infer_player_state.js";
 import {
   parseConstructorOptions,
   parseLoadVideoOptions,
@@ -153,7 +155,7 @@ class Player extends EventEmitter {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.0.0-rc6";
+    this.version = /*PLAYER_VERSION*/"3.0.0-rc7";
     this.log = log;
     this.state = undefined;
     this.videoElement = videoElement;
@@ -210,6 +212,11 @@ class Player extends EventEmitter {
     this._priv.unsubscribeLoadedVideo$ = new Subject()
       .takeUntil(this._priv.destroy$);
 
+    // Emit true when the stream is cleaning-up and thus cannot be re-created
+    // before this asynchronous process is finished.
+    this._priv.streamLock$ = new BehaviorSubject(false)
+      .takeUntil(this._priv.destroy$);
+
     this._priv.wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
     this._priv.maxBufferAhead$ = new BehaviorSubject(maxBufferAhead);
     this._priv.maxBufferBehind$ = new BehaviorSubject(maxBufferBehind);
@@ -234,17 +241,22 @@ class Player extends EventEmitter {
 
     this._priv.mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
-    // private state set later
-    [
-      "abrManager", "currentAdaptations", "currentImagePlaylist",
-      "currentRepresentations", "fatalError", "initialAudioTrack",
-      "initialTextTrack", "languageManager", "manifest", "recordedEvents",
-    ].forEach(key => {
-      this._priv[key] = undefined;
-    });
+    this._priv.initialAudioTrack = undefined;
+    this._priv.initialTextTrack = undefined;
+    this._priv.languageManager = null;
 
-    // populate initial values for content-related state
-    this._priv.resetContentState();
+    if (this._priv.abrManager) {
+      this._priv.abrManager = null;
+    }
+
+    this._priv.manifest = null;
+    this._priv.currentRepresentations = {};
+    this._priv.currentAdaptations = {};
+
+    this._priv.recordedEvents = {}; // event memory
+
+    this._priv.fatalError = null;
+    this._priv.currentImagePlaylist = null;
 
     this._priv.setPlayerState(PLAYER_STATES.STOPPED);
   }
@@ -254,8 +266,8 @@ class Player extends EventEmitter {
    */
   stop() {
     if (this.state !== PLAYER_STATES.STOPPED) {
-      this._priv.resetContentState();
       this._priv.unsubscribeLoadedVideo$.next();
+      this._priv.cleanUpCurrentContentState();
       this._priv.setPlayerState(PLAYER_STATES.STOPPED);
     }
   }
@@ -294,6 +306,7 @@ class Player extends EventEmitter {
     _priv.lastBitrates = null;
     _priv.manualBitrates = null;
     _priv.initialMaxAutoBitrates = null;
+    _priv.streamLock$ = null;
     this.videoElement = null;
   }
 
@@ -345,7 +358,8 @@ class Player extends EventEmitter {
     this._priv.initialAudioTrack = defaultAudioTrack;
     this._priv.initialTextTrack = defaultTextTrack;
 
-    this._priv.playing$.next(autoPlay);
+    // inilialize to false
+    this._priv.playing$.next(false);
 
     // get every properties used from context for clarity
     const { videoElement } = this;
@@ -460,7 +474,19 @@ class Player extends EventEmitter {
      * @type {Observable.<string>}
      */
     const stateChanges$ = loaded.mapTo(PLAYER_STATES.LOADED)
-      .concat(Observable.combineLatest(playing$, stalled$, inferPlayerState))
+      .concat(
+        Observable.combineLatest(playing$, stalled$)
+          .map(([isPlaying, stalledStatus]) => {
+            if (stalledStatus) {
+              return (stalledStatus.state == "seeking") ?
+                PLAYER_STATES.SEEKING : PLAYER_STATES.BUFFERING;
+            }
+            return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
+          })
+
+          // begin emitting those only when the content start to play
+          .skipUntil(playing$.filter(isPlaying => isPlaying === true))
+      )
       .distinctUntilChanged()
       .startWith(PLAYER_STATES.LOADING);
 
@@ -507,7 +533,14 @@ class Player extends EventEmitter {
         x => this._priv.onErrorStreamNext(x)
       );
 
-    streamDisposable = stream.connect();
+    // connect the stream when the lock is inactive
+    this._priv.streamLock$
+      .filter((isLocked) => !isLocked)
+      .take(1)
+      .takeUntil(unsubscribeLoadedVideo$)
+      .subscribe(() => {
+        streamDisposable = stream.connect();
+      });
   }
 
   /**

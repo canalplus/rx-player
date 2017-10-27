@@ -600,7 +600,7 @@ export default function Stream({
       mediaErrorManager$,
       speedManager$,
       stallingManager$
-    ).finally(() => abrManager.dispose());
+    );
   }
 
   return createAndPlugMediaSource(

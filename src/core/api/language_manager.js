@@ -99,82 +99,130 @@ class LanguageManager {
    * text adaptation will be emitted
    */
   constructor({ text, audio }, { text$, audio$ }) {
-    const textAdaptations = text || [];
-    const audioAdaptations = audio || [];
-
+    /**
+     * The currently chosen audio adaptation.
+     * undefined if none chosen yet
+     * null if the audio track is disabled
+     * @type {Adaptation|undefined|null}
+     */
     this._currentAudioAdaptation = undefined;
+
+    /**
+     * The currently chosen text adaptation.
+     * undefined if none chosen yet
+     * null if the text track is disabled
+     * @type {Adaptation|undefined|null}
+     */
     this._currentTextAdaptation = undefined;
-    this._textAdaptations = textAdaptations;
-    this._audioAdaptations = audioAdaptations;
+
+    /**
+     * Every audio adaptations available.
+     * @type {Array.<Adaptation>}
+     */
+    this._audioAdaptations = audio || [];
+
+    /**
+     * Every text adaptations available.
+     * @type {Array.<Adaptation>}
+     */
+    this._textAdaptations = text || [];
+
     this._text$ = text$;
     this._audio$ = audio$;
   }
 
+  /**
+   * Update the adaptations in the current content.
+   * Try to find the same adaptations than the ones previously chosen.
+   * @param {Object} adaptationsObject
+   * @param {Array.<Object>} audioAdaptationsObject.audio - The audio
+   * adaptations available.
+   * @param {Array.<Object>} audioAdaptationsObject.text - The text
+   * adaptations available.
+   */
   updateAdaptations({ audio, text }) {
     this._audioAdaptations = audio || [];
     this._textAdaptations = text || [];
 
     const currentAudioAdaptation = this._currentAudioAdaptation;
-    const currentAudioId = currentAudioAdaptation && currentAudioAdaptation.id;
 
-    let audioAdaptationFound;
-    if (currentAudioId != null) {
-      audioAdaptationFound = arrayFind(audio, ({ id }) =>
+    // if not set, it either means it is deactivated (null) or that is not set
+    // (undefined). In both cases, we don't want to update the adaptation here.
+    if (currentAudioAdaptation) {
+      // try to find the same adaptation than the current one
+      const currentAudioId = currentAudioAdaptation.id;
+      const audioAdaptationFound = arrayFind(audio, ({ id }) =>
         id === currentAudioId);
-    }
 
-    if (!audioAdaptationFound) {
-      const foundTrack = findAudioAdaptation(audio, {
-        language: currentAudioAdaptation.language,
-        audioDescription: !!currentAudioAdaptation.isAudioDescription,
-      });
+      if (!audioAdaptationFound) {
+        const foundTrack = findAudioAdaptation(audio, {
+          language: currentAudioAdaptation.language,
+          audioDescription: !!currentAudioAdaptation.isAudioDescription,
+        });
 
-      const chosenTrack = foundTrack || audio[0] || null;
-      if (this._currentAudioAdaptation !== chosenTrack) {
-        this._currentAudioAdaptation = chosenTrack;
-        this._audio$.next(this._currentAudioAdaptation);
+        const chosenTrack = foundTrack || audio[0] || null;
+        if (this._currentAudioAdaptation !== chosenTrack) {
+          this._currentAudioAdaptation = chosenTrack;
+          this._audio$.next(this._currentAudioAdaptation);
+        }
       }
     }
 
     const currentTextAdaptation = this._currentTextAdaptation;
-    const currentTextId = currentTextAdaptation && currentTextAdaptation.id;
 
-    let textAdaptationFound;
-    if (currentTextId != null) {
-      textAdaptationFound = arrayFind(text, ({ id }) =>
+    // if not set, it either means it is deactivated (null) or that is not set
+    // (undefined). In both cases, we don't want to update the adaptation here.
+    if (currentTextAdaptation) {
+      // try to find the same adaptation than the current one
+      const currentTextId = currentTextAdaptation.id;
+
+      const textAdaptationFound = arrayFind(text, ({ id }) =>
         id === currentTextId);
-    }
 
-    if (currentTextId !== null && !textAdaptationFound) {
-      const foundTrack =
-        findTextAdaptation(text, {
-          language: currentTextAdaptation.language,
-          closedCaption: !!currentTextAdaptation.isClosedCaption,
-        });
+      if (!textAdaptationFound) {
+        const foundTrack =
+          findTextAdaptation(text, {
+            language: currentTextAdaptation.language,
+            closedCaption: !!currentTextAdaptation.isClosedCaption,
+          });
 
-      const chosenTrack = foundTrack || text[0];
-      if (this._currentTextAdaptation !== chosenTrack) {
-        this._currentTextAdaptation = chosenTrack;
-        this._text$.next(this._currentTextAdaptation);
+        const chosenTrack = foundTrack || text[0];
+        if (this._currentTextAdaptation !== chosenTrack) {
+          this._currentTextAdaptation = chosenTrack;
+          this._text$.next(this._currentTextAdaptation);
+        }
       }
     }
   }
 
   /**
-   * Set the audio track based on its configuration.
-   * @param {Object} wantedTrack
+   * Set the audio track based on an optional given configuration.
+   *
+   * If no configuration is provided, set the first adaptation found.
+   * If the given configuration is ``null``, disable the audio track.
+   *
+   * Else, If it fails to find one matching the wanted criteria, set the first
+   * adaptation found instead.
+   * If there is no available audio adaptation at all, disable the audio track.
+   * @param {Object|null} [wantedTrack]
    * @param {string} wantedTrack.language
    * @param {string} wantedTrack.normalized
    * @param {Boolean} wantedTrack.audioDescription
    */
-  setAudioTrackByConfiguration(wantedTrack) {
-    const chosenAdaptation = wantedTrack ?
-      findAudioAdaptation(this._audioAdaptations, wantedTrack) ||
-      this._audioAdaptations[0] : this._audioAdaptations[0];
+  setInitialAudioTrack(wantedTrack) {
+    let chosenAdaptation;
+
+    if (wantedTrack) {
+      chosenAdaptation =
+        findAudioAdaptation(this._audioAdaptations, wantedTrack);
+    } else if (wantedTrack === null) {
+      chosenAdaptation = null;
+    }
 
     if (chosenAdaptation === undefined) {
-      throw new Error("Audio Track not found.");
+      chosenAdaptation = this._audioAdaptations[0] || null;
     }
+
     if (chosenAdaptation !== this._currentAudioAdaptation) {
       this._currentAudioAdaptation = chosenAdaptation;
       this._audio$.next(this._currentAudioAdaptation);
@@ -182,20 +230,20 @@ class LanguageManager {
   }
 
   /**
-   * Set the text track based on its configuration.
-   * @param {Object} wantedTrack
+   * Set the text track based on an optional given configuration.
+   * If the given configuration is not defined or null, disable the text track.
+   * Else, If it fails to find one matching the wanted criteria, disable the
+   * text track.
+   * @param {Object|null|undefined} wantedTrack
    * @param {string} wantedTrack.language
    * @param {string} wantedTrack.normalized
    * @param {Boolean} wantedTrack.closedCaption
    */
-  setTextTrackByConfiguration(wantedTrack) {
+  setInitialTextTrack(wantedTrack) {
     const chosenAdaptation = wantedTrack ?
-      findTextAdaptation(this._textAdaptations, wantedTrack) ||
-      null : null;
+      findTextAdaptation(this._textAdaptations, wantedTrack) || null :
+      null;
 
-    if (chosenAdaptation === undefined) {
-      throw new Error("Text Track not found.");
-    }
     if (chosenAdaptation !== this._currentTextAdaptation) {
       this._currentTextAdaptation = chosenAdaptation;
       this._text$.next(this._currentTextAdaptation);
@@ -203,6 +251,7 @@ class LanguageManager {
   }
 
   /**
+   * Set audio track based on the ID of its adaptation.
    * @param {string|Number} wantedId - adaptation id of the wanted track
    * @throws Error - Throws if the given id is not found in any audio adaptation
    */
@@ -221,6 +270,7 @@ class LanguageManager {
   }
 
   /**
+   * Set text track based on the ID of its adaptation.
    * @param {string|Number} wantedId - adaptation id of the wanted track
    * @throws Error - Throws if the given id is not found in any text adaptation
    */
@@ -238,6 +288,20 @@ class LanguageManager {
     }
   }
 
+  /**
+   * Disable the current audio track.
+   */
+  disableAudioTrack() {
+    if (this._currentAudioAdaptation === null) {
+      return;
+    }
+    this._currentAudioAdaptation = null;
+    this._audio$.next(this._currentAudioAdaptation);
+  }
+
+  /**
+   * Disable the current text track.
+   */
   disableTextTrack() {
     if (this._currentTextAdaptation === null) {
       return;
@@ -246,6 +310,18 @@ class LanguageManager {
     this._text$.next(this._currentTextAdaptation);
   }
 
+  /**
+   * Returns an object describing the current audio track.
+   * This object has the following keys:
+   *   - language {string}
+   *   - normalized {string}
+   *   - audioDescription {Boolean}
+   *   - id {number|string}
+   *
+   * Returns null is the the current audio track is disabled or not
+   * set yet.
+   * @returns {Object|null}
+   */
   getCurrentAudioTrack() {
     const adaptation = this._currentAudioAdaptation;
     if (!adaptation) {
@@ -259,6 +335,18 @@ class LanguageManager {
     };
   }
 
+  /**
+   * Returns an object describing the current text track.
+   * This object has the following keys:
+   *   - language {string}
+   *   - normalized {string}
+   *   - closedCaption {Boolean}
+   *   - id {number|string}
+   *
+   * Returns null is the the current text track is disabled or not
+   * set yet.
+   * @returns {Object|null}
+   */
   getCurrentTextTrack() {
     const adaptation = this._currentTextAdaptation;
     if (!adaptation) {
@@ -272,6 +360,16 @@ class LanguageManager {
     };
   }
 
+  /**
+   * Returns all available audio tracks, as an array of objects.
+   * Those objects have the following keys:
+   *   - language {string}
+   *   - normalized {string}
+   *   - audioDescription {Boolean}
+   *   - id {number|string}
+   *   - active {Boolean}
+   * @returns {Array.<Object>}
+   */
   getAvailableAudioTracks() {
     const currentTrack = this._currentAudioAdaptation;
     const currentId = currentTrack && currentTrack.id;
@@ -285,6 +383,16 @@ class LanguageManager {
       }));
   }
 
+  /**
+   * Returns all available text tracks, as an array of objects.
+   * Those objects have the following keys:
+   *   - language {string}
+   *   - normalized {string}
+   *   - closedCaption {Boolean}
+   *   - id {number|string}
+   *   - active {Boolean}
+   * @returns {Array.<Object>}
+   */
   getAvailableTextTracks() {
     const currentTrack = this._currentTextAdaptation;
     const currentId = currentTrack && currentTrack.id;

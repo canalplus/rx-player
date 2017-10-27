@@ -27,6 +27,7 @@
  */
 
 import deepEqual from "deep-equal";
+import { Observable } from "rxjs/Observable";
 
 import log from "../../utils/log";
 import assert from "../../utils/assert";
@@ -40,17 +41,25 @@ import { PLAYER_STATES } from "./constants.js";
 
 import LanguageManager from "./language_manager.js";
 
+import { clearEME } from "../eme";
+
 export default (self) => ({
   /**
-   * Reset all states relative to a playing content.
+   * Reset all state properties relative to a playing content.
    */
-  resetContentState() {
+  cleanUpCurrentContentState() {
+    // lock creation of new streams while cleaning up is pending
+    self._priv.streamLock$.next(true);
+
     // language management
     self._priv.initialAudioTrack = undefined;
     self._priv.initialTextTrack = undefined;
     self._priv.languageManager = null;
 
-    self._priv.abrManager = null;
+    if (self._priv.abrManager) {
+      self._priv.abrManager.dispose();
+      self._priv.abrManager = null;
+    }
 
     self._priv.manifest = null;
     self._priv.currentRepresentations = {};
@@ -60,6 +69,13 @@ export default (self) => ({
 
     self._priv.fatalError = null;
     self._priv.currentImagePlaylist = null;
+
+    clearEME()
+      .catch(() => Observable.empty())
+      .subscribe(() => {}, () => {}, () => {
+        // free up the lock
+        self._priv.streamLock$.next(false);
+      });
   },
 
   /**
@@ -128,9 +144,9 @@ export default (self) => ({
    * @param {Object} streamInfos
    */
   onStreamError(error) {
-    self._priv.resetContentState();
-    self._priv.fatalError = error;
     self._priv.unsubscribeLoadedVideo$.next();
+    this._priv.cleanUpCurrentContentState();
+    self._priv.fatalError = error;
     self._priv.setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the
@@ -150,8 +166,8 @@ export default (self) => ({
    * @param {Object} streamInfos
    */
   onStreamComplete() {
-    self._priv.resetContentState();
     self._priv.unsubscribeLoadedVideo$.next();
+    this._priv.cleanUpCurrentContentState();
     self._priv.setPlayerState(PLAYER_STATES.ENDED);
   },
 
@@ -184,10 +200,10 @@ export default (self) => ({
       // audio and text are completely managed by the languageManager
       if (type === "audio") {
         self._priv.languageManager
-          .setAudioTrackByConfiguration(self._priv.initialAudioTrack);
+          .setInitialAudioTrack(self._priv.initialAudioTrack);
       } else if (type === "text") {
         self._priv.languageManager
-          .setTextTrackByConfiguration(self._priv.initialTextTrack);
+          .setInitialTextTrack(self._priv.initialTextTrack);
       } else {
         const adaptations = manifest.adaptations[type] || [];
         adaptations$[type].next(adaptations[0] || null);
