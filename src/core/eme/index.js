@@ -143,13 +143,15 @@ function dispose() {
  * Clear EME ressources as the current content stops its playback.
  */
 function clearEME() {
-  if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
-    return disposeMediaKeys(instanceInfos.$videoElement)
-      .finally(() => {
-        instanceInfos.$videoElement = null;
-      });
-  }
-  return Observable.empty();
+  return Observable.defer(() => {
+    if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
+      return disposeMediaKeys(instanceInfos.$videoElement)
+        .finally(() => {
+          instanceInfos.$videoElement = null;
+        });
+    }
+    return Observable.empty();
+  });
 }
 
 /**

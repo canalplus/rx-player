@@ -40,9 +40,12 @@ import { PLAYER_STATES } from "./constants.js";
 
 import LanguageManager from "./language_manager.js";
 
+import { clearEME } from "../eme";
+
 export default (self) => ({
   /**
-   * Reset all states relative to a playing content.
+   * Reset all state properties relative to a playing content.
+   * @returns {Observable}
    */
   resetContentState() {
     // language management
@@ -50,7 +53,10 @@ export default (self) => ({
     self._priv.initialTextTrack = undefined;
     self._priv.languageManager = null;
 
-    self._priv.abrManager = null;
+    if (self._priv.abrManager) {
+      self._priv.abrManager.dispose();
+      self._priv.abrManager = null;
+    }
 
     self._priv.manifest = null;
     self._priv.currentRepresentations = {};
@@ -60,6 +66,8 @@ export default (self) => ({
 
     self._priv.fatalError = null;
     self._priv.currentImagePlaylist = null;
+
+    return clearEME();
   },
 
   /**
@@ -128,9 +136,8 @@ export default (self) => ({
    * @param {Object} streamInfos
    */
   onStreamError(error) {
-    self._priv.resetContentState();
-    self._priv.fatalError = error;
     self._priv.unsubscribeLoadedVideo$.next();
+    self._priv.fatalError = error;
     self._priv.setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the
@@ -150,7 +157,6 @@ export default (self) => ({
    * @param {Object} streamInfos
    */
   onStreamComplete() {
-    self._priv.resetContentState();
     self._priv.unsubscribeLoadedVideo$.next();
     self._priv.setPlayerState(PLAYER_STATES.ENDED);
   },

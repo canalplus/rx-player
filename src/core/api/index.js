@@ -210,6 +210,11 @@ class Player extends EventEmitter {
 
     // clean ressources from loaded content
     this._priv.unsubscribeLoadedVideo$ = new Subject()
+      .mergeMap(() => {
+        return this._priv.resetContentState()
+          // just ignore errors there
+          .catch(() => Observable.empty());
+      })
       .takeUntil(this._priv.destroy$);
 
     this._priv.wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
@@ -236,17 +241,22 @@ class Player extends EventEmitter {
 
     this._priv.mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
-    // private state set later
-    [
-      "abrManager", "currentAdaptations", "currentImagePlaylist",
-      "currentRepresentations", "fatalError", "initialAudioTrack",
-      "initialTextTrack", "languageManager", "manifest", "recordedEvents",
-    ].forEach(key => {
-      this._priv[key] = undefined;
-    });
+    this._priv.initialAudioTrack = undefined;
+    this._priv.initialTextTrack = undefined;
+    this._priv.languageManager = null;
 
-    // populate initial values for content-related state
-    this._priv.resetContentState();
+    if (this._priv.abrManager) {
+      this._priv.abrManager = null;
+    }
+
+    this._priv.manifest = null;
+    this._priv.currentRepresentations = {};
+    this._priv.currentAdaptations = {};
+
+    this._priv.recordedEvents = {}; // event memory
+
+    this._priv.fatalError = null;
+    this._priv.currentImagePlaylist = null;
 
     this._priv.setPlayerState(PLAYER_STATES.STOPPED);
   }
