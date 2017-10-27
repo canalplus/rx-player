@@ -210,11 +210,11 @@ class Player extends EventEmitter {
 
     // clean ressources from loaded content
     this._priv.unsubscribeLoadedVideo$ = new Subject()
-      .mergeMap(() => {
-        return this._priv.resetContentState()
-          // just ignore errors there
-          .catch(() => Observable.empty());
-      })
+      .takeUntil(this._priv.destroy$);
+
+    // Emit true when the stream is cleaning-up and thus cannot be re-created
+    // before this asynchronous process is finished.
+    this._priv.streamLock$ = new BehaviorSubject(false)
       .takeUntil(this._priv.destroy$);
 
     this._priv.wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
@@ -266,8 +266,8 @@ class Player extends EventEmitter {
    */
   stop() {
     if (this.state !== PLAYER_STATES.STOPPED) {
-      this._priv.resetContentState();
       this._priv.unsubscribeLoadedVideo$.next();
+      this._priv.cleanUpCurrentContentState();
       this._priv.setPlayerState(PLAYER_STATES.STOPPED);
     }
   }
@@ -306,6 +306,7 @@ class Player extends EventEmitter {
     _priv.lastBitrates = null;
     _priv.manualBitrates = null;
     _priv.initialMaxAutoBitrates = null;
+    _priv.streamLock$ = null;
     this.videoElement = null;
   }
 
@@ -532,7 +533,14 @@ class Player extends EventEmitter {
         x => this._priv.onErrorStreamNext(x)
       );
 
-    streamDisposable = stream.connect();
+    // connect the stream when the lock is inactive
+    this._priv.streamLock$
+      .filter((isLocked) => !isLocked)
+      .take(1)
+      .takeUntil(unsubscribeLoadedVideo$)
+      .subscribe(() => {
+        streamDisposable = stream.connect();
+      });
   }
 
   /**
