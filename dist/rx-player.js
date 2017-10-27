@@ -4833,8 +4833,8 @@ if (false) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return createEME; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return clearEME; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return createEME; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return clearEME; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return getCurrentKeySystem; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return dispose; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(0);
@@ -4985,10 +4985,14 @@ function dispose() {
  * Clear EME ressources as the current content stops its playback.
  */
 function clearEME() {
-  if (instanceInfos.$videoElement && __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__compat___["e" /* shouldUnsetMediaKeys */])()) {
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_8__set_media_keys_js__["b" /* disposeMediaKeys */])(instanceInfos.$videoElement).subscribe(function () {});
-    instanceInfos.$videoElement = null;
-  }
+  return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].defer(function () {
+    if (instanceInfos.$videoElement && __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__compat___["e" /* shouldUnsetMediaKeys */])()) {
+      return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_8__set_media_keys_js__["b" /* disposeMediaKeys */])(instanceInfos.$videoElement).finally(function () {
+        instanceInfos.$videoElement = null;
+      });
+    }
+    return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].empty();
+  });
 }
 
 /**
@@ -12471,6 +12475,10 @@ var Player = function (_EventEmitter) {
     // clean ressources from loaded content
     _this._priv.unsubscribeLoadedVideo$ = new __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__["Subject"]().takeUntil(_this._priv.destroy$);
 
+    // Emit true when the stream is cleaning-up and thus cannot be re-created
+    // before this asynchronous process is finished.
+    _this._priv.streamLock$ = new __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__["BehaviorSubject"](false).takeUntil(_this._priv.destroy$);
+
     _this._priv.wantedBufferAhead$ = new __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__["BehaviorSubject"](wantedBufferAhead);
     _this._priv.maxBufferAhead$ = new __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__["BehaviorSubject"](maxBufferAhead);
     _this._priv.maxBufferBehind$ = new __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__["BehaviorSubject"](maxBufferBehind);
@@ -12495,13 +12503,22 @@ var Player = function (_EventEmitter) {
 
     _this._priv.mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
-    // private state set later
-    ["abrManager", "currentAdaptations", "currentImagePlaylist", "currentRepresentations", "fatalError", "initialAudioTrack", "initialTextTrack", "languageManager", "manifest", "recordedEvents"].forEach(function (key) {
-      _this._priv[key] = undefined;
-    });
+    _this._priv.initialAudioTrack = undefined;
+    _this._priv.initialTextTrack = undefined;
+    _this._priv.languageManager = null;
 
-    // populate initial values for content-related state
-    _this._priv.resetContentState();
+    if (_this._priv.abrManager) {
+      _this._priv.abrManager = null;
+    }
+
+    _this._priv.manifest = null;
+    _this._priv.currentRepresentations = {};
+    _this._priv.currentAdaptations = {};
+
+    _this._priv.recordedEvents = {}; // event memory
+
+    _this._priv.fatalError = null;
+    _this._priv.currentImagePlaylist = null;
 
     _this._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_16__constants_js__["a" /* PLAYER_STATES */].STOPPED);
     return _this;
@@ -12514,8 +12531,8 @@ var Player = function (_EventEmitter) {
 
   Player.prototype.stop = function stop() {
     if (this.state !== __WEBPACK_IMPORTED_MODULE_16__constants_js__["a" /* PLAYER_STATES */].STOPPED) {
-      this._priv.resetContentState();
       this._priv.unsubscribeLoadedVideo$.next();
+      this._priv.cleanUpCurrentContentState();
       this._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_16__constants_js__["a" /* PLAYER_STATES */].STOPPED);
     }
   };
@@ -12557,6 +12574,7 @@ var Player = function (_EventEmitter) {
     _priv.lastBitrates = null;
     _priv.manualBitrates = null;
     _priv.initialMaxAutoBitrates = null;
+    _priv.streamLock$ = null;
     this.videoElement = null;
   };
 
@@ -12779,7 +12797,12 @@ var Player = function (_EventEmitter) {
       return _this2._priv.onErrorStreamNext(x);
     });
 
-    streamDisposable = stream.connect();
+    // connect the stream when the lock is inactive
+    this._priv.streamLock$.filter(function (isLocked) {
+      return !isLocked;
+    }).take(1).takeUntil(unsubscribeLoadedVideo$).subscribe(function () {
+      streamDisposable = stream.connect();
+    });
   };
 
   /**
@@ -14084,11 +14107,14 @@ function parseLoadVideoOptions() {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_deep_equal__ = __webpack_require__(194);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_deep_equal___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_deep_equal__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_assert__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__manifest_timings_js__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__constants_js__ = __webpack_require__(65);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__language_manager_js__ = __webpack_require__(109);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_assert__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__manifest_timings_js__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__constants_js__ = __webpack_require__(65);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__language_manager_js__ = __webpack_require__(109);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__eme__ = __webpack_require__(37);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -14128,18 +14154,27 @@ function parseLoadVideoOptions() {
 
 
 
+
+
+
 /* harmony default export */ __webpack_exports__["a"] = (function (self) {
   return {
     /**
-     * Reset all states relative to a playing content.
+     * Reset all state properties relative to a playing content.
      */
-    resetContentState: function resetContentState() {
+    cleanUpCurrentContentState: function cleanUpCurrentContentState() {
+      // lock creation of new streams while cleaning up is pending
+      self._priv.streamLock$.next(true);
+
       // language management
       self._priv.initialAudioTrack = undefined;
       self._priv.initialTextTrack = undefined;
       self._priv.languageManager = null;
 
-      self._priv.abrManager = null;
+      if (self._priv.abrManager) {
+        self._priv.abrManager.dispose();
+        self._priv.abrManager = null;
+      }
 
       self._priv.manifest = null;
       self._priv.currentRepresentations = {};
@@ -14149,6 +14184,13 @@ function parseLoadVideoOptions() {
 
       self._priv.fatalError = null;
       self._priv.currentImagePlaylist = null;
+
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_7__eme__["d" /* clearEME */])().catch(function () {
+        return __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__["Observable"].empty();
+      }).subscribe(function () {}, function () {}, function () {
+        // free up the lock
+        self._priv.streamLock$.next(false);
+      });
     },
 
 
@@ -14225,10 +14267,10 @@ function parseLoadVideoOptions() {
      * @param {Object} streamInfos
      */
     onStreamError: function onStreamError(error) {
-      self._priv.resetContentState();
-      self._priv.fatalError = error;
       self._priv.unsubscribeLoadedVideo$.next();
-      self._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* PLAYER_STATES */].STOPPED);
+      this._priv.cleanUpCurrentContentState();
+      self._priv.fatalError = error;
+      self._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_5__constants_js__["a" /* PLAYER_STATES */].STOPPED);
 
       // TODO This condition is here because the eventual callback called when the
       // player state is updated can launch a new content, thus the error will not
@@ -14248,9 +14290,9 @@ function parseLoadVideoOptions() {
      * @param {Object} streamInfos
      */
     onStreamComplete: function onStreamComplete() {
-      self._priv.resetContentState();
       self._priv.unsubscribeLoadedVideo$.next();
-      self._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* PLAYER_STATES */].ENDED);
+      this._priv.cleanUpCurrentContentState();
+      self._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_5__constants_js__["a" /* PLAYER_STATES */].ENDED);
     },
 
 
@@ -14275,7 +14317,7 @@ function parseLoadVideoOptions() {
       self._priv.manifest = manifest;
 
       // set language management for audio and text
-      self._priv.languageManager = new __WEBPACK_IMPORTED_MODULE_5__language_manager_js__["a" /* default */](manifest.adaptations, {
+      self._priv.languageManager = new __WEBPACK_IMPORTED_MODULE_6__language_manager_js__["a" /* default */](manifest.adaptations, {
         audio$: adaptations$.audio,
         text$: adaptations$.text
       });
@@ -14401,7 +14443,7 @@ function parseLoadVideoOptions() {
     setPlayerState: function setPlayerState(s) {
       if (self.state !== s) {
         self.state = s;
-        __WEBPACK_IMPORTED_MODULE_1__utils_log__["a" /* default */].info("playerStateChange", s);
+        __WEBPACK_IMPORTED_MODULE_2__utils_log__["a" /* default */].info("playerStateChange", s);
         self.trigger("playerStateChange", s);
       }
     },
@@ -14426,8 +14468,8 @@ function parseLoadVideoOptions() {
       };
 
       if (self._priv.manifest.isLive && timing.currentTime > 0) {
-        positionData.wallClockTime = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__manifest_timings_js__["a" /* toWallClockTime */])(timing.currentTime, self._priv.manifest).getTime() / 1000;
-        positionData.liveGap = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__manifest_timings_js__["d" /* getMaximumBufferPosition */])(self._priv.manifest) - timing.currentTime;
+        positionData.wallClockTime = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__manifest_timings_js__["a" /* toWallClockTime */])(timing.currentTime, self._priv.manifest).getTime() / 1000;
+        positionData.liveGap = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__manifest_timings_js__["d" /* getMaximumBufferPosition */])(self._priv.manifest) - timing.currentTime;
       }
 
       self.trigger("positionUpdate", positionData);
@@ -18130,7 +18172,7 @@ function createPipeline(_ref) {
  */
 function createEMEIfKeySystems(videoElement, keySystems, errorStream) {
   if (keySystems && keySystems.length) {
-    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__eme__["d" /* createEME */])(videoElement, keySystems, errorStream);
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__eme__["c" /* createEME */])(videoElement, keySystems, errorStream);
   } else {
     return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__compat_events_js__["f" /* onEncrypted$ */])(videoElement).map(function () {
       __WEBPACK_IMPORTED_MODULE_1__utils_log__["a" /* default */].error("eme: ciphered media and no keySystem passed");
@@ -18227,16 +18269,15 @@ function createMediaErrorStream(videoElement) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__buffer__ = __webpack_require__(114);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__pipelines_index_js__ = __webpack_require__(127);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__abr__ = __webpack_require__(105);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__eme__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__initial_time_js__ = __webpack_require__(131);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__source_buffers__ = __webpack_require__(135);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__media_source_js__ = __webpack_require__(132);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__timings_js__ = __webpack_require__(145);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__error_stream_js__ = __webpack_require__(129);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__process_pipeline_js__ = __webpack_require__(133);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__speed_manager_js__ = __webpack_require__(143);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__stalling_obs_js__ = __webpack_require__(144);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__eme_js__ = __webpack_require__(128);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__initial_time_js__ = __webpack_require__(131);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__source_buffers__ = __webpack_require__(135);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__media_source_js__ = __webpack_require__(132);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__timings_js__ = __webpack_require__(145);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__error_stream_js__ = __webpack_require__(129);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__process_pipeline_js__ = __webpack_require__(133);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__speed_manager_js__ = __webpack_require__(143);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__stalling_obs_js__ = __webpack_require__(144);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__eme_js__ = __webpack_require__(128);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -18252,8 +18293,6 @@ function createMediaErrorStream(videoElement) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 
 
 
@@ -18374,7 +18413,7 @@ function Stream(_ref) {
   var fetchManifest = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_9__utils_rx_throttle_js__["a" /* default */])(function (url) {
     var manifest$ = manifestPipeline({ url: url });
     var fakeSubject = new __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__["Subject"]();
-    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_24__process_pipeline_js__["a" /* default */])("manifest", manifest$, fakeSubject, // we don't care about metrics here
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_23__process_pipeline_js__["a" /* default */])("manifest", manifest$, fakeSubject, // we don't care about metrics here
     fakeSubject, // and we don't care about the request progress
     errorStream).map(function (_ref2) {
       var parsed = _ref2.parsed;
@@ -18487,7 +18526,7 @@ function Stream(_ref) {
     var pipelineOptions = getPipelineOptions(bufferType);
     return adaptation$.switchMap(function (adaptation) {
       if (!adaptation) {
-        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_20__source_buffers__["a" /* disposeSourceBuffer */])(videoElement, mediaSource, bufferType, sourceBufferMemory);
+        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_19__source_buffers__["a" /* disposeSourceBuffer */])(videoElement, mediaSource, bufferType, sourceBufferMemory);
         return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_15__buffer__["a" /* EmptyBuffer */])({ bufferType: bufferType }).startWith({
           type: "adaptationChange",
           value: {
@@ -18540,7 +18579,7 @@ function Stream(_ref) {
         return currentRepresentation = representation;
       });
 
-      var sourceBuffer = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_20__source_buffers__["b" /* createSourceBuffer */])(videoElement, mediaSource, bufferType, codec, sourceBufferMemory, bufferType === "text" ? textTrackOptions : {});
+      var sourceBuffer = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_19__source_buffers__["b" /* createSourceBuffer */])(videoElement, mediaSource, bufferType, codec, sourceBufferMemory, bufferType === "text" ? textTrackOptions : {});
 
       var downloader = function downloader(_ref7) {
         var segment = _ref7.segment,
@@ -18554,7 +18593,7 @@ function Stream(_ref) {
           manifest: manifest,
           init: init
         });
-        return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_24__process_pipeline_js__["a" /* default */])(bufferType, pipeline$, network$, requestsInfos$, errorStream);
+        return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_23__process_pipeline_js__["a" /* default */])(bufferType, pipeline$, network$, requestsInfos$, errorStream);
       };
 
       var switchRepresentation$ = __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].combineLatest(representation$, seekings).map(function (_ref8) {
@@ -18584,7 +18623,7 @@ function Stream(_ref) {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to
         // continue streaming without any subtitles
-        if (!__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_20__source_buffers__["c" /* shouldHaveNativeSourceBuffer */])(bufferType)) {
+        if (!__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_19__source_buffers__["c" /* shouldHaveNativeSourceBuffer */])(bufferType)) {
           errorStream.next(error);
           return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].empty();
         }
@@ -18620,7 +18659,7 @@ function Stream(_ref) {
    * @returns {Observable}
    */
   function createVideoEventsObservables(manifest, timings) {
-    var startTime = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_19__initial_time_js__["a" /* default */])(manifest, startAt);
+    var startTime = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_18__initial_time_js__["a" /* default */])(manifest, startAt);
 
     /**
      * Time offset is an offset to add to the timing's current time to have
@@ -18718,10 +18757,10 @@ function Stream(_ref) {
    */
   function createStream(mediaSource, manifest) {
     if (mediaSource) {
-      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_21__media_source_js__["a" /* setDurationToMediaSource */])(mediaSource, manifest.getDuration());
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_20__media_source_js__["a" /* setDurationToMediaSource */])(mediaSource, manifest.getDuration());
     }
 
-    var _createTimings = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_22__timings_js__["a" /* default */])(manifest, timings$),
+    var _createTimings = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_21__timings_js__["a" /* default */])(manifest, timings$),
         _timings = _createTimings.timings,
         seekings = _createTimings.seekings;
 
@@ -18748,8 +18787,8 @@ function Stream(_ref) {
       //    exception if the media element has reached the HAVE_METADATA
       //    readyState. This can occur if the user agent's media engine
       //    does not support adding more tracks during playback.
-      if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_20__source_buffers__["c" /* shouldHaveNativeSourceBuffer */])(type)) {
-        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_20__source_buffers__["d" /* addNativeSourceBuffer */])(mediaSource, type, codec, sourceBufferMemory);
+      if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_19__source_buffers__["c" /* shouldHaveNativeSourceBuffer */])(type)) {
+        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_19__source_buffers__["d" /* addNativeSourceBuffer */])(mediaSource, type, codec, sourceBufferMemory);
       }
 
       return createBuffer(mediaSource, type, codec, clock$, seekings, manifest, adaptations$[type], abrManager);
@@ -18768,27 +18807,24 @@ function Stream(_ref) {
       }
     });
 
-    var emeManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_27__eme_js__["a" /* default */])(videoElement, keySystems, errorStream);
+    var emeManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_26__eme_js__["a" /* default */])(videoElement, keySystems, errorStream);
 
-    var speedManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_25__speed_manager_js__["a" /* default */])(videoElement, speed$, _timings, {
+    var speedManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_24__speed_manager_js__["a" /* default */])(videoElement, speed$, _timings, {
       changePlaybackRate: withMediaSource
     }).map(function (newSpeed) {
       return { type: "speed", value: newSpeed };
     });
 
-    var stallingManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_26__stalling_obs_js__["a" /* default */])(videoElement, manifest, _timings).map(function (stalledStatus) {
+    var stallingManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_25__stalling_obs_js__["a" /* default */])(videoElement, manifest, _timings).map(function (stalledStatus) {
       return { type: "stalled", value: stalledStatus };
     });
 
-    var mediaErrorManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_23__error_stream_js__["a" /* default */])(videoElement);
+    var mediaErrorManager$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_22__error_stream_js__["a" /* default */])(videoElement);
 
-    return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge(buffers$, emeManager$, loaded$, manifest$, mediaErrorManager$, speedManager$, stallingManager$).finally(function () {
-      abrManager.dispose();
-      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_18__eme__["c" /* clearEME */])();
-    });
+    return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge(buffers$, emeManager$, loaded$, manifest$, mediaErrorManager$, speedManager$, stallingManager$);
   }
 
-  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_21__media_source_js__["b" /* createAndPlugMediaSource */])(url, videoElement, withMediaSource, sourceBufferMemory).mergeMap(startStream).takeUntil(endOfPlay);
+  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_20__media_source_js__["b" /* createAndPlugMediaSource */])(url, videoElement, withMediaSource, sourceBufferMemory).mergeMap(startStream).takeUntil(endOfPlay);
 }
 
 /***/ }),
