@@ -27,6 +27,7 @@
  */
 
 import deepEqual from "deep-equal";
+import { Observable } from "rxjs/Observable";
 
 import log from "../../utils/log";
 import assert from "../../utils/assert";
@@ -45,9 +46,11 @@ import { clearEME } from "../eme";
 export default (self) => ({
   /**
    * Reset all state properties relative to a playing content.
-   * @returns {Observable}
    */
-  resetContentState() {
+  cleanUpCurrentContentState() {
+    // lock creation of new streams while cleaning up is pending
+    self._priv.streamLock$.next(true);
+
     // language management
     self._priv.initialAudioTrack = undefined;
     self._priv.initialTextTrack = undefined;
@@ -67,7 +70,12 @@ export default (self) => ({
     self._priv.fatalError = null;
     self._priv.currentImagePlaylist = null;
 
-    return clearEME();
+    clearEME()
+      .catch(() => Observable.empty())
+      .subscribe(() => {}, () => {}, () => {
+        // free up the lock
+        self._priv.streamLock$.next(false);
+      });
   },
 
   /**
@@ -137,6 +145,7 @@ export default (self) => ({
    */
   onStreamError(error) {
     self._priv.unsubscribeLoadedVideo$.next();
+    this._priv.cleanUpCurrentContentState();
     self._priv.fatalError = error;
     self._priv.setPlayerState(PLAYER_STATES.STOPPED);
 
@@ -158,6 +167,7 @@ export default (self) => ({
    */
   onStreamComplete() {
     self._priv.unsubscribeLoadedVideo$.next();
+    this._priv.cleanUpCurrentContentState();
     self._priv.setPlayerState(PLAYER_STATES.ENDED);
   },
 
