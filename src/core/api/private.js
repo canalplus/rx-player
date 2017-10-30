@@ -145,7 +145,7 @@ export default (self) => ({
    */
   onStreamError(error) {
     self._priv.unsubscribeLoadedVideo$.next();
-    this._priv.cleanUpCurrentContentState();
+    self._priv.cleanUpCurrentContentState();
     self._priv.fatalError = error;
     self._priv.setPlayerState(PLAYER_STATES.STOPPED);
 
@@ -167,7 +167,7 @@ export default (self) => ({
    */
   onStreamComplete() {
     self._priv.unsubscribeLoadedVideo$.next();
-    this._priv.cleanUpCurrentContentState();
+    self._priv.cleanUpCurrentContentState();
     self._priv.setPlayerState(PLAYER_STATES.ENDED);
   },
 
