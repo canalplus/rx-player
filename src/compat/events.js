@@ -147,8 +147,17 @@ const onFullscreenChange$ = compatibleListener(
   BROWSER_PREFIXES.concat("MS")
 );
 
-const onPlayPause$ = compatibleListener(["play", "pause"]);
-const onTextTrackChanges$ = compatibleListener(["addtrack", "removetrack"]);
+const onPlayPause$ = videoElement =>
+  Observable.merge(
+    compatibleListener(["play"])(videoElement),
+    compatibleListener(["pause"])(videoElement)
+  );
+
+const onTextTrackChanges$ = videoElement =>
+  Observable.merge(
+    compatibleListener(["addtrack"])(videoElement),
+    compatibleListener(["removetrack"])(videoElement)
+  );
 
 const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
 const onEncrypted$ = compatibleListener(["encrypted", "needkey"]);
