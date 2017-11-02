@@ -40,6 +40,18 @@ import {
   setMediaKeys,
 } from "./eme";
 
+interface ICustomHTMLMediaElement extends HTMLMediaElement {
+  webkitDroppedFrameCount?: number;
+  webkitDecodedFrameCount?: number;
+  getVideoPlaybackQuality?: () => {
+    readonly creationTime: number;
+    readonly totalVideoFrames: number;
+    readonly droppedVideoFrames: number;
+    readonly corruptedVideoFrames: number;
+    readonly totalFrameDelay: number;
+  };
+}
+
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
@@ -302,6 +314,36 @@ function makeCue(
   return new VTTCue_(startTime, endTime, payload);
 }
 
+/**
+ * Get informations about playback frame counts.
+ * HTMLVideoElement API is supported in Firefox >= 25.
+ *
+ * @param {HTMLVideoElement} videoElement
+ */
+const getVideoPlaybackQuality = function(videoElement: ICustomHTMLMediaElement){
+
+  if (videoElement.getVideoPlaybackQuality) {
+    return videoElement.getVideoPlaybackQuality();
+  }
+  else if (
+    videoElement.webkitDroppedFrameCount &&
+    videoElement.webkitDecodedFrameCount
+  ) {
+    return {
+      droppedVideoFrames: videoElement.webkitDroppedFrameCount,
+      totalVideoFrames: videoElement.webkitDroppedFrameCount
+        + videoElement.webkitDecodedFrameCount,
+      creationTime: new Date(),
+    };
+  } else {
+    return {
+      droppedVideoFrames: 0,
+      totalVideoFrames: 0,
+      creationTime: new Date(),
+    };
+  }
+};
+
 export {
   KeySystemAccess,
   MediaSource_,
@@ -321,6 +363,7 @@ export {
   makeCue,
   requestFullscreen,
   requestMediaKeySystemAccess,
+  getVideoPlaybackQuality,
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,

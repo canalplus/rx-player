@@ -45,6 +45,10 @@ interface IRepresentationChooserClockTick {
   position : number;
   bitrate : number|undefined;
   speed : number;
+  videoPlaybackQuality: {
+    totalVideoFrames: number;
+    droppedVideoFrames: number;
+  };
 }
 
 interface IRequestInfo {
@@ -231,6 +235,18 @@ function getFilteredRepresentations(
   return _representations;
 }
 
+const getDecodableBitrate = function(
+    representations: Representation[],
+    bitrate: number
+  ) {
+  const representation = fromBitrateCeil(representations, bitrate);
+  const index = representations.indexOf(representation);
+
+  return (index <= 0) ?
+    representations[0].bitrate :
+    representations[index - 1].bitrate;
+};
+
 /**
  * Returns true if the request takes too much time relatively to how much we
  * should actually wait.
@@ -279,6 +295,31 @@ export default class RepresentationChooser {
   private _throttle$ : Observable<number>|undefined;
   private estimator : BandwidthEstimator;
   private _initialBitrate : number;
+
+  /**
+   * Information about frames (total decoded and dropped)
+   * Emitted at each clock event.
+   */
+  private lastDroppedFrames: number = 0;
+  private lastTotalFrames: number = 0;
+  private currentDroppedFrames: number = 0;
+  private currentTotalFrames: number = 0;
+
+  /**
+   * Maximum bitrate for which stream can be easily decoded.
+   * It is the last representation bitrate before the
+   * representation that causes player to have decode issues.
+   */
+  private _decodableBitrate: number = Infinity;
+
+  /**
+   * We consider that decoding troubles can be temporary.
+   * So, a timeout is set to define the moment where decodable
+   * bitrate should return to Infinity.
+   * The timeOut period increase each time the time is out.
+   */
+  private _timeOutId: number|null;
+  private _timeOutDuration: number = 2;
 
   /**
    * @param {Object} options
@@ -365,7 +406,18 @@ export default class RepresentationChooser {
 
           let nextBitrate;
           let bandwidthEstimate;
-          const { bufferGap } = clock;
+          const {
+            bufferGap,
+            videoPlaybackQuality,
+          } = clock;
+
+          this.currentTotalFrames =
+            videoPlaybackQuality.totalVideoFrames - this.lastTotalFrames;
+          this.lastTotalFrames = videoPlaybackQuality.totalVideoFrames;
+
+          this.currentDroppedFrames =
+            videoPlaybackQuality.droppedVideoFrames - this.lastDroppedFrames;
+          this.lastDroppedFrames = videoPlaybackQuality.droppedVideoFrames;
 
           // Check for starvation == not much left to play
           if (bufferGap <= ABR_STARVATION_GAP) {
@@ -449,8 +501,39 @@ export default class RepresentationChooser {
             nextBitrate /= clock.speed;
           }
 
+          if ((this.currentDroppedFrames / this.currentTotalFrames) > 0.33) {
+            if (clock.bitrate) {
+              const decodableBitrate =
+                getDecodableBitrate(representations, clock.bitrate);
+              if (decodableBitrate < this._decodableBitrate) {
+                this._decodableBitrate = decodableBitrate;
+                if (this._timeOutId !== null) {
+                  clearTimeout(this._timeOutId);
+                }
+                this._timeOutId = window.setTimeout(() => {
+                  this._decodableBitrate = Infinity;
+                  this._timeOutId = null;
+                  this._timeOutDuration =
+                    Math.min(Math.pow(this._timeOutDuration, 2), 32);
+                }, this._timeOutDuration * 60 * 1000);
+              }
+            }
+          }
+
+          const filters = deviceEvents;
+
+          if (deviceEvents.hasOwnProperty("bitrate")) {
+            filters.bitrate =
+              Math.min(this._decodableBitrate, deviceEvents.bitrate);
+          } else if (this._decodableBitrate !== Infinity) {
+            filters.bitrate = this._decodableBitrate;
+          }
+
           const _representations =
-            getFilteredRepresentations(representations, deviceEvents);
+            getFilteredRepresentations(
+              representations,
+              filters
+            );
 
           return {
             bitrate: bandwidthEstimate,
@@ -546,7 +629,10 @@ export default class RepresentationChooser {
   /**
    * TODO See if we can avoid this
    */
-  public dispose(): void {
+  dispose() {
+    if (this._timeOutId !== null) {
+      clearTimeout(this._timeOutId);
+    }
     this._dispose$.next();
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();
