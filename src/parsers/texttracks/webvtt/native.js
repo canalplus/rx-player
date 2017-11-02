@@ -118,7 +118,9 @@ function parseCue(cueLines) {
   const { start, end, settings } = timeAndSettings;
   const payload = payloadLines.join("\n");
   const cue = makeCue(start, end, payload);
-  setSettingsOnCue(settings, cue);
+  if (cue && cue instanceof VTTCue) {
+    setSettingsOnCue(settings, cue);
+  }
 
   return cue;
 }
@@ -133,14 +135,14 @@ function parseTimestamp(timestampString) {
   if (splittedTS.length === 3) {
     const hours = parseInt(splittedTS[0], 10);
     const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[2], 10);
+    const seconds = parseFloat(splittedTS[3]);
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }
     return hours * 60 * 60 + minutes * 60 + seconds;
   } else if (splittedTS.length === 2) {
     const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[2], 10);
+    const seconds = parseFloat(splittedTS[2]);
     if (isNaN(minutes) || isNaN(seconds)) {
       return;
     }
@@ -251,8 +253,8 @@ function setSettingsOnCue(settings, cue) {
       if (lineMatches) {
         cue.line = lineMatches[1];
         cue.snapToLines = true;
-        if (arrayIncludes(["start", "center", "end"], percentageMatches[3])) {
-          cue.lineAlign = percentageMatches[3];
+        if (arrayIncludes(["start", "center", "end"], lineMatches[3])) {
+          cue.lineAlign = lineMatches[3];
         }
       }
     }
@@ -261,12 +263,14 @@ function setSettingsOnCue(settings, cue) {
   if (settings.position) {
     const positionRegex = /^([\d\.]+)%(?:,(line-left|line-right|center))?$/;
     const positionArr = positionRegex.exec(settings.position);
-    const position = parseInt(positionArr[1], 10);
-    if (!isNaN(position)) {
-      cue.position = position;
+    if (positionArr && positionArr.length >= 2) {
+      const position = parseInt(positionArr[1], 10);
+      if (!isNaN(position)) {
+        cue.position = position;
 
-      if (positionArr[2]) {
-        cue.positionAlign = positionArr[2];
+        if (positionArr[2]) {
+          cue.positionAlign = positionArr[2];
+        }
       }
     }
   }

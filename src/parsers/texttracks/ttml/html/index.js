@@ -64,31 +64,42 @@ export default function parseTTMLStringToDIV(str) {
     // construct styles array based on the xml as an optimization
     const styles = [];
     for (let i = 0; i <= styleNodes.length - 1; i++) {
-      // TODO styles referencing other styles
-      styles.push({
-        id: styleNodes[i].getAttribute("xml:id"),
-        style: getStylingFromElement(styleNodes[i]),
-      });
+      if (styleNodes[i] instanceof Element) {
+        const styleNode = styleNodes[i];
+        const styleID = styleNode.getAttribute("xml:id");
+        if (styleID != null) {
+          // TODO styles referencing other styles
+          styles.push({
+            id: styleID,
+            style: getStylingFromElement(styleNode),
+          });
+        }
+      }
     }
 
     // construct regions array based on the xml as an optimization
     const regions = [];
     for (let i = 0; i <= regionNodes.length - 1; i++) {
-      const regionId = regionNodes[i].getAttribute("xml:id");
-      let regionStyle =
-        getStylingFromElement(regionNodes[i]);
+      if (regionNodes[i] instanceof Element) {
+        const regionNode = regionNodes[i];
+        const regionID = regionNode.getAttribute("xml:id");
+        if (regionID != null) {
+          let regionStyle =
+            getStylingFromElement(regionNode);
 
-      const associatedStyle = regionNodes[i].getAttribute("style");
-      if (associatedStyle) {
-        const style = styles.find((x) => x.id === associatedStyle);
-        if (style) {
-          regionStyle = objectAssign({}, style.style, regionStyle);
+          const associatedStyle = regionNode.getAttribute("style");
+          if (associatedStyle) {
+            const style = styles.find((x) => x.id === associatedStyle);
+            if (style) {
+              regionStyle = objectAssign({}, style.style, regionStyle);
+            }
+          }
+          regions.push({
+            id: regionID,
+            style: regionStyle,
+          });
         }
       }
-      regions.push({
-        id: regionId,
-        style: regionStyle,
-      });
     }
 
     // Computing the style takes a lot of ressources.
@@ -102,23 +113,25 @@ export default function parseTTMLStringToDIV(str) {
       STYLE_ATTRIBUTES, [body], styles, regions);
     for (let i = 0; i < textNodes.length; i++) {
       const paragraph = textNodes[i];
-      const divs = getParentElementsByTagName(paragraph , "div");
-      const paragraphStyle = objectAssign({}, bodyStyle,
-        getStylingAttributes(
-          STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
-      );
+      if (paragraph instanceof Element) {
+        const divs = getParentElementsByTagName(paragraph , "div");
+        const paragraphStyle = objectAssign({}, bodyStyle,
+          getStylingAttributes(
+            STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
+        );
 
-      const cue = parseCue(
-        paragraph,
-        0, // offset
-        styles,
-        regions,
-        body,
-        paragraphStyle,
-        params
-      );
-      if (cue) {
-        ret.push(cue);
+        const cue = parseCue(
+          paragraph,
+          0, // offset
+          styles,
+          regions,
+          body,
+          paragraphStyle,
+          params
+        );
+        if (cue) {
+          ret.push(cue);
+        }
       }
     }
   }

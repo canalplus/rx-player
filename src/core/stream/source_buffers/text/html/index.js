@@ -18,6 +18,7 @@ import { Subject } from "rxjs/Subject";
 import { Observable } from "rxjs/Observable";
 
 import config from "../../../../../config.js";
+import log from "../../../../../utils/log.js";
 import {
   onSeeking$,
   onSeeked$,
@@ -119,6 +120,7 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
   /**
    * Append text tracks.
    * @param {Object} data
+   * @param {string} data.type
    * @param {string} data.data
    * @param {string} data.language
    * @param {Number} data.timescale
@@ -136,6 +138,7 @@ export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
     } = data;
     if (timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
+      log.warn("Invalid text track appended: the start time is inferior or equal to the end time.");
       return;
     }
 

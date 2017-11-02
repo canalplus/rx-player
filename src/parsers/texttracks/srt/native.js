@@ -63,12 +63,15 @@ export default function parseSRTStringToVTTCues(srtStr) {
 function parseCue(cueLines) {
   const [startString, endString] = cueLines[1].split(" --> ");
   const payloadLines = cueLines.slice(2, cueLines.length);
-  if (!startString | !endString | !payloadLines.length) {
+  if (!startString || !endString || !payloadLines.length) {
     return null;
   }
 
   const start = parseTimestamp(startString);
   const end = parseTimestamp(endString);
+  if (start == null || end == null) {
+    return null;
+  }
   const payload = payloadLines.join("\n");
   return makeCue(start, end, payload);
 }

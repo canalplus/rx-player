@@ -32,7 +32,8 @@ function findAtom(buf, atomName) {
   const l = buf.length;
   let i = 0;
 
-  let name, size;
+  let name;
+  let size;
   while (i + 8 < l) {
     size = be4toi(buf, i);
     name = be4toi(buf, i + 4);
@@ -71,7 +72,7 @@ function findAtom(buf, atomName) {
  */
 function parseSidx(buf, offset) {
   const index = findAtom(buf, 0x73696478 /* "sidx" */);
-  if (index == -1) {
+  if (index === -1) {
     return null;
   }
 
@@ -118,7 +119,7 @@ function parseSidx(buf, offset) {
     const refSize = (refChunk & 0x7fffffff);
 
     // when set to 1 indicates that the reference is to a sidx, else to media
-    if (refType == 1) {
+    if (refType === 1) {
       throw new Error("not implemented");
     }
 
@@ -133,9 +134,8 @@ function parseSidx(buf, offset) {
     // let sapType = (sapChunk & 0x70000000) >>> 28;
     // let sapDelta = sapChunk & 0x0FFFFFFF;
 
-    const ts = time;
     segments.push({
-      time: ts,
+      time,
       duration: d,
       count: 0,
       timescale,
@@ -168,7 +168,7 @@ function parseTfdt(buffer) {
   }
 
   const index = findAtom(traf, 0x74666474 /* tfdt */);
-  if (index == -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -183,7 +183,7 @@ function parseTfdt(buffer) {
 
 function getDefaultDurationFromTFHDInTRAF(traf) {
   const index = findAtom(traf, 0x74666864 /* tfhd */);
-  if (index == -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -226,7 +226,7 @@ function getDurationFromTrun(buffer) {
   }
 
   const index = findAtom(traf, 0x7472756e /* tfdt */);
-  if (index == -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -300,17 +300,17 @@ function getMDHDTimescale(buffer) {
     return -1;
   }
   const trak = getAtomContent(moov, 0x7472616b /* "trak" */);
-  if (index == -1) {
+  if (!trak) {
     return -1;
   }
 
   const mdia = getAtomContent(trak, 0x6d646961 /* "mdia" */);
-  if (index == -1) {
+  if (!mdia) {
     return -1;
   }
 
   const index = findAtom(mdia, 0x6d646864  /* "mdhd" */);
-  if (index / -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -320,7 +320,7 @@ function getMDHDTimescale(buffer) {
   if (version === 1) {
     pos += 16;
     return be4toi(mdia, pos);
-  } else if (version == 0) {
+  } else if (version === 0) {
     pos += 8;
     return be4toi(mdia, pos);
   } else {
@@ -338,7 +338,8 @@ function getAtomContent(buf, atomName) {
   const l = buf.length;
   let i = 0;
 
-  let name, size;
+  let name;
+  let size = 0;
   while (i + 8 < l) {
     size = be4toi(buf, i);
     name = be4toi(buf, i + 4);
@@ -409,19 +410,19 @@ function patchPssh(buf, pssList) {
   }
 
   const pos = findAtom(buf, 0x6d6f6f76 /* = "moov" */);
-  if (pos == -1) {
+  if (pos === -1) {
     return buf;
   }
 
   const size = be4toi(buf, pos); // size of the "moov" box
   const moov = buf.subarray(pos, pos + size);
 
-  let newmoov = [moov];
+  const moovArr = [moov];
   for (let i = 0; i < pssList.length; i++) {
-    newmoov.push(createPssh(pssList[i]));
+    moovArr.push(createPssh(pssList[i]));
   }
 
-  newmoov = concat.apply(null, newmoov);
+  const newmoov = concat(...moovArr);
   newmoov.set(itobe4(newmoov.length), 0); // overwrite "moov" length
 
   return concat(

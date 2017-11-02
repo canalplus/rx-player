@@ -15,7 +15,7 @@
  */
 
 /**
- * Parse a single srt timestamp into seconds
+ * Parse a single webvtt timestamp into seconds
  * @param {string} timestampString
  * @returns {Number|undefined}
  */
@@ -25,7 +25,8 @@ export default function parseTimestamp(timestampString) {
   if (splittedTS[2] || splittedTS[1]) {
     const hours = splittedTS[2] ? parseInt(splittedTS[2], 10) : 0;
     const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[0].replace(",", "."), 10);
+    const seconds = parseFloat(splittedTS[0].replace(",", "."));
+
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }

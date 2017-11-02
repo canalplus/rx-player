@@ -61,12 +61,16 @@ export default function parseSRTStringToHTML(srtStr) {
 function parseCue(cueLines) {
   const [startString, endString] = cueLines[1].split(" --> ");
   const payloadLines = cueLines.slice(2, cueLines.length);
-  if (!startString | !endString | !payloadLines.length) {
+  if (!startString || !endString || !payloadLines.length) {
     return null;
   }
 
   const start = parseTimestamp(startString);
   const end = parseTimestamp(endString);
+
+  if (start == null || end == null) {
+    return null;
+  }
 
   const pEl = document.createElement("div");
   pEl.className = "rxp-texttrack-p";
@@ -80,7 +84,6 @@ function parseCue(cueLines) {
     "1px -1px 2px #000," +
     "-1px 1px 2px #000," +
     "1px 1px 2px #000";
-
 
   for (let i = 0; i < payloadLines.length; i++) {
     if (i) {
@@ -135,7 +138,7 @@ function generateSpansFromSRTText(text) {
         const spanChild = _loop(currentNode);
         spanChild.style.textDecoration = "underline";
         span.appendChild(spanChild);
-      } else if (currentNode.nodeName === "FONT" && currentNode.color) {
+      } else if (currentNode.nodeName === "FONT" && currentNode.color != null) {
         const spanChild = _loop(currentNode);
         spanChild.style.color = currentNode.color;
         span.appendChild(spanChild);

@@ -25,14 +25,15 @@ const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
 /**
  * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
- * @param {Array.<Object>} - Objects containing the start, end and text.
+ * @param {Array.<Object>} cuesArray - Objects containing the start, end and
+ * text.
  * @returns {Array.<VTTCue>}
  */
 function createCuesFromArray(cuesArray) {
   const nativeCues = [];
   for (let i = 0; i < cuesArray.length; i++) {
     const { start, end, text } = cuesArray[i];
-    if (text) {
+    if (text && end != null) {
       const cue = makeCue(start, end, text);
       if (cue != null) {
         nativeCues.push(cue);
@@ -42,29 +43,44 @@ function createCuesFromArray(cuesArray) {
   return nativeCues;
 }
 
-// Really basic CSS parsers using regular-expressions.
-function rulesCss(str) {
+/**
+ * Returns classnames for every languages.
+ * @param {string} str
+ * @returns {Object}
+ */
+function getClassNameByLang(str) {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   const langs = {};
   let m;
   while ((m = ruleRe.exec(str))) {
     const name = m[1];
-    const lang = propCss(m[2], "lang");
-    if (name && lang) {
+    const lang = getCSSProperty(m[2], "lang");
+    if (name != null && lang != null) {
       langs[lang] = name;
     }
   }
   return langs;
 }
 
-function propCss(str, name) {
-  return str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+/**
+ * @param {string} str - entire CSS rule
+ * @param {string} name - name of the property
+ * @returns {string|null} - value of the property. Null if not found.
+ */
+function getCSSProperty(str, name) {
+  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+  return matches ? matches[1] : null;
 }
 
+/**
+ * Decode HMTL formatting into a string.
+ * @param {string} text
+ * @returns {string}
+ */
 function decodeEntities(text) {
   return text
     .replace(BR, "\n")
-    .replace(HTML_ENTITIES, ($0, $1) => String.fromCharCode($1));
+    .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode($1));
 }
 
 /**
@@ -78,21 +94,24 @@ function decodeEntities(text) {
  * @param {string} lang
  */
 function parseSami(smi, lang) {
-  const syncOp = /<sync[ >]/ig;
-  const syncCl = /<sync[ >]|<\/body>/ig;
+  const syncOpen = /<sync[ >]/ig;
+  const syncClose = /<sync[ >]|<\/body>/ig;
 
   const subs = [];
-  const [, css] = smi.match(STYLE);
-  let up, to = syncCl.exec(smi);
 
-  const langs = rulesCss(css);
+  const styleMatches = smi.match(STYLE);
+  const css = styleMatches ? styleMatches[1] : "";
+  let up;
+  let to = syncClose.exec(smi);
+
+  const langs = getClassNameByLang(css);
   const klass = langs[lang];
 
   assert(klass, `sami: could not find lang ${lang} in CSS`);
 
-  for(;;) {
-    up = syncOp.exec(smi);
-    to = syncCl.exec(smi);
+  for (;;) {
+    up = syncOpen.exec(smi);
+    to = syncClose.exec(smi);
     if (!up && !to) {
       break;
     }
@@ -111,14 +130,14 @@ function parseSami(smi, lang) {
       throw new Error("parse error (sync time attribute NaN)");
     }
 
-    appendSub(subs, str.split("\n"), start / 1000);
+    appendToSubs(str.split("\n"), start / 1000);
   }
 
   return createCuesFromArray(subs);
 
-  function appendSub(subs, lines, start) {
+  function appendToSubs(lines, start) {
     let i = lines.length, m;
-    while(--i >= 0) {
+    while (--i >= 0) {
       m = lines[i].match(PARAG);
       if (!m) {
         continue;

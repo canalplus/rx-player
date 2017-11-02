@@ -34,6 +34,7 @@ export default function getTimeDelimiters(element, ttParams) {
     throw new Error("Invalid text cue");
   }
 
-  const end = parsedEnd == null ? start + duration : parsedEnd;
+  const end = parsedEnd == null ?
+    start + duration : parsedEnd;
   return { start, end };
 }

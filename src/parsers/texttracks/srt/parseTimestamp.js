@@ -17,14 +17,14 @@
 /**
  * Parse a single srt timestamp into seconds
  * @param {string} timestampString
- * @returns {Number}
+ * @returns {Number|undefined}
  */
 export default function parseTimestamp(timestampString) {
   const splittedTS = timestampString.split(":");
   if (splittedTS[2]) {
     const hours = parseInt(splittedTS[0], 10);
     const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[2].replace(",", "."), 10);
+    const seconds = parseFloat(splittedTS[2].replace(",", "."));
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }

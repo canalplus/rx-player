@@ -53,7 +53,8 @@ function parseBif(buf) {
   pos = 0x40;
 
   const thumbs = [];
-  let currentImage, currentTs = 0;
+  let currentImage;
+  let currentTs = 0;
 
   if (!imageCount) {
     throw new Error("bif: no images to parse");

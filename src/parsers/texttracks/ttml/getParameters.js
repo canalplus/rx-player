@@ -17,7 +17,7 @@
 /**
  * Returns global parameters from a TTML Document
  * TODO Missing parameters.
- * @param {Node} tt - <tt> node
+ * @param {Element} tt - <tt> node
  * @throws Error - Throws if the spacing style is invalid.
  * @returns {Object} params
  * @returns {Number} params.frameRate

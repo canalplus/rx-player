@@ -81,56 +81,71 @@ function parseTTMLStringToVTT(str) {
     // construct styles array based on the xml as an optimization
     const styles = [];
     for (let i = 0; i <= styleNodes.length - 1; i++) {
-      // TODO styles referencing other styles
-      styles.push({
-        id: styleNodes[i].getAttribute("xml:id"),
-        style: getStylingFromElement(styleNodes[i]),
-      });
+      if (styleNodes[i] instanceof Element) {
+        const styleNode = styleNodes[i];
+        const styleID = styleNode.getAttribute("xml:id");
+        if (styleID != null) {
+          // TODO styles referencing other styles
+          styles.push({
+            id: styleID,
+            style: getStylingFromElement(styleNode),
+          });
+        }
+      }
     }
 
     // construct regions array based on the xml as an optimization
     const regions = [];
     for (let i = 0; i <= regionNodes.length - 1; i++) {
-      const regionId = regionNodes[i].getAttribute("xml:id");
-      let regionStyle = getStylingFromElement(regionNodes[i]);
+      if (regionNodes[i] instanceof Element) {
+        const regionNode = regionNodes[i];
+        const regionID = regionNode.getAttribute("xml:id");
+        if (regionID != null) {
+          let regionStyle =
+            getStylingFromElement(regionNode);
 
-      const associatedStyle = regionNodes[i].getAttribute("style");
-      if (associatedStyle) {
-        const style = styles.find((x) => x.id === associatedStyle);
-        if (style) {
-          regionStyle = objectAssign({}, style.style, regionStyle);
+          const associatedStyle = regionNode.getAttribute("style");
+          if (associatedStyle) {
+            const style = styles.find((x) => x.id === associatedStyle);
+            if (style) {
+              regionStyle = objectAssign({}, style.style, regionStyle);
+            }
+          }
+          regions.push({
+            id: regionID,
+            style: regionStyle,
+          });
         }
       }
-      regions.push({
-        id: regionId,
-        style: regionStyle,
-      });
     }
 
     // Computing the style takes a lot of ressources.
     // To avoid too much re-computation, let's compute the body style right
     // now and do the rest progressively.
-    const bodyStyle = getStylingAttributes(
-      WANTED_STYLE_ATTRIBUTES, [body], styles, regions);
+    const bodyStyle = body ?
+      getStylingAttributes(WANTED_STYLE_ATTRIBUTES, [body], styles, regions) :
+      getStylingAttributes(WANTED_STYLE_ATTRIBUTES, [], styles, regions);
 
     for (let i = 0; i < textNodes.length; i++) {
       const paragraph = textNodes[i];
-      const divs = getParentElementsByTagName(paragraph , "div");
-      const paragraphStyle = objectAssign({}, bodyStyle,
-        getStylingAttributes(
-          WANTED_STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
-      );
+      if (paragraph instanceof Element) {
+        const divs = getParentElementsByTagName(paragraph , "div");
+        const paragraphStyle = objectAssign({}, bodyStyle,
+          getStylingAttributes(
+            WANTED_STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
+        );
 
-      const cue = parseCue(
-        paragraph,
-        0, // offset
-        styles,
-        regions,
-        paragraphStyle,
-        params
-      );
-      if (cue) {
-        ret.push(cue);
+        const cue = parseCue(
+          paragraph,
+          0, // offset
+          styles,
+          regions,
+          paragraphStyle,
+          params
+        );
+        if (cue) {
+          ret.push(cue);
+        }
       }
     }
   }
@@ -166,7 +181,9 @@ function parseCue(paragraph, offset, styles, regions, paragraphStyle, params) {
   if (!cue) {
     return null;
   }
-  addStyle(cue, paragraphStyle);
+  if (cue instanceof VTTCue) {
+    addStyle(cue, paragraphStyle);
+  }
   return cue;
 }
 
@@ -189,7 +206,7 @@ function generateTextContent(paragraph, shouldTrimWhiteSpace) {
     for (let i = 0; i < childNodes.length; i++) {
       const currentNode = childNodes[i];
       if (currentNode.nodeName === "#text") {
-        let textContent = currentNode.textContent;
+        let textContent = currentNode.textContent || "";
 
         // TODO Also parse it from parent elements
         // const spaceAttr = getAttribute("xml:space", [

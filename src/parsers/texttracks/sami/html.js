@@ -32,34 +32,57 @@ const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
 const PARAG = /\s*<p class=([^>]+)>(.*)/i;
 const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
-// Really basic CSS parsers using regular-expressions.
-function classCSSRules(str) {
+/**
+ * Returns classnames for every languages.
+ * @param {string} str
+ * @returns {Object}
+ */
+function getClassNameByLang(str) {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   const langs = {};
   let m;
   while ((m = ruleRe.exec(str))) {
     const name = m[1];
-    const lang = propCss(m[2], "lang");
-    if (name && lang) {
+    const lang = getCSSProperty(m[2], "lang");
+    if (name != null && lang != null) {
       langs[lang] = name;
     }
   }
   return langs;
 }
 
-function pCSSRules(str) {
+/**
+ * Returns the rules defined for the P element.
+ * Empty string if not found.
+ * @param {string} str - The entire styling part.
+ * @returns {string}
+ */
+function getPCSSRules(str) {
   const pRuleRegex = /p\s*{([^}]*)}/gi;
   const rule = pRuleRegex.exec(str);
+  if (!rule) {
+    return "";
+  }
   return rule[1];
 }
 
-function propCss(str, name) {
-  return str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+/**
+ * @param {string} str - entire CSS rule
+ * @param {string} name - name of the property
+ * @returns {string|null} - value of the property. Null if not found.
+ */
+function getCSSProperty(str, name) {
+  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+  return matches ? matches[1] : null;
 }
 
+/**
+ * @param {string} text
+ * @returns {string}
+ */
 function decodeEntities(text) {
   return text
-    .replace(HTML_ENTITIES, ($0, $1) => String.fromCharCode($1));
+    .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode($1));
 }
 
 /**
@@ -77,16 +100,19 @@ function parseSami(smi, lang) {
   const syncClose = /<sync[ >]|<\/body>/ig;
 
   const subs = [];
-  const [, css] = smi.match(STYLE);
-  let up, to = syncClose.exec(smi);
 
-  const langs = classCSSRules(css);
-  const pCSS = pCSSRules(css);
+  const styleMatches = smi.match(STYLE);
+  const css = styleMatches ? styleMatches[1] : "";
+  let up;
+  let to = syncClose.exec(smi);
+
+  const langs = getClassNameByLang(css);
+  const pCSS = getPCSSRules(css);
   const klass = langs[lang];
 
   assert(klass, `sami: could not find lang ${lang} in CSS`);
 
-  for(;;) {
+  for (;;) {
     up = syncOpen.exec(smi);
     to = syncClose.exec(smi);
     if (!up && !to) {
@@ -107,14 +133,14 @@ function parseSami(smi, lang) {
       throw new Error("parse error (sync time attribute NaN)");
     }
 
-    appendSub(subs, str.split("\n"), start / 1000);
+    appendToSubs(str.split("\n"), start / 1000);
   }
 
   return subs;
 
-  function appendSub(subs, lines, start) {
+  function appendToSubs(lines, start) {
     let i = lines.length;
-    while(--i >= 0) {
+    while (--i >= 0) {
       const paragraphInfos = lines[i].match(PARAG);
       if (!paragraphInfos) {
         continue;
@@ -135,7 +161,7 @@ function parseSami(smi, lang) {
         const divEl = document.createElement("DIV");
         divEl.className = "rxp-texttrack-div";
         divEl.style.position = "absolute";
-        divEl.style.bottom = 0;
+        divEl.style.bottom = "0";
         divEl.style.width = "100%";
         divEl.style.color = "#fff";
         divEl.style.textShadow = "-1px -1px 0 #000," +
@@ -163,7 +189,11 @@ function parseSami(smi, lang) {
         divEl.appendChild(pEl);
         wrapperEl.appendChild(divEl);
 
-        subs.push({ element: wrapperEl, start });
+        subs.push({
+          element: wrapperEl,
+          start,
+          end: -1, // Will be updated on a following iteration
+        });
       }
     }
   }

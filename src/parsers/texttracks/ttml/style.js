@@ -34,19 +34,19 @@ export function getStylingAttributes(
   attributes,
   elements,
   styles,
-  regions,
+  regions
 ) {
   const currentStyle = {};
   const leftAttributes = attributes.slice();
   for (let i = 0; i <= elements.length - 1; i++) {
     const element = elements[i];
     if (element) {
-      let styleID = undefined;
-      let regionID = undefined;
+      let styleID;
+      let regionID;
 
       // 1. the style is directly set on a "tts:" attribute
-      for (let i = 0; i <= element.attributes.length - 1; i++) {
-        const attribute = element.attributes[i];
+      for (let j = 0; j <= element.attributes.length - 1; j++) {
+        const attribute = element.attributes[j];
         const name = attribute.name;
         if (name === "style") {
           styleID = attribute.value;
@@ -56,7 +56,7 @@ export function getStylingAttributes(
           const nameWithoutTTS = name.substr(4);
           if (arrayIncludes(leftAttributes, nameWithoutTTS)) {
             currentStyle[attribute.name] = attribute.value;
-            leftAttributes.splice(i, 1);
+            leftAttributes.splice(j, 1);
             if (!leftAttributes.length) {
               return currentStyle;
             }
@@ -66,18 +66,18 @@ export function getStylingAttributes(
 
       // 2. the style is referenced on a "style" attribute
       if (styleID) {
-        const style = arrayFind(styles, x => x.id === styleID);
+        const style = arrayFind(styles, (x) => x.id === styleID);
         if (style) {
-          for (let i = 0; i <= leftAttributes.length - 1; i++) {
-            const attribute = leftAttributes[i];
+          for (let j = 0; j <= leftAttributes.length - 1; j++) {
+            const attribute = leftAttributes[j];
             if (!currentStyle[attribute]) {
               if (style.style[attribute]) {
                 currentStyle[attribute] = style.style[attribute];
-                leftAttributes.splice(i, 1);
+                leftAttributes.splice(j, 1);
                 if (!leftAttributes.length) {
                   return currentStyle;
                 }
-                i--;
+                j--;
               }
             }
           }
@@ -89,16 +89,16 @@ export function getStylingAttributes(
       if (regionID) {
         const region = arrayFind(regions, x => x.id === regionID);
         if (region) {
-          for (let i = 0; i <= leftAttributes.length - 1; i++) {
-            const attribute = leftAttributes[i];
+          for (let j = 0; j <= leftAttributes.length - 1; j++) {
+            const attribute = leftAttributes[j];
             if (!currentStyle[attribute]) {
               if (region.style[attribute]) {
                 currentStyle[attribute] = region.style[attribute];
-                leftAttributes.splice(i, 1);
+                leftAttributes.splice(j, 1);
                 if (!leftAttributes.length) {
                   return currentStyle;
                 }
-                i--;
+                j--;
               }
             }
           }
@@ -111,7 +111,7 @@ export function getStylingAttributes(
 
 /**
  * Returns the styling directly linked to an element.
- * @param {Element} element
+ * @param {Node} element
  * @returns {Object}
  */
 export function getStylingFromElement(element) {

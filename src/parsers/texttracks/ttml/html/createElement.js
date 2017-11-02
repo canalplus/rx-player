@@ -132,7 +132,7 @@ function applyTextStyle(element, style) {
       const isFirstArgANumber = /^[0-9]/.test(outlineData[0]);
 
       // XOR-ing to be sure we get what we have
-      if (isFirstArgAColor ^ isFirstArgANumber) {
+      if (isFirstArgAColor !== isFirstArgANumber) {
         if (isFirstArgAColor) {
           const outlineColor = ttmlColorToCSSColor(outlineData[0]);
           const thickness = outlineData[1];
@@ -472,7 +472,7 @@ function generateTextContent(
   return loop(paragraph, objectAssign({}, paragraphStyle), []);
 }
 
-  /**
+/**
  * @param {Element} paragraph
  * @param {Element} body
  * @param {Array.<Object>} regions
