@@ -25,7 +25,7 @@ import arrayIncludes from "../../../utils/array-includes.js";
  *
  * TODO manage IDREFS (plural) for styles and regions, that is, multiple one
  * @param {Array.<string>} attributes
- * @param {Array.<Element>} elements
+ * @param {Array.<Node>} elements
  * @param {Array.<Object>} styles
  * @param {Array.<Object>} regions
  * @returns {Object}

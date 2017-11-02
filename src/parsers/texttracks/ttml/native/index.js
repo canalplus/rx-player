@@ -81,8 +81,8 @@ function parseTTMLStringToVTT(str) {
     // construct styles array based on the xml as an optimization
     const styles = [];
     for (let i = 0; i <= styleNodes.length - 1; i++) {
-      if (styleNodes[i] instanceof Element) {
-        const styleNode = styleNodes[i];
+      const styleNode = styleNodes[i];
+      if (styleNode instanceof Element) {
         const styleID = styleNode.getAttribute("xml:id");
         if (styleID != null) {
           // TODO styles referencing other styles
@@ -97,12 +97,11 @@ function parseTTMLStringToVTT(str) {
     // construct regions array based on the xml as an optimization
     const regions = [];
     for (let i = 0; i <= regionNodes.length - 1; i++) {
-      if (regionNodes[i] instanceof Element) {
-        const regionNode = regionNodes[i];
+      const regionNode = regionNodes[i];
+      if (regionNode instanceof Element) {
         const regionID = regionNode.getAttribute("xml:id");
         if (regionID != null) {
-          let regionStyle =
-            getStylingFromElement(regionNode);
+          let regionStyle = getStylingFromElement(regionNode);
 
           const associatedStyle = regionNode.getAttribute("style");
           if (associatedStyle) {

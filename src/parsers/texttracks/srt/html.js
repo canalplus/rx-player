@@ -117,7 +117,7 @@ function generateSpansFromSRTText(text) {
   const secureDiv = document.createElement("div");
   secureDiv.innerHTML = text;
 
-  const _loop = function (node) {
+  const _loop = function(node) {
     const childNodes = node.childNodes;
     const span = document.createElement("span");
     span.className = "rxp-texttrack-span";

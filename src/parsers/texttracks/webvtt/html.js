@@ -137,7 +137,7 @@ function parseStyleBlock(styleBlock) {
     index++;
   } else {
     let cueClassLine;
-    while(cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
+    while (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
       classNames.push({
         className: cueClassLine[1],
         isGlobalStyle: false,
@@ -170,8 +170,7 @@ function parseStyleBlock(styleBlock) {
  *   - element {HTMLElement}: the cue text, translated into an HTMLElement
  *
  * Returns undefined if the cue block could not be parsed.
- * @param {number} index
- * @param {Array.<string>} linified
+ * @param {Array.<string>} cueBlock
  * @param {Array.<Object>} styleElements
  * @returns {Object|undefined}
  */
@@ -231,7 +230,7 @@ function parseCue(cueBlock, styleElements) {
 
   while (cueBlock[index]) {
 
-    if (spanElement.childNodes.length != 0) {
+    if (spanElement.childNodes.length !== 0) {
       spanElement.appendChild(document.createElement("br"));
     }
 

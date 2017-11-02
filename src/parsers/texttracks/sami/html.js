@@ -72,7 +72,7 @@ function getPCSSRules(str) {
  * @returns {string|null} - value of the property. Null if not found.
  */
 function getCSSProperty(str, name) {
-  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
   return matches ? matches[1] : null;
 }
 

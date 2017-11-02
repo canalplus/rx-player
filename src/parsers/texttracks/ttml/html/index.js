@@ -64,8 +64,8 @@ export default function parseTTMLStringToDIV(str) {
     // construct styles array based on the xml as an optimization
     const styles = [];
     for (let i = 0; i <= styleNodes.length - 1; i++) {
-      if (styleNodes[i] instanceof Element) {
-        const styleNode = styleNodes[i];
+      const styleNode = styleNodes[i];
+      if (styleNode instanceof Element) {
         const styleID = styleNode.getAttribute("xml:id");
         if (styleID != null) {
           // TODO styles referencing other styles
@@ -80,8 +80,8 @@ export default function parseTTMLStringToDIV(str) {
     // construct regions array based on the xml as an optimization
     const regions = [];
     for (let i = 0; i <= regionNodes.length - 1; i++) {
-      if (regionNodes[i] instanceof Element) {
-        const regionNode = regionNodes[i];
+      const regionNode = regionNodes[i];
+      if (regionNode instanceof Element) {
         const regionID = regionNode.getAttribute("xml:id");
         if (regionID != null) {
           let regionStyle =
@@ -109,8 +109,10 @@ export default function parseTTMLStringToDIV(str) {
     // TODO Compute corresponding CSS style here (as soon as we now the TTML
     // style) to speed up the process even
     // more.
-    const bodyStyle = getStylingAttributes(
-      STYLE_ATTRIBUTES, [body], styles, regions);
+    const bodyStyle = body != null ?
+      getStylingAttributes(STYLE_ATTRIBUTES, [body], styles, regions) :
+      getStylingAttributes(STYLE_ATTRIBUTES, [], styles, regions);
+
     for (let i = 0; i < textNodes.length; i++) {
       const paragraph = textNodes[i];
       if (paragraph instanceof Element) {

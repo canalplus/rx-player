@@ -33,4 +33,3 @@ export default function parseTimestamp(timestampString) {
     return hours * 60 * 60 + minutes * 60 + seconds;
   }
 }
-

@@ -33,7 +33,7 @@ function findAtom(buf, atomName) {
   let i = 0;
 
   let name;
-  let size;
+  let size = 0;
   while (i + 8 < l) {
     size = be4toi(buf, i);
     name = be4toi(buf, i + 4);

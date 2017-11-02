@@ -135,7 +135,7 @@ function parseTimestamp(timestampString) {
   if (splittedTS.length === 3) {
     const hours = parseInt(splittedTS[0], 10);
     const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[3]);
+    const seconds = parseFloat(splittedTS[2]);
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }
@@ -268,7 +268,7 @@ function setSettingsOnCue(settings, cue) {
       if (!isNaN(position)) {
         cue.position = position;
 
-        if (positionArr[2]) {
+        if (positionArr[2] != null) {
           cue.positionAlign = positionArr[2];
         }
       }

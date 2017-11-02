@@ -68,7 +68,7 @@ function getClassNameByLang(str) {
  * @returns {string|null} - value of the property. Null if not found.
  */
 function getCSSProperty(str, name) {
-  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+  const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
   return matches ? matches[1] : null;
 }
 
@@ -136,7 +136,8 @@ function parseSami(smi, lang) {
   return createCuesFromArray(subs);
 
   function appendToSubs(lines, start) {
-    let i = lines.length, m;
+    let i = lines.length;
+    let m;
     while (--i >= 0) {
       m = lines[i].match(PARAG);
       if (!m) {
