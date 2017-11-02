@@ -150,6 +150,19 @@ const getFilteredRepresentations = (representations, filters) => {
 };
 
 /**
+* Get supposed decodable bitrate.
+* The aim is to find last decodable representation bitrate.
+*/
+const getDecodableBitrate = function(representations, bitrate) {
+  const representation = fromBitrateCeil(representations, bitrate);
+  const index = representations.indexOf(representation);
+
+  return (index <= 0) ?
+    representation[0].bitrate :
+    representations[index - 1].bitrate;
+};
+
+/**
  * Returns true if the request takes too much time relatively to how much we
  * should actually wait.
  * Depends on the chunk duration.
@@ -213,6 +226,31 @@ export default class RepresentationChooser {
 
     this._limitWidth$ = options.limitWidth$;
     this._throttle$ = options.throttle$;
+
+    /**
+     * Information about frames (total decoded and dropped)
+     * Emitted at each clock event.
+     */
+    this._lastDroppedFrames = 0;
+    this._lastTotalFrames = 0;
+    this._currentDroppedFrames = 0;
+    this._currentTotalFrames = 0;
+
+    /**
+     * Maximum bitrate for which stream can be easily decoded.
+     * It is the last representation bitrate before the
+     * representation that causes player to have decode issues.
+     */
+    this._decodableBitrate = Infinity;
+
+    /**
+     * We consider that decoding troubles can be temporary.
+     * So, a timeout is set to define the moment where decodable
+     * bitrate should return to Infinity.
+     * The timeOut period increase each time the time is out.
+     */
+    this._timeOutId = null;
+    this._timeOutDuration = 2;
   }
 
   get$(clock$, representations) {
@@ -262,6 +300,14 @@ export default class RepresentationChooser {
           let nextBitrate;
           let bandwidthEstimate;
           const { bufferGap } = clock;
+
+          this._currentTotalFrames =
+            clock.framesInfo.totalVideoFrames - this._lastTotalFrames;
+          this._lastTotalFrames = clock.framesInfo.totalVideoFrames;
+
+          this._currentDroppedFrames =
+            clock.framesInfo.droppedVideoFrames - this._lastDroppedFrames;
+          this._lastDroppedFrames = clock.framesInfo.droppedVideoFrames;
 
           // Check for starvation == not much left to play
           if (bufferGap <= ABR_STARVATION_GAP) {
@@ -338,8 +384,39 @@ export default class RepresentationChooser {
             nextBitrate /= clock.speed;
           }
 
+          if ((this._currentDroppedFrames / this._currentTotalFrames) > 0.33) {
+            if (clock.bitrate) {
+              const decodableBitrate =
+                getDecodableBitrate(representations, clock.bitrate);
+              if (decodableBitrate < this._decodableBitrate) {
+                this._decodableBitrate = decodableBitrate;
+                if (this._timeOutId !== null) {
+                  clearTimeout(this._timeOutId);
+                }
+                this._timeOutId = setTimeout(() => {
+                  this._decodableBitrate = Infinity;
+                  this._timeOutId = null;
+                  this._timeOutDuration =
+                    Math.min(Math.pow(this._timeOutDuration, 2), 32);
+                }, this._timeOutDuration * 60 * 1000);
+              }
+            }
+          }
+
+          const filters = deviceEvents;
+
+          if (deviceEvents.hasOwnProperty("bitrate")) {
+            filters.bitrate =
+              Math.min(this._decodableBitrate, deviceEvents.bitrate);
+          } else if (this._decodableBitrate !== Infinity) {
+            filters.bitrate = this._decodableBitrate;
+          }
+
           const _representations =
-            getFilteredRepresentations(representations, deviceEvents);
+            getFilteredRepresentations(
+              representations,
+              filters,
+            );
 
           return {
             bitrate: bandwidthEstimate,
@@ -430,6 +507,9 @@ export default class RepresentationChooser {
    * TODO Not really needed for now
    */
   dispose() {
+    if (this._timeOutId !== null) {
+      clearTimeout(this._timeOutId);
+    }
     this._dispose$.next();
   }
 }

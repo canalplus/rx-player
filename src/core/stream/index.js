@@ -36,6 +36,7 @@ import {
 import {
   canPlay,
   canSeek,
+  getVideoPlaybackQuality,
 } from "../../compat";
 import { onSourceOpen$ } from "../../compat/events.js";
 
@@ -317,7 +318,6 @@ export default function Stream({
                 currentRepresentation.index.getLastPosition();
             }
           }
-
           return {
             bitrate,
             bufferGap: timing.bufferGap,
@@ -326,6 +326,7 @@ export default function Stream({
             lastIndexPosition,
             position: timing.currentTime,
             speed: speed$.getValue(),
+            framesInfo: getVideoPlaybackQuality(videoElement),
           };
         });
 
