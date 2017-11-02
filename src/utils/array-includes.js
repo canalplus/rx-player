@@ -15,7 +15,7 @@
  */
 
 // inspired from MDN polyfill, but ponyfilled instead
-export default (arr, searchElement, fromIndex) => {
+export default function arrayIncludes(arr, searchElement, fromIndex) {
   if (typeof Array.prototype.includes === "function") {
     return arr.includes(searchElement, fromIndex);
   }
@@ -43,4 +43,4 @@ export default (arr, searchElement, fromIndex) => {
   }
 
   return false;
-};
+}

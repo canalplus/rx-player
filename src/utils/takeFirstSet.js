@@ -19,7 +19,7 @@
  * @param {...*} args
  * @returns {*}
  */
-export default (...args) => {
+export default function takeFirstSet(...args) {
   let i = 0;
   const len = args.length;
   while (i < len) {
@@ -28,4 +28,4 @@ export default (...args) => {
     }
     i++;
   }
-};
+}

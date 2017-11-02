@@ -25,7 +25,7 @@ describe("utils - assert", () => {
       let error;
       try {
         assert(falsyValue);
-      } catch(e) {
+      } catch (e) {
         error = e;
         expect(e).to.exist;
       }
@@ -43,7 +43,7 @@ describe("utils - assert", () => {
       let error;
       try {
         assert(falsyValue, myMessage);
-      } catch(e) {
+      } catch (e) {
         error = e;
         expect(e).to.exist;
       }
@@ -76,7 +76,7 @@ describe("utils - assert.equal", () => {
       let error;
       try {
         assert.equal(unequalValue[0], unequalValue[1]);
-      } catch(e) {
+      } catch (e) {
         error = e;
       }
       expect(error).to.exist;
@@ -99,7 +99,7 @@ describe("utils - assert.equal", () => {
       let error;
       try {
         assert.equal(unequalValue[0], unequalValue[1], myMessage);
-      } catch(e) {
+      } catch (e) {
         error = e;
       }
       expect(error).to.exist;
@@ -138,7 +138,7 @@ describe("utils - assert.iface", () => {
     };
     try {
       assert.iface(undefined, nameOfMyObj, objIface);
-    } catch(e) {
+    } catch (e) {
       error = e;
     }
     expect(error).to.exist;
@@ -149,7 +149,7 @@ describe("utils - assert.iface", () => {
 
     try {
       assert.iface(null, nameOfMyObj, objIface);
-    } catch(e) {
+    } catch (e) {
       error = e;
     }
     expect(error).to.exist;
@@ -179,7 +179,7 @@ describe("utils - assert.iface", () => {
 
     try {
       assert.iface(myObj, nameOfMyObj, objIface);
-    } catch(e) {
+    } catch (e) {
       error = e;
     }
     expect(error).to.exist;

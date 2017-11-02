@@ -62,7 +62,7 @@ function createRangeUnion(range1, range2) {
  * That is, range objects which have their start equal to their end.
  * /!\ Mutate the array of ranges.
  * @param {Array<Object>} ranges
- * @returns {Boolean}
+ * @returns {Array<Object>}
  */
 function removeEmptyRanges(ranges) {
   for (let index = 0; index < ranges.length; index++) {
@@ -81,7 +81,7 @@ function removeEmptyRanges(ranges) {
  */
 function mergeContiguousRanges(ranges) {
   for (let index = 1; index < ranges.length; index++) {
-    const prevRange = ranges[index-1];
+    const prevRange = ranges[index - 1];
     const currRange = ranges[index];
     if (areRangesNearlyContiguous(prevRange, currRange)) {
       const unionRange = createRangeUnion(prevRange, currRange);

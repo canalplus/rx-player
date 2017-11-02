@@ -25,13 +25,11 @@ const WARNED_MESSAGES = [];
  *
  * @param {string} message
  */
-const warnOnce = (message) => {
+export default function warnOnce(message) {
   if (!arrayIncludes(WARNED_MESSAGES, message)) {
     /* eslint-disable no-console */
     console.warn(message);
     /* eslint-enable no-console */
     WARNED_MESSAGES.push(message);
   }
-};
-
-export default warnOnce;
+}

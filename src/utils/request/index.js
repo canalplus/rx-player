@@ -17,13 +17,13 @@
 import { Observable } from "rxjs/Observable";
 import { RequestError, RequestErrorTypes } from "../../errors";
 
-const toJSONForIE = data => {
+function toJSONForIE(data) {
   try {
     return JSON.parse(data);
-  } catch(e) {
+  } catch (e) {
     return null;
   }
-};
+}
 
 /**
  * # request function
@@ -40,15 +40,18 @@ const toJSONForIE = data => {
  * ## Emitted Objects
  *
  * The emitted objects are under the following form:
+ * ```
  *   {
  *     type {string}: the type of event
  *     value {Object}: the event value
  *   }
+ * ```
  *
  * The type of event can either be "progress" or "response". The value is under
  * a different form depending on the type.
  *
  * For "progress" events, the value should be the following object:
+ * ```
  *   {
  *     url {string}: url on which the request is being done
  *     sentTime {Number}: timestamp at which the request was sent.
@@ -59,8 +62,10 @@ const toJSONForIE = data => {
  *     totalSize {Number|undefined}: total size to download, in bytes
  *                                   (without overhead)
  *   }
+ * ```
  *
  * For "response" events, the value should be the following object:
+ * ```
  *   {
  *     status {Number}: xhr status code
  *     url {string}: url on which the request was done
@@ -72,6 +77,7 @@ const toJSONForIE = data => {
  *     responseData {*}: Data in the response. Format depends on the
  *                       responseType.
  *   }
+ * ```
  *
  * For any succesful request you should have 0+ "progress" events and 1
  * "response" event.
@@ -96,7 +102,7 @@ const toJSONForIE = data => {
  * @returns {Observable}
  */
 
-export default (options) => {
+export default function request(options) {
   const request = {
     url: "",
     headers: null,
@@ -166,13 +172,13 @@ export default (options) => {
           const receivedTime = Date.now();
           const totalSize = event.total;
           const status = xhr.status;
-          const responseType = xhr.responseType;
+          const loadedResponseType = xhr.responseType;
           const _url = xhr.responseURL || url;
 
           let responseData;
-          if (responseType === "json") {
+          if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
-            if (typeof xhr.response != "string") {
+            if (typeof xhr.response !== "string") {
               responseData = xhr.response;
             } else {
               responseData = toJSONForIE(xhr.responseText);
@@ -192,7 +198,7 @@ export default (options) => {
             value: {
               status,
               url: _url,
-              responseType,
+              responseType: loadedResponseType,
               sentTime,
               receivedTime,
               size: totalSize,
@@ -220,4 +226,4 @@ export default (options) => {
       }
     };
   });
-};
+}

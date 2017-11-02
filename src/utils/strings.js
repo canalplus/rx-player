@@ -17,7 +17,7 @@
 /**
  * Creates a new string from the given array of char codes.
  *
- * @param {TypedArray} args
+ * @param {Uint8Array} args
  * @returns {string}
  */
 function stringFromCharCode(args) {
@@ -46,7 +46,7 @@ function stringFromUTF8(data) {
   let uint8 = new Uint8Array(data);
 
   // If present, strip off the UTF-8 BOM.
-  if (uint8[0] == 0xef && uint8[1] == 0xbb && uint8[2] == 0xbf) {
+  if (uint8[0] === 0xef && uint8[1] === 0xbb && uint8[2] === 0xbf) {
     uint8 = uint8.subarray(3);
   }
 

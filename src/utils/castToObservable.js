@@ -46,7 +46,7 @@ export default function castToObservable(value) {
     });
   }
 
-  if (value && typeof value.then == "function") {
+  if (value && typeof value.then === "function") {
     return Observable.fromPromise(value);
   }
 

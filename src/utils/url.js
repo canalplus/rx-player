@@ -40,9 +40,9 @@ function _normalizeUrl(url) {
   const newUrl = [];
   const oldUrl = url.split("/");
   for (let i = 0, l = oldUrl.length; i < l; i++) {
-    if (oldUrl[i] == "..") {
+    if (oldUrl[i] === "..") {
       newUrl.pop();
-    } else if (oldUrl[i] == ".") {
+    } else if (oldUrl[i] === ".") {
       continue;
     } else {
       newUrl.push(oldUrl[i]);

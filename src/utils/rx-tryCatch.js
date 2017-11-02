@@ -25,7 +25,7 @@ import { Observable } from "rxjs/Observable";
 export default function tryCatch(func, args) {
   try {
     return func(args);
-  } catch(e) {
+  } catch (e) {
     return Observable.throw(e);
   }
 }

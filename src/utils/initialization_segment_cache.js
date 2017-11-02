@@ -20,18 +20,30 @@
  */
 class InitializationSegmentCache {
   constructor() {
-    this.cache = {};
+    this._cache = {};
   }
 
+  /**
+   * @param {Object} obj
+   * @param {Object} obj.segment
+   * @param {*} response
+   * TODO just add segment directly, not in an object?
+   */
   add({ segment }, response) {
     if (segment.isInit) {
-      this.cache[segment.id] = response;
+      this._cache[segment.id] = response;
     }
   }
 
+  /**
+   * @param {Object} obj
+   * @param {Object} obj.segment
+   * @returns {*} response
+   * TODO just add segment directly, not in an object?
+   */
   get({ segment }) {
     if (segment.isInit) {
-      const value = this.cache[segment.id];
+      const value = this._cache[segment.id];
       if (value != null) {
         return value;
       }

@@ -49,7 +49,7 @@ export default function throttle(func) {
     isPending = true;
     return castToObservable(func(...args))
       .do(
-        null,
+        () => {},
         () => isPending = false,
         () => isPending = false
       );

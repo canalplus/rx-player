@@ -24,8 +24,8 @@ import { Observable } from "rxjs/Observable";
  */
 export default function onEvent(elt, evts) {
   if (Array.isArray(evts)) {
-    return Observable.merge
-      .apply(null, evts.map((evt) => Observable.fromEvent(elt, evt)));
+    const eventsArray = evts.map((evt) => Observable.fromEvent(elt, evt));
+    return Observable.merge(...eventsArray);
   } else {
     return Observable.fromEvent(elt, evts);
   }

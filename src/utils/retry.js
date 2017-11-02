@@ -20,7 +20,7 @@ import { getBackedoffDelay } from "./backoff";
 /**
  * Simple debounce implementation.
  * @param {Function} fn
- * @param {Number} delay
+ * @param {Number} delay - delay in ms
  * @returns {Function}
  */
 function debounce(fn, delay) {
@@ -76,8 +76,8 @@ function retryWithBackoff(obs$, options) {
 
   let retryCount = 0;
   let debounceRetryCount;
-  if (resetDelay > 0) {
-    debounceRetryCount = debounce(() => retryCount = 0, resetDelay);
+  if (resetDelay != null && resetDelay > 0) {
+    debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
   }
 
   return obs$.catch((error, source) => {
@@ -96,7 +96,9 @@ function retryWithBackoff(obs$, options) {
 
     const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
     return Observable.timer(fuzzedDelay).mergeMap(() => {
-      debounceRetryCount && debounceRetryCount();
+      if (debounceRetryCount) {
+        debounceRetryCount();
+      }
       return source;
     });
   });
@@ -129,8 +131,8 @@ function retryableFuncWithBackoff(fn, options) {
 
   let retryCount = 0;
   let debounceRetryCount;
-  if (resetDelay > 0) {
-    debounceRetryCount = debounce(() => retryCount = 0, resetDelay);
+  if (resetDelay != null && resetDelay > 0) {
+    debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
   }
 
   return function doRetry(...args) {
@@ -150,7 +152,9 @@ function retryableFuncWithBackoff(fn, options) {
 
       const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
       return Observable.timer(fuzzedDelay).mergeMap(() => {
-        debounceRetryCount && debounceRetryCount();
+        if (debounceRetryCount) {
+          debounceRetryCount();
+        }
         return doRetry(...args);
       });
     });

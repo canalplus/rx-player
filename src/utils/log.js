@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const Levels = {
+const LEVELS = {
   NONE: 0,
   ERROR: 1,
   WARNING: 2,
@@ -22,42 +22,43 @@ const Levels = {
   DEBUG: 4,
 };
 
-function log() {}
 function noop() {}
 
-let currentLevel = 0;
+let currentLevel = Object.keys(LEVELS)[0];
 
-log.LEVELS = Object.keys(Levels);
-log.error = noop;
-log.warn = noop;
-log.info = noop;
-log.debug = noop;
+const logger = {
+  LEVELS: Object.keys(LEVELS),
+  error: noop,
+  warn: noop,
+  info: noop,
+  debug: noop,
 
-log.setLevel = function(levelStr) {
-  let level;
-  const foundLevel = Levels[levelStr];
-  if (foundLevel) {
-    level = foundLevel;
-    currentLevel = levelStr;
-  } else { // either 0 or not found
-    level = 0;
-    currentLevel = "NONE";
-  }
+  setLevel(levelStr) {
+    let level;
+    const foundLevel = LEVELS[levelStr];
+    if (foundLevel) {
+      level = foundLevel;
+      currentLevel = levelStr;
+    } else { // either 0 or not found
+      level = 0;
+      currentLevel = "NONE";
+    }
 
-  /* eslint-disable no-console */
-  log.error = (level >= Levels.ERROR) ?
-    console.error.bind(console) : noop;
-  log.warn = (level >= Levels.WARNING) ?
-    console.warn.bind(console) : noop;
-  log.info = (level >= Levels.INFO) ?
-    console.info.bind(console) : noop;
-  log.debug = (level >= Levels.DEBUG) ?
-    console.log.bind(console) : noop;
-  /* eslint-enable no-console */
+    /* eslint-disable no-console */
+    this.error = (level >= LEVELS.ERROR) ?
+      console.error.bind(console) : noop;
+    this.warn = (level >= LEVELS.WARNING) ?
+      console.warn.bind(console) : noop;
+    this.info = (level >= LEVELS.INFO) ?
+      console.info.bind(console) : noop;
+    this.debug = (level >= LEVELS.DEBUG) ?
+      console.log.bind(console) : noop;
+    /* eslint-enable no-console */
+  },
+
+  getLevel() {
+    return currentLevel;
+  },
 };
 
-log.getLevel = function() {
-  return currentLevel;
-};
-
-export default log;
+export default logger;

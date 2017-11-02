@@ -20,21 +20,22 @@
  */
 class SimpleSet {
   constructor() {
-    this.hash = {};
+    this._hash = {};
   }
 
   add(x) {
-    this.hash[x] = true;
+    this._hash[x] = true;
   }
 
   remove(x) {
-    delete this.hash[x];
+    delete this._hash[x];
   }
 
   test(x) {
-    return this.hash[x] === true;
+    return this._hash[x] === true;
   }
 }
 
 
+// TODO export default
 export { SimpleSet };

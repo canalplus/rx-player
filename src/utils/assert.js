@@ -49,7 +49,9 @@ assert.equal = function(a, b, message) {
 assert.iface = function(o, name, iface) {
   assert(o, `${name} should be an object`);
   for (const k in iface) {
-    assert.equal(typeof o[k], iface[k], `${name} should have property ${k} as a ${iface[k]}`);
+    if (iface.hasOwnProperty(k)) {
+      assert.equal(typeof o[k], iface[k], `${name} should have property ${k} as a ${iface[k]}`);
+    }
   }
 };
 
