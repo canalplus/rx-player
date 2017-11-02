@@ -24,26 +24,42 @@ This demo is a small application written in [React](https://github.com/facebook/
 
 ## How to use it?
 
-The fastest way to use our player directly in your code is to add this repository as a dependency. You can do it via the npm install command:
+The fastest way to use our player directly in your code is to add this repository as a dependency. You can do it via npm:
+```
+npm install --save rx-player
+```
+
+This will install the last "stable" version, which for now is the ``v2.3.2``.
+
+However, for all the improvements brought by our upcoming ``v3.0.0`` release, we advise most library users to clone directly the ``v3.0.0-rc7`` through github instead as a temporary solution:
 ```
 npm install --save git+https://git@github.com/canalplus/rx-player.git
 ```
 
-You can then either link directly to the `dist/rx-player.min.js` file (which is our last released version, ``v3.0.0-rc7``, compiled and minified):
-```html
-<script src="node_modules/rx-player/dist/rx-player.min.js"></script>
-```
+This is because:
+  - this is a release-candidate. Meaning that we're confident in this version and just waiting to receive your last inputs.
+  - the "true" ``v3.0.0`` should be released in the coming weeks.
 
-Or import it in your code with tools like [Browserify](http://browserify.org/) or [Webpack](http://webpack.github.io/):
+You can then directly import and use the Rx-Player in your code:
 ```js
-// CommonJS syntax
-const Player = require("rx-player");
+// import it ES6 style:
+import RxPlayer from "rx-player";
 
-// ECMAScript 2015 syntax
-import Player from "rx-player";
+// same in CommonJS style:
+// const RxPlayer = require("rx-player");
+
+// instantiate it
+const player = new RxPlayer({ videoElement: document.getElementById("my-video") });
+
+// play a video
+player.loadVideo({
+  url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+  transport: "dash",
+  autoPlay: true
+});
 ```
 
-You can also perform your own [custom build](./doc/api/custom_builds.md) with only the features you need to reduce the file size.
+From the ``v3.0.0-rc6`` onward. You can also perform your own [custom build](./doc/api/custom_builds.md) with only the features you need to reduce the file size.
 
 ## Your questions
 
