@@ -22,6 +22,7 @@ import log from "../../../utils/log";
 import castToObservable from "../../../utils/castToObservable";
 import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
+import { IEMEMessage } from "../session";
 
 interface ISessionData {
   initData : number;
@@ -53,7 +54,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     return null;
   }
 
-  get(initData : number) : MediaKeySession|null {
+  get(initData : number|Uint8Array) : MediaKeySession|null {
     initData = hashInitData(initData);
     const entry = this.find((e) => e.initData === initData);
     if (entry) {
@@ -66,7 +67,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   add(
     initData : Uint8Array|number[]|number,
     session : MediaKeySession,
-    sessionEvents : ConnectableObservable<Event>
+    sessionEvents : ConnectableObservable<Event|IEMEMessage>
   ) : void {
     initData = hashInitData(initData);
     const currentSession = this.get(initData);

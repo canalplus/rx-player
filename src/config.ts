@@ -106,7 +106,7 @@ export default {
     other: Infinity, // tracks which are not audio/video
                      // Though those are generally at a single bitrate, so no
                      // adaptive mechanism is triggered for them.
-  },
+  } as IDictionary<number>,
 
   /**
    * Buffer threshold ratio used as a lower bound margin to find the suitable
@@ -486,5 +486,5 @@ export default {
       "com.chromecast.playready",
       "com.youtube.playready",
     ],
-  },
+  } as IDictionary<string[]>,
 };

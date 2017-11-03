@@ -16,6 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { getBackedoffDelay } from "./backoff";
+import { CustomError } from "../errors";
 
 /**
  * Simple debounce implementation.
@@ -38,8 +39,8 @@ interface IBackoffOptions {
   totalRetry : number;
   shouldRetry? : (error : Error) => boolean;
   resetDelay? : number;
-  errorSelector? : (error : Error, retryCount : number) => Error;
-  onRetry? : (error : Error, retryCount : number) => void;
+  errorSelector? : (error : Error|CustomError, retryCount : number) => Error|CustomError;
+  onRetry? : (error : Error|CustomError, retryCount : number) => void;
 }
 
 /**
@@ -179,4 +180,5 @@ function retryableFuncWithBackoff<T, I>(
 export {
   retryWithBackoff,
   retryableFuncWithBackoff,
+  CustomError,
 };

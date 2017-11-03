@@ -23,6 +23,10 @@ import {
   normalizeTextTrack,
 } from "../../utils/languages";
 
+import {
+  IKeySystemOption,
+ } from "../eme/index";
+
 const {
   DEFAULT_AUTO_PLAY,
   DEFAULT_INITIAL_BITRATES,
@@ -35,32 +39,6 @@ const {
   DEFAULT_THROTTLE_WHEN_HIDDEN,
   DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
-
-// XXX TODO DRY this with EME part?
-interface ILicenseStorageData {
-  sessionId : string;
-  initData : number;
-}
-
-// XXX TODO DRY this with EME part?
-interface ILicenseStorageOption {
-  load() : ILicenseStorageData[];
-  save(x : ILicenseStorageData[]) : void;
-}
-
-// XXX TODO
-interface IKeySystemOption {
-  type : string;
-  getLicense : (message : Uint8Array, messageType : string)
-    => Promise<BufferSource>|BufferSource;
-  serverCertificate? : BufferSource;
-  persistentLicense? : boolean;
-  licenseStorage? : ILicenseStorageOption;
-  persistentStateRequired? : boolean;
-  distinctiveIdentifierRequired? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
-    => Promise<BufferSource>|BufferSource;
-}
 
 // XXX TODO
 interface ITransportOption {
