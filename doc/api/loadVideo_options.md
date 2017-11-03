@@ -275,6 +275,8 @@ In ``"html"`` mode, the text tracks will be displayed on a specific HTML element
 
 All text track formats supported in ``"native"`` mode also work in ``"html"`` mode.
 
+More infos on supported text tracks can be found in the [text track documentation](./text_tracks.md).
+
 
 ### <a name="prop-textTrackElement"></a>textTrackElement
 
@@ -330,6 +332,8 @@ const supplementaryTextTracks = [{
                                // container
 }];
 ```
+
+To know which type of formats are supported and how to add them, you can read the [text track documentation](./text_tracks.md).
 
 ### <a name="prop-supplementaryImageTracks"></a>supplementaryImageTracks
 
