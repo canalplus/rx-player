@@ -28,19 +28,6 @@ describe("utils - bytes", () => {
     return bytes;
   };
 
-  describe("totalBytes", () => {
-    it("should set 0 for an empty TypedArray", () => {
-      expect(bytes.totalBytes(new Uint8Array())).to.equal(0);
-    });
-
-    it("should set the right size for an ArrayBuffer", () => {
-      const b64 = "QmFzZSA2NCDigJQgTW96aWxsYSBEZXZlbG9wZXIgTmV0d29yaw==";
-      const buff = base64ToArrayBuffer(b64);
-      const arr = [buff, buff, buff];
-      expect(bytes.totalBytes(arr)).to.equal(buff.byteLength * 3);
-    });
-  });
-
   describe("strToBytes", () => {
     it("should return an empty Uint8Array for an empty string", () => {
       const res = bytes.strToBytes("");
