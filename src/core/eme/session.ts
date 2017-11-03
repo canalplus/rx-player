@@ -16,12 +16,15 @@
 
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
 import { TimeoutError } from "rxjs/util/TimeoutError";
+import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
 
 import arrayIncludes from "../../utils/array-includes";
 import tryCatch from "../../utils/rx-tryCatch";
 import castToObservable from "../../utils/castToObservable";
 import { retryWithBackoff } from "../../utils/retry";
+import { CustomError } from "../../errors";
 
 import {
   onKeyMessage$,
@@ -39,11 +42,36 @@ import {
   KEY_STATUS_ERRORS,
 } from "./constants";
 
+import { IKeySystemOption } from "./index";
+
 import log from "../../utils/log";
 import {
   $storedSessions,
   $loadedSessions,
 } from "./globals";
+
+type ErrorStream = Subject<Error|CustomError>;
+
+interface IEMEMessage {
+  type : string;
+  value : {
+    name : string,
+    session : MediaKeySession
+  };
+}
+
+interface IEMEMessageOptions {
+  updatedWith?: Event;
+  initData?: Uint8Array;
+  initDataType?: string;
+  storedSessionId?: string;
+}
+
+type MediaKeySessionType =
+  "temporary" |
+  "persistent-license" |
+  "persistent-release-message" |
+  undefined;
 
 /**
  * Create the Object emitted by the EME Observable.
@@ -56,9 +84,12 @@ import {
 function createMessage(
   name : string,
   session : MediaKeySession,
-  options? : any
-) : { type : "eme", value : { name : string, session : MediaKeySession } } {
-  return { type: "eme", value: objectAssign({ name, session }, options) };
+  options? : IEMEMessageOptions
+) : IEMEMessage {
+  return {
+    type: "eme",
+    value: objectAssign({ name, session }, options),
+  };
 }
 
 /**
@@ -70,16 +101,19 @@ function createMessage(
  * @param {Subject} errorStream
  * @returns {Observable}
  */
-function sessionEventsHandler(session, keySystem, errorStream) {
+function sessionEventsHandler(
+  session: MediaKeySession,
+  keySystem: IKeySystemOption,
+  errorStream: ErrorStream
+): Observable<Event|IEMEMessage> {
   log.debug("eme: handle message events", session);
-  let sessionId;
 
   /**
    * @param {Error|Object} error
    * @param {Boolean} fatal
    * @returns {Error|Object}
    */
-  function licenseErrorSelector(error, fatal) {
+  function licenseErrorSelector(error: CustomError, fatal: boolean): CustomError|Error {
     if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
       error.fatal = fatal;
       return error;
@@ -91,20 +125,18 @@ function sessionEventsHandler(session, keySystem, errorStream) {
   const getLicenseRetryOptions = {
     totalRetry: 2,
     retryDelay: 200,
-    errorSelector: (error) => licenseErrorSelector(error, true),
-    onRetry: (error) => errorStream.next(licenseErrorSelector(error, false)),
+    errorSelector: (error: CustomError) => licenseErrorSelector(error, true),
+    onRetry: (error: CustomError) => errorStream.next(licenseErrorSelector(error, false)),
   };
 
-  const keyErrors = onKeyError$(session).map((error) => {
+  const keyErrors: Observable<Event> = onKeyError$(session).map((error) => {
     throw new EncryptedMediaError("KEY_ERROR", error, true);
   });
 
   const keyStatusesChanges = onKeyStatusesChange$(session)
-    .mergeMap((keyStatusesEvent) => {
-      sessionId = keyStatusesEvent.sessionId;
+    .mergeMap((keyStatusesEvent: Event) => {
       log.debug(
         "eme: keystatuseschange event",
-        sessionId,
         session,
         keyStatusesEvent
       );
@@ -122,26 +154,29 @@ function sessionEventsHandler(session, keySystem, errorStream) {
         }
       });
 
-      // otherwise use the keysystem handler if disponible
-      if (!keySystem.onKeyStatusesChange) {
-        log.info("eme: keystatuseschange event not handled");
-        return Observable.empty();
+      const license = tryCatch(() => {
+        if (keySystem && keySystem.onKeyStatusesChange) {
+          return castToObservable(
+            keySystem.onKeyStatusesChange(keyStatusesEvent, session)
+          );
+        } else {
+          return Observable.empty();
+        }
       }
-
-      const license = tryCatch(() =>
-        castToObservable(
-          keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-        )
       );
 
-      return license.catch((error) => {
-        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
-      });
+      if (license) {
+        return license.catch((error: Error) => {
+          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
+        });
+      }
+      log.info("eme: keystatuseschange event not handled");
+      return Observable.empty();
+
     });
 
   const keyMessages = onKeyMessage$(session)
-    .mergeMap((messageEvent) => {
-      sessionId = messageEvent.sessionId;
+    .mergeMap((messageEvent: MediaKeyMessageEvent) => {
 
       const message = new Uint8Array(messageEvent.message);
       const messageType = messageEvent.messageType || "license-request";
@@ -167,20 +202,22 @@ function sessionEventsHandler(session, keySystem, errorStream) {
       return retryWithBackoff(getLicense, getLicenseRetryOptions);
     });
 
-  const sessionUpdates = Observable.merge(keyMessages, keyStatusesChanges)
-    .concatMap((res) => {
-      log.debug("eme: update session", sessionId, res);
+  const sessionUpdates: Observable<Event|IEMEMessage>
+    = Observable.merge(keyMessages, keyStatusesChanges)
+      .concatMap((res: Event) => {
+        log.debug("eme: update session", res);
 
-      return castToObservable(
-        session.update(res, sessionId)
-      )
-        .catch((error) => {
-          throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
-        })
-        .mapTo(createMessage("session-update", session, { updatedWith: res }));
-    });
+        return castToObservable(
+          session.update(res)
+        )
+          .catch((error) => {
+            throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
+          })
+          .mapTo(createMessage("session-update", session, { updatedWith: res }));
+      });
 
-  const sessionEvents = Observable.merge(sessionUpdates, keyErrors);
+  const sessionEvents: Observable<Event|IEMEMessage>
+    = Observable.merge(sessionUpdates, keyErrors);
   if (session.closed) {
     return sessionEvents.takeUntil(castToObservable(session.closed));
   } else {
@@ -189,7 +226,7 @@ function sessionEventsHandler(session, keySystem, errorStream) {
 }
 
 /**
- * Create Key Session and link MediaKeySession events to the right events
+ * Create Key MediaKeySessionType and link MediaKeySession events to the right events
  * handlers.
  * @param {MediaKeys} mediaKeys
  * @param {string} sessionType - Either "persistent-license" or "temporary"
@@ -199,8 +236,12 @@ function sessionEventsHandler(session, keySystem, errorStream) {
  * @returns {Observable}
  */
 function createSession(
-  mediaKeys, sessionType, keySystem, initData, errorStream
-) {
+  mediaKeys: MediaKeys,
+  sessionType: MediaKeySessionType,
+  keySystem: IKeySystemOption,
+  initData: Uint8Array,
+  errorStream: ErrorStream
+): {session: MediaKeySession, sessionEvents: ConnectableObservable<Event|IEMEMessage>} {
   log.debug(`eme: create a new ${sessionType} session`);
   const session = mediaKeys.createSession(sessionType);
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
@@ -225,8 +266,13 @@ function createSession(
  * @returns {Observable}
  */
 function createSessionAndKeyRequest(
-  mediaKeys, keySystem, sessionType, initDataType, initData, errorStream
-) {
+  mediaKeys: MediaKeys,
+  keySystem: IKeySystemOption,
+  sessionType: MediaKeySessionType,
+  initDataType: string,
+  initData: Uint8Array,
+  errorStream: ErrorStream
+): Observable<Event|IEMEMessage> {
   const {
     session,
     sessionEvents,
@@ -263,10 +309,20 @@ function createSessionAndKeyRequest(
  * @returns {Observable}
  */
 function createSessionAndKeyRequestWithRetry(
-  mediaKeys, keySystem, sessionType, initDataType, initData, errorStream
-) {
+  mediaKeys: MediaKeys,
+  keySystem: IKeySystemOption,
+  sessionType: MediaKeySessionType,
+  initDataType: string,
+  initData: Uint8Array,
+  errorStream: ErrorStream
+): Observable<Event|IEMEMessage> {
   return createSessionAndKeyRequest(
-    mediaKeys, keySystem, sessionType, initDataType, initData, errorStream
+    mediaKeys,
+    keySystem,
+    sessionType,
+    initDataType,
+    initData,
+    errorStream
   )
     .catch((error) => {
       if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
@@ -304,8 +360,13 @@ function createSessionAndKeyRequestWithRetry(
  * @returns {Observable}
  */
 function createPersistentSessionAndLoad(
-  mediaKeys, keySystem, storedSessionId, initDataType, initData, errorStream
-) {
+  mediaKeys: MediaKeys,
+  keySystem: IKeySystemOption,
+  storedSessionId: string,
+  initDataType: string,
+  initData: Uint8Array,
+  errorStream: ErrorStream
+): Observable<Event|IEMEMessage> {
   log.debug("eme: load persisted session", storedSessionId);
 
   const sessionType = "persistent-license";
@@ -356,8 +417,13 @@ function createPersistentSessionAndLoad(
  * @returns {Observable}
  */
 function manageSessionCreation(
-  mediaKeys, mksConfig, keySystem, initDataType, initData, errorStream
-) {
+  mediaKeys: MediaKeys,
+  mksConfig: MediaKeySystemConfiguration,
+  keySystem: IKeySystemOption,
+  initDataType: string,
+  initData: Uint8Array,
+  errorStream: ErrorStream
+): Observable<MediaKeys|IEMEMessage|Event> {
   return Observable.defer(() => {
     // reuse currently loaded sessions without making a new key request
     const loadedSession = $loadedSessions.get(initData);
@@ -366,7 +432,7 @@ function manageSessionCreation(
       return Observable.of(createMessage("reuse-session", loadedSession));
     }
 
-    let sessionType = "temporary"; // (default value)
+    let sessionType: MediaKeySessionType = "temporary"; // (default value)
     const sessionTypes = mksConfig.sessionTypes;
     const hasPersistence = (
       sessionTypes && arrayIncludes(sessionTypes, "persistent-license"));
@@ -392,3 +458,8 @@ function manageSessionCreation(
 }
 
 export default manageSessionCreation;
+
+export {
+  IEMEMessage,
+  ErrorStream,
+};

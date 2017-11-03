@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import castToObservable from "../../utils/castToObservable";
 import EncryptedMediaError from "../../errors/EncryptedMediaError";
+import { ErrorStream } from "./session";
 
 /**
  * Call the setServerCertificate API with the given certificate.
@@ -34,7 +35,7 @@ import EncryptedMediaError from "../../errors/EncryptedMediaError";
  */
 function setServerCertificate(
   mediaKeys : MediaKeys,
-  serverCertificate : ArrayBuffer
+  serverCertificate : BufferSource
 ) : Observable<{}|void> {
   return Observable.defer(() => {
     return castToObservable(
@@ -57,8 +58,8 @@ function setServerCertificate(
  */
 function trySettingServerCertificate(
   mediaKeys : MediaKeys,
-  serverCertificate : ArrayBuffer,
-  errorStream
+  serverCertificate : BufferSource,
+  errorStream: ErrorStream
 ) : Observable<void|{}> {
   return setServerCertificate(mediaKeys, serverCertificate)
     .catch(error => {

@@ -23,6 +23,16 @@ import assert from "../../utils/assert";
 import { shouldUnsetMediaKeys } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 
+import { IPersistedSessionStorage } from "./sessions_set/persisted";
+import {
+  IInstanceInfo,
+  IKeySystemPackage,
+ } from "./key_system";
+import {
+  IEMEMessage,
+  ErrorStream,
+ } from "./session";
+
 import {
   $storedSessions,
   $loadedSessions,
@@ -32,9 +42,26 @@ import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
 import manageSessionCreation from "./session";
 import findCompatibleKeySystem, { getKeySystem } from "./key_system";
 
+import { EncryptedMediaError } from "../../errors";
+
+interface IKeySystemOption {
+  type : string;
+  getLicense : (message : Uint8Array, messageType : string)
+    => Promise<BufferSource>|BufferSource;
+  serverCertificate? : BufferSource;
+  persistentLicense? : boolean;
+  licenseStorage? : IPersistedSessionStorage;
+  persistentStateRequired? : boolean;
+  distinctiveIdentifierRequired? : boolean;
+  onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
+    => Promise<BufferSource>|BufferSource;
+  videoRobustnesses?: Array<string|undefined>;
+  audioRobustnesses?: Array<string|undefined>;
+}
+
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
-const instanceInfos = {
+const instanceInfos: IInstanceInfo = {
   $mediaKeys: null,  // MediaKeys instance
   $mediaKeySystemConfiguration: null, // active MediaKeySystemConfiguration
   $keySystem: null,
@@ -50,7 +77,7 @@ function createMediaKeysObs(
   keySystemAccess : MediaKeySystemAccess
 ) : Observable<MediaKeys> {
   // MediaKeySystemAccess.prototype.createMediaKeys returns a promise
-  return castToObservable(keySystemAccess.createMediaKeys());
+  return castToObservable<MediaKeys>(keySystemAccess.createMediaKeys());
 }
 
 /**
@@ -66,16 +93,19 @@ function createMediaKeysObs(
  * @returns {Observable}
  */
 function handleEncryptedEvents(
-  encryptedEvent : Event,
-  {
-    keySystem,
-    keySystemAccess,
-  },
-  video : HTMLMediaElement,
-  errorStream
-) {
+  encryptedEvent : MediaEncryptedEvent,
+  keySystemInfo: IKeySystemPackage,
+  video : HTMLVideoElement,
+  errorStream: ErrorStream
+): Observable<{}|void|MediaKeys|IEMEMessage|Event> {
+  const { keySystem, keySystemAccess } = keySystemInfo;
   if (keySystem.persistentLicense) {
-    $storedSessions.setStorage(keySystem.licenseStorage);
+    if (keySystem.licenseStorage) {
+      $storedSessions.setStorage(keySystem.licenseStorage);
+    } else {
+      const error = new Error("no license storage found for persistent license.");
+      throw new EncryptedMediaError("INVALID_KEY_SYSTEM", error, true);
+    }
   }
 
   log.info("eme: encrypted event", encryptedEvent);
@@ -92,14 +122,18 @@ function handleEncryptedEvents(
 
     const setMediaKeys$ = setMediaKeysObs(
       mediaKeys, mksConfig, video, keySystem, instanceInfos);
+    if (encryptedEvent.initData) {
+      const initData = new Uint8Array(encryptedEvent.initData);
+      const manageSessionCreation$ = manageSessionCreation(
+        mediaKeys, mksConfig, keySystem, encryptedEvent.initDataType,
+        initData, errorStream);
 
-    const initData = new Uint8Array(encryptedEvent.initData);
-    const manageSessionCreation$ = manageSessionCreation(
-      mediaKeys, mksConfig, keySystem, encryptedEvent.initDataType,
-      initData, errorStream);
-
-    return setCertificate$
-      .concat(Observable.merge(setMediaKeys$, manageSessionCreation$));
+      return setCertificate$
+        .concat(Observable.merge(setMediaKeys$, manageSessionCreation$));
+    } else {
+      const error = new Error("no init data found on media encrypted event.");
+      throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+    }
   });
 }
 
@@ -114,7 +148,11 @@ function handleEncryptedEvents(
  * @param {Subject} errorStream
  * @returns {Observable}
  */
-function createEME(video : HTMLMediaElement, keySystems, errorStream) {
+function createEME(
+  video : HTMLVideoElement,
+  keySystems: IKeySystemOption[],
+  errorStream: ErrorStream
+) : Observable<void|{}|MediaKeys|IEMEMessage|Event> {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
@@ -127,7 +165,7 @@ function createEME(video : HTMLMediaElement, keySystems, errorStream) {
     findCompatibleKeySystem(keySystems, instanceInfos)
   )
     .take(1)
-    .mergeMap(([evt, ks] : [any, any]) => {
+    .mergeMap(([evt, ks] : [MediaEncryptedEvent, IKeySystemPackage]) => {
       return handleEncryptedEvents(evt, ks, video, errorStream);
     });
 }
@@ -149,7 +187,7 @@ function dispose() : void {
 /**
  * Clear EME ressources as the current content stops its playback.
  */
-function clearEME() {
+function clearEME(): Observable<MediaKeys> {
   return Observable.defer(() => {
     if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
       return disposeMediaKeys(instanceInfos.$videoElement)
@@ -165,7 +203,7 @@ function clearEME() {
  * Returns the name of the current key system used.
  * @returns {string}
  */
-function getCurrentKeySystem() : string {
+function getCurrentKeySystem() : string|null {
   return getKeySystem(instanceInfos);
 }
 
@@ -174,4 +212,6 @@ export {
   clearEME,
   getCurrentKeySystem,
   dispose,
+  IKeySystemOption,
+  ErrorStream,
 };

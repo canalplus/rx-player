@@ -34,17 +34,26 @@ let requestMediaKeySystemAccess :
 
 // TODO Implement MediaKeySession completely
 interface IMockMediaKeySession {
-  sessionId : string;
-  update(license : ArrayBuffer|Uint8Array, sessionId : string) :
-    Observable<Event>;
-  generateRequest(_initDataType : string, initData : ArrayBuffer) : void;
-  close() : void;
+  readonly closed: Promise<void>;
+  readonly expiration: number;
+  readonly keyStatuses: MediaKeyStatusMap;
+  readonly sessionId : string;
+  close(): Promise<void>;
+  generateRequest(initDataType: string, initData: any): Promise<void>;
+  load(sessionId: string): Promise<boolean>;
+  remove(): Promise<void>;
+  update(response: any): Promise<void>;
+  addEventListener(type: string, listener: () => {}, useCapture: boolean): void;
+  removeEventListener(type: string, listener: EventListener, useCapture: boolean): void;
+  dispatchEvent(evt: Event): boolean;
 }
+
+type IMediaKeySessionType = "temporary" | "persistent-license" | "persistent-release-message";
 
 interface IMockMediaKeys {
   _setVideo(vid : HTMLMediaElement) : void;
-  createSession(sessionType : string) : IMockMediaKeySession;
-  setServerCertificate(setServerCertificate : BufferSource) : Promise<boolean>;
+  createSession(sessionType? : IMediaKeySessionType) : IMockMediaKeySession;
+  setServerCertificate(setServerCertificate : any) : Promise<void>;
 }
 interface IMockMediaKeysConstructor {
   new(ks : string) : IMockMediaKeys;
@@ -60,7 +69,7 @@ let MockMediaKeys : IMockMediaKeysConstructor =
     createSession() : IMockMediaKeySession {
       throw new Error("MediaKeys is not implemented in your browser");
     }
-    setServerCertificate() : Promise<boolean> {
+    setServerCertificate() : Promise<void> {
       throw new Error("MediaKeys is not implemented in your browser");
     }
   };
@@ -70,16 +79,14 @@ if (navigator.requestMediaKeySystemAccess) {
     castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 } else {
   type wrapUpdateFn =
-    (license : Uint8Array, sessionId : string) => Observable<Event>;
+    (license : any, sessionId? : string) => Promise<void>;
   type memUpdateFn =
     (license : Uint8Array, sessionId : string) => void;
-  type sessionObjFn = () => MediaKeySession;
 
   // Wrap "MediaKeys.prototype.update" form an event based system to a
   // Promise based function.
   const wrapUpdate = (
-    memUpdate : memUpdateFn,
-    sessionObj? : sessionObjFn
+    memUpdate : memUpdateFn
   ) : wrapUpdateFn => {
     class KeySessionError extends Error {
       public name : "KeySessionError";
@@ -106,24 +113,17 @@ if (navigator.requestMediaKeySystemAccess) {
 
     return function(
       this : IMockMediaKeySession,
-      license : ArrayBuffer|Uint8Array,
-      sessionId : string
-    ) : Observable<Event> {
-      const session = typeof sessionObj === "function"
-      ? sessionObj.call(this)
-      : this;
-
-      const keys = events.onKeyAdded$(session);
-      const errs = events.onKeyError$(session).map((evt) => {
-        throw new KeySessionError(session.error || evt);
+      license : any,
+      sessionId? : string
+    ) : Promise<void> {
+      return new Promise((resolve, reject) => {
+        try {
+          memUpdate.call(this, license, sessionId);
+          resolve();
+        } catch (e) {
+            reject(e);
+          }
       });
-
-      try {
-        memUpdate.call(this, license, sessionId);
-        return Observable.merge(keys, errs).take(1);
-      } catch (e) {
-        return Observable.throw(e);
-      }
     };
   };
 
@@ -141,9 +141,15 @@ if (navigator.requestMediaKeySystemAccess) {
     {
       public sessionId : string;
       public update : (
-        license : ArrayBuffer|Uint8Array,
-        sessionId : string
-      ) => Observable<Event>;
+        license : any,
+        sessionId? : string
+      ) => Promise<void>;
+      public closed: Promise<void>;
+      readonly expiration: number;
+      public keyStatuses: MediaKeyStatusMap;
+      public dispatchEvent: (evt: Event) => boolean;
+      public load: (sessionId: string) => Promise<boolean>;
+      public remove: () => Promise<void>;
 
       private _vid : HTMLMediaElement;
       private _key : string;
@@ -160,7 +166,7 @@ if (navigator.requestMediaKeySystemAccess) {
           events.onKeyError$(video)
         ).subscribe((evt : Event) => this.trigger(evt.type, evt));
 
-        this.update = wrapUpdate((license, sessionId) => {
+        this.update = wrapUpdate((license, sessionId?) => {
           if (this._key.indexOf("clearkey") >= 0) {
             const json = JSON.parse(bytesToStr(license));
             const key = strToBytes(atob(json.keys[0].k));
@@ -173,17 +179,23 @@ if (navigator.requestMediaKeySystemAccess) {
         });
       }
 
-      generateRequest(_initDataType : string, initData : ArrayBuffer) : void {
-        if (typeof this._vid.webkitGenerateKeyRequest !== "function") {
-          throw new Error("impossible to generate a key request");
-        }
-        this._vid.webkitGenerateKeyRequest(this._key, initData);
+      generateRequest(_initDataType : string, initData : any) : Promise<void> {
+        return new Promise((resolve) => {
+          if (typeof this._vid.webkitGenerateKeyRequest !== "function") {
+            throw new Error("impossible to generate a key request");
+          }
+          this._vid.webkitGenerateKeyRequest(this._key, initData);
+          resolve();
+        });
       }
 
-      close() {
-        if (this._con) {
-          this._con.unsubscribe();
-        }
+      close(): Promise<void> {
+        return new Promise((resolve) => {
+          if (this._con) {
+            this._con.unsubscribe();
+          }
+          resolve();
+        });
       }
     }
 
@@ -206,7 +218,7 @@ if (navigator.requestMediaKeySystemAccess) {
         return new MockMediaKeySession(this._vid, this.ks_);
       }
 
-      setServerCertificate() : Promise<boolean> {
+      setServerCertificate() : Promise<void> {
         throw new Error("Server certificate is not implemented in your browser");
       }
     };
@@ -297,9 +309,15 @@ if (navigator.requestMediaKeySystemAccess) {
     class SessionProxy extends EventEmitter implements IMockMediaKeySession {
       public sessionId : string;
       public update : (
-        license : ArrayBuffer|Uint8Array,
-        sessionId : string
-      ) => Observable<Event>;
+        license : any,
+        sessionId? : string
+      ) => Promise<void>;
+      public load: (sessionId: string) => Promise<boolean>;
+      public remove: () => Promise<void>;
+      public closed: Promise<void>;
+      readonly expiration: number;
+      public keyStatuses: MediaKeyStatusMap;
+      public dispatchEvent: (evt: Event) => boolean;
 
       private _mk : IIE11MediaKeys;
       private _ss? : MediaKeySession;
@@ -314,30 +332,33 @@ if (navigator.requestMediaKeySystemAccess) {
           assert(this._ss);
           (this._ss as any).update(license, sessionId);
           this.sessionId = sessionId;
-        }, () => {
-          assert(this._ss);
-          return this._ss as MediaKeySession;
         });
       }
 
-      generateRequest(_initDataType : string, initData : ArrayBuffer) : void {
-        this._ss = this._mk.memCreateSession("video/mp4", initData);
-        this._con = Observable.merge(
-          events.onKeyMessage$(this._ss),
-          events.onKeyAdded$(this._ss),
-          events.onKeyError$(this._ss)
-        ).subscribe((evt : Event) => this.trigger(evt.type, evt));
+      generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
+        return new Promise((resolve) => {
+          this._ss = this._mk.memCreateSession("video/mp4", initData);
+          this._con = Observable.merge(
+            events.onKeyMessage$(this._ss),
+            events.onKeyAdded$(this._ss),
+            events.onKeyError$(this._ss)
+          ).subscribe((evt : Event) => this.trigger(evt.type, evt));
+          resolve();
+        });
       }
 
-      close() {
-        if (this._ss) {
-          this._ss.close();
-          this._ss = undefined;
-        }
-        if (this._con) {
-          this._con.unsubscribe();
-          this._con = undefined;
-        }
+      close(): Promise<void> {
+        return new Promise((resolve) => {
+          if (this._ss) {
+            this._ss.close();
+            this._ss = undefined;
+          }
+          if (this._con) {
+            this._con.unsubscribe();
+            this._con = undefined;
+          }
+          resolve();
+        });
       }
     }
 

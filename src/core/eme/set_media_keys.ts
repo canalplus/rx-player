@@ -18,6 +18,8 @@ import { Observable } from "rxjs/Observable";
 import log from "../../utils/log";
 import { setMediaKeys } from "../../compat";
 import { $loadedSessions } from "./globals";
+import { IKeySystemOption } from "./index";
+import { IInstanceInfo } from "./key_system";
 
 /**
  * Set the MediaKeys object on the videoElement.
@@ -31,9 +33,9 @@ import { $loadedSessions } from "./globals";
 function setMediaKeysObs(
   mediaKeys : MediaKeys,
   mksConfig : MediaKeySystemConfiguration,
-  video : HTMLMediaElement,
-  keySystem,
-  instceInfos
+  video : HTMLVideoElement,
+  keySystem: IKeySystemOption,
+  instceInfos: IInstanceInfo
 ) : Observable<MediaKeys> {
   return Observable.defer(() => {
     const {
@@ -74,7 +76,7 @@ function setMediaKeysObs(
 }
 
 function disposeMediaKeys(
-  videoElement : HTMLMediaElement
+  videoElement : HTMLMediaElement|null
 ) : Observable<MediaKeys> {
   if (videoElement) {
     return setMediaKeys(videoElement, null);

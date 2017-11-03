@@ -15,6 +15,8 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
+import { Subscription } from "rxjs/Subscription";
 
 import config from "../../config";
 import log from "../../utils/log";
@@ -24,21 +26,49 @@ import {
   shouldRenewMediaKeys,
 } from "../../compat";
 
-import {
-  EncryptedMediaError,
-} from "../../errors";
+import { IKeySystemOption } from "../eme/index";
+
+import { EncryptedMediaError } from "../../errors";
+
+type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 
 const {
   EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
   EME_KEY_SYSTEMS,
 } = config;
 
-function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
+interface IInstanceInfo {
+  $keySystem: IKeySystemOption|null;
+  $mediaKeys: MediaKeys|null;
+  $mediaKeySystemConfiguration: MediaKeySystemConfiguration|null;
+  $videoElement: HTMLVideoElement|null;
+}
+
+interface IMediaCapability {
+  contentType?: string;
+  robustness?: string;
+}
+
+interface IKeySystemType {
+  keyName: string;
+  keyType: string;
+  keySystem: IKeySystemOption;
+}
+
+interface IKeySystemPackage {
+  keySystemAccess: MediaKeySystemAccess;
+  keySystem: IKeySystemOption;
+}
+
+function getCachedKeySystemAccess(
+  keySystems: IKeySystemOption[],
+  instanceInfos: IInstanceInfo)
+    : null|undefined|{keySystem: IKeySystemOption, keySystemAccess: KeySystemAccess} {
   const {
     $keySystem,
     $mediaKeys,
     $mediaKeySystemConfiguration,
-  }  = instanceInfos;
+  } = instanceInfos;
 
   // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
   // creation of a new MediaKeys instance for each session creation
@@ -46,6 +76,7 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
     return null;
   }
 
+  if ($mediaKeySystemConfiguration) {
   const configuration = $mediaKeySystemConfiguration;
   const foundKeySystem = keySystems.filter((ks) => {
     if (ks.type !== $keySystem.type) {
@@ -78,15 +109,17 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
     return null;
   }
 }
+}
 
 /**
-* Find key system canonical name from key system type.
-* @param {string} ksType - Obtained via inversion
-* @returns {string} - Either the canonical name, or undefined.
-*/
-function findKeySystemCanonicalName(ksType) {
+ * Find key system canonical name from key system type.
+ * @param {string} ksType - Obtained via inversion
+ * @returns {string} - Either the canonical name, or undefined.
+ */
+function findKeySystemCanonicalName(ksType: string)
+: string|undefined {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
-    if(EME_KEY_SYSTEMS[ksName].includes(ksType)) {
+    if (EME_KEY_SYSTEMS[ksName].includes(ksType)) {
       return ksName;
     }
   }
@@ -105,10 +138,13 @@ function findKeySystemCanonicalName(ksType) {
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
-function buildKeySystemConfigurations(ksName, keySystem) {
+function buildKeySystemConfigurations(
+  ksName: string,
+  keySystem: IKeySystemOption
+) : MediaKeySystemConfiguration[] {
   const sessionTypes = ["temporary"];
-  let persistentState = "optional";
-  let distinctiveIdentifier = "optional";
+  let persistentState: MediaKeysRequirement = "optional";
+  let distinctiveIdentifier: MediaKeysRequirement = "optional";
 
   if (keySystem.persistentLicense) {
     persistentState = "required";
@@ -152,14 +188,28 @@ function buildKeySystemConfigurations(ksName, keySystem) {
   // More details here:
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
-  const videoCapabilities = videoRobustnesses.map(robustness => ({
+  const videoCapabilities: IMediaCapability[] = videoRobustnesses.map(robustness => ({
     contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
     robustness,
   }));
-  const audioCapabilities = audioRobustnesses.map(robustness => ({
+  const audioCapabilities: IMediaCapability[] = audioRobustnesses.map(robustness => ({
     contentType: "audio/mp4;codecs=\"mp4a.40.2\"", // standard mp4 codec
     robustness,
   }));
+
+  // TODO Re-test with a set contentType but an undefined robustness on the
+  // STBs on which this problem was found.
+  //
+  // add another with no {audio,video}Capabilities for some legacy browsers.
+  // As of today's spec, this should return NotSupported but the first
+  // candidate configuration should be good, so we should have no downside
+  // doing that.
+  // initDataTypes: ["cenc"],
+  // videoCapabilities: undefined,
+  // audioCapabilities: undefined,
+  // distinctiveIdentifier,
+  // persistentState,
+  // sessionTypes,
 
   return [{
     initDataTypes: ["cenc"],
@@ -168,20 +218,6 @@ function buildKeySystemConfigurations(ksName, keySystem) {
     distinctiveIdentifier,
     persistentState,
     sessionTypes,
-  }, {
-    // TODO Re-test with a set contentType but an undefined robustness on the
-    // STBs on which this problem was found.
-    //
-    // add another with no {audio,video}Capabilities for some legacy browsers.
-    // As of today's spec, this should return NotSupported but the first
-    // candidate configuration should be good, so we should have no downside
-    // doing that.
-    // initDataTypes: ["cenc"],
-    // videoCapabilities: undefined,
-    // audioCapabilities: undefined,
-    // distinctiveIdentifier,
-    // persistentState,
-    // sessionTypes,
   }];
 }
 
@@ -203,7 +239,10 @@ function buildKeySystemConfigurations(ksName, keySystem) {
  * @param {Array.<Object>} keySystems - The keySystems you want to test.
  * @returns {Observable}
  */
-function findCompatibleKeySystem(keySystems, instanceInfos) {
+function findCompatibleKeySystem(
+  keySystems: IKeySystemOption[],
+  instanceInfos: IInstanceInfo
+) : Observable<IKeySystemPackage> {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
   const cachedKeySystemAccess =
@@ -221,8 +260,8 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
    *   - keySystem {Object}: the original keySystem object
    * @type {Array.<Object>}
    */
-  const keySystemsType = keySystems.reduce(
-    (arr, keySystem) => {
+  const keySystemsType: IKeySystemType[] = keySystems.reduce(
+    (arr: IKeySystemType[], keySystem) => {
 
       let ksType;
 
@@ -234,7 +273,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
         );
       }
       else {
-        const keyName = findKeySystemCanonicalName(keySystem.type);
+        const keyName = findKeySystemCanonicalName(keySystem.type) || "";
         const keyType = keySystem.type;
         ksType = [{ keyName, keyType, keySystem }];
       }
@@ -243,15 +282,15 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
     }
     , []);
 
-  return Observable.create((obs) => {
+  return Observable.create((obs: Subject<IKeySystemPackage>) => {
     let disposed = false;
-    let sub = null;
+    let sub: Subscription|null;
 
     /**
      * Test the key system as defined in keySystemsType[index].
      * @param {Number} index
      */
-    function testKeySystem(index) {
+    function testKeySystem(index: number): void {
       // completely quit the loop if unsubscribed
       if (disposed) {
         return;
@@ -264,6 +303,7 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
       }
 
       const { keyName, keyType, keySystem } = keySystemsType[index];
+
       const keySystemConfigurations =
         buildKeySystemConfigurations(keyName, keySystem);
 
@@ -281,7 +321,10 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
             obs.complete();
           },
           () => {
-            log.debug("eme: rejected access to keysystem", keyType, keySystemConfigurations);
+            log.debug(
+              "eme: rejected access to keysystem",
+              keyType,
+              keySystemConfigurations);
             sub = null;
             testKeySystem(index + 1);
           }
@@ -293,19 +336,22 @@ function findCompatibleKeySystem(keySystems, instanceInfos) {
     return () => {
       disposed = true;
       if (sub) {
-        (sub as any).unsubscribe();
+        sub.unsubscribe();
       }
     };
   });
 }
 
-function getKeySystem(instanceInfos : any = {}) {
+function getKeySystem(instanceInfos : IInstanceInfo): string|null {
   return instanceInfos.$keySystem && instanceInfos.$keySystem.type;
 }
 
 export {
   findCompatibleKeySystem,
   getKeySystem,
+  IInstanceInfo,
+  IMediaCapability,
+  IKeySystemPackage,
 };
 
 export default findCompatibleKeySystem;
