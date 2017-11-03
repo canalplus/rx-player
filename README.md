@@ -10,7 +10,7 @@ Its main goals are:
   - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB integration...)
   - To be easy to integrate and use as a library in various codebases.
 
-Latest release: ``v3.0.0-rc7``
+Latest release: ``v3.0.0-rc8``
 
 ## API
 
@@ -31,7 +31,7 @@ npm install --save rx-player
 
 This will install the last "stable" version, which for now is the ``v2.3.2``.
 
-However, for all the improvements brought by our upcoming ``v3.0.0`` release, we advise most library users to clone directly the ``v3.0.0-rc7`` through github instead as a temporary solution:
+However, for all the improvements brought by our upcoming ``v3.0.0`` release, we advise most library users to clone directly the ``v3.0.0-rc8`` through github instead as a temporary solution:
 ```
 npm install --save git+https://git@github.com/canalplus/rx-player.git
 ```
