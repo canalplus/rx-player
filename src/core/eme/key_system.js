@@ -69,7 +69,7 @@ function getCachedKeySystemAccess(keySystems, instanceInfos = {}) {
     return {
       keySystem: foundKeySystem,
       keySystemAccess: new KeySystemAccess(
-        $keySystem,
+        $keySystem.type,
         $mediaKeys,
         $mediaKeySystemConfiguration),
     };
