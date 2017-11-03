@@ -548,6 +548,7 @@ export default class SegmentBookkeeper {
     }
 
     /* Returns true if the segment given can be played for the wanted range.
+     * @param {Object} _wantedRange
      * @param {Object} currentSegmentI
      * @param {Object} prevSegmentI
      * @param {Object} nextSegmentI
