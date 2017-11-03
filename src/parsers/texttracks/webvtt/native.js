@@ -31,7 +31,7 @@ export default function parseVTTStringToVTTCues(vttStr) {
   // WEBVTT authorize CRLF, LF or CR as line terminators
   const lines = vttStr.split(/\r\n|\n|\r/);
 
-  if (!(/^WEBVTT($ | |\t)/.test(lines[0]))) {
+  if (!(/^WEBVTT($| |\t)/.test(lines[0]))) {
     throw new Error("Can't parse WebVTT: Invalid file.");
   }
 
@@ -141,8 +141,8 @@ function parseTimestamp(timestampString) {
     }
     return hours * 60 * 60 + minutes * 60 + seconds;
   } else if (splittedTS.length === 2) {
-    const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[2]);
+    const minutes = parseInt(splittedTS[0], 10);
+    const seconds = parseFloat(splittedTS[1]);
     if (isNaN(minutes) || isNaN(seconds)) {
       return;
     }
