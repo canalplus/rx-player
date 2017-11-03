@@ -19,6 +19,7 @@ import { Observable } from "rxjs/Observable";
 import onEvent from "../utils/rx-onEvent.js";
 import EventEmitter from "../utils/eventemitter";
 import log from "../utils/log.js";
+
 import {
   HTMLVideoElement_,
   MediaSource_,
@@ -39,10 +40,20 @@ import {
   KeySystemAccess,
 } from "./eme";
 
+/**
+ * Returns true if the given codec is supported by the browser's MediaSource
+ * implementation.
+ * @returns {Boolean}
+ */
 function isCodecSupported(codec) {
   return !!MediaSource_ && MediaSource_.isTypeSupported(codec);
 }
 
+/**
+ * Returns true if the current target require the media keys to be renewed on
+ * each content.
+ * @returns {Boolean}
+ */
 function shouldRenewMediaKeys() {
   return isIE;
 }
@@ -64,7 +75,7 @@ function shouldUnsetMediaKeys() {
  * @returns {Observable}
  */
 function onSourceOpen$(mediaSource) {
-  if (mediaSource.readyState == "open") {
+  if (mediaSource.readyState === "open") {
     return Observable.of(null);
   } else {
     return events.onSourceOpen$(mediaSource).take(1);
@@ -99,7 +110,8 @@ function canPlay(videoElement) {
 }
 
 
-// TODO Lacking side-effect?
+// old WebKit SourceBuffer implementation,
+// where a synchronous append is used instead of appendBuffer
 if (
   window.WebKitSourceBuffer &&
   !window.WebKitSourceBuffer.prototype.addEventListener
@@ -138,8 +150,19 @@ if (
   };
 }
 
+/**
+ * Add text track to the given media element.
+ * Returns an object with the following properties:
+ *   - track {TextTrack}: the added text track
+ *   - trackElement {HTMLElement|undefined}: the added <track> element.
+ *     undefined if no trackElement was added.
+ * @param {HTMLMediaElement} video
+ * @param {Boolean} hidden
+ * @returns {Object}
+ */
 function addTextTrack(video, hidden) {
-  let track, trackElement;
+  let track;
+  let trackElement;
   const kind = "subtitles";
   if (isIE) {
     const tracksLength = video.textTracks.length;
@@ -161,21 +184,20 @@ function addTextTrack(video, hidden) {
 /**
  * firefox fix: sometimes the stream can be stalled, even if we are in a
  * buffer.
+ *
+ * TODO This seems to be about an old Firefox version. Delete it?
  * @param {Object} timing
  * @returns {Boolean}
  */
-function isPlaybackStuck(timing) {
+function isPlaybackStuck(time, currentRange, state, isStalled) {
   const FREEZE_THRESHOLD = 10; // video freeze threshold in seconds
   return (
-    isFirefox &&
-    timing.stalled &&
-    timing.state === "timeupdate" &&
-    timing.range &&
-    timing.range.end - timing.currentTime > FREEZE_THRESHOLD
+    isFirefox && isStalled && state === "timeupdate" &&
+    !!currentRange && currentRange.end - time > FREEZE_THRESHOLD
   );
 }
 
-/*
+/**
  * Clear video src attribute.
  *
  * On IE11,  video.src = "" is not sufficient as it

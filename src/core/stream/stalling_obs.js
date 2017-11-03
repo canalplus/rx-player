@@ -54,11 +54,18 @@ function StallingManager(
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the stream.
-      if (isPlaybackStuck(timing)) {
+      if (
+        isPlaybackStuck(
+          timing.currentTime,
+          timing.currentRange,
+          timing.state,
+          !!timing.stalled
+        )
+      ) {
         log.warn("after freeze seek", currentTime, timing.range);
         videoElement.currentTime = currentTime;
       } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
-        const seekTo = (currentTime + nextRangeGap + 1/60);
+        const seekTo = (currentTime + nextRangeGap + 1 / 60);
         log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
         videoElement.currentTime = seekTo;
       }
@@ -67,7 +74,7 @@ function StallingManager(
     .map(timing => timing.stalled)
     .distinctUntilChanged((wasStalled, isStalled) => {
       return !wasStalled && !isStalled ||
-        (wasStalled && isStalled && wasStalled.state === isStalled.state);
+        (!!wasStalled && !!isStalled && wasStalled.state === isStalled.state);
     });
 }
 
