@@ -30,10 +30,60 @@ import {
 import assert from "../../utils/assert";
 import { normalize as normalizeLang } from "../../utils/languages";
 
+import { IHSSParserOptions } from "./types";
+
 interface IParserFunctions {
-  (manifest : string|Document) : any;
-  parseFromString : (x: string) => any;
-  parseFromDocument : (manifest : Document) => any;
+  (manifest : string|Document) : IParsedManifestSmooth;
+  parseFromString : (x: string) => IParsedManifestSmooth;
+  parseFromDocument : (manifest : Document) => IParsedManifestSmooth;
+}
+
+interface IContentProtectionSmooth {
+    keyId : string;
+    keySystems: HSSKeySystem[];
+}
+
+interface IInitializationSmooth {
+  range: Array<number|null>;
+  indexRange: Array<number|null>;
+  media: string|null;
+}
+
+interface IIndexSmooth {
+  timeline: IHSSManifestSegment[];
+  indexType: string;
+  timescale: number;
+  initialization: IInitializationSmooth;
+}
+
+interface IAdaptationSmooth {
+  id?: string;
+  smoothProtection?: IContentProtectionSmooth|null;
+  type: string;
+  accessibility: string[];
+  index: IIndexSmooth;
+  representations: Array<IDictionary<string|number>>; // XXX TODO
+  name: string|null;
+  language: string|null;
+  normalizedLanguage: string|null;
+  baseURL: string|null;
+}
+
+interface IPeriodSmooth {
+  duration: number;
+  adaptations: IAdaptationSmooth[];
+  laFragCount: number;
+}
+
+interface IParsedManifestSmooth {
+  transportType: string;
+  profiles: string;
+  type: string;
+  suggestedPresentationDelay: number|undefined;
+  timeShiftBufferDepth: number|undefined;
+  presentationLiveGap: number|undefined;
+  availabilityStartTime: number|undefined;
+  periods: IPeriodSmooth[];
 }
 
 interface IHSSManifestSegment {
@@ -47,20 +97,13 @@ interface HSSKeySystem {
   privateData : Uint8Array;
 }
 
-interface IHSSParserOptions {
-  suggestedPresentationDelay? : number;
-  referenceDateTime? : number;
-  keySystems?: (keyIdBytes : Uint8Array) => HSSKeySystem[];
-  minRepresentationBitrate? : number;
-}
-
-const DEFAULT_MIME_TYPES = {
+const DEFAULT_MIME_TYPES: Dictionary<string> = {
   audio: "audio/mp4",
   video: "video/mp4",
   text: "application/ttml+xml",
 };
 
-const DEFAULT_CODECS = {
+const DEFAULT_CODECS: Dictionary<string> = {
   audio: "mp4a.40.2",
   video: "avc1.4D401E",
 };
@@ -155,17 +198,13 @@ function parseBoolean(val : string|null) : boolean {
  * @returns {Number}
  */
 function calcLastRef(
-  adaptation? : {
-    index : {
-      timeline : Array<{ ts : number, r : number, d : number }>,
-      timescale : number,
-    }
-  }
+  adaptation? : IAdaptationSmooth
 ) : number {
   if (!adaptation) { return Infinity; }
   const { index } = adaptation;
   const { ts, r, d } = index.timeline[index.timeline.length - 1];
-  return ((ts + (r + 1) * d) / index.timescale);
+  const dd = d ? d : 0;
+  return ((ts + (r + 1) * dd) / index.timescale);
 }
 
 /**
@@ -357,7 +396,10 @@ function createSmoothStreamingParser(
    * @param {Number} timescale
    * @returns {Object}
    */
-  function parseAdaptation(root : Element, timescale : number) {
+  function parseAdaptation(
+    root : Element,
+    timescale : number
+  ): IAdaptationSmooth|null {
     if (root.hasAttribute("Timescale")) {
       timescale = +(root.getAttribute("Timescale") || 0);
     }
@@ -417,7 +459,11 @@ function createSmoothStreamingParser(
         timeline: [] as IHSSManifestSegment[],
         indexType: "smooth",
         timescale,
-        initialization: {},
+        initialization: {
+          range: [],
+          indexRange: [],
+          media: null,
+        },
       },
     });
 
@@ -460,11 +506,11 @@ function createSmoothStreamingParser(
     };
   }
 
-  function parseFromString(manifest : string) {
+  function parseFromString(manifest : string): IParsedManifestSmooth {
     return parseFromDocument(new DOMParser().parseFromString(manifest, "application/xml"));
   }
 
-  function parseFromDocument(doc : Document) {
+  function parseFromDocument(doc : Document): IParsedManifestSmooth {
     const root = doc.documentElement;
     assert.equal(root.nodeName, "SmoothStreamingMedia", "document root should be SmoothStreamingMedia");
     assert(/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
@@ -476,11 +522,17 @@ function createSmoothStreamingParser(
     const {
       protection,
       adaptations,
-    } = reduceChildren(root, (res, name, node) => {
+    } = reduceChildren <{
+      protection: IContentProtectionSmooth|null,
+      adaptations: IAdaptationSmooth[]
+    }> (root, (res, name, node) => {
       switch (name) {
-      case "Protection":  res.protection = parseProtection(node);  break;
+      case "Protection":  {
+        res.protection = parseProtection(node);
+        break;
+      }
       case "StreamIndex":
-        const ada : any = parseAdaptation(node, timescale);
+        const ada : IAdaptationSmooth|null = parseAdaptation(node, timescale);
         if (ada) {
           let i = 0;
           let id;
@@ -536,7 +588,7 @@ function createSmoothStreamingParser(
     };
   }
 
-  const parser = <IParserFunctions> function(val) {
+  const parser = <IParserFunctions> function(val): IParsedManifestSmooth {
     if (typeof val === "string") {
       return parseFromString(val);
     } else {
