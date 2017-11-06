@@ -16,15 +16,13 @@
 
 import assert from "../../../utils/assert";
 import { parseMPD } from "./parsers";
+import {
+  ContentProtectionParser,
+  } from "../types";
 
-interface IParserFunctions {
-  (manifest : string|Document, contentProtectionParser? : (any?) => any) : any;
-  parseFromString : (string, contentProtectionParser? : (any?) => any) => any;
-  parseFromDocument : (
-    manifest : Document,
-    contentProtectionParser? : (any?) => any
-  ) => any;
-}
+import {
+    IParsedManifest
+  } from "../../types";
 
 /**
  * @param {string|Document} manifest - Original manifest as returned by the
@@ -32,11 +30,14 @@ interface IParserFunctions {
  * @param {Function} [contentProtectionParser]
  * @returns {Object} - parsed manifest
  */
-const parser = <IParserFunctions> function(manifest, contentProtectionParser) {
+const parser = function(
+  manifest: string|Document,
+  contentProtectionParser?: ContentProtectionParser
+): IParsedManifest {
   if (typeof manifest === "string") {
-    return parser.parseFromString(manifest, contentProtectionParser);
+    return parseFromString(manifest, contentProtectionParser);
   } else {
-    return parser.parseFromDocument(manifest, contentProtectionParser);
+    return parseFromDocument(manifest, contentProtectionParser);
   }
 };
 
@@ -45,7 +46,10 @@ const parser = <IParserFunctions> function(manifest, contentProtectionParser) {
  * @param {Function} [contentProtectionParser]
  * @returns {Object} - parsed manifest
  */
-function parseFromDocument(document, contentProtectionParser) {
+function parseFromDocument(
+  document: Document,
+  contentProtectionParser?: ContentProtectionParser
+): IParsedManifest {
   const root = document.documentElement;
   assert.equal(root.nodeName, "MPD", "document root should be MPD");
   return parseMPD(root, contentProtectionParser);
@@ -56,13 +60,15 @@ function parseFromDocument(document, contentProtectionParser) {
  * @param {Function} [contentProtectionParser]
  * @returns {Object} - parsed manifest
  */
-function parseFromString(manifest, contentProtectionParser) {
-  return parser
-    .parseFromDocument(new DOMParser().parseFromString(manifest, "application/xml"), contentProtectionParser);
+function parseFromString(
+  manifest: string,
+  contentProtectionParser?: ContentProtectionParser
+): IParsedManifest {
+  return parseFromDocument(
+    new DOMParser().parseFromString(manifest, "application/xml"), 
+    contentProtectionParser
+  );
 }
-
-parser.parseFromString   = parseFromString;
-parser.parseFromDocument = parseFromDocument;
 
 export {
   parseFromString,

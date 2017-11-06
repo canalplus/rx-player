@@ -21,4 +21,4 @@ export const KEY_STATUS_ERRORS = {
    // "output-restricted",
    // "output-downscaled",
    // "status-pending",
-} as Dictionary<boolean>;
+} as IDictionary<boolean>;

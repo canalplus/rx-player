@@ -6,6 +6,8 @@ import Adaptation from "../manifest/adaptation";
 import Representation from "../manifest/representation";
 import Segment from "../manifest/segment";
 import { IBifThumbnail } from "../parsers/images/bif";
+import { IPeriodSmooth } from "./smooth/types";
+import { IPeriodDash } from "./dash/types";
 
 // contains timings info on a single audio/video/text/image segment
 export interface ISegmentTimingInfos {
@@ -97,7 +99,7 @@ export interface ISegmentParserArguments<T> {
 
 // TODO
 export type IManifestParserObservable = Observable<{
-  manifest: any, // TODO Real interface
+  manifest: IParsedManifest,
   url? : string,
 }>;
 
@@ -187,9 +189,32 @@ export type CustomSegmentLoader = (
       duration : number,
     }) => void,
 
-    reject : (err? : any) => void
+    reject : (err? : Error) => void
     fallback? : () => void
   }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
+
+  interface IParsedManifest {
+    locations?: any[];
+    transportType: string;
+    id?: string;
+    type?: string;
+    availabilityStartTime?: Date|number;
+    presentationLiveGap?: number;
+    accessibility?: string[];
+   // representations?: IRepresentationDash[];
+    baseURL?: string|null;
+    profiles?: string;
+    availabilityEndTime?: Date|number;
+    publishTime?: Date|number;
+    mediaPresentationDuration?: number;
+    minimumUpdatePeriod?: number;
+    minBufferTime?: number;
+    timeShiftBufferDepth?: number;
+    suggestedPresentationDelay?: number;
+    maxSegmentDuration?: number;
+    maxSubsegmentDuration?: number;
+    periods: (IPeriodDash|IPeriodSmooth)[];
+  }

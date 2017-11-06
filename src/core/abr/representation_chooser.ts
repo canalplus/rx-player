@@ -93,11 +93,11 @@ interface ChooserOption {
 }
 
 interface ChooserOptions {
-  limitWidth: Dictionary<Observable<number>>;
-  throttle: Dictionary<Observable<number>>;
-  initialBitrates: Dictionary<number>;
-  manualBitrates: Dictionary<number>;
-  maxAutoBitrates: Dictionary<number>;
+  limitWidth: IDictionary<Observable<number>>;
+  throttle: IDictionary<Observable<number>>;
+  initialBitrates: IDictionary<number>;
+  manualBitrates: IDictionary<number>;
+  maxAutoBitrates: IDictionary<number>;
 }
 
 /**
@@ -128,7 +128,7 @@ const setManualRepresentation = (
  * @returns {IRequestInfo|undefined}
  */
 const getConcernedRequest = (
-  requests : Dictionary<IRequestInfo>,
+  requests : IDictionary<IRequestInfo>,
   segmentPosition : number
 ) : IRequestInfo|undefined => {
   const currentRequestIds = Object.keys(requests);
@@ -272,7 +272,7 @@ export default class RepresentationChooser {
   public maxAutoBitrate$ : BehaviorSubject<number>;
 
   private _dispose$ : Subject<void>;
-  private _currentRequests : Dictionary<IRequestInfo>;
+  private _currentRequests : IDictionary<IRequestInfo>;
   private _limitWidth$ : Observable<number>|undefined;
   private _throttle$ : Observable<number>|undefined;
   private estimator : BandwidthEstimator;

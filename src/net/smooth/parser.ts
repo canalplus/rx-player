@@ -27,6 +27,17 @@ import {
   hexToBytes,
 } from "../../utils/bytes";
 
+import {
+  IHSSKeySystem,
+  IAdaptationSmooth,
+  IHSSManifestSegment,
+  IContentProtectionSmooth,
+ } from "./types";
+
+import {
+   IParsedManifest
+ } from "../types";
+
 import assert from "../../utils/assert";
 import { normalize as normalizeLang } from "../../utils/languages";
 
@@ -97,13 +108,13 @@ interface HSSKeySystem {
   privateData : Uint8Array;
 }
 
-const DEFAULT_MIME_TYPES: Dictionary<string> = {
+const DEFAULT_MIME_TYPES: IDictionary<string> = {
   audio: "audio/mp4",
   video: "video/mp4",
   text: "application/ttml+xml",
 };
 
-const DEFAULT_CODECS: Dictionary<string> = {
+const DEFAULT_CODECS: IDictionary<string> = {
   audio: "mp4a.40.2",
   video: "avc1.4D401E",
 };
@@ -203,8 +214,7 @@ function calcLastRef(
   if (!adaptation) { return Infinity; }
   const { index } = adaptation;
   const { ts, r, d } = index.timeline[index.timeline.length - 1];
-  const dd = d ? d : 0;
-  return ((ts + (r + 1) * dd) / index.timescale);
+  return ((ts + (r + 1) * (d ? d : 0)) / index.timescale);
 }
 
 /**
@@ -213,7 +223,7 @@ function calcLastRef(
  */
 function getKeySystems(
   keyIdBytes : Uint8Array
-) : HSSKeySystem[] {
+) : IHSSKeySystem[] {
   return [
     {
       // Widevine
@@ -298,7 +308,7 @@ function createSmoothStreamingParser(
     root : Element
   ) : {
     keyId : string,
-    keySystems: HSSKeySystem[],
+    keySystems: IHSSKeySystem[],
   } {
     const header = root.firstElementChild as Element;
     assert.equal(header.nodeName, "ProtectionHeader", "Protection should have ProtectionHeader child");
