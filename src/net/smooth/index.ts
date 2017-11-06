@@ -49,7 +49,7 @@ import {
   ImageParserObservable,
 } from "../types";
 
-import { IHSSOptions } from "./types";
+import { IHSSParserOptions } from "./types";
 
 const {
   patchSegment,
@@ -59,7 +59,7 @@ const {
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
 
 export default function(
-  options : IHSSOptions = {}
+  options : IHSSParserOptions = {}
 ) : ITransportPipelines<
   Document,               // manifest loader -> parser
   ArrayBuffer|Uint8Array, // audio    loader -> parser
