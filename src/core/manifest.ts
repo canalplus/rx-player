@@ -237,7 +237,6 @@ function normalizeManifest(
                                // TODO needed for inheritance?
     isLive: manifest.isLive, // TODO needed for inheritance?
   };
-
   const periods = manifest.periods.map((period : any) =>
     normalizePeriod(period, inherit, externalTextTracks, externalImageTracks)
   ) as INormalizedPeriod[];
@@ -410,7 +409,6 @@ function normalizeAdaptation(
   if (!type) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
-
   if (type === "video" || type === "audio") {
     representations = representations
       .filter((representation) => isCodecSupported(getCodec(representation)));

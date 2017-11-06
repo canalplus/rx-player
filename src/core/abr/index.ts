@@ -90,7 +90,7 @@ const lazilyAttachChooser = (instce : ABRManager, bufferType : string) => {
  */
 export default class ABRManager {
   // TODO privatize
-  public _choosers:  Dictionary<RepresentationChooser>;
+  public _choosers:  IDictionary<RepresentationChooser>;
   public _chooserInstanceOptions: ChooserOptions;
 
   private _dispose$: Subject<void>;

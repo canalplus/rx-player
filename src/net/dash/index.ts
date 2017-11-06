@@ -49,9 +49,13 @@ import {
   CustomSegmentLoader,
 } from "../types";
 
+import {
+  ContentProtectionParser,
+} from "./types";
+
 interface IDASHOptions {
   segmentLoader? : CustomSegmentLoader;
-  contentProtectionParser? : (x : any) => any; // XXX TODO
+  contentProtectionParser? : ContentProtectionParser;
 }
 
 /**
@@ -72,11 +76,7 @@ export default function(
   ArrayBuffer
 >{
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
-  let { contentProtectionParser } = options;
-
-  if (!contentProtectionParser) {
-    contentProtectionParser = () => {};
-  }
+  const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(

@@ -28,6 +28,20 @@ import {
   parseRatio,
 } from "./helpers";
 
+import {
+  IRole,
+  ISegmentURL,
+  IPeriodDash,
+  ISegmentBase,
+  IAdaptationDash,
+  ISegmentTimeLine,
+  IRepresentationDash,
+  IContentComponentDash,
+  IContentProtectionDash,
+} from "../types";
+
+import { IParsedManifest } from "../../types";
+
 /**
  * Parse initialization attribute found in segment Template to
  * correspond to the initialization found in a regular segmentBase.
@@ -42,8 +56,8 @@ function parseInitializationAttribute(
 
 interface IMPDAttribute {
   k: string;
-  fn: (x: string) => any;
-  def?: any;
+  fn: (x: string) => object|Date|string|number|boolean|null|[number, number];
+  def?: boolean|number|string;
   n?: string;
 }
 
@@ -203,16 +217,43 @@ const attributes : { [keyName : string]: IMPDAttribute[] } = {
  * @param {Object} [base] - Base object that will be enriched
  * @returns {Object}
  */
-function feedAttributes(node, base?) {
+type types =
+  IRole | IContentComponentDash| IParsedManifest |
+  IAdaptationDash | IRepresentationDash | IPeriodDash |
+  ISegmentURL | ISegmentBase | ISegmentTimeLine;
+
+function feedAttributes(node: Element, base?: IParsedManifest): IParsedManifest;
+function feedAttributes(node: Element, base?: IAdaptationDash): IAdaptationDash;
+function feedAttributes(node: Element, base?: IRepresentationDash): IRepresentationDash;
+function feedAttributes(
+  node: Element,
+  base?: IContentComponentDash
+): IContentComponentDash;
+function feedAttributes(node: Element, base?: ISegmentURL): ISegmentURL;
+function feedAttributes(
+  node: Element,
+  base?: IContentProtectionDash
+): IContentProtectionDash;
+function feedAttributes(node: Element, base?: ISegmentBase): ISegmentBase;
+function feedAttributes(node: Element, base?: ISegmentTimeLine): ISegmentTimeLine;
+function feedAttributes(node: Element, base?: IPeriodDash): IPeriodDash;
+function feedAttributes(node: Element, base?: IRole): IRole;
+function feedAttributes<T>(node: Element): T;
+function feedAttributes<T>(node: Element, base?: types): T | types {
   const attrs = attributes[node.nodeName];
 
   assert(attrs, "no attributes for " + node.nodeName);
 
-  const obj = base || {};
+  /**
+   * XXX TODO Remove the obj with any type. Only security we got in this method
+   * is the assumption that fields in attr match exactly with properties of 
+   * input elements.
+   */
+  const obj: any = base || {};
   for (let i = 0; i < attrs.length; i++) {
     const { k, fn, n, def } = attrs[i];
     if (node.hasAttribute(k)) {
-      obj[n || k] = fn(node.getAttribute(k));
+      obj[n || k] = fn(node.getAttribute(k) as string);
     } else if (def != null) {
       obj[n || k] = def;
     }

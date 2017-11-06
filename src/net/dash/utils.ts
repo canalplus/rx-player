@@ -39,7 +39,7 @@ function pad(n : number|string, l : number) : string {
  */
 function processFormatedToken(
   replacer : string|number
-) : (x: any, y: any, widthStr: string) => string {
+) : (x: string, y: number, widthStr: string) => string {
   return (_match, _format, widthStr : string) => {
     const width = widthStr ? parseInt(widthStr, 10) : 1;
     return pad("" + replacer, width);
