@@ -41,15 +41,21 @@ if (__FEATURES__.HTML_VTT) {
 /**
  * @param {string} type
  * @param {string} data
+ * @param {Number} timeOffset
  * @param {string} [language]
  * @returns {Array.<Object>}
  * @throws Error - Throw if no parser is found for the given type
  */
-export default function parseTextTrackToElements(type, data, language) {
+export default function parseTextTrackToElements(
+  type,
+  data,
+  timeOffset,
+  language
+) {
   const parser = htmlParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
-  return parser(data, language);
+  return parser(data, timeOffset, language);
 }

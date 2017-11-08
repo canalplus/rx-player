@@ -23,9 +23,10 @@ import parseTimestamp from "./parseTimestamp.js";
 
 /**
  * @param {string}
+ * @param {Number} timeOffset
  * @returns {Array.<Object>}
  */
-export default function parseSRTStringToHTML(srtStr) {
+export default function parseSRTStringToHTML(srtStr, timeOffset) {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);
@@ -46,7 +47,7 @@ export default function parseSRTStringToHTML(srtStr) {
 
   const cues = [];
   for (let i = 0; i < cueBlocks.length; i++) {
-    const cue = parseCue(cueBlocks[i]);
+    const cue = parseCue(cueBlocks[i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -56,9 +57,10 @@ export default function parseSRTStringToHTML(srtStr) {
 
 /**
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {Object}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   const [startString, endString] = cueLines[1].split(" --> ");
   const payloadLines = cueLines.slice(2, cueLines.length);
   if (!startString || !endString || !payloadLines.length) {
@@ -94,8 +96,8 @@ function parseCue(cueLines) {
   }
 
   return {
-    start,
-    end,
+    start: start + timeOffset,
+    end: end + timeOffset,
     element: pEl,
   };
 }

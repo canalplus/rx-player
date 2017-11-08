@@ -155,12 +155,14 @@ export default function(options={}) {
         segmentData.end = segmentInfos.duration != null ?
           segmentInfos.time + segmentInfos.duration : undefined;
         segmentData.timescale = segmentInfos.timescale;
+        segmentData.timeOffset = segmentData.start / segmentData.timescale;
       } else {
         // vod is simple WebVTT or TTML text
         segmentData.start = segment.time;
         segmentData.end = segment.duration != null ?
           segment.time + segment.duration : undefined;
         segmentData.timescale = segment.timescale;
+        segmentData.timeOffset = segmentData.start / segmentData.timescale;
       }
 
       if (isMP4) {

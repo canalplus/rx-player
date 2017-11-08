@@ -93,9 +93,10 @@ function decodeEntities(text) {
  * may not work for every sami input.
  *
  * @param {string} smi
+ * @param {Number} timeOffset
  * @param {string} lang
  */
-function parseSami(smi, lang) {
+function parseSami(smi, timeOffset, lang) {
   const syncOpen = /<sync[ >]/ig;
   const syncClose = /<sync[ >]|<\/body>/ig;
 
@@ -191,7 +192,7 @@ function parseSami(smi, lang) {
 
         subs.push({
           element: wrapperEl,
-          start,
+          start: start + timeOffset,
           end: -1, // Will be updated on a following iteration
         });
       }
