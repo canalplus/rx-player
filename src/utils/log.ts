@@ -56,7 +56,6 @@ const logger : ILogger = {
       currentLevel = "NONE";
     }
 
-    /* eslint-disable no-console */
     this.error = (level >= LEVELS.ERROR) ?
       console.error.bind(console) : noop;
     this.warn = (level >= LEVELS.WARNING) ?
@@ -65,7 +64,6 @@ const logger : ILogger = {
       console.info.bind(console) : noop;
     this.debug = (level >= LEVELS.DEBUG) ?
       console.log.bind(console) : noop;
-    /* eslint-enable no-console */
   },
 
   getLevel() : string {
