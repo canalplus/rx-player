@@ -22,7 +22,7 @@ import { IMockMediaKeys } from "./MediaKeys";
  * All needed arguments are given to the constructor
  * @class CustomMediaKeySystemAccess
  */
-export default class CustomMediaKeySystemAccess {
+export default class CustomMediaKeySystemAccess implements MediaKeySystemAccess {
   constructor(
     private _keyType : string,
     private _mediaKeys : IMockMediaKeys|MediaKeys,
