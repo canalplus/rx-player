@@ -211,12 +211,14 @@ export default function Stream({
   /**
    * Subject through which network metrics will be sent to the ABR manager.
    */
+  // XXX TODO specify Subject<ABRThingy>
   const network$ = new Subject();
 
   /**
    * Subject through which each request progression will be reported to the ABR
    * manager.
    */
+  // XXX TODO specify Subject<ABRThingy>
   const requestsInfos$ = new Subject();
 
   /**
