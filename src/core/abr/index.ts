@@ -15,27 +15,31 @@
  */
 
 import { Subject } from "rxjs/Subject";
-import { Observable  } from "rxjs/Observable";
+import { Observable } from "rxjs/Observable";
 
-import arrayIncludes from "../../utils/array-includes";
-import assert from "../../utils/assert";
+import { SupportedBufferTypes } from "../types";
 
-import RepresentationChooser from "./representation_chooser";
+import RepresentationChooser, {
+  IRepresentationChooserClockTick,
+} from "./representation_chooser";
 import {
   IRequest,
-  ChooserOptions,
 } from "./representation_chooser";
 import Representation from "../../manifest/representation";
 
-interface IMetric {
+interface IMetricValue {
   duration: number;
   size: number;
 }
 
-/**
- * Types of chunks accepted by the ABR logic.
- */
-const KNOWN_TYPES = ["audio", "video", "text", "image"];
+// Options for every RepresentationChoosers
+interface IRepresentationChoosersOptions {
+  limitWidth: Partial<Record<SupportedBufferTypes, Observable<number>>>;
+  throttle: Partial<Record<SupportedBufferTypes, Observable<number>>>;
+  initialBitrates: Partial<Record<SupportedBufferTypes, number>>;
+  manualBitrates: Partial<Record<SupportedBufferTypes, number>>;
+  maxAutoBitrates: Partial<Record<SupportedBufferTypes, number>>;
+}
 
 const defaultChooserOptions = {
   limitWidth: {},
@@ -46,19 +50,15 @@ const defaultChooserOptions = {
 };
 
 /**
- * @param {string} type
- * @throws {AssertError} - Throws if the type given is not known.
- */
-const assertType = (type : string) =>
-  assert(arrayIncludes(KNOWN_TYPES, type), `"${type}" is an unknown type`);
-
-/**
  * Create the right RepresentationChooser instance, from the given data.
  * @param {string} type
- * @param {ChooserOptions} options
+ * @param {Object} options
  * @returns {RepresentationChooser} - The RepresentationChooser instance
  */
-const createChooser = (type : string, options : ChooserOptions): RepresentationChooser => {
+const createChooser = (
+  type : SupportedBufferTypes,
+  options : IRepresentationChoosersOptions
+): RepresentationChooser => {
   return new RepresentationChooser({
     limitWidth$: options.limitWidth[type],
     throttle$: options.throttle[type],
@@ -66,19 +66,6 @@ const createChooser = (type : string, options : ChooserOptions): RepresentationC
     manualBitrate: options.manualBitrates[type],
     maxAutoBitrate: options.maxAutoBitrates[type],
   });
-};
-
-/**
- * If it doesn't exist, create a RepresentationChooser instance and add
- * it to the given "instce" context, under the _choosers.<bufferType> property.
- * @param {ABRManager} intce
- * @param {string} bufferType
- */
-const lazilyAttachChooser = (instce : ABRManager, bufferType : string) => {
-  if (!instce._choosers[bufferType]) {
-    instce._choosers[bufferType] =
-      createChooser(bufferType, instce._chooserInstanceOptions);
-  }
 };
 
 /**
@@ -90,8 +77,8 @@ const lazilyAttachChooser = (instce : ABRManager, bufferType : string) => {
  */
 export default class ABRManager {
   // TODO privatize
-  public _choosers:  IDictionary<RepresentationChooser>;
-  public _chooserInstanceOptions: ChooserOptions;
+  private _choosers:  IDictionary<RepresentationChooser>;
+  private _chooserInstanceOptions: IRepresentationChoosersOptions;
 
   private _dispose$: Subject<void>;
 
@@ -158,8 +145,9 @@ export default class ABRManager {
    */
   constructor(
     requests$: Observable<IRequest[]>,
-    metrics$: Observable<{ type: string, value: IMetric }>,
-    options : ChooserOptions = defaultChooserOptions) {
+    metrics$: Observable<{ type: SupportedBufferTypes, value: IMetricValue }>,
+    options : IRepresentationChoosersOptions = defaultChooserOptions
+  ) {
     // Subject emitting and completing on dispose.
     // Used to clean up every created observables.
     this._dispose$ = new Subject();
@@ -184,11 +172,7 @@ export default class ABRManager {
     metrics$
       .takeUntil(this._dispose$)
       .subscribe(({ type, value }) => {
-        if (__DEV__) {
-          assertType(type);
-        }
-
-        lazilyAttachChooser(this, type);
+        this._lazilyCreateChooser(type);
         const { duration, size } = value;
 
         // TODO Should we do a single estimate instead of a per-type one?
@@ -202,11 +186,8 @@ export default class ABRManager {
       .takeUntil(this._dispose$)
       .subscribe((request) => {
         const { type, value } = request;
-        if (__DEV__) {
-          assertType(type);
-        }
 
-        lazilyAttachChooser(this, type);
+        this._lazilyCreateChooser(type);
         switch (request.event) {
         case "requestBegin":
           // use the id of the segment as in any case, we should only have at
@@ -236,14 +217,11 @@ export default class ABRManager {
    * @returns {Observable}
    */
   public get$(
-    type : string,
-    clock$: Observable<any>,
+    type : SupportedBufferTypes,
+    clock$: Observable<IRepresentationChooserClockTick>,
     representations: Representation[] = []
   ): Observable<{bitrate: undefined|number, representation: Representation|null}> {
-    if (__DEV__) {
-      assertType(type);
-    }
-    lazilyAttachChooser(this, type);
+    this._lazilyCreateChooser(type);
     return this._choosers[type].get$(clock$, representations);
   }
 
@@ -259,11 +237,7 @@ export default class ABRManager {
    * @param {string} type
    * @param {number} bitrate
    */
-  public setManualBitrate(type : string, bitrate : number): void {
-    if (__DEV__) {
-      assertType(type);
-    }
-
+  public setManualBitrate(type : SupportedBufferTypes, bitrate : number): void {
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -274,11 +248,7 @@ export default class ABRManager {
     }
   }
 
-  public setMaxAutoBitrate(type : string, bitrate : number): void {
-    if (__DEV__) {
-      assertType(type);
-    }
-
+  public setMaxAutoBitrate(type : SupportedBufferTypes, bitrate : number): void {
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -289,20 +259,14 @@ export default class ABRManager {
     }
   }
 
-  public getManualBitrate(type : string): number {
-    if (__DEV__) {
-      assertType(type);
-    }
+  public getManualBitrate(type : SupportedBufferTypes): number {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.manualBitrate$.getValue() :
       this._chooserInstanceOptions.manualBitrates[type];
   }
 
-  public getMaxAutoBitrate(type : string): number {
-    if (__DEV__) {
-      assertType(type);
-    }
+  public getMaxAutoBitrate(type : SupportedBufferTypes): number {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.maxAutoBitrate$.getValue() :
@@ -317,5 +281,18 @@ export default class ABRManager {
     this._choosers = {};
     this._dispose$.next();
     this._dispose$.complete();
+  }
+
+  /**
+   * If it doesn't exist, create a RepresentationChooser under the
+   * _choosers.<bufferType> property.
+   * @param {ABRManager} intce
+   * @param {string} bufferType
+   */
+  private _lazilyCreateChooser(bufferType : SupportedBufferTypes) {
+    if (!this._choosers[bufferType]) {
+      this._choosers[bufferType] =
+        createChooser(bufferType, this._chooserInstanceOptions);
+    }
   }
 }

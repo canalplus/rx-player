@@ -23,6 +23,8 @@ import { Observable } from "rxjs/Observable";
 import config from "../../config";
 import assert from "../../utils/assert";
 
+import { SupportedBufferTypes } from "../types";
+
 import BandwidthEstimator from "./bandwidth_estimator";
 import filterByWidth from "./filterByWidth";
 import filterByBitrate from "./filterByBitrate";
@@ -38,6 +40,13 @@ const {
   ABR_REGULAR_FACTOR,
 } = config;
 
+interface IRepresentationChooserClockTick {
+  bufferGap : number;
+  position : number;
+  bitrate : number;
+  speed : number;
+}
+
 interface IRequestInfo {
   time: number;
   duration: number;
@@ -51,7 +60,7 @@ interface IRequestInfo {
 type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
 
 interface IProgressRequest {
-  type: string;
+  type: SupportedBufferTypes;
   event: "progress";
   value: {
     id: string|number,
@@ -61,7 +70,7 @@ interface IProgressRequest {
 }
 
 interface IBeginRequest {
-  type: string;
+  type: SupportedBufferTypes;
   event: "requestBegin";
   value: {
     id: string|number,
@@ -72,7 +81,7 @@ interface IBeginRequest {
 }
 
 interface IEndRequest {
-  type: string;
+  type: SupportedBufferTypes;
   event: "requestEnd";
   value: {
     id: string|number,
@@ -84,7 +93,7 @@ interface IFilters {
   width?: number;
 }
 
-interface ChooserOption {
+interface IRepresentationChooserOptions {
   limitWidth$: Observable<number>;
   throttle$: Observable<number>;
   initialBitrate: number;
@@ -92,25 +101,17 @@ interface ChooserOption {
   maxAutoBitrate: number;
 }
 
-interface ChooserOptions {
-  limitWidth: IDictionary<Observable<number>>;
-  throttle: IDictionary<Observable<number>>;
-  initialBitrates: IDictionary<number>;
-  manualBitrates: IDictionary<number>;
-  maxAutoBitrates: IDictionary<number>;
-}
-
 /**
  * Returns an observable emitting only the representation concerned by the
  * bitrate ceil given.
- * @param {Representation[]} representations
+ * @param {Array.<Representation>} representations
  * @param {number} bitrate
  * @returns {Observable}
  */
-const setManualRepresentation = (
+function setManualRepresentation(
   representations : Representation[],
   bitrate : number
-) : Observable<{bitrate: number|undefined, representation: Representation}> => {
+) : Observable<{bitrate: undefined, representation: Representation}> {
   const chosenRepresentation =
     fromBitrateCeil(representations, bitrate) ||
     representations[0];
@@ -119,7 +120,7 @@ const setManualRepresentation = (
     bitrate: undefined, // Bitrate estimation is deactivated here
     representation: chosenRepresentation,
   });
-};
+}
 
 /**
  * Get the pending request containing the asked segment position.
@@ -127,10 +128,10 @@ const setManualRepresentation = (
  * @param {number} segmentPosition
  * @returns {IRequestInfo|undefined}
  */
-const getConcernedRequest = (
+function getConcernedRequest(
   requests : IDictionary<IRequestInfo>,
   segmentPosition : number
-) : IRequestInfo|undefined => {
+) : IRequestInfo|undefined {
   const currentRequestIds = Object.keys(requests);
   const len = currentRequestIds.length;
 
@@ -147,7 +148,7 @@ const getConcernedRequest = (
       return request;
     }
   }
-};
+}
 
 /**
  * Estimate the __VERY__ recent bandwidth based on a single unfinished request.
@@ -162,11 +163,11 @@ const getConcernedRequest = (
  * @param {number} bitrate - Current bitrate at the time of download
  * @returns {number}
  */
-const estimateRequestBandwidth = (
+function estimateRequestBandwidth(
   request : IRequestInfo,
   requestTime : number,
   bitrate : number
-) : number => {
+) : number {
   let estimate;
 
   // try to infer quickly the current bitrate based on the
@@ -200,34 +201,32 @@ const estimateRequestBandwidth = (
     estimate = chunkSize / (requestTime * 5 / 4);
   }
   return estimate;
-};
+}
 
 /**
  * Filter representations given through filters options.
- * @param {Representation[]} representations
+ * @param {Array.<Representation>} representations
  * @param {Object} filters
  * @param {number} [filters.bitrate] - max bitrate authorized (included).
  * @param {number} [filters.width] - max width authorized (included).
  * @returns {Representation[]}
  */
-const getFilteredRepresentations = (
+function getFilteredRepresentations(
   representations : Representation[],
   filters : IFilters
-) : Representation[] => {
+) : Representation[] {
   let _representations = representations;
 
-  if (filters.hasOwnProperty("bitrate")) {
-    _representations = filterByBitrate(
-      _representations, filters.bitrate as number);
+  if (filters.bitrate != null) {
+    _representations = filterByBitrate(_representations, filters.bitrate);
   }
 
-  if (filters.hasOwnProperty("width")) {
-    _representations = filterByWidth(
-      _representations, filters.width as number);
+  if (filters.width != null) {
+    _representations = filterByWidth(_representations, filters.width);
   }
 
   return _representations;
-};
+}
 
 /**
  * Returns true if the request takes too much time relatively to how much we
@@ -238,12 +237,12 @@ const getFilteredRepresentations = (
  * @param {number} chunkDuration - duration, in s, of a single chunk
  * @returns {Boolean}
  */
-const requestTakesTime = (
+function requestTakesTime(
   durationOfRequest : number,
   chunkDuration : number
-) : boolean => {
+) : boolean {
   return durationOfRequest > 1 + chunkDuration * 1.2;
-};
+}
 
 /**
  * Choose the right representation based on multiple parameters given, such as:
@@ -279,10 +278,9 @@ export default class RepresentationChooser {
   private _initialBitrate : number;
 
   /**
-   * @param {ChooserOption} options
+   * @param {Object} options
    */
-
-  constructor(options : ChooserOption) {
+  constructor(options : IRepresentationChooserOptions) {
     this._dispose$ = new Subject();
 
     this.manualBitrate$ = new BehaviorSubject(
@@ -305,7 +303,7 @@ export default class RepresentationChooser {
   }
 
   public get$(
-    clock$ : Observable<any>,
+    clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
   ): Observable<{bitrate: undefined|number, representation: Representation|null}> {
     if (representations.length < 2) {
@@ -544,6 +542,6 @@ export default class RepresentationChooser {
 
 export {
   IRequest,
-  ChooserOption,
-  ChooserOptions,
+  IRepresentationChooserClockTick,
+  IRepresentationChooserOptions,
 };
