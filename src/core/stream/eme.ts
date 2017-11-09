@@ -21,32 +21,7 @@ import log from "../../utils/log";
 import { IError } from "../../utils/retry";
 import { onEncrypted$ } from "../../compat/events";
 import { createEME } from "../eme";
-
-// XXX TODO DRY this with EME part?
-interface ILicenseStorageData {
-  sessionId : string;
-  initData : number;
-}
-
-// XXX TODO DRY this with EME part?
-interface ILicenseStorageOption {
-  load() : ILicenseStorageData[];
-  save(x : ILicenseStorageData[]) : void;
-}
-
-// XXX TODO
-interface IKeySystemOption {
-  type : string;
-  getLicense : (message : Uint8Array, messageType : string)
-    => Promise<BufferSource>|BufferSource;
-  serverCertificate? : BufferSource;
-  persistentLicense? : boolean;
-  licenseStorage? : ILicenseStorageOption;
-  persistentStateRequired? : boolean;
-  distinctiveIdentifierRequired? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
-    => Promise<BufferSource>|BufferSource;
-}
+import { IKeySystemOption } from "../eme";
 
 /**
  * Perform EME management if needed.

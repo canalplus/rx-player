@@ -123,10 +123,12 @@ export default function(
       init,
     } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : SegmentParserObservable {
-      // XXX TODO TypeScript thinks we cannot do a new Uint8Array(uint8Array)
-      // though/ we seems to be able to. Verify this, if true, rewrite
-      // Uint8Array definition
-      const responseData = new Uint8Array(response.responseData as ArrayBuffer);
+
+      const buffer = response.responseData instanceof Uint8Array
+        ? response.responseData.buffer
+        : response.responseData;
+
+      const responseData = new Uint8Array(buffer);
       let nextSegments : ISegmentTimingInfos[]|undefined;
       let segmentInfos : ISegmentTimingInfos;
       let segmentData : Uint8Array = responseData;

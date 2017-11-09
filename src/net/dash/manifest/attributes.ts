@@ -246,7 +246,7 @@ function feedAttributes<T>(node: Element, base?: types): T | types {
 
   /**
    * XXX TODO Remove the obj with any type. Only security we got in this method
-   * is the assumption that fields in attr match exactly with properties of 
+   * is the assumption that fields in attr match exactly with properties of
    * input elements.
    */
   const obj: any = base || {};

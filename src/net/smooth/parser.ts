@@ -34,9 +34,9 @@ import {
   IContentProtectionSmooth,
  } from "./types";
 
-import {
-   IParsedManifest
- } from "../types";
+import { IParsedManifest } from "../types";
+
+import { IRepresentationSmooth } from "./types";
 
 import assert from "../../utils/assert";
 import { normalize as normalizeLang } from "../../utils/languages";
@@ -386,15 +386,16 @@ function createSmoothStreamingParser(
   function parseQualityLevel(
     q : Element,
     prof : Array<[string, string, ProfileFunction]>
-  ) : IDictionary<string|number> {
-    const obj : IDictionary<string|number> = {};
+  ) : IRepresentationSmooth {
+    // XXX TODO anys
+    const obj : any = {};
     for (let i = 0; i < prof.length; i++) {
       const [key, name, parse] = prof[i];
       obj[name] = typeof parse === "function"
         ? parse(q.getAttribute(key) || "")
         : parse[q.getAttribute(key) || ""];
     }
-    return obj;
+    return obj as IRepresentationSmooth;
   }
 
   /**
@@ -445,10 +446,9 @@ function createSmoothStreamingParser(
           if (type === "audio") {
             const fourCC = node.getAttribute("FourCC") || "";
 
-            // XXX TODO Better TypeScript typing?
             rep.codecs = extractAudioCodecs(
               fourCC,
-              rep.codecPrivateData as string
+              rep.codecPrivateData
             );
           }
 
@@ -464,7 +464,7 @@ function createSmoothStreamingParser(
       }
       return res;
     }, {
-      representations: [] as Array<IDictionary<string|number>>, // TODO
+      representations: [] as IRepresentationSmooth[],
       index: {
         timeline: [] as IHSSManifestSegment[],
         indexType: "smooth",
@@ -482,12 +482,12 @@ function createSmoothStreamingParser(
     assert(representations.length, "adaptation should have at least one representation");
 
     // apply default codec if non-supported
-    representations.forEach((rep) =>
+    representations.forEach((rep: IRepresentationSmooth) =>
       rep.codecs = rep.codecs || DEFAULT_CODECS[type]
     );
 
     // apply default mimetype if non-supported
-    representations.forEach((rep) =>
+    representations.forEach((rep: IRepresentationSmooth) =>
       rep.mimeType = rep.mimeType || DEFAULT_MIME_TYPES[type]
     );
 

@@ -44,6 +44,8 @@ import { isCodecSupported } from "../compat";
 import { MediaError } from "../errors";
 import { normalize as normalizeLang } from "../utils/languages";
 import Manifest from "../manifest";
+import { IContentProtectionDash } from "../net/dash/types";
+import { IContentProtectionSmooth } from "../net/smooth/types";
 
 export interface ISupplementaryTextTrack {
   mimeType : string;
@@ -111,7 +113,7 @@ interface INormalizedRepresentation {
   baseURL : string;
   bitsPerSample? : number;
   channels? : any; // XXX TODO
-  codecPrivateData? : any; // XXX TODO
+  codecPrivateData? : string;
   height? : number;
   id : string;
   packetSize? : number;
@@ -125,11 +127,11 @@ interface INormalizedAdaptation {
   type : string;
   audioDescription? : boolean;
   closedCaption? : boolean;
-  contentProtection? : any; // XXX TODO
+  contentProtection? : IContentProtectionDash;
   language? : string;
   manuallyAdded? : boolean;
   normalizedLanguage? : string;
-  smoothProtection? : any; // XXX TODO
+  smoothProtection? : IContentProtectionSmooth;
 }
 
 interface INormalizedPeriod {

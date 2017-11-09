@@ -955,7 +955,7 @@ export default {
     vRes : number,
     nalLength : number,
     codecPrivateData : string,
-    keyId : string,
+    keyId? : string,
     pssList? : PSSList
   ) : Uint8Array {
 

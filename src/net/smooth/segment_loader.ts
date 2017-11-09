@@ -79,7 +79,7 @@ const generateSegmentLoader = (
   manifest,
   init,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
-  if (segment.isInit) {
+  if (segment.isInit && representation._codecPrivateData) {
     let responseData : Uint8Array;
     const protection = adaptation._smoothProtection || {};
 

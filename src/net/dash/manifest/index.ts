@@ -65,7 +65,7 @@ function parseFromString(
   contentProtectionParser?: ContentProtectionParser
 ): IParsedManifest {
   return parseFromDocument(
-    new DOMParser().parseFromString(manifest, "application/xml"), 
+    new DOMParser().parseFromString(manifest, "application/xml"),
     contentProtectionParser
   );
 }
