@@ -321,11 +321,11 @@ export default class RepresentationChooser {
 
             let nextEstimate;
             if (bandwidthEstimate != null) {
-              nextEstimate = clock.bufferGap <= inStarvationMode ?
+              nextEstimate = inStarvationMode ?
                 bandwidthEstimate * ABR_STARVATION_FACTOR :
                 bandwidthEstimate * ABR_REGULAR_FACTOR;
             } else if (lastEstimatedBitrate != null) {
-              nextEstimate =  clock.bufferGap <= inStarvationMode ?
+              nextEstimate = inStarvationMode ?
                 lastEstimatedBitrate * ABR_STARVATION_FACTOR :
                 lastEstimatedBitrate * ABR_REGULAR_FACTOR;
             } else {
