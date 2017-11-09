@@ -297,4 +297,7 @@ export default class ABRManager {
   }
 }
 
-export { IMetricValue };
+export {
+  IMetricValue,
+  IRequest,
+};

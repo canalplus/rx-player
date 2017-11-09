@@ -112,7 +112,7 @@ interface INormalizedRepresentation {
   };
   baseURL : string;
   bitsPerSample? : number;
-  channels? : any; // XXX TODO
+  channels? : number;
   codecPrivateData? : string;
   height? : number;
   id : string;
@@ -628,9 +628,11 @@ function updateManifest(
           arrayFind(newRepresentations, r => r.id === oldRepresentations[j].id);
 
         if (!newRepresentation) {
+          /* tslint:disable:max-line-length */
           log.warn(
             `manifest: representation "${oldRepresentations[j].id}" not found when merging.`
           );
+          /* tslint:enable:max-line-length */
         } else {
           oldRepresentations[j].index.update(newRepresentation.index);
         }

@@ -413,7 +413,6 @@ export default function Stream({
           currentRepresentation = representation;
         });
 
-      // XXX TODO Move
       const codec = getCodec(adaptation.representations[0] || {});
       const sourceBuffer = createSourceBuffer(
         videoElement,
@@ -555,8 +554,6 @@ export default function Stream({
 
       loaded$: Observable.combineLatest(canSeek$, canPlay$)
         .take(1)
-
-        // XXX TODO open issue on typescript side
         .mapTo({
           type: "loaded" as "loaded",
           value: true as true,
@@ -629,7 +626,7 @@ export default function Stream({
     mediaSource : MediaSource|null,
     manifest : Manifest
   ) {
-    // XXX TODO Find what to do with no media source.
+    // TODO Find what to do with no media source.
     if (!mediaSource) {
       throw new Error("No media source.");
     }

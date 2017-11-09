@@ -196,25 +196,25 @@ export type CustomSegmentLoader = (
   // returns either the aborting callback or nothing
   (() => void)|void;
 
-  interface IParsedManifest {
-    locations?: any[];
-    transportType: string;
-    id?: string;
-    type?: string;
-    availabilityStartTime?: Date|number;
-    presentationLiveGap?: number;
-    accessibility?: string[];
-   // representations?: IRepresentationDash[];
-    baseURL?: string|null;
-    profiles?: string;
-    availabilityEndTime?: Date|number;
-    publishTime?: Date|number;
-    mediaPresentationDuration?: number;
-    minimumUpdatePeriod?: number;
-    minBufferTime?: number;
-    timeShiftBufferDepth?: number;
-    suggestedPresentationDelay?: number;
-    maxSegmentDuration?: number;
-    maxSubsegmentDuration?: number;
-    periods: (IPeriodDash|IPeriodSmooth)[];
-  }
+interface IParsedManifest {
+  locations?: any[];
+  transportType: string;
+  id?: string;
+  type?: string;
+  availabilityStartTime?: Date|number;
+  presentationLiveGap?: number;
+  accessibility?: string[];
+  // representations?: IRepresentationDash[];
+  baseURL?: string|null;
+  profiles?: string;
+  availabilityEndTime?: Date|number;
+  publishTime?: Date|number;
+  mediaPresentationDuration?: number;
+  minimumUpdatePeriod?: number;
+  minBufferTime?: number;
+  timeShiftBufferDepth?: number;
+  suggestedPresentationDelay?: number;
+  maxSegmentDuration?: number;
+  maxSubsegmentDuration?: number;
+  periods: Array<IPeriodDash|IPeriodSmooth>;
+}

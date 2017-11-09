@@ -57,7 +57,7 @@
     "demo:min": "RXP_DEMO_MINIFY=true webpack --progress --config tools/webpack-demo.config.js",
     "demo:watch": "webpack --progress --config tools/webpack-demo.config.js -w",
     "info": "npm-scripts-info",
-    "lint": "eslint src/**/*.js",
+    "lint": "tslint src/**/*.ts",
     "lint:demo": "eslint demo/**/*.js",
     "standalone": "node ./tools/server.standalone.js",
     "start": "node ./tools/server.js",
