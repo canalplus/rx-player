@@ -52,7 +52,9 @@ assert.iface = function(o, name, iface) {
   assert(o, `${name} should be an object`);
   for (const k in iface) {
     if (iface.hasOwnProperty(k)) {
+      /* tslint:disable:max-line-length */
       assert.equal(typeof o[k], iface[k], `${name} should have property ${k} as a ${iface[k]}`);
+      /* tslint:enable:max-line-length */
     }
   }
 };

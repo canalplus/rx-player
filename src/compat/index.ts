@@ -49,7 +49,6 @@ function isCodecSupported(codec : string) : boolean {
     return false;
   }
 
-  // XXX TODO add to TypeScript
   if (typeof MediaSource_.isTypeSupported === "function") {
     return MediaSource_.isTypeSupported(codec);
   }
@@ -126,12 +125,11 @@ function canPlay(
 // old WebKit SourceBuffer implementation,
 // where a synchronous append is used instead of appendBuffer
 if (
-  // XXX TODO add to TypeScript
-  (window as any).WebKitSourceBuffer &&
-  !(window as any).WebKitSourceBuffer.prototype.addEventListener
+  window.WebKitSourceBuffer &&
+  !window.WebKitSourceBuffer.prototype.addEventListener
 ) {
 
-  const sourceBufferWebkitRef = (window as any).WebKitSourceBuffer;
+  const sourceBufferWebkitRef = window.WebKitSourceBuffer;
   const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
 
   for (const fnName in EventEmitter.prototype) {

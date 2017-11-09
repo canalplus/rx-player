@@ -329,7 +329,7 @@ function parseLoadVideoOptions(
   if (options.keySystems == null) {
     keySystems = [];
   } else {
-    // XXX TODO check interface here
+    // XXX TODO check interface here (throw if missing key prop)
     if (Array.isArray(options.keySystems)) {
       keySystems = options.keySystems;
     } else {
@@ -342,7 +342,7 @@ function parseLoadVideoOptions(
   if (options.supplementaryTextTracks == null) {
     supplementaryTextTracks = [];
   } else {
-    // XXX TODO check interface here
+    // XXX TODO check interface here (throw if missing key prop)
     if (Array.isArray(options.supplementaryTextTracks)) {
       supplementaryTextTracks = options.supplementaryTextTracks;
     } else {
@@ -353,7 +353,7 @@ function parseLoadVideoOptions(
   if (options.supplementaryImageTracks == null) {
     supplementaryImageTracks = [];
   } else {
-    // XXX TODO check interface here
+    // XXX TODO check interface here (throw if missing key prop)
     if (Array.isArray(options.supplementaryImageTracks)) {
       supplementaryImageTracks = options.supplementaryImageTracks;
     } else {

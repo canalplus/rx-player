@@ -94,8 +94,10 @@ function compatibleListener<T extends Event>(
         return Observable.fromEvent(element, mem);
       } else {
         if (__DEV__) {
+          /* tslint:disable:max-line-length */
           log.warn(
             `compat: element <${element.tagName}> does not support any of these events: ${eventNames.join(", ")}`
+            /* tslint:enable:max-line-length */
           );
         }
         return Observable.never();

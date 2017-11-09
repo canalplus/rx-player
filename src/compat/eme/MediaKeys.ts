@@ -109,7 +109,6 @@ if (navigator.requestMediaKeySystemAccess) {
   // pass the license.
   //
   // This is for Chrome with unprefixed EME api
-  // XXX TODO Add definition to webkitGenerateKeyRequest
   if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
 
     // TODO implement MediaKeySession completely

@@ -10,7 +10,8 @@ interface ObjectConstructor {
   create(o: object | null): any;
 
   /**
-   * Sets the prototype of a specified object o to  object proto or null. Returns the object o.
+   * Sets the prototype of a specified object o to  object proto or null.
+   * Returns the object o.
    * @param o The object to change its prototype.
    * @param proto The value of the new prototype or null.
    */
@@ -43,6 +44,16 @@ interface Window {
   MozMediaKeys? : MediaKeysConstructor;
   WebKitMediaKeys? : MediaKeysConstructor;
   MSMediaKeys? : MediaKeysConstructor;
+  WebKitSourceBuffer? : WebKitSourceBufferConstructor;
+}
+
+interface WebKitSourceBufferConstructor {
+  new() : WebKitSourceBuffer;
+}
+
+interface WebKitSourceBuffer {
+  append(data : any) : void;
+  remove(from : number, to : number) : void;
 }
 
 interface HTMLElementConstructor {
