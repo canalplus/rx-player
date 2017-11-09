@@ -99,6 +99,7 @@
 
   - dash: fix bug that prevented to play most dash contents with SegmentTemplate-based manifests
   - dash: it's now possible to play SegmentTimeline-based contents with a numbering scheme
+  - dash/text: calculate the text track time offset for dynamic DASH contents (prevented most text tracks from live DASH contents to be displayed)
   - eme: fix EME issues when loading multiple videos in IE/Edge
   - api: The state of the player when ready to play with autoPlay === false is now ``"LOADED"`` and not ``"PAUSED"``
   - api: fix infinite loading bug when a new content is synchronously launched as soon as the previous one is ended or fell on error
