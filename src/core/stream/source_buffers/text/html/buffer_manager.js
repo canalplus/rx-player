@@ -62,25 +62,6 @@ function areNearlyEqual(a, b) {
 }
 
 /**
- * Get cue corresponding to the given time in an array of cues.
- * @param {Number} currentTime
- * @param {Array.<Object>} cues
- * @returns {Object|undefined}
- */
-function getCueInCues(currentTime, cues) {
-  for (let i = cues.length - 1; i >= 0; i--) {
-    const cue = cues[i];
-    if (currentTime >= cue.start) {
-      if (currentTime < cue.end) {
-        return cue;
-      } else {
-        return;
-      }
-    }
-  }
-}
-
-/**
  * Get all cues strictly before the given time.
  * @param {Object} cues
  * @param {Number} time
@@ -183,12 +164,15 @@ export default class TextBufferManager {
     // begins at the end as most of the time the player will ask for the last
     // CuesGroup
     for (let i = cuesBuffer.length - 1; i >= 0; i--) {
-      const cuesInfos = cuesBuffer[i];
-      if (time >= cuesInfos.start) {
-        if (time < cuesInfos.end) {
-          return getCueInCues(time, cuesInfos.cues);
-        } else {
-          return;
+      const cues = cuesBuffer[i].cues;
+      for (let j = cues.length - 1; j >= 0; j--) {
+        const cue = cues[j];
+        if (time >= cue.start) {
+          if (time < cue.end) {
+            return cue;
+          } else {
+            return;
+          }
         }
       }
     }
