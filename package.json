@@ -89,7 +89,7 @@
     "deep-equal": "^1.0.1",
     "next-tick": "^1.0.0",
     "object-assign": "^4.1.1",
-    "rxjs": "^5.4.3"
+    "rxjs": "^5.5.2"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
@@ -129,7 +129,7 @@
     "sinon": "^2.3.4",
     "sinon-chai": "^2.11.0",
     "style-loader": "^0.13.0",
-    "ts-loader": "^2.3.7",
+    "ts-loader": "^3.1.1",
     "tslint": "^5.8.0",
     "typescript": "^2.6.1",
     "url-loader": "^0.5.9",

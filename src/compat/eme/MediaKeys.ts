@@ -88,29 +88,6 @@ if (navigator.requestMediaKeySystemAccess) {
   const wrapUpdate = (
     memUpdate : memUpdateFn
   ) : wrapUpdateFn => {
-    class KeySessionError extends Error {
-      public name : "KeySessionError";
-      public mediaKeyError : any;
-      public message : string;
-
-      constructor(err : any = {}) {
-        super();
-        // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-        Object.setPrototypeOf(this, KeySessionError.prototype);
-
-        if (err.errorCode) {
-          err = {
-            systemCode: err.systemCode,
-            code: err.errorCode.code,
-          };
-        }
-        this.name = "KeySessionError";
-        this.mediaKeyError = err;
-        this.message =
-          `MediaKeyError code:${err.code} and systemCode:${err.systemCode}`;
-      }
-    }
-
     return function(
       this : IMockMediaKeySession,
       license : any,

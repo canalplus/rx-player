@@ -23,7 +23,7 @@ describe("initial idle state", () => {
       const player = new RxPlayer({
         videoElement,
       });
-      expect(videoElement instanceof HTMLVideoElement).to.equal(true);
+      expect(videoElement instanceof HTMLMediaElement).to.equal(true);
       player.dispose();
     });
   });

@@ -95,7 +95,7 @@ function createMediaKeysObs(
 function handleEncryptedEvents(
   encryptedEvent : MediaEncryptedEvent,
   keySystemInfo: IKeySystemPackage,
-  video : HTMLVideoElement,
+  video : HTMLMediaElement,
   errorStream: ErrorStream
 ): Observable<{}|void|MediaKeys|IEMEMessage|Event> {
   const { keySystem, keySystemAccess } = keySystemInfo;
@@ -149,7 +149,7 @@ function handleEncryptedEvents(
  * @returns {Observable}
  */
 function createEME(
-  video : HTMLVideoElement,
+  video : HTMLMediaElement,
   keySystems: IKeySystemOption[],
   errorStream: ErrorStream
 ) : Observable<void|{}|MediaKeys|IEMEMessage|Event> {

@@ -21,6 +21,7 @@ import { SupportedBufferTypes } from "../types";
 import {
   PipelineEvent,
 } from "../pipelines/types";
+import { IError } from "../../utils/retry";
 
 /**
  * Process a pipeline observable to adapt it to the Stream way:
@@ -40,7 +41,7 @@ export default function processPipeline(
   pipeline$ : Observable<PipelineEvent>,
   network$ : Subject<any>, // XXX TODO
   requests$ : Subject<any>, // XXX TODO
-  warning$ : Subject<Error>
+  warning$ : Subject<Error|IError>
 ) : Observable<any> {
   let request$ : Subject<any>|undefined; // XXX TODO
   let segmentId : string|number|undefined;

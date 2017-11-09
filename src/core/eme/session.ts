@@ -24,7 +24,10 @@ import arrayIncludes from "../../utils/array-includes";
 import tryCatch from "../../utils/rx-tryCatch";
 import castToObservable from "../../utils/castToObservable";
 import { retryWithBackoff } from "../../utils/retry";
-import { CustomError } from "../../errors";
+import {
+  CustomError,
+  isKnownError,
+} from "../../errors";
 
 import {
   onKeyMessage$,
@@ -113,20 +116,28 @@ function sessionEventsHandler(
    * @param {Boolean} fatal
    * @returns {Error|Object}
    */
-  function licenseErrorSelector(error: CustomError, fatal: boolean): CustomError|Error {
-    if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
-      error.fatal = fatal;
-      return error;
-    } else {
-      return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
+  function licenseErrorSelector(
+    error: CustomError|Error,
+    fatal: boolean
+  ): CustomError|Error {
+    if (isKnownError(error)) {
+      if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
+        error.fatal = fatal;
+        return error;
+      } else {
+        return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
+      }
     }
+    return error;
   }
 
   const getLicenseRetryOptions = {
     totalRetry: 2,
     retryDelay: 200,
-    errorSelector: (error: CustomError) => licenseErrorSelector(error, true),
-    onRetry: (error: CustomError) => errorStream.next(licenseErrorSelector(error, false)),
+    errorSelector: (error: CustomError|Error) => licenseErrorSelector(error, true),
+    onRetry: (
+      error: CustomError|Error) => errorStream.next(licenseErrorSelector(error, false)
+    ),
   };
 
   const keyErrors: Observable<Event> = onKeyError$(session).map((error) => {

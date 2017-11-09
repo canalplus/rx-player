@@ -88,6 +88,10 @@ import {
   AdaptationsSubjects,
   IManifestUpdateEvent,
 } from "./types";
+import { IError } from "../../utils/retry";
+
+import { IRequest } from "../abr/representation_chooser";
+import { IMetricValue } from "../abr";
 
 const { END_OF_PLAY } = config;
 
@@ -149,7 +153,7 @@ interface IStreamOptions {
     maxBufferAhead$ : Observable<number>,
     maxBufferBehind$ : Observable<number>,
   };
-  errorStream : Subject<Error>;
+  errorStream : Subject<Error|IError>;
   speed$ : BehaviorSubject<number>;
   startAt? : IInitialTimeOptions;
   textTrackOptions : SourceBufferOptions;
@@ -211,15 +215,13 @@ export default function Stream({
   /**
    * Subject through which network metrics will be sent to the ABR manager.
    */
-  // XXX TODO specify Subject<ABRThingy>
-  const network$ = new Subject();
+  const network$ = new Subject<{ type: SupportedBufferTypes, value: IMetricValue }>();
 
   /**
    * Subject through which each request progression will be reported to the ABR
    * manager.
    */
-  // XXX TODO specify Subject<ABRThingy>
-  const requestsInfos$ = new Subject();
+  const requestsInfos$ = new Subject<IRequest[]>();
 
   /**
    * Pipeline used to download the manifest file.
@@ -295,7 +297,7 @@ export default function Stream({
       return true;
     },
 
-    errorSelector: (error : Error) => {
+    errorSelector: (error : Error|IError) => {
       if (!isKnownError(error)) {
         return new OtherError("NONE", error, true);
       }
@@ -303,7 +305,7 @@ export default function Stream({
       return error;
     },
 
-    onRetry: (error : Error, tryCount : number) => {
+    onRetry: (error : Error|IError, tryCount : number) => {
       log.warn("stream retry", error, tryCount);
       errorStream.next(error);
     },
@@ -382,7 +384,7 @@ export default function Stream({
           sourceBufferMemory
         );
         return Observable.of({
-            type: "adaptationChange",
+            type: "adaptationChange" as "adaptationChange",
             value: {
               type: bufferType,
               adaptation: null,
@@ -426,14 +428,13 @@ export default function Stream({
 
       const abr$ = abrManager.get$(bufferType, abrClock$, representations);
       const representation$ = abr$
-        .map(
-          ({ representation } : { representation : Representation }
-        ) => representation)
-        .distinctUntilChanged((a : Representation, b : Representation) =>
+        .map(abr => abr.representation)
+        .filter(representation => representation != null)
+        .distinctUntilChanged((a : Representation|null, b : Representation|null) =>
           (a && a.bitrate) === (b && b.bitrate) &&
           (a && a.id) === (b && b.id)
         )
-        .do((representation : Representation) => {
+        .do((representation : Representation|null) => {
           currentRepresentation = representation;
         });
 
@@ -509,7 +510,7 @@ export default function Stream({
         .filter(({ bitrate } : { bitrate? : number }) => bitrate != null)
         .map(({ bitrate } : { bitrate? : number }) => {
           return {
-            type: "bitrateEstimationChange",
+            type: "bitrateEstimationChange" as "bitrateEstimationChange",
             value: {
               type: bufferType,
               bitrate,

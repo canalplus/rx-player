@@ -76,10 +76,10 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
       .map((p) => p + name)), []);
 }
 
-function compatibleListener(
+function compatibleListener<T extends Event>(
   eventNames : string[],
   prefixes? : string[]
-) : (element : EventTargetLike) => Observable<Event> {
+) : (element : EventTargetLike) => Observable<T> {
   let mem : string|undefined;
   eventNames = eventPrefixed(eventNames, prefixes);
   return (element) => {
@@ -184,8 +184,8 @@ const onTextTrackChanges$ =
     );
 
 const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
-const onEncrypted$ = compatibleListener(["encrypted", "needkey"]);
-const onKeyMessage$ = compatibleListener(["keymessage", "message"]);
+const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(["encrypted", "needkey"]);
+const onKeyMessage$ = compatibleListener<MediaKeyMessageEvent>(["keymessage", "message"]);
 const onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
 const onKeyError$ = compatibleListener(["keyerror", "error"]);
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);

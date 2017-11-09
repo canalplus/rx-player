@@ -41,7 +41,7 @@ interface IInstanceInfo {
   $keySystem: IKeySystemOption|null;
   $mediaKeys: MediaKeys|null;
   $mediaKeySystemConfiguration: MediaKeySystemConfiguration|null;
-  $videoElement: HTMLVideoElement|null;
+  $videoElement: HTMLMediaElement|null;
 }
 
 interface IMediaCapability {
