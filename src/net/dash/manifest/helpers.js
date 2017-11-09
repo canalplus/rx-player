@@ -28,7 +28,7 @@ const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 
 /**
  * @param {Object} index
- * @returns {Number}
+ * @returns {Number|undefined}
  */
 function calculateIndexLastLiveTimeReference(index) {
   if (index.indexType === "timeline") {
@@ -38,8 +38,6 @@ function calculateIndexLastLiveTimeReference(index) {
     const securityTime = Math.min(Math.max(d / index.timescale, 5), 10);
     return ((ts + (r+1)*d) / index.timescale) - securityTime;
   }
-  // By default (e.g. for templates), live Edge is right now - 5s
-  return Date.now() / 1000 - 5;
 }
 
 /**
@@ -309,7 +307,7 @@ const getLastLiveTimeReference = (adaptation) => {
       .map(r => calculateIndexLastLiveTimeReference(r.index))
   );
 
-  // should not happen, means invalid index data has been found
+  // if the last live time reference could not be calculated, return undefined
   if (isNaN(representationsMin)) {
     return;
   }

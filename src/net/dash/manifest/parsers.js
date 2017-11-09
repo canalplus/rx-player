@@ -75,21 +75,13 @@ function parseMPD(root, contentProtectionParser) {
     let lastRef = getLastLiveTimeReference(videoAdaptation);
 
     if (__DEV__) {
-      assert(lastRef);
       assert(parsed.availabilityStartTime);
-    }
-
-    // if last time not found / something was invalid in the indexes, set a
-    // default live time.
-    if (!lastRef) {
-      log.warn("Live edge not deduced from manifest, setting a default one");
-      lastRef = Date.now() / 1000 - 60;
     }
 
     parsed.availabilityStartTime =
       parsed.availabilityStartTime.getTime() / 1000;
-    parsed.presentationLiveGap =
-      Date.now() / 1000 - (lastRef + parsed.availabilityStartTime);
+    parsed.presentationLiveGap = lastRef != null ?
+      Date.now() / 1000 - (lastRef + parsed.availabilityStartTime) : 10;
   }
 
   return filterMPD(parsed);
