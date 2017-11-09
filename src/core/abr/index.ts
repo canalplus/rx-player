@@ -144,7 +144,7 @@ export default class ABRManager {
    * @param {ChooserOption} [options={}]
    */
   constructor(
-    requests$: Observable<IRequest[]>,
+    requests$: Subject<IRequest[]>,
     metrics$: Observable<{ type: SupportedBufferTypes, value: IMetricValue }>,
     options : IRepresentationChoosersOptions = defaultChooserOptions
   ) {
@@ -259,14 +259,14 @@ export default class ABRManager {
     }
   }
 
-  public getManualBitrate(type : SupportedBufferTypes): number {
+  public getManualBitrate(type : SupportedBufferTypes): number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.manualBitrate$.getValue() :
       this._chooserInstanceOptions.manualBitrates[type];
   }
 
-  public getMaxAutoBitrate(type : SupportedBufferTypes): number {
+  public getMaxAutoBitrate(type : SupportedBufferTypes): number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.maxAutoBitrate$.getValue() :
@@ -296,3 +296,5 @@ export default class ABRManager {
     }
   }
 }
+
+export { IMetricValue };

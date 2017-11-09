@@ -34,6 +34,8 @@ import {
   getPlayedSizeOfRange,
 } from "../../utils/ranges";
 
+import { CustomError } from "../../errors";
+
 import {
   exitFullscreen,
   requestFullscreen,
@@ -133,7 +135,7 @@ class Player extends EventEmitter {
    * TODO Use regular Stream observable for that
    * @type {Subject}
    */
-  private _priv_errorStream$ : Subject<Error>;
+  private _priv_errorStream$ : Subject<Error|CustomError>;
 
   /**
    * Emit false when the player is in a "paused" state, true otherwise
@@ -752,7 +754,7 @@ class Player extends EventEmitter {
    * Returns the video DOM element used by the player.
    * You should not its HTML5 API directly and use the player's method instead,
    * to ensure a well-behaved player.
-   * @returns {HMTLMediaElement|null}
+   * @returns {HTMLMediaElement|null}
    */
   getVideoElement() : HTMLMediaElement|null {
     return this.videoElement;
@@ -992,7 +994,7 @@ class Player extends EventEmitter {
    * Returns max wanted video bitrate currently set.
    * @returns {Number}
    */
-  getMaxVideoBitrate() : number {
+  getMaxVideoBitrate() : number|undefined {
     if (!this._priv_abrManager) {
       return this._priv_initialMaxAutoBitrates.video;
     }
@@ -1003,7 +1005,7 @@ class Player extends EventEmitter {
    * Returns max wanted audio bitrate currently set.
    * @returns {Number}
    */
-  getMaxAudioBitrate() : number {
+  getMaxAudioBitrate() : number|undefined {
     if (!this._priv_abrManager) {
       return this._priv_initialMaxAutoBitrates.audio;
     }
@@ -1628,7 +1630,7 @@ class Player extends EventEmitter {
     bitrate,
   } : {
     type : SupportedBufferTypes,
-    bitrate : number,
+    bitrate : number|undefined,
   }) : void {
     if (__DEV__) {
       assert(type != null);

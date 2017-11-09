@@ -33,7 +33,7 @@ import { IInstanceInfo } from "./key_system";
 function setMediaKeysObs(
   mediaKeys : MediaKeys,
   mksConfig : MediaKeySystemConfiguration,
-  video : HTMLVideoElement,
+  video : HTMLMediaElement,
   keySystem: IKeySystemOption,
   instceInfos: IInstanceInfo
 ) : Observable<MediaKeys> {

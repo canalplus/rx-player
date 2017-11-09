@@ -59,7 +59,7 @@ export interface IBitrateEstimationChangeEvent {
   type : "bitrateEstimationChange";
   value : {
     type : SupportedBufferTypes,
-    bitrate : number
+    bitrate : number|undefined
   };
 }
 
