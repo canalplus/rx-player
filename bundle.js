@@ -4802,24 +4802,6 @@ module.exports = function (it) {
 
 /***/ }),
 /* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var helpers = __webpack_require__(4);
-
-module.exports = {
-	/**
-  * @private
-  */
-	_set: function _set(scope, values) {
-		return helpers.merge(this[scope] || (this[scope] = {}), values);
-	}
-};
-
-/***/ }),
-/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4839,7 +4821,7 @@ module.exports = {
  * limitations under the License.
  */
 
-var Levels = {
+var LEVELS = {
   NONE: 0,
   ERROR: 1,
   WARNING: 2,
@@ -4847,42 +4829,60 @@ var Levels = {
   DEBUG: 4
 };
 
-function log() {}
 function noop() {}
 
-var currentLevel = 0;
+var currentLevel = Object.keys(LEVELS)[0];
 
-log.LEVELS = Object.keys(Levels);
-log.error = noop;
-log.warn = noop;
-log.info = noop;
-log.debug = noop;
+var logger = {
+  LEVELS: Object.keys(LEVELS),
+  error: noop,
+  warn: noop,
+  info: noop,
+  debug: noop,
 
-log.setLevel = function (levelStr) {
-  var level = void 0;
-  var foundLevel = Levels[levelStr];
-  if (foundLevel) {
-    level = foundLevel;
-    currentLevel = levelStr;
-  } else {
-    // either 0 or not found
-    level = 0;
-    currentLevel = "NONE";
+  setLevel: function setLevel(levelStr) {
+    var level = void 0;
+    var foundLevel = LEVELS[levelStr];
+    if (foundLevel) {
+      level = foundLevel;
+      currentLevel = levelStr;
+    } else {
+      // either 0 or not found
+      level = 0;
+      currentLevel = "NONE";
+    }
+
+    /* eslint-disable no-console */
+    this.error = level >= LEVELS.ERROR ? console.error.bind(console) : noop;
+    this.warn = level >= LEVELS.WARNING ? console.warn.bind(console) : noop;
+    this.info = level >= LEVELS.INFO ? console.info.bind(console) : noop;
+    this.debug = level >= LEVELS.DEBUG ? console.log.bind(console) : noop;
+    /* eslint-enable no-console */
+  },
+  getLevel: function getLevel() {
+    return currentLevel;
   }
-
-  /* eslint-disable no-console */
-  log.error = level >= Levels.ERROR ? console.error.bind(console) : noop;
-  log.warn = level >= Levels.WARNING ? console.warn.bind(console) : noop;
-  log.info = level >= Levels.INFO ? console.info.bind(console) : noop;
-  log.debug = level >= Levels.DEBUG ? console.log.bind(console) : noop;
-  /* eslint-enable no-console */
 };
 
-log.getLevel = function () {
-  return currentLevel;
-};
+/* harmony default export */ __webpack_exports__["a"] = (logger);
 
-/* harmony default export */ __webpack_exports__["a"] = (log);
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var helpers = __webpack_require__(4);
+
+module.exports = {
+	/**
+  * @private
+  */
+	_set: function _set(scope, values) {
+		return helpers.merge(this[scope] || (this[scope] = {}), values);
+	}
+};
 
 /***/ }),
 /* 11 */
@@ -4957,7 +4957,9 @@ assert.equal = function (a, b, message) {
 assert.iface = function (o, name, iface) {
   assert(o, name + " should be an object");
   for (var k in iface) {
-    assert.equal(_typeof(o[k]), iface[k], name + " should have property " + k + " as a " + iface[k]);
+    if (iface.hasOwnProperty(k)) {
+      assert.equal(_typeof(o[k]), iface[k], name + " should have property " + k + " as a " + iface[k]);
+    }
   }
 };
 
@@ -6066,7 +6068,7 @@ module.exports = function (it) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_rx_onEvent_js__ = __webpack_require__(161);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_eventemitter__ = __webpack_require__(107);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_log_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_log_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__constants_js__ = __webpack_require__(147);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__events_js__ = __webpack_require__(53);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__fullscreen_js__ = __webpack_require__(749);
@@ -6109,10 +6111,21 @@ module.exports = function (it) {
 
 
 
+
+/**
+ * Returns true if the given codec is supported by the browser's MediaSource
+ * implementation.
+ * @returns {Boolean}
+ */
 function isCodecSupported(codec) {
   return !!__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* MediaSource_ */] && __WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* MediaSource_ */].isTypeSupported(codec);
 }
 
+/**
+ * Returns true if the current target require the media keys to be renewed on
+ * each content.
+ * @returns {Boolean}
+ */
 function shouldRenewMediaKeys() {
   return __WEBPACK_IMPORTED_MODULE_4__constants_js__["b" /* isIE */];
 }
@@ -6134,7 +6147,7 @@ function shouldUnsetMediaKeys() {
  * @returns {Observable}
  */
 function onSourceOpen$(mediaSource) {
-  if (mediaSource.readyState == "open") {
+  if (mediaSource.readyState === "open") {
     return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].of(null);
   } else {
     return __WEBPACK_IMPORTED_MODULE_5__events_js__["g" /* onSourceOpen$ */](mediaSource).take(1);
@@ -6168,7 +6181,8 @@ function canPlay(videoElement) {
   }
 }
 
-// TODO Lacking side-effect?
+// old WebKit SourceBuffer implementation,
+// where a synchronous append is used instead of appendBuffer
 if (window.WebKitSourceBuffer && !window.WebKitSourceBuffer.prototype.addEventListener) {
 
   var SourceBuffer = window.WebKitSourceBuffer;
@@ -6206,9 +6220,19 @@ if (window.WebKitSourceBuffer && !window.WebKitSourceBuffer.prototype.addEventLi
   };
 }
 
+/**
+ * Add text track to the given media element.
+ * Returns an object with the following properties:
+ *   - track {TextTrack}: the added text track
+ *   - trackElement {HTMLElement|undefined}: the added <track> element.
+ *     undefined if no trackElement was added.
+ * @param {HTMLMediaElement} video
+ * @param {Boolean} hidden
+ * @returns {Object}
+ */
 function addTextTrack(video, hidden) {
-  var track = void 0,
-      trackElement = void 0;
+  var track = void 0;
+  var trackElement = void 0;
   var kind = "subtitles";
   if (__WEBPACK_IMPORTED_MODULE_4__constants_js__["b" /* isIE */]) {
     var tracksLength = video.textTracks.length;
@@ -6229,15 +6253,17 @@ function addTextTrack(video, hidden) {
 /**
  * firefox fix: sometimes the stream can be stalled, even if we are in a
  * buffer.
+ *
+ * TODO This seems to be about an old Firefox version. Delete it?
  * @param {Object} timing
  * @returns {Boolean}
  */
-function isPlaybackStuck(timing) {
+function isPlaybackStuck(time, currentRange, state, isStalled) {
   var FREEZE_THRESHOLD = 10; // video freeze threshold in seconds
-  return __WEBPACK_IMPORTED_MODULE_4__constants_js__["d" /* isFirefox */] && timing.stalled && timing.state === "timeupdate" && timing.range && timing.range.end - timing.currentTime > FREEZE_THRESHOLD;
+  return __WEBPACK_IMPORTED_MODULE_4__constants_js__["d" /* isFirefox */] && isStalled && state === "timeupdate" && !!currentRange && currentRange.end - time > FREEZE_THRESHOLD;
 }
 
-/*
+/**
  * Clear video src attribute.
  *
  * On IE11,  video.src = "" is not sufficient as it
@@ -7625,6 +7651,7 @@ function isKnownError(error) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = arrayIncludes;
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -7642,7 +7669,7 @@ function isKnownError(error) {
  */
 
 // inspired from MDN polyfill, but ponyfilled instead
-/* harmony default export */ __webpack_exports__["a"] = (function (arr, searchElement, fromIndex) {
+function arrayIncludes(arr, searchElement, fromIndex) {
   if (typeof Array.prototype.includes === "function") {
     return arr.includes(searchElement, fromIndex);
   }
@@ -7670,7 +7697,7 @@ function isKnownError(error) {
   }
 
   return false;
-});
+}
 
 /***/ }),
 /* 47 */
@@ -7729,7 +7756,7 @@ function castToObservable(value) {
     });
   }
 
-  if (value && typeof value.then == "function") {
+  if (value && typeof value.then === "function") {
     return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].fromPromise(value);
   }
 
@@ -8075,7 +8102,7 @@ exports.root = _root;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__config_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_rx_onEvent_js__ = __webpack_require__(161);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__constants_js__ = __webpack_require__(147);
 /**
@@ -8224,8 +8251,13 @@ var onFullscreenChange$ = compatibleListener(["fullscreenchange", "FullscreenCha
 // On IE11, fullscreen change events is called MSFullscreenChange
 __WEBPACK_IMPORTED_MODULE_4__constants_js__["h" /* BROWSER_PREFIXES */].concat("MS"));
 
-var onPlayPause$ = compatibleListener(["play", "pause"]);
-var onTextTrackChanges$ = compatibleListener(["addtrack", "removetrack"]);
+var onPlayPause$ = function onPlayPause$(videoElement) {
+  return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge(compatibleListener(["play"])(videoElement), compatibleListener(["pause"])(videoElement));
+};
+
+var onTextTrackChanges$ = function onTextTrackChanges$(textTrackList) {
+  return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge(compatibleListener(["addtrack"])(textTrackList), compatibleListener(["removetrack"])(textTrackList));
+};
 
 var onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
 var onEncrypted$ = compatibleListener(["encrypted", "needkey"]);
@@ -8322,7 +8354,7 @@ function createRangeUnion(range1, range2) {
  * That is, range objects which have their start equal to their end.
  * /!\ Mutate the array of ranges.
  * @param {Array<Object>} ranges
- * @returns {Boolean}
+ * @returns {Array<Object>}
  */
 function removeEmptyRanges(ranges) {
   for (var index = 0; index < ranges.length; index++) {
@@ -9124,9 +9156,9 @@ function _normalizeUrl(url) {
   var newUrl = [];
   var oldUrl = url.split("/");
   for (var i = 0, l = oldUrl.length; i < l; i++) {
-    if (oldUrl[i] == "..") {
+    if (oldUrl[i] === "..") {
       newUrl.pop();
-    } else if (oldUrl[i] == ".") {
+    } else if (oldUrl[i] === ".") {
       continue;
     } else {
       newUrl.push(oldUrl[i]);
@@ -9800,7 +9832,6 @@ var scale = function scale(index, time) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export totalBytes */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return strToBytes; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return bytesToStr; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() { return bytesToUTF16Str; });
@@ -9842,19 +9873,6 @@ var scale = function scale(index, time) {
 
 
 /**
- * Returns total bytes in an array of ArrayBuffer.
- * @param {Array.<ArrayBuffer>} arr
- * @returns {Number}
- */
-function totalBytes(arr) {
-  var tot = 0;
-  for (var i = 0; i < arr.length; i++) {
-    tot += arr[i].byteLength;
-  }
-  return tot;
-}
-
-/**
  * Returns Uint8Array from UTF16 string.
  * /!\ Take only the first byte from each UTF16 code.
  * @param {string} str
@@ -9872,7 +9890,7 @@ function strToBytes(str) {
 /**
  * construct string from unicode values.
  * /!\ does not support non-UCS-2 values
- * @param {TypedArray} bytes
+ * @param {Uint8Array} bytes
  * @returns {string}
  */
 function bytesToStr(bytes) {
@@ -9883,7 +9901,7 @@ function bytesToStr(bytes) {
  * construct string from unicode values.
  * Only use every other byte for each UTF-16 character.
  * /!\ does not support non-UCS-2 values
- * @param {TypedArray} bytes
+ * @param {Uint8Array} bytes
  * @returns {string}
  */
 function bytesToUTF16Str(bytes) {
@@ -9913,7 +9931,7 @@ function hexToBytes(str) {
 /**
  * Convert bytes into the corresponding hex string, with the possibility
  * to add a separator.
- * @param {TypedArray} bytes
+ * @param {Uint8Array} bytes
  * @param {string} [sep=""] - separator. Separate each two hex character.
  * @returns {string}
  */
@@ -9937,7 +9955,7 @@ function bytesToHex(bytes, sep) {
  * Returns a Uint8Array from the arguments given, in order:
  *   - if the next argument given is a number N set the N next bytes to 0.
  *   - else set the next bytes to the argument given.
- * @param {...(Number|TypedArray)} arguments
+ * @param {...(Number|Uint8Array)} args
  * @returns {Uint8Array}
  */
 function concat() {
@@ -9946,19 +9964,19 @@ function concat() {
   var len = 0;
   var arg = void 0;
   while (++i < l) {
-    arg = arguments[i];
+    arg = arguments.length <= i ? undefined : arguments[i];
     len += typeof arg === "number" ? arg : arg.length;
   }
   var arr = new Uint8Array(len);
-  var off = 0;
+  var offset = 0;
   i = -1;
   while (++i < l) {
-    arg = arguments[i];
+    arg = arguments.length <= i ? undefined : arguments[i];
     if (typeof arg === "number") {
-      off += arg;
+      offset += arg;
     } else if (arg.length > 0) {
-      arr.set(arg, off);
-      off += arg.length;
+      arr.set(arg, offset);
+      offset += arg.length;
     }
   }
   return arr;
@@ -9966,42 +9984,42 @@ function concat() {
 
 /**
  * Translate groups of 2 big-endian bytes to Integer (from 0 up to 65535).
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be2toi(bytes, off) {
-  return (bytes[0 + off] << 8) + (bytes[1 + off] << 0);
+function be2toi(bytes, offset) {
+  return (bytes[0 + offset] << 8) + (bytes[1 + offset] << 0);
 }
 
 /**
  * Translate groups of 3 big-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be3toi(bytes, off) {
-  return bytes[0 + off] * 0x0010000 + bytes[1 + off] * 0x0000100 + bytes[2 + off];
+function be3toi(bytes, offset) {
+  return bytes[0 + offset] * 0x0010000 + bytes[1 + offset] * 0x0000100 + bytes[2 + offset];
 }
 
 /**
  * Translate groups of 4 big-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be4toi(bytes, off) {
-  return bytes[0 + off] * 0x1000000 + bytes[1 + off] * 0x0010000 + bytes[2 + off] * 0x0000100 + bytes[3 + off];
+function be4toi(bytes, offset) {
+  return bytes[0 + offset] * 0x1000000 + bytes[1 + offset] * 0x0010000 + bytes[2 + offset] * 0x0000100 + bytes[3 + offset];
 }
 
 /**
  * Translate groups of 8 big-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be8toi(bytes, off) {
-  return (bytes[0 + off] * 0x1000000 + bytes[1 + off] * 0x0010000 + bytes[2 + off] * 0x0000100 + bytes[3 + off]) * 0x100000000 + bytes[4 + off] * 0x1000000 + bytes[5 + off] * 0x0010000 + bytes[6 + off] * 0x0000100 + bytes[7 + off];
+function be8toi(bytes, offset) {
+  return (bytes[0 + offset] * 0x1000000 + bytes[1 + offset] * 0x0010000 + bytes[2 + offset] * 0x0000100 + bytes[3 + offset]) * 0x100000000 + bytes[4 + offset] * 0x1000000 + bytes[5 + offset] * 0x0010000 + bytes[6 + offset] * 0x0000100 + bytes[7 + offset];
 }
 
 /**
@@ -10040,32 +10058,32 @@ function itobe8(num) {
 
 /**
  * Translate groups of 2 little-endian bytes to Integer (from 0 up to 65535).
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function le2toi(bytes, off) {
-  return (bytes[0 + off] << 0) + (bytes[1 + off] << 8);
+function le2toi(bytes, offset) {
+  return (bytes[0 + offset] << 0) + (bytes[1 + offset] << 8);
 }
 
 /**
  * Translate groups of 4 little-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function le4toi(bytes, off) {
-  return bytes[0 + off] + bytes[1 + off] * 0x0000100 + bytes[2 + off] * 0x0010000 + bytes[3 + off] * 0x1000000;
+function le4toi(bytes, offset) {
+  return bytes[0 + offset] + bytes[1 + offset] * 0x0000100 + bytes[2 + offset] * 0x0010000 + bytes[3 + offset] * 0x1000000;
 }
 
 /**
  * Translate groups of 8 little-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function le8toi(bytes, off) {
-  return bytes[0 + off] + bytes[1 + off] * 0x0000100 + bytes[2 + off] * 0x0010000 + bytes[3 + off] * 0x1000000 + (bytes[4 + off] + bytes[5 + off] * 0x0000100 + bytes[6 + off] * 0x0010000 + bytes[7 + off] * 0x1000000) * 0x100000000;
+function le8toi(bytes, offset) {
+  return bytes[0 + offset] + bytes[1 + offset] * 0x0000100 + bytes[2 + offset] * 0x0010000 + bytes[3 + offset] * 0x1000000 + (bytes[4 + offset] + bytes[5 + offset] * 0x0000100 + bytes[6 + offset] * 0x0010000 + bytes[7 + offset] * 0x1000000) * 0x100000000;
 }
 
 /**
@@ -11182,8 +11200,8 @@ function findAtom(buf, atomName) {
   var l = buf.length;
   var i = 0;
 
-  var name = void 0,
-      size = void 0;
+  var name = void 0;
+  var size = 0;
   while (i + 8 < l) {
     size = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["e" /* be4toi */])(buf, i);
     name = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["e" /* be4toi */])(buf, i + 4);
@@ -11222,7 +11240,7 @@ function findAtom(buf, atomName) {
  */
 function parseSidx(buf, offset) {
   var index = findAtom(buf, 0x73696478 /* "sidx" */);
-  if (index == -1) {
+  if (index === -1) {
     return null;
   }
 
@@ -11267,7 +11285,7 @@ function parseSidx(buf, offset) {
     var refSize = refChunk & 0x7fffffff;
 
     // when set to 1 indicates that the reference is to a sidx, else to media
-    if (refType == 1) {
+    if (refType === 1) {
       throw new Error("not implemented");
     }
 
@@ -11282,9 +11300,8 @@ function parseSidx(buf, offset) {
     // let sapType = (sapChunk & 0x70000000) >>> 28;
     // let sapDelta = sapChunk & 0x0FFFFFFF;
 
-    var ts = time;
     segments.push({
-      time: ts,
+      time: time,
       duration: d,
       count: 0,
       timescale: timescale,
@@ -11317,7 +11334,7 @@ function parseTfdt(buffer) {
   }
 
   var index = findAtom(traf, 0x74666474 /* tfdt */);
-  if (index == -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -11332,7 +11349,7 @@ function parseTfdt(buffer) {
 
 function getDefaultDurationFromTFHDInTRAF(traf) {
   var index = findAtom(traf, 0x74666864 /* tfhd */);
-  if (index == -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -11375,7 +11392,7 @@ function getDurationFromTrun(buffer) {
   }
 
   var index = findAtom(traf, 0x7472756e /* tfdt */);
-  if (index == -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -11449,17 +11466,17 @@ function getMDHDTimescale(buffer) {
     return -1;
   }
   var trak = getAtomContent(moov, 0x7472616b /* "trak" */);
-  if (index == -1) {
+  if (!trak) {
     return -1;
   }
 
   var mdia = getAtomContent(trak, 0x6d646961 /* "mdia" */);
-  if (index == -1) {
+  if (!mdia) {
     return -1;
   }
 
   var index = findAtom(mdia, 0x6d646864 /* "mdhd" */);
-  if (index / -1) {
+  if (index === -1) {
     return -1;
   }
 
@@ -11469,7 +11486,7 @@ function getMDHDTimescale(buffer) {
   if (version === 1) {
     pos += 16;
     return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["e" /* be4toi */])(mdia, pos);
-  } else if (version == 0) {
+  } else if (version === 0) {
     pos += 8;
     return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["e" /* be4toi */])(mdia, pos);
   } else {
@@ -11487,8 +11504,8 @@ function getAtomContent(buf, atomName) {
   var l = buf.length;
   var i = 0;
 
-  var name = void 0,
-      size = void 0;
+  var name = void 0;
+  var size = 0;
   while (i + 8 < l) {
     size = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["e" /* be4toi */])(buf, i);
     name = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["e" /* be4toi */])(buf, i + 4);
@@ -11558,19 +11575,19 @@ function patchPssh(buf, pssList) {
   }
 
   var pos = findAtom(buf, 0x6d6f6f76 /* = "moov" */);
-  if (pos == -1) {
+  if (pos === -1) {
     return buf;
   }
 
   var size = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["e" /* be4toi */])(buf, pos); // size of the "moov" box
   var moov = buf.subarray(pos, pos + size);
 
-  var newmoov = [moov];
+  var moovArr = [moov];
   for (var i = 0; i < pssList.length; i++) {
-    newmoov.push(createPssh(pssList[i]));
+    moovArr.push(createPssh(pssList[i]));
   }
 
-  newmoov = __WEBPACK_IMPORTED_MODULE_1__utils_bytes__["i" /* concat */].apply(null, newmoov);
+  var newmoov = __WEBPACK_IMPORTED_MODULE_1__utils_bytes__["i" /* concat */].apply(undefined, moovArr);
   newmoov.set(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["j" /* itobe4 */])(newmoov.length), 0); // overwrite "moov" length
 
   return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_bytes__["i" /* concat */])(buf.subarray(0, pos), newmoov, buf.subarray(pos + size));
@@ -11583,7 +11600,7 @@ function patchPssh(buf, pssList) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__assert__ = __webpack_require__(12);
 /**
  * Copyright 2015 CANAL+ Group
@@ -13349,7 +13366,7 @@ if (true) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return dispose; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_castToObservable_js__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_assert__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compat___ = __webpack_require__(22);
@@ -15158,7 +15175,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  *
  * TODO manage IDREFS (plural) for styles and regions, that is, multiple one
  * @param {Array.<string>} attributes
- * @param {Array.<Element>} elements
+ * @param {Array.<Node>} elements
  * @param {Array.<Object>} styles
  * @param {Array.<Object>} regions
  * @returns {Object}
@@ -15170,12 +15187,12 @@ function getStylingAttributes(attributes, elements, styles, regions) {
     var element = elements[i];
     if (element) {
       var _ret = function () {
-        var styleID = undefined;
-        var regionID = undefined;
+        var styleID = void 0;
+        var regionID = void 0;
 
         // 1. the style is directly set on a "tts:" attribute
-        for (var _i = 0; _i <= element.attributes.length - 1; _i++) {
-          var attribute = element.attributes[_i];
+        for (var j = 0; j <= element.attributes.length - 1; j++) {
+          var attribute = element.attributes[j];
           var name = attribute.name;
           if (name === "style") {
             styleID = attribute.value;
@@ -15185,7 +15202,7 @@ function getStylingAttributes(attributes, elements, styles, regions) {
             var nameWithoutTTS = name.substr(4);
             if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_array_includes_js__["a" /* default */])(leftAttributes, nameWithoutTTS)) {
               currentStyle[attribute.name] = attribute.value;
-              leftAttributes.splice(_i, 1);
+              leftAttributes.splice(j, 1);
               if (!leftAttributes.length) {
                 return {
                   v: currentStyle
@@ -15201,18 +15218,18 @@ function getStylingAttributes(attributes, elements, styles, regions) {
             return x.id === styleID;
           });
           if (style) {
-            for (var _i2 = 0; _i2 <= leftAttributes.length - 1; _i2++) {
-              var _attribute = leftAttributes[_i2];
+            for (var _j = 0; _j <= leftAttributes.length - 1; _j++) {
+              var _attribute = leftAttributes[_j];
               if (!currentStyle[_attribute]) {
                 if (style.style[_attribute]) {
                   currentStyle[_attribute] = style.style[_attribute];
-                  leftAttributes.splice(_i2, 1);
+                  leftAttributes.splice(_j, 1);
                   if (!leftAttributes.length) {
                     return {
                       v: currentStyle
                     };
                   }
-                  _i2--;
+                  _j--;
                 }
               }
             }
@@ -15226,18 +15243,18 @@ function getStylingAttributes(attributes, elements, styles, regions) {
             return x.id === regionID;
           });
           if (region) {
-            for (var _i3 = 0; _i3 <= leftAttributes.length - 1; _i3++) {
-              var _attribute2 = leftAttributes[_i3];
+            for (var _j2 = 0; _j2 <= leftAttributes.length - 1; _j2++) {
+              var _attribute2 = leftAttributes[_j2];
               if (!currentStyle[_attribute2]) {
                 if (region.style[_attribute2]) {
                   currentStyle[_attribute2] = region.style[_attribute2];
-                  leftAttributes.splice(_i3, 1);
+                  leftAttributes.splice(_j2, 1);
                   if (!leftAttributes.length) {
                     return {
                       v: currentStyle
                     };
                   }
-                  _i3--;
+                  _j2--;
                 }
               }
             }
@@ -15253,7 +15270,7 @@ function getStylingAttributes(attributes, elements, styles, regions) {
 
 /**
  * Returns the styling directly linked to an element.
- * @param {Element} element
+ * @param {Node} element
  * @returns {Object}
  */
 function getStylingFromElement(element) {
@@ -15273,6 +15290,7 @@ function getStylingFromElement(element) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = generateNewId;
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -15291,22 +15309,24 @@ function getStylingFromElement(element) {
 
 var _lastId = 0;
 
-var generateNewId = function generateNewId() {
+/**
+ * @returns {string}
+ */
+function generateNewId() {
   var newId = 0;
   if (_lastId < Number.MAX_VALUE) {
     newId = _lastId + 1;
   }
   _lastId = newId;
   return "" + newId;
-};
-
-/* harmony default export */ __webpack_exports__["a"] = (generateNewId);
+}
 
 /***/ }),
 /* 160 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = request;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__errors__ = __webpack_require__(45);
@@ -15329,13 +15349,13 @@ var generateNewId = function generateNewId() {
 
 
 
-var toJSONForIE = function toJSONForIE(data) {
+function toJSONForIE(data) {
   try {
     return JSON.parse(data);
   } catch (e) {
     return null;
   }
-};
+}
 
 /**
  * # request function
@@ -15352,15 +15372,18 @@ var toJSONForIE = function toJSONForIE(data) {
  * ## Emitted Objects
  *
  * The emitted objects are under the following form:
+ * ```
  *   {
  *     type {string}: the type of event
  *     value {Object}: the event value
  *   }
+ * ```
  *
  * The type of event can either be "progress" or "response". The value is under
  * a different form depending on the type.
  *
  * For "progress" events, the value should be the following object:
+ * ```
  *   {
  *     url {string}: url on which the request is being done
  *     sentTime {Number}: timestamp at which the request was sent.
@@ -15371,8 +15394,10 @@ var toJSONForIE = function toJSONForIE(data) {
  *     totalSize {Number|undefined}: total size to download, in bytes
  *                                   (without overhead)
  *   }
+ * ```
  *
  * For "response" events, the value should be the following object:
+ * ```
  *   {
  *     status {Number}: xhr status code
  *     url {string}: url on which the request was done
@@ -15384,6 +15409,7 @@ var toJSONForIE = function toJSONForIE(data) {
  *     responseData {*}: Data in the response. Format depends on the
  *                       responseType.
  *   }
+ * ```
  *
  * For any succesful request you should have 0+ "progress" events and 1
  * "response" event.
@@ -15408,7 +15434,7 @@ var toJSONForIE = function toJSONForIE(data) {
  * @returns {Observable}
  */
 
-/* harmony default export */ __webpack_exports__["a"] = (function (options) {
+function request(options) {
   var request = {
     url: "",
     headers: null,
@@ -15484,13 +15510,13 @@ var toJSONForIE = function toJSONForIE(data) {
           var receivedTime = Date.now();
           var totalSize = event.total;
           var status = xhr.status;
-          var _responseType = xhr.responseType;
+          var loadedResponseType = xhr.responseType;
           var _url = xhr.responseURL || url;
 
           var responseData = void 0;
-          if (_responseType === "json") {
+          if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
-            if (typeof xhr.response != "string") {
+            if (typeof xhr.response !== "string") {
               responseData = xhr.response;
             } else {
               responseData = toJSONForIE(xhr.responseText);
@@ -15510,7 +15536,7 @@ var toJSONForIE = function toJSONForIE(data) {
             value: {
               status: status,
               url: _url,
-              responseType: _responseType,
+              responseType: loadedResponseType,
               sentTime: sentTime,
               receivedTime: receivedTime,
               size: totalSize,
@@ -15537,7 +15563,7 @@ var toJSONForIE = function toJSONForIE(data) {
       }
     };
   });
-});
+}
 
 /***/ }),
 /* 161 */
@@ -15573,9 +15599,10 @@ var toJSONForIE = function toJSONForIE(data) {
  */
 function onEvent(elt, evts) {
   if (Array.isArray(evts)) {
-    return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge.apply(null, evts.map(function (evt) {
+    var eventsArray = evts.map(function (evt) {
       return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].fromEvent(elt, evt);
-    }));
+    });
+    return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].merge.apply(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"], eventsArray);
   } else {
     return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].fromEvent(elt, evts);
   }
@@ -16114,7 +16141,7 @@ Chart.helpers = __webpack_require__(4);
 // @todo dispatch these helpers into appropriated helpers/helpers.* file and write unit tests!
 __webpack_require__(424)(Chart);
 
-Chart.defaults = __webpack_require__(9);
+Chart.defaults = __webpack_require__(10);
 Chart.Element = __webpack_require__(31);
 Chart.elements = __webpack_require__(48);
 Chart.Interaction = __webpack_require__(182);
@@ -31216,7 +31243,7 @@ var KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 
 /**
  * @param {Object} index
- * @returns {Number}
+ * @returns {Number|undefined}
  */
 function calculateIndexLastLiveTimeReference(index) {
   if (index.indexType === "timeline") {
@@ -31230,8 +31257,6 @@ function calculateIndexLastLiveTimeReference(index) {
     var securityTime = Math.min(Math.max(d / index.timescale, 5), 10);
     return (ts + (r + 1) * d) / index.timescale - securityTime;
   }
-  // By default (e.g. for templates), live Edge is right now - 5s
-  return Date.now() / 1000 - 5;
 }
 
 /**
@@ -31491,7 +31516,7 @@ var getLastLiveTimeReference = function getLastLiveTimeReference(adaptation) {
     return calculateIndexLastLiveTimeReference(r.index);
   }));
 
-  // should not happen, means invalid index data has been found
+  // if the last live time reference could not be calculated, return undefined
   if (isNaN(representationsMin)) {
     return;
   }
@@ -31712,8 +31737,8 @@ function parseBif(buf) {
   pos = 0x40;
 
   var thumbs = [];
-  var currentImage = void 0,
-      currentTs = 0;
+  var currentImage = void 0;
+  var currentTs = 0;
 
   if (!imageCount) {
     throw new Error("bif: no images to parse");
@@ -31785,14 +31810,14 @@ function parseBif(buf) {
 /**
  * Parse a single srt timestamp into seconds
  * @param {string} timestampString
- * @returns {Number}
+ * @returns {Number|undefined}
  */
 function parseTimestamp(timestampString) {
   var splittedTS = timestampString.split(":");
   if (splittedTS[2]) {
     var hours = parseInt(splittedTS[0], 10);
     var minutes = parseInt(splittedTS[1], 10);
-    var seconds = parseFloat(splittedTS[2].replace(",", "."), 10);
+    var seconds = parseFloat(splittedTS[2].replace(",", "."));
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }
@@ -31825,7 +31850,7 @@ function parseTimestamp(timestampString) {
 /**
  * Returns global parameters from a TTML Document
  * TODO Missing parameters.
- * @param {Node} tt - <tt> node
+ * @param {Element} tt - <tt> node
  * @throws Error - Throws if the spacing style is invalid.
  * @returns {Object} params
  * @returns {Number} params.frameRate
@@ -32063,7 +32088,7 @@ function getBackedoffDelay(retryDelay) {
 /**
  * Simple debounce implementation.
  * @param {Function} fn
- * @param {Number} delay
+ * @param {Number} delay - delay in ms
  * @returns {Function}
  */
 function debounce(fn, delay) {
@@ -32118,9 +32143,9 @@ function retryWithBackoff(obs$, options) {
 
   var retryCount = 0;
   var debounceRetryCount = void 0;
-  if (resetDelay > 0) {
+  if (resetDelay != null && resetDelay > 0) {
     debounceRetryCount = debounce(function () {
-      return retryCount = 0;
+      retryCount = 0;
     }, resetDelay);
   }
 
@@ -32140,7 +32165,9 @@ function retryWithBackoff(obs$, options) {
 
     var fuzzedDelay = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__backoff__["a" /* getBackedoffDelay */])(retryDelay, retryCount);
     return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].timer(fuzzedDelay).mergeMap(function () {
-      debounceRetryCount && debounceRetryCount();
+      if (debounceRetryCount) {
+        debounceRetryCount();
+      }
       return source;
     });
   });
@@ -32172,9 +32199,9 @@ function retryableFuncWithBackoff(fn, options) {
 
   var retryCount = 0;
   var debounceRetryCount = void 0;
-  if (resetDelay > 0) {
+  if (resetDelay != null && resetDelay > 0) {
     debounceRetryCount = debounce(function () {
-      return retryCount = 0;
+      retryCount = 0;
     }, resetDelay);
   }
 
@@ -32199,7 +32226,9 @@ function retryableFuncWithBackoff(fn, options) {
 
       var fuzzedDelay = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__backoff__["a" /* getBackedoffDelay */])(retryDelay, retryCount);
       return __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__["Observable"].timer(fuzzedDelay).mergeMap(function () {
-        debounceRetryCount && debounceRetryCount();
+        if (debounceRetryCount) {
+          debounceRetryCount();
+        }
         return doRetry.apply(undefined, args);
       });
     });
@@ -32234,7 +32263,7 @@ function retryableFuncWithBackoff(fn, options) {
 /**
  * Creates a new string from the given array of char codes.
  *
- * @param {TypedArray} args
+ * @param {Uint8Array} args
  * @returns {string}
  */
 function stringFromCharCode(args) {
@@ -32263,7 +32292,7 @@ function stringFromUTF8(data) {
   var uint8 = new Uint8Array(data);
 
   // If present, strip off the UTF-8 BOM.
-  if (uint8[0] == 0xef && uint8[1] == 0xbb && uint8[2] == 0xbf) {
+  if (uint8[0] === 0xef && uint8[1] === 0xbb && uint8[2] === 0xbf) {
     uint8 = uint8.subarray(3);
   }
 
@@ -43775,7 +43804,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var elements = __webpack_require__(48);
 var helpers = __webpack_require__(4);
 
@@ -44196,7 +44225,7 @@ module.exports = function (Chart) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var elements = __webpack_require__(48);
 var helpers = __webpack_require__(4);
 
@@ -44362,7 +44391,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var elements = __webpack_require__(48);
 var helpers = __webpack_require__(4);
 
@@ -44669,7 +44698,7 @@ module.exports = function (Chart) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var elements = __webpack_require__(48);
 var helpers = __webpack_require__(4);
 
@@ -45003,7 +45032,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var elements = __webpack_require__(48);
 var helpers = __webpack_require__(4);
 
@@ -45231,7 +45260,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var elements = __webpack_require__(48);
 var helpers = __webpack_require__(4);
 
@@ -45400,7 +45429,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 
 defaults._set('scatter', {
 	hover: {
@@ -45448,7 +45477,7 @@ module.exports = function (Chart) {
 /* global window: false */
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -45626,7 +45655,7 @@ module.exports = function (Chart) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var helpers = __webpack_require__(4);
 var Interaction = __webpack_require__(182);
 var platform = __webpack_require__(183);
@@ -46841,7 +46870,7 @@ module.exports = function (Chart) {
 
 
 var color = __webpack_require__(184);
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var helpers = __webpack_require__(4);
 
 module.exports = function (Chart) {
@@ -47458,7 +47487,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 
 defaults._set('global', {
 	responsive: true,
@@ -47938,7 +47967,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -48318,7 +48347,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 var Ticks = __webpack_require__(75);
@@ -49217,7 +49246,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var helpers = __webpack_require__(4);
 
 module.exports = function (Chart) {
@@ -49268,7 +49297,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -50218,7 +50247,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -50331,7 +50360,7 @@ module.exports = Element.extend({
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -50428,7 +50457,7 @@ module.exports = Element.extend({
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -50540,7 +50569,7 @@ module.exports = Element.extend({
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 
 defaults._set('global', {
@@ -51781,7 +51810,7 @@ helpers.removeEvent = _removeEventListener;
 
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var elements = __webpack_require__(48);
 var helpers = __webpack_require__(4);
 
@@ -52102,7 +52131,7 @@ module.exports = function () {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -52671,7 +52700,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var Element = __webpack_require__(31);
 var helpers = __webpack_require__(4);
 
@@ -53056,7 +53085,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var helpers = __webpack_require__(4);
 var Ticks = __webpack_require__(75);
 
@@ -53631,7 +53660,7 @@ module.exports = function (Chart) {
 "use strict";
 
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var helpers = __webpack_require__(4);
 var Ticks = __webpack_require__(75);
 
@@ -54157,7 +54186,7 @@ module.exports = function (Chart) {
 var moment = __webpack_require__(0);
 moment = typeof moment === 'function' ? moment : window.moment;
 
-var defaults = __webpack_require__(9);
+var defaults = __webpack_require__(10);
 var helpers = __webpack_require__(4);
 
 // Integer constants are from the ES6 spec.
@@ -69524,7 +69553,7 @@ function createTimingsSampler(video, _ref) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_ReplaySubject__ = __webpack_require__(337);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_ReplaySubject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_ReplaySubject__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__config_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_eventemitter__ = __webpack_require__(107);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__utils_assert__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__utils_ranges_js__ = __webpack_require__(54);
@@ -69695,7 +69724,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-rc7";
+    _this.version = /*PLAYER_VERSION*/"3.0.0-rc8";
     _this.log = __WEBPACK_IMPORTED_MODULE_5__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.videoElement = videoElement;
@@ -71399,7 +71428,7 @@ function parseLoadVideoOptions() {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_deep_equal___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_deep_equal__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_assert__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__manifest_timings_js__ = __webpack_require__(105);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__constants_js__ = __webpack_require__(357);
@@ -71558,7 +71587,7 @@ function parseLoadVideoOptions() {
      */
     onStreamError: function onStreamError(error) {
       self._priv.unsubscribeLoadedVideo$.next();
-      this._priv.cleanUpCurrentContentState();
+      self._priv.cleanUpCurrentContentState();
       self._priv.fatalError = error;
       self._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_5__constants_js__["a" /* PLAYER_STATES */].STOPPED);
 
@@ -71581,7 +71610,7 @@ function parseLoadVideoOptions() {
      */
     onStreamComplete: function onStreamComplete() {
       self._priv.unsubscribeLoadedVideo$.next();
-      this._priv.cleanUpCurrentContentState();
+      self._priv.cleanUpCurrentContentState();
       self._priv.setPlayerState(__WEBPACK_IMPORTED_MODULE_5__constants_js__["a" /* PLAYER_STATES */].ENDED);
     },
 
@@ -71892,7 +71921,7 @@ function cleanBuffer(qSourceBuffer, position, maxBufferBehind, maxBufferAhead) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__config_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_ranges_js__ = __webpack_require__(54);
 /**
  * Copyright 2015 CANAL+ Group
@@ -72010,7 +72039,7 @@ function launchGarbageCollector(timings$, bufferingQueue) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_object_assign__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_object_assign___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_object_assign__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__config_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_collections__ = __webpack_require__(835);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_ranges_js__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__errors__ = __webpack_require__(45);
@@ -72746,18 +72775,30 @@ var SegmentBookkeeper = function () {
 
 
   SegmentBookkeeper.prototype.addBufferedInfos = function addBufferedInfos(buffered) {
-    var ranges = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_ranges_js__["h" /* convertToRanges */])(buffered);
-    var maxI = ranges.length - 1;
-
     var _inventory = this._inventory;
 
+    var ranges = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__utils_ranges_js__["h" /* convertToRanges */])(buffered);
+
+    /**
+     * Current inventory index considered.
+     * @type {Number}
+     */
     var inventoryIndex = 0;
+
+    /**
+     * Current segmentInfos considered
+     * @type {Object}
+     */
     var thisSegment = _inventory[0];
 
-    for (var i = 0; i <= maxI; i++) {
-      if (!thisSegment) {
-        // Those buffered do not link to any segment here.
-        // It may be linked to another adaptation, for example
+    var rangesLength = ranges.length;
+    for (var i = 0; i < rangesLength; i++) {
+      if (thisSegment == null) {
+        // If thisSegment is not set, it means that we arrived at the end of
+        // our inventory.
+        // This TimeRange do not link to any segment and neither will any
+        // subsequent one.
+        // (It may be linked to another adaptation, for example)
         return;
       }
 
@@ -72765,51 +72806,69 @@ var SegmentBookkeeper = function () {
           rangeStart = _ranges$i.start,
           rangeEnd = _ranges$i.end;
 
+      // if current TimeRange is too small to contain a segment, go to next one
 
       if (rangeEnd - rangeStart < MINIMUM_SEGMENT_SIZE) {
         continue;
       }
 
+      /**
+       * Inventory index of the last segment not contained in the current range.
+       * Will be used to know how many segments have been garbage collected.
+       * @type {Number}
+       */
       var indexBefore = inventoryIndex;
 
+      // Find the first segment either within this TimeRange or past it:
       // skip until first segment with at least MINIMUM_SEGMENT_SIZE past the
       // start of that range.
       while (thisSegment && __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedEnd, thisSegment.end) - rangeStart < MINIMUM_SEGMENT_SIZE) {
         thisSegment = _inventory[++inventoryIndex];
       }
 
-      // might be useful to infer the bufferedStart of thisSegment
+      /**
+       * Contains the end of the last garbage-collected segment before
+       * thisSegment.
+       * Might be useful to infer later the bufferedStart of thisSegment.
+       *
+       * -1 if no segment have been garbage-collected before thisSegment.
+       * @type {Number}
+       */
       var lastDeletedSegmentEnd = -1;
 
       // remove garbage-collected segments
-      // (not in that range nor in the previous one)
+      // (not in that TimeRange nor in the previous one)
       var numberOfSegmentToDelete = inventoryIndex - indexBefore;
-      if (numberOfSegmentToDelete) {
+      if (numberOfSegmentToDelete > 0) {
+        // last garbage-collected segment
         var lastDeletedSegment = _inventory[indexBefore + numberOfSegmentToDelete - 1];
         lastDeletedSegmentEnd = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(lastDeletedSegment.bufferedEnd, lastDeletedSegment.end);
+
+        // mutate inventory
         _inventory.splice(indexBefore, numberOfSegmentToDelete);
         inventoryIndex = indexBefore;
       }
 
-      // if no segment left for that range (or any other one), quit
-      if (!thisSegment) {
+      // if no segment is left for that range (or any other one), quit
+      if (thisSegment == null) {
         return;
       }
 
-      // if the first segment past the start is actually outside that range,
-      // skip the following part
+      // Infer the bufferedStart for this segment, and the bufferedStart and
+      // bufferedEnd for the following segments included in that range.
+      //
+      // If the current segment is actually completely outside that range (it
+      // is contained in one of the next one), skip that part.
       if (rangeEnd - __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
 
         // set the bufferedStart of the first segment in that range
         if (thisSegment.bufferedStart != null && thisSegment.bufferedStart < rangeStart) {
-          // the segment appears to have been partially garbage collected.
+          // the segment appears to have been partially garbage collected:
           // Update bufferedStart
           thisSegment.bufferedStart = rangeStart;
         } else if (thisSegment.bufferedStart == null) {
-          if (lastDeletedSegmentEnd !== -1 && lastDeletedSegmentEnd > rangeStart) {
-            if (thisSegment.bufferedStart - lastDeletedSegmentEnd <= MAX_BUFFERED_DISTANCE) {
-              thisSegment.bufferedStart = lastDeletedSegmentEnd;
-            }
+          if (lastDeletedSegmentEnd !== -1 && lastDeletedSegmentEnd > rangeStart && thisSegment.start - lastDeletedSegmentEnd <= MAX_BUFFERED_DISTANCE) {
+            thisSegment.bufferedStart = lastDeletedSegmentEnd;
           } else if (thisSegment.start - rangeStart <= MAX_BUFFERED_DISTANCE) {
             thisSegment.bufferedStart = rangeStart;
           } else {
@@ -72818,29 +72877,29 @@ var SegmentBookkeeper = function () {
         }
 
         thisSegment = _inventory[++inventoryIndex];
-      }
 
-      // make contiguous until first segment outside that range
-      // (i.e until the start of the next segment can not constitute a segment
-      // in that range == less than MINIMUM_SEGMENT_SIZE into that range)
-      while (thisSegment && rangeEnd - __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
-        var prevSegment = _inventory[inventoryIndex - 1];
+        // Make contiguous until first segment outside that range
+        // (i.e until the start of the next segment can not constitute a segment
+        // in that range == less than MINIMUM_SEGMENT_SIZE into that range)
+        while (thisSegment && rangeEnd - __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__utils_takeFirstSet_js__["a" /* default */])(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
+          var prevSegment = _inventory[inventoryIndex - 1];
 
-        // those segments are contiguous, we have no way to infer their real end
-        if (prevSegment.bufferedEnd == null) {
-          prevSegment.bufferedEnd = prevSegment.end;
+          // those segments are contiguous, we have no way to infer their real
+          // end
+          if (prevSegment.bufferedEnd == null) {
+            prevSegment.bufferedEnd = prevSegment.end;
+          }
+
+          thisSegment.bufferedStart = prevSegment.bufferedEnd;
+          thisSegment = _inventory[++inventoryIndex];
         }
-
-        thisSegment.bufferedStart = prevSegment.bufferedEnd;
-        thisSegment = _inventory[++inventoryIndex];
       }
 
       // update the bufferedEnd of the last segment in that range
-      // Note: lastSegmentInRange can be undefined
       var lastSegmentInRange = _inventory[inventoryIndex - 1];
       if (lastSegmentInRange) {
         if (lastSegmentInRange.bufferedEnd != null && lastSegmentInRange.bufferedEnd > rangeEnd) {
-          // the segment appears to have been partially garbage collected.
+          // the segment appears to have been partially garbage collected:
           // Update bufferedEnd
           lastSegmentInRange.bufferedEnd = rangeEnd;
         } else if (lastSegmentInRange.bufferedEnd == null) {
@@ -72880,8 +72939,8 @@ var SegmentBookkeeper = function () {
     // This should be properly managed in this method, but it is not in some
     // other methods of this class, so I decided to not one of those to the
     // inventory by security
-    if (true) {
-      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_assert_js__["a" /* default */])(end != null, "SegmentBookkeeper: ending time of the segment not defined");
+    if (true && end == null) {
+      throw new Error("SegmentBookkeeper: ending time of the segment not defined");
     } else if (end == null) {
       // This leads to excessive re-downloads of segment without an ending time.
       return;
@@ -72995,7 +73054,7 @@ var SegmentBookkeeper = function () {
       return;
     }
 
-    if (segment.end == null) {
+    if (end == null) {
       if (firstSegment.start === start) {
         // same beginning, unknown end, just replace
         // Case 1:
@@ -73024,7 +73083,7 @@ var SegmentBookkeeper = function () {
       return;
     }
 
-    if (firstSegment.start >= segment.end) {
+    if (firstSegment.start >= end) {
       // our segment is before, put it before
       // Case 1:
       //  firstSegment :      |====|
@@ -73044,7 +73103,7 @@ var SegmentBookkeeper = function () {
       //
       // *|??? = unknown end
       this._inventory.splice(0, 0, newSegment);
-    } else if (firstSegment.end /* - SEGMENT_EPSILON */ <= segment.end) {
+    } else if (firstSegment.end /* - SEGMENT_EPSILON */ <= end) {
       // Our segment is bigger, replace the first
       // Case 1:
       //  firstSegment :   |===|
@@ -73066,7 +73125,7 @@ var SegmentBookkeeper = function () {
       // newSegment   : |=====|
       //
       // *|??? = unknown end
-      firstSegment.start = segment.end;
+      firstSegment.start = end;
       this._inventory.splice(0, 0, newSegment);
     }
   };
@@ -73130,12 +73189,12 @@ var SegmentBookkeeper = function () {
     // -- Helpers
 
     /*
-    * Check if segment can be evaluated.
-    * @param {Object} currentSegmentI
-    * @param {Object} prevSegmentI
-    * @param {Object} nextSegmentI
-    * @returns {Boolean}
-    */
+     * Check if segment can be evaluated.
+     * @param {Object} currentSegmentI
+     * @param {Object} prevSegmentI
+     * @param {Object} nextSegmentI
+     * @returns {Boolean}
+     */
     function hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI) {
       if (prevSegmentI && prevSegmentI.bufferedEnd == null || currentSegmentI.bufferedStart == null) {
         return false;
@@ -73149,16 +73208,20 @@ var SegmentBookkeeper = function () {
     }
 
     /* Returns true if the segment given can be played for the wanted range.
-    * @param {Object} currentSegmentI
-    * @param {Object} prevSegmentI
-    * @param {Object} nextSegmentI
-    * @returns {Boolean}
-    */
-    function hasWantedRange(wantedRange, currentSegmentI, prevSegmentI, nextSegmentI) {
-      if (!prevSegmentI || prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart) {
+     * @param {Object} _wantedRange
+     * @param {Object} currentSegmentI
+     * @param {Object} prevSegmentI
+     * @param {Object} nextSegmentI
+     * @returns {Boolean}
+     */
+    function hasWantedRange(_wantedRange, currentSegmentI, prevSegmentI, nextSegmentI) {
+      if (!prevSegmentI || prevSegmentI.bufferedEnd == null || currentSegmentI.bufferedStart == null || prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart) {
+        if (currentSegmentI.bufferedStart == null) {
+          return false;
+        }
         var timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
-        if (wantedRange.start > currentSegmentI.start) {
-          var wantedDiff = currentSegmentI.bufferedStart - wantedRange.start;
+        if (_wantedRange.start > currentSegmentI.start) {
+          var wantedDiff = currentSegmentI.bufferedStart - _wantedRange.start;
           if (wantedDiff > 0 && timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
@@ -73171,10 +73234,13 @@ var SegmentBookkeeper = function () {
 
       if (currentSegmentI.end === null) {
         return false;
-      } else if (!nextSegmentI || nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd) {
+      } else if (!nextSegmentI || nextSegmentI.bufferedStart == null || currentSegmentI.bufferedEnd == null || nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd) {
+        if (currentSegmentI.bufferedEnd == null) {
+          return false;
+        }
         var _timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
-        if (wantedRange.end < currentSegmentI.end) {
-          var _wantedDiff = wantedRange.end - currentSegmentI.bufferedEnd;
+        if (_wantedRange.end < currentSegmentI.end) {
+          var _wantedDiff = _wantedRange.end - currentSegmentI.bufferedEnd;
           if (_wantedDiff > 0 && _timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             return false;
           }
@@ -73234,7 +73300,7 @@ var KEY_STATUS_ERRORS = {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__config_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__compat__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__errors__ = __webpack_require__(45);
 /**
@@ -73298,7 +73364,7 @@ function getCachedKeySystemAccess(keySystems) {
   if (foundKeySystem) {
     return {
       keySystem: foundKeySystem,
-      keySystemAccess: new __WEBPACK_IMPORTED_MODULE_3__compat__["g" /* KeySystemAccess */]($keySystem, $mediaKeys, $mediaKeySystemConfiguration)
+      keySystemAccess: new __WEBPACK_IMPORTED_MODULE_3__compat__["g" /* KeySystemAccess */]($keySystem.type, $mediaKeys, $mediaKeySystemConfiguration)
     };
   } else {
     return null;
@@ -73630,7 +73696,7 @@ function trySettingServerCertificate(mediaKeys, serverCertificate, errorStream) 
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__compat_events_js__ = __webpack_require__(53);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__errors__ = __webpack_require__(45);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__constants_js__ = __webpack_require__(766);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__globals_js__ = __webpack_require__(148);
 /**
  * Copyright 2015 CANAL+ Group
@@ -73961,7 +74027,7 @@ function manageSessionCreation(mediaKeys, mksConfig, keySystem, initDataType, in
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_castToObservable_js__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__abstract_js__ = __webpack_require__(358);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__hash_init_data_js__ = __webpack_require__(359);
@@ -74143,7 +74209,7 @@ var InMemorySessionsSet = function (_SessionSet) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_assert__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__abstract_js__ = __webpack_require__(358);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__hash_init_data_js__ = __webpack_require__(359);
@@ -74330,7 +74396,7 @@ var PersistedSessionsSet = function (_SessionSet) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return disposeMediaKeys; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compat__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__globals_js__ = __webpack_require__(148);
 /**
@@ -74420,7 +74486,7 @@ function disposeMediaKeys(videoElement) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find__ = __webpack_require__(67);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_array_find___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_array_find__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_array_includes_js__ = __webpack_require__(46);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_url__ = __webpack_require__(74);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compat__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__errors__ = __webpack_require__(45);
@@ -75429,7 +75495,7 @@ function createPipeline(_ref) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__errors_EncryptedMediaError_js__ = __webpack_require__(151);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__compat_events_js__ = __webpack_require__(53);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__eme__ = __webpack_require__(149);
 /**
@@ -75480,7 +75546,7 @@ function createEMEIfKeySystems(videoElement, keySystems, errorStream) {
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = createMediaErrorStream;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__errors_MediaError_js__ = __webpack_require__(81);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_rx_onEvent_js__ = __webpack_require__(161);
 /**
  * Copyright 2015 CANAL+ Group
@@ -75547,7 +75613,7 @@ function createMediaErrorStream(videoElement) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_object_assign___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_object_assign__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__config_js__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_array_includes_js__ = __webpack_require__(46);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__utils_assert__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__utils_retry__ = __webpack_require__(370);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__utils_rx_throttle_js__ = __webpack_require__(840);
@@ -76211,7 +76277,7 @@ function getInitialTime(manifest, startAt) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__errors_MediaError_js__ = __webpack_require__(81);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__compat__ = __webpack_require__(22);
 /**
  * Copyright 2015 CANAL+ Group
@@ -76547,7 +76613,7 @@ var ImageSourceBuffer = function (_AbstractSourceBuffer) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return createSourceBuffer; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return disposeSourceBuffer; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__errors_MediaError_js__ = __webpack_require__(81);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__text__ = __webpack_require__(788);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__image__ = __webpack_require__(783);
 /**
@@ -77132,10 +77198,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__config_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__compat_events_js__ = __webpack_require__(53);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__abstract_js__ = __webpack_require__(150);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__buffer_manager_js__ = __webpack_require__(785);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__parsers_js__ = __webpack_require__(787);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_log_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compat_events_js__ = __webpack_require__(53);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__abstract_js__ = __webpack_require__(150);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__buffer_manager_js__ = __webpack_require__(785);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__parsers_js__ = __webpack_require__(787);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -77169,6 +77236,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 
+
 var MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL = __WEBPACK_IMPORTED_MODULE_2__config_js__["a" /* default */].MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL;
 
 /**
@@ -77178,9 +77246,9 @@ var MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL = __WEBPACK_IMPORTED_MODULE_2__confi
  */
 
 function generateClock(videoElement) {
-  var seeking$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__compat_events_js__["m" /* onSeeking$ */])(videoElement);
-  var seeked$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__compat_events_js__["n" /* onSeeked$ */])(videoElement);
-  var ended$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__compat_events_js__["o" /* onEnded$ */])(videoElement);
+  var seeking$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__compat_events_js__["m" /* onSeeking$ */])(videoElement);
+  var seeked$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__compat_events_js__["n" /* onSeeked$ */])(videoElement);
+  var ended$ = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__compat_events_js__["o" /* onEnded$ */])(videoElement);
 
   var manualRefresh$ = __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__["Observable"].merge(seeked$, ended$);
   var autoRefresh$ = __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__["Observable"].interval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL).startWith(null);
@@ -77221,7 +77289,7 @@ var HTMLTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
     _this._videoElement = videoElement;
     _this._textTrackElement = textTrackElement;
     _this._destroy$ = new __WEBPACK_IMPORTED_MODULE_0_rxjs_Subject__["Subject"]();
-    _this._buffer = new __WEBPACK_IMPORTED_MODULE_5__buffer_manager_js__["a" /* default */]();
+    _this._buffer = new __WEBPACK_IMPORTED_MODULE_6__buffer_manager_js__["a" /* default */]();
     _this._currentElement = null;
     _this._track = null;
 
@@ -77254,10 +77322,12 @@ var HTMLTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
   /**
    * Append text tracks.
    * @param {Object} data
+   * @param {string} data.type
    * @param {string} data.data
    * @param {string} data.language
    * @param {Number} data.timescale
    * @param {Number} data.start
+   * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
 
@@ -77268,17 +77338,19 @@ var HTMLTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
         timescaledEnd = data.end,
         dataString = data.data,
         type = data.type,
-        language = data.language;
+        language = data.language,
+        timeOffset = data.timeOffset;
 
     if (timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
+      __WEBPACK_IMPORTED_MODULE_3__utils_log_js__["a" /* default */].warn("Invalid text track appended: the start time is inferior or equal to the end time.");
       return;
     }
 
     var startTime = timescaledStart / timescale;
     var endTime = timescaledEnd != null ? timescaledEnd / timescale : undefined;
 
-    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__parsers_js__["a" /* default */])(type, dataString, language);
+    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_7__parsers_js__["a" /* default */])(type, dataString, timeOffset, language);
     var start = startTime;
     var end = endTime != null ? endTime : cues[cues.length - 1].end;
     this._buffer.insert(cues, start, end);
@@ -77307,7 +77379,7 @@ var HTMLTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
   };
 
   return HTMLTextTrackSourceBuffer;
-}(__WEBPACK_IMPORTED_MODULE_4__abstract_js__["a" /* AbstractSourceBuffer */]);
+}(__WEBPACK_IMPORTED_MODULE_5__abstract_js__["a" /* AbstractSourceBuffer */]);
 
 /* harmony default export */ __webpack_exports__["default"] = (HTMLTextTrackSourceBuffer);
 
@@ -77356,17 +77428,18 @@ if (true) {
 /**
  * @param {string} type
  * @param {string} data
+ * @param {Number} timeOffset
  * @param {string} [language]
  * @returns {Array.<Object>}
  * @throws Error - Throw if no parser is found for the given type
  */
-function parseTextTrackToElements(type, data, language) {
+function parseTextTrackToElements(type, data, timeOffset, language) {
   var parser = htmlParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
-  return parser(data, language);
+  return parser(data, timeOffset, language);
 }
 
 /***/ }),
@@ -77413,7 +77486,7 @@ var NativeTextSourceBuffer = HAS_NATIVE_MODE ? __webpack_require__(789).default 
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__compat__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__abstract_js__ = __webpack_require__(150);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__parsers_js__ = __webpack_require__(790);
@@ -77481,6 +77554,7 @@ var NativeTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
    * @param {string} data.language
    * @param {Number} data.timescale
    * @param {Number} data.start
+   * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
 
@@ -77493,7 +77567,8 @@ var NativeTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
         timescaledEnd = data.end,
         dataString = data.data,
         type = data.type,
-        language = data.language;
+        language = data.language,
+        timeOffset = data.timeOffset;
 
 
     if (timescaledEnd - timescaledStart <= 0) {
@@ -77505,7 +77580,7 @@ var NativeTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
     var startTime = timescaledStart / timescale;
     var endTime = timescaledEnd != null ? timescaledEnd / timescale : undefined;
 
-    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__parsers_js__["a" /* default */])(type, dataString, language);
+    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__parsers_js__["a" /* default */])(type, dataString, timeOffset, language);
     if (cues.length > 0) {
       var firstCue = cues[0];
 
@@ -77619,18 +77694,19 @@ if (true) {
 /**
  * @param {string} type
  * @param {string} data
+ * @param {Number} timeOffset
  * @param {string} [language]
  * @returns {Array.<VTTCue>}
  * @throws Error - Throw if no parser is found for the given type
  */
-function parseTextTrackToCues(type, data, language) {
+function parseTextTrackToCues(type, data, timeOffset, language) {
   var parser = nativeParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
 
-  return parser(data, language);
+  return parser(data, timeOffset, language);
 }
 
 /***/ }),
@@ -77727,7 +77803,7 @@ var ManualTimeRanges = function () {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -77807,7 +77883,7 @@ var SpeedManager = function SpeedManager(videoElement, speed$, clock$, _ref) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__config_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_ranges_js__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__compat__ = __webpack_require__(22);
 /**
@@ -77864,7 +77940,7 @@ function StallingManager(videoElement, manifest, timings$) {
     // calculate a stalled state. This is useful for some
     // implementation that might drop an injected segment, or in
     // case of small discontinuity in the stream.
-    if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__compat__["n" /* isPlaybackStuck */])(timing)) {
+    if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__compat__["n" /* isPlaybackStuck */])(timing.currentTime, timing.currentRange, timing.state, !!timing.stalled)) {
       __WEBPACK_IMPORTED_MODULE_1__utils_log__["a" /* default */].warn("after freeze seek", currentTime, timing.range);
       videoElement.currentTime = currentTime;
     } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
@@ -77875,7 +77951,7 @@ function StallingManager(videoElement, manifest, timings$) {
   }).share().map(function (timing) {
     return timing.stalled;
   }).distinctUntilChanged(function (wasStalled, isStalled) {
-    return !wasStalled && !isStalled || wasStalled && isStalled && wasStalled.state === isStalled.state;
+    return !wasStalled && !isStalled || !!wasStalled && !!isStalled && wasStalled.state === isStalled.state;
   });
 }
 
@@ -78231,7 +78307,7 @@ RequestError.prototype = new Error();
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_37_rxjs_add_operator_takeUntil___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_37_rxjs_add_operator_takeUntil__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_38_rxjs_add_operator_timeout__ = __webpack_require__(693);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_38_rxjs_add_operator_timeout___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_38_rxjs_add_operator_timeout__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__utils_log_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_39__utils_log_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_40__core_api__ = __webpack_require__(757);
 /**
  * Copyright 2015 CANAL+ Group
@@ -78537,7 +78613,7 @@ var Manifest = function () {
 
     // Will be needed here
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
-    this.availabilityStartTime = args.availabilityStartTime;
+    this.availabilityStartTime = args.availabilityStartTime || 0;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
   }
@@ -79848,7 +79924,7 @@ parser.parseFromDocument = parseFromDocument;
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return parseMPD; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_assert_js__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__helpers_js__ = __webpack_require__(361);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__filters_js__ = __webpack_require__(811);
@@ -79914,19 +79990,11 @@ function parseMPD(root, contentProtectionParser) {
     var lastRef = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__helpers_js__["b" /* getLastLiveTimeReference */])(videoAdaptation);
 
     if (true) {
-      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_assert_js__["a" /* default */])(lastRef);
       __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_assert_js__["a" /* default */])(parsed.availabilityStartTime);
     }
 
-    // if last time not found / something was invalid in the indexes, set a
-    // default live time.
-    if (!lastRef) {
-      __WEBPACK_IMPORTED_MODULE_0__utils_log__["a" /* default */].warn("Live edge not deduced from manifest, setting a default one");
-      lastRef = Date.now() / 1000 - 60;
-    }
-
     parsed.availabilityStartTime = parsed.availabilityStartTime.getTime() / 1000;
-    parsed.presentationLiveGap = Date.now() / 1000 - (lastRef + parsed.availabilityStartTime);
+    parsed.presentationLiveGap = lastRef != null ? Date.now() / 1000 - (lastRef + parsed.availabilityStartTime) : 10;
   }
 
   return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__filters_js__["a" /* filterMPD */])(parsed);
@@ -80494,6 +80562,7 @@ function TextTrackLoader(_ref) {
  *
  * @param {Object} infos
  * @param {Segment} infos.segment
+ * @param {Adaptation} infos.manifest
  * @param {Adaptation} infos.adaptation
  * @param {Representation} infos.representation
  * @param {Object} infos.init
@@ -80504,6 +80573,7 @@ function TextTrackParser(_ref2) {
       segment = _ref2.segment,
       adaptation = _ref2.adaptation,
       representation = _ref2.representation,
+      manifest = _ref2.manifest,
       init = _ref2.init;
   var language = adaptation.language;
   var isInit = segment.isInit,
@@ -80550,7 +80620,8 @@ function TextTrackParser(_ref2) {
       start: 0,
       end: 0,
       timescale: segmentInfos.timescale || 0,
-      data: []
+      data: [],
+      timeOffset: manifest.availabilityStartTime // TODO + period.start
     };
   } else {
     // if not init
@@ -80558,7 +80629,8 @@ function TextTrackParser(_ref2) {
       start: segmentInfos.time,
       end: segmentInfos.time + segmentInfos.duration,
       language: language,
-      timescale: segmentInfos.timescale
+      timescale: segmentInfos.timescale,
+      timeOffset: manifest.availabilityStartTime // TODO + period.start
     };
     if (isMP4) {
       var _representation$codec = representation.codec,
@@ -80907,11 +80979,13 @@ var WSX_REG = /\.wsx?(\?token=\S+)?/;
         segmentData.start = segmentInfos.time;
         segmentData.end = segmentInfos.duration != null ? segmentInfos.time + segmentInfos.duration : undefined;
         segmentData.timescale = segmentInfos.timescale;
+        segmentData.timeOffset = segmentData.start / segmentData.timescale;
       } else {
         // vod is simple WebVTT or TTML text
         segmentData.start = segment.time;
         segmentData.end = segment.duration != null ? segment.time + segment.duration : undefined;
         segmentData.timescale = segment.timescale;
+        segmentData.timeOffset = segmentData.start / segmentData.timescale;
       }
 
       if (isMP4) {
@@ -81011,7 +81085,7 @@ var WSX_REG = /\.wsx?(\?token=\S+)?/;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__parsers_containers_isobmff_js__ = __webpack_require__(106);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mp4_js__ = __webpack_require__(155);
 /**
@@ -81673,33 +81747,56 @@ var STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
 var PARAG = /\s*<p class=([^>]+)>(.*)/i;
 var START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
-// Really basic CSS parsers using regular-expressions.
-function classCSSRules(str) {
+/**
+ * Returns classnames for every languages.
+ * @param {string} str
+ * @returns {Object}
+ */
+function getClassNameByLang(str) {
   var ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   var langs = {};
   var m = void 0;
   while (m = ruleRe.exec(str)) {
     var name = m[1];
-    var lang = propCss(m[2], "lang");
-    if (name && lang) {
+    var lang = getCSSProperty(m[2], "lang");
+    if (name != null && lang != null) {
       langs[lang] = name;
     }
   }
   return langs;
 }
 
-function pCSSRules(str) {
+/**
+ * Returns the rules defined for the P element.
+ * Empty string if not found.
+ * @param {string} str - The entire styling part.
+ * @returns {string}
+ */
+function getPCSSRules(str) {
   var pRuleRegex = /p\s*{([^}]*)}/gi;
   var rule = pRuleRegex.exec(str);
+  if (!rule) {
+    return "";
+  }
   return rule[1];
 }
 
-function propCss(str, name) {
-  return str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+/**
+ * @param {string} str - entire CSS rule
+ * @param {string} name - name of the property
+ * @returns {string|null} - value of the property. Null if not found.
+ */
+function getCSSProperty(str, name) {
+  var matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
+  return matches ? matches[1] : null;
 }
 
+/**
+ * @param {string} text
+ * @returns {string}
+ */
 function decodeEntities(text) {
-  return text.replace(HTML_ENTITIES, function ($0, $1) {
+  return text.replace(HTML_ENTITIES, function (_, $1) {
     return String.fromCharCode($1);
   });
 }
@@ -81712,22 +81809,22 @@ function decodeEntities(text) {
  * may not work for every sami input.
  *
  * @param {string} smi
+ * @param {Number} timeOffset
  * @param {string} lang
  */
-function parseSami(smi, lang) {
+function parseSami(smi, timeOffset, lang) {
   var syncOpen = /<sync[ >]/ig;
   var syncClose = /<sync[ >]|<\/body>/ig;
 
   var subs = [];
 
-  var _smi$match = smi.match(STYLE),
-      css = _smi$match[1];
+  var styleMatches = smi.match(STYLE);
+  var css = styleMatches ? styleMatches[1] : "";
+  var up = void 0;
+  var to = syncClose.exec(smi);
 
-  var up = void 0,
-      to = syncClose.exec(smi);
-
-  var langs = classCSSRules(css);
-  var pCSS = pCSSRules(css);
+  var langs = getClassNameByLang(css);
+  var pCSS = getPCSSRules(css);
   var klass = langs[lang];
 
   __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_assert__["a" /* default */])(klass, "sami: could not find lang " + lang + " in CSS");
@@ -81753,12 +81850,12 @@ function parseSami(smi, lang) {
       throw new Error("parse error (sync time attribute NaN)");
     }
 
-    appendSub(subs, str.split("\n"), start / 1000);
+    appendToSubs(str.split("\n"), start / 1000);
   }
 
   return subs;
 
-  function appendSub(subs, lines, start) {
+  function appendToSubs(lines, start) {
     var i = lines.length;
     while (--i >= 0) {
       var paragraphInfos = lines[i].match(PARAG);
@@ -81783,7 +81880,7 @@ function parseSami(smi, lang) {
         var divEl = document.createElement("DIV");
         divEl.className = "rxp-texttrack-div";
         divEl.style.position = "absolute";
-        divEl.style.bottom = 0;
+        divEl.style.bottom = "0";
         divEl.style.width = "100%";
         divEl.style.color = "#fff";
         divEl.style.textShadow = "-1px -1px 0 #000," + "1px -1px 0 #000," + "-1px 1px 0 #000," + "1px 1px 0 #000";
@@ -81808,7 +81905,11 @@ function parseSami(smi, lang) {
         divEl.appendChild(pEl);
         wrapperEl.appendChild(divEl);
 
-        subs.push({ element: wrapperEl, start: start });
+        subs.push({
+          element: wrapperEl,
+          start: start + timeOffset,
+          end: -1 // Will be updated on a following iteration
+        });
       }
     }
   }
@@ -81851,7 +81952,8 @@ var START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
 /**
  * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
- * @param {Array.<Object>} - Objects containing the start, end and text.
+ * @param {Array.<Object>} cuesArray - Objects containing the start, end and
+ * text.
  * @returns {Array.<VTTCue>}
  */
 function createCuesFromArray(cuesArray) {
@@ -81862,7 +81964,7 @@ function createCuesFromArray(cuesArray) {
         end = _cuesArray$i.end,
         text = _cuesArray$i.text;
 
-    if (text) {
+    if (text && end != null) {
       var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__compat__["p" /* makeCue */])(start, end, text);
       if (cue != null) {
         nativeCues.push(cue);
@@ -81872,27 +81974,42 @@ function createCuesFromArray(cuesArray) {
   return nativeCues;
 }
 
-// Really basic CSS parsers using regular-expressions.
-function rulesCss(str) {
+/**
+ * Returns classnames for every languages.
+ * @param {string} str
+ * @returns {Object}
+ */
+function getClassNameByLang(str) {
   var ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   var langs = {};
   var m = void 0;
   while (m = ruleRe.exec(str)) {
     var name = m[1];
-    var lang = propCss(m[2], "lang");
-    if (name && lang) {
+    var lang = getCSSProperty(m[2], "lang");
+    if (name != null && lang != null) {
       langs[lang] = name;
     }
   }
   return langs;
 }
 
-function propCss(str, name) {
-  return str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"))[1];
+/**
+ * @param {string} str - entire CSS rule
+ * @param {string} name - name of the property
+ * @returns {string|null} - value of the property. Null if not found.
+ */
+function getCSSProperty(str, name) {
+  var matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
+  return matches ? matches[1] : null;
 }
 
+/**
+ * Decode HMTL formatting into a string.
+ * @param {string} text
+ * @returns {string}
+ */
 function decodeEntities(text) {
-  return text.replace(BR, "\n").replace(HTML_ENTITIES, function ($0, $1) {
+  return text.replace(BR, "\n").replace(HTML_ENTITIES, function (_, $1) {
     return String.fromCharCode($1);
   });
 }
@@ -81905,28 +82022,28 @@ function decodeEntities(text) {
  * may not work for every sami input.
  *
  * @param {string} smi
+ * @param {Number} timeOffset
  * @param {string} lang
  */
-function parseSami(smi, lang) {
-  var syncOp = /<sync[ >]/ig;
-  var syncCl = /<sync[ >]|<\/body>/ig;
+function parseSami(smi, timeOffset, lang) {
+  var syncOpen = /<sync[ >]/ig;
+  var syncClose = /<sync[ >]|<\/body>/ig;
 
   var subs = [];
 
-  var _smi$match = smi.match(STYLE),
-      css = _smi$match[1];
+  var styleMatches = smi.match(STYLE);
+  var css = styleMatches ? styleMatches[1] : "";
+  var up = void 0;
+  var to = syncClose.exec(smi);
 
-  var up = void 0,
-      to = syncCl.exec(smi);
-
-  var langs = rulesCss(css);
+  var langs = getClassNameByLang(css);
   var klass = langs[lang];
 
   __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_assert__["a" /* default */])(klass, "sami: could not find lang " + lang + " in CSS");
 
   for (;;) {
-    up = syncOp.exec(smi);
-    to = syncCl.exec(smi);
+    up = syncOpen.exec(smi);
+    to = syncClose.exec(smi);
     if (!up && !to) {
       break;
     }
@@ -81945,14 +82062,14 @@ function parseSami(smi, lang) {
       throw new Error("parse error (sync time attribute NaN)");
     }
 
-    appendSub(subs, str.split("\n"), start / 1000);
+    appendToSubs(str.split("\n"), start / 1000);
   }
 
   return createCuesFromArray(subs);
 
-  function appendSub(subs, lines, start) {
-    var i = lines.length,
-        m = void 0;
+  function appendToSubs(lines, start) {
+    var i = lines.length;
+    var m = void 0;
     while (--i >= 0) {
       m = lines[i].match(PARAG);
       if (!m) {
@@ -81971,7 +82088,10 @@ function parseSami(smi, lang) {
       if (txt === "&nbsp;") {
         subs[subs.length - 1].end = start;
       } else {
-        subs.push({ text: decodeEntities(txt), start: start });
+        subs.push({
+          text: decodeEntities(txt),
+          start: start + timeOffset
+        });
       }
     }
   }
@@ -82012,9 +82132,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 /**
  * @param {string}
+ * @param {Number} timeOffset
  * @returns {Array.<Object>}
  */
-function parseSRTStringToHTML(srtStr) {
+function parseSRTStringToHTML(srtStr, timeOffset) {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   var lines = srtStr.split(/\r\n|\n|\r/);
@@ -82035,7 +82156,7 @@ function parseSRTStringToHTML(srtStr) {
 
   var cues = [];
   for (var _i = 0; _i < cueBlocks.length; _i++) {
-    var cue = parseCue(cueBlocks[_i]);
+    var cue = parseCue(cueBlocks[_i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -82045,20 +82166,25 @@ function parseSRTStringToHTML(srtStr) {
 
 /**
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {Object}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   var _cueLines$1$split = cueLines[1].split(" --> "),
       startString = _cueLines$1$split[0],
       endString = _cueLines$1$split[1];
 
   var payloadLines = cueLines.slice(2, cueLines.length);
-  if (!startString | !endString | !payloadLines.length) {
+  if (!startString || !endString || !payloadLines.length) {
     return null;
   }
 
   var start = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__parseTimestamp_js__["a" /* default */])(startString);
   var end = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__parseTimestamp_js__["a" /* default */])(endString);
+
+  if (start == null || end == null) {
+    return null;
+  }
 
   var pEl = document.createElement("div");
   pEl.className = "rxp-texttrack-p";
@@ -82079,8 +82205,8 @@ function parseCue(cueLines) {
   }
 
   return {
-    start: start,
-    end: end,
+    start: start + timeOffset,
+    end: end + timeOffset,
     element: pEl
   };
 }
@@ -82123,7 +82249,7 @@ function generateSpansFromSRTText(text) {
         var _spanChild2 = _loop(currentNode);
         _spanChild2.style.textDecoration = "underline";
         span.appendChild(_spanChild2);
-      } else if (currentNode.nodeName === "FONT" && currentNode.color) {
+      } else if (currentNode.nodeName === "FONT" && currentNode.color != null) {
         var _spanChild3 = _loop(currentNode);
         _spanChild3.style.color = currentNode.color;
         span.appendChild(_spanChild3);
@@ -82173,9 +82299,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
  * Parse whole srt file into an array of cues, to be inserted in a video's
  * TrackElement.
  * @param {string}
+ * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
-function parseSRTStringToVTTCues(srtStr) {
+function parseSRTStringToVTTCues(srtStr, timeOffset) {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   var lines = srtStr.split(/\r\n|\n|\r/);
@@ -82196,7 +82323,7 @@ function parseSRTStringToVTTCues(srtStr) {
 
   var cues = [];
   for (var _i = 0; _i < cueBlocks.length; _i++) {
-    var cue = parseCue(cueBlocks[_i]);
+    var cue = parseCue(cueBlocks[_i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -82207,22 +82334,26 @@ function parseSRTStringToVTTCues(srtStr) {
 /**
  * Parse cue block into a cue.
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {TextTrackCue|VTTCue|null}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   var _cueLines$1$split = cueLines[1].split(" --> "),
       startString = _cueLines$1$split[0],
       endString = _cueLines$1$split[1];
 
   var payloadLines = cueLines.slice(2, cueLines.length);
-  if (!startString | !endString | !payloadLines.length) {
+  if (!startString || !endString || !payloadLines.length) {
     return null;
   }
 
   var start = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__parseTimestamp_js__["a" /* default */])(startString);
   var end = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__parseTimestamp_js__["a" /* default */])(endString);
+  if (start == null || end == null) {
+    return null;
+  }
   var payload = payloadLines.join("\n");
-  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__compat_index_js__["p" /* makeCue */])(start, end, payload);
+  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__compat_index_js__["p" /* makeCue */])(start + timeOffset, end + timeOffset, payload);
 }
 
 /***/ }),
@@ -82349,7 +82480,7 @@ function applyTextStyle(element, style) {
       var isFirstArgANumber = /^[0-9]/.test(outlineData[0]);
 
       // XOR-ing to be sure we get what we have
-      if (isFirstArgAColor ^ isFirstArgANumber) {
+      if (isFirstArgAColor !== isFirstArgANumber) {
         if (isFirstArgAColor) {
           var _outlineColor = ttmlColorToCSSColor(outlineData[0]);
           var _thickness2 = outlineData[1];
@@ -82675,14 +82806,14 @@ function generateTextContent(paragraph, regions, styles, paragraphStyle, shouldT
 }
 
 /**
-* @param {Element} paragraph
-* @param {Element} body
-* @param {Array.<Object>} regions
-* @param {Array.<Object>} styles
-* @param {Object} styles
-* @param {Boolean} shouldTrimWhiteSpace
-* @returns {HTMLElement}
-*/
+ * @param {Element} paragraph
+ * @param {Element} body
+ * @param {Array.<Object>} regions
+ * @param {Array.<Object>} styles
+ * @param {Object} styles
+ * @param {Boolean} shouldTrimWhiteSpace
+ * @returns {HTMLElement}
+ */
 function createElement(paragraph, body, regions, styles, paragraphStyle, shouldTrimWhiteSpace) {
   var divs = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__getParentElementsByTagName_js__["a" /* default */])(paragraph, "div");
 
@@ -82794,7 +82925,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
  * but we can still do better.
  * @param {string} str
  * @returns {Array.<Object>} */
-function parseTTMLStringToDIV(str) {
+function parseTTMLStringToDIV(str, timeOffset) {
   var ret = [];
   var xml = new DOMParser().parseFromString(str, "text/xml");
 
@@ -82814,37 +82945,45 @@ function parseTTMLStringToDIV(str) {
     // construct styles array based on the xml as an optimization
     var styles = [];
     for (var i = 0; i <= styleNodes.length - 1; i++) {
-      // TODO styles referencing other styles
-      styles.push({
-        id: styleNodes[i].getAttribute("xml:id"),
-        style: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["a" /* getStylingFromElement */])(styleNodes[i])
-      });
+      var styleNode = styleNodes[i];
+      if (styleNode instanceof Element) {
+        var styleID = styleNode.getAttribute("xml:id");
+        if (styleID != null) {
+          // TODO styles referencing other styles
+          styles.push({
+            id: styleID,
+            style: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["a" /* getStylingFromElement */])(styleNode)
+          });
+        }
+      }
     }
 
     // construct regions array based on the xml as an optimization
     var regions = [];
+    for (var _i = 0; _i <= regionNodes.length - 1; _i++) {
+      var regionNode = regionNodes[_i];
+      if (regionNode instanceof Element) {
+        var regionID = regionNode.getAttribute("xml:id");
+        if (regionID != null) {
+          (function () {
+            var regionStyle = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["a" /* getStylingFromElement */])(regionNode);
 
-    var _loop = function _loop(_i) {
-      var regionId = regionNodes[_i].getAttribute("xml:id");
-      var regionStyle = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["a" /* getStylingFromElement */])(regionNodes[_i]);
-
-      var associatedStyle = regionNodes[_i].getAttribute("style");
-      if (associatedStyle) {
-        var style = styles.find(function (x) {
-          return x.id === associatedStyle;
-        });
-        if (style) {
-          regionStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, style.style, regionStyle);
+            var associatedStyle = regionNode.getAttribute("style");
+            if (associatedStyle) {
+              var style = styles.find(function (x) {
+                return x.id === associatedStyle;
+              });
+              if (style) {
+                regionStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, style.style, regionStyle);
+              }
+            }
+            regions.push({
+              id: regionID,
+              style: regionStyle
+            });
+          })();
         }
       }
-      regions.push({
-        id: regionId,
-        style: regionStyle
-      });
-    };
-
-    for (var _i = 0; _i <= regionNodes.length - 1; _i++) {
-      _loop(_i);
     }
 
     // Computing the style takes a lot of ressources.
@@ -82854,16 +82993,18 @@ function parseTTMLStringToDIV(str) {
     // TODO Compute corresponding CSS style here (as soon as we now the TTML
     // style) to speed up the process even
     // more.
-    var bodyStyle = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["b" /* getStylingAttributes */])(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* STYLE_ATTRIBUTES */], [body], styles, regions);
+    var bodyStyle = body != null ? __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["b" /* getStylingAttributes */])(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* STYLE_ATTRIBUTES */], [body], styles, regions) : __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["b" /* getStylingAttributes */])(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* STYLE_ATTRIBUTES */], [], styles, regions);
+
     for (var _i2 = 0; _i2 < textNodes.length; _i2++) {
       var paragraph = textNodes[_i2];
-      var divs = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__getParentElementsByTagName_js__["a" /* default */])(paragraph, "div");
-      var paragraphStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, bodyStyle, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["b" /* getStylingAttributes */])(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* STYLE_ATTRIBUTES */], [paragraph].concat(divs), styles, regions));
+      if (paragraph instanceof Element) {
+        var divs = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__getParentElementsByTagName_js__["a" /* default */])(paragraph, "div");
+        var paragraphStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, bodyStyle, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["b" /* getStylingAttributes */])(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* STYLE_ATTRIBUTES */], [paragraph].concat(divs), styles, regions));
 
-      var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__parseCue_js__["a" /* default */])(paragraph, 0, // offset
-      styles, regions, body, paragraphStyle, params);
-      if (cue) {
-        ret.push(cue);
+        var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__parseCue_js__["a" /* default */])(paragraph, timeOffset, styles, regions, body, paragraphStyle, params);
+        if (cue) {
+          ret.push(cue);
+        }
       }
     }
   }
@@ -82992,7 +83133,12 @@ var TEXT_ALIGN_TO_POSITION_ALIGN = {
   right: "line-right"
 };
 
-function parseTTMLStringToVTT(str) {
+/**
+ * @param {string} str
+ * @param {Number} timeOffset
+ * @returns {Array.<VTTCue>}
+ */
+function parseTTMLStringToVTT(str, timeOffset) {
   var ret = [];
   var xml = new DOMParser().parseFromString(str, "text/xml");
 
@@ -83012,53 +83158,62 @@ function parseTTMLStringToVTT(str) {
     // construct styles array based on the xml as an optimization
     var styles = [];
     for (var i = 0; i <= styleNodes.length - 1; i++) {
-      // TODO styles referencing other styles
-      styles.push({
-        id: styleNodes[i].getAttribute("xml:id"),
-        style: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["a" /* getStylingFromElement */])(styleNodes[i])
-      });
+      var styleNode = styleNodes[i];
+      if (styleNode instanceof Element) {
+        var styleID = styleNode.getAttribute("xml:id");
+        if (styleID != null) {
+          // TODO styles referencing other styles
+          styles.push({
+            id: styleID,
+            style: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["a" /* getStylingFromElement */])(styleNode)
+          });
+        }
+      }
     }
 
     // construct regions array based on the xml as an optimization
     var regions = [];
+    for (var _i = 0; _i <= regionNodes.length - 1; _i++) {
+      var regionNode = regionNodes[_i];
+      if (regionNode instanceof Element) {
+        var regionID = regionNode.getAttribute("xml:id");
+        if (regionID != null) {
+          (function () {
+            var regionStyle = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["a" /* getStylingFromElement */])(regionNode);
 
-    var _loop = function _loop(_i) {
-      var regionId = regionNodes[_i].getAttribute("xml:id");
-      var regionStyle = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["a" /* getStylingFromElement */])(regionNodes[_i]);
-
-      var associatedStyle = regionNodes[_i].getAttribute("style");
-      if (associatedStyle) {
-        var style = styles.find(function (x) {
-          return x.id === associatedStyle;
-        });
-        if (style) {
-          regionStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, style.style, regionStyle);
+            var associatedStyle = regionNode.getAttribute("style");
+            if (associatedStyle) {
+              var style = styles.find(function (x) {
+                return x.id === associatedStyle;
+              });
+              if (style) {
+                regionStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, style.style, regionStyle);
+              }
+            }
+            regions.push({
+              id: regionID,
+              style: regionStyle
+            });
+          })();
         }
       }
-      regions.push({
-        id: regionId,
-        style: regionStyle
-      });
-    };
-
-    for (var _i = 0; _i <= regionNodes.length - 1; _i++) {
-      _loop(_i);
     }
 
     // Computing the style takes a lot of ressources.
     // To avoid too much re-computation, let's compute the body style right
     // now and do the rest progressively.
-    var bodyStyle = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["b" /* getStylingAttributes */])(WANTED_STYLE_ATTRIBUTES, [body], styles, regions);
+    var bodyStyle = body ? __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["b" /* getStylingAttributes */])(WANTED_STYLE_ATTRIBUTES, [body], styles, regions) : __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["b" /* getStylingAttributes */])(WANTED_STYLE_ATTRIBUTES, [], styles, regions);
 
     for (var _i2 = 0; _i2 < textNodes.length; _i2++) {
       var paragraph = textNodes[_i2];
-      var divs = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__getParentElementsByTagName__["a" /* default */])(paragraph, "div");
-      var paragraphStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, bodyStyle, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["b" /* getStylingAttributes */])(WANTED_STYLE_ATTRIBUTES, [paragraph].concat(divs), styles, regions));
+      if (paragraph instanceof Element) {
+        var divs = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__getParentElementsByTagName__["a" /* default */])(paragraph, "div");
+        var paragraphStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, bodyStyle, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["b" /* getStylingAttributes */])(WANTED_STYLE_ATTRIBUTES, [paragraph].concat(divs), styles, regions));
 
-      var cue = parseCue(paragraph, 0, // offset
-      styles, regions, paragraphStyle, params);
-      if (cue) {
-        ret.push(cue);
+        var cue = parseCue(paragraph, timeOffset, styles, regions, paragraphStyle, params);
+        if (cue) {
+          ret.push(cue);
+        }
       }
     }
   }
@@ -83095,7 +83250,9 @@ function parseCue(paragraph, offset, styles, regions, paragraphStyle, params) {
   if (!cue) {
     return null;
   }
-  addStyle(cue, paragraphStyle);
+  if (cue instanceof VTTCue) {
+    addStyle(cue, paragraphStyle);
+  }
   return cue;
 }
 
@@ -83118,7 +83275,7 @@ function generateTextContent(paragraph, shouldTrimWhiteSpace) {
     for (var i = 0; i < childNodes.length; i++) {
       var currentNode = childNodes[i];
       if (currentNode.nodeName === "#text") {
-        var textContent = currentNode.textContent;
+        var textContent = currentNode.textContent || "";
 
         // TODO Also parse it from parent elements
         // const spaceAttr = getAttribute("xml:space", [
@@ -83349,7 +83506,7 @@ function parseTimeFromRegExp(regex, text) {
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (immutable) */ __webpack_exports__["default"] = parseWebVTT;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log_js__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_log_js__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__parseTimestamp_js__ = __webpack_require__(834);
 /**
  * Copyright 2015 CANAL+ Group
@@ -83371,19 +83528,20 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 /**
-* Parse WebVTT from text. Returns an array with:
-* - start : start of current cue, in seconds
-* - end : end of current cue, in seconds
-* - content : HTML formatted cue.
-*
-* Global style is parsed and applied to div element.
-* Specific style is parsed and applied to class element.
-*
-* @param {string} text
-* @return {Array.<Object>}
-* @throws Error - Throws if the given WebVTT string is invalid.
-*/
-function parseWebVTT(text) {
+ * Parse WebVTT from text. Returns an array with:
+ * - start : start of current cue, in seconds
+ * - end : end of current cue, in seconds
+ * - content : HTML formatted cue.
+ *
+ * Global style is parsed and applied to div element.
+ * Specific style is parsed and applied to class element.
+ *
+ * @param {string} text
+ * @param {Number} timeOffset
+ * @return {Array.<Object>}
+ * @throws Error - Throws if the given WebVTT string is invalid.
+ */
+function parseWebVTT(text, timeOffset) {
   var newLineChar = /\r\n|\n|\r/g;
   var linified = text.split(newLineChar);
   var cuesArray = [];
@@ -83422,7 +83580,7 @@ function parseWebVTT(text) {
           _i++;
         }
         var cueBlock = linified.slice(startOfCueBlock, _i);
-        var cue = parseCue(cueBlock, styleElements);
+        var cue = parseCue(cueBlock, timeOffset, styleElements);
         if (cue) {
           cuesArray.push(cue);
         }
@@ -83442,7 +83600,8 @@ function parseWebVTT(text) {
  * @returns {Boolean}
  */
 function isStartOfStyleBlock(text) {
-  return text.match(/^STYLE.*?/g);
+  return (/^STYLE.*?/g.test(text)
+  );
 }
 
 /**
@@ -83451,7 +83610,8 @@ function isStartOfStyleBlock(text) {
  * @returns {Boolean}
  */
 function isStartOfNoteBlock(text) {
-  return text.match(/^NOTE.*?/g);
+  return (/^NOTE.*?/g.test(text)
+  );
 }
 
 /**
@@ -83460,7 +83620,8 @@ function isStartOfNoteBlock(text) {
  * @returns {Boolean}
  */
 function isStartOfRegionBlock(text) {
-  return text.match(/^REGION.*?/g);
+  return (/^REGION.*?/g.test(text)
+  );
 }
 
 /**
@@ -83486,8 +83647,8 @@ function parseStyleBlock(styleBlock) {
     classNames.push({ isGlobalStyle: true });
     index++;
   } else {
-    while (styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
-      var cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/);
+    var cueClassLine = void 0;
+    while (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
       classNames.push({
         className: cueClassLine[1],
         isGlobalStyle: false
@@ -83519,12 +83680,11 @@ function parseStyleBlock(styleBlock) {
  *   - element {HTMLElement}: the cue text, translated into an HTMLElement
  *
  * Returns undefined if the cue block could not be parsed.
- * @param {number} index
- * @param {Array.<string>} linified
+ * @param {Array.<string>} cueBlock
  * @param {Array.<Object>} styleElements
  * @returns {Object|undefined}
  */
-function parseCue(cueBlock, styleElements) {
+function parseCue(cueBlock, timeOffset, styleElements) {
   var region = document.createElement("div");
   var regionAttr = document.createAttribute("style");
   var index = 0;
@@ -83578,7 +83738,7 @@ function parseCue(cueBlock, styleElements) {
 
   while (cueBlock[index]) {
 
-    if (spanElement.childNodes.length != 0) {
+    if (spanElement.childNodes.length !== 0) {
       spanElement.appendChild(document.createElement("br"));
     }
 
@@ -83593,8 +83753,8 @@ function parseCue(cueBlock, styleElements) {
   pElement.appendChild(spanElement);
 
   return {
-    start: range.start,
-    end: range.end,
+    start: range.start + timeOffset,
+    end: range.end + timeOffset,
     element: region
   };
 }
@@ -83619,25 +83779,24 @@ function parseTimeCode(text) {
   var tsRegex = "((?:[0-9]{2}\:?)[0-9]{2}:[0-9]{2}.[0-9]{2,3})";
   var startEndRegex = tsRegex + "(?:\ |\t)-->(?:\ |\t)" + tsRegex;
   var ranges = text.match(startEndRegex);
-  if (startEndRegex) {
+  if (ranges && ranges.length >= 3) {
     var start = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__parseTimestamp_js__["a" /* default */])(ranges[1]);
     var end = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__parseTimestamp_js__["a" /* default */])(ranges[2]);
-
     return { start: start, end: end };
   }
 }
 
 /**
-* Format WebVTT tags and classes into usual HTML.
-* <b *> => <b>
-* <u *> => <u>
-* <i *> => <i>
-* <c.class *> => <c.class>
-* Style is inserted if associated to tag or class.
-* @param {string} text
-* @param {Array.<Object>} styleElements
-* @returns {Array.<Node>}
-*/
+ * Format WebVTT tags and classes into usual HTML.
+ * <b *> => <b>
+ * <u *> => <u>
+ * <i *> => <i>
+ * <c.class *> => <c.class>
+ * Style is inserted if associated to tag or class.
+ * @param {string} text
+ * @param {Array.<Object>} styleElements
+ * @returns {Array.<Node>}
+ */
 function formatWebVTTtoHTML(text, styleElements) {
   var HTMLTags = ["u", "i", "b"];
   var webVTTTags = ["u", "i", "b", "c", "#text"];
@@ -83655,15 +83814,15 @@ function formatWebVTTtoHTML(text, styleElements) {
   var nodes = parsedWebVTT.body.childNodes;
 
   /**
-  * Apply styles to specifig tag in children nodes.
-  * (e.g. If class "b" has style, then : <b style="content">
-  * )
-  * Change class tags into span with associated style, or text*
-  * First it was: <c.class>...</c>. Then <class></class>.
-  * Finally <span style="content"></span> or text.
-  * @param {Array.<Node>} childNodes
-  * @returns {Array.<Node>}
-  */
+   * Apply styles to specifig tag in children nodes.
+   * (e.g. If class "b" has style, then : <b style="content">
+   * )
+   * Change class tags into span with associated style, or text*
+   * First it was: <c.class>...</c>. Then <class></class>.
+   * Finally <span style="content"></span> or text.
+   * @param {Array.<Node>} childNodes
+   * @returns {Array.<Node>}
+   */
   function parseNode(nodeToParse) {
     var parsedNodeArray = [];
     for (var i = 0; i < nodeToParse.length; i++) {
@@ -83760,14 +83919,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /**
  * Parse whole WEBVTT file into an array of cues, to be inserted in a video's
  * TrackElement.
- * @param {string}
+ * @param {string} vttStr
+ * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
-function parseVTTStringToVTTCues(vttStr) {
+function parseVTTStringToVTTCues(vttStr, timeOffset) {
   // WEBVTT authorize CRLF, LF or CR as line terminators
   var lines = vttStr.split(/\r\n|\n|\r/);
 
-  if (!/^WEBVTT($ | |\t)/.test(lines[0])) {
+  if (!/^WEBVTT($| |\t)/.test(lines[0])) {
     throw new Error("Can't parse WebVTT: Invalid file.");
   }
 
@@ -83797,7 +83957,7 @@ function parseVTTStringToVTTCues(vttStr) {
 
   var cues = [];
   for (var _i = 0; _i < cueBlocks.length; _i++) {
-    var cue = parseCue(cueBlocks[_i]);
+    var cue = parseCue(cueBlocks[_i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -83827,9 +83987,10 @@ function isStartOfCueBlock(line) {
 /**
  * Parse cue block into a cue.
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {TextTrackCue|VTTCue}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   var timingRegexp = /-->/;
   var timeString = void 0;
   var payloadLines = void 0;
@@ -83856,8 +84017,10 @@ function parseCue(cueLines) {
       settings = timeAndSettings.settings;
 
   var payload = payloadLines.join("\n");
-  var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__compat_index_js__["p" /* makeCue */])(start, end, payload);
-  setSettingsOnCue(settings, cue);
+  var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__compat_index_js__["p" /* makeCue */])(start + timeOffset, end + timeOffset, payload);
+  if (cue && cue instanceof VTTCue) {
+    setSettingsOnCue(settings, cue);
+  }
 
   return cue;
 }
@@ -83872,14 +84035,14 @@ function parseTimestamp(timestampString) {
   if (splittedTS.length === 3) {
     var hours = parseInt(splittedTS[0], 10);
     var minutes = parseInt(splittedTS[1], 10);
-    var seconds = parseFloat(splittedTS[2], 10);
+    var seconds = parseFloat(splittedTS[2]);
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }
     return hours * 60 * 60 + minutes * 60 + seconds;
   } else if (splittedTS.length === 2) {
-    var _minutes = parseInt(splittedTS[1], 10);
-    var _seconds = parseFloat(splittedTS[2], 10);
+    var _minutes = parseInt(splittedTS[0], 10);
+    var _seconds = parseFloat(splittedTS[1]);
     if (isNaN(_minutes) || isNaN(_seconds)) {
       return;
     }
@@ -83987,8 +84150,8 @@ function setSettingsOnCue(settings, cue) {
       if (lineMatches) {
         cue.line = lineMatches[1];
         cue.snapToLines = true;
-        if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_array_includes_js__["a" /* default */])(["start", "center", "end"], percentageMatches[3])) {
-          cue.lineAlign = percentageMatches[3];
+        if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_array_includes_js__["a" /* default */])(["start", "center", "end"], lineMatches[3])) {
+          cue.lineAlign = lineMatches[3];
         }
       }
     }
@@ -83997,12 +84160,14 @@ function setSettingsOnCue(settings, cue) {
   if (settings.position) {
     var positionRegex = /^([\d\.]+)%(?:,(line-left|line-right|center))?$/;
     var positionArr = positionRegex.exec(settings.position);
-    var position = parseInt(positionArr[1], 10);
-    if (!isNaN(position)) {
-      cue.position = position;
+    if (positionArr && positionArr.length >= 2) {
+      var position = parseInt(positionArr[1], 10);
+      if (!isNaN(position)) {
+        cue.position = position;
 
-      if (positionArr[2]) {
-        cue.positionAlign = positionArr[2];
+        if (positionArr[2] != null) {
+          cue.positionAlign = positionArr[2];
+        }
       }
     }
   }
@@ -84039,7 +84204,7 @@ function setSettingsOnCue(settings, cue) {
  */
 
 /**
- * Parse a single srt timestamp into seconds
+ * Parse a single webvtt timestamp into seconds
  * @param {string} timestampString
  * @returns {Number|undefined}
  */
@@ -84049,7 +84214,8 @@ function parseTimestamp(timestampString) {
   if (splittedTS[2] || splittedTS[1]) {
     var hours = splittedTS[2] ? parseInt(splittedTS[2], 10) : 0;
     var minutes = parseInt(splittedTS[1], 10);
-    var seconds = parseFloat(splittedTS[0].replace(",", "."), 10);
+    var seconds = parseFloat(splittedTS[0].replace(",", "."));
+
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return;
     }
@@ -84089,23 +84255,26 @@ var SimpleSet = function () {
   function SimpleSet() {
     _classCallCheck(this, SimpleSet);
 
-    this.hash = {};
+    this._hash = {};
   }
 
   SimpleSet.prototype.add = function add(x) {
-    this.hash[x] = true;
+    this._hash[x] = true;
   };
 
   SimpleSet.prototype.remove = function remove(x) {
-    delete this.hash[x];
+    delete this._hash[x];
   };
 
   SimpleSet.prototype.test = function test(x) {
-    return this.hash[x] === true;
+    return this._hash[x] === true;
   };
 
   return SimpleSet;
 }();
+
+// TODO export default
+
 
 
 
@@ -84140,22 +84309,38 @@ var InitializationSegmentCache = function () {
   function InitializationSegmentCache() {
     _classCallCheck(this, InitializationSegmentCache);
 
-    this.cache = {};
+    this._cache = {};
   }
+
+  /**
+   * @param {Object} obj
+   * @param {Object} obj.segment
+   * @param {*} response
+   * TODO just add segment directly, not in an object?
+   */
+
 
   InitializationSegmentCache.prototype.add = function add(_ref, response) {
     var segment = _ref.segment;
 
     if (segment.isInit) {
-      this.cache[segment.id] = response;
+      this._cache[segment.id] = response;
     }
   };
+
+  /**
+   * @param {Object} obj
+   * @param {Object} obj.segment
+   * @returns {*} response
+   * TODO just add segment directly, not in an object?
+   */
+
 
   InitializationSegmentCache.prototype.get = function get(_ref2) {
     var segment = _ref2.segment;
 
     if (segment.isInit) {
-      var value = this.cache[segment.id];
+      var value = this._cache[segment.id];
       if (value != null) {
         return value;
       }
@@ -84522,7 +84707,7 @@ function throttle(func) {
     }
 
     isPending = true;
-    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__castToObservable_js__["a" /* default */])(func.apply(undefined, arguments)).do(null, function () {
+    return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__castToObservable_js__["a" /* default */])(func.apply(undefined, arguments)).do(function () {}, function () {
       return isPending = false;
     }, function () {
       return isPending = false;
@@ -84535,6 +84720,7 @@ function throttle(func) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = takeFirstDefined;
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -84556,7 +84742,7 @@ function throttle(func) {
  * @param {...*} args
  * @returns {*}
  */
-/* harmony default export */ __webpack_exports__["a"] = (function () {
+function takeFirstDefined() {
   var i = 0;
   var len = arguments.length;
   while (i < len) {
@@ -84565,13 +84751,14 @@ function throttle(func) {
     }
     i++;
   }
-});
+}
 
 /***/ }),
 /* 842 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = takeFirstSet;
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -84593,7 +84780,7 @@ function throttle(func) {
  * @param {...*} args
  * @returns {*}
  */
-/* harmony default export */ __webpack_exports__["a"] = (function () {
+function takeFirstSet() {
   var i = 0;
   var len = arguments.length;
   while (i < len) {
@@ -84602,7 +84789,7 @@ function throttle(func) {
     }
     i++;
   }
-});
+}
 
 /***/ }),
 /* 843 */
