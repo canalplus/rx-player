@@ -24,9 +24,10 @@ import parseTimestamp from "./parseTimestamp.js";
  * Parse whole srt file into an array of cues, to be inserted in a video's
  * TrackElement.
  * @param {string}
+ * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
-export default function parseSRTStringToVTTCues(srtStr) {
+export default function parseSRTStringToVTTCues(srtStr, timeOffset) {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);
@@ -47,7 +48,7 @@ export default function parseSRTStringToVTTCues(srtStr) {
 
   const cues = [];
   for (let i = 0; i < cueBlocks.length; i++) {
-    const cue = parseCue(cueBlocks[i]);
+    const cue = parseCue(cueBlocks[i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -58,9 +59,10 @@ export default function parseSRTStringToVTTCues(srtStr) {
 /**
  * Parse cue block into a cue.
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {TextTrackCue|VTTCue|null}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   const [startString, endString] = cueLines[1].split(" --> ");
   const payloadLines = cueLines.slice(2, cueLines.length);
   if (!startString || !endString || !payloadLines.length) {
@@ -73,5 +75,5 @@ function parseCue(cueLines) {
     return null;
   }
   const payload = payloadLines.join("\n");
-  return makeCue(start, end, payload);
+  return makeCue(start + timeOffset, end + timeOffset, payload);
 }

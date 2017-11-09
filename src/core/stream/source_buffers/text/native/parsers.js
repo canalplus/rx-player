@@ -39,16 +39,17 @@ if (__FEATURES__.NATIVE_SRT) {
 /**
  * @param {string} type
  * @param {string} data
+ * @param {Number} timeOffset
  * @param {string} [language]
  * @returns {Array.<VTTCue>}
  * @throws Error - Throw if no parser is found for the given type
  */
-export default function parseTextTrackToCues(type, data, language) {
+export default function parseTextTrackToCues(type, data, timeOffset, language) {
   const parser = nativeParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
 
-  return parser(data, language);
+  return parser(data, timeOffset, language);
 }

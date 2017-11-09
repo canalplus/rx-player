@@ -52,6 +52,7 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
    * @param {string} data.language
    * @param {Number} data.timescale
    * @param {Number} data.start
+   * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
   _append(data) {
@@ -62,6 +63,7 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
       data: dataString, // text track content. Should be a string
       type, // type of texttracks (e.g. "ttml" or "vtt")
       language, // language the texttrack is in
+      timeOffset,
     } = data;
 
     if (timescaledEnd - timescaledStart <= 0) {
@@ -74,7 +76,7 @@ export default class NativeTextTrackSourceBuffer extends AbstractSourceBuffer {
     const endTime = timescaledEnd != null ?
       timescaledEnd / timescale : undefined;
 
-    const cues = parseTextTrackToCues(type, dataString, language);
+    const cues = parseTextTrackToCues(type, dataString, timeOffset, language);
     if (cues.length > 0) {
       const firstCue = cues[0];
 

@@ -128,6 +128,7 @@ function TextTrackLoader({ segment, representation }) {
  *
  * @param {Object} infos
  * @param {Segment} infos.segment
+ * @param {Adaptation} infos.manifest
  * @param {Adaptation} infos.adaptation
  * @param {Representation} infos.representation
  * @param {Object} infos.init
@@ -138,6 +139,7 @@ function TextTrackParser({
   segment,
   adaptation,
   representation,
+  manifest,
   init,
 }) {
   const { language } = adaptation;
@@ -184,6 +186,7 @@ function TextTrackParser({
       end: 0,
       timescale: segmentInfos.timescale || 0,
       data: [],
+      timeOffset: manifest.availabilityStartTime, // TODO + period.start
     };
   } else { // if not init
     const segmentDataBase = {
@@ -191,6 +194,7 @@ function TextTrackParser({
       end: segmentInfos.time + segmentInfos.duration,
       language,
       timescale: segmentInfos.timescale,
+      timeOffset: manifest.availabilityStartTime, // TODO + period.start
     };
     if (isMP4) {
       const { codec = "" } = representation;
