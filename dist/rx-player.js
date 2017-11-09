@@ -8362,7 +8362,7 @@ var KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 
 /**
  * @param {Object} index
- * @returns {Number}
+ * @returns {Number|undefined}
  */
 function calculateIndexLastLiveTimeReference(index) {
   if (index.indexType === "timeline") {
@@ -8376,8 +8376,6 @@ function calculateIndexLastLiveTimeReference(index) {
     var securityTime = Math.min(Math.max(d / index.timescale, 5), 10);
     return (ts + (r + 1) * d) / index.timescale - securityTime;
   }
-  // By default (e.g. for templates), live Edge is right now - 5s
-  return Date.now() / 1000 - 5;
 }
 
 /**
@@ -8637,7 +8635,7 @@ var getLastLiveTimeReference = function getLastLiveTimeReference(adaptation) {
     return calculateIndexLastLiveTimeReference(r.index);
   }));
 
-  // should not happen, means invalid index data has been found
+  // if the last live time reference could not be calculated, return undefined
   if (isNaN(representationsMin)) {
     return;
   }
@@ -11904,9 +11902,9 @@ var RepresentationChooser = function () {
 
           var nextEstimate = void 0;
           if (bandwidthEstimate != null) {
-            nextEstimate = clock.bufferGap <= inStarvationMode ? bandwidthEstimate * ABR_STARVATION_FACTOR : bandwidthEstimate * ABR_REGULAR_FACTOR;
+            nextEstimate = inStarvationMode ? bandwidthEstimate * ABR_STARVATION_FACTOR : bandwidthEstimate * ABR_REGULAR_FACTOR;
           } else if (lastEstimatedBitrate != null) {
-            nextEstimate = clock.bufferGap <= inStarvationMode ? lastEstimatedBitrate * ABR_STARVATION_FACTOR : lastEstimatedBitrate * ABR_REGULAR_FACTOR;
+            nextEstimate = inStarvationMode ? lastEstimatedBitrate * ABR_STARVATION_FACTOR : lastEstimatedBitrate * ABR_REGULAR_FACTOR;
           } else {
             nextEstimate = initialBitrate;
           }
@@ -12436,7 +12434,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"3.0.0-rc8";
+    _this.version = /*PLAYER_VERSION*/"3.0.0";
     _this.log = __WEBPACK_IMPORTED_MODULE_5__utils_log__["a" /* default */];
     _this.state = undefined;
     _this.videoElement = videoElement;
@@ -19545,25 +19543,6 @@ function areNearlyEqual(a, b) {
 }
 
 /**
- * Get cue corresponding to the given time in an array of cues.
- * @param {Number} currentTime
- * @param {Array.<Object>} cues
- * @returns {Object|undefined}
- */
-function getCueInCues(currentTime, cues) {
-  for (var i = cues.length - 1; i >= 0; i--) {
-    var cue = cues[i];
-    if (currentTime >= cue.start) {
-      if (currentTime < cue.end) {
-        return cue;
-      } else {
-        return;
-      }
-    }
-  }
-}
-
-/**
  * Get all cues strictly before the given time.
  * @param {Object} cues
  * @param {Number} time
@@ -19671,12 +19650,15 @@ var TextBufferManager = function () {
     // begins at the end as most of the time the player will ask for the last
     // CuesGroup
     for (var i = cuesBuffer.length - 1; i >= 0; i--) {
-      var cuesInfos = cuesBuffer[i];
-      if (time >= cuesInfos.start) {
-        if (time < cuesInfos.end) {
-          return getCueInCues(time, cuesInfos.cues);
-        } else {
-          return;
+      var cues = cuesBuffer[i].cues;
+      for (var j = cues.length - 1; j >= 0; j--) {
+        var cue = cues[j];
+        if (time >= cue.start) {
+          if (time < cue.end) {
+            return cue;
+          } else {
+            return;
+          }
         }
       }
     }
@@ -20039,6 +20021,7 @@ var HTMLTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
    * @param {string} data.language
    * @param {Number} data.timescale
    * @param {Number} data.start
+   * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
 
@@ -20049,7 +20032,8 @@ var HTMLTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
         timescaledEnd = data.end,
         dataString = data.data,
         type = data.type,
-        language = data.language;
+        language = data.language,
+        timeOffset = data.timeOffset;
 
     if (timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
@@ -20060,7 +20044,7 @@ var HTMLTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
     var startTime = timescaledStart / timescale;
     var endTime = timescaledEnd != null ? timescaledEnd / timescale : undefined;
 
-    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_7__parsers_js__["a" /* default */])(type, dataString, language);
+    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_7__parsers_js__["a" /* default */])(type, dataString, timeOffset, language);
     var start = startTime;
     var end = endTime != null ? endTime : cues[cues.length - 1].end;
     this._buffer.insert(cues, start, end);
@@ -20138,17 +20122,18 @@ if (true) {
 /**
  * @param {string} type
  * @param {string} data
+ * @param {Number} timeOffset
  * @param {string} [language]
  * @returns {Array.<Object>}
  * @throws Error - Throw if no parser is found for the given type
  */
-function parseTextTrackToElements(type, data, language) {
+function parseTextTrackToElements(type, data, timeOffset, language) {
   var parser = htmlParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
-  return parser(data, language);
+  return parser(data, timeOffset, language);
 }
 
 /***/ }),
@@ -20263,6 +20248,7 @@ var NativeTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
    * @param {string} data.language
    * @param {Number} data.timescale
    * @param {Number} data.start
+   * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
 
@@ -20275,7 +20261,8 @@ var NativeTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
         timescaledEnd = data.end,
         dataString = data.data,
         type = data.type,
-        language = data.language;
+        language = data.language,
+        timeOffset = data.timeOffset;
 
 
     if (timescaledEnd - timescaledStart <= 0) {
@@ -20287,7 +20274,7 @@ var NativeTextTrackSourceBuffer = function (_AbstractSourceBuffer) {
     var startTime = timescaledStart / timescale;
     var endTime = timescaledEnd != null ? timescaledEnd / timescale : undefined;
 
-    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__parsers_js__["a" /* default */])(type, dataString, language);
+    var cues = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__parsers_js__["a" /* default */])(type, dataString, timeOffset, language);
     if (cues.length > 0) {
       var firstCue = cues[0];
 
@@ -20401,18 +20388,19 @@ if (true) {
 /**
  * @param {string} type
  * @param {string} data
+ * @param {Number} timeOffset
  * @param {string} [language]
  * @returns {Array.<VTTCue>}
  * @throws Error - Throw if no parser is found for the given type
  */
-function parseTextTrackToCues(type, data, language) {
+function parseTextTrackToCues(type, data, timeOffset, language) {
   var parser = nativeParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
 
-  return parser(data, language);
+  return parser(data, timeOffset, language);
 }
 
 /***/ }),
@@ -21190,7 +21178,7 @@ var Manifest = function () {
 
     // Will be needed here
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
-    this.availabilityStartTime = args.availabilityStartTime;
+    this.availabilityStartTime = args.availabilityStartTime || 0;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
   }
@@ -22567,19 +22555,11 @@ function parseMPD(root, contentProtectionParser) {
     var lastRef = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__helpers_js__["b" /* getLastLiveTimeReference */])(videoAdaptation);
 
     if (false) {
-      assert(lastRef);
       assert(parsed.availabilityStartTime);
     }
 
-    // if last time not found / something was invalid in the indexes, set a
-    // default live time.
-    if (!lastRef) {
-      __WEBPACK_IMPORTED_MODULE_0__utils_log__["a" /* default */].warn("Live edge not deduced from manifest, setting a default one");
-      lastRef = Date.now() / 1000 - 60;
-    }
-
     parsed.availabilityStartTime = parsed.availabilityStartTime.getTime() / 1000;
-    parsed.presentationLiveGap = Date.now() / 1000 - (lastRef + parsed.availabilityStartTime);
+    parsed.presentationLiveGap = lastRef != null ? Date.now() / 1000 - (lastRef + parsed.availabilityStartTime) : 10;
   }
 
   return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__filters_js__["a" /* filterMPD */])(parsed);
@@ -23147,6 +23127,7 @@ function TextTrackLoader(_ref) {
  *
  * @param {Object} infos
  * @param {Segment} infos.segment
+ * @param {Adaptation} infos.manifest
  * @param {Adaptation} infos.adaptation
  * @param {Representation} infos.representation
  * @param {Object} infos.init
@@ -23157,6 +23138,7 @@ function TextTrackParser(_ref2) {
       segment = _ref2.segment,
       adaptation = _ref2.adaptation,
       representation = _ref2.representation,
+      manifest = _ref2.manifest,
       init = _ref2.init;
   var language = adaptation.language;
   var isInit = segment.isInit,
@@ -23203,7 +23185,8 @@ function TextTrackParser(_ref2) {
       start: 0,
       end: 0,
       timescale: segmentInfos.timescale || 0,
-      data: []
+      data: [],
+      timeOffset: manifest.availabilityStartTime // TODO + period.start
     };
   } else {
     // if not init
@@ -23211,7 +23194,8 @@ function TextTrackParser(_ref2) {
       start: segmentInfos.time,
       end: segmentInfos.time + segmentInfos.duration,
       language: language,
-      timescale: segmentInfos.timescale
+      timescale: segmentInfos.timescale,
+      timeOffset: manifest.availabilityStartTime // TODO + period.start
     };
     if (isMP4) {
       var _representation$codec = representation.codec,
@@ -23560,11 +23544,13 @@ var WSX_REG = /\.wsx?(\?token=\S+)?/;
         segmentData.start = segmentInfos.time;
         segmentData.end = segmentInfos.duration != null ? segmentInfos.time + segmentInfos.duration : undefined;
         segmentData.timescale = segmentInfos.timescale;
+        segmentData.timeOffset = segmentData.start / segmentData.timescale;
       } else {
         // vod is simple WebVTT or TTML text
         segmentData.start = segment.time;
         segmentData.end = segment.duration != null ? segment.time + segment.duration : undefined;
         segmentData.timescale = segment.timescale;
+        segmentData.timeOffset = segmentData.start / segmentData.timescale;
       }
 
       if (isMP4) {
@@ -24388,9 +24374,10 @@ function decodeEntities(text) {
  * may not work for every sami input.
  *
  * @param {string} smi
+ * @param {Number} timeOffset
  * @param {string} lang
  */
-function parseSami(smi, lang) {
+function parseSami(smi, timeOffset, lang) {
   var syncOpen = /<sync[ >]/ig;
   var syncClose = /<sync[ >]|<\/body>/ig;
 
@@ -24485,7 +24472,7 @@ function parseSami(smi, lang) {
 
         subs.push({
           element: wrapperEl,
-          start: start,
+          start: start + timeOffset,
           end: -1 // Will be updated on a following iteration
         });
       }
@@ -24600,9 +24587,10 @@ function decodeEntities(text) {
  * may not work for every sami input.
  *
  * @param {string} smi
+ * @param {Number} timeOffset
  * @param {string} lang
  */
-function parseSami(smi, lang) {
+function parseSami(smi, timeOffset, lang) {
   var syncOpen = /<sync[ >]/ig;
   var syncClose = /<sync[ >]|<\/body>/ig;
 
@@ -24665,7 +24653,10 @@ function parseSami(smi, lang) {
       if (txt === "&nbsp;") {
         subs[subs.length - 1].end = start;
       } else {
-        subs.push({ text: decodeEntities(txt), start: start });
+        subs.push({
+          text: decodeEntities(txt),
+          start: start + timeOffset
+        });
       }
     }
   }
@@ -24706,9 +24697,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 /**
  * @param {string}
+ * @param {Number} timeOffset
  * @returns {Array.<Object>}
  */
-function parseSRTStringToHTML(srtStr) {
+function parseSRTStringToHTML(srtStr, timeOffset) {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   var lines = srtStr.split(/\r\n|\n|\r/);
@@ -24729,7 +24721,7 @@ function parseSRTStringToHTML(srtStr) {
 
   var cues = [];
   for (var _i = 0; _i < cueBlocks.length; _i++) {
-    var cue = parseCue(cueBlocks[_i]);
+    var cue = parseCue(cueBlocks[_i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -24739,9 +24731,10 @@ function parseSRTStringToHTML(srtStr) {
 
 /**
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {Object}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   var _cueLines$1$split = cueLines[1].split(" --> "),
       startString = _cueLines$1$split[0],
       endString = _cueLines$1$split[1];
@@ -24777,8 +24770,8 @@ function parseCue(cueLines) {
   }
 
   return {
-    start: start,
-    end: end,
+    start: start + timeOffset,
+    end: end + timeOffset,
     element: pEl
   };
 }
@@ -24871,9 +24864,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
  * Parse whole srt file into an array of cues, to be inserted in a video's
  * TrackElement.
  * @param {string}
+ * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
-function parseSRTStringToVTTCues(srtStr) {
+function parseSRTStringToVTTCues(srtStr, timeOffset) {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   var lines = srtStr.split(/\r\n|\n|\r/);
@@ -24894,7 +24888,7 @@ function parseSRTStringToVTTCues(srtStr) {
 
   var cues = [];
   for (var _i = 0; _i < cueBlocks.length; _i++) {
-    var cue = parseCue(cueBlocks[_i]);
+    var cue = parseCue(cueBlocks[_i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -24905,9 +24899,10 @@ function parseSRTStringToVTTCues(srtStr) {
 /**
  * Parse cue block into a cue.
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {TextTrackCue|VTTCue|null}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   var _cueLines$1$split = cueLines[1].split(" --> "),
       startString = _cueLines$1$split[0],
       endString = _cueLines$1$split[1];
@@ -24923,7 +24918,7 @@ function parseCue(cueLines) {
     return null;
   }
   var payload = payloadLines.join("\n");
-  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__compat_index_js__["p" /* makeCue */])(start, end, payload);
+  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__compat_index_js__["p" /* makeCue */])(start + timeOffset, end + timeOffset, payload);
 }
 
 /***/ }),
@@ -25495,7 +25490,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
  * but we can still do better.
  * @param {string} str
  * @returns {Array.<Object>} */
-function parseTTMLStringToDIV(str) {
+function parseTTMLStringToDIV(str, timeOffset) {
   var ret = [];
   var xml = new DOMParser().parseFromString(str, "text/xml");
 
@@ -25571,8 +25566,7 @@ function parseTTMLStringToDIV(str) {
         var divs = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__getParentElementsByTagName_js__["a" /* default */])(paragraph, "div");
         var paragraphStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, bodyStyle, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style_js__["b" /* getStylingAttributes */])(__WEBPACK_IMPORTED_MODULE_4__constants_js__["a" /* STYLE_ATTRIBUTES */], [paragraph].concat(divs), styles, regions));
 
-        var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__parseCue_js__["a" /* default */])(paragraph, 0, // offset
-        styles, regions, body, paragraphStyle, params);
+        var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__parseCue_js__["a" /* default */])(paragraph, timeOffset, styles, regions, body, paragraphStyle, params);
         if (cue) {
           ret.push(cue);
         }
@@ -25704,7 +25698,12 @@ var TEXT_ALIGN_TO_POSITION_ALIGN = {
   right: "line-right"
 };
 
-function parseTTMLStringToVTT(str) {
+/**
+ * @param {string} str
+ * @param {Number} timeOffset
+ * @returns {Array.<VTTCue>}
+ */
+function parseTTMLStringToVTT(str, timeOffset) {
   var ret = [];
   var xml = new DOMParser().parseFromString(str, "text/xml");
 
@@ -25776,8 +25775,7 @@ function parseTTMLStringToVTT(str) {
         var divs = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_6__getParentElementsByTagName__["a" /* default */])(paragraph, "div");
         var paragraphStyle = __WEBPACK_IMPORTED_MODULE_0_object_assign___default()({}, bodyStyle, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__style__["b" /* getStylingAttributes */])(WANTED_STYLE_ATTRIBUTES, [paragraph].concat(divs), styles, regions));
 
-        var cue = parseCue(paragraph, 0, // offset
-        styles, regions, paragraphStyle, params);
+        var cue = parseCue(paragraph, timeOffset, styles, regions, paragraphStyle, params);
         if (cue) {
           ret.push(cue);
         }
@@ -26104,10 +26102,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
  * Specific style is parsed and applied to class element.
  *
  * @param {string} text
+ * @param {Number} timeOffset
  * @return {Array.<Object>}
  * @throws Error - Throws if the given WebVTT string is invalid.
  */
-function parseWebVTT(text) {
+function parseWebVTT(text, timeOffset) {
   var newLineChar = /\r\n|\n|\r/g;
   var linified = text.split(newLineChar);
   var cuesArray = [];
@@ -26146,7 +26145,7 @@ function parseWebVTT(text) {
           _i++;
         }
         var cueBlock = linified.slice(startOfCueBlock, _i);
-        var cue = parseCue(cueBlock, styleElements);
+        var cue = parseCue(cueBlock, timeOffset, styleElements);
         if (cue) {
           cuesArray.push(cue);
         }
@@ -26250,7 +26249,7 @@ function parseStyleBlock(styleBlock) {
  * @param {Array.<Object>} styleElements
  * @returns {Object|undefined}
  */
-function parseCue(cueBlock, styleElements) {
+function parseCue(cueBlock, timeOffset, styleElements) {
   var region = document.createElement("div");
   var regionAttr = document.createAttribute("style");
   var index = 0;
@@ -26319,8 +26318,8 @@ function parseCue(cueBlock, styleElements) {
   pElement.appendChild(spanElement);
 
   return {
-    start: range.start,
-    end: range.end,
+    start: range.start + timeOffset,
+    end: range.end + timeOffset,
     element: region
   };
 }
@@ -26485,10 +26484,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /**
  * Parse whole WEBVTT file into an array of cues, to be inserted in a video's
  * TrackElement.
- * @param {string}
+ * @param {string} vttStr
+ * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
-function parseVTTStringToVTTCues(vttStr) {
+function parseVTTStringToVTTCues(vttStr, timeOffset) {
   // WEBVTT authorize CRLF, LF or CR as line terminators
   var lines = vttStr.split(/\r\n|\n|\r/);
 
@@ -26522,7 +26522,7 @@ function parseVTTStringToVTTCues(vttStr) {
 
   var cues = [];
   for (var _i = 0; _i < cueBlocks.length; _i++) {
-    var cue = parseCue(cueBlocks[_i]);
+    var cue = parseCue(cueBlocks[_i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -26552,9 +26552,10 @@ function isStartOfCueBlock(line) {
 /**
  * Parse cue block into a cue.
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {TextTrackCue|VTTCue}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   var timingRegexp = /-->/;
   var timeString = void 0;
   var payloadLines = void 0;
@@ -26581,7 +26582,7 @@ function parseCue(cueLines) {
       settings = timeAndSettings.settings;
 
   var payload = payloadLines.join("\n");
-  var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__compat_index_js__["p" /* makeCue */])(start, end, payload);
+  var cue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__compat_index_js__["p" /* makeCue */])(start + timeOffset, end + timeOffset, payload);
   if (cue && cue instanceof VTTCue) {
     setSettingsOnCue(settings, cue);
   }
