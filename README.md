@@ -10,7 +10,7 @@ Its main goals are:
   - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB integration...)
   - To be easy to integrate and use as a library in various codebases.
 
-Latest release: ``v3.0.0-rc8``
+Latest release: ``v3.0.0``
 
 ## API
 
@@ -28,17 +28,6 @@ The fastest way to use our player directly in your code is to add this repositor
 ```
 npm install --save rx-player
 ```
-
-This will install the last "stable" version, which for now is the ``v2.3.2``.
-
-However, for all the improvements brought by our upcoming ``v3.0.0`` release, we advise most library users to clone directly the ``v3.0.0-rc8`` through github instead as a temporary solution:
-```
-npm install --save git+https://git@github.com/canalplus/rx-player.git
-```
-
-This is because:
-  - this is a release-candidate. Meaning that we're confident in this version and just waiting to receive your last inputs.
-  - the "true" ``v3.0.0`` should be released in the coming weeks.
 
 You can then directly import and use the Rx-Player in your code:
 ```js
@@ -59,7 +48,7 @@ player.loadVideo({
 });
 ```
 
-From the ``v3.0.0-rc6`` onward. You can also perform your own [custom build](./doc/api/custom_builds.md) with only the features you need to reduce the file size.
+You can now also perform your own [custom build](./doc/api/custom_builds.md) with only the features you need to reduce the file size.
 
 ## Your questions
 
