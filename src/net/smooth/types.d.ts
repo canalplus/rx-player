@@ -39,13 +39,22 @@ interface IContentProtectionSmooth {
   keySystems: IHSSKeySystem[];
 }
 
+interface IRepresentationSmooth {
+  //[key: string]: any;
+  codecs: string;
+  mimeType: string;
+  bitrate: number;
+  id: string|number;
+  codecPrivateData: string;
+}
+
 interface IAdaptationSmooth {
 id?: string;
 smoothProtection?: IContentProtectionSmooth|null;
 type: string;
 accessibility: string[];
 index: IIndex;
-representations: Array<IDictionary<string|number>>; // XXX TODO
+representations: IRepresentationSmooth[];
 name: string|null;
 language: string|null;
 normalizedLanguage: string|null;
@@ -65,5 +74,6 @@ export {
   IHSSParserOptions,
   IAdaptationSmooth,
   IHSSManifestSegment,
+  IRepresentationSmooth,
   IContentProtectionSmooth,
 }

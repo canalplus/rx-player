@@ -16,6 +16,7 @@
 
 import getRightIndexHelpers from "./indexes/index";
 import Segment from "./segment";
+import { IBufferSegmentInfos } from "../core/buffer/types";
 
 interface IRepresentationIndexArguments {
   index : any; // TODO @ index refacto
@@ -92,8 +93,8 @@ class RepresentationIndex {
       timescale : number
     }>,
     currentSegment : { duration : number, time : number, timescale : number}
-  ) : any /* XXX TODO */ {
-    const addedSegments : any[] = [];
+  ) : IBufferSegmentInfos[] {
+    const addedSegments : IBufferSegmentInfos[] = [];
     for (let i = 0; i < nextSegments.length; i++) {
       if (
         this._indexHelpers._addSegmentInfos(

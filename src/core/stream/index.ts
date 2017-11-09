@@ -81,6 +81,7 @@ import processPipeline from "./process_pipeline";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_obs";
 import EMEManager from "./eme";
+import { IKeySystemOption } from "../eme";
 import {
   IStreamClockTick,
   ILoadedEvent,
@@ -111,32 +112,6 @@ function getPipelineOptions(bufferType : string) : IPipelineOptions<any, any> {
     downloaderOptions.maxRetry = 0; // Deactivate BIF fetching if it fails
   }
   return downloaderOptions;
-}
-
-// XXX TODO DRY this with EME part?
-interface ILicenseStorageData {
-  sessionId : string;
-  initData : number;
-}
-
-// XXX TODO DRY this with EME part?
-interface ILicenseStorageOption {
-  load() : ILicenseStorageData[];
-  save(x : ILicenseStorageData[]) : void;
-}
-
-// XXX TODO
-interface IKeySystemOption {
-  type : string;
-  getLicense : (message : Uint8Array, messageType : string)
-    => Promise<BufferSource>|BufferSource;
-  serverCertificate? : BufferSource;
-  persistentLicense? : boolean;
-  licenseStorage? : ILicenseStorageOption;
-  persistentStateRequired? : boolean;
-  distinctiveIdentifierRequired? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
-    => Promise<BufferSource>|BufferSource;
 }
 
 interface IStreamOptions {

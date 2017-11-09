@@ -69,7 +69,7 @@ interface IContentComponentDash {
 
 interface IRepresentationDash {
   id: string|number|null;
-  index: IIndex|ISegmentBase|null;
+  index: IIndex|ISegmentBase|IMultipleSegmentBase|null;
   mimeType: string|null;
   baseURL?: string|null;
   representations?: IRepresentationDash[];
@@ -154,13 +154,11 @@ interface ISegmentBase {
   indexRangeExact?: any;
   availabilityTimeOffset?: number;
   availabilityTimeComplete?: boolean;
-  // XXX TODO MultipleSegmentBase
+}
+
+interface IMultipleSegmentBase extends ISegmentBase {
   duration?: number;
   startNumber?: number;
-  // XXX TODO SegmentTimeLine
-  index?: string;
-  media?: string;
-  bitstreamSwitching?: string;
 }
 
 export {
@@ -174,6 +172,7 @@ export {
   IInitialization,
   ISegmentTimeLine,
   IRepresentationDash,
+  IMultipleSegmentBase,
   IContentComponentDash,
   IContentProtectionDash,
   ContentProtectionParser,

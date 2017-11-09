@@ -19,6 +19,8 @@ import arrayFind = require("array-find");
 
 import Representation, { IRepresentationArguments } from "./representation";
 import generateNewId from "../utils/id";
+import { IContentProtectionDash } from "../net/dash/types";
+import { IContentProtectionSmooth } from "../net/smooth/types";
 
 export type AdaptationType = "video"|"audio"|"text"|"image";
 
@@ -30,12 +32,12 @@ export interface IAdaptationArguments {
   // -- optional
   audioDescription? : boolean;
   closedCaption? : boolean;
-  contentProtection? : any; // XXX TODO
+  contentProtection? : IContentProtectionDash;
   id? : number|string;
   language? : string;
   manuallyAdded? : boolean;
   normalizedLanguage? : string;
-  smoothProtection? : any; // XXX TODO
+  smoothProtection? : IContentProtectionSmooth;
 }
 
 /**
@@ -49,8 +51,8 @@ class Adaptation {
   public type : AdaptationType;
 
   // optional
-  public _smoothProtection? : any; // XXX TODO
-  public contentProtection? : any; //  XXX TODO
+  public _smoothProtection? : IContentProtectionSmooth;
+  public contentProtection? : IContentProtectionDash;
   public isAudioDescription? : boolean;
   public isClosedCaption? : boolean;
   public language? : string;

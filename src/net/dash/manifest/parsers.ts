@@ -33,6 +33,7 @@ import {
   IInitialization,
   ISegmentTimeLine,
   IRepresentationDash,
+  IMultipleSegmentBase,
   IContentComponentDash,
   IContentProtectionDash,
   ContentProtectionParser,
@@ -287,11 +288,11 @@ function parseSegmentTemplate(root: Element): ISegmentBase {
   return base;
 }
 
-function parseSegmentList(root: Element): ISegmentBase {
+function parseSegmentList(root: Element): IMultipleSegmentBase {
   const base = parseMultipleSegmentBase(root);
   base.list = [];
   base.indexType = "list";
-  return reduceChildren<ISegmentBase>(root, (res, name, node) => {
+  return reduceChildren<IMultipleSegmentBase>(root, (res, name, node) => {
     if (name === "SegmentURL") {
       res.list.push(feedAttributes<ISegmentURL>(node));
     }
@@ -329,7 +330,7 @@ function parseSegmentBase(root: Element): ISegmentBase {
   return index;
 }
 
-function parseMultipleSegmentBase(root: Element): ISegmentBase {
+function parseMultipleSegmentBase(root: Element): IMultipleSegmentBase {
   return reduceChildren<ISegmentBase>(root, (res, name, node) => {
     if (name === "SegmentTimeline") {
       res.indexType = "timeline";

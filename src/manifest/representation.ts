@@ -26,7 +26,7 @@ export interface IRepresentationArguments {
   baseURL? : string;
   bitsPerSample? : number;
   channels? : any; // XXX TODO
-  codecPrivateData? : any; // XXX TODO
+  codecPrivateData? : string;
   codecs? : string;
   height? : number;
   id? : string|number;
@@ -55,7 +55,7 @@ class Representation {
 
   public _bitsPerSample? : number;
   public _channels? : any; // TODO
-  public _codecPrivateData? : any; // TODO
+  public _codecPrivateData? : string;
   public _packetSize? : number;
   public _samplingRate? : number;
 
