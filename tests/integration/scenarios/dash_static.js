@@ -55,7 +55,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(manifest.getAdaptations().length).to.equal(2);
 
     expect(manifest.timeShiftBufferDepth).to.equal(undefined);
-    expect(manifest.availabilityStartTime).to.equal(undefined);
+    expect(manifest.availabilityStartTime).to.equal(0);
 
 
     // ---- General Adaptations data ----
