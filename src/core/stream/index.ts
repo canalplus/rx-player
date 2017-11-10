@@ -89,7 +89,8 @@ import {
   AdaptationsSubjects,
   IManifestUpdateEvent,
 } from "./types";
-import { IError } from "../../utils/retry";
+
+import { CustomError } from "../../errors";
 
 import { IRequest } from "../abr/representation_chooser";
 import { IMetricValue } from "../abr";
@@ -128,7 +129,7 @@ interface IStreamOptions {
     maxBufferAhead$ : Observable<number>,
     maxBufferBehind$ : Observable<number>,
   };
-  errorStream : Subject<Error|IError>;
+  errorStream : Subject<Error| CustomError>;
   speed$ : BehaviorSubject<number>;
   startAt? : IInitialTimeOptions;
   textTrackOptions : SourceBufferOptions;
@@ -272,7 +273,7 @@ export default function Stream({
       return true;
     },
 
-    errorSelector: (error : Error|IError) => {
+    errorSelector: (error : Error| CustomError) => {
       if (!isKnownError(error)) {
         return new OtherError("NONE", error, true);
       }
@@ -280,7 +281,7 @@ export default function Stream({
       return error;
     },
 
-    onRetry: (error : Error|IError, tryCount : number) => {
+    onRetry: (error : Error| CustomError, tryCount : number) => {
       log.warn("stream retry", error, tryCount);
       errorStream.next(error);
     },
