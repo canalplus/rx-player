@@ -21,7 +21,7 @@ import { SupportedBufferTypes } from "../types";
 import {
   PipelineEvent,
 } from "../pipelines/types";
-import { IError } from "../../utils/retry";
+import { CustomError } from "../../errors";
 import {
   IMetricValue,
   IRequest
@@ -46,7 +46,7 @@ export default function processPipeline(
   pipeline$ : Observable<PipelineEvent>,
   network$ : Subject<{ type: SupportedBufferTypes, value: IMetricValue }>,
   requests$ : Subject<Subject<IRequest>>,
-  warning$ : Subject<Error|IError>
+  warning$ : Subject<Error|CustomError>
 ) : Observable<any> {
   let request$ : Subject<IRequest>|undefined;
   let segmentId : string|number|undefined;
