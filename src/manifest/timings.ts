@@ -20,7 +20,7 @@
 import Manifest from "./index";
 
 function toWallClockTime(position : number, manifest : Manifest) : Date {
-  return new Date((position + manifest.availabilityStartTime) * 1000);
+  return new Date((position + (manifest.availabilityStartTime || 0)) * 1000);
 }
 
 /**
@@ -35,7 +35,7 @@ function toWallClockTime(position : number, manifest : Manifest) : Date {
  */
 function fromWallClockTime(timeInMs : number, manifest : Manifest) : number {
   return normalizeWallClockTime(timeInMs, manifest) / 1000
-    - manifest.availabilityStartTime;
+    - (manifest.availabilityStartTime || 0);
 }
 
 /**
