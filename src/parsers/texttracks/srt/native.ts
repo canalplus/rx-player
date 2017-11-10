@@ -28,8 +28,8 @@ import parseTimestamp from "./parseTimestamp";
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 export default function parseSRTStringToVTTCues(
-  srtStr : string
-  timeOffset : number,
+  srtStr : string,
+  timeOffset : number
 ) : Array<VTTCue|TextTrackCue> {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
