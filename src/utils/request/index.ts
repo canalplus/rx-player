@@ -251,8 +251,9 @@ function request<T>(
       };
     }
 
-    // Note: Waiting for https://github.com/Microsoft/TypeScript/issues/19830
-    xhr.onload = function onXHRLoad(event : ProgressEvent) {
+    // XXX TODO:
+    // Waiting for https://github.com/Microsoft/TypeScript/issues/19830
+    (xhr as any).onload = function onXHRLoad(event : ProgressEvent) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = Date.now();
