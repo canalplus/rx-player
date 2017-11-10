@@ -214,7 +214,7 @@ const result = [
 
 #### What changed
 
-``defaultLanguage`` is replaced by the ``defaultAudioTrack`` option, which supports audio description.
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``defaultAudioTrack`` option.
 
 #### Examples
 
@@ -226,20 +226,24 @@ player = new RxPlayer({
 });
 
 // becomes
-player = new RxPlayer({
+player = new RxPlayer();
+player.loadVideo({
   defaultAudioTrack: {
     language: "en"
-  }
+  },
+  // ...
 });
 ```
 
 With audio description:
 ```js
-player = new RxPlayer({
+player = new RxPlayer();
+player.loadVideo({
   defaultAudioTrack: {
     language: "en",
     audioDescription: true
-  }
+  },
+  // ...
 });
 ```
 
@@ -247,7 +251,7 @@ player = new RxPlayer({
 
 #### What changed
 
-``defaultSubtitle`` is replaced by the ``defaultTextTrack`` option, which supports closed caption.
+This option has been removed from the constructor to simplify the API. Now you have to set the wanted transport per-``loadVideo`` calls via its ``defaultTextTrack`` option.
 
 #### Examples
 
@@ -259,20 +263,24 @@ player = new RxPlayer({
 });
 
 // becomes
-player = new RxPlayer({
+player = new RxPlayer();
+player.loadVideo({
   defaultTextTrack: {
     language: "en"
-  }
+  },
+  // ...
 });
 ```
 
 With closed caption:
 ```js
-player = new RxPlayer({
+player = new RxPlayer();
+player.loadVideo({
   defaultTextTrack: {
     language: "en",
     closedCaption: true
-  }
+  },
+  // ...
 });
 ```
 
