@@ -44,68 +44,9 @@ import { normalize as normalizeLang } from "../../utils/languages";
 import { IHSSParserOptions } from "./types";
 
 interface IParserFunctions {
-  (manifest : string|Document) : IParsedManifestSmooth;
-  parseFromString : (x: string) => IParsedManifestSmooth;
-  parseFromDocument : (manifest : Document) => IParsedManifestSmooth;
-}
-
-interface IContentProtectionSmooth {
-    keyId : string;
-    keySystems: HSSKeySystem[];
-}
-
-interface IInitializationSmooth {
-  range: Array<number|null>;
-  indexRange: Array<number|null>;
-  media: string|null;
-}
-
-interface IIndexSmooth {
-  timeline: IHSSManifestSegment[];
-  indexType: string;
-  timescale: number;
-  initialization: IInitializationSmooth;
-}
-
-interface IAdaptationSmooth {
-  id?: string;
-  smoothProtection?: IContentProtectionSmooth|null;
-  type: string;
-  accessibility: string[];
-  index: IIndexSmooth;
-  representations: Array<IDictionary<string|number>>; // XXX TODO
-  name: string|null;
-  language: string|null;
-  normalizedLanguage: string|null;
-  baseURL: string|null;
-}
-
-interface IPeriodSmooth {
-  duration: number;
-  adaptations: IAdaptationSmooth[];
-  laFragCount: number;
-}
-
-interface IParsedManifestSmooth {
-  transportType: string;
-  profiles: string;
-  type: string;
-  suggestedPresentationDelay: number|undefined;
-  timeShiftBufferDepth: number|undefined;
-  presentationLiveGap: number|undefined;
-  availabilityStartTime: number|undefined;
-  periods: IPeriodSmooth[];
-}
-
-interface IHSSManifestSegment {
-  ts : number;
-  d? : number;
-  r : number;
-}
-
-interface HSSKeySystem {
-  systemId : string;
-  privateData : Uint8Array;
+  (manifest : string|Document) : IParsedManifest;
+  parseFromString : (x: string) => IParsedManifest;
+  parseFromDocument : (manifest : Document) => IParsedManifest;
 }
 
 const DEFAULT_MIME_TYPES: IDictionary<string> = {
@@ -516,11 +457,11 @@ function createSmoothStreamingParser(
     };
   }
 
-  function parseFromString(manifest : string): IParsedManifestSmooth {
+  function parseFromString(manifest : string): IParsedManifest {
     return parseFromDocument(new DOMParser().parseFromString(manifest, "application/xml"));
   }
 
-  function parseFromDocument(doc : Document): IParsedManifestSmooth {
+  function parseFromDocument(doc : Document): IParsedManifest {
     const root = doc.documentElement;
     assert.equal(root.nodeName, "SmoothStreamingMedia", "document root should be SmoothStreamingMedia");
     assert(/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
@@ -598,7 +539,7 @@ function createSmoothStreamingParser(
     };
   }
 
-  const parser = <IParserFunctions> function(val): IParsedManifestSmooth {
+  const parser = <IParserFunctions> function(val): IParsedManifest {
     if (typeof val === "string") {
       return parseFromString(val);
     } else {
