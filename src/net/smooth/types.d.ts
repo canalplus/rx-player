@@ -40,7 +40,6 @@ interface IContentProtectionSmooth {
 }
 
 interface IRepresentationSmooth {
-  //[key: string]: any;
   codecs: string;
   mimeType: string;
   bitrate: number;

@@ -25,7 +25,7 @@ import {
 
 import {
   IKeySystemOption,
- } from "../eme/index";
+ } from "../eme";
 
 const {
   DEFAULT_AUTO_PLAY,
@@ -40,7 +40,8 @@ const {
   DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
 
-// XXX TODO
+// TODO
+// Set a real interface for transport options (i.e. same for DASH and SMOOTH).
 interface ITransportOption {
   [keyName : string] : any;
 }
@@ -53,12 +54,9 @@ interface ISupplementaryTextTrackOption {
   codecs? : string;
 }
 
-interface ISupplementaryAudioTrackOption {
+interface ISupplementaryImageTrackOption {
   url : string;
-  language : string;
-  closedCaption : boolean;
   mimeType : string;
-  codecs? : string;
 }
 
 interface IDefaultAudioTrackOption {
@@ -114,7 +112,7 @@ interface ILoadVideoOptionsBase {
   keySystems? : IKeySystemOption[];
   transportOptions? : ITransportOption|undefined;
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
-  supplementaryImageTracks? : ISupplementaryAudioTrackOption[];
+  supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
   startAt? : { position : number } | { wallClockTime : Date|number } |
@@ -141,7 +139,7 @@ interface IParsedLoadVideoOptionsBase {
   keySystems : IKeySystemOption[];
   transportOptions : ITransportOption|undefined;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
-  supplementaryImageTracks : ISupplementaryAudioTrackOption[];
+  supplementaryImageTracks : ISupplementaryImageTrackOption[];
   defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack : IDefaultTextTrackOption|null|undefined;
   startAt : IParsedStartAtOption|undefined;
@@ -290,6 +288,8 @@ function parseConstructorOptions(
  *
  * Do not mutate anything, only cross the given options and sane default options
  * (most coming from the config).
+ *
+ * Throws if any mandatory option is not set.
  * @param {Object} [options={}]
  * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
@@ -303,7 +303,7 @@ function parseLoadVideoOptions(
   let keySystems : IKeySystemOption[];
   let transportOptions : ITransportOption|undefined;
   let supplementaryTextTracks : ISupplementaryTextTrackOption[];
-  let supplementaryImageTracks : ISupplementaryAudioTrackOption[];
+  let supplementaryImageTracks : ISupplementaryImageTrackOption[];
   let textTrackMode : "native"|"html";
   let textTrackElement : HTMLElement|undefined;
   let defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
@@ -329,11 +329,19 @@ function parseLoadVideoOptions(
   if (options.keySystems == null) {
     keySystems = [];
   } else {
-    // XXX TODO check interface here (throw if missing key prop)
     if (Array.isArray(options.keySystems)) {
       keySystems = options.keySystems;
     } else {
       keySystems = [options.keySystems];
+    }
+    for (const keySystem of keySystems) {
+      if (
+        typeof keySystem.type !== "string" ||
+        typeof keySystem.getLicense !== "function"
+      ) {
+        throw new Error("Invalid key system given: Missing type string or " +
+          "getLicense callback");
+      }
     }
   }
 
@@ -342,22 +350,44 @@ function parseLoadVideoOptions(
   if (options.supplementaryTextTracks == null) {
     supplementaryTextTracks = [];
   } else {
-    // XXX TODO check interface here (throw if missing key prop)
     if (Array.isArray(options.supplementaryTextTracks)) {
       supplementaryTextTracks = options.supplementaryTextTracks;
     } else {
       supplementaryTextTracks = [options.supplementaryTextTracks];
+    }
+    for (const supplementaryTextTrack of supplementaryTextTracks) {
+      if (typeof supplementaryTextTrack.closedCaption !== "boolean") {
+        supplementaryTextTrack.closedCaption = !!supplementaryTextTrack.closedCaption;
+      }
+      if (
+        typeof supplementaryTextTrack.language !== "string" ||
+        typeof supplementaryTextTrack.mimeType !== "string" ||
+        typeof supplementaryTextTrack.url !== "string"
+      ) {
+        /* tslint:disable:max-line-length */
+        throw new Error("Invalid supplementary text track given. Missing either language, mimetype or url");
+        /* tslint:enable:max-line-length */
+      }
     }
   }
 
   if (options.supplementaryImageTracks == null) {
     supplementaryImageTracks = [];
   } else {
-    // XXX TODO check interface here (throw if missing key prop)
     if (Array.isArray(options.supplementaryImageTracks)) {
       supplementaryImageTracks = options.supplementaryImageTracks;
     } else {
       supplementaryImageTracks = [options.supplementaryImageTracks];
+    }
+    for (const supplementaryImageTrack of supplementaryImageTracks) {
+      if (
+        typeof supplementaryImageTrack.mimeType !== "string" ||
+        typeof supplementaryImageTrack.url !== "string"
+      ) {
+        /* tslint:disable:max-line-length */
+        throw new Error("Invalid supplementary image track given. Missing either mimetype or url");
+        /* tslint:enable:max-line-length */
+      }
     }
   }
 
