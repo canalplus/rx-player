@@ -83,7 +83,6 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "@types/deep-equal": "^1.0.1",
     "array-find": "^1.0.0",
     "array-find-index": "^1.0.2",
     "deep-equal": "^1.0.1",
@@ -93,6 +92,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
+    "@types/deep-equal": "^1.0.1",
     "@types/mocha": "^2.2.43",
     "@types/node": "^8.0.33",
     "arraybuffer-loader": "^0.2.2",
