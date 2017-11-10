@@ -18,7 +18,7 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import EncryptedMediaError from "../../errors/EncryptedMediaError";
 import log from "../../utils/log";
-import { IError } from "../../utils/retry";
+import { CustomError } from "../../errors";
 import { onEncrypted$ } from "../../compat/events";
 import { createEME } from "../eme";
 import { IKeySystemOption } from "../eme";
@@ -33,7 +33,7 @@ import { IKeySystemOption } from "../eme";
 function createEMEIfKeySystems(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
-  errorStream : Subject<Error|IError>
+  errorStream : Subject<Error|CustomError>
 ) : Observable<any> { // XXX TODO
   if (keySystems && keySystems.length) {
     return createEME(videoElement, keySystems, errorStream);
