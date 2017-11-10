@@ -186,7 +186,7 @@ function TextTrackParser({
       end: 0,
       timescale: segmentInfos.timescale || 0,
       data: [],
-      timeOffset: manifest.availabilityStartTime, // TODO + period.start
+      timeOffset: manifest.availabilityStartTime || 0, // TODO + period.start
     };
   } else { // if not init
     const segmentDataBase = {
@@ -194,7 +194,7 @@ function TextTrackParser({
       end: segmentInfos.time + segmentInfos.duration,
       language,
       timescale: segmentInfos.timescale,
-      timeOffset: manifest.availabilityStartTime, // TODO + period.start
+      timeOffset: manifest.availabilityStartTime || 0, // TODO + period.start
     };
     if (isMP4) {
       const { codec = "" } = representation;
