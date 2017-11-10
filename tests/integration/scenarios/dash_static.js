@@ -204,8 +204,8 @@ describe("dash static SegmentTimeline content", function () {
     const textTracks = player.getAvailableTextTracks();
 
     expect(audioTracks.length).to.equal(1);
-    expect(audioTracks[0].language).to.equal(undefined);
-    expect(audioTracks[0].normalized).to.equal(undefined);
+    expect(audioTracks[0].language).to.equal("");
+    expect(audioTracks[0].normalized).to.equal("");
     expect(audioTracks[0].audioDescription).to.equal(false);
     expect(typeof audioTracks[0].id).to.equal("string");
     expect(audioTracks[0].id).to.not.equal("");
