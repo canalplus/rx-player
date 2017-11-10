@@ -27,10 +27,11 @@ import parseTimestamp from "./parseTimestamp.js";
  * Specific style is parsed and applied to class element.
  *
  * @param {string} text
+ * @param {Number} timeOffset
  * @return {Array.<Object>}
  * @throws Error - Throws if the given WebVTT string is invalid.
  */
-export default function parseWebVTT(text) {
+export default function parseWebVTT(text, timeOffset) {
   const newLineChar = /\r\n|\n|\r/g;
   const linified = text.split(newLineChar);
   const cuesArray = [];
@@ -69,7 +70,7 @@ export default function parseWebVTT(text) {
           i++;
         }
         const cueBlock = linified.slice(startOfCueBlock, i);
-        const cue = parseCue(cueBlock, styleElements);
+        const cue = parseCue(cueBlock, timeOffset, styleElements);
         if (cue) {
           cuesArray.push(cue);
         }
@@ -174,7 +175,7 @@ function parseStyleBlock(styleBlock) {
  * @param {Array.<Object>} styleElements
  * @returns {Object|undefined}
  */
-function parseCue(cueBlock, styleElements) {
+function parseCue(cueBlock, timeOffset, styleElements) {
   const region = document.createElement("div");
   const regionAttr = document.createAttribute("style");
   let index = 0;
@@ -246,8 +247,8 @@ function parseCue(cueBlock, styleElements) {
   pElement.appendChild(spanElement);
 
   return {
-    start: range.start,
-    end: range.end,
+    start: range.start + timeOffset,
+    end: range.end + timeOffset,
     element: region,
   };
 }

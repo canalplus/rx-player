@@ -24,10 +24,11 @@ import { makeCue } from "../../../compat/index.js";
 /**
  * Parse whole WEBVTT file into an array of cues, to be inserted in a video's
  * TrackElement.
- * @param {string}
+ * @param {string} vttStr
+ * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
-export default function parseVTTStringToVTTCues(vttStr) {
+export default function parseVTTStringToVTTCues(vttStr, timeOffset) {
   // WEBVTT authorize CRLF, LF or CR as line terminators
   const lines = vttStr.split(/\r\n|\n|\r/);
 
@@ -61,7 +62,7 @@ export default function parseVTTStringToVTTCues(vttStr) {
 
   const cues = [];
   for (let i = 0; i < cueBlocks.length; i++) {
-    const cue = parseCue(cueBlocks[i]);
+    const cue = parseCue(cueBlocks[i], timeOffset);
     if (cue) {
       cues.push(cue);
     }
@@ -91,9 +92,10 @@ function isStartOfCueBlock(line) {
 /**
  * Parse cue block into a cue.
  * @param {Array.<string>} cueLines
+ * @param {Number} timeOffset
  * @returns {TextTrackCue|VTTCue}
  */
-function parseCue(cueLines) {
+function parseCue(cueLines, timeOffset) {
   const timingRegexp = /-->/;
   let timeString;
   let payloadLines;
@@ -117,7 +119,7 @@ function parseCue(cueLines) {
 
   const { start, end, settings } = timeAndSettings;
   const payload = payloadLines.join("\n");
-  const cue = makeCue(start, end, payload);
+  const cue = makeCue(start + timeOffset, end + timeOffset, payload);
   if (cue && cue instanceof VTTCue) {
     setSettingsOnCue(settings, cue);
   }

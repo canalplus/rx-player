@@ -44,7 +44,7 @@ import parseCue from "./parseCue.js";
  * but we can still do better.
  * @param {string} str
  * @returns {Array.<Object>} */
-export default function parseTTMLStringToDIV(str) {
+export default function parseTTMLStringToDIV(str, timeOffset) {
   const ret = [];
   const xml = new DOMParser().parseFromString(str, "text/xml");
 
@@ -124,7 +124,7 @@ export default function parseTTMLStringToDIV(str) {
 
         const cue = parseCue(
           paragraph,
-          0, // offset
+          timeOffset,
           styles,
           regions,
           body,
