@@ -216,7 +216,7 @@ export default function Stream({
    */
   const fetchManifest = throttle(_url => {
     const manifest$ = manifestPipeline({ url: _url });
-    const fakeSubject = new Subject<never>();
+    const fakeSubject = new Subject<any>();
     return processPipeline(
       "manifest",
       manifest$,
