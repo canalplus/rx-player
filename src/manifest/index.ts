@@ -64,7 +64,7 @@ class Manifest {
   public isLive : boolean;
   public uris : string[];
   public suggestedPresentationDelay? : number;
-  public availabilityStartTime : number;
+  public availabilityStartTime? : number;
   public presentationLiveGap? : number;
   public timeShiftBufferDepth? : number;
 
