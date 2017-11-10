@@ -144,7 +144,7 @@ export default class ABRManager {
    * @param {ChooserOption} [options={}]
    */
   constructor(
-    requests$: Subject<IRequest[]>,
+    requests$: Observable<Observable<IRequest>>,
     metrics$: Observable<{ type: SupportedBufferTypes, value: IMetricValue }>,
     options : IRepresentationChoosersOptions = defaultChooserOptions
   ) {

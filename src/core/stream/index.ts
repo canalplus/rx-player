@@ -197,7 +197,7 @@ export default function Stream({
    * Subject through which each request progression will be reported to the ABR
    * manager.
    */
-  const requestsInfos$ = new Subject<IRequest[]>();
+  const requestsInfos$ = new Subject<Subject<IRequest>>();
 
   /**
    * Pipeline used to download the manifest file.
@@ -216,7 +216,7 @@ export default function Stream({
    */
   const fetchManifest = throttle(_url => {
     const manifest$ = manifestPipeline({ url: _url });
-    const fakeSubject = new Subject();
+    const fakeSubject = new Subject<never>();
     return processPipeline(
       "manifest",
       manifest$,
