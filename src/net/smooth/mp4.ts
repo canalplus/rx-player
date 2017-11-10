@@ -969,7 +969,7 @@ export default {
     // TODO NAL length is forced to 4
     const avcc = atoms.avcc(sps, pps, nalLength);
     let stsd;
-    if (!pssList.length) {
+    if (!pssList.length || keyId == null) {
       const avc1 = atoms.avc1encv(
         "avc1", // name
         1, // drefIdx
@@ -1030,7 +1030,7 @@ export default {
     packetSize : number,
     sampleRate : number,
     codecPrivateData : string,
-    keyId : string,
+    keyId? : string,
     pssList? : PSSList
   ) {
 
@@ -1043,7 +1043,7 @@ export default {
 
     const esds = atoms.esds(1, codecPrivateData);
     let stsd;
-    if (!pssList.length) {
+    if (!pssList.length || keyId == null) {
       const mp4a = atoms.mp4aenca(
         "mp4a",
         1,

@@ -81,7 +81,7 @@ const generateSegmentLoader = (
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
   if (segment.isInit && representation._codecPrivateData) {
     let responseData : Uint8Array;
-    const protection = adaptation._smoothProtection || {};
+    const protection = adaptation._smoothProtection;
 
     switch (adaptation.type) {
     case "video":
@@ -91,20 +91,22 @@ const generateSegmentLoader = (
         representation.height || 0,
         72, 72, 4, // vRes, hRes, nal
         representation._codecPrivateData,
-        protection.keyId,     // keyId
-        protection.keySystems // pssList
+        protection && protection.keyId,     // keyId
+        protection && protection.keySystems // pssList
       );
       break;
     case "audio":
       responseData = createAudioInitSegment(
         segment.timescale,
-        representation._channels,
+
+        // TODO See if this should already be defined in the Smooth manifest
+        representation._channels || 0,
         representation._bitsPerSample || 0,
         representation._packetSize || 0,
         representation._samplingRate || 0,
         representation._codecPrivateData,
-        protection.keyId,     // keyId
-        protection.keySystems // pssList
+        protection && protection.keyId,     // keyId
+        protection && protection.keySystems // pssList
       );
       break;
     default:
