@@ -124,11 +124,10 @@ export default function(
     } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : SegmentParserObservable {
 
-      const buffer = response.responseData instanceof Uint8Array
-        ? response.responseData.buffer
-        : response.responseData;
+      const responseData = response.responseData instanceof Uint8Array
+      ? response.responseData
+       : new Uint8Array(response.responseData);
 
-      const responseData = new Uint8Array(buffer);
       let nextSegments : ISegmentTimingInfos[]|undefined;
       let segmentInfos : ISegmentTimingInfos;
       let segmentData : Uint8Array = responseData;
