@@ -47,7 +47,8 @@ interface IMockMediaKeySession {
   dispatchEvent(evt: Event): boolean;
 }
 
-type IMediaKeySessionType = "temporary" | "persistent-license" | "persistent-release-message";
+type IMediaKeySessionType =
+  "temporary" | "persistent-license" | "persistent-release-message";
 
 interface IMockMediaKeys {
   _setVideo(vid : HTMLMediaElement) : void;

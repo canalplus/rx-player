@@ -45,13 +45,13 @@ interface IRepresentationSmooth {
   codecs?: string;
   mimeType?: string;
   id?: string|number;
-  samplingRate?: number,
-  bitsPerSample?: number,
-  packetSize?: number,
-  width?: number,
-  height?: number,
-  audiotag?: number,
-  channels?: number,
+  samplingRate?: number;
+  bitsPerSample?: number;
+  packetSize?: number;
+  width?: number;
+  height?: number;
+  audiotag?: number;
+  channels?: number;
 }
 
 interface IAdaptationSmooth {
@@ -82,4 +82,4 @@ export {
   IHSSManifestSegment,
   IRepresentationSmooth,
   IContentProtectionSmooth,
-}
+};

@@ -139,7 +139,7 @@ interface ISegmentURL {
   media?: string;
   mediaRange?: [number, number];
   index?: string;
-  indexRange?: [number, number]; 
+  indexRange?: [number, number];
 }
 
 interface ISegmentBase {

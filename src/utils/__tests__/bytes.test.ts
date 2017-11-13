@@ -164,7 +164,9 @@ describe("utils - bytes", () => {
       expect(bytes.be2toi(arr, 45)).to.equal(0);
     });
 
+    /* tslint:disable:max-line-length */
     it("should return the number value for the 2 first elements of an Uint8Array from the offset", () => {
+    /* tslint:enable:max-line-length */
       // as the test would be equivalent to re-implement the function, I
       // directly take the expected result (number to hex and hex to
       // number) and compare
@@ -178,7 +180,9 @@ describe("utils - bytes", () => {
   });
 
   describe("be4toi", () => {
+    /* tslint:disable:max-line-length */
     it("should return the number value for the 4 first elements of an Uint8Array from the offset", () => {
+    /* tslint:enable:max-line-length */
       // as the test would be equivalent to re-implement the function, I
       // directly take the expected result (number to hex and hex to
       // number) and compare
@@ -192,7 +196,9 @@ describe("utils - bytes", () => {
   });
 
   describe("be8toi", () => {
+    /* tslint:disable:max-line-length */
     it("should return the number value for the 8 first elements of an Uint8Array from the offset", () => {
+    /* tslint:enable:max-line-length */
       // as the test would be equivalent to re-implement the function, I
       // directly take the expected result (number to hex and hex to
       // number) and compare
@@ -218,7 +224,9 @@ describe("utils - bytes", () => {
     });
 
     it(
+      /* tslint:disable:max-line-length */
       "should return the number value for the 2 first elements of an Uint8Array from the offset, little-endian style",
+      /* tslint:enable:max-line-length */
       () => {
         // as the test would be equivalent to re-implement the function, I
         // directly take the expected result (number to hex and hex to
@@ -234,7 +242,9 @@ describe("utils - bytes", () => {
 
   describe("le4toi", () => {
     it(
+      /* tslint:disable:max-line-length */
       "should return the number value for the 4 first elements of an Uint8Array from the offset, little-endian style",
+      /* tslint:enable:max-line-length */
       () => {
         // as the test would be equivalent to re-implement the function, I
         // directly take the expected result (number to hex and hex to
@@ -250,7 +260,9 @@ describe("utils - bytes", () => {
 
   describe("le8toi", () => {
     it(
+      /* tslint:disable:max-line-length */
       "should return the number value for the 8 first elements of an Uint8Array from the offset, little-endian style",
+      /* tslint:enable:max-line-length */
       () => {
         // as the test would be equivalent to re-implement the function, I
         // directly take the expected result (number to hex and hex to
@@ -266,7 +278,9 @@ describe("utils - bytes", () => {
   });
 
   describe("itole2", () => {
+    /* tslint:disable:max-line-length */
     it("should return a little-endian style Uint8Array of length 2 translated from the number given", () => {
+    /* tslint:enable:max-line-length */
       const values = [264, 65281, 65535, 255];
       expect(bytes.itole2(values[0])).to.deep.equal(new Uint8Array([8, 1]));
       expect(bytes.itole2(values[1])).to.deep.equal(new Uint8Array([1, 255]));
@@ -275,7 +289,9 @@ describe("utils - bytes", () => {
   });
 
   describe("itole4", () => {
+    /* tslint:disable:max-line-length */
     it("should return a little-endian style Uint8Array of length 4 translated from the number given", () => {
+    /* tslint:enable:max-line-length */
       const values = [ 33489666, 130819, 511, 1 ];
       expect(bytes.itole4(values[0]))
         .to.deep.equal(new Uint8Array([2, 3, 255, 1]));
@@ -289,7 +305,9 @@ describe("utils - bytes", () => {
   });
 
   describe("itole8", () => {
+    /* tslint:disable:max-line-length */
     xit("should return a little-endian style Uint8Array of length 8 translated from the number given", () => {
+    /* tslint:enable:max-line-length */
       const values = [ 1, 280379743338240 ];
       expect(bytes.itole8(values[0])).to.deep.equal(new Uint8Array([
         1, 0, 0, 0, 0, 0, 0, 0 ]));
