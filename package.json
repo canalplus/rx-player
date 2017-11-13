@@ -86,7 +86,7 @@
     "test:unit:firefox:watch": "RXP_TESTS_WATCH=true karma start tests/unit/karma.conf.js --browsers Firefox",
     "test:unit:watch": "RXP_TESTS_WATCH=true karma start tests/unit/karma.conf.js",
     "test:watch": "RXP_TESTS_WATCH=true karma start tests/karma.conf.js",
-    "types": "tsc --noEmit src/**/*.ts",
+    "types": "tsc --noEmit --project .",
     "update-version": "npm run version --git-tag-version=false",
     "preversion": "npm run check",
     "version": "./tools/bin/update-version"

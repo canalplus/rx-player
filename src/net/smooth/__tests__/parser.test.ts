@@ -36,22 +36,34 @@
 //       parser.parseFromString("<SmoothStreamingMedia></SmoothStreamingMedia>");
 //     }).to.throw();
 //     expect(function() {
+       /* tslint:disable:max-line-length */
 //       parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"1\"></SmoothStreamingMedia>");
+       /* tslint:enable:max-line-length */
 //     }).to.throw();
 //     expect(function() {
+       /* tslint:disable:max-line-length */
 //       parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\"></SmoothStreamingMedia>");
+       /* tslint:enable:max-line-length */
 //     }).to.throw();
 //     expect(function() {
+       /* tslint:disable:max-line-length */
 //       parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"3\"></SmoothStreamingMedia>");
+       /* tslint:enable:max-line-length */
 //     }).to.throw();
 //     expect(function() {
+       /* tslint:disable:max-line-length */
 //       parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"0\"></SmoothStreamingMedia>");
+       /* tslint:enable:max-line-length */
 //     }).to.not.throw();
 //     expect(function() {
+       /* tslint:disable:max-line-length */
 //       parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"1\"></SmoothStreamingMedia>");
+       /* tslint:enable:max-line-length */
 //     }).to.not.throw();
 //     expect(function() {
+       /* tslint:disable:max-line-length */
 //       parser.parseFromString("<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"2\"></SmoothStreamingMedia>");
+       /* tslint:enable:max-line-length */
 //     }).to.not.throw();
 //   });
 
@@ -88,7 +100,9 @@
 //     ).profiles).to.match(/isoff-live/);
 
 //     expect(parser.parseFromString(
+       /* tslint:disable:max-line-length */
 //       "<SmoothStreamingMedia MajorVersion=\"2\" MinorVersion=\"0\" Duration=\"\" IsLive=\"FALSE\">" +
+       /* tslint:enable:max-line-length */
 //       "</SmoothStreamingMedia>"
 //     ).profiles).not.to.match(/isoff-live/);
 //   });

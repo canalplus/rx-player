@@ -145,7 +145,9 @@ function getKeySystems(
     },
     // {
     //   // Clearkey
+    /* tslint:disable:max-line-length */
     //   // (https://dvcs.w3.org/hg/html-media/raw-file/tip/encrypted-media/cenc-format.html)
+    /* tslint:enable:max-line-length */
     //   systemId: "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b",
     //   privateData: strToBytes(JSON.stringify({
     //     kids: [toBase64URL(bytesToStr(keyIdBytes))],
@@ -223,7 +225,11 @@ function createSmoothStreamingParser(
     keySystems: IHSSKeySystem[],
   } {
     const header = root.firstElementChild as Element;
-    assert.equal(header.nodeName, "ProtectionHeader", "Protection should have ProtectionHeader child");
+    assert.equal(
+      header.nodeName,
+      "ProtectionHeader",
+      "Protection should have ProtectionHeader child"
+    );
     const privateData = strToBytes(atob(header.textContent || ""));
     const keyId = getHexKeyId(privateData);
     const keyIdBytes = hexToBytes(keyId);
@@ -454,13 +460,20 @@ function createSmoothStreamingParser(
   }
 
   function parseFromString(manifest : string): IParsedManifest {
-    return parseFromDocument(new DOMParser().parseFromString(manifest, "application/xml"));
+    return parseFromDocument(
+      new DOMParser().parseFromString(manifest, "application/xml")
+    );
   }
 
   function parseFromDocument(doc : Document): IParsedManifest {
     const root = doc.documentElement;
-    assert.equal(root.nodeName, "SmoothStreamingMedia", "document root should be SmoothStreamingMedia");
-    assert(/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
+    assert.equal(
+      root.nodeName,
+      "SmoothStreamingMedia",
+      "document root should be SmoothStreamingMedia"
+    );
+    assert(/^[2]-[0-2]$/
+      .test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
       "Version should be 2.0, 2.1 or 2.2");
 
     const timescale = +(root.getAttribute("Timescale") || 10000000);

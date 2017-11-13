@@ -90,7 +90,7 @@ describe("utils - assert.equal", () => {
       /* tslint:disable:no-unused-expression */
       expect(error).to.exist;
       /* tslint:enable:no-unused-expression */
-      expect(error.message).to.equal('invalid assertion');
+      expect(error.message).to.equal("invalid assertion");
       expect(error.name).to.equal("AssertionError");
     });
   });
