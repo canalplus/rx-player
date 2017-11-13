@@ -63,7 +63,13 @@ const SegmentBaseHelpers: SegmentHelpers<ITimelineIndex> = {
    */
   _addSegmentInfos(
     index : IBaseIndex,
-    segmentInfos : any // XXX TODO
+    segmentInfos : {
+      time : number,
+      duration : number,
+      timescale : number,
+      count: number,
+      range: [number, number],
+    }
   ) : boolean {
     if (segmentInfos.timescale !== index.timescale) {
       const { timescale } = index;
