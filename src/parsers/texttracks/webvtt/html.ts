@@ -15,6 +15,7 @@
  */
 
 import log from "../../../utils/log";
+import arrayIncludes from "../../../utils/array-includes";
 import parseTimestamp from "./parseTimestamp";
 
 export interface IVTTHTMLCue {
@@ -361,7 +362,7 @@ function formatWebVTTtoHTML(
     function createStyleElement(baseNode : Node) : HTMLElement|Text {
       const mainTag = baseNode.nodeName.toLowerCase().split(".")[0];
       let nodeWithStyle;
-      if (webVTTTags.includes(mainTag)) { // If element accepted
+      if (arrayIncludes(webVTTTags, mainTag)) { // If element accepted
         if (mainTag === "#text") {
           nodeWithStyle = document.createTextNode((baseNode as Text).wholeText);
         } else {
@@ -377,11 +378,11 @@ function formatWebVTTtoHTML(
             classIndexes.forEach(index => {
               attr.value += styleElements[index].styleContent;
             });
-            const nameClass = HTMLTags.includes(mainTag) ? mainTag : "span";
+            const nameClass = arrayIncludes(HTMLTags, mainTag) ? mainTag : "span";
             nodeWithStyle = document.createElement(nameClass);
             nodeWithStyle.setAttributeNode(attr);
           } else { // If style mustn't be applied. Rebuild element with tag name
-            const elementTag = (!HTMLTags.includes(mainTag)) ? "span" : mainTag;
+            const elementTag = !arrayIncludes(HTMLTags, mainTag) ? "span" : mainTag;
             nodeWithStyle = document.createElement(elementTag);
           }
           for (let j = 0; j < baseNode.childNodes.length; j++) {

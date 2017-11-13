@@ -14,31 +14,39 @@
  * limitations under the License.
  */
 
+import objectAssign = require("object-assign");
 import { Subject } from "rxjs/Subject";
 import {
   ICustomSourceBuffer,
   ICustomTimeRanges,
 } from "../stream/source_buffers";
 
-const BUFFER_APPEND = "append";
-const BUFFER_REMOVE = "remove";
+enum SourceBufferAction { Append, Remove }
 
-interface ISourceBufferQueueElement {
-  type : "append"|"remove"; // type of action that will be performed
-  args : any; // args for the corresponding action
-  subj : Subject<Event>; // Subject via which the response will be emitted
+interface ISourceBufferAppendQueueElement<T> {
+  type : SourceBufferAction.Append;
+  args : T;
+  subj : Subject<Event>;
 }
 
+interface ISourceBufferRemoveQueueElement {
+  type : SourceBufferAction.Remove;
+  args : { start : number, end : number };
+  subj : Subject<Event>;
+}
+
+type ISourceBufferQueueElement<T> =
+  ISourceBufferAppendQueueElement<T> | ISourceBufferRemoveQueueElement;
 /**
  * Append/Remove from sourceBuffer in a queue.
  * Wait for the previous buffer action to be finished (updateend event) to
  * perform the next in the queue.
  * @class QueuedSourceBuffer
  */
-export default class QueuedSourceBuffer {
-  private buffer : ICustomSourceBuffer;
-  private queue : ISourceBufferQueueElement[];
-  private flushing : Subject<Event>|null;
+export default class QueuedSourceBuffer<T> {
+  private _buffer : ICustomSourceBuffer<T>;
+  private _queue : Array<ISourceBufferQueueElement<T>>;
+  private _flushing : Subject<Event>|null;
   private __onUpdate : (x: Event) => void;
   private __onError : (x : Event) => void;
   private __flush : () => void;
@@ -47,18 +55,18 @@ export default class QueuedSourceBuffer {
    * @constructor
    * @param {SourceBuffer} sourceBuffer
    */
-  constructor(sourceBuffer : ICustomSourceBuffer) {
-    this.buffer = sourceBuffer;
-    this.queue = [];
-    this.flushing = null;
+  constructor(sourceBuffer : ICustomSourceBuffer<T>) {
+    this._buffer = sourceBuffer;
+    this._queue = [];
+    this._flushing = null;
 
     this.__onUpdate = this._onUpdate.bind(this);
     this.__onError = this._onError.bind(this);
     this.__flush = this._flush.bind(this);
 
-    this.buffer.addEventListener("update", this.__onUpdate);
-    this.buffer.addEventListener("error", this.__onError);
-    this.buffer.addEventListener("updateend", this.__flush);
+    this._buffer.addEventListener("update", this.__onUpdate);
+    this._buffer.addEventListener("error", this.__onError);
+    this._buffer.addEventListener("updateend", this.__flush);
   }
 
   /**
@@ -66,8 +74,11 @@ export default class QueuedSourceBuffer {
    * @param {ArrayBuffer} buffer
    * @returns {Observable}
    */
-  appendBuffer(buffer : any) : Subject<Event> {
-    return this._queueAction(BUFFER_APPEND, buffer);
+  appendBuffer(buffer : T) : Subject<Event> {
+    return this._queueAction({
+      type: SourceBufferAction.Append,
+      args: buffer,
+    });
   }
 
   /**
@@ -80,7 +91,10 @@ export default class QueuedSourceBuffer {
   removeBuffer(
     { start, end } : { start : number, end : number }
   ) : Subject<Event> {
-    return this._queueAction(BUFFER_REMOVE, { start, end });
+    return this._queueAction({
+      type: SourceBufferAction.Remove,
+      args: { start, end },
+    });
   }
 
   /**
@@ -88,29 +102,29 @@ export default class QueuedSourceBuffer {
    * @returns {TimeRanges}
    */
   getBuffered() : TimeRanges|ICustomTimeRanges {
-    return this.buffer.buffered;
+    return this._buffer.buffered;
   }
 
   /**
    * Free up ressources used by this class.
    */
   dispose() : void {
-    this.buffer.removeEventListener("update", this.__onUpdate);
-    this.buffer.removeEventListener("error", this.__onError);
-    this.buffer.removeEventListener("updateend", this.__flush);
-    this.queue.length = 0;
-    this.flushing = null;
+    this._buffer.removeEventListener("update", this.__onUpdate);
+    this._buffer.removeEventListener("error", this.__onError);
+    this._buffer.removeEventListener("updateend", this.__flush);
+    this._queue.length = 0;
+    this._flushing = null;
   }
 
   /**
    * @private
    * @param {Event} evt
    */
-  _onUpdate(evt : Event) : void {
-    if (this.flushing) {
-      this.flushing.next(evt);
-      this.flushing.complete();
-      this.flushing = null;
+  private _onUpdate(evt : Event) : void {
+    if (this._flushing) {
+      this._flushing.next(evt);
+      this._flushing.complete();
+      this._flushing = null;
     }
   }
 
@@ -118,10 +132,10 @@ export default class QueuedSourceBuffer {
    * @private
    * @param {Error} error
    */
-  _onError(error : Event) : void {
-    if (this.flushing) {
-      this.flushing.error(error);
-      this.flushing = null;
+  private _onError(error : Event) : void {
+    if (this._flushing) {
+      this._flushing.error(error);
+      this._flushing = null;
     }
   }
 
@@ -133,9 +147,18 @@ export default class QueuedSourceBuffer {
    * @param {*} args
    * @returns {Subject} - Can be used to follow the buffer action advancement.
    */
-  _queueAction(type : "append"|"remove", args : any /* TODO? */) : Subject<Event> {
-    const subj : Subject<Event> = new Subject();
-    const length = this.queue.unshift({ type, args, subj });
+  private _queueAction(action :
+    {
+      type : SourceBufferAction.Append,
+      args : T,
+    } | {
+      type : SourceBufferAction.Remove,
+      args : { start : number, end : number }
+    }
+  ) : Subject<Event> {
+    const subj = new Subject<Event>();
+    const queueElement = objectAssign({ subj }, action);
+    const length = this._queue.unshift(queueElement);
     if (length === 1) {
       this._flush();
     }
@@ -146,22 +169,23 @@ export default class QueuedSourceBuffer {
    * Perform next queued action if one and none are pending.
    * @private
    */
-  _flush() : void {
-    if (this.flushing || this.queue.length === 0 || this.buffer.updating) {
+  private _flush() : void {
+    if (this._flushing || this._queue.length === 0 || this._buffer.updating) {
       return;
     }
 
     // TODO TypeScrypt do not get the previous length check? Find solution /
     // open issue
-    const { type, args, subj } = this.queue.pop() as ISourceBufferQueueElement;
-    this.flushing = subj;
+    const queueElement = this._queue.pop() as ISourceBufferQueueElement<T>;
+    this._flushing = queueElement.subj;
     try {
-      switch (type) {
-        case BUFFER_APPEND:
-          this.buffer.appendBuffer(args);
+      switch (queueElement.type) {
+        case SourceBufferAction.Append:
+          this._buffer.appendBuffer(queueElement.args);
           break;
-        case BUFFER_REMOVE:
-          this.buffer.remove(args.start, args.end); break;
+        case SourceBufferAction.Remove:
+          this._buffer.remove(queueElement.args.start, queueElement.args.end);
+          break;
       }
     } catch (e) {
       this._onError(e);

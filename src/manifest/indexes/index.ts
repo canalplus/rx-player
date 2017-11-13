@@ -32,6 +32,7 @@ if (__FEATURES__.DASH) {
  * @param {Object} index
  * @returns {Object|undefined}
  */
+// XXX TODO
 function getRightIndexHelpers(index : { indexType : string }) : any|undefined {
   return indexes[index.indexType];
 }

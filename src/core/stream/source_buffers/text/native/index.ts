@@ -24,6 +24,16 @@ import {
 } from "../../abstract";
 import parseTextTrackToCues from "./parsers";
 
+export interface INativeTextTrackData {
+  data : string;
+  language : string;
+  timescale : number;
+  start: number;
+  timeOffset: number;
+  end? : number;
+  type : string;
+}
+
 /**
  * Source buffer to display TextTracks in a <track> element, in the given
  * video element.
@@ -31,8 +41,8 @@ import parseTextTrackToCues from "./parsers";
  * @extends AbstractSourceBuffer
  */
 export default class NativeTextTrackSourceBuffer
-  extends AbstractSourceBuffer
-  implements ICustomSourceBuffer
+  extends AbstractSourceBuffer<INativeTextTrackData>
+  implements ICustomSourceBuffer<INativeTextTrackData>
 {
   private _videoElement : HTMLMediaElement;
   private _track : TextTrack;
@@ -69,17 +79,7 @@ export default class NativeTextTrackSourceBuffer
    * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
-  _append(
-    data : {
-      data : string,
-      language : string,
-      timescale : number,
-      start: number,
-      timeOffset: number,
-      end? : number,
-      type : string,
-    }
-  ) : void {
+  _append(data : INativeTextTrackData) : void {
     const {
       timescale, // timescale for the start and end
       start: timescaledStart, // exact beginning to which the track applies

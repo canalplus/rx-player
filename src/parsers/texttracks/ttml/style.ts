@@ -16,6 +16,7 @@
 
 import arrayFind = require("array-find");
 import arrayIncludes from "../../../utils/array-includes";
+import startsWith from "../../../utils/starts-with";
 
 export interface IStyleList {
   [styleName: string] : string;
@@ -129,7 +130,7 @@ export function getStylingFromElement(element : Node) : IStyleList {
   const currentStyle : IStyleList = {};
   for (let i = 0; i <= element.attributes.length - 1; i++) {
     const styleAttribute = element.attributes[i];
-    if (styleAttribute.name.startsWith("tts")) {
+    if (startsWith(styleAttribute.name, "tts")) {
       const nameWithoutTTS = styleAttribute.name.substr(4);
       currentStyle[nameWithoutTTS] = styleAttribute.value;
     }

@@ -15,6 +15,7 @@
  */
 
 import objectAssign = require("object-assign");
+import arrayFind = require("array-find");
 import getParameters from "../getParameters";
 import {
   getBodyNode,
@@ -98,7 +99,7 @@ export default function parseTTMLStringToDIV(
 
           const associatedStyle = regionNode.getAttribute("style");
           if (associatedStyle) {
-            const style = styles.find((x) => x.id === associatedStyle);
+            const style = arrayFind(styles, (x) => x.id === associatedStyle);
             if (style) {
               regionStyle = objectAssign({}, style.style, regionStyle);
             }

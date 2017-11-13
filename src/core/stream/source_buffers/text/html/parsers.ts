@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
+export interface IHTMLCue {
+  start : number;
+  end: number;
+  element : HTMLElement;
+}
+
 type htmlParserFn =
-  (texttrack : string, timeOffset : number, language? : string) => any[];
+  (texttrack : string, timeOffset : number, language? : string) => IHTMLCue[];
 const htmlParsers : { [format : string] : htmlParserFn } = {};
 
 if (__FEATURES__.HTML_SAMI) {
@@ -51,7 +57,7 @@ export default function parseTextTrackToElements(
   data : string,
   timeOffset : number,
   language? : string
-) : any[] {
+) : IHTMLCue[] {
   const parser = htmlParsers[type];
 
   if (!parser) {

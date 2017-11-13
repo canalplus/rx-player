@@ -35,7 +35,7 @@ import QueuedSourceBuffer from "./queued-source-buffer";
  * @returns {Observable}
  */
 export default function cleanBuffer(
-  qSourceBuffer : QueuedSourceBuffer,
+  qSourceBuffer : QueuedSourceBuffer<any>, // The type of buffer has no importance here
   position : number,
   maxBufferBehind : number,
   maxBufferAhead : number
@@ -122,5 +122,5 @@ export default function cleanBuffer(
     .concatAll()
     .ignoreElements();
 
-  return clean$ as Observable<never>;
+  return clean$ as Observable<never>; // ignoreElements == the Observerable never emits
 }

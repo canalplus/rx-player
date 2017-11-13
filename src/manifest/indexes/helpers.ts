@@ -131,6 +131,7 @@ const setTimescale = (
   }
 
   // Huh? I think that's a TypeScript problem here
+  // XXX TODO
   return index as { timescale : number };
 };
 

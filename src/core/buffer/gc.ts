@@ -88,7 +88,7 @@ function selectGCedRanges(
  */
 export default function launchGarbageCollector(
   timings$ : Observable<{ currentTime: number }>,
-  bufferingQueue : QueuedSourceBuffer
+  bufferingQueue : QueuedSourceBuffer<any> // The type of buffer has no importance here
 ) : Observable<{}> {
   log.warn("buffer: running garbage collector");
 

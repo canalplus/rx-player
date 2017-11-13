@@ -47,7 +47,7 @@ export default function processPipeline(
   network$ : Subject<{ type: SupportedBufferTypes, value: IMetricValue }>,
   requests$ : Subject<Subject<IRequest>>,
   warning$ : Subject<Error|CustomError>
-) : Observable<any> {
+) : Observable<any> { // emit the segment data
   let request$ : Subject<IRequest>|undefined;
   let segmentId : string|number|undefined;
   return pipeline$

@@ -394,7 +394,7 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
  * @returns {Uint8Array}
  */
 function createPssh(
-  { systemId, privateData } : { systemId : string, privateData: any }
+  { systemId, privateData } : { systemId : string, privateData: any } // XXX TODO
 ) : Uint8Array {
   systemId = systemId.replace(/-/g, "");
 
@@ -418,6 +418,7 @@ function createPssh(
  *   - privateData {*}: private data associated.
  * @returns {Uint8Array} - The new ISOBMFF generated.
  */
+// XXX TODO pssList
 function patchPssh(buf : Uint8Array, pssList : any[]) : Uint8Array {
   if (!pssList || !pssList.length) {
     return buf;

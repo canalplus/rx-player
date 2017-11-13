@@ -19,6 +19,7 @@ import { Observer } from "rxjs/Observer";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 
 import config from "../../config";
+import objectAssign = require("object-assign");
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
 interface IVideoTiming {
@@ -246,7 +247,7 @@ function createTimingsSampler(
   { withMediaSource } : { withMediaSource : boolean }
 ) : Observable<IClockTick> {
   return Observable.create((obs : Observer<IClockTick>) => {
-    let lastTimings : IClockTick = Object.assign(getTimings(video, "init"),
+    let lastTimings : IClockTick = objectAssign(getTimings(video, "init"),
       { stalled: null }
     );
 
@@ -262,7 +263,7 @@ function createTimingsSampler(
         getStalledStatus(lastTimings, videoTimings, withMediaSource);
 
       // /!\ Mutate videoTimings
-      lastTimings = Object.assign(videoTimings,
+      lastTimings = objectAssign(videoTimings,
         { stalled: stalledState }
       );
       obs.next(lastTimings);

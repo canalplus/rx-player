@@ -27,7 +27,7 @@ import ICustomTimeRanges from  "./time_ranges";
 
 export interface ISourceBufferMemory {
   custom : {
-    [keyName : string ] : ICustomSourceBuffer;
+    [keyName : string ] : ICustomSourceBuffer<any>;
   };
   native : {
     audio? : SourceBuffer;
@@ -103,7 +103,7 @@ function createSourceBuffer(
   codec : string,
   sourceBufferMemory : ISourceBufferMemory,
   options : SourceBufferOptions = {}
-) : SourceBuffer|ICustomSourceBuffer {
+) : SourceBuffer|ICustomSourceBuffer<any> {
   let sourceBuffer;
 
   if (shouldHaveNativeSourceBuffer(bufferType)) {
@@ -174,7 +174,7 @@ function disposeSourceBuffer(
     custom,
   } = sourceBufferMemory;
 
-  let oldSourceBuffer : undefined|ICustomSourceBuffer|SourceBuffer;
+  let oldSourceBuffer : undefined|ICustomSourceBuffer<any>|SourceBuffer;
 
   const isNative = shouldHaveNativeSourceBuffer(bufferType);
   if (isNative) {

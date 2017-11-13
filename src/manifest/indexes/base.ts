@@ -61,7 +61,7 @@ export default {
    */
   _addSegmentInfos(
     index : IBaseIndex,
-    segmentInfos : any
+    segmentInfos : any // XXX TODO
   ) : boolean {
     if (segmentInfos.timescale !== index.timescale) {
       const { timescale } = index;

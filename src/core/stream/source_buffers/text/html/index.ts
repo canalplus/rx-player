@@ -85,7 +85,9 @@ function safelyRemoveChild(element : Element, child : Element|null) {
  * Source buffer to display TextTracks in the given HTML element.
  * @class HTMLTextTrackSourceBuffer
  */
-export default class HTMLTextTrackSourceBuffer extends AbstractSourceBuffer {
+export default class HTMLTextTrackSourceBuffer
+  extends AbstractSourceBuffer<IHTMLTextTrackData>
+{
   private _videoElement : HTMLMediaElement;
   private _destroy$ : Subject<void>;
   private _textTrackElement : HTMLTrackElement;

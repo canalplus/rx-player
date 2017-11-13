@@ -15,6 +15,7 @@
  */
 
 import objectAssign = require("object-assign");
+import arrayFind = require("array-find");
 import { makeCue } from "../../../../compat";
 
 import {
@@ -118,7 +119,7 @@ function parseTTMLStringToVTT(
 
           const associatedStyle = regionNode.getAttribute("style");
           if (associatedStyle) {
-            const style = styles.find((x) => x.id === associatedStyle);
+            const style = arrayFind(styles, (x) => x.id === associatedStyle);
             if (style) {
               regionStyle = objectAssign({}, style.style, regionStyle);
             }

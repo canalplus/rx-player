@@ -19,7 +19,6 @@ import { Subscription } from "rxjs/Subscription";
 
 import EventEmitter from "../../utils/eventemitter";
 import { bytesToStr, strToBytes } from "../../utils/bytes";
-import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 
 import {
@@ -39,10 +38,10 @@ interface IMockMediaKeySession {
   readonly keyStatuses: MediaKeyStatusMap;
   readonly sessionId : string;
   close(): Promise<void>;
-  generateRequest(initDataType: string, initData: any): Promise<void>;
+  generateRequest(initDataType: string, initData: ArrayBuffer): Promise<void>;
   load(sessionId: string): Promise<boolean>;
   remove(): Promise<void>;
-  update(response: any): Promise<void>;
+  update(response: ArrayBuffer): Promise<void>;
   addEventListener(type: string, listener: () => {}, useCapture: boolean): void;
   removeEventListener(type: string, listener: EventListener, useCapture: boolean): void;
   dispatchEvent(evt: Event): boolean;
@@ -53,7 +52,7 @@ type IMediaKeySessionType = "temporary" | "persistent-license" | "persistent-rel
 interface IMockMediaKeys {
   _setVideo(vid : HTMLMediaElement) : void;
   createSession(sessionType? : IMediaKeySessionType) : IMockMediaKeySession;
-  setServerCertificate(setServerCertificate : any) : Promise<void>;
+  setServerCertificate(setServerCertificate : ArrayBuffer) : Promise<void>;
 }
 interface IMockMediaKeysConstructor {
   new(ks : string) : IMockMediaKeys;
@@ -79,7 +78,7 @@ if (navigator.requestMediaKeySystemAccess) {
     castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 } else {
   type wrapUpdateFn =
-    (license : any, sessionId? : string) => Promise<void>;
+    (license : ArrayBuffer, sessionId? : string) => Promise<void>;
   type memUpdateFn =
     (license : Uint8Array, sessionId : string) => void;
 
@@ -90,7 +89,7 @@ if (navigator.requestMediaKeySystemAccess) {
   ) : wrapUpdateFn => {
     return function(
       this : IMockMediaKeySession,
-      license : any,
+      license : ArrayBuffer,
       sessionId? : string
     ) : Promise<void> {
       return new Promise((resolve, reject) => {
@@ -117,7 +116,7 @@ if (navigator.requestMediaKeySystemAccess) {
     {
       public sessionId : string;
       public update : (
-        license : any,
+        license : ArrayBuffer,
         sessionId? : string
       ) => Promise<void>;
       public closed: Promise<void>;
@@ -155,7 +154,7 @@ if (navigator.requestMediaKeySystemAccess) {
         });
       }
 
-      generateRequest(_initDataType : string, initData : any) : Promise<void> {
+      generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
         return new Promise((resolve) => {
           if (typeof this._vid.webkitGenerateKeyRequest !== "function") {
             throw new Error("impossible to generate a key request");
@@ -285,7 +284,7 @@ if (navigator.requestMediaKeySystemAccess) {
     class SessionProxy extends EventEmitter implements IMockMediaKeySession {
       public sessionId : string;
       public update : (
-        license : any,
+        license : ArrayBuffer,
         sessionId? : string
       ) => Promise<void>;
       public load: (sessionId: string) => Promise<boolean>;
@@ -305,7 +304,9 @@ if (navigator.requestMediaKeySystemAccess) {
         this._mk = mk;
 
         this.update = wrapUpdate((license, sessionId) => {
-          assert(this._ss);
+          if (!this._ss) {
+            throw new Error("MediaKeySession not set");
+          }
           (this._ss as any).update(license, sessionId);
           this.sessionId = sessionId;
         });

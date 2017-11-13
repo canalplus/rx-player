@@ -21,7 +21,7 @@ import tryCatch from "../../../utils/rx-tryCatch";
 import castToObservable from "../../../utils/castToObservable";
 import ManualTimeRanges from "./time_ranges";
 
-export interface ICustomSourceBuffer {
+export interface ICustomSourceBuffer<T> {
   addEventListener : (eventName : string, cb : (arg : any) => void) => void;
   removeEventListener : (
     eventName : string,
@@ -29,7 +29,7 @@ export interface ICustomSourceBuffer {
   ) => void;
   buffered : TimeRanges;
   updating : boolean;
-  appendBuffer(data : any) : void;
+  appendBuffer(data : T) : void;
   remove(from : number, to : number) : void;
   abort() : void;
 }
@@ -39,9 +39,9 @@ export interface ICustomSourceBuffer {
  * @class AbstractSourceBuffer
  * @extends EventEmitter
  */
-abstract class AbstractSourceBuffer
+abstract class AbstractSourceBuffer<T>
   extends EventEmitter
-  implements ICustomSourceBuffer
+  implements ICustomSourceBuffer<T>
 {
   public updating : boolean;
   public buffered : ManualTimeRanges;
@@ -61,7 +61,7 @@ abstract class AbstractSourceBuffer
    * Mimic the SourceBuffer _appendBuffer_ method: Append segment.
    * @param {*} data
    */
-  appendBuffer(data : any) : void {
+  appendBuffer(data : T) : void {
     this._lock(() => this._append(data));
   }
 
@@ -85,7 +85,7 @@ abstract class AbstractSourceBuffer
   }
 
   // to implement, called on appendBuffer
-  _append(_data : any) : void {}
+  _append(_data : T) : void {}
 
   // to implement, called on remove
   _remove(_from : number, _to : number) : void {}
@@ -104,7 +104,7 @@ abstract class AbstractSourceBuffer
     assert(!this.updating, "updating");
     this.updating = true;
     this.trigger("updatestart");
-    const result : Observable<any> = tryCatch(() => castToObservable(func()));
+    const result : Observable<void> = tryCatch(() => castToObservable(func()));
     result.subscribe(
       ()  => setTimeout(() => { this._unlock("update"); }, 0),
       (e) => setTimeout(() => { this._unlock("error", e); }, 0)

@@ -20,6 +20,7 @@ import { Subscription } from "rxjs/Subscription";
 
 import config from "../../config";
 import log from "../../utils/log";
+import arrayIncludes from "../../utils/array-includes";
 import {
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -119,7 +120,7 @@ function getCachedKeySystemAccess(
 function findKeySystemCanonicalName(ksType: string)
 : string|undefined {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
-    if (EME_KEY_SYSTEMS[ksName].includes(ksType)) {
+    if (arrayIncludes(EME_KEY_SYSTEMS[ksName], ksType)) {
       return ksName;
     }
   }
