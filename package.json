@@ -5,13 +5,19 @@
   "description": "Canal+ HTML5 Video Player",
   "main": "./dist/rx-player.js",
   "keywords": [
-    "video",
-    "streaming",
+    "dash",
+    "eme",
+    "hss",
     "html5",
     "mediasource",
-    "dash",
+    "mse",
     "reactive",
-    "rx"
+    "rx",
+    "rxjs",
+    "smooth",
+    "streaming",
+    "typescript",
+    "video"
   ],
   "browser": "./dist/rx-player.js",
   "homepage": "https://github.com/canalplus/rx-player",
