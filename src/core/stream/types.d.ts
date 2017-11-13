@@ -23,7 +23,7 @@ import { BufferEvent } from "../buffer/types";
 import { SupportedBufferTypes } from "../types";
 
 import { IStallingItem } from "./stalling_obs";
-import { IEMEMessage } from "../eme/session"
+import { ISessionEvent } from "../eme/session"
 
 // Object emitted when the stream's clock tick
 export interface IStreamClockTick {
@@ -102,5 +102,4 @@ export type StreamEvent =
   IStalledEvent |
   ILoadedEvent |
   BufferEvent |
-  IEMEMessage;
-// XXX TODO add EME items
+  ISessionEvent;

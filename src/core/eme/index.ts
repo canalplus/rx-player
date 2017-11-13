@@ -29,7 +29,7 @@ import {
   IKeySystemPackage,
  } from "./key_system";
 import {
-  IEMEMessage,
+  ISessionEvent,
   ErrorStream,
  } from "./session";
 
@@ -97,7 +97,7 @@ function handleEncryptedEvents(
   keySystemInfo: IKeySystemPackage,
   video : HTMLMediaElement,
   errorStream: ErrorStream
-): Observable<MediaKeys|IEMEMessage|Event> {
+): Observable<MediaKeys|ISessionEvent|Event> {
   const { keySystem, keySystemAccess } = keySystemInfo;
   if (keySystem.persistentLicense) {
     if (keySystem.licenseStorage) {
@@ -152,7 +152,7 @@ function createEME(
   video : HTMLMediaElement,
   keySystems: IKeySystemOption[],
   errorStream: ErrorStream
-) : Observable<MediaKeys|IEMEMessage|Event> {
+) : Observable<MediaKeys|ISessionEvent|Event> {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
