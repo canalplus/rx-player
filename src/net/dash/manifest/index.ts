@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import assert from "../../../utils/assert";
 import { parseMPD } from "./parsers";
 import {
   ContentProtectionParser,
@@ -51,7 +50,9 @@ function parseFromDocument(
   contentProtectionParser?: ContentProtectionParser
 ): IParsedManifest {
   const root = document.documentElement;
-  assert.equal(root.nodeName, "MPD", "document root should be MPD");
+  if (!root || root.nodeName !== "MPD") {
+    throw new Error("document root should be MPD");
+  }
   return parseMPD(root, contentProtectionParser);
 }
 
