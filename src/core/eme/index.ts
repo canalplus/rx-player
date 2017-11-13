@@ -97,7 +97,7 @@ function handleEncryptedEvents(
   keySystemInfo: IKeySystemPackage,
   video : HTMLMediaElement,
   errorStream: ErrorStream
-): Observable<{}|void|MediaKeys|IEMEMessage|Event> {
+): Observable<MediaKeys|IEMEMessage|Event> {
   const { keySystem, keySystemAccess } = keySystemInfo;
   if (keySystem.persistentLicense) {
     if (keySystem.licenseStorage) {
@@ -112,11 +112,11 @@ function handleEncryptedEvents(
   return createMediaKeysObs(keySystemAccess).mergeMap((mediaKeys) => {
     // set server certificate if set in API
     const { serverCertificate } = keySystem;
-    const setCertificate$ = serverCertificate &&
+    const setCertificate$ = (serverCertificate &&
       typeof mediaKeys.setServerCertificate === "function" ?
         trySettingServerCertificate(
           mediaKeys, serverCertificate, errorStream) :
-      Observable.empty();
+      Observable.empty()) as Observable<never>; // Typescript hack
 
     const mksConfig = keySystemAccess.getConfiguration();
 
@@ -152,7 +152,7 @@ function createEME(
   video : HTMLMediaElement,
   keySystems: IKeySystemOption[],
   errorStream: ErrorStream
-) : Observable<void|{}|MediaKeys|IEMEMessage|Event> {
+) : Observable<MediaKeys|IEMEMessage|Event> {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",

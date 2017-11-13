@@ -21,7 +21,6 @@ import request from "../../utils/request";
 
 import {
   parseSidx,
-  patchPssh,
   getMDHDTimescale,
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
@@ -118,7 +117,6 @@ export default function(
 
     parser({
       segment,
-      adaptation,
       response,
       init,
     } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
@@ -130,7 +128,7 @@ export default function(
 
       let nextSegments : ISegmentTimingInfos[]|undefined;
       let segmentInfos : ISegmentTimingInfos;
-      let segmentData : Uint8Array = responseData;
+      const segmentData : Uint8Array = responseData;
 
       const indexRange = segment.indexRange;
       const sidxSegments =
@@ -144,9 +142,6 @@ export default function(
         const timescale = getMDHDTimescale(responseData);
         if (timescale > 0) {
           segmentInfos.timescale = timescale;
-        }
-        if (adaptation.contentProtection) {
-          segmentData = patchPssh(responseData, adaptation.contentProtection);
         }
       } else {
         segmentInfos =

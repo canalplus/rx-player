@@ -22,7 +22,7 @@ import { CustomError } from "../../errors";
 import { onEncrypted$ } from "../../compat/events";
 import { createEME } from "../eme";
 import { IKeySystemOption } from "../eme";
-
+import { IEMEMessage } from "../eme/session";
 /**
  * Perform EME management if needed.
  * @param {HTMLMediaElement} videoElement
@@ -34,7 +34,7 @@ function createEMEIfKeySystems(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   errorStream : Subject<Error|CustomError>
-) : Observable<any> { // XXX TODO
+) :  Observable<MediaKeys|IEMEMessage|Event> {
   if (keySystems && keySystems.length) {
     return createEME(videoElement, keySystems, errorStream);
   } else {

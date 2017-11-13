@@ -40,11 +40,18 @@ interface IContentProtectionSmooth {
 }
 
 interface IRepresentationSmooth {
-  codecs: string;
-  mimeType: string;
   bitrate: number;
-  id: string|number;
   codecPrivateData: string;
+  codecs?: string;
+  mimeType?: string;
+  id?: string|number;
+  samplingRate?: number,
+  bitsPerSample?: number,
+  packetSize?: number,
+  width?: number,
+  height?: number,
+  audiotag?: number,
+  channels?: number,
 }
 
 interface IAdaptationSmooth {
