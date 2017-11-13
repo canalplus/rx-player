@@ -21,7 +21,7 @@ describe("manifest error management", function () {
     fakeServer.restore();
   });
 
-  it("should retry to download the manifest 5 times", done => {
+  it("should retry to download the manifest 5 times", () => {
     const clock = sinon.useFakeTimers();
     fakeServer.respondWith("GET", DynamicMock.manifest.url, res =>
       res.respond(500));
@@ -63,11 +63,10 @@ describe("manifest error management", function () {
       expect(error).not.to.equal(null);
       expect(error.type).to.equal(RxPlayer.ErrorTypes.NETWORK_ERROR);
       expect(error.code).to.equal(RxPlayer.ErrorCodes.PIPELINE_LOAD_ERROR);
-      done();
     }, 0);
   });
 
-  it("should parse the manifest if it works the second time", done => {
+  it("should parse the manifest if it works the second time", () => {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
@@ -98,12 +97,11 @@ describe("manifest error management", function () {
     setTimeout(() => {
       expect(player.getManifest()).not.to.equal(null);
       expect(typeof player.getManifest()).to.equal("object");
-      expect(player.getError()).to.equal(null);
-      done();
+      expect(player.getError()).to.equal(null);     
     }, 0);
   });
 
-  it("should parse the manifest if it works the third time", done => {
+  it("should parse the manifest if it works the third time", ()  => {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
@@ -140,12 +138,11 @@ describe("manifest error management", function () {
     setTimeout(() => {
       expect(player.getManifest()).not.to.equal(null);
       expect(typeof player.getManifest()).to.equal("object");
-      expect(player.getError()).to.equal(null);
-      done();
+      expect(player.getError()).to.equal(null);  
     }, 0);
   });
 
-  it("should parse the manifest if it works the fourth time", done => {
+  it("should parse the manifest if it works the fourth time", () => {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
@@ -187,12 +184,11 @@ describe("manifest error management", function () {
     setTimeout(() => {
       expect(player.getManifest()).not.to.equal(null);
       expect(typeof player.getManifest()).to.equal("object");
-      expect(player.getError()).to.equal(null);
-      done();
+      expect(player.getError()).to.equal(null); 
     }, 0);
   });
 
-  it("should parse the manifest if it works the fifth time", done => {
+  it("should parse the manifest if it works the fifth time", () => {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
@@ -238,7 +234,6 @@ describe("manifest error management", function () {
       expect(player.getManifest()).not.to.equal(null);
       expect(typeof player.getManifest()).to.equal("object");
       expect(player.getError()).to.equal(null);
-      done();
     });
   });
 });

@@ -23,7 +23,7 @@ describe("external text track", function () {
     fakeServer.restore();
   });
 
-  it("should be able to add an external text track", async function (done) {
+  it("should be able to add an external text track", async function () {
     mockManifestRequest(fakeServer, Mock);
 
     player.loadVideo({
@@ -50,10 +50,9 @@ describe("external text track", function () {
     expect(textTracks[0].id).to.not.equal("");
     expect(textTracks[0].active).to.equal(false);
 
-    done();
   });
 
-  it("should be able to add a closed caption text track", async function (done) {
+  it("should be able to add a closed caption text track", async function () {
     mockManifestRequest(fakeServer, Mock);
 
     player.loadVideo({
@@ -80,10 +79,9 @@ describe("external text track", function () {
     expect(textTracks[0].id).to.not.equal("");
     expect(textTracks[0].active).to.equal(false);
 
-    done();
   });
 
-  it("should be able to add multiple external text tracks", async function (done) {
+  it("should be able to add multiple external text tracks", async function () {
     mockManifestRequest(fakeServer, Mock);
 
     player.loadVideo({
@@ -139,10 +137,9 @@ describe("external text track", function () {
     expect(textTracks[2].id).to.not.equal("");
     expect(textTracks[2].active).to.equal(false);
 
-    done();
   });
 
-  it("should switch initially to external text track if set as default language", async function (done) {
+  it("should switch initially to external text track if set as default language", async function () {
     mockManifestRequest(fakeServer, Mock);
 
     const waysOfWritingDefaultTextTrack = [
@@ -208,10 +205,9 @@ describe("external text track", function () {
       expect(textTracks2[0].active).to.equal(true);
     }
 
-    done();
   });
 
-  it("should switch initially to a closed caption external text track if set as default language", async function (done) {
+  it("should switch initially to a closed caption external text track if set as default language", async function () {
     mockManifestRequest(fakeServer, Mock);
 
     const waysOfWritingDefaultTextTrack = [
@@ -272,11 +268,10 @@ describe("external text track", function () {
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(true);
     }
-
-    done();
+    
   });
 
-  it("should not switch initially to external text track if not set as default language", async function (done) {
+  it("should not switch initially to external text track if not set as default language", async function () {
     mockManifestRequest(fakeServer, Mock);
 
     const waysOfWritingDefaultTextTrack = [
@@ -341,7 +336,6 @@ describe("external text track", function () {
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(false);
     }
-
-    done();
+    
   });
 });
