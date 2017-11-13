@@ -27,10 +27,14 @@ describe("utils - assert", () => {
         assert(falsyValue);
       } catch (e) {
         error = e;
+        /* tslint:disable:no-unused-expression */
         expect(e).to.exist;
+        /* tslint:enable:no-unused-expression */
       }
+      /* tslint:disable:no-unused-expression */
       expect(error).to.exist;
-      expect(error.message).to.equal(undefined);
+      /* tslint:enable:no-unused-expression */
+      expect(error.message).to.equal("invalid assertion");
       expect(error.name).to.equal("AssertionError");
     });
   });
@@ -45,9 +49,13 @@ describe("utils - assert", () => {
         assert(falsyValue, myMessage);
       } catch (e) {
         error = e;
+        /* tslint:disable:no-unused-expression */
         expect(e).to.exist;
+        /* tslint:enable:no-unused-expression */
       }
+      /* tslint:disable:no-unused-expression */
       expect(error).to.exist;
+      /* tslint:enable:no-unused-expression */
       expect(error.message).to.equal(myMessage);
       expect(error.name).to.equal("AssertionError");
     });
@@ -79,8 +87,10 @@ describe("utils - assert.equal", () => {
       } catch (e) {
         error = e;
       }
+      /* tslint:disable:no-unused-expression */
       expect(error).to.exist;
-      expect(error.message).to.equal(undefined);
+      /* tslint:enable:no-unused-expression */
+      expect(error.message).to.equal('invalid assertion');
       expect(error.name).to.equal("AssertionError");
     });
   });
@@ -102,7 +112,9 @@ describe("utils - assert.equal", () => {
       } catch (e) {
         error = e;
       }
+      /* tslint:disable:no-unused-expression */
       expect(error).to.exist;
+      /* tslint:enable:no-unused-expression */
       expect(error.message).to.equal(myMessage);
       expect(error.name).to.equal("AssertionError");
     });
@@ -141,7 +153,9 @@ describe("utils - assert.iface", () => {
     } catch (e) {
       error = e;
     }
+    /* tslint:disable:no-unused-expression */
     expect(error).to.exist;
+    /* tslint:enable:no-unused-expression */
     expect(error.message).to.equal(`${nameOfMyObj} should be an object`);
     expect(error.name).to.equal("AssertionError");
 
@@ -152,7 +166,9 @@ describe("utils - assert.iface", () => {
     } catch (e) {
       error = e;
     }
+    /* tslint:disable:no-unused-expression */
     expect(error).to.exist;
+    /* tslint:enable:no-unused-expression */
     expect(error.message).to.equal(`${nameOfMyObj} should be an object`);
     expect(error.name).to.equal("AssertionError");
   });
@@ -182,7 +198,9 @@ describe("utils - assert.iface", () => {
     } catch (e) {
       error = e;
     }
+    /* tslint:disable:no-unused-expression */
     expect(error).to.exist;
+    /* tslint:enable:no-unused-expression */
     expect(error.message)
       .to.equal(`${nameOfMyObj} should have property f as a function`);
     expect(error.name).to.equal("AssertionError");
