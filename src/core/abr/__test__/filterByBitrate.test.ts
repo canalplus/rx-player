@@ -16,7 +16,7 @@
 
 import { expect } from "chai";
 import Representation from "../../../manifest/representation";
-import _filterByBitrate from "../filterByBitrate.js";
+import _filterByBitrate from "../filterByBitrate";
 
 describe("core - abr - filterByBitrate", () => {
   const fakeReps = [
