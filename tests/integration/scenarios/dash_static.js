@@ -173,7 +173,6 @@ describe("dash static SegmentTimeline content", function () {
 
     expect(requestsDone).to.include(Mock.audio[0].init.url);
     expect(requestsDone).to.include(Mock.video[0].init.url);
-    
   });
 
   it("should list the right bitrates", async function () {
@@ -211,7 +210,6 @@ describe("dash static SegmentTimeline content", function () {
     expect(audioTracks[0].active).to.equal(true);
 
     expect(textTracks.length).to.equal(0);
-    
   });
 
   // TODO fixup
@@ -240,6 +238,5 @@ describe("dash static SegmentTimeline content", function () {
 
     expect(player.getPlayerState()).to.equal("LOADED");
     expect(lastPlayerState).to.equal("LOADED");
-
   });
 });

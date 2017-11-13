@@ -24,7 +24,7 @@ describe("utils - castToObservable", () => {
     expect(castToObservable(obs)).to.equal(obs);
   });
 
-  it("should convert promise's then to next", () => {
+  it("should convert promise's then to next", (done) => {
     let resolve : ((str : string) => void)|undefined;
     const emitItem = "je n'ai plus peur de, perdre mes dents";
     const prom = new Promise((res) => {
@@ -37,6 +37,7 @@ describe("utils - castToObservable", () => {
       expect(x).to.equal(emitItem);
     }, () => {}, () => {
       expect(numberOfItemEmitted).to.equal(1);
+      done();
     });
 
     if (!resolve) {
@@ -45,7 +46,7 @@ describe("utils - castToObservable", () => {
     resolve(emitItem);
   });
 
-  it("should convert promise's error to Observable's error", () => {
+  it("should convert promise's error to Observable's error", (done) => {
     let reject : ((str : string) => void)|undefined;
     const errorItem = "je n'ai plus peur de, perdre mon temps";
     const prom = new Promise((_, rej) => {
@@ -58,6 +59,7 @@ describe("utils - castToObservable", () => {
     }, (err) => {
       expect(numberOfItemEmitted).to.equal(0);
       expect(err).to.equal(errorItem);
+      done();
     });
     if (!reject) {
       throw new Error();

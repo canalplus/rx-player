@@ -49,7 +49,6 @@ describe("external text track", function () {
     expect(typeof textTracks[0].id).to.equal("string");
     expect(textTracks[0].id).to.not.equal("");
     expect(textTracks[0].active).to.equal(false);
-
   });
 
   it("should be able to add a closed caption text track", async function () {
@@ -136,7 +135,6 @@ describe("external text track", function () {
     expect(typeof textTracks[2].id).to.equal("string");
     expect(textTracks[2].id).to.not.equal("");
     expect(textTracks[2].active).to.equal(false);
-
   });
 
   it("should switch initially to external text track if set as default language", async function () {
@@ -204,7 +202,6 @@ describe("external text track", function () {
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(true);
     }
-
   });
 
   it("should switch initially to a closed caption external text track if set as default language", async function () {
@@ -268,7 +265,6 @@ describe("external text track", function () {
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(true);
     }
-    
   });
 
   it("should not switch initially to external text track if not set as default language", async function () {
@@ -336,6 +332,5 @@ describe("external text track", function () {
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(false);
     }
-    
   });
 });

@@ -151,7 +151,6 @@ describe("dash live SegmentTimeline content", function () {
 
     expect(player.getAvailableAudioBitrates()).to.eql([96257]);
     expect(player.getAvailableVideoBitrates()).to.eql([601392]);
-
   });
 
   it("should list the right languages", async function () {
@@ -174,6 +173,5 @@ describe("dash live SegmentTimeline content", function () {
     expect(audioTracks[0].active).to.equal(true);
 
     expect(textTracks.length).to.equal(0);
-
   });
 });
