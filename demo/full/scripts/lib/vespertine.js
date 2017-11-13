@@ -147,8 +147,8 @@ const createModule = (module, payload) => {
 
     const observables = args.map(arg =>
       $updates
-      .map(state => state[arg])
-      .distinctUntilChanged()
+        .map(state => state[arg])
+        .distinctUntilChanged()
     );
 
     return Observable
