@@ -626,7 +626,7 @@ export default function Stream({
   function createStream(
     mediaSource : MediaSource|null,
     manifest : Manifest
-  ) {
+  ): Observable<StreamEvent> {
     // TODO Find what to do with no media source.
     if (!mediaSource) {
       throw new Error("No media source.");

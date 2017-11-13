@@ -56,7 +56,7 @@ import {
 type ErrorStream = Subject<Error|CustomError>;
 
 interface IEMEMessage {
-  type : string;
+  type : "IEMEMessage";
   value : {
     name : string,
     session : MediaKeySession
@@ -90,7 +90,7 @@ function createMessage(
   options? : IEMEMessageOptions
 ) : IEMEMessage {
   return {
-    type: "eme",
+    type: "IEMEMessage",
     value: objectAssign({ name, session }, options),
   };
 }

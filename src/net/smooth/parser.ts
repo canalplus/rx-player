@@ -60,40 +60,11 @@ const DEFAULT_CODECS: IDictionary<string> = {
   video: "avc1.4D401E",
 };
 
-const MIME_TYPES = {
+const MIME_TYPES: IDictionary<string> = {
   AACL: "audio/mp4",
   AVC1: "video/mp4",
   H264: "video/mp4",
   TTML: "application/ttml+xml+mp4",
-};
-
-type ProfileFunction = ((x : string) => string|number)|IDictionary<string>;
-
-const profiles : IDictionary<
-  Array<[string, string, ProfileFunction]>
-> = {
-  audio: [
-    ["Bitrate",          "bitrate",          parseInt],
-    ["AudioTag",         "audiotag",         parseInt],
-    ["FourCC",           "mimeType",         MIME_TYPES],
-    ["Channels",         "channels",         parseInt],
-    ["SamplingRate",     "samplingRate",     parseInt],
-    ["BitsPerSample",    "bitsPerSample",    parseInt],
-    ["PacketSize",       "packetSize",       parseInt],
-    ["CodecPrivateData", "codecPrivateData", String],
-  ],
-  video: [
-    ["Bitrate",          "bitrate",          parseInt],
-    ["FourCC",           "mimeType",         MIME_TYPES],
-    ["CodecPrivateData", "codecs",           extractVideoCodecs],
-    ["MaxWidth",         "width",            parseInt],
-    ["MaxHeight",        "height",           parseInt],
-    ["CodecPrivateData", "codecPrivateData", String],
-  ],
-  text: [
-    ["Bitrate", "bitrate",  parseInt],
-    ["FourCC",  "mimeType", MIME_TYPES],
-  ],
 };
 
 /**
@@ -320,23 +291,54 @@ function createSmoothStreamingParser(
 
   /**
    * @param {Element} q
-   * @param {Array.<string|Function>} prof
+   * @param {string} type
    * @return {Object}
    * TODO Better type signatures?
    */
   function parseQualityLevel(
     q : Element,
-    prof : Array<[string, string, ProfileFunction]>
+    type : string
   ) : IRepresentationSmooth {
-    // XXX TODO anys
-    const obj : any = {};
-    for (let i = 0; i < prof.length; i++) {
-      const [key, name, parse] = prof[i];
-      obj[name] = typeof parse === "function"
-        ? parse(q.getAttribute(key) || "")
-        : parse[q.getAttribute(key) || ""];
+
+    const hasAndGetAttribute = function(e: Element, name: string): string {
+      if (e.hasAttribute(name)) {
+        return e.getAttribute(name) as string;
+      } else {
+        throw new Error("Invalid QualityLevel tag.");
+      }
+    };
+
+    switch (type) {
+      case "audio":
+        return {
+          bitrate: parseInt(hasAndGetAttribute(q, "Bitrate"), 10),
+          audiotag: parseInt(hasAndGetAttribute(q, "AudioTag"), 10),
+          channels: parseInt(hasAndGetAttribute(q, "Channels"), 10),
+          samplingRate: parseInt(hasAndGetAttribute(q, "SamplingRate"), 10),
+          bitsPerSample: parseInt(hasAndGetAttribute(q, "BitsPerSample"), 10),
+          packetSize: parseInt(hasAndGetAttribute(q, "PacketSize"), 10),
+          codecPrivateData: hasAndGetAttribute(q, "CodecPrivateData"),
+          mimeType: q.getAttribute("FourCC") ?
+            MIME_TYPES[q.getAttribute("FourCC") as string] : "", // optionnal
+        };
+      case "video":
+        return {
+          bitrate: parseInt(hasAndGetAttribute(q, "Bitrate"), 10),
+          mimeType: MIME_TYPES[hasAndGetAttribute(q, "FourCC")],
+          codecPrivateData: hasAndGetAttribute(q, "CodecPrivateData"),
+          codecs: extractVideoCodecs(hasAndGetAttribute(q, "CodecPrivateData")),
+          width: parseInt(hasAndGetAttribute(q, "MaxWidth"), 10),
+          height: parseInt(hasAndGetAttribute(q, "MaxHeight"), 10),
+        };
+      case "text":
+        return {
+          bitrate: parseInt(hasAndGetAttribute(q, "Bitrate"), 10),
+          mimeType: MIME_TYPES[hasAndGetAttribute(q, "FourCC")],
+          codecPrivateData: "",
+        };
+      default:
+        throw new Error("Unrecognized StreamIndex type: " + type);
     }
-    return obj as IRepresentationSmooth;
   }
 
   /**
@@ -368,11 +370,6 @@ function createSmoothStreamingParser(
       language : normalizeLang(language);
     const baseURL = root.getAttribute("Url");
 
-    const profile = profiles[type];
-    if (profile == null) {
-      throw new Error("Unrecognized StreamIndex type: " + type);
-    }
-
     const accessibility : string[] = [];
     let representationCount = 0;
 
@@ -382,8 +379,7 @@ function createSmoothStreamingParser(
     } = reduceChildren(root, (res, _name, node) => {
       switch (_name) {
         case "QualityLevel":
-          const rep = parseQualityLevel(node, profile);
-
+          const rep = parseQualityLevel(node, type);
           if (type === "audio") {
             const fourCC = node.getAttribute("FourCC") || "";
 
