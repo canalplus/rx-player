@@ -61,7 +61,7 @@ const speedManager = (
       })
         .filter(val => val != null)
 
-        // TODO the filter is 2smart4TypeScript. Find better solution eventually
+        // TODO2smart4TypeScript. Find better solution eventually
         .startWith(false) as Observable<boolean>;
   }
 

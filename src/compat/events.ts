@@ -179,10 +179,10 @@ const onPlayPause$ = (videoElement : HTMLMediaElement) : Observable<Event> =>
   );
 
 const onTextTrackChanges$ =
-  (textTrackList : TextTrackList) : Observable<Event> =>
+  (textTrackList : TextTrackList) : Observable<TrackEvent> =>
     Observable.merge(
-      compatibleListener(["addtrack"])(textTrackList),
-      compatibleListener(["removetrack"])(textTrackList)
+      compatibleListener<TrackEvent>(["addtrack"])(textTrackList),
+      compatibleListener<TrackEvent>(["removetrack"])(textTrackList)
     );
 
 const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);

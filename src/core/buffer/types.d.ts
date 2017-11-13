@@ -51,7 +51,7 @@ export interface IDownloaderResponse {
 }
 
 export interface IBufferArguments {
-  sourceBuffer : ICustomSourceBuffer;
+  sourceBuffer : ICustomSourceBuffer<any>;
   downloader : (x : IDownloaderArgument) => Observable<IDownloaderResponse>;
   switch$ : Observable<Representation>;
   clock$ : Observable<IBufferClockTick>;

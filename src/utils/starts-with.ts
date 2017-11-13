@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-import {
-  AbstractSourceBuffer,
-} from "../abstract";
-
-import { IBifThumbnail } from "../../../../parsers/images/bif";
-
-class ImageSourceBuffer
-  extends AbstractSourceBuffer<IBifThumbnail[]>
-{
-  _append() {
-    // TODO: handle live case.
-    // We suppose here that the first received bsi includes all images
-    this.buffered.insert(0, Number.MAX_VALUE);
+// inspired from MDN polyfill, but ponyfilled instead
+export default function startsWith(
+  completeString : string,
+  searchString : string,
+  position? : number
+) : boolean {
+  if (typeof String.prototype.startsWith === "function") {
+    return completeString.startsWith(searchString, position);
   }
-
-  _remove() {
-  }
-
-  _abort() {
-  }
+  return completeString
+    .substr(position || 0, searchString.length) === searchString;
 }
-
-export default ImageSourceBuffer;

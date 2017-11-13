@@ -52,7 +52,7 @@ interface WebKitSourceBufferConstructor {
 }
 
 interface WebKitSourceBuffer {
-  append(data : any) : void;
+  append(data : ArrayBuffer) : void;
   remove(from : number, to : number) : void;
 }
 

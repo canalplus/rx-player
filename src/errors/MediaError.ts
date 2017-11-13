@@ -33,7 +33,7 @@ export default class MediaError extends Error {
   public fatal : boolean;
   public reason? : { message : string }|string|null;
 
-  constructor(code : string, reason? : any, fatal? : boolean) {
+  constructor(code : string, reason? : Error|null, fatal? : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);

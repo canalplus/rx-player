@@ -43,7 +43,7 @@ interface IInitialization {
     indexRange?: Array<number|null>|undefined;
 }
 
-type ContentProtectionParser = 
+type ContentProtectionParser =
   (attributes: IContentProtectionDash, root: Element) => IContentProtectionDash;
 
 interface IRole {
@@ -137,9 +137,9 @@ interface ISegmentTimeLine {
 
 interface ISegmentURL {
   media?: string;
-  mediaRange?: any;
+  mediaRange?: any; // XXX TODO
   index?: string;
-  indexRange?: any;
+  indexRange?: any; // XXX TODO
 }
 
 interface ISegmentBase {
@@ -150,8 +150,8 @@ interface ISegmentBase {
   initialization?: IInitialization;
   timeShiftBufferDepth?: number;
   presentationTimeOffset?: number;
-  indexRange?: any;
-  indexRangeExact?: any;
+  indexRange?: any; // XXX TODO
+  indexRangeExact?: any; // XXX TODO
   availabilityTimeOffset?: number;
   availabilityTimeComplete?: boolean;
 }

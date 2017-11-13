@@ -59,7 +59,7 @@ class Segment /* implements ISegment */ {
   constructor(args : ISegmentArguments) {
     if (__DEV__) {
       if (!args.init) {
-        assert(args.time as number >= 0);
+        assert(typeof args.time === "number" && args.time >= 0);
       }
       assert(args.id);
       assert(args.timescale);

@@ -65,7 +65,7 @@ class Adaptation {
   constructor(args : IAdaptationArguments) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
-    this.type = args.type || "";
+    this.type = args.type;
     this.representations = Array.isArray(args.representations) ?
       args.representations
         .map(r => new Representation(objectAssign({ rootId: this.id }, r)))
