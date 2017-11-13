@@ -26,6 +26,7 @@ import {
   setTimescale,
   scale,
   IIndexSegment,
+  SegmentHelpers,
 } from "./helpers";
 
 interface ITimelineIndex {
@@ -113,7 +114,7 @@ function calculateRepeat(
   return rep;
 }
 
-const SegmentTimelineHelpers = {
+const SegmentTimelineHelpers: SegmentHelpers<ITimelineIndex> = {
   getInitSegment,
   setTimescale,
   scale,

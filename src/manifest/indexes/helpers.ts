@@ -18,9 +18,39 @@ import assert from "../../utils/assert";
 import Segment from "../segment";
 
 export interface IIndexSegment {
-  ts : number; // start timestamp
-  d : number; // duration
-  r : number; // repeat counter
+  ts: number; // start timestamp
+  d: number; // duration
+  r: number; // repeat counter
+  range?: [number, number];
+}
+
+interface ITimelineIndex {
+  presentationTimeOffset?: number;
+  timescale: number;
+  media: string;
+  timeline: IIndexSegment[];
+  startNumber?: number;
+}
+
+interface ITemplateIndex {
+  presentationTimeOffset?: number;
+  timescale: number;
+  media: string;
+  duration: number;
+  startNumber: number;
+  timeline: IIndexSegment[];
+}
+
+interface IListIndex {
+  presentationTimeOffset? : number;
+  duration : number;
+  timescale : number;
+  media : string;
+  list : IListIndexListItem[];
+}
+
+export interface IListIndexListItem {
+  media : string;
   range? : [ number, number ];
 }
 
@@ -35,10 +65,10 @@ export interface IIndexSegment {
  *   - to {Number}: timescaled timestamp of the end time (start time + duration)
  */
 function normalizeRange(
-  index : { presentationTimeOffset? : number; timescale? : number }, // TODO
-  ts : number,
-  duration : number
-) : { up : number; to : number; } {
+  index: { presentationTimeOffset?: number; timescale?: number }, // TODO
+  ts: number,
+  duration: number
+): { up: number; to: number; } {
   const pto = index.presentationTimeOffset || 0;
   const timescale = index.timescale || 1;
 
@@ -57,7 +87,7 @@ function normalizeRange(
  * 2 elements etc.
  * @returns {Number} - absolute start time of the range
  */
-function getTimelineRangeStart({ ts, d, r } : IIndexSegment) : number {
+function getTimelineRangeStart({ ts, d, r }: IIndexSegment): number {
   return d === -1 ? ts : ts + r * d;
 }
 
@@ -70,7 +100,7 @@ function getTimelineRangeStart({ ts, d, r } : IIndexSegment) : number {
  * 2 elements etc.
  * @returns {Number} - absolute end time of the range
  */
-function getTimelineRangeEnd({ ts, d, r } : IIndexSegment) : number {
+function getTimelineRangeEnd({ ts, d, r }: IIndexSegment): number {
   return d === -1 ? ts : ts + (r + 1) * d;
 }
 
@@ -86,13 +116,13 @@ function getTimelineRangeEnd({ ts, d, r } : IIndexSegment) : number {
  * @returns {Segment}
  */
 function getInitSegment(
-  rootId : string,
-  index : {
-    timescale : number,
-    initialization : { media? : string, range? : [number, number] },
-    indexRange? : [number, number]
+  rootId: string,
+  index: {
+    timescale: number,
+    initialization: { media?: string, range?: [number, number] },
+    indexRange?: [number, number]
   }
-) : Segment {
+): Segment {
   const { initialization = {} } = index;
 
   const args = {
@@ -118,9 +148,9 @@ function getInitSegment(
  * @returns {Object}
  */
 const setTimescale = (
-  index : { timescale? : number },
-  timescale : number
-) : { timescale : number } => {
+  index: { timescale?: number },
+  timescale: number
+): { timescale: number } => {
   if (__DEV__) {
     assert(typeof timescale === "number");
     assert(timescale > 0);
@@ -132,7 +162,7 @@ const setTimescale = (
 
   // Huh? I think that's a TypeScript problem here
   // XXX TODO
-  return index as { timescale : number };
+  return index as { timescale: number };
 };
 
 /**
@@ -141,13 +171,56 @@ const setTimescale = (
  * @param {Number} time
  * @returns {Number}
  */
-const scale = (index : { timescale : number }, time : number) : number  => {
+const scale = (
+  index: { timescale: number },
+  time: number
+): number => {
   if (__DEV__) {
     assert(index.timescale > 0);
   }
 
   return time / index.timescale;
 };
+
+interface SegmentHelpers<T> {
+  getInitSegment: (
+    rootId: string,
+    index: {
+      timescale: number,
+      initialization: { media?: string, range?: [number, number] },
+      indexRange?: [number, number]
+    }) => Segment;
+  setTimescale: (
+    index: { timescale?: number },
+    timescale: number
+  ) => { timescale: number };
+  scale: (
+    index: { timescale: number },
+    time: number
+  ) => number;
+  getSegments: (
+    repId: string | number,
+    index: T,
+    _up: number,
+    _to: number
+  ) => Segment[];
+  shouldRefresh: (
+    index: T,
+    _time: number,
+    _up: number,
+    to: number) => boolean;
+  getFirstPosition: (index: T) => number | undefined;
+  getLastPosition: (index: T) => number | undefined;
+  checkDiscontinuity: (
+    index: T,
+    _time: number
+  ) => number;
+  _addSegmentInfos: (
+    index: T,
+    newSegment: { time: number, duration: number, timescale: number },
+    currentSegment: { time: number, duration: number, timescale: number }
+  ) => boolean;
+}
 
 export {
   normalizeRange,
@@ -156,4 +229,8 @@ export {
   getInitSegment,
   setTimescale,
   scale,
+  ITimelineIndex,
+  ITemplateIndex,
+  SegmentHelpers,
+  IListIndex,
 };

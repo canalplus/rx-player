@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+import {
+  SegmentHelpers,
+  ITimelineIndex,
+  ITemplateIndex,
+  IListIndex,
+} from "./helpers";
+
 const indexes : any = {};
 
 if (__FEATURES__.SMOOTH) {
@@ -32,8 +39,10 @@ if (__FEATURES__.DASH) {
  * @param {Object} index
  * @returns {Object|undefined}
  */
-// XXX TODO
-function getRightIndexHelpers(index : { indexType : string }) : any|undefined {
+
+function getRightIndexHelpers(
+  index : { indexType : string }
+) : SegmentHelpers<ITimelineIndex|ITemplateIndex|IListIndex>|undefined {
   return indexes[index.indexType];
 }
 

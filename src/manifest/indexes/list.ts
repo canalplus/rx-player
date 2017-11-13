@@ -23,21 +23,10 @@ import {
   normalizeRange,
   getInitSegment,
   setTimescale,
+  SegmentHelpers,
   scale,
+  IListIndex,
 } from "./helpers";
-
-export interface IListIndexListItem {
-  media : string;
-  range? : [ number, number ];
-}
-
-interface IListIndex {
-  presentationTimeOffset? : number;
-  duration : number;
-  timescale : number;
-  media : string;
-  list : IListIndexListItem[];
-}
 
 /**
  * NEEDED IN INDEX
@@ -51,7 +40,7 @@ interface IListIndex {
  * Provide helpers for SegmentList-based indexes.
  * @type {Object}
  */
-const ListIndexHelpers = {
+const ListIndexHelpers: SegmentHelpers<IListIndex> = {
   getInitSegment,
   setTimescale,
   scale,
