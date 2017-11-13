@@ -24,7 +24,6 @@ describe("media player instance", function () {
   });
 
   it("should begin playback", async function () {
-
     player.loadVideo({url: Mock.manifest.url, transport: "dash"});
 
     await new Promise(function(resolve) {
@@ -39,11 +38,9 @@ describe("media player instance", function () {
     expect(player.getPosition()).to.be.above(0);
     expect(player.getVideoLoadedTime()).to.be.above(0);
     expect(player.getVideoPlayedTime()).to.be.above(0);
-
   });
 
   it("should seek and continue playing", async function () {
-
     player.loadVideo({url: Mock.manifest.url, transport: "dash"});
 
     await new Promise(function(resolve) {
@@ -59,7 +56,6 @@ describe("media player instance", function () {
     await sleep(500);
 
     expect(player.getPosition()).to.be.above(2);
-
   });
 
   it("should seek to maximum position if manual seek is higher than maximum", async function () {
@@ -81,14 +77,17 @@ describe("media player instance", function () {
   });
 
   it("should download first segment when wanted buffer ahead is under first segment duration", async function () {
-
     player.setWantedBufferAhead(2);
 
     player.loadVideo({url: Mock.manifest.url, transport: "dash"});
+
     await sleep(100);
 
-    expect(player.getVideoLoadedTime()).to.equal(player.getCurrentRepresentations().video.index._index.timeline[0].d / 1000);
-
+    expect(player.getVideoLoadedTime()).to.equal(
+      player
+        .getCurrentRepresentations()
+        .video.index._index.timeline[0].d / 1000
+    );
   });
 
   it("should continue downloading when seek to wanter buffer ahead", async function() {
@@ -115,7 +114,6 @@ describe("media player instance", function () {
     await sleep(100);
 
     expect(state).to.equal("PLAYING");
-  
   });
 
   it("should not load more than defined max buffer ahead", async function() {
@@ -126,7 +124,6 @@ describe("media player instance", function () {
     await sleep(100);
 
     expect(Math.round(player.getVideoLoadedTime())).to.equal(2);
- 
   });
 
   xit("should delete buffer behind", async function() {
@@ -140,7 +137,5 @@ describe("media player instance", function () {
     await sleep(100);
 
     expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(6);
-    
   });
-
 });
