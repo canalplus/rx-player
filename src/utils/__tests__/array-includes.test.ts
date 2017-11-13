@@ -56,12 +56,6 @@ describe("utils - array-includes", () => {
     expect(arrayIncludes(["abc", "toto", /aa/, 4, []], "toto")).to.equal(true);
   });
 
-  it("should be false if a string is not included", () => {
-    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "titi"))
-      .to.equal(false);
-    expect(arrayIncludes([1, 2, 3, 4, 5], "toto")).to.equal(false);
-  });
-
   it("should be true if a boolean is included", () => {
     expect(arrayIncludes([true, false, true, "bar", "baz"], true))
       .to.equal(true);
@@ -70,12 +64,6 @@ describe("utils - array-includes", () => {
     expect(arrayIncludes([true, false], true))
       .to.equal(true);
     expect(arrayIncludes([false, "toto", /aa/, 4, []], false)).to.equal(true);
-  });
-
-  it("should be false if a boolean is not included", () => {
-    expect(arrayIncludes([true, true, true], false))
-      .to.equal(false);
-    expect(arrayIncludes([1, 2, 3, 4, 5], true)).to.equal(false);
   });
 
   it("should be true if an object is included", () => {
@@ -93,9 +81,9 @@ describe("utils - array-includes", () => {
     const obj2 = { a: obj1, b: { a: 4 } };
     const obj3 = { o: 4 };
     const obj4 = { z: obj1, t: { a: 4 } };
-    expect(arrayIncludes([obj1, obj2, obj3], obj4))
+    expect(arrayIncludes<any>([obj1, obj2, obj3], obj4))
       .to.equal(false);
-    expect(arrayIncludes([1, obj4, 3, obj3, 5], obj2)).to.equal(false);
+    expect(arrayIncludes<any>([1, obj4, 3, obj3, 5], obj2)).to.equal(false);
   });
 
   it("should not work for deep equality with objects", () => {
