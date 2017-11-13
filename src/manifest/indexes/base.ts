@@ -24,6 +24,8 @@ import {
   setTimescale,
   scale,
   IIndexSegment,
+  SegmentHelpers,
+  ITimelineIndex
 } from "./helpers";
 
 interface IBaseIndex {
@@ -38,7 +40,7 @@ interface IBaseIndex {
  * TODO weird that everything is inherited from Timeline...
  * Reimplement from scratch
  */
-export default {
+const SegmentBaseHelpers: SegmentHelpers<ITimelineIndex> = {
   getInitSegment,
   setTimescale,
   scale,
@@ -90,3 +92,5 @@ export default {
     return false;
   },
 };
+
+export default SegmentBaseHelpers;

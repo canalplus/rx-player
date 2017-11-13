@@ -24,19 +24,11 @@ import {
   getInitSegment,
   setTimescale,
   scale,
-  IIndexSegment,
+  ITemplateIndex,
+  SegmentHelpers,
 } from "./helpers";
 
-interface ITemplateIndex {
-  presentationTimeOffset? : number;
-  timescale : number;
-  media : string;
-  duration : number;
-  startNumber : number;
-  timeline : IIndexSegment[];
-}
-
-export default {
+const SegmentTemplateHelpers: SegmentHelpers<ITemplateIndex> = {
   getInitSegment,
   setTimescale,
   scale,
@@ -122,3 +114,5 @@ export default {
     return false;
   },
 };
+
+export default SegmentTemplateHelpers;

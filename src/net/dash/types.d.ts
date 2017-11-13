@@ -137,9 +137,9 @@ interface ISegmentTimeLine {
 
 interface ISegmentURL {
   media?: string;
-  mediaRange?: any; // XXX TODO
+  mediaRange?: [number, number];
   index?: string;
-  indexRange?: any; // XXX TODO
+  indexRange?: [number, number]; 
 }
 
 interface ISegmentBase {
@@ -150,8 +150,8 @@ interface ISegmentBase {
   initialization?: IInitialization;
   timeShiftBufferDepth?: number;
   presentationTimeOffset?: number;
-  indexRange?: any; // XXX TODO
-  indexRangeExact?: any; // XXX TODO
+  indexRange?: [number, number];
+  indexRangeExact?: boolean;
   availabilityTimeOffset?: number;
   availabilityTimeComplete?: boolean;
 }
