@@ -55,15 +55,15 @@ import {
 
 type ErrorStream = Subject<Error|CustomError>;
 
-interface IEMEMessage {
-  type : "IEMEMessage";
+interface ISessionEvent {
+  type : "ISessionEvent";
   value : {
     name : string,
     session : MediaKeySession
   };
 }
 
-interface IEMEMessageOptions {
+interface ISessionEventOptions {
   updatedWith?: Event;
   initData?: Uint8Array;
   initDataType?: string;
@@ -84,13 +84,13 @@ type MediaKeySessionType =
  * session information in the returned object.
  * @returns {Object}
  */
-function createMessage(
+function createSessionEvent(
   name : string,
   session : MediaKeySession,
-  options? : IEMEMessageOptions
-) : IEMEMessage {
+  options? : ISessionEventOptions
+) : ISessionEvent {
   return {
-    type: "IEMEMessage",
+    type: "ISessionEvent",
     value: objectAssign({ name, session }, options),
   };
 }
@@ -108,7 +108,7 @@ function sessionEventsHandler(
   session: MediaKeySession,
   keySystem: IKeySystemOption,
   errorStream: ErrorStream
-): Observable<Event|IEMEMessage> {
+): Observable<Event|ISessionEvent> {
   log.debug("eme: handle message events", session);
 
   /**
@@ -213,7 +213,7 @@ function sessionEventsHandler(
       return retryWithBackoff(getLicense, getLicenseRetryOptions);
     });
 
-  const sessionUpdates: Observable<Event|IEMEMessage>
+  const sessionUpdates: Observable<Event|ISessionEvent>
     = Observable.merge(keyMessages, keyStatusesChanges)
       .concatMap((res: Event) => {
         log.debug("eme: update session", res);
@@ -224,10 +224,10 @@ function sessionEventsHandler(
           .catch((error) => {
             throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
           })
-          .mapTo(createMessage("session-update", session, { updatedWith: res }));
+          .mapTo(createSessionEvent("session-update", session, { updatedWith: res }));
       });
 
-  const sessionEvents: Observable<Event|IEMEMessage>
+  const sessionEvents: Observable<Event|ISessionEvent>
     = Observable.merge(sessionUpdates, keyErrors);
   if (session.closed) {
     return sessionEvents.takeUntil(castToObservable(session.closed));
@@ -252,7 +252,7 @@ function createSession(
   keySystem: IKeySystemOption,
   initData: Uint8Array,
   errorStream: ErrorStream
-): {session: MediaKeySession, sessionEvents: ConnectableObservable<Event|IEMEMessage>} {
+): {session: MediaKeySession, sessionEvents: ConnectableObservable<Event|ISessionEvent>} {
   log.debug(`eme: create a new ${sessionType} session`);
   const session = mediaKeys.createSession(sessionType);
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
@@ -283,7 +283,7 @@ function createSessionAndKeyRequest(
   initDataType: string,
   initData: Uint8Array,
   errorStream: ErrorStream
-): Observable<Event|IEMEMessage> {
+): Observable<Event|ISessionEvent> {
   const {
     session,
     sessionEvents,
@@ -303,7 +303,7 @@ function createSessionAndKeyRequest(
         $storedSessions.add(initData, session);
       }
     })
-    .mapTo(createMessage("generated-request", session, { initData, initDataType }));
+    .mapTo(createSessionEvent("generated-request", session, { initData, initDataType }));
 
   return Observable.merge(sessionEvents, generateRequest);
 }
@@ -326,7 +326,7 @@ function createSessionAndKeyRequestWithRetry(
   initDataType: string,
   initData: Uint8Array,
   errorStream: ErrorStream
-): Observable<Event|IEMEMessage> {
+): Observable<Event|ISessionEvent> {
   return createSessionAndKeyRequest(
     mediaKeys,
     keySystem,
@@ -377,7 +377,7 @@ function createPersistentSessionAndLoad(
   initDataType: string,
   initData: Uint8Array,
   errorStream: ErrorStream
-): Observable<Event|IEMEMessage> {
+): Observable<Event|ISessionEvent> {
   log.debug("eme: load persisted session", storedSessionId);
 
   const sessionType = "persistent-license";
@@ -394,7 +394,7 @@ function createPersistentSessionAndLoad(
         $storedSessions.add(initData, session);
         return sessionEvents
           .startWith(
-            createMessage("loaded-session", session, { storedSessionId })
+            createSessionEvent("loaded-session", session, { storedSessionId })
           );
       } else {
         // Failed. Try to create a new persistent session from scratch
@@ -411,7 +411,7 @@ function createPersistentSessionAndLoad(
         return createSessionAndKeyRequestWithRetry(
           mediaKeys, keySystem, sessionType, initDataType, initData, errorStream
         ).startWith(
-          createMessage("loaded-session-failed", session, { storedSessionId })
+          createSessionEvent("loaded-session-failed", session, { storedSessionId })
         );
       }
     });
@@ -434,13 +434,13 @@ function manageSessionCreation(
   initDataType: string,
   initData: Uint8Array,
   errorStream: ErrorStream
-): Observable<MediaKeys|IEMEMessage|Event> {
+): Observable<MediaKeys|ISessionEvent|Event> {
   return Observable.defer(() => {
     // reuse currently loaded sessions without making a new key request
     const loadedSession = $loadedSessions.get(initData);
     if (loadedSession && loadedSession.sessionId) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
-      return Observable.of(createMessage("reuse-session", loadedSession));
+      return Observable.of(createSessionEvent("reuse-session", loadedSession));
     }
 
     let sessionType: MediaKeySessionType = "temporary"; // (default value)
@@ -471,6 +471,6 @@ function manageSessionCreation(
 export default manageSessionCreation;
 
 export {
-  IEMEMessage,
+  ISessionEvent,
   ErrorStream,
 };
