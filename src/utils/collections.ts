@@ -34,7 +34,7 @@ class SimpleSet {
   }
 
   public test(x : string|number) : boolean {
-    return this._hash[x];
+    return !!this._hash[x];
   }
 }
 

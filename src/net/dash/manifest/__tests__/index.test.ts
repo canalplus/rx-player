@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import sinon from "sinon";
+import sinon = require("sinon");
 
 import parser from "../index";
 
@@ -33,13 +33,15 @@ describe("dash parser", function() {
   });
 
   describe("parseFromString", () => {
+    /* tslint:disable:max-line-length */
     it("should call parseFromDocument with the string given converted to a document", function() {
+      /* tslint:enable:max-line-length */
       const xmlString = "<foo></foo>";
       const fakeDoc = { a: 97 };
       const contentProtectionParser = () => {};
 
       const DOMParserStub = sinon
-        .stub(window.DOMParser.prototype, "parseFromString")
+        .stub(DOMParser.prototype, "parseFromString")
         .callsFake((doc, mimeType) => {
           expect(doc).to.equal(xmlString);
           expect(mimeType).to.equal("application/xml");
@@ -52,8 +54,10 @@ describe("dash parser", function() {
 
       parser.parseFromString(xmlString, contentProtectionParser);
 
+      /* tslint:disable:no-unused-expression */
       expect(DOMParserStub).to.have.been.calledOnce;
       expect(parseFromDocumentStub).to.have.been.calledOnce;
+      /* tslint:enable:no-unused-expression */
       expect(parseFromDocumentStub).to.have.been.calledWith(
         fakeDoc,
         contentProtectionParser
@@ -64,9 +68,9 @@ describe("dash parser", function() {
   });
 
   describe("parseFromDocument", () => {
-    const setDocumentFromString = (str) => {
+    function setDocumentFromString(str : string) : Document {
       return new DOMParser().parseFromString(str, "application/xml");
-    };
+    }
 
     it("throws root if not MPD", function() {
       const doc = setDocumentFromString("<foo></foo>");
