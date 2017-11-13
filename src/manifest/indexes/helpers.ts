@@ -160,9 +160,10 @@ const setTimescale = (
     index.timescale = timescale;
   }
 
-  // Huh? I think that's a TypeScript problem here
-  // XXX TODO
-  return index as { timescale: number };
+  return {
+    timescale: index.timescale === timescale ?
+      timescale : index.timescale,
+  };
 };
 
 /**
@@ -217,7 +218,13 @@ interface SegmentHelpers<T> {
   ) => number;
   _addSegmentInfos: (
     index: T,
-    newSegment: { time: number, duration: number, timescale: number },
+    newSegment: {
+      time: number,
+      duration: number,
+      timescale: number,
+      count: number,
+      range: [number, number]
+    },
     currentSegment: { time: number, duration: number, timescale: number }
   ) => boolean;
 }
