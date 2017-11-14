@@ -16,7 +16,7 @@
 
 import { expect } from "chai";
 import Representation from "../../../manifest/representation";
-import  _filterByWidth from "../filterByWidth";
+import _filterByWidth from "../filterByWidth";
 
 describe("core - abr - filterByWidth", () => {
   const fakeReps = [

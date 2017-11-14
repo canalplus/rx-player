@@ -19,8 +19,8 @@
  * RxJS Observables
  */
 
-import { EventTargetLike } from "rxjs/observable/FromEventObservable";
 import { Observable } from "rxjs/Observable";
+import { EventTargetLike } from "rxjs/observable/FromEventObservable";
 
 import config from "../config";
 
@@ -28,8 +28,8 @@ import log from "../utils/log";
 import onEvent from "../utils/rx-onEvent";
 
 import {
-  HTMLElement_,
   BROWSER_PREFIXES,
+  HTMLElement_,
 } from "./constants";
 
 const INACTIVITY_DELAY = config.INACTIVITY_DELAY;

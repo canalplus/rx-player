@@ -18,7 +18,12 @@ import { Observable } from "rxjs/Observable";
 import { Subscription } from "rxjs/Subscription";
 
 import EventEmitter from "../../utils/eventemitter";
-import { bytesToStr, strToBytes } from "../../utils/bytes";
+
+import {
+  bytesToStr,
+  strToBytes,
+} from "../../utils/bytes";
+
 import castToObservable from "../../utils/castToObservable";
 
 import {
@@ -62,7 +67,6 @@ interface IMockMediaKeysConstructor {
 // Default MockMediaKeys implementation
 let MockMediaKeys : IMockMediaKeysConstructor =
   class implements IMockMediaKeys {
-    constructor() {}
     _setVideo() : void {
       throw new Error("MediaKeys is not implemented in your browser");
     }

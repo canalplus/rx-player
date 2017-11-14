@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs/Subject";
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
 
 import { SupportedBufferTypes } from "../types";
 
+import Representation from "../../manifest/representation";
 import RepresentationChooser, {
   IRepresentationChooserClockTick,
-} from "./representation_chooser";
-import {
   IRequest,
 } from "./representation_chooser";
-import Representation from "../../manifest/representation";
 
 interface IMetricValue {
   duration: number;
@@ -145,7 +143,10 @@ export default class ABRManager {
    */
   constructor(
     requests$: Observable<Observable<IRequest>>,
-    metrics$: Observable<{ type: SupportedBufferTypes, value: IMetricValue }>,
+    metrics$: Observable<{
+      type: SupportedBufferTypes;
+      value: IMetricValue;
+    }>,
     options : IRepresentationChoosersOptions = defaultChooserOptions
   ) {
     // Subject emitting and completing on dispose.
@@ -220,7 +221,10 @@ export default class ABRManager {
     type : SupportedBufferTypes,
     clock$: Observable<IRepresentationChooserClockTick>,
     representations: Representation[] = []
-  ): Observable<{bitrate: undefined|number, representation: Representation|null}> {
+  ): Observable<{
+    bitrate: undefined|number;
+    representation: Representation|null;
+  }> {
     this._lazilyCreateChooser(type);
     return this._choosers[type].get$(clock$, representations);
   }

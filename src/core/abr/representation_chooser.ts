@@ -17,19 +17,19 @@
 import objectAssign = require("object-assign");
 
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { Subject } from "rxjs/Subject";
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
 
 import config from "../../config";
 import assert from "../../utils/assert";
 
 import { SupportedBufferTypes } from "../types";
 
-import BandwidthEstimator from "./bandwidth_estimator";
-import filterByWidth from "./filterByWidth";
-import filterByBitrate from "./filterByBitrate";
-import fromBitrateCeil from "./fromBitrateCeil";
 import Representation from "../../manifest/representation";
+import BandwidthEstimator from "./bandwidth_estimator";
+import filterByBitrate from "./filterByBitrate";
+import filterByWidth from "./filterByWidth";
+import fromBitrateCeil from "./fromBitrateCeil";
 
 import EWMA from "./ewma";
 
@@ -52,8 +52,8 @@ interface IRequestInfo {
   duration: number;
   requestTimestamp: number;
   progress: Array<{
-    size: number,
-    timestamp: number,
+    size: number;
+    timestamp: number;
   }>;
 }
 
@@ -63,9 +63,9 @@ interface IProgressRequest {
   type: SupportedBufferTypes;
   event: "progress";
   value: {
-    id: string|number,
-    size: number,
-    timestamp: number,
+    id: string|number;
+    size: number;
+    timestamp: number;
   };
 }
 
@@ -73,10 +73,10 @@ interface IBeginRequest {
   type: SupportedBufferTypes;
   event: "requestBegin";
   value: {
-    id: string|number,
-    time: number,
-    duration: number,
-    requestTimestamp: number,
+    id: string|number;
+    time: number;
+    duration: number;
+    requestTimestamp: number;
   };
 }
 
@@ -84,7 +84,7 @@ interface IEndRequest {
   type: SupportedBufferTypes;
   event: "requestEnd";
   value: {
-    id: string|number,
+    id: string|number;
   };
 }
 
@@ -111,7 +111,10 @@ interface IRepresentationChooserOptions {
 function setManualRepresentation(
   representations : Representation[],
   bitrate : number
-) : Observable<{bitrate: undefined, representation: Representation}> {
+) : Observable<{
+  bitrate: undefined;
+  representation: Representation;
+}> {
   const chosenRepresentation =
     fromBitrateCeil(representations, bitrate) ||
     representations[0];
@@ -241,7 +244,7 @@ function requestTakesTime(
   durationOfRequest : number,
   chunkDuration : number
 ) : boolean {
-  return durationOfRequest > 1 + chunkDuration * 1.2;
+  return durationOfRequest > chunkDuration * 1.2 + 1;
 }
 
 /**
@@ -305,7 +308,10 @@ export default class RepresentationChooser {
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
-  ): Observable<{bitrate: undefined|number, representation: Representation|null}> {
+  ): Observable<{
+    bitrate: undefined|number;
+    representation: Representation|null;
+  }> {
     if (representations.length < 2) {
       return Observable.of({
         bitrate: undefined, // Bitrate estimation is deactivated here

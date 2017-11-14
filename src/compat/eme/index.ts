@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import KeySystemAccess from "./keySystemAccess";
 import { requestMediaKeySystemAccess } from "./MediaKeys";
 import setMediaKeys from "./setMediaKeys";
-import KeySystemAccess from "./keySystemAccess";
 
 export {
   requestMediaKeySystemAccess,

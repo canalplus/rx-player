@@ -16,27 +16,28 @@
 
 import { Observable } from "rxjs/Observable";
 
-import onEvent from "../utils/rx-onEvent";
 import EventEmitter from "../utils/eventemitter";
 import log from "../utils/log";
+import onEvent from "../utils/rx-onEvent";
 
 import {
-  MediaSource_,
-  VTTCue_,
-  isIE,
   isFirefox,
+  isIE,
+  MediaSource_,
   READY_STATES,
+  VTTCue_,
 } from "./constants";
 import * as events from "./events";
 import {
-  requestFullscreen,
   exitFullscreen,
   isFullscreen,
+  requestFullscreen,
 } from "./fullscreen";
+
 import {
+  KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
-  KeySystemAccess,
 } from "./eme";
 
 /**
@@ -179,7 +180,10 @@ if (
 function addTextTrack(
   video : HTMLMediaElement,
   hidden : boolean
-) : { track : TextTrack, trackElement? : HTMLTrackElement } {
+) : {
+  track : TextTrack;
+  trackElement? : HTMLTrackElement;
+} {
   let track;
   let trackElement;
 
@@ -211,7 +215,10 @@ function addTextTrack(
  */
 function isPlaybackStuck(
   time : number,
-  currentRange : { start: number, end: number }|null,
+  currentRange : {
+    start: number;
+    end: number;
+  }|null,
   state : string,
   isStalled : boolean
 ) : boolean {
