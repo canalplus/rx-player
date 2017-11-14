@@ -15,13 +15,14 @@
  */
 
 import assert from "../../utils/assert";
-import {
-  parseTfdt,
-  getDurationFromTrun,
-} from "../../parsers/containers/isobmff";
+
 import Segment from "../../manifest/segment";
+import {
+  getDurationFromTrun,
+  ISidxSegment,
+  parseTfdt,
+} from "../../parsers/containers/isobmff";
 import { ISegmentTimingInfos } from "../types";
-import { ISidxSegment } from "../../parsers/containers/isobmff";
 
 /**
  * Get precize start and duration of a segment from ISOBMFF.
@@ -66,14 +67,14 @@ function getISOBMFFTimingInfos(
 
   if (timescale === segment.timescale) {
     maxDecodeTimeDelta = Math.min(
-      0.9 * timescale,
+      timescale * 0.9,
       segment.duration != null ? segment.duration / 4 : 0.25
     );
     segmentStart = segment.time;
     segmentDuration = segment.duration;
   } else {
     maxDecodeTimeDelta = Math.min(
-      0.9 * timescale,
+      timescale * 0.9,
       segment.duration != null ?
         ((segment.duration / segment.timescale) * timescale) / 4 : 0.25
     );

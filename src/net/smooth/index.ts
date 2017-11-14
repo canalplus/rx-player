@@ -17,36 +17,36 @@
 import { Observable } from "rxjs/Observable";
 
 import assert from "../../utils/assert";
-import { resolveURL } from "../../utils/url";
-import { stringFromUTF8 } from "../../utils/strings";
 import request from "../../utils/request";
+import { stringFromUTF8 } from "../../utils/strings";
+import { resolveURL } from "../../utils/url";
 
-import createHSSManifestParser from "./parser";
 import parseBif from "../../parsers/images/bif";
 
+import extractTimingsInfos from "./isobmff_timings_infos";
 import mp4Utils from "./mp4";
+import createHSSManifestParser from "./parser";
+import generateSegmentLoader from "./segment_loader";
 import {
+  buildSegmentURL,
   extractISML,
   extractToken,
   replaceToken,
   resolveManifest,
-  buildSegmentURL,
 } from "./utils";
-import extractTimingsInfos from "./isobmff_timings_infos";
-import generateSegmentLoader from "./segment_loader";
 
 import {
-  ITransportPipelines,
-  IResolverObservable,
-  IManifestLoaderArguments,
   ILoaderObservable,
+  ImageParserObservable, // XXX TODO rename
+  IManifestLoaderArguments,
   IManifestParserArguments,
+  IManifestParserObservable,
+  IResolverObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
-  IManifestParserObservable,
+  ITransportPipelines,
   SegmentParserObservable,
   TextTrackParserObservable,
-  ImageParserObservable,
 } from "../types";
 
 import { IHSSParserOptions } from "./types";

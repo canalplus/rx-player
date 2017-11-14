@@ -15,39 +15,39 @@
  */
 
 import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
+import { Subject } from "rxjs/Subject";
+
 import config from "../../config";
+
 import arrayIncludes from "../../utils/array-includes";
+import InitializationSegmentCache from "../../utils/initialization_segment_cache";
 import log from "../../utils/log";
 import { retryableFuncWithBackoff } from "../../utils/retry";
 import throttle from "../../utils/rx-throttle";
-import InitializationSegmentCache
-  from "../../utils/initialization_segment_cache";
-import {
-  OtherError,
-  isKnownError,
-} from "../../errors";
+
 import {
   canPlay,
   canSeek,
 } from "../../compat";
 import { onSourceOpen$ } from "../../compat/events";
-import Manifest from  "../../manifest";
-import Segment from  "../../manifest/segment";
-import { ITransportPipelines } from "../../net";
-import Adaptation from  "../../manifest/adaptation";
-import Representation from  "../../manifest/representation";
-import { SupportedBufferTypes } from "../types";
 import {
-  normalizeManifest,
-  updateManifest,
-  getCodec,
-  ISupplementaryTextTrack,
-  ISupplementaryImageTrack,
-} from "../manifest";
+  CustomError,
+  isKnownError,
+  OtherError,
+} from "../../errors";
+import Manifest from "../../manifest";
+import Adaptation from "../../manifest/adaptation";
+import Representation from "../../manifest/representation";
+import Segment from "../../manifest/segment";
+import { ITransportPipelines } from "../../net";
+
+import ABRManager, {
+  IMetricValue,
+} from "../abr";
+import { IRequest } from "../abr/representation_chooser";
 import {
   Buffer,
   EmptyBuffer,
@@ -56,44 +56,49 @@ import {
   IBufferClockTick,
   IBufferSegmentInfos,
 } from "../buffer/types";
-import Pipeline, { IPipelineOptions } from "../pipelines";
-import ABRManager from "../abr";
+import { IKeySystemOption } from "../eme";
+import {
+  getCodec,
+  ISupplementaryImageTrack,
+  ISupplementaryTextTrack,
+  normalizeManifest,
+  updateManifest,
+} from "../manifest";
+import Pipeline, {
+  IPipelineOptions
+} from "../pipelines";
+import { SupportedBufferTypes } from "../types";
+
+import EMEManager from "./eme";
+import createMediaErrorStream from "./error_stream";
 import getInitialTime, {
   IInitialTimeOptions
 } from "./initial_time";
 import {
-  shouldHaveNativeSourceBuffer,
+  createAndPlugMediaSource,
+  setDurationToMediaSource,
+} from "./media_source";
+import processPipeline from "./process_pipeline";
+import {
   addNativeSourceBuffer,
   createSourceBuffer,
   disposeSourceBuffer,
   ISourceBufferMemory,
+  shouldHaveNativeSourceBuffer,
   SourceBufferOptions,
 } from "./source_buffers";
-import {
-  createAndPlugMediaSource,
-  setDurationToMediaSource,
-} from "./media_source";
+import SpeedManager from "./speed_manager";
+import StallingManager from "./stalling_obs";
 import createTimings, {
   ITimingsClockTick,
 } from "./timings";
-import createMediaErrorStream from "./error_stream";
-import processPipeline from "./process_pipeline";
-import SpeedManager from "./speed_manager";
-import StallingManager from "./stalling_obs";
-import EMEManager from "./eme";
-import { IKeySystemOption } from "../eme";
 import {
-  IStreamClockTick,
-  ILoadedEvent,
-  StreamEvent,
   AdaptationsSubjects,
+  ILoadedEvent,
   IManifestUpdateEvent,
+  IStreamClockTick,
+  StreamEvent,
 } from "./types";
-
-import { CustomError } from "../../errors";
-
-import { IRequest } from "../abr/representation_chooser";
-import { IMetricValue } from "../abr";
 
 const { END_OF_PLAY } = config;
 
@@ -117,17 +122,17 @@ function getPipelineOptions(bufferType : string) : IPipelineOptions<any, any> {
 
 interface IStreamOptions {
   adaptiveOptions: {
-    initialBitrates : Partial<Record<SupportedBufferTypes, number>>,
-    manualBitrates : Partial<Record<SupportedBufferTypes, number>>,
-    maxAutoBitrates : Partial<Record<SupportedBufferTypes, number>>,
-    throttle : Partial<Record<SupportedBufferTypes, Observable<number>>>
-    limitWidth : Partial<Record<SupportedBufferTypes, Observable<number>>>
+    initialBitrates : Partial<Record<SupportedBufferTypes, number>>;
+    manualBitrates : Partial<Record<SupportedBufferTypes, number>>;
+    maxAutoBitrates : Partial<Record<SupportedBufferTypes, number>>;
+    throttle : Partial<Record<SupportedBufferTypes, Observable<number>>>;
+    limitWidth : Partial<Record<SupportedBufferTypes, Observable<number>>>;
   };
   autoPlay : boolean;
   bufferOptions : {
-    wantedBufferAhead$ : Observable<number>,
-    maxBufferAhead$ : Observable<number>,
-    maxBufferBehind$ : Observable<number>,
+    wantedBufferAhead$ : Observable<number>;
+    maxBufferAhead$ : Observable<number>;
+    maxBufferBehind$ : Observable<number>;
   };
   errorStream : Subject<Error| CustomError>;
   speed$ : BehaviorSubject<number>;
@@ -191,7 +196,10 @@ export default function Stream({
   /**
    * Subject through which network metrics will be sent to the ABR manager.
    */
-  const network$ = new Subject<{ type: SupportedBufferTypes, value: IMetricValue }>();
+  const network$ = new Subject<{
+    type: SupportedBufferTypes;
+    value: IMetricValue;
+  }>();
 
   /**
    * Subject through which each request progression will be reported to the ABR
@@ -225,9 +233,9 @@ export default function Stream({
       errorStream
     ).map(({ parsed } : {
       parsed : {
-        url : string,
-        manifest : any,
-      }
+        url : string;
+        manifest : any;
+      };
     }) : Manifest =>
       normalizeManifest(
         parsed.url,
@@ -314,7 +322,10 @@ export default function Stream({
   const startStream = retryableFuncWithBackoff<any, StreamEvent>(({
     url: _url,
     mediaSource,
-  } : { url : string|null, mediaSource : MediaSource|null }) => {
+  } : {
+    url : string|null;
+    mediaSource : MediaSource|null;
+  }) => {
     const sourceOpening$ = mediaSource
       ? onSourceOpen$(mediaSource)
       : Observable.of(null);
@@ -427,9 +438,9 @@ export default function Stream({
       function downloader(
         { segment, representation, init } :
         {
-          segment : Segment,
-          representation : Representation,
-          init : IBufferSegmentInfos|null,
+          segment : Segment;
+          representation : Representation;
+          init : IBufferSegmentInfos|null;
         }
       ) {
         const pipeline$ = Pipeline(transport[bufferType], pipelineOptions)({
@@ -510,8 +521,8 @@ export default function Stream({
     manifest : Manifest,
     timings : Observable<ITimingsClockTick>
   ) : {
-    clock$ : Observable<IBufferClockTick>,
-    loaded$ : Observable<ILoadedEvent>,
+    clock$ : Observable<IBufferClockTick>;
+    loaded$ : Observable<ILoadedEvent>;
   } {
     const startTime = getInitialTime(manifest, startAt);
 

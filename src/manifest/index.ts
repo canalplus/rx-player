@@ -17,11 +17,12 @@
 import arrayFind = require("array-find");
 
 import assert from "../utils/assert";
-import Adaptation, {
-  IAdaptationArguments,
-  AdaptationType,
-} from "./adaptation";
 import generateNewId from "../utils/id";
+
+import Adaptation, {
+  AdaptationType,
+  IAdaptationArguments,
+} from "./adaptation";
 
 type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
 

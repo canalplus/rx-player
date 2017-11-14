@@ -15,9 +15,9 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import MediaError from "../../errors/MediaError";
 import log from "../../utils/log";
 import onEvent from "../../utils/rx-onEvent";
-import MediaError from "../../errors/MediaError";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"

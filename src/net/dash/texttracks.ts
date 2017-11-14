@@ -18,30 +18,30 @@ import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 
 import assert from "../../utils/assert";
-import { resolveURL } from "../../utils/url";
 import { stringFromUTF8 } from "../../utils/strings";
+import { resolveURL } from "../../utils/url";
 
 import {
-  parseSidx,
   getMdat,
   getMDHDTimescale,
+  parseSidx,
 } from "../../parsers/containers/isobmff";
 
 import request from "../../utils/request";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import {
   byteRange,
-  replaceTokens,
   isMP4EmbeddedTrack,
+  replaceTokens,
 } from "./utils";
 
 import {
   ILoaderObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
-  TextTrackParserObservable,
   ISegmentTimingInfos,
   ITextTrackSegmentData,
+  TextTrackParserObservable,
 } from "../types";
 
 /**

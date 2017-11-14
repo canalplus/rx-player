@@ -16,20 +16,20 @@
 
 import { Observable } from "rxjs/Observable";
 
-import request from "../../utils/request";
 import assert from "../../utils/assert";
+import request from "../../utils/request";
 import { resolveURL } from "../../utils/url";
 import mp4Utils from "./mp4";
 import {
-  byteRange,
   buildSegmentURL,
+  byteRange,
 } from "./utils";
 
 import {
   CustomSegmentLoader,
-  ISegmentLoaderArguments,
   ILoaderObservable,
   ILoaderObserver,
+  ISegmentLoaderArguments,
 } from "../types";
 
 const {
@@ -147,9 +147,9 @@ const generateSegmentLoader = (
       let hasFallbacked = false;
 
       const resolve = (_args : {
-        data : ArrayBuffer|Uint8Array,
-        size : number,
-        duration : number,
+        data : ArrayBuffer|Uint8Array;
+        size : number;
+        duration : number;
       }) => {
         if (!hasFallbacked) {
           hasFinished = true;

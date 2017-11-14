@@ -66,10 +66,13 @@ function normalize(_language : string) : string {
  */
 function normalizeBase(base : string) : string {
   let result;
-  if (base.length === 2) {
-    result = ISO_MAP_1_TO_3[base];
-  } else if (base.length === 3) {
-    result = ISO_MAP_2_TO_3[base];
+  switch (base.length) {
+    case 2:
+      result = ISO_MAP_1_TO_3[base];
+      break;
+    case 3:
+      result = ISO_MAP_2_TO_3[base];
+      break;
   }
   return result || base;
 }

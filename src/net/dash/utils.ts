@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import Segment from "../../manifest/segment";
 import Representation from "../../manifest/representation";
+import Segment from "../../manifest/segment";
 
 /**
  * Pad with 0 in the left of the given n argument to reach l length

@@ -20,6 +20,7 @@ import {
 
 import { IBifThumbnail } from "../../../../parsers/images/bif";
 
+// TODO
 class ImageSourceBuffer
   extends AbstractSourceBuffer<IBifThumbnail[]>
 {
@@ -29,11 +30,13 @@ class ImageSourceBuffer
     this.buffered.insert(0, Number.MAX_VALUE);
   }
 
-  _remove() {
-  }
+  /* tslint:disable no-empty */
+  _remove() {}
+  /* tslint:enable no-empty */
 
-  _abort() {
-  }
+  /* tslint:disable no-empty */
+  _abort() {}
+  /* tslint:enable no-empty */
 }
 
 export default ImageSourceBuffer;

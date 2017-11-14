@@ -15,10 +15,10 @@
  */
 
 import {
-  SegmentHelpers,
-  ITimelineIndex,
-  ITemplateIndex,
   IListIndex,
+  ISegmentHelpers,
+  ITemplateIndex,
+  ITimelineIndex,
 } from "./helpers";
 
 const indexes : any = {};
@@ -42,7 +42,7 @@ if (__FEATURES__.DASH) {
 
 function getRightIndexHelpers(
   index : { indexType : string }
-) : SegmentHelpers<ITimelineIndex|ITemplateIndex|IListIndex>|undefined {
+) : ISegmentHelpers<ITimelineIndex|ITemplateIndex|IListIndex>|undefined {
   return indexes[index.indexType];
 }
 

@@ -15,12 +15,13 @@
  */
 
 import log from "../../utils/log";
-import { getDurationFromTrun } from "../../parsers/containers/isobmff";
-import mp4Utils, { IISOBMFFBasicSegment } from "./mp4";
 
-// typings
-import { ISegmentTimingInfos } from "../types";
 import Segment from "../../manifest/segment";
+import { getDurationFromTrun } from "../../parsers/containers/isobmff";
+
+import { ISegmentTimingInfos } from "../types";
+
+import mp4Utils, { IISOBMFFBasicSegment } from "./mp4";
 
 const {
   getTraf,
@@ -33,8 +34,8 @@ function extractTimingsInfos(
   segment : Segment,
   isLive : boolean
 ) : {
-  nextSegments : ISegmentTimingInfos[],
-  segmentInfos : ISegmentTimingInfos,
+  nextSegments : ISegmentTimingInfos[];
+  segmentInfos : ISegmentTimingInfos;
 } {
   const nextSegments : ISegmentTimingInfos[] = [];
   let segmentInfos : ISegmentTimingInfos;
@@ -56,7 +57,7 @@ function extractTimingsInfos(
     // If the estimate is too far from what the segment seems to imply, take
     // the segment infos instead.
     const maxDecodeTimeDelta = Math.min(
-      0.9 * segment.timescale,
+      segment.timescale * 0.9,
       segment.duration != null ? segment.duration / 4 : 0.25
     );
 

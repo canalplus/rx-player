@@ -14,34 +14,31 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "../../utils/array-includes";
 import config from "../../config";
+import arrayIncludes from "../../utils/array-includes";
+import assert from "../../utils/assert";
 import {
-  concat,
-  strToBytes,
-  // toBase64URL,
   // bytesToStr,
-  le2toi,
+  // toBase64URL,
   bytesToUTF16Str,
+  concat,
   guidToUuid,
   hexToBytes,
+  le2toi,
+  strToBytes,
 } from "../../utils/bytes";
-
-import {
-  IHSSKeySystem,
-  IAdaptationSmooth,
-  IHSSManifestSegment,
-  IContentProtectionSmooth,
- } from "./types";
+import { normalize as normalizeLang } from "../../utils/languages";
 
 import { IParsedManifest } from "../types";
 
-import { IRepresentationSmooth } from "./types";
-
-import assert from "../../utils/assert";
-import { normalize as normalizeLang } from "../../utils/languages";
-
-import { IHSSParserOptions } from "./types";
+import {
+  IAdaptationSmooth,
+  IContentProtectionSmooth,
+  IHSSKeySystem,
+  IHSSManifestSegment,
+  IHSSParserOptions,
+  IRepresentationSmooth,
+ } from "./types";
 
 interface IParserFunctions {
   (manifest : string|Document) : IParsedManifest;
@@ -182,7 +179,7 @@ function createSmoothStreamingParser(
    */
   function getHexKeyId(buf : Uint8Array) : string {
     const len = le2toi(buf, 8);
-    const xml = bytesToUTF16Str(buf.subarray(10, 10 + len));
+    const xml = bytesToUTF16Str(buf.subarray(10, len + 10));
     const doc = new DOMParser().parseFromString(xml, "application/xml");
     const kidElement = doc.querySelector("KID");
     if (!kidElement) {
@@ -221,8 +218,8 @@ function createSmoothStreamingParser(
   function parseProtection(
     root : Element
   ) : {
-    keyId : string,
-    keySystems: IHSSKeySystem[],
+    keyId : string;
+    keySystems: IHSSKeySystem[];
   } {
     const header = root.firstElementChild as Element;
     assert.equal(
@@ -483,8 +480,8 @@ function createSmoothStreamingParser(
       protection,
       adaptations,
     } = reduceChildren <{
-      protection: IContentProtectionSmooth|null,
-      adaptations: IAdaptationSmooth[]
+      protection: IContentProtectionSmooth|null;
+      adaptations: IAdaptationSmooth[];
     }> (root, (res, name, node) => {
       switch (name) {
       case "Protection":  {

@@ -16,6 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import castToObservable from "./castToObservable";
+import noop from "./noop";
 
 /**
  * Throttle an asynchronous function (returning an Observable or Promise) to
@@ -54,7 +55,7 @@ export default function throttle<T>(
 
     return castToObservable(func(...args))
       .do(
-        () => {},
+        noop,
         () => isPending = false,
         () => isPending = false
       );

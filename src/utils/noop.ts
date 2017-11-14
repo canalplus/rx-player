@@ -17,4 +17,6 @@
 /**
  * Do nothing, well.
  */
+/* tslint:disable:no-empty */
 export default function() : void {}
+/* tslint:enable:no-empty */

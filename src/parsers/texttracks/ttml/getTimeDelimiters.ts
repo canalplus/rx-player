@@ -26,7 +26,7 @@ import parseTime from "./time_parsing";
 export default function getTimeDelimiters(
   element : Element,
   ttParams : ITTParameters
-) : { start : number, end : number } {
+) : { start : number; end : number } {
   const beginAttr = element.getAttribute("begin");
   const durationAttr = element.getAttribute("dur");
   const endAttr = element.getAttribute("end");

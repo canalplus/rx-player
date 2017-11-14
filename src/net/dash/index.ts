@@ -16,36 +16,36 @@
 
 import { Observable } from "rxjs/Observable";
 
-import { resolveURL } from "../../utils/url";
 import request from "../../utils/request";
+import { resolveURL } from "../../utils/url";
 
 import {
-  parseSidx,
   getMDHDTimescale,
+  parseSidx,
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
 
-import dashManifestParser from "./manifest";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import { replaceTokens } from "./utils";
+import dashManifestParser from "./manifest";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
   parser as TextTrackParser,
 } from "./texttracks";
+import { replaceTokens } from "./utils";
 
 import {
-  ITransportPipelines,
-  IManifestLoaderArguments,
+  CustomSegmentLoader,
   ILoaderObservable,
+  ImageParserObservable, // XXX TODO Rename
+  IManifestLoaderArguments,
   IManifestParserArguments,
+  IManifestParserObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
-  IManifestParserObservable,
-  SegmentParserObservable,
-  ImageParserObservable,
   ISegmentTimingInfos,
-  CustomSegmentLoader,
+  ITransportPipelines,
+  SegmentParserObservable,
 } from "../types";
 
 import {

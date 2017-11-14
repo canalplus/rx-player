@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs/Subject";
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
 
 import config from "../../../../../config";
 import log from "../../../../../utils/log";
+
 import {
-  onSeeking$,
-  onSeeked$,
   onEnded$,
+  onSeeked$,
+  onSeeking$,
 } from "../../../../../compat/events";
 
 import { AbstractSourceBuffer } from "../../abstract";
@@ -77,7 +78,9 @@ function safelyRemoveChild(element : Element, child : Element|null) {
   if (child) {
     try {
       element.removeChild(child);
-    } catch (e) {}
+    } catch (e) {
+      log.warn("Can't remove text track: not in the element.");
+    }
   }
 }
 

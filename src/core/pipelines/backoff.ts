@@ -15,12 +15,12 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { isOffline } from "../../compat";
 import {
   RequestError,
   RequestErrorTypes,
 } from "../../errors";
-import { isOffline } from "../../compat";
-import  { getFuzzedDelay } from "../../utils/backoff";
+import { getFuzzedDelay } from "../../utils/backoff";
 
 /**
  * Called on a pipeline's loader error.

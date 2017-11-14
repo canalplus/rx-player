@@ -26,9 +26,9 @@ import {
 
 import {
   CustomSegmentLoader,
-  ISegmentLoaderArguments,
   ILoaderObservable,
   ILoaderObserver,
+  ISegmentLoaderArguments,
 } from "../types";
 
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
@@ -139,9 +139,9 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
      * @param {Number} args.duration - The duration of the request, in ms
      */
     const resolve = (_args : {
-      data : ArrayBuffer|Uint8Array,
-      size : number,
-      duration : number,
+      data : ArrayBuffer|Uint8Array;
+      size : number;
+      duration : number;
     }) => {
       if (!hasFallbacked) {
         hasFinished = true;

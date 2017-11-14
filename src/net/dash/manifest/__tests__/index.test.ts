@@ -18,8 +18,8 @@ import { expect } from "chai";
 // import sinon = require("sinon");
 
 import {
-  parseFromString,
   parseFromDocument,
+  parseFromString,
 } from "../index";
 
 // const mpd = require("raw!test/fixtures/dash-seg-list.mpd");

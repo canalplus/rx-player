@@ -214,7 +214,7 @@ function getNextRangeGap(timeRanges : TimeRanges, time : number) : number {
 function getInnerAndOuterTimeRanges(
   timeRanges : TimeRanges,
   time : number
-) : { innerRange : IRange|null, outerRanges : IRange[] } {
+) : { innerRange : IRange|null; outerRanges : IRange[] } {
   let innerRange : IRange|null = null;
   const outerRanges : IRange[] = [];
   for (let i = timeRanges.length - 1; i >= 0; i--) {

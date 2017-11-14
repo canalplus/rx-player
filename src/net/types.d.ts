@@ -1,13 +1,32 @@
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 
-import Manifest from "../manifest/index";
 import Adaptation from "../manifest/adaptation";
+import Manifest from "../manifest/index";
 import Representation from "../manifest/representation";
 import Segment from "../manifest/segment";
+
 import { IBifThumbnail } from "../parsers/images/bif";
-import { IPeriodSmooth } from "./smooth/types";
+
+// TODO Refacto to unify those
 import { IPeriodDash } from "./dash/types";
+import { IPeriodSmooth } from "./smooth/types";
 
 // contains timings info on a single audio/video/text/image segment
 export interface ISegmentTimingInfos {
@@ -68,7 +87,7 @@ interface ILoaderProgress {
 interface ILoaderData<T> {
   type : "data";
   value : {
-    responseData: T
+    responseData: T;
   };
 }
 
@@ -99,14 +118,14 @@ export interface ISegmentParserArguments<T> {
 
 // TODO
 export type IManifestParserObservable = Observable<{
-  manifest: IParsedManifest,
-  url? : string,
+  manifest: IParsedManifest;
+  url? : string;
 }>;
 
 export type SegmentParserObservable = Observable<{
-  segmentData? : Uint8Array|ArrayBuffer,
-  segmentInfos : ISegmentTimingInfos,
-  nextSegments? : ISegmentTimingInfos[],
+  segmentData? : Uint8Array|ArrayBuffer;
+  segmentInfos : ISegmentTimingInfos;
+  nextSegments? : ISegmentTimingInfos[];
 }>;
 
 export interface ITextTrackSegmentData {
@@ -121,15 +140,15 @@ export interface ITextTrackSegmentData {
 }
 
 export type TextTrackParserObservable = Observable<{
-  segmentData? : ITextTrackSegmentData,
-  segmentInfos? : ISegmentTimingInfos,
-  nextSegments? : ISegmentTimingInfos[],
+  segmentData? : ITextTrackSegmentData;
+  segmentInfos? : ISegmentTimingInfos;
+  nextSegments? : ISegmentTimingInfos[];
 }>;
 
 export type ImageParserObservable = Observable<{
-  segmentData? : IBifThumbnail[],
-  segmentInfos : ISegmentTimingInfos,
-  nextSegments? : ISegmentTimingInfos[],
+  segmentData? : IBifThumbnail[];
+  segmentInfos : ISegmentTimingInfos;
+  nextSegments? : ISegmentTimingInfos[];
 }>;
 
 // Type parameters:
@@ -145,52 +164,52 @@ export type ImageParserObservable = Observable<{
 //         sergment parser
 export interface ITransportPipelines<T, U, V, W, X> {
   manifest: {
-    resolver?: (x : IManifestLoaderArguments) => IResolverObservable,
-    loader: (x : IManifestLoaderArguments) => ILoaderObservable<T>,
-    parser: (x : IManifestParserArguments<T>) => IManifestParserObservable,
+    resolver?: (x : IManifestLoaderArguments) => IResolverObservable;
+    loader: (x : IManifestLoaderArguments) => ILoaderObservable<T>;
+    parser: (x : IManifestParserArguments<T>) => IManifestParserObservable;
   };
   audio: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<U>,
-    parser: (x : ISegmentParserArguments<U>) => SegmentParserObservable,
+    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<U>;
+    parser: (x : ISegmentParserArguments<U>) => SegmentParserObservable;
   };
   video: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<V>,
-    parser: (x : ISegmentParserArguments<V>) => SegmentParserObservable,
+    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<V>;
+    parser: (x : ISegmentParserArguments<V>) => SegmentParserObservable;
   };
   text: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<W>,
-    parser: (x : ISegmentParserArguments<W>) => TextTrackParserObservable,
+    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<W>;
+    parser: (x : ISegmentParserArguments<W>) => TextTrackParserObservable;
   };
   image: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<X>,
-    parser: (x : ISegmentParserArguments<X>) => ImageParserObservable,
+    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<X>;
+    parser: (x : ISegmentParserArguments<X>) => ImageParserObservable;
   };
 }
 
 export type ITransportFunction =
-  (options : any ) => ITransportPipelines<any, any, any, any, any>;
+  (options : any) => ITransportPipelines<any, any, any, any, any>;
 
 export type CustomSegmentLoader = (
   // first argument: infos on the segment
   args : {
-    adaptation : Adaptation,
-    representation : Representation,
-    segment : Segment,
-    transport : string,
-    url : string,
-    manifest : Manifest,
+    adaptation : Adaptation;
+    representation : Representation;
+    segment : Segment;
+    transport : string;
+    url : string;
+    manifest : Manifest;
   },
 
   // second argument: callbacks
   callbacks : {
     resolve : (args: {
-      data : ArrayBuffer|Uint8Array,
-      size : number,
-      duration : number,
-    }) => void,
+      data : ArrayBuffer|Uint8Array;
+      size : number;
+      duration : number;
+    }) => void;
 
-    reject : (err? : Error) => void
-    fallback? : () => void
+    reject : (err? : Error) => void;
+    fallback? : () => void;
   }
 ) =>
   // returns either the aborting callback or nothing

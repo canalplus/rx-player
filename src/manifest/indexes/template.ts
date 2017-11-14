@@ -20,15 +20,15 @@
 
 import Segment from "../segment";
 import {
-  normalizeRange,
   getInitSegment,
-  setTimescale,
-  scale,
+  ISegmentHelpers,
   ITemplateIndex,
-  SegmentHelpers,
+  normalizeRange,
+  scale,
+  setTimescale,
 } from "./helpers";
 
-const SegmentTemplateHelpers: SegmentHelpers<ITemplateIndex> = {
+const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
   getInitSegment,
   setTimescale,
   scale,

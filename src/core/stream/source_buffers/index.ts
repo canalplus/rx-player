@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import log from "../../../utils/log";
 import MediaError from "../../../errors/MediaError";
+import log from "../../../utils/log";
 
+import { ICustomSourceBuffer } from "./abstract";
+import ImageSourceBuffer from "./image";
 import {
   HTMLTextSourceBuffer,
   NativeTextSourceBuffer,
 } from "./text";
-import ImageSourceBuffer from "./image";
-import { ICustomSourceBuffer } from  "./abstract";
-import ICustomTimeRanges from  "./time_ranges";
+import ICustomTimeRanges from "./time_ranges";
 
 export interface ISourceBufferMemory {
   custom : {

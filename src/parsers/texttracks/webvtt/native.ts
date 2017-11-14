@@ -15,6 +15,7 @@
  */
 
 import arrayIncludes from "../../../utils/array-includes";
+
 import { makeCue } from "../../../compat/index";
 
 // Simple VTT to VTTCue parser:
@@ -188,9 +189,9 @@ function parseSettings(
 function parseTimeAndSettings(
   timeString : string
 ) : {
-  start : number,
-  end : number,
-  settings : { [settingName : string ] : string },
+  start : number;
+  end : number;
+  settings : { [settingName : string ] : string };
 }|null {
   /*
    * RegExp for the timestamps + settings line.

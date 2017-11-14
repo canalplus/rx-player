@@ -15,10 +15,10 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import EventEmitter from "../../../utils/eventemitter";
 import assert from "../../../utils/assert";
-import tryCatch from "../../../utils/rx-tryCatch";
 import castToObservable from "../../../utils/castToObservable";
+import EventEmitter from "../../../utils/eventemitter";
+import tryCatch from "../../../utils/rx-tryCatch";
 import ManualTimeRanges from "./time_ranges";
 
 export interface ICustomSourceBuffer<T> {
@@ -84,14 +84,9 @@ abstract class AbstractSourceBuffer<T>
     this._abort();
   }
 
-  // to implement, called on appendBuffer
-  _append(_data : T) : void {}
-
-  // to implement, called on remove
-  _remove(_from : number, _to : number) : void {}
-
-  // to implement, called on abort
-  _abort() : void {}
+  abstract _append(_data : T) : void;
+  abstract _remove(_from : number, _to : number) : void;
+  abstract _abort() : void;
 
   /**
    * Active a lock, execute the given function, unlock when finished (on
