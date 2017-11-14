@@ -122,7 +122,7 @@ describe("utils - bytes", () => {
       const arr16 = new Uint16Array([258, 54]);
       const arr32 = new Uint32Array([11867, 87]);
       const expected = new Uint8Array(
-        [54, 255, 258, 54, 11867, 87].map(e => e && 0xFF)
+        [54, 255, 258, 54, 11867, 87].map(e => e & 0xFF)
       );
       const res = bytes.concat(arr8, arr16, arr32);
       expect(res).to.have.lengthOf(arr8.length + arr16.length + arr32.length);
@@ -134,7 +134,7 @@ describe("utils - bytes", () => {
       const arr16 = new Uint16Array([258, 54]);
       const arr32 = new Uint32Array([11867, 87]);
       const expected = new Uint8Array(
-        [54, 255, 0, 0, 258, 54, 11867, 87, 0].map(e => e && 0xFF)
+        [54, 255, 0, 0, 258, 54, 11867, 87, 0].map(e => e & 0xFF)
       );
       const res = bytes.concat(0, arr8, 2, arr16, arr32, 1);
       expect(res).to.have.lengthOf(
