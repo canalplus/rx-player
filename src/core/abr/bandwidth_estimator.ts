@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import EWMA from "./ewma";
 import config from "../../config";
+import EWMA from "./ewma";
 
 const FAST_EMA  = 2;
 const SLOW_EMA  = 10;
@@ -70,7 +70,7 @@ export default class BandwidthEstimator {
       return;
     }
 
-    const bandwidth = 8000 * numberOfBytes / durationInMs;
+    const bandwidth = numberOfBytes * 8000 / durationInMs;
     const weight = durationInMs / 1000;
     this._bytesSampled += numberOfBytes;
 

@@ -18,8 +18,8 @@ import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 
-import config from "../../config";
 import objectAssign = require("object-assign");
+import config from "../../config";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
 interface IVideoTiming {
@@ -29,12 +29,18 @@ interface IVideoTiming {
   bufferGap : number;
   state : string;
   playbackRate : number;
-  currentRange : { start : number, end : number }|null;
+  currentRange : {
+    start : number;
+    end : number;
+  }|null;
   readyState : number;
   paused : boolean;
 }
 
-type stalledStatus = { state : string, timestamp : number } | null;
+type stalledStatus = {
+  state : string;
+  timestamp : number;
+} | null;
 
 export interface IClockTick extends IVideoTiming {
   stalled : stalledStatus;
@@ -88,7 +94,10 @@ function getResumeGap(stalled : stalledStatus) : number {
  */
 function isEnding(
   bufferGap : number,
-  currentRange : { start : number, end : number}|null,
+  currentRange : {
+    start : number;
+    end : number;
+  }|null,
   duration : number
 ) : boolean {
   return currentRange != null &&
@@ -191,14 +200,14 @@ function getStalledStatus(
   else {
     if (
       canStall &&
-      ( !paused && currentState === "timeupdate" &&
+      (!paused && currentState === "timeupdate" &&
         prevState === "timeupdate" && currentTime === prevTime ||
-        currentState === "seeking" && bufferGap === Infinity )
+        currentState === "seeking" && bufferGap === Infinity)
     ) {
       shouldStall = true;
     } else if (
       prevStalled &&
-      ( currentState !== "seeking" && currentTime !== prevTime ||
+      (currentState !== "seeking" && currentTime !== prevTime ||
         currentState === "canplay" ||
         bufferGap < Infinity &&
         (bufferGap > getResumeGap(prevStalled) || ending)

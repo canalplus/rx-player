@@ -16,83 +16,87 @@
 
 import deepEqual = require("deep-equal");
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
+import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 
 import config from "../../config";
 
-import noop from "../../utils/noop";
-import log, { ILogger } from "../../utils/log";
-import EventEmitter from "../../utils/eventemitter";
 import assert from "../../utils/assert";
+import EventEmitter from "../../utils/eventemitter";
+import log, { ILogger } from "../../utils/log";
+import noop from "../../utils/noop";
 import {
   getLeftSizeOfRange,
-  getSizeOfRange,
   getPlayedSizeOfRange,
+  getSizeOfRange,
 } from "../../utils/ranges";
-
-import { CustomError } from "../../errors";
 
 import {
   exitFullscreen,
-  requestFullscreen,
   isFullscreen,
+  requestFullscreen,
 } from "../../compat";
 import {
+  isInBackground$,
+  onFullscreenChange$,
   onPlayPause$,
   onTextTrackChanges$,
-  onFullscreenChange$,
-  isInBackground$,
   videoWidth$,
 } from "../../compat/events";
 
 import { IBifThumbnail } from "../../parsers/images/bif";
+
 import Transports from "../../net";
+
 import {
-  toWallClockTime,
-  fromWallClockTime,
-  getMaximumBufferPosition,
-  getMinimumBufferPosition,
-} from "../../manifest/timings";
-import {
-  ErrorTypes,
+  CustomError,
   ErrorCodes,
+  ErrorTypes,
 } from "../../errors";
 
-import { SupportedBufferTypes } from "../types";
 import Stream from "../stream";
 import { StreamEvent } from "../stream/types";
+import { SupportedBufferTypes } from "../types";
 
 import Manifest from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
 import Representation from "../../manifest/representation";
+import {
+  fromWallClockTime,
+  getMaximumBufferPosition,
+  getMinimumBufferPosition,
+  toWallClockTime,
+} from "../../manifest/timings";
+
 import ABRManager from "../abr";
 import {
+  clearEME,
   dispose as emeDispose,
   getCurrentKeySystem,
-  clearEME,
 } from "../eme";
 
 import { PLAYER_STATES } from "./constants";
 import LanguageManager, {
   IAudioTrackConfiguration,
-  ITextTrackConfiguration,
-  ILMAudioTrackList,
-  ILMTextTrackList,
   ILMAudioTrack,
+  ILMAudioTrackList,
   ILMTextTrack,
+  ILMTextTrackList,
+  ITextTrackConfiguration,
 } from "./language_manager";
+
 import createClock, {
   IClockTick
 } from "./clock";
+
 import {
-  parseConstructorOptions,
-  parseLoadVideoOptions,
   IConstructorOptions,
   ILoadVideoOptions,
+  parseConstructorOptions,
+  parseLoadVideoOptions,
 } from "./option_parsers";
 
 const {
@@ -180,10 +184,10 @@ class Player extends EventEmitter {
    * @type {Object}
    */
   private _priv_lastBitrates : {
-    audio? : number,
-    video? : number,
-    text? : number,
-    image? : number,
+    audio? : number;
+    video? : number;
+    text? : number;
+    image? : number;
   };
 
   /**
@@ -191,10 +195,10 @@ class Player extends EventEmitter {
    * @type {Object}
    */
   private _priv_initialMaxAutoBitrates : {
-    audio : number,
-    video : number,
-    text? : number,
-    image? : number,
+    audio : number;
+    video : number;
+    text? : number;
+    image? : number;
   };
 
   /**
@@ -202,10 +206,10 @@ class Player extends EventEmitter {
    * @type {Object}
    */
   private _priv_manualBitrates : {
-    audio : number,
-    video : number,
-    text? : number,
-    image? : number,
+    audio : number;
+    video : number;
+    text? : number;
+    image? : number;
   };
 
   /**
@@ -213,10 +217,10 @@ class Player extends EventEmitter {
    * @type {Object}
    */
   private _priv_currentRepresentations : {
-    audio? : Representation|null,
-    video? : Representation|null,
-    text? : Representation|null,
-    image? : Representation|null,
+    audio? : Representation|null;
+    video? : Representation|null;
+    text? : Representation|null;
+    image? : Representation|null;
   };
 
   /**
@@ -224,10 +228,10 @@ class Player extends EventEmitter {
    * @type {Object}
    */
   private _priv_currentAdaptations : {
-    audio? : Adaptation|null,
-    video? : Adaptation|null,
-    text? : Adaptation|null,
-    image? : Adaptation|null,
+    audio? : Adaptation|null;
+    video? : Adaptation|null;
+    text? : Adaptation|null;
+    image? : Adaptation|null;
   };
 
   /**
@@ -1402,7 +1406,7 @@ class Player extends EventEmitter {
 
     clearEME()
       .catch(() => Observable.empty())
-      .subscribe(() => {}, () => {}, () => {
+      .subscribe(noop, noop, () => {
         // free up the lock
         this._priv_streamLock$.next(false);
       });
@@ -1507,14 +1511,14 @@ class Player extends EventEmitter {
    * adaptation for each type.
    */
   private _priv_onManifestChange(value : {
-    manifest : Manifest,
+    manifest : Manifest;
     adaptations$ : {
-      audio : Subject<Adaptation|null>,
-      video : Subject<Adaptation|null>,
-      text : Subject<Adaptation|null>,
-      image : Subject<Adaptation|null>,
-    },
-    abrManager : ABRManager,
+      audio : Subject<Adaptation|null>;
+      video : Subject<Adaptation|null>;
+      text : Subject<Adaptation|null>;
+      image : Subject<Adaptation|null>;
+    };
+    abrManager : ABRManager;
   }) : void {
     const { manifest, adaptations$ } = value;
     this._priv_manifest = manifest;
@@ -1577,8 +1581,8 @@ class Player extends EventEmitter {
     type,
     adaptation,
   } : {
-    type : SupportedBufferTypes,
-    adaptation : Adaptation|null,
+    type : SupportedBufferTypes;
+    adaptation : Adaptation|null;
   }) : void {
     this._priv_currentAdaptations[type] = adaptation;
 
@@ -1606,8 +1610,8 @@ class Player extends EventEmitter {
     type,
     representation,
   }: {
-    type : SupportedBufferTypes,
-    representation : Representation|null
+    type : SupportedBufferTypes;
+    representation : Representation|null;
   }) : void {
     this._priv_currentRepresentations[type] = representation;
 
@@ -1629,8 +1633,8 @@ class Player extends EventEmitter {
     type,
     bitrate,
   } : {
-    type : SupportedBufferTypes,
-    bitrate : number|undefined,
+    type : SupportedBufferTypes;
+    bitrate : number|undefined;
   }) : void {
     if (__DEV__) {
       assert(type != null);

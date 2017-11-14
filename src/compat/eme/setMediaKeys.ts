@@ -16,7 +16,10 @@
 
 import { Observable } from "rxjs/Observable";
 import castToObservable from "../../utils/castToObservable";
-import { MockMediaKeys, IMockMediaKeys } from "./MediaKeys";
+import {
+  IMockMediaKeys,
+  MockMediaKeys,
+} from "./MediaKeys";
 
 /**
  * Set the MediaKeys given on the media element.
