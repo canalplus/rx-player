@@ -56,6 +56,7 @@ const logger : ILogger = {
       currentLevel = "NONE";
     }
 
+    /* tslint:disable no-invalid-this */
     this.error = (level >= LEVELS.ERROR) ?
       console.error.bind(console) : noop;
     this.warn = (level >= LEVELS.WARNING) ?
@@ -64,6 +65,7 @@ const logger : ILogger = {
       console.info.bind(console) : noop;
     this.debug = (level >= LEVELS.DEBUG) ?
       console.log.bind(console) : noop;
+    /* tslint:enable no-invalid-this */
   },
 
   getLevel() : string {

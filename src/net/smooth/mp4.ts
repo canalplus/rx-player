@@ -431,9 +431,9 @@ const atoms = {
     privateData : Uint8Array = new Uint8Array(0),
     keyIds : Uint8Array = new Uint8Array(0)
   ) : Uint8Array {
-    systemId = systemId.replace(/-/g, "");
+    const _systemId = systemId.replace(/-/g, "");
 
-    assert(systemId.length === 32, "wrong system id length");
+    assert(_systemId.length === 32, "wrong system id length");
 
     let version;
     let kidList;
@@ -449,7 +449,7 @@ const atoms = {
 
     return Atom("pssh", concat(
       [version, 0, 0, 0],
-      hexToBytes(systemId),
+      hexToBytes(_systemId),
       kidList,
       itobe4(privateData.length),
       privateData
@@ -963,10 +963,7 @@ export default {
     keyId? : string,
     pssList? : PSSList
   ) : Uint8Array {
-
-    if (!pssList) {
-      pssList = [];
-    }
+    const _pssList = pssList || [];
     const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
     const sps = hexToBytes(spsHex);
     const pps = hexToBytes(ppsHex);
@@ -974,7 +971,7 @@ export default {
     // TODO NAL length is forced to 4
     const avcc = atoms.avcc(sps, pps, nalLength);
     let stsd;
-    if (!pssList.length || keyId == null) {
+    if (!_pssList.length || keyId == null) {
       const avc1 = atoms.avc1encv(
         "avc1", // name
         1, // drefIdx
@@ -1010,7 +1007,7 @@ export default {
     }
 
     return createInitSegment(
-      timescale, "video", stsd, atoms.vmhd(), width, height, pssList
+      timescale, "video", stsd, atoms.vmhd(), width, height, _pssList
     );
   },
 
@@ -1038,17 +1035,13 @@ export default {
     keyId? : string,
     pssList? : PSSList
   ) {
+    const _pssList = pssList || [];
+    const _codecPrivateData =
+      codecPrivateData || aacesHeader(2, sampleRate, channelsCount);
 
-    if (!pssList) {
-      pssList = [];
-    }
-    if (!codecPrivateData) {
-      codecPrivateData = aacesHeader(2, sampleRate, channelsCount);
-    }
-
-    const esds = atoms.esds(1, codecPrivateData);
+    const esds = atoms.esds(1, _codecPrivateData);
     let stsd;
-    if (!pssList.length || keyId == null) {
+    if (!_pssList.length || keyId == null) {
       const mp4a = atoms.mp4aenca(
         "mp4a",
         1,
@@ -1080,7 +1073,7 @@ export default {
     }
 
     return createInitSegment(
-      timescale, "audio", stsd, atoms.smhd(), 0, 0, pssList
+      timescale, "audio", stsd, atoms.smhd(), 0, 0, _pssList
     );
   },
 

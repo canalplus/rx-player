@@ -21,6 +21,7 @@ import {
 
 const exported : IDictionary<ITransportFunction> = {};
 
+/* tslint:disable no-var-requires */
 if (__FEATURES__.SMOOTH) {
   exported.smooth = require("./smooth/index.ts").default;
 }
@@ -30,6 +31,7 @@ if (__FEATURES__.DASH) {
 if (__FEATURES__.DIRECTFILE) {
   exported.directfile = require("./directfile/index.ts").default;
 }
+/* tslint:enable no-var-requires */
 
 export {
   ITransportFunction,

@@ -55,8 +55,8 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   }
 
   get(initData : number|Uint8Array) : MediaKeySession|null {
-    initData = hashInitData(initData);
-    const entry = this.find((e) => e.initData === initData);
+    const hash = hashInitData(initData);
+    const entry = this.find((e) => e.initData === hash);
     if (entry) {
       return entry.session;
     } else {
@@ -69,14 +69,18 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     session : MediaKeySession,
     sessionEvents : ConnectableObservable<Event|ISessionEvent>
   ) : void {
-    initData = hashInitData(initData);
-    const currentSession = this.get(initData);
+    const hash = hashInitData(initData);
+    const currentSession = this.get(hash);
     if (currentSession) {
       this.deleteAndClose(currentSession);
     }
 
     const eventSubscription = sessionEvents.connect();
-    const entry = { session, initData, eventSubscription };
+    const entry = {
+      session,
+      initData: hash,
+      eventSubscription,
+    };
     log.debug("eme-mem-store: add session", entry);
     this._entries.push(entry);
   }

@@ -100,6 +100,7 @@ export default {
    * Set to Infinity to discard any limit in the ABR strategy.
    * @type {Object}
    */
+  /* tslint:disable no-object-literal-type-assertion */
   DEFAULT_MAX_BITRATES: {
     audio: Infinity, // only "audio" segments
     video: Infinity, // only "video" segments
@@ -107,6 +108,7 @@ export default {
                      // Though those are generally at a single bitrate, so no
                      // adaptive mechanism is triggered for them.
   } as IDictionary<number>,
+  /* tslint:enable no-object-literal-type-assertion */
 
   /**
    * Buffer threshold ratio used as a lower bound margin to find the suitable
@@ -473,6 +475,7 @@ export default {
    * or "playready" as a keySystem.
    * @type {Object}
    */
+  /* tslint:disable no-object-literal-type-assertion */
   EME_KEY_SYSTEMS: {
     clearkey:  [
       "webkit-org.w3.clearkey",
@@ -487,4 +490,5 @@ export default {
       "com.youtube.playready",
     ],
   } as IDictionary<string[]>,
+  /* tslint:enable no-object-literal-type-assertion */
 };

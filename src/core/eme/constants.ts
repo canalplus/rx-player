@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-object-literal-type-assertion */
 export const KEY_STATUS_ERRORS = {
   expired: true,
   "internal-error": true,
@@ -22,3 +23,4 @@ export const KEY_STATUS_ERRORS = {
    // "output-downscaled",
    // "status-pending",
 } as IDictionary<boolean>;
+/* tslint:enable no-object-literal-type-assertion */

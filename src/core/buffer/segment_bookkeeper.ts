@@ -259,11 +259,9 @@ export default class SegmentBookkeeper {
           // Update bufferedEnd
           lastSegmentInRange.bufferedEnd = rangeEnd;
         } else if (lastSegmentInRange.bufferedEnd == null) {
-          if (rangeEnd - lastSegmentInRange.end <= MAX_BUFFERED_DISTANCE) {
-            lastSegmentInRange.bufferedEnd = rangeEnd;
-          } else {
-            lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
-          }
+          lastSegmentInRange.bufferedEnd =
+            rangeEnd - lastSegmentInRange.end <= MAX_BUFFERED_DISTANCE ?
+              rangeEnd : lastSegmentInRange.end;
         }
       }
     }

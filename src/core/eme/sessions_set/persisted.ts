@@ -91,8 +91,8 @@ export default class PersistedSessionsSet
    * @returns {Object|null}
    */
   get(initData : Uint8Array|number[]|number) : IPersistedSessionData|null {
-    initData = hashInitData(initData);
-    const entry = this.find((e) => e.initData === initData);
+    const hash = hashInitData(initData);
+    const entry = this.find((e) => e.initData === hash);
     return entry || null;
   }
 
@@ -107,16 +107,19 @@ export default class PersistedSessionsSet
       return;
     }
 
-    initData = hashInitData(initData);
-    const currentEntry = this.get(initData);
+    const hash = hashInitData(initData);
+    const currentEntry = this.get(hash);
     if (currentEntry && currentEntry.sessionId === sessionId) {
       return;
     } else if (currentEntry) { // currentEntry has a different sessionId
-      this.delete(initData);
+      this.delete(hash);
     }
 
     log.info("eme-persitent-store: add new session", sessionId, session);
-    this._entries.push({ sessionId, initData });
+    this._entries.push({
+      sessionId,
+      initData: hash,
+    });
     this._save();
   }
 
@@ -125,9 +128,9 @@ export default class PersistedSessionsSet
    * @param {Array|TypedArray|Number}  initData
    */
   delete(initData : Uint8Array|number) : void {
-    initData = hashInitData(initData);
+    const hash = hashInitData(initData);
 
-    const entry = this.find((e) => e.initData === initData);
+    const entry = this.find((e) => e.initData === hash);
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
 

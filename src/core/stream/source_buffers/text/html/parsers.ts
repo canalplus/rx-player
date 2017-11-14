@@ -24,6 +24,7 @@ type htmlParserFn =
   (texttrack : string, timeOffset : number, language? : string) => IHTMLCue[];
 const htmlParsers : { [format : string] : htmlParserFn } = {};
 
+/* tslint:disable no-var-requires */
 if (__FEATURES__.HTML_SAMI) {
   htmlParsers.sami =
     require("../../../../../parsers/texttracks/sami/html.ts").default;
@@ -43,6 +44,7 @@ if (__FEATURES__.HTML_VTT) {
   htmlParsers.vtt =
     require("../../../../../parsers/texttracks/webvtt/html.ts").default;
 }
+/* tslint:enable no-var-requires */
 
 /**
  * @param {string} type

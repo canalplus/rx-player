@@ -179,12 +179,9 @@ function TextTrackParser({
     if (sidxSegments) {
       nextSegments = sidxSegments;
     }
-    if (isInit) {
-      segmentInfos = { time: -1, duration: 0, timescale: segment.timescale };
-    } else {
-      segmentInfos =
-        getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
-    }
+    segmentInfos = isInit ?
+      { time: -1, duration: 0, timescale: segment.timescale } :
+      getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
   } else { // if not MP4
     assert(typeof response.responseData === "string");
     responseData = response.responseData as string;

@@ -24,11 +24,11 @@ import Segment from "../../manifest/segment";
  * @returns {string}
  */
 function pad(n : number|string, l : number) : string {
-  n = n.toString();
-  if (n.length >= l) {
-    return n;
+  const nToString = n.toString();
+  if (nToString.length >= l) {
+    return nToString;
   }
-  const arr = new Array(l + 1).join("0") + n;
+  const arr = new Array(l + 1).join("0") + nToString;
   return arr.slice(-l);
 }
 
