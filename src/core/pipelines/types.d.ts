@@ -15,9 +15,9 @@
  */
 
 import {
-  ILoaderResponse,
-  ILoaderProgress,
   // ILoaderData,
+  ILoaderProgress,
+  ILoaderResponse,
 } from "../../net/types";
 
 export interface IPipelineError {
@@ -28,8 +28,8 @@ export interface IPipelineError {
 export interface IPipelineMetrics {
   type : "metrics";
   value : {
-    size : number,
-    duration : number,
+    size : number;
+    duration : number;
   };
 }
 

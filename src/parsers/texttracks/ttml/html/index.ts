@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import arrayFind = require("array-find");
+import objectAssign = require("object-assign");
+
 import getParameters from "../getParameters";
+import getParentElementsByTagName from "../getParentElementsByTagName";
 import {
   getBodyNode,
-  getStyleNodes,
   getRegionNodes,
+  getStyleNodes,
   getTextNodes,
 } from "../nodes";
-import getParentElementsByTagName from "../getParentElementsByTagName";
-
-import { STYLE_ATTRIBUTES } from "./constants";
 import {
   getStylingAttributes,
   getStylingFromElement,
   IStyleObject,
 } from "../style";
+
+import { STYLE_ATTRIBUTES } from "./constants";
 import parseCue, { ITTMLHTMLCue } from "./parseCue";
 
 /**

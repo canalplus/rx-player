@@ -20,12 +20,12 @@
 
 import Segment from "../segment";
 import {
-  normalizeRange,
   getInitSegment,
-  setTimescale,
-  SegmentHelpers,
-  scale,
   IListIndex,
+  ISegmentHelpers,
+  normalizeRange,
+  scale,
+  setTimescale,
 } from "./helpers";
 
 /**
@@ -40,7 +40,7 @@ import {
  * Provide helpers for SegmentList-based indexes.
  * @type {Object}
  */
-const ListIndexHelpers: SegmentHelpers<IListIndex> = {
+const ListIndexHelpers: ISegmentHelpers<IListIndex> = {
   getInitSegment,
   setTimescale,
   scale,

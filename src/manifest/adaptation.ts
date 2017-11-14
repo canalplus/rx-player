@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import arrayFind = require("array-find");
+import objectAssign = require("object-assign");
 
-import Representation, { IRepresentationArguments } from "./representation";
 import generateNewId from "../utils/id";
+import Representation, {
+  IRepresentationArguments
+} from "./representation";
+
 import { IContentProtectionDash } from "../net/dash/types";
 import { IContentProtectionSmooth } from "../net/smooth/types";
 

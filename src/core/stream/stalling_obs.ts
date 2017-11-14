@@ -19,6 +19,7 @@ import { Observable } from "rxjs/Observable";
 import config from "../../config";
 import log from "../../utils/log";
 import { getNextRangeGap } from "../../utils/ranges";
+
 import { isPlaybackStuck } from "../../compat";
 import Manifest from "../../manifest";
 

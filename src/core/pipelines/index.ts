@@ -19,23 +19,23 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 
 import arrayIncludes from "../../utils/array-includes";
+import castToObservable from "../../utils/castToObservable";
 import noop from "../../utils/noop";
 import tryCatch from "../../utils/rx-tryCatch";
-import castToObservable from "../../utils/castToObservable";
 
 import config from "../../config";
 import {
-  RequestError,
+  CustomError,
+  isKnownError,
   NetworkError,
   OtherError,
-  isKnownError,
-  CustomError,
+  RequestError,
 } from "../../errors";
 
 import downloadingBackoff from "./backoff";
 import {
-  IPipelineMetrics,
   IPipelineError,
+  IPipelineMetrics,
   PipelineEvent,
 } from "./types";
 
@@ -79,8 +79,8 @@ function errorSelector(
 
 export interface IPipelineOptions<T, U> {
   cache? : {
-    add : (obj : T, arg : U) => void,
-    get : (obj : T) => U,
+    add : (obj : T, arg : U) => void;
+    get : (obj : T) => U;
   };
 
   maxRetry? : number;
@@ -121,9 +121,9 @@ export interface IPipelineOptions<T, U> {
  */
 export default function createPipeline(
   { resolver, loader, parser } : {
-    resolver? : (x : any) => Observable<any>,
-    loader? : (x : any) => Observable<any>,
-    parser? : (x : any) => Observable<any>,
+    resolver? : (x : any) => Observable<any>;
+    loader? : (x : any) => Observable<any>;
+    parser? : (x : any) => Observable<any>;
   },
   options : IPipelineOptions<any, any> = {}
 ) : (x : any) => Observable<PipelineEvent> {

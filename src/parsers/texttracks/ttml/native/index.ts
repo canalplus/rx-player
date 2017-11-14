@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import arrayFind = require("array-find");
+import objectAssign = require("object-assign");
+
 import { makeCue } from "../../../../compat";
 
-import {
-  REGXP_PERCENT_VALUES,
-} from "../regexps";
-import {
-  getBodyNode,
-  getStyleNodes,
-  getRegionNodes,
-  getTextNodes,
-} from "../nodes";
 import getParameters, { ITTParameters } from "../getParameters";
-import {
-  IStyleObject,
-  IStyleList,
-  getStylingAttributes,
-  getStylingFromElement,
-} from "../style";
 import getParentElementsByTagName from "../getParentElementsByTagName";
 import getTimeDelimiters from "../getTimeDelimiters";
+import {
+  getBodyNode,
+  getRegionNodes,
+  getStyleNodes,
+  getTextNodes,
+} from "../nodes";
+import { REGXP_PERCENT_VALUES, } from "../regexps";
+import {
+  getStylingAttributes,
+  getStylingFromElement,
+  IStyleList,
+  IStyleObject,
+} from "../style";
 
 /**
  * Style attributes currently used.
@@ -278,12 +277,17 @@ function addStyle(cue : VTTCue, style : IStyleList) {
 
   const writingMode = style.writingMode;
   let isVerticalText = true;
-  if (writingMode === "tb" || writingMode === "tblr") {
-    cue.vertical = "lr";
-  } else if (writingMode === "tbrl") {
-    cue.vertical = "rl";
-  } else {
-    isVerticalText = false;
+  switch (writingMode) {
+    case "tb":
+    case "tblr":
+      cue.vertical = "lr";
+      break;
+    case "tbrl":
+      cue.vertical = "rl";
+      break;
+    default:
+      isVerticalText = false;
+      break;
   }
 
   const origin = style.origin;

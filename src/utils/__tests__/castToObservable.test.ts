@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
 import { expect } from "chai";
+import { Observable } from "rxjs/Observable";
+
 import castToObservable from "../castToObservable";
+import noop from "../noop";
 
 describe("utils - castToObservable", () => {
   it("should return the argument if already an Observable", () => {
@@ -35,7 +37,7 @@ describe("utils - castToObservable", () => {
     castToObservable(prom).subscribe((x) => {
       numberOfItemEmitted++;
       expect(x).to.equal(emitItem);
-    }, () => {}, () => {
+    }, noop, () => {
       expect(numberOfItemEmitted).to.equal(1);
       done();
     });

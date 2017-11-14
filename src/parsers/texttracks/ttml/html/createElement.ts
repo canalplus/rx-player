@@ -15,16 +15,17 @@
  */
 
 import objectAssign = require("object-assign");
-import {
-  REGXP_PERCENT_VALUES,
-  REGXP_4_HEX_COLOR,
-  REGXP_8_HEX_COLOR,
-} from "../regexps";
+
 import getParentElementsByTagName from "../getParentElementsByTagName";
 import {
+  REGXP_4_HEX_COLOR,
+  REGXP_8_HEX_COLOR,
+  REGXP_PERCENT_VALUES,
+} from "../regexps";
+import {
   getStylingAttributes,
+  IStyleList,
   IStyleObject,
-  IStyleList
 } from "../style";
 // import getAttributeInElements from "../getAttributeInElements";
 
@@ -159,15 +160,18 @@ function applyTextStyle(
   // applies to span
   const textDecoration = style.textDecoration;
   if (textDecoration) {
-    if (
-      textDecoration === "noUnderline" || textDecoration === "noLineThrough" ||
-      textDecoration === "noOverline"
-    ) {
-      element.style.textDecoration = "none";
-    } else if (textDecoration === "lineThrough") {
-      element.style.textDecoration = "line-through";
-    } else {
-      element.style.textDecoration = textDecoration;
+    switch (textDecoration) {
+      case "noUnderline":
+      case "noLineThrough":
+      case "noOverline":
+        element.style.textDecoration = "none";
+        break;
+      case "lineThrough":
+        element.style.textDecoration = "line-through";
+        break;
+      default:
+        element.style.textDecoration = textDecoration;
+        break;
     }
   }
 
@@ -363,14 +367,20 @@ function applyPStyle(element : HTMLElement, style : IDictionary<string>) {
   // applies to p
   const textAlign = style.textAlign;
   if (textAlign) {
-    if (textAlign === "center") {
-      element.style.textAlign = "center";
-    } else if (textAlign === "left" || textAlign === "start") {
-      // TODO check what start means (difference with left, writing direction?)
-      element.style.textAlign = "left";
-    } else if (textAlign === "right" || textAlign === "end") {
-      // TODO check what end means (difference with right, writing direction?)
-      element.style.textAlign = "right";
+    switch (textAlign) {
+      case "center":
+        element.style.textAlign = "center";
+        break;
+      case "left":
+      case "start":
+        // TODO check what start means (difference with left, writing direction?)
+        element.style.textAlign = "left";
+        break;
+      case "right":
+      case "end":
+        // TODO check what end means (difference with right, writing direction?)
+        element.style.textAlign = "right";
+        break;
     }
   }
 }

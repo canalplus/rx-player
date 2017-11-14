@@ -25,6 +25,7 @@ import EncryptedMediaError from "./EncryptedMediaError";
 import IndexError from "./IndexError";
 import MediaError from "./MediaError";
 import OtherError from "./OtherError";
+
 import NetworkError from "./NetworkError";
 
 // Error used for XHRs

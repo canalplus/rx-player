@@ -1,7 +1,24 @@
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // deprecated browser API
 // typescript does not seem to know that one
 declare const escape : (str : string) => string;
 
+/* tslint:disable:interface-name */
 interface ObjectConstructor {
   /**
    * Creates an object that has the specified prototype or that has null prototype.
@@ -116,3 +133,4 @@ declare class VTTCue {
   vertical : string;
   constructor(start : number, end : number, cueText : string);
 }
+/* tslint:enable:interface-name */

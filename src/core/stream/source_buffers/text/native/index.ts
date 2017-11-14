@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
+import { addTextTrack } from "../../../../../compat";
 import log from "../../../../../utils/log";
-import {
-  addTextTrack,
-} from "../../../../../compat";
+
 import {
   AbstractSourceBuffer,
   ICustomSourceBuffer,
@@ -156,7 +155,9 @@ export default class NativeTextTrackSourceBuffer
     ) {
       try {
         _videoElement.removeChild(_trackElement);
-      } catch (e) {}
+      } catch (e) {
+        log.warn("Can't remove track element from the video");
+      }
     }
 
     if (this._track) {

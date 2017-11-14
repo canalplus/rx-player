@@ -23,10 +23,10 @@ import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 
 import {
-  IRepresentationDash,
-  IAdaptationDash,
   IAccessibility,
+  IAdaptationDash,
   IIndex,
+  IRepresentationDash,
   IRole,
 } from "../types";
 

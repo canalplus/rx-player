@@ -15,6 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
+
 import "rxjs/add/observable/fromPromise";
 
 interface IObservableLike<T> {
@@ -23,8 +24,8 @@ interface IObservableLike<T> {
     error : (e: any) => void,
     complete : () => void
   ) : ({
-    dispose? : () => void,
-    unsubscribe? : () => void,
+    dispose? : () => void;
+    unsubscribe? : () => void;
   }|void);
 }
 

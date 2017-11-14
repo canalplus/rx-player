@@ -20,8 +20,8 @@ import {
   RequestErrorTypes,
 } from "./constants";
 
-import RequestError from "./RequestError";
 import errorMessage from "./errorMessage";
+import RequestError from "./RequestError";
 
 /**
  * @class NetworkError

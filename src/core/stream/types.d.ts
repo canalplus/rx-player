@@ -22,8 +22,8 @@ import ABRManager from "../abr";
 import { BufferEvent } from "../buffer/types";
 import { SupportedBufferTypes } from "../types";
 
-import { IStallingItem } from "./stalling_obs";
 import { ISessionEvent } from "../eme/session";
+import { IStallingItem } from "./stalling_obs";
 
 // Object emitted when the stream's clock tick
 export interface IStreamClockTick {
@@ -33,10 +33,16 @@ export interface IStreamClockTick {
   bufferGap : number;
   state : string;
   playbackRate : number;
-  currentRange : { start : number, end : number }|null;
+  currentRange : {
+    start : number;
+      end : number;
+  } | null;
   readyState : number;
   paused : boolean;
-  stalled : { state : string, timestamp : number } | null;
+  stalled : {
+    state : string;
+    timestamp : number;
+  } | null;
 }
 
 // -- Events emitted by the Stream --
@@ -44,23 +50,23 @@ export interface IStreamClockTick {
 export interface IAdaptationChangeEvent {
   type : "adaptationChange";
   value : {
-    type : SupportedBufferTypes,
-    adaptation : Adaptation|null
+    type : SupportedBufferTypes;
+    adaptation : Adaptation|null;
   };
 }
 
 export interface IManifestUpdateEvent {
   type : "manifestUpdate";
   value : {
-    manifest : Manifest,
+    manifest : Manifest;
   };
 }
 
 export interface IBitrateEstimationChangeEvent {
   type : "bitrateEstimationChange";
   value : {
-    type : SupportedBufferTypes,
-    bitrate : number|undefined
+    type : SupportedBufferTypes;
+    bitrate : number|undefined;
   };
 }
 
@@ -71,9 +77,9 @@ export type AdaptationsSubjects =
 export interface IManifestChangeEvent {
   type : "manifestChange";
   value : {
-    manifest : Manifest,
-    adaptations$ : AdaptationsSubjects,
-    abrManager : ABRManager,
+    manifest : Manifest;
+    adaptations$ : AdaptationsSubjects;
+    abrManager : ABRManager;
   };
 }
 

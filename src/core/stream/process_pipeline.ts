@@ -17,16 +17,15 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 
-import { SupportedBufferTypes } from "../types";
-import {
-  PipelineEvent,
-} from "../pipelines/types";
 import { CustomError } from "../../errors";
+import Segment from "../../manifest/segment";
+
 import {
   IMetricValue,
   IRequest
 } from "../abr";
-import Segment from "../../manifest/segment";
+import { PipelineEvent } from "../pipelines/types";
+import { SupportedBufferTypes } from "../types";
 
 /**
  * Process a pipeline observable to adapt it to the Stream way:
@@ -44,7 +43,10 @@ import Segment from "../../manifest/segment";
 export default function processPipeline(
   pipelineType : SupportedBufferTypes|"manifest",
   pipeline$ : Observable<PipelineEvent>,
-  network$ : Subject<{ type: SupportedBufferTypes, value: IMetricValue }>,
+  network$ : Subject<{
+    type: SupportedBufferTypes;
+    value: IMetricValue;
+  }>,
   requests$ : Subject<Subject<IRequest>>,
   warning$ : Subject<Error|CustomError>
 ) : Observable<any> { // emit the segment data
@@ -63,61 +65,69 @@ export default function processPipeline(
         // value is an Error. Add the pipeline type information to it.
         value.pipelineType = pipelineType;
         warning$.next(value);
-      } else if (pipelineType === "manifest") {
-      } else if (type === "metrics") {
-        // format it for ABR Handling
-        network$.next({ type: pipelineType, value });
-      } else if (type === "request") {
-        // format it for ABR Handling if the right format
-        const segment : Segment|undefined = value && value.segment;
-        if (segment != null && segment.duration != null) {
-          const duration = segment.duration / segment.timescale;
-          const time = segment.time / segment.timescale;
-          segmentId = segment.id;
+      } else if (pipelineType !== "manifest") {
+        switch (type) {
+          case "metrics": {
+            // format it for ABR Handling
+            network$.next({ type: pipelineType, value });
+            break;
+          }
 
-          const segmentInfos = {
-            duration,
-            time,
-            requestTimestamp: Date.now(),
-            id: segmentId,
-          };
+          case "request": {
+            // format it for ABR Handling if the right format
+            const segment : Segment|undefined = value && value.segment;
+            if (segment != null && segment.duration != null) {
+              const duration = segment.duration / segment.timescale;
+              const time = segment.time / segment.timescale;
+              segmentId = segment.id;
 
-          request$ = new Subject();
-          requests$.next(request$);
+              const segmentInfos = {
+                duration,
+                time,
+                requestTimestamp: Date.now(),
+                id: segmentId,
+              };
 
-          request$.next({
-            type: pipelineType,
-            event: "requestBegin",
-            value: segmentInfos,
-          });
-        }
-      } else if (type === "progress") {
-        if (value.size === value.totalSize) {
-          return false;
-        }
-        if (segmentId != null) {
-          const progressInfos = {
-            duration: value.duration,
-            size: value.size,
-            totalSize: value.totalSize,
-            timestamp: Date.now(),
-            id: segmentId,
-          };
+              request$ = new Subject();
+              requests$.next(request$);
 
-          if (request$ != null) {
-            request$.next({
-              type: pipelineType,
-              event: "progress",
-              value: progressInfos,
-            });
+              request$.next({
+                type: pipelineType,
+                event: "requestBegin",
+                value: segmentInfos,
+              });
+            }
+            break;
+          }
+
+          case "progress": {
+            if (value.size === value.totalSize) {
+              return false;
+            }
+            if (segmentId != null) {
+              const progressInfos = {
+                duration: value.duration,
+                size: value.size,
+                totalSize: value.totalSize,
+                timestamp: Date.now(),
+                id: segmentId,
+              };
+
+              if (request$ != null) {
+                request$.next({
+                  type: pipelineType,
+                  event: "progress",
+                  value: progressInfos,
+                });
+              }
+            }
+            break;
           }
         }
       }
       return false;
     })
-    .map(({ value }) => {
-      return value;
-    }) // take only value from data/cache events
+    .map(({ value }) => value) // take only value from data/cache events
     .finally(() => {
       if (request$ != null) {
         if (pipelineType !== "manifest" && segmentId != null) {

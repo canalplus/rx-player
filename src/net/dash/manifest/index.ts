@@ -15,13 +15,10 @@
  */
 
 import { parseMPD } from "./parsers";
-import {
-  ContentProtectionParser,
-  } from "../types";
 
-import {
-    IParsedManifest
-  } from "../../types";
+import { IParsedManifest } from "../../types";
+
+import { ContentProtectionParser } from "../types";
 
 /**
  * @param {string|Document} manifest - Original manifest as returned by the

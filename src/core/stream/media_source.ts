@@ -17,12 +17,12 @@
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 
-import log from "../../utils/log";
 import {
-  MediaSource_,
   clearVideoSrc,
+  MediaSource_,
 } from "../../compat";
 import MediaError from "../../errors/MediaError";
+import log from "../../utils/log";
 import { ISourceBufferMemory } from "./source_buffers";
 
 /**
@@ -83,12 +83,12 @@ function createAndPlugMediaSource(
   withMediaSource : boolean,
   sourceBufferMemory: ISourceBufferMemory
 ) : Observable<{
-  mediaSource : MediaSource|null,
-  url : string|null,
+  mediaSource : MediaSource|null;
+  url : string|null;
 }> {
   return Observable.create((observer : Observer<{
-    mediaSource : MediaSource|null,
-    url : string|null,
+    mediaSource : MediaSource|null;
+    url : string|null;
   }>) => {
     let mediaSource : MediaSource|null;
     let objectURL : string|null;

@@ -18,15 +18,15 @@
 // TODO Should also probably a class implementing an interface e.g.
 // IIndexManager (with the index in state?)
 
-import TimelineIndex from "./timeline";
 import {
   getInitSegment,
-  setTimescale,
-  scale,
   IIndexSegment,
-  SegmentHelpers,
-  ITimelineIndex
+  ISegmentHelpers,
+  ITimelineIndex,
+  scale,
+  setTimescale,
 } from "./helpers";
+import TimelineIndex from "./timeline";
 
 interface IBaseIndex {
   timescale : number;
@@ -40,7 +40,7 @@ interface IBaseIndex {
  * TODO weird that everything is inherited from Timeline...
  * Reimplement from scratch
  */
-const SegmentBaseHelpers: SegmentHelpers<ITimelineIndex> = {
+const SegmentBaseHelpers: ISegmentHelpers<ITimelineIndex> = {
   getInitSegment,
   setTimescale,
   scale,
@@ -64,11 +64,11 @@ const SegmentBaseHelpers: SegmentHelpers<ITimelineIndex> = {
   _addSegmentInfos(
     index : IBaseIndex,
     segmentInfos : {
-      time : number,
-      duration : number,
-      timescale : number,
-      count: number,
-      range: [number, number],
+      time : number;
+      duration : number;
+      timescale : number;
+      count: number;
+      range: [number, number];
     }
   ) : boolean {
     if (segmentInfos.timescale !== index.timescale) {

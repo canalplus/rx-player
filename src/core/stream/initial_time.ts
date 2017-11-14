@@ -15,11 +15,11 @@
  */
 
 import config from "../../config";
+import Manifest from "../../manifest";
 import {
   getBufferLimits,
   getMaximumBufferPosition,
 } from "../../manifest/timings";
-import Manifest from "../../manifest";
 
 const { DEFAULT_LIVE_GAP } = config;
 

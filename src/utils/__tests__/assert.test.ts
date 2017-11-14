@@ -181,7 +181,9 @@ describe("utils - assert.iface", () => {
       b: {
         c: "toto",
       },
+      /* tslint:disable:no-empty */
       d: () => {},
+      /* tslint:enable:no-empty */
       e: true,
     };
 
@@ -213,7 +215,9 @@ describe("utils - assert.iface", () => {
       b: {
         c: "toto",
       },
+      /* tslint:disable:no-empty */
       d: () => {},
+      /* tslint:enable:no-empty */
       e: true,
     };
 

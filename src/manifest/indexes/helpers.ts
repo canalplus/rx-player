@@ -68,7 +68,10 @@ function normalizeRange(
   index: { presentationTimeOffset?: number; timescale?: number }, // TODO
   ts: number,
   duration: number
-): { up: number; to: number; } {
+): {
+  up: number;
+  to: number;
+} {
   const pto = index.presentationTimeOffset || 0;
   const timescale = index.timescale || 1;
 
@@ -118,9 +121,9 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment): number {
 function getInitSegment(
   rootId: string,
   index: {
-    timescale: number,
-    initialization: { media?: string, range?: [number, number] },
-    indexRange?: [number, number]
+    timescale: number;
+    initialization: { media?: string; range?: [number, number] };
+    indexRange?: [number, number];
   }
 ): Segment {
   const { initialization = {} } = index;
@@ -183,13 +186,16 @@ const scale = (
   return time / index.timescale;
 };
 
-interface SegmentHelpers<T> {
+interface ISegmentHelpers<T> {
   getInitSegment: (
     rootId: string,
     index: {
-      timescale: number,
-      initialization: { media?: string, range?: [number, number] },
-      indexRange?: [number, number]
+      timescale: number;
+      initialization: {
+        media?: string;
+        range?: [number, number];
+      };
+      indexRange?: [number, number];
     }) => Segment;
   setTimescale: (
     index: { timescale?: number },
@@ -209,7 +215,8 @@ interface SegmentHelpers<T> {
     index: T,
     _time: number,
     _up: number,
-    to: number) => boolean;
+    to: number
+  ) => boolean;
   getFirstPosition: (index: T) => number | undefined;
   getLastPosition: (index: T) => number | undefined;
   checkDiscontinuity: (
@@ -219,13 +226,17 @@ interface SegmentHelpers<T> {
   _addSegmentInfos: (
     index: T,
     newSegment: {
-      time: number,
-      duration: number,
-      timescale: number,
-      count: number,
-      range: [number, number]
+      time: number;
+      duration: number;
+      timescale: number;
+      count: number;
+      range: [number, number];
     },
-    currentSegment: { time: number, duration: number, timescale: number }
+    currentSegment: {
+      time: number;
+      duration: number;
+      timescale: number;
+    }
   ) => boolean;
 }
 
@@ -238,6 +249,6 @@ export {
   scale,
   ITimelineIndex,
   ITemplateIndex,
-  SegmentHelpers,
+  ISegmentHelpers,
   IListIndex,
 };

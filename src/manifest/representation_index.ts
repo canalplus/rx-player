@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+import { IBufferSegmentInfos } from "../core/buffer/types";
+
 import getRightIndexHelpers from "./indexes/index";
 import Segment from "./segment";
-import { IBufferSegmentInfos } from "../core/buffer/types";
 
 interface IRepresentationIndexArguments {
   index : any; // TODO @ index refacto
@@ -88,11 +89,11 @@ class RepresentationIndex {
 
   _addSegments(
     nextSegments : Array<{
-      duration : number,
-      time : number,
-      timescale : number
+      duration : number;
+      time : number;
+      timescale : number;
     }>,
-    currentSegment : { duration : number, time : number, timescale : number}
+    currentSegment : { duration : number; time : number; timescale : number}
   ) : IBufferSegmentInfos[] {
     const addedSegments : IBufferSegmentInfos[] = [];
     for (let i = 0; i < nextSegments.length; i++) {

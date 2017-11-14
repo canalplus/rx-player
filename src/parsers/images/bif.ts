@@ -15,9 +15,9 @@
  */
 
 import {
+  bytesToStr,
   le2toi,
   le4toi,
-  bytesToStr,
 } from "../../utils/bytes";
 
 export interface IBifThumbnail {

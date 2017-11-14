@@ -27,9 +27,9 @@ const WARNED_MESSAGES : string[] = [];
  */
 export default function warnOnce(message : string) : void {
   if (!arrayIncludes(WARNED_MESSAGES, message)) {
-    /* eslint-disable no-console */
+    /* tslint:disable no-console */
     console.warn(message);
-    /* eslint-enable no-console */
+    /* tslint:enable no-console */
     WARNED_MESSAGES.push(message);
   }
 }

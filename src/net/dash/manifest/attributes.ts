@@ -18,26 +18,26 @@ import config from "../../../config";
 import assert from "../../../utils/assert";
 import { normalize as normalizeLang } from "../../../utils/languages";
 import {
-  parseString,
-  parseFrameRate,
-  parseByteRange,
   parseBoolean,
+  parseByteRange,
   parseDateTime,
   parseDuration,
+  parseFrameRate,
   parseIntOrBoolean,
   parseRatio,
+  parseString,
 } from "./helpers";
 
 import {
-  IRole,
-  ISegmentURL,
-  IPeriodDash,
-  ISegmentBase,
   IAdaptationDash,
-  ISegmentTimeLine,
-  IRepresentationDash,
   IContentComponentDash,
   IContentProtectionDash,
+  IPeriodDash,
+  IRepresentationDash,
+  IRole,
+  ISegmentBase,
+  ISegmentTimeLine,
+  ISegmentURL,
 } from "../types";
 
 import { IParsedManifest } from "../../types";
@@ -50,7 +50,7 @@ import { IParsedManifest } from "../../types";
  */
 function parseInitializationAttribute(
   attrValue : string
-) : { media : string, range : undefined } {
+) : { media : string; range : undefined } {
   return { media: attrValue, range: undefined };
 }
 

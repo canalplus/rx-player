@@ -15,8 +15,11 @@
  */
 
 import { ITTParameters } from "../getParameters";
-import { IStyleObject, IStyleList } from "../style";
 import getTimeDelimiters from "../getTimeDelimiters";
+import {
+  IStyleList,
+  IStyleObject,
+} from "../style";
 import createElement from "./createElement";
 
 export interface ITTMLHTMLCue {

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "./log";
 import assert from "./assert";
+import log from "./log";
 
 type listenerFunction<T> = (payload : T) => void;
 interface IListeners<T> {

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../utils/log";
 import arrayIncludes from "../../../utils/array-includes";
+import log from "../../../utils/log";
+
 import parseTimestamp from "./parseTimestamp";
 
 export interface IVTTHTMLCue {
@@ -149,8 +150,8 @@ function parseStyleBlock(styleBlock : string[]) : IStyleElement[] {
   const styleElements : IStyleElement[] = [];
   let index = 1;
   const classNames : Array<{
-    isGlobalStyle : boolean,
-    className? : string,
+    isGlobalStyle : boolean;
+    className? : string;
   }> = [];
   if (styleBlock[index].match(/::cue {/)) {
     classNames.push({ isGlobalStyle: true });
@@ -295,7 +296,7 @@ function parseCue(
  */
 function parseTimeCode(
   text : string
-) : { start? : number, end? : number }|undefined {
+) : { start? : number; end? : number }|undefined {
   const tsRegex = "((?:[0-9]{2}\:?)[0-9]{2}:[0-9]{2}.[0-9]{2,3})";
   const startEndRegex = tsRegex + "(?:\ |\t)-->(?:\ |\t)" + tsRegex;
   const ranges = text.match(startEndRegex);

@@ -18,14 +18,14 @@
 // TODO Should also probably a class implementing an interface e.g.
 // IIndexManager (with the index in state?)
 
-import TimelineIndex from "./timeline";
 import {
-  getTimelineRangeEnd,
   getInitSegment,
-  setTimescale,
-  scale,
+  getTimelineRangeEnd,
   IIndexSegment,
+  scale,
+  setTimescale,
 } from "./helpers";
+import TimelineIndex from "./timeline";
 
 interface ISmoothIndex {
   presentationTimeOffset? : number;

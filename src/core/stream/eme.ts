@@ -16,12 +16,16 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import EncryptedMediaError from "../../errors/EncryptedMediaError";
-import log from "../../utils/log";
-import { CustomError } from "../../errors";
 import { onEncrypted$ } from "../../compat/events";
-import { createEME } from "../eme";
-import { IKeySystemOption } from "../eme";
+import {
+  CustomError,
+  EncryptedMediaError,
+} from "../../errors";
+import log from "../../utils/log";
+import {
+  createEME,
+  IKeySystemOption,
+} from "../eme";
 import { ISessionEvent } from "../eme/session";
 /**
  * Perform EME management if needed.

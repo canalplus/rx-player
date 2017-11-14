@@ -16,8 +16,14 @@
 
 import assert from "../../utils/assert";
 import {
-  itobe4, be8toi, be4toi, be2toi, be3toi,
-  hexToBytes, strToBytes, concat,
+  be2toi,
+  be3toi,
+  be4toi,
+  be8toi,
+  concat,
+  hexToBytes,
+  itobe4,
+  strToBytes,
 } from "../../utils/bytes";
 
 /**
@@ -394,7 +400,7 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
  * @returns {Uint8Array}
  */
 function createPssh(
-  { systemId, privateData } : { systemId : string, privateData: any } // XXX TODO
+  { systemId, privateData } : { systemId : string; privateData: any } // XXX TODO
 ) : Uint8Array {
   systemId = systemId.replace(/-/g, "");
 

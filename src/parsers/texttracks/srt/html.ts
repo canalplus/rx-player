@@ -145,11 +145,11 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
         const spanChild = _loop(currentNode);
         spanChild.style.fontWeight = "bold";
         span.appendChild(spanChild);
-      } else if (currentNode.nodeName === "I" ) {
+      } else if (currentNode.nodeName === "I") {
         const spanChild = _loop(currentNode);
         spanChild.style.fontStyle = "italic";
         span.appendChild(spanChild);
-      } else if (currentNode.nodeName === "U" ) {
+      } else if (currentNode.nodeName === "U") {
         const spanChild = _loop(currentNode);
         spanChild.style.textDecoration = "underline";
         span.appendChild(spanChild);

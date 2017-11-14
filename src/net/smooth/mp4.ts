@@ -18,18 +18,23 @@ import { isIE } from "../../compat";
 
 import assert from "../../utils/assert";
 import {
+  be2toi,
+  be4toi,
+  be8toi,
+  bytesToHex,
+  bytesToStr,
   concat,
-  strToBytes, bytesToStr,
-  hexToBytes, bytesToHex,
-  be2toi, itobe2,
-  be4toi, itobe4,
-  be8toi, itobe8,
+  hexToBytes,
+  itobe2,
+  itobe4,
+  itobe8,
+  strToBytes,
 } from "../../utils/bytes";
 
 type PSSList = Array<{
-  systemId : string,
-  privateData? : Uint8Array,
-  keyIds? : Uint8Array,
+  systemId : string;
+  privateData? : Uint8Array;
+  keyIds? : Uint8Array;
 }>;
 
 export interface IISOBMFFBasicSegment {
@@ -488,7 +493,7 @@ const atoms = {
     const flags   = be4toi(senc, 0);
     const entries = be4toi(senc, 4);
 
-    const arr = new Uint8Array(9 + entries);
+    const arr = new Uint8Array(entries + 9);
     arr.set(itobe4(entries), 5);
 
     let i = 9;
@@ -501,7 +506,7 @@ const atoms = {
       if ((flags & 0x2) === 0x2) {
         pairsLen = 2;
         pairsCnt = be2toi(senc, j);
-        j += 2 + (pairsCnt * 6);
+        j += (pairsCnt * 6) + 2;
       } else {
         pairsCnt = 0;
         pairsLen = 0;
@@ -896,18 +901,18 @@ export default {
       return [];
     }
 
-    const frags : Array<{ time: number, duration: number }> = [];
+    const frags : Array<{ time: number; duration: number }> = [];
     const version = tfrf[0];
     const fragCount = tfrf[4];
     for (let i = 0; i < fragCount; i++) {
       let duration;
       let time;
       if (version === 1) {
-        time = be8toi(tfrf, 16 * i + 5);
-        duration  = be8toi(tfrf, 16 * i + 5 + 8);
+        time = be8toi(tfrf, i * 16 + 5);
+        duration  = be8toi(tfrf, i * 16 + 5 + 8);
       } else {
-        time = be4toi(tfrf, 8 * i + 5);
-        duration = be4toi(tfrf, 8 * i + 5 + 4);
+        time = be4toi(tfrf, i * 8 + 5);
+        duration = be4toi(tfrf, i * 8 + 5 + 4);
       }
       frags.push({
         time,
@@ -1098,12 +1103,12 @@ export default {
     // reads [moof[mfhd|traf[tfhd|trun|..]]]
     const tfdtlen = newtfdt.length;
     const mfhdlen = be4toi(oldmoof, 8);
-    const traflen = be4toi(oldmoof, 8 + mfhdlen);
-    const tfhdlen = be4toi(oldmoof, 8 + mfhdlen + 8);
-    const trunlen = be4toi(oldmoof, 8 + mfhdlen + 8 + tfhdlen);
-    const oldmfhd = oldmoof.subarray(8, 8 + mfhdlen);
+    const traflen = be4toi(oldmoof, mfhdlen + 8);
+    const tfhdlen = be4toi(oldmoof, mfhdlen + 8 + 8);
+    const trunlen = be4toi(oldmoof, mfhdlen + 8 + 8 + tfhdlen);
+    const oldmfhd = oldmoof.subarray(8, mfhdlen + 8);
     const oldtraf = oldmoof
-      .subarray(8 + mfhdlen + 8, 8 + mfhdlen + 8 + traflen - 8);
+      .subarray(mfhdlen + 8 + 8, mfhdlen + 8 + 8 + traflen - 8);
     const oldtfhd = oldtraf.subarray(0, tfhdlen);
     const oldtrun = oldtraf.subarray(tfhdlen, tfhdlen + trunlen);
 
@@ -1122,7 +1127,7 @@ export default {
     const newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldsenc, oldmfhd);
     const newmoof = atoms.moof(oldmfhd, newtraf);
 
-    const trunoffset = 8 + mfhdlen + 8 + tfhdlen + tfdtlen;
+    const trunoffset = mfhdlen + 8 + 8 + tfhdlen + tfdtlen;
     // TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
     // try to put free atom inside traf children
     if (isIE) {

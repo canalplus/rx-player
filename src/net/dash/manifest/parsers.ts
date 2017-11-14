@@ -16,27 +16,28 @@
 
 import assert from "../../../utils/assert";
 import {
-  reduceChildren,
   getLastLiveTimeReference,
+  inferAdaptationType,
   isHardOfHearing,
   isVisuallyImpaired,
-  inferAdaptationType,
   parseByteRange,
+  reduceChildren,
 } from "./helpers";
+
 import {
-  IRole,
-  ISegmentURL,
-  IPeriodDash,
-  ISegmentBase,
+  ContentProtectionParser,
   IAccessibility,
   IAdaptationDash,
-  IInitialization,
-  ISegmentTimeLine,
-  IRepresentationDash,
-  IMultipleSegmentBase,
   IContentComponentDash,
   IContentProtectionDash,
-  ContentProtectionParser,
+  IInitialization,
+  IMultipleSegmentBase,
+  IPeriodDash,
+  IRepresentationDash,
+  IRole,
+  ISegmentBase,
+  ISegmentTimeLine,
+  ISegmentURL,
 } from "../types";
 
 import { IParsedManifest } from "../../types";

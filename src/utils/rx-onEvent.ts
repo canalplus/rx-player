@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { EventTargetLike } from "rxjs/observable/FromEventObservable";
 import { Observable } from "rxjs/Observable";
+import { EventTargetLike } from "rxjs/observable/FromEventObservable";
 
 /**
  * Returns a fromEvent on the given element for the given event(s).

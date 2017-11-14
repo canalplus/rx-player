@@ -20,13 +20,13 @@
 
 import Segment from "../segment";
 import {
-  normalizeRange,
-  getTimelineRangeEnd,
   getInitSegment,
-  setTimescale,
-  scale,
+  getTimelineRangeEnd,
   IIndexSegment,
-  SegmentHelpers,
+  ISegmentHelpers,
+  normalizeRange,
+  scale,
+  setTimescale,
 } from "./helpers";
 
 interface ITimelineIndex {
@@ -114,7 +114,7 @@ function calculateRepeat(
   return rep;
 }
 
-const SegmentTimelineHelpers: SegmentHelpers<ITimelineIndex> = {
+const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
   getInitSegment,
   setTimescale,
   scale,
@@ -327,10 +327,16 @@ const SegmentTimelineHelpers: SegmentHelpers<ITimelineIndex> = {
   _addSegmentInfos(
     index : ITimelineIndex,
     newSegment : {
-      time : number,
-      duration : number,
-      timescale : number },
-    currentSegment : { time : number, duration : number, timescale : number }
+      time : number;
+      duration : number;
+      timescale : number;
+    },
+    currentSegment : {
+      time : number;
+      duration :
+      number;
+      timescale : number;
+    }
   ) : boolean {
     const { timeline, timescale } = index;
     const timelineLength = timeline.length;
