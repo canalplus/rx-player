@@ -156,9 +156,13 @@ class LanguageManager {
    * text adaptation will be emitted
    */
   constructor(
-    { text, audio } : { text? : Adaptation[], audio? : Adaptation[] },
+    { text, audio } : {
+      text? : Adaptation[];
+      audio? : Adaptation[];
+    },
     { text$, audio$ } : {
-      text$ : Subject<Adaptation|null>, audio$ : Subject<Adaptation|null>
+      text$ : Subject<Adaptation|null>;
+      audio$ : Subject<Adaptation|null>;
     }
   ) {
     /**
@@ -203,7 +207,10 @@ class LanguageManager {
    * adaptations available.
    */
   updateAdaptations(
-    { text, audio } : { text?: Adaptation[], audio?: Adaptation[] }
+    { text, audio } : {
+      text?: Adaptation[];
+      audio?: Adaptation[];
+    }
   ) : void {
     this._audioAdaptations = audio || [];
     this._textAdaptations = text || [];

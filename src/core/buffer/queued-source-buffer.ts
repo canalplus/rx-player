@@ -31,7 +31,10 @@ interface ISourceBufferAppendQueueElement<T> {
 
 interface ISourceBufferRemoveQueueElement {
   type : SourceBufferAction.Remove;
-  args : { start : number, end : number };
+  args : {
+    start : number;
+    end : number;
+  };
   subj : Subject<Event>;
 }
 
@@ -89,7 +92,10 @@ export default class QueuedSourceBuffer<T> {
    * @returns {Observable}
    */
   removeBuffer(
-    { start, end } : { start : number, end : number }
+    { start, end } : {
+      start : number;
+      end : number;
+    }
   ) : Subject<Event> {
     return this._queueAction({
       type: SourceBufferAction.Remove,
@@ -149,11 +155,14 @@ export default class QueuedSourceBuffer<T> {
    */
   private _queueAction(action :
     {
-      type : SourceBufferAction.Append,
-      args : T,
+      type : SourceBufferAction.Append;
+      args : T;
     } | {
-      type : SourceBufferAction.Remove,
-      args : { start : number, end : number }
+      type : SourceBufferAction.Remove;
+      args : {
+        start : number;
+        end : number;
+      };
     }
   ) : Subject<Event> {
     const subj = new Subject<Event>();

@@ -19,29 +19,29 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 
 import config from "../../config";
-import log from "../../utils/log";
-import { SimpleSet } from "../../utils/collections";
-import { getLeftSizeOfRange } from "../../utils/ranges";
 import {
-  MediaError,
   ErrorTypes,
   IndexError,
+  MediaError,
 } from "../../errors";
+import { SimpleSet } from "../../utils/collections";
+import log from "../../utils/log";
+import { getLeftSizeOfRange } from "../../utils/ranges";
 
-import { SupportedBufferTypes } from "../types";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
+import { SupportedBufferTypes } from "../types";
 
-import SegmentBookkeeper from "./segment_bookkeeper";
-import QueuedSourceBuffer from "./queued-source-buffer";
-import launchGarbageCollector from "./gc";
 import cleanBuffer from "./cleanBuffer";
+import launchGarbageCollector from "./gc";
+import QueuedSourceBuffer from "./queued-source-buffer";
+import SegmentBookkeeper from "./segment_bookkeeper";
 
 import {
   BufferEvent,
+  IBufferArguments,
   IBufferClockTick,
   IBufferSegmentInfos,
-  IBufferArguments,
   IDownloaderResponse
 } from "./types";
 
@@ -65,8 +65,14 @@ function getWantedBufferRange(
   buffered : TimeRanges,
   clock : IBufferClockTick,
   bufferGoal : number,
-  paddings : { low : number, high : number }
-) : { start : number, end : number } {
+  paddings : {
+    low : number;
+    high : number;
+  }
+) : {
+  start : number;
+  end : number;
+} {
   const { low: lowPadding, high: highPadding } = paddings;
   const timestamp = clock.currentTime + clock.timeOffset;
 
@@ -163,7 +169,10 @@ function Buffer({
    */
   function getSegmentsListToInject(
     representation : Representation,
-    range : { start : number, end : number },
+    range : {
+      start : number;
+      end : number;
+    },
     timing : IBufferClockTick,
     withInitSegment : boolean
   ) : Segment[] {
@@ -258,7 +267,10 @@ function Buffer({
      */
     function segmentFilter(
       segment : Segment,
-      wantedRange : { start : number, end : number }
+      wantedRange : {
+        start : number;
+        end : number;
+      }
     ) : boolean {
       // if this segment is already in the pipeline
       const isInQueue = queuedSegments.test(segment.id);
@@ -294,12 +306,12 @@ function Buffer({
      */
     function appendDataInBuffer(
       pipelineData : {
-        segment : Segment,
+        segment : Segment;
         parsed : {
-          segmentData : any,
-          nextSegments : IBufferSegmentInfos[],
-          segmentInfos : IBufferSegmentInfos
-        }
+          segmentData : any;
+          nextSegments : IBufferSegmentInfos[];
+          segmentInfos : IBufferSegmentInfos;
+        };
       }
     ) : Observable<BufferEvent> {
       const { segment, parsed } = pipelineData;

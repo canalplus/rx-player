@@ -15,8 +15,8 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import log from "../../utils/log";
 import { setMediaKeys } from "../../compat";
+import log from "../../utils/log";
 import { $loadedSessions } from "./globals";
 import { IKeySystemOption } from "./index";
 import { IInstanceInfo } from "./key_system";

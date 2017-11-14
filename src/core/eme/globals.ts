@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import noop from "../../utils/noop";
 import {
   InMemorySessionsSet,
   PersistedSessionsSet,
@@ -21,7 +22,7 @@ import {
 
 const emptyStorage = {
   load() { return []; },
-  save() {},
+  save: noop,
 };
 
 const $storedSessions = new PersistedSessionsSet(emptyStorage);

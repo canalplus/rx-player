@@ -15,10 +15,9 @@
  */
 
 import config from "../../config";
-import takeFirstSet from "../../utils/takeFirstSet";
-import { convertToRanges } from "../../utils/ranges";
-
 import Segment from "../../manifest/segment";
+import { convertToRanges } from "../../utils/ranges";
+import takeFirstSet from "../../utils/takeFirstSet";
 
 const {
   MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
@@ -512,7 +511,10 @@ export default class SegmentBookkeeper {
    * @returns {Object|null}
    */
   hasPlayableSegment(
-    wantedRange : { start : number, end : number },
+    wantedRange : {
+      start : number;
+      end : number;
+    },
     time : number,
     duration : number,
     timescale : number
@@ -590,7 +592,10 @@ export default class SegmentBookkeeper {
      * @returns {Boolean}
      */
     function hasWantedRange(
-      _wantedRange : { start : number, end : number },
+      _wantedRange : {
+        start : number;
+        end : number;
+      },
       currentSegmentI : ISegmentInfos,
       prevSegmentI : ISegmentInfos,
       nextSegmentI : ISegmentInfos

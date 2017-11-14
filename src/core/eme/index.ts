@@ -16,31 +16,30 @@
 
 import { Observable } from "rxjs/Observable";
 
-import log from "../../utils/log";
-import castToObservable from "../../utils/castToObservable";
 import assert from "../../utils/assert";
+import castToObservable from "../../utils/castToObservable";
+import log from "../../utils/log";
+import noop from "../../utils/noop";
 
 import { shouldUnsetMediaKeys } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 
-import { IPersistedSessionStorage } from "./sessions_set/persisted";
 import {
+  $loadedSessions,
+  $storedSessions,
+} from "./globals";
+import findCompatibleKeySystem, {
+  getKeySystem,
   IInstanceInfo,
   IKeySystemPackage,
  } from "./key_system";
-import {
-  ISessionEvent,
-  ErrorStream,
- } from "./session";
-
-import {
-  $storedSessions,
-  $loadedSessions,
-} from "./globals";
 import { trySettingServerCertificate } from "./server_certificate";
+import manageSessionCreation, {
+  ErrorStream,
+  ISessionEvent,
+ } from "./session";
+import { IPersistedSessionStorage } from "./sessions_set/persisted";
 import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
-import manageSessionCreation from "./session";
-import findCompatibleKeySystem, { getKeySystem } from "./key_system";
 
 import { EncryptedMediaError } from "../../errors";
 
@@ -176,7 +175,7 @@ function createEME(
 function dispose() : void {
   // Remove MediaKey before to prevent MediaKey error
   // if other instance is creating after dispose
-  disposeMediaKeys(instanceInfos.$videoElement).subscribe(() => {});
+  disposeMediaKeys(instanceInfos.$videoElement).subscribe(noop);
   instanceInfos.$mediaKeys = null;
   instanceInfos.$keySystem = null;
   instanceInfos.$videoElement = null;

@@ -35,15 +35,16 @@ import arrayFind = require("array-find");
 
 import arrayIncludes from "../utils/array-includes";
 
+import { isCodecSupported } from "../compat";
+import { MediaError } from "../errors";
+import Manifest from "../manifest";
+import { normalize as normalizeLang } from "../utils/languages";
 import log from "../utils/log";
 import {
   normalizeBaseURL,
   resolveURL,
 } from "../utils/url";
-import { isCodecSupported } from "../compat";
-import { MediaError } from "../errors";
-import { normalize as normalizeLang } from "../utils/languages";
-import Manifest from "../manifest";
+
 import { IContentProtectionDash } from "../net/dash/types";
 import { IContentProtectionSmooth } from "../net/smooth/types";
 
@@ -69,11 +70,11 @@ interface INormalizedSupplementaryTextTrack {
     mimeType : string;
     codecs? : string;
     index : {
-      indexType : "template",
+      indexType : "template";
       duration : number;
       timescale : 1;
       startNumber : 0;
-    }
+    };
   }>;
 }
 
@@ -91,11 +92,11 @@ interface INormalizedSupplementaryImageTrack {
     id : string;
     mimeType : string;
     index : {
-      indexType : "template",
+      indexType : "template";
       duration : number;
       timescale : 1;
       startNumber : 0;
-    }
+    };
   }>;
 }
 
@@ -166,10 +167,10 @@ const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
  * @returns {string}
  */
 function parseBaseURL(manifest : {
-  locations : string[],
+  locations : string[];
   periods : Array<{
-    baseURL? : string,
-  }>,
+    baseURL? : string;
+  }>;
 }) : string {
   const baseURL = normalizeBaseURL(manifest.locations[0]);
   const period = manifest.periods[0];
@@ -377,7 +378,10 @@ function normalizePeriod(
  * @returns {Object} adaptation
  */
 function normalizeAdaptation(
-  initialAdaptation : { id : string, representations : Array<{ id : string }> },
+  initialAdaptation : {
+    id : string;
+    representations : Array<{ id : string }>;
+  },
   inherit : any
 ) : INormalizedAdaptation {
   if (typeof initialAdaptation.id === "undefined") {
@@ -395,7 +399,7 @@ function normalizeAdaptation(
   });
 
   let representations = adaptation.representations
-    .map((representation : { id : string } ) =>
+    .map((representation : { id : string }) =>
       normalizeRepresentation(
         representation,
         toInheritFromAdaptation,
@@ -411,19 +415,24 @@ function normalizeAdaptation(
   if (!type) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
-  if (type === "video" || type === "audio") {
-    representations = representations
-      .filter((representation) => isCodecSupported(getCodec(representation)));
 
-    if (type === "audio") {
-      const isAudioDescription =
-        arrayIncludes(accessibility, "visuallyImpaired");
-      adaptation.audioDescription = isAudioDescription;
-    }
-  }
-  else if (type === "text") {
-    const isHardOfHearing = arrayIncludes(accessibility, "hardOfHearing");
-    adaptation.closedCaption = isHardOfHearing;
+  switch (type) {
+    case "video":
+    case "audio":
+      representations = representations
+        .filter((representation) => isCodecSupported(getCodec(representation)));
+
+      if (type === "audio") {
+        const isAudioDescription =
+          arrayIncludes(accessibility, "visuallyImpaired");
+        adaptation.audioDescription = isAudioDescription;
+      }
+      break;
+
+    case "text":
+      const isHardOfHearing = arrayIncludes(accessibility, "hardOfHearing");
+      adaptation.closedCaption = isHardOfHearing;
+      break;
   }
 
   adaptation.representations = representations;
@@ -648,7 +657,10 @@ function updateManifest(
  * @returns {string}
  */
 function getCodec(
-  representation : { codec? : string, mimeType? : string }
+  representation : {
+    codec? : string;
+    mimeType? : string;
+  }
 ) : string {
   const { codec = "", mimeType = "" } = representation;
   return `${mimeType};codecs="${codec}"`;

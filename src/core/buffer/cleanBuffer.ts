@@ -44,7 +44,10 @@ export default function cleanBuffer(
     return Observable.empty();
   }
 
-  const cleanedupRanges : Array<{ start : number, end: number }> = [];
+  const cleanedupRanges : Array<{
+    start : number;
+    end: number;
+  }> = [];
   const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
     qSourceBuffer.getBuffered(),
     position

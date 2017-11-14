@@ -36,13 +36,19 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 function selectGCedRanges(
   currentTime : number,
   buffered : TimeRanges, gcGap : number
-) : Array<{ start : number, end : number }> {
+) : Array<{
+  start : number;
+  end : number;
+}> {
   const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
     buffered,
     currentTime
   );
 
-  const cleanedupRanges : Array<{ start : number, end: number }> = [];
+  const cleanedupRanges : Array<{
+    start : number;
+    end: number;
+  }> = [];
 
   // start by trying to remove all ranges that do not contain the
   // current time and respect the gcGap

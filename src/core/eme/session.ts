@@ -16,50 +16,45 @@
 
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
+import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
 import { Subject } from "rxjs/Subject";
 import { TimeoutError } from "rxjs/util/TimeoutError";
-import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
 
-import arrayIncludes from "../../utils/array-includes";
-import tryCatch from "../../utils/rx-tryCatch";
-import castToObservable from "../../utils/castToObservable";
-import { retryWithBackoff } from "../../utils/retry";
 import {
   CustomError,
+  EncryptedMediaError,
+  ErrorCodes,
+  ErrorTypes,
   isKnownError,
 } from "../../errors";
+import arrayIncludes from "../../utils/array-includes";
+import castToObservable from "../../utils/castToObservable";
+import log from "../../utils/log";
+import { retryWithBackoff } from "../../utils/retry";
+import tryCatch from "../../utils/rx-tryCatch";
 
 import {
-  onKeyMessage$,
   onKeyError$,
+  onKeyMessage$,
   onKeyStatusesChange$,
 } from "../../compat/events";
 
 import {
-  ErrorTypes,
-  ErrorCodes,
-  EncryptedMediaError,
-} from "../../errors";
-
-import {
   KEY_STATUS_ERRORS,
 } from "./constants";
-
-import { IKeySystemOption } from "./index";
-
-import log from "../../utils/log";
 import {
-  $storedSessions,
   $loadedSessions,
+  $storedSessions,
 } from "./globals";
+import { IKeySystemOption } from "./index"; // XXX TODO
 
 type ErrorStream = Subject<Error|CustomError>;
 
 interface ISessionEvent {
   type : "ISessionEvent";
   value : {
-    name : string,
-    session : MediaKeySession
+    name : string;
+    session : MediaKeySession;
   };
 }
 
@@ -252,7 +247,10 @@ function createSession(
   keySystem: IKeySystemOption,
   initData: Uint8Array,
   errorStream: ErrorStream
-): {session: MediaKeySession, sessionEvents: ConnectableObservable<Event|ISessionEvent>} {
+): {
+  session: MediaKeySession;
+  sessionEvents: ConnectableObservable<Event|ISessionEvent>;
+} {
   log.debug(`eme: create a new ${sessionType} session`);
   const session = mediaKeys.createSession(sessionType);
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
