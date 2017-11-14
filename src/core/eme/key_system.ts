@@ -127,7 +127,7 @@ function findKeySystemCanonicalName(ksType: string)
       return ksName;
     }
   }
-  return;
+  return undefined;
 }
 
 /**

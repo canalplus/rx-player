@@ -47,7 +47,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
 
   find(func : (x : ISessionData) => boolean) : ISessionData|null {
     for (let i = 0; i < this._entries.length; i++) {
-      if (func(this._entries[i]) === true) {
+      if (func(this._entries[i])) {
         return this._entries[i];
       }
     }

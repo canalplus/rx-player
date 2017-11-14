@@ -270,7 +270,9 @@ function clearVideoSrc(video : HTMLMediaElement) : void {
  * @returns {Boolean}
  */
 function isOffline() : boolean {
+  /* tslint:disable no-boolean-literal-compare */
   return navigator.onLine === false;
+  /* tslint:enable no-boolean-literal-compare */
 }
 
 /**

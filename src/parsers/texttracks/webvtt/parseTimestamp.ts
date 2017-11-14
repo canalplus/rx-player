@@ -30,7 +30,7 @@ export default function parseTimestamp(
     const seconds = parseFloat(splittedTS[0].replace(",", "."));
 
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-      return;
+      return undefined;
     }
     return hours * 60 * 60 + minutes * 60 + seconds;
   }

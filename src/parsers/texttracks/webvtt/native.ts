@@ -143,14 +143,14 @@ function parseTimestamp(timestampString : string) : number|undefined {
     const minutes = parseInt(splittedTS[1], 10);
     const seconds = parseFloat(splittedTS[2]);
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-      return;
+      return undefined;
     }
     return hours * 60 * 60 + minutes * 60 + seconds;
   } else if (splittedTS.length === 2) {
     const minutes = parseInt(splittedTS[0], 10);
     const seconds = parseFloat(splittedTS[1]);
     if (isNaN(minutes) || isNaN(seconds)) {
-      return;
+      return undefined;
     }
     return minutes * 60 + seconds;
   }
@@ -163,10 +163,10 @@ function parseTimestamp(timestampString : string) : number|undefined {
  */
 function parseSettings(
   settingsString : string
-) : { [settingName : string ] : string } {
+) : IDictionary<string> {
   const splittedSettings = settingsString.split(/ |\t/);
-  return splittedSettings.reduce((
-    acc : { [settingName : string ] : string },
+  return splittedSettings.reduce<IDictionary<string>>((
+    acc : IDictionary<string>,
     setting : string
   ) => {
     const splittedSetting = setting.split(":");

@@ -67,13 +67,13 @@ function extractTimingsInfos(
       Math.abs(trunDuration - segment.duration) <= maxDecodeTimeDelta)
     ) {
       segmentInfos = {
-        time: segment.time as number,
+        time: segment.time,
         duration: trunDuration,
         timescale: segment.timescale,
       };
     } else {
       segmentInfos = {
-        time: segment.time as number,
+        time: segment.time,
         duration: segment.duration,
         timescale: segment.timescale,
       };

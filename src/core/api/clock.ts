@@ -294,7 +294,7 @@ function createTimingsSampler(
         video.removeEventListener(eventName, emitSample));
     };
   })
-    .multicast(() => new ReplaySubject(1))
+    .multicast(() => new ReplaySubject<IClockTick>(1))
     .refCount();
 }
 

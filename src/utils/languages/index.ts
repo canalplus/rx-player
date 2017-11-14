@@ -108,8 +108,7 @@ function normalizeTextTrack(
     };
   }
 
-  // TypeScript does not seem smart enough here
-  return _language as undefined|null;
+  return _language;
 }
 
 /**
@@ -143,8 +142,7 @@ function normalizeAudioTrack(
     };
   }
 
-  // TypeScript does not seem smart enough here
-  return _language as undefined|null;
+  return _language;
 }
 
 export {

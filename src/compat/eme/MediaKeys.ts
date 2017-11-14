@@ -332,7 +332,9 @@ if (navigator.requestMediaKeySystemAccess) {
       close(): Promise<void> {
         return new Promise((resolve) => {
           if (this._ss) {
+            /* tslint:disable no-floating-promises */
             this._ss.close();
+            /* tslint:enable no-floating-promises */
             this._ss = undefined;
           }
           if (this._con) {

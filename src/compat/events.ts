@@ -145,12 +145,12 @@ function videoSizeChange() : Observable<number> {
 }
 
 const isVisible = visibilityChange() // emit false when visible
-  .filter((x) => x === false);
+  .filter((x) => !x);
 
 // Emit true if the visibility changed to hidden since 60s
 const isHidden = visibilityChange()
   .debounceTime(INACTIVITY_DELAY)
-  .filter((x) => x === true);
+  .filter((x) => x);
 
 const isInBackground$ = () => Observable.merge(isVisible, isHidden)
   .startWith(false);

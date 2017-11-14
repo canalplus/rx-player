@@ -276,7 +276,7 @@ export default function Stream({
 
     shouldRetry: (error : Error) => {
       if (isKnownError(error)) {
-        return error.fatal === false;
+        return !error.fatal;
       }
       return true;
     },
@@ -320,7 +320,10 @@ export default function Stream({
    * @returns {Observable}
    */
   const startStream = retryableFuncWithBackoff<any, StreamEvent>(({
+    // TODO tslint bug? Document.
+    /* tslint:disable no-use-before-declare */
     url: _url,
+    /* tslint:enable no-use-before-declare */
     mediaSource,
   } : {
     url : string|null;
@@ -553,7 +556,9 @@ export default function Stream({
       .do(() => {
         log.info("canplay event");
         if (autoPlay) {
+          /* tslint:disable no-floating-promises */
           videoElement.play();
+          /* tslint:enable no-floating-promises */
         }
       });
 
