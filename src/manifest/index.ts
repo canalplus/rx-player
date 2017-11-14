@@ -86,14 +86,14 @@ class Manifest {
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
     this.adaptations =
-      (Object.keys(args.adaptations) as AdaptationType[]).reduce((
-      acc : ManifestAdaptations,
-      val : AdaptationType
-    ) => {
-      acc[val] = (args.adaptations[val] || [])
-        .map((a) => new Adaptation(a));
-      return acc;
-    }, {}) || [];
+      (Object.keys(args.adaptations) as AdaptationType[]).reduce<ManifestAdaptations>((
+        acc : ManifestAdaptations,
+        val : AdaptationType
+      ) => {
+        acc[val] = (args.adaptations[val] || [])
+          .map((a) => new Adaptation(a));
+        return acc;
+      }, {}) || [];
 
     // TODO Real period management
     this.periods = [

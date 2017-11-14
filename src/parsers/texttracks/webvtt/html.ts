@@ -220,9 +220,9 @@ function parseCue(
   // Get time ranges.
   const timeCodes = cueBlock[index];
   const range = parseTimeCode(timeCodes);
-  if (!range || range.start == null || range.end == null) {
+  if (!range || range.start === undefined || range.end === undefined) {
     log.warn("VTT: Invalid cue, the timecode line could not be parsed.");
-    return; // cancel if we do not find the start or end of this cue
+    return undefined; // cancel if we do not find the start or end of this cue
   }
 
   index++;

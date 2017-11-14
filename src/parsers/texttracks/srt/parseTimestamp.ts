@@ -28,7 +28,7 @@ export default function parseTimestamp(
     const minutes = parseInt(splittedTS[1], 10);
     const seconds = parseFloat(splittedTS[2].replace(",", "."));
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-      return;
+      return undefined;
     }
     return hours * 60 * 60 + minutes * 60 + seconds;
   }

@@ -22,11 +22,12 @@
  */
 export default function listToMap(
   list : string[]
-) : { [key: string] : string } {
+) : IDictionary<string> {
 
-  const map = list.reduce((obj : { [key: string] : string }, name : string) => {
-    obj[name] = name;
-    return obj;
-  }, {});
+  const map = list.reduce<IDictionary<string>>(
+    (obj : { [key: string] : string }, name : string) => {
+      obj[name] = name;
+      return obj;
+    }, {});
   return map;
 }

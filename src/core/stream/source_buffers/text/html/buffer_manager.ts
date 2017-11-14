@@ -173,12 +173,12 @@ export default class TextBufferManager {
           if (time < cue.end) {
             return cue;
           } else {
-            return;
+            return undefined;
           }
         }
       }
     }
-    return;
+    return undefined;
   }
 
   /**

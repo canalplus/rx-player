@@ -659,7 +659,7 @@ class Player extends EventEmitter {
 
           // begin emitting those only when the content start to play
           .skipUntil(
-            this._priv_playing$.filter(isPlaying => isPlaying === true)
+            this._priv_playing$.filter(isPlaying => isPlaying)
           )
       )
       .distinctUntilChanged()
@@ -808,7 +808,7 @@ class Player extends EventEmitter {
    */
   getUrl() : string|undefined {
     if (!this._priv_manifest) {
-      return;
+      return undefined;
     }
     return this._priv_manifest.getUrl();
   }
@@ -1023,7 +1023,9 @@ class Player extends EventEmitter {
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
+    /* tslint:disable no-floating-promises */
     this.videoElement.play();
+    /* tslint:enable no-floating-promises */
   }
 
   /**
@@ -1344,7 +1346,7 @@ class Player extends EventEmitter {
 
   disableTextTrack() : void {
     if (!this._priv_languageManager) {
-      return undefined;
+      return;
     }
     return this._priv_languageManager.disableTextTrack();
   }
@@ -1652,7 +1654,7 @@ class Player extends EventEmitter {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
-    if (videoElement.ended !== true) {
+    if (!videoElement.ended) {
       this._priv_playing$.next(isPlaying);
     }
   }

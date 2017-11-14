@@ -83,12 +83,12 @@ export default function(
           ignoreProgressEvents: true,
         })
           .map(({ value }) : string => {
-          const extractedURL = extractISML(value.responseData as Document);
-          if (!extractedURL) {
-            throw new Error("Invalid ISML");
-          }
-          return extractedURL as string;
-        });
+            const extractedURL = extractISML(value.responseData);
+            if (!extractedURL) {
+              throw new Error("Invalid ISML");
+            }
+            return extractedURL;
+          });
       } else {
         resolving = Observable.of(url);
       }
@@ -202,7 +202,7 @@ export default function(
         assert(typeof response.responseData === "string" ||
           response.responseData instanceof ArrayBuffer);
       }
-      const responseData = response.responseData as ArrayBuffer|string;
+      const responseData = response.responseData;
       let parsedResponse : string|Uint8Array;
       let nextSegments;
       let segmentInfos;

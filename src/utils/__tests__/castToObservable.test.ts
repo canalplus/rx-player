@@ -22,14 +22,14 @@ import noop from "../noop";
 
 describe("utils - castToObservable", () => {
   it("should return the argument if already an Observable", () => {
-    const obs = new Observable();
+    const obs = new Observable<void>();
     expect(castToObservable(obs)).to.equal(obs);
   });
 
   it("should convert promise's then to next", (done) => {
     let resolve : ((str : string) => void)|undefined;
     const emitItem = "je n'ai plus peur de, perdre mes dents";
-    const prom = new Promise((res) => {
+    const prom = new Promise<string>((res) => {
       resolve = res;
     });
 
@@ -51,7 +51,7 @@ describe("utils - castToObservable", () => {
   it("should convert promise's error to Observable's error", (done) => {
     let reject : ((str : string) => void)|undefined;
     const errorItem = "je n'ai plus peur de, perdre mon temps";
-    const prom = new Promise((_, rej) => {
+    const prom = new Promise<string>((_, rej) => {
       reject = rej;
     });
 

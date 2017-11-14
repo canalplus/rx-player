@@ -403,7 +403,10 @@ function createPersistentSessionAndLoad(
         $storedSessions.delete(initData);
 
         if (session.sessionId) {
+          // XXX TODO manage asynchronicity?
+          /* tslint:disable no-floating-promises */
           session.remove();
+          /* tslint:enable no-floating-promises */
         }
 
         return createSessionAndKeyRequestWithRetry(

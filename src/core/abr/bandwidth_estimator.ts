@@ -84,7 +84,7 @@ export default class BandwidthEstimator {
    */
   public getEstimate() : number|undefined {
     if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
-      return;
+      return undefined;
     }
 
     // Take the minimum of these two estimates.  This should have the effect of

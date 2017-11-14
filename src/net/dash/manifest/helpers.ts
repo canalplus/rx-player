@@ -308,7 +308,7 @@ const getLastLiveTimeReference = (adaptation: IAdaptationDash): number|undefined
   //    - returns undefined
 
   if (!adaptation) {
-    return;
+    return undefined;
   }
 
   const representations = adaptation.representations || [];
@@ -327,14 +327,14 @@ const getLastLiveTimeReference = (adaptation: IAdaptationDash): number|undefined
     });
 
   if (lastLiveTimeReferences.some((x) => x == null)) {
-    return;
+    return undefined;
   }
 
   const representationsMin = Math.min(...lastLiveTimeReferences as number[]);
 
   // if the last live time reference could not be calculated, return undefined
   if (isNaN(representationsMin)) {
-    return;
+    return undefined;
   }
 
   if (representations.length === representationsWithIndex.length) {
