@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../utils/log";
 import assert from "../../../utils/assert";
+import log from "../../../utils/log";
 import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
 

@@ -15,10 +15,9 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { ICustomSourceBuffer } from "../stream/source_buffers";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
-
+import { ICustomSourceBuffer } from "../stream/source_buffers";
 import { SupportedBufferTypes } from "../types";
 
 export interface IBufferClockTick {
@@ -44,9 +43,9 @@ export interface IDownloaderArgument {
 
 export interface IDownloaderResponse {
   parsed: {
-    segmentData : any,
-    nextSegments : IBufferSegmentInfos[],
-    segmentInfos : IBufferSegmentInfos,
+    segmentData : any;
+    nextSegments : IBufferSegmentInfos[];
+    segmentInfos : IBufferSegmentInfos;
   };
 }
 
@@ -67,8 +66,8 @@ export interface IBufferArguments {
 export interface IRepresentationChangeEvent {
   type : "representationChange";
   value : {
-    type : SupportedBufferTypes,
-    representation : Representation|null,
+    type : SupportedBufferTypes;
+    representation : Representation|null;
   };
 }
 
@@ -80,13 +79,13 @@ export interface IPreconditionFailedEvent {
 export interface IPipelineEvent {
   type : "pipeline";
   value : {
-    bufferType : SupportedBufferTypes,
-    addedSegments: IBufferSegmentInfos[],
+    bufferType : SupportedBufferTypes;
+    addedSegments: IBufferSegmentInfos[] ;
     parsed : {
-      segmentData : any
-      nextSegments? : IBufferSegmentInfos[],
-      segmentInfos? : IBufferSegmentInfos,
-    },
+      segmentData : any;
+      nextSegments? : IBufferSegmentInfos[];
+      segmentInfos? : IBufferSegmentInfos;
+    };
   };
 }
 
@@ -98,7 +97,7 @@ export interface IOutOfIndexEvent {
 export interface IIndexDiscontinuityEvent {
   type : "index-discontinuity";
   value : {
-    ts : number,
+    ts : number;
   };
 }
 

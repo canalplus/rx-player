@@ -18,14 +18,14 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 
-import config from "../../config";
-import log from "../../utils/log";
-import arrayIncludes from "../../utils/array-includes";
 import {
   KeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
 } from "../../compat";
+import config from "../../config";
+import arrayIncludes from "../../utils/array-includes";
+import log from "../../utils/log";
 
 import { IKeySystemOption } from "../eme/index";
 
@@ -63,8 +63,11 @@ interface IKeySystemPackage {
 
 function getCachedKeySystemAccess(
   keySystems: IKeySystemOption[],
-  instanceInfos: IInstanceInfo)
-    : null|undefined|{keySystem: IKeySystemOption, keySystemAccess: KeySystemAccess} {
+  instanceInfos: IInstanceInfo
+) : null|undefined|{
+  keySystem: IKeySystemOption;
+  keySystemAccess: KeySystemAccess;
+} {
   const {
     $keySystem,
     $mediaKeys,

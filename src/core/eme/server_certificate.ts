@@ -15,8 +15,8 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import castToObservable from "../../utils/castToObservable";
 import EncryptedMediaError from "../../errors/EncryptedMediaError";
+import castToObservable from "../../utils/castToObservable";
 import { ErrorStream } from "./session";
 
 /**

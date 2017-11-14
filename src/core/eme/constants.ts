@@ -15,7 +15,7 @@
  */
 
 export const KEY_STATUS_ERRORS = {
-  "expired": true,
+  expired: true,
   "internal-error": true,
    // "released",
    // "output-restricted",

@@ -18,11 +18,11 @@ import { Observable } from "rxjs/Observable";
 import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
 import { Subscription } from "rxjs/Subscription";
 
-import log from "../../../utils/log";
 import castToObservable from "../../../utils/castToObservable";
+import log from "../../../utils/log";
+import { ISessionEvent } from "../session";
 import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
-import { ISessionEvent } from "../session";
 
 interface ISessionData {
   initData : number;

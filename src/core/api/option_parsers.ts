@@ -17,11 +17,11 @@
 import objectAssign = require("object-assign");
 
 import config from "../../config";
-import log from "../../utils/log";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
+import log from "../../utils/log";
 
 import {
   IKeySystemOption,
