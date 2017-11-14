@@ -36,14 +36,8 @@ function setDurationToMediaSource(
   mediaSource : MediaSource,
   duration : number
 ) : void {
-  let newDuration : number;
-  if (duration === Infinity) {
-    // TODO(pierre): hack for Chrome 42
-    // is it "https://bugs.chromium.org/p/chromium/issues/detail?id=461733"?
-    newDuration = Number.MAX_VALUE;
-  } else {
-    newDuration = duration;
-  }
+  const newDuration : number = duration === Infinity ?
+    Number.MAX_VALUE : duration;
 
   if (mediaSource.duration !== newDuration) {
     mediaSource.duration = newDuration;

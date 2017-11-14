@@ -88,11 +88,8 @@ function extractAudioCodecs(
   if (fourCC === "AACH") {
     mpProfile = 5; // High Efficiency AAC Profile
   } else {
-    if (codecPrivateData) {
-      mpProfile = (parseInt(codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3;
-    } else {
-      mpProfile = 2; // AAC Main Low Complexity
-    }
+    mpProfile = codecPrivateData ?
+      (parseInt(codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3 : 2;
   }
   return mpProfile ? ("mp4a.40." + mpProfile) : "";
 }
@@ -357,9 +354,8 @@ function createSmoothStreamingParser(
     root : Element,
     timescale : number
   ): IAdaptationSmooth|null {
-    if (root.hasAttribute("Timescale")) {
-      timescale = +(root.getAttribute("Timescale") || 0);
-    }
+    const _timescale = root.hasAttribute("Timescale") ?
+      +(root.getAttribute("Timescale") || 0) : timescale;
 
     const type = root.getAttribute("Type");
     if (type == null) {
@@ -408,7 +404,7 @@ function createSmoothStreamingParser(
       index: {
         timeline: [] as IHSSManifestSegment[],
         indexType: "smooth",
-        timescale,
+        timescale: _timescale,
         initialization: {
           range: [],
           indexRange: [],

@@ -144,14 +144,17 @@ if (
   sourceBufferWebkitProto.__emitUpdate =
     function(eventName : string, val : any) {
       setTimeout(() => {
+        /* tslint:disable no-invalid-this */
         this.trigger(eventName, val);
         this.updating = false;
         this.trigger("updateend");
+        /* tslint:enable no-invalid-this */
       }, 0);
     };
 
   sourceBufferWebkitProto.appendBuffer =
     function(data : any) {
+      /* tslint:disable no-invalid-this */
       if (this.updating) {
         throw new Error("updating");
       }
@@ -164,6 +167,7 @@ if (
         return;
       }
       this.__emitUpdate("update");
+      /* tslint:enable no-invalid-this */
     };
 }
 

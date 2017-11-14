@@ -18,6 +18,7 @@ type nativeParserFn = (texttrack : string, timeOffset : number, language? : stri
     VTTCue[]|TextTrackCue[];
 const nativeParsers : { [format : string] : nativeParserFn } = {};
 
+/* tslint:disable no-var-requires */
 if (__FEATURES__.NATIVE_VTT) {
   nativeParsers.vtt =
     require("../../../../../parsers/texttracks/webvtt/native.ts").default;
@@ -37,6 +38,7 @@ if (__FEATURES__.NATIVE_SRT) {
   nativeParsers.srt =
     require("../../../../../parsers/texttracks/srt/native.ts").default;
 }
+/* tslint:enable no-var-requires */
 
 /**
  * @param {string} type

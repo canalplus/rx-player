@@ -245,21 +245,21 @@ function normalizeManifest(
   ) as INormalizedPeriod[];
 
   // TODO(pierre): support multiple periods
-  manifest = assignAndClone(manifest, periods[0]);
-  manifest.periods = null;
+  const finalManifest = assignAndClone(manifest, periods[0]);
+  finalManifest.periods = null;
 
-  if (!manifest.duration) {
-    manifest.duration = Infinity;
+  if (!finalManifest.duration) {
+    finalManifest.duration = Infinity;
   }
 
-  if (manifest.isLive) {
-    manifest.suggestedPresentationDelay =
-      manifest.suggestedPresentationDelay || 0;
+  if (finalManifest.isLive) {
+    finalManifest.suggestedPresentationDelay =
+      finalManifest.suggestedPresentationDelay || 0;
 
-    manifest.availabilityStartTime = manifest.availabilityStartTime || 0;
+    finalManifest.availabilityStartTime = finalManifest.availabilityStartTime || 0;
   }
 
-  return new Manifest(manifest);
+  return new Manifest(finalManifest);
 }
 
 /**

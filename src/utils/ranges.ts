@@ -284,13 +284,15 @@ function getLeftSizeOfRange(
  * Insert a range object into an array of ranges objects, at the right place.
  * /!\ Mutate the array of ranges.
  * @param {Array.<Object>} ranges
- * @param {Object} rangeToAdd
+ * @param {Object} rangeToAddArg
  * @returns {Array.<Object>}
  */
-function insertInto(ranges : IRange[], rangeToAdd : IRange) : IRange[] {
-  if (rangeToAdd.start === rangeToAdd.end) {
+function insertInto(ranges : IRange[], rangeToAddArg : IRange) : IRange[] {
+  if (rangeToAddArg.start === rangeToAddArg.end) {
     return ranges;
   }
+
+  let rangeToAdd : IRange = rangeToAddArg;
 
   // For each present range check if we need to:
   // - In case we are overlapping or contiguous:
@@ -300,7 +302,6 @@ function insertInto(ranges : IRange[], rangeToAdd : IRange) : IRange[] {
   //     in place
   // - Need to insert in place, we we are completely, not overlapping
   //   and not contiguous in between two ranges.
-
   let index = 0;
   for (; index < ranges.length; index++) {
     const range = ranges[index];

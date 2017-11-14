@@ -72,7 +72,7 @@ export interface ISidxSegment {
  * Returns null if not found.
  *
  * @param {Uint8Array} buf
- * @param {Number} offset
+ * @param {Number} initialOffset
  * @returns {Object|null} {Array.<Object>} - Informations about each subsegment.
  * Contains those keys:
  *   - time {Number}: starting _presentation time_ for the subsegment,
@@ -86,12 +86,13 @@ export interface ISidxSegment {
  */
 function parseSidx(
   buf : Uint8Array,
-  offset : number
+  initialOffset : number
 ) : ISidxSegment[]|null {
   const index = findAtom(buf, 0x73696478 /* "sidx" */);
   if (index === -1) {
     return null;
   }
+  let offset = initialOffset;
 
   const size = be4toi(buf, index);
   let pos = index + /* size */4 + /* name */4;
@@ -402,12 +403,12 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
 function createPssh(
   { systemId, privateData } : { systemId : string; privateData: any } // XXX TODO
 ) : Uint8Array {
-  systemId = systemId.replace(/-/g, "");
+  const _systemId = systemId.replace(/-/g, "");
 
-  assert(systemId.length === 32);
+  assert(_systemId.length === 32);
   return Atom("pssh", concat(
     4, // 4 initial zeroed bytes
-    hexToBytes(systemId),
+    hexToBytes(_systemId),
     itobe4(privateData.length),
     privateData
   ));

@@ -81,11 +81,7 @@ function hexToBytes(str : string) : Uint8Array {
  * @param {string} [sep=""] - separator. Separate each two hex character.
  * @returns {string}
  */
-function bytesToHex(bytes : Uint8Array, sep? : string) : string {
-  if (!sep) {
-    sep = "";
-  }
-
+function bytesToHex(bytes : Uint8Array, sep : string = "") : string {
   let hex = "";
   for (let i = 0; i < bytes.byteLength; i++) {
     hex += (bytes[i] >>> 4).toString(16);

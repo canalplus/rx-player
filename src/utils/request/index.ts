@@ -265,11 +265,8 @@ function request<T>(
           let responseData;
           if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
-            if (typeof xhr.response !== "string") {
-              responseData = xhr.response;
-            } else {
-              responseData = toJSONForIE(xhr.responseText);
-            }
+            responseData = xhr.response !== "string" ?
+              xhr.response : toJSONForIE(xhr.responseText);
           } else {
             responseData = xhr.response;
           }

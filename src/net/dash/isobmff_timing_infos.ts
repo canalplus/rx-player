@@ -44,9 +44,7 @@ function getISOBMFFTimingInfos(
   sidxSegments : ISidxSegment[]|null,
   initInfos? : ISegmentTimingInfos
 ) : ISegmentTimingInfos {
-  if (!sidxSegments) {
-    sidxSegments = [];
-  }
+  const _sidxSegments = sidxSegments || [];
   let startTime;
   let duration;
 
@@ -104,8 +102,8 @@ function getISOBMFFTimingInfos(
   }
 
   if (startTime == null) {
-    if (sidxSegments.length === 1) {
-      const sidxStart = sidxSegments[0].time;
+    if (_sidxSegments.length === 1) {
+      const sidxStart = _sidxSegments[0].time;
       if (
         sidxStart >= 0 &&
         (
@@ -113,12 +111,9 @@ function getISOBMFFTimingInfos(
           Math.abs(segmentStart - sidxStart) <= maxDecodeTimeDelta
         )
       ) {
-        const sidxTimescale = sidxSegments[0].timescale;
-        if (sidxTimescale != null && sidxTimescale !== timescale) {
-          startTime = (sidxStart / sidxTimescale) * timescale;
-        } else {
-          startTime = sidxStart;
-        }
+        const sidxTimescale = _sidxSegments[0].timescale;
+        startTime = sidxTimescale != null && sidxTimescale !== timescale ?
+          (sidxStart / sidxTimescale) * timescale : sidxStart;
       } else {
         startTime = segmentStart;
       }
@@ -128,8 +123,8 @@ function getISOBMFFTimingInfos(
   }
 
   if (duration == null) {
-    if (sidxSegments.length === 1) {
-      const sidxDuration = sidxSegments[0].duration;
+    if (_sidxSegments.length === 1) {
+      const sidxDuration = _sidxSegments[0].duration;
       if (
         sidxDuration >= 0 &&
         (
@@ -137,12 +132,9 @@ function getISOBMFFTimingInfos(
           Math.abs(segmentDuration - sidxDuration) <= maxDecodeTimeDelta
         )
       ) {
-        const sidxTimescale = sidxSegments[0].timescale;
-        if (sidxTimescale != null && sidxTimescale !== timescale) {
-          duration = (sidxDuration / sidxTimescale) * timescale;
-        } else {
-          duration = sidxDuration;
-        }
+        const sidxTimescale = _sidxSegments[0].timescale;
+        duration = sidxTimescale != null && sidxTimescale !== timescale ?
+          (sidxDuration / sidxTimescale) * timescale : sidxDuration;
       } else {
         duration = segmentDuration;
       }

@@ -76,18 +76,23 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
       .map((p) => p + name)), []);
 }
 
+/**
+ * @param {Array.<string>} eventNames
+ * @param {Array.<string>} prefixes
+ * @returns {Observable}
+ */
 function compatibleListener<T extends Event>(
   eventNames : string[],
   prefixes? : string[]
 ) : (element : EventTargetLike) => Observable<T> {
   let mem : string|undefined;
-  eventNames = eventPrefixed(eventNames, prefixes);
+  const prefixedEvents = eventPrefixed(eventNames, prefixes);
   return (element) => {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
     if (element instanceof HTMLElement_) {
       if (typeof mem === "undefined") {
-        mem = findSupportedEvent(element, eventNames);
+        mem = findSupportedEvent(element, prefixedEvents);
       }
 
       if (mem) {
@@ -96,7 +101,7 @@ function compatibleListener<T extends Event>(
         if (__DEV__) {
           /* tslint:disable:max-line-length */
           log.warn(
-            `compat: element <${element.tagName}> does not support any of these events: ${eventNames.join(", ")}`
+            `compat: element <${element.tagName}> does not support any of these events: ${prefixedEvents.join(", ")}`
             /* tslint:enable:max-line-length */
           );
         }
@@ -106,7 +111,7 @@ function compatibleListener<T extends Event>(
 
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
-    return onEvent(element, eventNames);
+    return onEvent(element, prefixedEvents);
   };
 }
 

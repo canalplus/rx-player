@@ -27,6 +27,7 @@ const HAS_NATIVE_MODE =
   __FEATURES__.NATIVE_TTML ||
   __FEATURES__.NATIVE_SRT;
 
+/* tslint:disable no-var-requires */
 const HTMLTextSourceBuffer = HAS_HTML_MODE ?
   require("./html/index.ts").default :
   () => {
@@ -38,6 +39,7 @@ const NativeTextSourceBuffer = HAS_NATIVE_MODE ?
   () => {
     throw new Error("Cannot display native subtitles: feature not activated.");
   };
+/* tslint:enable no-var-requires */
 
 export {
   HTMLTextSourceBuffer,

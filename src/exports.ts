@@ -15,4 +15,6 @@
  */
 
 // ugly webpack workaround to export require-style
+/* tslint:disable no-var-requires */
 module.exports = require("./index.ts").default;
+/* tslint:enable no-var-requires */

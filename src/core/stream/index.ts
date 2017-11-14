@@ -555,7 +555,6 @@ export default function Stream({
         if (autoPlay) {
           videoElement.play();
         }
-        autoPlay = true;
       });
 
     return {

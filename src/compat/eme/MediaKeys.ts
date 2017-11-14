@@ -355,7 +355,9 @@ if (navigator.requestMediaKeySystemAccess) {
     MediaKeys_.prototype.alwaysRenew = true;
     MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
     MediaKeys_.prototype.createSession = function() : SessionProxy {
+      /* tslint:disable no-invalid-this */
       return new SessionProxy(this as IIE11MediaKeys);
+      /* tslint:enable no-invalid-this */
     };
 
     requestMediaKeySystemAccess = function(

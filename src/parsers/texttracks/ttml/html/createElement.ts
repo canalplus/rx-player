@@ -283,11 +283,7 @@ function applyGeneralStyle(element : HTMLElement, style : IDictionary<string>) {
 
   // applies to region
   const overflow = style.overflow;
-  if (overflow) {
-    element.style.overflow = overflow;
-  } else {
-    element.style.overflow = "hidden";
-  }
+  element.style.overflow = overflow || "hidden";
 
   // applies to region
   const padding = style.padding;

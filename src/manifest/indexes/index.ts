@@ -23,6 +23,7 @@ import {
 
 const indexes : any = {};
 
+/* tslint:disable no-var-requires */
 if (__FEATURES__.SMOOTH) {
   indexes.smooth = require("./smooth.ts").default;
 }
@@ -32,6 +33,7 @@ if (__FEATURES__.DASH) {
   indexes.list = require("./list.ts").default;
   indexes.base = require("./base.ts").default;
 }
+/* tslint:enable no-var-requires */
 
 /**
  * Indexes have multiple "flavors" depending on the manifest concerned.

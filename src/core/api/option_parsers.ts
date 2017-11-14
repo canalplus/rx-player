@@ -329,11 +329,8 @@ function parseLoadVideoOptions(
   if (options.keySystems == null) {
     keySystems = [];
   } else {
-    if (Array.isArray(options.keySystems)) {
-      keySystems = options.keySystems;
-    } else {
-      keySystems = [options.keySystems];
-    }
+    keySystems = Array.isArray(options.keySystems) ?
+      options.keySystems : [options.keySystems];
     for (const keySystem of keySystems) {
       if (
         typeof keySystem.type !== "string" ||
@@ -350,11 +347,10 @@ function parseLoadVideoOptions(
   if (options.supplementaryTextTracks == null) {
     supplementaryTextTracks = [];
   } else {
-    if (Array.isArray(options.supplementaryTextTracks)) {
-      supplementaryTextTracks = options.supplementaryTextTracks;
-    } else {
-      supplementaryTextTracks = [options.supplementaryTextTracks];
-    }
+    supplementaryTextTracks =
+      Array.isArray(options.supplementaryTextTracks) ?
+        options.supplementaryTextTracks : [options.supplementaryTextTracks];
+
     for (const supplementaryTextTrack of supplementaryTextTracks) {
       if (typeof supplementaryTextTrack.closedCaption !== "boolean") {
         supplementaryTextTrack.closedCaption = !!supplementaryTextTrack.closedCaption;
@@ -374,11 +370,9 @@ function parseLoadVideoOptions(
   if (options.supplementaryImageTracks == null) {
     supplementaryImageTracks = [];
   } else {
-    if (Array.isArray(options.supplementaryImageTracks)) {
-      supplementaryImageTracks = options.supplementaryImageTracks;
-    } else {
-      supplementaryImageTracks = [options.supplementaryImageTracks];
-    }
+    supplementaryImageTracks =
+      Array.isArray(options.supplementaryImageTracks) ?
+        options.supplementaryImageTracks : [options.supplementaryImageTracks];
     for (const supplementaryImageTrack of supplementaryImageTracks) {
       if (
         typeof supplementaryImageTrack.mimeType !== "string" ||
@@ -438,6 +432,8 @@ function parseLoadVideoOptions(
     }
   }
 
+  // TODO without cast
+  /* tslint:disable no-object-literal-type-assertion */
   return {
     url,
     transport,
@@ -453,6 +449,7 @@ function parseLoadVideoOptions(
     hideNativeSubtitle,
     startAt,
   } as IParsedLoadVideoOptions;
+  /* tslint:enable no-object-literal-type-assertion */
 }
 
 export {

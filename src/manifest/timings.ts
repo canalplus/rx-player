@@ -42,19 +42,18 @@ function fromWallClockTime(timeInMs : number, manifest : Manifest) : number {
  * TODO This function should have more of a seekTo kind of name
  */
 function normalizeWallClockTime(
-  timeInMs : number|Date,
+  _time : number|Date,
   manifest : Manifest
 ) : number {
   if (!manifest.isLive) {
-    return +timeInMs;
+    return +_time;
   }
   const spd = manifest.suggestedPresentationDelay || 0;
   const plg = manifest.presentationLiveGap || 0;
   const tsbd = manifest.timeShiftBufferDepth || 0;
 
-  if (typeof timeInMs !== "number") {
-    timeInMs = timeInMs.getTime();
-  }
+  const timeInMs = typeof _time === "number" ?
+    _time : +_time;
 
   const now = Date.now();
   const max = now - (plg + spd) * 1000;
