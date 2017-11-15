@@ -293,49 +293,72 @@ function createSmoothStreamingParser(
    * @param {Element} q
    * @param {string} type
    * @return {Object}
-   * TODO Better type signatures?
    */
-  function parseQualityLevel(
-    q : Element,
-    type : string
-  ) : IRepresentationSmooth {
-
-    const hasAndGetAttribute = function(e: Element, name: string): string {
-      if (e.hasAttribute(name)) {
-        return e.getAttribute(name) as string;
-      } else {
-        throw new Error("Invalid QualityLevel tag.");
-      }
-    };
+  function parseQualityLevel(q : Element, type : string) : IRepresentationSmooth {
+    /**
+     * @param {string} name
+     * @returns {string|undefined}
+     */
+    function getAttribute(name: string): string|undefined {
+      const attr = q.getAttribute(name);
+      return attr == null ? undefined : attr;
+    }
 
     switch (type) {
-      case "audio":
+
+      case "audio": {
+        const audiotag = getAttribute("AudioTag");
+        const bitrate = getAttribute("Bitrate");
+        const bitsPerSample = getAttribute("BitsPerSample");
+        const channels = getAttribute("Channels");
+        const codecPrivateData = getAttribute("CodecPrivateData");
+        const fourCC = getAttribute("FourCC");
+        const packetSize = getAttribute("PacketSize");
+        const samplingRate = getAttribute("SamplingRate");
+
         return {
-          bitrate: parseInt(hasAndGetAttribute(q, "Bitrate"), 10),
-          audiotag: parseInt(hasAndGetAttribute(q, "AudioTag"), 10),
-          channels: parseInt(hasAndGetAttribute(q, "Channels"), 10),
-          samplingRate: parseInt(hasAndGetAttribute(q, "SamplingRate"), 10),
-          bitsPerSample: parseInt(hasAndGetAttribute(q, "BitsPerSample"), 10),
-          packetSize: parseInt(hasAndGetAttribute(q, "PacketSize"), 10),
-          codecPrivateData: hasAndGetAttribute(q, "CodecPrivateData"),
-          mimeType: q.getAttribute("FourCC") ?
-            MIME_TYPES[q.getAttribute("FourCC") as string] : "", // optionnal
+          audiotag: audiotag !== undefined ? parseInt(audiotag, 10) : audiotag,
+          bitrate: bitrate ? parseInt(bitrate, 10) || 0 : 0,
+          bitsPerSample: bitsPerSample !== undefined ?
+            parseInt(bitsPerSample, 10) : bitsPerSample,
+          channels: channels !== undefined ? parseInt(channels, 10) : channels,
+          codecPrivateData: codecPrivateData || "",
+          mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
+          packetSize: packetSize !== undefined ?
+            parseInt(packetSize, 10) : packetSize,
+          samplingRate: samplingRate !== undefined ?
+            parseInt(samplingRate, 10) : samplingRate,
         };
-      case "video":
+      }
+
+      case "video": {
+        const bitrate = getAttribute("Bitrate");
+        const codecPrivateData = getAttribute("CodecPrivateData");
+        const fourCC = getAttribute("FourCC");
+        const width = getAttribute("MaxWidth");
+        const height = getAttribute("MaxHeight");
+
         return {
-          bitrate: parseInt(hasAndGetAttribute(q, "Bitrate"), 10),
-          mimeType: MIME_TYPES[hasAndGetAttribute(q, "FourCC")],
-          codecPrivateData: hasAndGetAttribute(q, "CodecPrivateData"),
-          codecs: extractVideoCodecs(hasAndGetAttribute(q, "CodecPrivateData")),
-          width: parseInt(hasAndGetAttribute(q, "MaxWidth"), 10),
-          height: parseInt(hasAndGetAttribute(q, "MaxHeight"), 10),
+          bitrate: bitrate ? parseInt(bitrate, 10) || 0 : 0,
+          mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
+          codecPrivateData: codecPrivateData || "",
+          codecs: extractVideoCodecs(codecPrivateData || ""),
+          width: width !== undefined ? parseInt(width, 10) : undefined,
+          height: height !== undefined ? parseInt(height, 10) : undefined,
         };
-      case "text":
+      }
+
+      case "text": {
+        const bitrate = getAttribute("Bitrate");
+        const codecPrivateData = getAttribute("CodecPrivateData");
+        const fourCC = getAttribute("FourCC");
         return {
-          bitrate: parseInt(hasAndGetAttribute(q, "Bitrate"), 10),
-          mimeType: MIME_TYPES[hasAndGetAttribute(q, "FourCC")],
-          codecPrivateData: "",
+          bitrate: bitrate ? parseInt(bitrate, 10) || 0 : 0,
+          mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
+          codecPrivateData: codecPrivateData || "",
         };
+      }
+
       default:
         throw new Error("Unrecognized StreamIndex type: " + type);
     }

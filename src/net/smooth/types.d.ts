@@ -56,31 +56,34 @@ interface IContentProtectionSmooth {
 }
 
 interface IRepresentationSmooth {
+  // required
   bitrate: number;
   codecPrivateData: string;
-  codecs?: string;
-  mimeType?: string;
-  id?: string|number;
-  samplingRate?: number;
-  bitsPerSample?: number;
-  packetSize?: number;
-  width?: number;
-  height?: number;
+
+  // optional
   audiotag?: number;
+  bitsPerSample?: number;
   channels?: number;
+  codecs?: string;
+  height?: number;
+  id?: string|number;
+  mimeType?: string;
+  packetSize?: number;
+  samplingRate?: number;
+  width?: number;
 }
 
 interface IAdaptationSmooth {
-id?: string;
-smoothProtection?: IContentProtectionSmooth|null;
-type: string;
-accessibility: string[];
-index: IIndex;
-representations: IRepresentationSmooth[];
-name: string|null;
-language: string|null;
-normalizedLanguage: string|null;
-baseURL: string|null;
+  id?: string;
+  smoothProtection?: IContentProtectionSmooth|null;
+  type: string;
+  accessibility: string[];
+  index: IIndex;
+  representations: IRepresentationSmooth[];
+  name: string|null;
+  language: string|null;
+  normalizedLanguage: string|null;
+  baseURL: string|null;
 }
 
 interface IPeriodSmooth {
