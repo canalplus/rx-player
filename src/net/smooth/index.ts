@@ -37,7 +37,7 @@ import {
 
 import {
   ILoaderObservable,
-  ImageParserObservable, // XXX TODO rename
+  ImageParserObservable,
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
