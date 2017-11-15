@@ -37,7 +37,7 @@ import { replaceTokens } from "./utils";
 import {
   CustomSegmentLoader,
   ILoaderObservable,
-  ImageParserObservable, // XXX TODO Rename
+  ImageParserObservable,
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
