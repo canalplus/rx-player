@@ -28,6 +28,7 @@ describe("utils - InitializationSegmentCache", () => {
       init: true,
       timescale: 1,
       time: 1,
+      media: "a",
     });
     expect(cache.get({ segment })).to.equal(null);
     cache.add({ segment }, data);
@@ -41,6 +42,7 @@ describe("utils - InitializationSegmentCache", () => {
       init: false,
       timescale: 1,
       time: 1,
+      media: "a",
     });
     expect(cache.get({ segment })).to.equal(null);
     cache.add({ segment }, data);
