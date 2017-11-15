@@ -26,6 +26,7 @@ import {
   createEME,
   IKeySystemOption,
 } from "../eme";
+
 import { ISessionEvent } from "../eme/session";
 /**
  * Perform EME management if needed.

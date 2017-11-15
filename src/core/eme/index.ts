@@ -31,6 +31,7 @@ import {
 import findCompatibleKeySystem, {
   getKeySystem,
   IInstanceInfo,
+  IKeySystemOption,
   IKeySystemPackage,
  } from "./key_system";
 import { trySettingServerCertificate } from "./server_certificate";
@@ -38,25 +39,9 @@ import manageSessionCreation, {
   ErrorStream,
   ISessionEvent,
  } from "./session";
-import { IPersistedSessionStorage } from "./sessions_set/persisted";
 import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
 
 import { EncryptedMediaError } from "../../errors";
-
-interface IKeySystemOption {
-  type : string;
-  getLicense : (message : Uint8Array, messageType : string)
-    => Promise<BufferSource>|BufferSource;
-  serverCertificate? : BufferSource;
-  persistentLicense? : boolean;
-  licenseStorage? : IPersistedSessionStorage;
-  persistentStateRequired? : boolean;
-  distinctiveIdentifierRequired? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
-    => Promise<BufferSource>|BufferSource;
-  videoRobustnesses?: Array<string|undefined>;
-  audioRobustnesses?: Array<string|undefined>;
-}
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
