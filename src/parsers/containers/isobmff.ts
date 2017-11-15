@@ -26,6 +26,8 @@ import {
   strToBytes,
 } from "../../utils/bytes";
 
+import { IHSSKeySystem } from "../../net/smooth/types";
+
 /**
  * Find the right atom (box) in an isobmff file from its hexa-encoded name.
  * @param {Uint8Array} buf - the isobmff structure
@@ -401,7 +403,7 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
  * @returns {Uint8Array}
  */
 function createPssh(
-  { systemId, privateData } : { systemId : string; privateData: any } // XXX TODO
+  { systemId, privateData } : IHSSKeySystem
 ) : Uint8Array {
   const _systemId = systemId.replace(/-/g, "");
 
@@ -425,8 +427,7 @@ function createPssh(
  *   - privateData {*}: private data associated.
  * @returns {Uint8Array} - The new ISOBMFF generated.
  */
-// XXX TODO pssList
-function patchPssh(buf : Uint8Array, pssList : any[]) : Uint8Array {
+function patchPssh(buf : Uint8Array, pssList : IHSSKeySystem[]) : Uint8Array {
   if (!pssList || !pssList.length) {
     return buf;
   }
