@@ -10,10 +10,10 @@ git:
   depth: 1
 
 # exclusive
-# branches: 
-#   only:
-#     - master
-#     - feat/travis-test
+branches: 
+  only:
+    - master
+    - /^release\/.*$/
 
 cache:
   directories:
