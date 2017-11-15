@@ -5,7 +5,7 @@
 [![Gitter](https://img.shields.io/gitter/room/canalplus/rx-player.svg)](https://gitter.im/canalplus/rx-player)
 
 
-The Rx-player is a TypeScript library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP) and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming) video player directly on the browser, without plugins. It relies on HTML5 [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions) and [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions).
+The Rx-player is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP) and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming) video player directly on the browser, without plugins. It relies on HTML5 [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions) and [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions) and is written in [TypeScript](http://www.typescriptlang.org/), a superset of JavaScript.
 
 It is currently used in production for premium services and targets several devices, such as computers, phones, but also set-top-boxes, smart TVs and other peculiar environments.
 
@@ -98,13 +98,13 @@ Builds are included in the ``dist/`` directory (builds based on the last version
 
 ## Why a new player? Why Rx?
 
-Building a streaming video player in javascript is a complex task due to the numerous interactions with the outside world it has to deal with. Whether they come from the user providing an input, network interactions or browser capabilities. If you add the speed with which browsers APIs are changed and added, you end up with a really important (both in the significant and large sense) piece of software. The video player being the centerpiece of our applications, it needs to adapt very quickly and stay resilient to various errors.
+Building a streaming video player for the web is a complex task due to the numerous interactions with the outside world it has to deal with. Whether they come from the user providing an input, network interactions or browser capabilities. If you also consider the multiplicity of browsers to support and the speed with which their APIs are changed and added, you end up with a really important (both in the significant and large sense) piece of software. The video player being the centerpiece of our applications, it needs to adapt very quickly and stay resilient to various errors.
 
 Many current video player implementations rely mostly on classical object-oriented hierarchy and imperative event callbacks with shared mutable objects to manage all these asynchronous tasks and states. We found that we could profit a lot more from adding a reactive-programming approach, with most notably the help of [the RxJS library](https://github.com/ReactiveX/rxjs).
 
 RxJS provides gracious interfaces and operators to compose asynchronous tasks together by representating changing states as observable stream of values. It also comes with a **cancelation** contract so that every asynchronous side-effect can be properly disposed when discarded by the system. This change of paradigm answers gracefully to most of our needs.
 
-This helps us to build what we think is a _maintainable_ and _evolutive_ codebase, allowing us to adapt quickly to very active standards.
+Moreover, writing the RxPlayer in TypeScript instead of plain JavaScript gives us more tools and confidence in our codebase. All of these elements helps us to build what we think is a _maintainable_ and _evolutive_ codebase, allowing us to adapt quickly to changing environements.
 
 ## Target support
 
