@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Other improvements
+
+  - Switch codebase to TypeScript
+  - Add Travis CI
+
 ## v3.0.0 (2017/11/10)
 
 ### Added
