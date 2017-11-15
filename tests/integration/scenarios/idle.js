@@ -23,7 +23,7 @@ describe("initial idle state", () => {
       const player = new RxPlayer({
         videoElement,
       });
-      expect(videoElement instanceof HTMLVideoElement).to.equal(true);
+      expect(videoElement instanceof HTMLMediaElement).to.equal(true);
       player.dispose();
     });
   });
@@ -78,7 +78,9 @@ describe("initial idle state", () => {
     it("should return the video element initial duration in getVideoDuration by default", () => {
 
       // ! HAHA ! NaN is not === to NaN
-      expect(player.getVideoDuration()).to.eql(player.getVideoElement().duration);
+      expect(player.getVideoDuration()).to.eql(
+        player.getVideoElement().duration
+      );
     });
 
     it("should return Infinity in getVideoBufferGap by default", () => {

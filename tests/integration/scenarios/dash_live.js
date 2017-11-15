@@ -11,7 +11,7 @@ describe("dash live SegmentTimeline content", function () {
 
   beforeEach(() => {
     player = new RxPlayer();
-    fakeServer = sinon.fakeServer.create();
+    fakeServer = sinon.createFakeServer();
   });
 
   afterEach(() => {
@@ -19,12 +19,10 @@ describe("dash live SegmentTimeline content", function () {
     fakeServer.restore();
   });
 
-  it("should fetch and parse the manifest", async function (done) {
+  it("should fetch and parse the manifest", async function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
-
     expect(fakeServer.requests.length).to.equal(1);
-
     await sleep(0);
     fakeServer.respond();
     await sleep(0);
@@ -140,10 +138,9 @@ describe("dash live SegmentTimeline content", function () {
 
     expect(requestsDone).to.include(Mock.audio[0].init.url);
     expect(requestsDone).to.include(Mock.video[0].init.url);
-    done();
   });
 
-  it("should list the right bitrates", async function (done) {
+  it("should list the right bitrates", async function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
@@ -153,11 +150,9 @@ describe("dash live SegmentTimeline content", function () {
 
     expect(player.getAvailableAudioBitrates()).to.eql([96257]);
     expect(player.getAvailableVideoBitrates()).to.eql([601392]);
-
-    done();
   });
 
-  it("should list the right languages", async function (done) {
+  it("should list the right languages", async function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
@@ -177,7 +172,5 @@ describe("dash live SegmentTimeline content", function () {
     expect(audioTracks[0].active).to.equal(true);
 
     expect(textTracks.length).to.equal(0);
-
-    done();
   });
 });
