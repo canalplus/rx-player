@@ -58,3 +58,7 @@ This means that we worked on every rx-player source and unit tests files.
 Some parts of the code still need work to look like perfect _idiomatic_ TypeScript.
 
 Most of all the part gluing our networking logic to the stream relies too much on _any_ types and casting. This is the main part that needs work today.
+
+A major part of manifest parsing logics relied on shared code mecanisms that populates native js objects with parsed properties. These objects are treated as __ any__. We may feed attributes specifically for each interface, in order to avoid deltas between js objects and interfaces.
+
+Also, much of manifest normalizing logic doesn't occurs in net parsing mecanisms. We build classes upon parsed interfaces, so we can definitely filter on bad attributes. But, we may directly normalize and construct classes at attribute feeding, avoiding unexpected object patterns.
