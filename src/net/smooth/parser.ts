@@ -405,11 +405,7 @@ function createSmoothStreamingParser(
         timeline: [] as IHSSManifestSegment[],
         indexType: "smooth",
         timescale: _timescale,
-        initialization: {
-          range: [],
-          indexRange: [],
-          media: null,
-        },
+        initialization: {},
       },
     });
 

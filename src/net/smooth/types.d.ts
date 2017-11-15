@@ -38,9 +38,9 @@ interface IHSSManifestSegment {
 }
 
 interface IInitialization {
-  range: Array<number|null>|null|undefined;
-  media: string|null|undefined;
-  indexRange?: Array<number|null>|undefined;
+  range?: Array<number|null>|null;
+  media?: string|null;
+  indexRange?: Array<number|null>;
 }
 
 interface IIndex {
