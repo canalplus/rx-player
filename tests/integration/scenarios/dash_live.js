@@ -23,9 +23,9 @@ describe("dash live SegmentTimeline content", function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
     expect(fakeServer.requests.length).to.equal(1);
-    await sleep(0);
+    await sleep(5);
     fakeServer.respond();
-    await sleep(0);
+    await sleep(5);
 
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
@@ -144,9 +144,9 @@ describe("dash live SegmentTimeline content", function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
-    await sleep(1);
+    await sleep(5);
     fakeServer.respond();
-    await sleep(1);
+    await sleep(5);
 
     expect(player.getAvailableAudioBitrates()).to.eql([96257]);
     expect(player.getAvailableVideoBitrates()).to.eql([601392]);
@@ -156,9 +156,9 @@ describe("dash live SegmentTimeline content", function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
 
-    await sleep(0);
+    await sleep(5);
     fakeServer.respond();
-    await sleep(0);
+    await sleep(5);
 
     const audioTracks = player.getAvailableAudioTracks();
     const textTracks = player.getAvailableTextTracks();
