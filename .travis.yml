@@ -1,0 +1,37 @@
+sudo: enabled
+
+language: node_js
+
+node_js:
+  - "8"
+
+# no need to keep large commit depth
+git:
+  depth: 1
+
+# exclusive
+# branches: 
+#   only:
+#     - master
+#     - feat/travis-test
+
+cache:
+  directories:
+    - "node_modules"
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y ubuntu-restricted-extras
+  - sudo apt-get install -y firefox
+  - sudo apt-get install -y chromium-browser
+
+install:
+  - npm install
+
+build:
+  - npm run build
+
+script:
+  - npm run types
+  - npm run lint
+  - npm run test

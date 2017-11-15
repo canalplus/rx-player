@@ -11,7 +11,7 @@ describe("dash live SegmentTimeline content", function () {
 
   beforeEach(() => {
     player = new RxPlayer();
-    fakeServer = sinon.fakeServer.create();
+    fakeServer = sinon.createFakeServer();
   });
 
   afterEach(() => {
@@ -22,7 +22,6 @@ describe("dash live SegmentTimeline content", function () {
   it("should fetch and parse the manifest", async function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
-
     expect(fakeServer.requests.length).to.equal(1);
     await sleep(0);
     fakeServer.respond();

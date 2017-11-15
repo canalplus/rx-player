@@ -11,10 +11,17 @@ const karmaConf = {
     // "Chrome",
     "ChromeHeadless",
     // "ChromeCanary",
-    "Firefox",
+    "FirefoxHeadless",
   ],
 
   singleRun,
+
+  customLaunchers: {
+    FirefoxHeadless: {
+      base: 'Firefox',
+      flags: [ '-headless' ],
+    },
+  },
 
   reporters: ["mocha", "coverage-istanbul"],
 

@@ -38,8 +38,15 @@ const karmaConf = {
     // "Chrome",
     "ChromeHeadless",
     // "ChromeCanary",
-    "Firefox",
+    "FirefoxHeadless",
   ],
+
+  customLaunchers: {
+    FirefoxHeadless: {
+      base: 'Firefox',
+      flags: [ '-headless' ],
+    },
+  },
 
   reporters: coverageIsWanted ?
     ["mocha", "coverage"] : ["mocha"],
