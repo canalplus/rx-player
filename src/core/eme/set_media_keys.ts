@@ -18,8 +18,10 @@ import { Observable } from "rxjs/Observable";
 import { setMediaKeys } from "../../compat";
 import log from "../../utils/log";
 import { $loadedSessions } from "./globals";
-import { IKeySystemOption } from "./index";
-import { IInstanceInfo } from "./key_system";
+import {
+  IInstanceInfo,
+  IKeySystemOption,
+} from "./key_system";
 
 /**
  * Set the MediaKeys object on the videoElement.

@@ -47,7 +47,7 @@ import {
   $loadedSessions,
   $storedSessions,
 } from "./globals";
-import { IKeySystemOption } from "./index"; // XXX TODO
+import { IKeySystemOption } from "./key_system";
 
 type ErrorStream = Subject<Error|CustomError>;
 

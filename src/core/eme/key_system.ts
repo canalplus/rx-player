@@ -27,11 +27,26 @@ import config from "../../config";
 import arrayIncludes from "../../utils/array-includes";
 import log from "../../utils/log";
 
-import { IKeySystemOption } from "../eme/index";
-
 import { EncryptedMediaError } from "../../errors";
 
+import { IPersistedSessionStorage } from "../eme/sessions_set/persisted";
+
 type MediaKeysRequirement = "optional" | "required" | "not-allowed";
+
+interface IKeySystemOption {
+  type : string;
+  getLicense : (message : Uint8Array, messageType : string)
+    => Promise<BufferSource>|BufferSource;
+  serverCertificate? : BufferSource;
+  persistentLicense? : boolean;
+  licenseStorage? : IPersistedSessionStorage;
+  persistentStateRequired? : boolean;
+  distinctiveIdentifierRequired? : boolean;
+  onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
+    => Promise<BufferSource>|BufferSource;
+  videoRobustnesses?: Array<string|undefined>;
+  audioRobustnesses?: Array<string|undefined>;
+}
 
 const {
   EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
@@ -356,6 +371,7 @@ export {
   IInstanceInfo,
   IMediaCapability,
   IKeySystemPackage,
+  IKeySystemOption,
 };
 
 export default findCompatibleKeySystem;
