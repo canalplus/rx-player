@@ -81,7 +81,7 @@ We use npm scripts to bundle, lint and test the player. Here are some examples:
 # build the player in dist/rx-player.js
 npm run build
 
-# lint the code with eslint
+# lint the code with tslint
 npm run lint
 
 # launch the demo on a local server (http://127.0.0.1:8000)
