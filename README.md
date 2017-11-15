@@ -104,7 +104,7 @@ Many current video player implementations rely mostly on classical object-orient
 
 RxJS provides gracious interfaces and operators to compose asynchronous tasks together by representating changing states as observable stream of values. It also comes with a **cancelation** contract so that every asynchronous side-effect can be properly disposed when discarded by the system. This change of paradigm answers gracefully to most of our needs.
 
-Moreover, writing the RxPlayer in TypeScript instead of plain JavaScript gives us more tools and confidence in our codebase. All of these elements helps us to build what we think is a _maintainable_ and _evolutive_ codebase, allowing us to adapt quickly to changing environements.
+Moreover, writing the RxPlayer in TypeScript instead of plain JavaScript gives us more tools and confidence in our codebase. All of these elements helps us to build what we think is a _maintainable_ and _evolutive_ codebase, allowing us to adapt quickly to changing environments.
 
 ## Target support
 
