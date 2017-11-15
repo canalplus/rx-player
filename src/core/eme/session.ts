@@ -30,6 +30,7 @@ import {
 import arrayIncludes from "../../utils/array-includes";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
+import noop from "../../utils/noop";
 import { retryWithBackoff } from "../../utils/retry";
 import tryCatch from "../../utils/rx-tryCatch";
 
@@ -403,10 +404,10 @@ function createPersistentSessionAndLoad(
         $storedSessions.delete(initData);
 
         if (session.sessionId) {
-          // XXX TODO manage asynchronicity?
-          /* tslint:disable no-floating-promises */
-          session.remove();
-          /* tslint:enable no-floating-promises */
+          castToObservable(session.remove())
+            .subscribe(noop, (e) => {
+              log.warn("Failed to remove session:" + e.message);
+            });
         }
 
         return createSessionAndKeyRequestWithRetry(
