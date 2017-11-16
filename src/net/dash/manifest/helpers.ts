@@ -42,12 +42,18 @@ const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
  * @returns {Number|undefined}
  */
 function calculateIndexLastLiveTimeReference(index: IIndex) : number|undefined {
-  if (index.indexType === "timeline") {
+  if (index && index.indexType === "timeline") {
     const { ts, r, d } = index.timeline[index.timeline.length - 1];
 
     // TODO FIXME does that make sense?
-    const securityTime = Math.min(Math.max(d ? d : 0 / index.timescale, 5), 10);
-    return ((ts + (r + 1) * (d ? d : 0)) / index.timescale) - securityTime;
+    if(
+      ts != null &&
+      r != null &&
+      d != null
+    ) {
+      const securityTime = Math.min(Math.max(d / index.timescale, 5), 10);
+      return ((ts + (r + 1) * d) / index.timescale) - securityTime;
+    }
   }
 }
 

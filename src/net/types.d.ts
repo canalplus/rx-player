@@ -231,7 +231,7 @@ interface IParsedManifest {
   profiles?: string;
   availabilityEndTime?: Date|number;
   publishTime?: Date|number;
-  mediaPresentationDuration?: number;
+  duration?: number;
   minimumUpdatePeriod?: number;
   minBufferTime?: number;
   timeShiftBufferDepth?: number;

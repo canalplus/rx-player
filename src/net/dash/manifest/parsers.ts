@@ -36,13 +36,25 @@ import {
   IRepresentationDash,
   IRole,
   ISegmentBase,
+  ISegmentList,
+  ISegmentTemplate,
   ISegmentTimeLine,
-  ISegmentURL,
 } from "../types";
 
 import { IParsedManifest } from "../../types";
 
-import feedAttributes from "./attributes";
+import {
+  feedAdaptation,
+  feedContentComponent,
+  feedContentProtection,
+  feedMPD,
+  feedPeriod,
+  feedRepresentation,
+  feedRole,
+  feedSegmentNode,
+  feedSegmentTimeLine,
+  feedSegmentURL,
+} from "./attributes";
 
 function parseMPD(
   root: Element,
@@ -74,8 +86,7 @@ function parseMPD(
     locations: [],
   });
 
-  const parsedMpd = feedAttributes(root, mpd);
-
+  const parsedMpd = feedMPD(root, mpd);
   if (parsedMpd.type && /dynamic/.test(parsedMpd.type)) {
     // As adaptations can either be from DASH or SMOOTH in parsed mpd object,
     // we must type adaptations as IAdaptationDash.
@@ -113,7 +124,7 @@ function parsePeriod(
   contentProtectionParser?: ContentProtectionParser
 ): IPeriodDash {
   const period =
-    feedAttributes(root, reduceChildren<IPeriodDash>(root, (res, name, node) => {
+    feedPeriod(root, reduceChildren<IPeriodDash>(root, (res, name, node) => {
       switch (name) {
 
         case "BaseURL":
@@ -179,7 +190,7 @@ function parseAdaptationSet(
         break;
 
       case "SegmentBase":
-        res.index = parseSegmentBase(node);
+        res.index = parseSegmentNode(node);
         break;
 
       case "SegmentList":
@@ -199,7 +210,7 @@ function parseAdaptationSet(
       mimeType: null,
   });
 
-  const parsedAdaptation = feedAttributes(root, adapatationSet);
+  const parsedAdaptation = feedAdaptation(root, adapatationSet);
 
   parsedAdaptation.type = inferAdaptationType(parsedAdaptation);
 
@@ -247,7 +258,7 @@ function parseRepresentation(root: Element): IRepresentationDash {
         break;
 
       case "SegmentBase":
-        res.index = parseSegmentBase(node);
+        res.index = parseSegmentNode(node);
         break;
 
       case "SegmentList":
@@ -265,20 +276,20 @@ function parseRepresentation(root: Element): IRepresentationDash {
     mimeType: null,
   });
 
-  const parsedRep = feedAttributes(root, representation);
+  const parsedRep = feedRepresentation(root, representation);
   return parsedRep;
 }
 
 function parseRole(root: Element): IRole {
-  return feedAttributes<IRole>(root);
+  return feedRole(root);
 }
 
 function parseAccessibility(root: Element): IAccessibility {
-  return feedAttributes<IRole>(root);
+  return feedRole(root);
 }
 
 function parseContentComponent(root: Element): IContentComponentDash {
-  return feedAttributes<IContentComponentDash>(root);
+  return feedContentComponent(root);
 }
 
 function parseSegmentTemplate(root: Element): ISegmentBase {
@@ -289,13 +300,13 @@ function parseSegmentTemplate(root: Element): ISegmentBase {
   return base;
 }
 
-function parseSegmentList(root: Element): IMultipleSegmentBase {
+function parseSegmentList(root: Element): ISegmentList {
   const base = parseMultipleSegmentBase(root);
   base.list = [];
   base.indexType = "list";
-  return reduceChildren<IMultipleSegmentBase>(root, (res, name, node) => {
+  return reduceChildren<ISegmentList>(root, (res, name, node) => {
     if (name === "SegmentURL") {
-      res.list.push(feedAttributes<ISegmentURL>(node));
+      res.list.push(feedSegmentURL(node));
     }
     return res;
   }, base);
@@ -312,42 +323,43 @@ function parseContentProtection(
   contentProtectionParser?: ContentProtectionParser
 ): IContentProtectionDash|undefined {
   if (contentProtectionParser) {
-    return contentProtectionParser(feedAttributes<IContentProtectionDash>(root), root);
+    return contentProtectionParser(feedContentProtection(root), root);
   }
 }
 
-function parseSegmentBase(root: Element): ISegmentBase {
-  const index = reduceChildren<ISegmentBase>(root, (res, name, node) => {
+function parseSegmentNode(root: Element): ISegmentBase|ISegmentTemplate|ISegmentList {
+  const index = reduceChildren(root, (res, name, node) => {
     if (name === "Initialization") {
-      res.initialization = parseInitialization(node);
+      (res as ISegmentTemplate).initialization = parseInitialization(node);
     }
     return res;
-  }, feedAttributes<ISegmentBase>(root));
-
-  if (root.nodeName === "SegmentBase") {
-    index.indexType = "base";
-    index.timeline = [];
-  }
+  }, feedSegmentNode(root));
   return index;
 }
 
 function parseMultipleSegmentBase(root: Element): IMultipleSegmentBase {
-  return reduceChildren<ISegmentBase>(root, (res, name, node) => {
+  return reduceChildren<IMultipleSegmentBase>(root, (res, name, node) => {
     if (name === "SegmentTimeline") {
       res.indexType = "timeline";
       res.timeline = parseSegmentTimeline(node);
     }
     return res;
-  }, parseSegmentBase(root));
+  }, parseSegmentNode(root));
 }
 
 function parseSegmentTimeline(root: Element): ISegmentTimeLine[] {
   return reduceChildren<ISegmentTimeLine[]>(root, (arr, _name, node) => {
     const len = arr.length;
-    const seg = feedAttributes<ISegmentTimeLine>(node);
+    const seg = feedSegmentTimeLine(node);
     if (seg.ts == null) {
       const prev = (len > 0) && arr[len - 1];
-      seg.ts = prev
+      seg.ts =
+        (
+          prev &&
+          prev.ts != null &&
+          prev.d != null &&
+          prev.r != null
+        )
         ? prev.ts + prev.d * (prev.r + 1)
         : 0;
     }

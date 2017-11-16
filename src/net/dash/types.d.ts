@@ -62,9 +62,10 @@ interface IContentProtectionDash {
 }
 interface IContentComponentDash {
   id: string;
-  lang?: string;
+  language?: string;
+  normalizedLanguage?: string;
   contentType?: string;
-  par?: number;
+  par?: string;
 }
 
 interface IRepresentationDash {
@@ -87,6 +88,8 @@ interface IRepresentationDash {
   codingDependency?: boolean;
   bandwidth?: string;
   qualityRanking?: number;
+  group?: number;
+  bitrate?: number;
 }
 
 interface IAdaptationDash {
@@ -101,11 +104,12 @@ interface IAdaptationDash {
   contentComponent?: IContentComponentDash;
   contentProtection?: IContentProtectionDash|undefined;
   group?: number;
-  lang?: string;
+  language?: string;
+  normalizedLanguage?: string;
   contentType?: string;
-  par?: number;
-  minBandwidth?: number;
-  maxBandwidth?: number;
+  par?: string;
+  minBitrate?: number;
+  maxBitrate?: number;
   minWidth?: number;
   maxWidth?: number;
   minHeight?: number;
@@ -118,6 +122,16 @@ interface IAdaptationDash {
   codecs?: string;
   height?: number;
   width?: number;
+  // not sure about this
+  profiles?: string;
+  width?: number;
+  height?: number;
+  frameRate?: number;
+  audioSamplingRate?: string;
+  segmentProfiles?: string;
+  maximumSAPPeriod?: number;
+  maxPlayoutRate?: number;
+  codingDependency?: boolean;
 }
 
 interface IPeriodDash {
@@ -130,9 +144,9 @@ interface IPeriodDash {
 }
 
 interface ISegmentTimeLine {
-  ts: number;
-  r: number;
-  d: number;
+  ts?: number;
+  r?: number;
+  d?: number;
 }
 
 interface ISegmentURL {
@@ -147,7 +161,6 @@ interface ISegmentBase {
   timeline: ISegmentTimeLine[];
   timescale: number;
   indexType?: string;
-  initialization?: IInitialization;
   timeShiftBufferDepth?: number;
   presentationTimeOffset?: number;
   indexRange?: [number, number];
@@ -161,16 +174,27 @@ interface IMultipleSegmentBase extends ISegmentBase {
   startNumber?: number;
 }
 
+interface ISegmentTemplate extends IMultipleSegmentBase {
+  media?: string;
+  bitstreamSwitching?: string;
+  index?: string;
+  initialization?: IInitialization;
+}
+
+interface ISegmentList extends IMultipleSegmentBase {}
+
 export {
   IRole,
   IIndex,
   ISegmentURL,
   IPeriodDash,
+  ISegmentList,
   ISegmentBase,
   IAccessibility,
   IAdaptationDash,
   IInitialization,
   ISegmentTimeLine,
+  ISegmentTemplate,
   IRepresentationDash,
   IMultipleSegmentBase,
   IContentComponentDash,
