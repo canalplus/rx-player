@@ -18,6 +18,8 @@
 // TODO Should also probably a class implementing an interface e.g.
 // IIndexManager (with the index in state?)
 
+import Segment from "../../manifest/segment";
+
 import {
   getInitSegment,
   getTimelineRangeEnd,
@@ -53,35 +55,44 @@ export default {
    */
   shouldRefresh(
     index : ISmoothIndex,
-    time : number,
-    _ : number,
+    parsedSegments : Segment[],
+    up : number,
     to : number
   ) : boolean {
     const {
       timeline,
       timescale,
-      presentationTimeOffset = 0,
     } = index;
 
-    const scaledTime = time * timescale - presentationTimeOffset;
-    let last = timeline[timeline.length - 1];
-    if (!last) {
+    const lastSegmentInTimeline = timeline[timeline.length - 1];
+    if (!lastSegmentInTimeline) {
       return false;
     }
 
-    if (last.d < 0) {
-      last = { ts: last.ts, d: 0, r: last.r };
+    const repeat = lastSegmentInTimeline.r || 0;
+    const endOfLastSegment =
+      lastSegmentInTimeline.ts + repeat * lastSegmentInTimeline.d;
+
+    if (to * timescale < endOfLastSegment) {
+      return false;
     }
 
-    const lastEnd = getTimelineRangeEnd(last);
-    const scaledTo = to * timescale - presentationTimeOffset;
+    if (up * timescale >= endOfLastSegment) {
+      return true;
+    }
 
-    // TODO This is an ugly hack, see buffer code.
-    // What we do here is to check if we are currently close to the end
-    // of the index and if we still have no informations about the next
-    // segments.
-    // If that's the case we have to refresh.
-    return (lastEnd - scaledTime) / timescale <= 1 && scaledTo > lastEnd;
+    const lastParsedSegment = parsedSegments[parsedSegments.length - 1];
+    if (!lastParsedSegment) {
+      return false;
+    }
+
+    const startOfLastSegment =
+      lastSegmentInTimeline.ts + repeat * lastSegmentInTimeline.d;
+    if (startOfLastSegment > lastParsedSegment.time) {
+      return false;
+    }
+
+    return true;
   },
 
   /**

@@ -190,47 +190,8 @@ function Buffer({
     const { start, end } = range;
     const duration = end - start;
 
-    /**
-     * TODO This is an ugly hack for now.
-     * shouldRefresh returns true if, from the informations given and the type
-     * of index used in the manifest, we infer that we have to refresh the
-     * manifest (to get informations about subsequent needed segments).
-     *
-     * The problem with shouldRefresh is that depending on the type of techno,
-     * we want different things:
-     *
-     *   - for smooth contents, index informations about a segment n is present
-     *     in the container of the segment n-1. Thus, shouldRefresh should
-     *     return true there if the segment n-1 has been parsed but we still
-     *     miss informations about the segment n (this happens).
-     *
-     *   - for dash contents, we prefer to fetch the manifest as soon as we
-     *     miss the informations about even one distant segment in the future.
-     *     Thus, shouldRefresh should return true there if the end of the
-     *     wanted range is not yet in the index.
-     *
-     * Doing the DASH usecase does not cause much problem (though the precision
-     * of the range end could be improved).
-     * The smooth usecase is however difficult to implement with the current
-     * code (we have to know that we parsed the last segment from the index and
-     * that we need the next segment, for which we have no information).
-     * As a quick and dirty hack, we take the current time instead. If the
-     * current time is well into the last segment and our range indicates
-     * that we need another segment, we should refresh. However, this is not
-     * efficient:
-     *   - we have a high chance of rebuffering when this happens. It would
-     *     be best to know that we have the last segment (one other problem is
-     *     that this segment could be in another representation) before
-     *     actually playing it.
-     *   - the player stops usually some milliseconds before the end of the
-     *     last segment, but this is not an exact thing. So we have to add
-     *     rounding and infer the fact that we're well into the last segment.
-     *   - for readability, it makes no sense that shouldRefresh might need
-     *     the current time of playback.
-     */
-    const timestamp = timing.currentTime + timing.timeOffset;
-    const shouldRefresh = representation.index
-      .shouldRefresh(timestamp, start, end);
+    const segments = bookkeeper.inventory.map(s => s.segment);
+    const shouldRefresh = representation.index.shouldRefresh(segments, start, end);
     if (shouldRefresh) {
       const error = new IndexError(
         "OUT_OF_INDEX_ERROR", representation.index.getType(), false);
@@ -309,23 +270,16 @@ function Buffer({
         segment : Segment;
         parsed : {
           segmentData : any;
-          nextSegments : IBufferSegmentInfos[];
           segmentInfos : IBufferSegmentInfos;
         };
       }
     ) : Observable<BufferEvent> {
       const { segment, parsed } = pipelineData;
-      const { segmentData, nextSegments, segmentInfos } = parsed;
+      const { segmentData, segmentInfos } = parsed;
 
       if (segment.isInit) {
         initSegmentInfos = segmentInfos;
       }
-
-      // If we have informations about subsequent segments, add them to the
-      // index.
-      // TODO do that higher up?
-      const addedSegments = nextSegments ?
-        representation.index._addSegments(nextSegments, segmentInfos) : [];
 
       /**
        * Validate the segment downloaded:
@@ -379,7 +333,7 @@ function Buffer({
             });
         }).map(() => ({
           type: "pipeline" as "pipeline",
-          value: objectAssign({ bufferType, addedSegments }, pipelineData),
+          value: objectAssign({ bufferType }, pipelineData),
         }));
     }
 

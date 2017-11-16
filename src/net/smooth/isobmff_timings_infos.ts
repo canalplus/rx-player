@@ -19,7 +19,10 @@ import log from "../../utils/log";
 import Segment from "../../manifest/segment";
 import { getDurationFromTrun } from "../../parsers/containers/isobmff";
 
-import { ISegmentTimingInfos } from "../types";
+import {
+  INextSegmentsInfos,
+  ISegmentTimingInfos,
+} from "../types";
 
 import mp4Utils, { IISOBMFFBasicSegment } from "./mp4";
 
@@ -34,10 +37,10 @@ function extractTimingsInfos(
   segment : Segment,
   isLive : boolean
 ) : {
-  nextSegments : ISegmentTimingInfos[];
+  nextSegments : INextSegmentsInfos[];
   segmentInfos : ISegmentTimingInfos;
 } {
-  const nextSegments : ISegmentTimingInfos[] = [];
+  const nextSegments : INextSegmentsInfos[] = [];
   let segmentInfos : ISegmentTimingInfos;
 
   let tfxdSegment : IISOBMFFBasicSegment|undefined;

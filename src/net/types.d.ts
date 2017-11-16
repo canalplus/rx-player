@@ -36,6 +36,12 @@ export interface ISegmentTimingInfos {
                        // might be undefined for init segments.
 }
 
+export interface INextSegmentsInfos {
+  duration : number;
+  time : number;
+  timescale : number;
+}
+
 // ---- RESOLVER ---- TODO delete
 
 export type IResolverObservable = Observable<{ url : string }>;
@@ -125,7 +131,6 @@ export type IManifestParserObservable = Observable<{
 export type SegmentParserObservable = Observable<{
   segmentData? : Uint8Array|ArrayBuffer;
   segmentInfos : ISegmentTimingInfos;
-  nextSegments? : ISegmentTimingInfos[];
 }>;
 
 export interface ITextTrackSegmentData {
@@ -142,13 +147,11 @@ export interface ITextTrackSegmentData {
 export type TextTrackParserObservable = Observable<{
   segmentData? : ITextTrackSegmentData;
   segmentInfos? : ISegmentTimingInfos;
-  nextSegments? : ISegmentTimingInfos[];
 }>;
 
 export type ImageParserObservable = Observable<{
   segmentData? : IBifThumbnail[];
   segmentInfos : ISegmentTimingInfos;
-  nextSegments? : ISegmentTimingInfos[];
 }>;
 
 // Type parameters:

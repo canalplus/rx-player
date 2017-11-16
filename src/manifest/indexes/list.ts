@@ -111,7 +111,7 @@ const ListIndexHelpers: ISegmentHelpers<IListIndex> = {
    */
   shouldRefresh(
     index : IListIndex,
-    _ : number,
+    _ : Segment[],
     _up : number,
     to : number
   ) : boolean {

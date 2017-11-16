@@ -23,6 +23,8 @@ import { resolveURL } from "../../utils/url";
 
 import parseBif from "../../parsers/images/bif";
 
+import Adaptation from "../../manifest/adaptation";
+
 import extractTimingsInfos from "./isobmff_timings_infos";
 import mp4Utils from "./mp4";
 import createHSSManifestParser from "./parser";
@@ -41,9 +43,11 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
+  INextSegmentsInfos,
   IResolverObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
+  ISegmentTimingInfos,
   ITransportPipelines,
   SegmentParserObservable,
   TextTrackParserObservable,
@@ -57,6 +61,33 @@ const {
 } = mp4Utils;
 
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
+
+/**
+ * @param {Object} adaptation
+ * @param {Object} dlSegment
+ * @param {Object} nextSegments
+ */
+function addNextSegments(
+  adaptation : Adaptation,
+  dlSegment : ISegmentTimingInfos,
+  nextSegments : INextSegmentsInfos[]
+) {
+  const representations = adaptation.representations;
+  for (let i = 0; i < representations.length; i++) {
+    const representation = representations[i];
+    if (
+      dlSegment.duration != null &&
+      dlSegment.timescale != null
+    ) {
+      // TODO TypeScript bug?
+      representation.index._addSegments(nextSegments, dlSegment as {
+        time : number;
+        duration : number;
+        timescale : number;
+      });
+    }
+  }
+}
 
 export default function(
   options : IHSSParserOptions = {}
@@ -134,6 +165,7 @@ export default function(
     parser({
       segment,
       response,
+      adaptation,
       manifest,
     } : ISegmentParserArguments<ArrayBuffer|Uint8Array>
     ) : SegmentParserObservable {
@@ -159,7 +191,11 @@ export default function(
       const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
       const segmentData = patchSegment(responseBuffer, segmentInfos.time);
-      return Observable.of({ segmentData, segmentInfos, nextSegments });
+
+      if (nextSegments) {
+        addNextSegments(adaptation, segmentInfos, nextSegments);
+      }
+      return Observable.of({ segmentData, segmentInfos });
     },
   };
 
@@ -287,6 +323,9 @@ export default function(
         _sdData = responseData as string;
       }
 
+      if (segmentInfos != null && nextSegments) {
+        addNextSegments(adaptation, segmentInfos, nextSegments);
+      }
       return Observable.of({
         segmentData: {
           type: _sdType,
@@ -298,7 +337,6 @@ export default function(
           timeOffset: _sdStart / _sdTimescale,
         },
         segmentInfos,
-        nextSegments,
       });
     },
   };

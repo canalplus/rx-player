@@ -44,7 +44,6 @@ export interface IDownloaderArgument {
 export interface IDownloaderResponse {
   parsed: {
     segmentData : any;
-    nextSegments : IBufferSegmentInfos[];
     segmentInfos : IBufferSegmentInfos;
   };
 }
@@ -80,10 +79,8 @@ export interface IPipelineEvent {
   type : "pipeline";
   value : {
     bufferType : SupportedBufferTypes;
-    addedSegments: IBufferSegmentInfos[] ;
     parsed : {
       segmentData : any;
-      nextSegments? : IBufferSegmentInfos[];
       segmentInfos? : IBufferSegmentInfos;
     };
   };

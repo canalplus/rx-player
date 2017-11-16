@@ -58,7 +58,7 @@ interface ISegmentInfos {
  * @class SegmentBookkeeper
  */
 export default class SegmentBookkeeper {
-  private _inventory : ISegmentInfos[];
+  public inventory : ISegmentInfos[];
 
   constructor() {
     /**
@@ -88,7 +88,7 @@ export default class SegmentBookkeeper {
      *
      * @type {Array.<Object>}
      */
-    this._inventory = [];
+    this.inventory = [];
   }
 
   /**
@@ -99,7 +99,7 @@ export default class SegmentBookkeeper {
    * TODO implement management of segments whose end is not known
    */
   addBufferedInfos(buffered : TimeRanges) : void {
-    const { _inventory } = this;
+    const { inventory } = this;
     const ranges = convertToRanges(buffered);
 
     /**
@@ -112,7 +112,7 @@ export default class SegmentBookkeeper {
      * Current segmentInfos considered
      * @type {Object}
      */
-    let thisSegment = _inventory[0];
+    let thisSegment = inventory[0];
 
     const rangesLength = ranges.length;
     for (let i = 0; i < rangesLength; i++) {
@@ -150,7 +150,7 @@ export default class SegmentBookkeeper {
           - rangeStart)
         < MINIMUM_SEGMENT_SIZE
       ) {
-        thisSegment = _inventory[++inventoryIndex];
+        thisSegment = inventory[++inventoryIndex];
       }
 
       /**
@@ -169,14 +169,14 @@ export default class SegmentBookkeeper {
       if (numberOfSegmentToDelete > 0) {
         // last garbage-collected segment
         const lastDeletedSegment =
-          _inventory[indexBefore + numberOfSegmentToDelete - 1];
+          inventory[indexBefore + numberOfSegmentToDelete - 1];
 
         // TODO better way to indicate to typescript that all is well here
         lastDeletedSegmentEnd = takeFirstSet(
           lastDeletedSegment.bufferedEnd, lastDeletedSegment.end) as number;
 
         // mutate inventory
-        _inventory.splice(indexBefore, numberOfSegmentToDelete);
+        inventory.splice(indexBefore, numberOfSegmentToDelete);
         inventoryIndex = indexBefore;
       }
 
@@ -219,7 +219,7 @@ export default class SegmentBookkeeper {
           }
         }
 
-        thisSegment = _inventory[++inventoryIndex];
+        thisSegment = inventory[++inventoryIndex];
 
         // Make contiguous until first segment outside that range
         // (i.e until the start of the next segment can not constitute a segment
@@ -235,7 +235,7 @@ export default class SegmentBookkeeper {
           )
           >= MINIMUM_SEGMENT_SIZE
         ) {
-          const prevSegment = _inventory[inventoryIndex - 1];
+          const prevSegment = inventory[inventoryIndex - 1];
 
           // those segments are contiguous, we have no way to infer their real
           // end
@@ -244,12 +244,12 @@ export default class SegmentBookkeeper {
           }
 
           thisSegment.bufferedStart = prevSegment.bufferedEnd;
-          thisSegment = _inventory[++inventoryIndex];
+          thisSegment = inventory[++inventoryIndex];
         }
       }
 
       // update the bufferedEnd of the last segment in that range
-      const lastSegmentInRange = _inventory[inventoryIndex - 1];
+      const lastSegmentInRange = inventory[inventoryIndex - 1];
       if (lastSegmentInRange) {
         if (
           lastSegmentInRange.bufferedEnd != null &&
@@ -269,7 +269,7 @@ export default class SegmentBookkeeper {
     // if we still have segments left, they are not affiliated to any range.
     // They might have been garbage collected, delete them from here.
     if (thisSegment) {
-      _inventory.splice(inventoryIndex, _inventory.length - inventoryIndex);
+      inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
     }
   }
 
@@ -303,7 +303,7 @@ export default class SegmentBookkeeper {
       return;
     }
 
-    const { _inventory } = this;
+    const { inventory } = this;
 
     // infer start and end from the segment data
     // /!\ Can be a little different than their real start/end time in the
@@ -321,8 +321,8 @@ export default class SegmentBookkeeper {
     };
 
     // begin by the end as in most use cases this will be faster
-    for (let i = _inventory.length - 1; i >= 0; i--) {
-      const segmentI = _inventory[i];
+    for (let i = inventory.length - 1; i >= 0; i--) {
+      const segmentI = inventory[i];
 
       if ((segmentI.start/* - SEGMENT_EPSILON */) <= start) {
         if ((segmentI.end/* - SEGMENT_EPSILON */) <= start) {
@@ -335,7 +335,7 @@ export default class SegmentBookkeeper {
           // Case 2:
           //   segmentI     : |------|
           //   newSegment   :          |------|
-          this._inventory.splice(i + 1, 0, newSegment);
+          this.inventory.splice(i + 1, 0, newSegment);
           return;
         } else { // /!\ also goes here if end is undefined
           if (segmentI.start >= (start/* - SEGMENT_EPSILON */)) {
@@ -361,7 +361,7 @@ export default class SegmentBookkeeper {
             //  newSegment   : |???*
             //
             // *|??? - unknown end
-            this._inventory.splice(i, 1, newSegment);
+            this.inventory.splice(i, 1, newSegment);
             return;
           } else {
             // our segment has a "complex" relation with this one,
@@ -394,7 +394,7 @@ export default class SegmentBookkeeper {
             if (segmentI.end != null) {
               segmentI.end = start;
             }
-            this._inventory.splice(i + 1, 0, newSegment);
+            this.inventory.splice(i + 1, 0, newSegment);
             return;
           }
         }
@@ -403,9 +403,9 @@ export default class SegmentBookkeeper {
 
     // if we got here, we are the first segment
     // check bounds of the previous first segment
-    const firstSegment = this._inventory[0];
+    const firstSegment = this.inventory[0];
     if (!firstSegment) { // we do not have any segment yet
-      this._inventory.push(newSegment);
+      this.inventory.push(newSegment);
       return;
     }
 
@@ -421,7 +421,7 @@ export default class SegmentBookkeeper {
         //  newSegment   : |???*
         //
         // *|??? - unknown end
-        this._inventory.splice(0, 1, newSegment);
+        this.inventory.splice(0, 1, newSegment);
       } else {
         // our segment begins before this one, push at the beginning
         // Case 1:
@@ -433,7 +433,7 @@ export default class SegmentBookkeeper {
         // newSegment   : |???*
         //
         // *|??? - unknown end
-        this._inventory.splice(0, 0, newSegment);
+        this.inventory.splice(0, 0, newSegment);
       }
       return;
     }
@@ -457,7 +457,7 @@ export default class SegmentBookkeeper {
       //  newSegment   : |----|
       //
       // *|??? - unknown end
-      this._inventory.splice(0, 0, newSegment);
+      this.inventory.splice(0, 0, newSegment);
     } else if ((firstSegment.end/* - SEGMENT_EPSILON */) <= end) {
       // Our segment is bigger, replace the first
       // Case 1:
@@ -467,7 +467,7 @@ export default class SegmentBookkeeper {
       // Case 2:
       //  firstSegment :   |-----|
       //  newSegment   : |-------|
-      this._inventory.splice(0, 1, newSegment);
+      this.inventory.splice(0, 1, newSegment);
     } else {
       // our segment has a "complex" relation with the first one,
       // update the old one start and add this one before it.
@@ -481,7 +481,7 @@ export default class SegmentBookkeeper {
       //
       // *|??? - unknown end
       firstSegment.start = end;
-      this._inventory.splice(0, 0, newSegment);
+      this.inventory.splice(0, 0, newSegment);
     }
   }
 
@@ -517,12 +517,12 @@ export default class SegmentBookkeeper {
     duration : number,
     timescale : number
   ) : ISegmentInfos|null {
-    const { _inventory } = this;
+    const { inventory } = this;
 
-    for (let i = _inventory.length - 1; i >= 0; i--) {
-      const currentSegmentI = _inventory[i];
-      const prevSegmentI = _inventory[i - 1];
-      const nextSegmentI = _inventory[i + 1];
+    for (let i = inventory.length - 1; i >= 0; i--) {
+      const currentSegmentI = inventory[i];
+      const prevSegmentI = inventory[i - 1];
+      const nextSegmentI = inventory[i + 1];
 
       const segment = currentSegmentI.segment;
 
