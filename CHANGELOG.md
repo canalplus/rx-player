@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.0.2 (2017/11/17)
+
+### Bug Fixes
+
+  - misc: work around typescript issue [20104](https://github.com/Microsoft/TypeScript/issues/20104) temporarly to launch in Chrome in HTTP
+
 ## v3.0.1 (2017/11/17)
 
 ### Bug Fixes
