@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+  - abr: adopt a less agressive strategy to avoid re-bufferings
+  - smooth: avoid most of the manifest refresh requests
+
 ### Other improvements
 
   - Switch codebase to TypeScript
