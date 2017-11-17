@@ -1,9 +1,0 @@
-#!/bin/bash
-set -e
-
-version=`cat VERSION`
-changelog=`awk "/^v[0-9]/{flag=0} /^v${version}/{flag=1} flag {print}" CHANGELOG`
-
-echo "record state in git..."
-git commit -m "Release v${version}" -- demo/ dist/ package.json CHANGELOG README.md VERSION src/core/player.js
-git tag -a v${version} -m v${version} -m "${changelog}" HEAD

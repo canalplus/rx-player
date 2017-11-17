@@ -8704,7 +8704,7 @@ else {
         // TODO implement MediaKeySession completely
         var MockMediaKeySession_1 = /** @class */ (function (_super) {
             __extends(MockMediaKeySession_1, _super);
-            function MockMediaKeySession(video, keySystem) {
+            function MockMediaKeySession_1(video, keySystem) {
                 var _this = _super.call(this) || this;
                 _this.sessionId = "";
                 _this._vid = video;
@@ -8724,7 +8724,7 @@ else {
                 });
                 return _this;
             }
-            MockMediaKeySession.prototype.generateRequest = function (_initDataType, initData) {
+            MockMediaKeySession_1.prototype.generateRequest = function (_initDataType, initData) {
                 var _this = this;
                 return new Promise(function (resolve) {
                     if (typeof _this._vid.webkitGenerateKeyRequest !== "function") {
@@ -8734,7 +8734,7 @@ else {
                     resolve();
                 });
             };
-            MockMediaKeySession.prototype.close = function () {
+            MockMediaKeySession_1.prototype.close = function () {
                 var _this = this;
                 return new Promise(function (resolve) {
                     if (_this._con) {
@@ -8743,7 +8743,7 @@ else {
                     resolve();
                 });
             };
-            return MockMediaKeySession;
+            return MockMediaKeySession_1;
         }(eventemitter_1.default));
         exports.MockMediaKeys = MockMediaKeys = /** @class */ (function () {
             function class_2(keySystem) {
@@ -8811,7 +8811,7 @@ else {
         // TODO implement MediaKeySession completely
         var SessionProxy_1 = /** @class */ (function (_super) {
             __extends(SessionProxy_1, _super);
-            function SessionProxy(mk) {
+            function SessionProxy_1(mk) {
                 var _this = _super.call(this) || this;
                 _this.sessionId = "";
                 _this._mk = mk;
@@ -8824,7 +8824,7 @@ else {
                 });
                 return _this;
             }
-            SessionProxy.prototype.generateRequest = function (_initDataType, initData) {
+            SessionProxy_1.prototype.generateRequest = function (_initDataType, initData) {
                 var _this = this;
                 return new Promise(function (resolve) {
                     _this._ss = _this._mk.memCreateSession("video/mp4", initData);
@@ -8832,7 +8832,7 @@ else {
                     resolve();
                 });
             };
-            SessionProxy.prototype.close = function () {
+            SessionProxy_1.prototype.close = function () {
                 var _this = this;
                 return new Promise(function (resolve) {
                     if (_this._ss) {
@@ -8848,12 +8848,12 @@ else {
                     resolve();
                 });
             };
-            return SessionProxy;
+            return SessionProxy_1;
         }(eventemitter_1.default));
         // Add empty prototype for some IE targets which do not set one and just
         // throws in the following lines
-        if (!MediaKeys.prototype) {
-            MediaKeys.prototype = {};
+        if (!constants_1.MediaKeys_.prototype) {
+            constants_1.MediaKeys_.prototype = {};
         }
         // on IE11, each created session needs to be created on a new
         // MediaKeys object

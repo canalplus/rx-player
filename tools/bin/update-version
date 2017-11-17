@@ -8,5 +8,5 @@ sed -i.bak -e "s/\/\\*PLAYER_VERSION\\*\/\"\(.*\)\";/\/*PLAYER_VERSION*\/\"${ver
 sed -E -i.bak -e "s/^  \"version\": \"\d+\.\d+\.\d+\",/  \"version\": \"${version}\",/" package-lock.json && rm package-lock.json.bak
 echo $version > VERSION
 
-npm run build
-npm run build:min
+# npm run build
+# npm run build:min
