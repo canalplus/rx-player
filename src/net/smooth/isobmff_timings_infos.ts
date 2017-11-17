@@ -90,7 +90,7 @@ function extractTimingsInfos(
   }
 
   if (tfrfSegments) {
-    for (let i = 0; i >= tfrfSegments.length - 1; i--) {
+    for (let i = 0; i < tfrfSegments.length; i++) {
       nextSegments.push({
         time: tfrfSegments[i].time,
         duration: tfrfSegments[i].duration,
