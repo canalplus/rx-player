@@ -348,8 +348,8 @@ if (navigator.requestMediaKeySystemAccess) {
 
     // Add empty prototype for some IE targets which do not set one and just
     // throws in the following lines
-    if (!MediaKeys.prototype) {
-      (MediaKeys as any).prototype = {};
+    if (!MediaKeys_.prototype) {
+      (MediaKeys_ as any).prototype = {};
     }
 
     // on IE11, each created session needs to be created on a new
