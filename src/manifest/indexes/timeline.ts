@@ -20,6 +20,7 @@
 
 import Segment from "../segment";
 import {
+  calculateRepeat,
   getInitSegment,
   getTimelineRangeEnd,
   IIndexSegment,
@@ -83,35 +84,6 @@ function getSegmentNumber(
   } else {
     return 0;
   }
-}
-
-/**
- * Calculate the number of times a segment repeat based on the next segment.
- * @param {Object} seg
- * @param {Number} seg.ts - beginning timescaled timestamp
- * @param {Number} seg.d - timescaled duration of the segment
- * @param {Object} nextSeg
- * @param {Number} nextSeg.ts
- * @returns {Number}
- */
-function calculateRepeat(
-  seg : IIndexSegment,
-  nextSeg : IIndexSegment
-) : number {
-  let rep = seg.r || 0;
-
-  // A negative value of the @r attribute of the S element indicates
-  // that the duration indicated in @d attribute repeats until the
-  // start of the next S element, the end of the Period or until the
-  // next MPD update.
-  if (rep < 0) {
-    const repEnd = nextSeg
-      ? nextSeg.ts
-      : Infinity;
-    rep = Math.ceil((repEnd - seg.ts) / seg.d) - 1;
-  }
-
-  return rep;
 }
 
 const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
@@ -217,7 +189,7 @@ const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
    */
   shouldRefresh(
     index : ITimelineIndex,
-    _time : number,
+    _ : Segment[],
     _up : number,
     to : number
   ) : boolean {
@@ -333,8 +305,7 @@ const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
     },
     currentSegment : {
       time : number;
-      duration :
-      number;
+      duration : number;
       timescale : number;
     }
   ) : boolean {

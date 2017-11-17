@@ -32,7 +32,10 @@ import {
   loader as TextTrackLoader,
   parser as TextTrackParser,
 } from "./texttracks";
-import { replaceTokens } from "./utils";
+import {
+  addNextSegments,
+  replaceTokens,
+} from "./utils";
 
 import {
   CustomSegmentLoader,
@@ -41,6 +44,7 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
+  INextSegmentsInfos,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
@@ -117,6 +121,7 @@ export default function(
 
     parser({
       segment,
+      representation,
       response,
       init,
     } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
@@ -126,7 +131,7 @@ export default function(
       ? response.responseData
        : new Uint8Array(response.responseData);
 
-      let nextSegments : ISegmentTimingInfos[]|undefined;
+      let nextSegments : INextSegmentsInfos[]|undefined;
       let segmentInfos : ISegmentTimingInfos;
       const segmentData : Uint8Array = responseData;
 
@@ -148,7 +153,10 @@ export default function(
           getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
       }
 
-      return Observable.of({ segmentData, segmentInfos, nextSegments });
+      if (nextSegments) {
+        addNextSegments(representation, segmentInfos, nextSegments);
+      }
+      return Observable.of({ segmentData, segmentInfos });
     },
   };
 

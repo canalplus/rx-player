@@ -55,6 +55,30 @@ export interface IListIndexListItem {
 }
 
 /**
+ * Calculate the number of times a segment repeat based on the next segment.
+ * @param {Object} seg
+ * @param {Number} seg.ts - beginning timescaled timestamp
+ * @param {Number} seg.d - timescaled duration of the segment
+ * @param {Object} nextSeg
+ * @param {Number} nextSeg.ts
+ * @returns {Number}
+ */
+function calculateRepeat(seg : IIndexSegment, nextSeg : IIndexSegment) : number {
+  let rep = seg.r || 0;
+
+  // A negative value of the @r attribute of the S element indicates
+  // that the duration indicated in @d attribute repeats until the
+  // start of the next S element, the end of the Period or until the
+  // next MPD update.
+  if (rep < 0) {
+    const repEnd = nextSeg ? nextSeg.ts : Infinity;
+    rep = Math.ceil((repEnd - seg.ts) / seg.d) - 1;
+  }
+
+  return rep;
+}
+
+/**
  * Convert second-based start time and duration to the timescale of the
  * manifest's index.
  * @param {Object} index
@@ -213,8 +237,8 @@ interface ISegmentHelpers<T> {
   ) => Segment[];
   shouldRefresh: (
     index: T,
-    _time: number,
-    _up: number,
+    parsedSegments: Segment[],
+    up: number,
     to: number
   ) => boolean;
   getFirstPosition: (index: T) => number | undefined;
@@ -241,6 +265,7 @@ interface ISegmentHelpers<T> {
 }
 
 export {
+  calculateRepeat,
   normalizeRange,
   getTimelineRangeStart,
   getTimelineRangeEnd,

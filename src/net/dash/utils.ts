@@ -16,6 +16,33 @@
 
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
+import {
+  INextSegmentsInfos,
+  ISegmentTimingInfos,
+} from "../types";
+
+/**
+ * @param {Object} adaptation
+ * @param {Object} dlSegment
+ * @param {Object} nextSegments
+ */
+function addNextSegments(
+  representation : Representation,
+  dlSegment : ISegmentTimingInfos,
+  nextSegments : INextSegmentsInfos[]
+) {
+  if (
+    dlSegment.duration != null &&
+    dlSegment.timescale != null
+  ) {
+    // TODO TypeScript bug?
+    representation.index._addSegments(nextSegments, dlSegment as {
+      time : number;
+      duration : number;
+      timescale : number;
+    });
+  }
+}
 
 /**
  * Pad with 0 in the left of the given n argument to reach l length
@@ -109,6 +136,7 @@ function byteRange([start, end] : [number, number]) : string {
 }
 
 export {
+  addNextSegments,
   pad,
   processFormatedToken,
   replaceTokens,

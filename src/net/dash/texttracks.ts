@@ -30,6 +30,7 @@ import {
 import request from "../../utils/request";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import {
+  addNextSegments,
   byteRange,
   isMP4EmbeddedTrack,
   replaceTokens,
@@ -37,6 +38,7 @@ import {
 
 import {
   ILoaderObservable,
+  INextSegmentsInfos,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
@@ -164,7 +166,7 @@ function TextTrackParser({
   const { isInit, indexRange } = segment;
 
   let responseData : Uint8Array|string;
-  let nextSegments : ISegmentTimingInfos[]|undefined;
+  let nextSegments : INextSegmentsInfos[]|undefined;
   let segmentInfos : ISegmentTimingInfos;
   let segmentData : ITextTrackSegmentData|undefined;
 
@@ -269,11 +271,11 @@ function TextTrackParser({
       }, { timescale: 1 }, segmentDataBase);
     }
   }
-  return Observable.of({
-    segmentData,
-    segmentInfos,
-    nextSegments,
-  });
+
+  if (nextSegments) {
+    addNextSegments(representation, segmentInfos, nextSegments);
+  }
+  return Observable.of({ segmentData, segmentInfos });
 }
 
 export {

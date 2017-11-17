@@ -54,8 +54,8 @@ class RepresentationIndex {
     );
   }
 
-  shouldRefresh(time : number, up : number, to : number) : boolean {
-    return this._indexHelpers.shouldRefresh(this._index, time, up, to);
+  shouldRefresh(parsedSegments : Segment[], up : number, to : number) : boolean {
+    return this._indexHelpers.shouldRefresh(this._index, parsedSegments, up, to);
   }
 
   getFirstPosition() : number|undefined {
