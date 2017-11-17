@@ -124,7 +124,7 @@ export default {
    * @see DEFAULT_THROTTLE_WHEN_HIDDEN
    * @type {Number}
    */
-  INACTIVITY_DELAY: 60 * 1000,
+  INACTIVITY_DELAY: 1 * 1000,
 
   /**
    * If true, if the player is in a "hidden" state for a delay specified by the
@@ -291,7 +291,7 @@ export default {
    * This specific value is based on experimentation.
    * @type {Number}
    */
-  ABR_MINIMUM_TOTAL_BYTES: 200e3,
+  ABR_MINIMUM_TOTAL_BYTES: 350e3,
 
   /**
    * Minimum number of bytes, under which samples are discarded.
@@ -309,14 +309,14 @@ export default {
    * starvation mode.
    * @type {Number}
    */
-  ABR_STARVATION_FACTOR: 0.85,
+  ABR_STARVATION_FACTOR: 0.72,
 
   /**
    * Factor with which is multiplied the bandwidth estimate when the ABR is not
    * in starvation mode.
    * @type {Number}
    */
-  ABR_REGULAR_FACTOR: 0.98,
+  ABR_REGULAR_FACTOR: 0.90,
 
   /**
    * If a SourceBuffer has less than this amount of seconds ahead of the current
@@ -342,7 +342,7 @@ export default {
    * seeking on an unbuffered part of the stream.
    * @type {Number}
    */
-  RESUME_AFTER_SEEKING_GAP: 1,
+  RESUME_AFTER_SEEKING_GAP: 1.5,
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume
