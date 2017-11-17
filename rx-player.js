@@ -8852,8 +8852,8 @@ else {
         }(eventemitter_1.default));
         // Add empty prototype for some IE targets which do not set one and just
         // throws in the following lines
-        if (!MediaKeys.prototype) {
-            MediaKeys.prototype = {};
+        if (!constants_1.MediaKeys_.prototype) {
+            constants_1.MediaKeys_.prototype = {};
         }
         // on IE11, each created session needs to be created on a new
         // MediaKeys object
