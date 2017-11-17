@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+  - abr: adopt a less agressive strategy to avoid re-bufferings
+  - smooth: avoid most of the manifest refresh requests
+
+### Other improvements
+
+  - Switch codebase to TypeScript
+  - Add Travis CI
+
 ## v3.0.0 (2017/11/10)
 
 ### Added

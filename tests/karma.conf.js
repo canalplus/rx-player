@@ -1,33 +1,9 @@
 /* eslint-env node */
 const path = require("path");
-const webpackConfig = require("../tools/webpack.config.js");
+const webpackConfig = require("../tools/webpack-tests.config.js");
 
 const coverageIsWanted = !!process.env.RXP_COVERAGE;
 const singleRun = !process.env.RXP_TESTS_WATCH;
-
-if (coverageIsWanted) {
-  if (!webpackConfig.module) {
-    webpackConfig.module = {};
-  }
-
-  if (!webpackConfig.module.rules) {
-    webpackConfig.module.rules = [];
-  }
-
-  // add coverage for js files in src
-  webpackConfig.module.rules.push({
-    test: /\.js$/,
-    enforce: "post",
-    include: path.resolve(__dirname, "../src/"),
-    exclude: [/__tests__/],
-    use: {
-      loader: "istanbul-instrumenter-loader",
-      query: {
-        esModules: true,
-      },
-    },
-  });
-}
 
 const karmaConf = {
   basePath: ".",
@@ -38,8 +14,15 @@ const karmaConf = {
     // "Chrome",
     "ChromeHeadless",
     // "ChromeCanary",
-    "Firefox",
+    "FirefoxHeadless",
   ],
+
+  customLaunchers: {
+    FirefoxHeadless: {
+      base: "Firefox",
+      flags: [ "-headless" ],
+    },
+  },
 
   reporters: coverageIsWanted ?
     ["mocha", "coverage"] : ["mocha"],
