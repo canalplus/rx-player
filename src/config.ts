@@ -124,7 +124,7 @@ export default {
    * @see DEFAULT_THROTTLE_WHEN_HIDDEN
    * @type {Number}
    */
-  INACTIVITY_DELAY: 1 * 1000,
+  INACTIVITY_DELAY: 60 * 1000,
 
   /**
    * If true, if the player is in a "hidden" state for a delay specified by the
