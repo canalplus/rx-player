@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.0.1 (2017/11/17)
 
 ### Bug Fixes
 
