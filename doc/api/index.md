@@ -116,9 +116,10 @@ The different Error "codes" you can get on playback error,
 
 See [the Player Error documentation](./errors.md) for more informations.
 
-### <a name="static-ErrorCodes"></a>LogLevel
+### <a name="static-LogLevel"></a>LogLevel
 
 _type_: ``string``
+
 _default_: ``"NONE"``
 
 The current level of verbosity for the RxPlayer logs. Those logs all use the console.
@@ -132,6 +133,12 @@ From the less verbose to the most:
 
 If the value set to this property is different than those, it will be automatically set
 to ``"NONE"``.
+
+#### Example
+```js
+import RxPlayer from "rx-player";
+RxPlayer.LogLevel = "WARNING";
+```
 
 ## <a name="meth"></a>Methods
 
