@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import "rxjs/add/observable/defer";
 import "rxjs/add/observable/empty";
 import "rxjs/add/observable/merge";
 import "rxjs/add/observable/of";
