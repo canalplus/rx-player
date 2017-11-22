@@ -65,7 +65,7 @@ export function getStylingAttributes(
         } else {
           const nameWithoutTTS = name.substr(4);
           if (arrayIncludes(leftAttributes, nameWithoutTTS)) {
-            currentStyle[attribute.name] = attribute.value;
+            currentStyle[nameWithoutTTS] = attribute.value;
             leftAttributes.splice(j, 1);
             if (!leftAttributes.length) {
               return currentStyle;
