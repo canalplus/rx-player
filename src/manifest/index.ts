@@ -37,6 +37,8 @@ export interface IManifestArguments {
   availabilityStartTime? : number;
   presentationLiveGap? : number;
   timeShiftBufferDepth? : number;
+  minimumUpdatePeriod?: number;
+  start?: number;
 }
 
 /**
@@ -61,13 +63,14 @@ class Manifest {
   public id : string|number;
   public transport : string;
   public adaptations : ManifestAdaptations;
-  public periods : Array<{ adaptations : ManifestAdaptations }>;
+  public periods : Array<{ adaptations : ManifestAdaptations; start: number|undefined }>;
   public isLive : boolean;
   public uris : string[];
   public suggestedPresentationDelay? : number;
   public availabilityStartTime? : number;
   public presentationLiveGap? : number;
   public timeShiftBufferDepth? : number;
+  public minimumUpdatePeriod?: number;
 
   private _duration : number;
 
@@ -99,6 +102,7 @@ class Manifest {
     this.periods = [
       {
         adaptations: this.adaptations,
+        start: args.start,
       },
     ];
 
@@ -111,6 +115,7 @@ class Manifest {
     // Will be needed here
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
     this.availabilityStartTime = args.availabilityStartTime;
+    this.minimumUpdatePeriod = args.minimumUpdatePeriod;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
 

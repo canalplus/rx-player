@@ -19,7 +19,6 @@ import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
-
 import config from "../../config";
 
 import arrayIncludes from "../../utils/array-includes";
@@ -95,6 +94,7 @@ import createTimings, {
 import {
   AdaptationsSubjects,
   ILoadedEvent,
+  IManifestExpired,
   IManifestUpdateEvent,
   IStreamClockTick,
   StreamEvent,
@@ -364,6 +364,7 @@ export default function Stream({
     adaptation$ : Observable<Adaptation|null>,
     abrManager : ABRManager
   ) : Observable<StreamEvent> {
+
     const pipelineOptions = getPipelineOptions(bufferType);
     return adaptation$.switchMap((adaptation) => {
       if (!adaptation) {
@@ -633,6 +634,10 @@ export default function Stream({
         // manifest to refresh the current index
         log.info("out of index");
         return refreshManifest(manifest);
+
+      case "manifest-expired":
+        log.info("manifest has expired");
+        return Observable.of(message);
     }
 
     return Observable.of(message);
@@ -708,8 +713,26 @@ export default function Stream({
 
     const adaptations$ = _adaptations$ as AdaptationsSubjects;
 
+    function manifestExpired$(
+      minimumUpdatePeriod?: number
+    ): Observable<IManifestExpired> {
+      return minimumUpdatePeriod ?
+        Observable.timer(minimumUpdatePeriod * 1000)
+          .mergeMap(() => {
+            return refreshManifest(manifest)
+              .concatMap(() =>
+              Observable.of({
+                type: "manifest-expired" as "manifest-expired",
+                value: minimumUpdatePeriod,
+              }).merge(manifestExpired$(manifest.minimumUpdatePeriod))
+          );
+        }) :
+        Observable.never();
+    }
+
     const buffers$ = manifest.isLive ?
-      Observable.merge(..._buffersArray)
+      Observable
+        .merge(..._buffersArray, manifestExpired$(manifest.minimumUpdatePeriod))
         .mergeMap(message => liveMessageHandler(message, manifest)) :
       Observable.merge(..._buffersArray);
 

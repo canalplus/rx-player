@@ -98,6 +98,11 @@ export interface ILoadedEvent {
   value : true;
 }
 
+export interface IManifestExpired {
+  type: "manifest-expired";
+  value: number;
+}
+
 // Every possible item emitted by the Stream
 export type StreamEvent =
   IAdaptationChangeEvent |
@@ -108,4 +113,5 @@ export type StreamEvent =
   IStalledEvent |
   ILoadedEvent |
   BufferEvent |
-  ISessionEvent;
+  ISessionEvent |
+  IManifestExpired;

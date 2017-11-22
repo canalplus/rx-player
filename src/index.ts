@@ -32,6 +32,8 @@ import "rxjs/add/operator/concat";
 import "rxjs/add/operator/concatAll";
 import "rxjs/add/operator/concatMap";
 import "rxjs/add/operator/debounceTime";
+import "rxjs/add/operator/delay";
+import "rxjs/add/operator/delayWhen";
 import "rxjs/add/operator/distinctUntilChanged";
 import "rxjs/add/operator/do";
 import "rxjs/add/operator/filter";
@@ -53,6 +55,7 @@ import "rxjs/add/operator/switchMap";
 import "rxjs/add/operator/switchMapTo";
 import "rxjs/add/operator/take";
 import "rxjs/add/operator/takeUntil";
+import "rxjs/add/operator/throttleTime";
 import "rxjs/add/operator/timeout";
 
 import logger from "./utils/log";
