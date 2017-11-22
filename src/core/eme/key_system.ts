@@ -42,6 +42,7 @@ interface IKeySystemOption {
   licenseStorage? : IPersistedSessionStorage;
   persistentStateRequired? : boolean;
   distinctiveIdentifierRequired? : boolean;
+  closeSessionsOnStop? : boolean;
   onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
     => Promise<BufferSource>|BufferSource;
   videoRobustnesses?: Array<string|undefined>;
