@@ -1406,12 +1406,13 @@ class Player extends EventEmitter {
     this._priv_fatalError = null;
     this._priv_currentImagePlaylist = null;
 
+    const freeUpStreamLock = () => {
+      this._priv_streamLock$.next(false);
+    };
+
     clearEME()
       .catch(() => Observable.empty())
-      .subscribe(noop, noop, () => {
-        // free up the lock
-        this._priv_streamLock$.next(false);
-      });
+      .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
   }
 
   /**
