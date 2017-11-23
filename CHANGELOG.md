@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Other improvements
+
+  - misc: set better work arround for typescript issue [20104](https://github.com/Microsoft/TypeScript/issues/20104) to make building npm scripts usable again
+
 ## v3.0.2 (2017/11/17)
 
 ### Bug Fixes
