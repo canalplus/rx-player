@@ -320,7 +320,10 @@ export default function Stream({
    * @returns {Observable}
    */
   const startStream = retryableFuncWithBackoff<any, StreamEvent>(({
+    // TODO tslint bug? Document.
+    /* tslint:disable no-use-before-declare */
     url: _url,
+    /* tslint:enable no-use-before-declare */
     mediaSource,
   } : {
     url : string|null;
