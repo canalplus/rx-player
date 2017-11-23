@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.4.0 (2017/11/23)
+
+### Added
+
+  - eme: add closeSessionsOnStop to the keySystems option
+
+### Bug Fixes
+
+  - eme: fix EME problems on Edge when playing multiple crypted streams with the same instance
+
 ## v2.3.2 (2017/07/25)
 
 ### Bug Fixes
