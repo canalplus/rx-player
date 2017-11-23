@@ -92,7 +92,12 @@ This property is an array of objects with the following properties (only ``type`
 
   - ``distinctiveIdentifierRequired`` (``Boolean|undefined``)
 
-  - ``onKeyStatusesChange``: (``Function|undefined``)
+  - ``onKeyStatusesChange`` (``Function|undefined``)
+
+  - ``closeSessionsOnStop`` (``Boolean|undefined``): If set to ``true``, the ``MediaKeySession`` created for a content will be immediately closed when the content stops its playback. This might be required by your key system implementation (most often, it is not).
+
+    If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the same content needs to be re-decrypted.
+
 
 ### <a name="prop-autoPlay"></a>autoPlay
 
