@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+  - text/ttml: apply correctly a style if directly set on an attribute
+
 ### Other improvements
 
   - misc: set better work arround for typescript issue [20104](https://github.com/Microsoft/TypeScript/issues/20104) to make building npm scripts usable again
