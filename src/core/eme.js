@@ -27,11 +27,12 @@ import assert from "../utils/assert";
 import { tryCatch, castToObservable } from "../utils/rx-utils";
 import { retryWithBackoff } from "../utils/retry";
 import {
+  emeEvents,
   KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
-  emeEvents,
   shouldRenewMediaKeys,
+  shouldUnsetMediaKeys,
 } from "./compat";
 
 import {
@@ -946,8 +947,7 @@ function setServerCertificate(mediaKeys, serverCertificate) {
   )
     .ignoreElements()
     .catch((error) => {
-      throw new
-        EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
+      throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
     });
 }
 
@@ -1059,14 +1059,13 @@ function createEME(video, keySystems, errorStream) {
         return setCertificate$
           .concat(setMediaKeysObs(mediaKeys, mksConfig, video, keySystem))
           .concat(manageSessionCreation(
-              mediaKeys,
-              mksConfig,
-              keySystem,
-              encryptedEvent.initDataType,
-              new Uint8Array(encryptedEvent.initData),
-              errorStream
-            )
-          );
+            mediaKeys,
+            mksConfig,
+            keySystem,
+            encryptedEvent.initDataType,
+            new Uint8Array(encryptedEvent.initData),
+            errorStream
+          ));
 
         // TODO Test this in next Release instead. The previous behavior has a
         // high chance to not work as expected with future evolutions.
@@ -1109,8 +1108,31 @@ function dispose() {
   $loadedSessions.dispose();
 }
 
+/**
+ * Clear EME ressources as the current content stops its playback.
+ * @returns {Observable}
+ */
+function clearEME() {
+  return Observable.defer(() => {
+    const observablesArray = [];
+    if ($videoElement && shouldUnsetMediaKeys()) {
+      const obs$ = setMediaKeys($videoElement, null)
+        .finally(() => {
+          $videoElement = null;
+        });
+      observablesArray.push(obs$);
+    }
+    if ($keySystem && $keySystem.closeSessionsOnStop) {
+      observablesArray.push($loadedSessions.dispose());
+    }
+    return observablesArray.length ?
+      Observable.merge(...observablesArray) : Observable.empty();
+  });
+}
+
 export {
   createEME,
+  clearEME,
   getCurrentKeySystem,
   onEncrypted,
   dispose,

@@ -17,7 +17,7 @@
 
 import objectAssign from "object-assign";
 import arrayFind from "array-find";
-import { Subscription } from "rxjs/Subscription";
+import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { combineLatest } from "rxjs/observable/combineLatest";
@@ -70,7 +70,11 @@ import Transports from "../net";
 import PipeLines from "./pipelines";
 import Adaptive from "../adaptive";
 import Stream from "./stream";
-import { dispose as emeDispose , getCurrentKeySystem } from "./eme";
+import {
+  dispose as emeDispose,
+  getCurrentKeySystem,
+  clearEME,
+} from "./eme";
 
 // -- PLAYER STATES --
 const PLAYER_STOPPED   = "STOPPED";
@@ -298,6 +302,12 @@ class Player extends EventEmitter {
     this.images = new Subject();
     this.errorStream = new Subject();
 
+    this._unsubscribeLoadedVideo$ = new Subject();
+
+    // Emit true when the stream is cleaning-up and thus cannot be re-created
+    // before this asynchronous process is finished.
+    this._streamLock$ = new BehaviorSubject(false);
+
     const { createPipelines, metrics } = PipeLines();
 
     const deviceEvents = DeviceEvents(videoElement);
@@ -321,16 +331,7 @@ class Player extends EventEmitter {
 
     // states
     this._setPlayerState(PLAYER_STOPPED);
-    this._resetStates();
 
-    this.log = log;
-  }
-
-  /**
-   * Reset all states relative to a playing content.
-   * @private
-   */
-  _resetStates() {
     this._manifest = null;
     this.reps = { video: null, audio: null, text: null, images: null };
     this.adas = { video: null, audio: null, text: null, images: null };
@@ -339,6 +340,32 @@ class Player extends EventEmitter {
     this.error = null;
     this.images.next(null);
     this._currentImagePlaylist = null;
+
+    this.log = log;
+  }
+
+  /**
+   * Reset all states relative to a playing content.
+   * @private
+   */
+  _cleanUpCurrentState() {
+    this._streamLock$.next(true);
+    this._manifest = null;
+    this.reps = { video: null, audio: null, text: null, images: null };
+    this.adas = { video: null, audio: null, text: null, images: null };
+    this.evts = {};
+    this.frag = { start: null, end: null };
+    this.error = null;
+    this.images.next(null);
+    this._currentImagePlaylist = null;
+
+    const freeUpLock = () => {
+      this._streamLock$.next(false);
+    };
+
+    clearEME()
+      .catch(() => Observable.empty())
+      .subscribe(noop, freeUpLock, freeUpLock);
   }
 
   /**
@@ -359,8 +386,8 @@ class Player extends EventEmitter {
    */
   stop() {
     if (this.state !== PLAYER_STOPPED) {
-      this._resetStates();
-      this._unsubscribe();
+      this._unsubscribeLoadedVideo$.next();
+      this._cleanUpCurrentState();
       this._setPlayerState(PLAYER_STOPPED);
     }
   }
@@ -374,12 +401,16 @@ class Player extends EventEmitter {
     this.adaptive.unsubscribe();
     this.fullscreen.unsubscribe();
     this.stream.unsubscribe(); // @deprecated
+    this._streamLock$.complete();
+    this._unsubscribeLoadedVideo$.complete();
     emeDispose();
 
     this.metrics = null;
     this.adaptive = null;
     this.fullscreen = null;
     this.stream = null; // @deprecated
+    this._streamLock$ = null;
+    this._unsubscribeLoadedVideo$ = null;
 
     this.createPipelines = null;
     this.video = null;
@@ -599,25 +630,59 @@ class Player extends EventEmitter {
     const playChanges = on(videoElement, ["play", "pause"]);
     const textTracksChanges = on(videoElement.textTracks, ["addtrack"]);
 
-    const subs = this.subscriptions = new Subscription();
-    subs.add(playChanges.subscribe(this._playPauseNext$, noop));
-    subs.add(textTracksChanges.subscribe(this._textTrackChanges$, noop));
-    subs.add(stateChanges.subscribe(this._setPlayerState$, noop));
-    subs.add(timings.subscribe(this._triggerTimeChange$, noop));
-    subs.add(stream.subscribe(
-      this._streamNext$,
-      this._streamFatalError$,
-      this._streamComplete$
-    ));
-    subs.add(errorStream.subscribe(this._streamError$));
-    subs.add(stream.connect());
+    let streamDisposable;
+    this._unsubscribeLoadedVideo$
+      .take(1)
+      .subscribe(() => {
+        if (streamDisposable) {
+          streamDisposable.unsubscribe();
+        }
+      });
 
-    // _unsubscribe may have been called synchronously on early disposable
-    if (!this.subscriptions) {
-      subs.unsubscribe();
-    } else {
-      this._triggerTimeChange();
-    }
+    playChanges
+      .takeUntil(this._unsubscribeLoadedVideo$)
+      .subscribe(this._playPauseNext$, noop);
+
+    textTracksChanges
+      .takeUntil(this._unsubscribeLoadedVideo$)
+      .subscribe(this._textTrackChanges$, noop);
+
+    stateChanges
+      .takeUntil(this._unsubscribeLoadedVideo$)
+      .subscribe(this._setPlayerState$, noop);
+
+    timings
+      .takeUntil(this._unsubscribeLoadedVideo$)
+      .subscribe(this._triggerTimeChange$, noop);
+
+    stream
+      .takeUntil(this._unsubscribeLoadedVideo$)
+      .subscribe(
+        this._streamNext$,
+        this._streamFatalError$,
+        this._streamComplete$
+      );
+
+    errorStream
+      .takeUntil(this._unsubscribeLoadedVideo$)
+      .subscribe(this._streamError$);
+
+    this._streamLock$
+      .filter((isLocked) => !isLocked)
+      .take(1)
+      .takeUntil(this._unsubscribeLoadedVideo$)
+      .subscribe(() => {
+        streamDisposable = stream.connect();
+      });
+
+    this._unsubscribeLoadedVideo$.take(1).subscribe(() => {
+      if (streamDisposable) {
+        streamDisposable.unsubscribe();
+      }
+    });
+
+
+    streamDisposable = stream.connect();
 
     return loaded;
   }
@@ -683,11 +748,21 @@ class Player extends EventEmitter {
    * @param {Object} streamInfos
    */
   _streamFatalError(error) {
-    this._resetStates();
+    this._unsubscribeLoadedVideo$.next();
     this.error = error;
     this._setPlayerState(PLAYER_STOPPED);
-    this._unsubscribe();
-    this.trigger("error", error);
+
+    // TODO This condition is here because the eventual callback called when the
+    // player state is updated can launch a new content, thus the error will not
+    // be here anymore, in which case triggering the "error" event is unwanted.
+    // This is not perfect however as technically, this condition could be true
+    // even for a new content (I cannot see it happen with the current code but
+    // that's not a reason). In that case, "error" would be triggered 2 times.
+    // Find a better solution.
+    if (this._error === error) {
+      this.trigger("error", error);
+    }
+
 
     // stream could be unset following the previous triggers
     // @deprecated
@@ -702,9 +777,8 @@ class Player extends EventEmitter {
    * @param {Object} streamInfos
    */
   _streamComplete() {
-    this._resetStates();
+    this._unsubscribeLoadedVideo$.next();
     this._setPlayerState(PLAYER_ENDED);
-    this._unsubscribe();
 
     // stream could be unset following the previous triggers
     // @deprecated
