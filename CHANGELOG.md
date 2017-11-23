@@ -11,6 +11,7 @@
 
   - misc: set better work arround for typescript issue [20104](https://github.com/Microsoft/TypeScript/issues/20104) to make building npm scripts usable again
   - tools: update the update-version npm script
+  - demo: ``npm run start`` and ``npm run standalone`` now build the rx-player in the "development" environment
 
 ## v3.0.2 (2017/11/17)
 
