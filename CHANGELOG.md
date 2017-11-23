@@ -5,6 +5,7 @@
 ### Bug Fixes
 
   - text/ttml: apply correctly a style if directly set on an attribute
+  - eme: load new video even if the last EME clean-up failed
 
 ### Other improvements
 
