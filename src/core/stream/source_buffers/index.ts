@@ -76,7 +76,7 @@ function addNativeSourceBuffer(
   { native } : ISourceBufferMemory
 ) : SourceBuffer {
   if (native[bufferType] == null) {
-    log.info("add sourcebuffer", codec);
+    log.info("adding native sourcebuffer with type", codec);
     native[bufferType] = mediaSource.addSourceBuffer(codec);
   }
 
@@ -192,6 +192,8 @@ function disposeSourceBuffer(
       oldSourceBuffer.abort();
 
       if (isNative) {
+        log.info("removing native sourcebuffer", bufferType);
+
         // TODO once again, we outsmart TypeScript here.
         mediaSource.removeSourceBuffer(oldSourceBuffer as SourceBuffer);
       }

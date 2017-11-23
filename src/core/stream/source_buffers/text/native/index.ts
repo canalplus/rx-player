@@ -57,6 +57,7 @@ export default class NativeTextTrackSourceBuffer
     videoElement : HTMLMediaElement,
     hideNativeSubtitle : boolean
   ) {
+    log.debug("creating native text track source buffer");
     super(codec);
     const {
       track,
@@ -79,6 +80,7 @@ export default class NativeTextTrackSourceBuffer
    * @param {Number|undefined} data.end
    */
   _append(data : INativeTextTrackData) : void {
+    log.debug("appending new native text tracks", data);
     const {
       timescale, // timescale for the start and end
       start: timescaledStart, // exact beginning to which the track applies
@@ -131,6 +133,7 @@ export default class NativeTextTrackSourceBuffer
    * @param {Number} to
    */
   _remove(from : number, to : number) : void {
+    log.debug("removing native text track data", from, to);
     const track = this._track;
     const cues = track.cues;
     for (let i = cues.length - 1; i >= 0; i--) {
@@ -144,6 +147,7 @@ export default class NativeTextTrackSourceBuffer
   }
 
   _abort() : void {
+    log.debug("aborting native text track source buffer");
     const {
       _trackElement,
       _videoElement,

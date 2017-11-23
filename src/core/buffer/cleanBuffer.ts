@@ -15,6 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import log from "../../utils/log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import QueuedSourceBuffer from "./queued-source-buffer";
 
@@ -120,7 +121,10 @@ export default function cleanBuffer(
   collectBufferBehind();
   collectBufferAhead();
   const clean$ = Observable.from(
-    cleanedupRanges.map((range) => qSourceBuffer.removeBuffer(range))
+    cleanedupRanges.map((range) => {
+      log.info("cleaning range from source buffer", range);
+      return qSourceBuffer.removeBuffer(range);
+    })
   )
     .concatAll()
     .ignoreElements();

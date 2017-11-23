@@ -98,6 +98,7 @@ function createAndPlugMediaSource(
           const sourceBuffer = sourceBuffers[i];
           try {
             if (readyState === "open") {
+              log.info("aborting previous source buffer", sourceBuffer);
               sourceBuffer.abort();
             }
 
@@ -129,6 +130,7 @@ function createAndPlugMediaSource(
 
       if (objectURL) {
         try {
+          log.debug("revoking previous URL");
           URL.revokeObjectURL(objectURL);
         } catch (e) {
           log.warn("error while revoking ObjectURL", e);
@@ -146,6 +148,7 @@ function createAndPlugMediaSource(
       if (!MediaSource_) {
         throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
       }
+      log.info("creating MediaSource");
       mediaSource = new MediaSource_();
       objectURL = URL.createObjectURL(mediaSource);
     } else {
@@ -153,11 +156,10 @@ function createAndPlugMediaSource(
       objectURL = url;
     }
 
+    log.info("attaching MediaSource URL to video element", objectURL);
     video.src = objectURL;
 
     observer.next({ url, mediaSource });
-    log.info("create mediasource object", objectURL);
-
     return resetMediaElement;
   });
 }

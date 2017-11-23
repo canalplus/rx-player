@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import log from "../../../../../utils/log";
+
 type nativeParserFn = (texttrack : string, timeOffset : number, language? : string) =>
     VTTCue[]|TextTrackCue[];
 const nativeParsers : { [format : string] : nativeParserFn } = {};
@@ -54,11 +56,15 @@ export default function parseTextTrackToCues(
   timeOffset : number,
   language : string
 ) : VTTCue[]|TextTrackCue[] {
+  log.debug("finding parser for native text tracks:", type);
   const parser = nativeParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
 
-  return parser(data, timeOffset, language);
+  log.debug("parser found, parsing...");
+  const parsed = parser(data, timeOffset, language);
+  log.debug("parsed successfully!", parsed);
+  return parsed;
 }

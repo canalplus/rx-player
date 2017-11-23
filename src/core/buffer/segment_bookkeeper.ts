@@ -16,6 +16,7 @@
 
 import config from "../../config";
 import Segment from "../../manifest/segment";
+import log from "../../utils/log";
 import { convertToRanges } from "../../utils/ranges";
 import takeFirstSet from "../../utils/takeFirstSet";
 
@@ -612,10 +613,12 @@ export default class SegmentBookkeeper {
           const wantedDiff = currentSegmentI.bufferedStart - _wantedRange.start;
           if (wantedDiff > 0 && timeDiff
             > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+            log.debug("The wanted segment has been garbage collected", currentSegmentI);
             return false;
           }
         } else {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+            log.debug("The wanted segment has been garbage collected", currentSegmentI);
             return false;
           }
         }
@@ -637,10 +640,12 @@ export default class SegmentBookkeeper {
           const wantedDiff = _wantedRange.end - currentSegmentI.bufferedEnd;
           if (wantedDiff > 0 && timeDiff
             > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+            log.debug("The wanted segment has been garbage collected", currentSegmentI);
             return false;
           }
         } else {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+            log.debug("The wanted segment has been garbage collected", currentSegmentI);
             return false;
           }
         }
