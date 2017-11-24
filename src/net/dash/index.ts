@@ -82,9 +82,7 @@ export default function(
   const { contentProtectionParser } = options;
 
   const manifestPipeline = {
-    loader(
-      { url } : IManifestLoaderArguments
-    ) : ILoaderObservable<Document> {
+    loader(url: IManifestLoaderArguments) : ILoaderObservable<Document> {
       return request({
         url,
         responseType: "document",

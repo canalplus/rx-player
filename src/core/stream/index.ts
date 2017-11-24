@@ -41,7 +41,13 @@ import Manifest from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
-import { ITransportPipelines } from "../../net";
+import {
+  ITransportPipelines,
+} from "../../net";
+
+import {
+  ISegmentLoaderArguments,
+} from "../../net/types";
 
 import ABRManager, {
   IMetricValue,
@@ -63,8 +69,12 @@ import {
   normalizeManifest,
   updateManifest,
 } from "../manifest";
-import Pipeline, {
-  IPipelineOptions
+import {
+  createManifestPipeline,
+  createSegmentPipeline,
+  IPipelineOptions,
+  processManifestPipeline,
+  processPipeline,
 } from "../pipelines";
 import { SupportedBufferTypes } from "../types";
 
@@ -77,7 +87,7 @@ import {
   createAndPlugMediaSource,
   setDurationToMediaSource,
 } from "./media_source";
-import processPipeline from "./process_pipeline";
+
 import {
   addNativeSourceBuffer,
   createSourceBuffer,
@@ -97,7 +107,7 @@ import {
   IManifestExpired,
   IManifestUpdateEvent,
   IStreamClockTick,
-  StreamEvent,
+  StreamEvent
 } from "./types";
 
 const { END_OF_PLAY } = config;
@@ -208,28 +218,16 @@ export default function Stream({
   const requestsInfos$ = new Subject<Subject<IRequest>>();
 
   /**
-   * Pipeline used to download the manifest file.
-   * @see ../pipelines
-   * @type {Function} - take in argument the pipeline data, returns a pipeline
-   * observable.
-   */
-  const manifestPipeline = Pipeline(transport.manifest);
-
-  /**
    * ...Fetch the manifest file given.
    * Throttled to avoid doing multiple simultaneous requests because multiple
    * source buffers are out-of-index
    * @param {string} url - the manifest url
    * @returns {Observable} - the parsed manifest
    */
-  const fetchManifest = throttle(_url => {
-    const manifest$ = manifestPipeline({ url: _url });
-    const fakeSubject = new Subject<any>();
-    return processPipeline(
-      "manifest",
+  const fetchManifest = throttle((_url: string) => {
+    const manifest$ = createManifestPipeline(_url, transport.manifest);
+    return processManifestPipeline(
       manifest$,
-      fakeSubject, // we don't care about metrics here
-      fakeSubject, // and we don't care about the request progress
       errorStream
     ).map(({ parsed } : {
       parsed : {
@@ -450,13 +448,17 @@ export default function Stream({
           init : IBufferSegmentInfos|null;
         }
       ) {
-        const pipeline$ = Pipeline(transport[bufferType], pipelineOptions)({
+        const segmentInformation: ISegmentLoaderArguments = {
           segment,
           representation,
           adaptation,
           manifest,
           init,
-        });
+        };
+        const pipeline$ = createSegmentPipeline(
+          segmentInformation,
+          transport[bufferType],
+          pipelineOptions);
         return processPipeline(
           bufferType, pipeline$, network$, requestsInfos$, errorStream);
       }
