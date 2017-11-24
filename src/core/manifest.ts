@@ -648,6 +648,7 @@ function updateManifest(
     }
   }
   oldManifest.minimumUpdatePeriod = newManifest.minimumUpdatePeriod;
+  oldManifest.loadedAt = Date.now();
   return oldManifest;
 }
 

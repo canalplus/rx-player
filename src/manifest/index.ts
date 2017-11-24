@@ -71,6 +71,7 @@ class Manifest {
   public presentationLiveGap? : number;
   public timeShiftBufferDepth? : number;
   public minimumUpdatePeriod?: number;
+  public loadedAt: number;
 
   private _duration : number;
 
@@ -87,6 +88,7 @@ class Manifest {
   constructor(args : IManifestArguments) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
+    this.loadedAt = Date.now();
     this.transport = args.transportType || "";
     this.adaptations =
       (Object.keys(args.adaptations) as AdaptationType[]).reduce<ManifestAdaptations>((

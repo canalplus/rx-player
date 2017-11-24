@@ -33,7 +33,6 @@ import "rxjs/add/operator/concatAll";
 import "rxjs/add/operator/concatMap";
 import "rxjs/add/operator/debounceTime";
 import "rxjs/add/operator/delay";
-import "rxjs/add/operator/delayWhen";
 import "rxjs/add/operator/distinctUntilChanged";
 import "rxjs/add/operator/do";
 import "rxjs/add/operator/filter";

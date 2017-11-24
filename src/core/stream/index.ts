@@ -713,26 +713,39 @@ export default function Stream({
 
     const adaptations$ = _adaptations$ as AdaptationsSubjects;
 
+    // In the case where minimumUpdatePeriod is specified, and above 0,
+    // manifest may be updated when update period has elapsed from the download
+    // time of previous manifest.
     function manifestExpired$(
-      minimumUpdatePeriod?: number
+      minimumUpdatePeriod?: number,
+      updateGap?: number
     ): Observable<IManifestExpired> {
-      return minimumUpdatePeriod ?
-        Observable.timer(minimumUpdatePeriod * 1000)
+      return (minimumUpdatePeriod && updateGap) ?
+        Observable.timer((minimumUpdatePeriod - updateGap) * 1000)
           .mergeMap(() => {
             return refreshManifest(manifest)
               .concatMap(() =>
               Observable.of({
                 type: "manifest-expired" as "manifest-expired",
                 value: minimumUpdatePeriod,
-              }).merge(manifestExpired$(manifest.minimumUpdatePeriod))
+              }).merge(
+                manifestExpired$(
+                  manifest.minimumUpdatePeriod,
+                  (Date.now() - manifest.loadedAt)
+                )
+              )
           );
         }) :
         Observable.never();
     }
 
+    const initialUpdateGap = Date.now() - manifest.loadedAt;
     const buffers$ = manifest.isLive ?
       Observable
-        .merge(..._buffersArray, manifestExpired$(manifest.minimumUpdatePeriod))
+        .merge(
+          ..._buffersArray,
+          manifestExpired$(manifest.minimumUpdatePeriod, initialUpdateGap)
+        )
         .mergeMap(message => liveMessageHandler(message, manifest)) :
       Observable.merge(..._buffersArray);
 
