@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import log from "../../../../../utils/log";
+
 export interface IHTMLCue {
   start : number;
   end: number;
@@ -60,10 +62,14 @@ export default function parseTextTrackToElements(
   timeOffset : number,
   language? : string
 ) : IHTMLCue[] {
+  log.debug("finding parser for html text tracks:", type);
   const parser = htmlParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");
   }
-  return parser(data, timeOffset, language);
+  log.debug("parser found, parsing...");
+  const parsed = parser(data, timeOffset, language);
+  log.debug("parsed successfully!", parsed);
+  return parsed;
 }

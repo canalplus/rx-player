@@ -16,6 +16,7 @@
 
 import objectAssign = require("object-assign");
 import { Subject } from "rxjs/Subject";
+import log from "../../utils/log";
 import {
   ICustomSourceBuffer,
   ICustomTimeRanges,
@@ -190,10 +191,13 @@ export default class QueuedSourceBuffer<T> {
     try {
       switch (queueElement.type) {
         case SourceBufferAction.Append:
+          log.debug("pushing data to source buffer", queueElement.args);
           this._buffer.appendBuffer(queueElement.args);
           break;
         case SourceBufferAction.Remove:
-          this._buffer.remove(queueElement.args.start, queueElement.args.end);
+          const { start, end } = queueElement.args;
+          log.debug("removing data from source buffer", start, end);
+          this._buffer.remove(start, end);
           break;
       }
     } catch (e) {

@@ -372,6 +372,7 @@ function Buffer({
         low: LOW_PADDING,
         high: HIGH_PADDING,
       });
+      log.debug("calculating segments for wanted range", wantedRange);
 
       const neededSegments = getSegmentsListToInject(
         representation,
@@ -379,6 +380,7 @@ function Buffer({
         timing,
         withInitSegment
       ).filter((segment) => segmentFilter(segment, wantedRange));
+      log.debug("segments needed:", !!neededSegments.length, neededSegments);
 
       // queue all segments injected in the observable
       for (let i = 0; i < neededSegments.length; i++) {
