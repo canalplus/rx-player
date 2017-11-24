@@ -281,7 +281,7 @@ export default function Stream({
       return true;
     },
 
-    errorSelector: (error : Error| CustomError) => {
+    errorSelector: (error : Error|CustomError) => {
       if (!isKnownError(error)) {
         return new OtherError("NONE", error, true);
       }
@@ -289,7 +289,7 @@ export default function Stream({
       return error;
     },
 
-    onRetry: (error : Error| CustomError, tryCount : number) => {
+    onRetry: (error : Error|CustomError, tryCount : number) => {
       log.warn("stream retry", error, tryCount);
       errorStream.next(error);
     },
@@ -367,6 +367,7 @@ export default function Stream({
     const pipelineOptions = getPipelineOptions(bufferType);
     return adaptation$.switchMap((adaptation) => {
       if (!adaptation) {
+        log.info(`disposing ${bufferType} adaptation`);
         disposeSourceBuffer(
           videoElement,
           mediaSource,
@@ -381,6 +382,8 @@ export default function Stream({
             },
         }).concat(EmptyBuffer({ bufferType }));
       }
+
+      log.info(`updating ${bufferType} adaptation`, adaptation);
 
       /**
        * Keep the current representation to add informations to the ABR clock.
@@ -462,6 +465,7 @@ export default function Stream({
           .map(([representation]) => representation) as
             Observable<Representation>;
 
+      log.info("creating Buffer for ", bufferType);
       const buffer = Buffer({
         sourceBuffer,
         downloader,
@@ -483,15 +487,16 @@ export default function Stream({
       })
         .concat(buffer)
         .catch<StreamEvent, never>(error => {
-          log.error("buffer", bufferType, "has crashed", error);
-
           // non native buffer should not impact the stability of the
           // player. ie: if a text buffer sends an error, we want to
           // continue streaming without any subtitles
           if (!shouldHaveNativeSourceBuffer(bufferType)) {
+            log.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
             errorStream.next(error);
             return Observable.empty();
           }
+          log.error(
+            "native buffer: ", bufferType, "has crashed. Stopping playback.", error);
           throw error; // else, throw
         });
 
@@ -527,7 +532,9 @@ export default function Stream({
     clock$ : Observable<IBufferClockTick>;
     loaded$ : Observable<ILoadedEvent>;
   } {
+    log.debug("calculating initial time");
     const startTime = getInitialTime(manifest, startAt);
+    log.debug("initial time calculated:", startTime);
 
     /**
      * Time offset is an offset to add to the timing's current time to have

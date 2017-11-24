@@ -370,7 +370,7 @@ class Player extends EventEmitter {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.0.2";
+    this.version = /*PLAYER_VERSION*/"3.0.3";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -1406,12 +1406,13 @@ class Player extends EventEmitter {
     this._priv_fatalError = null;
     this._priv_currentImagePlaylist = null;
 
+    const freeUpStreamLock = () => {
+      this._priv_streamLock$.next(false);
+    };
+
     clearEME()
       .catch(() => Observable.empty())
-      .subscribe(noop, noop, () => {
-        // free up the lock
-        this._priv_streamLock$.next(false);
-      });
+      .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
   }
 
   /**

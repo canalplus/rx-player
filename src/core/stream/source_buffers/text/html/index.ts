@@ -107,6 +107,7 @@ export default class HTMLTextTrackSourceBuffer
     videoElement : HTMLMediaElement,
     textTrackElement : HTMLTrackElement
   ) {
+    log.debug("creating html text track source buffer");
     super(codec);
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
@@ -154,6 +155,7 @@ export default class HTMLTextTrackSourceBuffer
    * @param {Number|undefined} data.end
    */
   _append(data : IHTMLTextTrackData) : void {
+    log.debug("appending new html text tracks", data);
     const {
       timescale, // timescale for the start and end
       start: timescaledStart, // exact beginning to which the track applies
@@ -188,6 +190,7 @@ export default class HTMLTextTrackSourceBuffer
    * @param {Number} to
    */
   _remove(from : number, to : number) : void {
+    log.debug("removing html text track data", from, to);
     this._buffer.remove(from, to);
   }
 
@@ -195,6 +198,7 @@ export default class HTMLTextTrackSourceBuffer
    * Free up ressources from this sourceBuffer
    */
   _abort() : void {
+    log.debug("aborting html text track source buffer");
     this._destroy$.next();
     this._destroy$.complete();
     safelyRemoveChild(this._textTrackElement, this._currentElement);

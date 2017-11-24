@@ -11,6 +11,8 @@ if (["development", "production"].indexOf(RXP_ENV) < 0) {
   throw new Error("unknown RXP_ENV " + RXP_ENV);
 }
 
+const isDevMode = RXP_ENV === "development";
+
 const config = {
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
@@ -82,8 +84,8 @@ const config = {
         //   process.env.RXP_BIF === "true" :
         //   process.env.RXP_BIF !== "false",
       },
-      __DEV__: RXP_ENV === "development",
-      __LOGGER_LEVEL__: "\"DEBUG\"",
+      __DEV__: isDevMode,
+      __LOGGER_LEVEL__: isDevMode ? "\"DEBUG\"" : "\"NONE\"",
       "process.env": {
         NODE_ENV: JSON.stringify(RXP_ENV),
       },

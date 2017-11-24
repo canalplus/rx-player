@@ -7223,7 +7223,7 @@ function getStylingAttributes(attributes, elements, styles, regions) {
                 else {
                     var nameWithoutTTS = name_1.substr(4);
                     if (array_includes_1.default(leftAttributes, nameWithoutTTS)) {
-                        currentStyle[attribute.name] = attribute.value;
+                        currentStyle[nameWithoutTTS] = attribute.value;
                         leftAttributes.splice(j, 1);
                         if (!leftAttributes.length) {
                             return { value: currentStyle };
@@ -8657,6 +8657,119 @@ var events = __webpack_require__(16);
 var keySystemAccess_1 = __webpack_require__(82);
 var requestMediaKeySystemAccess;
 exports.requestMediaKeySystemAccess = requestMediaKeySystemAccess;
+// Wrap "MediaKeys.prototype.update" form an event based system to a
+// Promise based function.
+var wrapUpdate = function (memUpdate) {
+    return function (license, sessionId) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                memUpdate.call(_this, license, sessionId);
+                resolve();
+            }
+            catch (e) {
+                reject(e);
+            }
+        });
+    };
+};
+// ---------------------------------------------------------------
+// End of the limitation
+// XXX TODO Put that after the:
+// ```js
+// if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
+// ```
+// line. This was put here because of:
+// https://github.com/Microsoft/TypeScript/issues/20104
+// ---------------------------------------------------------------
+// TODO implement MediaKeySession completely
+var MockMediaKeySession = /** @class */ (function (_super) {
+    __extends(MockMediaKeySession, _super);
+    function MockMediaKeySession(video, keySystem) {
+        var _this = _super.call(this) || this;
+        _this.sessionId = "";
+        _this._vid = video;
+        _this._key = keySystem;
+        _this._con = Observable_1.Observable.merge(events.onKeyMessage$(video), events.onKeyAdded$(video), events.onKeyError$(video)).subscribe(function (evt) { return _this.trigger(evt.type, evt); });
+        _this.update = wrapUpdate(function (license, sessionId) {
+            if (_this._key.indexOf("clearkey") >= 0) {
+                var json = JSON.parse(bytes_1.bytesToStr(license));
+                var key = bytes_1.strToBytes(atob(json.keys[0].k));
+                var kid = bytes_1.strToBytes(atob(json.keys[0].kid));
+                _this._vid.webkitAddKey(_this._key, key, kid, sessionId);
+            }
+            else {
+                _this._vid.webkitAddKey(_this._key, license, null, sessionId);
+            }
+            _this.sessionId = sessionId;
+        });
+        return _this;
+    }
+    MockMediaKeySession.prototype.generateRequest = function (_initDataType, initData) {
+        var _this = this;
+        return new Promise(function (resolve) {
+            if (typeof _this._vid.webkitGenerateKeyRequest !== "function") {
+                throw new Error("impossible to generate a key request");
+            }
+            _this._vid.webkitGenerateKeyRequest(_this._key, initData);
+            resolve();
+        });
+    };
+    MockMediaKeySession.prototype.close = function () {
+        var _this = this;
+        return new Promise(function (resolve) {
+            if (_this._con) {
+                _this._con.unsubscribe();
+            }
+            resolve();
+        });
+    };
+    return MockMediaKeySession;
+}(eventemitter_1.default));
+// TODO implement MediaKeySession completely
+var SessionProxy = /** @class */ (function (_super) {
+    __extends(SessionProxy, _super);
+    function SessionProxy(mk) {
+        var _this = _super.call(this) || this;
+        _this.sessionId = "";
+        _this._mk = mk;
+        _this.update = wrapUpdate(function (license, sessionId) {
+            if (!_this._ss) {
+                throw new Error("MediaKeySession not set");
+            }
+            _this._ss.update(license, sessionId);
+            _this.sessionId = sessionId;
+        });
+        return _this;
+    }
+    SessionProxy.prototype.generateRequest = function (_initDataType, initData) {
+        var _this = this;
+        return new Promise(function (resolve) {
+            _this._ss = _this._mk.memCreateSession("video/mp4", initData);
+            _this._con = Observable_1.Observable.merge(events.onKeyMessage$(_this._ss), events.onKeyAdded$(_this._ss), events.onKeyError$(_this._ss)).subscribe(function (evt) { return _this.trigger(evt.type, evt); });
+            resolve();
+        });
+    };
+    SessionProxy.prototype.close = function () {
+        var _this = this;
+        return new Promise(function (resolve) {
+            if (_this._ss) {
+                /* tslint:disable no-floating-promises */
+                _this._ss.close();
+                /* tslint:enable no-floating-promises */
+                _this._ss = undefined;
+            }
+            if (_this._con) {
+                _this._con.unsubscribe();
+                _this._con = undefined;
+            }
+            resolve();
+        });
+    };
+    return SessionProxy;
+}(eventemitter_1.default));
+// ---------------------------------------------------------------
+// End of the limitation
 // Default MockMediaKeys implementation
 var MockMediaKeys = /** @class */ (function () {
     function class_1() {
@@ -8679,72 +8792,13 @@ if (navigator.requestMediaKeySystemAccess) {
     };
 }
 else {
-    // Wrap "MediaKeys.prototype.update" form an event based system to a
-    // Promise based function.
-    var wrapUpdate_1 = function (memUpdate) {
-        return function (license, sessionId) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                try {
-                    memUpdate.call(_this, license, sessionId);
-                    resolve();
-                }
-                catch (e) {
-                    reject(e);
-                }
-            });
-        };
-    };
+    // XXX TODO Put wrapUpdate here
     // Browser without any MediaKeys object: A mock for MediaKey and
     // MediaKeySession are created, and the <video>.addKey api is used to
     // pass the license.
     //
     // This is for Chrome with unprefixed EME api
     if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
-        // TODO implement MediaKeySession completely
-        var MockMediaKeySession_1 = /** @class */ (function (_super) {
-            __extends(MockMediaKeySession_1, _super);
-            function MockMediaKeySession_1(video, keySystem) {
-                var _this = _super.call(this) || this;
-                _this.sessionId = "";
-                _this._vid = video;
-                _this._key = keySystem;
-                _this._con = Observable_1.Observable.merge(events.onKeyMessage$(video), events.onKeyAdded$(video), events.onKeyError$(video)).subscribe(function (evt) { return _this.trigger(evt.type, evt); });
-                _this.update = wrapUpdate_1(function (license, sessionId) {
-                    if (_this._key.indexOf("clearkey") >= 0) {
-                        var json = JSON.parse(bytes_1.bytesToStr(license));
-                        var key = bytes_1.strToBytes(atob(json.keys[0].k));
-                        var kid = bytes_1.strToBytes(atob(json.keys[0].kid));
-                        _this._vid.webkitAddKey(_this._key, key, kid, sessionId);
-                    }
-                    else {
-                        _this._vid.webkitAddKey(_this._key, license, null, sessionId);
-                    }
-                    _this.sessionId = sessionId;
-                });
-                return _this;
-            }
-            MockMediaKeySession_1.prototype.generateRequest = function (_initDataType, initData) {
-                var _this = this;
-                return new Promise(function (resolve) {
-                    if (typeof _this._vid.webkitGenerateKeyRequest !== "function") {
-                        throw new Error("impossible to generate a key request");
-                    }
-                    _this._vid.webkitGenerateKeyRequest(_this._key, initData);
-                    resolve();
-                });
-            };
-            MockMediaKeySession_1.prototype.close = function () {
-                var _this = this;
-                return new Promise(function (resolve) {
-                    if (_this._con) {
-                        _this._con.unsubscribe();
-                    }
-                    resolve();
-                });
-            };
-            return MockMediaKeySession_1;
-        }(eventemitter_1.default));
         exports.MockMediaKeys = MockMediaKeys = /** @class */ (function () {
             function class_2(keySystem) {
                 this.ks_ = keySystem;
@@ -8756,7 +8810,7 @@ else {
                 if (!this._vid) {
                     throw new Error("Video not attached to the MediaKeys");
                 }
-                return new MockMediaKeySession_1(this._vid, this.ks_);
+                return new MockMediaKeySession(this._vid, this.ks_);
             };
             class_2.prototype.setServerCertificate = function () {
                 throw new Error("Server certificate is not implemented in your browser");
@@ -8808,48 +8862,7 @@ else {
         };
     }
     else if (constants_1.MediaKeys_) {
-        // TODO implement MediaKeySession completely
-        var SessionProxy_1 = /** @class */ (function (_super) {
-            __extends(SessionProxy_1, _super);
-            function SessionProxy_1(mk) {
-                var _this = _super.call(this) || this;
-                _this.sessionId = "";
-                _this._mk = mk;
-                _this.update = wrapUpdate_1(function (license, sessionId) {
-                    if (!_this._ss) {
-                        throw new Error("MediaKeySession not set");
-                    }
-                    _this._ss.update(license, sessionId);
-                    _this.sessionId = sessionId;
-                });
-                return _this;
-            }
-            SessionProxy_1.prototype.generateRequest = function (_initDataType, initData) {
-                var _this = this;
-                return new Promise(function (resolve) {
-                    _this._ss = _this._mk.memCreateSession("video/mp4", initData);
-                    _this._con = Observable_1.Observable.merge(events.onKeyMessage$(_this._ss), events.onKeyAdded$(_this._ss), events.onKeyError$(_this._ss)).subscribe(function (evt) { return _this.trigger(evt.type, evt); });
-                    resolve();
-                });
-            };
-            SessionProxy_1.prototype.close = function () {
-                var _this = this;
-                return new Promise(function (resolve) {
-                    if (_this._ss) {
-                        /* tslint:disable no-floating-promises */
-                        _this._ss.close();
-                        /* tslint:enable no-floating-promises */
-                        _this._ss = undefined;
-                    }
-                    if (_this._con) {
-                        _this._con.unsubscribe();
-                        _this._con = undefined;
-                    }
-                    resolve();
-                });
-            };
-            return SessionProxy_1;
-        }(eventemitter_1.default));
+        // XXX TODO Put SessionProxy here
         // Add empty prototype for some IE targets which do not set one and just
         // throws in the following lines
         if (!constants_1.MediaKeys_.prototype) {
@@ -8861,7 +8874,7 @@ else {
         constants_1.MediaKeys_.prototype.memCreateSession = constants_1.MediaKeys_.prototype.createSession;
         constants_1.MediaKeys_.prototype.createSession = function () {
             /* tslint:disable no-invalid-this */
-            return new SessionProxy_1(this);
+            return new SessionProxy(this);
             /* tslint:enable no-invalid-this */
         };
         exports.requestMediaKeySystemAccess = requestMediaKeySystemAccess = function (keyType, keySystemConfigurations) {
@@ -16537,7 +16550,7 @@ var Player = /** @class */ (function (_super) {
         // Workaround to support Firefox autoplay on FF 42.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
         videoElement.preload = "auto";
-        _this.version = /*PLAYER_VERSION*/ "3.0.1";
+        _this.version = /*PLAYER_VERSION*/ "3.0.3";
         _this.log = log_1.default;
         _this.state = "STOPPED";
         _this.videoElement = videoElement;
@@ -17488,12 +17501,12 @@ var Player = /** @class */ (function (_super) {
         this._priv_recordedEvents = {}; // event memory
         this._priv_fatalError = null;
         this._priv_currentImagePlaylist = null;
+        var freeUpStreamLock = function () {
+            _this._priv_streamLock$.next(false);
+        };
         eme_1.clearEME()
             .catch(function () { return Observable_1.Observable.empty(); })
-            .subscribe(noop_1.default, noop_1.default, function () {
-            // free up the lock
-            _this._priv_streamLock$.next(false);
-        });
+            .subscribe(noop_1.default, freeUpStreamLock, freeUpStreamLock);
     };
     /**
      * Store and emit new player state (e.g. text track, videoBitrate...).
@@ -21175,6 +21188,7 @@ function Stream(_a) {
         var pipelineOptions = getPipelineOptions(bufferType);
         return adaptation$.switchMap(function (adaptation) {
             if (!adaptation) {
+                log_1.default.info("disposing " + bufferType + " adaptation");
                 source_buffers_1.disposeSourceBuffer(videoElement, mediaSource, bufferType, sourceBufferMemory);
                 return Observable_1.Observable.of({
                     type: "adaptationChange",
@@ -21184,6 +21198,7 @@ function Stream(_a) {
                     },
                 }).concat(buffer_1.EmptyBuffer({ bufferType: bufferType }));
             }
+            log_1.default.info("updating " + bufferType + " adaptation", adaptation);
             /**
              * Keep the current representation to add informations to the ABR clock.
              * TODO isn't that a little bit ugly?
@@ -21241,6 +21256,7 @@ function Stream(_a) {
                 var representation = _a[0];
                 return representation;
             });
+            log_1.default.info("creating Buffer for ", bufferType);
             var buffer = buffer_1.Buffer({
                 sourceBuffer: sourceBuffer,
                 downloader: downloader,
@@ -21261,14 +21277,15 @@ function Stream(_a) {
             })
                 .concat(buffer)
                 .catch(function (error) {
-                log_1.default.error("buffer", bufferType, "has crashed", error);
                 // non native buffer should not impact the stability of the
                 // player. ie: if a text buffer sends an error, we want to
                 // continue streaming without any subtitles
                 if (!source_buffers_1.shouldHaveNativeSourceBuffer(bufferType)) {
+                    log_1.default.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
                     errorStream.next(error);
                     return Observable_1.Observable.empty();
                 }
+                log_1.default.error("native buffer: ", bufferType, "has crashed. Stopping playback.", error);
                 throw error; // else, throw
             });
             var bitrateEstimate$ = abr$
@@ -21299,7 +21316,9 @@ function Stream(_a) {
      * @returns {Observable}
      */
     function createVideoEventsObservables(manifest, timings) {
+        log_1.default.debug("calculating initial time");
         var startTime = initial_time_1.default(manifest, startAt);
+        log_1.default.debug("initial time calculated:", startTime);
         /**
          * Time offset is an offset to add to the timing's current time to have
          * the "real" position.
@@ -22694,7 +22713,9 @@ function Buffer(_a) {
                 low: LOW_PADDING,
                 high: HIGH_PADDING,
             });
+            log_1.default.debug("calculating segments for wanted range", wantedRange);
             var neededSegments = getSegmentsListToInject(representation, wantedRange, timing, withInitSegment).filter(function (segment) { return segmentFilter(segment, wantedRange); });
+            log_1.default.debug("segments needed:", !!neededSegments.length, neededSegments);
             // queue all segments injected in the observable
             for (var i = 0; i < neededSegments.length; i++) {
                 queuedSegments.add(neededSegments[i].id);
@@ -22835,6 +22856,7 @@ exports.SimpleSet = SimpleSet;
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var Observable_1 = __webpack_require__(0);
+var log_1 = __webpack_require__(1);
 var ranges_1 = __webpack_require__(15);
 /**
  * Remove buffer from the browser's memory based on the user's
@@ -22917,7 +22939,10 @@ function cleanBuffer(qSourceBuffer, // The type of buffer has no importance here
     };
     collectBufferBehind();
     collectBufferAhead();
-    var clean$ = Observable_1.Observable.from(cleanedupRanges.map(function (range) { return qSourceBuffer.removeBuffer(range); }))
+    var clean$ = Observable_1.Observable.from(cleanedupRanges.map(function (range) {
+        log_1.default.info("cleaning range from source buffer", range);
+        return qSourceBuffer.removeBuffer(range);
+    }))
         .concatAll()
         .ignoreElements();
     return clean$; // ignoreElements == the Observerable never emits
@@ -23047,6 +23072,7 @@ exports.default = launchGarbageCollector;
 Object.defineProperty(exports, "__esModule", { value: true });
 var objectAssign = __webpack_require__(7);
 var Subject_1 = __webpack_require__(6);
+var log_1 = __webpack_require__(1);
 var SourceBufferAction;
 (function (SourceBufferAction) {
     SourceBufferAction[SourceBufferAction["Append"] = 0] = "Append";
@@ -23169,10 +23195,13 @@ var QueuedSourceBuffer = /** @class */ (function () {
         try {
             switch (queueElement.type) {
                 case SourceBufferAction.Append:
+                    log_1.default.debug("pushing data to source buffer", queueElement.args);
                     this._buffer.appendBuffer(queueElement.args);
                     break;
                 case SourceBufferAction.Remove:
-                    this._buffer.remove(queueElement.args.start, queueElement.args.end);
+                    var _a = queueElement.args, start = _a.start, end = _a.end;
+                    log_1.default.debug("removing data from source buffer", start, end);
+                    this._buffer.remove(start, end);
                     break;
             }
         }
@@ -23208,6 +23237,7 @@ exports.default = QueuedSourceBuffer;
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var config_1 = __webpack_require__(4);
+var log_1 = __webpack_require__(1);
 var ranges_1 = __webpack_require__(15);
 var takeFirstSet_1 = __webpack_require__(267);
 var MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = config_1.default.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT, MAX_BUFFERED_DISTANCE = config_1.default.MAX_BUFFERED_DISTANCE, MINIMUM_SEGMENT_SIZE = config_1.default.MINIMUM_SEGMENT_SIZE;
@@ -23687,11 +23717,13 @@ var SegmentBookkeeper = /** @class */ (function () {
                     var wantedDiff = currentSegmentI.bufferedStart - _wantedRange.start;
                     if (wantedDiff > 0 && timeDiff
                         > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+                        log_1.default.debug("The wanted segment has been garbage collected", currentSegmentI);
                         return false;
                     }
                 }
                 else {
                     if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+                        log_1.default.debug("The wanted segment has been garbage collected", currentSegmentI);
                         return false;
                     }
                 }
@@ -23711,11 +23743,13 @@ var SegmentBookkeeper = /** @class */ (function () {
                     var wantedDiff = _wantedRange.end - currentSegmentI.bufferedEnd;
                     if (wantedDiff > 0 && timeDiff
                         > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+                        log_1.default.debug("The wanted segment has been garbage collected", currentSegmentI);
                         return false;
                     }
                 }
                 else {
                     if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+                        log_1.default.debug("The wanted segment has been garbage collected", currentSegmentI);
                         return false;
                     }
                 }
@@ -26735,6 +26769,7 @@ function createAndPlugMediaSource(url, video, withMediaSource, sourceBufferMemor
                     var sourceBuffer = sourceBuffers[i];
                     try {
                         if (readyState === "open") {
+                            log_1.default.info("aborting previous source buffer", sourceBuffer);
                             sourceBuffer.abort();
                         }
                         mediaSource.removeSourceBuffer(sourceBuffer);
@@ -26763,6 +26798,7 @@ function createAndPlugMediaSource(url, video, withMediaSource, sourceBufferMemor
             compat_1.clearVideoSrc(video);
             if (objectURL) {
                 try {
+                    log_1.default.debug("revoking previous URL");
                     URL.revokeObjectURL(objectURL);
                 }
                 catch (e) {
@@ -26778,6 +26814,7 @@ function createAndPlugMediaSource(url, video, withMediaSource, sourceBufferMemor
             if (!compat_1.MediaSource_) {
                 throw new MediaError_1.default("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
             }
+            log_1.default.info("creating MediaSource");
             mediaSource = new compat_1.MediaSource_();
             objectURL = URL.createObjectURL(mediaSource);
         }
@@ -26785,9 +26822,9 @@ function createAndPlugMediaSource(url, video, withMediaSource, sourceBufferMemor
             mediaSource = null;
             objectURL = url;
         }
+        log_1.default.info("attaching MediaSource URL to video element", objectURL);
         video.src = objectURL;
         observer.next({ url: url, mediaSource: mediaSource });
-        log_1.default.info("create mediasource object", objectURL);
         return resetMediaElement;
     });
 }
@@ -26973,7 +27010,7 @@ exports.shouldHaveNativeSourceBuffer = shouldHaveNativeSourceBuffer;
 function addNativeSourceBuffer(mediaSource, bufferType, codec, _a) {
     var native = _a.native;
     if (native[bufferType] == null) {
-        log_1.default.info("add sourcebuffer", codec);
+        log_1.default.info("adding native sourcebuffer with type", codec);
         native[bufferType] = mediaSource.addSourceBuffer(codec);
     }
     // TODO is TypeScript playing Dumb here?
@@ -27061,6 +27098,7 @@ function disposeSourceBuffer(_video, mediaSource, bufferType, sourceBufferMemory
         try {
             oldSourceBuffer.abort();
             if (isNative) {
+                log_1.default.info("removing native sourcebuffer", bufferType);
                 // TODO once again, we outsmart TypeScript here.
                 mediaSource.removeSourceBuffer(oldSourceBuffer);
             }
@@ -27259,7 +27297,9 @@ var HTMLTextTrackSourceBuffer = /** @class */ (function (_super) {
      * @param {HTMLTrackElement} textTrackElement
      */
     function HTMLTextTrackSourceBuffer(codec, videoElement, textTrackElement) {
-        var _this = _super.call(this, codec) || this;
+        var _this = this;
+        log_1.default.debug("creating html text track source buffer");
+        _this = _super.call(this, codec) || this;
         _this._videoElement = videoElement;
         _this._textTrackElement = textTrackElement;
         _this._destroy$ = new Subject_1.Subject();
@@ -27305,6 +27345,7 @@ var HTMLTextTrackSourceBuffer = /** @class */ (function (_super) {
      * @param {Number|undefined} data.end
      */
     HTMLTextTrackSourceBuffer.prototype._append = function (data) {
+        log_1.default.debug("appending new html text tracks", data);
         var timescale = data.timescale, // timescale for the start and end
         timescaledStart = data.start, // exact beginning to which the track applies
         timescaledEnd = data.end, // exact end to which the track applies
@@ -27333,12 +27374,14 @@ var HTMLTextTrackSourceBuffer = /** @class */ (function (_super) {
      * @param {Number} to
      */
     HTMLTextTrackSourceBuffer.prototype._remove = function (from, to) {
+        log_1.default.debug("removing html text track data", from, to);
         this._buffer.remove(from, to);
     };
     /**
      * Free up ressources from this sourceBuffer
      */
     HTMLTextTrackSourceBuffer.prototype._abort = function () {
+        log_1.default.debug("aborting html text track source buffer");
         this._destroy$.next();
         this._destroy$.complete();
         safelyRemoveChild(this._textTrackElement, this._currentElement);
@@ -27736,6 +27779,7 @@ exports.default = TextBufferManager;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+var log_1 = __webpack_require__(1);
 var htmlParsers = {};
 /* tslint:disable no-var-requires */
 if (true) {
@@ -27764,11 +27808,15 @@ if (true) {
  * @throws Error - Throw if no parser is found for the given type
  */
 function parseTextTrackToElements(type, data, timeOffset, language) {
+    log_1.default.debug("finding parser for html text tracks:", type);
     var parser = htmlParsers[type];
     if (!parser) {
         throw new Error("no parser found for the given text track");
     }
-    return parser(data, timeOffset, language);
+    log_1.default.debug("parser found, parsing...");
+    var parsed = parser(data, timeOffset, language);
+    log_1.default.debug("parsed successfully!", parsed);
+    return parsed;
 }
 exports.default = parseTextTrackToElements;
 
@@ -29432,7 +29480,9 @@ var NativeTextTrackSourceBuffer = /** @class */ (function (_super) {
      * @param {Boolean} hideNativeSubtitle
      */
     function NativeTextTrackSourceBuffer(codec, videoElement, hideNativeSubtitle) {
-        var _this = _super.call(this, codec) || this;
+        var _this = this;
+        log_1.default.debug("creating native text track source buffer");
+        _this = _super.call(this, codec) || this;
         var _a = compat_1.addTextTrack(videoElement, hideNativeSubtitle), track = _a.track, trackElement = _a.trackElement;
         _this._videoElement = videoElement;
         _this._track = track;
@@ -29450,6 +29500,7 @@ var NativeTextTrackSourceBuffer = /** @class */ (function (_super) {
      * @param {Number|undefined} data.end
      */
     NativeTextTrackSourceBuffer.prototype._append = function (data) {
+        log_1.default.debug("appending new native text tracks", data);
         var timescale = data.timescale, // timescale for the start and end
         timescaledStart = data.start, // exact beginning to which the track applies
         timescaledEnd = data.end, // exact end to which the track applies
@@ -29491,6 +29542,7 @@ var NativeTextTrackSourceBuffer = /** @class */ (function (_super) {
      * @param {Number} to
      */
     NativeTextTrackSourceBuffer.prototype._remove = function (from, to) {
+        log_1.default.debug("removing native text track data", from, to);
         var track = this._track;
         var cues = track.cues;
         for (var i = cues.length - 1; i >= 0; i--) {
@@ -29503,6 +29555,7 @@ var NativeTextTrackSourceBuffer = /** @class */ (function (_super) {
         this.buffered.remove(from, to);
     };
     NativeTextTrackSourceBuffer.prototype._abort = function () {
+        log_1.default.debug("aborting native text track source buffer");
         var _a = this, _trackElement = _a._trackElement, _videoElement = _a._videoElement;
         if (_trackElement && _videoElement &&
             _videoElement.hasChildNodes()) {
@@ -29547,6 +29600,7 @@ exports.default = NativeTextTrackSourceBuffer;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+var log_1 = __webpack_require__(1);
 var nativeParsers = {};
 /* tslint:disable no-var-requires */
 if (true) {
@@ -29575,11 +29629,15 @@ if (true) {
  * @throws Error - Throw if no parser is found for the given type
  */
 function parseTextTrackToCues(type, data, timeOffset, language) {
+    log_1.default.debug("finding parser for native text tracks:", type);
     var parser = nativeParsers[type];
     if (!parser) {
         throw new Error("no parser found for the given text track");
     }
-    return parser(data, timeOffset, language);
+    log_1.default.debug("parser found, parsing...");
+    var parsed = parser(data, timeOffset, language);
+    log_1.default.debug("parsed successfully!", parsed);
+    return parsed;
 }
 exports.default = parseTextTrackToCues;
 
