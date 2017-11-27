@@ -54,6 +54,7 @@ import "rxjs/add/operator/switchMapTo";
 import "rxjs/add/operator/take";
 import "rxjs/add/operator/takeUntil";
 import "rxjs/add/operator/timeout";
+import "rxjs/add/operator/withLatestFrom";
 
 import logger from "./utils/log";
 

@@ -100,6 +100,7 @@ import {
   IStreamClockTick,
   StreamEvent,
 } from "./types";
+import { currentId } from "async_hooks";
 
 const { END_OF_PLAY } = config;
 
@@ -390,8 +391,24 @@ export default function Stream({
        */
       let currentRepresentation : Representation|null = null;
 
+      const droppedFrameRatio$ =
+        Observable.timer(1000, 1000)
+          .map(() => getVideoPlaybackQuality(videoElement))
+          .pairwise()
+          .map(([oldPlaybackQuality, newPlaybackQuality]) => {
+            const currentDecodedFrames =
+              newPlaybackQuality.totalVideoFrames -
+                oldPlaybackQuality.totalVideoFrames;
+            const currentDroppedFrames =
+              newPlaybackQuality.droppedVideoFrames -
+                oldPlaybackQuality.droppedVideoFrames;
+            return currentDroppedFrames / currentDecodedFrames;
+          })
+          .startWith(0);
+
       const abrClock$ = timings$
-        .map(timing => {
+        .withLatestFrom(droppedFrameRatio$)
+        .map(([timing, droppedFrameRatio]) => {
           let bitrate;
           let lastIndexPosition;
 
@@ -411,7 +428,7 @@ export default function Stream({
             lastIndexPosition,
             position: timing.currentTime,
             speed: speed$.getValue(),
-            videoPlaybackQuality: getVideoPlaybackQuality(videoElement),
+            droppedFrameRatio,
           };
         });
 

@@ -46,10 +46,7 @@ interface IRepresentationChooserClockTick {
   position : number;
   bitrate : number|undefined;
   speed : number;
-  videoPlaybackQuality: {
-    totalVideoFrames: number;
-    droppedVideoFrames: number;
-  };
+  droppedFrameRatio: number;
 }
 
 interface IRequestInfo {
@@ -304,13 +301,6 @@ export default class RepresentationChooser {
   private _initialBitrate : number;
 
   /**
-   * Information about frames (total decoded and dropped)
-   * Emitted at each clock event.
-   */
-  private lastDroppedFrames: number = 0;
-  private lastTotalFrames: number = 0;
-
-  /**
    * Maximum bitrate for which stream can be easily decoded.
    * It is the last representation bitrate before the
    * representation that causes player to have decode issues.
@@ -413,16 +403,9 @@ export default class RepresentationChooser {
           let bandwidthEstimate;
           const {
             bufferGap,
-            videoPlaybackQuality,
           } = clock;
 
-          const currentTotalFrames =
-            videoPlaybackQuality.totalVideoFrames - this.lastTotalFrames;
-          this.lastTotalFrames = videoPlaybackQuality.totalVideoFrames;
-
-          const currentDroppedFrames =
-            videoPlaybackQuality.droppedVideoFrames - this.lastDroppedFrames;
-          this.lastDroppedFrames = videoPlaybackQuality.droppedVideoFrames;
+          const { droppedFrameRatio } = clock;
 
           // Check for starvation == not much left to play
           if (bufferGap <= ABR_STARVATION_GAP) {
@@ -506,7 +489,7 @@ export default class RepresentationChooser {
             nextBitrate /= clock.speed;
           }
 
-          if ((currentDroppedFrames / currentTotalFrames) > ABR_MAX_FRAMEDROP_RATIO) {
+          if (droppedFrameRatio > ABR_MAX_FRAMEDROP_RATIO) {
             if (clock.bitrate != null) {
               const maxDecodableBitrate =
                 getLastBitrateBeforeCeiledRepresentation(representations, clock.bitrate);
