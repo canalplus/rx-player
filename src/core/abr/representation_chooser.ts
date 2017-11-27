@@ -46,7 +46,6 @@ interface IRepresentationChooserClockTick {
   position : number;
   bitrate : number|undefined;
   speed : number;
-  droppedFrameRatio: number;
 }
 
 interface IRequestInfo {
@@ -308,15 +307,6 @@ export default class RepresentationChooser {
   private _maxDecodableBitrate: number = Infinity;
 
   /**
-   * We consider that decoding troubles can be temporary.
-   * So, a timeout is set to define the moment where decodable
-   * bitrate should return to Infinity.
-   * The timeOut period increase each time the time is out.
-   */
-  private _timeOutId: number|null;
-  private _timeOutDuration: number = 2;
-
-  /**
    * @param {Object} options
    */
   constructor(options : IRepresentationChooserOptions) {
@@ -343,7 +333,8 @@ export default class RepresentationChooser {
 
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
-    representations : Representation[]
+    representations : Representation[],
+    droppedFrameRatio$ : Observable<number>
   ): Observable<{
     bitrate: undefined|number;
     representation: Representation|null;
@@ -394,6 +385,48 @@ export default class RepresentationChooser {
         return setManualRepresentation(representations, manualBitrate);
       }
 
+      /**
+       * Emit a new maximum decodable bitrate (mdb) each time that
+       * emitted ratio is non-tolerated and if new calculated mdb is lower to current mdb.
+       */
+      const maxDecodableBitrate$ = droppedFrameRatio$
+        .withLatestFrom(clock$)
+        .filter(([ratio, clock]) =>
+          ratio > ABR_MAX_FRAMEDROP_RATIO &&
+          clock.bitrate != null
+        )
+        .map(([_, clock]) => {
+          return getLastBitrateBeforeCeiledRepresentation(
+              representations,
+              clock.bitrate || Infinity
+            );
+          })
+        .filter(maxDecodableBitrate => maxDecodableBitrate < this._maxDecodableBitrate);
+
+      /**
+       * Emit each time max decodable bitrates must be reset
+       */
+      const resetDecodableBitrate$ = maxDecodableBitrate$.map(maxDecodableBitrate => {
+          this._maxDecodableBitrate = maxDecodableBitrate;
+          return {
+            delay: 2,
+            maxDecodableBitrate,
+          };
+        })
+        .scan((x,y) => {
+          return {
+            delay: x ? Math.min(Math.pow(x.delay, 2), 32) : 2,
+            maxDecodableBitrate: x.maxDecodableBitrate,
+          } || y;
+        })
+        .delayWhen(t => {
+          return Observable.timer(t.delay);
+        })
+        // Only emit if _maxDecodableBitrate hasn't changed.
+        .filter(r => this._maxDecodableBitrate === r.maxDecodableBitrate);
+
+      resetDecodableBitrate$.subscribe(() => this._maxDecodableBitrate = Infinity);
+
       // AUTO mode
       let inStarvationMode = false;
       return Observable.combineLatest(clock$, maxAutoBitrate$, deviceEvents$)
@@ -404,8 +437,6 @@ export default class RepresentationChooser {
           const {
             bufferGap,
           } = clock;
-
-          const { droppedFrameRatio } = clock;
 
           // Check for starvation == not much left to play
           if (bufferGap <= ABR_STARVATION_GAP) {
@@ -487,25 +518,6 @@ export default class RepresentationChooser {
 
           if (clock.speed > 1) {
             nextBitrate /= clock.speed;
-          }
-
-          if (droppedFrameRatio > ABR_MAX_FRAMEDROP_RATIO) {
-            if (clock.bitrate != null) {
-              const maxDecodableBitrate =
-                getLastBitrateBeforeCeiledRepresentation(representations, clock.bitrate);
-              if (maxDecodableBitrate < this._maxDecodableBitrate) {
-                this._maxDecodableBitrate = maxDecodableBitrate;
-                if (this._timeOutId !== null) {
-                  clearTimeout(this._timeOutId);
-                }
-                this._timeOutId = window.setTimeout(() => {
-                  this._maxDecodableBitrate = Infinity;
-                  this._timeOutId = null;
-                  this._timeOutDuration =
-                    Math.min(Math.pow(this._timeOutDuration, 2), 32);
-                }, this._timeOutDuration * 60 * 1000);
-              }
-            }
           }
 
           const maximumBitrate = (this._maxDecodableBitrate !== Infinity) ?
@@ -615,10 +627,6 @@ export default class RepresentationChooser {
    * TODO See if we can avoid this
    */
   dispose() {
-    if (this._timeOutId !== null) {
-      clearTimeout(this._timeOutId);
-      this._timeOutId = null;
-    }
     this._dispose$.next();
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();

@@ -100,7 +100,6 @@ import {
   IStreamClockTick,
   StreamEvent,
 } from "./types";
-import { currentId } from "async_hooks";
 
 const { END_OF_PLAY } = config;
 
@@ -407,8 +406,7 @@ export default function Stream({
           .startWith(0);
 
       const abrClock$ = timings$
-        .withLatestFrom(droppedFrameRatio$)
-        .map(([timing, droppedFrameRatio]) => {
+        .map((timing) => {
           let bitrate;
           let lastIndexPosition;
 
@@ -428,13 +426,18 @@ export default function Stream({
             lastIndexPosition,
             position: timing.currentTime,
             speed: speed$.getValue(),
-            droppedFrameRatio,
           };
         });
 
       const { representations } = adaptation;
 
-      const abr$ = abrManager.get$(bufferType, abrClock$, representations);
+      const abr$ = abrManager.get$(
+        bufferType,
+        abrClock$,
+        representations,
+        droppedFrameRatio$
+      );
+
       const representation$ = abr$
         .map(abr => abr.representation)
         .filter(representation => representation != null)

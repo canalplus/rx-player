@@ -333,7 +333,6 @@ function getVideoPlaybackQuality(videoElement: HTMLMediaElement): IVideoPlayback
 }
 
 export {
-  IVideoPlaybackQuality,
   KeySystemAccess,
   MediaSource_,
   VTTCue_,
