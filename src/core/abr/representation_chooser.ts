@@ -38,6 +38,7 @@ const {
   OUT_OF_STARVATION_GAP,
   ABR_STARVATION_FACTOR,
   ABR_REGULAR_FACTOR,
+  ABR_MAX_FRAMEDROP_RATIO,
 } = config;
 
 interface IRepresentationChooserClockTick {
@@ -235,17 +236,23 @@ function getFilteredRepresentations(
   return _representations;
 }
 
-const getDecodableBitrate = function(
+/**
+ * Get first bitrate from representation under the one ceiled by the bitrate if one.
+ * Returns first representation if none.
+ * @param {Array.<Object>} representations
+ * @param {Array.<Object>} ceilingBitrate
+ */
+function getLastBitrateBeforeCeiledRepresentation(
     representations: Representation[],
-    bitrate: number
+    ceilingBitrate: number
   ) {
-  const representation = fromBitrateCeil(representations, bitrate);
+  const representation = fromBitrateCeil(representations, ceilingBitrate);
   const index = representations.indexOf(representation);
 
   return (index <= 0) ?
     representations[0].bitrate :
     representations[index - 1].bitrate;
-};
+}
 
 /**
  * Returns true if the request takes too much time relatively to how much we
@@ -302,15 +309,13 @@ export default class RepresentationChooser {
    */
   private lastDroppedFrames: number = 0;
   private lastTotalFrames: number = 0;
-  private currentDroppedFrames: number = 0;
-  private currentTotalFrames: number = 0;
 
   /**
    * Maximum bitrate for which stream can be easily decoded.
    * It is the last representation bitrate before the
    * representation that causes player to have decode issues.
    */
-  private _decodableBitrate: number = Infinity;
+  private _maxDecodableBitrate: number = Infinity;
 
   /**
    * We consider that decoding troubles can be temporary.
@@ -411,11 +416,11 @@ export default class RepresentationChooser {
             videoPlaybackQuality,
           } = clock;
 
-          this.currentTotalFrames =
+          const currentTotalFrames =
             videoPlaybackQuality.totalVideoFrames - this.lastTotalFrames;
           this.lastTotalFrames = videoPlaybackQuality.totalVideoFrames;
 
-          this.currentDroppedFrames =
+          const currentDroppedFrames =
             videoPlaybackQuality.droppedVideoFrames - this.lastDroppedFrames;
           this.lastDroppedFrames = videoPlaybackQuality.droppedVideoFrames;
 
@@ -501,17 +506,17 @@ export default class RepresentationChooser {
             nextBitrate /= clock.speed;
           }
 
-          if ((this.currentDroppedFrames / this.currentTotalFrames) > 0.33) {
-            if (clock.bitrate) {
-              const decodableBitrate =
-                getDecodableBitrate(representations, clock.bitrate);
-              if (decodableBitrate < this._decodableBitrate) {
-                this._decodableBitrate = decodableBitrate;
+          if ((currentDroppedFrames / currentTotalFrames) > ABR_MAX_FRAMEDROP_RATIO) {
+            if (clock.bitrate != null) {
+              const maxDecodableBitrate =
+                getLastBitrateBeforeCeiledRepresentation(representations, clock.bitrate);
+              if (maxDecodableBitrate < this._maxDecodableBitrate) {
+                this._maxDecodableBitrate = maxDecodableBitrate;
                 if (this._timeOutId !== null) {
                   clearTimeout(this._timeOutId);
                 }
                 this._timeOutId = window.setTimeout(() => {
-                  this._decodableBitrate = Infinity;
+                  this._maxDecodableBitrate = Infinity;
                   this._timeOutId = null;
                   this._timeOutDuration =
                     Math.min(Math.pow(this._timeOutDuration, 2), 32);
@@ -520,20 +525,17 @@ export default class RepresentationChooser {
             }
           }
 
-          const filters = deviceEvents;
+          const maximumBitrate = (this._maxDecodableBitrate !== Infinity) ?
+            Math.min(this._maxDecodableBitrate, deviceEvents.bitrate || 0) :
+            deviceEvents.bitrate;
 
-          if (deviceEvents.hasOwnProperty("bitrate")) {
-            filters.bitrate =
-              Math.min(this._decodableBitrate, deviceEvents.bitrate);
-          } else if (this._decodableBitrate !== Infinity) {
-            filters.bitrate = this._decodableBitrate;
-          }
+          const filters: IFilters = {
+            bitrate: maximumBitrate,
+            width: deviceEvents.width,
+          };
 
           const _representations =
-            getFilteredRepresentations(
-              representations,
-              filters
-            );
+            getFilteredRepresentations(representations, filters);
 
           return {
             bitrate: bandwidthEstimate,
@@ -632,6 +634,7 @@ export default class RepresentationChooser {
   dispose() {
     if (this._timeOutId !== null) {
       clearTimeout(this._timeOutId);
+      this._timeOutId = null;
     }
     this._dispose$.next();
     this.manualBitrate$.complete();

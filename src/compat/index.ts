@@ -40,18 +40,6 @@ import {
   setMediaKeys,
 } from "./eme";
 
-interface ICustomHTMLMediaElement extends HTMLMediaElement {
-  webkitDroppedFrameCount?: number;
-  webkitDecodedFrameCount?: number;
-  getVideoPlaybackQuality?: () => {
-    readonly creationTime: number;
-    readonly totalVideoFrames: number;
-    readonly droppedVideoFrames: number;
-    readonly corruptedVideoFrames: number;
-    readonly totalFrameDelay: number;
-  };
-}
-
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
@@ -320,7 +308,7 @@ function makeCue(
  *
  * @param {HTMLVideoElement} videoElement
  */
-const getVideoPlaybackQuality = function(videoElement: ICustomHTMLMediaElement){
+function getVideoPlaybackQuality(videoElement: HTMLMediaElement): IVideoPlaybackQuality{
 
   if (videoElement.getVideoPlaybackQuality) {
     return videoElement.getVideoPlaybackQuality();
@@ -333,18 +321,19 @@ const getVideoPlaybackQuality = function(videoElement: ICustomHTMLMediaElement){
       droppedVideoFrames: videoElement.webkitDroppedFrameCount,
       totalVideoFrames: videoElement.webkitDroppedFrameCount
         + videoElement.webkitDecodedFrameCount,
-      creationTime: new Date(),
+      creationTime: Date.now(),
     };
   } else {
     return {
       droppedVideoFrames: 0,
       totalVideoFrames: 0,
-      creationTime: new Date(),
+      creationTime: Date.now(),
     };
   }
-};
+}
 
 export {
+  IVideoPlaybackQuality,
   KeySystemAccess,
   MediaSource_,
   VTTCue_,
