@@ -17,7 +17,7 @@
 import objectAssign = require("object-assign");
 
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { Observable } from "rxjs/Observable";
+import { Observable,  } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 
 import config from "../../config";
@@ -32,6 +32,8 @@ import filterByWidth from "./filterByWidth";
 import fromBitrateCeil from "./fromBitrateCeil";
 
 import EWMA from "./ewma";
+
+import { Subscription } from "rxjs/Subscription";
 
 const {
   ABR_STARVATION_GAP,
@@ -298,6 +300,7 @@ export default class RepresentationChooser {
   private _throttle$ : Observable<number>|undefined;
   private estimator : BandwidthEstimator;
   private _initialBitrate : number;
+  private _resetDecodableBitrate : Subscription;
 
   /**
    * Maximum bitrate for which stream can be easily decoded.
@@ -404,28 +407,26 @@ export default class RepresentationChooser {
         .filter(maxDecodableBitrate => maxDecodableBitrate < this._maxDecodableBitrate);
 
       /**
-       * Emit each time max decodable bitrates must be reset
+       * Triggers delay and reset maximum decodable bitrate each time
+       * maxDecodableBitrate emits.
        */
-      const resetDecodableBitrate$ = maxDecodableBitrate$.map(maxDecodableBitrate => {
+      this._resetDecodableBitrate = maxDecodableBitrate$
+        .mergeMap(maxDecodableBitrate => {
           this._maxDecodableBitrate = maxDecodableBitrate;
-          return {
-            delay: 2,
-            maxDecodableBitrate,
-          };
+          return Observable.of(1.2);
         })
-        .scan((x,y) => {
-          return {
-            delay: x ? Math.min(Math.pow(x.delay, 2), 32) : 2,
-            maxDecodableBitrate: x.maxDecodableBitrate,
-          } || y;
+        .scan((x, _) => {
+          const count = Math.min(Math.pow(x, 2), 32);
+          return count;
         })
-        .delayWhen(t => {
-          return Observable.timer(t.delay);
+        .switchMap(count => {
+          return Observable
+            .timer(count * 30 * 1000)
+            .map(() => {
+              this._maxDecodableBitrate = Infinity;
+            });
         })
-        // Only emit if _maxDecodableBitrate hasn't changed.
-        .filter(r => this._maxDecodableBitrate === r.maxDecodableBitrate);
-
-      resetDecodableBitrate$.subscribe(() => this._maxDecodableBitrate = Infinity);
+        .subscribe();
 
       // AUTO mode
       let inStarvationMode = false;
@@ -628,6 +629,9 @@ export default class RepresentationChooser {
    */
   dispose() {
     this._dispose$.next();
+    if(this._resetDecodableBitrate != null){
+      this._resetDecodableBitrate.unsubscribe();
+    }
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();
   }
