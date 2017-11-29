@@ -40,6 +40,7 @@ import {
 import {
   ILoaderObservable,
   ImageParserObservable,
+  IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
@@ -50,7 +51,6 @@ import {
   ITransportPipelines,
   SegmentParserObservable,
   TextTrackParserObservable,
-  IManifestLoaderArguments,
 } from "../types";
 
 import { IHSSParserOptions } from "./types";

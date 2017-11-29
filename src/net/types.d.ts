@@ -200,7 +200,7 @@ export type ITransportFunction =
 export type CustomSegmentLoader = (
   // first argument: infos on the segment
   args : {
-    adaptation : Adaptation;
+    adaptation : Adaptation|null;
     representation : Representation;
     segment : Segment;
     transport : string;

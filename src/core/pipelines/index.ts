@@ -61,8 +61,6 @@ import {
 } from "../../net/types";
 
 type ILoader<T> = ILoaderData<T> | ILoaderProgress | ILoaderResponse<T>;
-type IParserObservable =
-  SegmentParserObservable|TextTrackParserObservable|ImageParserObservable|IManifestParserObservable;
 
 interface IBackoffOptions {
   baseDelay: number;
@@ -120,20 +118,6 @@ export interface IPipelineOptions<T, U> {
   maxRetry? : number;
 }
 
-// function catchedLoader(
-//   loader:  ((x : IManifestLoaderArguments) => ILoaderObservable<Document>),
-//   backoffOptions: IBackoffOptions,
-//   resolvedInfos : IManifestLoaderArguments,
-//   pipelineInputData : IManifestLoaderArguments,
-//   cache?: ICache<IManifestLoaderArguments, IManifestLoaderArguments>
-// ) : ILoaderObservable<Document>;
-// function catchedLoader(
-//   loader:  ((x : ISegmentLoaderArguments) => ILoaderObservable<ArrayBuffer|Uint8Array>),
-//   backoffOptions: IBackoffOptions,
-//   resolvedInfos : ISegmentLoaderArguments,
-//   pipelineInputData : ISegmentLoaderArguments,
-//   cache?: ICache<ISegmentLoaderArguments, ISegmentLoaderArguments>
-// ) : ILoaderObservable<ArrayBuffer|Uint8Array>;
 function catchedLoader<T, U>(
   loader: (x?: T) => Observable<U>,
   backoffOptions: IBackoffOptions,
@@ -175,14 +159,6 @@ function catchedLoader<T, U>(
     }).catch(() => loaderWithRetry(resolvedInfos));
 }
 
-// function catchedParser(
-//   parser: ((x : IManifestParserArguments<Document>) => IManifestParserObservable),
-//   loadedInfos : IManifestParserArguments<Document>) : IManifestParserObservable;
-// function catchedParser(
-//   parser: ((x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
-//     SegmentParserObservable|TextTrackParserObservable|ImageParserObservable),
-//   loadedInfos : ISegmentParserArguments<Uint8Array|ArrayBuffer>
-// ) : SegmentParserObservable|TextTrackParserObservable|ImageParserObservable;
 function catchedParser<T, U>(
   parser: (x? : T) => Observable<U>,
   loadedInfos : T
@@ -225,7 +201,7 @@ const pipeline$ = tryCatch(resolver, pipelineInputData)
 .catch((error : Error) => {
   throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
 }).mergeMap((resolvedInfos: T) => {
-  return catchedLoader<T,ILoader<U>>(
+  return catchedLoader(
     loader,
     backoffOptions,
     resolvedInfos,
@@ -238,8 +214,8 @@ const pipeline$ = tryCatch(resolver, pipelineInputData)
       // "response": a request has been done
       if (arrayIncludes(["cache", "data", "response"], event.type)) {
         const loaderResponse = event.value;
-        const loadedInfos =
-          objectAssign({ response: loaderResponse }, resolvedInfos);
+        const loadedInfos: V =
+          objectAssign<any,any>({ response: loaderResponse }, resolvedInfos);
 
         // add metrics if a request was made
         const metrics : Observable<IPipelineMetrics> =
@@ -255,8 +231,8 @@ const pipeline$ = tryCatch(resolver, pipelineInputData)
 
         return metrics
           .concat(
-            catchedParser<V,W>(parser, loadedInfos as W)
-            .map((parserResponse: IParserObservable) => {
+            catchedParser(parser, loadedInfos)
+            .map((parserResponse) => {
               return {
                 type: "data" as "data",
                 value: objectAssign({
