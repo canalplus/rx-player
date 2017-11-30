@@ -55,7 +55,7 @@ const config = {
         HTML_VTT: true,
       },
       "__DEV__": true,
-      "__LOGGER_LEVEL__": "\"DEBUG\"",
+      "__LOGGER_LEVEL__": "\"INFO\"",
       "process.env": {
         NODE_ENV: JSON.stringify("production"),
       },

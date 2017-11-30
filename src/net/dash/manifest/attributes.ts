@@ -15,7 +15,6 @@
  */
 
 import config from "../../../config";
-import assert from "../../../utils/assert";
 import { normalize as normalizeLang } from "../../../utils/languages";
 import {
   parseBoolean,
@@ -30,19 +29,25 @@ import {
 
 import {
   IAdaptationDash,
+  IBaseAdaptationDash,
+  IBasePeriodDash,
+  IBaseRepresentationDash,
   IContentComponentDash,
   IContentProtectionDash,
+  IMultipleSegmentBase,
   IPeriodDash,
   IRepresentationDash,
   IRole,
   ISegmentBase,
-  ISegmentList,
   ISegmentTemplate,
   ISegmentTimeLine,
   ISegmentURL,
 } from "../types";
 
-import { IParsedManifest } from "../../types";
+import {
+  IBaseManifest,
+  IParsedManifest,
+} from "../../types";
 
 /**
  * Parse initialization attribute found in segment Template to
@@ -56,214 +61,11 @@ function parseInitializationAttribute(
   return { media: attrValue, range: undefined };
 }
 
-interface IMPDAttribute {
-  k: string;
-  fn: (x: string) => object|Date|string|number|boolean|null|[number, number];
-  def?: boolean|number|string;
-  n?: string;
-}
-
-// @see attributes
-const representationBaseType : IMPDAttribute[] = [
-  { k: "profiles",          fn: parseString },
-  { k: "width",             fn: parseInt },
-  { k: "height",            fn: parseInt },
-  { k: "frameRate",         fn: parseFrameRate },
-  { k: "audioSamplingRate", fn: parseString },
-  { k: "mimeType",          fn: parseString },
-  { k: "segmentProfiles",   fn: parseString },
-  { k: "codecs",            fn: parseString },
-  { k: "maximumSAPPeriod",  fn: parseFloat },
-  { k: "maxPlayoutRate",    fn: parseFloat },
-  { k: "codingDependency",  fn: parseBoolean },
-];
-
-// @see attributes
-const segmentBaseType : IMPDAttribute[] = [
-  { k: "timescale",                fn: parseInt, def: 1 },
-  { k: "timeShiftBufferDepth",     fn: parseDuration },
-  { k: "presentationTimeOffset",   fn: parseFloat, def: 0 },
-  { k: "indexRange",               fn: parseByteRange },
-  { k: "indexRangeExact",          fn: parseBoolean, def: false },
-  { k: "availabilityTimeOffset",   fn: parseFloat },
-  { k: "availabilityTimeComplete", fn: parseBoolean, def: true },
-];
-
-// @see attributes
-const multipleSegmentBaseType : IMPDAttribute[] = segmentBaseType.concat([
-  { k: "duration",    fn: parseInt },
-  { k: "startNumber", fn: parseInt },
-]);
-
-/**
- * Object describing how a Dash MPD should be parsed automatically.
- *
- * Basically, immediate keys are the nodeName concerned.
- * They contain array of Objects, each concerning a unique node attributes.
- *
- * The keys these Objects have are as such:
- *
- *   - k {string}: the name of the node attribute
- *
- *   - fn {Function}: the function called to parse this attribute. It takes
- *     as argument the attribute value and should return the parsed value.
- *
- *   - n {string}: new name used for the attribute in the parsed object.
- *
- *   - def {*}: the default value used if the attribute is not found in the
- *     MPD.
- */
-const attributes : { [keyName : string]: IMPDAttribute[] } = {
-  ContentProtection: [
-    { k: "schemeIdUri", fn: parseString },
-    { k: "value", fn: parseString },
-  ],
-
-  SegmentURL: [
-    { k: "media",      fn: parseString },
-    { k: "mediaRange", fn: parseByteRange },
-    { k: "index",      fn: parseString },
-    { k: "indexRange", fn: parseByteRange },
-  ],
-
-  S: [
-    { k: "t", fn: parseInt, n: "ts"},
-    { k: "d", fn: parseInt },
-    { k: "r", fn: parseInt },
-  ],
-
-  SegmentTimeline: [],
-  SegmentBase: segmentBaseType,
-  SegmentTemplate: multipleSegmentBaseType.concat([
-    { k: "initialization",     fn: parseInitializationAttribute },
-    { k: "index",              fn: parseString },
-    { k: "media",              fn: parseString },
-    { k: "bitstreamSwitching", fn: parseString },
-  ]),
-  SegmentList: multipleSegmentBaseType,
-
-  ContentComponent: [
-    { k: "id",          fn: parseString },
-    { k: "lang",        fn: parseString, n: "language" },
-    { k: "lang",        fn: normalizeLang, n: "normalizedLanguage" },
-    { k: "contentType", fn: parseString },
-    { k: "par",         fn: parseRatio },
-  ],
-
-  Representation: representationBaseType.concat([
-    { k: "id",             fn: parseString },
-    { k: "bandwidth",      fn: parseInt, n: "bitrate" },
-    { k: "qualityRanking", fn: parseInt },
-  ]),
-
-  AdaptationSet: representationBaseType.concat([
-    { k: "id",                  fn: parseString },
-    { k: "group",               fn: parseInt },
-    { k: "lang",                fn: parseString, n: "language" },
-    { k: "lang",                fn: normalizeLang, n: "normalizedLanguage" },
-    { k: "contentType",         fn: parseString },
-    { k: "par",                 fn: parseRatio },
-    { k: "minBandwidth",        fn: parseInt, n: "minBitrate" },
-    { k: "maxBandwidth",        fn: parseInt, n: "maxBitrate" },
-    { k: "minWidth",            fn: parseInt },
-    { k: "maxWidth",            fn: parseInt },
-    { k: "minHeight",           fn: parseInt },
-    { k: "maxHeight",           fn: parseInt },
-    { k: "minFrameRate",        fn: parseFrameRate },
-    { k: "maxFrameRate",        fn: parseFrameRate },
-    { k: "segmentAlignment",    fn: parseIntOrBoolean },
-    { k: "subsegmentAlignment", fn: parseIntOrBoolean },
-    { k: "bitstreamSwitching",  fn: parseBoolean },
-  ]),
-
-  Period: [
-    { k: "id",                 fn: parseString },
-    { k: "start",              fn: parseDuration },
-    { k: "duration",           fn: parseDuration },
-    { k: "bitstreamSwitching", fn: parseBoolean },
-  ],
-
-  MPD: [
-    { k: "id",                         fn: parseString },
-    { k: "profiles",                   fn: parseString },
-    { k: "type",                       fn: parseString, def: "static" },
-    { k: "availabilityStartTime",      fn: parseDateTime },
-    { k: "availabilityEndTime",        fn: parseDateTime },
-    { k: "publishTime",                fn: parseDateTime },
-    { k: "mediaPresentationDuration",  fn: parseDuration, n: "duration" },
-    { k: "minimumUpdatePeriod",        fn: parseDuration },
-    { k: "minBufferTime",              fn: parseDuration },
-    { k: "timeShiftBufferDepth",       fn: parseDuration },
-    {
-      k: "suggestedPresentationDelay",
-      fn: parseDuration,
-      def: config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
-    },
-    { k: "maxSegmentDuration",         fn: parseDuration },
-    { k: "maxSubsegmentDuration",      fn: parseDuration },
-  ],
-
-  Role: [
-    { k: "schemeIdUri", fn: parseString },
-    { k: "value",       fn: parseString},
-  ],
-
-  Accessibility: [
-    { k: "schemeIdUri", fn: parseString },
-    { k: "value",       fn: parseInt},
-  ],
-};
-
-/**
- * @param {Document} node - The Node content
- * @param {Object} [base] - Base object that will be enriched
- * @returns {Object}
- */
-type types =
-  IRole | IContentComponentDash| IParsedManifest |
-  IAdaptationDash | IRepresentationDash | IPeriodDash |
-  ISegmentURL | ISegmentBase | ISegmentTimeLine;
-
-function feedAttributes(node: Element, base?: IParsedManifest): IParsedManifest;
-function feedAttributes(node: Element, base?: IAdaptationDash): IAdaptationDash;
-function feedAttributes(node: Element, base?: IRepresentationDash): IRepresentationDash;
-function feedAttributes(
-  node: Element,
-  base?: IContentComponentDash
-): IContentComponentDash;
-function feedAttributes(node: Element, base?: ISegmentURL): ISegmentURL;
-function feedAttributes(
-  node: Element,
-  base?: IContentProtectionDash
-): IContentProtectionDash;
-function feedAttributes(node: Element, base?: ISegmentBase): ISegmentBase;
-function feedAttributes(node: Element, base?: ISegmentTimeLine): ISegmentTimeLine;
-function feedAttributes(node: Element, base?: IPeriodDash): IPeriodDash;
-function feedAttributes(node: Element, base?: IRole): IRole;
-function feedAttributes<T>(node: Element): T;
-function feedAttributes<T>(node: Element, base?: types): T | types {
-  const attrs = attributes[node.nodeName];
-
-  assert(attrs, "no attributes for " + node.nodeName);
-
-  /**
-   * XXX TODO Remove the obj with any type. Only security we got in this method
-   * is the assumption that fields in attr match exactly with properties of
-   * input elements.
-   */
-  const obj: any = base || {};
-  for (let i = 0; i < attrs.length; i++) {
-    const { k, fn, n, def } = attrs[i];
-    if (node.hasAttribute(k)) {
-      obj[n || k] = fn(node.getAttribute(k) as string);
-    } else if (def != null) {
-      obj[n || k] = def;
-    }
+function feedRole(node: Element): IRole {
+  if (node.nodeName !== "Role"){
+    throw new Error(`Expected 'Role' instead of nodeName: ${node.nodeName}`);
   }
-  return obj;
-}
 
-function parseSchemeIdUriPattern(node: Element): {schemeIdUri: string; value: string} {
   const schemeIdUri = node.getAttribute("schemeIdUri");
   const value = node.getAttribute("value");
 
@@ -273,17 +75,23 @@ function parseSchemeIdUriPattern(node: Element): {schemeIdUri: string; value: st
   };
 }
 
-function feedRole(node: Element): IRole {
-  if (node.nodeName !== "Role"){
-    throw new Error("Expected 'Role' instead on nodeName: "+node.nodeName);
+function feedContentProtection(node: Element): IContentProtectionDash {
+  if (node.nodeName !== "ContentProtection"){
+    throw new Error(`Expected 'ContentProtection' instead of nodeName: ${node.nodeName}`);
   }
 
-  return parseSchemeIdUriPattern(node);
+  const schemeIdUri = node.getAttribute("schemeIdUri");
+  const value = node.getAttribute("value");
+
+  return {
+    schemeIdUri: schemeIdUri ? parseString(schemeIdUri) : "",
+    value: value ? parseString(value) : "",
+  };
 }
 
 function feedSegmentURL(node: Element): ISegmentURL {
   if (node.nodeName !== "SegmentURL"){
-    throw new Error("Expected 'SegmentURL' instead on nodeName: "+node.nodeName);
+    throw new Error(`Expected 'SegmentURL' instead of nodeName: ${node.nodeName}`);
   }
 
   const media = node.getAttribute("media");
@@ -301,19 +109,9 @@ function feedSegmentURL(node: Element): ISegmentURL {
   };
 }
 
-function feedContentProtection(node: Element): IContentProtectionDash {
-  if (node.nodeName !== "ContentProtection"){
-    throw new Error(
-      "Expected 'ContentProtection' instead on nodeName: "+node.nodeName
-    );
-  }
-
-  return parseSchemeIdUriPattern(node);
-}
-
 function feedSegmentTimeLine(node: Element): ISegmentTimeLine {
   if (node.nodeName !== "S"){
-    throw new Error("Expected 'S' instead on nodeName: "+node.nodeName);
+    throw new Error(`Expected 'S' instead of nodeName: ${node.nodeName}`);
   }
 
   const t = node.getAttribute("t");
@@ -327,9 +125,9 @@ function feedSegmentTimeLine(node: Element): ISegmentTimeLine {
   };
 }
 
-function feedAdaptation(node: Element, base: IAdaptationDash): IAdaptationDash {
+function feedAdaptation(node: Element, base: IBaseAdaptationDash): IAdaptationDash {
   if (node.nodeName !== "AdaptationSet"){
-    throw new Error("Expected 'AdaptationSet' instead on nodeName: "+node.nodeName);
+    throw new Error(`Expected 'AdaptationSet' instead of nodeName: ${node.nodeName}`);
   }
   const type = node.getAttribute("type");
   const id = node.getAttribute("id");
@@ -363,13 +161,11 @@ function feedAdaptation(node: Element, base: IAdaptationDash): IAdaptationDash {
 
   return {
     baseURL: base.baseURL,
-    id: (base.id !== "") ? base.id : (id ? parseString(id) : ""),
+    id: id ? parseString(id) : undefined,
     type: type ? parseString(type) : "",
-    index: base.index,
-    mimeType: (base.mimeType !== "" && base.mimeType != null) ?
-      base.mimeType :
-      (mimeType ? parseString(mimeType) : null),
-    representations: base.representations,
+    index: base.index || null,
+    mimeType: mimeType ? parseString(mimeType) : null,
+    representations: base.representations || [],
     group: group ? parseInt(group, 10) : undefined,
     language: language ? parseString(language) : undefined,
     normalizedLanguage: normalizedLanguage ?
@@ -405,10 +201,10 @@ function feedAdaptation(node: Element, base: IAdaptationDash): IAdaptationDash {
 
 function feedRepresentation(
   node: Element,
-  base: IRepresentationDash
+  base: IBaseRepresentationDash
 ): IRepresentationDash {
   if (node.nodeName !== "Representation"){
-    throw new Error("Expected 'Representation' instead on nodeName: "+node.nodeName);
+    throw new Error(`Expected 'Representation' instead of nodeName: ${node.nodeName}`);
   }
 
   const profiles = node.getAttribute("profiles");
@@ -428,13 +224,9 @@ function feedRepresentation(
 
   return {
     baseURL: base.baseURL,
-    id: (base.id !== "" && base.id != null) ?
-      base.id :
-      (id ? parseString(id) : ""),
-    index: base.index,
-    mimeType: (base.mimeType !== "" && base.mimeType != null) ?
-      base.mimeType :
-      (mimeType ? parseString(mimeType) : null),
+    id: id ? parseString(id) : undefined,
+    index: base.index || null,
+    mimeType: mimeType ? parseString(mimeType) : null,
     bitrate: bitrate ? parseInt(bitrate, 10) : undefined,
     qualityRanking: qualityRanking ? parseInt(qualityRanking, 10) : undefined,
     profiles: profiles ? parseString(profiles) : undefined,
@@ -450,10 +242,10 @@ function feedRepresentation(
   };
 }
 
-function feedMPD(
-  node: Element,
-  base: IParsedManifest
-): IParsedManifest {
+function feedMPD(node: Element, base: IBaseManifest): IParsedManifest {
+if (node.nodeName !== "MPD"){
+  throw new Error(`Expected 'MPD' instead of nodeName: ${node.nodeName}`);
+}
 
 const id = node.getAttribute("id");
 const profiles = node.getAttribute("profiles");
@@ -470,10 +262,10 @@ const maxSubsegmentDuration = node.getAttribute("maxSubsegmentDuration");
 const suggestedPresentationDelay = node.getAttribute("suggestedPresentationDelay");
 
 return {
-  transportType: base.transportType,
-  periods: base.periods,
-  locations: base.locations,
-  id: id ? parseString(id) : undefined,
+  transportType: "dash",
+  periods: base.periods || [],
+  locations: base.locations || [],
+  id: id ? parseString(id) :  undefined,
   profiles: profiles ? parseString(profiles) : undefined,
   type: type ? parseString(type) : "static",
   availabilityStartTime: availabilityStartTime ?
@@ -501,37 +293,40 @@ return {
 };
 }
 
-function feedPeriod(
-  node: Element,
-  base: IPeriodDash): IPeriodDash {
+function feedPeriod(node: Element, base: IBasePeriodDash): IPeriodDash {
+  if (node.nodeName !== "Period"){
+    throw new Error(`Expected 'Period' instead of nodeName: ${node.nodeName}`);
+  }
 
-    const id = node.getAttribute("id");
-    const start = node.getAttribute("start");
-    const duration = node.getAttribute("duration");
-    const bitstreamSwitching = node.getAttribute("bitstreamSwitching");
+  const id = node.getAttribute("id");
+  const start = node.getAttribute("start");
+  const duration = node.getAttribute("duration");
+  const bitstreamSwitching = node.getAttribute("bitstreamSwitching");
 
-    return {
-      id: id ? parseString(id) : null,
-      adaptations: base.adaptations,
-      baseURL: base.baseURL,
-      start: start ? parseDuration(start) : undefined,
-      duration: duration ? parseDuration(duration) : undefined,
-      bitstreamSwitching: bitstreamSwitching ?
-        parseBoolean(bitstreamSwitching) :
-        undefined,
-    };
+  return {
+    id: id ? parseString(id) : undefined,
+    adaptations: base.adaptations || [],
+    baseURL: base.baseURL,
+    start: start ? parseDuration(start) : undefined,
+    duration: duration ? parseDuration(duration) : undefined,
+    bitstreamSwitching: bitstreamSwitching ?
+      parseBoolean(bitstreamSwitching) :
+      undefined,
+  };
 }
 
-function feedContentComponent(
-  node: Element
-): IContentComponentDash {
+function feedContentComponent(node: Element): IContentComponentDash {
+  if (node.nodeName !== "ContentComponent"){
+    throw new Error(`Expected 'ContentComponent' instead of nodeName: ${node.nodeName}`);
+  }
+
   const id = node.getAttribute("id");
   const lang = node.getAttribute("lang");
   const contentType = node.getAttribute("contentType");
   const par = node.getAttribute("par");
 
   return {
-    id: id ? parseString(id) : "",
+    id: id ? parseString(id) : undefined,
     language: lang ? parseString(lang) : undefined,
     normalizedLanguage: lang ? normalizeLang(lang) : undefined,
     contentType: contentType ? parseString(contentType) : undefined,
@@ -573,57 +368,52 @@ function feedSegmentBase(
   };
 }
 
-function feedSegmentTemplate(
-  node: Element
-): ISegmentTemplate {
+function feedSegmentTemplate(node: Element): ISegmentTemplate {
+  const timescale = node.getAttribute("timescale");
+  const timeShiftBufferDepth = node.getAttribute("timeShiftBufferDepth");
+  const presentationTimeOffset = node.getAttribute("presentationTimeOffset");
+  const indexRange = node.getAttribute("indexRange");
+  const indexRangeExact = node.getAttribute("indexRangeExact");
+  const availabilityTimeOffset = node.getAttribute("availabilityTimeOffset");
+  const availabilityTimeComplete = node.getAttribute("availabilityTimeComplete");
+  const duration = node.getAttribute("duration");
+  const startNumber = node.getAttribute("startNumber");
+  const initialization = node.getAttribute("initialization");
+  const index = node.getAttribute("index");
+  const bitstreamSwitching = node.getAttribute("bitstreamSwitching");
+  const media = node.getAttribute("media");
 
-    const timescale = node.getAttribute("timescale");
-    const timeShiftBufferDepth = node.getAttribute("timeShiftBufferDepth");
-    const presentationTimeOffset = node.getAttribute("presentationTimeOffset");
-    const indexRange = node.getAttribute("indexRange");
-    const indexRangeExact = node.getAttribute("indexRangeExact");
-    const availabilityTimeOffset = node.getAttribute("availabilityTimeOffset");
-    const availabilityTimeComplete = node.getAttribute("availabilityTimeComplete");
-    const duration = node.getAttribute("duration");
-    const startNumber = node.getAttribute("startNumber");
-    const initialization = node.getAttribute("initialization");
-    const index = node.getAttribute("index");
-    const bitstreamSwitching = node.getAttribute("bitstreamSwitching");
-    const media = node.getAttribute("media");
-
-    return {
-      timeline: [],
-      list: [],
-      timescale: timescale ? parseInt(timescale, 10) : 1,
-      timeShiftBufferDepth: timeShiftBufferDepth ?
-        parseDuration(timeShiftBufferDepth) :
-        undefined,
-      presentationTimeOffset: presentationTimeOffset ?
-        parseFloat(presentationTimeOffset) :
-        undefined,
-      indexRange: indexRange ?
-        (parseByteRange(indexRange) || undefined) : undefined,
-      indexRangeExact: indexRangeExact ? parseBoolean(indexRangeExact) : false,
-      availabilityTimeOffset: availabilityTimeOffset ?
-        parseFloat(availabilityTimeOffset) :
-        undefined,
-      availabilityTimeComplete: availabilityTimeComplete ?
-        parseBoolean(availabilityTimeComplete) :
-        true,
-      duration: duration ? parseInt(duration, 10) : undefined,
-      startNumber: startNumber ? parseInt(startNumber, 10) : undefined,
-      initialization: initialization ?
-        parseInitializationAttribute(initialization) :
-        undefined,
-      index: index ? parseString(index) : undefined,
-      bitstreamSwitching: bitstreamSwitching ? parseString(bitstreamSwitching): undefined,
-      media: media ? parseString(media) : undefined,
-    };
+  return {
+    timeline: [],
+    list: [],
+    timescale: timescale ? parseInt(timescale, 10) : 1,
+    timeShiftBufferDepth: timeShiftBufferDepth ?
+      parseDuration(timeShiftBufferDepth) :
+      undefined,
+    presentationTimeOffset: presentationTimeOffset ?
+      parseFloat(presentationTimeOffset) :
+      undefined,
+    indexRange: indexRange ?
+      (parseByteRange(indexRange) || undefined) : undefined,
+    indexRangeExact: indexRangeExact ? parseBoolean(indexRangeExact) : false,
+    availabilityTimeOffset: availabilityTimeOffset ?
+      parseFloat(availabilityTimeOffset) :
+      undefined,
+    availabilityTimeComplete: availabilityTimeComplete ?
+      parseBoolean(availabilityTimeComplete) :
+      true,
+    duration: duration ? parseInt(duration, 10) : undefined,
+    startNumber: startNumber ? parseInt(startNumber, 10) : undefined,
+    initialization: initialization ?
+      parseInitializationAttribute(initialization) :
+      undefined,
+    index: index ? parseString(index) : undefined,
+    bitstreamSwitching: bitstreamSwitching ? parseString(bitstreamSwitching): undefined,
+    media: media ? parseString(media) : undefined,
+  };
 }
 
-function feedSegmentList(node: Element)
-: ISegmentList {
-
+function feedSegmentList(node: Element): IMultipleSegmentBase {
   const timescale = node.getAttribute("timescale");
   const timeShiftBufferDepth = node.getAttribute("timeShiftBufferDepth");
   const presentationTimeOffset = node.getAttribute("presentationTimeOffset");
@@ -658,7 +448,11 @@ function feedSegmentList(node: Element)
   };
 }
 
-function feedSegmentNode(node: Element): ISegmentBase|ISegmentTemplate|ISegmentList {
+function feedSegmentNode(node: Element):
+  ISegmentBase|
+  ISegmentTemplate|
+  IMultipleSegmentBase
+{
   switch(node.nodeName) {
     case "SegmentBase": return feedSegmentBase(node);
     case "SegmentTemplate": return feedSegmentTemplate(node);
@@ -666,8 +460,6 @@ function feedSegmentNode(node: Element): ISegmentBase|ISegmentTemplate|ISegmentL
     default: throw new Error("Invalid segment element.");
   }
 }
-
-export default feedAttributes;
 
 export {
   feedRole,

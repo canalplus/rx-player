@@ -75,7 +75,6 @@ class Representation {
     this.id = (args.id == null ? nId : args.id);
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
-
     if (args.height != null) {
       this.height = args.height;
     }

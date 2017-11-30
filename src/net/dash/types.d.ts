@@ -61,15 +61,20 @@ interface IContentProtectionDash {
   value: string;
 }
 interface IContentComponentDash {
-  id: string;
+  id?: string;
   language?: string;
   normalizedLanguage?: string;
   contentType?: string;
   par?: string;
 }
 
+interface IBaseRepresentationDash {
+  index?: IIndex|ISegmentBase|IMultipleSegmentBase|null;
+  baseURL?: string|null;
+}
+
 interface IRepresentationDash {
-  id: string|number|null;
+  id?: string|number;
   index: IIndex|ISegmentBase|IMultipleSegmentBase|null;
   mimeType: string|null;
   baseURL?: string|null;
@@ -92,8 +97,17 @@ interface IRepresentationDash {
   bitrate?: number;
 }
 
+interface IBaseAdaptationDash {
+  baseURL?: string|null;
+  contentComponent?: IContentComponentDash;
+  contentProtection?: IContentProtectionDash|undefined;
+  representations?: IRepresentationDash[];
+  role?: IRole;
+  index?: IIndex|ISegmentBase|null;
+}
+
 interface IAdaptationDash {
-  id: string|null|number;
+  id?: string|number;
   index: IIndex|ISegmentBase|null;
   representations: IRepresentationDash[];
   mimeType: string|null;
@@ -134,8 +148,13 @@ interface IAdaptationDash {
   codingDependency?: boolean;
 }
 
+interface IBasePeriodDash {
+  adaptations?: IAdaptationDash[];
+  baseURL?: string|null;
+}
+
 interface IPeriodDash {
-  id: string|null|number;
+  id?: string|number;
   adaptations: IAdaptationDash[];
   baseURL?: string|null;
   start?: number;
@@ -181,23 +200,23 @@ interface ISegmentTemplate extends IMultipleSegmentBase {
   initialization?: IInitialization;
 }
 
-interface ISegmentList extends IMultipleSegmentBase {}
-
 export {
   IRole,
   IIndex,
   ISegmentURL,
   IPeriodDash,
-  ISegmentList,
   ISegmentBase,
   IAccessibility,
   IAdaptationDash,
   IInitialization,
+  IBasePeriodDash,
   ISegmentTimeLine,
   ISegmentTemplate,
   IRepresentationDash,
+  IBaseAdaptationDash,
   IMultipleSegmentBase,
   IContentComponentDash,
   IContentProtectionDash,
   ContentProtectionParser,
+  IBaseRepresentationDash,
 };

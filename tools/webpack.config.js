@@ -85,7 +85,7 @@ const config = {
         //   process.env.RXP_BIF !== "false",
       },
       __DEV__: isDevMode,
-      __LOGGER_LEVEL__: isDevMode ? "\"DEBUG\"" : "\"NONE\"",
+      __LOGGER_LEVEL__: isDevMode ? "\"INFO\"" : "\"NONE\"",
       "process.env": {
         NODE_ENV: JSON.stringify(RXP_ENV),
       },
