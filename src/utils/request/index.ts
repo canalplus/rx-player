@@ -257,7 +257,7 @@ function request<T>(
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = Date.now();
-          const totalSize = event.total;
+          const totalSize = event.loaded;
           const status = xhr.status;
           const loadedResponseType = xhr.responseType;
           const _url = xhr.responseURL || url;
