@@ -2415,7 +2415,6 @@ function areRangesOverlapping(range1, range2) {
         range1.start < range2.end && range2.end < range1.end ||
         isTimeInRange(range2, range1.start);
 }
-exports.areRangesOverlapping = areRangesOverlapping;
 /**
  * Returns true if the two ranges given can be considered contiguous.
  * @param {Object} range1
@@ -2426,7 +2425,6 @@ function areRangesNearlyContiguous(range1, range2) {
     return nearlyEqual(range2.start, range1.end) ||
         nearlyEqual(range2.end, range1.start);
 }
-exports.areRangesNearlyContiguous = areRangesNearlyContiguous;
 /**
  * Convert from a TimeRanges object to an array of Ranges.
  * @param {TimeRanges} timeRanges
@@ -2492,7 +2490,7 @@ exports.getNextRangeGap = getNextRangeGap;
 function getInnerAndOuterTimeRanges(timeRanges, time) {
     var innerRange = null;
     var outerRanges = [];
-    for (var i = timeRanges.length - 1; i >= 0; i--) {
+    for (var i = 0; i < timeRanges.length; i++) {
         var start = timeRanges.start(i);
         var end = timeRanges.end(i);
         if (time < start || time >= end) {
@@ -2619,7 +2617,6 @@ function findOverlappingRange(range, ranges) {
     }
     return null;
 }
-exports.findOverlappingRange = findOverlappingRange;
 /**
  * Returns only the intersection between the two ranges, from the first
  * ranges argument given.
@@ -4798,7 +4795,6 @@ var Segment /* implements ISegment */ = /** @class */ (function () {
             }
             assert_1.default(args.id);
             assert_1.default(args.timescale);
-            assert_1.default(args.media);
         }
         this.id = args.id;
         this.duration = args.duration;
@@ -5992,7 +5988,7 @@ var atoms = {
      * @param {Uint8Array} mfhd
      * @returns {Uint8Array}
      */
-    traf: function (tfhd, tfdt, trun, senc, mfhd) {
+    traf: function (tfhd, tfdt, trun, mfhd, senc) {
         var trafs = [tfhd, tfdt, trun];
         if (senc) {
             trafs.push(atoms.senc(senc), atoms.saiz(senc), atoms.saio(mfhd, tfhd, tfdt, trun));
@@ -6343,12 +6339,9 @@ exports.default = {
         oldtfhd.set([0, 0, 0, 1], 12);
         // TODO fallback?
         var oldsenc = reads.senc(oldtraf);
-        if (false) {
-            assert_1.default(oldsenc);
-        }
         // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
         var newtrun = atoms.trun(oldtrun);
-        var newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldsenc, oldmfhd);
+        var newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldmfhd, oldsenc);
         var newmoof = atoms.moof(oldmfhd, newtraf);
         var trunoffset = mfhdlen + 8 + 8 + tfhdlen + tfdtlen;
         // TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
@@ -16525,10 +16518,10 @@ var errors_1 = __webpack_require__(8);
 var stream_1 = __webpack_require__(252);
 var timings_1 = __webpack_require__(55);
 var eme_1 = __webpack_require__(94);
-var constants_1 = __webpack_require__(318);
-var language_manager_1 = __webpack_require__(319);
-var clock_1 = __webpack_require__(320);
-var option_parsers_1 = __webpack_require__(321);
+var constants_1 = __webpack_require__(322);
+var language_manager_1 = __webpack_require__(323);
+var clock_1 = __webpack_require__(324);
+var option_parsers_1 = __webpack_require__(325);
 var DEFAULT_UNMUTED_VOLUME = config_1.default.DEFAULT_UNMUTED_VOLUME;
 /**
  * @class Player
@@ -16550,7 +16543,7 @@ var Player = /** @class */ (function (_super) {
         // Workaround to support Firefox autoplay on FF 42.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
         videoElement.preload = "auto";
-        _this.version = /*PLAYER_VERSION*/ "3.0.3";
+        _this.version = /*PLAYER_VERSION*/ "3.0.4";
         _this.log = log_1.default;
         _this.state = "STOPPED";
         _this.videoElement = videoElement;
@@ -21006,9 +20999,9 @@ var initial_time_1 = __webpack_require__(290);
 var media_source_1 = __webpack_require__(291);
 var process_pipeline_1 = __webpack_require__(292);
 var source_buffers_1 = __webpack_require__(293);
-var speed_manager_1 = __webpack_require__(315);
-var stalling_obs_1 = __webpack_require__(316);
-var timings_1 = __webpack_require__(317);
+var speed_manager_1 = __webpack_require__(319);
+var stalling_obs_1 = __webpack_require__(320);
+var timings_1 = __webpack_require__(321);
 var END_OF_PLAY = config_1.default.END_OF_PLAY;
 var SUPPORTED_BUFFER_TYPES = ["audio", "video", "text", "image"];
 /**
@@ -27204,7 +27197,7 @@ var HTMLTextSourceBuffer = HAS_HTML_MODE ?
     };
 exports.HTMLTextSourceBuffer = HTMLTextSourceBuffer;
 var NativeTextSourceBuffer = HAS_NATIVE_MODE ?
-    __webpack_require__(309).default :
+    __webpack_require__(313).default :
     function () {
         throw new Error("Cannot display native subtitles: feature not activated.");
     };
@@ -29056,9 +29049,11 @@ function generateSpansFromSRTText(text) {
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var array_includes_1 = __webpack_require__(9);
 var log_1 = __webpack_require__(1);
-var parseTimestamp_1 = __webpack_require__(308);
+var formatCueLineToHTML_1 = __webpack_require__(308);
+var parseStyleBlock_1 = __webpack_require__(309);
+var parseTimeCode_1 = __webpack_require__(310);
+var utils_1 = __webpack_require__(312);
 /**
  * Parse WebVTT from text. Returns an array with:
  * - start : start of current cue, in seconds
@@ -29081,8 +29076,9 @@ function parseWebVTT(text, timeOffset) {
     if (!linified[0].match(/^WEBVTT( |\t|\n|\r|$)/)) {
         throw new Error("Can't parse WebVTT: Invalid File.");
     }
-    for (var i = 1; i < linified.length; i++) {
-        if (isStartOfStyleBlock(linified[i])) {
+    var firstLineAfterHeader = utils_1.getFirstLineAfterHeader(linified);
+    for (var i = firstLineAfterHeader; i < linified.length; i++) {
+        if (utils_1.isStartOfStyleBlock(linified[i])) {
             var startOfStyleBlock = i;
             i++;
             // continue incrementing i until either:
@@ -29092,14 +29088,14 @@ function parseWebVTT(text, timeOffset) {
                 i++;
             }
             var styleBlock = linified.slice(startOfStyleBlock, i);
-            var parsedStyles = parseStyleBlock(styleBlock);
+            var parsedStyles = parseStyleBlock_1.default(styleBlock);
             styleElements.push.apply(styleElements, parsedStyles);
         }
     }
     // Parse cues, format and apply style.
-    for (var i = 1; i < linified.length; i++) {
+    for (var i = firstLineAfterHeader; i < linified.length; i++) {
         if (!(linified[i].length === 0)) {
-            if (isStartOfCueBlock(linified[i])) {
+            if (utils_1.isStartOfCueBlock(linified[i])) {
                 var startOfCueBlock = i;
                 i++;
                 // continue incrementing i until either:
@@ -29124,80 +29120,6 @@ function parseWebVTT(text, timeOffset) {
     return cuesArray;
 }
 exports.default = parseWebVTT;
-/**
- * Returns true if the given line looks like the beginning of a Style block.
- * @param {string} text
- * @returns {Boolean}
- */
-function isStartOfStyleBlock(text) {
-    return /^STYLE.*?/g.test(text);
-}
-/**
- * Returns true if the given line looks like the beginning of a comment block.
- * @param {string} text
- * @returns {Boolean}
- */
-function isStartOfNoteBlock(text) {
-    return /^NOTE.*?/g.test(text);
-}
-/**
- * Returns true if the given line looks like the beginning of a region block.
- * @param {string} text
- * @returns {Boolean}
- */
-function isStartOfRegionBlock(text) {
-    return /^REGION.*?/g.test(text);
-}
-/**
- * Returns true if the given line looks like the beginning of a cue block.
- * @param {string} text
- * @returns {Boolean}
- */
-function isStartOfCueBlock(text) {
-    return (!isStartOfNoteBlock(text) &&
-        !isStartOfStyleBlock(text) &&
-        !isStartOfRegionBlock(text)) &&
-        text.length !== 0;
-}
-/**
- *
- * Parse style element from WebVTT.
- * @param {Array.<string>} styleBlock
- * @return {Array.<Object>} styleElements
- */
-function parseStyleBlock(styleBlock) {
-    var styleElements = [];
-    var index = 1;
-    var classNames = [];
-    if (styleBlock[index].match(/::cue {/)) {
-        classNames.push({ isGlobalStyle: true });
-        index++;
-    }
-    else {
-        var cueClassLine = void 0;
-        while (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
-            classNames.push({
-                className: cueClassLine[1],
-                isGlobalStyle: false,
-            });
-            index++;
-        }
-    }
-    var styleContent = "";
-    while (!(styleBlock[index].match(/}/)
-        || styleBlock[index].length === 0)) {
-        styleContent += styleBlock[index];
-        index++;
-    }
-    classNames.forEach(function (name) {
-        styleElements.push({
-            className: name.className,
-            isGlobalStyle: name.isGlobalStyle,
-            styleContent: styleContent.replace(/\s/g, ""),
-        });
-    });
-    return styleElements;
-}
 /**
  * Parse cue block into an object with the following properties:
  *   - start {number}: start time at which the cue should be displayed
@@ -29227,7 +29149,7 @@ function parseCue(cueBlock, timeOffset, styleElements) {
     index++;
     // Get time ranges.
     var timeCodes = cueBlock[index];
-    var range = parseTimeCode(timeCodes);
+    var range = parseTimeCode_1.default(timeCodes);
     if (!range || range.start === undefined || range.end === undefined) {
         log_1.default.warn("VTT: Invalid cue, the timecode line could not be parsed.");
         return undefined; // cancel if we do not find the start or end of this cue
@@ -29259,7 +29181,7 @@ function parseCue(cueBlock, timeOffset, styleElements) {
         if (spanElement.childNodes.length !== 0) {
             spanElement.appendChild(document.createElement("br"));
         }
-        formatWebVTTtoHTML(cueBlock[index], styleElements)
+        formatCueLineToHTML_1.default(cueBlock[index], styleElements)
             .forEach(function (child) {
             spanElement.appendChild(child);
         });
@@ -29273,32 +29195,31 @@ function parseCue(cueBlock, timeOffset, styleElements) {
         element: region,
     };
 }
+
+
+/***/ }),
+/* 308 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 /**
- * Parse the VTT timecode line given and construct an object with two
- * properties:
- *   - start {Number|undefined}: the corresponding start time in seconds
- *   - end {Number|undefined}: the corresponding end time in seconds
- * @example
- * ```js
- * parseTimeCode("00:02:30 -> 00:03:00");
- * // -> {
- * //      start: 150,
- * //      end: 180,
- * //    }
- * ```
- * @param {string} text
- * @returns {Object|undefined}
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-function parseTimeCode(text) {
-    var tsRegex = "((?:[0-9]{2}\:?)[0-9]{2}:[0-9]{2}.[0-9]{2,3})";
-    var startEndRegex = tsRegex + "(?:\ |\t)-->(?:\ |\t)" + tsRegex;
-    var ranges = text.match(startEndRegex);
-    if (ranges && ranges.length >= 3) {
-        var start = parseTimestamp_1.default(ranges[1]);
-        var end = parseTimestamp_1.default(ranges[2]);
-        return { start: start, end: end };
-    }
-}
+Object.defineProperty(exports, "__esModule", { value: true });
+var array_includes_1 = __webpack_require__(9);
 /**
  * Format WebVTT tags and classes into usual HTML.
  * <b *> => <b>
@@ -29310,7 +29231,7 @@ function parseTimeCode(text) {
  * @param {Array.<Object>} styleElements
  * @returns {Array.<Node>}
  */
-function formatWebVTTtoHTML(text, styleElements) {
+function formatCueLineToHTML(text, styleElements) {
     var HTMLTags = ["u", "i", "b"];
     var webVTTTags = ["u", "i", "b", "c", "#text"];
     var styleClasses = styleElements.map(function (styleElement) { return styleElement.className; });
@@ -29386,10 +29307,127 @@ function formatWebVTTtoHTML(text, styleElements) {
     }
     return parseNode(nodes);
 }
+exports.default = formatCueLineToHTML;
 
 
 /***/ }),
-/* 308 */
+/* 309 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *
+ * Parse style element from WebVTT.
+ * @param {Array.<string>} styleBlock
+ * @return {Array.<Object>} styleElements
+ */
+function parseStyleBlock(styleBlock) {
+    var styleElements = [];
+    var index = 1;
+    var classNames = [];
+    if (styleBlock[index].match(/::cue {/)) {
+        classNames.push({ isGlobalStyle: true });
+        index++;
+    }
+    else {
+        var cueClassLine = void 0;
+        while (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
+            classNames.push({
+                className: cueClassLine[1],
+                isGlobalStyle: false,
+            });
+            index++;
+        }
+    }
+    var styleContent = "";
+    while (!(styleBlock[index].match(/}/)
+        || styleBlock[index].length === 0)) {
+        styleContent += styleBlock[index];
+        index++;
+    }
+    classNames.forEach(function (name) {
+        styleElements.push({
+            className: name.className,
+            isGlobalStyle: name.isGlobalStyle,
+            styleContent: styleContent.replace(/\s/g, ""),
+        });
+    });
+    return styleElements;
+}
+exports.default = parseStyleBlock;
+
+
+/***/ }),
+/* 310 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var parseTimestamp_1 = __webpack_require__(311);
+/**
+ * Parse the VTT timecode line given and construct an object with two
+ * properties:
+ *   - start {Number|undefined}: the corresponding start time in seconds
+ *   - end {Number|undefined}: the corresponding end time in seconds
+ * @example
+ * ```js
+ * parseTimeCode("00:02:30 --> 00:03:00");
+ * // -> {
+ * //      start: 150,
+ * //      end: 180,
+ * //    }
+ * ```
+ * @param {string} text
+ * @returns {Object|undefined}
+ */
+function parseTimeCode(text) {
+    var tsRegex = "((?:[0-9]{2}\:)?[0-9]{2}:[0-9]{2}.[0-9]{2,3})";
+    var startEndRegex = tsRegex + "(?:\ |\t)-->(?:\ |\t)" + tsRegex;
+    var ranges = text.match(startEndRegex);
+    if (ranges && ranges.length >= 3) {
+        var start = parseTimestamp_1.default(ranges[1]);
+        var end = parseTimestamp_1.default(ranges[2]);
+        return { start: start, end: end };
+    }
+}
+exports.default = parseTimeCode;
+
+
+/***/ }),
+/* 311 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29431,7 +29469,87 @@ exports.default = parseTimestamp;
 
 
 /***/ }),
-/* 309 */
+/* 312 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Returns first line after the WEBVTT header.
+ * That is, the line after the first blank line after the first line!
+ * @param {Array.<string>} linified
+ * @returns {Number}
+ */
+function getFirstLineAfterHeader(linified) {
+    var i = 0;
+    while (i < linified.length) {
+        if (linified[i] === "") {
+            return i + 1;
+        }
+        i++;
+    }
+    return i;
+}
+exports.getFirstLineAfterHeader = getFirstLineAfterHeader;
+/**
+ * Returns true if the given line looks like the beginning of a Style block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
+function isStartOfStyleBlock(text) {
+    return /^STYLE( .*)?$/g.test(text);
+}
+exports.isStartOfStyleBlock = isStartOfStyleBlock;
+/**
+ * Returns true if the given line looks like the beginning of a comment block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
+function isStartOfNoteBlock(text) {
+    return /^NOTE( .*)?$/g.test(text);
+}
+exports.isStartOfNoteBlock = isStartOfNoteBlock;
+/**
+ * Returns true if the given line looks like the beginning of a region block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
+function isStartOfRegionBlock(text) {
+    return /^REGION( .*)?$/g.test(text);
+}
+exports.isStartOfRegionBlock = isStartOfRegionBlock;
+/**
+ * Returns true if the given line looks like the beginning of a cue block.
+ * @param {string} text
+ * @returns {Boolean}
+ */
+function isStartOfCueBlock(text) {
+    return (!isStartOfNoteBlock(text) &&
+        !isStartOfStyleBlock(text) &&
+        !isStartOfRegionBlock(text)) &&
+        text.length !== 0;
+}
+exports.isStartOfCueBlock = isStartOfCueBlock;
+
+
+/***/ }),
+/* 313 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29465,7 +29583,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var compat_1 = __webpack_require__(5);
 var log_1 = __webpack_require__(1);
 var abstract_1 = __webpack_require__(56);
-var parsers_1 = __webpack_require__(310);
+var parsers_1 = __webpack_require__(314);
 /**
  * Source buffer to display TextTracks in a <track> element, in the given
  * video element.
@@ -29579,7 +29697,7 @@ exports.default = NativeTextTrackSourceBuffer;
 
 
 /***/ }),
-/* 310 */
+/* 314 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29605,19 +29723,19 @@ var nativeParsers = {};
 /* tslint:disable no-var-requires */
 if (true) {
     nativeParsers.vtt =
-        __webpack_require__(311).default;
+        __webpack_require__(315).default;
 }
 if (true) {
     nativeParsers.ttml =
-        __webpack_require__(312).default;
+        __webpack_require__(316).default;
 }
 if (true) {
     nativeParsers.sami =
-        __webpack_require__(313).default;
+        __webpack_require__(317).default;
 }
 if (true) {
     nativeParsers.srt =
-        __webpack_require__(314).default;
+        __webpack_require__(318).default;
 }
 /* tslint:enable no-var-requires */
 /**
@@ -29643,7 +29761,7 @@ exports.default = parseTextTrackToCues;
 
 
 /***/ }),
-/* 311 */
+/* 315 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29914,7 +30032,7 @@ function setSettingsOnCue(settings, cue) {
 
 
 /***/ }),
-/* 312 */
+/* 316 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30203,7 +30321,7 @@ exports.default = parseTTMLStringToVTT;
 
 
 /***/ }),
-/* 313 */
+/* 317 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30359,7 +30477,7 @@ exports.default = parseSami;
 
 
 /***/ }),
-/* 314 */
+/* 318 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30439,7 +30557,7 @@ function parseCue(cueLines, timeOffset) {
 
 
 /***/ }),
-/* 315 */
+/* 319 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30516,7 +30634,7 @@ exports.default = speedManager;
 
 
 /***/ }),
-/* 316 */
+/* 320 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30588,7 +30706,7 @@ exports.default = StallingManager;
 
 
 /***/ }),
-/* 317 */
+/* 321 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30665,7 +30783,7 @@ exports.default = createTimingsAndSeekingsObservables;
 
 
 /***/ }),
-/* 318 */
+/* 322 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30706,7 +30824,7 @@ exports.PLAYER_STATES = {
 
 
 /***/ }),
-/* 319 */
+/* 323 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31101,7 +31219,7 @@ exports.default = LanguageManager;
 
 
 /***/ }),
-/* 320 */
+/* 324 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31308,7 +31426,7 @@ exports.default = createTimingsSampler;
 
 
 /***/ }),
-/* 321 */
+/* 325 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

@@ -217,7 +217,7 @@ function getInnerAndOuterTimeRanges(
 ) : { innerRange : IRange|null; outerRanges : IRange[] } {
   let innerRange : IRange|null = null;
   const outerRanges : IRange[] = [];
-  for (let i = timeRanges.length - 1; i >= 0; i--) {
+  for (let i = 0; i < timeRanges.length; i++) {
     const start = timeRanges.start(i);
     const end = timeRanges.end(i);
     if (time < start || time >= end) {
@@ -384,10 +384,7 @@ function keepRangeIntersection(
 }
 
 export {
-  areRangesNearlyContiguous,
-  areRangesOverlapping,
   convertToRanges,
-  findOverlappingRange,
   getInnerAndOuterTimeRanges,
   getLeftSizeOfRange,
   getNextRangeGap,

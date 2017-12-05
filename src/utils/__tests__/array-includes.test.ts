@@ -17,7 +17,16 @@
 import { expect } from "chai";
 import arrayIncludes from "../array-includes";
 
+const initialArrayIncludes = Array.prototype.includes;
 describe("utils - array-includes", () => {
+  before(() => {
+    (Array.prototype as any).includes = undefined;
+  });
+
+  after(() => {
+    Array.prototype.includes = initialArrayIncludes;
+  });
+
   it("should be true if a number is included", () => {
     expect(arrayIncludes([1, 2, 3, 4, 5], 1)).to.equal(true);
     expect(arrayIncludes([1, 2, 3, 4, 5], 2)).to.equal(true);

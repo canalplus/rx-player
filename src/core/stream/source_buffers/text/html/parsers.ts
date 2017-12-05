@@ -44,7 +44,7 @@ if (__FEATURES__.HTML_SRT) {
 
 if (__FEATURES__.HTML_VTT) {
   htmlParsers.vtt =
-    require("../../../../../parsers/texttracks/webvtt/html.ts").default;
+    require("../../../../../parsers/texttracks/webvtt/html/index.ts").default;
 }
 /* tslint:enable no-var-requires */
 

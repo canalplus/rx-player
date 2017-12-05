@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.4 (2017/12/05)
+
+### Bug Fixes
+
+  - text/webvtt: authorize header options without parsing them
+  - text/webvtt: authorize timestamps without hours
+
+### Other improvements
+
+  - misc: remove multiple unneeded assertions in DEV mode
+  - misc: update DEV mode default debug level from DEBUG to INFO
+
 ## v3.0.3 (2017/11/24)
 
 ### Bug Fixes
