@@ -18,6 +18,7 @@ import arrayFind = require("array-find");
 
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
+import { normalize as normalizeLang } from "../utils/languages";
 
 import Adaptation, {
   AdaptationType,
@@ -25,6 +26,20 @@ import Adaptation, {
 } from "./adaptation";
 
 type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
+
+export interface ISupplementaryImageTrack {
+  mimeType : string;
+  url : string;
+}
+
+export interface ISupplementaryTextTrack {
+  mimeType : string;
+  codecs? : string;
+  url : string;
+  language? : string;
+  languages? : string[];
+  closedCaption : boolean;
+}
 
 export interface IManifestArguments {
   id : number|string;
@@ -119,6 +134,105 @@ class Manifest {
       assert(this.availabilityStartTime != null);
       assert(this.presentationLiveGap != null);
       assert(this.timeShiftBufferDepth != null);
+    }
+  }
+
+  /**
+   * Add supplementary image Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} imageTracks
+   */
+  addSupplementaryImageAdaptations(
+    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
+  ) {
+    const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
+    const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
+      return new Adaptation({
+        id: "gen-image-ada-" + generateNewId(),
+        type: "image", // TODO enum
+        manuallyAdded: true,
+        representations: [{
+          baseURL: url,
+          bitrate: 0, // TODO remove bitrate when moved to Manifest
+          id: "gen-image-rep-" + generateNewId(),
+          mimeType,
+          index: {
+            indexType: "template", // TODO Rename "manual"?
+            duration: Number.MAX_VALUE,
+            timescale: 1,
+            startNumber: 0,
+          },
+        }],
+      });
+    });
+
+    if (newImageTracks.length) {
+      // sort representations by bitrates
+      // XXX TODO Do it in Adaptation instead
+      newImageTracks.map((adaptation) => {
+        adaptation.representations = adaptation.representations.sort((a, b) =>
+          a.bitrate - b.bitrate // bitrate ascending
+        );
+      });
+
+      this.adaptations.image = this.adaptations.image ?
+        this.adaptations.image.concat(newImageTracks) : newImageTracks;
+    }
+  }
+
+  /**
+   * Add supplementary text Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} textTracks
+   */
+  addSupplementaryTextAdaptations(
+    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
+  ) {
+    const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
+    const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
+      mimeType,
+      codecs,
+      url,
+      language,
+      languages,
+      closedCaption,
+    }) => {
+      const langsToMapOn : string[] = language ? [language] : languages || [];
+
+      return allSubs.concat(langsToMapOn.map((_language) => {
+        return new Adaptation({
+          id: "gen-text-ada-" + generateNewId(),
+          type: "text", // TODO enum
+          language: _language,
+          normalizedLanguage: normalizeLang(_language),
+          closedCaption,
+          manuallyAdded: true,
+          representations: [{
+            baseURL: url,
+            bitrate: 0, // TODO remove bitrate when moved to Manifest
+            id: "gen-text-rep-" + generateNewId(),
+            mimeType,
+            codecs,
+            index: {
+              indexType: "template", // TODO Rename "manual"?
+              duration: Number.MAX_VALUE,
+              timescale: 1,
+              startNumber: 0,
+            },
+          }],
+        });
+      }));
+    }, []);
+
+    if (newTextAdaptations.length) {
+      // sort representations by bitrates
+      // XXX TODO Do it in Adaptation instead
+      newTextAdaptations.map((adaptation) => {
+        adaptation.representations = adaptation.representations.sort((a, b) =>
+          a.bitrate - b.bitrate // bitrate ascending
+        );
+      });
+
+      this.adaptations.text = this.adaptations.text ?
+        this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
     }
   }
 
