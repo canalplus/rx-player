@@ -633,8 +633,8 @@ const atoms = {
     tfhd : Uint8Array,
     tfdt : Uint8Array,
     trun : Uint8Array,
-    senc : Uint8Array,
-    mfhd : Uint8Array
+    mfhd : Uint8Array,
+    senc?: Uint8Array
   ) : Uint8Array {
     const trafs = [tfhd, tfdt, trun];
     if (senc) {
@@ -1109,15 +1109,11 @@ export default {
     oldtfhd.set([0, 0, 0, 1], 12);
 
     // TODO fallback?
-    const oldsenc = reads.senc(oldtraf) as Uint8Array;
-
-    if (__DEV__) {
-      assert(oldsenc);
-    }
+    const oldsenc = reads.senc(oldtraf);
 
     // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
     const newtrun = atoms.trun(oldtrun);
-    const newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldsenc, oldmfhd);
+    const newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldmfhd, oldsenc);
     const newmoof = atoms.moof(oldmfhd, newtraf);
 
     const trunoffset = mfhdlen + 8 + 8 + tfhdlen + tfdtlen;
