@@ -15,7 +15,6 @@
  */
 
 import config from "../../config";
-import arrayIncludes from "../../utils/array-includes";
 import assert from "../../utils/assert";
 import {
   // bytesToStr,
@@ -27,6 +26,7 @@ import {
   le2toi,
   strToBytes,
 } from "../../utils/bytes";
+import generateNewId from "../../utils/id";
 import { normalize as normalizeLang } from "../../utils/languages";
 
 import { IParsedManifest } from "../types";
@@ -115,10 +115,15 @@ function parseBoolean(val : string|null) : boolean {
  * @returns {Number}
  */
 function calcLastRef(
-  adaptation? : IAdaptationSmooth
+  index : {
+    timeline : Array<{
+      ts : number;
+      r : number;
+      d? : number;
+    }>;
+    timescale : number;
+  }
 ) : number {
-  if (!adaptation) { return Infinity; }
-  const { index } = adaptation;
   const { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r + 1) * (d ? d : 0)) / index.timescale);
 }
@@ -294,7 +299,23 @@ function createSmoothStreamingParser(
    * @param {string} type
    * @return {Object}
    */
-  function parseQualityLevel(q : Element, type : string) : IRepresentationSmooth {
+  function parseQualityLevel(q : Element, type : string) : {
+    // required
+    bitrate: number;
+    codecPrivateData: string;
+
+    // optional
+    audiotag?: number;
+    bitsPerSample?: number;
+    channels?: number;
+    codecs?: string;
+    height?: number;
+    id?: string|number;
+    mimeType?: string;
+    packetSize?: number;
+    samplingRate?: number;
+    width?: number;
+  } {
     /**
      * @param {string} name
      * @returns {string|undefined}
@@ -380,8 +401,8 @@ function createSmoothStreamingParser(
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
 
-    const type = root.getAttribute("Type");
-    if (type == null) {
+    const adaptationType = root.getAttribute("Type");
+    if (adaptationType == null) {
       throw new Error("StreamIndex without type.");
     }
 
@@ -392,17 +413,14 @@ function createSmoothStreamingParser(
       language : normalizeLang(language);
     const baseURL = root.getAttribute("Url");
 
-    const accessibility : string[] = [];
-    let representationCount = 0;
-
     const {
       representations,
       index,
     } = reduceChildren(root, (res, _name, node) => {
       switch (_name) {
         case "QualityLevel":
-          const rep = parseQualityLevel(node, type);
-          if (type === "audio") {
+          const rep = parseQualityLevel(node, adaptationType);
+          if (adaptationType === "audio") {
             const fourCC = node.getAttribute("FourCC") || "";
 
             rep.codecs = extractAudioCodecs(
@@ -412,8 +430,7 @@ function createSmoothStreamingParser(
           }
 
           // filter out video representations with small bitrates
-          if (type !== "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
-            rep.id = representationCount++;
+          if (adaptationType !== "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
             res.representations.push(rep);
           }
           break;
@@ -423,10 +440,10 @@ function createSmoothStreamingParser(
       }
       return res;
     }, {
-      representations: [] as IRepresentationSmooth[],
+      representations: [] as any[],
       index: {
         timeline: [] as IHSSManifestSegment[],
-        indexType: "smooth",
+        indexType: "smooth" as "smooth",
         timescale: _timescale,
         initialization: {},
       },
@@ -436,39 +453,46 @@ function createSmoothStreamingParser(
     // codec and mimeType
     assert(representations.length, "adaptation should have at least one representation");
 
-    // apply default codec if non-supported
-    representations.forEach((rep: IRepresentationSmooth) =>
-      rep.codecs = rep.codecs || DEFAULT_CODECS[type]
-    );
+    // XXX TODO Do something to avoid duplicated IDs
+    const id = adaptationType + (language ? ("_" + language) : "");
 
-    // apply default mimetype if non-supported
-    representations.forEach((rep: IRepresentationSmooth) =>
-      rep.mimeType = rep.mimeType || DEFAULT_MIME_TYPES[type]
-    );
+    // apply default properties
+    representations.forEach((representation: IRepresentationSmooth) => {
+      representation.mimeType =
+        representation.mimeType || DEFAULT_MIME_TYPES[adaptationType];
+      representation.codecs = representation.codecs || DEFAULT_CODECS[adaptationType];
+      representation.id = id + "_" + adaptationType + "-" +
+        representation.mimeType + "-" +
+        representation.codecs;
+      representation.index = index;
+    });
 
     // TODO(pierre): real ad-insert support
     if (subType === "ADVT") {
       return null;
     }
-    else if (type === "text" && subType === "DESC") {
-      accessibility.push("hardOfHearing");
-    }
 
-    // TODO check that one, I did not find it in the spec
-    // else if (type === "audio" && subType === "DESC") {
-    //   accessibility.push("visuallyImpaired");
-    // }
-
-    return {
-      type,
-      accessibility,
+    const parsedAdaptation : IAdaptationSmooth = {
+      id,
       index,
+      type: adaptationType,
       representations,
       name,
       language,
       normalizedLanguage,
       baseURL,
     };
+
+    if (adaptationType === "text" && subType === "DESC") {
+      parsedAdaptation.closedCaption = true;
+    }
+
+    // TODO check that one, I did not find it in the spec
+    // else if (adaptationType === "audio" && subType === "DESC") {
+    //   parsedAdaptation.audioDescription = true;
+    // }
+
+    return parsedAdaptation;
   }
 
   function parseFromString(manifest : string): IParsedManifest {
@@ -489,7 +513,6 @@ function createSmoothStreamingParser(
       "Version should be 2.0, 2.1 or 2.2");
 
     const timescale = +(root.getAttribute("Timescale") || 10000000);
-    const adaptationIds : string[] = [];
 
     const {
       protection,
@@ -504,17 +527,9 @@ function createSmoothStreamingParser(
         break;
       }
       case "StreamIndex":
-        const ada : IAdaptationSmooth|null = parseAdaptation(node, timescale);
-        if (ada) {
-          let i = 0;
-          let id;
-          do {
-            id = ada.type + "_" +
-              (ada.language ? (ada.language + "_") : "") + i++;
-          } while (arrayIncludes(adaptationIds, id));
-          ada.id = id;
-          adaptationIds.push(id);
-          res.adaptations.push(ada);
+        const adaptation : IAdaptationSmooth|null = parseAdaptation(node, timescale);
+        if (adaptation) {
+          res.adaptations.push(adaptation);
         }
         break;
       }
@@ -539,12 +554,23 @@ function createSmoothStreamingParser(
       availabilityStartTime = REFERENCE_DATE_TIME;
       const video = adaptations.filter((a) => a.type === "video")[0];
       const audio = adaptations.filter((a) => a.type === "audio")[0];
-      const lastRef = Math.min(calcLastRef(video), calcLastRef(audio));
+      let lastRef;
+      {
+        const refsToCompare : number[] = [];
+        if (video && video.index) {
+          refsToCompare.push(calcLastRef(video.index));
+        }
+        if (audio && audio.index) {
+          refsToCompare.push(calcLastRef(audio.index));
+        }
+        lastRef = Math.min(...refsToCompare);
+      }
       presentationLiveGap = Date.now() / 1000 -
         (lastRef + availabilityStartTime);
     }
 
     return {
+      id: "gen-smooth-manifest-" + generateNewId(),
       transportType: "smooth",
       profiles: "",
       type: isLive ? "dynamic" : "static",
@@ -553,6 +579,7 @@ function createSmoothStreamingParser(
       presentationLiveGap,
       availabilityStartTime,
       periods: [{
+        id: "gen-smooth-period-0",
         duration: +(root.getAttribute("Duration") || Infinity) / timescale,
         adaptations,
         laFragCount: +(root.getAttribute("LookAheadFragmentCount") || 0),

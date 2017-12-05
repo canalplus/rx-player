@@ -55,10 +55,18 @@ interface IContentProtectionSmooth {
   keySystems: IHSSKeySystem[];
 }
 
+interface ISmoothRepresentationIndexIndex {
+  timeline : IHSSManifestSegment[];
+  indexType : "smooth";
+  timescale : number;
+  initialization : {};
+}
+
 interface IRepresentationSmooth {
   // required
   bitrate: number;
   codecPrivateData: string;
+  index: ISmoothRepresentationIndexIndex;
 
   // optional
   audiotag?: number;
@@ -77,7 +85,8 @@ interface IAdaptationSmooth {
   id?: string;
   smoothProtection?: IContentProtectionSmooth|null;
   type: string;
-  accessibility: string[];
+  closedCaption? : boolean;
+  audioDescription? : boolean;
   index: IIndex;
   representations: IRepresentationSmooth[];
   name: string|null;

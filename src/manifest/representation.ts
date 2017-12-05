@@ -120,6 +120,10 @@ class Representation {
     // this._profiles = args.profiles;
     // this._segmentProfiles = args.segmentProfiles;
   }
+
+  getMimeTypeString() {
+    return `${this.mimeType};codecs="${this.codec}"`;
+  }
 }
 
 export default Representation;

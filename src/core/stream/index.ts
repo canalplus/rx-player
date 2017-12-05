@@ -38,7 +38,10 @@ import {
   isKnownError,
   OtherError,
 } from "../../errors";
-import Manifest from "../../manifest";
+import Manifest, {
+  ISupplementaryImageTrack,
+  ISupplementaryTextTrack,
+} from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
@@ -58,9 +61,6 @@ import {
 } from "../buffer/types";
 import { IKeySystemOption } from "../eme";
 import {
-  getCodec,
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
   normalizeManifest,
   updateManifest,
 } from "../manifest";
@@ -431,7 +431,10 @@ export default function Stream({
           currentRepresentation = representation;
         });
 
-      const codec = getCodec(adaptation.representations[0] || {});
+      const codec = (
+        adaptation.representations[0] &&
+        adaptation.representations[0].getMimeTypeString()
+      ) || "";
       const sourceBuffer = createSourceBuffer(
         videoElement,
         mediaSource,
@@ -673,7 +676,7 @@ export default function Stream({
           const representations = adaptations ?
             adaptations[0].representations : [];
           if (representations.length) {
-            const codec = getCodec(representations[0]);
+            const codec = representations[0].getMimeTypeString();
             addNativeSourceBuffer(mediaSource, bufferType, codec, sourceBufferMemory);
           }
         }
