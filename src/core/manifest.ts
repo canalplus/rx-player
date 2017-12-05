@@ -33,136 +33,34 @@
 
 import arrayFind = require("array-find");
 
-import arrayIncludes from "../utils/array-includes";
-
 import { isCodecSupported } from "../compat";
 import { MediaError } from "../errors";
-import Manifest from "../manifest";
-import { normalize as normalizeLang } from "../utils/languages";
+import Manifest, {
+  ISupplementaryImageTrack,
+  ISupplementaryTextTrack,
+} from "../manifest";
+import { IAdaptationArguments } from "../manifest/adaptation";
+import { IRepresentationArguments } from "../manifest/representation";
 import log from "../utils/log";
 import {
   normalizeBaseURL,
   resolveURL,
 } from "../utils/url";
 
-import { IContentProtectionDash } from "../net/dash/types";
-import { IContentProtectionSmooth } from "../net/smooth/types";
-
-export interface ISupplementaryTextTrack {
-  mimeType : string;
-  codecs? : string;
-  url : string;
-  language? : string;
-  languages? : string[];
-  closedCaption : boolean;
-}
-
-interface INormalizedSupplementaryTextTrack {
-  id : string;
-  type : "text";
-  language : string;
-  normalizedLanguage : string;
-  accessibility : string[];
-  baseURL : string;
-  manuallyAdded: true;
-  representations: Array<{
-    id : string;
-    mimeType : string;
-    codecs? : string;
-    index : {
-      indexType : "template";
-      duration : number;
-      timescale : 1;
-      startNumber : 0;
-    };
-  }>;
-}
-
-export interface ISupplementaryImageTrack {
-  mimeType : string;
-  url : string;
-}
-
-interface INormalizedSupplementaryImageTrack {
-  id : string;
-  type : "image";
-  baseURL : string;
-  manuallyAdded: true;
-  representations: Array<{
-    id : string;
-    mimeType : string;
-    index : {
-      indexType : "template";
-      duration : number;
-      timescale : 1;
-      startNumber : 0;
-    };
-  }>;
-}
-
-interface INormalizedRepresentation {
-  bitrate : number;
-  codec : string;
-  codecs : string;
-  mimeType : string;
-  index : {
-    indexType : string;
-    duration : number;
-    timescale : number;
-    startNumber? : number;
-  };
-  baseURL : string;
-  bitsPerSample? : number;
-  channels? : number;
-  codecPrivateData? : string;
-  height? : number;
-  id : string;
-  packetSize? : number;
-  samplingRate? : number;
-  width? : number;
-}
-
-interface INormalizedAdaptation {
-  id : string;
-  representations : INormalizedRepresentation[];
-  type : string;
-  audioDescription? : boolean;
-  closedCaption? : boolean;
-  contentProtection? : IContentProtectionDash;
-  language? : string;
-  manuallyAdded? : boolean;
-  normalizedLanguage? : string;
-  smoothProtection? : IContentProtectionSmooth;
-}
-
 interface INormalizedPeriod {
-  adaptations : INormalizedAdaptation[];
+  adaptations : IAdaptationArguments[];
 }
 
-/**
- * Representation keys directly inherited from the adaptation.
- * If any of those keys are in an adaptation but not in one of its
- * representation, it will be inherited.
- */
-const representationBaseType = [
-  "audioSamplingRate",
-  "codecs",
-  "codingDependency",
-  "frameRate",
-  "height",
-  "index",
-  "maxPlayoutRate",
-  "maximumSAPPeriod",
-  "mimeType",
-  "profiles",
-  "segmentProfiles",
-  "width",
-];
-
-let uniqueId = 0;
 const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 
 /**
+ * Returns the real period's baseURL.
+ *
+ * Here is how it works:
+ *   1. If periods.baseURL is an absolute URL, return it.
+ *   2. If periods.baseURL is a relative URL, contatenate it with the
+ *      Manifest's URL
+ *   3. If periods.baseURL is undefined, just return the URL of the Manifest.
  * @param {Object}
  * @returns {string}
  */
@@ -209,57 +107,40 @@ function parseBaseURL(manifest : {
  */
 function normalizeManifest(
   url : string,
-  manifest : any,
+  manifestObject : any,
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
 ) : Manifest {
-  // transportType == "smooth"|"dash"
-  if (!manifest.transportType) {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
-
-  // TODO cleaner ID
-  manifest.id = manifest.id || "gen-manifest-" + uniqueId++;
-
-  // "static"|"dynamic"
-  manifest.type = manifest.type || "static";
-  manifest.isLive = manifest.type === "dynamic";
-
-  const locations = manifest.locations;
+  const locations = manifestObject.locations;
   if (!locations || !locations.length) {
-    manifest.locations = [url];
+    manifestObject.locations = [url];
   }
-
-  const rootURL = parseBaseURL(manifest);
+  const rootURL = parseBaseURL(manifestObject);
 
   // TODO(pierre): support multi-locations/cdns
   const inherit = {
     rootURL, // TODO needed for inheritance?
-    baseURL: manifest.baseURL, // TODO so manifest.baseURL is more important
-                               // than manifest.periods[0].baseURL?
+    baseURL: manifestObject.baseURL, // TODO so manifestObject.baseURL is more important
+                               // than manifestObject.periods[0].baseURL?
                                // TODO needed for inheritance?
-    isLive: manifest.isLive, // TODO needed for inheritance?
+    isLive: manifestObject.isLive, // TODO needed for inheritance?
   };
-  const periods = manifest.periods.map((period : any) =>
-    normalizePeriod(period, inherit, externalTextTracks, externalImageTracks)
+  const periods = manifestObject.periods.map((period : any) =>
+    normalizePeriod(period, inherit)
   ) as INormalizedPeriod[];
 
   // TODO(pierre): support multiple periods
-  const finalManifest = assignAndClone(manifest, periods[0]);
+  const finalManifest = assignAndClone(manifestObject, periods[0]);
   finalManifest.periods = null;
 
   if (!finalManifest.duration) {
     finalManifest.duration = Infinity;
   }
 
-  if (finalManifest.isLive) {
-    finalManifest.suggestedPresentationDelay =
-      finalManifest.suggestedPresentationDelay || 0;
-
-    finalManifest.availabilityStartTime = finalManifest.availabilityStartTime || 0;
-  }
-
-  return new Manifest(finalManifest);
+  const manifest = new Manifest(finalManifest);
+  manifest.addSupplementaryTextAdaptations(externalTextTracks);
+  manifest.addSupplementaryImageAdaptations(externalImageTracks);
+  return manifest;
 }
 
 /**
@@ -286,38 +167,11 @@ function normalizeManifest(
  *
  * @returns {Object} period
  */
-function normalizePeriod(
-  period : any,
-  inherit : any,
-  externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
-  externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
-) : INormalizedPeriod {
-  if (typeof period.id === "undefined") {
-    // TODO cleaner ID
-    period.id = "gen-period-" + uniqueId++;
-
-    // TODO Generate ID higher and throw here?
-    // throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
-
+function normalizePeriod(period : any, inherit : any) : INormalizedPeriod {
   const adaptations = period.adaptations
     .map((adaptation : any) =>
       normalizeAdaptation(adaptation, inherit)
-    ) as INormalizedAdaptation[];
-
-  if (externalTextTracks) {
-    adaptations.push(
-      ...normalizeSupplementaryTextTracks(externalTextTracks)
-        .map(adaptation => normalizeAdaptation(adaptation, inherit))
-    );
-  }
-
-  if (externalImageTracks) {
-    adaptations.push(
-      ...normalizeSupplementaryImageTracks(externalImageTracks)
-        .map(adaptation => normalizeAdaptation(adaptation, inherit))
-    );
-  }
+    ) as IAdaptationArguments[];
 
   // filter out adaptations from unsupported types
   const filteredAdaptations = adaptations.filter((adaptation) => {
@@ -333,7 +187,7 @@ function normalizePeriod(
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
-  const adaptationsByType : IDictionary<INormalizedAdaptation[]> = {};
+  const adaptationsByType : IDictionary<IAdaptationArguments[]> = {};
 
   // construct adaptationsByType object
   for (let i = 0; i < filteredAdaptations.length; i++) {
@@ -380,63 +234,30 @@ function normalizePeriod(
 function normalizeAdaptation(
   initialAdaptation : {
     id : string;
-    representations : Array<{ id : string }>;
+    representations : IRepresentationArguments[];
   },
   inherit : any
-) : INormalizedAdaptation {
-  if (typeof initialAdaptation.id === "undefined") {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
-
+) : IAdaptationArguments {
   const adaptation : any = assignAndClone(inherit, initialAdaptation);
 
-  // representations in this adaptation will inherit the props of this object
-  const toInheritFromAdaptation : any = {};
-  representationBaseType.forEach((baseType) => {
-    if (baseType in adaptation) {
-      toInheritFromAdaptation[baseType] = adaptation[baseType];
-    }
-  });
-
   let representations = adaptation.representations
-    .map((representation : { id : string }) =>
+    .map((representation : IRepresentationArguments) =>
       normalizeRepresentation(
         representation,
-        toInheritFromAdaptation,
         adaptation.rootURL,
         adaptation.baseURL
       )
     ).sort(
-      (a : INormalizedRepresentation, b : INormalizedRepresentation) =>
+      (a : IRepresentationArguments, b : IRepresentationArguments) =>
         a.bitrate - b.bitrate // bitrate ascending
-    ) as INormalizedRepresentation[];
+    ) as IRepresentationArguments[];
 
-  const { type, accessibility = [] } = adaptation;
-  if (!type) {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
-
-  switch (type) {
-    case "video":
-    case "audio":
-      representations = representations
-        .filter((representation) => isCodecSupported(getCodec(representation)));
-
-      if (type === "audio") {
-        const isAudioDescription =
-          arrayIncludes(accessibility, "visuallyImpaired");
-        adaptation.audioDescription = isAudioDescription;
-      }
-      break;
-
-    case "text":
-      const isHardOfHearing = arrayIncludes(accessibility, "hardOfHearing");
-      adaptation.closedCaption = isHardOfHearing;
-      break;
+  if (adaptation.type === "video" || adaptation.type === "audio") {
+    representations = representations
+      .filter((representation) => isCodecSupported(getCodec(representation)));
   }
 
   adaptation.representations = representations;
-  adaptation.bitrates = representations.map((rep) => rep.bitrate);
   return adaptation;
 }
 
@@ -451,122 +272,12 @@ function normalizeAdaptation(
    * @returns {Object}
    */
 function normalizeRepresentation(
-  initialRepresentation : { id: string },
-  inherit : any,
+  representation : IRepresentationArguments,
   rootURL? : string,
   baseURL? : string
-) : INormalizedRepresentation {
-  if (typeof initialRepresentation.id === "undefined") {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
-
-  const representation : any = assignAndClone(inherit, initialRepresentation);
-
-  if (!representation.index) {
-    // if we have no index, it must mean the whole file is directly accessible
-    // as is. Simulate a "template" for now as it is the most straightforward.
-    // TODO own indexType
-    representation.index = {
-      indexType: "template",
-      duration: Number.MAX_VALUE,
-      timescale: 1,
-      startNumber: 0,
-    };
-  } else if (!representation.index.timescale) {
-    representation.index.timescale = 1;
-  }
-
-  if (representation.bitrate == null) {
-    representation.bitrate = 1;
-  } else if (representation.bitrate === 0) {
-    log.warn("One of your representation has an invalid bitrate of 0.");
-  }
-
-  // Fix issue in some packagers, like GPAC, generating a non
-  // compliant mimetype with RFC 6381. Other closed-source packagers
-  // may be impacted.
-  if (representation.codecs === "mp4a.40.02") {
-    representation.codecs = "mp4a.40.2";
-  }
-
+) : IRepresentationArguments {
   representation.baseURL = resolveURL(rootURL, baseURL, representation.baseURL);
-  representation.codec = representation.codecs;
   return representation;
-}
-
-/**
- * Normalize text tracks Object/Array to a normalized manifest adaptation.
- * @param {Array.<Object>|Object} subtitles
- * @returns {Array.<Object>}
- */
-function normalizeSupplementaryTextTracks(
-  textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
-) : INormalizedSupplementaryTextTrack[] {
-  const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
-  return _textTracks.reduce((allSubs : INormalizedSupplementaryTextTrack[], {
-    mimeType,
-    codecs,
-    url,
-    language,
-    languages,
-    closedCaption,
-  }) => {
-    const langsToMapOn : string[] = language ? [language] : languages || [];
-
-    return allSubs.concat(langsToMapOn.map((_language) => ({
-      // TODO cleaner ID
-      id: "gen-text-ada-" + uniqueId++,
-
-      // TODO open a TypeScript issue?
-      type: "text" as "text",
-      language: _language,
-      normalizedLanguage: normalizeLang(_language),
-      accessibility: closedCaption ? ["hardOfHearing"] : [],
-      baseURL: url,
-      manuallyAdded: true as true,
-      representations: [{
-        // TODO cleaner ID
-        id: "gen-text-rep-" + uniqueId++,
-        mimeType,
-        codecs,
-        index: {
-          indexType: "template" as "template",
-          duration: Number.MAX_VALUE,
-          timescale: 1 as 1,
-          startNumber: 0 as 0,
-        },
-      }],
-    })));
-  }, []);
-}
-
-/**
- * Normalize image tracks Object/Array to a normalized manifest adaptation.
- * @param {Array.<Object>|Object} images
- * @returns {Array.<Object>}
- */
-function normalizeSupplementaryImageTracks(
-  imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
-) : INormalizedSupplementaryImageTrack[] {
-  const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
-  return _imageTracks.map(({ mimeType, url /*, size */ }) => {
-    return {
-      id: "gen-image-ada-" + uniqueId++,
-      type: "image" as "image",
-      baseURL: url,
-      manuallyAdded: true as true,
-      representations: [{
-        id: "gen-image-rep-" + uniqueId++,
-        mimeType,
-        index: {
-          indexType: "template" as "template",
-          duration: Number.MAX_VALUE,
-          timescale: 1 as 1,
-          startNumber: 0 as 0,
-        },
-      }],
-    };
-  });
 }
 
 /**
@@ -658,16 +369,15 @@ function updateManifest(
  */
 function getCodec(
   representation : {
-    codec? : string;
+    codecs? : string;
     mimeType? : string;
   }
 ) : string {
-  const { codec = "", mimeType = "" } = representation;
-  return `${mimeType};codecs="${codec}"`;
+  const { codecs = "", mimeType = "" } = representation;
+  return `${mimeType};codecs="${codecs}"`;
 }
 
 export {
   normalizeManifest,
-  getCodec,
   updateManifest,
 };
