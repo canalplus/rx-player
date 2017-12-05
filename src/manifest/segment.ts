@@ -63,7 +63,6 @@ class Segment /* implements ISegment */ {
       }
       assert(args.id);
       assert(args.timescale);
-      assert(args.media);
     }
 
     this.id = args.id;
