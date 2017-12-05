@@ -7,6 +7,10 @@
   - text/webvtt: authorize header options without parsing them
   - text/webvtt: authorize timestamps without hours
 
+### Other improvements
+
+  - misc: remove multiple unneeded assertions in DEV mode
+
 ## v3.0.3 (2017/11/24)
 
 ### Bug Fixes
