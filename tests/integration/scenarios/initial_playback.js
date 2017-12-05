@@ -49,9 +49,9 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.play();
-    await sleep(100);
+    await sleep(200);
     expect(player.getPosition()).to.be.above(0);
-    expect(player.getPosition()).to.be.below(0.15);
+    expect(player.getPosition()).to.be.below(0.25);
     expect(player.getVideoLoadedTime()).to.be.above(0);
     expect(player.getVideoPlayedTime()).to.be.above(0);
   });
@@ -64,9 +64,9 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(0.5);
     player.play();
-    const lastPosition = player.getPosition()
+    const lastPosition = player.getPosition();
     await sleep(300);
-    expect(player.getPosition()).to.be.below(0.3);
+    expect(player.getPosition()).to.be.below(0.35);
     expect(player.getPosition()).to.be.above(0.05);
     expect(player.getPosition()).to.be.above(lastPosition);
     expect(player.getVideoLoadedTime()).to.be.above(0);
@@ -102,7 +102,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPosition()).to.equal(2);
     expect(player.getPlayerState()).to.equal("LOADED");
     player.play();
-    await sleep(100);
+    await sleep(200);
     expect(player.getPlayerState()).to.equal("PLAYING");
     expect(player.getPosition()).to.be.above(2);
   });
@@ -117,7 +117,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPosition()).to.equal(player.getMinimumPosition());
     expect(player.getPlayerState()).to.equal("LOADED");
     player.play();
-    await sleep(100);
+    await sleep(200);
     expect(player.getPlayerState()).to.equal("PLAYING");
     expect(player.getPosition()).to.be.above(player.getMinimumPosition());
   });
