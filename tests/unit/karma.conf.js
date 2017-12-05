@@ -18,12 +18,12 @@ const karmaConf = {
 
   customLaunchers: {
     FirefoxHeadless: {
-      base: 'Firefox',
-      flags: [ '-headless' ],
+      base: "Firefox",
+      flags: [ "-headless" ],
     },
   },
 
-  reporters: ["mocha", "coverage-istanbul"],
+  reporters: ["mocha"],
 
   frameworks: ["mocha"],
 
