@@ -23,7 +23,7 @@ import {
   isStartOfStyleBlock,
 } from "../utils";
 
-describe("webvtt - utils", () => {
+describe("webvtt - html - utils", () => {
   describe("getFirstLineAfterHeader", () => {
     it("should give the second line after the WEBVTT one if no header", () => {
       const webvttFile = [

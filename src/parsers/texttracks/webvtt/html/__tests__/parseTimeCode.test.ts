@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import parseTimeCode from "../parseTimeCode";
 
-describe("webvtt - parseTimeCode", () => {
+describe("webvtt - html - parseTimeCode", () => {
   /* tslint:disable max-line-length */
   it("should translate well-formed webvtt timestamps with minutes and seconds", () => {
   /* tslint:enable max-line-length */
