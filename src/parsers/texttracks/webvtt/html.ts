@@ -57,7 +57,9 @@ export default function parseWebVTT(
     throw new Error("Can't parse WebVTT: Invalid File.");
   }
 
-  for (let i = 1; i < linified.length; i++) {
+  const firstLineAfterHeader = getFirstLineAfterHeader(linified);
+
+  for (let i = firstLineAfterHeader; i < linified.length; i++) {
     if (isStartOfStyleBlock(linified[i])) {
       const startOfStyleBlock = i;
       i++;
@@ -75,7 +77,7 @@ export default function parseWebVTT(
   }
 
   // Parse cues, format and apply style.
-  for (let i = 1; i < linified.length; i++) {
+  for (let i = firstLineAfterHeader; i < linified.length; i++) {
     if (!(linified[i].length === 0)) {
       if (isStartOfCueBlock(linified[i])) {
         const startOfCueBlock = i;
@@ -99,6 +101,23 @@ export default function parseWebVTT(
     }
   }
   return cuesArray;
+}
+
+/**
+ * Returns first line after the WEBVTT header.
+ * That is, the line after the first blank line after the first line!
+ * @param {Array.<string>} linified
+ * @returns {Number}
+ */
+function getFirstLineAfterHeader(linified : string[]) : number {
+  let i = 1;
+  while (i < linified.length) {
+    if (linified[i] === "") {
+      return i+1;
+    }
+    i++;
+  }
+  return i;
 }
 
 /**
