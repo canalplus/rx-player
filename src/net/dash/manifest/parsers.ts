@@ -15,6 +15,8 @@
  */
 
 import assert from "../../../utils/assert";
+import generateNewId from "../../../utils/id";
+import log from "../../../utils/log";
 import {
   getLastLiveTimeReference,
   inferAdaptationType,
@@ -76,6 +78,10 @@ function parseMPD(
 
   const parsedMpd = feedAttributes(root, mpd);
 
+  if (!parsedMpd.id) {
+    parsedMpd.id = "gen-dash-manifest-" + generateNewId();
+  }
+
   if (parsedMpd.type && /dynamic/.test(parsedMpd.type)) {
     // As adaptations can either be from DASH or SMOOTH in parsed mpd object,
     // we must type adaptations as IAdaptationDash.
@@ -90,13 +96,22 @@ function parseMPD(
       assert(parsedMpd.availabilityStartTime);
     }
 
-    if (parsedMpd.availabilityStartTime &&
-        typeof parsedMpd.availabilityStartTime !== "number") {
-      parsedMpd.availabilityStartTime =
-        parsedMpd.availabilityStartTime.getTime() / 1000;
-      parsedMpd.presentationLiveGap = lastRef != null ?
-        Date.now() / 1000 - (lastRef + parsedMpd.availabilityStartTime) : 10;
+    if (typeof parsedMpd.availabilityStartTime !== "number") {
+      if (parsedMpd.availabilityStartTime) {
+        parsedMpd.availabilityStartTime =
+          parsedMpd.availabilityStartTime.getTime() / 1000;
+        parsedMpd.presentationLiveGap = lastRef != null ?
+          Date.now() / 1000 - (lastRef + parsedMpd.availabilityStartTime) : 10;
+      } else {
+        parsedMpd.availabilityStartTime = 0;
+      }
     }
+
+    if (typeof parsedMpd.suggestedPresentationDelay !== "number") {
+      parsedMpd.suggestedPresentationDelay = 0;
+    }
+  } else if (!parsedMpd.type) {
+    parsedMpd.type = "static";
   }
 
   return parsedMpd;
@@ -134,6 +149,10 @@ function parsePeriod(
       id: null,
       adaptations: [],
     }));
+
+  if (!period.id) {
+    period.id = "gen-dash-period-" + generateNewId();
+  }
 
   return period;
 }
@@ -203,14 +222,12 @@ function parseAdaptationSet(
 
   parsedAdaptation.type = inferAdaptationType(parsedAdaptation);
 
-  parsedAdaptation.accessibility = [];
-
   if (accessibility && isHardOfHearing(accessibility)) {
-    parsedAdaptation.accessibility.push("hardOfHearing");
+    parsedAdaptation.closedCaption = true;
   }
 
   if (accessibility && isVisuallyImpaired(accessibility)) {
-    parsedAdaptation.accessibility.push("visuallyImpaired");
+    parsedAdaptation.audioDescription = true;
   }
 
   // representations inherit some adaptation keys
@@ -232,40 +249,95 @@ function parseAdaptationSet(
       if (parsedAdaptation.width && representation.width == null) {
           representation.width = parsedAdaptation.width;
       }
+      if (parsedAdaptation.index && representation.index == null) {
+          representation.index = parsedAdaptation.index;
+      } else if (!representation.index) {
+        // if we have no index, it must mean the whole file is directly accessible
+        // as is. Simulate a "template" for now as it is the most straightforward.
+        // TODO own indexType
+        representation.index = {
+          indexType: "template" as "template",
+          duration: Number.MAX_VALUE,
+          timescale: 1,
+          startNumber: 0,
+        };
+      }
+
+      if (!representation.index.timescale) {
+        representation.index.timescale = 1;
+      }
+
       return representation;
     });
+  }
+
+  // generate some ID for the adaptation based on its characteristics
+  if (!parsedAdaptation.id) {
+    let idString = `${parsedAdaptation.type}`;
+    if (parsedAdaptation.language) {
+      idString += `-${parsedAdaptation.language}`;
+    }
+    if (parsedAdaptation.closedCaption) {
+      idString += "-cc";
+    }
+    if (parsedAdaptation.audioDescription) {
+      idString += "-ad";
+    }
+    if (parsedAdaptation.mimeType) {
+      idString += `-${parsedAdaptation.mimeType}`;
+    }
+    // XXX TODO second pass to ensure each id is unique?
+    parsedAdaptation.id = idString;
   }
 
   return parsedAdaptation;
 }
 
 function parseRepresentation(root: Element): IRepresentationDash {
-  const representation = reduceChildren<IRepresentationDash>(root, (res, name, node) => {
-    switch (name) {
-      case "BaseURL":
-        res.baseURL = node.textContent;
-        break;
+  const representation : IRepresentationDash =
+    reduceChildren<any>(root, (res, name, node) => {
+      switch (name) {
+        case "BaseURL":
+          res.baseURL = node.textContent;
+          break;
 
-      case "SegmentBase":
-        res.index = parseSegmentBase(node);
-        break;
+        case "SegmentBase":
+          res.index = parseSegmentBase(node);
+          break;
 
-      case "SegmentList":
-        res.index = parseSegmentList(node);
-        break;
+        case "SegmentList":
+          res.index = parseSegmentList(node);
+          break;
 
-      case "SegmentTemplate":
-        res.index = parseSegmentTemplate(node);
-        break;
-    }
-    return res;
-  }, {
-    id: null,
-    index: null,
-    mimeType: null,
-  });
+        case "SegmentTemplate":
+          res.index = parseSegmentTemplate(node);
+          break;
+      }
+      return res;
+    }, {
+      id: null,
+      index: null,
+      mimeType: null,
+    });
 
   const parsedRep = feedAttributes(root, representation);
+
+  if (!parsedRep.id) {
+    parsedRep.id = "gen-dash-representation-" + generateNewId();
+  }
+
+  if (!parsedRep.bitrate) {
+    log.warn("One of your representation has an invalid bitrate");
+    parsedRep.bitrate = 0;
+  }
+
+  // Fix issue in some packagers, like GPAC, generating a non
+  // compliant mimetype with RFC 6381. Other closed-source packagers
+  // may be impacted.
+  if (parsedRep.codecs === "mp4a.40.02") {
+    parsedRep.codecs = "mp4a.40.2";
+  }
+
   return parsedRep;
 }
 
