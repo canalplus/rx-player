@@ -69,7 +69,7 @@ interface IContentComponentDash {
 
 interface IRepresentationDash {
   id: string|number|null;
-  index: IIndex|ISegmentBase|IMultipleSegmentBase|null;
+  index: any|null; // XXX TODO
   mimeType: string|null;
   baseURL?: string|null;
   representations?: IRepresentationDash[];
@@ -85,38 +85,42 @@ interface IRepresentationDash {
   maximumSAPPeriod?: number;
   maxPlayoutRate?: number;
   codingDependency?: boolean;
-  bandwidth?: string;
+  bitrate: number;
   qualityRanking?: number;
 }
 
 interface IAdaptationDash {
+  // required
   id: string|null|number;
   index: IIndex|ISegmentBase|null;
-  representations: IRepresentationDash[];
   mimeType: string|null;
+  representations: IRepresentationDash[];
+
+  // optional
+  audioDescription? : boolean;
   baseURL?: string|null;
-  type?: string;
-  role?: IRole;
-  accessibility?: string[];
+  bitstreamSwitching?: boolean;
+  closedCaption? : boolean;
+  codecs?: string;
   contentComponent?: IContentComponentDash;
   contentProtection?: IContentProtectionDash|undefined;
-  group?: number;
-  lang?: string;
   contentType?: string;
-  par?: number;
-  minBandwidth?: number;
+  group?: number;
+  height?: number;
+  language?: string;
   maxBandwidth?: number;
-  minWidth?: number;
-  maxWidth?: number;
-  minHeight?: number;
-  maxHeight?: number;
-  minFrameRate?: number;
   maxFrameRate?: number;
+  maxHeight?: number;
+  maxWidth?: number;
+  minBandwidth?: number;
+  minFrameRate?: number;
+  minHeight?: number;
+  minWidth?: number;
+  par?: number;
+  role?: IRole;
   segmentAlignment?: number|boolean;
   subsegmentAlignment?: number|boolean;
-  bitstreamSwitching?: boolean;
-  codecs?: string;
-  height?: number;
+  type?: string;
   width?: number;
 }
 
