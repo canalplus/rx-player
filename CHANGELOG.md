@@ -1,5 +1,12 @@
 # Changelog
 
+## unreleased
+
+### Bug Fixes
+
+  - text/webvtt: authorize header options without parsing them
+  - text/webvtt: authorize timestamps without hours
+
 ## v3.0.3 (2017/11/24)
 
 ### Bug Fixes
