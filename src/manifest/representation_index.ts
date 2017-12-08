@@ -14,13 +14,37 @@
  * limitations under the License.
  */
 
-import { IBufferSegmentInfos } from "../core/buffer/types";
-
 import getRightIndexHelpers from "./indexes/index";
 import Segment from "./segment";
 
-interface IRepresentationIndexArguments {
-  index : any; // TODO @ index refacto
+export interface IRepresentationIndexSegmentInfos {
+  duration : number;
+  time : number;
+  timescale : number;
+}
+
+// TODO fix this mess
+interface IRepresentationIndexIndexArguments {
+  rootId : string;
+  indexType : string;
+  timeline? : Array<{
+    ts : number;
+    d? : number;
+    r : number;
+  }>;
+  timescale?: number;
+  timeShiftBufferDepth?: number;
+  presentationTimeOffset?: number;
+  indexRange?: [number, number];
+  indexRangeExact?: boolean;
+  availabilityTimeOffset?: number;
+  availabilityTimeComplete?: boolean;
+  duration? : number;
+  startNumber? : number;
+}
+
+export interface IRepresentationIndexArguments {
+  index : IRepresentationIndexIndexArguments;
   rootId : string|number;
 }
 
@@ -94,8 +118,8 @@ class RepresentationIndex {
       timescale : number;
     }>,
     currentSegment : { duration : number; time : number; timescale : number}
-  ) : IBufferSegmentInfos[] {
-    const addedSegments : IBufferSegmentInfos[] = [];
+  ) : IRepresentationIndexSegmentInfos[] {
+    const addedSegments : IRepresentationIndexSegmentInfos[] = [];
     for (let i = 0; i < nextSegments.length; i++) {
       if (
         this._indexHelpers._addSegmentInfos(

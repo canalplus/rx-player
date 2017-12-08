@@ -22,16 +22,16 @@ interface IListeners<T> {
   [propName: string] : Array<listenerFunction<T>>;
 }
 
-export default class EventEmitter {
+export default class EventEmitter<T> {
   public on = this.addEventListener;
   public off = this.removeEventListener;
-  private _listeners : IListeners<any>;
+  private _listeners : IListeners<T>;
 
   constructor() {
     this._listeners = {};
   }
 
-  public addEventListener(evt : string, fn : listenerFunction<any>) : void {
+  public addEventListener(evt : string, fn : listenerFunction<T>) : void {
     assert(typeof fn === "function",
            "eventemitter: second argument should be a function");
     if (!this._listeners[evt]) {
@@ -40,7 +40,7 @@ export default class EventEmitter {
     this._listeners[evt].push(fn);
   }
 
-  public removeEventListener(evt : string, fn : listenerFunction<any>) : void {
+  public removeEventListener(evt : string, fn : listenerFunction<T>) : void {
     if (arguments.length === 0) {
       this._listeners = {};
       return;
@@ -62,7 +62,7 @@ export default class EventEmitter {
     }
   }
 
-  public trigger(evt : string, arg? : any) : void {
+  public trigger(evt : string, arg : T) : void {
     if (!this._listeners.hasOwnProperty(evt)) {
       return;
     }

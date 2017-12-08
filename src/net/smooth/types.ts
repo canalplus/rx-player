@@ -64,9 +64,11 @@ interface ISmoothRepresentationIndexIndex {
 
 interface IRepresentationSmooth {
   // required
+  baseURL : string;
   bitrate: number;
   codecPrivateData: string;
   index: ISmoothRepresentationIndexIndex;
+  id: string;
 
   // optional
   audiotag?: number;
@@ -74,31 +76,33 @@ interface IRepresentationSmooth {
   channels?: number;
   codecs?: string;
   height?: number;
-  id?: string|number;
   mimeType?: string;
   packetSize?: number;
   samplingRate?: number;
   width?: number;
 }
 
+interface IPeriodSmooth {
+  id: string;
+  adaptations: IAdaptationSmooth[];
+  duration: number;
+  laFragCount: number;
+}
+
 interface IAdaptationSmooth {
-  id?: string;
-  smoothProtection?: IContentProtectionSmooth|null;
+  // -- required --
+  id: string;
   type: string;
+  representations: IRepresentationSmooth[];
+
+  // -- optional --
+  smoothProtection?: IContentProtectionSmooth;
   closedCaption? : boolean;
   audioDescription? : boolean;
   index: IIndex;
-  representations: IRepresentationSmooth[];
-  name: string|null;
-  language: string|null;
-  normalizedLanguage: string|null;
-  baseURL: string|null;
-}
-
-interface IPeriodSmooth {
-duration: number;
-adaptations: IAdaptationSmooth[];
-laFragCount: number;
+  name?: string;
+  language?: string;
+  normalizedLanguage?: string|null;
 }
 
 export {

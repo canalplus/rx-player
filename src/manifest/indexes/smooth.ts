@@ -18,8 +18,7 @@
 // TODO Should also probably a class implementing an interface e.g.
 // IIndexManager (with the index in state?)
 
-import Segment from "../../manifest/segment";
-
+import { Segment } from "../../manifest";
 import {
   getInitSegment,
   getTimelineRangeEnd,
