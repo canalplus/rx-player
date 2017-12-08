@@ -15,28 +15,12 @@
  */
 
 import { Observable } from "rxjs/Observable";
-
+import { Adaptation } from "../../manifest";
+import parseBif from "../../parsers/images/bif";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
 import { resolveURL } from "../../utils/url";
-
-import parseBif from "../../parsers/images/bif";
-
-import Adaptation from "../../manifest/adaptation";
-
-import extractTimingsInfos from "./isobmff_timings_infos";
-import mp4Utils from "./mp4";
-import createHSSManifestParser from "./parser";
-import generateSegmentLoader from "./segment_loader";
-import {
-  buildSegmentURL,
-  extractISML,
-  extractToken,
-  replaceToken,
-  resolveManifest,
-} from "./utils";
-
 import {
   ILoaderObservable,
   ImageParserObservable,
@@ -52,8 +36,18 @@ import {
   SegmentParserObservable,
   TextTrackParserObservable,
 } from "../types";
-
+import extractTimingsInfos from "./isobmff_timings_infos";
+import createSmoothManifestParser from "./manifest";
+import mp4Utils from "./mp4";
+import generateSegmentLoader from "./segment_loader";
 import { IHSSParserOptions } from "./types";
+import {
+  buildSegmentURL,
+  extractISML,
+  extractToken,
+  replaceToken,
+  resolveManifest,
+} from "./utils";
 
 const {
   patchSegment,
@@ -98,7 +92,7 @@ export default function(
   ArrayBuffer|string,     // text     loader -> parser
   ArrayBuffer             // image    loader -> parser
 > {
-  const smoothManifestParser = createHSSManifestParser(options);
+  const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
   const manifestPipeline = {
@@ -137,28 +131,33 @@ export default function(
     },
 
     parser(
-      { response } : IManifestParserArguments<Document>
+      { response, url } : IManifestParserArguments<Document>
     ) : IManifestParserObservable {
-      const manifest = smoothManifestParser(response.responseData);
-      return Observable.of({ manifest, url: response.url });
+      const manifest = smoothManifestParser(response.responseData, url);
+      return Observable.of({
+        manifest,
+        url: response.url,
+      });
     },
   };
 
   const segmentPipeline = {
     loader({
-      segment,
-      representation,
       adaptation,
-      manifest,
       init,
+      manifest,
+      period,
+      representation,
+      segment,
     } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|Uint8Array> {
       return segmentLoader({
-        segment,
-        representation,
         adaptation,
-        manifest,
         init,
+        manifest,
+        period,
+        representation,
+        segment,
       });
     },
 

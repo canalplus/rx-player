@@ -15,7 +15,7 @@
  */
 
 /**
- * This file declares constants useful for every API files
+ * This file declares constants useful for every API files.
  */
 
 /**

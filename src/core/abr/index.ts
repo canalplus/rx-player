@@ -16,10 +16,8 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-
-import { SupportedBufferTypes } from "../types";
-
-import Representation from "../../manifest/representation";
+import { Representation } from "../../manifest";
+import { SupportedBufferTypes } from "../source_buffers";
 import RepresentationChooser, {
   IRepresentationChooserClockTick,
   IRequest,
@@ -28,6 +26,11 @@ import RepresentationChooser, {
 interface IMetricValue {
   duration: number;
   size: number;
+}
+
+interface IMetric {
+  type : SupportedBufferTypes;
+  value : IMetricValue;
 }
 
 // Options for every RepresentationChoosers
@@ -143,10 +146,7 @@ export default class ABRManager {
    */
   constructor(
     requests$: Observable<Observable<IRequest>>,
-    metrics$: Observable<{
-      type: SupportedBufferTypes;
-      value: IMetricValue;
-    }>,
+    metrics$: Observable<IMetric>,
     options : IRepresentationChoosersOptions = defaultChooserOptions
   ) {
     // Subject emitting and completing on dispose.
@@ -252,6 +252,13 @@ export default class ABRManager {
     }
   }
 
+  /**
+   * Set a maximum bitrate a given type will be able to automatically switch to.
+   * The chooser for the given type can still emit higher bitrates with the
+   * setManualBitrate method.
+   * @param {string} supportedBufferTypes
+   * @param {number} bitrate
+   */
   public setMaxAutoBitrate(type : SupportedBufferTypes, bitrate : number): void {
     const chooser = this._choosers[type];
     if (!chooser) {
@@ -263,6 +270,11 @@ export default class ABRManager {
     }
   }
 
+  /**
+   * Returns the set (and active) manual bitrate for the given type.
+   * @param {string} supportedBufferTypes
+   * @returns {number|undefined}
+   */
   public getManualBitrate(type : SupportedBufferTypes): number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
@@ -270,6 +282,11 @@ export default class ABRManager {
       this._chooserInstanceOptions.manualBitrates[type];
   }
 
+  /**
+   * Returns the set (and active) maximum auto bitrate for the given type.
+   * @param {string} supportedBufferTypes
+   * @returns {number|undefined}
+   */
   public getMaxAutoBitrate(type : SupportedBufferTypes): number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
@@ -277,6 +294,10 @@ export default class ABRManager {
       this._chooserInstanceOptions.maxAutoBitrates[type];
   }
 
+  /**
+   * Clean every ressources linked to the ABRManager.
+   * The ABRManager is unusable after calling this method.
+   */
   public dispose(): void {
     Object.keys(this._choosers).forEach(type => {
       this._choosers[type].dispose();
@@ -289,8 +310,7 @@ export default class ABRManager {
 
   /**
    * If it doesn't exist, create a RepresentationChooser under the
-   * _choosers.<bufferType> property.
-   * @param {ABRManager} intce
+   * _choosers[bufferType] property.
    * @param {string} bufferType
    */
   private _lazilyCreateChooser(bufferType : SupportedBufferTypes) {
@@ -302,6 +322,7 @@ export default class ABRManager {
 }
 
 export {
-  IMetricValue,
-  IRequest,
+  IRequest as IABRRequest,
+  IMetric as IABRMetric,
+  IRepresentationChoosersOptions as IABROptions,
 };

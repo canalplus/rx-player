@@ -15,23 +15,18 @@
  */
 
 import objectAssign = require("object-assign");
-
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-
 import config from "../../config";
-import assert from "../../utils/assert";
-
-import { SupportedBufferTypes } from "../types";
-
-import Representation from "../../manifest/representation";
+import { Representation } from "../../manifest";
+import log from "../../utils/log";
+import { SupportedBufferTypes } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
+import EWMA from "./ewma";
 import filterByBitrate from "./filterByBitrate";
 import filterByWidth from "./filterByWidth";
 import fromBitrateCeil from "./fromBitrateCeil";
-
-import EWMA from "./ewma";
 
 const {
   ABR_STARVATION_GAP,
@@ -268,6 +263,7 @@ function requestTakesTime(
  *     switch-able bitrate. If no representation is found inferior or equal to
  *     this bitrate, the representation with the minimum bitrate will be taken.
  *
+ * @class RepresentationChooser
  */
 export default class RepresentationChooser {
   public manualBitrate$ : BehaviorSubject<number>;
@@ -305,12 +301,17 @@ export default class RepresentationChooser {
     this._throttle$ = options.throttle$;
   }
 
+  /**
+   * @param {Observable} clock$
+   * @param {Array.<Object>} representations
+   * @returns {Observable}
+   */
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
   ): Observable<{
-    bitrate: undefined|number;
-    representation: Representation|null;
+    bitrate: undefined|number; // bitrate estimation
+    representation: Representation|null; // chosen representation
   }> {
     if (representations.length < 2) {
       return Observable.of({
@@ -495,8 +496,12 @@ export default class RepresentationChooser {
    * @param {Object} payload
    */
   public addPendingRequest(id : string|number, payload: IBeginRequest): void {
-    if (__DEV__) {
-      assert(!this._currentRequests[id], "request already added");
+    if (this._currentRequests[id]) {
+      if (__DEV__) {
+        throw new Error("ABR: request already added.");
+      }
+      log.warn("ABR: request already added.");
+      return;
     }
     const { time, duration, requestTimestamp } = payload.value;
     this._currentRequests[id] = {
@@ -517,9 +522,12 @@ export default class RepresentationChooser {
    * @param {Object} progress
    */
   public addRequestProgress(id : string|number, progress: IProgressRequest): void {
-    if (__DEV__) {
-      assert(this._currentRequests[id] &&
-        this._currentRequests[id].progress, "not a valid request");
+    if (!this._currentRequests[id]) {
+      if (__DEV__) {
+        throw new Error("ABR: progress for a request not added");
+      }
+      log.warn("ABR: progress for a request not added");
+      return;
     }
     this._currentRequests[id].progress.push(progress.value);
   }
@@ -530,8 +538,11 @@ export default class RepresentationChooser {
    * @param {string|number} id
    */
   public removePendingRequest(id : string|number): void {
-    if (__DEV__) {
-      assert(this._currentRequests[id], "can't remove request: id not found");
+    if (!this._currentRequests[id]) {
+      if (__DEV__) {
+        throw new Error("ABR: can't remove unknown request");
+      }
+      log.warn("ABR: can't remove unknown request");
     }
     delete this._currentRequests[id];
   }

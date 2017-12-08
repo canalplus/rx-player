@@ -17,59 +17,12 @@
 import { expect } from "chai";
 // import sinon = require("sinon");
 
-import {
-  parseFromDocument,
-  parseFromString,
-} from "../index";
+import parseFromDocument from "../index";
 
 // const mpd = require("raw!test/fixtures/dash-seg-list.mpd");
 // const mpd = require("raw!test/fixtures/dash-seg-template.mpd");
 
 describe("dash parser", function() {
-
-  it("has a parseFromString function", function() {
-    expect(parseFromString).to.be.a("function");
-  });
-
-  it("has a parseFromDocument function", function() {
-    expect(parseFromDocument).to.be.a("function");
-  });
-
-  describe("parseFromString", () => {
-    /* tslint:disable:max-line-length */
-    // xit("should call parseFromDocument with the string given converted to a document", function() {
-       /* tslint:enable:max-line-length */
-    //   const xmlString = "<foo></foo>";
-    //   const fakeDoc = { a: 97 };
-    //   const contentProtectionParser = () => {};
-
-    //   const DOMParserStub = sinon
-    //     .stub(DOMParser.prototype, "parseFromString")
-    //     .callsFake((doc, mimeType) => {
-    //       expect(doc).to.equal(xmlString);
-    //       expect(mimeType).to.equal("application/xml");
-    //       return fakeDoc;
-    //     });
-
-    //   const parseFromDocumentStub = sinon
-    //     .stub(parser, "parseFromDocument")
-    //     .returns();
-
-    //   parseFromString(xmlString, contentProtectionParser);
-
-    //   /* tslint:disable:no-unused-expression */
-    //   expect(DOMParserStub).to.have.been.calledOnce;
-    //   expect(parseFromDocumentStub).to.have.been.calledOnce;
-    //   /* tslint:enable:no-unused-expression */
-    //   expect(parseFromDocumentStub).to.have.been.calledWith(
-    //     fakeDoc,
-    //     contentProtectionParser
-    //   );
-    //   DOMParserStub.restore();
-    //   parseFromDocumentStub.restore();
-    // });
-  });
-
   describe("parseFromDocument", () => {
     function setDocumentFromString(str : string) : Document {
       return new DOMParser().parseFromString(str, "application/xml");
@@ -79,7 +32,7 @@ describe("dash parser", function() {
       const doc = setDocumentFromString("<foo></foo>");
 
       expect(function() {
-        parseFromDocument(doc);
+        parseFromDocument(doc, "");
       }).to.throw("document root should be MPD");
     });
   });

@@ -14,113 +14,67 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
-import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
-import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
-
 import config from "../../config";
-
-import arrayIncludes from "../../utils/array-includes";
-import InitializationSegmentCache from "../../utils/initialization_segment_cache";
 import log from "../../utils/log";
 import { retryableFuncWithBackoff } from "../../utils/retry";
 import throttle from "../../utils/rx-throttle";
+import WeakMapMemory from "../../utils/weak_map_memory";
 
-import {
-  canPlay,
-  canSeek,
-} from "../../compat";
 import { onSourceOpen$ } from "../../compat/events";
 import {
   CustomError,
   isKnownError,
+  MediaError,
   OtherError,
 } from "../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../manifest";
-import Adaptation from "../../manifest/adaptation";
-import Representation from "../../manifest/representation";
-import Segment from "../../manifest/segment";
 import { ITransportPipelines } from "../../net";
-
 import ABRManager, {
-  IMetricValue,
+  IABRMetric,
+  IABRRequest,
 } from "../abr";
-import { IRequest } from "../abr/representation_chooser";
+import BufferManager from "../buffer";
+import EMEManager, {
+  IKeySystemOption,
+} from "../eme";
 import {
-  Buffer,
-  EmptyBuffer,
-} from "../buffer";
-import {
-  IBufferClockTick,
-  IBufferSegmentInfos,
-} from "../buffer/types";
-import { IKeySystemOption } from "../eme";
-import {
-  normalizeManifest,
-  updateManifest,
-} from "../manifest";
-import Pipeline, {
-  IPipelineOptions
+  createManifestPipeline,
+  SegmentPipelinesManager,
 } from "../pipelines";
-import { SupportedBufferTypes } from "../types";
-
-import EMEManager from "./eme";
-import createMediaErrorStream from "./error_stream";
-import getInitialTime, {
-  IInitialTimeOptions
-} from "./initial_time";
-import {
-  createAndPlugMediaSource,
-  setDurationToMediaSource,
-} from "./media_source";
-import processPipeline from "./process_pipeline";
-import {
-  addNativeSourceBuffer,
-  createSourceBuffer,
-  disposeSourceBuffer,
-  ISourceBufferMemory,
-  shouldHaveNativeSourceBuffer,
+import SourceBufferManager, {
+  QueuedSourceBuffer,
   SourceBufferOptions,
-} from "./source_buffers";
-import SpeedManager from "./speed_manager";
-import StallingManager from "./stalling_obs";
-import createTimings, {
-  ITimingsClockTick,
-} from "./timings";
-import {
-  AdaptationsSubjects,
-  ILoadedEvent,
-  IManifestUpdateEvent,
+  SupportedBufferTypes ,
+} from "../source_buffers";
+import BuffersHandler from "./buffers_handler";
+import createBufferClock, {
   IStreamClockTick,
-  StreamEvent,
-} from "./types";
+} from "./clock";
+import createMediaSource, {
+  setDurationToMediaSource,
+} from "./create_media_source";
+import BufferGarbageCollector from "./garbage_collector";
+import getInitialTime, {
+  IInitialTimeOptions,
+} from "./get_initial_time";
+import liveEventsHandler from "./live_events_handler";
+import createMediaErrorHandler from "./media_error_handler";
+import SegmentBookkeeper from "./segment_bookkeeper";
+import SpeedManager from "./speed_manager";
+import StallingManager from "./stalling_manager";
+import EVENTS, {
+  IStreamEvent,
+} from "./stream_events";
+import handleInitialVideoEvents from "./video_events";
 
 const { END_OF_PLAY } = config;
 
-const SUPPORTED_BUFFER_TYPES : SupportedBufferTypes[] =
-  ["audio", "video", "text", "image"];
-
-/**
- * Returns the pipeline options depending on the type of pipeline concerned.
- * @param {string} bufferType - e.g. "audio"|"text"...
- * @returns {Object} - Options to give to the Pipeline
- */
-function getPipelineOptions(bufferType : string) : IPipelineOptions<any, any> {
-  const downloaderOptions : IPipelineOptions<any, any> = {};
-  if (arrayIncludes(["audio", "video"], bufferType)) {
-    downloaderOptions.cache = new InitializationSegmentCache();
-  } else if (bufferType === "image") {
-    downloaderOptions.maxRetry = 0; // Deactivate BIF fetching if it fails
-  }
-  return downloaderOptions;
-}
-
-interface IStreamOptions {
+export interface IStreamOptions {
   adaptiveOptions: {
     initialBitrates : Partial<Record<SupportedBufferTypes, number>>;
     manualBitrates : Partial<Record<SupportedBufferTypes, number>>;
@@ -134,18 +88,17 @@ interface IStreamOptions {
     maxBufferAhead$ : Observable<number>;
     maxBufferBehind$ : Observable<number>;
   };
-  errorStream : Subject<Error| CustomError>;
-  speed$ : BehaviorSubject<number>;
+  clock$ : Observable<IStreamClockTick>;
+  isDirectFile : boolean;
+  keySystems : IKeySystemOption[];
+  speed$ : Observable<number>;
   startAt? : IInitialTimeOptions;
+  supplementaryImageTracks : ISupplementaryImageTrack[];
+  supplementaryTextTracks : ISupplementaryTextTrack[];
   textTrackOptions : SourceBufferOptions;
+  transport : ITransportPipelines<any, any, any, any, any>;
   url : string;
   videoElement : HTMLMediaElement;
-  withMediaSource : boolean;
-  timings$ : Observable<IStreamClockTick>;
-  supplementaryTextTracks : ISupplementaryTextTrack[];
-  supplementaryImageTracks : ISupplementaryImageTrack[];
-  keySystems : IKeySystemOption[];
-  transport : ITransportPipelines<any, any, any, any, any>;
 }
 
 /**
@@ -156,12 +109,10 @@ interface IStreamOptions {
  *  - Creates the MediaSource and attached sourceBuffers instances.
  *  - download the content's manifest
  *  - Perform EME management if needed
- *  - create Buffer instances for each adaptation to manage buffers.
- *  - give adaptation control to the caller (e.g. to choose a language)
- *  - perform ABR Management
+ *  - get Buffers for each active adaptations.
+ *  - give choice of the adaptation to the caller (e.g. to choose a language)
  *  - returns Observable emitting notifications about the stream lifecycle.
  *
- * TODO TOO MANY PARAMETERS something is wrong here.
  * @param {Object} args
  * @returns {Observable}
  */
@@ -169,23 +120,18 @@ export default function Stream({
   adaptiveOptions,
   autoPlay,
   bufferOptions,
+  clock$,
+  isDirectFile = false,
   keySystems,
   speed$,
   startAt,
-  url,
-  videoElement,
-
   supplementaryImageTracks, // eventual manually added images
   supplementaryTextTracks, // eventual manually added subtitles
-
-  errorStream, // subject through which minor errors are emitted TODO Remove?
   textTrackOptions,
-  timings$,
-
-  withMediaSource = true,
-
   transport,
-} : IStreamOptions) : Observable<StreamEvent> {
+  url,
+  videoElement,
+} : IStreamOptions) : Observable<IStreamEvent> {
 
   const {
     wantedBufferAhead$,
@@ -194,94 +140,88 @@ export default function Stream({
   } = bufferOptions;
 
   /**
-   * Subject through which network metrics will be sent to the ABR manager.
+   * Observable through which all warning events will be sent.
+   * @type {Subject}
    */
-  const network$ = new Subject<{
-    type: SupportedBufferTypes;
-    value: IMetricValue;
-  }>();
+  const warning$ = new Subject<Error|CustomError>();
 
   /**
-   * Subject through which each request progression will be reported to the ABR
-   * manager.
-   */
-  const requestsInfos$ = new Subject<Subject<IRequest>>();
-
-  /**
-   * Pipeline used to download the manifest file.
-   * @see ../pipelines
-   * @type {Function} - take in argument the pipeline data, returns a pipeline
-   * observable.
-   */
-  const manifestPipeline = Pipeline(transport.manifest);
-
-  /**
-   * ...Fetch the manifest file given.
-   * Throttled to avoid doing multiple simultaneous requests because multiple
-   * source buffers are out-of-index
+   * Fetch and parse the manifest from the URL given.
+   * Throttled to avoid doing multiple simultaneous requests.
    * @param {string} url - the manifest url
    * @returns {Observable} - the parsed manifest
    */
-  const fetchManifest = throttle(_url => {
-    const manifest$ = manifestPipeline({ url: _url });
-    const fakeSubject = new Subject<any>();
-    return processPipeline(
-      "manifest",
-      manifest$,
-      fakeSubject, // we don't care about metrics here
-      fakeSubject, // and we don't care about the request progress
-      errorStream
-    ).map(({ parsed } : {
-      parsed : {
-        url : string;
-        manifest : any;
-      };
-    }) : Manifest =>
-      normalizeManifest(
-        parsed.url,
-        parsed.manifest,
-        supplementaryTextTracks,
-        supplementaryImageTracks
-      )
-    );
-  });
+  const fetchManifest = throttle(createManifestPipeline(
+    transport,
+    warning$,
+    supplementaryTextTracks,
+    supplementaryImageTracks
+  ));
 
   /**
-   * Map the "type" of a sourceBuffer (example "audio" or "video") to a
-   * SourceBuffer.
-   *
-   * Allow to avoid creating multiple sourceBuffers for the same type.
-   * TODO Is this compatible with codec switching?
-   *
-   * There is 2 "native" SourceBuffers: "audio" and "video" as they are the
-   * only one added to the MediaSource.
-   *
-   * All other SourceBuffers are "custom"
-   * @type Object
+   * Keep track of a unique BufferGarbageCollector created per
+   * QueuedSourceBuffer.
+   * @type {WeakMapMemory}
    */
-  const sourceBufferMemory : ISourceBufferMemory = {
-    native: {}, // SourceBuffers added to the MediaSource
-    custom: {}, // custom SourceBuffers managed entirely in the Rx-PLayer
-  };
+  const garbageCollectors =
+    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<any>) =>
+      BufferGarbageCollector({
+        queuedSourceBuffer: qSourceBuffer,
+        clock$: clock$.map(tick => tick.currentTime),
+        maxBufferBehind$,
+        maxBufferAhead$,
+      })
+    );
 
   /**
-   * Backoff options used given to the backoff retry done with the manifest
-   * pipeline.
+   * Keep track of a unique segmentBookkeeper created per
+   * QueuedSourceBuffer.
+   * @type {WeakMapMemory}
+   */
+  const segmentBookkeepers =
+    new WeakMapMemory<QueuedSourceBuffer<any>, SegmentBookkeeper>(() =>
+      new SegmentBookkeeper()
+    );
+
+  /**
+   * End-Of-Play emit when the current clock is really close to the end.
+   * TODO Remove END_OF_PLAY constant
+   * @see END_OF_PLAY
+   * @type {Observable}
+   */
+  const endOfPlay = clock$
+    .filter(({ currentTime, duration }) =>
+      duration > 0 && duration - currentTime < END_OF_PLAY
+    );
+
+  /**
+   * Retry the stream if ended for an unknown or non-fatal error.
+   * TODO working? remove?
    * @see retryWithBackoff
    */
-  const retryOptions = {
+  const streamRetryOptions = {
     totalRetry: 3,
     retryDelay: 250,
     resetDelay: 60 * 1000,
 
-    shouldRetry: (error : Error) => {
+    /**
+     * Only retry if the error is unknown or non-fatal
+     * @param {Error|CustomError}
+     * @returns {Boolean}
+     */
+    shouldRetry: (error : Error|CustomError) : boolean => {
       if (isKnownError(error)) {
         return !error.fatal;
       }
       return true;
     },
 
-    errorSelector: (error : Error|CustomError) => {
+    /**
+     * Called when the stream truly throws
+     * @param {Error|CustomError}
+     * @returns {CustomError}
+     */
+    errorSelector: (error : Error|CustomError) : CustomError => {
       if (!isKnownError(error)) {
         return new OtherError("NONE", error, true);
       }
@@ -289,21 +229,11 @@ export default function Stream({
       return error;
     },
 
-    onRetry: (error : Error|CustomError, tryCount : number) => {
+    onRetry: (error : Error|CustomError, tryCount : number) : void => {
       log.warn("stream retry", error, tryCount);
-      errorStream.next(error);
+      warning$.next(error);
     },
   };
-
-  /**
-   * End-Of-Play emit when the current timing is really close to the end.
-   * @see END_OF_PLAY
-   * @type {Observable}
-   */
-  const endOfPlay = timings$
-    .filter(({ currentTime, duration }) => (
-      duration > 0 && duration - currentTime < END_OF_PLAY
-    ));
 
   /**
    * On subscription:
@@ -312,447 +242,192 @@ export default function Stream({
    * Once those are done, initialize the source duration and creates every
    * SourceBuffers and Buffers instances.
    *
-   * This Observable can be retried on the basis of the retryOptions defined
-   * here.
+   * This Observable can be retried on the basis of the streamRetryOptions
+   * defined here.
    * @param {Object} params
    * @param {string} params.url
    * @param {MediaSource|null} params.mediaSource
    * @returns {Observable}
    */
-  const startStream = retryableFuncWithBackoff<any, StreamEvent>(({
-    // TODO tslint bug? Document.
-    /* tslint:disable no-use-before-declare */
-    url: _url,
-    /* tslint:enable no-use-before-declare */
-    mediaSource,
-  } : {
-    url : string|null;
-    mediaSource : MediaSource|null;
-  }) => {
-    const sourceOpening$ = mediaSource
-      ? onSourceOpen$(mediaSource)
-      : Observable.of(null);
+  const startStreamWithRetry =
+    retryableFuncWithBackoff<any, IStreamEvent>(startStream, streamRetryOptions);
 
-    return Observable.combineLatest(fetchManifest(url), sourceOpening$)
-      .mergeMap(([manifest]) => createStream(mediaSource, manifest));
-  }, retryOptions);
+  // TODO Find what to do with the direct file API
+  if (isDirectFile) {
+    return Observable.throw(new MediaError("UNAVAILABLE_MEDIA_SOURCE", null, true));
+  }
+
+  const stream$ = createMediaSource(videoElement)
+    .mergeMap(startStreamWithRetry);
+
+  const warningEvents$ = warning$.map(EVENTS.warning);
+
+  return Observable.merge(stream$, warningEvents$)
+    .takeUntil(endOfPlay);
 
   /**
-   * Creates a stream of audio/video/text buffers given a set of
-   * adaptations and a codec information.
-   *
-   * For each buffer stream, a unique "sourceBuffer" observable is
-   * created that will be reused for each created buffer.
-   *
-   * An "adaptations choice" observable is also created and
-   * responsible for changing the video or audio adaptation choice in
-   * reaction to user choices (ie. changing the language).
-   *
+   * Begin the stream logic, starting by fetching the manifest and waiting for
+   * the MediaSource to emit its open event.
    * @param {MediaSource} mediaSource
-   * @param {Object} bufferInfos - Per-type object containing the adaptions,
-   * the codec and the type
-   * @param {Observable} timings
-   * @param {Observable} seekings
    * @returns {Observable}
    */
-  function createBuffer(
-    mediaSource : MediaSource,
-    bufferType : SupportedBufferTypes,
-    timings : Observable<IBufferClockTick>,
-    seekings : Observable<null>,
-    manifest : Manifest,
-    adaptation$ : Observable<Adaptation|null>,
-    abrManager : ABRManager
-  ) : Observable<StreamEvent> {
-    const pipelineOptions = getPipelineOptions(bufferType);
-    return adaptation$.switchMap((adaptation) => {
-      if (!adaptation) {
-        log.info(`disposing ${bufferType} adaptation`);
-        disposeSourceBuffer(
-          videoElement,
-          mediaSource,
-          bufferType,
-          sourceBufferMemory
-        );
-        return Observable.of({
-            type: "adaptationChange" as "adaptationChange",
-            value: {
-              type: bufferType,
-              adaptation: null,
-            },
-        }).concat(EmptyBuffer({ bufferType }));
-      }
-
-      log.info(`updating ${bufferType} adaptation`, adaptation);
-
-      /**
-       * Keep the current representation to add informations to the ABR clock.
-       * TODO isn't that a little bit ugly?
-       * @type {Object|null}
-       */
-      let currentRepresentation : Representation|null = null;
-
-      const abrClock$ = timings$
-        .map(timing => {
-          let bitrate;
-          let lastIndexPosition;
-
-          if (currentRepresentation) {
-            bitrate = currentRepresentation.bitrate;
-
-            if (currentRepresentation.index) {
-              lastIndexPosition =
-                currentRepresentation.index.getLastPosition();
-            }
-          }
-
-          return {
-            bitrate,
-            bufferGap: timing.bufferGap,
-            duration: timing.duration,
-            isLive: manifest.isLive,
-            lastIndexPosition,
-            position: timing.currentTime,
-            speed: speed$.getValue(),
-          };
-        }).share(); // side-effect === share to avoid doing it multiple times
-
-      const { representations } = adaptation;
-
-      const abr$ = abrManager.get$(bufferType, abrClock$, representations);
-      const representation$ = abr$
-        .map(abr => abr.representation)
-        .filter(representation => representation != null)
-        .distinctUntilChanged((a : Representation|null, b : Representation|null) =>
-          (a && a.bitrate) === (b && b.bitrate) &&
-          (a && a.id) === (b && b.id)
-        )
-        .do((representation : Representation|null) => {
-          currentRepresentation = representation;
-        });
-
-      const codec = (
-        adaptation.representations[0] &&
-        adaptation.representations[0].getMimeTypeString()
-      ) || "";
-      const sourceBuffer = createSourceBuffer(
-        videoElement,
-        mediaSource,
-        bufferType,
-        codec,
-        sourceBufferMemory,
-        bufferType === "text" ? textTrackOptions : {}
-      );
-
-      function downloader(
-        { segment, representation, init } :
-        {
-          segment : Segment;
-          representation : Representation;
-          init : IBufferSegmentInfos|null;
-        }
-      ) {
-        const pipeline$ = Pipeline(transport[bufferType], pipelineOptions)({
-          segment,
-          representation,
-          adaptation,
-          manifest,
-          init,
-        });
-        return processPipeline(
-          bufferType, pipeline$, network$, requestsInfos$, errorStream);
-      }
-
-      const switchRepresentation$ : Observable<Representation> =
-        Observable.combineLatest(representation$, seekings)
-          .map(([representation]) => representation) as
-            Observable<Representation>;
-
-      log.info("creating Buffer for ", bufferType);
-      const buffer = Buffer({
-        sourceBuffer,
-        downloader,
-        switch$: switchRepresentation$,
-        clock$: timings,
-        wantedBufferAhead: wantedBufferAhead$,
-        maxBufferBehind: maxBufferBehind$,
-        maxBufferAhead: maxBufferAhead$,
-        bufferType,
-        isLive: manifest.isLive,
-      });
-
-      const buffer$ = Observable.of({
-        type: "adaptationChange" as "adaptationChange",
-        value: {
-          type: bufferType,
-          adaptation,
-        },
-      })
-        .concat(buffer)
-        .catch<StreamEvent, never>(error => {
-          // non native buffer should not impact the stability of the
-          // player. ie: if a text buffer sends an error, we want to
-          // continue streaming without any subtitles
-          if (!shouldHaveNativeSourceBuffer(bufferType)) {
-            log.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
-            errorStream.next(error);
-            return Observable.empty();
-          }
-          log.error(
-            "native buffer: ", bufferType, "has crashed. Stopping playback.", error);
-          throw error; // else, throw
-        });
-
-      const bitrateEstimate$ = abr$
-        .filter(({ bitrate } : { bitrate? : number }) => bitrate != null)
-        .map(({ bitrate } : { bitrate? : number }) => {
-          return {
-            type: "bitrateEstimationChange" as "bitrateEstimationChange",
-            value: {
-              type: bufferType,
-              bitrate,
-            },
-          };
-        });
-
-      return Observable.merge(buffer$, bitrateEstimate$);
-    });
+  function startStream(mediaSource : MediaSource) {
+    return Observable.combineLatest(fetchManifest(url), onSourceOpen$(mediaSource))
+      .mergeMap(([manifest]) => initialize(mediaSource, manifest));
   }
 
   /**
-   * Creates an observable waiting for the "loadedmetadata" and "canplay"
-   * events, and emitting a "loaded" event as both are received.
-   *
-   * /!\ This has also the side effect of setting the initial time as soon as
-   * the loadedmetadata event pops up.
+   * Initialize stream playback by merging all observable that are required to
+   * make the system cooperate.
+   * @param {MediaSource} mediaSource
    * @param {Object} manifest
    * @returns {Observable}
    */
-  function createVideoEventsObservables(
-    manifest : Manifest,
-    timings : Observable<ITimingsClockTick>
-  ) : {
-    clock$ : Observable<IBufferClockTick>;
-    loaded$ : Observable<ILoadedEvent>;
-  } {
+  function initialize(
+    mediaSource : MediaSource,
+    manifest : Manifest
+  ): Observable<IStreamEvent> {
+    setDurationToMediaSource(mediaSource, manifest.getDuration());
+
     log.debug("calculating initial time");
-    const startTime = getInitialTime(manifest, startAt);
-    log.debug("initial time calculated:", startTime);
+    const initialTime = getInitialTime(manifest, startAt);
+    log.debug("initial time calculated:", initialTime);
+
+    const firstPeriodToPlay = manifest.getPeriodForTime(initialTime);
+    if (firstPeriodToPlay == null) {
+      throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND", null, true);
+    }
+
+    const {
+      hasDoneInitialSeek$,
+      isLoaded$,
+    } = handleInitialVideoEvents(videoElement, initialTime, autoPlay);
+
+    const {
+      clock$: bufferClock$,
+      seekings$,
+    } = createBufferClock(manifest, clock$, hasDoneInitialSeek$, initialTime);
 
     /**
-     * Time offset is an offset to add to the timing's current time to have
-     * the "real" position.
-     * For now, this is seen when the video has not yet seeked to its initial
-     * position, the currentTime will most probably be 0 where the effective
-     * starting position will be _startTime_.
-     * Thus we initially set a timeOffset equal to startTime.
-     * TODO That look ugly, find better solution?
-     * @type {Number}
+     * Subject through which network metrics will be sent by the segment
+     * pipelines to the ABR manager.
+     * @type {Subject}
      */
-    let timeOffset = startTime;
+    const network$ = new Subject<IABRMetric>();
 
-    const canSeek$ = canSeek(videoElement)
-      .do(() => {
-        log.info("set initial time", startTime);
+    /**
+     * Subject through which each request progression will be sent by the
+     * segment pipelines to the ABR manager.
+     * @type {Subject}
+     */
+    const requestsInfos$ = new Subject<Subject<IABRRequest>>();
 
-        // reset playbackRate to 1 in case we were at 0 (from a stalled
-        // retry for instance)
-        videoElement.playbackRate = 1;
-        videoElement.currentTime = startTime;
-        timeOffset = 0;
-      });
+    /**
+     * Creates pipelines for downloading segments.
+     * @type {SegmentPipelinesManager}
+     */
+    const segmentPipelinesManager = new SegmentPipelinesManager(
+      transport, requestsInfos$, network$, warning$);
 
-    const canPlay$ = canPlay(videoElement)
-      .do(() => {
-        log.info("canplay event");
-        if (autoPlay) {
-          /* tslint:disable no-floating-promises */
-          videoElement.play();
-          /* tslint:enable no-floating-promises */
-        }
-      });
+    /**
+     * Create ABR Manager, which will choose the right "Representation" for a
+     * given "Adaptation".
+     * @type {ABRManager}
+     */
+    const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
 
-    return {
-      clock$: timings
-        .map(timing =>
-          objectAssign({ timeOffset }, timing)
-        ),
+    /**
+     * Creates BufferManager allowing to easily create a Buffer linked to any
+     * Adaptation from the current content.
+     * @type {BufferManager}
+     */
+    const bufferManager = new BufferManager(
+      abrManager, clock$, speed$, seekings$, wantedBufferAhead$);
 
-      loaded$: Observable.combineLatest(canSeek$, canPlay$)
-        .take(1)
-        .mapTo({
-          type: "loaded" as "loaded",
-          value: true as true,
-        }),
-    };
-  }
+    /**
+     * Creates SourceBufferManager allowing to create and keep track of a single
+     * SourceBuffer per type.
+     * @type {SourceBufferManager}
+     */
+    const sourceBufferManager = new SourceBufferManager(videoElement, mediaSource);
 
-  /**
-   * Re-fetch the manifest and merge it with the previous version.
-   * @param {Object} manifest
-   * @returns {Observable}
-   */
-  function refreshManifest(
-    manifest : Manifest
-  ) : Observable<IManifestUpdateEvent> {
-    return fetchManifest(manifest.getUrl())
-      .map((parsed) => {
-        const newManifest = updateManifest(manifest, parsed);
-        return {
-          type: "manifestUpdate" as "manifestUpdate",
-          value: {
-            manifest: newManifest,
-          },
-        };
-      });
-  }
-
-  /**
-   * Handle events happening only in live contexts.
-   * @param {Object} message
-   * @param {Object} manifest
-   * @returns {Observable}
-   */
-  function liveMessageHandler(
-    message : StreamEvent,
-    manifest : Manifest
-  ) : Observable<StreamEvent> {
-    switch (message.type) {
-      case "index-discontinuity":
-        log.warn("explicit discontinuity seek", message.value.ts);
-        videoElement.currentTime = message.value.ts;
-        break;
-
-      // precondition-failed messages require a change of live-gap to
-      // calibrate the live representation of the player
-      // TODO(pierre): smarter converging algorithm
-      case "precondition-failed":
-        manifest.updateLiveGap(1); // go back 1s for now
-        log.warn("precondition failed", manifest.presentationLiveGap);
-        break;
-
-      case "out-of-index":
-        // out-of-index messages require a complete reloading of the
-        // manifest to refresh the current index
-        log.info("out of index");
-        return refreshManifest(manifest);
-    }
-
-    return Observable.of(message);
-  }
-
-  /**
-   * Creates a stream merging all observable that are required to make
-   * the system cooperate.
-   * @param {MediaSource} mediaSource
-   * @param {Object} manifest
-   * @returns {Observable}
-   */
-  function createStream(
-    mediaSource : MediaSource|null,
-    manifest : Manifest
-  ): Observable<StreamEvent> {
-    // TODO Find what to do with no media source.
-    if (!mediaSource) {
-      throw new Error("No media source.");
-    }
-
-    if (mediaSource) {
-      setDurationToMediaSource(mediaSource, manifest.getDuration());
-
-      // Initialize all native source buffer at the same time. We cannot
-      // lazily create native sourcebuffers since the spec does not
-      // allow adding them during playback.
-      //
-      // From https://w3c.github.io/media-source/#methods
-      //    For example, a user agent may throw a QuotaExceededError
-      //    exception if the media element has reached the HAVE_METADATA
-      //    readyState. This can occur if the user agent's media engine
-      //    does not support adding more tracks during playback.
-      Object.keys(manifest.adaptations).map(bufferType => {
-        if (shouldHaveNativeSourceBuffer(bufferType)) {
-
-          const adaptations = manifest.getAdaptationsForType(bufferType);
-          const representations = adaptations ?
-            adaptations[0].representations : [];
-          if (representations.length) {
-            const codec = representations[0].getMimeTypeString();
-            addNativeSourceBuffer(mediaSource, bufferType, codec, sourceBufferMemory);
-          }
-        }
-      });
-    }
-
-    const {
-      timings: _timings,
-      seekings,
-    } = createTimings(manifest, timings$);
-    const {
-      loaded$,
-      clock$,
-    } = createVideoEventsObservables(manifest, _timings);
-
-    const abrManager = new ABRManager(
-      requestsInfos$,
-      network$, // emit network metrics such as the observed bandwidth
-      adaptiveOptions
+    /**
+     * Creates Observable which will manage every Buffer for the given Content.
+     * @type {Observable}
+     */
+    const handledBuffers$ = BuffersHandler(
+      { manifest, period: firstPeriodToPlay }, // content
+      bufferClock$,
+      bufferManager,
+      sourceBufferManager,
+      segmentPipelinesManager,
+      segmentBookkeepers,
+      garbageCollectors,
+      { text: textTrackOptions }, // sourceBufferOptions
+      warning$
     );
 
-    const _adaptations$ : Partial<AdaptationsSubjects> = {};
-    const _buffersArray = SUPPORTED_BUFFER_TYPES.map(type => {
-      const adaptation$ = new ReplaySubject<Adaptation|null>(1);
+    /**
+     * Add management of events linked to live Playback.
+     * @type {Observable}
+     */
+    const buffers$ = (manifest.isLive ?
+      handledBuffers$
+        .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
+      handledBuffers$);
 
-      _adaptations$[type] = adaptation$;
-      return createBuffer(
-        mediaSource, type, clock$, seekings,
-        manifest, adaptation$, abrManager
-      );
-    });
+    /**
+     * Create EME Manager, an observable which will manage every EME-related
+     * issue.
+     * @type {Observable}
+     */
+    const emeManager$ = EMEManager(videoElement, keySystems, warning$);
 
-    const adaptations$ = _adaptations$ as AdaptationsSubjects;
+    /**
+     * Translate errors coming from the video element into RxPlayer errors
+     * through a throwing Observable.
+     * @type {Observable}
+     */
+    const mediaErrorHandler$ = createMediaErrorHandler(videoElement);
 
-    const buffers$ = manifest.isLive ?
-      Observable.merge(..._buffersArray)
-        .mergeMap(message => liveMessageHandler(message, manifest)) :
-      Observable.merge(..._buffersArray);
+    /**
+     * Create Speed Manager, an observable which will set the speed set by the
+     * user on the video element while pausing a little longer while the buffer
+     * is stalled.
+     * @type {Observable}
+     */
+    const speedManager$ = SpeedManager(videoElement, speed$, clock$, {
+      pauseWhenStalled: true,
+    }).map(EVENTS.speedChanged);
 
-    const manifest$ = Observable.of({
-      type: "manifestChange",
-      value: {
-        manifest,
-        adaptations$,
-        abrManager,
-      },
-    });
+    /**
+     * Create Stalling Manager, an observable which will try to get out of
+     * various infinite stalling issues
+     * @type {Observable}
+     */
+    const stallingManager$ = StallingManager(videoElement, manifest, clock$)
+      .map(EVENTS.stalled);
 
-    const emeManager$ = EMEManager(videoElement, keySystems, errorStream);
-
-    const speedManager$ = SpeedManager(videoElement, speed$, timings$, {
-      pauseWhenStalled: withMediaSource,
-    }).map(newSpeed => ({ type: "speed", value: newSpeed }));
-
-    const stallingManager$ = StallingManager(videoElement, manifest, timings$)
-      .map(stalledStatus => ({ type: "stalled", value: stalledStatus }));
-
-    const mediaErrorManager$ = createMediaErrorStream(videoElement);
+    // Single lifecycle events
+    const streamStartedEvent$ = Observable.of(EVENTS.started(abrManager, manifest));
+    const loadedEvent$ = isLoaded$.mapTo(EVENTS.loaded());
 
     return Observable.merge(
+      streamStartedEvent$,
+      loadedEvent$,
       buffers$,
       emeManager$,
-      loaded$,
-      manifest$,
-      mediaErrorManager$,
+      mediaErrorHandler$,
       speedManager$,
       stallingManager$
-    );
+    ).finally(() => {
+      // clean-up every created SourceBuffers
+      sourceBufferManager.disposeAll();
+    });
   }
-
-  return createAndPlugMediaSource(
-    url,
-    videoElement,
-    withMediaSource,
-    sourceBufferMemory
-  )
-    .mergeMap(startStream)
-    .takeUntil(endOfPlay);
 }
+
+export {
+  IStreamEvent,
+  SegmentBookkeeper,
+};

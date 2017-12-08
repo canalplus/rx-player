@@ -15,9 +15,8 @@
  */
 
 import { expect } from "chai";
+import { Segment } from "../../manifest";
 import InitializationSegmentCache from "../initialization_segment_cache";
-
-import Segment from "../../manifest/segment";
 
 describe("utils - InitializationSegmentCache", () => {
   it("should allow to add init segment with associated data", () => {

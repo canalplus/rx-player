@@ -15,8 +15,10 @@
  */
 
 // for typings
-import Representation from "../../manifest/representation";
-import Segment from "../../manifest/segment";
+import {
+  Representation,
+  Segment,
+} from "../../manifest";
 
 const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 const TOKEN_REG = /\?token=(\S+)/;

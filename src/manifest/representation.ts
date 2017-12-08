@@ -20,7 +20,7 @@ import RepresentationIndex from "./representation_index";
 export interface IRepresentationArguments {
   // -- required
   bitrate : number;
-  index : any; /* TODO @ index refacto */
+  index : any;
 
   // -- optional
   baseURL? : string;

@@ -16,7 +16,7 @@
 
 import assert from "../../utils/assert";
 
-import Segment from "../../manifest/segment";
+import { Segment } from "../../manifest";
 import {
   getDurationFromTrun,
   ISidxSegment,

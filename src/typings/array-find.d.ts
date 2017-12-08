@@ -19,7 +19,7 @@ declare module "array-find" {
     arr : T[],
     predicate : (arg: T) => boolean,
     thisArg? : any
-  ) : T;
+  ) : T | undefined;
 
   export = arrayFind;
 }
