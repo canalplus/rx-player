@@ -15,18 +15,17 @@
  */
 
 import { Observable } from "rxjs/Observable";
-
-import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
-
 import {
   getMDHDTimescale,
   parseSidx,
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
-
+import request from "../../utils/request";
+import { resolveURL } from "../../utils/url";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import dashManifestParser from "./manifest";
+import dashManifestParser, {
+  IContentProtectionParser,
+} from "./manifest";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
@@ -52,13 +51,9 @@ import {
   SegmentParserObservable,
 } from "../types";
 
-import {
-  ContentProtectionParser,
-} from "./types";
-
 interface IDASHOptions {
   segmentLoader? : CustomSegmentLoader;
-  contentProtectionParser? : ContentProtectionParser;
+  contentProtectionParser? : IContentProtectionParser;
 }
 
 /**
@@ -92,11 +87,11 @@ export default function(
     },
 
     parser(
-      { response } : IManifestParserArguments<Document>
+      { response, url } : IManifestParserArguments<Document>
     ) : IManifestParserObservable {
       const data = response.responseData;
       return Observable.of({
-        manifest: dashManifestParser(data, contentProtectionParser),
+        manifest: dashManifestParser(data, url, contentProtectionParser),
         url: response.url,
       });
     },

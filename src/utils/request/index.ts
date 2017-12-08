@@ -299,6 +299,14 @@ function request<T>(
       }
     };
 
+    const URLSS : string[] = window.URLSS || [];
+    window.URLSS = URLSS;
+    if (URLSS.includes(url)) {
+      console.warn("Request already done", url);
+    } else {
+      URLSS.push(url);
+    }
+
     if (body !== undefined) {
       xhr.send(body);
     } else {

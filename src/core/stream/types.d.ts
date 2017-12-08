@@ -18,6 +18,7 @@ import { ReplaySubject } from "rxjs/ReplaySubject";
 
 import Manifest from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
+import Period from "../../manifest/period";
 import ABRManager from "../abr";
 import { BufferEvent } from "../buffer/types";
 import { SupportedBufferTypes } from "../types";
@@ -78,6 +79,7 @@ export interface IManifestChangeEvent {
   type : "manifestChange";
   value : {
     manifest : Manifest;
+    period : Period;
     adaptations$ : AdaptationsSubjects;
     abrManager : ABRManager;
   };
@@ -98,6 +100,15 @@ export interface ILoadedEvent {
   value : true;
 }
 
+export interface IPeriodChangeEvent {
+  type : "periodChange";
+  value : {
+    manifest : Manifest;
+      period : Period;
+      adaptations$ : AdaptationsSubjects;
+  };
+}
+
 // Every possible item emitted by the Stream
 export type StreamEvent =
   IAdaptationChangeEvent |
@@ -108,4 +119,5 @@ export type StreamEvent =
   IStalledEvent |
   ILoadedEvent |
   BufferEvent |
+  IPeriodChangeEvent |
   ISessionEvent;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import assert from "../../utils/assert";
+import config from "../../../config";
+import assert from "../../../utils/assert";
 import {
   // bytesToStr,
   // toBase64URL,
@@ -25,11 +25,15 @@ import {
   hexToBytes,
   le2toi,
   strToBytes,
-} from "../../utils/bytes";
-import generateNewId from "../../utils/id";
-import { normalize as normalizeLang } from "../../utils/languages";
+} from "../../../utils/bytes";
+import generateNewId from "../../../utils/id";
+import { normalize as normalizeLang } from "../../../utils/languages";
+import {
+  normalizeBaseURL,
+  resolveURL,
+} from "../../../utils/url";
 
-import { IParsedManifest } from "../types";
+import { IParsedManifest } from "../../types";
 
 import {
   IAdaptationSmooth,
@@ -38,13 +42,7 @@ import {
   IHSSManifestSegment,
   IHSSParserOptions,
   IRepresentationSmooth,
- } from "./types";
-
-interface IParserFunctions {
-  (manifest : string|Document) : IParsedManifest;
-  parseFromString : (x: string) => IParsedManifest;
-  parseFromDocument : (manifest : Document) => IParsedManifest;
-}
+ } from "../types";
 
 const DEFAULT_MIME_TYPES: IDictionary<string> = {
   audio: "audio/mp4",
@@ -161,7 +159,7 @@ function getKeySystems(
  */
 function createSmoothStreamingParser(
   parserOptions : IHSSParserOptions = {}
-) : IParserFunctions {
+) : (manifest : Document, url : string) => IParsedManifest {
 
   const SUGGESTED_PERSENTATION_DELAY =
     parserOptions.suggestedPresentationDelay == null ?
@@ -391,11 +389,13 @@ function createSmoothStreamingParser(
    * Indexes can be quite huge, and this function needs to
    * to be optimized.
    * @param {Element} root
+   * @param {string} rootURL
    * @param {Number} timescale
    * @returns {Object}
    */
   function parseAdaptation(
     root : Element,
+    rootURL : string,
     timescale : number
   ): IAdaptationSmooth|null {
     const _timescale = root.hasAttribute("Timescale") ?
@@ -411,7 +411,10 @@ function createSmoothStreamingParser(
     const language = root.getAttribute("Language");
     const normalizedLanguage = language == null ?
       language : normalizeLang(language);
-    const baseURL = root.getAttribute("Url");
+    const baseURL = root.getAttribute("Url") || "";
+    if (__DEV__) {
+      assert(baseURL);
+    }
 
     const {
       representations,
@@ -458,6 +461,7 @@ function createSmoothStreamingParser(
 
     // apply default properties
     representations.forEach((representation: IRepresentationSmooth) => {
+      representation.baseURL = resolveURL(rootURL, baseURL);
       representation.mimeType =
         representation.mimeType || DEFAULT_MIME_TYPES[adaptationType];
       representation.codecs = representation.codecs || DEFAULT_CODECS[adaptationType];
@@ -477,10 +481,9 @@ function createSmoothStreamingParser(
       index,
       type: adaptationType,
       representations,
-      name,
-      language,
+      name: name == null ? undefined : name,
+      language: language == null ? undefined : language,
       normalizedLanguage,
-      baseURL,
     };
 
     if (adaptationType === "text" && subType === "DESC") {
@@ -495,13 +498,8 @@ function createSmoothStreamingParser(
     return parsedAdaptation;
   }
 
-  function parseFromString(manifest : string): IParsedManifest {
-    return parseFromDocument(
-      new DOMParser().parseFromString(manifest, "application/xml")
-    );
-  }
-
-  function parseFromDocument(doc : Document): IParsedManifest {
+  function parseFromDocument(doc : Document, url : string): IParsedManifest {
+    const rootURL = normalizeBaseURL(url);
     const root = doc.documentElement;
     assert.equal(
       root.nodeName,
@@ -527,7 +525,8 @@ function createSmoothStreamingParser(
         break;
       }
       case "StreamIndex":
-        const adaptation : IAdaptationSmooth|null = parseAdaptation(node, timescale);
+        const adaptation : IAdaptationSmooth|null =
+          parseAdaptation(node, rootURL, timescale);
         if (adaptation) {
           res.adaptations.push(adaptation);
         }
@@ -539,7 +538,9 @@ function createSmoothStreamingParser(
       adaptations: [],
     });
 
-    adaptations.forEach((a) => a.smoothProtection = protection);
+    adaptations.forEach((a) => {
+      a.smoothProtection = protection == null ? undefined : protection;
+    });
 
     let suggestedPresentationDelay;
     let presentationLiveGap;
@@ -569,36 +570,30 @@ function createSmoothStreamingParser(
         (lastRef + availabilityStartTime);
     }
 
+    const duration = +(root.getAttribute("Duration") || Infinity) / timescale;
     return {
+      availabilityStartTime: availabilityStartTime || 0,
+      duration,
       id: "gen-smooth-manifest-" + generateNewId(),
-      transportType: "smooth",
+      presentationLiveGap,
       profiles: "",
-      type: isLive ? "dynamic" : "static",
       suggestedPresentationDelay,
       timeShiftBufferDepth,
-      presentationLiveGap,
-      availabilityStartTime,
+      transportType: "smooth",
+      type: isLive ? "dynamic" : "static",
+      uris: [url],
       periods: [{
         id: "gen-smooth-period-0",
-        duration: +(root.getAttribute("Duration") || Infinity) / timescale,
         adaptations,
+
+        start: 0,
+        duration,
         laFragCount: +(root.getAttribute("LookAheadFragmentCount") || 0),
       }],
     };
   }
 
-  const parser = <IParserFunctions> function(val): IParsedManifest {
-    if (typeof val === "string") {
-      return parseFromString(val);
-    } else {
-      return parseFromDocument(val);
-    }
-  };
-
-  parser.parseFromString   = parseFromString;
-  parser.parseFromDocument = parseFromDocument;
-
-  return parser;
+  return parseFromDocument;
 }
 
 export default createSmoothStreamingParser;

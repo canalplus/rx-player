@@ -15,18 +15,16 @@
  */
 
 import arrayFind = require("array-find");
-import assert from "../utils/assert";
+
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
-import log from "../utils/log";
+
 import Adaptation, {
   AdaptationType,
+  IAdaptationArguments,
 } from "./adaptation";
-import Period, {
-  IPeriodArguments,
-} from "./period";
 
-type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
+export type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
 
 export interface ISupplementaryImageTrack {
   mimeType : string;
@@ -42,74 +40,52 @@ export interface ISupplementaryTextTrack {
   closedCaption : boolean;
 }
 
-export interface IManifestArguments {
-  availabilityStartTime? : number;
-  duration : number;
-  id : string;
-  periods : IPeriodArguments[];
-  presentationLiveGap? : number;
-  suggestedPresentationDelay? : number;
-  timeShiftBufferDepth? : number;
-  transportType : string;
-  type? : string;
-  uris : string[];
+/**
+ * @param {Array.<Object>} adaptations
+ * @returns {Object}
+ */
+function createManifestAdaptations(
+  adaptations : IAdaptationArguments[]
+) : ManifestAdaptations {
+  return adaptations.reduce((
+    acc : ManifestAdaptations,
+    adaptation
+  ) => {
+    const { type, representations } = adaptation;
+    if (!representations.length) {
+      return acc;
+    }
+
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    (acc[type] as Adaptation[]).push(new Adaptation(adaptation));
+    return acc;
+  }, {});
 }
 
-/**
- * Normalized Manifest structure.
- * @class Manifest
- */
-class Manifest {
-  public id : string;
-  public transport : string;
-  public adaptations : ManifestAdaptations;
-  public periods : Period[];
-  public isLive : boolean;
-  public uris : string[];
-  public suggestedPresentationDelay? : number;
-  public availabilityStartTime? : number;
-  public presentationLiveGap? : number;
-  public timeShiftBufferDepth? : number;
+export interface IPeriodArguments {
+  id: string;
+  adaptations: IAdaptationArguments[];
+  start?: number;
+  duration?: number;
+}
 
-  private _duration : number;
+export default class Period {
+  public id : string;
+  public adaptations : ManifestAdaptations;
+  public duration? : number;
+  public start? : number;
 
   /**
    * @constructor
    * @param {Object} args
    */
-  constructor(args : IManifestArguments) {
-    const nId = generateNewId();
-    this.id = args.id == null ? nId : "" + args.id;
-    this.transport = args.transportType || "";
-
-    // TODO Real period management
-    this.periods = args.periods.map((period) => {
-      return new Period(period);
-    });
-
-    /**
-     * @deprecated TODO It is here to ensure compatibility with the way the
-     * v3.x.x manages adaptations at the Manifest level
-     */
-    this.adaptations = this.periods[0].adaptations;
-
-    this.isLive = args.type === "dynamic";
-    this.uris = args.uris;
-
-    this.suggestedPresentationDelay = args.suggestedPresentationDelay;
-    this.availabilityStartTime = args.availabilityStartTime;
-    this.presentationLiveGap = args.presentationLiveGap;
-    this.timeShiftBufferDepth = args.timeShiftBufferDepth;
-
-    // --------- private data
-    this._duration = args.duration;
-
-    if (__DEV__ && this.isLive) {
-      assert(this.suggestedPresentationDelay != null);
-      assert(this.availabilityStartTime != null);
-      assert(this.presentationLiveGap != null);
-      assert(this.timeShiftBufferDepth != null);
-    }
+  constructor(args : IPeriodArguments) {
+    this.id = args.id;
+    this.adaptations = createManifestAdaptations(args.adaptations);
+    this.duration = args.duration;
+    this.start = args.start;
   }
 
   /**
@@ -195,27 +171,6 @@ class Manifest {
     }
   }
 
-  getPeriodForTime(time : number) : Period|undefined {
-    return this.periods.find(period => {
-      if (period.start == null || period.duration == null) {
-        return false;
-      }
-      return period.start >= time &&
-        (period.start + period.duration) < time;
-    });
-  }
-
-  /**
-   * @returns {Number}
-   */
-  getDuration() : number {
-    return this._duration;
-  }
-
-  getUrl() : string|undefined {
-    return this.uris[0];
-  }
-
   /**
    * @returns {Array.<Object>}
    */
@@ -244,68 +199,4 @@ class Manifest {
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
-
-  updateLiveGap(delta : number) : void {
-    if (this.isLive) {
-      if (this.presentationLiveGap) {
-        this.presentationLiveGap += delta;
-      } else {
-        this.presentationLiveGap = delta;
-      }
-    }
-  }
-
-  /**
-   * @deprecated TODO It is here to ensure compatibility with the way the
-   * v3.x.x manages adaptations at the Manifest level
-   * @param {number} wantedId
-   */
-  _switchPeriod(period : Period) : void {
-    this.adaptations = period.adaptations;
-  }
-
-  /**
-   * Update the current manifest properties
-   * XXX TODO Also update attributes?
-   * @param {Object} Manifest
-   */
-  update(newManifest : Manifest) {
-    const oldPeriods = this.periods;
-    const newPeriods = newManifest.periods;
-
-    for (let periodIndex = 0; periodIndex < oldPeriods.length; periodIndex++) {
-      const oldAdaptations = oldPeriods[periodIndex].getAdaptations();
-      const newAdaptations = newPeriods[periodIndex].getAdaptations();
-
-      for (let i = 0; i < oldAdaptations.length; i++) {
-        const newAdaptation =
-          arrayFind(newAdaptations, a => a.id === oldAdaptations[i].id);
-
-        if (!newAdaptation) {
-          log.warn(
-            `manifest: adaptation "${oldAdaptations[i].id}" not found when merging.`
-          );
-        } else {
-          const oldRepresentations = oldAdaptations[i].representations;
-          const newRepresentations = newAdaptation.representations;
-          for (let j = 0; j < oldRepresentations.length; j++) {
-            const newRepresentation =
-              arrayFind(newRepresentations, r => r.id === oldRepresentations[j].id);
-
-            if (!newRepresentation) {
-              /* tslint:disable:max-line-length */
-              log.warn(
-                `manifest: representation "${oldRepresentations[j].id}" not found when merging.`
-              );
-              /* tslint:enable:max-line-length */
-            } else {
-              oldRepresentations[j].index.update(newRepresentation.index);
-            }
-          }
-        }
-      }
-    }
-  }
 }
-
-export default Manifest;

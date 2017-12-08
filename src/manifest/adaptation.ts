@@ -22,7 +22,10 @@ import Representation, {
   IRepresentationArguments
 } from "./representation";
 
-import { IContentProtectionDash } from "../net/dash/types";
+// XXX TODO
+import {
+  IParsedContentProtection,
+} from "../net/dash/manifest/node_parsers/ContentProtection";
 import { IContentProtectionSmooth } from "../net/smooth/types";
 
 export type AdaptationType = "video"|"audio"|"text"|"image";
@@ -35,7 +38,7 @@ export interface IAdaptationArguments {
   // -- optional
   audioDescription? : boolean;
   closedCaption? : boolean;
-  contentProtection? : IContentProtectionDash;
+  contentProtection? : IParsedContentProtection;
   id? : number|string;
   language? : string;
   manuallyAdded? : boolean;
@@ -55,7 +58,7 @@ class Adaptation {
 
   // optional
   public _smoothProtection? : IContentProtectionSmooth;
-  public contentProtection? : IContentProtectionDash;
+  public contentProtection? : IParsedContentProtection;
   public isAudioDescription? : boolean;
   public isClosedCaption? : boolean;
   public language? : string;
@@ -99,10 +102,6 @@ class Adaptation {
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = !!args.manuallyAdded;
-
-    // ---------
-    // this._rootURL = args.rootURL;
-    // this._baseURL = args.baseURL;
   }
 
   /**

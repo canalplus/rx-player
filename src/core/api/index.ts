@@ -63,6 +63,7 @@ import { SupportedBufferTypes } from "../types";
 
 import Manifest from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
+import Period from "../../manifest/period";
 import Representation from "../../manifest/representation";
 import {
   fromWallClockTime,
@@ -1436,6 +1437,9 @@ class Player extends EventEmitter {
    */
   private _priv_onStreamNext(streamInfos : StreamEvent) : void {
     switch (streamInfos.type) {
+      case "periodChange":
+        this._priv_onPeriodChange(streamInfos.value);
+        break;
       case "representationChange":
         this._priv_onRepresentationChange(streamInfos.value);
         break;
@@ -1515,6 +1519,7 @@ class Player extends EventEmitter {
    */
   private _priv_onManifestChange(value : {
     manifest : Manifest;
+    period : Period;
     adaptations$ : {
       audio : Subject<Adaptation|null>;
       video : Subject<Adaptation|null>;
@@ -1523,12 +1528,12 @@ class Player extends EventEmitter {
     };
     abrManager : ABRManager;
   }) : void {
-    const { manifest, adaptations$ } = value;
+    const { manifest, period, adaptations$ } = value;
     this._priv_manifest = manifest;
 
     // set language management for audio and text
     this._priv_languageManager =
-      new LanguageManager(manifest.adaptations, {
+      new LanguageManager(period.adaptations, {
         audio$: adaptations$.audio,
         text$: adaptations$.text,
       });
@@ -1558,6 +1563,39 @@ class Player extends EventEmitter {
     this._priv_abrManager = value.abrManager;
 
     this.trigger("manifestChange", manifest);
+  }
+
+  private _priv_onPeriodChange(value : {
+    period : Period;
+    adaptations$ : {
+      audio : Subject<Adaptation|null>;
+      video : Subject<Adaptation|null>;
+      text : Subject<Adaptation|null>;
+      image : Subject<Adaptation|null>;
+    };
+  }) : void {
+    const { period, adaptations$ } = value;
+    const adaptationsPerType = period.adaptations;
+
+    if (this._priv_languageManager) {
+      this._priv_languageManager.updateAdaptations(adaptationsPerType);
+    }
+
+    // set initial adaptations
+    for (const bufferType of Object.keys(adaptations$)) {
+      const adaptations = period.getAdaptationsForType(
+        bufferType as SupportedBufferTypes
+      );
+
+      // if we have adaptations for the given type, make a choice.
+      // if we do not, do not emit anything for it.
+      if (adaptations.length) {
+        if (bufferType !== "audio" && bufferType !== "text") {
+          const adaptation$ = adaptations$[bufferType as "image"|"video" ];
+          adaptation$.next(adaptations[0]);
+        }
+      }
+    }
   }
 
   private _priv_onManifestUpdate(value : { manifest : Manifest }) : void {

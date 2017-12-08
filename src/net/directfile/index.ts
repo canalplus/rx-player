@@ -26,7 +26,7 @@ const manifestPipeline = {
   parser({ url } : any) : any {
     const manifest = {
       transportType: "directfile",
-      locations: [url],
+      uris: [url],
       periods: [],
       isLive: false,
       duration: Infinity,

@@ -20,6 +20,14 @@ import Segment from "../../manifest/segment";
 import { ICustomSourceBuffer } from "../stream/source_buffers";
 import { SupportedBufferTypes } from "../types";
 
+// export enum BufferEventName {
+//   RepresentationChange = "representationChange",
+//   PreconditionFailed = "Precondition-failed",
+//   Pipeline = "pipeline",
+//   OutOfIndex = "out-of-index",
+//   IndexDiscontinuity = "index-discontinuity",
+// }
+
 export interface IBufferClockTick {
   currentTime : number;
   readyState : number;

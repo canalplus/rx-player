@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-import parseMPD, {
-  IContentProtectionParser,
-  IParsedMPD,
-} from "./node_parsers";
+import {
+  parseScheme,
+} from "../helpers";
 
-/**
- * @param {Document} manifest - Original manifest as returned by the server
- * @param {Function} [contentProtectionParser]
- * @returns {Object} - parsed manifest
- */
-export default function parseFromDocument(
-  document: Document,
-  uri : string,
-  contentProtectionParser?: IContentProtectionParser
-): IParsedMPD {
-  const root = document.documentElement;
-  if (!root || root.nodeName !== "MPD") {
-    throw new Error("document root should be MPD");
-  }
-  return parseMPD(root, uri, contentProtectionParser);
+export interface IParsedContentProtection {
+  schemeIdUri?: string;
+  value?: string;
 }
 
-export {
-  IParsedMPD,
-  IContentProtectionParser,
-};
+export type IContentProtectionParser =
+  (attributes: IParsedContentProtection, root: Node) => IParsedContentProtection;
+
+/**
+ * Parse the "ContentProtection" node of a MPD.
+ * @param {Node} root
+ * @param {Function} [contentProtectionParser]
+ * @returns {Object}
+ */
+export default function parseContentProtection(
+  root: Node,
+  contentProtectionParser?: IContentProtectionParser
+) : IParsedContentProtection|undefined {
+  if (contentProtectionParser) {
+    return contentProtectionParser(parseScheme(root), root);
+  }
+}

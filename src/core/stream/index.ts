@@ -19,9 +19,7 @@ import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
-
 import config from "../../config";
-
 import arrayIncludes from "../../utils/array-includes";
 import InitializationSegmentCache from "../../utils/initialization_segment_cache";
 import log from "../../utils/log";
@@ -38,15 +36,18 @@ import {
   isKnownError,
   OtherError,
 } from "../../errors";
+
 import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
+import createManifest from "../../manifest/factory";
+import Period from "../../manifest/period";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
-import { ITransportPipelines } from "../../net";
 
+import { ITransportPipelines } from "../../net";
 import ABRManager, {
   IMetricValue,
 } from "../abr";
@@ -60,15 +61,10 @@ import {
   IBufferSegmentInfos,
 } from "../buffer/types";
 import { IKeySystemOption } from "../eme";
-import {
-  normalizeManifest,
-  updateManifest,
-} from "../manifest";
 import Pipeline, {
   IPipelineOptions
 } from "../pipelines";
 import { SupportedBufferTypes } from "../types";
-
 import EMEManager from "./eme";
 import createMediaErrorStream from "./error_stream";
 import getInitialTime, {
@@ -236,14 +232,13 @@ export default function Stream({
         url : string;
         manifest : any;
       };
-    }) : Manifest =>
-      normalizeManifest(
-        parsed.url,
+    }) : Manifest => {
+      return createManifest(
         parsed.manifest,
         supplementaryTextTracks,
         supplementaryImageTracks
-      )
-    );
+      );
+    });
   });
 
   /**
@@ -529,15 +524,12 @@ export default function Stream({
    * @returns {Observable}
    */
   function createVideoEventsObservables(
-    manifest : Manifest,
-    timings : Observable<ITimingsClockTick>
+    timings : Observable<ITimingsClockTick>,
+    startTime : number
   ) : {
     clock$ : Observable<IBufferClockTick>;
     loaded$ : Observable<ILoadedEvent>;
   } {
-    log.debug("calculating initial time");
-    const startTime = getInitialTime(manifest, startAt);
-    log.debug("initial time calculated:", startTime);
 
     /**
      * Time offset is an offset to add to the timing's current time to have
@@ -595,13 +587,18 @@ export default function Stream({
   function refreshManifest(
     manifest : Manifest
   ) : Observable<IManifestUpdateEvent> {
-    return fetchManifest(manifest.getUrl())
+    const refreshURL = manifest.getUrl();
+    if (!refreshURL) {
+      log.warn("Cannot refresh the manifest: no url");
+      return Observable.empty();
+    }
+    return fetchManifest(refreshURL)
       .map((parsed) => {
-        const newManifest = updateManifest(manifest, parsed);
+        manifest.update(parsed);
         return {
           type: "manifestUpdate" as "manifestUpdate",
           value: {
-            manifest: newManifest,
+            manifest,
           },
         };
       });
@@ -683,14 +680,30 @@ export default function Stream({
       });
     }
 
+    log.debug("calculating initial time");
+    const startTime = getInitialTime(manifest, startAt);
+    log.debug("initial time calculated:", startTime);
+
+    debugger;
+    const period = manifest.periods.length <= 1 ?
+      manifest.periods[0] : manifest.getPeriodForTime(startTime);
+
+    // XXX TODO
+    if (period == null) {
+      throw new Error("Invalid starting time.");
+    }
+
+    const period$ : BehaviorSubject<Period> = new BehaviorSubject(period);
+
     const {
       timings: _timings,
       seekings,
-    } = createTimings(manifest, timings$);
+    } = createTimings(manifest, period$, timings$);
+
     const {
       loaded$,
       clock$,
-    } = createVideoEventsObservables(manifest, _timings);
+    } = createVideoEventsObservables(_timings, startTime);
 
     const abrManager = new ABRManager(
       requestsInfos$,
@@ -716,14 +729,36 @@ export default function Stream({
         .mergeMap(message => liveMessageHandler(message, manifest)) :
       Observable.merge(..._buffersArray);
 
-    const manifest$ = Observable.of({
+    const manifestEvents$ = Observable.of({
       type: "manifestChange",
       value: {
         manifest,
+        period,
         adaptations$,
         abrManager,
       },
     });
+
+    const periodEvents$ = period$
+      .skip(1)
+      .do((currentPeriod) => {
+        /**
+         * @deprecated TODO It is here to ensure compatibility with the way the
+         * v3.x.x manages adaptations at the Manifest level
+         * @param {number} wantedId
+         */
+        manifest._switchPeriod(currentPeriod);
+      })
+      .map((currentPeriod) => {
+        return {
+          type: "periodChange",
+          value: {
+            manifest,
+            period: currentPeriod,
+            adaptations$,
+          },
+        };
+      });
 
     const emeManager$ = EMEManager(videoElement, keySystems, errorStream);
 
@@ -740,8 +775,9 @@ export default function Stream({
       buffers$,
       emeManager$,
       loaded$,
-      manifest$,
+      manifestEvents$,
       mediaErrorManager$,
+      periodEvents$,
       speedManager$,
       stallingManager$
     );
