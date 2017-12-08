@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Segment from "../manifest/segment";
+import { Segment } from "../manifest";
 
 /**
  * Caching object used to cache initialization segments.

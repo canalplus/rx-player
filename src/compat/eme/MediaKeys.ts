@@ -108,7 +108,7 @@ const wrapUpdate = (
 // ---------------------------------------------------------------
 
 // TODO implement MediaKeySession completely
-class MockMediaKeySession extends EventEmitter
+class MockMediaKeySession extends EventEmitter<Event>
 implements IMockMediaKeySession
 {
   public sessionId : string;
@@ -186,7 +186,7 @@ interface IIE11MediaKeys {
 }
 
 // TODO implement MediaKeySession completely
-class SessionProxy extends EventEmitter implements IMockMediaKeySession {
+class SessionProxy extends EventEmitter<Event> implements IMockMediaKeySession {
   public sessionId : string;
   public update : (
     license : ArrayBuffer,

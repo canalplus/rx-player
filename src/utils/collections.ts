@@ -36,6 +36,10 @@ class SimpleSet {
   public test(x : string|number) : boolean {
     return !!this._hash[x];
   }
+
+  public isEmpty() : boolean {
+    return !Object.keys(this._hash).length;
+  }
 }
 
 // TODO export default

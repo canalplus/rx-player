@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import Representation from "../../../manifest/representation";
+import { Representation } from "../../../manifest";
 import _filterByBitrate from "../filterByBitrate";
 
 describe("core - abr - filterByBitrate", () => {
