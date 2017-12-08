@@ -19,38 +19,27 @@
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 /* tslint:enable:max-line-length */
 
-import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 
-import {
-  IAccessibility,
-  IAdaptationDash,
-  IIndex,
-  IRepresentationDash,
-  IRole,
-} from "../types";
+export interface IScheme {
+  schemeIdUri? : string;
+  value? : string;
+}
+
+export interface IAccessibility {
+  schemeIdUri?: string;
+  value?: string|number;
+}
+
+export interface IRole {
+  schemeIdUri?: string;
+  value?: string;
+}
 
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
 const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
-
-const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
-const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
-
-/**
- * @param {Object} index
- * @returns {Number|undefined}
- */
-function calculateIndexLastLiveTimeReference(index: IIndex) : number|undefined {
-  if (index.indexType === "timeline") {
-    const { ts, r, d } = index.timeline[index.timeline.length - 1];
-
-    // TODO FIXME does that make sense?
-    const securityTime = Math.min(Math.max(d ? d : 0 / index.timescale, 5), 10);
-    return ((ts + (r + 1) * (d ? d : 0)) / index.timescale) - securityTime;
-  }
-}
 
 /**
  * Parse MPD string attributes.
@@ -90,8 +79,8 @@ function parseIntOrBoolean(str : string) : boolean|number {
  * @param {string}
  * @returns {Date}
  */
-function parseDateTime(str : string) : Date {
-  return new Date(Date.parse(str));
+function parseDateTime(str : string) : number {
+  return new Date(Date.parse(str)).getTime() / 1000;
 }
 
 /**
@@ -161,31 +150,6 @@ function parseByteRange(str : string) : [number, number]|null {
 }
 
 /**
- * Reduce on each immediate children from the Document object given.
- * @param {Document} root
- * @param {Function} fn - Will be called on each children with the following
- * arguments:
- *   1. the reducer's accumulator
- *   2. the current node's name
- *   3. the current node Document Object
- * @param {*} init - the initial value for the accumulator
- * @returns {*} - the accumulator
- */
-function reduceChildren<T>(
-  root: Element,
-  fn: (res: T, name: string, node: Element) => T,
-  init: T
-): T {
-  let node = root.firstElementChild;
-  let r = init;
-  while (node) {
-    r = fn(r, node.nodeName, node);
-    node = node.nextElementSibling;
-  }
-  return r;
-}
-
-/**
  * Detect if the accessibility given defines an adaptation for the visually
  * impaired.
  * Based on DVB Document A168 (DVB-DASH).
@@ -199,64 +163,8 @@ function isVisuallyImpaired(accessibility: IRole) : boolean {
 
   return (
     accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-    accessibility.value === 1
+    accessibility.value === "1"
   );
-}
-
-/**
- * Infers the type of adaptation from codec and mimetypes found in it.
- *
- * This follows the guidelines defined by the DASH-IF IOP:
- *   - one adaptation set contains a single media type
- *   - The order of verifications are:
- *       1. mimeType
- *       2. Role
- *       3. codec
- *
- * Note: This is based on DASH-IF-IOP-v4.0 with some more freedom.
- * @param {Object} adaptation
- * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
- */
-function inferAdaptationType(adaptation: IAdaptationDash) : string {
-  const { mimeType } : { mimeType : string|null } = adaptation;
-  const topLevel = mimeType ? mimeType.split("/")[0] : "";
-  if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
-    return topLevel;
-  }
-
-  if (mimeType === "application/bif") {
-    return "image";
-  }
-
-  if (mimeType === "application/ttml+xml") {
-    return "text";
-  }
-
-  // manage DASH-IF mp4-embedded subtitles and metadata
-  if (mimeType === "application/mp4") {
-    const { role } = adaptation;
-    if (
-      role &&
-      role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-      arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
-    ) {
-      return "text";
-    }
-    return "metadata";
-  }
-
-  // take 1st representation's mimetype as default
-  const representations: IRepresentationDash[] = adaptation.representations;
-  if (representations.length) {
-    const firstReprMimeType = representations[0].mimeType || "";
-    const _topLevel = firstReprMimeType.split("/")[0];
-    if (arrayIncludes(KNOWN_ADAPTATION_TYPES, _topLevel)) {
-      return _topLevel;
-    }
-  }
-
-  // TODO infer from representations' codecs?
-  return "unknown";
 }
 
 /**
@@ -278,89 +186,65 @@ function isHardOfHearing(accessibility: IAccessibility) {
 }
 
 /**
- * Returns "last time of reference" from the adaptation given, considering a
- * live content.
- * Undefined if a time could not be found.
- *
- * We consider the earliest last time from every representations in the given
- * adaptation.
- *
- * This is done to calculate a liveGap which is valid for the whole manifest,
- * even in weird ones.
- * @param {Object} adaptation
- * @returns {Number|undefined}
+ * @param {Node} root
+ * @returns {Object}
  */
-const getLastLiveTimeReference = (adaptation: IAdaptationDash): number|undefined => {
-  // Here's how we do, for each possibility:
-  //  1. only the adaptation has an index (no representation has):
-  //    - returns the index last time reference
-  //
-  //  2. every representations have an index:
-  //    - returns minimum for every representations
-  //
-  //  3. not all representations have an index but the adaptation has
-  //    - returns minimum between all representations and the adaptation
-  //
-  //  4. no index for 1+ representation(s) and no adaptation index:
-  //    - returns undefined
-  //
-  //  5. Invalid index found somewhere:
-  //    - returns undefined
+function parseScheme(root: Node): IScheme {
+  let schemeIdUri : string|undefined;
+  let value : string|undefined;
+  for (let i = 0; i < root.attributes.length; i++) {
+    const attribute = root.attributes[i];
 
-  if (!adaptation) {
-    return undefined;
-  }
-
-  const representations = adaptation.representations || [];
-  const representationsWithIndex = representations
-    .filter((r: IRepresentationDash) => r && r.index);
-
-  if (!representations.length && adaptation.index) {
-    return calculateIndexLastLiveTimeReference(adaptation.index);
-  }
-
-  const lastLiveTimeReferences : Array<number|undefined> = representationsWithIndex
-    .map(representation => {
-      return representation.index ?
-        calculateIndexLastLiveTimeReference(representation.index) :
-        undefined;
-    });
-
-  if (lastLiveTimeReferences.some((x) => x == null)) {
-    return undefined;
-  }
-
-  const representationsMin = Math.min(...lastLiveTimeReferences as number[]);
-
-  // if the last live time reference could not be calculated, return undefined
-  if (isNaN(representationsMin)) {
-    return undefined;
-  }
-
-  if (representations.length === representationsWithIndex.length) {
-    return representationsMin;
-  }
-
-  if (adaptation.index) {
-    const adaptationRef = calculateIndexLastLiveTimeReference(adaptation.index);
-    if (adaptationRef) {
-      return Math.min(representationsMin, adaptationRef);
+    switch (attribute.name) {
+      case "schemeIdUri":
+        schemeIdUri = attribute.value;
+        break;
+      case "value":
+        value = attribute.value;
+        break;
     }
   }
-};
+
+  return {
+    schemeIdUri,
+    value,
+  };
+}
+
+/**
+ * @param {Array.<string>}
+ * @param {Object} finalObject
+ * @param {Object} objectToInherit
+ * @returns {Object}
+ */
+function inheritAttributes<T,U>(
+  attributes : string[],
+  finalObject : T,
+  objectToInherit : U
+) : T {
+  for (let i = 0; i < attributes.length; i++) {
+    const attribute = attributes[i];
+    if (
+      !finalObject.hasOwnProperty(attribute) &&
+      objectToInherit.hasOwnProperty(attribute)
+    ) {
+      (finalObject as any)[attribute] = (objectToInherit as any)[attribute];
+    }
+  }
+  return finalObject as T & U;
+}
 
 export {
-  parseString,
-  parseFrameRate,
-  parseByteRange,
-  parseBoolean,
-  parseDateTime,
-  parseDuration,
-  parseIntOrBoolean,
-  parseRatio,
-  reduceChildren,
-  getLastLiveTimeReference,
+  inheritAttributes,
   isHardOfHearing,
   isVisuallyImpaired,
-  inferAdaptationType,
+  parseBoolean,
+  parseByteRange,
+  parseDateTime,
+  parseDuration,
+  parseFrameRate,
+  parseIntOrBoolean,
+  parseRatio,
+  parseScheme,
+  parseString,
 };

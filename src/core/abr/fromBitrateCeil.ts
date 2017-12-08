@@ -15,7 +15,7 @@
  */
 
 import arrayFindIndex = require("array-find-index");
-import Representation from "../../manifest/representation";
+import { Representation } from "../../manifest";
 
 /**
  * @param {Array.<Representation>} representations - The representations array
@@ -25,7 +25,7 @@ import Representation from "../../manifest/representation";
 export default function fromBitrateCeil(
   representations : Representation[],
   bitrate : number
-) : Representation {
+) : Representation|undefined {
   const tooHighIndex : number = arrayFindIndex(
     representations,
     (representation) => representation.bitrate > bitrate

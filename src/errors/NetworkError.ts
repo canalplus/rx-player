@@ -31,7 +31,7 @@ export default class NetworkError extends Error {
   public name : "NetworkError";
   public type : string;
   public message : string;
-  public code : string;
+  public code : string|undefined;
   public fatal : boolean;
   public reason : RequestError;
   public xhr : XMLHttpRequest;
@@ -53,7 +53,8 @@ export default class NetworkError extends Error {
     this.errorType = reason.type;
 
     this.reason = reason;
-    this.code = ErrorCodes[code];
+    this.code = ErrorCodes.hasOwnProperty(code) ?
+      (ErrorCodes as IDictionary<string>)[code] : "";
     this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, this.reason);
   }

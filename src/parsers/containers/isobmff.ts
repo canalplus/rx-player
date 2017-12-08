@@ -172,6 +172,7 @@ function parseSidx(
 /**
  * Parse track Fragment Decode Time to get a precize initial time for this
  * segment (in the media timescale).
+ * Stops at the first tfdt encountered from the beginning of the file.
  * Returns this time. -1 if not found.
  * @param {Uint8Array} buffer
  * @returns {Number}

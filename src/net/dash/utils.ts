@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import Representation from "../../manifest/representation";
-import Segment from "../../manifest/segment";
+import {
+  Representation,
+  Segment,
+} from "../../manifest";
 import {
   INextSegmentsInfos,
   ISegmentTimingInfos,
@@ -31,8 +33,7 @@ function addNextSegments(
   nextSegments : INextSegmentsInfos[],
   currentSegment? : ISegmentTimingInfos
 ) {
-    // TODO TypeScript bug?
-    representation.index._addSegments(nextSegments, currentSegment);
+  representation.index._addSegments(nextSegments, currentSegment);
 }
 
 /**

@@ -16,7 +16,7 @@
 
 import log from "../../utils/log";
 
-import Segment from "../../manifest/segment";
+import { Segment } from "../../manifest";
 import { getDurationFromTrun } from "../../parsers/containers/isobmff";
 
 import {

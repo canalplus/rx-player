@@ -16,7 +16,7 @@
 
 import assert from "../utils/assert";
 
-interface ISegmentArguments {
+export interface ISegmentArguments {
   // -- required
   id : number|string;
   init : boolean;

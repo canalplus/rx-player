@@ -80,7 +80,7 @@ export default class BandwidthEstimator {
 
   /**
    * Get estimate of the bandwidth, in bits per seconds.
-   * @returns {Number}
+   * @returns {Number|undefined}
    */
   public getEstimate() : number|undefined {
     if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
