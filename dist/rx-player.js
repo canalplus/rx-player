@@ -16543,7 +16543,7 @@ var Player = /** @class */ (function (_super) {
         // Workaround to support Firefox autoplay on FF 42.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
         videoElement.preload = "auto";
-        _this.version = /*PLAYER_VERSION*/ "3.0.4";
+        _this.version = /*PLAYER_VERSION*/ "3.0.5";
         _this.log = log_1.default;
         _this.state = "STOPPED";
         _this.videoElement = videoElement;
@@ -26198,11 +26198,8 @@ function sessionEventsHandler(session, keySystem, errorStream) {
                 error.fatal = fatal;
                 return error;
             }
-            else {
-                return new errors_1.EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
-            }
         }
-        return error;
+        return new errors_1.EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
     }
     var getLicenseRetryOptions = {
         totalRetry: 2,

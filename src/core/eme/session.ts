@@ -120,11 +120,9 @@ function sessionEventsHandler(
       if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
         error.fatal = fatal;
         return error;
-      } else {
-        return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
       }
     }
-    return error;
+    return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
   }
 
   const getLicenseRetryOptions = {
