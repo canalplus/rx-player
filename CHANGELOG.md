@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.5 (2017/12/11)
+
+### Bug Fixes
+  - eme: consider unknown errors (e.g. errors coming from the user of the library) as fatal eme errors
+
 ## v3.0.4 (2017/12/05)
 
 ### Bug Fixes

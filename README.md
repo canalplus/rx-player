@@ -17,7 +17,7 @@ Its main goals are:
 
 We recently switched our codebase to TypeScript, [here's why](./doc/why_typescript.md).
 
-Latest release: ``v3.0.4``
+Latest release: ``v3.0.5``
 
 ## API
 
