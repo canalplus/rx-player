@@ -47,18 +47,30 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
     _to : number
   ) : Segment[] {
     const { up, to } = normalizeRange(index, _up, _to);
+    if (to <= up) {
+      return [];
+    }
 
-    const { duration, startNumber, timescale, media } = index;
+    const {
+      duration,
+      startNumber,
+      timescale,
+      media,
+      presentationTimeOffset,
+    } = index;
 
     const segments : Segment[] = [];
-    for (let time = up; time <= to; time += duration) {
-      const number = Math.floor(time / duration) +
+    for (let baseTime = up; baseTime <= to; baseTime += duration) {
+      const number = Math.floor(baseTime / duration) +
         (startNumber == null ? 1 : startNumber);
 
+      const time = (number -
+        (startNumber == null ? 1 : startNumber)
+      ) * duration + (presentationTimeOffset || 0);
       const args = {
         id: "" + repId + "_" + number,
         number,
-        time: number * duration,
+        time,
         init: false,
         duration,
         range: null,
@@ -117,6 +129,18 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
    * @returns {Boolean}
    */
   _addSegmentInfos() : false {
+    return false;
+  },
+
+  hasSegmentLeftAfter(time : number) {
+    if (!window.tototo) {
+      if (time > 119.52) {
+        // debugger;
+        window.tototo = true;
+        return true;
+      }
+      return false;
+    }
     return false;
   },
 };

@@ -117,6 +117,10 @@ class RepresentationIndex {
   getType() : string {
     return this._index.indexType || "";
   }
+
+  hasSegmentLeftAfter(time : number) {
+    return this._indexHelpers.hasSegmentLeftAfter(time);
+  }
 }
 
 export default RepresentationIndex;

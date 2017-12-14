@@ -32,9 +32,10 @@ export interface IBufferClockTick {
   currentTime : number;
   readyState : number;
   timeOffset : number;
-  duration? : number;
-  liveGap? : number;
   stalled : object|null;
+
+  periodDuration? : number;
+  liveGap? : number;
 }
 
 export interface IBufferSegmentInfos {
@@ -106,9 +107,17 @@ export interface IIndexDiscontinuityEvent {
   };
 }
 
+export interface IEndOfBufferEvent {
+  type: "end-of-buffer";
+  value : {
+    time : number;
+  };
+}
+
 export type BufferEvent =
   IRepresentationChangeEvent |
   IPreconditionFailedEvent |
   IPipelineEvent |
   IOutOfIndexEvent |
-  IIndexDiscontinuityEvent;
+  IIndexDiscontinuityEvent |
+  IEndOfBufferEvent;

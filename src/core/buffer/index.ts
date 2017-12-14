@@ -79,7 +79,7 @@ function getWantedBufferRange(
   // wantedBufferSize calculates the size of the buffer we want to ensure,
   // taking into account the min between: the set max buffer size, the
   // duration and the live gap.
-  const endDiff = (clock.duration || Infinity) - timestamp;
+  const endDiff = (clock.periodDuration || Infinity) - timestamp;
   const wantedBufferSize = Math.max(0, clock.liveGap == null ?
     Math.min(bufferGoal, endDiff) :
     Math.min(bufferGoal, clock.liveGap, endDiff)
@@ -190,6 +190,7 @@ function Buffer({
     const { start, end } = range;
     const duration = end - start;
 
+    // get every segments currently downloaded and loaded
     const segments = bookkeeper.inventory.map(s => s.segment);
     const shouldRefresh = representation.index.shouldRefresh(segments, start, end);
     if (shouldRefresh) {
@@ -380,6 +381,21 @@ function Buffer({
         timing,
         withInitSegment
       ).filter((segment) => segmentFilter(segment, wantedRange));
+
+      if (
+        !neededSegments.length &&
+        representation.index.hasSegmentLeftAfter(wantedRange.end)
+      ) {
+        // XXX TODO return instead of next
+        messageSubject.next({
+          type: "end-of-buffer",
+          value: {
+            time: wantedRange.end,
+          },
+        });
+        return Observable.empty();
+      }
+
       log.debug("segments needed:", !!neededSegments.length, neededSegments);
 
       // queue all segments injected in the observable

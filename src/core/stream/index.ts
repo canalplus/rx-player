@@ -353,7 +353,7 @@ export default function Stream({
   function createBuffer(
     mediaSource : MediaSource,
     bufferType : SupportedBufferTypes,
-    timings : Observable<IBufferClockTick>,
+    clock$ : Observable<IBufferClockTick>,
     seekings : Observable<null>,
     manifest : Manifest,
     adaptation$ : Observable<Adaptation|null>,
@@ -361,6 +361,7 @@ export default function Stream({
   ) : Observable<StreamEvent> {
     const pipelineOptions = getPipelineOptions(bufferType);
     return adaptation$.switchMap((adaptation) => {
+
       if (!adaptation) {
         log.info(`disposing ${bufferType} adaptation`);
         disposeSourceBuffer(
@@ -370,11 +371,11 @@ export default function Stream({
           sourceBufferMemory
         );
         return Observable.of({
-            type: "adaptationChange" as "adaptationChange",
-            value: {
-              type: bufferType,
-              adaptation: null,
-            },
+          type: "adaptationChange" as "adaptationChange",
+          value: {
+            type: bufferType,
+            adaptation: null,
+          },
         }).concat(EmptyBuffer({ bufferType }));
       }
 
@@ -415,16 +416,18 @@ export default function Stream({
       const { representations } = adaptation;
 
       const abr$ = abrManager.get$(bufferType, abrClock$, representations);
+
+      // XXX TODO check the null thing... sounds fishy
       const representation$ = abr$
         .map(abr => abr.representation)
         .filter(representation => representation != null)
-        .distinctUntilChanged((a : Representation|null, b : Representation|null) =>
-          (a && a.bitrate) === (b && b.bitrate) &&
-          (a && a.id) === (b && b.id)
+        .distinctUntilChanged((a : Representation, b : Representation) =>
+          (a.bitrate) === (b.bitrate) &&
+          (a.id) === (b.id)
         )
-        .do((representation : Representation|null) => {
+        .do((representation : Representation) => {
           currentRepresentation = representation;
-        });
+        }) as Observable<Representation>;
 
       const codec = (
         adaptation.representations[0] &&
@@ -460,15 +463,14 @@ export default function Stream({
 
       const switchRepresentation$ : Observable<Representation> =
         Observable.combineLatest(representation$, seekings)
-          .map(([representation]) => representation) as
-            Observable<Representation>;
+        .map(([representation]) => representation);
 
       log.info("creating Buffer for ", bufferType);
       const buffer = Buffer({
         sourceBuffer,
         downloader,
         switch$: switchRepresentation$,
-        clock$: timings,
+        clock$,
         wantedBufferAhead: wantedBufferAhead$,
         maxBufferBehind: maxBufferBehind$,
         maxBufferAhead: maxBufferAhead$,
@@ -684,13 +686,13 @@ export default function Stream({
     const startTime = getInitialTime(manifest, startAt);
     log.debug("initial time calculated:", startTime);
 
-    debugger;
-    const period = manifest.periods.length <= 1 ?
+    let period = manifest.periods.length <= 1 ?
       manifest.periods[0] : manifest.getPeriodForTime(startTime);
 
     // XXX TODO
     if (period == null) {
-      throw new Error("Invalid starting time.");
+      // throw new Error("Invalid starting time.");
+      period = manifest.periods[0];
     }
 
     const period$ : BehaviorSubject<Period> = new BehaviorSubject(period);
@@ -698,7 +700,7 @@ export default function Stream({
     const {
       timings: _timings,
       seekings,
-    } = createTimings(manifest, period$, timings$);
+    } = createTimings(manifest, timings$);
 
     const {
       loaded$,
@@ -714,20 +716,33 @@ export default function Stream({
     const _adaptations$ : Partial<AdaptationsSubjects> = {};
     const _buffersArray = SUPPORTED_BUFFER_TYPES.map(type => {
       const adaptation$ = new ReplaySubject<Adaptation|null>(1);
-
       _adaptations$[type] = adaptation$;
+
+      const _clock$ = clock$.map((clockTick) => {
+        return objectAssign(clockTick, {
+          periodDuration: period.duration,
+        });
+      });
       return createBuffer(
-        mediaSource, type, clock$, seekings,
+        mediaSource, type, _clock$, seekings,
         manifest, adaptation$, abrManager
       );
     });
 
     const adaptations$ = _adaptations$ as AdaptationsSubjects;
 
-    const buffers$ = manifest.isLive ?
+    const buffers$ = (manifest.isLive ?
       Observable.merge(..._buffersArray)
         .mergeMap(message => liveMessageHandler(message, manifest)) :
-      Observable.merge(..._buffersArray);
+      Observable.merge(..._buffersArray))
+      .do((message) => {
+        if (message.type === "end-of-buffer") {
+          window.xaxaxa = window.xaxaxa || 0;
+          window.xaxaxa++;
+          console.log("END OF BUFFER NEXT PERIOD", window.xaxaxa);
+          // period$.next(manifest.periods[1]);
+        }
+      });
 
     const manifestEvents$ = Observable.of({
       type: "manifestChange",

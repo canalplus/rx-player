@@ -18,14 +18,12 @@ import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 
 import Manifest from "../../manifest";
-import Period from "../../manifest/period";
 import { getMaximumBufferPosition } from "../../manifest/timings";
 
 import { IStreamClockTick } from "./types";
 
 export interface ITimingsClockTick extends IStreamClockTick {
   liveGap : number;
-  periodDuration? : number;
 }
 
 /**
@@ -74,21 +72,17 @@ function seekingsSampler(
  */
 function createTimingsAndSeekingsObservables(
   manifest : Manifest,
-  periods$ : Observable<Period>,
   timings$ : Observable<IStreamClockTick>
 ) : {
   timings : Observable<ITimingsClockTick>;
   seekings : Observable<null>;
 } {
-  const augmentedTimings = periods$.mergeMap(period => {
-    return timings$.map((timing) => {
-      return objectAssign({
-        liveGap: manifest.isLive ?
-          getMaximumBufferPosition(manifest) - timing.currentTime :
-          Infinity,
-        periodDuration: period.duration,
-      }, timing);
-    });
+  const augmentedTimings = timings$.map((timing) => {
+    return objectAssign({
+      liveGap: manifest.isLive ?
+      getMaximumBufferPosition(manifest) - timing.currentTime :
+      Infinity,
+    }, timing);
   });
 
   const seekings = seekingsSampler(augmentedTimings);

@@ -1512,10 +1512,14 @@ class Player extends EventEmitter {
 
   /**
    * Called when the manifest is first downloaded.
+   *
    * @param {Object} value
    * @param {Manifest} value.manifest - The Manifest instance
-   * @param {Subject} value.adaptations$ - Subject to emit the chosen
-   * adaptation for each type.
+   * @param {Period} value.period - The period which will be first played.
+   * @param {Object} value.adaptations$ - Subjects to emit the chosen
+   * adaptation for each type from the given period.
+   * @param {Object} abrManager - ABR manager which can be used to select the
+   * wanted bandwidth.
    */
   private _priv_onManifestChange(value : {
     manifest : Manifest;
@@ -1565,6 +1569,14 @@ class Player extends EventEmitter {
     this.trigger("manifestChange", manifest);
   }
 
+  /**
+   * Triggered each time the period considered by the stream changes.
+   * Should emit the chosen adaptations for this given period.
+   *
+   * @param {Object} value
+   * @param {Object} value.period
+   * @param {Object} value.adaptations$
+   */
   private _priv_onPeriodChange(value : {
     period : Period;
     adaptations$ : {

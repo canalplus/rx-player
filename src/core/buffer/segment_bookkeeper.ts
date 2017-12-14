@@ -67,26 +67,6 @@ export default class SegmentBookkeeper {
      * in the browser's memory.
      * This array contains objects, each being related to a single downloaded
      * segment which is at least partially added in a source buffer.
-     * Those objects have the following keys:
-     *
-     *   - bitrate {Number}: bitrate of the representation corresponding to
-     *     the segment.
-     *
-     *   - start {Number}: time, in seconds, at which the segment should begin
-     *     (parsed from the container or from the Segment Object)
-     *
-     *   - end {Number}: time, in seconds, at which the segment should end
-     *     (parsed from the container or from the Segment Object)
-     *
-     *   - bufferedStart {Number|undefined}: time, in seconds, at which we infer
-     *     the segment currently begin in the sourcebuffer
-     *
-     *   - bufferedEnd {Number|undefined}: time, in seconds, at which we infer
-     *     the segment currently end in the sourcebuffer
-     *
-     *   - segment {Segment}: the corresponding segment object, as downloaded
-     *     from the CDN.
-     *
      * @type {Array.<Object>}
      */
     this.inventory = [];
