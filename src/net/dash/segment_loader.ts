@@ -92,10 +92,11 @@ function regularSegmentLoader(
  * @returns {Function}
  */
 const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
-  segment,
   adaptation,
-  representation,
   manifest,
+  period,
+  representation,
+  segment,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
   const {
     media,
@@ -116,8 +117,9 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
 
   const args = {
     adaptation,
-    representation,
     manifest,
+    period,
+    representation,
     segment,
     transport: "dash",
     url,

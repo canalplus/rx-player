@@ -20,7 +20,7 @@ import log from "../../utils/log";
 import {
   ICustomSourceBuffer,
   ICustomTimeRanges,
-} from "../stream/source_buffers";
+} from "./index";
 
 enum SourceBufferAction { Append, Remove }
 
@@ -41,10 +41,12 @@ interface ISourceBufferRemoveQueueElement {
 
 type ISourceBufferQueueElement<T> =
   ISourceBufferAppendQueueElement<T> | ISourceBufferRemoveQueueElement;
+
 /**
- * Append/Remove from sourceBuffer in a queue.
+ * Wrap a SourceBuffer and append/remove segments in it in a queue.
  * Wait for the previous buffer action to be finished (updateend event) to
  * perform the next in the queue.
+ *
  * @class QueuedSourceBuffer
  */
 export default class QueuedSourceBuffer<T> {
@@ -102,6 +104,15 @@ export default class QueuedSourceBuffer<T> {
       type: SourceBufferAction.Remove,
       args: { start, end },
     });
+  }
+
+  abort() {
+    this.dispose();
+    this._buffer.abort();
+  }
+
+  unwrap() : ICustomSourceBuffer<T> {
+    return this._buffer;
   }
 
   /**

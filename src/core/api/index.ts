@@ -1455,7 +1455,7 @@ class Player extends EventEmitter {
       case "manifestChange":
         this._priv_onManifestChange(streamInfos.value);
         break;
-      case "pipeline":
+      case "added-segment":
         const { bufferType, parsed } = streamInfos.value;
         if (bufferType === "image") {
           const segmentData = parsed.segmentData;
@@ -1544,7 +1544,7 @@ class Player extends EventEmitter {
 
     // set initial adaptations
     for (const bufferType of Object.keys(adaptations$)) {
-      const adaptations = manifest.getAdaptationsForType(
+      const adaptations = period.getAdaptationsForType(
         bufferType as SupportedBufferTypes
       );
 

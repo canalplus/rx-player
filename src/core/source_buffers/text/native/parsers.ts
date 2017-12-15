@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import log from "../../../../../utils/log";
+import log from "../../../../utils/log";
 
 type nativeParserFn = (texttrack : string, timeOffset : number, language? : string) =>
     VTTCue[]|TextTrackCue[];
@@ -23,22 +23,22 @@ const nativeParsers : { [format : string] : nativeParserFn } = {};
 /* tslint:disable no-var-requires */
 if (__FEATURES__.NATIVE_VTT) {
   nativeParsers.vtt =
-    require("../../../../../parsers/texttracks/webvtt/native.ts").default;
+    require("../../../../parsers/texttracks/webvtt/native.ts").default;
 }
 
 if (__FEATURES__.NATIVE_TTML) {
   nativeParsers.ttml =
-    require("../../../../../parsers/texttracks/ttml/native/index.ts").default;
+    require("../../../../parsers/texttracks/ttml/native/index.ts").default;
 }
 
 if (__FEATURES__.NATIVE_SAMI) {
   nativeParsers.sami =
-    require("../../../../../parsers/texttracks/sami/native.ts").default;
+    require("../../../../parsers/texttracks/sami/native.ts").default;
 }
 
 if (__FEATURES__.NATIVE_SRT) {
   nativeParsers.srt =
-    require("../../../../../parsers/texttracks/srt/native.ts").default;
+    require("../../../../parsers/texttracks/srt/native.ts").default;
 }
 /* tslint:enable no-var-requires */
 

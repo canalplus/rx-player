@@ -28,7 +28,7 @@ import parseSegmentTemplate from "./SegmentTemplate";
 // Parsed child nodes from a MPD
 interface IRepresentationChildNodes {
   baseURL? : string;
-  index? : any; // XXX TODO
+  index? : any; // TODO
 }
 
 // Parsed attributes from a MPD
@@ -71,7 +71,7 @@ export interface IParsedRepresentation {
   frameRate? : number;
   height? : number;
   id? : string;
-  index? : any; // XXX TODO
+  index? : any; // TODO
   maxPlayoutRate? : number;
   maximumSAPPeriod? : number;
   mimeType? : string;

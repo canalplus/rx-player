@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
+import { IBifThumbnail } from "../../../parsers/images/bif";
 import {
   AbstractSourceBuffer,
 } from "../abstract";
-
-import { IBifThumbnail } from "../../../../parsers/images/bif";
 
 // TODO
 class ImageSourceBuffer

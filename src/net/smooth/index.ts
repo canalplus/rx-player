@@ -143,19 +143,21 @@ export default function(
 
   const segmentPipeline = {
     loader({
-      segment,
-      representation,
       adaptation,
-      manifest,
       init,
+      manifest,
+      period,
+      representation,
+      segment,
     } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|Uint8Array> {
       return segmentLoader({
-        segment,
-        representation,
         adaptation,
-        manifest,
         init,
+        manifest,
+        period,
+        representation,
+        segment,
       });
     },
 

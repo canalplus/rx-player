@@ -15,39 +15,20 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import Manifest from "../../manifest";
+import Adaptation from "../../manifest/adaptation";
+import Period from "../../manifest/period";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
-import { ICustomSourceBuffer } from "../stream/source_buffers";
+import { ISegmentLoaderArguments } from "../../net/types";
+import QueuedSourceBuffer from "../source_buffers/queued-source-buffer";
+import SegmentBookkeeper from "../source_buffers/segment_bookkeeper";
 import { SupportedBufferTypes } from "../types";
-
-// export enum BufferEventName {
-//   RepresentationChange = "representationChange",
-//   PreconditionFailed = "Precondition-failed",
-//   Pipeline = "pipeline",
-//   OutOfIndex = "out-of-index",
-//   IndexDiscontinuity = "index-discontinuity",
-// }
-
-export interface IBufferClockTick {
-  currentTime : number;
-  readyState : number;
-  timeOffset : number;
-  stalled : object|null;
-
-  periodDuration? : number;
-  liveGap? : number;
-}
 
 export interface IBufferSegmentInfos {
   duration : number;
   time : number;
   timescale : number;
-}
-
-export interface IDownloaderArgument {
-  segment : Segment;
-  representation : Representation;
-  init: IBufferSegmentInfos|null;
 }
 
 export interface IDownloaderResponse {
@@ -57,35 +38,33 @@ export interface IDownloaderResponse {
   };
 }
 
+export interface IBufferClockTick {
+  currentTime : number;
+  readyState : number;
+  timeOffset : number;
+  stalled : object|null;
+  liveGap? : number;
+}
+
 export interface IBufferArguments {
-  sourceBuffer : ICustomSourceBuffer<any>;
-  downloader : (x : IDownloaderArgument) => Observable<IDownloaderResponse>;
-  switch$ : Observable<Representation>;
   clock$ : Observable<IBufferClockTick>;
-  wantedBufferAhead : Observable<number>;
-  maxBufferAhead : Observable<number>;
-  maxBufferBehind : Observable<number>;
-  bufferType : SupportedBufferTypes;
-  isLive : boolean;
-}
-
-// -- Events emitted by the Buffer --
-
-export interface IRepresentationChangeEvent {
-  type : "representationChange";
-  value : {
-    type : SupportedBufferTypes;
-    representation : Representation|null;
+  content: {
+    representation : Representation;
+    adaptation : Adaptation;
+    period : Period;
+    manifest : Manifest;
   };
+  queuedSourceBuffer : QueuedSourceBuffer<any>;
+  segmentBookkeeper : SegmentBookkeeper;
+  pipeline : (x : ISegmentLoaderArguments) => Observable<IDownloaderResponse>;
+  wantedBufferAhead$ : Observable<number>;
 }
 
-export interface IPreconditionFailedEvent {
-  type : "precondition-failed";
-  value : Error;
-}
+// -- Events emitted by the RepresentationBuffer --
 
-export interface IPipelineEvent {
-  type : "pipeline";
+// Emitted when a new segment has been added to the SourceBuffer
+export interface IAddedSegmentEvent {
+  type : "added-segment";
   value : {
     bufferType : SupportedBufferTypes;
     parsed : {
@@ -95,29 +74,115 @@ export interface IPipelineEvent {
   };
 }
 
-export interface IOutOfIndexEvent {
-  type : "out-of-index";
+// Emitted when the next wanted segment is after what is described by the manifest
+// (The manifest should be refreshed)
+
+// The Manifest needs to be refreshed.
+// The buffer might still download segments after this message
+export interface INeedingManifestRefreshEvent {
+  type : "needs-manifest-refresh";
   value : Error;
 }
 
-export interface IIndexDiscontinuityEvent {
-  type : "index-discontinuity";
+// Emit when a discontinuity is encountered and the user is "stuck" on it.
+export interface IDiscontinuityEvent {
+  type : "discontinuity-encountered";
   value : {
-    ts : number;
+    nextTime : number;
   };
 }
 
-export interface IEndOfBufferEvent {
-  type: "end-of-buffer";
+// Emit when the buffer has reached its end in term of segment downloads.
+// The Buffer does not download segments after this message
+export interface IBufferFilledEvent {
+  type: "filled";
   value : {
-    time : number;
+    wantedRange : {
+      start : number;
+      end : number;
+    };
   };
 }
 
-export type BufferEvent =
+// Emit when segments are being queued for download
+export interface IQueuedSegmentsEvent {
+  type: "segments-queued";
+  value : {
+    segments: Segment[]; // The downloaded segments
+    wantedRange : {
+      start : number;
+      end : number;
+    };
+  };
+}
+
+export interface IBufferFinishedEvent {
+  type: "finished";
+  value : {
+    wantedRange : {
+      start : number;
+      end : number;
+    };
+  };
+}
+
+export interface IBeforeBufferEvent {
+  type: "needed-before-buffer";
+  value : {
+    wantedRange : {
+      start : number;
+      end : number;
+    };
+  };
+}
+
+// Emit when the buffer does nothing for 1 clock tick
+export interface IWaitingBufferEvent {
+  type : "waiting";
+  value : {
+    wantedRange : {
+      start : number;
+      end : number;
+    };
+  };
+}
+
+export interface IIdleBufferEvent {
+  type : "idle";
+  value : undefined;
+}
+
+export interface IBitrateEstimationChangeEvent {
+  type : "bitrateEstimationChange";
+  value : {
+    type : SupportedBufferTypes;
+    bitrate : number|undefined;
+  };
+}
+
+export interface IRepresentationChangeEvent {
+  type : "representationChange";
+  value : {
+    type : SupportedBufferTypes;
+    representation : Representation|null;
+  };
+}
+
+export type IRepresentationBufferStatus =
+  IQueuedSegmentsEvent |
+  IBufferFilledEvent |
+  IBufferFinishedEvent |
+  IBeforeBufferEvent |
+  IIdleBufferEvent |
+  IWaitingBufferEvent;
+
+export type IRepresentationBufferEvent =
+  IAddedSegmentEvent |
+  INeedingManifestRefreshEvent |
+  IDiscontinuityEvent |
+  IRepresentationBufferStatus;
+
+export type IAdaptationBufferEvent =
+  IRepresentationBufferEvent |
   IRepresentationChangeEvent |
-  IPreconditionFailedEvent |
-  IPipelineEvent |
-  IOutOfIndexEvent |
-  IIndexDiscontinuityEvent |
-  IEndOfBufferEvent;
+  IBitrateEstimationChangeEvent;

@@ -19,6 +19,7 @@ import { Observer } from "rxjs/Observer";
 
 import Adaptation from "../manifest/adaptation";
 import Manifest from "../manifest/index";
+import Period from "../manifest/period";
 import Representation from "../manifest/representation";
 import Segment from "../manifest/segment";
 
@@ -59,6 +60,7 @@ export interface IManifestLoaderArguments {
 export interface ISegmentLoaderArguments {
   init? : ISegmentTimingInfos;
   manifest : Manifest;
+  period : Period;
   adaptation : Adaptation;
   representation : Representation;
   segment : Segment;

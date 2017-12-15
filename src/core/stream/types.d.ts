@@ -63,14 +63,6 @@ export interface IManifestUpdateEvent {
   };
 }
 
-export interface IBitrateEstimationChangeEvent {
-  type : "bitrateEstimationChange";
-  value : {
-    type : SupportedBufferTypes;
-    bitrate : number|undefined;
-  };
-}
-
 // Subjects given to allow a choice between the different adaptations available
 export type AdaptationsSubjects =
   Record<SupportedBufferTypes, ReplaySubject<Adaptation|null>>;
@@ -111,6 +103,7 @@ export interface IPeriodChangeEvent {
 
 // Every possible item emitted by the Stream
 export type StreamEvent =
+  IRepresentationChangeEvent |
   IAdaptationChangeEvent |
   IManifestChangeEvent |
   IManifestUpdateEvent |

@@ -23,7 +23,7 @@ import {
 } from "../../compat";
 import MediaError from "../../errors/MediaError";
 import log from "../../utils/log";
-import { ISourceBufferMemory } from "./source_buffers";
+import { ISourceBufferMemory } from "../source_buffers";
 
 /**
  * Side effect that set the media duration in the mediaSource. This side

@@ -35,7 +35,7 @@ import { ISessionEvent } from "../eme/session";
  * @param {Subject} errorStream
  * @returns {Observable}
  */
-function createEMEIfKeySystems(
+function EMEManager(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   errorStream : Subject<Error|CustomError>
@@ -50,4 +50,4 @@ function createEMEIfKeySystems(
   }
 }
 
-export default createEMEIfKeySystems;
+export default EMEManager;

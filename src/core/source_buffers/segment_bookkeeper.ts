@@ -15,6 +15,9 @@
  */
 
 import config from "../../config";
+import Adaptation from "../../manifest/adaptation";
+import Period from "../../manifest/period";
+import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
 import log from "../../utils/log";
 import { convertToRanges } from "../../utils/ranges";
@@ -40,26 +43,31 @@ const {
  */
 // const SEGMENT_EPSILON = 0.3;
 
-interface ISegmentInfos {
-  bitrate : number;
-  start : number;
-  end : number;
-  bufferedStart : number|undefined;
-  bufferedEnd : number|undefined;
+interface IBufferedSegmentInfos {
+  adaptation : Adaptation;
+  period : Period;
+  representation : Representation;
   segment : Segment;
+}
+
+interface IBufferedSegment {
+  bufferedEnd : number|undefined;
+  bufferedStart : number|undefined;
+  end : number;
+  infos : IBufferedSegmentInfos;
+  start : number;
 }
 
 /**
  * Keep track of every segment downloaded and currently in the browser's memory.
  *
  * The main point of this class is to know which CDN segments are already
- * downloaded, at which bitrate, and which have been garbage-collected since
- * by the browser (and thus should be re-downloaded).
- *
+ * pushed to the SourceBuffer, at which bitrate, and which have been
+ * garbage-collected since by the browser (and thus should be re-downloaded).
  * @class SegmentBookkeeper
  */
 export default class SegmentBookkeeper {
-  public inventory : ISegmentInfos[];
+  public inventory : IBufferedSegment[];
 
   constructor() {
     /**
@@ -79,7 +87,7 @@ export default class SegmentBookkeeper {
    *
    * TODO implement management of segments whose end is not known
    */
-  addBufferedInfos(buffered : TimeRanges) : void {
+  synchronizeBuffered(buffered : TimeRanges) : void {
     const { inventory } = this;
     const ranges = convertToRanges(buffered);
 
@@ -267,20 +275,24 @@ export default class SegmentBookkeeper {
    * @param {Number} bitrate - bitrate of the representation the segment is in
    */
   insert(
+    period : Period,
+    adaptation : Adaptation,
+    representation : Representation,
     segment : Segment,
     start : number,
-    end : number|undefined,
-    bitrate : number
+    end : number|undefined
   ) : void {
     // TODO (*very* low-priority) manage segments whose end is unknown (rare but
     // could eventually happen).
     // This should be properly managed in this method, but it is not in some
     // other methods of this class, so I decided to not one of those to the
     // inventory by security
-    if (__DEV__ && end == null) {
-      throw new Error("SegmentBookkeeper: ending time of the segment not defined");
-    } else if (end == null) {
+    if (end == null) {
+      if (__DEV__) {
+        throw new Error("SegmentBookkeeper: ending time of the segment not defined");
+      }
       // This leads to excessive re-downloads of segment without an ending time.
+      log.warn("SegmentBookkeeper: ending time of the segment not defined");
       return;
     }
 
@@ -293,12 +305,16 @@ export default class SegmentBookkeeper {
     // const end = (segment.time + segment.duration) / segment.timescale;
 
     const newSegment = {
-      bitrate,
       start,
       end,
       bufferedStart: undefined,
       bufferedEnd: undefined,
-      segment,
+      infos: {
+        segment,
+        period,
+        adaptation,
+        representation,
+      },
     };
 
     // begin by the end as in most use cases this will be faster
@@ -494,10 +510,17 @@ export default class SegmentBookkeeper {
       start : number;
       end : number;
     },
-    time : number,
-    duration : number,
-    timescale : number
-  ) : ISegmentInfos|null {
+    segmentInfos : {
+      time : number;
+      duration : number;
+      timescale : number;
+    }
+  ) : IBufferedSegment|null {
+    const {
+      time,
+      duration,
+      timescale,
+    } = segmentInfos;
     const { inventory } = this;
 
     for (let i = inventory.length - 1; i >= 0; i--) {
@@ -505,7 +528,7 @@ export default class SegmentBookkeeper {
       const prevSegmentI = inventory[i - 1];
       const nextSegmentI = inventory[i + 1];
 
-      const segment = currentSegmentI.segment;
+      const segment = currentSegmentI.infos.segment;
 
       let _time = time;
       let _duration = duration;
@@ -544,9 +567,9 @@ export default class SegmentBookkeeper {
      * @returns {Boolean}
      */
     function hasEnoughInfos(
-      currentSegmentI : ISegmentInfos,
-      prevSegmentI : ISegmentInfos,
-      nextSegmentI : ISegmentInfos
+      currentSegmentI : IBufferedSegment,
+      prevSegmentI : IBufferedSegment,
+      nextSegmentI : IBufferedSegment
     ) : boolean {
       if ((prevSegmentI && prevSegmentI.bufferedEnd == null) ||
         currentSegmentI.bufferedStart == null
@@ -575,9 +598,9 @@ export default class SegmentBookkeeper {
         start : number;
         end : number;
       },
-      currentSegmentI : ISegmentInfos,
-      prevSegmentI : ISegmentInfos,
-      nextSegmentI : ISegmentInfos
+      currentSegmentI : IBufferedSegment,
+      prevSegmentI : IBufferedSegment,
+      nextSegmentI : IBufferedSegment
     ) : boolean {
       if (
         !prevSegmentI ||

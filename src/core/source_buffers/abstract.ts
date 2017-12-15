@@ -15,10 +15,10 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import assert from "../../../utils/assert";
-import castToObservable from "../../../utils/castToObservable";
-import EventEmitter from "../../../utils/eventemitter";
-import tryCatch from "../../../utils/rx-tryCatch";
+import assert from "../../utils/assert";
+import castToObservable from "../../utils/castToObservable";
+import EventEmitter from "../../utils/eventemitter";
+import tryCatch from "../../utils/rx-tryCatch";
 import ManualTimeRanges from "./time_ranges";
 
 export interface ICustomSourceBuffer<T> {

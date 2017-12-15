@@ -131,18 +131,6 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
   _addSegmentInfos() : false {
     return false;
   },
-
-  hasSegmentLeftAfter(time : number) {
-    if (!window.tototo) {
-      if (time > 119.52) {
-        // debugger;
-        window.tototo = true;
-        return true;
-      }
-      return false;
-    }
-    return false;
-  },
 };
 
 export default SegmentTemplateHelpers;

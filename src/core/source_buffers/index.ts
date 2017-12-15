@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import MediaError from "../../../errors/MediaError";
-import log from "../../../utils/log";
-
+import MediaError from "../../errors/MediaError";
+import log from "../../utils/log";
 import { ICustomSourceBuffer } from "./abstract";
 import ImageSourceBuffer from "./image";
+import QueuedSourceBuffer from "./queued_source_buffer";
 import {
   HTMLTextSourceBuffer,
   NativeTextSourceBuffer,
@@ -27,11 +27,11 @@ import ICustomTimeRanges from "./time_ranges";
 
 export interface ISourceBufferMemory {
   custom : {
-    [keyName : string ] : ICustomSourceBuffer<any>;
+    [keyName : string ] : QueuedSourceBuffer<any>;
   };
   native : {
-    audio? : SourceBuffer;
-    video? : SourceBuffer;
+    audio? : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView>;
+    video? : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView>;
   };
 }
 
@@ -74,14 +74,15 @@ function addNativeSourceBuffer(
   bufferType : "audio"|"video",
   codec : string,
   { native } : ISourceBufferMemory
-) : SourceBuffer {
+) : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView> {
   if (native[bufferType] == null) {
     log.info("adding native sourcebuffer with type", codec);
-    native[bufferType] = mediaSource.addSourceBuffer(codec);
+    const sourceBuffer = mediaSource.addSourceBuffer(codec);
+    native[bufferType] = new QueuedSourceBuffer(sourceBuffer);
   }
 
   // TODO is TypeScript playing Dumb here?
-  return native[bufferType] as SourceBuffer;
+  return native[bufferType] as QueuedSourceBuffer<ArrayBuffer|ArrayBufferView>;
 }
 
 /**
@@ -103,19 +104,17 @@ function createSourceBuffer(
   codec : string,
   sourceBufferMemory : ISourceBufferMemory,
   options : SourceBufferOptions = {}
-) : SourceBuffer|ICustomSourceBuffer<any> {
+) : QueuedSourceBuffer<any> {
   let sourceBuffer;
 
   if (shouldHaveNativeSourceBuffer(bufferType)) {
-    sourceBuffer =
-      addNativeSourceBuffer(mediaSource, bufferType, codec, sourceBufferMemory);
-  }
-  else {
+    return addNativeSourceBuffer(mediaSource, bufferType, codec, sourceBufferMemory);
+  } else {
     const { custom } = sourceBufferMemory;
-    const oldSourceBuffer = custom[bufferType];
-    if (oldSourceBuffer) {
+    const oldQueuedSourceBuffer = custom[bufferType];
+    if (oldQueuedSourceBuffer) {
       try {
-        oldSourceBuffer.abort();
+        oldQueuedSourceBuffer.abort();
       } catch (e) {
         log.warn(e);
       } finally {
@@ -148,10 +147,10 @@ function createSourceBuffer(
       throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
     }
 
-    custom[bufferType] = sourceBuffer;
+    const queuedSourceBuffer = new QueuedSourceBuffer(sourceBuffer);
+    custom[bufferType] = queuedSourceBuffer;
+    return queuedSourceBuffer;
   }
-
-  return sourceBuffer;
 }
 
 /**
@@ -174,28 +173,28 @@ function disposeSourceBuffer(
     custom,
   } = sourceBufferMemory;
 
-  let oldSourceBuffer : undefined|ICustomSourceBuffer<any>|SourceBuffer;
+  let oldQueuedSourceBuffer : undefined|QueuedSourceBuffer<any>;
 
   const isNative = shouldHaveNativeSourceBuffer(bufferType);
   if (isNative) {
     // TODO 2Smart4TypeScript here. Find another way.
-    oldSourceBuffer = native[bufferType as "audio"|"video"];
+    oldQueuedSourceBuffer = native[bufferType as "audio"|"video"];
     delete native[bufferType as "audio"|"video"];
   }
   else {
-    oldSourceBuffer = custom[bufferType];
+    oldQueuedSourceBuffer = custom[bufferType];
     delete custom[bufferType];
   }
 
-  if (oldSourceBuffer) {
+  if (oldQueuedSourceBuffer) {
     try {
-      oldSourceBuffer.abort();
+      oldQueuedSourceBuffer.abort();
 
       if (isNative) {
         log.info("removing native sourcebuffer", bufferType);
 
         // TODO once again, we outsmart TypeScript here.
-        mediaSource.removeSourceBuffer(oldSourceBuffer as SourceBuffer);
+        mediaSource.removeSourceBuffer(oldQueuedSourceBuffer.unwrap() as SourceBuffer);
       }
 
     } catch (e) {

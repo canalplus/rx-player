@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+import objectAssign = require("object-assign");
 import config from "../../../../config";
+import arrayIncludes from "../../../../utils/array-includes";
 import generateNewId from "../../../../utils/id";
+import log from "../../../../utils/log";
 import {
   normalizeBaseURL,
   resolveURL,
@@ -29,7 +32,6 @@ import {
 } from "./AdaptationSet";
 import parsePeriod, {
   IContentProtectionParser,
-  IParsedPeriod,
 } from "./Period";
 
 export interface IParsedMPD {
@@ -37,7 +39,7 @@ export interface IParsedMPD {
   availabilityStartTime : number;
   duration : number;
   id : string;
-  periods : IParsedPeriod[];
+  periods : IPeriod[];
   transportType : string;
   type : string;
   uris : string[];
@@ -55,12 +57,30 @@ export interface IParsedMPD {
   presentationLiveGap? : number;
 }
 
+export interface IPeriod {
+  // required
+  id : string;
+  adaptations : IParsedAdaptationSet[];
+  start : number;
+
+  // optional
+  duration? : number; // should only be for the last period
+  bitstreamSwitching? : boolean;
+}
+
 /**
  * @param {Object} index
  * @returns {Number|undefined}
- * XXX TODO index
  */
-function calculateIndexLastLiveTimeReference(index: any) : number|undefined {
+function calculateIndexLastLiveTimeReference(index: {
+  indexType : string;
+  timeline : Array<{
+    ts : number;
+    d? : number;
+    r : number;
+  }>;
+  timescale : number;
+}) : number|undefined {
   if (index.indexType === "timeline") {
     const { ts, r, d } = index.timeline[index.timeline.length - 1];
 
@@ -166,7 +186,7 @@ export default function parseMPD(
     }
   }
 
-  const periods = mpdPeriodNodes
+  const parsedPeriods = mpdPeriodNodes
     .map(periodNode => {
       return parsePeriod(periodNode, mpdRootURL, contentProtectionParser);
     });
@@ -231,13 +251,42 @@ export default function parseMPD(
     }
   }
 
+  const periods : IPeriod[] = [];
+
+  for (let i = 0; i < parsedPeriods.length; i++) {
+    const parsedPeriod = parsedPeriods[i];
+
+    let period : IPeriod;
+    if (parsedPeriod.start != null) {
+      // is TS dumb here? It is not some lines after so this is weird.
+      period = parsedPeriod as IPeriod;
+    } else {
+      let start : number;
+      if (i === 0) {
+        start = availabilityStartTime == null ? 0 : availabilityStartTime;
+      } else {
+        const prevPeriod = periods[i - 1];
+        if (prevPeriod.duration != null) {
+          start = prevPeriod.start + prevPeriod.duration;
+        } else {
+          throw new Error("Not enough informations on the periods.");
+        }
+      }
+      period = objectAssign(parsedPeriod, { start });
+    }
+
+    const nextPeriod = parsedPeriods[i + 1];
+    if (period.duration == null && nextPeriod && nextPeriod.start != null) {
+      period.duration = nextPeriod.start - period.start;
+    }
+
+    periods.push(period);
+  }
+
   const parsedMPD : IParsedMPD = {
     availabilityStartTime: availabilityStartTime != null ?
       availabilityStartTime : 0,
-
-    // XXX TODO Check with periods also
     duration: duration == null ? Infinity : duration,
-
     id: id != null ? id : "gen-dash-manifest-" + generateNewId(),
     periods,
     transportType: "dash",
@@ -277,9 +326,7 @@ export default function parseMPD(
 
   if (parsedMPD.type === "dynamic") {
     const adaptations = parsedMPD.periods[
-      0 /* XXX TODO
       parsedMPD.periods.length - 1
-      */
     ].adaptations;
 
     const videoAdaptation = adaptations
@@ -290,7 +337,62 @@ export default function parseMPD(
       Date.now() / 1000 - (lastRef + parsedMPD.availabilityStartTime) : 10;
   }
 
+  checkManifestIDs(parsedMPD);
   return parsedMPD;
+}
+
+/**
+ * Ensure that no two period have the same ID, than no two adaptations
+ * neither for the same period and that no two representations from a same
+ * adaptation neither.
+ *
+ * Log and mutate their ID if not until this is verified.
+ *
+ * @param {Object} manifest
+ */
+function checkManifestIDs(manifest : IParsedMPD) : void {
+  const periodIDs : string[] = [];
+  manifest.periods.forEach(period => {
+    const periodID = period.id;
+    if (arrayIncludes(periodIDs, periodID)) {
+      log.warn("DASH: Two periods with the same ID found. Updating.",
+        periodID);
+      const newID =  periodID + "-";
+      period.id = newID;
+      checkManifestIDs(manifest);
+      periodIDs.push(newID);
+    } else {
+      periodIDs.push(periodID);
+    }
+    const adaptationIDs : string[] = [];
+    period.adaptations.forEach(adaptation => {
+      const adaptationID = adaptation.id;
+      if (arrayIncludes(adaptationIDs, adaptationID)) {
+        log.warn("DASH: Two adaptations with the same ID found. Updating.",
+          adaptationID);
+        const newID =  adaptationID + "-";
+        adaptation.id = newID;
+        checkManifestIDs(manifest);
+        adaptationIDs.push(newID);
+      } else {
+        adaptationIDs.push(adaptationID);
+      }
+      const representationIDs : string[] = [];
+      adaptation.representations.forEach(representation => {
+        const representationID = representation.id;
+        if (arrayIncludes(representationIDs, representationID)) {
+          log.warn("DASH: Two representations with the same ID found. Updating.",
+            representationID);
+          const newID =  representationID + "-";
+          representation.id = newID;
+          checkManifestIDs(manifest);
+          representationIDs.push(newID);
+        } else {
+          representationIDs.push(representationID);
+        }
+      });
+    });
+  });
 }
 
 export { IContentProtectionParser };

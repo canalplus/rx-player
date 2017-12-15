@@ -15,6 +15,7 @@
  */
 
 import config from "../../../config";
+import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
   // bytesToStr,
@@ -28,6 +29,7 @@ import {
 } from "../../../utils/bytes";
 import generateNewId from "../../../utils/id";
 import { normalize as normalizeLang } from "../../../utils/languages";
+import log from "../../../utils/log";
 import {
   normalizeBaseURL,
   resolveURL,
@@ -308,7 +310,7 @@ function createSmoothStreamingParser(
     channels?: number;
     codecs?: string;
     height?: number;
-    id?: string|number;
+    id?: string;
     mimeType?: string;
     packetSize?: number;
     samplingRate?: number;
@@ -456,7 +458,6 @@ function createSmoothStreamingParser(
     // codec and mimeType
     assert(representations.length, "adaptation should have at least one representation");
 
-    // XXX TODO Do something to avoid duplicated IDs
     const id = adaptationType + (language ? ("_" + language) : "");
 
     // apply default properties
@@ -467,7 +468,7 @@ function createSmoothStreamingParser(
       representation.codecs = representation.codecs || DEFAULT_CODECS[adaptationType];
       representation.id = id + "_" + adaptationType + "-" +
         representation.mimeType + "-" +
-        representation.codecs;
+        representation.codecs + "-" + representation.bitrate;
       representation.index = index;
     });
 
@@ -570,8 +571,12 @@ function createSmoothStreamingParser(
         (lastRef + availabilityStartTime);
     }
 
-    const duration = +(root.getAttribute("Duration") || Infinity) / timescale;
-    return {
+    const durationInt = parseInt(root.getAttribute("Duration") || "", 10);
+    if (isNaN(durationInt)) {
+      log.warn("Smooth: Invalid duration");
+    }
+    const duration = (durationInt || Infinity) / timescale;
+    const manifest = {
       availabilityStartTime: availabilityStartTime || 0,
       duration,
       id: "gen-smooth-manifest-" + generateNewId(),
@@ -591,9 +596,52 @@ function createSmoothStreamingParser(
         laFragCount: +(root.getAttribute("LookAheadFragmentCount") || 0),
       }],
     };
+    checkManifestIDs(manifest);
+    return manifest;
   }
 
   return parseFromDocument;
+}
+
+/**
+ * Ensure that no two adaptations have the same ID and that no two
+ * representations from a same adaptation neither.
+ *
+ * Log and mutate their ID if not until this is verified.
+ *
+ * @param {Object} manifest
+ */
+function checkManifestIDs(manifest : IParsedManifest) : void {
+  manifest.periods.forEach(({ adaptations } : { adaptations : IAdaptationSmooth[] }) => {
+    const adaptationIDs : string[] = [];
+    adaptations.forEach(adaptation => {
+      const adaptationID = adaptation.id;
+      if (arrayIncludes(adaptationIDs, adaptationID)) {
+        log.warn("Smooth: Two adaptations with the same ID found. Updating.",
+          adaptationID);
+        const newID =  adaptationID + "-";
+        adaptation.id = newID;
+        checkManifestIDs(manifest);
+        adaptationIDs.push(newID);
+      } else {
+        adaptationIDs.push(adaptationID);
+      }
+      const representationIDs : string[] = [];
+      adaptation.representations.forEach(representation => {
+        const representationID = representation.id;
+        if (arrayIncludes(representationIDs, representationID)) {
+          log.warn("Smooth: Two representations with the same ID found. Updating.",
+            representationID);
+          const newID =  representationID + "-";
+          representation.id = newID;
+          checkManifestIDs(manifest);
+          representationIDs.push(newID);
+        } else {
+          representationIDs.push(representationID);
+        }
+      });
+    });
+  });
 }
 
 export default createSmoothStreamingParser;

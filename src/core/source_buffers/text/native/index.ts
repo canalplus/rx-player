@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import { addTextTrack } from "../../../../../compat";
-import log from "../../../../../utils/log";
-
+import { addTextTrack } from "../../../../compat";
+import log from "../../../../utils/log";
 import {
   AbstractSourceBuffer,
   ICustomSourceBuffer,

@@ -79,8 +79,8 @@ function parseIntOrBoolean(str : string) : boolean|number {
  * @param {string}
  * @returns {Date}
  */
-function parseDateTime(str : string) : Date {
-  return new Date(Date.parse(str));
+function parseDateTime(str : string) : number {
+  return new Date(Date.parse(str)).getTime() / 1000;
 }
 
 /**
@@ -212,7 +212,6 @@ function parseScheme(root: Node): IScheme {
 }
 
 /**
- * XXX TODO Do without that
  * @param {Array.<string>}
  * @param {Object} finalObject
  * @param {Object} objectToInherit

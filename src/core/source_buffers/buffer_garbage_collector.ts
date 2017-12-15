@@ -17,7 +17,37 @@
 import { Observable } from "rxjs/Observable";
 import log from "../../utils/log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
-import QueuedSourceBuffer from "./queued-source-buffer";
+import QueuedSourceBuffer from "./queued_source_buffer";
+
+/**
+ * Perform cleaning of the buffer according to the values set by the user
+ * at each clock tick and each times the maxBufferBehind/maxBufferAhead values
+ * change.
+ *
+ * @param {Object} opt
+ * @returns {Observable}
+ */
+export default function BufferGarbageCollector({
+  queuedSourceBuffer,
+  clock$,
+  maxBufferBehind$,
+  maxBufferAhead$,
+} : {
+  queuedSourceBuffer : QueuedSourceBuffer<any>;
+  clock$ : Observable<number>;
+  maxBufferBehind$ : Observable<number>;
+  maxBufferAhead$ : Observable<number>;
+}) : Observable<never> {
+  return Observable.combineLatest(clock$, maxBufferBehind$, maxBufferAhead$)
+    .mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
+      return clearBuffer(
+        queuedSourceBuffer,
+        currentTime,
+        maxBufferBehind,
+        maxBufferAhead
+      );
+    });
+}
 
 /**
  * Remove buffer from the browser's memory based on the user's
@@ -35,7 +65,7 @@ import QueuedSourceBuffer from "./queued-source-buffer";
  * @param {Number} maxBufferAhead
  * @returns {Observable}
  */
-export default function cleanBuffer(
+function clearBuffer(
   qSourceBuffer : QueuedSourceBuffer<any>, // The type of buffer has no importance here
   position : number,
   maxBufferBehind : number,

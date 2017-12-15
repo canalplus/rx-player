@@ -25,7 +25,7 @@ import onEvent from "../../utils/rx-onEvent";
  * @see MediaError
  * @returns {Observable}
  */
-export default function createMediaErrorStream(
+export default function createMediaErrorHandler(
   videoElement : HTMLMediaElement
 ) : Observable<never> {
   return onEvent(videoElement, "error").mergeMap(() => {

@@ -30,6 +30,11 @@ interface IMetricValue {
   size: number;
 }
 
+export interface IMetric {
+  type : SupportedBufferTypes;
+  value : IMetricValue;
+}
+
 // Options for every RepresentationChoosers
 interface IRepresentationChoosersOptions {
   limitWidth: Partial<Record<SupportedBufferTypes, Observable<number>>>;
@@ -302,6 +307,6 @@ export default class ABRManager {
 }
 
 export {
-  IMetricValue,
-  IRequest,
+  IRequest as IABRRequest,
+  IMetric as IABRMetric,
 };

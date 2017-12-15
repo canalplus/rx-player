@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import log from "../../../../../utils/log";
+import log from "../../../../utils/log";
 
 export interface IHTMLCue {
   start : number;
@@ -29,22 +29,22 @@ const htmlParsers : { [format : string] : htmlParserFn } = {};
 /* tslint:disable no-var-requires */
 if (__FEATURES__.HTML_SAMI) {
   htmlParsers.sami =
-    require("../../../../../parsers/texttracks/sami/html.ts").default;
+    require("../../../../parsers/texttracks/sami/html.ts").default;
 }
 
 if (__FEATURES__.HTML_TTML) {
   htmlParsers.ttml =
-    require("../../../../../parsers/texttracks/ttml/html/index.ts").default;
+    require("../../../../parsers/texttracks/ttml/html/index.ts").default;
 }
 
 if (__FEATURES__.HTML_SRT) {
   htmlParsers.srt =
-    require("../../../../../parsers/texttracks/srt/html.ts").default;
+    require("../../../../parsers/texttracks/srt/html.ts").default;
 }
 
 if (__FEATURES__.HTML_VTT) {
   htmlParsers.vtt =
-    require("../../../../../parsers/texttracks/webvtt/html/index.ts").default;
+    require("../../../../parsers/texttracks/webvtt/html/index.ts").default;
 }
 /* tslint:enable no-var-requires */
 

@@ -16,7 +16,6 @@
 
 import arrayFind = require("array-find");
 import objectAssign = require("object-assign");
-
 import generateNewId from "../utils/id";
 import Representation, {
   IRepresentationArguments

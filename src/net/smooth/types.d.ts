@@ -68,6 +68,7 @@ interface IRepresentationSmooth {
   bitrate: number;
   codecPrivateData: string;
   index: ISmoothRepresentationIndexIndex;
+  id: string;
 
   // optional
   audiotag?: number;
@@ -75,7 +76,6 @@ interface IRepresentationSmooth {
   channels?: number;
   codecs?: string;
   height?: number;
-  id?: string|number;
   mimeType?: string;
   packetSize?: number;
   samplingRate?: number;

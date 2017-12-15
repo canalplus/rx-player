@@ -67,7 +67,7 @@ function createManifestAdaptations(
 export interface IPeriodArguments {
   id: string;
   adaptations: IAdaptationArguments[];
-  start?: number;
+  start: number;
   duration?: number;
 }
 
@@ -75,7 +75,8 @@ export default class Period {
   public id : string;
   public adaptations : ManifestAdaptations;
   public duration? : number;
-  public start? : number;
+  public start : number;
+  public end? : number;
 
   /**
    * @constructor
@@ -86,6 +87,10 @@ export default class Period {
     this.adaptations = createManifestAdaptations(args.adaptations);
     this.duration = args.duration;
     this.start = args.start;
+
+    if (this.duration != null && this.start != null) {
+      this.end = this.start + this.duration;
+    }
   }
 
   /**

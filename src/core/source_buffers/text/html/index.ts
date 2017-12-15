@@ -16,18 +16,14 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-
-import config from "../../../../../config";
-import log from "../../../../../utils/log";
-
 import {
   onEnded$,
   onSeeked$,
   onSeeking$,
-} from "../../../../../compat/events";
-
+} from "../../../../compat/events";
+import config from "../../../../config";
+import log from "../../../../utils/log";
 import { AbstractSourceBuffer } from "../../abstract";
-
 import TextBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";
 

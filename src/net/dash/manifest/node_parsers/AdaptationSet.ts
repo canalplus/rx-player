@@ -50,7 +50,8 @@ interface IRepresentation {
   // required
   baseURL : string;
   bitrate : number;
-  index : any; // XXX TODO
+  index : any; // TODO
+  id: string;
 
   // optional
   audioSamplingRate?: string;
@@ -60,7 +61,6 @@ interface IRepresentation {
   contentProtection?: IParsedContentProtection;
   frameRate?: number;
   height?: number;
-  id?: string;
   maxPlayoutRate?: number;
   maximumSAPPeriod?: number;
   mimeType?: string;
@@ -72,7 +72,7 @@ interface IRepresentation {
 
 export interface IParsedAdaptationSet {
   // required
-  id: string|null|number;
+  id: string;
   representations: IRepresentation[];
   type: string;
 
@@ -104,7 +104,7 @@ interface IAdaptationSetChildNodes {
   contentProtection? : IParsedContentProtection;
   representations : Node[];
   role? : IScheme;
-  index? : any; // XXX TODO
+  index? : any; // TODO
 }
 
 interface IAdaptationSetAttributes {
@@ -527,8 +527,8 @@ export default function parseAdaptationSet(
 
       let representationID = representationObject.id;
       if (representationID == null) {
-        // XXX TODO
-        representationID = "";
+        representationID = representationObject.bitrate + "-" +
+          (representationObject.codecs || "");
       }
 
       // Fix issue in some packagers, like GPAC, generating a non
@@ -540,7 +540,7 @@ export default function parseAdaptationSet(
 
       return objectAssign({
         index: baseIndex,
-        id: "", // XXX TODO
+        id: representationID,
       }, representationObject);
     });
 
@@ -579,7 +579,6 @@ export default function parseAdaptationSet(
     if (adaptationAttributes.mimeType) {
       idString += `-${adaptationAttributes.mimeType}`;
     }
-    // XXX TODO second pass to ensure each id is unique?
     id = idString;
   }
 
@@ -603,7 +602,6 @@ export default function parseAdaptationSet(
     adaptationAttributes
   );
 
-  // XXX TODO
   parsedAdaptationSet = inheritAttributes(
    [
      "bitstreamSwitching",

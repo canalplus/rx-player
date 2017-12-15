@@ -91,7 +91,7 @@ class Manifest {
      * @deprecated TODO It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
-    this.adaptations = this.periods[0].adaptations;
+    this.adaptations = (this.periods[0] && this.periods[0].adaptations) || [];
 
     this.isLive = args.type === "dynamic";
     this.uris = args.uris;
@@ -196,12 +196,10 @@ class Manifest {
   }
 
   getPeriodForTime(time : number) : Period|undefined {
+    const scaledTime = time + (this.availabilityStartTime || 0);
     return this.periods.find(period => {
-      if (period.start == null || period.duration == null) {
-        return false;
-      }
-      return period.start >= time &&
-        (period.start + period.duration) < time;
+     return scaledTime >= period.start &&
+        (period.end == null || period.end > scaledTime);
     });
   }
 
@@ -217,14 +215,16 @@ class Manifest {
   }
 
   /**
+   * TODO log deprecation
+   * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
-    const adaptationsByType = this.adaptations;
-    if (!adaptationsByType) {
+    const firstPeriod = this.periods[0];
+    if (!firstPeriod) {
       return [];
     }
-
+    const adaptationsByType = firstPeriod.adaptations;
     const adaptationsList : Adaptation[] = [];
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
@@ -236,15 +236,31 @@ class Manifest {
     return adaptationsList;
   }
 
+  /**
+   * TODO log deprecation
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
   getAdaptationsForType(adaptationType : AdaptationType) : Adaptation[] {
-    const adaptations = this.adaptations[adaptationType];
-    return adaptations || [];
+    const firstPeriod = this.periods[0];
+    if (!firstPeriod) {
+      return [];
+    }
+    return firstPeriod.adaptations[adaptationType] || [];
   }
 
+  /**
+   * TODO log deprecation
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
 
+  /**
+   * @param {number} delta
+   */
   updateLiveGap(delta : number) : void {
     if (this.isLive) {
       if (this.presentationLiveGap) {
@@ -253,15 +269,6 @@ class Manifest {
         this.presentationLiveGap = delta;
       }
     }
-  }
-
-  /**
-   * @deprecated TODO It is here to ensure compatibility with the way the
-   * v3.x.x manages adaptations at the Manifest level
-   * @param {number} wantedId
-   */
-  _switchPeriod(period : Period) : void {
-    this.adaptations = period.adaptations;
   }
 
   /**

@@ -44,7 +44,7 @@ export interface IInitialTimeOptions {
  * @param {Object} startAt
  * @returns {Number}
  */
-export default function getInitialTime(
+export default function calculateInitialTime(
   manifest : Manifest,
   startAt? : IInitialTimeOptions
 ) : number {
