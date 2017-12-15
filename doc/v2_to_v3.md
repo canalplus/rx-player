@@ -15,7 +15,7 @@ The simplest way of switching here would be to:
 
 If you were only using documented APIs and you follow this, you'll be ready to completely switch to a ``3.x.x`` release !
 
-If you don't know if you were using documented APIs, you can still check if the options, methods and events you use now are documented in the [new API](./api/index.md). Now, every non-documented (private) APIs are isolated in a ``_priv`` object in the rx-player instance, to simplify this process.
+If you don't know if you were using documented APIs, you can still check if the options, methods and events you use now are documented in the [new API](./api/index.md). Now, most non-documented (private) APIs begin by the string ``_priv_``, to simplify this process.
 
 ## Table of Contents
 
