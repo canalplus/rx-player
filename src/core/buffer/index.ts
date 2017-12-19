@@ -161,7 +161,7 @@ function Buffer({
    * @param {Object} timing - The last item emitted from clock$
    * @param {Number} bufferGoal - The last item emitted from wantedBufferAhead
    * @param {Number} bufferSize - The last item emitted from bufferSize$
-   * @param {Boolean} withInitSegment - Whether we're dealing with an init
+   * @param {Boolean} needsInitSegment - Whether we're dealing with an init
    * segment.
    * @returns {Array.<Segment>}
    * @throws IndexError - Throws if the current timestamp is considered out
@@ -174,11 +174,11 @@ function Buffer({
       end : number;
     },
     timing : IBufferClockTick,
-    withInitSegment : boolean
+    needsInitSegment : boolean
   ) : Segment[] {
     let initSegment : Segment|null = null;
 
-    if (withInitSegment) {
+    if (needsInitSegment) {
       log.debug("add init segment", bufferType);
       initSegment = representation.index.getInitSegment();
     }
@@ -339,14 +339,15 @@ function Buffer({
 
     /**
      * Get list of segment to injects.
-     * @param {Array} combineLatestResult
-     * @param {Number} injectCount
+     * @param {Object} timing
+     * @param {number} bufferGoal
+     * @param {boolean} needsInitSegment
      * @returns {Observable|Array.<Segment>}
      */
     function getNeededSegments(
       timing : IBufferClockTick,
       bufferGoal : number,
-      injectCount : number
+      needsInitSegment : boolean
     ) : Observable<Segment> {
       const buffered = bufferingQueue.getBuffered();
       bookkeeper.addBufferedInfos(buffered);
@@ -366,8 +367,6 @@ function Buffer({
         }
       }
 
-      const withInitSegment = (injectCount === 0);
-
       const wantedRange = getWantedBufferRange(buffered, timing, bufferGoal, {
         low: LOW_PADDING,
         high: HIGH_PADDING,
@@ -378,7 +377,7 @@ function Buffer({
         representation,
         wantedRange,
         timing,
-        withInitSegment
+        needsInitSegment
       ).filter((segment) => segmentFilter(segment, wantedRange));
       log.debug("segments needed:", !!neededSegments.length, neededSegments);
 
@@ -401,29 +400,52 @@ function Buffer({
         .map((args) => objectAssign({ segment }, args));
     }
 
-    function onClockTick(
-      [ timing, _wantedBufferAhead, _maxBufferBehind, _maxBufferAhead ]
-        : [ IBufferClockTick, number, number, number ],
-      i : number
+    /**
+     * Check and load needed segments.
+     * @param {Object} timing
+     * @param {number} _wantedBufferAhead
+     * @param {number} _maxBufferAhead
+     * @param {Boolean} needsInitSegment
+     * @returns {Observable}
+     */
+    function checkNeededSegments(
+      timing : IBufferClockTick,
+      _wantedBufferAhead : number,
+      _maxBufferAhead : number,
+      needsInitSegment : boolean
     ) : Observable<{ segment : Segment } & IDownloaderResponse> {
       const bufferGoal = Math.min(_wantedBufferAhead, _maxBufferAhead);
-      const loadNeeded$ = getNeededSegments(timing, bufferGoal, i)
+      return getNeededSegments(timing, bufferGoal, needsInitSegment)
         .concatMap(loadNeededSegments);
-      const clean$ = cleanBuffer(
-        bufferingQueue, timing.currentTime, _maxBufferBehind, _maxBufferAhead);
-      return Observable.merge(loadNeeded$, clean$);
     }
 
-    const segmentsPipeline = Observable.combineLatest(
-      clock$,
-      wantedBufferAhead,
-      maxBufferBehind,
-      maxBufferAhead
-    )
-      .mergeMap(onClockTick)
+    /**
+     * Check the size of buffer and clean if it goes beyond the limits set by
+     * the user.
+     * @param {number} currentTime
+     * @param {number} _maxBufferBehind
+     * @param {number} _maxBufferAhead
+     * @returns {Observable}
+     */
+    function checkBufferSize(
+      currentTime : number,
+      _maxBufferBehind : number,
+      _maxBufferAhead : number
+    ) : Observable<never> {
+      return cleanBuffer(
+        bufferingQueue, currentTime, _maxBufferBehind, _maxBufferAhead);
+    }
+
+    const loadNeededSegments$ = Observable
+      .combineLatest(clock$, wantedBufferAhead, maxBufferAhead)
+      .concatMap((args, i) => checkNeededSegments(args[0], args[1], args[2], !i))
       .concatMap(appendDataInBuffer);
 
-    return Observable.merge(segmentsPipeline, messageSubject)
+    const clean$ = Observable
+      .combineLatest(clock$, maxBufferBehind, maxBufferAhead)
+      .mergeMap(args => checkBufferSize(args[0].currentTime, args[1], args[2]));
+
+    return Observable.merge(loadNeededSegments$, clean$, messageSubject)
       .catch((error) => {
         // For live adaptations, handle 412 errors as precondition-
         // failed errors, ie: we are requesting for segments before they
