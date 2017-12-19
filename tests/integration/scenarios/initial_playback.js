@@ -244,10 +244,10 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
       transport: "dash",
     });
     await waitForLoadedStateAfterLoadVideo(player);
-    await sleep(100);
+    await sleep(200);
 
     player.seekTo(6);
-    await sleep(10);
+    await sleep(100);
 
     expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
   });
