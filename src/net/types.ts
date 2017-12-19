@@ -73,13 +73,13 @@ interface ILoaderResponseValue<T> {
   url? : string;
 }
 
-interface ILoaderResponse<T> {
+export interface ILoaderResponse<T> {
   type : "response";
   value : ILoaderResponseValue<T>;
 }
 
 // items emitted by net/ pipelines' loaders on xhr progress events
-interface ILoaderProgress {
+export interface ILoaderProgress {
   type : "progress";
   value : {
     duration : number;
@@ -218,7 +218,7 @@ export type CustomSegmentLoader = (
   // returns either the aborting callback or nothing
   (() => void)|void;
 
-interface IParsedManifest {
+export interface IParsedManifest {
   locations?: any[];
   transportType: string;
   id?: string;
