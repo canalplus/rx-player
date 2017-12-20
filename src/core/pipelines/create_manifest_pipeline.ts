@@ -24,30 +24,49 @@ import Manifest, {
 import createManifest from "../../manifest/factory";
 import { ITransportPipelines } from "../../net";
 import Pipeline from "./pipeline";
-import streamPipelineFactory from "./stream_pipeline";
+import {
+  IPipelineCache,
+  IPipelineData,
+} from "./types";
 
+/**
+ * Create function allowing to easily fetch and parse the manifest from its URL.
+ *
+ * @example
+ * ```js
+ * const manifestPipeline = createManifestPipeline(transport, errorStream);
+ * manifestPipeline(manifestURL)
+ *  .subscribe(manifest => console.log("Manifest:", manifest));
+ * ```
+ *
+ * @param {Object} transport
+ * @param {Subject} errorStream
+ * @param {Array.<Object>} [supplementaryTextTracks=[]]
+ * @param {Array.<Object>} [supplementaryImageTrack=[]]
+ * @returns {Function}
+ */
 export default function createManifestPipeline(
   transport : ITransportPipelines<any, any, any, any, any>,
   errorStream : Subject<Error | CustomError>,
-  supplementaryTextTracks : ISupplementaryTextTrack[],
-  supplementaryImageTracks : ISupplementaryImageTrack[]
+  supplementaryTextTracks : ISupplementaryTextTrack[] = [],
+  supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {
   return function fetchManifest(url : string) {
     const manifest$ = Pipeline(transport.manifest)({ url });
-    const fakeSubject = new Subject<any>();
-    return streamPipelineFactory(
-      fakeSubject, // we don't care about metrics here
-      fakeSubject, // and we don't care about the request progress
-      errorStream
-    )("manifest", manifest$)
-      .map(({ parsed } : {
-        parsed : {
-          url : string;
-          manifest : any;
-        };
-      }) : Manifest => {
+
+    return manifest$
+      .do(({ type, value }) => {
+        if (type === "error") {
+          errorStream.next(value);
+        }
+      })
+      .share()
+      .filter((arg) : arg is IPipelineData|IPipelineCache =>
+        arg.type === "data" || arg.type === "cache"
+      )
+      .map(({ value }) : Manifest => {
         return createManifest(
-          parsed.manifest,
+          value.parsed.manifest,
           supplementaryTextTracks,
           supplementaryImageTracks
         );

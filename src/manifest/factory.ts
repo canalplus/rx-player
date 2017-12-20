@@ -51,12 +51,12 @@ export default function createManifest(
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
 ) : Manifest {
-  manifestObject.periods = manifestObject.periods.map((period) => {
+  manifestObject.periods = (manifestObject.periods as any[]).map((period) => {
     period.adaptations = checkAdaptations(period.adaptations);
     return period;
   });
 
-  const manifest = new Manifest(manifestObject);
+  const manifest = new Manifest(manifestObject as any);
   manifest.addSupplementaryTextAdaptations(externalTextTracks);
   manifest.addSupplementaryImageAdaptations(externalImageTracks);
   return manifest;

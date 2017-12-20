@@ -26,7 +26,7 @@ import Segment from "../manifest/segment";
 import { IBifThumbnail } from "../parsers/images/bif";
 
 // TODO Refacto to unify those
-import { IPeriodDash } from "./dash/manifest";
+import { IParsedPeriod } from "./dash/manifest/node_parsers/Period";
 import { IPeriodSmooth } from "./smooth/types";
 
 // contains timings info on a single audio/video/text/image segment
@@ -75,13 +75,13 @@ interface ILoaderResponseValue<T> {
   url? : string;
 }
 
-interface ILoaderResponse<T> {
+export interface ILoaderResponse<T> {
   type : "response";
   value : ILoaderResponseValue<T>;
 }
 
 // items emitted by net/ pipelines' loaders on xhr progress events
-interface ILoaderProgress {
+export interface ILoaderProgress {
   type : "progress";
   value : {
     duration : number;
@@ -222,12 +222,12 @@ export type CustomSegmentLoader = (
   (() => void)|void;
 
 // TODO 2 Types static & dynamic
-interface IParsedManifest {
+export interface IParsedManifest {
   // required
   availabilityStartTime : number;
   duration: number;
   id: string;
-  periods: Array<IPeriodDash|IPeriodSmooth>; // TODO
+  periods: IParsedPeriod[]|IPeriodSmooth[]; // TODO
   transportType: string;
   type: string;
   uris: string[];

@@ -21,7 +21,7 @@ import Period from "../../manifest/period";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
 import { ISegmentLoaderArguments } from "../../net/types";
-import QueuedSourceBuffer from "../source_buffers/queued-source-buffer";
+import QueuedSourceBuffer from "../source_buffers/queued_source_buffer";
 import SegmentBookkeeper from "../source_buffers/segment_bookkeeper";
 import { SupportedBufferTypes } from "../types";
 

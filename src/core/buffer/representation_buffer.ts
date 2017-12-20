@@ -86,20 +86,19 @@ export default function RepresentationBuffer({
 
   const { high : HIGH_PADDING, low : LOW_PADDING } = getBufferPaddings(adaptation);
   /**
-   * Saved state of the init segment for this representation to give back to the
-   * pipeline.
+   * Saved state of the init segment for this representation to give it back to the
+   * pipeline on subsequent downloads
    * @type {Object|null}
    */
   let initSegmentInfos : IBufferSegmentInfos|null = null;
 
   /**
-   * Keep track of currently downloaded segments to avoid re-downloading them
-   * when they are pending.
+   * Keep track of currently downloaded segments:
+   *   - avoid re-downloading them when they are pending.
+   *   - allows to know if the buffer is idle or waiting on segments.
    * @type {Object}
    */
   const queuedSegments = new SimpleSet();
-
-  log.info("bitrate", adaptation.type, representation.bitrate);
 
   /**
    * Returns every segments currently wanted.
@@ -311,8 +310,10 @@ export default function RepresentationBuffer({
   }
 
   /**
-   * Check what should be done with the current buffer, and return its current
-   * status.
+   * Check what should be done with the current buffer.
+   *
+   * The returned status indicates whether the buffer should download segments,
+   * or if it is filled, finished, idle etc.
    * @param {Object} timing
    * @param {number} bufferGoal
    * @param {Number} injectCount
@@ -327,7 +328,7 @@ export default function RepresentationBuffer({
     segmentBookkeeper.synchronizeBuffered(buffered);
 
     const limits = {
-      start: timing.currentTime + timing.timeOffset,
+      start: Math.max(period.start, timing.currentTime + timing.timeOffset),
       end: period.end,
       liveGap: timing.liveGap,
     };
@@ -392,17 +393,18 @@ export default function RepresentationBuffer({
   }
 
   /**
-   * Actions to perform on each clock tick
-   * @param {Array} arr
-   * @param {Number} injectCount
+   * @param {Object} timing
+   * @param {number} wantedBufferAhead
+   * @param {Boolean} needsInitSegment
    * @returns {Observable}
    */
-  function onClockTick(
-    [ timing, wantedBufferAhead ] : [ IBufferClockTick, number ],
-    injectCount : number
+  function checkBufferStatus(
+    timing : IBufferClockTick,
+    wantedBufferAhead : number,
+    needsInitSegment : boolean
   ) : Observable<IRepresentationBufferEvent> {
     checkDiscontinuity(timing);
-    const bufferStatus = getCurrentStatus(timing, wantedBufferAhead, !injectCount);
+    const bufferStatus = getCurrentStatus(timing, wantedBufferAhead, needsInitSegment);
     log.debug("Buffer status:", bufferStatus.type, bufferStatus.value, representation);
 
     if (bufferStatus.type === "segments-queued") {
@@ -411,17 +413,17 @@ export default function RepresentationBuffer({
         queuedSegments.add(neededSegments[i].id);
       }
 
-      const addNeeded$ = Observable.of(...neededSegments)
+      return Observable.of(...neededSegments)
         .concatMap(loadNeededSegments)
-        .concatMap(appendDataInBuffer);
-      return addNeeded$.startWith(bufferStatus);
+        .concatMap(appendDataInBuffer)
+        .startWith(bufferStatus);
     }
 
     return Observable.of(bufferStatus);
   }
 
-  const run$ = Observable.combineLatest(clock$, wantedBufferAhead$)
-    .mergeMap(onClockTick);
+  const check$ = Observable.combineLatest(clock$, wantedBufferAhead$)
+    .concatMap((args, i) => checkBufferStatus(args[0], args[1], !i));
 
-  return Observable.merge(run$, messageSubject);
+  return Observable.merge(check$, messageSubject);
 }

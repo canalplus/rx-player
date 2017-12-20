@@ -57,8 +57,9 @@ import {
   ErrorTypes,
 } from "../../errors";
 
-import Stream from "../stream";
-import { StreamEvent } from "../stream/types";
+import Stream, {
+  IStreamEvent,
+} from "../stream";
 import { SupportedBufferTypes } from "../types";
 
 import Manifest from "../../manifest";
@@ -1435,7 +1436,7 @@ class Player extends EventEmitter {
    * Called each time the Stream Observable emits.
    * @param {Object} streamInfos - payload emitted
    */
-  private _priv_onStreamNext(streamInfos : StreamEvent) : void {
+  private _priv_onStreamNext(streamInfos : IStreamEvent) : void {
     switch (streamInfos.type) {
       case "periodChange":
         this._priv_onPeriodChange(streamInfos.value);

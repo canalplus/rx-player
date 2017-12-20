@@ -15,15 +15,12 @@
  */
 
 import { Observable } from "rxjs/Observable";
-
+import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
+import Manifest from "../../manifest";
 import log from "../../utils/log";
 import { getNextRangeGap } from "../../utils/ranges";
-
-import { isPlaybackStuck } from "../../compat";
-import Manifest from "../../manifest";
-
-import { IStreamClockTick } from "./types";
+import { IStreamClockTick } from "./timings";
 
 const { DISCONTINUITY_THRESHOLD } = config;
 

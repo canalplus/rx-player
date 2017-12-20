@@ -34,15 +34,14 @@ import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../utils/url";
-
 import { IParsedManifest } from "../../types";
-
 import {
   IAdaptationSmooth,
   IContentProtectionSmooth,
   IHSSKeySystem,
   IHSSManifestSegment,
   IHSSParserOptions,
+  IPeriodSmooth,
   IRepresentationSmooth,
  } from "../types";
 
@@ -612,7 +611,7 @@ function createSmoothStreamingParser(
  * @param {Object} manifest
  */
 function checkManifestIDs(manifest : IParsedManifest) : void {
-  manifest.periods.forEach(({ adaptations } : { adaptations : IAdaptationSmooth[] }) => {
+  (manifest.periods as IPeriodSmooth[]).forEach(({ adaptations }) => {
     const adaptationIDs : string[] = [];
     adaptations.forEach(adaptation => {
       const adaptationID = adaptation.id;

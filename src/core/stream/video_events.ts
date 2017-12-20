@@ -14,47 +14,25 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import {
   canPlay,
   canSeek,
 } from "../../compat";
 import log from "../../utils/log";
-import { IBufferClockTick } from "../buffer/types";
-import { ITimingsClockTick } from "./timings";
-import { ILoadedEvent } from "./types";
 
 /**
- * Creates an observable waiting for the "loadedmetadata" and "canplay"
- * events, and emitting a "loaded" event as both are received.
- *
- * /!\ This has also the side effect of setting the initial time as soon as
- * the loadedmetadata event pops up.
+ * Set the initial time given as soon as possible on the video element.
+ * Emit "null" when done.
+ * @param {HMTLMediaElement} videoElement
+ * @param {number} startTime
+ * @returns {Observable}
  */
-export default function createVideoEventsObservables(
+function handleCanSeek(
   videoElement : HTMLMediaElement,
-  startTime : number,
-  autoPlay : boolean,
-  timings : Observable<ITimingsClockTick>
-) : {
-  clock$ : Observable<IBufferClockTick>;
-  loaded$ : Observable<ILoadedEvent>;
-} {
-
-  /**
-   * Time offset is an offset to add to the timing's current time to have
-   * the "real" position.
-   * For now, this is seen when the video has not yet seeked to its initial
-   * position, the currentTime will most probably be 0 where the effective
-   * starting position will be _startTime_.
-   * Thus we initially set a timeOffset equal to startTime.
-   * TODO That look ugly, find better solution?
-   * @type {Number}
-   */
-  let timeOffset = startTime;
-
-  const canSeek$ = canSeek(videoElement)
+  startTime : number
+) : Observable<null> {
+  return canSeek(videoElement)
     .do(() => {
       log.info("set initial time", startTime);
 
@@ -62,10 +40,16 @@ export default function createVideoEventsObservables(
       // retry for instance)
       videoElement.playbackRate = 1;
       videoElement.currentTime = startTime;
-      timeOffset = 0;
-    });
+    })
+    .mapTo(null)
+    .share();
+}
 
-  const canPlay$ = canPlay(videoElement)
+function handleCanPlay(
+  videoElement : HTMLMediaElement,
+  autoPlay : boolean
+) : Observable<null> {
+  return canPlay(videoElement)
     .do(() => {
       log.info("canplay event");
       if (autoPlay) {
@@ -73,19 +57,34 @@ export default function createVideoEventsObservables(
         videoElement.play();
         /* tslint:enable no-floating-promises */
       }
-    });
+    })
+    .mapTo(null)
+    .share();
+}
+
+/**
+ * @param {HTMLMediaElement} videoElement
+ * @param {number} startTime
+ * @param {boolean} autoPlay
+ * @returns {object}
+ */
+export default function handleVideoEvents(
+  videoElement : HTMLMediaElement,
+  startTime : number,
+  autoPlay : boolean
+) : {
+  hasDoneInitialSeek$ : Observable<null>;
+  isLoaded$ : Observable<null>;
+} {
+  const hasDoneInitialSeek$ = handleCanSeek(videoElement, startTime);
+  const hasHandledCanPlay$ = handleCanPlay(videoElement, autoPlay);
+  const isLoaded$ = Observable.combineLatest(
+    hasDoneInitialSeek$, hasHandledCanPlay$)
+    .take(1)
+    .mapTo(null);
 
   return {
-    clock$: timings
-      .map(timing =>
-        objectAssign({ timeOffset }, timing)
-      ),
-
-    loaded$: Observable.combineLatest(canSeek$, canPlay$)
-      .take(1)
-      .mapTo({
-        type: "loaded" as "loaded",
-        value: true as true,
-      }),
+    hasDoneInitialSeek$,
+    isLoaded$,
   };
 }

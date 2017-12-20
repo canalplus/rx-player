@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { CustomError } from "../../errors";
 import {
   // ILoaderData,
   ILoaderProgress,
@@ -22,7 +23,7 @@ import {
 
 export interface IPipelineError {
   type : "error";
-  value : Error;
+  value : Error|CustomError;
 }
 
 export interface IPipelineMetrics {

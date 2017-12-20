@@ -21,8 +21,8 @@ import Manifest from "../../manifest";
 
 import {
   IManifestUpdateEvent,
-  StreamEvent,
-} from "./types";
+  IStreamEvent,
+} from "./events";
 
 /**
  * Create handler for Buffer events happening only in live contexts.
@@ -35,7 +35,7 @@ export default function liveEventsHandler(
   videoElement : HTMLMediaElement,
   manifest : Manifest,
   refreshManifest : (manifest : Manifest) => Observable<IManifestUpdateEvent>
-) : (message : StreamEvent) => Observable<StreamEvent> {
+) : (message : IStreamEvent) => Observable<IStreamEvent> {
   /**
    * Handle individual stream events
    * @param {string} message

@@ -16,8 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import log from "../../utils/log";
-
-import { IStreamClockTick } from "./types";
+import { IStreamClockTick } from "./timings";
 
 export interface ISpeedManagerOptions {
   pauseWhenStalled? : boolean;

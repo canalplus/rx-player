@@ -16,11 +16,7 @@
 
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import {
-  CustomError,
-  ErrorTypes,
-} from "../../errors";
+import { ErrorTypes } from "../../errors";
 import Manifest, {
 } from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
@@ -29,7 +25,6 @@ import Representation from "../../manifest/representation";
 import { ISegmentLoaderArguments } from "../../net/types";
 import log from "../../utils/log";
 import ABRManager from "../abr";
-import { shouldHaveNativeSourceBuffer } from "../source_buffers";
 import QueuedSourceBuffer from "../source_buffers/queued_source_buffer";
 import SegmentBookkeeper from "../source_buffers/segment_bookkeeper";
 import RepresentationBuffer from "./representation_buffer";
@@ -38,6 +33,12 @@ import {
   IBufferClockTick,
   IRepresentationBufferEvent,
 } from "./types";
+
+export interface IAdaptationBufferClockTick {
+  bufferGap : number;
+  currentTime : number;
+  duration : number;
+}
 
 /**
  * Factory to create a new Buffer per adaptation.
@@ -53,15 +54,10 @@ import {
  */
 export default function AdaptationBufferFactory(
   abrManager : ABRManager,
-  abrBaseClock$ : Observable<{
-    bufferGap : number;
-    currentTime : number;
-    duration : number;
-  }>,
+  abrBaseClock$ : Observable<IAdaptationBufferClockTick>,
   speed$ : BehaviorSubject<number>,
   seeking$ : Observable<null>,
-  wantedBufferAhead$ : Observable<number>,
-  warnings$ : Subject<Error | CustomError>
+  wantedBufferAhead$ : Observable<number>
 ) {
   /**
    * Let ABR choose the right representation for the given adaptation.
@@ -69,7 +65,7 @@ export default function AdaptationBufferFactory(
    * @param {Object} adaptation
    * @returns {Observable}
    */
-  function startABRForAdaptation(
+  function startABR$(
     manifest : Manifest,
     adaptation : Adaptation
   ) {
@@ -131,22 +127,23 @@ export default function AdaptationBufferFactory(
     content : { manifest : Manifest; period : Period; adaptation : Adaptation }
   ) : Observable<IAdaptationBufferEvent> {
     const { manifest, period, adaptation } = content;
-    const abr$ = startABRForAdaptation(manifest, adaptation);
+    const abr$ = startABR$(manifest, adaptation);
 
     const representation$ = abr$
       .map(abr => abr.representation)
       .distinctUntilChanged((a, b) =>
-        !a || !b || (a.bitrate === b.bitrate && (a.id) === (b.id))
+        !a || !b || (a.bitrate === b.bitrate && a.id === b.id)
       ) as Observable<Representation>;
 
-    const createBuffer$ : Observable<Representation> = Observable
-      .combineLatest(representation$, seeking$)
-      .map(([representation]) => representation);
+    const shouldSwitchRepresentationBuffer$ : Observable<Representation> =
+      Observable.combineLatest(representation$, seeking$)
+        .map(([representation]) => representation);
 
     function createRepresentationBuffer(
       representation : Representation
     ) : Observable<IRepresentationBufferEvent> {
-      log.debug("creating buffer for representation:", representation);
+
+      log.info("changing representation", adaptation.type, representation);
       return RepresentationBuffer({
         clock$: bufferClock$,
         content: {
@@ -183,7 +180,7 @@ export default function AdaptationBufferFactory(
       });
     }
 
-    const buffer$ = createBuffer$
+    const buffer$ = shouldSwitchRepresentationBuffer$
       .switchMap((representation) =>
         Observable.of({
           type: "representationChange" as "representationChange",
@@ -192,20 +189,7 @@ export default function AdaptationBufferFactory(
             representation,
           },
         }).concat(createRepresentationBuffer(representation))
-      ).catch<IAdaptationBufferEvent, never>((error : Error) => {
-        const bufferType = adaptation.type;
-        // non native buffer should not impact the stability of the
-        // player. ie: if a text buffer sends an error, we want to
-        // continue streaming without any subtitles
-        if (!shouldHaveNativeSourceBuffer(bufferType)) {
-          log.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
-          warnings$.next(error);
-          return Observable.empty();
-        }
-        log.error(
-          "native buffer: ", bufferType, "has crashed. Stopping playback.", error);
-        throw error; // else, throw
-      });
+      );
 
     const bitrateEstimate$ = abr$
       .filter(({ bitrate } : { bitrate? : number }) => bitrate != null)

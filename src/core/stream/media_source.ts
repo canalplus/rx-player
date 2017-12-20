@@ -85,7 +85,7 @@ function createAndPlugMediaSource(
     url : string|null;
   }>) => {
     let mediaSource : MediaSource|null;
-    let objectURL : string|null;
+    let objectURL : string|null = video.src || null;
     const {
       native: nativeBuffers,
       custom: customBuffers,

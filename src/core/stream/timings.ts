@@ -16,14 +16,28 @@
 
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
-
 import Manifest from "../../manifest";
 import { getMaximumBufferPosition } from "../../manifest/timings";
+import { IBufferClockTick } from "../buffer/types";
 
-import { IStreamClockTick } from "./types";
-
-export interface ITimingsClockTick extends IStreamClockTick {
-  liveGap : number;
+// Object emitted when the stream's clock tick
+export interface IStreamClockTick {
+  currentTime : number;
+  buffered : TimeRanges;
+  duration : number;
+  bufferGap : number;
+  state : string;
+  playbackRate : number;
+  currentRange : {
+    start : number;
+      end : number;
+  } | null;
+  readyState : number;
+  paused : boolean;
+  stalled : {
+    state : string;
+    timestamp : number;
+  } | null;
 }
 
 /**
@@ -36,14 +50,12 @@ const SEEK_GAP = 2;
  * Observable emitting each time the player is in a true seeking state.
  * That is, the player is seeking and no buffer has been constructed for this
  * range yet.
- * @param {Observable} timingsSampling - the timings observable emitting every
+ * @param {Observable} clock$ - the clock$ observable emitting every
  * seeking events.
  * @returns {Observable}
  */
-function seekingsSampler(
-  timingsSampling : Observable<IStreamClockTick>
-) : Observable<null> {
-  return timingsSampling
+function getSeekings$(clock$ : Observable<IStreamClockTick>) : Observable<null> {
+  return clock$
     .filter(timing => {
       return timing.state === "seeking" &&
         (timing.bufferGap === Infinity ||
@@ -60,37 +72,55 @@ function seekingsSampler(
     // TODO Always the case? check that up
     .skip(1)
     .map(() => null)
-    .startWith(null); // TODO Why starting with somthing?
+    .startWith(null); // TODO Why starting with something?
 }
 
 /**
- * Create timings and seekings Observables:
- *   - timings is the given timings observable with added informations.
- *   - seekings emits each time the player go in a seeking state.
+ * Create clock$ and seekings$ Observables:
+ *   - clock$ is the given clock$ observable with added informations.
+ *   - seekings$ emits each time the player go in a seeking state.
  * @param {Object} manifest
  * @returns {Object}
  */
-function createTimingsAndSeekingsObservables(
+export default function createBufferClock(
   manifest : Manifest,
-  timings$ : Observable<IStreamClockTick>
+  streamClock$ : Observable<IStreamClockTick>,
+  hasDoneInitialSeek$ : Observable<null>,
+  startTime : number
 ) : {
-  timings : Observable<ITimingsClockTick>;
-  seekings : Observable<null>;
+  clock$ : Observable<IBufferClockTick>;
+  seekings$ : Observable<null>;
 } {
-  const augmentedTimings = timings$.map((timing) => {
-    return objectAssign({
-      liveGap: manifest.isLive ?
-      getMaximumBufferPosition(manifest) - timing.currentTime :
-      Infinity,
-    }, timing);
-  });
+  /**
+   * Time offset is an offset to add to the timing's current time to have
+   * the "real" position.
+   * For now, this is seen when the video has not yet seeked to its initial
+   * position, the currentTime will most probably be 0 where the effective
+   * starting position will be _startTime_.
+   * Thus we initially set a timeOffset equal to startTime.
+   * @type {Number}
+   */
+  let timeOffset = startTime;
+  const updateTimeOffset$ = hasDoneInitialSeek$
+    .take(1)
+    .do(() => {
+      timeOffset = 0;
+    }).ignoreElements() as Observable<never>;
 
-  const seekings = seekingsSampler(augmentedTimings);
+  const clock$ = streamClock$
+    .map((timing) =>
+      objectAssign({
+        liveGap: manifest.isLive ?
+        getMaximumBufferPosition(manifest) - timing.currentTime :
+        Infinity,
+        timeOffset,
+      }, timing)
+    );
+
+  const seekings$ = getSeekings$(clock$);
 
   return {
-    timings: augmentedTimings,
-    seekings,
+    clock$: Observable.merge(clock$, updateTimeOffset$),
+    seekings$,
   };
 }
-
-export default createTimingsAndSeekingsObservables;
