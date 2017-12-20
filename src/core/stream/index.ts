@@ -397,7 +397,7 @@ export default function Stream({
           _adaptation$ : Observable<Adaptation|null>
         ) : Observable<IStreamEvent> {
 
-          const periodBuffer$ = _adaptation$.switchMap((adaptation) => {
+          const currentBuffer$ = _adaptation$.switchMap((adaptation) => {
             if (mediaSource == null) {
               // should NEVER EVER happen
               throw new MediaError("UNAVAILABLE_MEDIA_SOURCE", null, true);
@@ -414,9 +414,8 @@ export default function Stream({
             }
 
             log.info(`updating ${bufferType} adaptation`, adaptation);
-            const pipelineOptions = getPipelineOptions(bufferType);
-            const segmentBookkeeper = getSegmentBookkeeper(bufferType);
             const { representations } = adaptation;
+            const segmentBookkeeper = getSegmentBookkeeper(bufferType);
             const codec = (
               representations[0] && representations[0].getMimeTypeString()
             ) || "";
@@ -429,6 +428,7 @@ export default function Stream({
               bufferType === "text" ? textTrackOptions : {}
             );
 
+            const pipelineOptions = getPipelineOptions(bufferType);
             const pipeline =
               segmentPipelinesManager.createPipeline(bufferType, pipelineOptions);
 
@@ -466,17 +466,17 @@ export default function Stream({
               .concat(Observable.merge(adaptationBuffer$, bufferGarbageCollector$));
           }).share();
 
-          const bufferFilled$ : Observable<IBufferFilledEvent> = periodBuffer$
+          const bufferFilled$ : Observable<IBufferFilledEvent> = currentBuffer$
             .filter((message) : message is IBufferFilledEvent =>
               message.type === "filled"
             );
 
-          const bufferFinished$ : Observable<IBufferFinishedEvent> = periodBuffer$
+          const bufferFinished$ : Observable<IBufferFinishedEvent> = currentBuffer$
             .filter((message) : message is IBufferFinishedEvent =>
               message.type === "finished"
             );
 
-          const bufferNeeds$ = periodBuffer$
+          const bufferActive$ : Observable<IQueuedSegmentsEvent> = currentBuffer$
             .filter((message) : message is IQueuedSegmentsEvent =>
               message.type === "segments-queued"
             );
@@ -484,7 +484,8 @@ export default function Stream({
           function prepareSwitchToNextPeriod() : Observable<IStreamEvent> {
             return Observable.merge(bufferFilled$, bufferFinished$)
               .take(1)
-              .switchMap(({ value }) => {
+              .mergeMap(({ value }) => {
+                // XXX TODO
                 const _period = manifest.getPeriodForTime(value.wantedRange.end + 2);
                 if (!_period) {
                   // finished
@@ -498,18 +499,13 @@ export default function Stream({
                 log.info("creating new Buffer for", bufferType, _period);
                 return startBuffer(_period, __adaptation$)
                   .takeUntil(
-                    bufferNeeds$
+                    bufferActive$
                       .take(1)
                       .concat(prepareSwitchToNextPeriod())
                   );
               });
           }
-          const switchNextBuffer$ = prepareSwitchToNextPeriod();
-
-          return Observable.merge(
-            switchNextBuffer$,
-            periodBuffer$.takeUntil(bufferFinished$)
-          ) as Observable<IStreamEvent>;
+          return Observable.merge(prepareSwitchToNextPeriod(), currentBuffer$);
         }
       });
 

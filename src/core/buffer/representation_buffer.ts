@@ -244,7 +244,6 @@ export default function RepresentationBuffer({
 
         // current segment timings informations are used to update
         // bufferedRanges informations
-        // XXX TODO Also add adaptation + Period and compare?
         segmentBookkeeper.insert(
           period,
           adaptation,
