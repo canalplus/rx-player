@@ -195,11 +195,14 @@ class Manifest {
     }
   }
 
+  /**
+   * @param {number} time
+   * @returns {Period|undefine}
+   */
   getPeriodForTime(time : number) : Period|undefined {
-    const scaledTime = time + (this.availabilityStartTime || 0);
     return this.periods.find(period => {
-     return scaledTime >= period.start &&
-        (period.end == null || period.end > scaledTime);
+     return time >= period.start &&
+        (period.end == null || period.end > time);
     });
   }
 
@@ -210,6 +213,9 @@ class Manifest {
     return this._duration;
   }
 
+  /**
+   * @returns {string|undefined}
+   */
   getUrl() : string|undefined {
     return this.uris[0];
   }
