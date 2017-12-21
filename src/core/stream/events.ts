@@ -80,6 +80,11 @@ export interface IPeriodChangeEvent {
   };
 }
 
+export interface IManifestExpired {
+  type: "manifest-expired";
+  value: number;
+}
+
 const STREAM_EVENTS = {
   adaptationChange(
     bufferType : SupportedBufferTypes,
@@ -177,6 +182,7 @@ export type IStreamEvent =
   IStreamLoadedEvent |
   IAdaptationBufferEvent |
   IPeriodChangeEvent |
-  ISessionEvent;
+  ISessionEvent |
+  IManifestExpired;
 
 export default STREAM_EVENTS;

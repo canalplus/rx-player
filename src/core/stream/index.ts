@@ -76,12 +76,16 @@ import createMediaSource, {
 import EMEManager from "./eme_manager";
 import EVENTS, {
   IAdaptationsSubject,
+  IManifestExpired,
   IStreamEvent,
 } from "./events";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import liveEventsHandler from "./live_events_handler";
+import {
+  liveEventsHandler,
+  refreshManifest,
+} from "./live_events_handler";
 import createMediaErrorHandler from "./media_error_handler";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
@@ -509,10 +513,41 @@ export default function Stream({
 
     const adaptations$ = _adaptations$ as IAdaptationsSubject;
 
-    const buffers$ = (manifest.isLive ?
-      Observable.merge(..._buffersArray)
+        // In the case where minimumUpdatePeriod is specified, and above 0,
+    // manifest may be updated when update period has elapsed from the download
+    // time of previous manifest.
+    function manifestExpired$(
+      minimumUpdatePeriod?: number,
+      updateGap?: number
+    ): Observable<IManifestExpired> {
+      return (minimumUpdatePeriod && updateGap != null) ?
+        Observable.timer((minimumUpdatePeriod - updateGap) * 1000)
+          .mergeMap(() => {
+            return refreshManifest(fetchManifest, manifest)
+              .concatMap(() =>
+              Observable.of({
+                type: "manifest-expired" as "manifest-expired",
+                value: minimumUpdatePeriod,
+              }).merge(
+                manifestExpired$(
+                  manifest.minimumUpdatePeriod,
+                  (Date.now() / 1000 - manifest.loadedAt)
+                )
+              )
+          );
+        }) :
+        Observable.never();
+    }
+
+    const initialUpdateGap = Date.now() / 1000 - manifest.loadedAt;
+    const buffers$ = manifest.isLive ?
+      Observable
+        .merge(
+          ..._buffersArray,
+          manifestExpired$(manifest.minimumUpdatePeriod, initialUpdateGap)
+        )
         .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
-      Observable.merge(..._buffersArray));
+      Observable.merge(..._buffersArray);
 
     const manifestEvent$ = Observable
       .of(EVENTS.manifestChange(
@@ -534,7 +569,7 @@ export default function Stream({
       emeManager$,
       loadedEvent$,
       manifestEvent$,
-      mediaErrorHandler$,
+      mediaErrorHandler$ as any,
       speedManager$,
       stallingManager$
     );
