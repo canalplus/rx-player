@@ -76,12 +76,16 @@ import createMediaSource, {
 import EMEManager from "./eme_manager";
 import EVENTS, {
   IAdaptationsSubject,
+  IManifestUpdateEvent,
   IStreamEvent,
 } from "./events";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import liveEventsHandler from "./live_events_handler";
+import {
+  liveEventsHandler,
+  refreshManifest,
+} from "./live_events_handler";
 import createMediaErrorHandler from "./media_error_handler";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
@@ -509,10 +513,41 @@ export default function Stream({
 
     const adaptations$ = _adaptations$ as IAdaptationsSubject;
 
-    const buffers$ = (manifest.isLive ?
-      Observable.merge(..._buffersArray)
+    /**
+     * In the case where minimumUpdatePeriod is specified, and above 0,
+     * manifest may be updated when update period has elapsed from the download
+     * time of previous manifest.
+     * @param {number} minimumUpdatePeriod
+     * @param {number} updateGap
+     */
+    function refreshExpiredManifest(
+      updateGap: number,
+      minimumUpdatePeriod?: number
+    ): Observable<IManifestUpdateEvent> {
+      return minimumUpdatePeriod ?
+        Observable.timer((minimumUpdatePeriod - updateGap) * 1000)
+          .mergeMap(() => {
+            return refreshManifest(fetchManifest, manifest)
+              .concatMap(() =>
+                refreshExpiredManifest(
+                  (Date.now() / 1000 - manifest.loadedAt),
+                  manifest.minimumUpdatePeriod
+                )
+              );
+            }
+          ) :
+        Observable.never();
+    }
+
+    const initialUpdateGap = Date.now() / 1000 - manifest.loadedAt;
+    const expiredManifestUpdate$ =
+      refreshExpiredManifest(initialUpdateGap, manifest.minimumUpdatePeriod);
+
+    const buffers$ = manifest.isLive ?
+      Observable
+        .merge(..._buffersArray)
         .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
-      Observable.merge(..._buffersArray));
+      Observable.merge(..._buffersArray);
 
     const manifestEvent$ = Observable
       .of(EVENTS.manifestChange(
@@ -532,6 +567,7 @@ export default function Stream({
     return Observable.merge(
       buffers$,
       emeManager$,
+      expiredManifestUpdate$,
       loadedEvent$,
       manifestEvent$,
       mediaErrorHandler$,
