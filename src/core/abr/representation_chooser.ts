@@ -263,6 +263,7 @@ function requestTakesTime(
  *     switch-able bitrate. If no representation is found inferior or equal to
  *     this bitrate, the representation with the minimum bitrate will be taken.
  *
+ * @class RepresentationChooser
  */
 export default class RepresentationChooser {
   public manualBitrate$ : BehaviorSubject<number>;
@@ -300,12 +301,17 @@ export default class RepresentationChooser {
     this._throttle$ = options.throttle$;
   }
 
+  /**
+   * @param {Observable} clock$
+   * @param {Array.<Object>} representations
+   * @returns {Observable}
+   */
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
   ): Observable<{
-    bitrate: undefined|number;
-    representation: Representation|null;
+    bitrate: undefined|number; // bitrate estimation
+    representation: Representation|null; // chosen representation
   }> {
     if (representations.length < 2) {
       return Observable.of({

@@ -32,7 +32,7 @@ import { ISourceBufferMemory } from "../source_buffers";
  * @param {MediaSource} mediaSource
  * @param {Object} manifest
  */
-function setDurationToMediaSource(
+export function setDurationToMediaSource(
   mediaSource : MediaSource,
   duration : number
 ) : void {
@@ -71,7 +71,7 @@ function setDurationToMediaSource(
  * @param {Object} sourceBufferMemory.native
  * @returns {Observable}
  */
-function createAndPlugMediaSource(
+export default function createMediaSource(
   url : string,
   video : HTMLMediaElement,
   withMediaSource : boolean,
@@ -163,8 +163,3 @@ function createAndPlugMediaSource(
     return resetMediaElement;
   });
 }
-
-export {
-  createAndPlugMediaSource,
-  setDurationToMediaSource,
-};

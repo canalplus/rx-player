@@ -15,26 +15,49 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import log from "../../utils/log";
-
 import Manifest from "../../manifest";
-
-import {
+import log from "../../utils/log";
+import EVENTS, {
   IManifestUpdateEvent,
   IStreamEvent,
 } from "./events";
 
 /**
+ * Re-fetch the manifest and merge it with the previous version.
+ *
+ * /!\ Mutates the given manifest
+ * @param {Object} manifest
+ * @returns {Observable}
+ */
+function refreshManifest(
+  manifestPipeline : (url : string) => Observable<Manifest>,
+  currentManifest : Manifest
+) : Observable<IManifestUpdateEvent> {
+  const refreshURL = currentManifest.getUrl();
+  if (!refreshURL) {
+    log.warn("Cannot refresh the manifest: no url");
+    return Observable.empty();
+  }
+
+  return manifestPipeline(refreshURL)
+    .do((parsed) => {
+      currentManifest.update(parsed);
+    })
+    .share() // share the previous side effect
+    .mapTo(EVENTS.manifestUpdate(currentManifest));
+}
+
+/**
  * Create handler for Buffer events happening only in live contexts.
  * @param {HTMLMediaElement} videoElement
  * @param {Object} manifest
- * @param {Function} refreshManifest
+ * @param {Function} fetchManifest
  * @returns {Function}
  */
 export default function liveEventsHandler(
   videoElement : HTMLMediaElement,
   manifest : Manifest,
-  refreshManifest : (manifest : Manifest) => Observable<IManifestUpdateEvent>
+  fetchManifest : (url : string) => Observable<Manifest>
 ) : (message : IStreamEvent) => Observable<IStreamEvent> {
   /**
    * Handle individual stream events
@@ -52,7 +75,7 @@ export default function liveEventsHandler(
         // out-of-index messages require a complete reloading of the
         // manifest to refresh the current index
         log.info("out of index");
-        return refreshManifest(manifest);
+        return refreshManifest(fetchManifest, manifest);
     }
     return Observable.of(message);
   };

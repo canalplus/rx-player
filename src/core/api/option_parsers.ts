@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * This file exports various helpers to parse options given to various APIs,
+ * throw if something is wrong, and return a normalized option object.
+ */
+
 import objectAssign = require("object-assign");
 
 import config from "../../config";

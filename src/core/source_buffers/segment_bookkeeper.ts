@@ -656,4 +656,11 @@ export default class SegmentBookkeeper {
       return true;
     }
   }
+
+  /**
+   * Empty the current inventory
+   */
+  reset() {
+    this.inventory = [];
+  }
 }

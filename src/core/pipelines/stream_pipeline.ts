@@ -23,7 +23,7 @@ import {
   IABRMetric,
   IABRRequest
 } from "../abr";
-import { PipelineEvent } from "../pipelines/types";
+import { PipelineEvent } from "../pipelines/pipeline";
 import { SupportedBufferTypes } from "../types";
 
 /**

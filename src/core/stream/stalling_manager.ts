@@ -20,7 +20,7 @@ import config from "../../config";
 import Manifest from "../../manifest";
 import log from "../../utils/log";
 import { getNextRangeGap } from "../../utils/ranges";
-import { IStreamClockTick } from "./timings";
+import { IStreamClockTick } from "./clock";
 
 const { DISCONTINUITY_THRESHOLD } = config;
 

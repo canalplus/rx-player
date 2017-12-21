@@ -169,20 +169,23 @@ export interface IRepresentationChangeEvent {
 }
 
 export type IRepresentationBufferStatus =
-  IQueuedSegmentsEvent |
+  IBeforeBufferEvent |
   IBufferFilledEvent |
   IBufferFinishedEvent |
-  IBeforeBufferEvent |
   IIdleBufferEvent |
+  IQueuedSegmentsEvent |
   IWaitingBufferEvent;
 
 export type IRepresentationBufferEvent =
   IAddedSegmentEvent |
-  INeedingManifestRefreshEvent |
+  IBeforeBufferEvent |
+  IBufferFilledEvent |
+  IBufferFinishedEvent |
   IDiscontinuityEvent |
-  IRepresentationBufferStatus;
+  INeedingManifestRefreshEvent |
+  IQueuedSegmentsEvent;
 
 export type IAdaptationBufferEvent =
+  IBitrateEstimationChangeEvent |
   IRepresentationBufferEvent |
-  IRepresentationChangeEvent |
-  IBitrateEstimationChangeEvent;
+  IRepresentationChangeEvent;

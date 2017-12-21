@@ -63,6 +63,12 @@ export default class SegmentPipelinesManager {
   private _warning$ : Subject<Error | CustomError>;
   private _transport : ITransportPipelines<any, any, any, any, any>;
 
+  /**
+   * @param {Object} transport
+   * @param {Subject} requestsInfos$
+   * @param {Subject} metrics$
+   * @param {Subject} warning
+   */
   constructor(
     transport : ITransportPipelines<any, any, any, any, any>,
     requestsInfos$ : Subject<Subject<IABRRequest>>,
@@ -75,6 +81,11 @@ export default class SegmentPipelinesManager {
     this._warning$ = warning;
   }
 
+  /**
+   * @param {string} bufferType
+   * @param {Object} options
+   * @returns {Function}
+   */
   createPipeline(
     bufferType : SupportedBufferTypes,
     options : IPipelineOptions<any, any>
@@ -84,13 +95,16 @@ export default class SegmentPipelinesManager {
       options
     );
 
-    // XXX TODO
     const streamPipeline = streamPipelineFactory(
       this._metrics$,
       this._requestsInfos$,
       this._warning$
     );
 
+    /**
+     * @param {Object} content
+     * @returns {Observable}
+     */
     return function fetchSegment(content : ISegmentLoaderArguments) {
       const pipeline$ = pipeline(content);
       return streamPipeline(bufferType, pipeline$);

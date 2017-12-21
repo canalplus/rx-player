@@ -17,7 +17,6 @@
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-
 import arrayIncludes from "../../utils/array-includes";
 import castToObservable from "../../utils/castToObservable";
 import noop from "../../utils/noop";
@@ -31,13 +30,50 @@ import {
   OtherError,
   RequestError,
 } from "../../errors";
+import {
+  // ILoaderData,
+  ILoaderProgress,
+  ILoaderResponse,
+} from "../../net/types";
 
 import downloadingBackoff from "./backoff";
-import {
-  IPipelineError,
-  IPipelineMetrics,
-  PipelineEvent,
-} from "./types";
+
+export interface IPipelineError {
+  type : "error";
+  value : Error|CustomError;
+}
+
+export interface IPipelineMetrics {
+  type : "metrics";
+  value : {
+    size : number;
+    duration : number;
+  };
+}
+
+export interface IPipelineData {
+  type : "data";
+  value : any;
+}
+
+export interface IPipelineCache {
+  type : "cache";
+  value : any;
+}
+
+export interface IPipelineRequest {
+  type : "request";
+  value : any;
+}
+
+export type PipelineEvent =
+  ILoaderResponse<any> |
+  ILoaderProgress |
+  IPipelineError |
+  IPipelineData |
+  IPipelineMetrics |
+  IPipelineCache |
+  IPipelineRequest;
 
 // TODO Typings is a complete mess in this file.
 // Maybe is it too DRY? Refactor.

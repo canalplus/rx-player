@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * This file and directory defines the public API for the RxPlayer.
+ *
+ * It also starts the different sub-parts of the player on various API calls.
+ */
+
 import deepEqual = require("deep-equal");
 
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
@@ -23,7 +29,6 @@ import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 
 import config from "../../config";
-
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
 import log, { ILogger } from "../../utils/log";
@@ -46,17 +51,13 @@ import {
   onTextTrackChanges$,
   videoWidth$,
 } from "../../compat/events";
-
-import { IBifThumbnail } from "../../parsers/images/bif";
-
-import Transports from "../../net";
-
 import {
   CustomError,
   ErrorCodes,
   ErrorTypes,
 } from "../../errors";
-
+import Transports from "../../net";
+import { IBifThumbnail } from "../../parsers/images/bif";
 import Stream, {
   IStreamEvent,
 } from "../stream";

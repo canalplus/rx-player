@@ -23,11 +23,10 @@ import Manifest, {
 } from "../../manifest";
 import createManifest from "../../manifest/factory";
 import { ITransportPipelines } from "../../net";
-import Pipeline from "./pipeline";
-import {
+import Pipeline, {
   IPipelineCache,
   IPipelineData,
-} from "./types";
+} from "./pipeline";
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.

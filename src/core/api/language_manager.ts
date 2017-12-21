@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * This file is used to abstract the notion of text and audio language-switching
+ * for an easier API management.
+ */
+
 import arrayFind = require("array-find");
 
 import { Subject } from "rxjs/Subject";

@@ -14,6 +14,4 @@
  * limitations under the License.
  */
 
-// All buffer types instanciated
-// TODO Enum instead?
 export type SupportedBufferTypes = "audio"|"video"|"text"|"image";

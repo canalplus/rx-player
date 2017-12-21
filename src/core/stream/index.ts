@@ -46,8 +46,8 @@ import ABRManager, {
 import AdaptationBufferFactory from "../buffer/adaptation_buffer";
 import {
   IAdaptationBufferEvent,
-  IBufferFilledEvent,
-  IBufferFinishedEvent,
+  // IBufferFilledEvent,
+  // IBufferFinishedEvent,
   IQueuedSegmentsEvent,
 } from "../buffer/types";
 import { IKeySystemOption } from "../eme";
@@ -64,13 +64,18 @@ import {
   shouldHaveNativeSourceBuffer,
   SourceBufferOptions,
 } from "../source_buffers";
-import BufferGarbageCollector from "../source_buffers/buffer_garbage_collector";
-import SegmentBookkeeper from "../source_buffers/segment_bookkeeper";
+import GarbageCollectorMemory from "../source_buffers/garbage_collector_memory";
+import SegmentBookkeeperMemory from "../source_buffers/segment_bookkeeper_memory";
 import { SupportedBufferTypes } from "../types";
+import createBufferClock, {
+  IStreamClockTick,
+} from "./clock";
+import createMediaSource, {
+  setDurationToMediaSource,
+} from "./create_media_source";
 import EMEManager from "./eme_manager";
 import EVENTS, {
   IAdaptationsSubject,
-  IManifestUpdateEvent,
   IStreamEvent,
 } from "./events";
 import getInitialTime, {
@@ -78,15 +83,8 @@ import getInitialTime, {
 } from "./get_initial_time";
 import liveEventsHandler from "./live_events_handler";
 import createMediaErrorHandler from "./media_error_handler";
-import {
-  createAndPlugMediaSource,
-  setDurationToMediaSource,
-} from "./media_source";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
-import createBufferClock, {
-  IStreamClockTick,
-} from "./timings";
 import handleVideoEvents from "./video_events";
 
 const { END_OF_PLAY } = config;
@@ -131,7 +129,6 @@ export interface IStreamOptions {
  *  - give choice of the adaptation to the caller (e.g. to choose a language)
  *  - returns Observable emitting notifications about the stream lifecycle.
  *
- * TODO TOO MANY PARAMETERS something is wrong here.
  * @param {Object} args
  * @returns {Observable}
  */
@@ -152,6 +149,13 @@ export default function Stream({
   withMediaSource = true,
   transport,
 } : IStreamOptions) : Observable<IStreamEvent> {
+
+  const {
+    wantedBufferAhead$,
+    maxBufferAhead$,
+    maxBufferBehind$,
+  } = bufferOptions;
+
   /**
    * Fetch and parse the manifest from the URL given.
    * Throttled to avoid doing multiple simultaneous requests.
@@ -178,17 +182,16 @@ export default function Stream({
    * All other SourceBuffers are "custom"
    * @type Object
    */
-  const sourceBufferMemory : ISourceBufferMemory = {
+  const sourceBuffers : ISourceBufferMemory = {
     native: {}, // SourceBuffers added to the MediaSource
     custom: {}, // custom SourceBuffers managed entirely in the Rx-PLayer
   };
-
-  /**
-   * Lazily create a SegmentBookkeeper for each buffer type.
-   * @param {string}
-   * @returns {Object}
-   */
-  const getSegmentBookkeeper = segmentBookkeeperHandler();
+  const garbageCollectors = new GarbageCollectorMemory(
+    timings$.map(timing => timing.currentTime),
+    maxBufferBehind$,
+    maxBufferAhead$
+  );
+  const segmentBookkeepers = new SegmentBookkeeperMemory();
 
   /**
    * @see retryWithBackoff
@@ -247,11 +250,11 @@ export default function Stream({
   const startStream =
     retryableFuncWithBackoff<any, IStreamEvent>(openStream, streamRetryOptions);
 
-  return createAndPlugMediaSource(
+  return createMediaSource(
     url,
     videoElement,
     withMediaSource,
-    sourceBufferMemory
+    sourceBuffers
   )
     .mergeMap(startStream)
     .takeUntil(endOfPlay);
@@ -314,7 +317,7 @@ export default function Stream({
           adaptations[0].representations : [];
         if (representations.length) {
           const codec = representations[0].getMimeTypeString();
-          addNativeSourceBuffer(mediaSource, bufferType, codec, sourceBufferMemory);
+          addNativeSourceBuffer(mediaSource, bufferType, codec, sourceBuffers);
         }
       }
     });
@@ -337,12 +340,6 @@ export default function Stream({
       clock$,
       seekings$,
     } = createBufferClock(manifest, timings$, hasDoneInitialSeek$, startTime);
-
-    const {
-      wantedBufferAhead$,
-      maxBufferAhead$,
-      maxBufferBehind$,
-    } = bufferOptions;
 
     const loadedEvent$ = isLoaded$.mapTo(EVENTS.loaded());
 
@@ -406,7 +403,7 @@ export default function Stream({
             if (adaptation == null) {
               log.info(`disposing ${bufferType} adaptation`);
               disposeSourceBuffer(
-                videoElement, mediaSource, bufferType, sourceBufferMemory);
+                videoElement, mediaSource, bufferType, sourceBuffers);
 
               return Observable
                 .of(EVENTS.adaptationChange(bufferType, null))
@@ -415,7 +412,6 @@ export default function Stream({
 
             log.info(`updating ${bufferType} adaptation`, adaptation);
             const { representations } = adaptation;
-            const segmentBookkeeper = getSegmentBookkeeper(bufferType);
             const codec = (
               representations[0] && representations[0].getMimeTypeString()
             ) || "";
@@ -424,9 +420,11 @@ export default function Stream({
               mediaSource,
               bufferType,
               codec,
-              sourceBufferMemory,
+              sourceBuffers,
               bufferType === "text" ? textTrackOptions : {}
             );
+            const bufferGarbageCollector$ = garbageCollectors.get(queuedSourceBuffer);
+            const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
 
             const pipelineOptions = getPipelineOptions(bufferType);
             const pipeline =
@@ -453,51 +451,51 @@ export default function Stream({
               throw error; // else, throw
             });
 
-            // XXX TODO One per SourceBuffer created as for SegmentBookkeepers
-            const bufferGarbageCollector$ = BufferGarbageCollector({
-              queuedSourceBuffer,
-              clock$: clock$.map(tick => tick.currentTime),
-              maxBufferBehind$,
-              maxBufferAhead$,
-            });
-
             return Observable
               .of(EVENTS.adaptationChange(bufferType, adaptation))
               .concat(Observable.merge(adaptationBuffer$, bufferGarbageCollector$));
           }).share();
 
-          const bufferFilled$ : Observable<IBufferFilledEvent> = currentBuffer$
-            .filter((message) : message is IBufferFilledEvent =>
-              message.type === "filled"
-            );
+          // const bufferFilled$ : Observable<IBufferFilledEvent> = currentBuffer$
+          //   .filter((message) : message is IBufferFilledEvent =>
+          //     message.type === "filled"
+          //   );
 
-          const bufferFinished$ : Observable<IBufferFinishedEvent> = currentBuffer$
-            .filter((message) : message is IBufferFinishedEvent =>
-              message.type === "finished"
-            );
+          // const bufferFinished$ : Observable<IBufferFinishedEvent> = currentBuffer$
+          //   .filter((message) : message is IBufferFinishedEvent =>
+          //     message.type === "finished"
+          //   );
 
           const bufferActive$ : Observable<IQueuedSegmentsEvent> = currentBuffer$
             .filter((message) : message is IQueuedSegmentsEvent =>
               message.type === "segments-queued"
             );
 
+          const onFullBuffer$ = currentBuffer$
+            .filter((message) : message is IQueuedSegmentsEvent =>
+              message.type === "filled" || message.type === "finished"
+            )
+            .take(1);
+
           function prepareSwitchToNextPeriod() : Observable<IStreamEvent> {
-            return Observable.merge(bufferFilled$, bufferFinished$)
-              .take(1)
-              .mergeMap(({ value }) => {
+            return onFullBuffer$
+              .mergeMap(() => {
                 // XXX TODO
-                const _period = manifest.getPeriodForTime(value.wantedRange.end + 2);
-                if (!_period) {
+                const newPeriodIndex = manifest.periods.indexOf(period) + 1;
+                const newPeriod = manifest.periods[newPeriodIndex];
+                if (!newPeriod) {
                   // finished
                   return Observable.empty();
                 }
 
-                const adaptationsArr = _period.adaptations[bufferType];
+                const adaptationsArr = newPeriod.adaptations[bufferType];
+
+                // XXX TODO
                 const __adaptation$ = new BehaviorSubject<Adaptation|null>(
                   adaptationsArr ? adaptationsArr[0] : null);
 
-                log.info("creating new Buffer for", bufferType, _period);
-                return startBuffer(_period, __adaptation$)
+                log.info("creating new Buffer for", bufferType, newPeriod);
+                return startBuffer(newPeriod, __adaptation$)
                   .takeUntil(
                     bufferActive$
                       .take(1)
@@ -513,7 +511,7 @@ export default function Stream({
 
     const buffers$ = (manifest.isLive ?
       Observable.merge(..._buffersArray)
-        .mergeMap(liveEventsHandler(videoElement, manifest, refreshManifest)) :
+        .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
       Observable.merge(..._buffersArray));
 
     const manifestEvent$ = Observable
@@ -541,72 +539,6 @@ export default function Stream({
       stallingManager$
     );
   }
-
-  /**
-   * Re-fetch the manifest and merge it with the previous version.
-   *
-   * /!\ Mutates the given manifest
-   * @param {Object} manifest
-   * @returns {Observable}
-   */
-  function refreshManifest(
-    manifest : Manifest
-  ) : Observable<IManifestUpdateEvent> {
-    const refreshURL = manifest.getUrl();
-    if (!refreshURL) {
-      log.warn("Cannot refresh the manifest: no url");
-      return Observable.empty();
-    }
-    return fetchManifest(refreshURL)
-      .map((parsed) => {
-        manifest.update(parsed);
-        return EVENTS.manifestUpdate(manifest);
-      });
-  }
-}
-
-/**
- * Keep memory of a single SegmentBookeeper by type of buffer.
- * Allows to lazily create SegmentBookeepers as they are needed.
- *
- * @example
- * ```js
- * const createSegmentBookkeeper = segmentBookkeeperHandler();
- * const segmentBookkeeper = createSegmentBookkeeper("audio");
- *
- * console.log(segmentBookkeeper === createSegmentBookkeeper("audio"));
- * // => true
- * ```
- *
- * @returns {Function}
- */
-function segmentBookkeeperHandler(
-) : (bufferType : SupportedBufferTypes) => SegmentBookkeeper  {
-  /**
-   * Store SegmentBookkeeper instances as they are created. Per-type.
-   * Allow to create them lazily.
-   * @type {Object}
-   */
-  const segmentBookkeepers : Partial<
-    Record<SupportedBufferTypes, SegmentBookkeeper>
-  > = {};
-
-  /**
-   * @param {string} bufferType
-   * @returns {Object}
-   */
-  return function getSegmentBookkeeper(
-    bufferType : SupportedBufferTypes
-  ) : SegmentBookkeeper {
-    const fromMemory = segmentBookkeepers[bufferType];
-    if (!fromMemory) {
-      const segmentBookkeeper = new SegmentBookkeeper();
-      segmentBookkeepers[bufferType] = segmentBookkeeper;
-      return segmentBookkeeper;
-    } else {
-      return fromMemory;
-    }
-  };
 }
 
 /**
@@ -616,6 +548,7 @@ function segmentBookkeeperHandler(
  */
 function getPipelineOptions(bufferType : string) : IPipelineOptions<any, any> {
   const downloaderOptions : IPipelineOptions<any, any> = {};
+
   if (arrayIncludes(["audio", "video"], bufferType)) {
     downloaderOptions.cache = new InitializationSegmentCache();
   } else if (bufferType === "image") {

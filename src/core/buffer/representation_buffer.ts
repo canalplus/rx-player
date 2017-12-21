@@ -404,6 +404,11 @@ export default function RepresentationBuffer({
   ) : Observable<IRepresentationBufferEvent> {
     checkDiscontinuity(timing);
     const bufferStatus = getCurrentStatus(timing, wantedBufferAhead, needsInitSegment);
+
+    if (bufferStatus.type === "idle" || bufferStatus.type === "waiting") {
+      return Observable.empty();
+    }
+
     log.debug("Buffer status:", bufferStatus.type, bufferStatus.value, representation);
 
     if (bufferStatus.type === "segments-queued") {
