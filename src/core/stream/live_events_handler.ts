@@ -29,7 +29,7 @@ import EVENTS, {
  * @param {Object} manifest
  * @returns {Observable}
  */
-function refreshManifest(
+export function refreshManifest(
   manifestPipeline : (url : string) => Observable<Manifest>,
   currentManifest : Manifest
 ) : Observable<IManifestUpdateEvent> {
@@ -54,7 +54,7 @@ function refreshManifest(
  * @param {Function} fetchManifest
  * @returns {Function}
  */
-export default function liveEventsHandler(
+export function liveEventsHandler(
   videoElement : HTMLMediaElement,
   manifest : Manifest,
   fetchManifest : (url : string) => Observable<Manifest>
