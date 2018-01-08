@@ -36,6 +36,7 @@ const rangeRe = /([0-9]+)-([0-9]+)/;
 const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
+const SUPPORTED_TEXT_TYPE = ["subtitle", "caption"];
 
 /**
  * @param {Object} index
@@ -237,7 +238,7 @@ function inferAdaptationType(adaptation: IAdaptationDash) : string {
     if (role) {
       if (
         role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-        role.value === "subtitle"
+        SUPPORTED_TEXT_TYPE.indexOf(role.value.toString()) >= 0
       ) {
         return "text";
       }
