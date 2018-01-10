@@ -76,14 +76,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.isPaused = false;
       } else if (arg === "LOADED") {
         stateUpdates.isPaused = true;
-        stateUpdates.availableAudioBitrates =
-          player.getAvailableAudioBitrates();
-        stateUpdates.availableVideoBitrates =
-          player.getAvailableVideoBitrates();
-        stateUpdates.availableLanguages =
-          player.getAvailableAudioTracks();
-        stateUpdates.availableSubtitles =
-          player.getAvailableTextTracks();
       } else if (arg === "STOPPED" || arg === "ENDED") {
         stateUpdates.audioBitrate = undefined;
         stateUpdates.videoBitrate = undefined;
@@ -105,6 +97,17 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       }
 
       state.set(stateUpdates);
+    });
+
+  fromPlayerEvent("periodChange")
+    .takeUntil($destroy)
+    .subscribe(() => {
+      state.set({
+        availableAudioBitrates: player.getAvailableAudioBitrates(),
+        availableVideoBitrates: player.getAvailableVideoBitrates(),
+        availableLanguages: player.getAvailableAudioTracks(),
+        availableSubtitles: player.getAvailableTextTracks(),
+      });
     });
 
   fromPlayerEvent("manifestChange")
