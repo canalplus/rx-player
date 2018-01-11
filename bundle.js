@@ -32845,7 +32845,10 @@ var ContentList = function (_React$Component) {
     loadVideo({
       url: url,
       transport: this.state.techno.toLowerCase(),
-      autoPlay: true // TODO add checkBox
+      autoPlay: true, // TODO add checkBox
+      // native browser subtitles engine (VTTCue) doesn't render stylized subs
+      // we force HTML textTrackMode to vizualise styles
+      textTrackMode: "html"
     });
   };
 
