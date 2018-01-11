@@ -254,6 +254,10 @@ function createSession(
   const session = mediaKeys.createSession(sessionType);
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
+      // TODO subscribe to it
+      // Normally deleteAndClose should begin to emit (and do its side-effects)
+      // on subscription. It's however not the case here.
+      // If that was the case though, we should subscribe here.
       $loadedSessions.deleteAndClose(session);
       $storedSessions.delete(initData);
     })
