@@ -1051,7 +1051,7 @@ class Player extends EventEmitter<any> {
   getVideoBitrate() : number|undefined {
     const representations = this.getCurrentRepresentations();
     if (!representations || !representations.video) {
-      return;
+      return undefined;
     }
     return representations.video.bitrate;
   }
@@ -1063,7 +1063,7 @@ class Player extends EventEmitter<any> {
   getAudioBitrate() : number|undefined {
     const representations = this.getCurrentRepresentations();
     if (!representations || !representations.audio) {
-      return;
+      return undefined;
     }
     return representations.audio.bitrate;
   }

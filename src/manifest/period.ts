@@ -47,7 +47,7 @@ export interface ISupplementaryTextTrack {
 function createManifestAdaptations(
   adaptations : IAdaptationArguments[]
 ) : ManifestAdaptations {
-  return adaptations.reduce((
+  return adaptations.reduce<ManifestAdaptations>((
     acc : ManifestAdaptations,
     adaptation
   ) => {
