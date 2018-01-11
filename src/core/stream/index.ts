@@ -415,7 +415,7 @@ export default function Stream({
             position: timing.currentTime,
             speed: speed$.getValue(),
           };
-        });
+        }).share(); // side-effect === share to avoid doing it multiple times
 
       const { representations } = adaptation;
 

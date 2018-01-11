@@ -36,6 +36,7 @@ const rangeRe = /([0-9]+)-([0-9]+)/;
 const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
+const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
 /**
  * @param {Object} index
@@ -234,13 +235,12 @@ function inferAdaptationType(adaptation: IAdaptationDash) : string {
   // manage DASH-IF mp4-embedded subtitles and metadata
   if (mimeType === "application/mp4") {
     const { role } = adaptation;
-    if (role) {
-      if (
-        role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-        role.value === "subtitle"
-      ) {
-        return "text";
-      }
+    if (
+      role &&
+      role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+      arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
+    ) {
+      return "text";
     }
     return "metadata";
   }

@@ -158,7 +158,6 @@ function TextTrackParser({
   segment,
   adaptation,
   representation,
-  manifest,
   init,
 } : ISegmentParserArguments<ArrayBuffer|string>
 ) : TextTrackParserObservable {
@@ -214,7 +213,7 @@ function TextTrackParser({
       end: segmentInfos.time + (segmentInfos.duration || 0),
       language,
       timescale: segmentInfos.timescale,
-      timeOffset: manifest.availabilityStartTime || 0, // TODO + period.start
+      timeOffset: 0,
     };
     if (isMP4) {
       const { codec = "" } = representation;

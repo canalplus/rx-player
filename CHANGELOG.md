@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+  - buffer: fix issue which could led to multiple video or audio segments being downloaded at the same time
+  - dash/text: support MPD AdaptationSet with a "caption" Role as text Adaptations
+  - dash/text: remove offset set for subtitles on live contents, which led to unsynchronized subtitles
+  - dash: fix issue which could led to segments being re-downloaded too much in a SegmentTemplate scheme
+
 ## v3.0.5 (2017/12/11)
 
 ### Bug Fixes
