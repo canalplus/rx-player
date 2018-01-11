@@ -158,7 +158,6 @@ function TextTrackParser({
   segment,
   adaptation,
   representation,
-  manifest,
   init,
 } : ISegmentParserArguments<ArrayBuffer|string>
 ) : TextTrackParserObservable {
