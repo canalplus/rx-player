@@ -24,6 +24,7 @@ import { ISessionEvent } from "../session";
 import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
 
+// Cached data for a single MediaKeySession
 interface ISessionData {
   initData : number;
   session : MediaKeySession;
@@ -39,12 +40,19 @@ interface ISessionData {
  * @extends SessionSet
  */
 export default class InMemorySessionsSet extends SessionSet<ISessionData> {
+  /**
+   * @returns {MediaKeySession|undefined}
+   */
   getFirst() : MediaKeySession|undefined {
     if (this._entries.length > 0) {
       return this._entries[0].session;
     }
   }
 
+  /**
+   * @param {Function} func
+   * @returns {Object|null}
+   */
   find(func : (x : ISessionData) => boolean) : ISessionData|null {
     for (let i = 0; i < this._entries.length; i++) {
       if (func(this._entries[i])) {
@@ -54,6 +62,10 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     return null;
   }
 
+  /**
+   * @param {number|Uint8Array} initData
+   * @returns {MediaKeySession|null}
+   */
   get(initData : number|Uint8Array) : MediaKeySession|null {
     const hash = hashInitData(initData);
     const entry = this.find((e) => e.initData === hash);
@@ -64,6 +76,11 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     }
   }
 
+  /**
+   * @param {Uint8Array|Array.<number>|number} initData
+   * @param {MediaKeySession} session
+   * @param {ConnectableObservable} sessionEvents
+   */
   add(
     initData : Uint8Array|number[]|number,
     session : MediaKeySession,
@@ -85,6 +102,10 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     this._entries.push(entry);
   }
 
+  /**
+   * @param {string} sessionId
+   * @returns {MediaKeySession|null}
+   */
   deleteById(sessionId : string) : MediaKeySession|null {
     const entry = this.find((e) => e.session.sessionId === sessionId);
     if (entry) {
@@ -94,6 +115,10 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     }
   }
 
+  /**
+   * @param {MediaKeySession} session_
+   * @returns {MediaKeySession|null}
+   */
   delete(session_ : MediaKeySession) : MediaKeySession|null {
     const entry = this.find((e) => e.session === session_);
     if (!entry) {
@@ -108,10 +133,17 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     return session;
   }
 
+  /**
+   * @param {MediaKeySession} session_
+   * @returns {Observable}
+   */
   deleteAndClose(session_ : MediaKeySession) : Observable<void|null> {
     const session = this.delete(session_);
     if (session) {
       log.debug("eme-mem-store: close session", session);
+
+      // TODO This call will be active as soon as this line is read. We should
+      // probably defer the call on subscription
       return castToObservable(session.close())
         .catch(() => Observable.of(null));
     } else {
@@ -119,6 +151,9 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     }
   }
 
+  /**
+   * @returns {Observable}
+   */
   dispose() : Observable<void|null> {
     const disposed = this._entries.map((e) => this.deleteAndClose(e.session));
     this._entries = [];
