@@ -42,7 +42,7 @@ describe("dash live SegmentTimeline content", function () {
     const adaptations = manifest.adaptations;
 
     expect(adaptations.audio.length).to.equal(1);
-    expect(adaptations.audio[0].isAudioDescription).to.equal(false);
+    expect(!!adaptations.audio[0].isAudioDescription).to.equal(false);
     expect(adaptations.audio[0].language).to.equal("eng");
     expect(adaptations.audio[0].normalizedLanguage).to.equal("eng");
     expect(adaptations.audio[0].type).to.equal("audio");

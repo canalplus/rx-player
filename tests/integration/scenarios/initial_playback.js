@@ -223,16 +223,21 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
   });
 
   it("should respect a set max buffer ahead", async function() {
-    player.setMaxBufferAhead(5);
+    player.setWantedBufferAhead(5);
+    player.setMaxBufferAhead(10);
     player.loadVideo({
       url: Mock.manifest.url,
       transport: "dash",
     });
     await waitForLoadedStateAfterLoadVideo(player);
-    await sleep(100);
+    await sleep(40);
+    player.seekTo(9);
+    await sleep(40);
+    player.seekTo(0);
+    await sleep(40);
 
     // The real limit is actually closer to the duration of a segment
-    expect(Math.round(player.getVideoLoadedTime())).to.be.below(10);
+    expect(Math.round(player.getVideoLoadedTime())).to.be.below(11);
   });
 
   it("should delete buffer behind", async function() {
