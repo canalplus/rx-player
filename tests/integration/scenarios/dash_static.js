@@ -55,7 +55,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(manifest.getAdaptations().length).to.equal(2);
 
     expect(manifest.timeShiftBufferDepth).to.equal(undefined);
-    expect(manifest.availabilityStartTime).to.equal(undefined);
+    expect(manifest.availabilityStartTime).to.equal(0);
 
 
     // ---- General Adaptations data ----
@@ -65,7 +65,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(adaptations.audio.length).to.equal(1);
     expect(adaptations.audio[0].type).to.equal("audio");
 
-    expect(adaptations.audio[0].isAudioDescription).to.equal(false);
+    expect(!!adaptations.audio[0].isAudioDescription).to.equal(false);
     expect(adaptations.audio[0].language).to.equal(undefined);
     expect(adaptations.audio[0].normalizedLanguage).to.equal(undefined);
     expect(typeof adaptations.audio[0].id).to.equal("string");
