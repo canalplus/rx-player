@@ -102,7 +102,7 @@ function checkAdaptations(
     })
 
     // 3. filter those without representations
-    .filter(({ representations }) => representations.length)  as IAdaptationArguments[];
+    .filter(({ representations }) => representations.length);
 
   // 4. throw if no adaptation
   if (adaptations.length === 0) {

@@ -114,7 +114,7 @@ export type IBufferHandlerEvent =
  * @returns {Observable}
  */
 export default function BuffersHandler(
-  { manifest, period: firstPeriod } : { manifest : Manifest; period : Period },
+  content : { manifest : Manifest; period : Period },
   clock$ : Observable<IBufferClockTick>,
   bufferManager : BufferManager,
   sourceBufferManager : SourceBufferManager,
@@ -124,6 +124,9 @@ export default function BuffersHandler(
   sourceBufferOptions : Partial<Record<SupportedBufferTypes, SourceBufferOptions>>,
   errorStream : Subject<Error | CustomError>
 ) : Observable<IBufferHandlerEvent> {
+  const manifest = content.manifest;
+  const firstPeriod = content.period;
+
   // Initialize all native source buffers from the first period at the same
   // time.
   // We cannot lazily create native sourcebuffers since the spec does not
@@ -141,9 +144,7 @@ export default function BuffersHandler(
 
   // Manage Buffers for every possible types of content
   const buffersArray = BUFFER_TYPES
-    .map((adaptationType) => {
-      // :/ TS does not have the intelligence to know that here
-      const bufferType = adaptationType as SupportedBufferTypes;
+    .map((bufferType) => {
       return manageEveryBuffers(bufferType, firstPeriod)
         .do((evt) => {
           if (evt.type === "periodBufferReady") {

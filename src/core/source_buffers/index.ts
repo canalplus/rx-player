@@ -188,7 +188,7 @@ export default class SourceBufferManager {
       const sourceBuffer = options.textTrackMode === "html" ?
         new HTMLTextSourceBuffer(this._videoElement, options.textTrackElement) :
         new NativeTextSourceBuffer(this._videoElement, options.hideNativeSubtitle);
-      const queuedSourceBuffer = new QueuedSourceBuffer(sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<any>(sourceBuffer);
 
       this._initializedCustomSourceBuffers.text = {
         codec,
