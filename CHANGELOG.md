@@ -8,6 +8,9 @@
   - dash/text: remove offset set for subtitles on live contents, which led to unsynchronized subtitles
   - dash: fix issue which could led to segments being re-downloaded too much in a SegmentTemplate scheme
 
+### Other improvements
+  - demo: set "html" textTrackMode by default to have a better stylization of closed captions.
+
 ## v3.0.5 (2017/12/11)
 
 ### Bug Fixes
