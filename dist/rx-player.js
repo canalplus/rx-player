@@ -9386,6 +9386,7 @@ var iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d
 var rangeRe = /([0-9]+)-([0-9]+)/;
 var frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 var KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
+var SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 /**
  * @param {Object} index
  * @returns {Number|undefined}
@@ -9567,11 +9568,10 @@ function inferAdaptationType(adaptation) {
     // manage DASH-IF mp4-embedded subtitles and metadata
     if (mimeType === "application/mp4") {
         var role = adaptation.role;
-        if (role) {
-            if (role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-                role.value === "subtitle") {
-                return "text";
-            }
+        if (role &&
+            role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+            array_includes_1.default(SUPPORTED_TEXT_TYPES, role.value)) {
+            return "text";
         }
         return "metadata";
     }
@@ -16543,7 +16543,7 @@ var Player = /** @class */ (function (_super) {
         // Workaround to support Firefox autoplay on FF 42.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
         videoElement.preload = "auto";
-        _this.version = /*PLAYER_VERSION*/ "3.0.5";
+        _this.version = /*PLAYER_VERSION*/ "3.0.6";
         _this.log = log_1.default;
         _this.state = "STOPPED";
         _this.videoElement = videoElement;
@@ -20798,7 +20798,7 @@ exports.loader = TextTrackLoader;
  * @returns {Observable.<Object>}
  */
 function TextTrackParser(_a) {
-    var response = _a.response, segment = _a.segment, adaptation = _a.adaptation, representation = _a.representation, manifest = _a.manifest, init = _a.init;
+    var response = _a.response, segment = _a.segment, adaptation = _a.adaptation, representation = _a.representation, init = _a.init;
     var language = adaptation.language;
     var isInit = segment.isInit, indexRange = segment.indexRange;
     var responseData;
@@ -20848,7 +20848,7 @@ function TextTrackParser(_a) {
             end: segmentInfos.time + (segmentInfos.duration || 0),
             language: language,
             timescale: segmentInfos.timescale,
-            timeOffset: manifest.availabilityStartTime || 0,
+            timeOffset: 0,
         };
         if (isMP4) {
             var _b = representation.codec, codec = _b === void 0 ? "" : _b;
@@ -21218,7 +21218,7 @@ function Stream(_a) {
                     position: timing.currentTime,
                     speed: speed$.getValue(),
                 };
-            });
+            }).share(); // side-effect === share to avoid doing it multiple times
             var representations = adaptation.representations;
             var abr$ = abrManager.get$(bufferType, abrClock$, representations);
             var representation$ = abr$
@@ -22556,15 +22556,15 @@ function Buffer(_a) {
      * @param {Object} timing - The last item emitted from clock$
      * @param {Number} bufferGoal - The last item emitted from wantedBufferAhead
      * @param {Number} bufferSize - The last item emitted from bufferSize$
-     * @param {Boolean} withInitSegment - Whether we're dealing with an init
+     * @param {Boolean} needsInitSegment - Whether we're dealing with an init
      * segment.
      * @returns {Array.<Segment>}
      * @throws IndexError - Throws if the current timestamp is considered out
      * of bounds.
      */
-    function getSegmentsListToInject(representation, range, timing, withInitSegment) {
+    function getSegmentsListToInject(representation, range, timing, needsInitSegment) {
         var initSegment = null;
-        if (withInitSegment) {
+        if (needsInitSegment) {
             log_1.default.debug("add init segment", bufferType);
             initSegment = representation.index.getInitSegment();
         }
@@ -22681,11 +22681,12 @@ function Buffer(_a) {
         }
         /**
          * Get list of segment to injects.
-         * @param {Array} combineLatestResult
-         * @param {Number} injectCount
+         * @param {Object} timing
+         * @param {number} bufferGoal
+         * @param {boolean} needsInitSegment
          * @returns {Observable|Array.<Segment>}
          */
-        function getNeededSegments(timing, bufferGoal, injectCount) {
+        function getNeededSegments(timing, bufferGoal, needsInitSegment) {
             var buffered = bufferingQueue.getBuffered();
             bookkeeper.addBufferedInfos(buffered);
             // send a message downstream when bumping on an explicit
@@ -22701,13 +22702,12 @@ function Buffer(_a) {
                     }
                 }
             }
-            var withInitSegment = (injectCount === 0);
             var wantedRange = getWantedBufferRange(buffered, timing, bufferGoal, {
                 low: LOW_PADDING,
                 high: HIGH_PADDING,
             });
             log_1.default.debug("calculating segments for wanted range", wantedRange);
-            var neededSegments = getSegmentsListToInject(representation, wantedRange, timing, withInitSegment).filter(function (segment) { return segmentFilter(segment, wantedRange); });
+            var neededSegments = getSegmentsListToInject(representation, wantedRange, timing, needsInitSegment).filter(function (segment) { return segmentFilter(segment, wantedRange); });
             log_1.default.debug("segments needed:", !!neededSegments.length, neededSegments);
             // queue all segments injected in the observable
             for (var i = 0; i < neededSegments.length; i++) {
@@ -22723,18 +22723,38 @@ function Buffer(_a) {
             return downloader({ segment: segment, representation: representation, init: initSegmentInfos })
                 .map(function (args) { return objectAssign({ segment: segment }, args); });
         }
-        function onClockTick(_a, i) {
-            var timing = _a[0], _wantedBufferAhead = _a[1], _maxBufferBehind = _a[2], _maxBufferAhead = _a[3];
+        /**
+         * Check and load needed segments.
+         * @param {Object} timing
+         * @param {number} _wantedBufferAhead
+         * @param {number} _maxBufferAhead
+         * @param {Boolean} needsInitSegment
+         * @returns {Observable}
+         */
+        function checkNeededSegments(timing, _wantedBufferAhead, _maxBufferAhead, needsInitSegment) {
             var bufferGoal = Math.min(_wantedBufferAhead, _maxBufferAhead);
-            var loadNeeded$ = getNeededSegments(timing, bufferGoal, i)
+            return getNeededSegments(timing, bufferGoal, needsInitSegment)
                 .concatMap(loadNeededSegments);
-            var clean$ = cleanBuffer_1.default(bufferingQueue, timing.currentTime, _maxBufferBehind, _maxBufferAhead);
-            return Observable_1.Observable.merge(loadNeeded$, clean$);
         }
-        var segmentsPipeline = Observable_1.Observable.combineLatest(clock$, wantedBufferAhead, maxBufferBehind, maxBufferAhead)
-            .mergeMap(onClockTick)
+        /**
+         * Check the size of buffer and clean if it goes beyond the limits set by
+         * the user.
+         * @param {number} currentTime
+         * @param {number} _maxBufferBehind
+         * @param {number} _maxBufferAhead
+         * @returns {Observable}
+         */
+        function checkBufferSize(currentTime, _maxBufferBehind, _maxBufferAhead) {
+            return cleanBuffer_1.default(bufferingQueue, currentTime, _maxBufferBehind, _maxBufferAhead);
+        }
+        var loadNeededSegments$ = Observable_1.Observable
+            .combineLatest(clock$, wantedBufferAhead, maxBufferAhead)
+            .concatMap(function (args, i) { return checkNeededSegments(args[0], args[1], args[2], !i); })
             .concatMap(appendDataInBuffer);
-        return Observable_1.Observable.merge(segmentsPipeline, messageSubject)
+        var clean$ = Observable_1.Observable
+            .combineLatest(clock$, maxBufferBehind, maxBufferAhead)
+            .mergeMap(function (args) { return checkBufferSize(args[0].currentTime, args[1], args[2]); });
+        return Observable_1.Observable.merge(loadNeededSegments$, clean$, messageSubject)
             .catch(function (error) {
             // For live adaptations, handle 412 errors as precondition-
             // failed errors, ie: we are requesting for segments before they
@@ -24852,15 +24872,20 @@ var SegmentTemplateHelpers = {
      */
     getSegments: function (repId, index, _up, _to) {
         var _a = helpers_1.normalizeRange(index, _up, _to), up = _a.up, to = _a.to;
-        var duration = index.duration, startNumber = index.startNumber, timescale = index.timescale, media = index.media;
+        if (to <= up) {
+            return [];
+        }
+        var duration = index.duration, startNumber = index.startNumber, timescale = index.timescale, media = index.media, presentationTimeOffset = index.presentationTimeOffset;
         var segments = [];
-        for (var time = up; time <= to; time += duration) {
-            var number = Math.floor(time / duration) +
+        for (var baseTime = up; baseTime <= to; baseTime += duration) {
+            var number = Math.floor(baseTime / duration) +
                 (startNumber == null ? 1 : startNumber);
+            var time = (number -
+                (startNumber == null ? 1 : startNumber)) * duration + (presentationTimeOffset || 0);
             var args = {
                 id: "" + repId + "_" + number,
                 number: number,
-                time: number * duration,
+                time: time,
                 init: false,
                 duration: duration,
                 range: null,
