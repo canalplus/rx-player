@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.0.6 (2018/01/11)
 
 ### Bug Fixes
   - buffer: fix issue which could led to multiple video or audio segments being downloaded at the same time
