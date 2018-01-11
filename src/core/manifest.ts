@@ -620,7 +620,6 @@ function updateManifest(
 ) : Manifest {
   const oldAdaptations = oldManifest.getAdaptations();
   const newAdaptations = newManifest.getAdaptations();
-
   for (let i = 0; i < oldAdaptations.length; i++) {
     const newAdaptation =
       arrayFind(newAdaptations, a => a.id === oldAdaptations[i].id);
@@ -648,6 +647,8 @@ function updateManifest(
       }
     }
   }
+  oldManifest.minimumUpdatePeriod = newManifest.minimumUpdatePeriod;
+  oldManifest.loadedAt = Date.now();
   return oldManifest;
 }
 

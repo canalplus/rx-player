@@ -19,7 +19,6 @@ import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
-
 import config from "../../config";
 
 import arrayIncludes from "../../utils/array-includes";
@@ -42,7 +41,13 @@ import Manifest from "../../manifest";
 import Adaptation from "../../manifest/adaptation";
 import Representation from "../../manifest/representation";
 import Segment from "../../manifest/segment";
-import { ITransportPipelines } from "../../net";
+import {
+  ITransportPipelines,
+} from "../../net";
+
+import {
+  ISegmentLoaderArguments,
+} from "../../net/types";
 
 import ABRManager, {
   IMetricValue,
@@ -64,8 +69,12 @@ import {
   normalizeManifest,
   updateManifest,
 } from "../manifest";
-import Pipeline, {
-  IPipelineOptions
+import {
+  createManifestPipeline,
+  createSegmentPipeline,
+  IPipelineOptions,
+  processManifestPipeline,
+  processPipeline,
 } from "../pipelines";
 import { SupportedBufferTypes } from "../types";
 
@@ -78,7 +87,7 @@ import {
   createAndPlugMediaSource,
   setDurationToMediaSource,
 } from "./media_source";
-import processPipeline from "./process_pipeline";
+
 import {
   addNativeSourceBuffer,
   createSourceBuffer,
@@ -95,9 +104,10 @@ import createTimings, {
 import {
   AdaptationsSubjects,
   ILoadedEvent,
+  IManifestExpired,
   IManifestUpdateEvent,
   IStreamClockTick,
-  StreamEvent,
+  StreamEvent
 } from "./types";
 
 const { END_OF_PLAY } = config;
@@ -208,28 +218,16 @@ export default function Stream({
   const requestsInfos$ = new Subject<Subject<IRequest>>();
 
   /**
-   * Pipeline used to download the manifest file.
-   * @see ../pipelines
-   * @type {Function} - take in argument the pipeline data, returns a pipeline
-   * observable.
-   */
-  const manifestPipeline = Pipeline(transport.manifest);
-
-  /**
    * ...Fetch the manifest file given.
    * Throttled to avoid doing multiple simultaneous requests because multiple
    * source buffers are out-of-index
    * @param {string} url - the manifest url
    * @returns {Observable} - the parsed manifest
    */
-  const fetchManifest = throttle(_url => {
-    const manifest$ = manifestPipeline({ url: _url });
-    const fakeSubject = new Subject<any>();
-    return processPipeline(
-      "manifest",
+  const fetchManifest = throttle((_url: string) => {
+    const manifest$ = createManifestPipeline(_url, transport.manifest);
+    return processManifestPipeline(
       manifest$,
-      fakeSubject, // we don't care about metrics here
-      fakeSubject, // and we don't care about the request progress
       errorStream
     ).map(({ parsed } : {
       parsed : {
@@ -364,6 +362,7 @@ export default function Stream({
     adaptation$ : Observable<Adaptation|null>,
     abrManager : ABRManager
   ) : Observable<StreamEvent> {
+
     const pipelineOptions = getPipelineOptions(bufferType);
     return adaptation$.switchMap((adaptation) => {
       if (!adaptation) {
@@ -449,13 +448,17 @@ export default function Stream({
           init : IBufferSegmentInfos|null;
         }
       ) {
-        const pipeline$ = Pipeline(transport[bufferType], pipelineOptions)({
+        const segmentInformation: ISegmentLoaderArguments = {
           segment,
           representation,
           adaptation,
           manifest,
           init,
-        });
+        };
+        const pipeline$ = createSegmentPipeline(
+          segmentInformation,
+          transport[bufferType],
+          pipelineOptions);
         return processPipeline(
           bufferType, pipeline$, network$, requestsInfos$, errorStream);
       }
@@ -633,6 +636,10 @@ export default function Stream({
         // manifest to refresh the current index
         log.info("out of index");
         return refreshManifest(manifest);
+
+      case "manifest-expired":
+        log.info("manifest has expired");
+        return Observable.of(message);
     }
 
     return Observable.of(message);
@@ -708,8 +715,39 @@ export default function Stream({
 
     const adaptations$ = _adaptations$ as AdaptationsSubjects;
 
+    // In the case where minimumUpdatePeriod is specified, and above 0,
+    // manifest may be updated when update period has elapsed from the download
+    // time of previous manifest.
+    function manifestExpired$(
+      minimumUpdatePeriod?: number,
+      updateGap?: number
+    ): Observable<IManifestExpired> {
+      return (minimumUpdatePeriod && updateGap) ?
+        Observable.timer((minimumUpdatePeriod - updateGap) * 1000)
+          .mergeMap(() => {
+            return refreshManifest(manifest)
+              .concatMap(() =>
+              Observable.of({
+                type: "manifest-expired" as "manifest-expired",
+                value: minimumUpdatePeriod,
+              }).merge(
+                manifestExpired$(
+                  manifest.minimumUpdatePeriod,
+                  (Date.now() - manifest.loadedAt)
+                )
+              )
+          );
+        }) :
+        Observable.never();
+    }
+
+    const initialUpdateGap = Date.now() - manifest.loadedAt;
     const buffers$ = manifest.isLive ?
-      Observable.merge(..._buffersArray)
+      Observable
+        .merge(
+          ..._buffersArray,
+          manifestExpired$(manifest.minimumUpdatePeriod, initialUpdateGap)
+        )
         .mergeMap(message => liveMessageHandler(message, manifest)) :
       Observable.merge(..._buffersArray);
 

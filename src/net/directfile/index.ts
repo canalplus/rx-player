@@ -20,7 +20,7 @@ import { Observable } from "rxjs/Observable";
 // TODO Delete this file and handle it elsewhere
 
 const manifestPipeline = {
-  loader({ url } : any) : any {
+  loader(url : string) : any {
     return Observable.of({ url });
   },
   parser({ url } : any) : any {

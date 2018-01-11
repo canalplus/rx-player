@@ -42,24 +42,29 @@ export interface INextSegmentsInfos {
   timescale : number;
 }
 
+export interface ISegmentInformations {
+  segment: Segment;
+  representation: Representation;
+  adaptation: Adaptation|null;
+  manifest: Manifest;
+  init: IBufferSegmentInfos|null;
+}
+
 // ---- RESOLVER ---- TODO delete
 
-export type IResolverObservable = Observable<{ url : string }>;
+export type IResolverObservable = Observable<string>;
 
 // ---- LOADER ----
 
 // -- arguments
 
-// for the manifest pipeline
-export interface IManifestLoaderArguments {
-  url : string;
-}
+type IManifestLoaderArguments = string;
 
 // for every other pipelines
 export interface ISegmentLoaderArguments {
-  init? : ISegmentTimingInfos;
+  init? : ISegmentTimingInfos|null;
   manifest : Manifest;
-  adaptation : Adaptation;
+  adaptation : Adaptation|null;
   representation : Representation;
   segment : Segment;
 }
@@ -195,7 +200,7 @@ export type ITransportFunction =
 export type CustomSegmentLoader = (
   // first argument: infos on the segment
   args : {
-    adaptation : Adaptation;
+    adaptation : Adaptation|null;
     representation : Representation;
     segment : Segment;
     transport : string;

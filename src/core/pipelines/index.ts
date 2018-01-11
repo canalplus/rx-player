@@ -39,6 +39,37 @@ import {
   PipelineEvent,
 } from "./types";
 
+import {
+  processManifestPipeline,
+  processPipeline,
+ } from "./process_pipeline";
+
+import {
+  ILoaderData,
+  ILoaderObservable,
+  ILoaderProgress,
+  ILoaderResponse,
+  ImageParserObservable,
+  IManifestLoaderArguments,
+  IManifestParserArguments,
+  IManifestParserObservable,
+  IResolverObservable,
+  ISegmentLoaderArguments,
+  ISegmentParserArguments,
+  SegmentParserObservable,
+  TextTrackParserObservable,
+} from "../../net/types";
+
+type ILoader<T> = ILoaderData<T> | ILoaderProgress | ILoaderResponse<T>;
+
+interface IBackoffOptions {
+  baseDelay: number;
+  maxDelay: number;
+  maxRetryRegular: number;
+  maxRetryOffline: number;
+  onRetry: (error : Error) => void;
+}
+
 // TODO Typings is a complete mess in this file.
 // Maybe is it too DRY? Refactor.
 
@@ -77,24 +108,162 @@ function errorSelector(
   return error;
 }
 
-export interface IPipelineOptions<T, U> {
-  cache? : {
-    add : (obj : T, arg : U) => void;
-    get : (obj : T) => U;
-  };
+interface ICache<T,U> {
+  add : (obj : T, arg: U) => void;
+  get : (obj : T) => U;
+}
 
+export interface IPipelineOptions<T, U> {
+  cache? : ICache<T,U>;
   maxRetry? : number;
 }
 
+function catchedLoader<T, U>(
+  loader: (x?: T) => Observable<U>,
+  backoffOptions: IBackoffOptions,
+  resolvedInfos : T,
+  pipelineInputData : T,
+  cache?: ICache<T, T>
+) : Observable<U> {
+  function loaderWithRetry(
+    _resolvedInfos: T
+  ) {
+    // TODO do something about bufferdepth to avoid infinite errors?
+    return downloadingBackoff(
+      tryCatch(loader, _resolvedInfos),
+      backoffOptions
+    )
+      .catch((error : Error) => {
+        throw errorSelector("PIPELINE_LOAD_ERROR", error);
+      })
+      .do(({ type, value }) => {
+        if (type === "response" && cache) {
+          cache.add(_resolvedInfos, value);
+        }
+      })
+      .startWith({
+        type: "request",
+        value: pipelineInputData,
+      });
+  }
+
+  const fromCache = cache ? cache.get(resolvedInfos) : null;
+  return fromCache === null ?
+    loaderWithRetry(resolvedInfos) :
+    castToObservable(fromCache)
+    .map(response => {
+      return {
+        type: "cache",
+        value: response,
+      };
+    }).catch(() => loaderWithRetry(resolvedInfos));
+}
+
+function catchedParser<T, U>(
+  parser: (x? : T) => Observable<U>,
+  loadedInfos : T
+) : Observable<U> {
+  return tryCatch(parser, loadedInfos)
+    .catch((error) => {
+      throw errorSelector("PIPELINE_PARSING_ERROR", error);
+    });
+}
+
+function startPipeline(
+  resolver: (x? : IManifestLoaderArguments) => IResolverObservable,
+  pipelineInputData: IManifestLoaderArguments,
+  loader: (x : IManifestLoaderArguments) => ILoaderObservable<Document>,
+  backoffOptions: IBackoffOptions,
+  parser:  (x : IManifestParserArguments<Document>) => IManifestParserObservable,
+  retryErrorSubject: Subject<Error>,
+  cache?: ICache<IManifestLoaderArguments,IManifestLoaderArguments>
+): Observable<PipelineEvent>;
+function startPipeline(
+  resolver: (x? : ISegmentLoaderArguments) => Observable<ISegmentLoaderArguments>,
+  pipelineInputData: ISegmentLoaderArguments,
+  loader: (x : ISegmentLoaderArguments) => ILoaderObservable<Uint8Array|ArrayBuffer>,
+  backoffOptions: IBackoffOptions,
+  parser:   (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
+    SegmentParserObservable|TextTrackParserObservable|ImageParserObservable,
+  retryErrorSubject: Subject<Error>,
+  cache?: ICache<ISegmentLoaderArguments,ISegmentLoaderArguments>
+): Observable<PipelineEvent>;
+function startPipeline<T,U,V,W>(
+  resolver: (x?: T) => Observable<T>,
+  pipelineInputData: T,
+  loader: (x?: T) => Observable<ILoader<U>>,
+  backoffOptions: IBackoffOptions,
+  parser: (x?: V) => Observable<W>,
+  retryErrorSubject: Subject<Error>,
+  cache?: ICache<T,T>
+): Observable<PipelineEvent|{}> {
+const pipeline$ = tryCatch(resolver, pipelineInputData)
+.catch((error : Error) => {
+  throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
+}).mergeMap((resolvedInfos: T) => {
+  return catchedLoader(
+    loader,
+    backoffOptions,
+    resolvedInfos,
+    pipelineInputData,
+    cache
+  )
+    .mergeMap((event: ILoader<U>) => {
+      // "cache": taken from cache
+      // "data": no request have been done
+      // "response": a request has been done
+      if (arrayIncludes(["cache", "data", "response"], event.type)) {
+        const loaderResponse = event.value;
+        const loadedInfos: V =
+          objectAssign<any,any>({ response: loaderResponse }, resolvedInfos);
+
+        // add metrics if a request was made
+        const metrics : Observable<IPipelineMetrics> =
+        event.type === "response" ?
+            Observable.of({
+              type: "metrics" as "metrics",
+              value: {
+                size: event.value.size || 0,
+                duration: event.value.duration || 0,
+              },
+            }) :
+            Observable.empty();
+
+        return metrics
+          .concat(
+            catchedParser(parser, loadedInfos)
+            .map((parserResponse) => {
+              return {
+                type: "data" as "data",
+                value: objectAssign({
+                  parsed: parserResponse,
+                }, loadedInfos),
+              };
+            })
+          );
+      } else {
+        return Observable.of(event);
+      }
+    });
+}).do(noop, noop, () => { retryErrorSubject.complete(); });
+
+const retryError$ : Observable<IPipelineError> = retryErrorSubject
+.map((error: Error) => ({
+  type: "error" as "error",
+  value: error,
+}));
+
+return Observable.merge(pipeline$, retryError$);
+}
+
 /**
- * Returns function allowing to download the wanted transport object through
- * the resolver -> loader -> parser pipeline.
+ * Returns observable of the wanted transport object through
+ * the loader -> parser pipeline.
  *
- * (A transport object can be for example: the manifest, audio and video
+ * (A transport object can be for example:  audio and video
  * segments, text, images...)
  *
- * The function returned takes the initial data in arguments and returns an
- * Observable which will emit:
+ * The observable will emit:
  *   - each time a request begins (type "request"). This is not emitted if the
  *     value is retrieved from a local js cache. This one emit the payload
  *     as a value.
@@ -110,32 +279,27 @@ export interface IPipelineOptions<T, U> {
  * possible retry all failed.
  *
  * This observable will complete after emitting the data.
- * @param {Object} transportObject
- * @param {Function} transportObject.resolver
+ * @param {Object} informations
  * @param {Function} transportObject.loader
  * @param {Function} transportObject.parser
- * @param {Object} [options={}]
- * @param {Number} [options.maxRetry=DEFAULT_MAXIMUM_RETRY_ON_ERROR]
- * @param {Object} [options.cache]
- * @returns {Function}
+ * @param {Object} options
+ * @returns {Observable<Object>}
  */
-export default function createPipeline(
-  { resolver, loader, parser } : {
-    resolver? : (x : any) => Observable<any>;
-    loader? : (x : any) => Observable<any>;
-    parser? : (x : any) => Observable<any>;
+function createSegmentPipeline(
+  segmentInfos: ISegmentLoaderArguments,
+  { loader, parser } : {
+    loader : (x : ISegmentLoaderArguments) => ILoaderObservable<Uint8Array|ArrayBuffer>;
+    parser : (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
+      SegmentParserObservable|TextTrackParserObservable|ImageParserObservable;
   },
-  options : IPipelineOptions<any, any> = {}
-) : (x : any) => Observable<PipelineEvent> {
+  options : IPipelineOptions<ISegmentLoaderArguments, ISegmentLoaderArguments> = {}
+) : Observable<PipelineEvent> {
   const { maxRetry, cache } = options;
 
   /**
    * Subject that will emit non-fatal errors.
    */
   const retryErrorSubject : Subject<Error> = new Subject();
-  const _resolver = resolver || Observable.of;
-  const _loader = loader || Observable.of;
-  const _parser = parser || Observable.of;
 
   const totalRetry = typeof maxRetry === "number" ?
     maxRetry : DEFAULT_MAXIMUM_RETRY_ON_ERROR;
@@ -144,7 +308,7 @@ export default function createPipeline(
    * Backoff options given to the backoff retry done with the loader function.
    * @see retryWithBackoff
    */
-  const backoffOptions = {
+  const backoffOptions: IBackoffOptions = {
     baseDelay: INITIAL_BACKOFF_DELAY_BASE,
     maxDelay: MAX_BACKOFF_DELAY_BASE,
     maxRetryRegular: totalRetry,
@@ -155,108 +319,84 @@ export default function createPipeline(
     },
   };
 
-  function catchedResolver(pipelineInputData : any) : Observable<any> {
-    return tryCatch(_resolver, pipelineInputData)
-      .catch((error : Error) => {
-        throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
-      });
-  }
-
-  function catchedLoader(
-    resolvedInfos : any,
-    pipelineInputData : any
-  ) : Observable<any> {
-    function loaderWithRetry(_resolvedInfos : any) {
-      // TODO do something about bufferdepth to avoid infinite errors?
-      return downloadingBackoff(
-        tryCatch(_loader, _resolvedInfos),
-        backoffOptions
-      )
-        .catch((error : Error) => {
-          throw errorSelector("PIPELINE_LOAD_ERROR", error);
-        })
-        .do(({ type, value }) => {
-          if (type === "response" && cache) {
-            cache.add(_resolvedInfos, value);
-          }
-        })
-        .startWith({
-          type: "request",
-          value: pipelineInputData,
-        });
-    }
-
-    const fromCache = cache ? cache.get(resolvedInfos) : null;
-    return fromCache === null ?
-      loaderWithRetry(resolvedInfos) :
-      castToObservable(fromCache)
-      .map(response => {
-        return {
-          type: "cache",
-          value: response,
-        };
-      }).catch(() => loaderWithRetry(resolvedInfos));
-  }
-
-  function catchedParser(loadedInfos : any) : Observable<any> {
-    return tryCatch(_parser, loadedInfos)
-      .catch((error) => {
-        throw errorSelector("PIPELINE_PARSING_ERROR", error);
-      });
-  }
-
-  return function startPipeline(pipelineInputData : any) {
-    const pipeline$ = catchedResolver(pipelineInputData)
-      .mergeMap(resolvedInfos => {
-        return catchedLoader(resolvedInfos, pipelineInputData)
-          .mergeMap(({ type, value }) => {
-            // "cache": taken from cache
-            // "data": no request have been done
-            // "response": a request has been done
-            if (arrayIncludes(["cache", "data", "response"], type)) {
-              const loaderResponse = value;
-              const loadedInfos =
-                objectAssign({ response: loaderResponse }, resolvedInfos);
-
-              // add metrics if a request was made
-              const metrics : Observable<IPipelineMetrics> =
-                type === "response" ?
-                  Observable.of({
-                    type: "metrics" as "metrics",
-                    value: {
-                      size: value.size,
-                      duration: value.duration,
-                    },
-                  }) :
-                  Observable.empty();
-
-              return metrics
-                .concat(
-                  catchedParser(loadedInfos)
-                  .map(parserResponse => {
-                    return {
-                      type: "data" as "data",
-                      value: objectAssign({
-                        parsed: parserResponse,
-                      }, loadedInfos),
-                    };
-                  })
-                );
-            } else {
-              return Observable.of({
-                type,
-                value,
-              });
-            }
-          });
-      }).do(noop, noop, () => { retryErrorSubject.complete(); });
-
-    const retryError$ : Observable<IPipelineError> = retryErrorSubject
-      .map(error => ({
-        type: "error" as "error",
-        value: error,
-      }));
-
-    return Observable.merge(pipeline$, retryError$);
-  };
+  return startPipeline(
+    Observable.of,
+    segmentInfos,
+    loader,
+    backoffOptions,
+    parser,
+    retryErrorSubject,
+    cache
+  );
 }
+
+/**
+ * Returns observable of the wanted manifest transport object through
+ * the resolver -> loader -> parser pipeline.
+ *
+ * The observable will emit:
+ *   - each time a request begins (type "request"). This is not emitted if the
+ *     value is retrieved from a local js cache. This one emit the payload
+ *     as a value.
+ *   - each time a request ends (type "metrics"). This one contains
+ *     informations about the metrics of the request.
+ *   - each time a minor request error is encountered (type "error"). With the
+ *     error as a value.
+ *   - Lastly, with the obtained data (type "data").
+ *
+ * Each of these but "error" can be emitted at most one time.
+ *
+ * This observable will throw if, following the options given, the request and
+ * possible retry all failed.
+ *
+ * This observable will complete after emitting the data.
+ * @param {string} url
+ * @param {Function} transport.manifest.resolver
+ * @param {Function} transport.manifest.loader
+ * @param {Function} transport.manifest.parser
+ * @returns {Observable<Object>}
+ */
+function createManifestPipeline(
+  url: IManifestLoaderArguments,
+  { resolver, loader, parser } : {
+    resolver?: (x : IManifestLoaderArguments) => IResolverObservable;
+    loader: (x : IManifestLoaderArguments) => ILoaderObservable<Document>;
+    parser: (x : IManifestParserArguments<Document>) => IManifestParserObservable;
+  }
+) : Observable<PipelineEvent> {
+  /**
+   * Subject that will emit non-fatal errors.
+   */
+  const retryErrorSubject : Subject<Error> = new Subject();
+  /**
+   * Backoff options given to the backoff retry done with the loader function.
+   * @see retryWithBackoff
+   */
+  const backoffOptions = {
+    baseDelay: INITIAL_BACKOFF_DELAY_BASE,
+    maxDelay: MAX_BACKOFF_DELAY_BASE,
+    maxRetryRegular: DEFAULT_MAXIMUM_RETRY_ON_ERROR,
+    maxRetryOffline: DEFAULT_MAXIMUM_RETRY_ON_OFFLINE,
+    onRetry: (error : Error) => {
+      retryErrorSubject
+        .next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
+    },
+  };
+
+  return startPipeline(
+    resolver || Observable.of,
+    url,
+    loader,
+    backoffOptions,
+    parser,
+    retryErrorSubject
+  );
+
+}
+
+export {
+  processPipeline,
+  createSegmentPipeline,
+  createManifestPipeline,
+  processManifestPipeline
+};

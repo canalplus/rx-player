@@ -102,7 +102,7 @@ export default function(
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
   const manifestPipeline = {
-    resolver({ url } : IManifestLoaderArguments) : IResolverObservable {
+    resolver(url: IManifestLoaderArguments) : IResolverObservable {
       let resolving;
       const token = extractToken(url);
 
@@ -125,10 +125,10 @@ export default function(
       }
 
       return resolving
-        .map((_url) => ({ url: replaceToken(resolveManifest(_url), token) }));
+        .map((_url) => (replaceToken(resolveManifest(_url), token)));
     },
 
-    loader({ url } : IManifestLoaderArguments) : ILoaderObservable<Document> {
+    loader(url: IManifestLoaderArguments) : ILoaderObservable<Document> {
       return request({
         url,
         responseType: "document",

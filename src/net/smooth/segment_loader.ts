@@ -79,7 +79,7 @@ const generateSegmentLoader = (
   manifest,
   init,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
-  if (segment.isInit) {
+  if (segment.isInit && adaptation) {
     if (representation._codecPrivateData == null) {
       throw new Error(
         "Invalid request: A smooth init segment should have CodecPrivateData"
@@ -87,7 +87,6 @@ const generateSegmentLoader = (
     }
     let responseData : Uint8Array;
     const protection = adaptation._smoothProtection;
-
     switch (adaptation.type) {
     case "video":
       responseData = createVideoInitSegment(
