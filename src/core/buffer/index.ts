@@ -321,7 +321,7 @@ export default class AdaptationBufferManager {
         lastIndexPosition,
         speed,
       };
-    });
+    }).share();  // side-effect === share to avoid doing it multiple times
 
     return this._abrManager.get$(adaptation.type, abrClock$, representations)
       .do(({ representation }) => {
