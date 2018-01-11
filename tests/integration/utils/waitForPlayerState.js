@@ -25,12 +25,13 @@ function waitForLoadedStateAfterLoadVideo(player) {
 }
 
 /**
- * Wait for the given state just after ``loadVideo`` is called on the player.
+ * Wait for the given state on the player.
+ *
  * If a whitelist is set, reject if the state is not in it. You do not have to
  * put the wanted state in that list.
  * @param {RxPlayer} player
  * @param {string} state
- * @param {Array.<string>} whitelist
+ * @param {Array.<string>} [whitelist]
  * @returns {Promise}
  */
 export default function waitForState(player, state, whitelist) {
