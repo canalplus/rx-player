@@ -61,14 +61,20 @@ interface IContentProtectionDash {
   value: string;
 }
 interface IContentComponentDash {
-  id: string;
-  lang?: string;
+  id?: string;
+  language?: string;
+  normalizedLanguage?: string;
   contentType?: string;
-  par?: number;
+  par?: string;
+}
+
+interface IBaseRepresentationDash {
+  index?: IIndex|ISegmentBase|IMultipleSegmentBase|null;
+  baseURL?: string|null;
 }
 
 interface IRepresentationDash {
-  id: string|number|null;
+  id?: string|number;
   index: IIndex|ISegmentBase|IMultipleSegmentBase|null;
   mimeType: string|null;
   baseURL?: string|null;
@@ -87,10 +93,21 @@ interface IRepresentationDash {
   codingDependency?: boolean;
   bandwidth?: string;
   qualityRanking?: number;
+  group?: number;
+  bitrate?: number;
+}
+
+interface IBaseAdaptationDash {
+  baseURL?: string|null;
+  contentComponent?: IContentComponentDash;
+  contentProtection?: IContentProtectionDash|undefined;
+  representations?: IRepresentationDash[];
+  role?: IRole;
+  index?: IIndex|ISegmentBase|null;
 }
 
 interface IAdaptationDash {
-  id: string|null|number;
+  id?: string|number;
   index: IIndex|ISegmentBase|null;
   representations: IRepresentationDash[];
   mimeType: string|null;
@@ -101,11 +118,12 @@ interface IAdaptationDash {
   contentComponent?: IContentComponentDash;
   contentProtection?: IContentProtectionDash|undefined;
   group?: number;
-  lang?: string;
+  language?: string;
+  normalizedLanguage?: string;
   contentType?: string;
-  par?: number;
-  minBandwidth?: number;
-  maxBandwidth?: number;
+  par?: string;
+  minBitrate?: number;
+  maxBitrate?: number;
   minWidth?: number;
   maxWidth?: number;
   minHeight?: number;
@@ -118,10 +136,25 @@ interface IAdaptationDash {
   codecs?: string;
   height?: number;
   width?: number;
+  // not sure about this
+  profiles?: string;
+  width?: number;
+  height?: number;
+  frameRate?: number;
+  audioSamplingRate?: string;
+  segmentProfiles?: string;
+  maximumSAPPeriod?: number;
+  maxPlayoutRate?: number;
+  codingDependency?: boolean;
+}
+
+interface IBasePeriodDash {
+  adaptations?: IAdaptationDash[];
+  baseURL?: string|null;
 }
 
 interface IPeriodDash {
-  id: string|null|number;
+  id?: string|number;
   adaptations: IAdaptationDash[];
   baseURL?: string|null;
   start?: number;
@@ -130,9 +163,9 @@ interface IPeriodDash {
 }
 
 interface ISegmentTimeLine {
-  ts: number;
-  r: number;
-  d: number;
+  ts?: number;
+  r?: number;
+  d?: number;
 }
 
 interface ISegmentURL {
@@ -147,7 +180,6 @@ interface ISegmentBase {
   timeline: ISegmentTimeLine[];
   timescale: number;
   indexType?: string;
-  initialization?: IInitialization;
   timeShiftBufferDepth?: number;
   presentationTimeOffset?: number;
   indexRange?: [number, number];
@@ -161,6 +193,13 @@ interface IMultipleSegmentBase extends ISegmentBase {
   startNumber?: number;
 }
 
+interface ISegmentTemplate extends IMultipleSegmentBase {
+  media?: string;
+  bitstreamSwitching?: string;
+  index?: string;
+  initialization?: IInitialization;
+}
+
 export {
   IRole,
   IIndex,
@@ -170,10 +209,14 @@ export {
   IAccessibility,
   IAdaptationDash,
   IInitialization,
+  IBasePeriodDash,
   ISegmentTimeLine,
+  ISegmentTemplate,
   IRepresentationDash,
+  IBaseAdaptationDash,
   IMultipleSegmentBase,
   IContentComponentDash,
   IContentProtectionDash,
   ContentProtectionParser,
+  IBaseRepresentationDash,
 };

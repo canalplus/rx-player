@@ -218,6 +218,12 @@ export type CustomSegmentLoader = (
   // returns either the aborting callback or nothing
   (() => void)|void;
 
+interface IBaseManifest {
+  baseURL?: string|null;
+  periods?: Array<IPeriodDash|IPeriodSmooth>;
+  locations?: any[];
+}
+
 interface IParsedManifest {
   locations?: any[];
   transportType: string;
@@ -231,7 +237,7 @@ interface IParsedManifest {
   profiles?: string;
   availabilityEndTime?: Date|number;
   publishTime?: Date|number;
-  mediaPresentationDuration?: number;
+  duration?: number;
   minimumUpdatePeriod?: number;
   minBufferTime?: number;
   timeShiftBufferDepth?: number;
