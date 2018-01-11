@@ -302,9 +302,9 @@ export default class Manifest {
    * @returns {Array.<Object>}
    */
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
-    /* tslint:disable deprecation */
+    /* tslint:disable:deprecation */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-    /* tslint:enable deprecation */
+    /* tslint:enable:deprecation */
   }
 
   /**

@@ -129,7 +129,8 @@ export default function BuffersHandler(
   },
   errorStream : Subject<Error | CustomError>
 ) : Observable<IBufferHandlerEvent> {
-  const { manifest, period: firstPeriod } = content;
+  const manifest = content.manifest;
+  const firstPeriod = content.period;
 
   // Initialize all native source buffers from the first period at the same
   // time.
