@@ -22,6 +22,8 @@ import {
 import errorMessage from "./errorMessage";
 
 /**
+ * Error linked to the media Playback.
+ *
  * @class MediaError
  * @extends Error
  */

@@ -24,6 +24,8 @@ import errorMessage from "./errorMessage";
 import RequestError from "./RequestError";
 
 /**
+ * Error linked to network interactions (requests).
+ *
  * @class NetworkError
  * @extends Error
  */
