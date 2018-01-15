@@ -429,7 +429,10 @@ export default function BuffersHandler(
   ) : Observable<IPeriodBufferEvent> {
     return adaptation$.switchMap((adaptation) => {
       if (adaptation == null) {
+        log.info(`set no ${bufferType} Adaptation`, period);
+
         if (sourceBufferManager.has(bufferType)) {
+          log.info(`clearing previous ${bufferType} SourceBuffer`);
           const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
 
           // TODO use SegmentBookeeper to remove the complete range of segments
@@ -444,7 +447,7 @@ export default function BuffersHandler(
           .concat(createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period }));
       }
 
-      log.info(`updating ${bufferType} adaptation`, adaptation);
+      log.info(`updating ${bufferType} adaptation`, adaptation, period);
 
       // 1 - create or reuse the SourceBuffer
       let queuedSourceBuffer : QueuedSourceBuffer<any>;
