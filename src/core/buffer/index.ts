@@ -79,8 +79,7 @@ export type IAdaptationBufferEvent =
  *   abrManager,
  *   abrClock$,
  *   speed$,
- *   seekings$,
- *   wantedBufferAhead$
+ *   seekings$
  * );
  *
  * const buffer$ = bufferManager.createBuffer(
@@ -88,6 +87,7 @@ export type IAdaptationBufferEvent =
  *  queuedSourceBuffer,
  *  segmentBookkeeper,
  *  pipeline,
+ *  wantedBufferAhead$,
  *  { manifest, period, adaptation},
  * );
  * ```
@@ -98,7 +98,6 @@ export default class AdaptationBufferManager {
   private _abrBaseClock$ : Observable<IAdaptationBufferClockTick>;
   private _speed$ : Observable<number>;
   private _seeking$ : Observable<null>;
-  private _wantedBufferAhead$ : Observable<number>;
 
   /**
    * @param {ABRManager} abrManager
@@ -106,21 +105,18 @@ export default class AdaptationBufferManager {
    * make estimates.
    * @param {BehaviorSubject} speed$ - emits the speed each time it changes
    * @param {Observable} seeking$ - emits each time the user seeks
-   * @param {Observable} wantedBufferAhead$ - emits the buffer goal
    * @param {Subject} warnings$ - Subject to emit non-fatal errors
    */
   constructor(
     abrManager : ABRManager,
     abrBaseClock$ : Observable<IAdaptationBufferClockTick>,
     speed$ : Observable<number>,
-    seeking$ : Observable<null>,
-    wantedBufferAhead$ : Observable<number>
+    seeking$ : Observable<null>
   ) {
     this._abrManager = abrManager;
     this._abrBaseClock$ = abrBaseClock$;
     this._speed$ = speed$;
     this._seeking$ = seeking$;
-    this._wantedBufferAhead$ = wantedBufferAhead$;
   }
 
   /**
@@ -142,11 +138,11 @@ export default class AdaptationBufferManager {
     queuedSourceBuffer : QueuedSourceBuffer<any>,
     segmentBookkeeper : SegmentBookkeeper,
     pipeline : (content : ISegmentLoaderArguments) => Observable<any>,
+    wantedBufferAhead$ : Observable<number>,
     content : { manifest : Manifest; period : Period; adaptation : Adaptation }
   ) : Observable<IAdaptationBufferEvent> {
 
     const { manifest, period, adaptation } = content;
-    const wantedBufferAhead$ = this._wantedBufferAhead$;
     const abr$ = this._getABRForAdaptation(manifest, adaptation);
 
     /**
@@ -249,37 +245,6 @@ export default class AdaptationBufferManager {
           .mergeMap(() => createRepresentationBuffer(representation));
       });
     }
-  }
-
-  /**
-   * Create empty Buffer Observable, linked to a Period.
-   *
-   * This observable will never download any segment and just emit a "full"
-   * event when reaching the end.
-   * @param {Object} content
-   * @returns {Observable}
-   */
-  public createEmptyBuffer(
-    bufferClock$ : Observable<IBufferClockTick>,
-    content : { manifest : Manifest; period : Period }
-  ) : Observable<IAdaptationBufferEvent> {
-    const period = content.period;
-    return Observable.combineLatest(bufferClock$, this._wantedBufferAhead$)
-      .filter(([clockTick, wantedBufferAhead]) =>
-        period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
-      )
-      .map(([clockTick, wantedBufferAhead]) => {
-        const periodEnd = period.end || Infinity;
-        return {
-          type: "full" as "full",
-          value: {
-            wantedRange: {
-              start: Math.min(clockTick.currentTime, periodEnd),
-              end: Math.min(clockTick.currentTime + wantedBufferAhead, periodEnd),
-            },
-          },
-        };
-      });
   }
 
   private _getABRForAdaptation(

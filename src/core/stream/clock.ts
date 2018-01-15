@@ -108,9 +108,9 @@ export default function createBufferClock(
     .take(1)
     .do(() => {
       timeOffset = 0;
-    }).ignoreElements() as Observable<never>;
+    }).share().ignoreElements() as Observable<never>;
 
-  const clock$ = streamClock$
+  const clock$ : Observable<IBufferClockTick> = streamClock$
     .map((timing) =>
       objectAssign({
         liveGap: manifest.isLive ?
@@ -120,7 +120,7 @@ export default function createBufferClock(
       }, timing)
     );
 
-  const seekings$ = getSeekings$(clock$);
+  const seekings$ = getSeekings$(streamClock$);
 
   return {
     clock$: Observable.merge(clock$, updateTimeOffset$),

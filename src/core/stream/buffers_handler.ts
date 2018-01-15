@@ -34,6 +34,7 @@ import WeakMapMemory from "../../utils/weak_map_memory";
 import BufferManager, {
   IAdaptationBufferEvent,
   IBufferClockTick,
+  IBufferFullEvent,
 } from "../buffer";
 import {
   IPipelineOptions,
@@ -117,6 +118,7 @@ export type IBufferHandlerEvent =
 export default function BuffersHandler(
   content : { manifest : Manifest; period : Period },
   clock$ : Observable<IBufferClockTick>,
+  wantedBufferAhead$ : Observable<number>,
   bufferManager : BufferManager,
   sourceBufferManager : SourceBufferManager,
   segmentPipelinesManager : SegmentPipelinesManager,
@@ -304,12 +306,6 @@ export default function BuffersHandler(
     const adaptation$ = new ReplaySubject<Adaptation|null>(1);
 
     /**
-     * The Period coming just after the current one.
-     * @type {Period|undefined}
-     */
-    const nextPeriod = manifest.getPeriodAfter(basePeriod);
-
-    /**
      * Will emit when the Buffer for the next Period can be created.
      * @type {Subject}
      */
@@ -337,8 +333,14 @@ export default function BuffersHandler(
      */
     const nextPeriodBuffer$ = createNextBuffers$
       .exhaustMap(() => {
+        /**
+         * The Period coming just after the current one.
+         * @type {Period|undefined}
+         */
+        const nextPeriod = manifest.getPeriodAfter(basePeriod);
+
         if (!nextPeriod || nextPeriod === basePeriod) {
-          return Observable.empty(); // finished
+          return Observable.empty();
         }
         return manageConsecutivePeriodBuffers(
           bufferType, nextPeriod, destroyNextBuffers$);
@@ -425,7 +427,6 @@ export default function BuffersHandler(
     adaptation$ : Observable<Adaptation|null>
   ) : Observable<IPeriodBufferEvent> {
     return adaptation$.switchMap((adaptation) => {
-
       if (adaptation == null) {
         if (sourceBufferManager.has(bufferType)) {
           const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
@@ -439,7 +440,7 @@ export default function BuffersHandler(
 
         return Observable
           .of(EVENTS.adaptationChange(bufferType, null, period))
-          .concat(bufferManager.createEmptyBuffer(clock$, { manifest, period }));
+          .concat(createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period }));
       }
 
       log.info(`updating ${bufferType} adaptation`, adaptation);
@@ -481,6 +482,7 @@ export default function BuffersHandler(
         queuedSourceBuffer,
         segmentBookkeeper,
         pipeline,
+        wantedBufferAhead$,
         { manifest, period, adaptation }
       ).catch<IAdaptationBufferEvent, never>((error : Error) => {
         // non native buffer should not impact the stability of the
@@ -578,4 +580,38 @@ function createNativeSourceBuffersForPeriod(
       }
     }
   });
+}
+
+/**
+ * Create empty Buffer Observable, linked to a Period.
+ *
+ * This observable will never download any segment and just emit a "full"
+ * event when reaching the end.
+ * @param {Observable} bufferClock$
+ * @param {Observable} wantedBufferAhead$
+ * @param {Object} content
+ * @returns {Observable}
+ */
+function createFakeBuffer(
+  bufferClock$ : Observable<IBufferClockTick>,
+  wantedBufferAhead$ : Observable<number>,
+  content : { manifest : Manifest; period : Period }
+) : Observable<IBufferFullEvent> {
+  const period = content.period;
+  return Observable.combineLatest(bufferClock$, wantedBufferAhead$)
+    .filter(([clockTick, wantedBufferAhead]) =>
+      period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
+    )
+    .map(([clockTick, wantedBufferAhead]) => {
+      const periodEnd = period.end || Infinity;
+      return {
+        type: "full" as "full",
+        value: {
+          wantedRange: {
+            start: Math.min(clockTick.currentTime, periodEnd),
+            end: Math.min(clockTick.currentTime + wantedBufferAhead, periodEnd),
+          },
+        },
+      };
+    });
 }
