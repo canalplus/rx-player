@@ -1588,15 +1588,21 @@ class Player extends EventEmitter<any> {
         this._priv_onStreamWarning(streamInfos.value);
         break;
       case "added-segment":
+        // Manage image tracks
+        // TODO Better way? Perhaps linked to an ImageSourceBuffer
+        // implementation
         const { bufferType, parsed } = streamInfos.value;
         if (bufferType === "image") {
           const segmentData = parsed.segmentData;
+          if (segmentData != null && segmentData.type === "bif") {
+            const imageData = segmentData.data as IBifThumbnail[];
 
-          // TODO merge multiple data from the same track together
-          this._priv_currentImagePlaylist = segmentData as IBifThumbnail[];
-          this.trigger("imageTrackUpdate", {
-            data: this._priv_currentImagePlaylist,
-          });
+            // TODO merge multiple data from the same track together
+            this._priv_currentImagePlaylist = imageData;
+            this.trigger("imageTrackUpdate", {
+              data: this._priv_currentImagePlaylist,
+            });
+          }
         }
     }
   }

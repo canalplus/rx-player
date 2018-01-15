@@ -104,7 +104,7 @@ export default class Period {
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       return new Adaptation({
         id: "gen-image-ada-" + generateNewId(),
-        type: "image", // TODO enum
+        type: "image",
         manuallyAdded: true,
         representations: [{
           baseURL: url,
@@ -148,7 +148,7 @@ export default class Period {
       return allSubs.concat(langsToMapOn.map((_language) => {
         return new Adaptation({
           id: "gen-text-ada-" + generateNewId(),
-          type: "text", // TODO enum
+          type: "text",
           language: _language,
           normalizedLanguage: normalizeLang(_language),
           closedCaption,

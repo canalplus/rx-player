@@ -676,7 +676,7 @@ Returns the current loaded Manifest if one. A manifest object structure is relat
 
 _return value_: ``Object``
 
-Returns the adaptations being loaded per type if a manifest is loaded. The returned object will have at most four keys for each type ("video", "audio", "text" and "image") which will each contain an array of Adaptation Objects.
+Returns the adaptations being loaded per type if a manifest is loaded. The returned object will have at most a key for each type ("video", "audio", "text" and "image") which will each contain an array of Adaptation Objects.
 
 An Adaptation object structure is relatively complex and is described in the [Manifest Object structure page](./manifest.md#adaptation).
 
@@ -684,7 +684,7 @@ An Adaptation object structure is relatively complex and is described in the [Ma
 
 _return value_: ``Object``
 
-Returns the representations being loaded per type if a manifest is loaded. The returned object will have at most four keys for each type ("video", "audio", "text" and "image") which will each contain an array of Representation Objects.
+Returns the representations being loaded per type if a manifest is loaded. The returned object will have at most a key for each type ("video", "audio", "text" and "image") which will each contain an array of Representation Objects.
 
 An Representation object structure is relatively complex and is described in the [Manifest Object structure page](./manifest.md#representation).
 
