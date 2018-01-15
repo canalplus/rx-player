@@ -363,8 +363,7 @@ export default function Stream({
      * Adaptation from the current content.
      * @type {BufferManager}
      */
-    const bufferManager = new BufferManager(
-      abrManager, clock$, speed$, seekings$, wantedBufferAhead$);
+    const bufferManager = new BufferManager(abrManager, clock$, speed$, seekings$);
 
     /**
      * Creates SourceBufferManager allowing to create and keep track of a single
@@ -380,6 +379,7 @@ export default function Stream({
     const handledBuffers$ = BuffersHandler(
       { manifest, period: firstPeriodToPlay }, // content
       bufferClock$,
+      wantedBufferAhead$,
       bufferManager,
       sourceBufferManager,
       segmentPipelinesManager,
