@@ -31,9 +31,9 @@ import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import BufferManager, {
+  createFakeBuffer,
   IAdaptationBufferEvent,
   IBufferClockTick,
-  IBufferFullEvent,
 } from "../buffer";
 import {
   IPipelineOptions,
@@ -113,6 +113,12 @@ export type IBufferHandlerEvent =
  * @param {Object} sourceBufferOptions - Every SourceBuffer options, per type
  * @param {Subject} errorStream - Subject to emit minor errors
  * @returns {Observable}
+ *
+ * TODO Special case for image Buffer, where we want data for EVERY active
+ * periods.
+ *
+ * TODO Special garbage collection for text and image buffers, as we want to
+ * clean it for potentially very long sessions.
  */
 export default function BuffersHandler(
   content : { manifest : Manifest; period : Period },
@@ -554,38 +560,4 @@ function createNativeSourceBuffersForPeriod(
       }
     }
   });
-}
-
-/**
- * Create empty Buffer Observable, linked to a Period.
- *
- * This observable will never download any segment and just emit a "full"
- * event when reaching the end.
- * @param {Observable} bufferClock$
- * @param {Observable} wantedBufferAhead$
- * @param {Object} content
- * @returns {Observable}
- */
-function createFakeBuffer(
-  bufferClock$ : Observable<IBufferClockTick>,
-  wantedBufferAhead$ : Observable<number>,
-  content : { manifest : Manifest; period : Period }
-) : Observable<IBufferFullEvent> {
-  const period = content.period;
-  return Observable.combineLatest(bufferClock$, wantedBufferAhead$)
-    .filter(([clockTick, wantedBufferAhead]) =>
-      period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
-    )
-    .map(([clockTick, wantedBufferAhead]) => {
-      const periodEnd = period.end || Infinity;
-      return {
-        type: "full" as "full",
-        value: {
-          wantedRange: {
-            start: Math.min(clockTick.currentTime, periodEnd),
-            end: Math.min(clockTick.currentTime + wantedBufferAhead, periodEnd),
-          },
-        },
-      };
-    });
 }

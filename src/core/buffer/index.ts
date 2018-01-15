@@ -295,6 +295,40 @@ export default class AdaptationBufferManager {
   }
 }
 
+/**
+ * Create empty Buffer Observable, linked to a Period.
+ *
+ * This observable will never download any segment and just emit a "full"
+ * event when reaching the end.
+ * @param {Observable} bufferClock$
+ * @param {Observable} wantedBufferAhead$
+ * @param {Object} content
+ * @returns {Observable}
+ */
+export function createFakeBuffer(
+  bufferClock$ : Observable<IBufferClockTick>,
+  wantedBufferAhead$ : Observable<number>,
+  content : { manifest : Manifest; period : Period }
+) : Observable<IBufferFullEvent> {
+  const period = content.period;
+  return Observable.combineLatest(bufferClock$, wantedBufferAhead$)
+    .filter(([clockTick, wantedBufferAhead]) =>
+      period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
+    )
+    .map(([clockTick, wantedBufferAhead]) => {
+      const periodEnd = period.end || Infinity;
+      return {
+        type: "full" as "full",
+        value: {
+          wantedRange: {
+            start: Math.min(clockTick.currentTime, periodEnd),
+            end: Math.min(clockTick.currentTime + wantedBufferAhead, periodEnd),
+          },
+        },
+      };
+    });
+}
+
 // Re-export RepresentationBuffer events used by the AdaptationBufferManager
 export {
   IAddedSegmentEvent,
