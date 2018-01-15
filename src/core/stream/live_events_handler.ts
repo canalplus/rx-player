@@ -72,9 +72,10 @@ export default function liveEventsHandler(
         break;
 
       case "needs-manifest-refresh":
+        log.debug("out of index");
+
         // out-of-index messages require a complete reloading of the
         // manifest to refresh the current index
-        log.info("out of index");
         return refreshManifest(fetchManifest, manifest);
     }
     return Observable.of(message);
