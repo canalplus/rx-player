@@ -17,20 +17,41 @@
 import { IBifThumbnail } from "../../../parsers/images/bif";
 import AbstractSourceBuffer from "../abstract_source_buffer";
 
+export interface IImageTrackSegmentData {
+  data : IBifThumbnail[]; // image track data, in the given type
+  end : number; // end time time until which the segment apply
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each image
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data (example: "bif")
+}
+
 // TODO
 class ImageSourceBuffer
-  extends AbstractSourceBuffer<IBifThumbnail[]>
+  extends AbstractSourceBuffer<IImageTrackSegmentData>
 {
-  _append() {
-    // TODO: handle live case.
-    // We suppose here that the first received bsi includes all images
-    this.buffered.insert(0, Number.MAX_VALUE);
+  /**
+   * @param {Object} data
+   */
+  _append(data : IImageTrackSegmentData) {
+    const {
+      start,
+      end,
+      timescale,
+    } = data;
+
+    this.buffered.insert(
+      start / timescale,
+      end == null ? Number.MAX_VALUE : end / timescale
+    );
   }
 
+  // TODO
   /* tslint:disable no-empty */
   _remove() {}
   /* tslint:enable no-empty */
 
+  // TODO
   /* tslint:disable no-empty */
   _abort() {}
   /* tslint:enable no-empty */
