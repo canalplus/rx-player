@@ -22,6 +22,10 @@ import {
 import errorMessage from "./errorMessage";
 
 /**
+ * Error linked to the Index part of the Manifest.
+ *
+ * TODO Rename ManifestError or something?
+ *
  * @class IndexError
  * @extends Error
  */
