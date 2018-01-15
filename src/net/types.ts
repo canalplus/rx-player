@@ -136,14 +136,13 @@ export type SegmentParserObservable = Observable<{
 }>;
 
 export interface ITextTrackSegmentData {
-  data : string;
-  start : number;
-  timescale : number;
-  // type : "ttml"|"vtt"|"sami"|"smil";
-  type : string;
-  end? : number;
-  language? : string;
-  timeOffset : number;
+  data : string; // text track data, in the given type
+  end? : number; // end time until which the segment apply
+  language? : string; // language in which the text track is
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each subtitle
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data (examples: "ttml", "srt" or "vtt")
 }
 
 export type TextTrackParserObservable = Observable<{
@@ -151,8 +150,17 @@ export type TextTrackParserObservable = Observable<{
   segmentInfos? : ISegmentTimingInfos;
 }>;
 
+export interface IImageTrackSegmentData {
+  data : IBifThumbnail[]; // image track data, in the given type
+  end : number; // end time time until which the segment apply
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each image
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data (example: "bif")
+}
+
 export type ImageParserObservable = Observable<{
-  segmentData? : IBifThumbnail[];
+  segmentData? : IImageTrackSegmentData;
   segmentInfos : ISegmentTimingInfos;
 }>;
 

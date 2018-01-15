@@ -130,7 +130,7 @@ export default class Manifest {
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       return new Adaptation({
         id: "gen-image-ada-" + generateNewId(),
-        type: "image", // TODO enum
+        type: "image",
         manuallyAdded: true,
         representations: [{
           baseURL: url,
@@ -174,7 +174,7 @@ export default class Manifest {
       return allSubs.concat(langsToMapOn.map((_language) => {
         return new Adaptation({
           id: "gen-text-ada-" + generateNewId(),
-          type: "text", // TODO enum
+          type: "text",
           language: _language,
           normalizedLanguage: normalizeLang(_language),
           closedCaption,

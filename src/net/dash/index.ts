@@ -190,22 +190,21 @@ export default function(
       const blob = new Uint8Array(responseData);
 
       const bif = parseBif(blob);
-      const segmentData = bif.thumbs;
+      const data = bif.thumbs;
 
       const segmentInfos = {
         time: 0,
         duration: Number.MAX_VALUE,
         timescale: bif.timescale,
       };
-
-      // var firstThumb = blob[0];
-      // var lastThumb  = blob[blob.length - 1];
-
-      // segmentInfos = {
-      //   time: firstThumb.ts,
-      //   duration: lastThumb.ts
-      // };
-
+      const segmentData = {
+        data,
+        start: 0,
+        end: Number.MAX_VALUE,
+        timescale: 1,
+        timeOffset: 0,
+        type: "bif",
+      };
       return Observable.of({ segmentData, segmentInfos });
     },
   };

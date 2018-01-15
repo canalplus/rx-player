@@ -268,9 +268,9 @@ export default class AdaptationBufferManager {
       .filter(([clockTick, wantedBufferAhead]) =>
         period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
       )
-      .mergeMap(([clockTick, wantedBufferAhead]) => {
+      .map(([clockTick, wantedBufferAhead]) => {
         const periodEnd = period.end || Infinity;
-        return Observable.of({
+        return {
           type: "full" as "full",
           value: {
             wantedRange: {
@@ -278,7 +278,7 @@ export default class AdaptationBufferManager {
               end: Math.min(clockTick.currentTime + wantedBufferAhead, periodEnd),
             },
           },
-        });
+        };
       });
   }
 
