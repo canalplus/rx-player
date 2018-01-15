@@ -206,6 +206,8 @@ export default class LanguageManager {
 
       this._audioChoiceMemory.set(period, optimalAdaptation);
       audioInfos.adaptation$.next(optimalAdaptation);
+    } else {
+      audioInfos.adaptation$.next(chosenAudioAdaptation);
     }
   }
 
@@ -229,6 +231,8 @@ export default class LanguageManager {
 
       this._textChoiceMemory.set(period, optimalAdaptation);
       textInfos.adaptation$.next(optimalAdaptation);
+    } else {
+      textInfos.adaptation$.next(chosenTextAdaptation);
     }
   }
 
