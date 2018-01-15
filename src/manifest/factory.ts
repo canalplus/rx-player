@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import { Subject } from "rxjs/Subject";
 import { isCodecSupported } from "../compat";
-import { MediaError } from "../errors";
+import { CustomError, MediaError } from "../errors";
 import { IParsedManifest } from "../net/types";
 import log from "../utils/log";
 import { IAdaptationArguments } from "./adaptation";
@@ -49,10 +50,11 @@ const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 export default function createManifest(
   manifestObject : IParsedManifest,
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
-  externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
+  externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
+  warning$ : Subject<Error|CustomError>
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods as any[]).map((period) => {
-    period.adaptations = checkAdaptations(period.adaptations);
+    period.adaptations = checkAdaptations(period.adaptations, warning$);
     return period;
   });
 
@@ -72,7 +74,8 @@ export default function createManifest(
  * @returns {Array.<Object>}
  */
 function checkAdaptations(
-  initialAdaptations : IAdaptationArguments[]
+  initialAdaptations : IAdaptationArguments[],
+  warning$ : Subject<Error|CustomError>
 ) : IAdaptationArguments[] {
   const adaptations = initialAdaptations
 
@@ -80,6 +83,9 @@ function checkAdaptations(
     .filter((adaptation) => {
       if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
         log.info("not supported adaptation type", adaptation.type);
+        const error =
+          new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false);
+        warning$.next(error);
         return false;
       } else {
         return true;
@@ -87,17 +93,20 @@ function checkAdaptations(
     })
 
     .map((adaptation) => {
-      // 2. Filter from codecs and throw if none supported
-      // TODO be more resilient
-      adaptation.representations = filterSupportedRepresentations(
-        adaptation.type,
-        adaptation.representations
-      );
+      if (adaptation.representations.length) {
+        // 2. Filter from codecs and throw if none supported
+        adaptation.representations = filterSupportedRepresentations(
+          adaptation.type,
+          adaptation.representations
+        );
 
-      // XXX TODO
-      // if (adaptation.representations.length === 0) {
-      //   throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, true);
-      // }
+        if (adaptation.representations.length === 0) {
+          log.warn("Incompatible codecs for adaptation", adaptation);
+          const error =
+            new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, false);
+          warning$.next(error);
+        }
+      }
       return adaptation;
     })
 

@@ -22,6 +22,8 @@ import {
 import errorMessage from "./errorMessage";
 
 /**
+ * Error linked to the encryption of the media.
+ *
  * @class EncryptedMediaError
  * @extends Error
  */

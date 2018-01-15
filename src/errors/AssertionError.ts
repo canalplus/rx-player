@@ -15,6 +15,8 @@
  */
 
 /**
+ * Error due to an abnormal assertion fails.
+ *
  * @class AssertionError
  * @extends Error
  */

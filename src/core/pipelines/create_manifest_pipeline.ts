@@ -48,7 +48,7 @@ import Pipeline, {
 export default function createManifestPipeline(
   transport : ITransportPipelines<any, any, any, any, any>,
   pipelineOptions : IPipelineOptions<any, any>,
-  warning$ : Subject<Error | CustomError>,
+  warning$ : Subject<Error|CustomError>,
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
   supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {
@@ -69,7 +69,8 @@ export default function createManifestPipeline(
         return createManifest(
           value.parsed.manifest,
           supplementaryTextTracks,
-          supplementaryImageTracks
+          supplementaryImageTracks,
+          warning$
         );
       });
   };
