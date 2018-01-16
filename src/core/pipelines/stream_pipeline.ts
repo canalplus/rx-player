@@ -17,7 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { CustomError } from "../../errors";
-import { Segment } from "../../manifest";
+import { ISegment } from "../../manifest";
 import generateID from "../../utils/id";
 import {
   IABRMetric,
@@ -84,7 +84,7 @@ export default function streamPipelineFactory(
 
             case "request": {
               // format it for ABR Handling if the right format
-              const segment : Segment|undefined = value && value.segment;
+              const segment : ISegment|undefined = value && value.segment;
               if (segment != null && segment.duration != null) {
                 const duration = segment.duration / segment.timescale;
                 const time = segment.time / segment.timescale;

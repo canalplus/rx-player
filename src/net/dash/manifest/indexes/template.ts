@@ -14,38 +14,63 @@
  * limitations under the License.
  */
 
-// TODO This file should probably be moved somewhere in the net folder
-// TODO Should also probably a class implementing an interface e.g.
-// IIndexManager (with the index in state?)
-
-import Segment from "../segment";
+import {
+  IRepresentationIndex,
+  ISegment,
+} from "../../../../manifest";
 import {
   getInitSegment,
-  ISegmentHelpers,
-  ITemplateIndex,
   normalizeRange,
   scale,
-  setTimescale,
 } from "./helpers";
 
-const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
-  getInitSegment,
-  setTimescale,
-  scale,
+export interface ITemplateIndex {
+  indexType : "template";
+  duration : number;
+  indexRange?: [number, number];
+  initialization: { media?: string; range?: [number, number] };
+  media? : string;
+  presentationTimeOffset? : number;
+  startNumber? : number;
+  timescale : number;
+}
+
+export default class TemplateRepresentationIndex implements IRepresentationIndex {
+  private _index : ITemplateIndex;
 
   /**
-   * @param {string|Number} repId
    * @param {Object} index
+   */
+  constructor(index : ITemplateIndex) {
+    this._index = index;
+  }
+
+  /**
+   * Construct init Segment.
+   * @returns {Object}
+   */
+  getInitSegment() : ISegment {
+    return getInitSegment(this._index);
+  }
+
+  /**
+   * Convert a time from a generated Segment to seconds.
+   *
+   * TODO What? Should be sufficient with a Segment alone. Check that.
+   * @param {Number} time
+   * @returns {Number}
+   */
+  scale(time : number) : number {
+    return scale(this._index, time);
+  }
+
+  /**
    * @param {Number} _up
    * @param {Number} _to
-   * @returns {Array.<Segment>}
+   * @returns {Array.<Object>}
    */
-  getSegments(
-    repId : string|number,
-    index : ITemplateIndex,
-    _up : number,
-    _to : number
-  ) : Segment[] {
+  getSegments(_up : number, _to : number) : ISegment[] {
+    const index = this._index;
     const { up, to } = normalizeRange(index, _up, _to);
     if (to <= up) {
       return [];
@@ -59,7 +84,7 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
       presentationTimeOffset,
     } = index;
 
-    const segments : Segment[] = [];
+    const segments : ISegment[] = [];
     for (let baseTime = up; baseTime <= to; baseTime += duration) {
       const number = Math.floor(baseTime / duration) +
         (startNumber == null ? 1 : startNumber);
@@ -69,21 +94,19 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
       ) * duration + (presentationTimeOffset || 0);
 
       const args = {
-        id: "" + repId + "_" + number,
+        id: "" + number,
         number,
         time,
-        init: false,
+        isInit: false,
         duration,
-        range: null,
-        indexRange: null,
         timescale,
         media,
       };
-      segments.push(new Segment(args));
+      segments.push(args);
     }
 
     return segments;
-  },
+  }
 
   /**
    * Returns first position in index.
@@ -94,7 +117,7 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
     /* tslint:disable return-undefined */
     return undefined;
     /* tslint:enable return-undefined */
-  },
+  }
 
   /**
    * Returns last position in index.
@@ -105,7 +128,7 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
     /* tslint:disable return-undefined */
     return undefined;
     /* tslint:enable return-undefined */
-  },
+  }
 
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
@@ -114,7 +137,7 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
    */
   shouldRefresh() : false {
     return false;
-  },
+  }
 
   /**
    * We cannot check for discontinuity in SegmentTemplate-based indexes.
@@ -122,16 +145,29 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
    */
   checkDiscontinuity() : -1 {
     return -1;
-  },
+  }
 
   /**
    * We do not have to add new segments to SegmentList-based indexes.
-   * Return false in any case.
-   * @returns {Boolean}
+   * @returns {Array}
    */
-  _addSegmentInfos() : false {
-    return false;
-  },
-};
+  _addSegments() : never[] {
+    return [];
+  }
 
-export default SegmentTemplateHelpers;
+  /**
+   * @param {Object}
+   */
+  update(
+    newIndex : TemplateRepresentationIndex /* TODO @ index refacto */
+  ) : void {
+    this._index = newIndex._index;
+  }
+
+  /**
+   * @returns {string}
+   */
+  getType() : string { // TODO Remove
+    return "template";
+  }
+}

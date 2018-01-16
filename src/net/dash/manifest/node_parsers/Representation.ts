@@ -15,12 +15,14 @@
  */
 
 import objectAssign = require("object-assign");
+import { IRepresentationIndex } from "../../../../manifest";
 import log from "../../../../utils/log";
 import { resolveURL } from "../../../../utils/url";
 import {
   parseBoolean,
   parseFrameRate,
 } from "../helpers";
+import createRepresentationIndex from "../indexes";
 import parseSegmentBase from "./SegmentBase";
 import parseSegmentList from "./SegmentList";
 import parseSegmentTemplate from "./SegmentTemplate";
@@ -71,7 +73,7 @@ export interface IParsedRepresentation {
   frameRate? : number;
   height? : number;
   id? : string;
-  index? : any; // TODO
+  index? : IRepresentationIndex;
   maxPlayoutRate? : number;
   maximumSAPPeriod? : number;
   mimeType? : string;
@@ -236,6 +238,10 @@ export default function parseRepresentationNode(
   if (bitrate == null) {
     log.warn("DASH: No usable bitrate found in the Representation.");
     bitrate = 0;
+  }
+
+  if (base.index != null) {
+    base.index = createRepresentationIndex(base.index);
   }
 
   return objectAssign(

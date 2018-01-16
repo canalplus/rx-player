@@ -18,9 +18,9 @@ import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import Manifest, {
   Adaptation,
+  ISegment,
   Period,
   Representation,
-  Segment,
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
 
@@ -61,7 +61,7 @@ export interface ISegmentLoaderArguments {
   period : Period;
   adaptation : Adaptation;
   representation : Representation;
-  segment : Segment;
+  segment : ISegment;
 }
 
 // -- response
@@ -117,7 +117,7 @@ export interface ISegmentParserArguments<T> {
   manifest : Manifest;
   adaptation : Adaptation;
   representation : Representation;
-  segment : Segment;
+  segment : ISegment;
   init? : ISegmentTimingInfos;
 }
 
@@ -206,7 +206,7 @@ export type CustomSegmentLoader = (
   args : {
     adaptation : Adaptation;
     representation : Representation;
-    segment : Segment;
+    segment : ISegment;
     transport : string;
     url : string;
     manifest : Manifest;

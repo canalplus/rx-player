@@ -18,8 +18,6 @@ import config from "../../../config";
 import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
-  // bytesToStr,
-  // toBase64URL,
   bytesToUTF16Str,
   concat,
   guidToUuid,
@@ -44,6 +42,7 @@ import {
   IPeriodSmooth,
   IRepresentationSmooth,
  } from "../types";
+import RepresentationIndex from "./representationIndex";
 
 const DEFAULT_MIME_TYPES: IDictionary<string> = {
   audio: "audio/mp4",
@@ -107,36 +106,6 @@ function parseBoolean(val : string|null) : boolean {
   else {
     return false;
   }
-}
-
-/**
- * Returns the first time referenced in the index for a given HSS StreamIndex.
- * Returns undefined if the index is empty.
- * @param {Object} adaptation
- * @returns {Number|undefined}
- */
-function getFirstTimeReference(adaptation: IAdaptationSmooth) : number|undefined {
-  const { index } = adaptation;
-  if (index.timeline.length === 0) {
-    return undefined;
-  }
-  const { ts } = index.timeline[0];
-  return ts;
-}
-
-/**
- * Returns the last time referenced in the index for a given HSS StreamIndex.
- * Returns undefined if the index is empty.
- * @param {Object} adaptation
- * @returns {Number|undefined}
- */
-function getLastTimeReference(adaptation : IAdaptationSmooth) : number|undefined {
-  const { index } = adaptation;
-  if (index.timeline.length === 0) {
-    return undefined;
-  }
-  const { ts, r, d } = index.timeline[index.timeline.length - 1];
-  return ((ts + (r + 1) * (d ? d : 0)) / index.timescale);
 }
 
 /**
@@ -459,7 +428,6 @@ function createSmoothStreamingParser(
       representations: [] as any[],
       index: {
         timeline: [] as IHSSManifestSegment[],
-        indexType: "smooth" as "smooth",
         timescale: _timescale,
         initialization: {},
       },
@@ -480,7 +448,7 @@ function createSmoothStreamingParser(
       representation.id = id + "_" + adaptationType + "-" +
         representation.mimeType + "-" +
         representation.codecs + "-" + representation.bitrate;
-      representation.index = index;
+      representation.index = new RepresentationIndex(index);
     });
 
     // TODO(pierre): real ad-insert support
@@ -490,7 +458,6 @@ function createSmoothStreamingParser(
 
     const parsedAdaptation : IAdaptationSmooth = {
       id,
-      index,
       type: adaptationType,
       representations,
       name: name == null ? undefined : name,
@@ -570,28 +537,38 @@ function createSmoothStreamingParser(
       const lastTimeReferences : number[] = [];
 
       if (firstVideoAdaptation) {
-        const firstVideoTimeReference = getFirstTimeReference(firstVideoAdaptation);
-        const lastVideoTimeReference = getLastTimeReference(firstVideoAdaptation);
+        const firstVideoRepresentation = firstVideoAdaptation.representations[0];
+        if (firstVideoRepresentation) {
+          const firstVideoTimeReference =
+            firstVideoRepresentation.index.getFirstPosition();
+          const lastVideoTimeReference =
+            firstVideoRepresentation.index.getLastPosition();
 
-        if (firstVideoTimeReference != null) {
-          firstTimeReferences.push(firstVideoTimeReference);
-        }
+          if (firstVideoTimeReference != null) {
+            firstTimeReferences.push(firstVideoTimeReference);
+          }
 
-        if (lastVideoTimeReference != null) {
-          lastTimeReferences.push(lastVideoTimeReference);
+          if (lastVideoTimeReference != null) {
+            lastTimeReferences.push(lastVideoTimeReference);
+          }
         }
       }
 
       if (firstAudioAdaptation) {
-        const firstAudioTimeReference = getFirstTimeReference(firstAudioAdaptation);
-        const lastAudioTimeReference = getLastTimeReference(firstAudioAdaptation);
+        const firstAudioRepresentation = firstAudioAdaptation.representations[0];
+        if (firstAudioRepresentation) {
+          const firstAudioTimeReference =
+            firstAudioRepresentation.index.getFirstPosition();
+          const lastAudioTimeReference =
+            firstAudioRepresentation.index.getLastPosition();
 
-        if (firstAudioTimeReference != null) {
-          firstTimeReferences.push(firstAudioTimeReference);
-        }
+          if (firstAudioTimeReference != null) {
+            firstTimeReferences.push(firstAudioTimeReference);
+          }
 
-        if (lastAudioTimeReference != null) {
-          lastTimeReferences.push(lastAudioTimeReference);
+          if (lastAudioTimeReference != null) {
+            lastTimeReferences.push(lastAudioTimeReference);
+          }
         }
       }
 
