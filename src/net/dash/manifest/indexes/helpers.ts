@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import assert from "../../utils/assert";
-import Segment from "../segment";
+import { ISegment } from "../../../../manifest";
+import assert from "../../../../utils/assert";
 
 export interface IIndexSegment {
   ts: number; // start timestamp
@@ -133,35 +133,32 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment): number {
 
 /**
  * Construct init segment for the given index.
- * @param {string} rootId
  * @param {Object} index
  * @param {Number} index.timescale
  * @param {Object} [index.initialization={}]
  * @param {Array.<Number>|null} [index.initialization.range=null]
  * @param {Array.<Number>|null} [index.initialization.indexRange=null]
  * @param {string} [index.initialization.media]
- * @returns {Segment}
+ * @returns {Object}
  */
 function getInitSegment(
-  rootId: string,
   index: {
     timescale: number;
     initialization: { media?: string; range?: [number, number] };
     indexRange?: [number, number];
   }
-): Segment {
+): ISegment {
   const { initialization = {} } = index;
 
-  const args = {
-    id: "" + rootId + "_init",
-    init: true,
+  return {
+    id: "init",
+    isInit: true,
     time: 0,
-    range: initialization.range || null,
-    indexRange: index.indexRange || null,
+    range: initialization.range || undefined,
+    indexRange: index.indexRange || undefined,
     media: initialization.media,
     timescale: index.timescale,
   };
-  return new Segment(args);
 }
 
 /**
@@ -199,69 +196,12 @@ const setTimescale = (
  * @param {Number} time
  * @returns {Number}
  */
-const scale = (
-  index: { timescale: number },
-  time: number
-): number => {
+function scale(index: { timescale: number }, time: number): number {
   if (__DEV__) {
     assert(index.timescale > 0);
   }
 
   return time / index.timescale;
-};
-
-interface ISegmentHelpers<T> {
-  getInitSegment: (
-    rootId: string,
-    index: {
-      timescale: number;
-      initialization: {
-        media?: string;
-        range?: [number, number];
-      };
-      indexRange?: [number, number];
-    }) => Segment;
-  setTimescale: (
-    index: { timescale?: number },
-    timescale: number
-  ) => { timescale: number };
-  scale: (
-    index: { timescale: number },
-    time: number
-  ) => number;
-  getSegments: (
-    repId: string | number,
-    index: T,
-    _up: number,
-    _to: number
-  ) => Segment[];
-  shouldRefresh: (
-    index: T,
-    parsedSegments: Segment[],
-    up: number,
-    to: number
-  ) => boolean;
-  getFirstPosition: (index: T) => number | undefined;
-  getLastPosition: (index: T) => number | undefined;
-  checkDiscontinuity: (
-    index: T,
-    _time: number
-  ) => number;
-  _addSegmentInfos: (
-    index: T,
-    newSegment: {
-      time: number;
-      duration: number;
-      timescale: number;
-      count: number;
-      range: [number, number];
-    },
-    currentSegment: {
-      time: number;
-      duration: number;
-      timescale: number;
-    }
-  ) => boolean;
 }
 
 export {
@@ -274,6 +214,5 @@ export {
   scale,
   ITimelineIndex,
   ITemplateIndex,
-  ISegmentHelpers,
   IListIndex,
 };
