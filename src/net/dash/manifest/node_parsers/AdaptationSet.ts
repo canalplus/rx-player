@@ -15,6 +15,7 @@
  */
 
 import objectAssign = require("object-assign");
+import { IRepresentationIndex } from "../../../../manifest";
 import arrayIncludes from "../../../../utils/array-includes";
 import {
   normalize as normalizeLang,
@@ -31,6 +32,7 @@ import {
   parseIntOrBoolean,
   parseScheme,
 } from "../helpers";
+import createRepresentationIndex from "../indexes";
 
 import parseContentComponent, {
   IParsedContentComponent,
@@ -50,7 +52,7 @@ interface IRepresentation {
   // required
   baseURL : string;
   bitrate : number;
-  index : any; // TODO
+  index : IRepresentationIndex;
   id: string;
 
   // optional
@@ -501,12 +503,15 @@ export default function parseAdaptationSet(
   const adaptationAttributes = parseAdaptationSetAttributes(root);
 
   const adaptationBaseURL = resolveURL(rootURL, adaptationChildNodes.baseURL);
-  const baseIndex = adaptationChildNodes.index != null ? adaptationChildNodes.index : {
-    indexType: "template" as "template",
-    duration: Number.MAX_VALUE,
-    timescale: 1,
-    startNumber: 0,
-  };
+  const baseIndex = createRepresentationIndex(
+    adaptationChildNodes.index != null ?
+      adaptationChildNodes.index : {
+        indexType: "template" as "template",
+        duration: Number.MAX_VALUE,
+        timescale: 1,
+        startNumber: 0,
+      }
+  );
 
   const parsedNodes : IRepresentation[] = adaptationChildNodes.representations
     .map((representationNode) => {

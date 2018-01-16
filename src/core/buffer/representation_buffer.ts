@@ -24,9 +24,9 @@ import {
 } from "../../errors";
 import Manifest, {
   Adaptation,
+  ISegment,
   Period,
   Representation,
-  Segment,
 } from "../../manifest";
 import { ISegmentLoaderArguments } from "../../net/types";
 import { SimpleSet } from "../../utils/collections";
@@ -83,7 +83,7 @@ export interface IBufferFullEvent {
 export interface IBufferActiveEvent {
   type: "segments-queued";
   value : {
-    segments: Segment[]; // The downloaded segments
+    segments: ISegment[]; // The downloaded segments
     wantedRange : {
       start : number;
       end : number;
@@ -239,14 +239,14 @@ export default function RepresentationBuffer({
    * @param {Object} timing - The last item emitted from clock$
    * @param {Boolean} needsInitSegment - Whether we're dealing with an init
    * segment.
-   * @returns {Array.<Segment>}
+   * @returns {Array.<Object>}
    */
   function getSegmentsListToInject(
     range : { start : number; end : number },
     timing : IBufferClockTick,
     needsInitSegment : boolean
-  ) : Segment[] {
-    let initSegment : Segment|null = null;
+  ) : ISegment[] {
+    let initSegment : ISegment|null = null;
 
     if (needsInitSegment) {
       log.debug("add init segment", adaptation.type);
@@ -289,12 +289,12 @@ export default function RepresentationBuffer({
 
   /**
    * Returns true if it considers that the segment given should be loaded.
-   * @param {Segment} segment
+   * @param {Object} segment
    * @param {Object} wantedRange
    * @returns {Boolean}
    */
   function segmentFilter(
-    segment : Segment,
+    segment : ISegment,
     wantedRange : { start : number; end : number }
   ) : boolean {
     // if this segment is already in the pipeline
@@ -342,7 +342,7 @@ export default function RepresentationBuffer({
    */
   function appendDataInBuffer(
     pipelineData : {
-      segment : Segment;
+      segment : ISegment;
       parsed : {
         segmentData : any;
         segmentInfos : IBufferSegmentInfos;
@@ -503,8 +503,8 @@ export default function RepresentationBuffer({
    * @returns {Observable}
    */
   function loadNeededSegments(
-    segment : Segment
-  ) : Observable<{ segment : Segment } & IPipelineResponse> {
+    segment : ISegment
+  ) : Observable<{ segment : ISegment } & IPipelineResponse> {
     return pipeline({
       adaptation,
       init: initSegmentInfos || undefined,

@@ -18,8 +18,6 @@ import config from "../../../config";
 import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
-  // bytesToStr,
-  // toBase64URL,
   bytesToUTF16Str,
   concat,
   guidToUuid,
@@ -44,6 +42,7 @@ import {
   IPeriodSmooth,
   IRepresentationSmooth,
  } from "../types";
+import RepresentationIndex from "./representationIndex";
 
 const DEFAULT_MIME_TYPES: IDictionary<string> = {
   audio: "audio/mp4",
@@ -107,24 +106,6 @@ function parseBoolean(val : string|null) : boolean {
   else {
     return false;
   }
-}
-
-/**
- * @param {Object} adaptation
- * @returns {Number}
- */
-function calcLastRef(
-  index : {
-    timeline : Array<{
-      ts : number;
-      r : number;
-      d? : number;
-    }>;
-    timescale : number;
-  }
-) : number {
-  const { ts, r, d } = index.timeline[index.timeline.length - 1];
-  return ((ts + (r + 1) * (d ? d : 0)) / index.timescale);
 }
 
 /**
@@ -447,7 +428,6 @@ function createSmoothStreamingParser(
       representations: [] as any[],
       index: {
         timeline: [] as IHSSManifestSegment[],
-        indexType: "smooth" as "smooth",
         timescale: _timescale,
         initialization: {},
       },
@@ -468,7 +448,7 @@ function createSmoothStreamingParser(
       representation.id = id + "_" + adaptationType + "-" +
         representation.mimeType + "-" +
         representation.codecs + "-" + representation.bitrate;
-      representation.index = index;
+      representation.index = new RepresentationIndex(index);
     });
 
     // TODO(pierre): real ad-insert support
@@ -478,7 +458,6 @@ function createSmoothStreamingParser(
 
     const parsedAdaptation : IAdaptationSmooth = {
       id,
-      index,
       type: adaptationType,
       representations,
       name: name == null ? undefined : name,
@@ -558,11 +537,17 @@ function createSmoothStreamingParser(
       let lastRef;
       {
         const refsToCompare : number[] = [];
-        if (video && video.index) {
-          refsToCompare.push(calcLastRef(video.index));
+        if (video && video.representations.length) {
+          const lastPosition = video.representations[0].index.getLastPosition();
+          if (lastPosition != null) {
+            refsToCompare.push(lastPosition);
+          }
         }
-        if (audio && audio.index) {
-          refsToCompare.push(calcLastRef(audio.index));
+        if (audio && audio.representations.length) {
+          const lastPosition = audio.representations[0].index.getLastPosition();
+          if (lastPosition != null) {
+            refsToCompare.push(lastPosition);
+          }
         }
         lastRef = Math.min(...refsToCompare);
       }

@@ -16,7 +16,7 @@
 
 import log from "../../utils/log";
 
-import { Segment } from "../../manifest";
+import { ISegment } from "../../manifest";
 import { getDurationFromTrun } from "../../parsers/containers/isobmff";
 
 import {
@@ -34,7 +34,7 @@ const {
 
 function extractTimingsInfos(
   responseData : Uint8Array,
-  segment : Segment,
+  segment : ISegment,
   isLive : boolean
 ) : {
   nextSegments : INextSegmentsInfos[];

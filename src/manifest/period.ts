@@ -23,6 +23,7 @@ import Adaptation, {
   AdaptationType,
   IAdaptationArguments,
 } from "./adaptation";
+import { StaticRepresentationIndex } from "./representation_index";
 
 export type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
 
@@ -102,21 +103,18 @@ export default class Period {
   ) {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
+      const adaptationID = "gen-image-ada-" + generateNewId();
+      const representationID = "gen-image-rep-" + generateNewId();
       return new Adaptation({
-        id: "gen-image-ada-" + generateNewId(),
+        id: adaptationID,
         type: "image",
         manuallyAdded: true,
         representations: [{
           baseURL: url,
           bitrate: 0,
-          id: "gen-image-rep-" + generateNewId(),
+          id: representationID,
           mimeType,
-          index: {
-            indexType: "template", // TODO Rename "manual"?
-            duration: Number.MAX_VALUE,
-            timescale: 1,
-            startNumber: 0,
-          },
+          index: new StaticRepresentationIndex(),
         }],
       });
     });
@@ -146,8 +144,10 @@ export default class Period {
       const langsToMapOn : string[] = language ? [language] : languages || [];
 
       return allSubs.concat(langsToMapOn.map((_language) => {
+        const adaptationID = "gen-image-ada-" + generateNewId();
+        const representationID = "gen-image-rep-" + generateNewId();
         return new Adaptation({
-          id: "gen-text-ada-" + generateNewId(),
+          id: adaptationID,
           type: "text",
           language: _language,
           normalizedLanguage: normalizeLang(_language),
@@ -156,15 +156,10 @@ export default class Period {
           representations: [{
             baseURL: url,
             bitrate: 0,
-            id: "gen-text-rep-" + generateNewId(),
+            id: representationID,
             mimeType,
             codecs,
-            index: {
-              indexType: "template", // TODO Rename "manual"?
-              duration: Number.MAX_VALUE,
-              timescale: 1,
-              startNumber: 0,
-            },
+            index: new StaticRepresentationIndex(),
           }],
         });
       }));

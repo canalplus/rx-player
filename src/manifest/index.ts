@@ -21,26 +21,24 @@ import { normalize as normalizeLang } from "../utils/languages";
 import log from "../utils/log";
 import Adaptation, {
   AdaptationType,
-  IAdaptationArguments,
 } from "./adaptation";
 import Period, {
   IPeriodArguments,
 } from "./period";
-import Representation, {
-  IRepresentationArguments,
-} from "./representation";
-import Segment, {
-  ISegmentArguments,
-} from "./segment";
+import Representation from "./representation";
+import IRepresentationIndex, {
+  ISegment,
+  StaticRepresentationIndex,
+} from "./representation_index";
 
 type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
 
-export interface ISupplementaryImageTrack {
+interface ISupplementaryImageTrack {
   mimeType : string;
   url : string;
 }
 
-export interface ISupplementaryTextTrack {
+interface ISupplementaryTextTrack {
   mimeType : string;
   codecs? : string;
   url : string;
@@ -49,7 +47,7 @@ export interface ISupplementaryTextTrack {
   closedCaption : boolean;
 }
 
-export interface IManifestArguments {
+interface IManifestArguments {
   availabilityStartTime? : number;
   duration : number;
   id : string;
@@ -128,21 +126,18 @@ export default class Manifest {
   ) {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
+      const adaptationID = "gen-image-ada-" + generateNewId();
+      const representationID = "gen-image-rep-" + generateNewId();
       return new Adaptation({
-        id: "gen-image-ada-" + generateNewId(),
+        id: adaptationID,
         type: "image",
         manuallyAdded: true,
         representations: [{
           baseURL: url,
           bitrate: 0,
-          id: "gen-image-rep-" + generateNewId(),
+          id: representationID,
           mimeType,
-          index: {
-            indexType: "template", // TODO Rename "manual"?
-            duration: Number.MAX_VALUE,
-            timescale: 1,
-            startNumber: 0,
-          },
+          index: new StaticRepresentationIndex(),
         }],
       });
     });
@@ -172,8 +167,10 @@ export default class Manifest {
       const langsToMapOn : string[] = language ? [language] : languages || [];
 
       return allSubs.concat(langsToMapOn.map((_language) => {
+        const adaptationID = "gen-image-ada-" + generateNewId();
+        const representationID = "gen-image-rep-" + generateNewId();
         return new Adaptation({
-          id: "gen-text-ada-" + generateNewId(),
+          id: adaptationID,
           type: "text",
           language: _language,
           normalizedLanguage: normalizeLang(_language),
@@ -182,15 +179,10 @@ export default class Manifest {
           representations: [{
             baseURL: url,
             bitrate: 0,
-            id: "gen-text-rep-" + generateNewId(),
+            id: representationID,
             mimeType,
             codecs,
-            index: {
-              indexType: "template", // TODO Rename "manual"?
-              duration: Number.MAX_VALUE,
-              timescale: 1,
-              startNumber: 0,
-            },
+            index: new StaticRepresentationIndex(),
           }],
         });
       }));
@@ -362,13 +354,15 @@ export default class Manifest {
 }
 
 export {
+  // classes
   Period,
   Adaptation,
   Representation,
-  Segment,
 
-  IPeriodArguments,
-  IAdaptationArguments,
-  IRepresentationArguments,
-  ISegmentArguments,
+  // types
+  IManifestArguments,
+  IRepresentationIndex,
+  ISegment,
+  ISupplementaryImageTrack,
+  ISupplementaryTextTrack,
 };

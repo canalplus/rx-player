@@ -15,8 +15,8 @@
  */
 
 import {
+  ISegment,
   Representation,
-  Segment,
 } from "../manifest";
 
 /**
@@ -42,7 +42,7 @@ class InitializationSegmentCache<T> {
       segment,
     } : {
       representation : Representation;
-      segment : Segment;
+      segment : ISegment;
     },
     response : T
   ) : void {
@@ -63,7 +63,7 @@ class InitializationSegmentCache<T> {
       segment,
     } : {
       representation : Representation;
-      segment : Segment;
+      segment : ISegment;
     }
   ) {
     if (segment.isInit) {
