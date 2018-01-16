@@ -17,9 +17,9 @@
 import config from "../../config";
 import {
   Adaptation,
+  ISegment,
   Period,
   Representation,
-  Segment,
 } from "../../manifest";
 import log from "../../utils/log";
 import { convertToRanges } from "../../utils/ranges";
@@ -49,7 +49,7 @@ interface IBufferedSegmentInfos {
   adaptation : Adaptation;
   period : Period;
   representation : Representation;
-  segment : Segment;
+  segment : ISegment;
 }
 
 interface IBufferedSegment {
@@ -270,7 +270,7 @@ export default class SegmentBookkeeper {
    * Note: As new segments can "replace" partially or completely old ones, we
    * have to perform a complex logic and might update previously added segments.
    *
-   * @param {Segment} segment
+   * @param {Object} segment
    * @param {Number} start - start time of the segment, in seconds
    * @param {Number|undefined} end - end time of the segment, in seconds. Can
    * be undefined in some rare cases
@@ -280,7 +280,7 @@ export default class SegmentBookkeeper {
     period : Period,
     adaptation : Adaptation,
     representation : Representation,
-    segment : Segment,
+    segment : ISegment,
     start : number,
     end : number|undefined
   ) : void {

@@ -16,8 +16,8 @@
 
 // for typings
 import {
+  ISegment,
   Representation,
-  Segment,
 } from "../../manifest";
 
 const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
@@ -80,13 +80,13 @@ function resolveManifest(url : string) : string {
 /**
  * @param {string} url
  * @param {Representation} representation
- * @param {Segment} segment
+ * @param {Object} segment
  * @returns {string}
  */
 function buildSegmentURL(
   url : string,
   representation : Representation,
-  segment : Segment
+  segment : ISegment
 ) : string {
   return url
     .replace(/\{bitrate\}/g,    String(representation.bitrate))

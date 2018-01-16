@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-import assert from "../../utils/assert";
-import Segment from "../segment";
+import { ISegment } from "../../../../manifest";
+import assert from "../../../../utils/assert";
 
-export interface IIndexSegment {
+interface IIndexSegment {
   ts: number; // start timestamp
   d: number; // duration
   r: number; // repeat counter
   range?: [number, number];
 }
 
+<<<<<<< HEAD:src/manifest/indexes/helpers.ts
 interface ITimelineIndex {
   presentationTimeOffset?: number;
   timescale: number;
@@ -54,6 +55,8 @@ export interface IListIndexListItem {
   mediaRange? : [ number, number ];
 }
 
+=======
+>>>>>>> manifest: move custom indexes implementations to net directory:src/net/dash/manifest/indexes/helpers.ts
 /**
  * Calculate the number of times a segment repeat based on the next segment.
  * @param {Object} seg
@@ -130,65 +133,33 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment): number {
 
 /**
  * Construct init segment for the given index.
- * @param {string} rootId
  * @param {Object} index
  * @param {Number} index.timescale
  * @param {Object} [index.initialization={}]
  * @param {Array.<Number>|null} [index.initialization.range=null]
  * @param {Array.<Number>|null} [index.initialization.indexRange=null]
  * @param {string} [index.initialization.media]
- * @returns {Segment}
+ * @returns {Object}
  */
 function getInitSegment(
-  rootId: string,
   index: {
     timescale: number;
     initialization: { media?: string; range?: [number, number] };
     indexRange?: [number, number];
   }
-): Segment {
+): ISegment {
   const { initialization = {} } = index;
 
-  const args = {
-    id: "" + rootId + "_init",
-    init: true,
+  return {
+    id: "init",
+    isInit: true,
     time: 0,
-    range: initialization.range || null,
-    indexRange: index.indexRange || null,
+    range: initialization.range || undefined,
+    indexRange: index.indexRange || undefined,
     media: initialization.media,
     timescale: index.timescale,
   };
-  return new Segment(args);
 }
-
-/**
- * Update the timescale used (for all segments).
- * TODO This should probably update all previous segments to the newly set
- * Timescale.
- *
- * /!\ Mutates the given index
- * @param {Object} index
- * @param {Number} timescale
- * @returns {Object}
- */
-const setTimescale = (
-  index: { timescale?: number },
-  timescale: number
-): { timescale: number } => {
-  if (__DEV__) {
-    assert(typeof timescale === "number");
-    assert(timescale > 0);
-  }
-
-  if (index.timescale !== timescale) {
-    index.timescale = timescale;
-  }
-
-  return {
-    timescale: index.timescale === timescale ?
-      timescale : index.timescale,
-  };
-};
 
 /**
  * Re-scale a given time from timescaled information to second-based.
@@ -196,26 +167,97 @@ const setTimescale = (
  * @param {Number} time
  * @returns {Number}
  */
-const scale = (
-  index: { timescale: number },
-  time: number
-): number => {
+function scale(index: { timescale: number }, time: number): number {
   if (__DEV__) {
     assert(index.timescale > 0);
   }
 
   return time / index.timescale;
-};
+}
 
-interface ISegmentHelpers<T> {
-  getInitSegment: (
-    rootId: string,
-    index: {
-      timescale: number;
-      initialization: {
-        media?: string;
-        range?: [number, number];
+/**
+ * @param {Number} ts
+ * @param {Number} up
+ * @param {Number} duration
+ * @returns {Number}
+ */
+function getSegmentNumber(
+  ts : number,
+  up : number,
+  duration : number
+) : number {
+  const diff = up - ts;
+  if (diff > 0) {
+    return Math.floor(diff / duration);
+  } else {
+    return 0;
+  }
+}
+
+function getSegmentsFromTimeline(
+  index : {
+    media? : string;
+    startNumber? : number;
+    timeline : IIndexSegment[];
+    timescale : number;
+  },
+  _up : number,
+  _to : number
+) : ISegment[] {
+  const { up, to } = normalizeRange(index, _up, _to);
+  const { timeline, timescale, media, startNumber } = index;
+
+  let currentNumber = startNumber != null ? startNumber : undefined;
+
+  const segments : ISegment[] = [];
+
+  const timelineLength = timeline.length;
+
+  // TODO(pierre): use @maxSegmentDuration if possible
+  let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
+
+  for (let i = 0; i < timelineLength; i++) {
+    const segmentRange = timeline[i];
+    const { d, ts, range } = segmentRange;
+
+    maxEncounteredDuration = Math.max(maxEncounteredDuration, d);
+
+    // live-added segments have @d attribute equals to -1
+    if (d < 0) {
+      // TODO what? May be to play it safe and avoid adding segments which are
+      // not completely generated
+      if (ts + maxEncounteredDuration < to) {
+        const segment = {
+          id: "" + ts,
+          time: ts,
+          isInit: false,
+          range,
+          duration: undefined,
+          timescale,
+          media,
+          number: currentNumber != null ? currentNumber : undefined,
+        };
+        segments.push(segment);
+      }
+      return segments;
+    }
+
+    const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
+    let segmentNumberInCurrentRange = getSegmentNumber(ts, up, d);
+    let segmentTime = ts + segmentNumberInCurrentRange * d;
+    while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
+      const segment = {
+        id: "" + segmentTime,
+        time: segmentTime,
+        isInit: false,
+        range,
+        duration: d,
+        timescale,
+        media,
+        number: currentNumber != null ?
+        currentNumber + segmentNumberInCurrentRange : undefined,
       };
+<<<<<<< HEAD:src/manifest/indexes/helpers.ts
       indexRange?: [number, number];
     }) => Segment;
   setTimescale: (
@@ -257,20 +299,34 @@ interface ISegmentHelpers<T> {
       duration?: number;
       time: number;
       timescale: number;
+=======
+      segments.push(segment);
+
+      // update segment number and segment time for the next segment
+      segmentNumberInCurrentRange++;
+      segmentTime = ts + segmentNumberInCurrentRange * d;
     }
-  ) => boolean;
+
+    if (segmentTime >= to) {
+      // we reached ``to``, we're done
+      return segments;
+    }
+
+    if (currentNumber != null) {
+      currentNumber += repeat + 1;
+>>>>>>> manifest: move custom indexes implementations to net directory:src/net/dash/manifest/indexes/helpers.ts
+    }
+  }
+
+  return segments;
 }
 
 export {
-  calculateRepeat,
   normalizeRange,
+  getSegmentsFromTimeline,
   getTimelineRangeStart,
   getTimelineRangeEnd,
   getInitSegment,
-  setTimescale,
+  IIndexSegment,
   scale,
-  ITimelineIndex,
-  ITemplateIndex,
-  ISegmentHelpers,
-  IListIndex,
 };

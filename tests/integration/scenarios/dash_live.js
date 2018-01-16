@@ -66,12 +66,12 @@ describe("dash live SegmentTimeline content", function () {
     const audioRepresentationIndex = audioRepresentation.index;
     const initAudioSegment = audioRepresentationIndex.getInitSegment();
     expect(initAudioSegment.media).to.equal("chunk_ctaudio_cfm4s_rid$RepresentationID$_cinit_w925796611_mpd.m4s");
-    expect(initAudioSegment.id).to.equal("p0aa0br96257_init");
+    expect(initAudioSegment.id).to.equal("init");
 
     const nextAudioSegment1 = audioRepresentationIndex.getSegments(3023671, 10);
     expect(nextAudioSegment1.length).to.equal(1);
     expect(nextAudioSegment1[0].duration).to.equal(479232);
-    expect(nextAudioSegment1[0].id).to.equal("p0aa0br96257_145136233968");
+    expect(nextAudioSegment1[0].id).to.equal("145136233968");
     expect(nextAudioSegment1[0].isInit).to.equal(false);
     expect(nextAudioSegment1[0].media).to.equal("chunk_ctaudio_cfm4s_rid$RepresentationID$_cs$Time$_w925796611_mpd.m4s");
     expect(nextAudioSegment1[0].time).to.equal(145136233968);
@@ -80,7 +80,7 @@ describe("dash live SegmentTimeline content", function () {
     const nextAudioSegment2 = audioRepresentationIndex.getSegments(3023671, 11);
     expect(nextAudioSegment2.length).to.equal(2);
     expect(nextAudioSegment2[1].duration).to.equal(480288);
-    expect(nextAudioSegment2[1].id).to.equal("p0aa0br96257_145136713200");
+    expect(nextAudioSegment2[1].id).to.equal("145136713200");
     expect(nextAudioSegment2[1].isInit).to.equal(false);
     expect(nextAudioSegment2[1].media).to.equal("chunk_ctaudio_cfm4s_rid$RepresentationID$_cs$Time$_w925796611_mpd.m4s");
     expect(nextAudioSegment2[1].time).to.equal(145136713200);
@@ -108,7 +108,7 @@ describe("dash live SegmentTimeline content", function () {
     const nextVideoSegment1 = videoRepresentationIndex.getSegments(3023671, 10);
     expect(nextVideoSegment1.length).to.equal(1);
     expect(nextVideoSegment1[0].duration).to.equal(900000);
-    expect(nextVideoSegment1[0].id).to.equal("p0va0br601392_272130436800");
+    expect(nextVideoSegment1[0].id).to.equal("272130436800");
     expect(nextVideoSegment1[0].isInit).to.equal(false);
     expect(nextVideoSegment1[0].media).to.equal("chunk_ctvideo_cfm4s_rid$RepresentationID$_cs$Time$_w925796611_mpd.m4s");
     expect(nextVideoSegment1[0].time).to.equal(272130436800);
@@ -117,7 +117,7 @@ describe("dash live SegmentTimeline content", function () {
     const nextVideoSegment2 = videoRepresentationIndex.getSegments(3023671, 11);
     expect(nextVideoSegment2.length).to.equal(2);
     expect(nextVideoSegment2[1].duration).to.equal(900000);
-    expect(nextVideoSegment2[1].id).to.equal("p0va0br601392_272131336800");
+    expect(nextVideoSegment2[1].id).to.equal("272131336800");
     expect(nextVideoSegment2[1].isInit).to.equal(false);
     expect(nextVideoSegment2[1].media).to.equal("chunk_ctvideo_cfm4s_rid$RepresentationID$_cs$Time$_w925796611_mpd.m4s");
     expect(nextVideoSegment2[1].time).to.equal(272131336800);

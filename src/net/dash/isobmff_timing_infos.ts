@@ -16,7 +16,7 @@
 
 import assert from "../../utils/assert";
 
-import { Segment } from "../../manifest";
+import { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
   ISidxSegment,
@@ -30,7 +30,7 @@ import { ISegmentTimingInfos } from "../types";
  *   2. get duration from trun
  *   3. if at least one is missing, get both informations from sidx
  *   4. As a fallback take segment infos.
- * @param {Segment} segment
+ * @param {Object} segment
  * @param {UInt8Array} buffer - The entire isobmff container
  * @param {Array.<Object>} [sidxSegments=[]] - Segments from sidx. Here
  * pre-parsed for performance reasons as it is usually available when
@@ -39,7 +39,7 @@ import { ISegmentTimingInfos } from "../types";
  * @returns {Object}
  */
 function getISOBMFFTimingInfos(
-  segment : Segment,
+  segment : ISegment,
   buffer : Uint8Array,
   sidxSegments : ISidxSegment[]|null,
   initInfos? : ISegmentTimingInfos
