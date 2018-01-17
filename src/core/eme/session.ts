@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { arrayCompare } from "../../utils/array-compare";
+
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
@@ -467,7 +469,7 @@ function manageSessionCreation(
       loadedSession &&
       loadedSession.sessionId &&
       config &&
-      JSON.stringify(config) === JSON.stringify(mksConfig)
+      compareMksConfigurations(config, mksConfig)
     ) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
       return Observable.of(createSessionEvent("reuse-session", loadedSession));
@@ -498,9 +500,71 @@ function manageSessionCreation(
   });
 }
 
+function compareMksConfigurations(
+  A_config: MediaKeySystemConfiguration,
+  B_config: MediaKeySystemConfiguration
+){
+  if(A_config == null || B_config == null){
+    return false;
+  }
+  if(
+      (A_config.distinctiveIdentifier !== B_config.distinctiveIdentifier) ||
+      (A_config.persistentState !== B_config.persistentState) ||
+      (!arrayCompare(A_config.initDataTypes || [], B_config.initDataTypes || [])) ||
+      (!arrayCompare(A_config.sessionTypes, B_config.sessionTypes))
+  ) {
+      return false;
+  }
+
+  if(!(A_config.audioCapabilities == null && B_config.audioCapabilities == null)){
+    if(
+      A_config.audioCapabilities != null &&
+      B_config.audioCapabilities != null &&
+      A_config.audioCapabilities.length === B_config.audioCapabilities.length
+    ){
+      A_config.audioCapabilities.forEach((cap, idx) => {
+        const { contentType, robustness } = cap;
+        const Bcap = (B_config.audioCapabilities as MediaKeySystemMediaCapability[])[idx];
+        if(
+          Bcap.contentType !== contentType ||
+          Bcap.robustness !== robustness
+        ){
+          return false;
+        }
+      });
+    } else {
+      return false;
+    }
+  }
+
+  if(!(A_config.videoCapabilities == null && B_config.videoCapabilities == null)){
+    if(
+      A_config.videoCapabilities != null &&
+      B_config.videoCapabilities != null &&
+      A_config.videoCapabilities.length === B_config.videoCapabilities.length
+    ){
+      A_config.videoCapabilities.forEach((cap, idx) => {
+        const { contentType, robustness } = cap;
+        const Bcap = (B_config.videoCapabilities as MediaKeySystemMediaCapability[])[idx];
+        if(
+          Bcap.contentType !== contentType ||
+          Bcap.robustness !== robustness
+        ){
+          return false;
+        }
+      });
+    } else {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export default manageSessionCreation;
 
 export {
   ISessionEvent,
   ErrorStream,
+  compareMksConfigurations,
 };

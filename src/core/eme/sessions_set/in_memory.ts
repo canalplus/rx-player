@@ -153,17 +153,6 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     };
   }
 
-  // updateMediaKeyForSession(
-  //   session : MediaKeySession,
-  //   mediaKeys : MediaKeys
-  // ) {
-  //   const entry = thiscreat
-  //     .find((e) => e.session === session);
-  //   if (entry) {
-  //     entry.mediaKeys = mediaKeys;
-  //   }
-  // }
-
   /**
    * @param {MediaKeySession} session_
    * @returns {Observable}

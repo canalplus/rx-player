@@ -39,7 +39,7 @@ import findCompatibleKeySystem, {
  } from "./key_system";
 import { trySettingServerCertificate } from "./server_certificate";
 import manageSessionCreation, {
-  createSessionEvent,
+  compareMksConfigurations,
   ErrorStream,
   ISessionEvent,
  } from "./session";
@@ -186,6 +186,16 @@ function handleOngoingPlaybackEncryptedEvents(
     const error = new Error("Video Element should have attached MediaKeys.");
     throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
   }
+      if(
+        !compareMksConfigurations(
+          keySystemInfo.keySystemAccess.getConfiguration(),
+          instanceInfos.$mediaKeySystemConfiguration as MediaKeySystemConfiguration
+        )
+      ){
+        const error =
+          new Error("Different configuration assignments for same media content.");
+        throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+      }
 
   return handleEncryptedEvent(
     encryptedEvent,
@@ -326,5 +336,5 @@ export {
   getCurrentKeySystem,
   dispose,
   IKeySystemOption,
-  ErrorStream,
+  ErrorStream
 };
