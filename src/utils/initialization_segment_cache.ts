@@ -14,28 +14,40 @@
  * limitations under the License.
  */
 
-import { Segment } from "../manifest";
+import {
+  Representation,
+  Segment,
+} from "../manifest";
 
 /**
  * Caching object used to cache initialization segments.
  * This allow to have a faster representation switch and faster seeking.
  */
 class InitializationSegmentCache<T> {
-  private _cache : IDictionary<T>;
+  private _cache : WeakMap<Representation, T>;
 
   constructor() {
-    this._cache = {};
+    this._cache = new WeakMap();
   }
 
   /**
    * @param {Object} obj
+   * @param {Object} obj.representation
    * @param {Object} obj.segment
    * @param {*} response
-   * TODO just add segment directly, not in an object?
    */
-  public add({ segment } : { segment : Segment }, response : T) : void {
+  public add(
+    {
+      representation,
+      segment,
+    } : {
+      representation : Representation;
+      segment : Segment;
+    },
+    response : T
+  ) : void {
     if (segment.isInit) {
-      this._cache[segment.id] = response;
+      this._cache.set(representation, response);
     }
   }
 
@@ -45,9 +57,17 @@ class InitializationSegmentCache<T> {
    * @returns {*} response
    * TODO just add segment directly, not in an object?
    */
-  public get({ segment } : { segment : Segment }) : T|null {
+  public get(
+    {
+      representation,
+      segment,
+    } : {
+      representation : Representation;
+      segment : Segment;
+    }
+  ) {
     if (segment.isInit) {
-      const value = this._cache[segment.id];
+      const value = this._cache.get(representation);
       if (value != null) {
         return value;
       }
