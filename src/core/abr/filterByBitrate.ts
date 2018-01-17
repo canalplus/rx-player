@@ -15,9 +15,10 @@
  */
 
 import arrayFindIndex = require("array-find-index");
-import Representation from "../../manifest/representation";
+import { Representation } from "../../manifest";
 
 /**
+ * Get only representations lower than a given bitrate.
  * @param {Array.<Object>} representations - The representations array
  * @param {Number} bitrate
  * @returns {Array.<Object>}
@@ -32,7 +33,7 @@ export default function filterByBitrate(
   );
 
   if (firstSuperiorBitrate === -1) {
-    return representations;
+    return representations; // All representations have a lower bitrates.
   }
   return representations.slice(0, firstSuperiorBitrate);
 }

@@ -15,12 +15,12 @@
  */
 
 import generateNewId from "../utils/id";
-import RepresentationIndex from "./representation_index";
+import IRepresentationIndex from "./representation_index";
 
 export interface IRepresentationArguments {
   // -- required
   bitrate : number;
-  index : any; /* TODO @ index refacto */
+  index : IRepresentationIndex;
 
   // -- optional
   baseURL? : string;
@@ -43,7 +43,7 @@ export interface IRepresentationArguments {
 class Representation {
   // required
   public id : string|number;
-  public index : RepresentationIndex;
+  public index : IRepresentationIndex;
 
   // optional
   public baseURL? : string;
@@ -88,10 +88,7 @@ class Representation {
       this.mimeType = args.mimeType;
     }
 
-    this.index = new RepresentationIndex({
-      index: args.index,
-      rootId: this.id,
-    });
+    this.index = args.index;
 
     this.baseURL = args.baseURL;
 
@@ -119,6 +116,10 @@ class Representation {
     // this._maximumSAPPeriod = args.maximumSAPPeriod;
     // this._profiles = args.profiles;
     // this._segmentProfiles = args.segmentProfiles;
+  }
+
+  getMimeTypeString() {
+    return `${this.mimeType};codecs="${this.codec}"`;
   }
 }
 

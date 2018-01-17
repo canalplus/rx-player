@@ -14,63 +14,29 @@
  * limitations under the License.
  */
 
-import { parseMPD } from "./parsers";
-
-import { IParsedManifest } from "../../types";
-
-import { ContentProtectionParser } from "../types";
-
-/**
- * @param {string|Document} manifest - Original manifest as returned by the
- * server. Either in string format, or in a Document Object format.
- * @param {Function} [contentProtectionParser]
- * @returns {Object} - parsed manifest
- */
-const parser = function(
-  manifest: string|Document,
-  contentProtectionParser?: ContentProtectionParser
-): IParsedManifest {
-  if (typeof manifest === "string") {
-    return parseFromString(manifest, contentProtectionParser);
-  } else {
-    return parseFromDocument(manifest, contentProtectionParser);
-  }
-};
+import parseMPD, {
+  IContentProtectionParser,
+  IParsedMPD,
+} from "./node_parsers";
 
 /**
  * @param {Document} manifest - Original manifest as returned by the server
  * @param {Function} [contentProtectionParser]
  * @returns {Object} - parsed manifest
  */
-function parseFromDocument(
+export default function parseFromDocument(
   document: Document,
-  contentProtectionParser?: ContentProtectionParser
-): IParsedManifest {
+  uri : string,
+  contentProtectionParser?: IContentProtectionParser
+): IParsedMPD {
   const root = document.documentElement;
   if (!root || root.nodeName !== "MPD") {
     throw new Error("document root should be MPD");
   }
-  return parseMPD(root, contentProtectionParser);
-}
-
-/**
- * @param {string} manifest - manifest file in a string format
- * @param {Function} [contentProtectionParser]
- * @returns {Object} - parsed manifest
- */
-function parseFromString(
-  manifest: string,
-  contentProtectionParser?: ContentProtectionParser
-): IParsedManifest {
-  return parseFromDocument(
-    new DOMParser().parseFromString(manifest, "application/xml"),
-    contentProtectionParser
-  );
+  return parseMPD(root, uri, contentProtectionParser);
 }
 
 export {
-  parseFromString,
-  parseFromDocument,
+  IParsedMPD,
+  IContentProtectionParser,
 };
-
-export default parser;

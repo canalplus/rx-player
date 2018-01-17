@@ -44,7 +44,8 @@ export default class OtherError extends Error {
     this.type = ErrorTypes.OTHER_ERROR;
 
     this.reason = reason;
-    this.code = ErrorCodes[code];
+    this.code = ErrorCodes.hasOwnProperty(code) ?
+      (ErrorCodes as IDictionary<string>)[code] : "";
     this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, this.reason);
   }

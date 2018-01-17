@@ -16,16 +16,16 @@
 
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
-
-import Adaptation from "../manifest/adaptation";
-import Manifest from "../manifest/index";
-import Representation from "../manifest/representation";
-import Segment from "../manifest/segment";
-
+import Manifest, {
+  Adaptation,
+  ISegment,
+  Period,
+  Representation,
+} from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
 
 // TODO Refacto to unify those
-import { IPeriodDash } from "./dash/types";
+import { IParsedPeriod } from "./dash/manifest/node_parsers/Period";
 import { IPeriodSmooth } from "./smooth/types";
 
 // contains timings info on a single audio/video/text/image segment
@@ -59,9 +59,10 @@ export interface IManifestLoaderArguments {
 export interface ISegmentLoaderArguments {
   init? : ISegmentTimingInfos;
   manifest : Manifest;
+  period : Period;
   adaptation : Adaptation;
   representation : Representation;
-  segment : Segment;
+  segment : ISegment;
 }
 
 // -- response
@@ -109,6 +110,7 @@ export type ILoaderObservable<T> = Observable<
 
 export interface IManifestParserArguments<T> {
   response : ILoaderResponseValue<T>;
+  url : string;
 }
 
 export interface ISegmentParserArguments<T> {
@@ -116,7 +118,7 @@ export interface ISegmentParserArguments<T> {
   manifest : Manifest;
   adaptation : Adaptation;
   representation : Representation;
-  segment : Segment;
+  segment : ISegment;
   init? : ISegmentTimingInfos;
 }
 
@@ -134,14 +136,13 @@ export type SegmentParserObservable = Observable<{
 }>;
 
 export interface ITextTrackSegmentData {
-  data : string;
-  start : number;
-  timescale : number;
-  // type : "ttml"|"vtt"|"sami"|"smil";
-  type : string;
-  end? : number;
-  language? : string;
-  timeOffset : number;
+  data : string; // text track data, in the given type
+  end? : number; // end time until which the segment apply
+  language? : string; // language in which the text track is
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each subtitle
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data (examples: "ttml", "srt" or "vtt")
 }
 
 export type TextTrackParserObservable = Observable<{
@@ -149,8 +150,17 @@ export type TextTrackParserObservable = Observable<{
   segmentInfos? : ISegmentTimingInfos;
 }>;
 
+export interface IImageTrackSegmentData {
+  data : IBifThumbnail[]; // image track data, in the given type
+  end : number; // end time time until which the segment apply
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each image
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data (example: "bif")
+}
+
 export type ImageParserObservable = Observable<{
-  segmentData? : IBifThumbnail[];
+  segmentData? : IImageTrackSegmentData;
   segmentInfos : ISegmentTimingInfos;
 }>;
 
@@ -197,7 +207,7 @@ export type CustomSegmentLoader = (
   args : {
     adaptation : Adaptation;
     representation : Representation;
-    segment : Segment;
+    segment : ISegment;
     transport : string;
     url : string;
     manifest : Manifest;
@@ -218,25 +228,26 @@ export type CustomSegmentLoader = (
   // returns either the aborting callback or nothing
   (() => void)|void;
 
+// TODO 2 Types static & dynamic
 export interface IParsedManifest {
-  locations?: any[];
+  // required
+  availabilityStartTime : number;
+  duration: number;
+  id: string;
+  periods: IParsedPeriod[]|IPeriodSmooth[]; // TODO
   transportType: string;
-  id?: string;
-  type?: string;
-  availabilityStartTime?: Date|number;
-  presentationLiveGap?: number;
-  accessibility?: string[];
-  // representations?: IRepresentationDash[];
-  baseURL?: string|null;
-  profiles?: string;
-  availabilityEndTime?: Date|number;
-  publishTime?: Date|number;
-  mediaPresentationDuration?: number;
-  minimumUpdatePeriod?: number;
-  minBufferTime?: number;
-  timeShiftBufferDepth?: number;
-  suggestedPresentationDelay?: number;
+  type: string;
+  uris: string[];
+
+  // optional
+  availabilityEndTime?: number;
   maxSegmentDuration?: number;
   maxSubsegmentDuration?: number;
-  periods: Array<IPeriodDash|IPeriodSmooth>;
+  minBufferTime?: number;
+  minimumUpdatePeriod?: number;
+  presentationLiveGap?: number;
+  profiles?: string;
+  publishTime?: number;
+  suggestedPresentationDelay?: number;
+  timeShiftBufferDepth?: number;
 }

@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
+/**
+ * This file exports various helpers to parse options given to various APIs,
+ * throw if something is wrong, and return a normalized option object.
+ */
 
+import objectAssign = require("object-assign");
 import config from "../../config";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
 import log from "../../utils/log";
-
-import {
-  IKeySystemOption,
- } from "../eme";
+import { IKeySystemOption } from "../eme";
 
 const {
   DEFAULT_AUTO_PLAY,

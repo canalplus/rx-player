@@ -15,6 +15,8 @@
  */
 
 /**
+ * Errors linked to the XHR implentation done in the RxPlayer.
+ *
  * @class RequestError
  * @extends Error
  */

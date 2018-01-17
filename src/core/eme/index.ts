@@ -15,15 +15,13 @@
  */
 
 import { Observable } from "rxjs/Observable";
-
+import { shouldUnsetMediaKeys } from "../../compat/";
+import { onEncrypted$ } from "../../compat/events";
+import { EncryptedMediaError } from "../../errors";
 import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
-
-import { shouldUnsetMediaKeys } from "../../compat/";
-import { onEncrypted$ } from "../../compat/events";
-
 import {
   $loadedSessions,
   $storedSessions,
@@ -40,8 +38,6 @@ import manageSessionCreation, {
   ISessionEvent,
  } from "./session";
 import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
-
-import { EncryptedMediaError } from "../../errors";
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
@@ -189,6 +185,28 @@ function clearEME(): Observable<MediaKeys> {
  */
 function getCurrentKeySystem() : string|null {
   return getKeySystem(instanceInfos);
+}
+
+/**
+ * Perform EME management if needed.
+ * @param {HTMLMediaElement} videoElement
+ * @param {Array.<Object>} keySystems
+ * @param {Subject} errorStream
+ * @returns {Observable}
+ */
+export default function EMEManager(
+  videoElement : HTMLMediaElement,
+  keySystems : IKeySystemOption[],
+  errorStream : ErrorStream
+) :  Observable<MediaKeys|ISessionEvent|Event> {
+  if (keySystems && keySystems.length) {
+    return createEME(videoElement, keySystems, errorStream);
+  } else {
+    return onEncrypted$(videoElement).map(() => {
+      log.error("eme: ciphered media and no keySystem passed");
+      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
+    });
+  }
 }
 
 export {
