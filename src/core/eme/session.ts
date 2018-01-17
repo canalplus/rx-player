@@ -88,7 +88,7 @@ type LicenseObject =
  * session information in the returned object.
  * @returns {Object}
  */
-function createSessionEvent(
+export function createSessionEvent(
   name : string,
   session : IMediaKeySession|MediaKeySession,
   options? : ISessionEventOptions
@@ -291,14 +291,15 @@ function createSessionAndKeyRequest(
   sessionType: MediaKeySessionType,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  mksConfig: MediaKeySystemConfiguration
 ): Observable<Event|ISessionEvent> {
   const {
     session,
     sessionEvents,
   } = createSession(mediaKeys, sessionType, keySystem, initData, errorStream);
 
-  $loadedSessions.add(initData, session, sessionEvents);
+  $loadedSessions.add(initData, session, sessionEvents, mksConfig);
   log.debug("eme: generate request", initDataType, initData);
 
   const generateRequest = castToObservable(
@@ -334,7 +335,8 @@ function createSessionAndKeyRequestWithRetry(
   sessionType: MediaKeySessionType,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  mksConfig: MediaKeySystemConfiguration
 ): Observable<Event|ISessionEvent> {
   return createSessionAndKeyRequest(
     mediaKeys,
@@ -342,7 +344,8 @@ function createSessionAndKeyRequestWithRetry(
     sessionType,
     initDataType,
     initData,
-    errorStream
+    errorStream,
+    mksConfig
   )
     .catch((error) => {
       if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
@@ -363,7 +366,7 @@ function createSessionAndKeyRequestWithRetry(
         .mergeMap(() =>
           createSessionAndKeyRequest(
             mediaKeys, keySystem, sessionType, initDataType,
-            initData, errorStream
+            initData, errorStream, mksConfig
           )
         );
     });
@@ -385,7 +388,8 @@ function createPersistentSessionAndLoad(
   storedSessionId: string,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  mksConfig: MediaKeySystemConfiguration
 ): Observable<Event|ISessionEvent> {
   log.debug("eme: load persisted session", storedSessionId);
 
@@ -399,7 +403,7 @@ function createPersistentSessionAndLoad(
     .catch(() => Observable.of(false))
     .mergeMap((success) => {
       if (success) {
-        $loadedSessions.add(initData, session, sessionEvents);
+        $loadedSessions.add(initData, session, sessionEvents, mksConfig);
         $storedSessions.add(initData, session);
         return sessionEvents
           .startWith(
@@ -421,7 +425,13 @@ function createPersistentSessionAndLoad(
         }
 
         return createSessionAndKeyRequestWithRetry(
-          mediaKeys, keySystem, sessionType, initDataType, initData, errorStream
+          mediaKeys,
+          keySystem,
+          sessionType,
+          initDataType,
+          initData,
+          errorStream,
+          mksConfig
         ).startWith(
           createSessionEvent("loaded-session-failed", session, { storedSessionId })
         );
@@ -449,8 +459,16 @@ function manageSessionCreation(
 ): Observable<MediaKeys|ISessionEvent|Event> {
   return Observable.defer(() => {
     // reuse currently loaded sessions without making a new key request
-    const loadedSession = $loadedSessions.get(initData);
-    if (loadedSession && loadedSession.sessionId) {
+    const {
+      config,
+      session: loadedSession,
+    } = $loadedSessions.getConfigForInitData(initData);
+    if (
+      loadedSession &&
+      loadedSession.sessionId &&
+      config &&
+      JSON.stringify(config) === JSON.stringify(mksConfig)
+    ) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
       return Observable.of(createSessionEvent("reuse-session", loadedSession));
     }
@@ -469,14 +487,14 @@ function manageSessionCreation(
       if (storedEntry) {
         return createPersistentSessionAndLoad(
           mediaKeys, keySystem, storedEntry.sessionId, initDataType,
-          initData, errorStream);
+          initData, errorStream, mksConfig);
       }
     }
 
     // we have a fresh session without persisted informations and need
     // to make a new key request that we will associate to this session
     return createSessionAndKeyRequestWithRetry(
-      mediaKeys, keySystem, sessionType, initDataType, initData, errorStream);
+      mediaKeys, keySystem, sessionType, initDataType, initData, errorStream, mksConfig);
   });
 }
 
