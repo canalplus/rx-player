@@ -17,10 +17,14 @@
 import { Subject } from "rxjs/Subject";
 import { isCodecSupported } from "../compat";
 import { CustomError, MediaError } from "../errors";
-import { IParsedManifest } from "../net/types";
+import {
+  IParsedAdaptation,
+  IParsedManifest,
+  IParsedRepresentation,
+} from "../net/types";
 import log from "../utils/log";
-import { IAdaptationArguments } from "./adaptation";
 import Manifest, {
+  IManifestArguments,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "./index";
@@ -53,12 +57,13 @@ export default function createManifest(
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
   warning$ : Subject<Error|CustomError>
 ) : Manifest {
-  manifestObject.periods = (manifestObject.periods as any[]).map((period) => {
+  manifestObject.periods = (manifestObject.periods).map((period) => {
     period.adaptations = checkAdaptations(period.adaptations, warning$);
     return period;
   });
 
-  const manifest = new Manifest(manifestObject as any);
+  // TODO Better way than this "as"
+  const manifest = new Manifest(manifestObject as IManifestArguments);
   manifest.addSupplementaryTextAdaptations(externalTextTracks);
   manifest.addSupplementaryImageAdaptations(externalImageTracks);
   return manifest;
@@ -74,9 +79,9 @@ export default function createManifest(
  * @returns {Array.<Object>}
  */
 function checkAdaptations(
-  initialAdaptations : IAdaptationArguments[],
+  initialAdaptations : IParsedAdaptation[],
   warning$ : Subject<Error|CustomError>
-) : IAdaptationArguments[] {
+) : IParsedAdaptation[] {
   const adaptations = initialAdaptations
 
     // 1. filter out adaptations from unsupported types
@@ -128,8 +133,8 @@ function checkAdaptations(
  */
 function filterSupportedRepresentations(
   adaptationType : string,
-  representations : IRepresentationArguments[]
-) : IRepresentationArguments[] {
+  representations : IParsedRepresentation[]
+) : IParsedRepresentation[] {
   if (adaptationType === "audio" || adaptationType === "video") {
     return representations
       .filter((representation) => {

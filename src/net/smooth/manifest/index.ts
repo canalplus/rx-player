@@ -471,18 +471,15 @@ function createSmoothStreamingParser(
       type: adaptationType,
       representations,
       name: name == null ? undefined : name,
-      language: language == null ? undefined : language,
-      normalizedLanguage,
+      language: language == null ?
+        undefined : language,
+      normalizedLanguage: normalizedLanguage == null ?
+        undefined : normalizedLanguage,
     };
 
     if (adaptationType === "text" && subType === "DESC") {
       parsedAdaptation.closedCaption = true;
     }
-
-    // TODO check that one, I did not find it in the spec
-    // else if (adaptationType === "audio" && subType === "DESC") {
-    //   parsedAdaptation.audioDescription = true;
-    // }
 
     return parsedAdaptation;
   }
