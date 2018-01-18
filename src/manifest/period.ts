@@ -41,6 +41,13 @@ export interface ISupplementaryTextTrack {
   closedCaption : boolean;
 }
 
+export interface IPeriodArguments {
+  id: string;
+  adaptations: IAdaptationArguments[];
+  start: number;
+  duration?: number;
+}
+
 /**
  * @param {Array.<Object>} adaptations
  * @returns {Object}
@@ -63,13 +70,6 @@ function createManifestAdaptations(
     (acc[type] as Adaptation[]).push(new Adaptation(adaptation));
     return acc;
   }, {});
-}
-
-export interface IPeriodArguments {
-  id: string;
-  adaptations: IAdaptationArguments[];
-  start: number;
-  duration?: number;
 }
 
 export default class Period {
