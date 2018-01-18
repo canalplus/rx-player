@@ -314,6 +314,21 @@ function calculateRepeat(
   return repeatCount;
 }
 
+interface ISmoothInitSegmentPrivateInfos {
+  codecPrivateData : string;
+  bitsPerSample? : number;
+  channels? : number;
+  packetSize? : number;
+  samplingRate? : number;
+  protection? : {
+    keyId : string;
+    keySystems: Array<{
+      systemId : string;
+      privateData : Uint8Array;
+    }>;
+  };
+}
+
 /**
  * RepresentationIndex implementation for Smooth Manifests.
  *
@@ -324,14 +339,33 @@ function calculateRepeat(
 export default class SmoothRepresentationIndex
   implements IRepresentationIndex {
 
+    private _codecPrivateData : string;
+    private _bitsPerSample? : number;
+    private _channels? : number;
+    private _packetSize? : number;
+    private _samplingRate? : number;
+    private _protection? : {
+      keyId : string;
+      keySystems: Array<{
+        systemId : string;
+        privateData : Uint8Array;
+      }>;
+    };
+
     private _index : any;
     // private _index : {
     //   timeline : IHSSManifestSegment[];
     //   timescale : number;
     // }; // TODO
 
-    constructor(index : any) { // TODO
+    constructor(index : any, infos : ISmoothInitSegmentPrivateInfos) { // TODO
       this._index = index;
+      this._bitsPerSample = infos.bitsPerSample;
+      this._channels = infos.channels;
+      this._codecPrivateData = infos.codecPrivateData;
+      this._packetSize = infos.packetSize;
+      this._samplingRate = infos.samplingRate;
+      this._protection = infos.protection;
     }
 
     /**
@@ -346,6 +380,15 @@ export default class SmoothRepresentationIndex
         isInit: true,
         time: 0,
         timescale: index.timescale,
+        privateInfos: {
+          type: "smooth-init",
+          bitsPerSample: this._bitsPerSample,
+          channels: this._channels,
+          codecPrivateData: this._codecPrivateData,
+          packetSize: this._packetSize,
+          samplingRate: this._samplingRate,
+          protection: this._protection,
+        },
       };
     }
 
