@@ -90,7 +90,10 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
    * @returns {undefined}
    */
   getFirstPosition() : undefined {
+    // TODO tslint bug? Document.
+    /* tslint:disable return-undefined */
     return undefined;
+    /* tslint:enable return-undefined */
   },
 
   /**
@@ -98,7 +101,10 @@ const SegmentTemplateHelpers: ISegmentHelpers<ITemplateIndex> = {
    * @returns {undefined}
    */
   getLastPosition() : undefined {
+    // TODO tslint bug? Document.
+    /* tslint:disable return-undefined */
     return undefined;
+    /* tslint:enable return-undefined */
   },
 
   /**
