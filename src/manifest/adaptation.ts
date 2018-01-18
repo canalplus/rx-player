@@ -45,12 +45,11 @@ export interface IAdaptationArguments {
   // -- optional
   audioDescription? : boolean;
   closedCaption? : boolean;
-  contentProtection? : IContentProtectionDASH;
   id? : number|string;
   language? : string;
   manuallyAdded? : boolean;
   normalizedLanguage? : string;
-  smoothProtection? : IContentProtectionSmooth;
+  contentProtection? : IContentProtectionDASH;
 }
 
 /**
@@ -64,7 +63,6 @@ class Adaptation {
   public type : AdaptationType;
 
   // optional
-  public _smoothProtection? : IContentProtectionSmooth;
   public contentProtection? : IContentProtectionDASH;
   public isAudioDescription? : boolean;
   public isClosedCaption? : boolean;
@@ -99,12 +97,9 @@ class Adaptation {
       this.isAudioDescription = args.audioDescription;
     }
 
-    // TODO rename both protectionData?
+    // TODO move to DASH's Segment private infos
     if (args.contentProtection != null) {
       this.contentProtection = args.contentProtection;
-    }
-    if (args.smoothProtection != null) {
-      this._smoothProtection = args.smoothProtection;
     }
 
     // for manuallyAdded adaptations (not in the manifest)

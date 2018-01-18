@@ -81,13 +81,12 @@ const generateSegmentLoader = (
   init,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
   if (segment.isInit) {
-    if (representation._codecPrivateData == null) {
-      throw new Error(
-        "Invalid request: A smooth init segment should have CodecPrivateData"
-      );
+    if (!segment.privateInfos || segment.privateInfos.type !== "smooth-init") {
+      throw new Error("Smooth: Invalid segment format");
     }
     let responseData : Uint8Array;
-    const protection = adaptation._smoothProtection;
+    const privateInfos = segment.privateInfos;
+    const protection = privateInfos.protection;
 
     switch (adaptation.type) {
     case "video":
@@ -96,7 +95,7 @@ const generateSegmentLoader = (
         representation.width || 0,
         representation.height || 0,
         72, 72, 4, // vRes, hRes, nal
-        representation._codecPrivateData,
+        privateInfos.codecPrivateData,
         protection && protection.keyId,     // keyId
         protection && protection.keySystems // pssList
       );
@@ -104,13 +103,11 @@ const generateSegmentLoader = (
     case "audio":
       responseData = createAudioInitSegment(
         segment.timescale,
-
-        // TODO See if this should already be defined in the Smooth manifest
-        representation._channels || 0,
-        representation._bitsPerSample || 0,
-        representation._packetSize || 0,
-        representation._samplingRate || 0,
-        representation._codecPrivateData,
+        privateInfos.channels || 0,
+        privateInfos.bitsPerSample || 0,
+        privateInfos.packetSize || 0,
+        privateInfos.samplingRate || 0,
+        privateInfos.codecPrivateData,
         protection && protection.keyId,     // keyId
         protection && protection.keySystems // pssList
       );

@@ -378,7 +378,8 @@ function createSmoothStreamingParser(
   function parseAdaptation(
     root : Element,
     rootURL : string,
-    timescale : number
+    timescale : number,
+    protection? : IContentProtectionSmooth
   ): IAdaptationSmooth|null {
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
@@ -448,7 +449,16 @@ function createSmoothStreamingParser(
       representation.id = id + "_" + adaptationType + "-" +
         representation.mimeType + "-" +
         representation.codecs + "-" + representation.bitrate;
-      representation.index = new RepresentationIndex(index);
+
+      const initSegmentInfos = {
+        bitsPerSample: representation.bitsPerSample,
+        channels: representation.channels,
+        codecPrivateData: representation.codecPrivateData,
+        packetSize: representation.packetSize,
+        samplingRate: representation.samplingRate,
+        protection,
+      };
+      representation.index = new RepresentationIndex(index, initSegmentInfos);
     });
 
     // TODO(pierre): real ad-insert support
@@ -493,10 +503,10 @@ function createSmoothStreamingParser(
 
     const {
       protection,
-      adaptations,
+      adaptationNodes,
     } = reduceChildren <{
-      protection: IContentProtectionSmooth|null;
-      adaptations: IAdaptationSmooth[];
+      protection?: IContentProtectionSmooth;
+      adaptationNodes: Element[];
     }> (root, (res, name, node) => {
       switch (name) {
       case "Protection":  {
@@ -504,22 +514,17 @@ function createSmoothStreamingParser(
         break;
       }
       case "StreamIndex":
-        const adaptation : IAdaptationSmooth|null =
-          parseAdaptation(node, rootURL, timescale);
-        if (adaptation) {
-          res.adaptations.push(adaptation);
-        }
+        res.adaptationNodes.push(node);
         break;
       }
       return res;
     }, {
-      protection:  null,
-      adaptations: [],
+      adaptationNodes: [],
     });
 
-    adaptations.forEach((a) => {
-      a.smoothProtection = protection == null ? undefined : protection;
-    });
+    const adaptations : IAdaptationSmooth[] = adaptationNodes.map(node => {
+      return parseAdaptation(node, rootURL, timescale, protection);
+    }).filter((adaptation) : adaptation is IAdaptationSmooth => !!adaptation);
 
     let suggestedPresentationDelay;
     let presentationLiveGap;
