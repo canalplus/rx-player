@@ -93,19 +93,19 @@ export default class HTMLTextTrackSourceBuffer
 {
   private _videoElement : HTMLMediaElement;
   private _destroy$ : Subject<void>;
-  private _textTrackElement : HTMLTrackElement;
+  private _textTrackElement : HTMLElement;
 
   private _buffer : TextBufferManager;
   private _currentElement : HTMLElement|null;
 
   /**
    * @param {HTMLMediaElement} videoElement
-   * @param {HTMLTrackElement} textTrackElement
+   * @param {HTMLElement} textTrackElement
    */
   constructor(
     codec : string,
     videoElement : HTMLMediaElement,
-    textTrackElement : HTMLTrackElement
+    textTrackElement : HTMLElement
   ) {
     log.debug("creating html text track source buffer");
     super(codec);
