@@ -95,7 +95,6 @@ interface IAdaptationSmooth {
   representations: IRepresentationSmooth[];
 
   // -- optional --
-  smoothProtection?: IContentProtectionSmooth;
   closedCaption? : boolean;
   audioDescription? : boolean;
   name?: string;

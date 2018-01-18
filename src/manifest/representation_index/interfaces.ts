@@ -14,6 +14,27 @@
  * limitations under the License.
  */
 
+// privateInfos specific to Smooth Initialization Segments
+export interface ISmoothInitSegmentPrivateInfos {
+  type : "smooth-init";
+  codecPrivateData : string;
+  bitsPerSample? : number;
+  channels? : number;
+  packetSize? : number;
+  samplingRate? : number;
+  protection? : {
+    keyId : string;
+    keySystems: Array<{
+      systemId : string;
+      privateData : Uint8Array;
+    }>;
+  };
+}
+
+// Possible values for Segment's privateInfos
+export type ISegmentPrivateInfos =
+  ISmoothInitSegmentPrivateInfos;
+
 // ISegment Object.
 // Represent a single Segment from a Representation.
 export interface ISegment {
@@ -29,9 +50,13 @@ export interface ISegment {
                                   // for other Segments
   number? : number; // Optional number of the Segment
   range? : [number, number]; // Optional byte range to retrieve the Segment
+
+  privateInfos? : ISegmentPrivateInfos; // Allows a RepresentationIndex to store
+                                        // supplementary informations in a given
+                                        // Segment for later downloading/parsing
 }
 
-interface IRepresentationIndexSegmentInfos {
+export interface IRepresentationIndexSegmentInfos {
   duration : number;
   time : number;
   timescale : number;
