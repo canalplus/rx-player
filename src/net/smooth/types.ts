@@ -71,8 +71,8 @@ interface IRepresentationSmooth {
 
   // optional
   audiotag?: number;
-  bitsPerSample?: number;
-  channels?: number;
+  bitsPerSample? : number;
+  channels? : number;
   codecs?: string;
   height?: number;
   mimeType?: string;
@@ -99,7 +99,7 @@ interface IAdaptationSmooth {
   audioDescription? : boolean;
   name?: string;
   language?: string;
-  normalizedLanguage?: string|null;
+  normalizedLanguage?: string;
 }
 
 export {
