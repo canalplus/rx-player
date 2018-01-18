@@ -28,14 +28,6 @@ export interface IContentProtectionDASH {
   schemeIdUri?: string;
   value?: string;
 }
-interface IKeySystem {
-  systemId : string;
-  privateData : Uint8Array;
-}
-export interface IContentProtectionSmooth {
-  keyId : string;
-  keySystems: IKeySystem[];
-}
 
 export interface IAdaptationArguments {
   // -- required
