@@ -182,7 +182,7 @@ const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * @param {Object} index
-   * @param {Number} time
+   * @param {Number} _
    * @param {Number} up
    * @param {Number} to
    * @returns {Boolean}
@@ -216,7 +216,7 @@ const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
   /**
    * Returns first position in index.
    * @param {Object} index
-   * @returns {Number}
+   * @returns {Number|undefined}
    */
   getFirstPosition(index : ITimelineIndex) : number|undefined {
     if (!index.timeline.length) {
@@ -228,7 +228,7 @@ const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
   /**
    * Returns last position in index.
    * @param {Object} index
-   * @returns {Number}
+   * @returns {Number|undefined}
    */
   getLastPosition(index : ITimelineIndex) : number|undefined {
     if (!index.timeline.length) {
@@ -294,6 +294,7 @@ const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
    * @param {Object} currentSegment
    * @param {Number} currentSegment.timescale
    * @param {Number} currentSegment.time
+   * @param {Number} currentSegment.duration
    * @returns {Boolean} - true if the segment has been added
    */
   _addSegmentInfos(

@@ -55,10 +55,11 @@ const SegmentBaseHelpers: ISegmentHelpers<ITimelineIndex> = {
    * /!\ Mutate the given index
    * @param {Object} index
    * @param {Object} segmentInfos
+   * @param {Number} segmentInfos.time
    * @param {Number} segmentInfos.timescale
    * @param {Number} segmentInfos.duration
    * @param {Number} segmentInfos.count
-   * @param {*} segmentInfos.range - TODO check type
+   * @param {Array.<Number>} segmentInfos.range
    * @returns {Boolean} - true if the segment has been added
    */
   _addSegmentInfos(

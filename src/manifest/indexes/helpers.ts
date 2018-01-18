@@ -57,10 +57,7 @@ export interface IListIndexListItem {
 /**
  * Calculate the number of times a segment repeat based on the next segment.
  * @param {Object} seg
- * @param {Number} seg.ts - beginning timescaled timestamp
- * @param {Number} seg.d - timescaled duration of the segment
  * @param {Object} nextSeg
- * @param {Number} nextSeg.ts
  * @returns {Number}
  */
 function calculateRepeat(seg : IIndexSegment, nextSeg : IIndexSegment) : number {

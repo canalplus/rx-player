@@ -29,14 +29,6 @@ import {
 } from "./helpers";
 
 /**
- * NEEDED IN INDEX
- * duration
- * list []
- *   ?range
- * timescale
- */
-
-/**
  * Provide helpers for SegmentList-based indexes.
  * @type {Object}
  */
@@ -105,6 +97,7 @@ const ListIndexHelpers: ISegmentHelpers<IListIndex> = {
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
    * @param {Object} index
+   * @param {Array,<Object>} _
    * @param {Number} up
    * @param {Number} to
    * @returns {Boolean}

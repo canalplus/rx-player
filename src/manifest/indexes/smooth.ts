@@ -48,7 +48,7 @@ export default {
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
    * @param {Object} index
-   * @param {Number} time
+   * @param {Array.<Object>} parsedSegments
    * @param {Number} from
    * @param {Number} to
    * @returns {Boolean}
@@ -98,7 +98,7 @@ export default {
   /**
    * Returns first position in index.
    * @param {Object} index
-   * @returns {Number}
+   * @returns {Number|undefined}
    */
   getFirstPosition(index : ISmoothIndex) : number|undefined {
     if (!index.timeline.length) {
@@ -110,7 +110,7 @@ export default {
   /**
    * Returns last position in index.
    * @param {Object} index
-   * @returns {Number}
+   * @returns {Number|undefined}
    */
   getLastPosition(index : ISmoothIndex) : number|undefined {
     if (!index.timeline.length) {
