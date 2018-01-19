@@ -433,7 +433,7 @@ if (navigator.requestMediaKeySystemAccess) {
               keyType,
 
               // TODO Authorize 1 argument for IE?
-              new (MediaKeys as any)(keyType),
+              new (MediaKeys_ as any)(keyType),
               keySystemConfigurationResponse
             )
           );
