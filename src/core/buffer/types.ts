@@ -21,6 +21,7 @@ import { ICustomSourceBuffer } from "../stream/source_buffers";
 import { SupportedBufferTypes } from "../types";
 
 export interface IBufferClockTick {
+  buffered : TimeRanges;
   currentTime : number;
   readyState : number;
   timeOffset : number;

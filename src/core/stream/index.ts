@@ -32,7 +32,10 @@ import {
   canPlay,
   canSeek,
 } from "../../compat";
-import { onSourceOpen$ } from "../../compat/events";
+import {
+  onEnded$,
+  onSourceOpen$,
+} from "../../compat/events";
 import {
   CustomError,
   isKnownError,
@@ -99,8 +102,6 @@ import {
   IStreamClockTick,
   StreamEvent,
 } from "./types";
-
-const { END_OF_PLAY } = config;
 
 const SUPPORTED_BUFFER_TYPES : SupportedBufferTypes[] =
   ["audio", "video", "text", "image"];
@@ -296,14 +297,10 @@ export default function Stream({
   };
 
   /**
-   * End-Of-Play emit when the current timing is really close to the end.
-   * @see END_OF_PLAY
+   * End-Of-Play emit when playback completes.
    * @type {Observable}
    */
-  const endOfPlay = timings$
-    .filter(({ currentTime, duration }) => (
-      duration > 0 && duration - currentTime < END_OF_PLAY
-    ));
+  const endOfPlay = onEnded$(videoElement);
 
   /**
    * On subscription:
@@ -330,7 +327,7 @@ export default function Stream({
     mediaSource : MediaSource|null;
   }) => {
     const sourceOpening$ = mediaSource
-      ? onSourceOpen$(mediaSource)
+      ? onSourceOpen$(mediaSource).take(1)
       : Observable.of(null);
 
     return Observable.combineLatest(fetchManifest(url), sourceOpening$)
@@ -713,6 +710,31 @@ export default function Stream({
         .mergeMap(message => liveMessageHandler(message, manifest)) :
       Observable.merge(..._buffersArray);
 
+    /**
+     * Triggers the mediaSource end of stream when buffer high limit has
+     * reached content duration, and when playback current time is on
+     * the last buffered range.
+     */
+    const endOfStream$ = clock$
+    .filter(({ buffered, currentTime }) => {
+      return buffered.length > 0 &&
+      ((currentTime - buffered.start(buffered.length - 1)) > 0) &&
+      mediaSource.readyState === "open";
+    })
+    .map(({ buffered }) => {
+      const duration = manifest.getPresentationTimelineDuration();
+      const lastBufferedEnd = buffered.end(buffered.length - 1);
+      return lastBufferedEnd - duration;
+    })
+    .filter((gap) => {
+      const roundedGapWithThreeDecimals = Math.round(gap * 100) / 100;
+      return roundedGapWithThreeDecimals >= 0;
+    })
+    .do(() => {
+      log.info("Triggering MediaSource end of stream.");
+      mediaSource.endOfStream();
+    });
+
     const manifest$ = Observable.of({
       type: "manifestChange",
       value: {
@@ -740,7 +762,8 @@ export default function Stream({
       manifest$,
       mediaErrorManager$,
       speedManager$,
-      stallingManager$
+      stallingManager$,
+      endOfStream$
     );
   }
 
