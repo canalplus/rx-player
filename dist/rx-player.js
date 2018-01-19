@@ -4011,10 +4011,7 @@ var segment_1 = __webpack_require__(35);
 /**
  * Calculate the number of times a segment repeat based on the next segment.
  * @param {Object} seg
- * @param {Number} seg.ts - beginning timescaled timestamp
- * @param {Number} seg.d - timescaled duration of the segment
  * @param {Object} nextSeg
- * @param {Number} nextSeg.ts
  * @returns {Number}
  */
 function calculateRepeat(seg, nextSeg) {
@@ -6663,7 +6660,7 @@ var SegmentTimelineHelpers = {
     /**
      * Returns true if, based on the arguments, the index should be refreshed.
      * @param {Object} index
-     * @param {Number} time
+     * @param {Number} _
      * @param {Number} up
      * @param {Number} to
      * @returns {Boolean}
@@ -6683,7 +6680,7 @@ var SegmentTimelineHelpers = {
     /**
      * Returns first position in index.
      * @param {Object} index
-     * @returns {Number}
+     * @returns {Number|undefined}
      */
     getFirstPosition: function (index) {
         if (!index.timeline.length) {
@@ -6694,7 +6691,7 @@ var SegmentTimelineHelpers = {
     /**
      * Returns last position in index.
      * @param {Object} index
-     * @returns {Number}
+     * @returns {Number|undefined}
      */
     getLastPosition: function (index) {
         if (!index.timeline.length) {
@@ -6752,6 +6749,7 @@ var SegmentTimelineHelpers = {
      * @param {Object} currentSegment
      * @param {Number} currentSegment.timescale
      * @param {Number} currentSegment.time
+     * @param {Number} currentSegment.duration
      * @returns {Boolean} - true if the segment has been added
      */
     _addSegmentInfos: function (index, newSegment, currentSegment) {
@@ -8893,7 +8891,7 @@ else {
                     };
                     return Observable_1.Observable.of(new keySystemAccess_1.default(keyType, 
                     // TODO Authorize 1 argument for IE?
-                    new MediaKeys(keyType), keySystemConfigurationResponse));
+                    new constants_1.MediaKeys_(keyType), keySystemConfigurationResponse));
                 }
             }
             return Observable_1.Observable.throw(undefined);
@@ -16543,7 +16541,7 @@ var Player = /** @class */ (function (_super) {
         // Workaround to support Firefox autoplay on FF 42.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
         videoElement.preload = "auto";
-        _this.version = /*PLAYER_VERSION*/ "3.0.6";
+        _this.version = /*PLAYER_VERSION*/ "3.0.7";
         _this.log = log_1.default;
         _this.state = "STOPPED";
         _this.videoElement = videoElement;
@@ -24777,7 +24775,7 @@ exports.default = {
      * Returns true if, based on the arguments, the index should be refreshed.
      * (If we should re-fetch the manifest)
      * @param {Object} index
-     * @param {Number} time
+     * @param {Array.<Object>} parsedSegments
      * @param {Number} from
      * @param {Number} to
      * @returns {Boolean}
@@ -24809,7 +24807,7 @@ exports.default = {
     /**
      * Returns first position in index.
      * @param {Object} index
-     * @returns {Number}
+     * @returns {Number|undefined}
      */
     getFirstPosition: function (index) {
         if (!index.timeline.length) {
@@ -24820,7 +24818,7 @@ exports.default = {
     /**
      * Returns last position in index.
      * @param {Object} index
-     * @returns {Number}
+     * @returns {Number|undefined}
      */
     getLastPosition: function (index) {
         if (!index.timeline.length) {
@@ -24972,13 +24970,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var segment_1 = __webpack_require__(35);
 var helpers_1 = __webpack_require__(30);
 /**
- * NEEDED IN INDEX
- * duration
- * list []
- *   ?range
- * timescale
- */
-/**
  * Provide helpers for SegmentList-based indexes.
  * @type {Object}
  */
@@ -25037,6 +25028,7 @@ var ListIndexHelpers = {
      * Returns true if, based on the arguments, the index should be refreshed.
      * (If we should re-fetch the manifest)
      * @param {Object} index
+     * @param {Array,<Object>} _
      * @param {Number} up
      * @param {Number} to
      * @returns {Boolean}
@@ -25113,10 +25105,11 @@ var SegmentBaseHelpers = {
      * /!\ Mutate the given index
      * @param {Object} index
      * @param {Object} segmentInfos
+     * @param {Number} segmentInfos.time
      * @param {Number} segmentInfos.timescale
      * @param {Number} segmentInfos.duration
      * @param {Number} segmentInfos.count
-     * @param {*} segmentInfos.range - TODO check type
+     * @param {Array.<Number>} segmentInfos.range
      * @returns {Boolean} - true if the segment has been added
      */
     _addSegmentInfos: function (index, segmentInfos) {
@@ -27309,7 +27302,7 @@ var HTMLTextTrackSourceBuffer = /** @class */ (function (_super) {
     __extends(HTMLTextTrackSourceBuffer, _super);
     /**
      * @param {HTMLMediaElement} videoElement
-     * @param {HTMLTrackElement} textTrackElement
+     * @param {HTMLElement} textTrackElement
      */
     function HTMLTextTrackSourceBuffer(codec, videoElement, textTrackElement) {
         var _this = this;

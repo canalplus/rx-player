@@ -1,8 +1,15 @@
 # Changelog
 
+## v3.0.7 (2018/01/19)
+
+### Bug fixes
+
+  - eme: fix bug which prevented to play encrypted contents on IE11
+
 ## v3.0.6 (2018/01/11)
 
 ### Bug Fixes
+
   - buffer: fix issue which could led to multiple video or audio segments being downloaded at the same time
   - dash/text: support MPD AdaptationSet with a "caption" Role as text Adaptations
   - dash/text: remove offset set for subtitles on live contents, which led to unsynchronized subtitles
@@ -14,6 +21,7 @@
 ## v3.0.5 (2017/12/11)
 
 ### Bug Fixes
+
   - eme: consider unknown errors (e.g. errors coming from the user of the library) as fatal eme errors
 
 ## v3.0.4 (2017/12/05)
