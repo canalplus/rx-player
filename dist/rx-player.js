@@ -6365,6 +6365,7 @@ function normalizeManifest(location, manifest, subtitles, images) {
 
   manifest.id = manifest.id || uniqueId++;
   manifest.type = manifest.type || "static";
+  manifest.minimumTime = manifest.minimumTime;
 
   var locations = manifest.locations;
   if (!locations || !locations.length) {
@@ -6665,6 +6666,7 @@ function updateManifest(oldManifest, newManifest) {
   var oldAdaptations = oldManifest.getAdaptations();
   var newAdaptations = newManifest.getAdaptations();
 
+  oldManifest.minimumTime = newManifest.minimumTime;
   for (var i = 0; i < oldAdaptations.length; i++) {
     var newAdaptation = findElementFromId(oldAdaptations[i].id, newAdaptations);
 
@@ -7190,7 +7192,7 @@ function getBufferLimits(manifest) {
   var BUFFER_DEPTH_SECURITY = 5;
 
   if (!manifest.isLive) {
-    return [0, manifest.getDuration()];
+    return [manifest.minimumTime || 0, manifest.getDuration()];
   }
 
   var availabilityStartTime = manifest.availabilityStartTime,
@@ -7200,7 +7202,8 @@ function getBufferLimits(manifest) {
 
   var now = Date.now() / 1000;
   var max = now - availabilityStartTime - presentationLiveGap;
-  return [Math.min(max, max - timeShiftBufferDepth + BUFFER_DEPTH_SECURITY), max];
+
+  return [Math.min(max, Math.max(manifest.minimumTime != null ? manifest.minimumTime : 0, max - timeShiftBufferDepth + BUFFER_DEPTH_SECURITY)), max];
 }
 
 
@@ -11449,7 +11452,7 @@ var Player = function (_EventEmitter) {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    _this.version = /*PLAYER_VERSION*/"2.4.0";
+    _this.version = /*PLAYER_VERSION*/"2.4.1";
     _this.video = videoElement;
 
     // fullscreen change subscription.
@@ -13242,7 +13245,7 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
 
     if (!manifest.isLive) {
       __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__utils_assert__["a" /* default */])(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
-      return startTime;
+      return Math.max(startTime, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["g" /* getMinimumBufferPosition */])(manifest));
     } else if (startTime) {
       return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["f" /* fromWallClockTime */])(startTime, manifest);
     } else {
@@ -13251,7 +13254,7 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
     }
   }
 
-  return 0;
+  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__timings__["g" /* getMinimumBufferPosition */])(manifest);
 }
 
 /**
@@ -13529,6 +13532,8 @@ function Stream(_ref) {
     };
   }
 
+  var manifest = null;
+
   /**
    * End-Of-Play emit when the current timing is really close to the end.
    * @see END_OF_PLAY
@@ -13537,7 +13542,7 @@ function Stream(_ref) {
   var endOfPlay = timings.filter(function (_ref2) {
     var ts = _ref2.ts,
         duration = _ref2.duration;
-    return duration > 0 && Math.min(duration, timeFragment.end) - ts < END_OF_PLAY;
+    return duration > 0 && Math.min(manifest != null ? manifest.getDuration() : Infinity, duration, timeFragment.end) - ts < END_OF_PLAY;
   });
 
   /**
@@ -13563,7 +13568,7 @@ function Stream(_ref) {
     return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_7_rxjs_observable_combineLatest__["combineLatest"])(fetchManifest({ url: url }), sourceOpening).mergeMap(function (_ref4) {
       var parsed = _ref4[0].parsed;
 
-      var manifest = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_14__manifest__["c" /* normalizeManifest */])(parsed.url, parsed.manifest, supplementaryTextTracks, supplementaryImageTracks);
+      manifest = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_14__manifest__["c" /* normalizeManifest */])(parsed.url, parsed.manifest, supplementaryTextTracks, supplementaryImageTracks);
 
       if (mediaSource) {
         setDurationToMediaSource(mediaSource, manifest.getDuration());
@@ -14822,6 +14827,7 @@ var Manifest = function () {
    * @param {string} args.type
    * @param {Array.<string>} args.locations
    * @param {Number} args.duration
+   * @param {Number} [args.minimumTime]
    */
   function Manifest() {
     var args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -14843,6 +14849,7 @@ var Manifest = function () {
       adaptations: this.adaptations
     }];
 
+    this.minimumTime = args.minimumTime;
     this.isLive = args.type === "dynamic";
     this.uris = args.locations || [];
 
@@ -18016,7 +18023,7 @@ function parseBoolean(val) {
   }
 }
 
-function calcLastRef(adaptation) {
+function getLastTimeReference(adaptation) {
   if (!adaptation) {
     return Infinity;
   }
@@ -18027,6 +18034,16 @@ function calcLastRef(adaptation) {
       d = _index$timeline.d;
 
   return (ts + (r + 1) * d) / index.timescale;
+}
+
+function getFirstTimeReference(adaptation) {
+  if (!adaptation) {
+    return;
+  }
+  var index = adaptation.index;
+  var ts = index.timeline[0].ts;
+
+  return ts;
 }
 
 function getKeySystems(keyIdBytes) {
@@ -18266,21 +18283,35 @@ function createSmoothStreamingParser() {
     var suggestedPresentationDelay = void 0,
         presentationLiveGap = void 0,
         timeShiftBufferDepth = void 0,
-        availabilityStartTime = void 0;
+        availabilityStartTime = void 0,
+        duration = void 0;
+
+    var firstVideoAdaptation = adaptations.filter(function (a) {
+      return a.type == "video";
+    })[0];
+    var firstAudioAdaptation = adaptations.filter(function (a) {
+      return a.type == "audio";
+    })[0];
+    var firstTimeReference = Math.max(getFirstTimeReference(firstVideoAdaptation), getFirstTimeReference(firstAudioAdaptation)) || 0;
+    var lastTimeReference = Math.min(getLastTimeReference(firstVideoAdaptation), getLastTimeReference(firstAudioAdaptation));
 
     var isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      var video = adaptations.filter(function (a) {
-        return a.type == "video";
-      })[0];
-      var audio = adaptations.filter(function (a) {
-        return a.type == "audio";
-      })[0];
-      var lastRef = Math.min(calcLastRef(video), calcLastRef(audio));
-      presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
+      presentationLiveGap = Date.now() / 1000 - (lastTimeReference + availabilityStartTime);
+      duration = (+root.getAttribute("Duration") || Infinity) / timescale;
+    } else {
+      // if non-live and first time reference different than 0. Add first time reference
+      // to duration
+      var manifestDuration = +root.getAttribute("Duration");
+
+      if (manifestDuration != null) {
+        duration = lastTimeReference === Infinity ? (manifestDuration + firstTimeReference) / timescale : lastTimeReference;
+      } else {
+        duration = Infinity;
+      }
     }
 
     return {
@@ -18291,8 +18322,9 @@ function createSmoothStreamingParser() {
       timeShiftBufferDepth: timeShiftBufferDepth,
       presentationLiveGap: presentationLiveGap,
       availabilityStartTime: availabilityStartTime,
+      minimumTime: firstTimeReference / timescale || 0,
       periods: [{
-        duration: (+root.getAttribute("Duration") || Infinity) / timescale,
+        duration: duration,
         adaptations: adaptations,
         laFragCount: +root.getAttribute("LookAheadFragmentCount")
       }]

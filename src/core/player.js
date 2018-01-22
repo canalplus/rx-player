@@ -285,7 +285,7 @@ class Player extends EventEmitter {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"2.4.0";
+    this.version = /*PLAYER_VERSION*/"2.4.1";
     this.video = videoElement;
 
     // fullscreen change subscription.
