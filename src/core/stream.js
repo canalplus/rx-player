@@ -19,6 +19,7 @@ import assert from "../utils/assert";
 import {
   seekingsSampler,
   getBufferLimits,
+  getMinimumBufferPosition,
   getMaximumBufferPosition,
   getMaximumSecureBufferPosition,
   fromWallClockTime,
@@ -154,7 +155,7 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
 
     if (!manifest.isLive) {
       assert(startTime < duration && endTime <= duration, "stream: bad startTime and endTime");
-      return startTime ;
+      return Math.max(startTime, getMinimumBufferPosition(manifest));
     }
     else if (startTime) {
       return fromWallClockTime(startTime, manifest);
@@ -166,7 +167,7 @@ function calculateInitialTime(manifest, startAt, timeFragment) {
     }
   }
 
-  return 0;
+  return getMinimumBufferPosition(manifest);
 }
 
 /**
@@ -447,6 +448,8 @@ function Stream({
     };
   }
 
+  let manifest = null;
+
   /**
    * End-Of-Play emit when the current timing is really close to the end.
    * @see END_OF_PLAY
@@ -455,7 +458,11 @@ function Stream({
   const endOfPlay = timings
     .filter(({ ts, duration }) => (
       duration > 0 &&
-      Math.min(duration, timeFragment.end) - ts < END_OF_PLAY
+      Math.min(
+        manifest != null ? manifest.getDuration() : Infinity,
+        duration,
+        timeFragment.end
+      ) - ts < END_OF_PLAY
     ));
 
   /**
@@ -479,10 +486,12 @@ function Stream({
 
     return combineLatest(fetchManifest({ url }), sourceOpening)
       .mergeMap(([{ parsed }]) => {
-        const manifest = normalizeManifest(parsed.url,
-                                           parsed.manifest,
-                                           supplementaryTextTracks,
-                                           supplementaryImageTracks);
+        manifest = normalizeManifest(
+          parsed.url,
+          parsed.manifest,
+          supplementaryTextTracks,
+          supplementaryImageTracks
+        );
 
         if (mediaSource) {
           setDurationToMediaSource(mediaSource, manifest.getDuration());
@@ -831,18 +840,12 @@ function Stream({
       changePlaybackRate: pipelines.requiresMediaSource(),
     });
     const canPlay = createLoadedMetadata(manifest);
-    const buffers = createAdaptationsBuffers(mediaSource,
-                                             manifest,
-                                             timings,
-                                             seekings);
+    const buffers = createAdaptationsBuffers(
+      mediaSource, manifest, timings, seekings);
     const mediaError = createMediaErrorStream();
 
-    return merge(justManifest,
-                       canPlay,
-                       stalled,
-                       emeHandler,
-                       buffers,
-                       mediaError);
+    return merge(
+      justManifest, canPlay, stalled, emeHandler, buffers, mediaError);
   }
 }
 

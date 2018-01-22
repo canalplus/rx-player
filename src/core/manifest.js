@@ -74,6 +74,7 @@ function normalizeManifest(location, manifest, subtitles, images) {
 
   manifest.id = manifest.id || uniqueId++;
   manifest.type = manifest.type || "static";
+  manifest.minimumTime = manifest.minimumTime;
 
   const locations = manifest.locations;
   if (!locations || !locations.length) {
@@ -361,6 +362,7 @@ function updateManifest(oldManifest, newManifest) {
   const oldAdaptations = oldManifest.getAdaptations();
   const newAdaptations = newManifest.getAdaptations();
 
+  oldManifest.minimumTime = newManifest.minimumTime;
   for (let i = 0; i < oldAdaptations.length; i++) {
     const newAdaptation =
       findElementFromId(oldAdaptations[i].id, newAdaptations);

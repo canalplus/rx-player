@@ -32,6 +32,7 @@ class Manifest {
    * @param {string} args.type
    * @param {Array.<string>} args.locations
    * @param {Number} args.duration
+   * @param {Number} [args.minimumTime]
    */
   constructor(args = {}) {
     const nId = generateNewId();
@@ -50,6 +51,7 @@ class Manifest {
       },
     ];
 
+    this.minimumTime = args.minimumTime;
     this.isLive = args.type === "dynamic";
     this.uris = args.locations || [];
 

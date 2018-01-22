@@ -370,7 +370,7 @@ function getBufferLimits(manifest) {
   const BUFFER_DEPTH_SECURITY = 5;
 
   if (!manifest.isLive) {
-    return [0, manifest.getDuration()];
+    return [manifest.minimumTime || 0, manifest.getDuration()];
   }
 
   const {
@@ -381,8 +381,15 @@ function getBufferLimits(manifest) {
 
   const now = Date.now() / 1000;
   const max = now - availabilityStartTime - presentationLiveGap;
+
   return [
-    Math.min(max, max - timeShiftBufferDepth + BUFFER_DEPTH_SECURITY),
+    Math.min(
+      max,
+      Math.max(
+        manifest.minimumTime != null ? manifest.minimumTime : 0,
+        max - timeShiftBufferDepth + BUFFER_DEPTH_SECURITY
+      )
+    ),
     max,
   ];
 }
