@@ -181,7 +181,7 @@ function isHardOfHearing(accessibility: IAccessibility) {
 
   return (
     accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-    accessibility.value === 2
+    accessibility.value === "2"
   );
 }
 
