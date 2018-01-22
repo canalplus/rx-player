@@ -104,11 +104,18 @@ function parseBoolean(val) {
   }
 }
 
-function calcLastRef(adaptation) {
+function getLastTimeReference(adaptation) {
   if (!adaptation) { return Infinity; }
   const { index } = adaptation;
   const { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r+1)*d) / index.timescale);
+}
+
+function getFirstTimeReference(adaptation) {
+  if (!adaptation) { return ; }
+  const { index } = adaptation;
+  const { ts } = index.timeline[0];
+  return ts;
 }
 
 function getKeySystems(keyIdBytes) {
@@ -351,17 +358,39 @@ function createSmoothStreamingParser(parserOptions={}) {
       suggestedPresentationDelay,
       presentationLiveGap,
       timeShiftBufferDepth,
-      availabilityStartTime;
+      availabilityStartTime,
+      duration;
+
+    const firstVideoAdaptation = adaptations.filter((a) => a.type == "video")[0];
+    const firstAudioAdaptation = adaptations.filter((a) => a.type == "audio")[0];
+    const firstTimeReference = Math.max(
+      getFirstTimeReference(firstVideoAdaptation),
+      getFirstTimeReference(firstAudioAdaptation)
+    ) || 0;
+    const lastTimeReference = Math.min(
+      getLastTimeReference(firstVideoAdaptation),
+      getLastTimeReference(firstAudioAdaptation)
+    );
 
     const isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      const video = adaptations.filter((a) => a.type == "video")[0];
-      const audio = adaptations.filter((a) => a.type == "audio")[0];
-      const lastRef = Math.min(calcLastRef(video), calcLastRef(audio));
-      presentationLiveGap = Date.now() / 1000 - (lastRef + availabilityStartTime);
+      presentationLiveGap = Date.now() / 1000 - (lastTimeReference + availabilityStartTime);
+      duration = (+root.getAttribute("Duration") || Infinity) / timescale;
+    } else {
+      // if non-live and first time reference different than 0. Add first time reference
+      // to duration
+      const manifestDuration = +root.getAttribute("Duration");
+
+      if (manifestDuration != null) {
+        duration = lastTimeReference === Infinity ?
+          (manifestDuration + firstTimeReference) / timescale :
+          lastTimeReference;
+      } else {
+        duration = Infinity;
+      }
     }
 
     return {
@@ -372,8 +401,9 @@ function createSmoothStreamingParser(parserOptions={}) {
       timeShiftBufferDepth,
       presentationLiveGap,
       availabilityStartTime,
+      minimumTime: (firstTimeReference / timescale) || 0,
       periods: [{
-        duration:    (+root.getAttribute("Duration") || Infinity) / timescale,
+        duration,
         adaptations,
         laFragCount: +root.getAttribute("LookAheadFragmentCount"),
       }],
