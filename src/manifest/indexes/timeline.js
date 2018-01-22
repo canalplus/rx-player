@@ -1,57 +1,14 @@
 import Segment from "../segment.js";
 import {
+  calculateRepeat,
+  getSegmentIndex,
+  getSegmentNumber,
   normalizeRange,
   getTimelineRangeEnd,
   getInitSegment,
   setTimescale,
   scale,
 } from "./helpers.js";
-
-const getSegmentIndex = (index, ts) => {
-  const { timeline } = index;
-
-  let low = 0;
-  let high = timeline.length;
-
-  while (low < high) {
-    const mid = (low + high) >>> 1;
-    if (timeline[mid].ts < ts) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
-  }
-
-  return (low > 0)
-    ? low - 1
-    : low;
-};
-
-const getSegmentNumber = (ts, up, duration) => {
-  const diff = up - ts;
-  if (diff > 0) {
-    return Math.floor(diff / duration);
-  } else {
-    return 0;
-  }
-};
-
-const calculateRepeat = (seg, nextSeg) => {
-  let rep = seg.r || 0;
-
-  // A negative value of the @r attribute of the S element indicates
-  // that the duration indicated in @d attribute repeats until the
-  // start of the next S element, the end of the Period or until the
-  // next MPD update.
-  if (rep < 0) {
-    const repEnd = nextSeg
-      ? nextSeg.t
-      : Infinity;
-    rep = Math.ceil((repEnd - seg.ts) / seg.d) - 1;
-  }
-
-  return rep;
-};
 
 const SegmentTimelineHelpers = {
   getInitSegment,

@@ -51,6 +51,10 @@ const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
 const TOKEN_REG = /\?token=(\S+)/;
 
+/**
+ * @param {Array.<Number>} range
+ * @returns {string}
+ */
 function byteRange([start, end]) {
   if (!end || end === Infinity) {
     return "bytes=" + (+start) + "-";
@@ -59,6 +63,11 @@ function byteRange([start, end]) {
   }
 }
 
+/**
+ * @param {Object} response
+ * @param {Document} response.responseData
+ * @returns {string}
+ */
 function extractISML({ responseData }) {
   return responseData.getElementsByTagName("media")[0].getAttribute("src");
 }
@@ -88,6 +97,10 @@ function replaceToken(url, token) {
   }
 }
 
+/**
+ * @param {string} url
+ * @returns {string}
+ */
 function resolveManifest(url) {
   const ismMatch = url.match(ISM_REG);
   if (ismMatch) {
@@ -97,10 +110,31 @@ function resolveManifest(url) {
   }
 }
 
+/**
+ * @param {Object} [index={}]
+ * @returns {number}
+ */
+function getSegmentTimeOffsetFromIndex(index = {}) {
+  // TODO cleaner
+  if (!index._index) {
+    return 0;
+  }
+
+  return index._index.segmentTimeOffset || 0;
+}
+
+/**
+ * @param {string} url
+ * @param {Object} representation
+ * @param {Object} segment
+ * @returns {string}
+ */
 function buildSegmentURL(url, representation, segment) {
+  const segmentTime = segment.time +
+    getSegmentTimeOffsetFromIndex(representation.index);
   return url
     .replace(/\{bitrate\}/g,    representation.bitrate)
-    .replace(/\{start time\}/g, segment.time);
+    .replace(/\{start time\}/g, segmentTime);
 }
 
 export default function(options={}) {
@@ -223,7 +257,11 @@ export default function(options={}) {
     else {
       const customSegmentLoader = options.segmentLoader;
 
-      const url = buildSegmentURL(resolveURL(representation.baseURL), representation, segment);
+      const url = buildSegmentURL(
+        resolveURL(representation.baseURL),
+        representation,
+        segment
+      );
 
       const args = {
         adaptation,

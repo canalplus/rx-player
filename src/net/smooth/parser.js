@@ -131,6 +131,17 @@ function getKeySystems(keyIdBytes) {
   ];
 }
 
+/**
+ * @param {Array.<Object>} timeline
+ * @returns {Number}
+ */
+function getSegmentTimeOffsetFromTimeline(timeline) {
+  if (!timeline.length) {
+    return 0;
+  }
+  return timeline[0].ts || 0;
+}
+
 function createSmoothStreamingParser(parserOptions={}) {
 
   const SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay || 20;
@@ -225,7 +236,7 @@ function createSmoothStreamingParser(parserOptions={}) {
   // representations (<QualityLevels>) and timestamp indexes (<c>).
   // Indexes can be quite huge, and this function needs to
   // to be optimized.
-  function parseAdaptation(root, timescale) {
+  function parseAdaptation(root, timescale, isLive) {
     if (root.hasAttribute("Timescale")) {
       timescale = +root.getAttribute("Timescale");
     }
@@ -274,6 +285,10 @@ function createSmoothStreamingParser(parserOptions={}) {
       },
     });
 
+    if (!isLive) {
+      index.segmentTimeOffset = getSegmentTimeOffsetFromTimeline(index.timeline);
+    }
+
     // we assume that all representations have the same
     // codec and mimeType
     assert(representations.length, "adaptation should have at least one representation");
@@ -318,6 +333,7 @@ function createSmoothStreamingParser(parserOptions={}) {
     assert(/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
       "Version should be 2.0, 2.1 or 2.2");
 
+    const isLive = parseBoolean(root.getAttribute("IsLive"));
     const timescale = +root.getAttribute("Timescale") || 10000000;
     const adaptationIds = [];
 
@@ -325,7 +341,7 @@ function createSmoothStreamingParser(parserOptions={}) {
       switch (name) {
       case "Protection":  res.protection = parseProtection(node);  break;
       case "StreamIndex":
-        const ada = parseAdaptation(node, timescale);
+        const ada = parseAdaptation(node, timescale, isLive);
         if (ada) {
           let i = 0;
           let id;
@@ -353,7 +369,6 @@ function createSmoothStreamingParser(parserOptions={}) {
       timeShiftBufferDepth,
       availabilityStartTime;
 
-    const isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       timeShiftBufferDepth = +root.getAttribute("DVRWindowLength") / timescale;
