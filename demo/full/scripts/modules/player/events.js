@@ -84,7 +84,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
           player.getAvailableAudioTracks();
         stateUpdates.availableSubtitles =
           player.getAvailableTextTracks();
-      } else if (arg === "STOPPED" || arg === "ENDED") {
+      } else if (arg === "STOPPED") {
         stateUpdates.audioBitrate = undefined;
         stateUpdates.videoBitrate = undefined;
         stateUpdates.availableAudioBitrates = [];
