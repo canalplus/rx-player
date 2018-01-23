@@ -28,6 +28,7 @@ export interface IBufferClockTick {
   duration? : number;
   liveGap? : number;
   stalled : object|null;
+  currentRange : {start : number; end: number}|null;
 }
 
 export interface IBufferSegmentInfos {

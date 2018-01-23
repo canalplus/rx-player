@@ -28,6 +28,7 @@ import "rxjs/add/observable/throw";
 import "rxjs/add/observable/timer";
 
 import "rxjs/add/operator/catch";
+import "rxjs/add/operator/combineLatest";
 import "rxjs/add/operator/concat";
 import "rxjs/add/operator/concatAll";
 import "rxjs/add/operator/concatMap";

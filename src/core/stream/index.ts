@@ -99,8 +99,6 @@ import {
   IStreamClockTick,
   StreamEvent,
 } from "./types";
-import tryCatch from "../../utils/rx-tryCatch";
-import { setTimeout } from "timers";
 
 const SUPPORTED_BUFFER_TYPES : SupportedBufferTypes[] =
   ["audio", "video", "text", "image"];
@@ -650,7 +648,7 @@ export default function Stream({
         throw error;
       } else {
         log.warn("Error during endOfStream() call. Retrying "+(countDown - 1)+" times.");
-        setTimeout(() => triggerEndOfStream(mediaSource, countDown - 1), 100);
+        setTimeout(() => triggerEndOfStream(mediaSource, countDown - 1), 200);
       }
     }
   }
@@ -736,24 +734,32 @@ export default function Stream({
      * the last buffered range.
      */
     const endOfStream$ = clock$
-    .filter(({ buffered, currentTime }) => {
-      return buffered.length > 0 &&
-      ((currentTime - buffered.start(buffered.length - 1)) > 0) &&
-      mediaSource.readyState === "open";
-    })
-    .map(({ buffered }) => {
-      const duration = manifest.getPresentationTimelineDuration();
-      const lastBufferedEnd = buffered.end(buffered.length - 1);
-      return lastBufferedEnd - duration;
-    })
-    .filter((gap) => {
-      const roundedGapWithThreeDecimals = Math.round(gap * 100) / 100;
-      return roundedGapWithThreeDecimals >= 0;
-    })
-    .do(() => {
-      log.info("Triggering MediaSource end of stream.");
-      triggerEndOfStream(mediaSource, 5);
-    });
+      .combineLatest(wantedBufferAhead$)
+      .filter(([{ buffered, currentTime, currentRange }, wantedBufferAhead]) => {
+        return (
+          // Content has been buffered
+          buffered.length > 0 &&
+          // Video plays in buffer
+          currentRange != null &&
+          // Current range is the last one
+          buffered.end(buffered.length - 1) === currentRange.end &&
+          // The media source is open
+          mediaSource.readyState === "open" &&
+           // Buffering will reach the end soon
+          currentTime + wantedBufferAhead > (manifest.getDuration() || Infinity) &&
+          // Buffered end has reached the end of estimated presentation timeline
+          (Math.round(
+            (
+              buffered.end(buffered.length - 1) -
+              manifest.getPresentationTimelineDuration()
+            ) * 100) / 100
+          ) >= 0
+        );
+      })
+      .do(() => {
+        log.info("Triggering MediaSource end of stream.");
+        triggerEndOfStream(mediaSource, 5);
+      });
 
     const manifest$ = Observable.of({
       type: "manifestChange",

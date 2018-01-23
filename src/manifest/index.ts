@@ -114,6 +114,7 @@ class Manifest {
     this.availabilityStartTime = args.availabilityStartTime;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+    this.updatePresentationTimelineDuration();
 
     if (__DEV__ && this.isLive) {
       assert(this.suggestedPresentationDelay != null);
@@ -147,7 +148,9 @@ class Manifest {
             if(lastPosition && minimumAdaptationsDuration[type] == null) {
               minimumAdaptationsDuration[type] = lastPosition;
             } else if(lastPosition && minimumAdaptationsDuration[type] !== lastPosition) {
-              throw new Error("VALID_MANIFEST_ERROR");
+              throw new Error(
+                "Unauthorized manifest. Representations should have the same duration."
+              );
             }
           });
         });
