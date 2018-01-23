@@ -9,12 +9,14 @@
 import { linkPlayerEventsToState } from "./events.js";
 
 const RxPlayer = window.RxPlayer;
+const stopAtEnd = false;
 
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   const player = new RxPlayer({
     limitVideoWidth: false,
     throttleWhenHidden: true,
     videoElement,
+    stopAtEnd,
   });
 
   // facilitate DEV mode
@@ -51,6 +53,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     videoBitrateAuto: true,
     videoBitrate: undefined,
     volume: player.getVolume(),
+    stopAtEnd,
   });
 
   linkPlayerEventsToState(player, state, $destroy);

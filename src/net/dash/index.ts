@@ -124,6 +124,7 @@ export default function(
       representation,
       response,
       init,
+      manifest,
     } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : SegmentParserObservable {
 
@@ -152,9 +153,9 @@ export default function(
         segmentInfos =
           getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
       }
-
       if (nextSegments) {
         addNextSegments(representation, segmentInfos, nextSegments);
+        manifest.updatePresentationTimelineDuration();
       }
       return Observable.of({ segmentData, segmentInfos });
     },

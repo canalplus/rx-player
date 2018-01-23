@@ -57,7 +57,7 @@ const ListIndexHelpers: ISegmentHelpers<IListIndex> = {
     const segments : Segment[] = [];
     let i = Math.floor(up / duration);
     while (i <= length) {
-      const range = list[i].range;
+      const range = list[i].mediaRange;
       const media = list[i].media;
       const args = {
         id: "" + repId + "_" + i,

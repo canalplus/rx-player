@@ -69,7 +69,8 @@ class Manifest {
   public presentationLiveGap? : number;
   public timeShiftBufferDepth? : number;
 
-  private _duration : number;
+  private _presentationTimelineDuration: number;
+  private _duration: number;
 
   /**
    * @constructor
@@ -113,6 +114,7 @@ class Manifest {
     this.availabilityStartTime = args.availabilityStartTime;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+    this.updatePresentationTimelineDuration();
 
     if (__DEV__ && this.isLive) {
       assert(this.suggestedPresentationDelay != null);
@@ -129,7 +131,48 @@ class Manifest {
     return this._duration;
   }
 
-  getUrl() : string {
+  /**
+   * Update presentation timeline duration
+   */
+  updatePresentationTimelineDuration() {
+    const minimumAdaptationsDuration: IDictionary<number> = {};
+
+    // Browse adaptations to find minimum duration
+    ["audio","video"].forEach((type) => {
+      const adaptations = (this.adaptations as any)[type];
+      if (adaptations) {
+        adaptations.forEach((adaptation: Adaptation) => {
+          const representations = adaptation.representations;
+          representations.forEach((representation) => {
+            const lastPosition = representation.index.getLastPosition();
+            if(lastPosition && minimumAdaptationsDuration[type] == null) {
+              minimumAdaptationsDuration[type] = lastPosition;
+            } else if(lastPosition && minimumAdaptationsDuration[type] !== lastPosition) {
+              throw new Error(
+                "Unauthorized manifest. Representations should have the same duration."
+              );
+            }
+          });
+        });
+      }
+    });
+
+    this._presentationTimelineDuration = Math.min(
+      this._duration,
+      minimumAdaptationsDuration.video || Infinity,
+      minimumAdaptationsDuration.audio|| Infinity
+    );
+  }
+
+  /**
+   * Get current presentation timeline duration.
+   * @returns {number}
+   */
+  getPresentationTimelineDuration(): number {
+    return this._presentationTimelineDuration;
+  }
+
+  getUrl(): string {
     return this.uris[0];
   }
 

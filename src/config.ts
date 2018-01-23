@@ -166,15 +166,6 @@ export default {
   DISCONTINUITY_THRESHOLD: 1,
 
   /**
-   * Time before the end of a video (in seconds) at which the player should
-   * automatically stop.
-   * It happens often that the video gets stuck 100 to 300 ms before the end,
-   * especially on IE11 and Edge
-   * @type {Number}
-   */
-  END_OF_PLAY: 0.5,
-
-  /**
    * Ratio used to know if an already loaded segment should be re-buffered.
    * We re-load the given segment if the current one times that ratio is
    * inferior to the new one.

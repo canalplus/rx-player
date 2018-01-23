@@ -35,6 +35,7 @@ interface IVideoTiming {
   }|null;
   readyState : number;
   paused : boolean;
+  ended : boolean;
 }
 
 type stalledStatus = {
@@ -119,6 +120,7 @@ function getTimings(video : HTMLMediaElement, name : string) : IVideoTiming {
     readyState,
     buffered,
     duration,
+    ended,
   } = video;
 
   return {
@@ -131,6 +133,7 @@ function getTimings(video : HTMLMediaElement, name : string) : IVideoTiming {
     currentRange: getRange(buffered, currentTime),
     readyState,
     paused,
+    ended,
   };
 }
 
@@ -159,6 +162,7 @@ function getStalledStatus(
     duration,
     paused,
     readyState,
+    ended,
   } = currentTimings;
 
   const {
@@ -167,13 +171,14 @@ function getStalledStatus(
     currentTime: prevTime,
   } = prevTimings;
 
-  const ending = isEnding(bufferGap, currentRange, duration);
+  const ending =
+    isEnding(bufferGap, currentRange, duration);
 
   const canStall = (
     readyState >= 1 &&
     currentState !== "loadedmetadata" &&
     !prevStalled &&
-    !ending
+    !(ending || ended)
   );
 
   let shouldStall;
@@ -188,7 +193,7 @@ function getStalledStatus(
     } else if (
       prevStalled &&
       readyState > 1 &&
-      bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending)
+      bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending || ended)
     ) {
       shouldUnstall = true;
     }
@@ -210,7 +215,7 @@ function getStalledStatus(
       (currentState !== "seeking" && currentTime !== prevTime ||
         currentState === "canplay" ||
         bufferGap < Infinity &&
-        (bufferGap > getResumeGap(prevStalled) || ending)
+        (bufferGap > getResumeGap(prevStalled) || ending || ended)
       )
     ) {
       shouldUnstall = true;

@@ -20,8 +20,6 @@ import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
 
-import config from "../../config";
-
 import arrayIncludes from "../../utils/array-includes";
 import InitializationSegmentCache from "../../utils/initialization_segment_cache";
 import log from "../../utils/log";
@@ -32,7 +30,9 @@ import {
   canPlay,
   canSeek,
 } from "../../compat";
-import { onSourceOpen$ } from "../../compat/events";
+import {
+  onSourceOpen$,
+} from "../../compat/events";
 import {
   CustomError,
   isKnownError,
@@ -100,8 +100,6 @@ import {
   StreamEvent,
 } from "./types";
 
-const { END_OF_PLAY } = config;
-
 const SUPPORTED_BUFFER_TYPES : SupportedBufferTypes[] =
   ["audio", "video", "text", "image"];
 
@@ -146,6 +144,7 @@ interface IStreamOptions {
   supplementaryImageTracks : ISupplementaryImageTrack[];
   keySystems : IKeySystemOption[];
   transport : ITransportPipelines<any, any, any, any, any>;
+  stopAtEnd : boolean;
 }
 
 /**
@@ -296,16 +295,6 @@ export default function Stream({
   };
 
   /**
-   * End-Of-Play emit when the current timing is really close to the end.
-   * @see END_OF_PLAY
-   * @type {Observable}
-   */
-  const endOfPlay = timings$
-    .filter(({ currentTime, duration }) => (
-      duration > 0 && duration - currentTime < END_OF_PLAY
-    ));
-
-  /**
    * On subscription:
    *   - load the manifest (through its pipeline)
    *   - wiat for the given mediasource to be open
@@ -330,7 +319,7 @@ export default function Stream({
     mediaSource : MediaSource|null;
   }) => {
     const sourceOpening$ = mediaSource
-      ? onSourceOpen$(mediaSource)
+      ? onSourceOpen$(mediaSource).take(1)
       : Observable.of(null);
 
     return Observable.combineLatest(fetchManifest(url), sourceOpening$)
@@ -639,6 +628,32 @@ export default function Stream({
   }
 
   /**
+   * MediaSource.prototype.endOfStream may throw an exception is one or more
+   * source buffers are being updated. This function allows to handle these exceptions
+   * and direclty retry the end of stream.
+   *
+   * If source buffers are still being updated after 0.5 seconds, then throw.
+   * @param mediaSource
+   * @param countDown
+   */
+  function triggerEndOfStream(
+    mediaSource: MediaSource,
+    countDown: number
+  ) {
+    try {
+      mediaSource.endOfStream();
+      return;
+    } catch(error) {
+      if (countDown <= 1) {
+        throw error;
+      } else {
+        log.warn("Error during endOfStream() call. Retrying "+(countDown - 1)+" times.");
+        setTimeout(() => triggerEndOfStream(mediaSource, countDown - 1), 200);
+      }
+    }
+  }
+
+  /**
    * Creates a stream merging all observable that are required to make
    * the system cooperate.
    * @param {MediaSource} mediaSource
@@ -713,6 +728,39 @@ export default function Stream({
         .mergeMap(message => liveMessageHandler(message, manifest)) :
       Observable.merge(..._buffersArray);
 
+    /**
+     * Triggers the mediaSource end of stream when buffer high limit has
+     * reached content duration, and when playback current time is on
+     * the last buffered range.
+     */
+    const endOfStream$ = clock$
+      .combineLatest(wantedBufferAhead$)
+      .filter(([{ buffered, currentTime, currentRange }, wantedBufferAhead]) => {
+        return (
+          // Content has been buffered
+          buffered.length > 0 &&
+          // Video plays in buffer
+          currentRange != null &&
+          // Current range is the last one
+          buffered.end(buffered.length - 1) === currentRange.end &&
+          // The media source is open
+          mediaSource.readyState === "open" &&
+           // Buffering will reach the end soon
+          currentTime + wantedBufferAhead > (manifest.getDuration() || Infinity) &&
+          // Buffered end has reached the end of estimated presentation timeline
+          (Math.round(
+            (
+              buffered.end(buffered.length - 1) -
+              manifest.getPresentationTimelineDuration()
+            ) * 100) / 100
+          ) >= 0
+        );
+      })
+      .do(() => {
+        log.info("Triggering MediaSource end of stream.");
+        triggerEndOfStream(mediaSource, 5);
+      });
+
     const manifest$ = Observable.of({
       type: "manifestChange",
       value: {
@@ -740,7 +788,8 @@ export default function Stream({
       manifest$,
       mediaErrorManager$,
       speedManager$,
-      stallingManager$
+      stallingManager$,
+      endOfStream$
     );
   }
 
@@ -750,6 +799,5 @@ export default function Stream({
     withMediaSource,
     sourceBufferMemory
   )
-    .mergeMap(startStream)
-    .takeUntil(endOfPlay);
+    .mergeMap(startStream);
 }
