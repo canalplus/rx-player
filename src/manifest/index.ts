@@ -347,7 +347,7 @@ export default class Manifest {
               );
               /* tslint:enable:max-line-length */
             } else {
-              oldRepresentations[j].index.update(newRepresentation.index);
+              oldRepresentations[j].index._update(newRepresentation.index);
             }
           }
         }

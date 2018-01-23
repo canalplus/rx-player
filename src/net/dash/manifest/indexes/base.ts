@@ -23,7 +23,6 @@ import {
   getSegmentsFromTimeline,
   getTimelineRangeEnd,
   IIndexSegment,
-  scale,
 } from "./helpers";
 
 export interface IBaseIndex {
@@ -56,8 +55,8 @@ function _addSegmentInfos(
     time : number;
     duration : number;
     timescale : number;
-    count: number;
-    range: [number, number];
+    count?: number;
+    range?: [number, number];
   }
 ) : boolean {
   if (segmentInfos.timescale !== index.timescale) {
@@ -65,14 +64,14 @@ function _addSegmentInfos(
     index.timeline.push({
       ts: (segmentInfos.time / segmentInfos.timescale) * timescale,
       d: (segmentInfos.duration / segmentInfos.timescale) * timescale,
-      r: segmentInfos.count,
+      r: segmentInfos.count || 0,
       range: segmentInfos.range,
     });
   } else {
     index.timeline.push({
       ts: segmentInfos.time,
       d: segmentInfos.duration,
-      r: segmentInfos.count,
+      r: segmentInfos.count || 0,
       range: segmentInfos.range,
     });
   }
@@ -104,17 +103,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Convert a time from a generated Segment to seconds.
-   *
-   * TODO What? Should be sufficient with a Segment alone. Check that.
-   * @param {Number} time
-   * @returns {Number}
-   */
-  scale(time : number) : number {
-    return scale(this._index, time);
-  }
-
-  /**
    * @param {Number} _up
    * @param {Number} _to
    * @returns {Array.<Object>}
@@ -124,19 +112,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @param {Array.<Object>}
-   * @returns {Array.<Object>}
+   * Returns false as no Segment-Base based index should need to be refreshed.
+   * @returns {Boolean}
    */
-  _addSegments(nextSegments : any[]) : any[] { // TODO
-    const addedSegments : any[] = [];
-    for (let i = 0; i < nextSegments.length; i++) {
-      if (
-        _addSegmentInfos(this._index, nextSegments[i])
-      ) {
-        addedSegments.push(nextSegments[i]);
-      }
-    }
-    return addedSegments;
+  shouldRefresh() : false {
+    return false;
   }
 
   /**
@@ -173,26 +153,27 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns false as no Segment-Base based index should need to be refreshed.
-   * @returns {Boolean}
+   * @param {Array.<Object>}
+   * @returns {Array.<Object>}
    */
-  shouldRefresh() : false {
-    return false;
+  _addSegments(nextSegments : Array<{
+    time : number;
+    duration : number;
+    timescale : number;
+    count? : number;
+    range? : [number, number];
+  }>) : void {
+    for (let i = 0; i < nextSegments.length; i++) {
+      _addSegmentInfos(this._index, nextSegments[i]);
+    }
   }
 
   /**
    * @param {Object}
    */
-  update(
+  _update(
     newIndex : BaseRepresentationIndex /* TODO @ index refacto */
   ) : void {
     this._index = newIndex._index;
-  }
-
-  /**
-   * @returns {string}
-   */
-  getType() : string { // TODO Remove
-    return "base";
   }
 }

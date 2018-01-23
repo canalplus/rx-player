@@ -65,11 +65,10 @@ function addNextSegments(
   adaptation : Adaptation,
   nextSegments : INextSegmentsInfos[],
   dlSegment? : ISegmentTimingInfos
-) {
+) : void {
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];
-      // TODO TypeScript bug?
       representation.index._addSegments(nextSegments, dlSegment);
     }
 }
