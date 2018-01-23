@@ -267,8 +267,7 @@ export default function RepresentationBuffer({
 
     const shouldRefresh = representation.index.shouldRefresh(segments, start, end);
     if (shouldRefresh) {
-      const error = new IndexError(
-        "OUT_OF_INDEX_ERROR", representation.index.getType(), false);
+      const error = new IndexError("OUT_OF_INDEX_ERROR", false);
       messageSubject.next({
         type: "needs-manifest-refresh",
         value: error,

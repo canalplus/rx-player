@@ -35,18 +35,15 @@ export default class IndexError extends Error {
   public message : string;
   public code : string;
   public fatal : boolean;
-  public indexType? : string;
   public reason? : { message : string }|string|null;
 
-  constructor(code : string, indexType? : string, fatal? : boolean) {
+  constructor(code : string, fatal? : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, IndexError.prototype);
 
     this.name = "IndexError";
     this.type = ErrorTypes.INDEX_ERROR;
-
-    this.indexType = indexType;
 
     this.reason = null;
     this.code = ErrorCodes.hasOwnProperty(code) ?

@@ -18,14 +18,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-import assert from "../../../utils/assert";
 // import { IHSSManifestSegment } from "../types";
-
-export interface IRepresentationIndexSegmentInfos {
-  duration : number;
-  time : number;
-  timescale : number;
-}
 
 export interface IIndexSegment {
   ts : number; // start timestamp
@@ -64,8 +57,8 @@ function _addSegmentInfos(
   },
   currentSegment : {
     time : number;
-    duration : number;
-    timescale : number;
+    duration? : number;
+    timescale? : number;
   }
 ) : boolean {
   const { timeline, timescale } = index;
@@ -82,7 +75,7 @@ function _addSegmentInfos(
 
   let scaledCurrentTime;
 
-  if (currentSegment) {
+  if (currentSegment && currentSegment.timescale) {
     scaledCurrentTime = currentSegment.timescale === timescale ?
       currentSegment.time :
       (currentSegment.time / currentSegment.timescale) * timescale;
@@ -207,49 +200,6 @@ function getTimelineRangeEnd({ ts, d, r }: {
 }): number {
   return (d == null || d === -1) ? ts : ts + (r + 1) * d;
 }
-
-/**
- * Re-scale a given time from timescaled information to second-based.
- * @param {Object} index
- * @param {Number} time
- * @returns {Number}
- */
-function scale(index: { timescale: number }, time: number): number {
-  if (__DEV__) {
-    assert(index.timescale > 0);
-  }
-
-  return time / index.timescale;
-}
-
-/**
- * Update the timescale used (for all segments).
- * TODO This should probably update all previous segments to the newly set
- * Timescale.
- *
- * /!\ Mutates the given index
- * @param {Object} index
- * @param {Number} timescale
- * @returns {Object}
- */
-const setTimescale = (
-  index: { timescale?: number },
-  timescale: number
-): { timescale: number } => {
-  if (__DEV__) {
-    assert(typeof timescale === "number");
-    assert(timescale > 0);
-  }
-
-  if (index.timescale !== timescale) {
-    index.timescale = timescale;
-  }
-
-  return {
-    timescale: index.timescale === timescale ?
-      timescale : index.timescale,
-  };
-};
 
 // interface ISmoothIndex {
 //   presentationTimeOffset? : number;
@@ -393,27 +343,6 @@ export default class SmoothRepresentationIndex
     }
 
     /**
-     * Update the timescale in a Smooth Manifest
-     * TODO private?
-     *
-     * @param {Number} timescale
-     */
-    setTimescale(timescale : number) : void {
-      setTimescale(this._index, timescale);
-    }
-
-    /**
-     * Convert a time from a generated Segment to seconds.
-     *
-     * TODO What? Should be sufficient with a Segment alone. Check that.
-     * @param {Number} time
-     * @returns {Number}
-     */
-    scale(time : number) : number {
-      return scale(this._index, time);
-    }
-
-    /**
      * Generate a list of Segments for a particular period of time.
      *
      * @param {Number} _up
@@ -490,74 +419,6 @@ export default class SmoothRepresentationIndex
     }
 
     /**
-     * Checks if the time given is in a discontinuity. That is:
-     *   - We're on the upper bound of the current range (end of the range - time
-     *     is inferior to the timescale)
-     *   - The next range starts after the end of the current range.
-     *
-     * @param {Number} _time
-     * @returns {Number} - If a discontinuity is present, this is the Starting ts
-     * for the next (discontinuited) range. If not this is equal to -1.
-     */
-    checkDiscontinuity(_time : number) : number {
-      const index = this._index;
-      const { timeline, timescale = 1 } = index;
-      const time = _time * timescale;
-
-      if (time <= 0) {
-        return -1;
-      }
-
-      const segmentIndex = getSegmentIndex(index, time);
-      if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
-        return -1;
-      }
-
-      const range = timeline[segmentIndex];
-      if (range.d === -1) {
-        return -1;
-      }
-
-      const rangeUp = range.ts;
-      const rangeTo = getTimelineRangeEnd(range);
-      const nextRange = timeline[segmentIndex + 1];
-
-      // when we are actually inside the found range and this range has
-      // an explicit discontinuity with the next one
-      if (rangeTo !== nextRange.ts &&
-          time >= rangeUp &&
-          time <= rangeTo &&
-          (rangeTo - time) < timescale) {
-        return nextRange.ts / timescale;
-      }
-
-      return -1;
-    }
-
-    _addSegments(
-      nextSegments : Array<{
-        duration : number;
-        time : number;
-        timescale : number;
-      }>,
-      currentSegment : { duration : number; time : number; timescale : number}
-    ) : IRepresentationIndexSegmentInfos[] {
-      const addedSegments : IRepresentationIndexSegmentInfos[] = [];
-      for (let i = 0; i < nextSegments.length; i++) {
-        if (
-          _addSegmentInfos(
-            this._index,
-            nextSegments[i],
-            currentSegment
-          )
-        ) {
-          addedSegments.push(nextSegments[i]);
-        }
-      }
-      return addedSegments;
-    }
-
-    /**
      * Returns true if, based on the arguments, the index should be refreshed.
      * (If we should re-fetch the manifest)
      * @param {Array.<Object>} parsedSegments
@@ -630,11 +491,65 @@ export default class SmoothRepresentationIndex
       return (getTimelineRangeEnd(lastTimelineElement) / index.timescale);
     }
 
-    update(newIndex : any /* TODO @ index refacto */) : void {
+    /**
+     * Checks if the time given is in a discontinuity. That is:
+     *   - We're on the upper bound of the current range (end of the range - time
+     *     is inferior to the timescale)
+     *   - The next range starts after the end of the current range.
+     *
+     * @param {Number} _time
+     * @returns {Number} - If a discontinuity is present, this is the Starting ts
+     * for the next (discontinuited) range. If not this is equal to -1.
+     */
+    checkDiscontinuity(_time : number) : number {
+      const index = this._index;
+      const { timeline, timescale = 1 } = index;
+      const time = _time * timescale;
+
+      if (time <= 0) {
+        return -1;
+      }
+
+      const segmentIndex = getSegmentIndex(index, time);
+      if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
+        return -1;
+      }
+
+      const range = timeline[segmentIndex];
+      if (range.d === -1) {
+        return -1;
+      }
+
+      const rangeUp = range.ts;
+      const rangeTo = getTimelineRangeEnd(range);
+      const nextRange = timeline[segmentIndex + 1];
+
+      // when we are actually inside the found range and this range has
+      // an explicit discontinuity with the next one
+      if (rangeTo !== nextRange.ts &&
+          time >= rangeUp &&
+          time <= rangeTo &&
+          (rangeTo - time) < timescale) {
+        return nextRange.ts / timescale;
+      }
+
+      return -1;
+    }
+
+    _update(newIndex : SmoothRepresentationIndex) : void {
       this._index = newIndex._index;
     }
 
-    getType() : string { // TODO Remove
-      return "smooth";
+    _addSegments(
+      nextSegments : Array<{
+        duration : number;
+        time : number;
+        timescale : number;
+      }>,
+      currentSegment : { duration : number; time : number; timescale : number}
+    ) : void {
+      for (let i = 0; i < nextSegments.length; i++) {
+        _addSegmentInfos(this._index, nextSegments[i], currentSegment);
+      }
     }
 }

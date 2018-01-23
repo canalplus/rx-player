@@ -18,10 +18,10 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import log from "../../../../utils/log";
 import {
   getInitSegment,
   normalizeRange,
-  scale,
 } from "./helpers";
 
 export interface IListIndex {
@@ -60,17 +60,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Convert a time from a generated Segment to seconds.
-   *
-   * TODO What? Should be sufficient with a Segment alone. Check that.
-   * @param {Number} time
-   * @returns {Number}
-   */
-  scale(time : number) : number {
-    return scale(this._index, time);
-  }
-
-  /**
    * @param {Number} _up
    * @param {Number} _to
    * @returns {Array.<Object>}
@@ -102,24 +91,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns first position in index.
-   * @returns {Number}
-   */
-  getFirstPosition() : number {
-    return 0;
-  }
-
-  /**
-   * Returns last position in index.
-   * @returns {Number}
-   */
-  getLastPosition() : number {
-    const index = this._index;
-    const { duration, list } = index;
-    return (list.length * duration) / index.timescale;
-  }
-
-  /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
    * @param {Array.<Object>} _
@@ -141,11 +112,21 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * We do not have to add new segments to SegmentList-based indexes.
-   * @returns {Array}
+   * Returns first position in index.
+   * @returns {Number}
    */
-  _addSegments() : never[] {
-    return [];
+  getFirstPosition() : number {
+    return 0;
+  }
+
+  /**
+   * Returns last position in index.
+   * @returns {Number}
+   */
+  getLastPosition() : number {
+    const index = this._index;
+    const { duration, list } = index;
+    return (list.length * duration) / index.timescale;
   }
 
   /**
@@ -159,16 +140,17 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object}
    */
-  update(
-    newIndex : ListRepresentationIndex /* TODO @ index refacto */
-  ) : void {
+  _update(newIndex : ListRepresentationIndex) : void {
     this._index = newIndex._index;
   }
 
   /**
-   * @returns {string}
+   * We do not have to add new segments to SegmentList-based indexes.
+   * @returns {Array}
    */
-  getType() : string { // TODO Remove
-    return "list";
+  _addSegments() : void {
+    if (__DEV__) {
+      log.warn("Tried to add Segments to a list RepresentationIndex");
+    }
   }
 }

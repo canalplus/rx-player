@@ -15,7 +15,6 @@
  */
 
 import { ISegment } from "../../../../manifest";
-import assert from "../../../../utils/assert";
 
 interface IIndexSegment {
   ts: number; // start timestamp
@@ -24,39 +23,6 @@ interface IIndexSegment {
   range?: [number, number];
 }
 
-<<<<<<< HEAD:src/manifest/indexes/helpers.ts
-interface ITimelineIndex {
-  presentationTimeOffset?: number;
-  timescale: number;
-  media: string;
-  timeline: IIndexSegment[];
-  startNumber?: number;
-}
-
-interface ITemplateIndex {
-  presentationTimeOffset?: number;
-  timescale: number;
-  media: string;
-  duration: number;
-  startNumber: number;
-  timeline: IIndexSegment[];
-}
-
-interface IListIndex {
-  presentationTimeOffset? : number;
-  duration : number;
-  timescale : number;
-  media : string;
-  list : IListIndexListItem[];
-}
-
-export interface IListIndexListItem {
-  media : string;
-  mediaRange? : [ number, number ];
-}
-
-=======
->>>>>>> manifest: move custom indexes implementations to net directory:src/net/dash/manifest/indexes/helpers.ts
 /**
  * Calculate the number of times a segment repeat based on the next segment.
  * @param {Object} seg
@@ -162,20 +128,6 @@ function getInitSegment(
 }
 
 /**
- * Re-scale a given time from timescaled information to second-based.
- * @param {Object} index
- * @param {Number} time
- * @returns {Number}
- */
-function scale(index: { timescale: number }, time: number): number {
-  if (__DEV__) {
-    assert(index.timescale > 0);
-  }
-
-  return time / index.timescale;
-}
-
-/**
  * @param {Number} ts
  * @param {Number} up
  * @param {Number} duration
@@ -257,49 +209,6 @@ function getSegmentsFromTimeline(
         number: currentNumber != null ?
         currentNumber + segmentNumberInCurrentRange : undefined,
       };
-<<<<<<< HEAD:src/manifest/indexes/helpers.ts
-      indexRange?: [number, number];
-    }) => Segment;
-  setTimescale: (
-    index: { timescale?: number },
-    timescale: number
-  ) => { timescale: number };
-  scale: (
-    index: { timescale: number },
-    time: number
-  ) => number;
-  getSegments: (
-    repId: string | number,
-    index: T,
-    _up: number,
-    _to: number
-  ) => Segment[];
-  shouldRefresh: (
-    index: T,
-    parsedSegments: Segment[],
-    up: number,
-    to: number
-  ) => boolean;
-  getFirstPosition: (index: T) => number | undefined;
-  getLastPosition: (index: T) => number | undefined;
-  checkDiscontinuity: (
-    index: T,
-    _time: number
-  ) => number;
-  _addSegmentInfos: (
-    index: T,
-    newSegment: {
-      time: number;
-      duration: number;
-      timescale: number;
-      count: number;
-      range: [number, number];
-    },
-    currentSegment?: {
-      duration?: number;
-      time: number;
-      timescale: number;
-=======
       segments.push(segment);
 
       // update segment number and segment time for the next segment
@@ -314,7 +223,6 @@ function getSegmentsFromTimeline(
 
     if (currentNumber != null) {
       currentNumber += repeat + 1;
->>>>>>> manifest: move custom indexes implementations to net directory:src/net/dash/manifest/indexes/helpers.ts
     }
   }
 
@@ -328,5 +236,4 @@ export {
   getTimelineRangeEnd,
   getInitSegment,
   IIndexSegment,
-  scale,
 };
