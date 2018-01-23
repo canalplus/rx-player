@@ -15,7 +15,6 @@
  */
 
 import { ISegment } from "../../../../manifest";
-import assert from "../../../../utils/assert";
 
 interface IIndexSegment {
   ts: number; // start timestamp
@@ -129,20 +128,6 @@ function getInitSegment(
 }
 
 /**
- * Re-scale a given time from timescaled information to second-based.
- * @param {Object} index
- * @param {Number} time
- * @returns {Number}
- */
-function scale(index: { timescale: number }, time: number): number {
-  if (__DEV__) {
-    assert(index.timescale > 0);
-  }
-
-  return time / index.timescale;
-}
-
-/**
  * @param {Number} ts
  * @param {Number} up
  * @param {Number} duration
@@ -251,5 +236,4 @@ export {
   getTimelineRangeEnd,
   getInitSegment,
   IIndexSegment,
-  scale,
 };

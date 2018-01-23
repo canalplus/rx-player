@@ -103,16 +103,11 @@ const getLastLiveTimeReference = (adaptation: IParsedAdaptationSet): number|unde
   }
 
   const representations = adaptation.representations || [];
-  const representationsWithIndex = representations
-    .filter((r) => r && r.index);
 
-  const lastLiveTimeReferences : Array<number|undefined> = representationsWithIndex
+  const lastLiveTimeReferences : Array<number|undefined> = representations
     .map(representation => {
-      if (representation.index.getType() === "timeline") {
-        const lastPosition = representation.index.getLastPosition();
-        return lastPosition != null ? lastPosition - 10 : undefined; // TODO
-      }
-      return undefined;
+      const lastPosition = representation.index.getLastPosition();
+      return lastPosition != null ? lastPosition - 10 : undefined; // TODO
     });
 
   if (lastLiveTimeReferences.some((x) => x == null)) {
@@ -121,14 +116,10 @@ const getLastLiveTimeReference = (adaptation: IParsedAdaptationSet): number|unde
 
   const representationsMin = Math.min(...lastLiveTimeReferences as number[]);
 
-  // if the last live time reference could not be calculated, return undefined
   if (isNaN(representationsMin)) {
     return undefined;
   }
-
-  if (representations.length === representationsWithIndex.length) {
-    return representationsMin;
-  }
+  return representationsMin;
 };
 
 /**

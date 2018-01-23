@@ -65,7 +65,7 @@ function addNextSegments(
   adaptation : Adaptation,
   dlSegment : ISegmentTimingInfos,
   nextSegments : INextSegmentsInfos[]
-) {
+) : void {
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];
@@ -73,12 +73,7 @@ function addNextSegments(
       dlSegment.duration != null &&
       dlSegment.timescale != null
     ) {
-      // TODO TypeScript bug?
-      representation.index._addSegments(nextSegments, dlSegment as {
-        time : number;
-        duration : number;
-        timescale : number;
-      });
+      representation.index._addSegments(nextSegments, dlSegment);
     }
   }
 }

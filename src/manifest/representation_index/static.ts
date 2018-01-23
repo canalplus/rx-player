@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../utils/log";
 import IRepresentationIndex, {
   ISegment,
   ISegmentPrivateInfos,
@@ -49,15 +50,6 @@ export default class StaticRepresentationIndex<
       timescale: 1,
       privateInfos: this._privateInfos,
     };
-  }
-
-  /**
-   * Convert a time from a generated Segment to seconds.
-   * @param {Number} time
-   * @returns {Number}
-   */
-  scale(time : number) : number {
-    return time;
   }
 
   /**
@@ -107,7 +99,6 @@ export default class StaticRepresentationIndex<
   }
 
   /**
-   * We cannot check for discontinuity in SegmentTemplate-based indexes.
    * @returns {Number}
    */
   checkDiscontinuity() : -1 {
@@ -115,24 +106,15 @@ export default class StaticRepresentationIndex<
   }
 
   /**
-   * We do not have to add new segments to SegmentList-based indexes.
    * @returns {Array}
    */
-  _addSegments() : never[] {
+  _addSegments() : void {
     if (__DEV__) {
-      throw new Error("Cannot add Segments to a static RepresentationIndex");
+      log.warn("Tried add Segments to a static RepresentationIndex");
     }
-    return [];
   }
 
-  update() : void {
-    if (__DEV__) {
-      throw new Error("Cannot update a static RepresentationIndex");
-    }
-    return;
-  }
-
-  getType() : string { // TODO Remove
-    return "manual";
+  _update() : void {
+    log.warn("Tried to update a static RepresentationIndex");
   }
 }

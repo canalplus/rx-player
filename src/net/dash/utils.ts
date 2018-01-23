@@ -37,12 +37,7 @@ function addNextSegments(
     dlSegment.duration != null &&
     dlSegment.timescale != null
   ) {
-    // TODO TypeScript bug?
-    representation.index._addSegments(nextSegments, dlSegment as {
-      time : number;
-      duration : number;
-      timescale : number;
-    });
+    representation.index._addSegments(nextSegments, dlSegment);
   }
 }
 

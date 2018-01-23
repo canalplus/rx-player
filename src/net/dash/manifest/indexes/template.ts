@@ -18,10 +18,10 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import log from "../../../../utils/log";
 import {
   getInitSegment,
   normalizeRange,
-  scale,
 } from "./helpers";
 
 export interface ITemplateIndex {
@@ -51,17 +51,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   getInitSegment() : ISegment {
     return getInitSegment(this._index);
-  }
-
-  /**
-   * Convert a time from a generated Segment to seconds.
-   *
-   * TODO What? Should be sufficient with a Segment alone. Check that.
-   * @param {Number} time
-   * @returns {Number}
-   */
-  scale(time : number) : number {
-    return scale(this._index, time);
   }
 
   /**
@@ -151,23 +140,18 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * We do not have to add new segments to SegmentList-based indexes.
    * @returns {Array}
    */
-  _addSegments() : never[] {
-    return [];
+  _addSegments() : void {
+    if (__DEV__) {
+      log.warn("Tried to add Segments to a template RepresentationIndex");
+    }
   }
 
   /**
    * @param {Object}
    */
-  update(
+  _update(
     newIndex : TemplateRepresentationIndex /* TODO @ index refacto */
   ) : void {
     this._index = newIndex._index;
-  }
-
-  /**
-   * @returns {string}
-   */
-  getType() : string { // TODO Remove
-    return "template";
   }
 }

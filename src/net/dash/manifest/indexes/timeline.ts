@@ -23,14 +23,7 @@ import {
   getSegmentsFromTimeline,
   getTimelineRangeEnd,
   IIndexSegment,
-  scale,
 } from "./helpers";
-
-interface IRepresentationIndexSegmentInfos {
-  duration : number;
-  time : number;
-  timescale : number;
-}
 
 export interface ITimelineIndex {
   indexType : "timeline";
@@ -90,7 +83,7 @@ function getSegmentIndex(
 function _addSegmentInfos(
   index : ITimelineIndex,
   newSegment : { time : number; duration : number; timescale : number },
-  currentSegment : { time : number; duration : number; timescale : number }
+  currentSegment : { time : number; duration? : number; timescale? : number }
 ) : boolean {
   const { timeline, timescale } = index;
   const timelineLength = timeline.length;
@@ -106,7 +99,7 @@ function _addSegmentInfos(
 
   let scaledCurrentTime;
 
-  if (currentSegment) {
+  if (currentSegment && currentSegment.timescale) {
     scaledCurrentTime = currentSegment.timescale === timescale ?
       currentSegment.time :
       (currentSegment.time / currentSegment.timescale) * timescale;
@@ -183,17 +176,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   getInitSegment() : ISegment {
     return getInitSegment(this._index);
-  }
-
-  /**
-   * Convert a time from a generated Segment to seconds.
-   *
-   * TODO What? Should be sufficient with a Segment alone. Check that.
-   * @param {Number} time
-   * @returns {Number}
-   */
-  scale(time : number) : number {
-    return scale(this._index, time);
   }
 
   /**
@@ -302,6 +284,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * @param {Object}
+   */
+  _update(
+    newIndex : TimelineRepresentationIndex /* TODO @ index refacto */
+  ) : void {
+    this._index = newIndex._index;
+  }
+
+  /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @param {Array.<Object>}
    * @param {Object}
@@ -309,36 +300,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   _addSegments(
     nextSegments : Array<{ duration : number; time : number; timescale : number }>,
-    currentSegment : { duration : number; time : number; timescale : number}
-  ) : IRepresentationIndexSegmentInfos[] {
-    const addedSegments : IRepresentationIndexSegmentInfos[] = [];
-    for (let i = 0; i < nextSegments.length; i++) {
-      if (
-        _addSegmentInfos(
-          this._index,
-          nextSegments[i],
-          currentSegment
-        )
-      ) {
-        addedSegments.push(nextSegments[i]);
-      }
+    currentSegment : {
+      duration? : number;
+      time : number;
+      timescale? : number;
     }
-    return addedSegments;
-  }
-
-  /**
-   * @param {Object}
-   */
-  update(
-    newIndex : TimelineRepresentationIndex /* TODO @ index refacto */
   ) : void {
-    this._index = newIndex._index;
-  }
-
-  /**
-   * @returns {string}
-   */
-  getType() : string { // TODO Remove
-    return "timeline";
+    for (let i = 0; i < nextSegments.length; i++) {
+      _addSegmentInfos(this._index, nextSegments[i], currentSegment);
+    }
   }
 }
