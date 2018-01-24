@@ -573,6 +573,18 @@ export default function parseManifest(
       parsedPeriod.bitstreamSwitching = period.attributes.bitstreamSwitching;
     }
 
+    const nextPeriod = parsedPeriods[i + 1];
+    if (parsedPeriod.duration == null && nextPeriod && nextPeriod.start != null) {
+      parsedPeriod.duration = nextPeriod.start - parsedPeriod.start;
+    } else if (
+      i === 0 &&
+      parsedPeriod.duration == null &&
+      rootAttributes.duration &&
+      !nextPeriod
+    ){
+      parsedPeriod.duration = rootAttributes.duration;
+    }
+
     parsedPeriods.push(parsedPeriod);
   }
 

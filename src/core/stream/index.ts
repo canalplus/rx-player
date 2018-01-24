@@ -16,13 +16,15 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import config from "../../config";
 import log from "../../utils/log";
 import { retryableFuncWithBackoff } from "../../utils/retry";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
-import { onSourceOpen$ } from "../../compat/events";
+import {
+  onEnded$,
+  onSourceOpen$,
+ } from "../../compat/events";
 import {
   CustomError,
   isKnownError,
@@ -73,7 +75,7 @@ import EVENTS, {
 } from "./stream_events";
 import handleInitialVideoEvents from "./video_events";
 
-const { END_OF_PLAY } = config;
+import config from "../../config";
 
 function getManifestPipelineOptions(
   networkConfig: {
@@ -206,15 +208,10 @@ export default function Stream({
     );
 
   /**
-   * End-Of-Play emit when the current clock is really close to the end.
-   * TODO Remove END_OF_PLAY constant
-   * @see END_OF_PLAY
+   * End-Of-Play emit when video triggers ended event.
    * @type {Observable}
    */
-  const endOfPlay = clock$
-    .filter(({ currentTime, duration }) =>
-      duration > 0 && duration - currentTime < END_OF_PLAY
-    );
+  const endOfPlay = onEnded$(videoElement);
 
   /**
    * Retry the stream if ended for an unknown or non-fatal error.
@@ -294,7 +291,7 @@ export default function Stream({
    * @returns {Observable}
    */
   function startStream(mediaSource : MediaSource) {
-    return Observable.combineLatest(fetchManifest(url), onSourceOpen$(mediaSource))
+    return Observable.combineLatest(fetchManifest(url), onSourceOpen$(mediaSource).take(1))
       .mergeMap(([manifest]) => initialize(mediaSource, manifest));
   }
 
@@ -393,6 +390,18 @@ export default function Stream({
       warning$
     );
 
+    const endOfStream$ = handledBuffers$
+      .filter((evt) => {
+        return (
+          evt.type === "end-of-stream" &&
+          mediaSource.readyState === "open"
+        );
+      })
+      .do(() => {
+        log.info("Triggering end of stream.");
+        mediaSource.endOfStream();
+      });
+
     /**
      * Add management of events linked to live Playback.
      * @type {Observable}
@@ -444,6 +453,7 @@ export default function Stream({
       buffers$,
       emeManager$,
       mediaErrorHandler$,
+      endOfStream$,
       speedManager$,
       stallingManager$
     ).finally(() => {
