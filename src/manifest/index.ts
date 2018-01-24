@@ -55,6 +55,7 @@ interface IManifestArguments {
   periods : IPeriodArguments[];
   presentationLiveGap? : number;
   suggestedPresentationDelay? : number;
+  minimumUpdatePeriod? : number;
   timeShiftBufferDepth? : number;
   transportType : string;
   type? : string;
@@ -77,6 +78,8 @@ export default class Manifest {
   public minimumTime? : number;
   public presentationLiveGap? : number;
   public timeShiftBufferDepth? : number;
+  public minimumUpdatePeriod?: number;
+  public loadedAt: number;
 
   private _duration : number;
 
@@ -108,6 +111,7 @@ export default class Manifest {
     this.availabilityStartTime = args.availabilityStartTime;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+    this.minimumUpdatePeriod = args.minimumUpdatePeriod;
 
     // --------- private data
     this._duration = args.duration;
@@ -118,6 +122,8 @@ export default class Manifest {
       assert(this.presentationLiveGap != null);
       assert(this.timeShiftBufferDepth != null);
     }
+
+    this.loadedAt = Date.now() / 1000;
   }
 
   /**
@@ -383,6 +389,14 @@ export default class Manifest {
         }
       }
     }
+    // update manifest attributes
+    this.loadedAt = Date.now() / 1000;
+    this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
+    this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.presentationLiveGap = newManifest.presentationLiveGap;
+    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
+    this.minimumUpdatePeriod = newManifest.minimumUpdatePeriod;
+    this._duration = newManifest._duration;
   }
 }
 

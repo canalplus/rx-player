@@ -61,12 +61,16 @@ import BufferGarbageCollector from "./garbage_collector";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import liveEventsHandler from "./live_events_handler";
+import {
+  liveEventsHandler,
+  refreshManifest,
+ } from "./live_events_handler";
 import createMediaErrorHandler from "./media_error_handler";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import EVENTS, {
+  IManifestUpdateEvent,
   IStreamEvent,
 } from "./stream_events";
 import handleInitialVideoEvents from "./video_events";
@@ -330,14 +334,39 @@ export default function Stream({
       return Observable.of(evt);
     });
 
-    /**
-     * Add management of events linked to live Playback.
-     * @type {Observable}
+    /* In the case where minimumUpdatePeriod is specified, and above 0,
+     * manifest may be updated when update period has elapsed from the download
+     * time of previous manifest.
+     * @param {number} minimumUpdatePeriod
+     * @param {number} updateGap
      */
-    const buffers$ = (manifest.isLive ?
-      handledBuffers$
-        .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
-      handledBuffers$);
+    function refreshExpiredManifest(
+      updateGap: number,
+      minimumUpdatePeriod?: number
+    ): Observable<IManifestUpdateEvent> {
+      return minimumUpdatePeriod ?
+        Observable.timer((minimumUpdatePeriod - updateGap) * 1000)
+          .mergeMap(() => {
+            return refreshManifest(fetchManifest, manifest)
+              .concatMap(() =>
+                refreshExpiredManifest(
+                  (Date.now() / 1000 - manifest.loadedAt),
+                  manifest.minimumUpdatePeriod
+                )
+              );
+            }
+          ) :
+        Observable.never();
+    }
+
+    const initialUpdateGap = Date.now() / 1000 - manifest.loadedAt;
+    const expiredManifestUpdate$ =
+      refreshExpiredManifest(initialUpdateGap, manifest.minimumUpdatePeriod);
+
+    const buffers$ = manifest.isLive ?
+        handledBuffers$
+          .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
+        handledBuffers$;
 
     /**
      * Create EME Manager, an observable which will manage every EME-related
@@ -381,6 +410,7 @@ export default function Stream({
       loadedEvent$,
       buffers$,
       emeManager$,
+      expiredManifestUpdate$,
       mediaErrorHandler$ as Observable<any>, // TODO RxJS Bug?
       speedManager$,
       stallingManager$
