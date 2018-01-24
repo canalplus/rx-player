@@ -102,6 +102,11 @@ export interface IPeriodBufferClearedEvent {
   };
 }
 
+export interface IEndOfStreamEvent {
+  type: "end-of-stream";
+  value: undefined;
+}
+
 const STREAM_EVENTS = {
   adaptationChange(
     bufferType : SupportedBufferTypes,
@@ -230,6 +235,7 @@ export type IStreamEvent =
   IStalledEvent |
   IStreamLoadedEvent |
   IStreamStartedEvent |
+  IEndOfStreamEvent |
   IStreamWarningEvent;
 
 export default STREAM_EVENTS;

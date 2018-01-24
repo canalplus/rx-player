@@ -53,6 +53,7 @@ import SegmentBookkeeper from "./segment_bookkeeper";
 import EVENTS, {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
+  IEndOfStreamEvent,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
 } from "./stream_events";
@@ -77,7 +78,8 @@ type IMultiplePeriodBuffersEvent =
  */
 export type IBufferHandlerEvent =
   IActivePeriodChangedEvent |
-  IMultiplePeriodBuffersEvent;
+  IMultiplePeriodBuffersEvent |
+  IEndOfStreamEvent;
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
@@ -168,6 +170,16 @@ export default function BuffersHandler(
         }).share();
     });
 
+    const streamHasEnded$ =
+      Observable
+        .combineLatest(
+          buffersArray.map((obs) => obs.filter((evt) => evt.type === "last-full")
+        ))
+        .mapTo({
+          type: "end-of-stream",
+          value: undefined,
+        });
+
   const activePeriod$ : Observable<Period> =
     ActivePeriodEmitter(addPeriodBuffer$, removePeriodBuffer$)
       .filter((period) : period is Period => !!period);
@@ -178,7 +190,8 @@ export default function BuffersHandler(
         log.info("new active period", period);
       })
       .map(period => EVENTS.activePeriodChanged(period)),
-    ...buffersArray
+    ...buffersArray,
+    streamHasEnded$
   );
 
   /**
@@ -324,6 +337,8 @@ export default function BuffersHandler(
      */
     const destroyNextBuffers$ = new Subject<void>();
 
+    const lastBufferCreated$ = new Subject<void>();
+
     /**
      * Emit when the current position goes over the end of the current buffer.
      * @type {Subject}
@@ -346,6 +361,7 @@ export default function BuffersHandler(
         const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
         if (!nextPeriod || nextPeriod === basePeriod) {
+          lastBufferCreated$.next();
           return Observable.empty();
         }
         return manageConsecutivePeriodBuffers(
@@ -403,9 +419,25 @@ export default function BuffersHandler(
             })
         );
 
+    const lastPeriodBuffer$ = currentBuffer$
+      .filter((evt) => {
+        return evt.type === "periodBufferReady" || evt.type === "representationChange";
+      })
+      .switchMap(() => {
+        return currentBuffer$
+          .filter((evt) => evt.type === "full")
+          .take(1);
+      })
+      .withLatestFrom(lastBufferCreated$.take(1))
+      .mapTo({
+        type: "last-full",
+        value : bufferType,
+      });
+
     return Observable.merge(
       currentBuffer$,
       nextPeriodBuffer$,
+      lastPeriodBuffer$,
       destroyAll$.ignoreElements()
     ) as Observable<IMultiplePeriodBuffersEvent>;
   }
