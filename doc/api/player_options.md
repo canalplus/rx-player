@@ -14,6 +14,7 @@
     - [maxBufferBehind](#prop-maxBufferBehind)
     - [limitVideoWidth](#prop-limitVideoWidth)
     - [throttleWhenHidden](#prop-throttleWhenHidden)
+    - [stopAtEnd](#prop-stopAtEnd)
 
 
 ## <a name="overview"></a>Overview
@@ -204,5 +205,24 @@ To activate this feature, set it to ``true``.
 ```js
 const player = Player({
   throttleWhenHidden: true
+});
+```
+
+### <a name="prop-stopAtEnd"></a>stopAtEnd
+
+_type_: ``Boolean``
+
+_defaults_: ``true``
+
+If some cases, you may want the player to stop current playback when content is ended.
+At this point, the player is idle, and the content is no more loaded.
+
+If players doesn't stop at end, it means that current content is still loaded. 
+You can perform trickmode.
+
+To activate this feature, set it to ``true``.
+```js
+const player = Player({
+  stopAtEnd: true
 });
 ```

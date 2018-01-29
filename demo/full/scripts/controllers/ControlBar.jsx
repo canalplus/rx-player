@@ -16,8 +16,9 @@ const ControlBar = ({
   hasEnded,
   isLive,
   player,
+  stopAtEnd,
 }) => {
-  const displayControls = hasLoadedContent && !hasEnded;
+  const displayControls = !stopAtEnd || (hasLoadedContent && !hasEnded);
 
   let positionElement;
   if (!displayControls) {
@@ -70,5 +71,6 @@ export default withModulesState({
     hasLoadedContent: "hasLoadedContent",
     hasEnded: "hasEnded",
     isLive: "isLive",
+    stopAtEnd: "stopAtEnd",
   },
 })(ControlBar);

@@ -42,14 +42,15 @@ export default class StaticRepresentationIndex<
    * TODO getInitSegment should probably return null instead when no init
    * Segment exists.
    */
-  getInitSegment() : ISegment {
-    return {
-      id: "init",
-      isInit: true,
-      time: 0,
-      timescale: 1,
-      privateInfos: this._privateInfos,
-    };
+  getInitSegment() : null {
+    // return {
+    //   id: "init",
+    //   isInit: true,
+    //   time: 0,
+    //   timescale: 1,
+    //   privateInfos: this._privateInfos,
+    // };
+    return null;
   }
 
   /**

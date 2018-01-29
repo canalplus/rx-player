@@ -43,6 +43,7 @@ interface IVideoInfos {
   }|null;
   readyState : number;
   paused : boolean;
+  ended: boolean;
 }
 
 type stalledStatus = {
@@ -131,6 +132,7 @@ function getVideoInfos(
     readyState,
     buffered,
     duration,
+    ended,
   } = video;
 
   return {
@@ -143,6 +145,7 @@ function getVideoInfos(
     currentRange: getRange(buffered, currentTime),
     readyState,
     paused,
+    ended,
   };
 }
 
@@ -171,6 +174,7 @@ function getStalledStatus(
     duration,
     paused,
     readyState,
+    ended,
   } = currentTimings;
 
   const {
@@ -185,7 +189,7 @@ function getStalledStatus(
     readyState >= 1 &&
     currentState !== "loadedmetadata" &&
     !prevStalled &&
-    !ending
+    !(ending || ended)
   );
 
   let shouldStall;
@@ -200,7 +204,7 @@ function getStalledStatus(
     } else if (
       prevStalled &&
       readyState > 1 &&
-      bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending)
+      bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending || ended)
     ) {
       shouldUnstall = true;
     }
@@ -222,7 +226,7 @@ function getStalledStatus(
       (currentState !== "seeking" && currentTime !== prevTime ||
         currentState === "canplay" ||
         bufferGap < Infinity &&
-        (bufferGap > getResumeGap(prevStalled) || ending)
+        (bufferGap > getResumeGap(prevStalled) || ending || ended)
       )
     ) {
       shouldUnstall = true;

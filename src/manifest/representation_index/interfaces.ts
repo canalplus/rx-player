@@ -68,7 +68,7 @@ export default interface IRepresentationIndex {
    * Returns Segment object allowing to do the Init Segment request.
    * @returns {Object}
    */
-  getInitSegment() : ISegment;
+  getInitSegment() : ISegment|null;
 
   /**
    * Returns an array of Segments needed for the amount of time given.
