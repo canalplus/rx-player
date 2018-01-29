@@ -22,7 +22,6 @@ import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
 import {
-  onEnded$,
   onSourceOpen$,
  } from "../../compat/events";
 import {
@@ -121,6 +120,7 @@ export interface IStreamOptions {
   transport : ITransportPipelines<any, any, any, any, any>;
   url : string;
   videoElement : HTMLMediaElement;
+  stopAtEnd : boolean;
 }
 
 /**
@@ -208,12 +208,6 @@ export default function Stream({
     );
 
   /**
-   * End-Of-Play emit when video triggers ended event.
-   * @type {Observable}
-   */
-  const endOfPlay = onEnded$(videoElement);
-
-  /**
    * Retry the stream if ended for an unknown or non-fatal error.
    * TODO working? remove?
    * @see retryWithBackoff
@@ -281,8 +275,7 @@ export default function Stream({
 
   const warningEvents$ = warning$.map(EVENTS.warning);
 
-  return Observable.merge(stream$, warningEvents$)
-    .takeUntil(endOfPlay);
+  return Observable.merge(stream$, warningEvents$);
 
   /**
    * Begin the stream logic, starting by fetching the manifest and waiting for
@@ -390,6 +383,34 @@ export default function Stream({
       warning$
     );
 
+    /**
+     * MediaSource.prototype.endOfStream may throw an exception is one or more
+     * source buffers are being updated. This function allows to handle these exceptions
+     * and direclty retry the end of stream.
+     *
+     * If source buffers are still being updated after 0.5 seconds, then throw.
+     * @param mediaSource
+     * @param countDown
+     */
+    function triggerEndOfStream(
+      _mediaSource: MediaSource,
+      countDown: number
+    ) {
+      try {
+        _mediaSource.endOfStream();
+        return;
+      } catch(error) {
+        if (countDown <= 1) {
+          throw error;
+        } else {
+          log.warn(
+            "Error during endOfStream() call. Retrying "+(countDown - 1)+" times."
+          );
+          setTimeout(() => triggerEndOfStream(_mediaSource, countDown - 1), 100);
+        }
+      }
+    }
+
     const endOfStream$ = handledBuffers$
       .filter((evt) => {
         return (
@@ -399,7 +420,7 @@ export default function Stream({
       })
       .do(() => {
         log.info("Triggering end of stream.");
-        mediaSource.endOfStream();
+        triggerEndOfStream(mediaSource, 5);
       });
 
     /**

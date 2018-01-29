@@ -76,7 +76,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.isPaused = false;
       } else if (arg === "LOADED") {
         stateUpdates.isPaused = true;
-      } else if (arg === "STOPPED" || arg === "ENDED") {
+      } else if (arg === "STOPPED") {
         stateUpdates.audioBitrate = undefined;
         stateUpdates.videoBitrate = undefined;
         stateUpdates.availableAudioBitrates = [];
