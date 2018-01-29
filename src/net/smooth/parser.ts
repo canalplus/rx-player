@@ -111,14 +111,31 @@ function parseBoolean(val : string|null) : boolean {
 }
 
 /**
+ * Returns the first time referenced in the index for a given HSS StreamIndex.
+ * Returns undefined if the index is empty.
  * @param {Object} adaptation
- * @returns {Number}
+ * @returns {Number|undefined}
  */
-function calcLastRef(
-  adaptation? : IAdaptationSmooth
-) : number {
-  if (!adaptation) { return Infinity; }
+function getFirstTimeReference(adaptation: IAdaptationSmooth) : number|undefined {
   const { index } = adaptation;
+  if (index.timeline.length === 0) {
+    return undefined;
+  }
+  const { ts } = index.timeline[0];
+  return ts;
+}
+
+/**
+ * Returns the last time referenced in the index for a given HSS StreamIndex.
+ * Returns undefined if the index is empty.
+ * @param {Object} adaptation
+ * @returns {Number|undefined}
+ */
+function getLastTimeReference(adaptation : IAdaptationSmooth) : number|undefined {
+  const { index } = adaptation;
+  if (index.timeline.length === 0) {
+    return undefined;
+  }
   const { ts, r, d } = index.timeline[index.timeline.length - 1];
   return ((ts + (r + 1) * (d ? d : 0)) / index.timescale);
 }
@@ -526,10 +543,55 @@ function createSmoothStreamingParser(
 
     adaptations.forEach((a) => a.smoothProtection = protection);
 
-    let suggestedPresentationDelay;
-    let presentationLiveGap;
-    let timeShiftBufferDepth;
-    let availabilityStartTime;
+    let suggestedPresentationDelay : number|undefined;
+    let presentationLiveGap : number|undefined;
+    let timeShiftBufferDepth : number|undefined;
+    let availabilityStartTime : number|undefined;
+    let duration : number;
+
+    const firstVideoAdaptation = adaptations.filter((a) => a.type === "video")[0];
+    const firstAudioAdaptation = adaptations.filter((a) => a.type === "audio")[0];
+    let firstTimeReference : number|undefined;
+    let lastTimeReference : number|undefined;
+
+    if (firstVideoAdaptation || firstAudioAdaptation) {
+      const firstTimeReferences : number[] = [];
+      const lastTimeReferences : number[] = [];
+
+      if (firstVideoAdaptation) {
+        const firstVideoTimeReference = getFirstTimeReference(firstVideoAdaptation);
+        const lastVideoTimeReference = getLastTimeReference(firstVideoAdaptation);
+
+        if (firstVideoTimeReference != null) {
+          firstTimeReferences.push(firstVideoTimeReference);
+        }
+
+        if (lastVideoTimeReference != null) {
+          lastTimeReferences.push(lastVideoTimeReference);
+        }
+      }
+
+      if (firstAudioAdaptation) {
+        const firstAudioTimeReference = getFirstTimeReference(firstAudioAdaptation);
+        const lastAudioTimeReference = getLastTimeReference(firstAudioAdaptation);
+
+        if (firstAudioTimeReference != null) {
+          firstTimeReferences.push(firstAudioTimeReference);
+        }
+
+        if (lastAudioTimeReference != null) {
+          lastTimeReferences.push(lastAudioTimeReference);
+        }
+      }
+
+      if (firstTimeReferences.length) {
+        firstTimeReference = Math.max(...firstTimeReferences);
+      }
+
+      if (lastTimeReferences.length) {
+        lastTimeReference = Math.max(...lastTimeReferences);
+      }
+    }
 
     const isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
@@ -537,12 +599,29 @@ function createSmoothStreamingParser(
       timeShiftBufferDepth =
         +(root.getAttribute("DVRWindowLength") || 0) / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      const video = adaptations.filter((a) => a.type === "video")[0];
-      const audio = adaptations.filter((a) => a.type === "audio")[0];
-      const lastRef = Math.min(calcLastRef(video), calcLastRef(audio));
       presentationLiveGap = Date.now() / 1000 -
-        (lastRef + availabilityStartTime);
+        (lastTimeReference != null ?
+          (lastTimeReference + availabilityStartTime) : 10);
+      const manifestDuration = root.getAttribute("Duration");
+      duration = manifestDuration != null ?
+        (+manifestDuration / timescale) : Infinity;
+    } else {
+      // if non-live and first time reference different than 0. Add first time reference
+      // to duration
+      const manifestDuration = root.getAttribute("Duration");
+
+      if (manifestDuration != null) {
+        duration = lastTimeReference == null ?
+          (+manifestDuration + (firstTimeReference || 0)) / timescale :
+          lastTimeReference;
+      } else {
+        duration = Infinity;
+      }
+
     }
+
+    const minimumTime = firstTimeReference != null ?
+      firstTimeReference / timescale : undefined;
 
     return {
       transportType: "smooth",
@@ -552,8 +631,9 @@ function createSmoothStreamingParser(
       timeShiftBufferDepth,
       presentationLiveGap,
       availabilityStartTime,
+      minimumTime,
       periods: [{
-        duration: +(root.getAttribute("Duration") || Infinity) / timescale,
+        duration,
         adaptations,
         laFragCount: +(root.getAttribute("LookAheadFragmentCount") || 0),
       }],
