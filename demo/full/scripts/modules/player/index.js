@@ -68,11 +68,14 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     },
 
     LOAD: (arg) => {
-      if (arg.textTrackMode === "html") {
-        player.loadVideo(Object.assign({ textTrackElement }, arg));
-      } else {
-        player.loadVideo(arg);
-      }
+      player.loadVideo(Object.assign({
+        textTrackElement,
+        networkConfig: {
+          segmentRetry: Infinity,
+          manifestRetry: Infinity,
+          offlineRetry: Infinity,
+        },
+      }, arg));
       state.set({ loadedVideo: arg });
     },
 
