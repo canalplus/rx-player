@@ -51,7 +51,7 @@ interface IListIndex {
 
 export interface IListIndexListItem {
   media : string;
-  range? : [ number, number ];
+  mediaRange? : [ number, number ];
 }
 
 /**
