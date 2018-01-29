@@ -315,12 +315,20 @@ export default class Manifest {
   /**
    * Update the current manifest properties
    * XXX TODO Also update attributes?
+   * XXX TODO How to add Periods?
+   * XXX TODO Recognizing Periods by their index in the manifest is not a good
+   * solution if those periods evolve.
    * @param {Object} Manifest
    */
   update(newManifest : Manifest) {
+    this._duration = newManifest.getDuration();
+    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
+    this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
+    this.uris = newManifest.uris;
+
     const oldPeriods = this.periods;
     const newPeriods = newManifest.periods;
-
     for (let periodIndex = 0; periodIndex < oldPeriods.length; periodIndex++) {
       const oldAdaptations = oldPeriods[periodIndex].getAdaptations();
       const newAdaptations = newPeriods[periodIndex].getAdaptations();
