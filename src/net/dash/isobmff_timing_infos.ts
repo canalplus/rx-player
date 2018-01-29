@@ -41,8 +41,8 @@ import { ISegmentTimingInfos } from "../types";
 function getISOBMFFTimingInfos(
   segment : Segment,
   buffer : Uint8Array,
-  sidxSegments : ISidxSegment[]|null,
-  initInfos? : ISegmentTimingInfos
+  initInfos? : ISegmentTimingInfos,
+  sidxSegments? : ISidxSegment[]|null
 ) : ISegmentTimingInfos {
   const _sidxSegments = sidxSegments || [];
   let startTime;
@@ -136,7 +136,7 @@ function getISOBMFFTimingInfos(
         duration = sidxTimescale != null && sidxTimescale !== timescale ?
           (sidxDuration / sidxTimescale) * timescale : sidxDuration;
       } else {
-        duration = segmentDuration;
+        duration = sidxDuration;
       }
     } else {
       duration = segmentDuration;

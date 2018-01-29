@@ -28,20 +28,11 @@ import {
  */
 function addNextSegments(
   representation : Representation,
-  dlSegment : ISegmentTimingInfos,
-  nextSegments : INextSegmentsInfos[]
+  nextSegments : INextSegmentsInfos[],
+  currentSegment? : ISegmentTimingInfos
 ) {
-  if (
-    dlSegment.duration != null &&
-    dlSegment.timescale != null
-  ) {
     // TODO TypeScript bug?
-    representation.index._addSegments(nextSegments, dlSegment as {
-      time : number;
-      duration : number;
-      timescale : number;
-    });
-  }
+    representation.index._addSegments(nextSegments, currentSegment);
 }
 
 /**

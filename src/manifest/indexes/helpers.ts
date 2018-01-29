@@ -253,10 +253,10 @@ interface ISegmentHelpers<T> {
       count: number;
       range: [number, number];
     },
-    currentSegment: {
+    currentSegment?: {
+      duration?: number;
       time: number;
-      duration: number;
-      timescale: number;
+      timescale?: number;
     }
   ) => boolean;
 }

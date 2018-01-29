@@ -69,24 +69,15 @@ const WSX_REG = /\.wsx?(\?token=\S+)?/;
  */
 function addNextSegments(
   adaptation : Adaptation,
-  dlSegment : ISegmentTimingInfos,
-  nextSegments : INextSegmentsInfos[]
+  nextSegments : INextSegmentsInfos[],
+  dlSegment? : ISegmentTimingInfos
 ) {
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];
-    if (
-      dlSegment.duration != null &&
-      dlSegment.timescale != null
-    ) {
       // TODO TypeScript bug?
-      representation.index._addSegments(nextSegments, dlSegment as {
-        time : number;
-        duration : number;
-        timescale : number;
-      });
+      representation.index._addSegments(nextSegments, dlSegment);
     }
-  }
 }
 
 export default function(
@@ -193,7 +184,7 @@ export default function(
       const segmentData = patchSegment(responseBuffer, segmentInfos.time);
 
       if (nextSegments) {
-        addNextSegments(adaptation, segmentInfos, nextSegments);
+        addNextSegments(adaptation, nextSegments, segmentInfos);
       }
       return Observable.of({ segmentData, segmentInfos });
     },
@@ -324,7 +315,7 @@ export default function(
       }
 
       if (segmentInfos != null && nextSegments) {
-        addNextSegments(adaptation, segmentInfos, nextSegments);
+        addNextSegments(adaptation, nextSegments, segmentInfos);
       }
       return Observable.of({
         segmentData: {
