@@ -294,7 +294,6 @@ function Buffer({
         if (!segment.isInit) {
           const { time, duration, timescale } = segmentInfos ?
             segmentInfos : segment;
-
           // current segment timings informations are used to update
           // bufferedRanges informations
           bookkeeper.insert(

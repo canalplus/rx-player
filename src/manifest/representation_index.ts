@@ -93,7 +93,11 @@ class RepresentationIndex {
       time : number;
       timescale : number;
     }>,
-    currentSegment : { duration : number; time : number; timescale : number}
+    currentSegment? : {
+      duration? : number;
+      time : number;
+      timescale? : number;
+    }
   ) : IBufferSegmentInfos[] {
     const addedSegments : IBufferSegmentInfos[] = [];
     for (let i = 0; i < nextSegments.length; i++) {

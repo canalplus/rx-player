@@ -138,11 +138,12 @@ export default function(
       const indexRange = segment.indexRange;
       const sidxSegments =
         parseSidx(responseData, indexRange ? indexRange[0] : 0);
-      if (sidxSegments) {
-        nextSegments = sidxSegments;
-      }
 
       if (segment.isInit) {
+        if (sidxSegments) {
+          nextSegments = sidxSegments;
+          addNextSegments(representation, nextSegments);
+        }
         segmentInfos = { time: -1, duration: 0 };
         const timescale = getMDHDTimescale(responseData);
         if (timescale > 0) {
@@ -150,12 +151,9 @@ export default function(
         }
       } else {
         segmentInfos =
-          getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
+          getISOBMFFTimingInfos(segment, responseData, init, sidxSegments);
       }
 
-      if (nextSegments) {
-        addNextSegments(representation, segmentInfos, nextSegments);
-      }
       return Observable.of({ segmentData, segmentInfos });
     },
   };
