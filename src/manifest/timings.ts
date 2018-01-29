@@ -87,7 +87,7 @@ function getBufferLimits(manifest : Manifest) : [number, number] {
   const BUFFER_DEPTH_SECURITY = 5;
 
   if (!manifest.isLive) {
-    return [0, manifest.getDuration()];
+    return [manifest.minimumTime || 0, manifest.getDuration()];
   }
 
   const ast = manifest.availabilityStartTime || 0;
@@ -97,7 +97,13 @@ function getBufferLimits(manifest : Manifest) : [number, number] {
   const now = Date.now() / 1000;
   const max = now - ast - plg;
   return [
-    Math.min(max, max - tsbd + BUFFER_DEPTH_SECURITY),
+    Math.min(
+      max,
+      Math.max(
+        manifest.minimumTime != null ? manifest.minimumTime : 0,
+        max - tsbd + BUFFER_DEPTH_SECURITY
+      )
+    ),
     max,
   ];
 }
