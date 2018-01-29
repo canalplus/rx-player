@@ -376,3 +376,35 @@ This has an effect only if:
   - the current ``textTrackMode`` is equal to ``"native"`` (see [textTrackMode option](#prop-textTrackMode))
   - a text track is currently active
   - the text track format is understood by the rx-player
+
+### <a name="prop-networkConfig"></a>networkConfig
+
+_type_: ``Object``
+
+_defaults_: ``{}``
+
+Configuration linked to manifest and segment requests. This object can take the following properties (all are optional):
+
+  - ``segmentRetry`` (``Number``): Maximum number of times a segment request will be retried when an error happen - only on some condition [1].
+
+    Those retry will be done with a progressive delay, to avoid overloading a CDN. When this count is reached, the player will stop and throw a fatal error.
+
+    Defaults to ``4``.
+
+  - ``manifestRetry`` (``Number``): Maximum number of times a manifest request will be retried when a request error happen - only on some condition [1]. Defaults to ``4``.
+
+    Those retry will be done with a progressive delay, to avoid overloading a CDN. When this count is reached, the player will stop and throw a fatal error.
+
+    Defaults to ``4``.
+
+  - ``offlineRetry`` (``Number``): Maximum number of times a request will be retried when the request fails because the user is offline.
+
+    Those retry will be done with a progressive delay, to avoid overloading the user's ressources. When this count is reached, the player will stop and throw a fatal error.
+
+    Defaults to ``Infinity``.
+
+[1] To retry a request, one of the following condition should be met:
+  - The request failed because of a ``404`` HTTP code
+  - The request failed because of an HTTP code in the ``500`` family
+  - The request failed because of a timeout
+  - the request failed because of an unknown XHR error (might be a parsing/interface error)

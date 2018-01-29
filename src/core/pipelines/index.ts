@@ -42,12 +42,6 @@ import {
 // TODO Typings is a complete mess in this file.
 // Maybe is it too DRY? Refactor.
 
-const DEFAULT_MAXIMUM_RETRY_ON_ERROR =
-  config.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
-
-const DEFAULT_MAXIMUM_RETRY_ON_OFFLINE =
-  config.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
-
 const {
   MAX_BACKOFF_DELAY_BASE,
   INITIAL_BACKOFF_DELAY_BASE,
@@ -77,13 +71,14 @@ function errorSelector(
   return error;
 }
 
+// TODO Define T
 export interface IPipelineOptions<T, U> {
   cache? : {
     add : (obj : T, arg : U) => void;
     get : (obj : T) => U;
   };
-
-  maxRetry? : number;
+  maxRetry : number;
+  maxRetryOffline : number;
 }
 
 /**
@@ -125,9 +120,13 @@ export default function createPipeline(
     loader? : (x : any) => Observable<any>;
     parser? : (x : any) => Observable<any>;
   },
-  options : IPipelineOptions<any, any> = {}
+  options : IPipelineOptions<any, any>
 ) : (x : any) => Observable<PipelineEvent> {
-  const { maxRetry, cache } = options;
+  const {
+    cache,
+    maxRetry,
+    maxRetryOffline,
+  } = options;
 
   /**
    * Subject that will emit non-fatal errors.
@@ -137,9 +136,6 @@ export default function createPipeline(
   const _loader = loader || Observable.of;
   const _parser = parser || Observable.of;
 
-  const totalRetry = typeof maxRetry === "number" ?
-    maxRetry : DEFAULT_MAXIMUM_RETRY_ON_ERROR;
-
   /**
    * Backoff options given to the backoff retry done with the loader function.
    * @see retryWithBackoff
@@ -147,8 +143,8 @@ export default function createPipeline(
   const backoffOptions = {
     baseDelay: INITIAL_BACKOFF_DELAY_BASE,
     maxDelay: MAX_BACKOFF_DELAY_BASE,
-    maxRetryRegular: totalRetry,
-    maxRetryOffline: DEFAULT_MAXIMUM_RETRY_ON_OFFLINE,
+    maxRetryRegular: maxRetry,
+    maxRetryOffline,
     onRetry: (error : Error) => {
       retryErrorSubject
         .next(errorSelector("PIPELINE_LOAD_ERROR", error, false));

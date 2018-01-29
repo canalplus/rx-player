@@ -211,6 +211,21 @@ export default {
   },
 
   /**
+   * The default number of times a manifest request will be re-performed
+   * when loaded/refreshed if the request finishes on an error which
+   * justify an retry.
+   *
+   * Note that some errors do not use this counter:
+   *   - if the error is not due to the xhr, no retry will be peformed
+   *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
+   *     retry will be performed.
+   *   - if it has a high chance of being due to the user being offline, a
+   *     separate counter is used (see DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE).
+   * @type Number
+   */
+  DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
+
+  /**
    * The default number of times a pipeline request will be re-performed when
    * on error which justify a retry.
    *
