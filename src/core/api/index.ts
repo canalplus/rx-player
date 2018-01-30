@@ -370,7 +370,7 @@ class Player extends EventEmitter {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.0.7";
+    this.version = /*PLAYER_VERSION*/"3.1.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;

@@ -7,7 +7,7 @@
 		exports["RxPlayer"] = factory();
 	else
 		root["RxPlayer"] = factory();
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -973,6 +973,20 @@ exports.default = {
          */
         BEEFY: 30,
     },
+    /**
+     * The default number of times a manifest request will be re-performed
+     * when loaded/refreshed if the request finishes on an error which
+     * justify an retry.
+     *
+     * Note that some errors do not use this counter:
+     *   - if the error is not due to the xhr, no retry will be peformed
+     *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
+     *     retry will be performed.
+     *   - if it has a high chance of being due to the user being offline, a
+     *     separate counter is used (see DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE).
+     * @type Number
+     */
+    DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
     /**
      * The default number of times a pipeline request will be re-performed when
      * on error which justify a retry.
@@ -6385,12 +6399,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @param {Object} dlSegment
  * @param {Object} nextSegments
  */
-function addNextSegments(representation, dlSegment, nextSegments) {
-    if (dlSegment.duration != null &&
-        dlSegment.timescale != null) {
-        // TODO TypeScript bug?
-        representation.index._addSegments(nextSegments, dlSegment);
-    }
+function addNextSegments(representation, nextSegments, currentSegment) {
+    // TODO TypeScript bug?
+    representation.index._addSegments(nextSegments, currentSegment);
 }
 exports.addNextSegments = addNextSegments;
 /**
@@ -6983,7 +6994,7 @@ function getBufferLimits(manifest) {
     // TODO use RTT for the manifest request + 3 or something
     var BUFFER_DEPTH_SECURITY = 5;
     if (!manifest.isLive) {
-        return [0, manifest.getDuration()];
+        return [manifest.minimumTime || 0, manifest.getDuration()];
     }
     var ast = manifest.availabilityStartTime || 0;
     var plg = manifest.presentationLiveGap || 0;
@@ -6991,7 +7002,7 @@ function getBufferLimits(manifest) {
     var now = Date.now() / 1000;
     var max = now - ast - plg;
     return [
-        Math.min(max, max - tsbd + BUFFER_DEPTH_SECURITY),
+        Math.min(max, Math.max(manifest.minimumTime != null ? manifest.minimumTime : 0, max - tsbd + BUFFER_DEPTH_SECURITY)),
         max,
     ];
 }
@@ -9293,9 +9304,7 @@ function getISOBMFFTimingInfos(segment, buffer, sidxSegments, initInfos) {
         segmentDuration = segment.duration != null ?
             (segment.duration / segment.timescale) * timescale : undefined;
     }
-    if (decodeTime >= 0 &&
-        (segmentStart == null ||
-            Math.abs(decodeTime - segmentStart) <= maxDecodeTimeDelta)) {
+    if (decodeTime >= 0) {
         startTime = decodeTime;
     }
     if (trunDuration >= 0 &&
@@ -9304,36 +9313,20 @@ function getISOBMFFTimingInfos(segment, buffer, sidxSegments, initInfos) {
         duration = trunDuration;
     }
     if (startTime == null) {
-        if (_sidxSegments.length === 1) {
-            var sidxStart = _sidxSegments[0].time;
-            if (sidxStart >= 0 &&
-                (segmentStart == null ||
-                    Math.abs(segmentStart - sidxStart) <= maxDecodeTimeDelta)) {
-                var sidxTimescale = _sidxSegments[0].timescale;
-                startTime = sidxTimescale != null && sidxTimescale !== timescale ?
-                    (sidxStart / sidxTimescale) * timescale : sidxStart;
-            }
-            else {
-                startTime = segmentStart;
-            }
+        var sidxStart = _sidxSegments[0].time;
+        if (sidxStart >= 0) {
+            var sidxTimescale = _sidxSegments[0].timescale;
+            startTime = sidxTimescale != null && sidxTimescale !== timescale ?
+                (sidxStart / sidxTimescale) * timescale : sidxStart;
         }
         else {
             startTime = segmentStart;
         }
     }
     if (duration == null) {
-        if (_sidxSegments.length === 1) {
-            var sidxDuration = _sidxSegments[0].duration;
-            if (sidxDuration >= 0 &&
-                (segmentDuration == null ||
-                    Math.abs(segmentDuration - sidxDuration) <= maxDecodeTimeDelta)) {
-                var sidxTimescale = _sidxSegments[0].timescale;
-                duration = sidxTimescale != null && sidxTimescale !== timescale ?
-                    (sidxDuration / sidxTimescale) * timescale : sidxDuration;
-            }
-            else {
-                duration = segmentDuration;
-            }
+        if (_sidxSegments.length) {
+            var sidxDuration = _sidxSegments.reduce(function (a, b) { return a + (b.duration || 0); }, 0);
+            duration = sidxDuration >= 0 ? sidxDuration : segmentDuration;
         }
         else {
             duration = segmentDuration;
@@ -10092,13 +10085,20 @@ exports.dispose = dispose;
  */
 function clearEME() {
     return Observable_1.Observable.defer(function () {
+        var observablesArray = [];
         if (instanceInfos.$videoElement && _1.shouldUnsetMediaKeys()) {
-            return set_media_keys_1.disposeMediaKeys(instanceInfos.$videoElement)
+            var obs$ = set_media_keys_1.disposeMediaKeys(instanceInfos.$videoElement)
+                .ignoreElements()
                 .finally(function () {
                 instanceInfos.$videoElement = null;
             });
+            observablesArray.push(obs$);
         }
-        return Observable_1.Observable.empty();
+        if (instanceInfos.$keySystem && instanceInfos.$keySystem.closeSessionsOnStop) {
+            observablesArray.push(globals_1.$loadedSessions.dispose()
+                .ignoreElements());
+        }
+        return observablesArray.length ? Observable_1.Observable.merge.apply(Observable_1.Observable, observablesArray) : Observable_1.Observable.empty();
     });
 }
 exports.clearEME = clearEME;
@@ -16541,7 +16541,7 @@ var Player = /** @class */ (function (_super) {
         // Workaround to support Firefox autoplay on FF 42.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
         videoElement.preload = "auto";
-        _this.version = /*PLAYER_VERSION*/ "3.0.7";
+        _this.version = /*PLAYER_VERSION*/ "3.1.0";
         _this.log = log_1.default;
         _this.state = "STOPPED";
         _this.videoElement = videoElement;
@@ -16696,7 +16696,7 @@ var Player = /** @class */ (function (_super) {
         var _this = this;
         var options = option_parsers_1.parseLoadVideoOptions(opts);
         log_1.default.info("loadvideo", options);
-        var autoPlay = options.autoPlay, defaultAudioTrack = options.defaultAudioTrack, defaultTextTrack = options.defaultTextTrack, keySystems = options.keySystems, startAt = options.startAt, supplementaryImageTracks = options.supplementaryImageTracks, supplementaryTextTracks = options.supplementaryTextTracks, transport = options.transport, transportOptions = options.transportOptions, url = options.url;
+        var autoPlay = options.autoPlay, defaultAudioTrack = options.defaultAudioTrack, defaultTextTrack = options.defaultTextTrack, keySystems = options.keySystems, networkConfig = options.networkConfig, startAt = options.startAt, supplementaryImageTracks = options.supplementaryImageTracks, supplementaryTextTracks = options.supplementaryTextTracks, transport = options.transport, transportOptions = options.transportOptions, url = options.url;
         // Perform multiple checks on the given options
         if (!this.videoElement) {
             throw new Error("the attached video element is disposed");
@@ -16772,6 +16772,7 @@ var Player = /** @class */ (function (_super) {
             bufferOptions: bufferOptions,
             errorStream: this._priv_errorStream$,
             keySystems: keySystems,
+            networkConfig: networkConfig,
             speed$: this._priv_speed$,
             startAt: startAt,
             textTrackOptions: textTrackOptions,
@@ -18377,15 +18378,12 @@ var WSX_REG = /\.wsx?(\?token=\S+)?/;
  * @param {Object} dlSegment
  * @param {Object} nextSegments
  */
-function addNextSegments(adaptation, dlSegment, nextSegments) {
+function addNextSegments(adaptation, nextSegments, dlSegment) {
     var representations = adaptation.representations;
     for (var i = 0; i < representations.length; i++) {
         var representation = representations[i];
-        if (dlSegment.duration != null &&
-            dlSegment.timescale != null) {
-            // TODO TypeScript bug?
-            representation.index._addSegments(nextSegments, dlSegment);
-        }
+        // TODO TypeScript bug?
+        representation.index._addSegments(nextSegments, dlSegment);
     }
 }
 function default_1(options) {
@@ -18467,7 +18465,7 @@ function default_1(options) {
             var _b = isobmff_timings_infos_1.default(responseBuffer, segment, manifest.isLive), nextSegments = _b.nextSegments, segmentInfos = _b.segmentInfos;
             var segmentData = patchSegment(responseBuffer, segmentInfos.time);
             if (nextSegments) {
-                addNextSegments(adaptation, segmentInfos, nextSegments);
+                addNextSegments(adaptation, nextSegments, segmentInfos);
             }
             return Observable_1.Observable.of({ segmentData: segmentData, segmentInfos: segmentInfos });
         },
@@ -18498,7 +18496,7 @@ function default_1(options) {
             var responseData = response.responseData;
             var parsedResponse;
             var nextSegments;
-            var segmentInfos;
+            var segmentInfos = null;
             var isMP4 = mimeType.indexOf("mp4") >= 0;
             // segmentData components
             var _sdStart;
@@ -18573,7 +18571,7 @@ function default_1(options) {
                 _sdData = responseData;
             }
             if (segmentInfos != null && nextSegments) {
-                addNextSegments(adaptation, segmentInfos, nextSegments);
+                addNextSegments(adaptation, nextSegments, segmentInfos);
             }
             return Observable_1.Observable.of({
                 segmentData: {
@@ -19044,14 +19042,30 @@ function parseBoolean(val) {
     }
 }
 /**
+ * Returns the first time referenced in the index for a given HSS StreamIndex.
+ * Returns undefined if the index is empty.
  * @param {Object} adaptation
- * @returns {Number}
+ * @returns {Number|undefined}
  */
-function calcLastRef(adaptation) {
-    if (!adaptation) {
-        return Infinity;
-    }
+function getFirstTimeReference(adaptation) {
     var index = adaptation.index;
+    if (index.timeline.length === 0) {
+        return undefined;
+    }
+    var ts = index.timeline[0].ts;
+    return ts;
+}
+/**
+ * Returns the last time referenced in the index for a given HSS StreamIndex.
+ * Returns undefined if the index is empty.
+ * @param {Object} adaptation
+ * @returns {Number|undefined}
+ */
+function getLastTimeReference(adaptation) {
+    var index = adaptation.index;
+    if (index.timeline.length === 0) {
+        return undefined;
+    }
     var _a = index.timeline[index.timeline.length - 1], ts = _a.ts, r = _a.r, d = _a.d;
     return ((ts + (r + 1) * (d ? d : 0)) / index.timescale);
 }
@@ -19369,18 +19383,69 @@ function createSmoothStreamingParser(parserOptions) {
         var presentationLiveGap;
         var timeShiftBufferDepth;
         var availabilityStartTime;
+        var duration;
+        var firstVideoAdaptation = adaptations.filter(function (a) { return a.type === "video"; })[0];
+        var firstAudioAdaptation = adaptations.filter(function (a) { return a.type === "audio"; })[0];
+        var firstTimeReference;
+        var lastTimeReference;
+        if (firstVideoAdaptation || firstAudioAdaptation) {
+            var firstTimeReferences = [];
+            var lastTimeReferences = [];
+            if (firstVideoAdaptation) {
+                var firstVideoTimeReference = getFirstTimeReference(firstVideoAdaptation);
+                var lastVideoTimeReference = getLastTimeReference(firstVideoAdaptation);
+                if (firstVideoTimeReference != null) {
+                    firstTimeReferences.push(firstVideoTimeReference);
+                }
+                if (lastVideoTimeReference != null) {
+                    lastTimeReferences.push(lastVideoTimeReference);
+                }
+            }
+            if (firstAudioAdaptation) {
+                var firstAudioTimeReference = getFirstTimeReference(firstAudioAdaptation);
+                var lastAudioTimeReference = getLastTimeReference(firstAudioAdaptation);
+                if (firstAudioTimeReference != null) {
+                    firstTimeReferences.push(firstAudioTimeReference);
+                }
+                if (lastAudioTimeReference != null) {
+                    lastTimeReferences.push(lastAudioTimeReference);
+                }
+            }
+            if (firstTimeReferences.length) {
+                firstTimeReference = Math.max.apply(Math, firstTimeReferences);
+            }
+            if (lastTimeReferences.length) {
+                lastTimeReference = Math.max.apply(Math, lastTimeReferences);
+            }
+        }
         var isLive = parseBoolean(root.getAttribute("IsLive"));
         if (isLive) {
             suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
             timeShiftBufferDepth =
                 +(root.getAttribute("DVRWindowLength") || 0) / timescale;
             availabilityStartTime = REFERENCE_DATE_TIME;
-            var video = adaptations.filter(function (a) { return a.type === "video"; })[0];
-            var audio = adaptations.filter(function (a) { return a.type === "audio"; })[0];
-            var lastRef = Math.min(calcLastRef(video), calcLastRef(audio));
             presentationLiveGap = Date.now() / 1000 -
-                (lastRef + availabilityStartTime);
+                (lastTimeReference != null ?
+                    (lastTimeReference + availabilityStartTime) : 10);
+            var manifestDuration = root.getAttribute("Duration");
+            duration = manifestDuration != null ?
+                (+manifestDuration / timescale) : Infinity;
         }
+        else {
+            // if non-live and first time reference different than 0. Add first time reference
+            // to duration
+            var manifestDuration = root.getAttribute("Duration");
+            if (manifestDuration != null) {
+                duration = lastTimeReference == null ?
+                    (+manifestDuration + (firstTimeReference || 0)) / timescale :
+                    lastTimeReference;
+            }
+            else {
+                duration = Infinity;
+            }
+        }
+        var minimumTime = firstTimeReference != null ?
+            firstTimeReference / timescale : undefined;
         return {
             transportType: "smooth",
             profiles: "",
@@ -19389,8 +19454,9 @@ function createSmoothStreamingParser(parserOptions) {
             timeShiftBufferDepth: timeShiftBufferDepth,
             presentationLiveGap: presentationLiveGap,
             availabilityStartTime: availabilityStartTime,
+            minimumTime: minimumTime,
             periods: [{
-                    duration: +(root.getAttribute("Duration") || Infinity) / timescale,
+                    duration: duration,
                     adaptations: adaptations,
                     laFragCount: +(root.getAttribute("LookAheadFragmentCount") || 0),
                 }],
@@ -19896,26 +19962,27 @@ function default_1(options) {
                 ? response.responseData
                 : new Uint8Array(response.responseData);
             var nextSegments;
-            var segmentInfos;
+            var segmentInfos = null;
             var segmentData = responseData;
             var indexRange = segment.indexRange;
             var sidxSegments = isobmff_1.parseSidx(responseData, indexRange ? indexRange[0] : 0);
-            if (sidxSegments) {
-                nextSegments = sidxSegments;
-            }
             if (segment.isInit) {
-                segmentInfos = { time: -1, duration: 0 };
+                if (sidxSegments) {
+                    nextSegments = sidxSegments;
+                    utils_1.addNextSegments(representation, nextSegments);
+                }
                 var timescale = isobmff_1.getMDHDTimescale(responseData);
                 if (timescale > 0) {
-                    segmentInfos.timescale = timescale;
+                    segmentInfos = {
+                        time: -1,
+                        duration: 0,
+                        timescale: timescale,
+                    };
                 }
             }
             else {
                 segmentInfos =
                     isobmff_timing_infos_1.default(segment, responseData, sidxSegments, init);
-            }
-            if (nextSegments) {
-                utils_1.addNextSegments(representation, segmentInfos, nextSegments);
             }
             return Observable_1.Observable.of({ segmentData: segmentData, segmentInfos: segmentInfos });
         },
@@ -20830,11 +20897,14 @@ function TextTrackParser(_a) {
         }
     }
     if (isInit) {
-        segmentInfos = { time: -1, duration: 0 };
         if (isMP4) {
             var timescale = isobmff_1.getMDHDTimescale(responseData);
             if (timescale > 0) {
-                segmentInfos.timescale = timescale;
+                segmentInfos = {
+                    time: -1,
+                    duration: 0,
+                    timescale: timescale,
+                };
             }
         }
         segmentData = undefined;
@@ -20897,7 +20967,7 @@ function TextTrackParser(_a) {
         }
     }
     if (nextSegments) {
-        utils_1.addNextSegments(representation, segmentInfos, nextSegments);
+        utils_1.addNextSegments(representation, nextSegments, segmentInfos);
     }
     return Observable_1.Observable.of({ segmentData: segmentData, segmentInfos: segmentInfos });
 }
@@ -21002,20 +21072,38 @@ var stalling_obs_1 = __webpack_require__(320);
 var timings_1 = __webpack_require__(321);
 var END_OF_PLAY = config_1.default.END_OF_PLAY;
 var SUPPORTED_BUFFER_TYPES = ["audio", "video", "text", "image"];
+function getManifestPipelineOptions(networkConfig) {
+    return {
+        maxRetry: networkConfig.manifestRetry != null ?
+            networkConfig.manifestRetry : config_1.default.DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
+        maxRetryOffline: networkConfig.offlineRetry != null ?
+            networkConfig.offlineRetry : config_1.default.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+    };
+}
 /**
- * Returns the pipeline options depending on the type of pipeline concerned.
- * @param {string} bufferType - e.g. "audio"|"text"...
+ * @param {string} bufferType
+ * @param {Object} networkConfig
  * @returns {Object} - Options to give to the Pipeline
  */
-function getPipelineOptions(bufferType) {
-    var downloaderOptions = {};
-    if (array_includes_1.default(["audio", "video"], bufferType)) {
-        downloaderOptions.cache = new initialization_segment_cache_1.default();
+function getSegmentPipelineOptions(bufferType, networkConfig) {
+    var cache = array_includes_1.default(["audio", "video"], bufferType) ?
+        new initialization_segment_cache_1.default() : undefined;
+    var maxRetry;
+    var maxRetryOffline;
+    if (bufferType === "image") {
+        maxRetry = 0; // Deactivate BIF fetching if it fails
     }
-    else if (bufferType === "image") {
-        downloaderOptions.maxRetry = 0; // Deactivate BIF fetching if it fails
+    else {
+        maxRetry = networkConfig.segmentRetry != null ?
+            networkConfig.segmentRetry : config_1.default.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
     }
-    return downloaderOptions;
+    maxRetryOffline = networkConfig.offlineRetry != null ?
+        networkConfig.offlineRetry : config_1.default.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
+    return {
+        cache: cache,
+        maxRetry: maxRetry,
+        maxRetryOffline: maxRetryOffline,
+    };
 }
 /**
  * Central part of the player. Play a given stream described by the given
@@ -21035,7 +21123,7 @@ function getPipelineOptions(bufferType) {
  * @returns {Observable}
  */
 function Stream(_a) {
-    var adaptiveOptions = _a.adaptiveOptions, autoPlay = _a.autoPlay, bufferOptions = _a.bufferOptions, keySystems = _a.keySystems, speed$ = _a.speed$, startAt = _a.startAt, url = _a.url, videoElement = _a.videoElement, supplementaryImageTracks = _a.supplementaryImageTracks, // eventual manually added images
+    var adaptiveOptions = _a.adaptiveOptions, autoPlay = _a.autoPlay, bufferOptions = _a.bufferOptions, keySystems = _a.keySystems, networkConfig = _a.networkConfig, speed$ = _a.speed$, startAt = _a.startAt, url = _a.url, videoElement = _a.videoElement, supplementaryImageTracks = _a.supplementaryImageTracks, // eventual manually added images
     supplementaryTextTracks = _a.supplementaryTextTracks, // eventual manually added subtitles
     errorStream = _a.errorStream, // subject through which minor errors are emitted TODO Remove?
     textTrackOptions = _a.textTrackOptions, timings$ = _a.timings$, _b = _a.withMediaSource, withMediaSource = _b === void 0 ? true : _b, transport = _a.transport;
@@ -21055,7 +21143,7 @@ function Stream(_a) {
      * @type {Function} - take in argument the pipeline data, returns a pipeline
      * observable.
      */
-    var manifestPipeline = pipelines_1.default(transport.manifest);
+    var manifestPipeline = pipelines_1.default(transport.manifest, getManifestPipelineOptions(networkConfig));
     /**
      * ...Fetch the manifest file given.
      * Throttled to avoid doing multiple simultaneous requests because multiple
@@ -21176,7 +21264,7 @@ function Stream(_a) {
      * @returns {Observable}
      */
     function createBuffer(mediaSource, bufferType, timings, seekings, manifest, adaptation$, abrManager) {
-        var pipelineOptions = getPipelineOptions(bufferType);
+        var pipelineOptions = getSegmentPipelineOptions(bufferType, networkConfig);
         return adaptation$.switchMap(function (adaptation) {
             if (!adaptation) {
                 log_1.default.info("disposing " + bufferType + " adaptation");
@@ -24330,13 +24418,7 @@ var adaptation_1 = __webpack_require__(270);
 var Manifest = /** @class */ (function () {
     /**
      * @constructor
-     * @param {Object} [args={}]
-     * @param {string|Number} [args.id]
-     * @param {string} args.transportType
-     * @param {Array.<Object>} args.adaptations
-     * @param {string} args.type
-     * @param {Array.<string>} args.locations
-     * @param {Number} args.duration
+     * @param {Object} args
      */
     function Manifest(args) {
         var nId = id_1.default();
@@ -24354,6 +24436,7 @@ var Manifest = /** @class */ (function () {
                 adaptations: this.adaptations,
             },
         ];
+        this.minimumTime = args.minimumTime;
         this.isLive = args.type === "dynamic";
         this.uris = args.locations || [];
         // --------- private data
@@ -24991,7 +25074,7 @@ var ListIndexHelpers = {
         var segments = [];
         var i = Math.floor(up / duration);
         while (i <= length) {
-            var range = list[i].range;
+            var range = list[i].mediaRange;
             var media = list[i].media;
             var args = {
                 id: "" + repId + "_" + i,
@@ -25177,8 +25260,6 @@ var errors_1 = __webpack_require__(8);
 var backoff_1 = __webpack_require__(279);
 // TODO Typings is a complete mess in this file.
 // Maybe is it too DRY? Refactor.
-var DEFAULT_MAXIMUM_RETRY_ON_ERROR = config_1.default.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
-var DEFAULT_MAXIMUM_RETRY_ON_OFFLINE = config_1.default.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
 var MAX_BACKOFF_DELAY_BASE = config_1.default.MAX_BACKOFF_DELAY_BASE, INITIAL_BACKOFF_DELAY_BASE = config_1.default.INITIAL_BACKOFF_DELAY_BASE;
 /**
  * Generate a new error from the infos given.
@@ -25235,8 +25316,7 @@ function errorSelector(code, error, fatal) {
  */
 function createPipeline(_a, options) {
     var resolver = _a.resolver, loader = _a.loader, parser = _a.parser;
-    if (options === void 0) { options = {}; }
-    var maxRetry = options.maxRetry, cache = options.cache;
+    var cache = options.cache, maxRetry = options.maxRetry, maxRetryOffline = options.maxRetryOffline;
     /**
      * Subject that will emit non-fatal errors.
      */
@@ -25244,8 +25324,6 @@ function createPipeline(_a, options) {
     var _resolver = resolver || Observable_1.Observable.of;
     var _loader = loader || Observable_1.Observable.of;
     var _parser = parser || Observable_1.Observable.of;
-    var totalRetry = typeof maxRetry === "number" ?
-        maxRetry : DEFAULT_MAXIMUM_RETRY_ON_ERROR;
     /**
      * Backoff options given to the backoff retry done with the loader function.
      * @see retryWithBackoff
@@ -25253,8 +25331,8 @@ function createPipeline(_a, options) {
     var backoffOptions = {
         baseDelay: INITIAL_BACKOFF_DELAY_BASE,
         maxDelay: MAX_BACKOFF_DELAY_BASE,
-        maxRetryRegular: totalRetry,
-        maxRetryOffline: DEFAULT_MAXIMUM_RETRY_ON_OFFLINE,
+        maxRetryRegular: maxRetry,
+        maxRetryOffline: maxRetryOffline,
         onRetry: function (error) {
             retryErrorSubject
                 .next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
@@ -26646,7 +26724,7 @@ var DEFAULT_LIVE_GAP = config_1.default.DEFAULT_LIVE_GAP;
  *      the manifest informations
  *   2. else if the video is live, use the live edge and suggested delays from
  *      it
- *   3. else returns 0 (beginning)
+ *   3. else returns the minimum time announced in the manifest
  *
  * @param {Manifest} manifest
  * @param {Object} startAt
@@ -26692,7 +26770,7 @@ function getInitialTime(manifest, startAt) {
         return timings_1.getMaximumBufferPosition(manifest) -
             (sgp == null ? DEFAULT_LIVE_GAP : sgp);
     }
-    return 0;
+    return timings_1.getMinimumBufferPosition(manifest);
 }
 exports.default = getInitialTime;
 
@@ -31723,22 +31801,28 @@ function parseLoadVideoOptions(options) {
             startAt = options.startAt;
         }
     }
+    var networkConfig = options.networkConfig == null ? {} : {
+        manifestRetry: options.networkConfig.manifestRetry,
+        offlineRetry: options.networkConfig.offlineRetry,
+        segmentRetry: options.networkConfig.segmentRetry,
+    };
     // TODO without cast
     /* tslint:disable no-object-literal-type-assertion */
     return {
-        url: url,
-        transport: transport,
         autoPlay: autoPlay,
-        keySystems: keySystems,
-        transportOptions: transportOptions,
-        supplementaryTextTracks: supplementaryTextTracks,
-        supplementaryImageTracks: supplementaryImageTracks,
-        textTrackMode: textTrackMode,
-        textTrackElement: textTrackElement,
         defaultAudioTrack: defaultAudioTrack,
         defaultTextTrack: defaultTextTrack,
         hideNativeSubtitle: hideNativeSubtitle,
+        keySystems: keySystems,
+        networkConfig: networkConfig,
         startAt: startAt,
+        supplementaryImageTracks: supplementaryImageTracks,
+        supplementaryTextTracks: supplementaryTextTracks,
+        textTrackElement: textTrackElement,
+        textTrackMode: textTrackMode,
+        transport: transport,
+        transportOptions: transportOptions,
+        url: url,
     };
     /* tslint:enable no-object-literal-type-assertion */
 }
