@@ -32,8 +32,7 @@ import { IPeriodSmooth } from "./smooth/types";
 export interface ISegmentTimingInfos {
   duration? : number; // duration of the segment. 0 for init segments
   time : number; // start time of the segment. -1 for init segments
-  timescale? : number; // time unit for seconds conversion.
-                       // might be undefined for init segments.
+  timescale : number; // time unit for seconds conversion.
 }
 
 export interface INextSegmentsInfos {
@@ -130,7 +129,7 @@ export type IManifestParserObservable = Observable<{
 
 export type SegmentParserObservable = Observable<{
   segmentData? : Uint8Array|ArrayBuffer;
-  segmentInfos : ISegmentTimingInfos;
+  segmentInfos : ISegmentTimingInfos|null;
 }>;
 
 export interface ITextTrackSegmentData {
@@ -146,12 +145,12 @@ export interface ITextTrackSegmentData {
 
 export type TextTrackParserObservable = Observable<{
   segmentData? : ITextTrackSegmentData;
-  segmentInfos? : ISegmentTimingInfos;
+  segmentInfos : ISegmentTimingInfos|null;
 }>;
 
 export type ImageParserObservable = Observable<{
   segmentData? : IBifThumbnail[];
-  segmentInfos : ISegmentTimingInfos;
+  segmentInfos : ISegmentTimingInfos|null;
 }>;
 
 // Type parameters:
@@ -233,6 +232,7 @@ export interface IParsedManifest {
   publishTime?: Date|number;
   mediaPresentationDuration?: number;
   minimumUpdatePeriod?: number;
+  minimumTime? : number;
   minBufferTime?: number;
   timeShiftBufferDepth?: number;
   suggestedPresentationDelay?: number;

@@ -81,13 +81,7 @@ function getISOBMFFTimingInfos(
       (segment.duration / segment.timescale) * timescale : undefined;
   }
 
-  if (
-    decodeTime >= 0 &&
-    (
-      segmentStart == null ||
-      Math.abs(decodeTime - segmentStart) <= maxDecodeTimeDelta
-    )
-  ) {
+  if (decodeTime >= 0) {
     startTime = decodeTime;
   }
 
@@ -102,42 +96,20 @@ function getISOBMFFTimingInfos(
   }
 
   if (startTime == null) {
-    if (_sidxSegments.length === 1) {
       const sidxStart = _sidxSegments[0].time;
-      if (
-        sidxStart >= 0 &&
-        (
-          segmentStart == null ||
-          Math.abs(segmentStart - sidxStart) <= maxDecodeTimeDelta
-        )
-      ) {
+      if (sidxStart >= 0) {
         const sidxTimescale = _sidxSegments[0].timescale;
         startTime = sidxTimescale != null && sidxTimescale !== timescale ?
           (sidxStart / sidxTimescale) * timescale : sidxStart;
       } else {
         startTime = segmentStart;
       }
-    } else {
-      startTime = segmentStart;
-    }
   }
 
   if (duration == null) {
-    if (_sidxSegments.length === 1) {
-      const sidxDuration = _sidxSegments[0].duration;
-      if (
-        sidxDuration >= 0 &&
-        (
-          segmentDuration == null ||
-          Math.abs(segmentDuration - sidxDuration) <= maxDecodeTimeDelta
-        )
-      ) {
-        const sidxTimescale = _sidxSegments[0].timescale;
-        duration = sidxTimescale != null && sidxTimescale !== timescale ?
-          (sidxDuration / sidxTimescale) * timescale : sidxDuration;
-      } else {
-        duration = segmentDuration;
-      }
+    if (_sidxSegments.length) {
+      const sidxDuration = _sidxSegments.reduce((a,b) => a + (b.duration || 0), 0);
+      duration = sidxDuration >= 0 ? sidxDuration : segmentDuration;
     } else {
       duration = segmentDuration;
     }

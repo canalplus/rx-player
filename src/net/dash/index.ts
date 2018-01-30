@@ -132,30 +132,31 @@ export default function(
        : new Uint8Array(response.responseData);
 
       let nextSegments : INextSegmentsInfos[]|undefined;
-      let segmentInfos : ISegmentTimingInfos;
+      let segmentInfos : ISegmentTimingInfos|null = null;
       const segmentData : Uint8Array = responseData;
 
       const indexRange = segment.indexRange;
       const sidxSegments =
         parseSidx(responseData, indexRange ? indexRange[0] : 0);
-      if (sidxSegments) {
-        nextSegments = sidxSegments;
-      }
 
       if (segment.isInit) {
-        segmentInfos = { time: -1, duration: 0 };
+        if (sidxSegments) {
+          nextSegments = sidxSegments;
+          addNextSegments(representation, nextSegments);
+        }
         const timescale = getMDHDTimescale(responseData);
         if (timescale > 0) {
-          segmentInfos.timescale = timescale;
+          segmentInfos = {
+            time: -1,
+            duration: 0,
+            timescale,
+          };
         }
       } else {
         segmentInfos =
           getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
       }
 
-      if (nextSegments) {
-        addNextSegments(representation, segmentInfos, nextSegments);
-      }
       return Observable.of({ segmentData, segmentInfos });
     },
   };

@@ -45,7 +45,7 @@ import { EncryptedMediaError } from "../../errors";
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
-const instanceInfos: IInstanceInfo = {
+const instanceInfos : IInstanceInfo = {
   $mediaKeys: null,  // MediaKeys instance
   $mediaKeySystemConfiguration: null, // active MediaKeySystemConfiguration
   $keySystem: null,
@@ -171,15 +171,25 @@ function dispose() : void {
 /**
  * Clear EME ressources as the current content stops its playback.
  */
-function clearEME(): Observable<MediaKeys> {
+function clearEME(): Observable<never> {
   return Observable.defer(() => {
+    const observablesArray : Array<Observable<never>> = [];
     if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
-      return disposeMediaKeys(instanceInfos.$videoElement)
+      const obs$ = disposeMediaKeys(instanceInfos.$videoElement)
+        .ignoreElements()
         .finally(() => {
           instanceInfos.$videoElement = null;
-        });
+        }) as Observable<never>;
+      observablesArray.push(obs$);
     }
-    return Observable.empty();
+    if (instanceInfos.$keySystem && instanceInfos.$keySystem.closeSessionsOnStop) {
+      observablesArray.push(
+        $loadedSessions.dispose()
+          .ignoreElements() as Observable<never>
+      );
+    }
+    return observablesArray.length ?
+      Observable.merge(...observablesArray) : Observable.empty();
   });
 }
 

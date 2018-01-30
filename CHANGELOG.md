@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.1.0 (2018/01/30)
+
+### Added
+
+  - api: add ``networkConfig`` to ``loadVideo`` options
+  - eme: add ``closeSessionsOnStop`` to the ``keySystems`` ``loadVideo`` option
+
+### Bug fixes
+
+  - dash: fix Range request ranges for representations based on a SegmentList index
+  - smooth: allows smooth Manifests for non-live contents to begin at a timestamp != 0
+
 ## v3.0.7 (2018/01/19)
 
 ### Bug fixes

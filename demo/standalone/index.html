@@ -9,9 +9,11 @@
       <video id="video"></video>
       <script type="text/javascript" src="./lib.js" charset="utf-8"></script>
       <script charset="utf-8">
-        window.player = new window.RxPlayer({
+        const player = new window.RxPlayer({
           videoElement: document.getElementById("video")
         });
+
+        window.player = player;
       </script>
     </body>
 

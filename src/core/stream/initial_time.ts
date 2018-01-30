@@ -19,6 +19,7 @@ import Manifest from "../../manifest";
 import {
   getBufferLimits,
   getMaximumBufferPosition,
+  getMinimumBufferPosition,
 } from "../../manifest/timings";
 
 const { DEFAULT_LIVE_GAP } = config;
@@ -38,7 +39,7 @@ export interface IInitialTimeOptions {
  *      the manifest informations
  *   2. else if the video is live, use the live edge and suggested delays from
  *      it
- *   3. else returns 0 (beginning)
+ *   3. else returns the minimum time announced in the manifest
  *
  * @param {Manifest} manifest
  * @param {Object} startAt
@@ -87,5 +88,6 @@ export default function getInitialTime(
     return getMaximumBufferPosition(manifest) -
       (sgp == null ? DEFAULT_LIVE_GAP : sgp);
   }
-  return 0;
+
+  return getMinimumBufferPosition(manifest);
 }

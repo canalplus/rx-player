@@ -51,7 +51,7 @@ interface IListIndex {
 
 export interface IListIndexListItem {
   media : string;
-  range? : [ number, number ];
+  mediaRange? : [ number, number ];
 }
 
 /**
@@ -253,9 +253,9 @@ interface ISegmentHelpers<T> {
       count: number;
       range: [number, number];
     },
-    currentSegment: {
+    currentSegment?: {
+      duration?: number;
       time: number;
-      duration: number;
       timescale: number;
     }
   ) => boolean;

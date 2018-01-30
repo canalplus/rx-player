@@ -370,7 +370,7 @@ class Player extends EventEmitter {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.0.7";
+    this.version = /*PLAYER_VERSION*/"3.1.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -511,6 +511,7 @@ class Player extends EventEmitter {
       defaultAudioTrack,
       defaultTextTrack,
       keySystems,
+      networkConfig,
       startAt,
       supplementaryImageTracks,
       supplementaryTextTracks,
@@ -606,6 +607,7 @@ class Player extends EventEmitter {
       bufferOptions,
       errorStream: this._priv_errorStream$,
       keySystems,
+      networkConfig,
       speed$: this._priv_speed$,
       startAt,
       textTrackOptions,

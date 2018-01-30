@@ -33,6 +33,7 @@ export interface IManifestArguments {
   adaptations : Partial<Record<AdaptationType, IAdaptationArguments[]>>;
   type? : string;
   locations : string[];
+  minimumTime? : number;
   suggestedPresentationDelay? : number;
   availabilityStartTime? : number;
   presentationLiveGap? : number;
@@ -66,6 +67,7 @@ class Manifest {
   public uris : string[];
   public suggestedPresentationDelay? : number;
   public availabilityStartTime? : number;
+  public minimumTime? : number;
   public presentationLiveGap? : number;
   public timeShiftBufferDepth? : number;
 
@@ -73,13 +75,7 @@ class Manifest {
 
   /**
    * @constructor
-   * @param {Object} [args={}]
-   * @param {string|Number} [args.id]
-   * @param {string} args.transportType
-   * @param {Array.<Object>} args.adaptations
-   * @param {string} args.type
-   * @param {Array.<string>} args.locations
-   * @param {Number} args.duration
+   * @param {Object} args
    */
   constructor(args : IManifestArguments) {
     const nId = generateNewId();
@@ -102,6 +98,7 @@ class Manifest {
       },
     ];
 
+    this.minimumTime = args.minimumTime;
     this.isLive = args.type === "dynamic";
     this.uris = args.locations || [];
 

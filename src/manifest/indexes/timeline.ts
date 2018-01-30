@@ -304,9 +304,9 @@ const SegmentTimelineHelpers: ISegmentHelpers<ITimelineIndex> = {
       duration : number;
       timescale : number;
     },
-    currentSegment : {
+    currentSegment? : {
       time : number;
-      duration : number;
+      duration? : number;
       timescale : number;
     }
   ) : boolean {

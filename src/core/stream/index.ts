@@ -105,19 +105,53 @@ const { END_OF_PLAY } = config;
 const SUPPORTED_BUFFER_TYPES : SupportedBufferTypes[] =
   ["audio", "video", "text", "image"];
 
+function getManifestPipelineOptions(
+  networkConfig: {
+    manifestRetry? : number;
+    offlineRetry? : number;
+  }
+) : IPipelineOptions<any, any> {
+  return {
+    maxRetry: networkConfig.manifestRetry != null ?
+      networkConfig.manifestRetry : config.DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
+    maxRetryOffline: networkConfig.offlineRetry != null ?
+      networkConfig.offlineRetry : config.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+  };
+}
+
 /**
- * Returns the pipeline options depending on the type of pipeline concerned.
- * @param {string} bufferType - e.g. "audio"|"text"...
+ * @param {string} bufferType
+ * @param {Object} networkConfig
  * @returns {Object} - Options to give to the Pipeline
  */
-function getPipelineOptions(bufferType : string) : IPipelineOptions<any, any> {
-  const downloaderOptions : IPipelineOptions<any, any> = {};
-  if (arrayIncludes(["audio", "video"], bufferType)) {
-    downloaderOptions.cache = new InitializationSegmentCache();
-  } else if (bufferType === "image") {
-    downloaderOptions.maxRetry = 0; // Deactivate BIF fetching if it fails
+function getSegmentPipelineOptions(
+  bufferType : string,
+  networkConfig : {
+    offlineRetry? : number;
+    segmentRetry? : number;
   }
-  return downloaderOptions;
+) : IPipelineOptions<any, any> {
+  const cache = arrayIncludes(["audio", "video"], bufferType) ?
+    new InitializationSegmentCache<any>() : undefined;
+
+  let maxRetry : number;
+  let maxRetryOffline : number;
+
+  if (bufferType === "image") {
+    maxRetry = 0; // Deactivate BIF fetching if it fails
+  } else {
+    maxRetry = networkConfig.segmentRetry != null ?
+      networkConfig.segmentRetry : config.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
+  }
+
+  maxRetryOffline = networkConfig.offlineRetry != null ?
+    networkConfig.offlineRetry : config.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
+
+  return {
+    cache,
+    maxRetry,
+    maxRetryOffline,
+  };
 }
 
 interface IStreamOptions {
@@ -135,17 +169,22 @@ interface IStreamOptions {
     maxBufferBehind$ : Observable<number>;
   };
   errorStream : Subject<Error| CustomError>;
+  networkConfig: {
+    manifestRetry? : number;
+    offlineRetry? : number;
+    segmentRetry? : number;
+  };
+  keySystems : IKeySystemOption[];
   speed$ : BehaviorSubject<number>;
   startAt? : IInitialTimeOptions;
+  supplementaryImageTracks : ISupplementaryImageTrack[];
+  supplementaryTextTracks : ISupplementaryTextTrack[];
   textTrackOptions : SourceBufferOptions;
+  timings$ : Observable<IStreamClockTick>;
+  transport : ITransportPipelines<any, any, any, any, any>;
   url : string;
   videoElement : HTMLMediaElement;
   withMediaSource : boolean;
-  timings$ : Observable<IStreamClockTick>;
-  supplementaryTextTracks : ISupplementaryTextTrack[];
-  supplementaryImageTracks : ISupplementaryImageTrack[];
-  keySystems : IKeySystemOption[];
-  transport : ITransportPipelines<any, any, any, any, any>;
 }
 
 /**
@@ -170,6 +209,7 @@ export default function Stream({
   autoPlay,
   bufferOptions,
   keySystems,
+  networkConfig,
   speed$,
   startAt,
   url,
@@ -213,7 +253,8 @@ export default function Stream({
    * @type {Function} - take in argument the pipeline data, returns a pipeline
    * observable.
    */
-  const manifestPipeline = Pipeline(transport.manifest);
+  const manifestPipeline = Pipeline(
+    transport.manifest, getManifestPipelineOptions(networkConfig));
 
   /**
    * ...Fetch the manifest file given.
@@ -364,7 +405,7 @@ export default function Stream({
     adaptation$ : Observable<Adaptation|null>,
     abrManager : ABRManager
   ) : Observable<StreamEvent> {
-    const pipelineOptions = getPipelineOptions(bufferType);
+    const pipelineOptions = getSegmentPipelineOptions(bufferType, networkConfig);
     return adaptation$.switchMap((adaptation) => {
       if (!adaptation) {
         log.info(`disposing ${bufferType} adaptation`);
