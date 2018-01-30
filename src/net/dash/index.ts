@@ -154,7 +154,7 @@ export default function(
         }
       } else {
         segmentInfos =
-          getISOBMFFTimingInfos(segment, responseData, init, sidxSegments);
+          getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
       }
 
       return Observable.of({ segmentData, segmentInfos });
