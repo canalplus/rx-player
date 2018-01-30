@@ -6,6 +6,10 @@
 
   - eme: add closeSessionsOnStop to the keySystems option
 
+### Bug fixes
+
+  - dash: fix Range request ranges for representations based on a SegmentList index
+
 ## v3.0.7 (2018/01/19)
 
 ### Bug fixes
