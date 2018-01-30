@@ -4,7 +4,8 @@
 
 ### Added
 
-  - eme: add closeSessionsOnStop to the keySystems option
+  - api: add ``networkConfig`` to ``loadVideo`` options
+  - eme: add ``closeSessionsOnStop`` to the ``keySystems`` ``loadVideo`` option
 
 ### Bug fixes
 

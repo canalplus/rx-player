@@ -71,6 +71,12 @@ interface IDefaultTextTrackOption {
   closedCaption : boolean;
 }
 
+interface INetworkConfigOption {
+  manifestRetry? : number;
+  offlineRetry? : number;
+  segmentRetry? : number;
+}
+
 type IParsedStartAtOption = { position : number } | { wallClockTime : number } |
   { percentage : number } | { fromLastPosition : number } |
   { fromFirstPosition : number };
@@ -115,6 +121,7 @@ interface ILoadVideoOptionsBase {
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
+  networkConfig? : INetworkConfigOption;
   startAt? : { position : number } | { wallClockTime : Date|number } |
     { percentage : number } | { fromLastPosition : number } |
     { fromFirstPosition : number };
@@ -137,6 +144,7 @@ interface IParsedLoadVideoOptionsBase {
   transport : string;
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
+  networkConfig: INetworkConfigOption;
   transportOptions : ITransportOption|undefined;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
   supplementaryImageTracks : ISupplementaryImageTrackOption[];
@@ -432,22 +440,29 @@ function parseLoadVideoOptions(
     }
   }
 
+  const networkConfig = options.networkConfig == null ? {} : {
+    manifestRetry: options.networkConfig.manifestRetry,
+    offlineRetry: options.networkConfig.offlineRetry,
+    segmentRetry: options.networkConfig.segmentRetry,
+  };
+
   // TODO without cast
   /* tslint:disable no-object-literal-type-assertion */
   return {
-    url,
-    transport,
     autoPlay,
-    keySystems,
-    transportOptions,
-    supplementaryTextTracks,
-    supplementaryImageTracks,
-    textTrackMode,
-    textTrackElement,
     defaultAudioTrack,
     defaultTextTrack,
     hideNativeSubtitle,
+    keySystems,
+    networkConfig,
     startAt,
+    supplementaryImageTracks,
+    supplementaryTextTracks,
+    textTrackElement,
+    textTrackMode,
+    transport,
+    transportOptions,
+    url,
   } as IParsedLoadVideoOptions;
   /* tslint:enable no-object-literal-type-assertion */
 }
