@@ -10,6 +10,7 @@
 ### Bug fixes
 
   - dash: fix Range request ranges for representations based on a SegmentList index
+  - smooth: allows smooth Manifests for non-live contents to begin at a timestamp != 0
 
 ## v3.0.7 (2018/01/19)
 
