@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+  - eme: add closeSessionsOnStop to the keySystems option
+
 ## v3.0.7 (2018/01/19)
 
 ### Bug fixes
