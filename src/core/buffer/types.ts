@@ -81,7 +81,7 @@ export interface IPipelineEvent {
     bufferType : SupportedBufferTypes;
     parsed : {
       segmentData : any;
-      segmentInfos? : IBufferSegmentInfos;
+      segmentInfos : IBufferSegmentInfos|null;
     };
   };
 }

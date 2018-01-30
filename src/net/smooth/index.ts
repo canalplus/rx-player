@@ -232,7 +232,7 @@ export default function(
       const responseData = response.responseData;
       let parsedResponse : string|Uint8Array;
       let nextSegments;
-      let segmentInfos;
+      let segmentInfos : ISegmentTimingInfos|null = null;
       const isMP4 = mimeType.indexOf("mp4") >= 0;
 
       // segmentData components
@@ -259,7 +259,7 @@ export default function(
         if (__DEV__) {
           assert(typeof segmentInfos.timescale === "number");
         }
-        _sdTimescale = segmentInfos.timescale as number;
+        _sdTimescale = segmentInfos.timescale;
       } else {
         if (__DEV__) {
           assert(typeof responseData === "string");
