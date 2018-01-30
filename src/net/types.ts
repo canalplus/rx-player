@@ -232,6 +232,7 @@ export interface IParsedManifest {
   publishTime?: Date|number;
   mediaPresentationDuration?: number;
   minimumUpdatePeriod?: number;
+  minimumTime? : number;
   minBufferTime?: number;
   timeShiftBufferDepth?: number;
   suggestedPresentationDelay?: number;
