@@ -270,7 +270,7 @@ function Buffer({
         segment : Segment;
         parsed : {
           segmentData : any;
-          segmentInfos : IBufferSegmentInfos;
+          segmentInfos : IBufferSegmentInfos|null;
         };
       }
     ) : Observable<BufferEvent> {

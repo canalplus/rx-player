@@ -198,11 +198,14 @@ function TextTrackParser({
   }
 
   if (isInit) {
-    segmentInfos = { time: -1, duration: 0 };
     if (isMP4) {
       const timescale = getMDHDTimescale(responseData as Uint8Array);
       if (timescale > 0) {
-        segmentInfos.timescale = timescale;
+        segmentInfos = {
+          time: -1,
+          duration: 0,
+          timescale,
+        };
       }
     }
     segmentData = undefined;

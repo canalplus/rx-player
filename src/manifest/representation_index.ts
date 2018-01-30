@@ -96,7 +96,7 @@ class RepresentationIndex {
     currentSegment? : {
       duration? : number;
       time : number;
-      timescale? : number;
+      timescale : number;
     }
   ) : IBufferSegmentInfos[] {
     const addedSegments : IBufferSegmentInfos[] = [];

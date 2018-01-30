@@ -256,7 +256,7 @@ interface ISegmentHelpers<T> {
     currentSegment?: {
       duration?: number;
       time: number;
-      timescale?: number;
+      timescale: number;
     }
   ) => boolean;
 }
