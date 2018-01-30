@@ -329,35 +329,74 @@ export default class Manifest {
 
     const oldPeriods = this.periods;
     const newPeriods = newManifest.periods;
-    for (let periodIndex = 0; periodIndex < oldPeriods.length; periodIndex++) {
-      const oldAdaptations = oldPeriods[periodIndex].getAdaptations();
-      const newAdaptations = newPeriods[periodIndex].getAdaptations();
 
-      for (let i = 0; i < oldAdaptations.length; i++) {
-        const newAdaptation =
-          arrayFind(newAdaptations, a => a.id === oldAdaptations[i].id);
+    for (let i = 0; i < oldPeriods.length; i++) {
+      const oldPeriod = oldPeriods[i];
+      const newPeriod =
+        arrayFind(newPeriods, a => a.id === oldPeriod.id);
 
-        if (!newAdaptation) {
-          log.warn(
-            `manifest: adaptation "${oldAdaptations[i].id}" not found when merging.`
-          );
-        } else {
-          const oldRepresentations = oldAdaptations[i].representations;
-          const newRepresentations = newAdaptation.representations;
-          for (let j = 0; j < oldRepresentations.length; j++) {
-            const newRepresentation =
-              arrayFind(newRepresentations, r => r.id === oldRepresentations[j].id);
+      if (!newPeriod) {
+        log.info(`Period ${oldPeriod.id} not found after update. Removing.`);
+        oldPeriods.splice(i, 1);
+        i--;
+      } else {
+        oldPeriod.start = newPeriod.start;
+        oldPeriod.end = newPeriod.end;
+        oldPeriod.duration = newPeriod.duration;
 
-            if (!newRepresentation) {
-              /* tslint:disable:max-line-length */
-              log.warn(
-                `manifest: representation "${oldRepresentations[j].id}" not found when merging.`
-              );
-              /* tslint:enable:max-line-length */
-            } else {
-              oldRepresentations[j].index._update(newRepresentation.index);
+        const oldAdaptations = newPeriod.getAdaptations();
+        const newAdaptations = newPeriod.getAdaptations();
+
+        for (let j = 0; j < oldAdaptations.length; j++) {
+          const oldAdaptation = oldAdaptations[j];
+          const newAdaptation =
+            arrayFind(newAdaptations, a => a.id === oldAdaptation.id);
+
+          if (!newAdaptation) {
+            log.warn(
+              `manifest: adaptation "${oldAdaptations[j].id}" not found when merging.`
+            );
+          } else {
+            const oldRepresentations = oldAdaptations[j].representations;
+            const newRepresentations = newAdaptation.representations;
+
+            for (let k = 0; k < oldRepresentations.length; k++) {
+              const oldRepresentation = oldRepresentations[k];
+              const newRepresentation =
+                arrayFind(newRepresentations, r => r.id === oldRepresentation.id);
+
+              if (!newRepresentation) {
+                /* tslint:disable:max-line-length */
+                log.warn(
+                  `manifest: representation "${oldRepresentations[k].id}" not found when merging.`
+                );
+                /* tslint:enable:max-line-length */
+              } else {
+                oldRepresentation.baseURL = newRepresentation.baseURL;
+                oldRepresentations[k].index._update(newRepresentation.index);
+              }
             }
           }
+        }
+      }
+    }
+
+    // adding - perhaps - new Period[s]
+    if (newPeriods.length > oldPeriods.length) {
+      const lastOldPeriod = oldPeriods[oldPeriods.length - 1];
+      if (lastOldPeriod) {
+        for (let i = 0; i < newPeriods.length - 1; i++) {
+          const newPeriod = newPeriods[i];
+          if (newPeriod.start > lastOldPeriod.start) {
+            log.info(`Adding new period ${newPeriod.id}`);
+            this.periods.push(newPeriod);
+          }
+        }
+      } else {
+        for (let i = 0; i < newPeriods.length - 1; i++) {
+          const newPeriod = newPeriods[i];
+          log.info(`Adding new period ${newPeriod.id}`);
+          this.periods.push(newPeriod);
         }
       }
     }
