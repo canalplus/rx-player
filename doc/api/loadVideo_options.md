@@ -17,7 +17,7 @@
     - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
-    - [hideNativeSubtitle](#prop-networkConfig)
+    - [networkConfig](#prop-networkConfig)
 
 ## <a name="overview"></a>Overview
 
