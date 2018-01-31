@@ -350,6 +350,21 @@ export default {
    */
   ABR_STARVATION_GAP: 5,
 
+  /**
+   * Defines the accepted framedrop ratio on total decoded frames.
+   * Two bitrates may be mostly playbacked, 25 and 50 fps.
+   *
+   * Consider to lose 9 non-contiguous frames on 25 fps. The framerate goes
+   * down to 16 fps, which is the estimated minimum framerate for movement perception.
+   * It makes 1/3 of tolerated decoded frames.
+   *
+   * Whatever the framerate is, contiguous framedrops may be akward for the viewer.
+   * Now considering 50 fps as the maximum framerate, a third of dropped frames might be
+   * a good compromise since (1/3)*50 = 16 contiguous frames are dropped.
+   *
+   */
+  ABR_MAX_FRAMEDROP_RATIO: 0.33,
+
   OUT_OF_STARVATION_GAP: 7,
 
   /**

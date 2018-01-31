@@ -302,6 +302,36 @@ function makeCue(
   return new VTTCue_(startTime, endTime, payload);
 }
 
+/**
+ * Get informations about playback frame counts.
+ * HTMLVideoElement API is supported in Firefox >= 25.
+ *
+ * @param {HTMLVideoElement} videoElement
+ */
+function getVideoPlaybackQuality(videoElement: HTMLMediaElement): IVideoPlaybackQuality{
+
+  if (videoElement.getVideoPlaybackQuality) {
+    return videoElement.getVideoPlaybackQuality();
+  }
+  else if (
+    videoElement.webkitDroppedFrameCount &&
+    videoElement.webkitDecodedFrameCount
+  ) {
+    return {
+      droppedVideoFrames: videoElement.webkitDroppedFrameCount,
+      totalVideoFrames: videoElement.webkitDroppedFrameCount
+        + videoElement.webkitDecodedFrameCount,
+      creationTime: Date.now(),
+    };
+  } else {
+    return {
+      droppedVideoFrames: 0,
+      totalVideoFrames: 0,
+      creationTime: Date.now(),
+    };
+  }
+}
+
 export {
   KeySystemAccess,
   MediaSource_,
@@ -321,6 +351,7 @@ export {
   makeCue,
   requestFullscreen,
   requestMediaKeySystemAccess,
+  getVideoPlaybackQuality,
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,

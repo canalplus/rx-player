@@ -31,6 +31,7 @@ import throttle from "../../utils/rx-throttle";
 import {
   canPlay,
   canSeek,
+  getVideoPlaybackQuality,
 } from "../../compat";
 import { onSourceOpen$ } from "../../compat/events";
 import {
@@ -433,8 +434,23 @@ export default function Stream({
        */
       let currentRepresentation : Representation|null = null;
 
+      const droppedFrameRatio$ =
+        Observable.timer(1000, 1000)
+          .map(() => getVideoPlaybackQuality(videoElement))
+          .pairwise()
+          .map(([oldPlaybackQuality, newPlaybackQuality]) => {
+            const currentDecodedFrames =
+              newPlaybackQuality.totalVideoFrames -
+                oldPlaybackQuality.totalVideoFrames;
+            const currentDroppedFrames =
+              newPlaybackQuality.droppedVideoFrames -
+                oldPlaybackQuality.droppedVideoFrames;
+            return currentDroppedFrames / currentDecodedFrames;
+          })
+          .startWith(0);
+
       const abrClock$ = timings$
-        .map(timing => {
+        .map((timing) => {
           let bitrate;
           let lastIndexPosition;
 
@@ -446,7 +462,6 @@ export default function Stream({
                 currentRepresentation.index.getLastPosition();
             }
           }
-
           return {
             bitrate,
             bufferGap: timing.bufferGap,
@@ -460,7 +475,13 @@ export default function Stream({
 
       const { representations } = adaptation;
 
-      const abr$ = abrManager.get$(bufferType, abrClock$, representations);
+      const abr$ = abrManager.get$(
+        bufferType,
+        abrClock$,
+        representations,
+        droppedFrameRatio$
+      );
+
       const representation$ = abr$
         .map(abr => abr.representation)
         .filter(representation => representation != null)
