@@ -38,7 +38,7 @@ function debounce(fn : () => void, delay : number) : () => void {
 interface IBackoffOptions {
   retryDelay : number;
   totalRetry : number;
-  shouldRetry? : (error : Error) => boolean;
+  shouldRetry? : (error : Error|CustomError) => boolean;
   resetDelay? : number;
   errorSelector? : (error : Error|CustomError, retryCount : number) => Error|CustomError;
   onRetry? : (error : Error|CustomError, retryCount : number) => void;
@@ -70,7 +70,12 @@ interface IBackoffOptions {
  * each retry. Will receive two arguments:
  *   1. The observable error
  *   2. The current retry count, beginning at 1 for the first retry
- * @param {Function} [options.errorSelector]
+ * @param {Function} [options.errorSelector] - If and when the observable will
+ * definitely throw (without retrying), this function will be called with two
+ * arguments:
+ *   1. The observable error
+ *   2. The final retry count, beginning at 1 for the first retry
+ * The returned value will be what will be thrown by the observable.
  * @returns {Observable}
  * TODO Take errorSelector out. Should probably be entirely managed in the
  * calling code via a catch (much simpler to use and to understand).

@@ -14,15 +14,23 @@
  * limitations under the License.
  */
 
+/**
+ * This file defines a global clock for the RxPlayer.
+ *
+ * Each clock tick also pass informations about the current state of the
+ * video element to sub-parts of the player.
+ */
+
+import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import { ReplaySubject } from "rxjs/ReplaySubject";
-
-import objectAssign = require("object-assign");
 import config from "../../config";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
-interface IVideoTiming {
+// Informations recuperated on the video element on each clock
+// tick
+interface IVideoInfos {
   currentTime : number;
   buffered : TimeRanges;
   duration : number;
@@ -42,7 +50,8 @@ type stalledStatus = {
   timestamp : number;
 } | null;
 
-export interface IClockTick extends IVideoTiming {
+// Global informations emitted on each clock tick
+export interface IClockTick extends IVideoInfos {
   stalled : stalledStatus;
 }
 
@@ -108,10 +117,13 @@ function isEnding(
  * Generate a basic timings object from the video element and the eventName
  * which triggered the request.
  * @param {HTMLMediaElement} video
- * @param {string} name
+ * @param {string} currentState
  * @returns {Object}
  */
-function getTimings(video : HTMLMediaElement, name : string) : IVideoTiming {
+function getVideoInfos(
+  video : HTMLMediaElement,
+  currentState : string
+) : IVideoInfos {
   const {
     currentTime,
     paused,
@@ -126,7 +138,7 @@ function getTimings(video : HTMLMediaElement, name : string) : IVideoTiming {
     buffered,
     duration,
     bufferGap: getLeftSizeOfRange(buffered, currentTime),
-    state: name,
+    state: currentState,
     playbackRate,
     currentRange: getRange(buffered, currentTime),
     readyState,
@@ -136,7 +148,7 @@ function getTimings(video : HTMLMediaElement, name : string) : IVideoTiming {
 
 /**
  * Infer stalled status of the video based on:
- *   - the return of the function getTimings
+ *   - the return of the function getVideoInfos
  *   - the previous timings object.
  *
  * @param {Object} prevTimings - Previous timings object. See function to know
@@ -148,7 +160,7 @@ function getTimings(video : HTMLMediaElement, name : string) : IVideoTiming {
  */
 function getStalledStatus(
   prevTimings : IClockTick,
-  currentTimings : IVideoTiming,
+  currentTimings : IVideoInfos,
   withMediaSource : boolean
 ) : stalledStatus {
   const {
@@ -251,12 +263,12 @@ function getStalledStatus(
  * @param {Object} options
  * @returns {Observable}
  */
-function createTimingsSampler(
+function createClock(
   video : HTMLMediaElement,
   { withMediaSource } : { withMediaSource : boolean }
 ) : Observable<IClockTick> {
   return Observable.create((obs : Observer<IClockTick>) => {
-    let lastTimings : IClockTick = objectAssign(getTimings(video, "init"),
+    let lastTimings : IClockTick = objectAssign(getVideoInfos(video, "init"),
       { stalled: null }
     );
 
@@ -267,7 +279,7 @@ function createTimingsSampler(
      */
     function emitSample(evt? : Event) {
       const timingEventType = evt && evt.type || "timeupdate";
-      const videoTimings = getTimings(video, timingEventType);
+      const videoTimings = getVideoInfos(video, timingEventType);
       const stalledState =
         getStalledStatus(lastTimings, videoTimings, withMediaSource);
 
@@ -298,4 +310,4 @@ function createTimingsSampler(
     .refCount();
 }
 
-export default createTimingsSampler;
+export default createClock;

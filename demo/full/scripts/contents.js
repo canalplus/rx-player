@@ -1,5 +1,11 @@
 export default [
   {
+    "name": "DASH multiperiod",
+    "url": "https://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-live-periods/mp4-live-periods-mpd.mpd",
+    "transport": "dash",
+    "live": false,
+  },
+  {
     "name": "BIF Thumbnail Track example",
     "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
     "transport": "smooth",

@@ -16,16 +16,18 @@
 
 import arrayFind = require("array-find");
 import objectAssign = require("object-assign");
-
 import generateNewId from "../utils/id";
 import Representation, {
   IRepresentationArguments
 } from "./representation";
 
-import { IContentProtectionDash } from "../net/dash/types";
-import { IContentProtectionSmooth } from "../net/smooth/types";
-
 export type AdaptationType = "video"|"audio"|"text"|"image";
+
+// TODO
+export interface IContentProtectionDASH {
+  schemeIdUri?: string;
+  value?: string;
+}
 
 export interface IAdaptationArguments {
   // -- required
@@ -35,12 +37,11 @@ export interface IAdaptationArguments {
   // -- optional
   audioDescription? : boolean;
   closedCaption? : boolean;
-  contentProtection? : IContentProtectionDash;
   id? : number|string;
   language? : string;
   manuallyAdded? : boolean;
   normalizedLanguage? : string;
-  smoothProtection? : IContentProtectionSmooth;
+  contentProtection? : IContentProtectionDASH;
 }
 
 /**
@@ -54,8 +55,7 @@ class Adaptation {
   public type : AdaptationType;
 
   // optional
-  public _smoothProtection? : IContentProtectionSmooth;
-  public contentProtection? : IContentProtectionDash;
+  public contentProtection? : IContentProtectionDASH;
   public isAudioDescription? : boolean;
   public isClosedCaption? : boolean;
   public language? : string;
@@ -89,20 +89,13 @@ class Adaptation {
       this.isAudioDescription = args.audioDescription;
     }
 
-    // TODO rename both protectionData?
+    // TODO move to DASH's Segment private infos
     if (args.contentProtection != null) {
       this.contentProtection = args.contentProtection;
-    }
-    if (args.smoothProtection != null) {
-      this._smoothProtection = args.smoothProtection;
     }
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = !!args.manuallyAdded;
-
-    // ---------
-    // this._rootURL = args.rootURL;
-    // this._baseURL = args.baseURL;
   }
 
   /**

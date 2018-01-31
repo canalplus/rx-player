@@ -24,6 +24,9 @@ export default class EWMA {
   private _lastEstimate : number;
   private _totalWeight : number;
 
+  /**
+   * @param {number} halfLife
+   */
   constructor(halfLife : number) {
     // (half-life = log(1/2) / log(Decay Factor)
     this._alpha = Math.exp(Math.log(0.5) / halfLife);
@@ -31,6 +34,10 @@ export default class EWMA {
     this._totalWeight = 0;
   }
 
+  /**
+   * @param {number} weight
+   * @param {number} value
+   */
   public addSample(weight : number, value : number) : void {
     const adjAlpha = Math.pow(this._alpha, weight);
     const newEstimate = value * (1 - adjAlpha) + adjAlpha * this._lastEstimate;
@@ -40,6 +47,9 @@ export default class EWMA {
     }
   }
 
+  /**
+   * @returns {number} value
+   */
   public getEstimate() : number {
     const zeroFactor = 1 - Math.pow(this._alpha, this._totalWeight);
     return this._lastEstimate / zeroFactor;

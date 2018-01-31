@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  CustomSegmentLoader,
-} from "../types";
+import { IRepresentationIndex } from "../../manifest";
+import { CustomSegmentLoader } from "../types";
 
 interface IHSSKeySystem {
   systemId : string;
@@ -37,63 +36,73 @@ interface IHSSManifestSegment {
   r : number;
 }
 
-interface IInitialization {
-  range?: Array<number|null>|null;
-  media?: string|null;
-  indexRange?: Array<number|null>;
-}
+// interface IInitialization {
+//   range?: Array<number|null>|null;
+//   media?: string|null;
+//   indexRange?: Array<number|null>;
+// }
 
-interface IIndex {
-  timeline: IHSSManifestSegment[];
-  timescale: number;
-  initialization?: IInitialization;
-  indexType?: string;
-}
+// interface IIndex {
+//   timeline: IHSSManifestSegment[];
+//   timescale: number;
+//   initialization?: IInitialization;
+//   indexType?: string;
+// }
 
 interface IContentProtectionSmooth {
   keyId : string;
   keySystems: IHSSKeySystem[];
 }
 
+// interface ISmoothRepresentationIndexIndex {
+//   timeline : IHSSManifestSegment[];
+//   indexType : "smooth";
+//   timescale : number;
+//   initialization : {};
+// }
+
 interface IRepresentationSmooth {
   // required
+  baseURL : string;
   bitrate: number;
   codecPrivateData: string;
+  index: IRepresentationIndex;
+  id: string;
 
   // optional
   audiotag?: number;
-  bitsPerSample?: number;
-  channels?: number;
+  bitsPerSample? : number;
+  channels? : number;
   codecs?: string;
   height?: number;
-  id?: string|number;
   mimeType?: string;
   packetSize?: number;
   samplingRate?: number;
   width?: number;
 }
 
-interface IAdaptationSmooth {
-  id?: string;
-  smoothProtection?: IContentProtectionSmooth|null;
-  type: string;
-  accessibility: string[];
-  index: IIndex;
-  representations: IRepresentationSmooth[];
-  name: string|null;
-  language: string|null;
-  normalizedLanguage: string|null;
-  baseURL: string|null;
+interface IPeriodSmooth {
+  id: string;
+  adaptations: IAdaptationSmooth[];
+  duration: number;
+  laFragCount?: number;
 }
 
-interface IPeriodSmooth {
-duration: number;
-adaptations: IAdaptationSmooth[];
-laFragCount: number;
+interface IAdaptationSmooth {
+  // -- required --
+  id: string;
+  type: string;
+  representations: IRepresentationSmooth[];
+
+  // -- optional --
+  closedCaption? : boolean;
+  audioDescription? : boolean;
+  name?: string;
+  language?: string;
+  normalizedLanguage?: string;
 }
 
 export {
-  IIndex,
   IHSSKeySystem,
   IPeriodSmooth,
   IHSSParserOptions,

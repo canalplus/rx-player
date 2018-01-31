@@ -22,6 +22,10 @@ import {
 import errorMessage from "./errorMessage";
 
 /**
+ * Error linked to the Index part of the Manifest.
+ *
+ * TODO Rename ManifestError or something?
+ *
  * @class IndexError
  * @extends Error
  */
@@ -31,10 +35,9 @@ export default class IndexError extends Error {
   public message : string;
   public code : string;
   public fatal : boolean;
-  public indexType? : string;
   public reason? : { message : string }|string|null;
 
-  constructor(code : string, indexType? : string, fatal? : boolean) {
+  constructor(code : string, fatal? : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, IndexError.prototype);
@@ -42,10 +45,9 @@ export default class IndexError extends Error {
     this.name = "IndexError";
     this.type = ErrorTypes.INDEX_ERROR;
 
-    this.indexType = indexType;
-
     this.reason = null;
-    this.code = ErrorCodes[code];
+    this.code = ErrorCodes.hasOwnProperty(code) ?
+      (ErrorCodes as IDictionary<string>)[code] : "";
     this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, null);
   }
