@@ -19,6 +19,7 @@ import objectAssign = require("object-assign");
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
+import { Subscription } from "rxjs/Subscription";
 
 import config from "../../config";
 import assert from "../../utils/assert";
@@ -38,6 +39,7 @@ const {
   OUT_OF_STARVATION_GAP,
   ABR_STARVATION_FACTOR,
   ABR_REGULAR_FACTOR,
+  ABR_MAX_FRAMEDROP_RATIO,
 } = config;
 
 interface IRepresentationChooserClockTick {
@@ -232,6 +234,24 @@ function getFilteredRepresentations(
 }
 
 /**
+ * Get first bitrate from representation under the one ceiled by the bitrate if one.
+ * Returns first representation if none.
+ * @param {Array.<Object>} representations
+ * @param {Array.<Object>} ceilingBitrate
+ */
+function getLastBitrateBeforeCeiledRepresentation(
+    representations: Representation[],
+    ceilingBitrate: number
+  ) {
+  const representation = fromBitrateCeil(representations, ceilingBitrate);
+  const index = representations.indexOf(representation);
+
+  return (index <= 0) ?
+    representations[0].bitrate :
+    representations[index - 1].bitrate;
+}
+
+/**
  * Returns true if the request takes too much time relatively to how much we
  * should actually wait.
  * Depends on the chunk duration.
@@ -279,6 +299,14 @@ export default class RepresentationChooser {
   private _throttle$ : Observable<number>|undefined;
   private estimator : BandwidthEstimator;
   private _initialBitrate : number;
+  private _resetDecodableBitrate : Subscription;
+
+  /**
+   * Maximum bitrate for which stream can be easily decoded.
+   * It is the last representation bitrate before the
+   * representation that causes player to have decode issues.
+   */
+  private _maxDecodableBitrate: number|null = null;
 
   /**
    * @param {Object} options
@@ -307,7 +335,8 @@ export default class RepresentationChooser {
 
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
-    representations : Representation[]
+    representations : Representation[],
+    droppedFrameRatio$: Observable<any>
   ): Observable<{
     bitrate: undefined|number;
     representation: Representation|null;
@@ -357,6 +386,50 @@ export default class RepresentationChooser {
         // MANUAL mode
         return setManualRepresentation(representations, manualBitrate);
       }
+
+      /**
+       * Emit a new maximum decodable bitrate (mdb) each time that
+       * emitted ratio is non-tolerated and if new calculated mdb is lower to current mdb.
+       */
+      const maxDecodableBitrate$ = droppedFrameRatio$
+        .withLatestFrom(clock$)
+        .filter(([ratio, clock]) =>
+          ratio > ABR_MAX_FRAMEDROP_RATIO &&
+          clock.bitrate != null
+        )
+        .map(([_, clock]) => {
+          return getLastBitrateBeforeCeiledRepresentation(
+              representations,
+              clock.bitrate || Infinity
+            );
+          })
+        .filter((maxDecodableBitrate) => {
+          return this._maxDecodableBitrate === null ?
+            true :
+            maxDecodableBitrate < this._maxDecodableBitrate;
+        });
+
+      /**
+       * Triggers delay and reset maximum decodable bitrate each time
+       * maxDecodableBitrate emits.
+       */
+      this._resetDecodableBitrate = maxDecodableBitrate$
+        .mergeMap(maxDecodableBitrate => {
+          this._maxDecodableBitrate = maxDecodableBitrate;
+          return Observable.of(1.2);
+        })
+        .scan((x, _) => {
+          const count = Math.min(Math.pow(x, 2), 32);
+          return count;
+        })
+        .switchMap(count => {
+          return Observable
+            .timer(count * 30 * 1000)
+            .map(() => {
+              this._maxDecodableBitrate = null;
+            });
+        })
+        .subscribe();
 
       // AUTO mode
       let inStarvationMode = false;
@@ -449,8 +522,17 @@ export default class RepresentationChooser {
             nextBitrate /= clock.speed;
           }
 
+          const maximumBitrate = (this._maxDecodableBitrate !== null) ?
+            Math.min(this._maxDecodableBitrate, deviceEvents.bitrate || 0) :
+            deviceEvents.bitrate;
+
+          const filters: IFilters = {
+            bitrate: maximumBitrate,
+            width: deviceEvents.width,
+          };
+
           const _representations =
-            getFilteredRepresentations(representations, deviceEvents);
+            getFilteredRepresentations(representations, filters);
 
           return {
             bitrate: bandwidthEstimate,
@@ -548,6 +630,9 @@ export default class RepresentationChooser {
    */
   public dispose(): void {
     this._dispose$.next();
+    if(this._resetDecodableBitrate != null){
+      this._resetDecodableBitrate.unsubscribe();
+    }
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();
   }
