@@ -106,6 +106,17 @@ interface HTMLVideoElement {
 }
 interface HTMLMediaElement {
   webkitGenerateKeyRequest? : (key: string, initData : ArrayBuffer) => void;
+  webkitDroppedFrameCount?: number;
+  webkitDecodedFrameCount?: number;
+  getVideoPlaybackQuality?: () => IVideoPlaybackQuality;
+}
+
+interface IVideoPlaybackQuality {
+  readonly creationTime: number;
+  readonly totalVideoFrames: number;
+  readonly droppedVideoFrames: number;
+  readonly corruptedVideoFrames?: number;
+  readonly totalFrameDelay?: number;
 }
 
 interface Document {

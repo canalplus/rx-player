@@ -31,6 +31,8 @@ import throttle from "../../utils/rx-throttle";
 import {
   canPlay,
   canSeek,
+  getTotalPlaybackTime,
+  getVideoPlaybackQuality,
 } from "../../compat";
 import { onSourceOpen$ } from "../../compat/events";
 import {
@@ -433,6 +435,40 @@ export default function Stream({
        */
       let currentRepresentation : Representation|null = null;
 
+      /**
+       * Measure two video playback qualities far from a significant interval
+       * (equivalent to a second) then return the ratio of dropped frames on
+       * total playback frames.
+       */
+      const droppedFrameRatio$ =
+        timings$
+          .map(() => getVideoPlaybackQuality(videoElement))
+          .exhaustMap((oldPlaybackQuality) => {
+            return timings$
+              .map(() => getVideoPlaybackQuality(videoElement))
+              .distinctUntilChanged()
+              .filter((newPlaybackQuality) => {
+                const totalPlaybackTime = getTotalPlaybackTime(videoElement);
+                const fps = newPlaybackQuality.totalVideoFrames / totalPlaybackTime;
+                return ((
+                  newPlaybackQuality.totalVideoFrames -
+                  oldPlaybackQuality.totalVideoFrames
+                ) >= fps && fps !== 0);
+              })
+              .map((newPlaybackQuality) => {
+                const currentTotalFrames =
+                  newPlaybackQuality.totalVideoFrames -
+                  oldPlaybackQuality.totalVideoFrames;
+                const currentDroppedFrames =
+                  newPlaybackQuality.droppedVideoFrames -
+                  oldPlaybackQuality.droppedVideoFrames;
+                return currentDroppedFrames / currentTotalFrames;
+              })
+              .take(1);
+          })
+        .startWith(0)
+        .takeUntil(endOfPlay);
+
       const abrClock$ = timings$
         .map(timing => {
           let bitrate;
@@ -460,7 +496,12 @@ export default function Stream({
 
       const { representations } = adaptation;
 
-      const abr$ = abrManager.get$(bufferType, abrClock$, representations);
+      const abr$ = abrManager.get$(
+        bufferType,
+        abrClock$,
+        representations,
+        droppedFrameRatio$
+      );
       const representation$ = abr$
         .map(abr => abr.representation)
         .filter(representation => representation != null)
