@@ -80,7 +80,7 @@ export default class ABRManager {
   // TODO privatize
   private _choosers:  IDictionary<RepresentationChooser>;
   private _chooserInstanceOptions: IRepresentationChoosersOptions;
-  private _droppedFrameRatio$: Observable<number>;
+
   private _dispose$: Subject<void>;
 
   /**
@@ -147,8 +147,7 @@ export default class ABRManager {
   constructor(
     requests$: Observable<Observable<IRequest>>,
     metrics$: Observable<IMetric>,
-    options : IRepresentationChoosersOptions = defaultChooserOptions,
-    droppedFrameRatio$: Observable<number>
+    options : IRepresentationChoosersOptions = defaultChooserOptions
   ) {
     // Subject emitting and completing on dispose.
     // Used to clean up every created observables.
@@ -157,8 +156,6 @@ export default class ABRManager {
     // Will contain every RepresentationChooser attached to the ABRManager,
     // by type ("audio"/"video" etc.)
     this._choosers = {};
-
-    this._droppedFrameRatio$ = droppedFrameRatio$;
 
     // -- OPTIONS --
 
@@ -223,13 +220,14 @@ export default class ABRManager {
   public get$(
     type : SupportedBufferTypes,
     clock$: Observable<IRepresentationChooserClockTick>,
-    representations: Representation[] = []
+    representations: Representation[] = [],
+    maxDecodableBitrate$ : Observable<number>
   ): Observable<{
     bitrate: undefined|number;
     representation: Representation|null;
   }> {
     this._lazilyCreateChooser(type);
-    return this._choosers[type].get$(clock$, representations, this._droppedFrameRatio$);
+    return this._choosers[type].get$(clock$, representations, maxDecodableBitrate$);
   }
 
   /**

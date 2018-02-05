@@ -29,6 +29,7 @@ import {
   SupportedBufferTypes,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
+import FrameDropManager from "../stream/frame_drop_manager";
 import RepresentationBuffer, {
   IAddedSegmentEvent,
   IBufferActiveEvent,
@@ -135,6 +136,7 @@ export default class AdaptationBufferManager {
    */
   public createBuffer(
     bufferClock$ : Observable<IBufferClockTick>,
+    frameDropManager : FrameDropManager,
     queuedSourceBuffer : QueuedSourceBuffer<any>,
     segmentBookkeeper : SegmentBookkeeper,
     pipeline : (content : ISegmentLoaderArguments) => Observable<any>,
@@ -143,7 +145,8 @@ export default class AdaptationBufferManager {
   ) : Observable<IAdaptationBufferEvent> {
 
     const { manifest, period, adaptation } = content;
-    const abr$ = this._getABRForAdaptation(manifest, adaptation);
+    const abr$ = this._getABRForAdaptation(
+      manifest, adaptation, frameDropManager, segmentBookkeeper);
 
     /**
      * Emit at each bitrate estimate done by the ABRManager
@@ -249,7 +252,9 @@ export default class AdaptationBufferManager {
 
   private _getABRForAdaptation(
     manifest : Manifest,
-    adaptation : Adaptation
+    adaptation : Adaptation,
+    frameDropManager : FrameDropManager,
+    segmentBookkeeper : SegmentBookkeeper
   ) {
     const representations = adaptation.representations;
 
@@ -288,7 +293,17 @@ export default class AdaptationBufferManager {
       };
     }).share();  // side-effect === share to avoid doing it multiple times
 
-    return this._abrManager.get$(adaptation.type, abrClock$, representations)
+    const maxDecodableBitrate$ = frameDropManager.getMaximumDecodableBitrate$(
+      segmentBookkeeper,
+      representations
+    );
+
+    return this._abrManager.get$(
+      adaptation.type,
+      abrClock$,
+      representations,
+      maxDecodableBitrate$
+    )
       .do(({ representation }) => {
         currentRepresentation = representation;
       });

@@ -26,10 +26,9 @@ import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
 import {
-  getTotalPlaybackTime,
-  getVideoPlaybackQuality,
-} from "../../compat";
-import { onSourceOpen$ } from "../../compat/events";
+  onEnded$,
+  onSourceOpen$,
+} from "../../compat/events";
 import {
   CustomError,
   isKnownError,
@@ -66,6 +65,7 @@ import createBufferClock, {
 import createMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
+import FrameDropManager from "./frame_drop_manager";
 import BufferGarbageCollector from "./garbage_collector";
 import getInitialTime, {
   IInitialTimeOptions,
@@ -208,6 +208,9 @@ export default function Stream({
       new SegmentBookkeeper()
     );
 
+  const frameDropManager =
+    new FrameDropManager(videoElement, clock$, onEnded$(videoElement));
+
   /**
    * Retry the stream if ended for an unknown or non-fatal error.
    * TODO working? remove?
@@ -320,40 +323,6 @@ export default function Stream({
     } = createBufferClock(manifest, clock$, initialSeek$, initialTime);
 
     /**
-     * Measure two video playback qualities far from a significant interval
-     * (equivalent to a second) then return the ratio of dropped frames on
-     * total playback frames.
-     */
-    const droppedFrameRatio$ =
-      clock$
-        .map(() => getVideoPlaybackQuality(videoElement))
-        .exhaustMap((oldPlaybackQuality) => {
-          return clock$
-            .map(() => getVideoPlaybackQuality(videoElement))
-            .distinctUntilChanged()
-            .filter((newPlaybackQuality) => {
-              const totalPlaybackTime = getTotalPlaybackTime(videoElement);
-              const fps = newPlaybackQuality.totalVideoFrames / totalPlaybackTime;
-              return ((
-                newPlaybackQuality.totalVideoFrames -
-                oldPlaybackQuality.totalVideoFrames
-              ) >= fps && fps !== 0);
-            })
-            .map((newPlaybackQuality) => {
-              const currentTotalFrames =
-                newPlaybackQuality.totalVideoFrames -
-                oldPlaybackQuality.totalVideoFrames;
-              const currentDroppedFrames =
-                newPlaybackQuality.droppedVideoFrames -
-                oldPlaybackQuality.droppedVideoFrames;
-              return currentDroppedFrames / currentTotalFrames;
-            })
-            .take(1);
-        })
-      .startWith(0)
-      .takeUntil(endOfPlay);
-
-    /**
      * Subject through which network metrics will be sent by the segment
      * pipelines to the ABR manager.
      * @type {Subject}
@@ -382,8 +351,7 @@ export default function Stream({
     const abrManager = new ABRManager(
       requestsInfos$,
       network$,
-      adaptiveOptions,
-      droppedFrameRatio$
+      adaptiveOptions
     );
 
     /**
@@ -407,6 +375,7 @@ export default function Stream({
     const handledBuffers$ = BuffersHandler(
       { manifest, period: firstPeriodToPlay }, // content
       bufferClock$,
+      frameDropManager,
       wantedBufferAhead$,
       bufferManager,
       sourceBufferManager,

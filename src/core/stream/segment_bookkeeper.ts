@@ -659,6 +659,17 @@ export default class SegmentBookkeeper {
     }
   }
 
+  public getBitrate(currentTime: number) {
+    const { inventory } = this;
+    for(let i = inventory.length - 1; i >= 0; i--){
+      const segment = inventory[i];
+      if(currentTime >= segment.start && currentTime <= segment.end){
+        return segment.infos.representation.bitrate;
+      }
+    }
+    return null;
+  }
+
   /**
    * Empty the current inventory
    */

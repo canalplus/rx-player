@@ -49,6 +49,7 @@ import SourceBufferManager, {
 import ActivePeriodEmitter, {
   IPeriodBufferItem,
 } from "./active_period_emitter";
+import FrameDropManager from "./frame_drop_manager";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import EVENTS, {
   IActivePeriodChangedEvent,
@@ -128,6 +129,7 @@ export type IBufferHandlerEvent =
 export default function BuffersHandler(
   content : { manifest : Manifest; period : Period },
   clock$ : Observable<IBufferClockTick>,
+  frameDropManager : FrameDropManager,
   wantedBufferAhead$ : Observable<number>,
   bufferManager : BufferManager,
   sourceBufferManager : SourceBufferManager,
@@ -526,6 +528,7 @@ export default function BuffersHandler(
       // 4 - create the Buffer
       const adaptationBuffer$ = bufferManager.createBuffer(
         clock$,
+        frameDropManager,
         queuedSourceBuffer,
         segmentBookkeeper,
         pipeline,
