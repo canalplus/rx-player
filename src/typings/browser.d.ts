@@ -127,6 +127,17 @@ interface HTMLMediaElement {
     kid : ArrayBuffer|ArrayBufferView|null,
     sessionId : string
   ) => void;
+  webkitDroppedFrameCount?: number;
+  webkitDecodedFrameCount?: number;
+  getVideoPlaybackQuality?: () => IVideoPlaybackQuality;
+}
+
+interface IVideoPlaybackQuality {
+  readonly creationTime: number;
+  readonly totalVideoFrames: number;
+  readonly droppedVideoFrames: number;
+  readonly corruptedVideoFrames?: number;
+  readonly totalFrameDelay?: number;
 }
 
 interface Document {

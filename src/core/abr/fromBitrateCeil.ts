@@ -25,7 +25,7 @@ import { Representation } from "../../manifest";
 export default function fromBitrateCeil(
   representations : Representation[],
   bitrate : number
-) : Representation|undefined {
+) : Representation {
   const tooHighIndex : number = arrayFindIndex(
     representations,
     (representation) => representation.bitrate > bitrate

@@ -344,6 +344,52 @@ function makeCue(
   return new VTTCue_(startTime, endTime, payload);
 }
 
+/**
+ * Get informations about playback frame counts.
+ * HTMLVideoElement API is supported in Firefox >= 25.
+ *
+ * @param {HTMLVideoElement} videoElement
+ */
+function getVideoPlaybackQuality(videoElement: HTMLMediaElement): IVideoPlaybackQuality{
+
+  if (videoElement.getVideoPlaybackQuality) {
+    return videoElement.getVideoPlaybackQuality();
+  }
+  else if (
+    videoElement.webkitDroppedFrameCount &&
+    videoElement.webkitDecodedFrameCount
+  ) {
+    return {
+      droppedVideoFrames: videoElement.webkitDroppedFrameCount,
+      totalVideoFrames: videoElement.webkitDroppedFrameCount
+        + videoElement.webkitDecodedFrameCount,
+      creationTime: Date.now(),
+    };
+  } else {
+    return {
+      droppedVideoFrames: 0,
+      totalVideoFrames: 0,
+      creationTime: Date.now(),
+    };
+  }
+}
+
+/**
+ * From total played ranges, get total played time (in seconds).
+ * @param {HTMLMediaElement} video
+ */
+function getTotalPlaybackTime(video: HTMLMediaElement) {
+  const playedRangesLength = video.played.length;
+  let totalPlaybackTime = 0;
+  for(let i = 0; i < playedRangesLength; i++){
+    const timeOnRange =
+      video.played.end(i) -
+      video.played.start(i);
+    totalPlaybackTime += timeOnRange;
+  }
+  return totalPlaybackTime;
+}
+
 export {
   KeySystemAccess,
   MediaSource_,
@@ -368,6 +414,8 @@ export {
   requestFullscreen,
   requestMediaKeySystemAccess,
   setElementSrc$,
+  getVideoPlaybackQuality,
+  getTotalPlaybackTime,
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
