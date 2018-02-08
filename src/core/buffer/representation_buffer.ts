@@ -136,7 +136,7 @@ export interface IBufferClockTick {
 }
 
 // Arguments to give to the Buffer
-export interface IRepresentationBufferArguments {
+export interface IRepresentationBufferArguments<T> {
   clock$ : Observable<IBufferClockTick>;
   content: {
     representation : Representation;
@@ -144,7 +144,7 @@ export interface IRepresentationBufferArguments {
     period : Period;
     manifest : Manifest;
   };
-  queuedSourceBuffer : QueuedSourceBuffer<any>;
+  queuedSourceBuffer : QueuedSourceBuffer<T>;
   segmentBookkeeper : SegmentBookkeeper;
   pipeline : (x : ISegmentLoaderArguments) => Observable<IPipelineResponse>;
   wantedBufferAhead$ : Observable<number>;
@@ -194,14 +194,14 @@ function getBufferPaddings(
  * @param {Object} opt
  * @returns {Observable}
  */
-export default function RepresentationBuffer({
+export default function RepresentationBuffer<T>({
   clock$, // emit current playback informations
   content, // all informations about the content we want
   queuedSourceBuffer, // allows to interact with the SourceBuffer
   segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
   pipeline, // allows to download new segments
   wantedBufferAhead$, // emit the buffer goal
-} : IRepresentationBufferArguments) : Observable<IRepresentationBufferEvent> {
+} : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent> {
   const {
     manifest,
     period,
@@ -215,8 +215,14 @@ export default function RepresentationBuffer({
   const { high : highPadding, low : lowPadding } = getBufferPaddings(adaptation);
 
   /**
-   * Saved state of the init segment for this representation to give it back to the
-   * pipeline on subsequent downloads.
+   * Saved initSegment data for this representation.
+   * Is needed to push new segments associated to it to the QueuedSourceBuffer
+   */
+  let initSegmentData : T|null = null;
+
+  /**
+   * Saved information of the init segment for this representation to give it
+   * back to the pipeline on subsequent downloads.
    * @type {Object|null}
    */
   let initSegmentInfos : IBufferSegmentInfos|null = null;
@@ -343,17 +349,13 @@ export default function RepresentationBuffer({
     pipelineData : {
       segment : ISegment;
       parsed : {
-        segmentData : any;
+        segmentData : T;
         segmentInfos : IBufferSegmentInfos|null;
       };
     }
   ) : Observable<IRepresentationBufferEvent> {
     const { segment, parsed } = pipelineData;
     const { segmentData, segmentInfos } = parsed;
-
-    if (segment.isInit) {
-      initSegmentInfos = segmentInfos;
-    }
 
     /**
      * Validate the segment downloaded:
@@ -387,10 +389,20 @@ export default function RepresentationBuffer({
      * Emit when done.
      * @returns {Observable}
      */
-    function appendSegment() : Observable<any> {
-      const append$ = segmentData != null ?
-        queuedSourceBuffer.appendBuffer(segmentData) : Observable.of(null);
+    function appendSegment() : Observable<void> {
+      let append$ : Observable<void>;
 
+      if (segment.isInit) {
+        initSegmentInfos = segmentInfos;
+        initSegmentData = segmentData;
+        append$ = initSegmentData == null ?
+          Observable.of(undefined) :
+          queuedSourceBuffer.appendBuffer(initSegmentData, null);
+      } else {
+        append$ = segmentData == null ?
+          Observable.of(undefined) :
+          queuedSourceBuffer.appendBuffer(initSegmentData, segmentData);
+      }
       return append$.do(validateSegment);
     }
 
