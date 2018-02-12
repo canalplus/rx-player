@@ -23,9 +23,6 @@ export interface IParsedContentProtection {
   value?: string;
 }
 
-export type IContentProtectionParser =
-  (attributes: IParsedContentProtection, root: Node) => IParsedContentProtection;
-
 /**
  * Parse the "ContentProtection" node of a MPD.
  * @param {Node} root
@@ -33,10 +30,7 @@ export type IContentProtectionParser =
  * @returns {Object}
  */
 export default function parseContentProtection(
-  root: Node,
-  contentProtectionParser?: IContentProtectionParser
+  root: Node
 ) : IParsedContentProtection|undefined {
-  if (contentProtectionParser) {
-    return contentProtectionParser(parseScheme(root), root);
-  }
+  return parseScheme(root);
 }

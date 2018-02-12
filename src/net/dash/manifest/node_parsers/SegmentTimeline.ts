@@ -18,13 +18,13 @@ import parseS, {
   IParsedS,
 } from "./S";
 
-export type IParsedSegmentTimeline = IParsedS[];
+export type IParsedTimeline = IParsedS[];
 
 /**
  * @param {Node} root
  * @returns {Array.<Object>}
  */
-export default function parseSegmentTimeline(root: Node): IParsedSegmentTimeline {
+export default function parseSegmentTimeline(root: Node): IParsedTimeline {
   const timeline : IParsedS[] = [];
   const timelineChildren = root.childNodes;
   for (let i = 0; i < timelineChildren.length; i++) {

@@ -23,9 +23,10 @@ import parseBif from "../../parsers/images/bif";
 import request from "../../utils/request";
 import { resolveURL } from "../../utils/url";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import dashManifestParser, {
-  IContentProtectionParser,
-} from "./manifest";
+// import dashManifestParser, {
+//   IContentProtectionParser,
+// } from "./manifest";
+import dashManifestParser from "./manifest";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
@@ -53,7 +54,7 @@ import {
 
 interface IDASHOptions {
   segmentLoader? : CustomSegmentLoader;
-  contentProtectionParser? : IContentProtectionParser;
+  // contentProtectionParser? : IContentProtectionParser;
 }
 
 /**
@@ -74,7 +75,7 @@ export default function(
   ArrayBuffer
 >{
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
-  const { contentProtectionParser } = options;
+  // const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(
@@ -91,7 +92,7 @@ export default function(
     ) : IManifestParserObservable {
       const data = response.responseData;
       return Observable.of({
-        manifest: dashManifestParser(data, url, contentProtectionParser),
+        manifest: dashManifestParser(data, url/*, contentProtectionParser*/),
         url: response.url,
       });
     },

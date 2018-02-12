@@ -14,27 +14,39 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
-import { IRepresentationIndex } from "../../../../manifest";
 import log from "../../../../utils/log";
-import { resolveURL } from "../../../../utils/url";
 import {
   parseBoolean,
   parseFrameRate,
 } from "../helpers";
-import createRepresentationIndex from "../indexes";
-import parseSegmentBase from "./SegmentBase";
-import parseSegmentList from "./SegmentList";
-import parseSegmentTemplate from "./SegmentTemplate";
+import parseSegmentBase, {
+  IParsedSegmentBase,
+} from "./SegmentBase";
+import parseSegmentList, {
+  IParsedSegmentList,
+} from "./SegmentList";
+import parseSegmentTemplate, {
+  IParsedSegmentTemplate,
+  IParsedSegmentTimeline,
+} from "./SegmentTemplate";
 
-// Parsed child nodes from a MPD
-interface IRepresentationChildNodes {
-  baseURL? : string;
-  index? : any; // TODO
+export interface IRepresentationIntermediateRepresentation {
+  children : IRepresentationChildren;
+  attributes : IRepresentationAttributes;
 }
 
-// Parsed attributes from a MPD
-interface IRepresentationAttributes {
+export interface IRepresentationChildren {
+  // required
+  baseURL : string;
+
+  // optional
+  segmentBase? : IParsedSegmentBase;
+  segmentList? : IParsedSegmentList;
+  segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;
+}
+
+export interface IRepresentationAttributes {
+  // optional
   audioSamplingRate? : string;
   bitrate? : number;
   codecs? : string;
@@ -52,43 +64,16 @@ interface IRepresentationAttributes {
 }
 
 /**
- * Object returned by the Representation parser
- *
- * Note: Every undefined value is not added at all to the corresponding object.
- * Example:
- * We cannot have { frameRate: undefined, id: "4" }.
- * Instead, we would have just { id: "4" }.
- * This is useful, for example, when inheriting via Object.assign, but it's also
- * better for debugging by just ignoring unset values.
+ * @param {NodeList} representationChildren
+ * @returns {Object}
  */
-export interface IParsedRepresentation {
-  // required
-  baseURL: string;
-  bitrate : number;
+function parseRepresentationChildren(
+  representationChildren : NodeList
+) : IRepresentationChildren {
+  const children : IRepresentationChildren = {
+    baseURL: "",
+  };
 
-  // optional
-  audioSamplingRate? : string;
-  codecs? : string;
-  codingDependency? : boolean;
-  frameRate? : number;
-  height? : number;
-  id? : string;
-  index? : IRepresentationIndex;
-  maxPlayoutRate? : number;
-  maximumSAPPeriod? : number;
-  mimeType? : string;
-  profiles? : string;
-  qualityRanking? : number;
-  segmentProfiles? : string;
-  width? : number;
-}
-
-function parseRepresentationChildNodes(
-  representationNode : Node
-) : IRepresentationChildNodes {
-  const children : IRepresentationChildNodes = {};
-
-  const representationChildren = representationNode.childNodes;
   for (let i = 0; i < representationChildren.length; i++) {
     const currentNode = representationChildren[i];
 
@@ -97,19 +82,23 @@ function parseRepresentationChildNodes(
         children.baseURL = currentNode.textContent || "";
         break;
       case "SegmentBase":
-        children.index = parseSegmentBase(currentNode);
+        children.segmentBase = parseSegmentBase(currentNode);
         break;
       case "SegmentList":
-        children.index = parseSegmentList(currentNode);
+        children.segmentList = parseSegmentList(currentNode);
         break;
       case "SegmentTemplate":
-        children.index = parseSegmentTemplate(currentNode);
+        children.segmentTemplate = parseSegmentTemplate(currentNode);
         break;
     }
   }
   return children;
 }
 
+/**
+ * @param {Node} representationNode
+ * @returns {Object}
+ */
 function parseRepresentationAttributes(
   representationNode : Node
 ) : IRepresentationAttributes {
@@ -221,37 +210,11 @@ function parseRepresentationAttributes(
   return attributes;
 }
 
-/**
- * @param {Node} root
- * @returns {Object}
- */
-export default function parseRepresentationNode(
-  root : Node,
-  rootURL : string
-) : IParsedRepresentation {
-  const base = objectAssign(
-    parseRepresentationAttributes(root),
-    parseRepresentationChildNodes(root)
-  );
-
-  let bitrate = base.bitrate;
-  if (bitrate == null) {
-    log.warn("DASH: No usable bitrate found in the Representation.");
-    bitrate = 0;
-  }
-
-  if (base.index != null) {
-    base.index = createRepresentationIndex(base.index);
-  }
-
-  return objectAssign(
-    base,
-    {
-      baseURL: resolveURL(
-        rootURL,
-        base.baseURL
-      ),
-      bitrate,
-    }
-  );
+export function createRepresentationIntermediateRepresentation(
+  representationNode : Node
+) : IRepresentationIntermediateRepresentation {
+  return {
+    children: parseRepresentationChildren(representationNode.childNodes),
+    attributes: parseRepresentationAttributes(representationNode),
+  };
 }

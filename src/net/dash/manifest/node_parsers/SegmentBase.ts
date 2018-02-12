@@ -24,61 +24,32 @@ import {
 import parseInitialization, {
   IParsedInitialization,
 } from "./Initialization";
-import parseSegmentTimeline, {
-  IParsedSegmentTimeline,
-} from "./SegmentTimeline";
 
 export interface ISegmentBaseAttributes {
-  timeline?: IParsedSegmentTimeline;
-  timescale?: number;
-  indexType?: string;
-  initialization?: IParsedInitialization;
-  timeShiftBufferDepth?: number;
-  presentationTimeOffset?: number;
+  availabilityTimeComplete?: boolean;
+  availabilityTimeOffset?: number;
+  duration? : number;
   indexRange?: [number, number];
   indexRangeExact?: boolean;
-  availabilityTimeOffset?: number;
-  availabilityTimeComplete?: boolean;
-  duration? : number;
+  initialization?: IParsedInitialization;
+  presentationTimeOffset?: number;
   startNumber? : number;
+  timeShiftBufferDepth?: number;
+  timescale?: number;
+}
+
+interface ISegmentBaseSegment {
+  ts: number; // start timestamp
+  d: number; // duration
+  r: number; // repeat counter
+  range?: [number, number];
 }
 
 export interface IParsedSegmentBase extends ISegmentBaseAttributes {
-  timescale : number;
-  presentationTimeOffset : number;
-  indexRangeExact : boolean;
   availabilityTimeComplete : boolean;
-}
-
-// TODO Refacto MultipleSegmentBase
-export interface IMultipleSegmentBase extends IParsedSegmentBase {
-  duration?: number;
-  startNumber?: number;
-}
-
-/**
- * TODO Refacto MultipleSegmentBase
- * @param {Node} root
- * @returns {Object}
- */
-export function parseMultipleSegmentBase(root: Node): IMultipleSegmentBase {
-  let indexType : string|undefined;
-  let timeline : IParsedSegmentTimeline|undefined;
-  const base = parseSegmentBase(root);
-
-  const multipleSegmentBaseChildren = root.childNodes;
-  for (let i = 0; i < multipleSegmentBaseChildren.length; i++) {
-    const currentNode = multipleSegmentBaseChildren[i];
-    if (currentNode.nodeName === "SegmentTimeline") {
-      indexType = "timeline";
-      timeline = parseSegmentTimeline(currentNode);
-    }
-  }
-
-  return objectAssign(base, {
-    indexType,
-    timeline,
-  });
+  indexRangeExact : boolean;
+  timeline : ISegmentBaseSegment[];
+  timescale : number;
 }
 
 /**
@@ -95,11 +66,6 @@ export default function parseSegmentBase(root: Node): IParsedSegmentBase {
     if (currentNode.nodeName === "Initialization") {
       attributes.initialization = parseInitialization(currentNode);
     }
-  }
-
-  if (root.nodeName === "SegmentBase") {
-    attributes.indexType = "base";
-    attributes.timeline = [];
   }
 
   for (let i = 0; i < root.attributes.length; i++) {
@@ -172,7 +138,6 @@ export default function parseSegmentBase(root: Node): IParsedSegmentBase {
   }
 
   const timescale = attributes.timescale == null ? 1 : attributes.timescale;
-  const presentationTimeOffset = attributes.presentationTimeOffset || 0;
   const indexRangeExact = !!attributes.indexRangeExact;
   const availabilityTimeComplete = attributes.availabilityTimeComplete == null ?
     true : attributes.availabilityTimeComplete;
@@ -180,10 +145,10 @@ export default function parseSegmentBase(root: Node): IParsedSegmentBase {
   return objectAssign(
     attributes,
     {
-      timescale,
-      presentationTimeOffset,
-      indexRangeExact,
       availabilityTimeComplete,
+      indexRangeExact,
+      timeline: [],
+      timescale,
     }
   );
 }

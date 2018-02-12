@@ -14,81 +14,82 @@
  * limitations under the License.
  */
 
-import generateNewId from "../../../../utils/id";
 import log from "../../../../utils/log";
-import {
-  resolveURL,
-} from "../../../../utils/url";
 import {
   parseBoolean,
   parseDuration,
 } from "../helpers";
-import parseAdaptationSet, {
-  IContentProtectionParser,
-  IParsedAdaptationSet,
+import {
+  createAdaptationSetIntermediateRepresentation,
+  IAdaptationSetIntermediateRepresentation,
 } from "./AdaptationSet";
 
-export interface IParsedPeriod {
-  // required
-  id : string;
-  adaptations : IParsedAdaptationSet[];
+export interface IPeriodIntermediateRepresentation {
+  children : IPeriodChildren;
+  attributes : IPeriodAttributes;
+}
 
+// intermediate representation for a Period's children
+export interface IPeriodChildren {
+  // required
+  baseURL : string; // BaseURL for the contents. Empty string if not defined
+  adaptations : IAdaptationSetIntermediateRepresentation[];
+}
+
+// intermediate representation for a Period's attributes
+export interface IPeriodAttributes {
   // optional
+  id? : string;
   start? : number;
   duration? : number;
   bitstreamSwitching? : boolean;
 }
 
 /**
- * Parse a single manifest period.
- * @param {Node} root - Root Node of the period
- * @param {string} rootURL - Base URL for segments contained in this period.
- * @param {Function} contentProtectionParser
+ * @param {NodeList} periodChildren
  * @returns {Object}
  */
-export default function parsePeriod(
-  root: Node,
-  rootURL : string,
-  contentProtectionParser?: IContentProtectionParser
-): IParsedPeriod {
-  let periodRootURL = rootURL;
+function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
+  let baseURL = "";
+  const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
 
-  const adaptationNodes : Node[] = [];
-  const periodChildren = root.childNodes;
   for (let i = 0; i < periodChildren.length; i++) {
     const currentNode = periodChildren[i];
 
     switch (currentNode.nodeName) {
 
       case "BaseURL":
-        periodRootURL = resolveURL(periodRootURL, currentNode.textContent || "");
+        baseURL = currentNode.textContent || "";
         break;
 
       case "AdaptationSet":
-        adaptationNodes.push(currentNode);
+        const adaptation =
+          createAdaptationSetIntermediateRepresentation(currentNode);
+        adaptations.push(adaptation);
         break;
     }
   }
 
-  const adaptations = adaptationNodes.map((adaptationNode) => {
-    return parseAdaptationSet(adaptationNode, periodRootURL, contentProtectionParser);
-  });
+  return { baseURL, adaptations };
+}
 
-  let id : string|undefined;
-  let start : number|undefined;
-  let duration : number|undefined;
-  let bitstreamSwitching : boolean|undefined;
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
+/**
+ * @param {Node} periodNode
+ * @returns {Object}
+ */
+function parsePeriodAttributes(periodNode : Node) : IPeriodAttributes {
+  const res : IPeriodAttributes = {};
+  for (let i = 0; i < periodNode.attributes.length; i++) {
+    const attribute = periodNode.attributes[i];
 
     switch (attribute.name) {
       case "id":
-        id = attribute.value;
+        res.id = attribute.value;
         break;
       case "start": {
         const tempStart = parseDuration(attribute.value);
         if (!isNaN(tempStart)) {
-          start = tempStart;
+          res.start = tempStart;
         } else {
           log.warn("DASH: Unrecognized start in the mpd:", attribute.value);
         }
@@ -97,42 +98,26 @@ export default function parsePeriod(
       case "duration": {
         const tempDuration = parseDuration(attribute.value);
         if (!isNaN(tempDuration)) {
-          duration = tempDuration;
+          res.duration = tempDuration;
         } else {
           log.warn("DASH: Unrecognized duration in the mpd:", attribute.value);
         }
       }
         break;
       case "bitstreamSwitching":
-        bitstreamSwitching = parseBoolean(attribute.value);
+        res.bitstreamSwitching = parseBoolean(attribute.value);
         break;
 
     }
   }
-
-  if (id == null) {
-    log.warn("DASH: No usable id found in the Period. Generating one.");
-    id = "gen-dash-period-" + generateNewId();
-  }
-
-  const parsedPeriod : IParsedPeriod = {
-    id,
-    adaptations,
-  };
-
-  if (start != null) {
-    parsedPeriod.start = start;
-  }
-
-  if (duration != null) {
-    parsedPeriod.duration = duration;
-  }
-
-  if (bitstreamSwitching != null) {
-    parsedPeriod.bitstreamSwitching = bitstreamSwitching;
-  }
-
-  return parsedPeriod;
+  return res;
 }
 
-export { IContentProtectionParser };
+export function createPeriodIntermediateRepresentation(
+  periodNode : Node
+) : IPeriodIntermediateRepresentation {
+  return {
+    children: parsePeriodChildren(periodNode.childNodes),
+    attributes: parsePeriodAttributes(periodNode),
+  };
+}
