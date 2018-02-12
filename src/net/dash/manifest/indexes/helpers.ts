@@ -110,7 +110,7 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment): number {
 function getInitSegment(
   index: {
     timescale: number;
-    initialization: { media?: string; range?: [number, number] };
+    initialization?: { media?: string; range?: [number, number] };
     indexRange?: [number, number];
   }
 ): ISegment {

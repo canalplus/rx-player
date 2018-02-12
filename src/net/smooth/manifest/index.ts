@@ -39,7 +39,6 @@ import {
   IHSSKeySystem,
   IHSSManifestSegment,
   IHSSParserOptions,
-  IPeriodSmooth,
   IRepresentationSmooth,
  } from "../types";
 import RepresentationIndex from "./representationIndex";
@@ -648,7 +647,7 @@ function createSmoothStreamingParser(
  * @param {Object} manifest
  */
 function checkManifestIDs(manifest : IParsedManifest) : void {
-  (manifest.periods as IPeriodSmooth[]).forEach(({ adaptations }) => {
+  manifest.periods.forEach(({ adaptations }) => {
     const adaptationIDs : string[] = [];
     adaptations.forEach(adaptation => {
       const adaptationID = adaptation.id;

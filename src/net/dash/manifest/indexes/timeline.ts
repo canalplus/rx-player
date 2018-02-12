@@ -26,10 +26,9 @@ import {
 } from "./helpers";
 
 export interface ITimelineIndex {
-  indexType : "timeline";
-  duration : number;
+  duration? : number;
   indexRange?: [number, number];
-  initialization: { media?: string; range?: [number, number] };
+  initialization? : { media?: string; range?: [number, number] };
   media? : string;
   presentationTimeOffset? : number;
   startNumber? : number;
@@ -166,7 +165,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /**
    * @param {Object} index
    */
-  constructor(index : ITimelineIndex) {
+  constructor(index : ITimelineIndex, periodStart : number) {
+    if (index.presentationTimeOffset == null) {
+      index.presentationTimeOffset = periodStart * index.timescale;
+    }
+
     this._index = index;
   }
 

@@ -14,256 +14,152 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
-import { IRepresentationIndex } from "../../../../manifest";
-import arrayIncludes from "../../../../utils/array-includes";
-import {
-  normalize as normalizeLang,
-} from "../../../../utils/languages";
 import log from "../../../../utils/log";
-import { resolveURL } from "../../../../utils/url";
 import {
-  inheritAttributes,
   IScheme,
-  isHardOfHearing,
-  isVisuallyImpaired,
   parseBoolean,
   parseFrameRate,
   parseIntOrBoolean,
   parseScheme,
 } from "../helpers";
-import createRepresentationIndex from "../indexes";
-
 import parseContentComponent, {
-  IParsedContentComponent,
+  IParsedContentComponent
 } from "./ContentComponent";
 import parseContentProtection, {
-  IContentProtectionParser,
-  IParsedContentProtection,
+  IParsedContentProtection
 } from "./ContentProtection";
-import parseRepresentation, {
-  IParsedRepresentation,
+import {
+  createRepresentationIntermediateRepresentation,
+  IRepresentationIntermediateRepresentation,
 } from "./Representation";
-import parseSegmentBase from "./SegmentBase";
-import parseSegmentList from "./SegmentList";
-import parseSegmentTemplate from "./SegmentTemplate";
+import parseSegmentBase, {
+  IParsedSegmentBase,
+} from "./SegmentBase";
+import parseSegmentList, {
+  IParsedSegmentList,
+} from "./SegmentList";
+import parseSegmentTemplate, {
+  IParsedSegmentTemplate,
+  IParsedSegmentTimeline,
+} from "./SegmentTemplate";
 
-interface IRepresentation {
-  // required
-  baseURL : string;
-  bitrate : number;
-  index : IRepresentationIndex;
-  id: string;
-
-  // optional
-  audioSamplingRate?: string;
-  codecs?: string;
-  codingDependency?: boolean;
-  contentComponent?: IParsedContentComponent;
-  contentProtection?: IParsedContentProtection;
-  frameRate?: number;
-  height?: number;
-  maxPlayoutRate?: number;
-  maximumSAPPeriod?: number;
-  mimeType?: string;
-  profiles?: string;
-  qualityRanking?: number;
-  segmentProfiles?: string;
-  width?: number;
+export interface IAdaptationSetIntermediateRepresentation {
+  children : IAdaptationSetChildren;
+  attributes : IAdaptationSetAttributes;
 }
 
-export interface IParsedAdaptationSet {
+export interface IAdaptationSetChildren {
   // required
-  id: string;
-  representations: IRepresentation[];
-  type: string;
+  baseURL : string; // BaseURL for the contents. Empty string if not defined
+  representations : IRepresentationIntermediateRepresentation[];
 
   // optional
-  audioDescription? : boolean;
-  bitstreamSwitching?: boolean;
-  closedCaption? : boolean;
-  contentComponent?: IParsedContentComponent;
-  contentProtection?: IParsedContentProtection|undefined;
-  language?: string;
-  maxBitrate?: number;
-  maxFrameRate?: number;
-  maxHeight?: number;
-  maxWidth?: number;
-  minBitrate?: number;
-  minFrameRate?: number;
-  minHeight?: number;
-  minWidth?: number;
-  normalizedLanguage? : string;
-  par?: string;
-  segmentAlignment?: number|boolean;
-  subsegmentAlignment?: number|boolean;
-}
-
-interface IAdaptationSetChildNodes {
   accessibility? : IScheme;
-  baseURL? : string;
   contentComponent? : IParsedContentComponent;
   contentProtection? : IParsedContentProtection;
-  representations : Node[];
   role? : IScheme;
-  index? : any; // TODO
+
+  // TODO
+  segmentBase? : IParsedSegmentBase;
+  segmentList? : IParsedSegmentList;
+  segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;
+
+  // rating? : Node;
+  // viewpoint? : Node;
 }
 
-interface IAdaptationSetAttributes {
+export interface IAdaptationSetAttributes {
+  // optional
+  audioSamplingRate? : string;
   bitstreamSwitching? : boolean;
+  codecs? : string;
+  codingDependency? : boolean;
   contentType? : string;
+  frameRate? : number;
   group? : number;
+  height? : number;
   id? : string;
   language? : string;
   maxBitrate? : number;
   maxFrameRate? : number;
   maxHeight? : number;
+  maxPlayoutRate? : number;
   maxWidth? : number;
+  maximumSAPPeriod? : number;
+  mimeType? : string;
   minBitrate? : number;
   minFrameRate? : number;
   minHeight? : number;
   minWidth? : number;
   normalizedLanguage? : string;
   par? : string;
-  segmentAlignment? : number|boolean;
-  subsegmentAlignment? : number|boolean;
-
-  audioSamplingRate? : string;
-  codecs? : string;
-  codingDependency? : boolean;
-  frameRate? : number;
-  height? : number;
-  maxPlayoutRate? : number;
-  maximumSAPPeriod? : number;
-  mimeType? : string;
   profiles? : string;
+  segmentAlignment? : number|boolean;
   segmentProfiles? : string;
+  subsegmentAlignment? : number|boolean;
   width? : number;
 }
 
-const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
-const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
-
-/**
- * Infers the type of adaptation from codec and mimetypes found in it.
- *
- * This follows the guidelines defined by the DASH-IF IOP:
- *   - one adaptation set contains a single media type
- *   - The order of verifications are:
- *       1. mimeType
- *       2. Role
- *       3. codec
- *
- * Note: This is based on DASH-IF-IOP-v4.0 with some more freedom.
- * @param {Object} adaptation
- * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
- */
-function inferAdaptationType(
-  mimeType : string,
-  role : IScheme|null,
-  representations: IParsedRepresentation[]
-) : string {
-  const topLevel = mimeType.split("/")[0];
-  if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
-    return topLevel;
-  }
-
-  if (mimeType === "application/bif") {
-    return "image";
-  }
-
-  if (mimeType === "application/ttml+xml") {
-    return "text";
-  }
-
-  // manage DASH-IF mp4-embedded subtitles and metadata
-  if (mimeType === "application/mp4") {
-    if (role) {
-      if (
-        role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-        arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
-      ) {
-        return "text";
-      }
-    }
-    return "metadata";
-  }
-
-  // take 1st representation's mimetype as default
-  if (representations.length) {
-    const firstReprMimeType = representations[0].mimeType || "";
-    const _topLevel = firstReprMimeType.split("/")[0];
-    if (arrayIncludes(KNOWN_ADAPTATION_TYPES, _topLevel)) {
-      return _topLevel;
-    }
-  }
-
-  // TODO infer from representations' codecs?
-  return "unknown";
-}
-
-/**
- * @param {Node} root
- * @param {Function} [contentProtectionParser]
- * @returns {Object}
- */
-function parseAdaptationSetChildNodes(
-  root : Node,
-  contentProtectionParser?: IContentProtectionParser
-) : IAdaptationSetChildNodes {
-  const parsedAdaptation : IAdaptationSetChildNodes = {
+function parseAdaptationSetChildren(
+  adaptationSetChildren : NodeList
+) : IAdaptationSetChildren {
+  const children : IAdaptationSetChildren = {
+    baseURL: "",
     representations: [],
   };
-
-  const adaptationSetChildren = root.childNodes;
   for (let i = 0; i < adaptationSetChildren.length; i++) {
     const currentNode = adaptationSetChildren[i];
 
     switch(currentNode.nodeName) {
-        // case "Rating": break;
-        // case "Viewpoint": break;
 
       case "Accessibility":
-        parsedAdaptation.accessibility = parseScheme(currentNode);
+        children.accessibility = parseScheme(currentNode);
         break;
 
       case "BaseURL":
-        parsedAdaptation.baseURL = currentNode.textContent || "";
+        children.baseURL = currentNode.textContent || "";
         break;
 
-        // TODO seems to be unused
       case "ContentComponent":
-        parsedAdaptation.contentComponent = parseContentComponent(currentNode);
-        break;
-
-        // TODO seems to be unused
-      case "ContentProtection":
-        parsedAdaptation.contentProtection =
-          parseContentProtection(currentNode, contentProtectionParser);
+        children.contentComponent = parseContentComponent(currentNode);
         break;
 
       case "Representation":
-        parsedAdaptation.representations.push(currentNode);
+        const representation =
+          createRepresentationIntermediateRepresentation(currentNode);
+        children.representations.push(representation);
         break;
 
       case "Role":
-        parsedAdaptation.role = parseScheme(currentNode);
+        children.role = parseScheme(currentNode);
         break;
 
       case "SegmentBase":
-        parsedAdaptation.index = parseSegmentBase(currentNode);
+        children.segmentBase = parseSegmentBase(currentNode);
         break;
 
       case "SegmentList":
-        parsedAdaptation.index = parseSegmentList(currentNode);
+        children.segmentList = parseSegmentList(currentNode);
         break;
 
       case "SegmentTemplate":
-        parsedAdaptation.index = parseSegmentTemplate(currentNode);
+        children.segmentTemplate = parseSegmentTemplate(currentNode);
         break;
+
+      case "ContentProtection":
+        children.contentProtection = parseContentProtection(currentNode);
+        break;
+
+      // case "Rating":
+      //   children.rating = currentNode;
+      //   break;
+
+      // case "Viewpoint":
+      //   children.viewpoint = currentNode;
+      //   break;
     }
   }
-  return parsedAdaptation;
+  return children;
 }
 
 function parseAdaptationSetAttributes(
@@ -292,7 +188,6 @@ function parseAdaptationSetAttributes(
 
       case "lang":
         parsedAdaptation.language = attribute.value;
-        parsedAdaptation.normalizedLanguage = normalizeLang(attribute.value);
         break;
 
       case "contentType":
@@ -486,153 +381,11 @@ function parseAdaptationSetAttributes(
   return parsedAdaptation;
 }
 
-/**
- * @param {Node} root
- * @param {string} rootURL
- * @param {Function} [contentProtectionParser]
- * @returns {Object}
- */
-export default function parseAdaptationSet(
-  root: Node,
-  rootURL : string,
-  contentProtectionParser?: IContentProtectionParser
-): IParsedAdaptationSet {
-
-  const adaptationChildNodes =
-    parseAdaptationSetChildNodes(root, contentProtectionParser);
-  const adaptationAttributes = parseAdaptationSetAttributes(root);
-
-  const adaptationBaseURL = resolveURL(rootURL, adaptationChildNodes.baseURL);
-  const baseIndex = createRepresentationIndex(
-    adaptationChildNodes.index != null ?
-      adaptationChildNodes.index : {
-        indexType: "template" as "template",
-        duration: Number.MAX_VALUE,
-        timescale: 1,
-        startNumber: 0,
-      }
-  );
-
-  const parsedNodes : IRepresentation[] = adaptationChildNodes.representations
-    .map((representationNode) => {
-      let representationObject =
-        parseRepresentation(representationNode, adaptationBaseURL);
-      representationObject = inheritAttributes([
-        "audioSamplingRate",
-        "codecs",
-        "codingDependency",
-        "frameRate",
-        "height",
-        "maxPlayoutRate",
-        "maximumSAPPeriod",
-        "mimeType",
-        "profiles",
-        "segmentProfiles",
-        "width",
-      ], representationObject, adaptationAttributes);
-
-      let representationID = representationObject.id;
-      if (representationID == null) {
-        representationID = representationObject.bitrate + "-" +
-          (representationObject.codecs || "");
-      }
-
-      // Fix issue in some packagers, like GPAC, generating a non
-      // compliant mimetype with RFC 6381. Other closed-source packagers
-      // may be impacted.
-      if (representationObject.codecs === "mp4a.40.02") {
-        representationObject.codecs = "mp4a.40.2";
-      }
-
-      return objectAssign({
-        index: baseIndex,
-        id: representationID,
-      }, representationObject);
-    });
-
-  let closedCaption : boolean|undefined;
-  let audioDescription : boolean|undefined;
-
-  const type = inferAdaptationType(
-    adaptationAttributes.mimeType || "",
-    adaptationChildNodes.role || null,
-    parsedNodes
-  );
-
-  const accessibility = adaptationChildNodes.accessibility;
-  if (type === "text" && accessibility && isHardOfHearing(accessibility)) {
-    closedCaption = true;
-  }
-
-  if (type === "audio" && accessibility && isVisuallyImpaired(accessibility)) {
-    audioDescription = true;
-  }
-
-  let id : string;
-  if (adaptationAttributes.id != null) {
-    id = adaptationAttributes.id;
-  } else {
-    let idString = `${type}`;
-    if (adaptationAttributes.language) {
-      idString += `-${adaptationAttributes.language}`;
-    }
-    if (closedCaption) {
-      idString += "-cc";
-    }
-    if (audioDescription) {
-      idString += "-ad";
-    }
-    if (adaptationAttributes.mimeType) {
-      idString += `-${adaptationAttributes.mimeType}`;
-    }
-    id = idString;
-  }
-
-  let parsedAdaptationSet : IParsedAdaptationSet = {
-    id,
-    representations: parsedNodes,
-    type,
+export function createAdaptationSetIntermediateRepresentation(
+  adaptationSetNode : Node
+) : IAdaptationSetIntermediateRepresentation {
+  return {
+    children: parseAdaptationSetChildren(adaptationSetNode.childNodes),
+    attributes: parseAdaptationSetAttributes(adaptationSetNode),
   };
-
-  if (closedCaption != null) {
-    parsedAdaptationSet.closedCaption = closedCaption;
-  }
-
-  if (audioDescription != null) {
-    parsedAdaptationSet.audioDescription = audioDescription;
-  }
-
-  const childNodesAndAttributes = objectAssign(
-    {},
-    adaptationChildNodes,
-    adaptationAttributes
-  );
-
-  parsedAdaptationSet = inheritAttributes(
-   [
-     "bitstreamSwitching",
-     "closedCaption",
-     "contentComponent",
-     "contentProtection",
-     "language",
-     "maxBitrate",
-     "maxFrameRate",
-     "maxHeight",
-     "maxWidth",
-     "minBitrate",
-     "minFrameRate",
-     "minHeight",
-     "minWidth",
-     "normalizedLanguage",
-     "par",
-     "segmentAlignment",
-     "subsegmentAlignment",
-   ],
-    parsedAdaptationSet,
-    childNodesAndAttributes
-  );
-
-  return parsedAdaptationSet;
 }
-
-export { IContentProtectionParser };

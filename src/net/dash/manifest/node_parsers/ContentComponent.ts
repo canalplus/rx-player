@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { normalize as normalizeLang } from "../../../../utils/languages";
 import {
   parseRatio,
 } from "../helpers";
@@ -22,7 +21,6 @@ import {
 export interface IParsedContentComponent {
   id?: string;
   language?: string;
-  normalizedLanguage? : string;
   contentType?: string;
   par?: string;
 }
@@ -33,35 +31,26 @@ export interface IParsedContentComponent {
  * @returns {Object}
  */
 export default function parseContentComponent(root: Node): IParsedContentComponent {
-  let id : string|undefined;
-  let lang : string|undefined;
-  let contentType : string|undefined;
-  let par : string|undefined;
+  const ret : IParsedContentComponent = {};
 
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
     switch (attribute.name) {
       case "id":
-        id = attribute.value;
+        ret.id = attribute.value;
         break;
       case "lang":
-        lang = attribute.value;
+        ret.language = attribute.value;
         break;
       case "contentType":
-        contentType = attribute.value;
+        ret.contentType = attribute.value;
         break;
       case "par":
-        par = parseRatio(attribute.value);
+        ret.par = parseRatio(attribute.value);
         break;
     }
   }
 
-  return {
-    id,
-    language: lang,
-    normalizedLanguage: lang && normalizeLang(lang),
-    contentType,
-    par,
-  };
+  return ret;
 }

@@ -211,31 +211,7 @@ function parseScheme(root: Node): IScheme {
   };
 }
 
-/**
- * @param {Array.<string>}
- * @param {Object} finalObject
- * @param {Object} objectToInherit
- * @returns {Object}
- */
-function inheritAttributes<T,U>(
-  attributes : string[],
-  finalObject : T,
-  objectToInherit : U
-) : T {
-  for (let i = 0; i < attributes.length; i++) {
-    const attribute = attributes[i];
-    if (
-      !finalObject.hasOwnProperty(attribute) &&
-      objectToInherit.hasOwnProperty(attribute)
-    ) {
-      (finalObject as any)[attribute] = (objectToInherit as any)[attribute];
-    }
-  }
-  return finalObject as T & U;
-}
-
 export {
-  inheritAttributes,
   isHardOfHearing,
   isVisuallyImpaired,
   parseBoolean,

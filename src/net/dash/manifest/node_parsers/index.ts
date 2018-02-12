@@ -14,58 +14,149 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import config from "../../../../config";
+import { IRepresentationIndex } from "../../../../manifest";
 import arrayIncludes from "../../../../utils/array-includes";
 import generateNewId from "../../../../utils/id";
+import {
+  normalize as normalizeLang,
+} from "../../../../utils/languages";
 import log from "../../../../utils/log";
 import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../../utils/url";
 import {
-  parseDateTime,
-  parseDuration,
-} from "../helpers";
+  IParsedAdaptation,
+  IParsedManifest,
+  IParsedPeriod,
+  IParsedRepresentation,
+} from "../../../types";
 import {
-  IParsedAdaptationSet,
-} from "./AdaptationSet";
-import parsePeriod, {
-  IContentProtectionParser,
-} from "./Period";
+  IRole,
+  isHardOfHearing,
+  isVisuallyImpaired,
+} from "../helpers";
+import BaseRepresentationIndex from "../indexes/base";
+import ListRepresentationIndex from "../indexes/list";
+import TemplateRepresentationIndex from "../indexes/template";
+import TimelineRepresentationIndex from "../indexes/timeline";
+import {
+  createMPDIntermediateRepresentation,
+} from "./MPD";
 
-export interface IParsedMPD {
-  // required
-  availabilityStartTime : number;
-  duration : number;
-  id : string;
-  periods : IPeriod[];
-  transportType : string;
-  type : string;
-  uris : string[];
+const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
+const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
-  // optional
-  profiles? : string;
-  availabilityEndTime? : number;
-  publishTime? : number;
-  minimumUpdatePeriod? : number;
-  minBufferTime? : number;
-  timeShiftBufferDepth? : number;
-  suggestedPresentationDelay? : number;
-  maxSegmentDuration? : number;
-  maxSubsegmentDuration? : number;
-  presentationLiveGap? : number;
-}
+/**
+ * Infers the type of adaptation from codec and mimetypes found in it.
+ *
+ * This follows the guidelines defined by the DASH-IF IOP:
+ *   - one adaptation set contains a single media type
+ *   - The order of verifications are:
+ *       1. mimeType
+ *       2. Role
+ *       3. codec
+ *
+ * Note: This is based on DASH-IF-IOP-v4.0 with some more freedom.
+ * @param {Object} adaptation
+ * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
+ */
+function inferAdaptationType(
+  adaptationMimeType : string|null,
+  representationMimeTypes : string[],
+  adaptationCodecs : string|null,
+  representationCodecs : string[],
+  adaptationRole : IRole|null
+) : string {
 
-export interface IPeriod {
-  // required
-  id : string;
-  adaptations : IParsedAdaptationSet[];
-  start : number;
+  function fromMimeType(mimeType : string, role : IRole|null) : string|undefined {
+    const topLevel = mimeType.split("/")[0];
+    if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
+      return topLevel;
+    }
 
-  // optional
-  duration? : number; // should only be for the last period
-  bitstreamSwitching? : boolean;
+    if (mimeType === "application/bif") {
+      return "image";
+    }
+
+    if (mimeType === "application/ttml+xml") {
+      return "text";
+    }
+
+    // manage DASH-IF mp4-embedded subtitles and metadata
+    if (mimeType === "application/mp4") {
+      if (role) {
+        if (
+          role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+          arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
+        ) {
+          return "text";
+        }
+      }
+      return "metadata";
+    }
+  }
+
+  function fromCodecs(codecs : string) {
+    switch (codecs.substr(0, 3)) {
+      case "avc":
+      case "hev":
+      case "hvc":
+      case "vp8":
+      case "vp9":
+      case "av1":
+        return "video";
+      case "vtt":
+        return "text";
+      case "bif":
+        return "image";
+    }
+
+    switch (codecs.substr(0, 4)) {
+      case "mp4a":
+        return "audio";
+      case "wvtt":
+      case "stpp":
+        return "text";
+    }
+  }
+
+  if (adaptationMimeType != null) {
+    const typeFromMimeType = fromMimeType(adaptationMimeType, adaptationRole);
+    if (typeFromMimeType != null) {
+      return typeFromMimeType;
+    }
+  }
+
+  if (adaptationCodecs != null) {
+    const typeFromCodecs = fromCodecs(adaptationCodecs);
+    if (typeFromCodecs != null) {
+      return typeFromCodecs;
+    }
+  }
+
+  for (let i = 0; i < representationMimeTypes.length; i++) {
+    const representationMimeType = representationMimeTypes[i];
+    if (representationMimeType != null) {
+      const typeFromMimeType = fromMimeType(representationMimeType, adaptationRole);
+      if (typeFromMimeType != null) {
+        return typeFromMimeType;
+      }
+    }
+  }
+
+  for (let i = 0; i < representationCodecs.length; i++) {
+    const codecs = representationCodecs[i];
+    if (codecs != null) {
+      const typeFromMimeType = fromCodecs(codecs);
+      if (typeFromMimeType != null) {
+        return typeFromMimeType;
+      }
+    }
+  }
+
+  return "unknown";
 }
 
 /**
@@ -81,7 +172,9 @@ export interface IPeriod {
  * @param {Object} adaptation
  * @returns {Number|undefined}
  */
-const getLastLiveTimeReference = (adaptation: IParsedAdaptationSet): number|undefined => {
+const getLastLiveTimeReference = (
+  adaptation: IParsedAdaptation
+): number|undefined => {
   // Here's how we do, for each possibility:
   //  1. only the adaptation has an index (no representation has):
   //    - returns the index last time reference
@@ -122,248 +215,424 @@ const getLastLiveTimeReference = (adaptation: IParsedAdaptationSet): number|unde
   return representationsMin;
 };
 
-/**
- * @param {Element} root
- * @param {string} uri - URI with which the manifest has been downloaded.
- * @param {Function} [contentProtectionParser]
- * @returns {Object}
- */
-export default function parseMPD(
-  root: Element,
-  uri : string,
-  contentProtectionParser?: IContentProtectionParser
-) : IParsedMPD {
-  let mpdRootURL = normalizeBaseURL(uri);
+export default function parseManifest(
+  root: Node,
+  uri : string
+  // contentProtectionParser?: IContentProtectionParser
+) : IParsedManifest {
+  // Transform whole MPD into a parsed JS object representation
+  const {
+    children: rootChildren,
+    attributes: rootAttributes,
+  } = createMPDIntermediateRepresentation(root);
 
-  const mpdURIs : string[] = [uri];
-  const mpdPeriodNodes : Node[] = [];
+  const mpdRootURL = resolveURL(normalizeBaseURL(uri), rootChildren.baseURL);
 
-  const mpdChildren = root.childNodes;
-  for (let i = 0; i < mpdChildren.length; i++) {
-    const currentNode = mpdChildren[i];
-    switch (currentNode.nodeName) {
+  const parsedPeriods : IParsedPeriod[] = [];
+  for (let i = 0; i < rootChildren.periods.length; i++) {
+    const period = rootChildren.periods[i];
 
-      case "BaseURL":
-        mpdRootURL = resolveURL(mpdRootURL, currentNode.textContent || "");
-        break;
+    // 1. Construct partial URL for contents
+    const periodRootURL = resolveURL(mpdRootURL, period.children.baseURL);
 
-      case "Location":
-        mpdURIs.push(currentNode.textContent || "");
-        break;
-
-      case "Period":
-        mpdPeriodNodes.push(currentNode);
-        break;
-    }
-  }
-
-  const parsedPeriods = mpdPeriodNodes
-    .map(periodNode => {
-      return parsePeriod(periodNode, mpdRootURL, contentProtectionParser);
-    });
-
-  let id : string|undefined;
-  let profiles : string|undefined;
-  let type : string|undefined;
-  let availabilityStartTime : number|undefined;
-  let availabilityEndTime : number|undefined;
-  let publishTime : number|undefined;
-  let duration : number|undefined;
-  let minimumUpdatePeriod : number|undefined;
-  let minBufferTime : number|undefined;
-  let timeShiftBufferDepth : number|undefined;
-  let suggestedPresentationDelay : number|undefined;
-  let maxSegmentDuration : number|undefined;
-  let maxSubsegmentDuration : number|undefined;
-
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
-
-    switch (attribute.name) {
-      case "id":
-        id = attribute.value;
-        break;
-      case "profiles":
-        profiles = attribute.value;
-        break;
-      case "type":
-        type = attribute.value;
-        break;
-      case "availabilityStartTime":
-        availabilityStartTime = +parseDateTime(attribute.value);
-        break;
-      case "availabilityEndTime":
-        availabilityEndTime = +parseDateTime(attribute.value);
-        break;
-      case "publishTime":
-        publishTime = +parseDateTime(attribute.value);
-        break;
-      case "mediaPresentationDuration":
-        duration = parseDuration(attribute.value);
-        break;
-      case "minimumUpdatePeriod":
-        minimumUpdatePeriod = parseDuration(attribute.value);
-        break;
-      case "minBufferTime":
-        minBufferTime = parseDuration(attribute.value);
-        break;
-      case "timeShiftBufferDepth":
-        timeShiftBufferDepth = parseDuration(attribute.value);
-        break;
-      case "suggestedPresentationDelay":
-        suggestedPresentationDelay = parseDuration(attribute.value);
-        break;
-      case "maxSegmentDuration":
-        maxSegmentDuration = parseDuration(attribute.value);
-        break;
-      case "maxSubsegmentDuration":
-        maxSubsegmentDuration = parseDuration(attribute.value);
-        break;
-    }
-  }
-
-  const periods : IPeriod[] = [];
-
-  for (let i = 0; i < parsedPeriods.length; i++) {
-    const parsedPeriod = parsedPeriods[i];
-
-    let period : IPeriod;
-    if (parsedPeriod.start != null) {
-      // is TS dumb here? It is not some lines after so this is weird.
-      period = parsedPeriod as IPeriod;
+    // 2. Generate ID
+    let periodID : string;
+    if (period.attributes.id == null) {
+      log.warn("DASH: No usable id found in the Period. Generating one.");
+      periodID = "gen-dash-period-" + generateNewId();
     } else {
-      let start : number;
+      periodID = period.attributes.id;
+    }
+
+    // 3. Find the start of the Period (required)
+    let periodStart : number;
+    if (period.attributes.start != null) {
+      periodStart = period.attributes.start;
+    } else {
       if (i === 0) {
-        start = availabilityStartTime == null ? 0 : availabilityStartTime;
+        periodStart = rootAttributes.availabilityStartTime == null ?
+          0 : rootAttributes.availabilityStartTime;
       } else {
-        const prevPeriod = periods[i - 1];
+        const prevPeriod = parsedPeriods[i - 1];
         if (prevPeriod.duration != null) {
-          start = prevPeriod.start + prevPeriod.duration;
+          periodStart = prevPeriod.start + prevPeriod.duration;
         } else {
-          throw new Error("Not enough informations on the periods.");
+          throw new Error("Not enough informations on the periods: cannot find start.");
         }
       }
-      period = objectAssign(parsedPeriod, { start });
     }
 
-    const nextPeriod = parsedPeriods[i + 1];
-    if (period.duration == null && nextPeriod && nextPeriod.start != null) {
-      period.duration = nextPeriod.start - period.start;
+    // 4. Construct underlying adaptations
+    const adaptations = period.children.adaptations.map((adaptation) => {
+      const adaptationRootURL = resolveURL(periodRootURL, adaptation.children.baseURL);
+      const adaptationChildren = adaptation.children;
+
+      // 4-1. Find Index
+      let adaptationIndex : IRepresentationIndex;
+      if (adaptationChildren.segmentBase != null) {
+        adaptationIndex = new BaseRepresentationIndex(
+          adaptationChildren.segmentBase,
+          periodStart
+        );
+      } else if (adaptationChildren.segmentList != null) {
+        adaptationIndex = new ListRepresentationIndex(
+          adaptationChildren.segmentList,
+          periodStart
+        );
+      } else if (adaptationChildren.segmentTemplate != null) {
+        const template = adaptationChildren.segmentTemplate;
+        template.presentationTimeOffset = periodStart * template.timescale;
+        adaptationIndex = template.indexType === "timeline" ?
+          // TODO Find a way with the optional 'd'
+          new TimelineRepresentationIndex(template as any, periodStart) :
+          new TemplateRepresentationIndex(template, periodStart);
+      } else {
+        adaptationIndex = new TemplateRepresentationIndex({
+          duration: Number.MAX_VALUE,
+          timescale: 1,
+          startNumber: 0,
+        }, periodStart);
+      }
+
+      // 4-2. Construct Representations
+      const representations = adaptation.children
+        .representations.map((representation) => {
+          const representationURL = resolveURL(
+            adaptationRootURL, representation.children.baseURL);
+
+          // 4-2-1. Find bitrate
+          let representationBitrate : number;
+          if (representation.attributes.bitrate == null) {
+            log.warn("DASH: No usable bitrate found in the Representation.");
+            representationBitrate = 0;
+          } else {
+            representationBitrate = representation.attributes.bitrate;
+          }
+
+          // 4-2-2. Find Index
+          let representationIndex : IRepresentationIndex;
+          if (representation.children.segmentBase != null) {
+            representationIndex = new BaseRepresentationIndex(
+              representation.children.segmentBase,
+              periodStart
+            );
+          } else if (representation.children.segmentList != null) {
+            representationIndex = new ListRepresentationIndex(
+              representation.children.segmentList,
+              periodStart
+            );
+          } else if (representation.children.segmentTemplate != null) {
+            const template = representation.children.segmentTemplate;
+            representationIndex = template.indexType === "timeline" ?
+              // TODO Find a way with the optional 'd'
+              new TimelineRepresentationIndex(template as any, periodStart) :
+              new TemplateRepresentationIndex(template, periodStart);
+          } else {
+            representationIndex = adaptationIndex;
+          }
+
+          // 4-2-3. Set ID
+          const representationID = representation.attributes.id != null ?
+            representation.attributes.id :
+            (
+              representation.attributes.bitrate +
+              (
+                representation.attributes.height != null ?
+                  ("-" + representation.attributes.height) : ""
+              ) +
+              (
+                representation.attributes.width != null ?
+                  ("-" + representation.attributes.width) : ""
+              ) +
+              (
+                representation.attributes.mimeType != null ?
+                  ("-" + representation.attributes.mimeType) : ""
+              ) +
+              (
+                representation.attributes.codecs != null ?
+                  ("-" + representation.attributes.codecs) : ""
+              )
+            );
+
+          // 4-2-4. Construct Representation Base
+          const parsedRepresentation : IParsedRepresentation = {
+            bitrate: representationBitrate,
+            index: representationIndex,
+            id: representationID,
+            baseURL: representationURL,
+          };
+
+          // 4-2-5. Add optional attributes
+          let codecs : string|undefined;
+          if (representation.attributes.codecs != null) {
+            codecs = representation.attributes.codecs;
+          } else if (adaptation.attributes.codecs != null) {
+            codecs = adaptation.attributes.codecs;
+          }
+
+          if (codecs != null) {
+            codecs = codecs === "mp4a.40.02" ? "mp4a.40.2" : codecs;
+            parsedRepresentation.codecs = codecs;
+          }
+
+          if (representation.attributes.audioSamplingRate != null) {
+            parsedRepresentation.audioSamplingRate =
+              representation.attributes.audioSamplingRate;
+          } else if (adaptation.attributes.audioSamplingRate != null) {
+            parsedRepresentation.audioSamplingRate =
+              adaptation.attributes.audioSamplingRate;
+          }
+
+          if (representation.attributes.codingDependency != null) {
+            parsedRepresentation.codingDependency =
+              representation.attributes.codingDependency;
+          } else if (adaptation.attributes.codingDependency != null) {
+            parsedRepresentation.codingDependency =
+              adaptation.attributes.codingDependency;
+          }
+
+          if (representation.attributes.frameRate != null) {
+            parsedRepresentation.frameRate =
+              representation.attributes.frameRate;
+          } else if (adaptation.attributes.frameRate != null) {
+            parsedRepresentation.frameRate =
+              adaptation.attributes.frameRate;
+          }
+
+          if (representation.attributes.height != null) {
+            parsedRepresentation.height =
+              representation.attributes.height;
+          } else if (adaptation.attributes.height != null) {
+            parsedRepresentation.height =
+              adaptation.attributes.height;
+          }
+
+          if (representation.attributes.maxPlayoutRate != null) {
+            parsedRepresentation.maxPlayoutRate =
+              representation.attributes.maxPlayoutRate;
+          } else if (adaptation.attributes.maxPlayoutRate != null) {
+            parsedRepresentation.maxPlayoutRate =
+              adaptation.attributes.maxPlayoutRate;
+          }
+
+          if (representation.attributes.maximumSAPPeriod != null) {
+            parsedRepresentation.maximumSAPPeriod =
+              representation.attributes.maximumSAPPeriod;
+          } else if (adaptation.attributes.maximumSAPPeriod != null) {
+            parsedRepresentation.maximumSAPPeriod =
+              adaptation.attributes.maximumSAPPeriod;
+          }
+
+          if (representation.attributes.mimeType != null) {
+            parsedRepresentation.mimeType =
+              representation.attributes.mimeType;
+          } else if (adaptation.attributes.mimeType != null) {
+            parsedRepresentation.mimeType =
+              adaptation.attributes.mimeType;
+          }
+
+          if (representation.attributes.profiles != null) {
+            parsedRepresentation.profiles =
+              representation.attributes.profiles;
+          } else if (adaptation.attributes.profiles != null) {
+            parsedRepresentation.profiles =
+              adaptation.attributes.profiles;
+          }
+
+          if (representation.attributes.qualityRanking != null) {
+            parsedRepresentation.qualityRanking =
+              representation.attributes.qualityRanking;
+          }
+
+          if (representation.attributes.segmentProfiles != null) {
+            parsedRepresentation.segmentProfiles =
+              representation.attributes.segmentProfiles;
+          } else if (adaptation.attributes.segmentProfiles != null) {
+            parsedRepresentation.segmentProfiles =
+              adaptation.attributes.segmentProfiles;
+          }
+
+          if (representation.attributes.width != null) {
+            parsedRepresentation.width =
+              representation.attributes.width;
+          } else if (adaptation.attributes.width != null) {
+            parsedRepresentation.width =
+              adaptation.attributes.width;
+          }
+
+          return parsedRepresentation;
+        });
+
+      const adaptationMimeType = adaptation.attributes.mimeType;
+      const adaptationCodecs = adaptation.attributes.codecs;
+
+      const representationMimeTypes = representations
+        .map(r => r.mimeType)
+        .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
+
+      const representationCodecs = representations
+        .map(r => r.codecs)
+        .filter((codecs : string|undefined) : codecs is string => codecs != null);
+
+      const type = inferAdaptationType(
+        adaptationMimeType || null,
+        representationMimeTypes,
+        adaptationCodecs || null,
+        representationCodecs,
+        adaptationChildren.role || null
+      );
+
+      let closedCaption : boolean|undefined;
+      let audioDescription : boolean|undefined;
+
+      if (
+        type === "text" &&
+        adaptationChildren.accessibility &&
+        isHardOfHearing(adaptationChildren.accessibility)
+      ) {
+        closedCaption = true;
+      }
+
+      if (
+        type === "audio" &&
+        adaptationChildren.accessibility &&
+        isVisuallyImpaired(adaptationChildren.accessibility)
+      ) {
+        audioDescription = true;
+      }
+
+      let adaptationID : string;
+      if (adaptation.attributes.id != null) {
+        adaptationID = adaptation.attributes.id;
+      } else {
+        let idString = type;
+        if (adaptation.attributes.language) {
+          idString += `-${adaptation.attributes.language}`;
+        }
+        if (closedCaption) {
+          idString += "-cc";
+        }
+        if (audioDescription) {
+          idString += "-ad";
+        }
+        if (adaptation.attributes.contentType) {
+          idString += `-${adaptation.attributes.contentType}`;
+        }
+        if (adaptation.attributes.codecs) {
+          idString += `-${adaptation.attributes.codecs}`;
+        }
+        if (adaptation.attributes.mimeType) {
+          idString += `-${adaptation.attributes.mimeType}`;
+        }
+        if (adaptation.attributes.frameRate) {
+          idString += `-${adaptation.attributes.frameRate}`;
+        }
+
+        if (idString.length === type.length) {
+          idString += representations.length ?
+            ("-" + representations[0].id) : "-empty";
+        }
+
+        adaptationID = "adaptation-" + idString;
+      }
+
+      const parsedAdaptationSet : IParsedAdaptation = {
+        id: adaptationID,
+        representations,
+        type,
+      };
+
+      if (adaptation.attributes.language != null) {
+        parsedAdaptationSet.language = adaptation.attributes.language;
+        parsedAdaptationSet.normalizedLanguage =
+          normalizeLang(adaptation.attributes.language);
+      }
+
+      if (closedCaption != null) {
+        parsedAdaptationSet.closedCaption = closedCaption;
+      }
+
+      if (audioDescription != null) {
+        parsedAdaptationSet.audioDescription = audioDescription;
+      }
+
+      return parsedAdaptationSet;
+    });
+
+    const parsedPeriod : IParsedPeriod = {
+      id: periodID,
+      start: periodStart,
+      adaptations,
+    };
+
+    if (period.attributes.duration != null) {
+      parsedPeriod.duration = period.attributes.duration;
     }
 
-    periods.push(period);
+    if (period.attributes.bitstreamSwitching != null) {
+      parsedPeriod.bitstreamSwitching = period.attributes.bitstreamSwitching;
+    }
+
+    parsedPeriods.push(parsedPeriod);
   }
 
-  const parsedMPD : IParsedMPD = {
-    availabilityStartTime: availabilityStartTime != null ?
-      availabilityStartTime : 0,
-    duration: duration == null ? Infinity : duration,
-    id: id != null ? id : "gen-dash-manifest-" + generateNewId(),
-    periods,
+  const parsedMPD : IParsedManifest = {
+    availabilityStartTime: rootAttributes.availabilityStartTime != null ?
+      rootAttributes.availabilityStartTime : 0,
+    duration: rootAttributes.duration == null ? Infinity : rootAttributes.duration,
+    id: rootAttributes.id != null ?
+      rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
+    periods: parsedPeriods,
     transportType: "dash",
-    type: type || "static",
-    uris: mpdURIs,
-    suggestedPresentationDelay: suggestedPresentationDelay != null ?
-      suggestedPresentationDelay : config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
+    type: rootAttributes.type || "static",
+    uris: [uri, ...rootChildren.locations],
+    suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
+      rootAttributes.suggestedPresentationDelay :
+      config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
   };
 
-  if (profiles != null) {
-    parsedMPD.profiles = profiles;
+  // -- add optional fields --
+
+  if (rootAttributes.profiles != null) {
+    parsedMPD.profiles = rootAttributes.profiles;
   }
-  if (availabilityEndTime != null) {
-    parsedMPD.availabilityEndTime = availabilityEndTime;
+  if (rootAttributes.availabilityEndTime != null) {
+    parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime;
   }
-  if (publishTime != null) {
-    parsedMPD.publishTime = publishTime;
+  if (rootAttributes.publishTime != null) {
+    parsedMPD.publishTime = rootAttributes.publishTime;
   }
-  if (duration != null) {
-    parsedMPD.duration = duration;
+  if (rootAttributes.duration != null) {
+    parsedMPD.duration = rootAttributes.duration;
   }
-  if (minimumUpdatePeriod != null) {
-    parsedMPD.minimumUpdatePeriod = minimumUpdatePeriod;
+  if (rootAttributes.minimumUpdatePeriod != null) {
+    parsedMPD.minimumUpdatePeriod = rootAttributes.minimumUpdatePeriod;
   }
-  if (minBufferTime != null) {
-    parsedMPD.minBufferTime = minBufferTime;
+  if (rootAttributes.minBufferTime != null) {
+    parsedMPD.minBufferTime = rootAttributes.minBufferTime;
   }
-  if (timeShiftBufferDepth != null) {
-    parsedMPD.timeShiftBufferDepth = timeShiftBufferDepth;
+  if (rootAttributes.timeShiftBufferDepth != null) {
+    parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   }
-  if (maxSegmentDuration != null) {
-    parsedMPD.maxSegmentDuration = maxSegmentDuration;
+  if (rootAttributes.maxSegmentDuration != null) {
+    parsedMPD.maxSegmentDuration = rootAttributes.maxSegmentDuration;
   }
-  if (maxSubsegmentDuration != null) {
-    parsedMPD.maxSubsegmentDuration = maxSubsegmentDuration;
+  if (rootAttributes.maxSubsegmentDuration != null) {
+    parsedMPD.maxSubsegmentDuration = rootAttributes.maxSubsegmentDuration;
   }
 
   if (parsedMPD.type === "dynamic") {
-    const adaptations = parsedMPD.periods[
+    const lastPeriodAdaptations = parsedMPD.periods[
       parsedMPD.periods.length - 1
     ].adaptations;
 
-    const videoAdaptation = adaptations
+    const firstVideoAdaptationFromLastPeriod = lastPeriodAdaptations
       .filter(a => a.type === "video")[0];
 
-    const lastRef = getLastLiveTimeReference(videoAdaptation);
+    const lastRef = getLastLiveTimeReference(firstVideoAdaptationFromLastPeriod);
     parsedMPD.presentationLiveGap = lastRef != null ?
       Date.now() / 1000 - (lastRef + parsedMPD.availabilityStartTime) : 10;
   }
 
-  checkManifestIDs(parsedMPD);
   return parsedMPD;
 }
-
-/**
- * Ensure that no two period have the same ID, than no two adaptations
- * neither for the same period and that no two representations from a same
- * adaptation neither.
- *
- * Log and mutate their ID if not until this is verified.
- *
- * @param {Object} manifest
- */
-function checkManifestIDs(manifest : IParsedMPD) : void {
-  const periodIDs : string[] = [];
-  manifest.periods.forEach(period => {
-    const periodID = period.id;
-    if (arrayIncludes(periodIDs, periodID)) {
-      log.warn("DASH: Two periods with the same ID found. Updating.",
-        periodID);
-      const newID =  periodID + "-";
-      period.id = newID;
-      checkManifestIDs(manifest);
-      periodIDs.push(newID);
-    } else {
-      periodIDs.push(periodID);
-    }
-    const adaptationIDs : string[] = [];
-    period.adaptations.forEach(adaptation => {
-      const adaptationID = adaptation.id;
-      if (arrayIncludes(adaptationIDs, adaptationID)) {
-        log.warn("DASH: Two adaptations with the same ID found. Updating.",
-          adaptationID);
-        const newID =  adaptationID + "-";
-        adaptation.id = newID;
-        checkManifestIDs(manifest);
-        adaptationIDs.push(newID);
-      } else {
-        adaptationIDs.push(adaptationID);
-      }
-      const representationIDs : string[] = [];
-      adaptation.representations.forEach(representation => {
-        const representationID = representation.id;
-        if (arrayIncludes(representationIDs, representationID)) {
-          log.warn("DASH: Two representations with the same ID found. Updating.",
-            representationID);
-          const newID =  representationID + "-";
-          representation.id = newID;
-          checkManifestIDs(manifest);
-          representationIDs.push(newID);
-        } else {
-          representationIDs.push(representationID);
-        }
-      });
-    });
-  });
-}
-
-export { IContentProtectionParser };

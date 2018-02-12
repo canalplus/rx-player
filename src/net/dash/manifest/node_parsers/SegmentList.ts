@@ -15,22 +15,24 @@
  */
 
 import objectAssign = require("object-assign");
-import {
-  IMultipleSegmentBase,
-  parseMultipleSegmentBase,
+import parseSegmentBase, {
+  IParsedSegmentBase,
 } from "./SegmentBase";
 import parseSegmentURL, {
   IParsedSegmentURL,
 } from "./SegmentURL";
 
-export type IParsedSegmentList = IMultipleSegmentBase;
+export interface IParsedSegmentList extends IParsedSegmentBase {
+  duration : number;
+  list: IParsedSegmentURL[];
+}
 
 /**
  * @param {Node} root
  * @returns {Object}
  */
 export default function parseSegmentList(root: Node): IParsedSegmentList {
-  const base = parseMultipleSegmentBase(root);
+  const base = parseSegmentBase(root);
   const list : IParsedSegmentURL[] = [];
 
   const segmentListChildren = root.childNodes;
@@ -42,8 +44,14 @@ export default function parseSegmentList(root: Node): IParsedSegmentList {
     }
   }
 
+  const baseDuration = base.duration;
+
+  if (baseDuration == null) {
+    throw new Error("Invalid SegmentList: no duration");
+  }
+
   return objectAssign(base, {
-    indexType: "list",
     list,
+    duration: baseDuration, // Ugly but TS is too dumb there
   });
 }

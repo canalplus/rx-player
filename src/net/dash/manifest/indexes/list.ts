@@ -25,15 +25,15 @@ import {
 } from "./helpers";
 
 export interface IListIndex {
-  indexType : "list";
   timescale: number;
-  initialization: { media?: string; range?: [number, number] };
-  indexRange?: [number, number];
+  duration : number;
   list: Array<{
     media? : string;
     mediaRange? : [number, number];
   }>;
-  duration : number;
+
+  initialization?: { media?: string; range?: [number, number] };
+  indexRange?: [number, number];
   presentationTimeOffset? : number;
 }
 
@@ -47,7 +47,11 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object} index
    */
-  constructor(index : IListIndex) {
+  constructor(index : IListIndex, periodStart : number) {
+    if (index.presentationTimeOffset == null) {
+      index.presentationTimeOffset = periodStart * index.timescale;
+    }
+
     this._index = index;
   }
 

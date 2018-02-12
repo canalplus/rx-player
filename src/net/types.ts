@@ -288,10 +288,10 @@ export interface IParsedAdaptation {
 export interface IParsedPeriod {
   // required
   id : string;
+  start : number;
   adaptations : IParsedAdaptation[];
 
   // optional
-  start? : number;
   duration? : number;
   bitstreamSwitching? : boolean;
 }

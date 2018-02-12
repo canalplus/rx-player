@@ -26,15 +26,17 @@ import {
 } from "./helpers";
 
 export interface IBaseIndex {
-  indexType : "base";
-  duration : number;
-  indexRange?: [number, number];
-  initialization: { media?: string; range?: [number, number] };
-  media? : string;
-  presentationTimeOffset? : number;
-  startNumber? : number;
   timeline : IIndexSegment[];
   timescale : number;
+  // indexRangeExact : boolean;
+  // availabilityTimeComplete : boolean;
+
+  presentationTimeOffset? : number;
+  duration? : number;
+  indexRange?: [number, number];
+  initialization?: { media?: string; range?: [number, number] };
+  media? : string;
+  startNumber? : number;
 }
 
 /**
@@ -90,7 +92,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object} index
    */
-  constructor(index : IBaseIndex) {
+  constructor(index : IBaseIndex, periodStart : number) {
+    if (index.presentationTimeOffset == null) {
+      index.presentationTimeOffset = periodStart * index.timescale;
+    }
+
     this._index = index;
   }
 

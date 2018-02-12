@@ -25,14 +25,14 @@ import {
 } from "./helpers";
 
 export interface ITemplateIndex {
-  indexType : "template";
   duration : number;
+  timescale : number;
+
   indexRange?: [number, number];
-  initialization: { media?: string; range?: [number, number] };
+  initialization?: { media?: string; range?: [number, number] };
   media? : string;
   presentationTimeOffset? : number;
   startNumber? : number;
-  timescale : number;
 }
 
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
@@ -41,7 +41,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * @param {Object} index
    */
-  constructor(index : ITemplateIndex) {
+  constructor(index : ITemplateIndex, periodStart : number) {
+    if (index.presentationTimeOffset == null) {
+      index.presentationTimeOffset = periodStart * index.timescale;
+    }
+
     this._index = index;
   }
 
