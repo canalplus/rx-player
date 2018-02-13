@@ -344,7 +344,7 @@ export default class Manifest {
         oldPeriod.end = newPeriod.end;
         oldPeriod.duration = newPeriod.duration;
 
-        const oldAdaptations = newPeriod.getAdaptations();
+        const oldAdaptations = oldPeriod.getAdaptations();
         const newAdaptations = newPeriod.getAdaptations();
 
         for (let j = 0; j < oldAdaptations.length; j++) {
