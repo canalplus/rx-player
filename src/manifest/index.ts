@@ -15,54 +15,61 @@
  */
 
 import arrayFind = require("array-find");
-
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
-
+import { normalize as normalizeLang } from "../utils/languages";
+import log from "../utils/log";
 import Adaptation, {
   AdaptationType,
-  IAdaptationArguments,
 } from "./adaptation";
+import Period, {
+  IPeriodArguments,
+} from "./period";
+import Representation from "./representation";
+import IRepresentationIndex, {
+  ISegment,
+  StaticRepresentationIndex,
+} from "./representation_index";
 
 type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
 
-export interface IManifestArguments {
-  id : number|string;
-  transportType : string;
-  duration : number;
-  adaptations : Partial<Record<AdaptationType, IAdaptationArguments[]>>;
-  type? : string;
-  locations : string[];
-  minimumTime? : number;
-  suggestedPresentationDelay? : number;
+interface ISupplementaryImageTrack {
+  mimeType : string;
+  url : string;
+}
+
+interface ISupplementaryTextTrack {
+  mimeType : string;
+  codecs? : string;
+  url : string;
+  language? : string;
+  languages? : string[];
+  closedCaption : boolean;
+}
+
+interface IManifestArguments {
   availabilityStartTime? : number;
+  duration : number;
+  minimumTime? : number;
+  id : string;
+  periods : IPeriodArguments[];
   presentationLiveGap? : number;
+  suggestedPresentationDelay? : number;
   timeShiftBufferDepth? : number;
+  transportType : string;
+  type? : string;
+  uris : string[];
 }
 
 /**
  * Normalized Manifest structure.
- *
- * API Public Properties:
- *   - id {string|Number}
- *   - adaptations {Object}:
- *       adaptations.video {[]Adaptation|undefined}
- *       adaptations.audio {[]Adaptation|undefined}
- *       adaptations.text {[]Adaptation|undefined}
- *       adaptations.image {[]Adaptation|undefined}
- *   - periods {[]Object} TODO
- *   - isLive {Boolean}
- *   - uris {[]string}
- *   - transport {string}
- *
- * API Public Methods:
- *   - getDuration () => {Number} - Returns duration of the entire content, in s
+ * @class Manifest
  */
-class Manifest {
-  public id : string|number;
+export default class Manifest {
+  public id : string;
   public transport : string;
   public adaptations : ManifestAdaptations;
-  public periods : Array<{ adaptations : ManifestAdaptations }>;
+  public periods : Period[];
   public isLive : boolean;
   public uris : string[];
   public suggestedPresentationDelay? : number;
@@ -81,35 +88,29 @@ class Manifest {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
-    this.adaptations =
-      (Object.keys(args.adaptations) as AdaptationType[]).reduce<ManifestAdaptations>((
-        acc : ManifestAdaptations,
-        val : AdaptationType
-      ) => {
-        acc[val] = (args.adaptations[val] || [])
-          .map((a) => new Adaptation(a));
-        return acc;
-      }, {}) || [];
 
     // TODO Real period management
-    this.periods = [
-      {
-        adaptations: this.adaptations,
-      },
-    ];
+    this.periods = args.periods.map((period) => {
+      return new Period(period);
+    });
+
+    /**
+     * @deprecated TODO It is here to ensure compatibility with the way the
+     * v3.x.x manages adaptations at the Manifest level
+     */
+    this.adaptations = (this.periods[0] && this.periods[0].adaptations) || [];
 
     this.minimumTime = args.minimumTime;
     this.isLive = args.type === "dynamic";
-    this.uris = args.locations || [];
+    this.uris = args.uris;
 
-    // --------- private data
-    this._duration = args.duration;
-
-    // Will be needed here
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
     this.availabilityStartTime = args.availabilityStartTime;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+
+    // --------- private data
+    this._duration = args.duration;
 
     if (__DEV__ && this.isLive) {
       assert(this.suggestedPresentationDelay != null);
@@ -120,25 +121,149 @@ class Manifest {
   }
 
   /**
+   * Add supplementary image Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} imageTracks
+   */
+  addSupplementaryImageAdaptations(
+    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
+  ) {
+    const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
+    const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
+      const adaptationID = "gen-image-ada-" + generateNewId();
+      const representationID = "gen-image-rep-" + generateNewId();
+      return new Adaptation({
+        id: adaptationID,
+        type: "image",
+        manuallyAdded: true,
+        representations: [{
+          baseURL: url,
+          bitrate: 0,
+          id: representationID,
+          mimeType,
+          index: new StaticRepresentationIndex(),
+        }],
+      });
+    });
+
+    if (newImageTracks.length) {
+      this.adaptations.image = this.adaptations.image ?
+        this.adaptations.image.concat(newImageTracks) : newImageTracks;
+    }
+  }
+
+  /**
+   * Add supplementary text Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} textTracks
+   */
+  addSupplementaryTextAdaptations(
+    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
+  ) {
+    const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
+    const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
+      mimeType,
+      codecs,
+      url,
+      language,
+      languages,
+      closedCaption,
+    }) => {
+      const langsToMapOn : string[] = language ? [language] : languages || [];
+
+      return allSubs.concat(langsToMapOn.map((_language) => {
+        const adaptationID = "gen-image-ada-" + generateNewId();
+        const representationID = "gen-image-rep-" + generateNewId();
+        return new Adaptation({
+          id: adaptationID,
+          type: "text",
+          language: _language,
+          normalizedLanguage: normalizeLang(_language),
+          closedCaption,
+          manuallyAdded: true,
+          representations: [{
+            baseURL: url,
+            bitrate: 0,
+            id: representationID,
+            mimeType,
+            codecs,
+            index: new StaticRepresentationIndex(),
+          }],
+        });
+      }));
+    }, []);
+
+    if (newTextAdaptations.length) {
+      this.adaptations.text = this.adaptations.text ?
+        this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
+    }
+  }
+
+  /**
+   * Returns Period encountered at the given time.
+   * Returns undefined if there is no Period exactly at the given time.
+   * @param {number} time
+   * @returns {Period|undefined}
+   */
+  getPeriodForTime(time : number) : Period|undefined {
+    return this.periods.find(period => {
+     return time >= period.start &&
+        (period.end == null || period.end > time);
+    });
+  }
+
+  /**
+   * Returns period coming just after a given period.
+   * Returns undefined if not found.
+   * @param {Period} period
+   * @returns {Period|undefined}
+   */
+  getPeriodAfter(period : Period) : Period|undefined {
+    const endOfPeriod = period.end;
+    if (endOfPeriod == null) {
+      return period;
+    }
+    return this.periods.find(_period => {
+      return _period.end == null || endOfPeriod < _period.end;
+    });
+  }
+
+  /**
+   * Returns first period encountered during or after a given
+   * time.
+   * Returns undefined if there's no Period at or after the time asked.
+   * @param {number} time
+   * @returns {Period|undefined}
+   */
+  getNextPeriod(time : number) : Period|undefined {
+    return this.periods.find(period => {
+      return period.end == null || time < period.end;
+    });
+  }
+
+  /**
    * @returns {Number}
    */
   getDuration() : number {
     return this._duration;
   }
 
-  getUrl() : string {
+  /**
+   * @returns {string|undefined}
+   */
+  getUrl() : string|undefined {
     return this.uris[0];
   }
 
   /**
+   * TODO log deprecation
+   * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
-    const adaptationsByType = this.adaptations;
-    if (!adaptationsByType) {
+    const firstPeriod = this.periods[0];
+    if (!firstPeriod) {
       return [];
     }
-
+    const adaptationsByType = firstPeriod.adaptations;
     const adaptationsList : Adaptation[] = [];
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
@@ -150,15 +275,33 @@ class Manifest {
     return adaptationsList;
   }
 
+  /**
+   * TODO log deprecation
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
   getAdaptationsForType(adaptationType : AdaptationType) : Adaptation[] {
-    const adaptations = this.adaptations[adaptationType];
-    return adaptations || [];
+    const firstPeriod = this.periods[0];
+    if (!firstPeriod) {
+      return [];
+    }
+    return firstPeriod.adaptations[adaptationType] || [];
   }
 
+  /**
+   * TODO log deprecation
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
+    /* tslint:disable:deprecation */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
+    /* tslint:enable:deprecation */
   }
 
+  /**
+   * @param {number} delta
+   */
   updateLiveGap(delta : number) : void {
     if (this.isLive) {
       if (this.presentationLiveGap) {
@@ -168,6 +311,108 @@ class Manifest {
       }
     }
   }
+
+  /**
+   * Update the current manifest properties
+   * XXX TODO Also update attributes?
+   * XXX TODO How to add Periods?
+   * XXX TODO Recognizing Periods by their index in the manifest is not a good
+   * solution if those periods evolve.
+   * @param {Object} Manifest
+   */
+  update(newManifest : Manifest) {
+    this._duration = newManifest.getDuration();
+    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
+    this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
+    this.uris = newManifest.uris;
+
+    const oldPeriods = this.periods;
+    const newPeriods = newManifest.periods;
+
+    for (let i = 0; i < oldPeriods.length; i++) {
+      const oldPeriod = oldPeriods[i];
+      const newPeriod =
+        arrayFind(newPeriods, a => a.id === oldPeriod.id);
+
+      if (!newPeriod) {
+        log.info(`Period ${oldPeriod.id} not found after update. Removing.`);
+        oldPeriods.splice(i, 1);
+        i--;
+      } else {
+        oldPeriod.start = newPeriod.start;
+        oldPeriod.end = newPeriod.end;
+        oldPeriod.duration = newPeriod.duration;
+
+        const oldAdaptations = oldPeriod.getAdaptations();
+        const newAdaptations = newPeriod.getAdaptations();
+
+        for (let j = 0; j < oldAdaptations.length; j++) {
+          const oldAdaptation = oldAdaptations[j];
+          const newAdaptation =
+            arrayFind(newAdaptations, a => a.id === oldAdaptation.id);
+
+          if (!newAdaptation) {
+            log.warn(
+              `manifest: adaptation "${oldAdaptations[j].id}" not found when merging.`
+            );
+          } else {
+            const oldRepresentations = oldAdaptations[j].representations;
+            const newRepresentations = newAdaptation.representations;
+
+            for (let k = 0; k < oldRepresentations.length; k++) {
+              const oldRepresentation = oldRepresentations[k];
+              const newRepresentation =
+                arrayFind(newRepresentations, r => r.id === oldRepresentation.id);
+
+              if (!newRepresentation) {
+                /* tslint:disable:max-line-length */
+                log.warn(
+                  `manifest: representation "${oldRepresentations[k].id}" not found when merging.`
+                );
+                /* tslint:enable:max-line-length */
+              } else {
+                oldRepresentation.baseURL = newRepresentation.baseURL;
+                oldRepresentations[k].index._update(newRepresentation.index);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // adding - perhaps - new Period[s]
+    if (newPeriods.length > oldPeriods.length) {
+      const lastOldPeriod = oldPeriods[oldPeriods.length - 1];
+      if (lastOldPeriod) {
+        for (let i = 0; i < newPeriods.length - 1; i++) {
+          const newPeriod = newPeriods[i];
+          if (newPeriod.start > lastOldPeriod.start) {
+            log.info(`Adding new period ${newPeriod.id}`);
+            this.periods.push(newPeriod);
+          }
+        }
+      } else {
+        for (let i = 0; i < newPeriods.length - 1; i++) {
+          const newPeriod = newPeriods[i];
+          log.info(`Adding new period ${newPeriod.id}`);
+          this.periods.push(newPeriod);
+        }
+      }
+    }
+  }
 }
 
-export default Manifest;
+export {
+  // classes
+  Period,
+  Adaptation,
+  Representation,
+
+  // types
+  IManifestArguments,
+  IRepresentationIndex,
+  ISegment,
+  ISupplementaryImageTrack,
+  ISupplementaryTextTrack,
+};

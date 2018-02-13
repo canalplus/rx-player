@@ -37,4 +37,10 @@ export default [
     "transport": "smooth",
     "live": true,
   },
+  {
+    "name": "Static Multi-Period",
+    "url": "https://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-live-periods/mp4-live-periods-mpd.mpd",
+    "transport": "dash",
+    "live": false,
+  },
 ];

@@ -15,17 +15,17 @@
  */
 
 import { Observable } from "rxjs/Observable";
-
-import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
-
 import {
   getMDHDTimescale,
   parseSidx,
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
-
+import request from "../../utils/request";
+import { resolveURL } from "../../utils/url";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
+// import dashManifestParser, {
+//   IContentProtectionParser,
+// } from "./manifest";
 import dashManifestParser from "./manifest";
 import generateSegmentLoader from "./segment_loader";
 import {
@@ -52,13 +52,9 @@ import {
   SegmentParserObservable,
 } from "../types";
 
-import {
-  ContentProtectionParser,
-} from "./types";
-
 interface IDASHOptions {
   segmentLoader? : CustomSegmentLoader;
-  contentProtectionParser? : ContentProtectionParser;
+  // contentProtectionParser? : IContentProtectionParser;
 }
 
 /**
@@ -79,7 +75,7 @@ export default function(
   ArrayBuffer
 >{
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
-  const { contentProtectionParser } = options;
+  // const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(
@@ -92,11 +88,11 @@ export default function(
     },
 
     parser(
-      { response } : IManifestParserArguments<Document>
+      { response, url } : IManifestParserArguments<Document>
     ) : IManifestParserObservable {
       const data = response.responseData;
       return Observable.of({
-        manifest: dashManifestParser(data, contentProtectionParser),
+        manifest: dashManifestParser(data, url/*, contentProtectionParser*/),
         url: response.url,
       });
     },
@@ -104,18 +100,20 @@ export default function(
 
   const segmentPipeline = {
     loader({
-      segment,
-      representation,
       adaptation,
-      manifest,
       init,
+      manifest,
+      period,
+      representation,
+      segment,
     } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> {
       return segmentLoader({
-        segment,
-        representation,
         adaptation,
-        manifest,
         init,
+        manifest,
+        period,
+        representation,
+        segment,
       });
     },
 
@@ -194,22 +192,21 @@ export default function(
       const blob = new Uint8Array(responseData);
 
       const bif = parseBif(blob);
-      const segmentData = bif.thumbs;
+      const data = bif.thumbs;
 
       const segmentInfos = {
         time: 0,
         duration: Number.MAX_VALUE,
         timescale: bif.timescale,
       };
-
-      // var firstThumb = blob[0];
-      // var lastThumb  = blob[blob.length - 1];
-
-      // segmentInfos = {
-      //   time: firstThumb.ts,
-      //   duration: lastThumb.ts
-      // };
-
+      const segmentData = {
+        data,
+        start: 0,
+        end: Number.MAX_VALUE,
+        timescale: 1,
+        timeOffset: 0,
+        type: "bif",
+      };
       return Observable.of({ segmentData, segmentInfos });
     },
   };

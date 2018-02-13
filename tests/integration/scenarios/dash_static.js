@@ -55,7 +55,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(manifest.getAdaptations().length).to.equal(2);
 
     expect(manifest.timeShiftBufferDepth).to.equal(undefined);
-    expect(manifest.availabilityStartTime).to.equal(undefined);
+    expect(manifest.availabilityStartTime).to.equal(0);
 
 
     // ---- General Adaptations data ----
@@ -65,7 +65,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(adaptations.audio.length).to.equal(1);
     expect(adaptations.audio[0].type).to.equal("audio");
 
-    expect(adaptations.audio[0].isAudioDescription).to.equal(false);
+    expect(!!adaptations.audio[0].isAudioDescription).to.equal(false);
     expect(adaptations.audio[0].language).to.equal(undefined);
     expect(adaptations.audio[0].normalizedLanguage).to.equal(undefined);
     expect(typeof adaptations.audio[0].id).to.equal("string");
@@ -96,12 +96,12 @@ describe("dash static SegmentTimeline content", function () {
     const audioRepresentationIndex = audioRepresentation.index;
     const initAudioSegment = audioRepresentationIndex.getInitSegment();
     expect(initAudioSegment.media).to.equal("ateam-$RepresentationID$.dash");
-    expect(initAudioSegment.id).to.equal("audio=128000_init");
+    expect(initAudioSegment.id).to.equal("init");
 
     const nextAudioSegment1 = audioRepresentationIndex.getSegments(0, 4);
     expect(nextAudioSegment1.length).to.equal(1);
     expect(nextAudioSegment1[0].duration).to.equal(177341);
-    expect(nextAudioSegment1[0].id).to.equal("audio=128000_0");
+    expect(nextAudioSegment1[0].id).to.equal("0");
     expect(nextAudioSegment1[0].isInit).to.equal(false);
     expect(nextAudioSegment1[0].media).to
       .equal("ateam-$RepresentationID$-$Time$.dash");
@@ -111,7 +111,7 @@ describe("dash static SegmentTimeline content", function () {
     const nextAudioSegment2 = audioRepresentationIndex.getSegments(0, 5);
     expect(nextAudioSegment2.length).to.equal(2);
     expect(nextAudioSegment2[1].duration).to.equal(176128);
-    expect(nextAudioSegment2[1].id).to.equal("audio=128000_177341");
+    expect(nextAudioSegment2[1].id).to.equal("177341");
     expect(nextAudioSegment2[1].isInit).to.equal(false);
     expect(nextAudioSegment2[1].media)
       .to.equal("ateam-$RepresentationID$-$Time$.dash");
@@ -139,12 +139,12 @@ describe("dash static SegmentTimeline content", function () {
     const videoRepresentationIndex = videoRepresentation.index;
     const initVideoSegment = videoRepresentationIndex.getInitSegment();
     expect(initVideoSegment.media).to.equal("ateam-$RepresentationID$.dash");
-    expect(initVideoSegment.id).to.equal("video=400000_init");
+    expect(initVideoSegment.id).to.equal("init");
 
     const nextVideoSegment1 = videoRepresentationIndex.getSegments(0, 4);
     expect(nextVideoSegment1.length).to.equal(1);
     expect(nextVideoSegment1[0].duration).to.equal(4004);
-    expect(nextVideoSegment1[0].id).to.equal("video=400000_0");
+    expect(nextVideoSegment1[0].id).to.equal("0");
     expect(nextVideoSegment1[0].isInit).to.equal(false);
     expect(nextVideoSegment1[0].media).to.equal("ateam-$RepresentationID$-$Time$.dash");
     expect(nextVideoSegment1[0].time).to.equal(0);
@@ -153,7 +153,7 @@ describe("dash static SegmentTimeline content", function () {
     const nextVideoSegment2 = videoRepresentationIndex.getSegments(0, 5);
     expect(nextVideoSegment2.length).to.equal(2);
     expect(nextVideoSegment2[1].duration).to.equal(4004);
-    expect(nextVideoSegment2[1].id).to.equal("video=400000_4004");
+    expect(nextVideoSegment2[1].id).to.equal("4004");
     expect(nextVideoSegment2[1].isInit).to.equal(false);
     expect(nextVideoSegment2[1].media).to.equal("ateam-$RepresentationID$-$Time$.dash");
     expect(nextVideoSegment2[1].time).to.equal(4004);

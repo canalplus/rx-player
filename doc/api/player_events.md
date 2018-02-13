@@ -16,6 +16,7 @@
     - [warning](#events-warning)
     - [error](#events-error)
     - [nativeTextTracksChange](#events-nativeTextTracksChange)
+    - [periodChange](#events-periodChange)
 
 ## <a name="overview"></a>Overview
 
@@ -145,3 +146,11 @@ _payload type_: ``Array<TextTrackElement>``
 Triggered each times a new ``<track>`` element is removed or added to the video element.
 
 The payload is the array of ``TextTrack`` elements. The RxPlayer will only set a single ``<track>`` when a text track is set.
+
+### <a name="events-periodChange"></a>periodChange
+
+_payload type_: ``Object``
+
+Triggered when the current Period being seen changes.
+
+The payload is the corresponding Period. See [the Manifest documentation](./manifest.md#period) for more informations.
