@@ -224,6 +224,25 @@ export type CustomSegmentLoader = (
   // returns either the aborting callback or nothing
   (() => void)|void;
 
+export type CustomManifestLoader = (
+  // first argument: url of the manifest
+  url: string,
+
+  // second argument: callbacks
+  callbacks : {
+    resolve : (args: {
+      data : Document;
+      size : number;
+      duration : number;
+    }) => void;
+
+    reject : (err? : Error) => void;
+    fallback? : () => void;
+  }
+) =>
+  // returns either the aborting callback or nothing
+  (() => void)|void;
+
 // TODO move to DASH Segment's privateInfos
 export interface IParsedContentProtection {
   schemeIdUri?: string;

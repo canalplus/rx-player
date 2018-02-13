@@ -23,10 +23,8 @@ import parseBif from "../../parsers/images/bif";
 import request from "../../utils/request";
 import { resolveURL } from "../../utils/url";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-// import dashManifestParser, {
-//   IContentProtectionParser,
-// } from "./manifest";
 import dashManifestParser from "./manifest";
+import generateManifestLoader from "./manifest_loader";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
@@ -38,6 +36,7 @@ import {
 } from "./utils";
 
 import {
+  CustomManifestLoader,
   CustomSegmentLoader,
   ILoaderObservable,
   ImageParserObservable,
@@ -53,6 +52,7 @@ import {
 } from "../types";
 
 interface IDASHOptions {
+  manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
   // contentProtectionParser? : IContentProtectionParser;
 }
@@ -74,6 +74,7 @@ export default function(
   ArrayBuffer|string,
   ArrayBuffer
 >{
+  const manifestLoader = generateManifestLoader(options.manifestLoader);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
   // const { contentProtectionParser } = options;
 
@@ -81,10 +82,7 @@ export default function(
     loader(
       { url } : IManifestLoaderArguments
     ) : ILoaderObservable<Document> {
-      return request({
-        url,
-        responseType: "document",
-      });
+      return manifestLoader(url);
     },
 
     parser(

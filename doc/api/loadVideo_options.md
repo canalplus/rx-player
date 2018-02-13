@@ -219,6 +219,7 @@ That is, the part of the code:
 
 This Object can contain multiple properties. Only those documented here are considered stable:
   - ``segmentLoader`` (``Function``): defines a custom segment loader. More info on it can be found [here](./plugins.md#segmentLoader).
+  - ``manifestLoader`` (``Function``): defines a custom manifest loader. More info on it can be found [here](./plugins.md#manifestLoader).
 
 ### <a name="prop-defaultAudioTrack"></a>defaultAudioTrack
 
