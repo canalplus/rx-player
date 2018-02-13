@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+  - dash: Handle multi-periods DASH manifests
+  - api: add ``periodChange`` event
+
 ## v3.1.0 (2018/01/30)
 
 ### Added
