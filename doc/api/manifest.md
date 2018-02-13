@@ -5,6 +5,8 @@
 - [Overview](#overview)
 - [Structure of a Manifest Object](#manifest)
     - [properties](#manifest-props)
+- [Structure of a Period Object](#period)
+    - [properties](#period-props)
 - [Structure of an Adaptation Object](#adaptation)
     - [properties](#adaptation-props)
     - [methods](#adaptation-meth)
@@ -47,19 +49,33 @@ The Manifest Object represents the manifest file of the content loaded.
 
 The manifest Object has the following properties.
 
+#### periods
+
+_type_: ``Array.<Period>``
+
+A single Manifest instance can contain multiple Periods, which are periods of time for which the list of available type of contents (audio tracks, subtitles, video tracks...) can be different.
+
+Such example of Periods could be multiple Programs of a live contents, which can be each in different languages, for example.
+
+The player will switch smoothly across subsequent Periods within playback.
+
+Most Streaming technologies (e.g. HLS and Smooth) do not have a "Period" concept. For those, the Manifest will only have one Period for the whole content.
+
 #### adaptations
 
 _type_: ``Object``
 
-The adaptations (tracks if you want) for the current content, per-type (audio/video/text/image).
+:warn: This property is deprecated and is only here for legacy reasons.
 
-See [the Adaptation chapter](#adaptation) for more info about an Adaptation's structure.
+Adaptation objects for the first Period.
 
-The adaptation object _can_ contain any of the following keys:
-  - audio (``Array.<Adaptation>``): The audio adaptation(s) available.
-  - video (``Array.<Adaptation>``): The video adaptation(s) available.
-  - text (``Array.<Adaptation>``): The text adaptation(s) available.
-  - image (``Array.<Adaptation>``): The image adaptation(s) available.
+Both of those lines have the same effect:
+```js
+console.log(manifest.adaptations);
+console.log(manifest.periods[0].adaptations);
+```
+
+See [the Period chapter](#period-props) for more informations on Adaptations.
 
 
 #### isLive
@@ -80,13 +96,58 @@ _type_: ``string``
 
 The type of transport used. For now, this can only be equal to either ``dash`` or ``smooth``.
 
+## <a name="period"></a>Structure of a Period Object
+
+A period is an object describing what to play during a certain time periods.
+
+A manifest can have a single period, which means that the played content do not change its characteristics (same languages, same bitrates etc.) or multiple ones.
+
+A good example of a content with multiple periods would be a live channel broadcasting multiple foreign films. Each film, being in a different language, will need to be part of a new Period.
+
+### <a name="period-props"></a>properties
+
+#### id
+
+_type_: ``string``
+
+The id of an adaptation should be a string unique to that Period. It serves identifications purpose, when updating the manifest for example.
+
+#### start
+
+_type_: ``Number``
+
+Start time at which the Period begins in the whole content, in seconds.
+
+#### end
+
+_type_: ``Number|undefined``
+
+End time at which the Period ends in the whole content, in seconds.
+
+If not set or set to undefined, it means that the end is unknown, in which case it is the current last content of the current manifest.
+
+#### adaptations
+
+_type_: ``Object``
+
+The adaptations (tracks if you want) for the current content, per-type (audio/video/text/image).
+
+See [the Adaptation chapter](#adaptation) for more info about an Adaptation's structure.
+
+The adaptation object _can_ contain any of the following keys:
+  - audio (``Array.<Adaptation>``): The audio adaptation(s) available.
+  - video (``Array.<Adaptation>``): The video adaptation(s) available.
+  - text (``Array.<Adaptation>``): The text adaptation(s) available.
+  - image (``Array.<Adaptation>``): The image adaptation(s) available.
+
+
 ## <a name="adaptation"></a>Structure of an Adaptation Object
 
 An adaptation is a set of streams representing the exact same contents in multiple forms (different sizes, different bitrates...). Concretely, a frequent usecase is to have a single video adaptation and multiple audio ones, one for each language available.
 
 As such, it is also often called in the API a ``track``.
 
-### properties
+### <a name="adaptation-props"></a>properties
 
 #### id
 
@@ -140,7 +201,7 @@ The represesentations for this adaptation.
 
 See [the Representation chapter](#representation) for more info about a Representation's structure.
 
-### <a name="adaptaion-meth"></a>methods
+### <a name="adaptation-meth"></a>methods
 
 #### getAvailableBitrates
 

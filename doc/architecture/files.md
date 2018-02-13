@@ -139,6 +139,12 @@ Handle the segment downloading pipelines (resolve/load/parse) as defined in the 
 
 This is the layer directly interacting with the transport part (HSS, DASH). It facilitates the role of loading manifest and new segments for the rest of the core.
 
+### <a name="core-source_buffers"></a>src/core/source_buffers/: SourceBuffers definitions
+
+Provide multiple abstraction to manage SourceBuffers, which are the objects through which media segments are added to the browser.
+
+In this directory, you have glue code for both SourceBuffer managed natively (i.e. Audio and Video SourceBuffers) and SourceBuffer implementations for other types of content (text, images etc.).
+
 ### <a name="core-stream"></a>src/core/stream/: Media streaming logic
 
 Main logic for media streaming.
