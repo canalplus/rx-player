@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { IContentProtectionParser } from "../../../types";
 import {
   parseDateTime,
   parseDuration,
@@ -82,7 +83,10 @@ export interface IParsedMPD {
  * @param {NodeList} mpdChildren
  * @returns {Object}
  */
-function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
+function parseMPDChildren(
+  mpdChildren : NodeList,
+  contentProtectionParser? : IContentProtectionParser
+) : IMPDChildren {
   let baseURL = "";
   const locations : string[] = [];
   const periods : IPeriodIntermediateRepresentation[] = [];
@@ -101,7 +105,7 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
 
       case "Period":
         const period =
-          createPeriodIntermediateRepresentation(currentNode);
+          createPeriodIntermediateRepresentation(currentNode, contentProtectionParser);
         periods.push(period);
         break;
     }
@@ -165,10 +169,11 @@ function parseMPDAttributes(root : Node) : IMPDAttributes {
 }
 
 export function createMPDIntermediateRepresentation(
-  root : Node
+  root : Node,
+  contentProtectionParser? : IContentProtectionParser
 ) : IMPDIntermediateRepresentation {
   return {
-    children: parseMPDChildren(root.childNodes),
+    children: parseMPDChildren(root.childNodes, contentProtectionParser),
     attributes: parseMPDAttributes(root),
   };
 }

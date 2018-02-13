@@ -49,6 +49,7 @@ import SourceBufferManager, {
 import ActivePeriodEmitter, {
   IPeriodBufferItem,
 } from "./active_period_emitter";
+import StreamRestrictionManager from "./restriction_manager";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import EVENTS, {
   IActivePeriodChangedEvent,
@@ -139,7 +140,8 @@ export default function BuffersHandler(
     maxRetryOffline? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
   },
-  errorStream : Subject<Error | CustomError>
+  errorStream : Subject<Error | CustomError>,
+  restrictionManager : StreamRestrictionManager
 ) : Observable<IBufferHandlerEvent> {
   const manifest = content.manifest;
   const firstPeriod = content.period;
@@ -530,7 +532,8 @@ export default function BuffersHandler(
         segmentBookkeeper,
         pipeline,
         wantedBufferAhead$,
-        { manifest, period, adaptation }
+        { manifest, period, adaptation },
+        restrictionManager
       ).catch<IAdaptationBufferEvent, never>((error : Error) => {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to

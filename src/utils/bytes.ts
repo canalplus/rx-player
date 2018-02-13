@@ -370,6 +370,21 @@ function toBase64URL(str : string) : string {
   return btoa(str).replace(/\=+$/, "");
 }
 
+/**
+ * Creates a binary array from base64 string.
+ * @param {string} data
+ */
+function base64toUTF8Arr(data: string) {
+  const raw = window.atob(data);
+  const rawLength = raw.length;
+  const array = new Uint8Array(new ArrayBuffer(rawLength));
+
+  for(let i = 0; i < rawLength; i++) {
+    array[i] = raw.charCodeAt(i);
+  }
+  return array;
+}
+
 export {
   strToBytes,
   bytesToStr, bytesToUTF16Str,
@@ -382,4 +397,5 @@ export {
   itole2, itole4, itole8,
   guidToUuid,
   toBase64URL,
+  base64toUTF8Arr
 };

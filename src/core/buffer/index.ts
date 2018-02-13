@@ -16,6 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { ErrorTypes } from "../../errors";
+import MediaError from "../../errors/MediaError";
 import Manifest, {
   Adaptation,
   Period,
@@ -29,6 +30,9 @@ import {
   SupportedBufferTypes,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
+import StreamRestrictionManager, {
+  IRights
+} from "../stream/restriction_manager";
 import RepresentationBuffer, {
   IAddedSegmentEvent,
   IBufferActiveEvent,
@@ -139,11 +143,13 @@ export default class AdaptationBufferManager {
     segmentBookkeeper : SegmentBookkeeper,
     pipeline : (content : ISegmentLoaderArguments) => Observable<any>,
     wantedBufferAhead$ : Observable<number>,
-    content : { manifest : Manifest; period : Period; adaptation : Adaptation }
+    content : { manifest : Manifest; period : Period; adaptation : Adaptation },
+    restrictionManager : StreamRestrictionManager
   ) : Observable<IAdaptationBufferEvent> {
 
     const { manifest, period, adaptation } = content;
-    const abr$ = this._getABRForAdaptation(manifest, adaptation);
+    const rights$ = restrictionManager.getRepresentationRights$();
+    const abr$ = this._getABRForAdaptation(manifest, adaptation, rights$);
 
     /**
      * Emit at each bitrate estimate done by the ABRManager
@@ -249,9 +255,29 @@ export default class AdaptationBufferManager {
 
   private _getABRForAdaptation(
     manifest : Manifest,
-    adaptation : Adaptation
+    adaptation : Adaptation,
+    rights$: Observable<IRights>
   ) {
     const representations = adaptation.representations;
+
+    const _representations$ = rights$.map((rights: IRights) => {
+
+      const _authorizedRepresentations = representations.filter((r) => {
+        const right = rights[r.id] ? rights[r.id].outputRestricted !== false : true;
+        if(!right){
+          log.warn(
+            "Output restricted for representation \"" +r.id+ "\" ("+r.mimeType+")");
+        }
+        return right;
+      });
+
+      if(representations.length > 0 && (_authorizedRepresentations.length === 0)){
+        const error = new Error("No playable stream found.");
+        throw new MediaError("OUTPUT_RESTRICTION", error, true);
+      }
+
+      return _authorizedRepresentations;
+    });
 
     /**
      * Keep track of the current representation to add informations to the
@@ -288,7 +314,7 @@ export default class AdaptationBufferManager {
       };
     }).share();  // side-effect === share to avoid doing it multiple times
 
-    return this._abrManager.get$(adaptation.type, abrClock$, representations)
+    return this._abrManager.get$(adaptation.type, abrClock$, _representations$)
       .do(({ representation }) => {
         currentRepresentation = representation;
       });

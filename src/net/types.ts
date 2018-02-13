@@ -159,6 +159,14 @@ export type ImageParserObservable = Observable<{
   segmentInfos : ISegmentTimingInfos;
 }>;
 
+export interface IScheme {
+  schemeIdUri? : string;
+  value? : string;
+  kid? : string;
+}
+
+export type IContentProtectionParser = (a: IScheme, b: Node) => IParsedContentProtection;
+
 export interface ITransportPipelines {
 
   manifest: {
@@ -214,7 +222,7 @@ export interface ITransportOptions {
   }>;
 
   // dash only
-  // contentProtectionParser? : IContentProtectionParser;
+  contentProtectionParser? : IContentProtectionParser;
 }
 
 export type ITransportFunction = (options? : ITransportOptions) =>
@@ -267,8 +275,10 @@ export type CustomManifestLoader = (
 
 // TODO move to DASH Segment's privateInfos
 export interface IParsedContentProtection {
+  systemId?: string;
   schemeIdUri?: string;
   value?: string;
+  kid?: string;
 }
 
 export interface IParsedRepresentation {
@@ -294,7 +304,7 @@ export interface IParsedRepresentation {
   width?: number;
 
   // TODO move to DASH Segment's privateInfos
-  contentProtection?: IParsedContentProtection;
+  contentProtection?: IParsedContentProtection[];
 }
 
 export interface IParsedAdaptation {
@@ -323,7 +333,7 @@ export interface IParsedAdaptation {
   subsegmentAlignment?: number|boolean;
 
   // TODO move to DASH Segment's privateInfos
-  contentProtection?: IParsedContentProtection;
+  contentProtection?: IParsedContentProtection[];
 }
 
 export interface IParsedPeriod {

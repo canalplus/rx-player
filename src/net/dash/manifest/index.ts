@@ -15,6 +15,7 @@
  */
 
 import {
+  IContentProtectionParser,
   IParsedManifest,
 } from "../../types";
 import parseMPD from "./node_parsers";
@@ -26,12 +27,12 @@ import parseMPD from "./node_parsers";
  */
 export default function parseFromDocument(
   document: Document,
-  uri : string/*,*/
-  // contentProtectionParser?: IContentProtectionParser
+  uri : string,
+  contentProtectionParser?: IContentProtectionParser
 ): IParsedManifest {
   const root = document.documentElement;
   if (!root || root.nodeName !== "MPD") {
     throw new Error("document root should be MPD");
   }
-  return parseMPD(root, uri/*, contentProtectionParser*/);
+  return parseMPD(root, uri, contentProtectionParser);
 }

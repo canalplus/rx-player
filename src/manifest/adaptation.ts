@@ -27,6 +27,7 @@ export type AdaptationType = "video"|"audio"|"text"|"image";
 export interface IContentProtectionDASH {
   schemeIdUri?: string;
   value?: string;
+  kid?: string;
 }
 
 export interface IAdaptationArguments {
@@ -41,7 +42,7 @@ export interface IAdaptationArguments {
   language? : string;
   manuallyAdded? : boolean;
   normalizedLanguage? : string;
-  contentProtection? : IContentProtectionDASH;
+  contentProtection? : IContentProtectionDASH[];
 }
 
 /**
@@ -55,7 +56,7 @@ class Adaptation {
   public type : AdaptationType;
 
   // optional
-  public contentProtection? : IContentProtectionDASH;
+  public contentProtection? : IContentProtectionDASH[];
   public isAudioDescription? : boolean;
   public isClosedCaption? : boolean;
   public language? : string;

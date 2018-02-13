@@ -15,6 +15,7 @@
  */
 
 import log from "../../../../utils/log";
+import { IContentProtectionParser } from "../../../types";
 import {
   parseBoolean,
   parseDuration,
@@ -49,7 +50,10 @@ export interface IPeriodAttributes {
  * @param {NodeList} periodChildren
  * @returns {Object}
  */
-function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
+function parsePeriodChildren(
+  periodChildren : NodeList,
+  contentProtectionParser? : IContentProtectionParser
+) : IPeriodChildren {
   let baseURL = "";
   const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
 
@@ -64,7 +68,8 @@ function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
 
       case "AdaptationSet":
         const adaptation =
-          createAdaptationSetIntermediateRepresentation(currentNode);
+          createAdaptationSetIntermediateRepresentation(
+            currentNode, contentProtectionParser);
         adaptations.push(adaptation);
         break;
     }
@@ -114,10 +119,11 @@ function parsePeriodAttributes(periodNode : Node) : IPeriodAttributes {
 }
 
 export function createPeriodIntermediateRepresentation(
-  periodNode : Node
+  periodNode : Node,
+  contentProtectionParser?: IContentProtectionParser
 ) : IPeriodIntermediateRepresentation {
   return {
-    children: parsePeriodChildren(periodNode.childNodes),
+    children: parsePeriodChildren(periodNode.childNodes, contentProtectionParser),
     attributes: parsePeriodAttributes(periodNode),
   };
 }

@@ -18,9 +18,12 @@ import {
   parseScheme,
 } from "../helpers";
 
+import { IContentProtectionParser } from "../../../types";
+
 export interface IParsedContentProtection {
   schemeIdUri?: string;
   value?: string;
+  kid?: string;
 }
 
 /**
@@ -30,7 +33,12 @@ export interface IParsedContentProtection {
  * @returns {Object}
  */
 export default function parseContentProtection(
-  root: Node
+  root: Node,
+  contentProtectionParser?: IContentProtectionParser
 ) : IParsedContentProtection|undefined {
-  return parseScheme(root);
+  if (contentProtectionParser) {
+    return contentProtectionParser(parseScheme(root), root);
+  } else {
+    return parseScheme(root);
+  }
 }

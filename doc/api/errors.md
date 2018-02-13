@@ -160,5 +160,6 @@ error. Here is a list of them:
   - ``"MEDIA_ERR_SRC_NOT_SUPPORTED"``
   - ``"MEDIA_SOURCE_NOT_SUPPORTED"``
   - ``"MEDIA_KEYS_NOT_SUPPORTED"``
+  - ``"OUTPUT_RESTRICTION"``
   - ``"OUT_OF_INDEX_ERROR"``
   - ``"UNKNOWN_INDEX"``

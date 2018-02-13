@@ -44,8 +44,10 @@ import {
   onKeyStatusesChange$,
 } from "../../compat/events";
 
+import StreamRestrictionManager from "../stream/restriction_manager";
 import {
   KEY_STATUS_ERRORS,
+  KEY_STATUS_RESTRICTED,
 } from "./constants";
 import {
   $loadedSessions,
@@ -111,7 +113,8 @@ function createSessionEvent(
 function sessionEventsHandler(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ): Observable<Event|ISessionEvent> {
   log.debug("eme: handle message events", session);
 
@@ -155,7 +158,7 @@ function sessionEventsHandler(
       );
 
       // find out possible errors associated with this event
-      session.keyStatuses.forEach((keyStatus, keyId) => {
+      session.keyStatuses.forEach((keyStatus: any, keyId: any) => {
         // Hack present because the order of the arguments has changed in spec
         // and is not the same between some versions of Edge and Chrome.
         if (KEY_STATUS_ERRORS[keyId]) {
@@ -164,6 +167,12 @@ function sessionEventsHandler(
         } else if (KEY_STATUS_ERRORS[keyStatus]) {
           throw new
             EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
+        }
+        // Handle restricted statuses.
+        if (restrictionManager && KEY_STATUS_RESTRICTED[keyId]) {
+          restrictionManager.restrictForKeyID(new Uint8Array(keyId));
+        } else if (restrictionManager && KEY_STATUS_RESTRICTED[keyStatus]) {
+          restrictionManager.restrictForKeyID(new Uint8Array(keyId));
         }
       });
 
@@ -250,7 +259,8 @@ function createSession(
   sessionType: MediaKeySessionType,
   keySystem: IKeySystemOption,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ): {
   session: IMediaKeySession|MediaKeySession;
   sessionEvents: ConnectableObservable<Event|ISessionEvent>;
@@ -260,7 +270,8 @@ function createSession(
     throw new Error("Invalid MediaKeys implementation: Missing createSession");
   }
   const session = mediaKeys.createSession(sessionType);
-  const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
+  const sessionEvents =
+    sessionEventsHandler(session, keySystem, errorStream, restrictionManager)
     .finally(() => {
       // TODO subscribe to it
       // Normally deleteAndClose should begin to emit (and do its side-effects)
@@ -291,12 +302,20 @@ function createSessionAndKeyRequest(
   sessionType: MediaKeySessionType,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ): Observable<Event|ISessionEvent> {
   const {
     session,
     sessionEvents,
-  } = createSession(mediaKeys, sessionType, keySystem, initData, errorStream);
+  } = createSession(
+    mediaKeys,
+    sessionType,
+    keySystem,
+    initData,
+    errorStream,
+    restrictionManager
+  );
 
   $loadedSessions.add(initData, session, sessionEvents);
   log.debug("eme: generate request", initDataType, initData);
@@ -334,7 +353,8 @@ function createSessionAndKeyRequestWithRetry(
   sessionType: MediaKeySessionType,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ): Observable<Event|ISessionEvent> {
   return createSessionAndKeyRequest(
     mediaKeys,
@@ -342,7 +362,8 @@ function createSessionAndKeyRequestWithRetry(
     sessionType,
     initDataType,
     initData,
-    errorStream
+    errorStream,
+    restrictionManager
   )
     .catch((error) => {
       if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
@@ -363,7 +384,7 @@ function createSessionAndKeyRequestWithRetry(
         .mergeMap(() =>
           createSessionAndKeyRequest(
             mediaKeys, keySystem, sessionType, initDataType,
-            initData, errorStream
+            initData, errorStream, restrictionManager
           )
         );
     });
@@ -385,7 +406,8 @@ function createPersistentSessionAndLoad(
   storedSessionId: string,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ): Observable<Event|ISessionEvent> {
   log.debug("eme: load persisted session", storedSessionId);
 
@@ -393,7 +415,14 @@ function createPersistentSessionAndLoad(
   const {
     session,
     sessionEvents,
-  } = createSession(mediaKeys, sessionType, keySystem, initData, errorStream);
+  } = createSession(
+    mediaKeys,
+    sessionType,
+    keySystem,
+    initData,
+    errorStream,
+    restrictionManager
+  );
 
   return castToObservable(session.load(storedSessionId))
     .catch(() => Observable.of(false))
@@ -421,7 +450,13 @@ function createPersistentSessionAndLoad(
         }
 
         return createSessionAndKeyRequestWithRetry(
-          mediaKeys, keySystem, sessionType, initDataType, initData, errorStream
+          mediaKeys,
+          keySystem,
+          sessionType,
+          initDataType,
+          initData,
+          errorStream,
+          restrictionManager
         ).startWith(
           createSessionEvent("loaded-session-failed", session, { storedSessionId })
         );
@@ -445,7 +480,8 @@ function manageSessionCreation(
   keySystem: IKeySystemOption,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ): Observable<MediaKeys|ISessionEvent|Event> {
   return Observable.defer(() => {
     // reuse currently loaded sessions without making a new key request
@@ -469,14 +505,21 @@ function manageSessionCreation(
       if (storedEntry) {
         return createPersistentSessionAndLoad(
           mediaKeys, keySystem, storedEntry.sessionId, initDataType,
-          initData, errorStream);
+          initData, errorStream, restrictionManager);
       }
     }
 
     // we have a fresh session without persisted informations and need
     // to make a new key request that we will associate to this session
     return createSessionAndKeyRequestWithRetry(
-      mediaKeys, keySystem, sessionType, initDataType, initData, errorStream);
+      mediaKeys,
+      keySystem,
+      sessionType,
+      initDataType,
+      initData,
+      errorStream,
+      restrictionManager
+    );
   });
 }
 

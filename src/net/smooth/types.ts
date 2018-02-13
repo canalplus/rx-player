@@ -17,7 +17,8 @@
 import { IRepresentationIndex } from "../../manifest";
 import {
   CustomManifestLoader,
-  CustomSegmentLoader
+  CustomSegmentLoader,
+  IParsedContentProtection
 } from "../types";
 
 interface IHSSKeySystem {
@@ -104,6 +105,7 @@ interface IAdaptationSmooth {
   name?: string;
   language?: string;
   normalizedLanguage?: string;
+  contentProtection: IParsedContentProtection[];
 }
 
 export {

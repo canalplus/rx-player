@@ -17,9 +17,20 @@
 /* tslint:disable no-object-literal-type-assertion */
 export const KEY_STATUS_ERRORS = {
   expired: true,
-  "internal-error": true,
+  // "internal-error": true,
    // "released",
    // "output-restricted",
+   // "output-downscaled",
+   // "status-pending",
+} as IDictionary<boolean>;
+/* tslint:enable no-object-literal-type-assertion */
+
+/* tslint:disable no-object-literal-type-assertion */
+export const KEY_STATUS_RESTRICTED = {
+  // expired: true,
+  "internal-error": true,
+   // "released",
+   "output-restricted": true,
    // "output-downscaled",
    // "status-pending",
 } as IDictionary<boolean>;

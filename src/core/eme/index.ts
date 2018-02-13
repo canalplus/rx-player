@@ -28,6 +28,7 @@ import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
+import StreamRestrictionManager from "../stream/restriction_manager";
 import {
   $loadedSessions,
   $storedSessions,
@@ -100,32 +101,42 @@ function handleEncryptedEvent(
   encryptedEvent : MediaEncryptedEvent,
   mediaKeysInfos : IMediaKeysInfos,
   video : HTMLMediaElement,
-  errorStream : ErrorStream
-): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
+  errorStream : ErrorStream,
+  restrictionManager? : StreamRestrictionManager
+): Observable<IMockMediaKeys | MediaKeys | ISessionEvent | Event> {
+  const {
+    keySystemAccess,
+    keySystem,
+  } = mediaKeysInfos;
+
   return Observable.defer(() => {
     log.info("eme: encrypted event", encryptedEvent);
+    log.info("eme: encrypted event", encryptedEvent);
+    return createMediaKeysObs(keySystemAccess).mergeMap((mediaKeys) => {
+      // set server certificate if set in API
 
-    if (encryptedEvent.initData == null) {
-      const error = new Error("no init data found on media encrypted event.");
-      throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
-    }
+      const mksConfig = keySystemAccess.getConfiguration();
 
-    const {
-      mediaKeys,
-      keySystem,
-      keySystemAccess,
-    } = mediaKeysInfos;
-    const mksConfig = keySystemAccess.getConfiguration();
-    const initData = new Uint8Array(encryptedEvent.initData);
+      const setMediaKeys$ = setMediaKeysObs(
+        mediaKeys, mksConfig, video, keySystem, instanceInfos);
+      if (encryptedEvent.initData) {
+        const initData = new Uint8Array(encryptedEvent.initData);
+        const manageSessionCreation$ = manageSessionCreation(
+          mediaKeys, mksConfig, keySystem, encryptedEvent.initDataType,
+          initData, errorStream, restrictionManager);
 
-    // The mediaKeys is lazily attached to the media element
-    const setMediaKeys$ =
-      setMediaKeysObs(mediaKeys, mksConfig, video, keySystem, instanceInfos);
-    const manageSessionCreation$ = manageSessionCreation(
-      mediaKeys, mksConfig, keySystem, encryptedEvent.initDataType,
-      initData, errorStream);
-    return Observable.merge(setMediaKeys$, manageSessionCreation$);
- });
+        if (encryptedEvent.initData == null) {
+          const error = new Error("no init data found on media encrypted event.");
+          throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+        }
+        return Observable.merge(setMediaKeys$, manageSessionCreation$);
+      } else {
+        const error = new Error("no init data found on media encrypted event.");
+        throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+      }
+    });
+  }
+  );
 }
 
 /**
@@ -142,7 +153,8 @@ function handleEncryptedEvent(
 function createEME(
   video : HTMLMediaElement,
   keySystems: IKeySystemOption[],
-  errorStream: ErrorStream
+  errorStream: ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ) : Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
@@ -179,9 +191,10 @@ function createEME(
     onEncrypted$(video).take(1),
     mediaKeysInfos$
   )
-    .mergeMap(([encryptedEvent, mediaKeysInfos]) =>
-      handleEncryptedEvent(encryptedEvent, mediaKeysInfos, video, errorStream)
-    );
+    .take(1)
+    .mergeMap(([evt, mki] : [MediaEncryptedEvent, IMediaKeysInfos]) => {
+      return handleEncryptedEvent(evt, mki, video, errorStream, restrictionManager);
+    });
 }
 
 /**
@@ -241,7 +254,8 @@ function getCurrentKeySystem() : string|null {
 export default function EMEManager(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
-  errorStream : ErrorStream
+  errorStream : ErrorStream,
+  restrictionManager?: StreamRestrictionManager
 ) :  Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {
@@ -250,7 +264,7 @@ export default function EMEManager(
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
       });
     }
-    return createEME(videoElement, keySystems, errorStream);
+    return createEME(videoElement, keySystems, errorStream, restrictionManager);
   } else {
     return onEncrypted$(videoElement).map(() => {
       log.error("eme: ciphered media and no keySystem passed");

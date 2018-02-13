@@ -16,7 +16,10 @@
 
 import log from "../../../../utils/log";
 import {
+  IContentProtectionParser,
   IScheme,
+} from "../../../types";
+import {
   parseBoolean,
   parseFrameRate,
   parseIntOrBoolean,
@@ -56,7 +59,7 @@ export interface IAdaptationSetChildren {
   // optional
   accessibility? : IScheme;
   contentComponent? : IParsedContentComponent;
-  contentProtection? : IParsedContentProtection;
+  contentProtection? : IParsedContentProtection[];
   role? : IScheme;
 
   // TODO
@@ -101,12 +104,16 @@ export interface IAdaptationSetAttributes {
 }
 
 function parseAdaptationSetChildren(
-  adaptationSetChildren : NodeList
+  adaptationSetChildren : NodeList,
+  contentProtectionParser? : IContentProtectionParser
 ) : IAdaptationSetChildren {
   const children : IAdaptationSetChildren = {
     baseURL: "",
     representations: [],
   };
+
+  children.contentProtection = [];
+
   for (let i = 0; i < adaptationSetChildren.length; i++) {
     const currentNode = adaptationSetChildren[i];
 
@@ -122,6 +129,15 @@ function parseAdaptationSetChildren(
 
       case "ContentComponent":
         children.contentComponent = parseContentComponent(currentNode);
+        break;
+
+        // TODO seems to be unused
+      case "ContentProtection":
+        const protection =
+          parseContentProtection(currentNode, contentProtectionParser);
+        if(protection != null){
+          children.contentProtection.push(protection);
+        }
         break;
 
       case "Representation":
@@ -144,10 +160,6 @@ function parseAdaptationSetChildren(
 
       case "SegmentTemplate":
         children.segmentTemplate = parseSegmentTemplate(currentNode);
-        break;
-
-      case "ContentProtection":
-        children.contentProtection = parseContentProtection(currentNode);
         break;
 
       // case "Rating":
@@ -382,10 +394,12 @@ function parseAdaptationSetAttributes(
 }
 
 export function createAdaptationSetIntermediateRepresentation(
-  adaptationSetNode : Node
+  adaptationSetNode : Node,
+  contentProtectionParser? : IContentProtectionParser
 ) : IAdaptationSetIntermediateRepresentation {
   return {
-    children: parseAdaptationSetChildren(adaptationSetNode.childNodes),
+    children: parseAdaptationSetChildren(
+      adaptationSetNode.childNodes, contentProtectionParser),
     attributes: parseAdaptationSetAttributes(adaptationSetNode),
   };
 }

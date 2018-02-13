@@ -38,6 +38,7 @@ import {
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
+  IContentProtectionParser,
   ILoaderObservable,
   ImageParserObservable,
   IManifestLoaderArguments,
@@ -54,7 +55,7 @@ import {
 interface IDASHOptions {
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
-  // contentProtectionParser? : IContentProtectionParser;
+  contentProtectionParser? : IContentProtectionParser;
 }
 
 /**
@@ -72,7 +73,7 @@ export default function(
     customManifestLoader: options.manifestLoader,
   });
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
-  // const { contentProtectionParser } = options;
+  const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(
@@ -88,7 +89,7 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
       return Observable.of({
-        manifest: dashManifestParser(data, url/*, contentProtectionParser*/),
+        manifest: dashManifestParser(data, url, contentProtectionParser),
         url: response.url,
       });
     },
