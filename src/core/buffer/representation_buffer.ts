@@ -40,12 +40,12 @@ import forceGarbageCollection from "./force_garbage_collection";
 import getWantedRange from "./get_wanted_range";
 
 // Emitted when a new segment has been added to the SourceBuffer
-export interface IAddedSegmentEvent {
+export interface IAddedSegmentEvent<T> {
   type : "added-segment";
   value : {
     bufferType : SupportedBufferTypes;
     parsed : {
-      segmentData : any;
+      segmentData : T;
       segmentInfos? : IBufferSegmentInfos|null;
     };
   };
@@ -117,9 +117,9 @@ export interface IBufferSegmentInfos {
 }
 
 // Response that should be emitted by the given Pipeline
-export interface IPipelineResponse {
+export interface IPipelineResponse<T> {
   parsed: {
-    segmentData : any;
+    segmentData : T;
     segmentInfos : IBufferSegmentInfos;
   };
 }
@@ -146,13 +146,13 @@ export interface IRepresentationBufferArguments<T> {
   };
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   segmentBookkeeper : SegmentBookkeeper;
-  pipeline : (x : ISegmentLoaderArguments) => Observable<IPipelineResponse>;
+  pipeline : (x : ISegmentLoaderArguments) => Observable<IPipelineResponse<T>>;
   wantedBufferAhead$ : Observable<number>;
 }
 
 // Events emitted by the Buffer
-export type IRepresentationBufferEvent =
-  IAddedSegmentEvent |
+export type IRepresentationBufferEvent<T> =
+  IAddedSegmentEvent<T> |
   INeedingManifestRefreshEvent |
   IDiscontinuityEvent |
   IBufferActiveEvent |
@@ -201,7 +201,7 @@ export default function RepresentationBuffer<T>({
   segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
   pipeline, // allows to download new segments
   wantedBufferAhead$, // emit the buffer goal
-} : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent> {
+} : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   const {
     manifest,
     period,
@@ -210,7 +210,7 @@ export default function RepresentationBuffer<T>({
   } = content;
 
   // will be used to emit messages to the calling function
-  const messageSubject : Subject<IRepresentationBufferEvent> = new Subject();
+  const messageSubject : Subject<IRepresentationBufferEvent<T>> = new Subject();
 
   const { high : highPadding, low : lowPadding } = getBufferPaddings(adaptation);
 
@@ -353,7 +353,7 @@ export default function RepresentationBuffer<T>({
         segmentInfos : IBufferSegmentInfos|null;
       };
     }
-  ) : Observable<IRepresentationBufferEvent> {
+  ) : Observable<IRepresentationBufferEvent<T>> {
     const { segment, parsed } = pipelineData;
     const { segmentData, segmentInfos } = parsed;
 
@@ -515,7 +515,7 @@ export default function RepresentationBuffer<T>({
    */
   function loadNeededSegments(
     segment : ISegment
-  ) : Observable<{ segment : ISegment } & IPipelineResponse> {
+  ) : Observable<{ segment : ISegment } & IPipelineResponse<T>> {
     return pipeline({
       adaptation,
       init: initSegmentInfos || undefined,
@@ -536,7 +536,7 @@ export default function RepresentationBuffer<T>({
     timing : IBufferClockTick,
     wantedBufferAhead : number,
     needsInitSegment : boolean
-  ) : Observable<IRepresentationBufferEvent> {
+  ) : Observable<IRepresentationBufferEvent<T>> {
     checkDiscontinuity(timing);
     const bufferStatus = getCurrentStatus(timing, wantedBufferAhead, needsInitSegment);
 

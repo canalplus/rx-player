@@ -63,7 +63,7 @@ export interface IRepresentationChangeEvent {
 }
 
 export type IAdaptationBufferEvent =
-  IRepresentationBufferEvent |
+  IRepresentationBufferEvent<any> |
   IBitrateEstimationChangeEvent |
   IRepresentationChangeEvent;
 
@@ -206,7 +206,7 @@ export default class AdaptationBufferManager {
      */
     function createRepresentationBuffer(
       representation : Representation
-    ) : Observable<IRepresentationBufferEvent> {
+    ) : Observable<IRepresentationBufferEvent<any>> {
 
       log.info("changing representation", adaptation.type, representation);
       return RepresentationBuffer({
