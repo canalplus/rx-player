@@ -58,6 +58,15 @@ function isCodecSupported(codec : string) : boolean {
 }
 
 /**
+ * Returns true if the browser has the minimum needed EME APIs to decrypt a
+ * content.
+ * @returns {Boolean}
+ */
+function hasEMEAPIs() : boolean {
+  return typeof requestMediaKeySystemAccess === "function";
+}
+
+/**
  * Returns true if the current target require the media keys to be renewed on
  * each content.
  * @returns {Boolean}
@@ -312,6 +321,7 @@ export {
   clearVideoSrc,
   events,
   exitFullscreen,
+  hasEMEAPIs,
   isCodecSupported,
   isFirefox,
   isFullscreen,

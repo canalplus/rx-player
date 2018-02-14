@@ -33,8 +33,10 @@ import * as events from "../events";
 import CustomMediaKeySystemAccess from "./keySystemAccess";
 
 let requestMediaKeySystemAccess :
+(
   (keyType : string, config : MediaKeySystemConfiguration[]) =>
-  Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess>;
+    Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess>
+) | null;
 
 // TODO Implement MediaKeySession completely
 interface IMockMediaKeySession {
@@ -91,8 +93,8 @@ const wrapUpdate = (
         memUpdate.call(this, license, sessionId);
         resolve();
       } catch (e) {
-          reject(e);
-        }
+        reject(e);
+      }
     });
   };
 };
@@ -181,8 +183,7 @@ implements IMockMediaKeySession
 // https://github.com/Microsoft/TypeScript/issues/20104
 // ---------------------------------------------------------------
 interface IIE11MediaKeys {
-  memCreateSession(codec : string, initData : ArrayBuffer) :
-    MediaKeySession;
+  memCreateSession(codec : string, initData : ArrayBuffer) : MediaKeySession;
 }
 
 // TODO implement MediaKeySession completely
@@ -339,8 +340,8 @@ if (navigator.requestMediaKeySystemAccess) {
         supported = supported && (
           !sessionTypes ||
           sessionTypes
-            .filter((sessionType) => sessionType === "temporary").length ===
-              sessionTypes.length
+            .filter((sessionType) => sessionType === "temporary")
+            .length === sessionTypes.length
         );
         supported = supported && (distinctiveIdentifier !== "required");
         supported = supported && (persistentState !== "required");
@@ -375,8 +376,10 @@ if (navigator.requestMediaKeySystemAccess) {
   // available. We need to add recent apis using Promises to mock the
   // most recent MediaKeys apis.
   // This is for IE11
-  else if (MediaKeys_) {
-
+  else if (
+    MediaKeys_ &&
+    typeof MediaKeys_.isTypeSupported === "function"
+  ) {
     // XXX TODO Put SessionProxy here
 
     // Add empty prototype for some IE targets which do not set one and just
@@ -399,7 +402,7 @@ if (navigator.requestMediaKeySystemAccess) {
       keyType : string,
       keySystemConfigurations : MediaKeySystemConfiguration[]
     ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
-      // TODO Authorize isTypeSupported for IE?
+      // TODO Why TS Do not understand that isTypeSupported exists here?
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
         return Observable.throw(undefined);
       }
@@ -443,9 +446,7 @@ if (navigator.requestMediaKeySystemAccess) {
       return Observable.throw(undefined);
     };
   } else {
-    requestMediaKeySystemAccess = () => {
-      throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
-    };
+    requestMediaKeySystemAccess = null;
   }
 }
 

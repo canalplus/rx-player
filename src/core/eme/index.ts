@@ -15,7 +15,10 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { shouldUnsetMediaKeys } from "../../compat/";
+import {
+  hasEMEAPIs,
+  shouldUnsetMediaKeys,
+} from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 import { EncryptedMediaError } from "../../errors";
 import assert from "../../utils/assert";
@@ -210,6 +213,12 @@ export default function EMEManager(
   errorStream : ErrorStream
 ) :  Observable<MediaKeys|ISessionEvent|Event> {
   if (keySystems && keySystems.length) {
+    if (!hasEMEAPIs()) {
+      return onEncrypted$(videoElement).map(() => {
+        log.error("eme: encrypted event but no EME API available");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
+      });
+    }
     return createEME(videoElement, keySystems, errorStream);
   } else {
     return onEncrypted$(videoElement).map(() => {

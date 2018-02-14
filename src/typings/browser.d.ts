@@ -93,6 +93,9 @@ interface MediaSourceConstructor {
 }
 
 interface MediaKeysConstructor {
+  // for IE11
+  isTypeSupported? : (type : string) => boolean;
+
   new(): MediaKeys;
 }
 
