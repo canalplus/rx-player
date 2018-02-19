@@ -227,7 +227,7 @@ export default class SourceBufferManager {
       }
 
       log.info("aborting native source buffer", bufferType);
-      if(this._mediaSource.readyState === "open"){
+      if (this._mediaSource.readyState === "open") {
         try {
           memorizedNativeSourceBuffer.sourceBuffer.abort();
         } catch (e) {

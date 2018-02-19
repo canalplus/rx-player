@@ -9,7 +9,7 @@
 import { linkPlayerEventsToState } from "./events.js";
 
 const RxPlayer = window.RxPlayer;
-const stopAtEnd = true;
+const stopAtEnd = false;
 
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   const player = new RxPlayer({

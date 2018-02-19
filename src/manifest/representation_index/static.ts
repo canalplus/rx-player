@@ -17,39 +17,18 @@
 import log from "../../utils/log";
 import IRepresentationIndex, {
   ISegment,
-  ISegmentPrivateInfos,
 } from "./interfaces";
 
 /**
  * Simple RepresentationIndex implementation for static files.
  * @class StaticRepresentationIndex
  */
-export default class StaticRepresentationIndex<
-  T extends ISegmentPrivateInfos
-> implements IRepresentationIndex {
-  private _privateInfos? : T;
-
-  /**
-   * Create a new index, with additional privateInfos.
-   * @param {*} privateInfos
-   */
-  constructor(privateInfos? : T) {
-    this._privateInfos = privateInfos;
-  }
+export default class StaticRepresentationIndex implements IRepresentationIndex {
 
   /**
    * @returns {Object}
-   * TODO getInitSegment should probably return null instead when no init
-   * Segment exists.
    */
   getInitSegment() : null {
-    // return {
-    //   id: "init",
-    //   isInit: true,
-    //   time: 0,
-    //   timescale: 1,
-    //   privateInfos: this._privateInfos,
-    // };
     return null;
   }
 
@@ -65,7 +44,6 @@ export default class StaticRepresentationIndex<
       time: 0,
       duration: Number.MAX_VALUE,
       timescale: 1,
-      privateInfos: this._privateInfos,
     }];
   }
 

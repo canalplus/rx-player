@@ -29,6 +29,12 @@ import { ISessionEvent } from "../eme/session";
 import { SupportedBufferTypes } from "../source_buffers";
 import { IStallingItem } from "./stalling_manager";
 
+// Emit when the buffer from last period is full
+export interface ICompletedBufferEvent {
+  type: "completed";
+  value : string;
+}
+
 export interface IAdaptationChangeEvent {
   type : "adaptationChange";
   value : {
@@ -220,6 +226,20 @@ const STREAM_EVENTS = {
       value,
     };
   },
+
+  endOfStream() : IEndOfStreamEvent {
+    return {
+      type: "end-of-stream",
+      value: undefined,
+    };
+  },
+
+  completed(bufferType: string) : ICompletedBufferEvent {
+    return {
+      type: "completed",
+      value: bufferType,
+    };
+  },
 };
 
 // Every possible item emitted by the Stream
@@ -236,6 +256,7 @@ export type IStreamEvent =
   IStreamLoadedEvent |
   IStreamStartedEvent |
   IEndOfStreamEvent |
+  ICompletedBufferEvent |
   IStreamWarningEvent;
 
 export default STREAM_EVENTS;

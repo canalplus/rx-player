@@ -176,17 +176,6 @@ class Player extends EventEmitter<any> {
   private _priv_playing$ : ReplaySubject<boolean>;
 
   /**
-   * Emit true if video is playing when player has seeked.
-   * @type {ReplaySubject}
-   */
-  private _priv_seeked$ : ReplaySubject<boolean>;
-
-  /**
-   * Emit true when video has ended
-   */
-  private _priv_ended$ : ReplaySubject<boolean>;
-
-  /**
    * Last speed set by the user.
    * Used instead of videoElement.playbackRate to allow more flexibility.
    * @private
@@ -490,8 +479,6 @@ class Player extends EventEmitter<any> {
       .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
 
     this._priv_playing$ = new ReplaySubject(1);
-    this._priv_seeked$ = new ReplaySubject(1);
-    this._priv_ended$ = new ReplaySubject(1);
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
     this._priv_stopCurrentContent$ = new Subject();
     this._priv_streamLock$ = new BehaviorSubject(false);
@@ -568,8 +555,6 @@ class Player extends EventEmitter<any> {
     // Complete all subjects
     this._priv_stopCurrentContent$.complete();
     this._priv_playing$.complete();
-    this._priv_seeked$.complete();
-    this._priv_ended$.complete();
     this._priv_speed$.complete();
     this._priv_streamLock$.complete();
     this._priv_wantedBufferAhead$.complete();
@@ -629,7 +614,6 @@ class Player extends EventEmitter<any> {
 
     // inilialize to false
     this._priv_playing$.next(false);
-    this._priv_seeked$.next(false);
 
     // get every properties used from context for clarity
     const videoElement = this.videoElement;
@@ -686,6 +670,11 @@ class Player extends EventEmitter<any> {
       textTrackElement: options.textTrackElement,
     };
 
+    const closeStream$ = Observable.merge(
+      this._priv_stopCurrentContent$,
+      this._priv_stopAtEnd ? onEnded$(videoElement) : Observable.empty()
+    ).take(1);
+
     /**
      * Stream Observable, through which the content will be launched.
      * @type {Observable.<Object>}
@@ -704,18 +693,10 @@ class Player extends EventEmitter<any> {
       supplementaryTextTracks,
       textTrackOptions,
       transport: transportObj,
-      stopAtEnd: this._priv_stopAtEnd,
       url,
       videoElement,
     })
-    .takeUntil(
-      Observable.combineLatest(
-        this._priv_stopCurrentContent$,
-        this._priv_ended$.filter(() => {
-          return this._priv_stopAtEnd;
-        })
-      )
-    )
+    .takeUntil(closeStream$)
     .publish();
 
     /**
@@ -749,7 +730,7 @@ class Player extends EventEmitter<any> {
             .takeUntil(this._priv_stopCurrentContent$)
              .map(([isPlaying, stalledStatus]) => {
                if (stalledStatus) {
-                 switch(stalledStatus.state){
+                 switch (stalledStatus.state) {
                    case "seeking":
                      return PLAYER_STATES.SEEKING;
                    default:
@@ -759,11 +740,16 @@ class Player extends EventEmitter<any> {
               return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
             })
             .distinctUntilChanged(),
-          this._priv_seeked$
-            .map((isPlaying) => {
+          onSeeked$(videoElement)
+            .map(() => {
+              const isPlaying = (
+                !videoElement.paused &&
+                !videoElement.ended &&
+                !videoElement.seeking
+              );
               return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
             }),
-          this._priv_ended$
+          onEnded$(videoElement)
             .mapTo(PLAYER_STATES.ENDED)
         )
           // begin emitting those only when the content start to play
@@ -781,17 +767,6 @@ class Player extends EventEmitter<any> {
     const videoPlays$ = onPlayPause$(videoElement)
       .map(evt => evt.type === "play");
 
-    /**
-     * Emit true at seek if video is playing
-     */
-    const videoSeeked$ =
-      onSeeked$(videoElement)
-        .map(() =>
-          !videoElement.paused &&
-          !videoElement.ended &&
-          !videoElement.seeking
-        );
-
     let streamDisposable : Subscription|undefined;
     this._priv_stopCurrentContent$.take(1).subscribe(() => {
       if (streamDisposable) {
@@ -802,14 +777,6 @@ class Player extends EventEmitter<any> {
     videoPlays$
       .takeUntil(this._priv_stopCurrentContent$)
       .subscribe(x => this._priv_onPlayPauseNext(x), noop);
-
-    videoSeeked$
-       .takeUntil(this._priv_stopCurrentContent$)
-       .subscribe(x => this._priv_onSeek(x), noop);
-
-     onEnded$(videoElement)
-       .takeUntil(this._priv_stopCurrentContent$)
-       .subscribe(() => this._priv_onEnd(), noop);
 
     clock$
       .takeUntil(this._priv_stopCurrentContent$)
@@ -1229,9 +1196,8 @@ class Player extends EventEmitter<any> {
     if (positionWanted === undefined) {
       throw new Error("invalid time given");
     }
-    const limitedPosition = Math.min(positionWanted, this.videoElement.duration);
-    this.videoElement.currentTime = limitedPosition;
-    return limitedPosition;
+    this.videoElement.currentTime = positionWanted;
+    return positionWanted;
   }
 
   exitFullscreen() : void {
@@ -2007,20 +1973,6 @@ class Player extends EventEmitter<any> {
     }
 
     this._priv_playing$.next(isPlaying);
-  }
-
-  private _priv_onSeek(isPlaying : boolean) : void {
-    if (!this.videoElement) {
-      throw new Error("Disposed player");
-    }
-    this._priv_seeked$.next(isPlaying);
-  }
-
-  private _priv_onEnd() : void {
-    if (!this.videoElement) {
-      throw new Error("Disposed player");
-    }
-    this._priv_ended$.next(true);
   }
 
   /**
