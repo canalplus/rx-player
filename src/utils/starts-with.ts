@@ -20,7 +20,9 @@ export default function startsWith(
   searchString : string,
   position? : number
 ) : boolean {
+  /* tslint:disable no-unbound-method */
   if (typeof String.prototype.startsWith === "function") {
+  /* tslint:enable no-unbound-method */
     return completeString.startsWith(searchString, position);
   }
   return completeString

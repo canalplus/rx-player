@@ -15,17 +15,13 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
-
-import EventEmitter from "../../utils/eventemitter";
-
+import { Subject } from "rxjs/Subject";
 import {
   bytesToStr,
   strToBytes,
 } from "../../utils/bytes";
-
 import castToObservable from "../../utils/castToObservable";
-
+import EventEmitter from "../../utils/eventemitter";
 import {
   MediaKeys_,
 } from "../constants";
@@ -38,29 +34,45 @@ let requestMediaKeySystemAccess :
     Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess>
 ) | null;
 
-// TODO Implement MediaKeySession completely
-interface IMockMediaKeySession {
-  readonly closed: Promise<void>;
-  readonly expiration: number;
-  readonly keyStatuses: MediaKeyStatusMap;
+type MEDIA_KEY_SESSION_EVENTS =
+  string;
+  // "keymessage" |
+  // "message" |
+  // "keyadded" |
+  // "ready" |
+  // "keyerror" |
+  // "error";
+
+export interface IMediaKeySession
+  extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
+{
+  // Attributes
   readonly sessionId : string;
-  close(): Promise<void>;
-  generateRequest(initDataType: string, initData: ArrayBuffer): Promise<void>;
+  readonly expiration: number;
+  readonly closed: Promise<void>;
+  readonly keyStatuses: MediaKeyStatusMap;
+
+  // Event handlers
+  onmessage? : (message : MediaKeyMessageEvent) => void;
+  onkeystatusesChange? : (evt : Event) => void;
+
+  // Functions
+  generateRequest(initDataType: string, initData: BufferSource): Promise<void>;
   load(sessionId: string): Promise<boolean>;
+  update(response: BufferSource): Promise<void>;
+  close(): Promise<void>;
   remove(): Promise<void>;
-  update(response: ArrayBuffer): Promise<void>;
-  addEventListener(type: string, listener: () => {}, useCapture: boolean): void;
-  removeEventListener(type: string, listener: EventListener, useCapture: boolean): void;
-  dispatchEvent(evt: Event): boolean;
 }
 
 type IMediaKeySessionType =
   "temporary" | "persistent-license" | "persistent-release-message";
 
 interface IMockMediaKeys {
-  _setVideo(vid : HTMLMediaElement) : void;
-  createSession(sessionType? : IMediaKeySessionType) : IMockMediaKeySession;
-  setServerCertificate(setServerCertificate : ArrayBuffer) : Promise<void>;
+  _setVideo : (vid : HTMLMediaElement) => void;
+  createSession : (sessionType? : IMediaKeySessionType) => IMediaKeySession;
+  setServerCertificate : (
+    setServerCertificate : ArrayBuffer|ArrayBufferView
+  ) => Promise<void>;
 }
 interface IMockMediaKeysConstructor {
   new(ks : string) : IMockMediaKeys;
@@ -84,7 +96,7 @@ const wrapUpdate = (
   memUpdate : memUpdateFn
 ) : wrapUpdateFn => {
   return function(
-    this : IMockMediaKeySession,
+    this : IMediaKeySession,
     license : ArrayBuffer,
     sessionId? : string
   ) : Promise<void> {
@@ -109,36 +121,42 @@ const wrapUpdate = (
 // https://github.com/Microsoft/TypeScript/issues/20104
 // ---------------------------------------------------------------
 
-// TODO implement MediaKeySession completely
-class MockMediaKeySession extends EventEmitter<Event>
-implements IMockMediaKeySession
+class WebkitMediaKeySession
+  extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
+  implements IMediaKeySession
 {
   public sessionId : string;
+  public closed: Promise<void>;
+  public readonly expiration: number;
+  public keyStatuses: MediaKeyStatusMap;
   public update : (
     license : ArrayBuffer,
     sessionId? : string
   ) => Promise<void>;
-  public closed: Promise<void>;
-  readonly expiration: number;
-  public keyStatuses: MediaKeyStatusMap;
-  public dispatchEvent: (evt: Event) => boolean;
-  public load: (sessionId: string) => Promise<boolean>;
-  public remove: () => Promise<void>;
 
   private _vid : HTMLMediaElement;
   private _key : string;
-  private _con : Subscription;
+  private _closeSession$ : Subject<void>;
 
   constructor(video : HTMLMediaElement, keySystem : string) {
     super();
-    this.sessionId = "";
+    this._closeSession$ = new Subject();
     this._vid = video;
     this._key = keySystem;
-    this._con = Observable.merge(
+
+    this.sessionId = "";
+    this.closed = new Promise((resolve) => {
+      this._closeSession$.subscribe(resolve);
+    });
+    this.keyStatuses = new Map();
+    this.expiration = NaN;
+    Observable.merge(
       events.onKeyMessage$(video),
       events.onKeyAdded$(video),
       events.onKeyError$(video)
-    ).subscribe((evt : Event) => this.trigger(evt.type, evt));
+    )
+      .takeUntil(this._closeSession$)
+      .subscribe((evt : Event) => this.trigger(evt.type, evt));
 
     this.update = wrapUpdate((license, sessionId?) => {
       if (this._key.indexOf("clearkey") >= 0) {
@@ -165,9 +183,20 @@ implements IMockMediaKeySession
 
   close(): Promise<void> {
     return new Promise((resolve) => {
-      if (this._con) {
-        this._con.unsubscribe();
-      }
+      this._closeSession$.next();
+      this._closeSession$.complete();
+      resolve();
+    });
+  }
+
+  load() : Promise<boolean> {
+    return new Promise((resolve) => {
+      resolve(false);
+    });
+  }
+
+  remove() : Promise<void> {
+    return new Promise((resolve) => {
       resolve();
     });
   }
@@ -177,7 +206,7 @@ implements IMockMediaKeySession
 
 // XXX TODO Put that were the following comment is:
 // ```js
-// // XXX TODO Put SessionProxy here
+// // XXX TODO Put IE11MediaKeySession here
 // ```
 // This was put here because of:
 // https://github.com/Microsoft/TypeScript/issues/20104
@@ -187,27 +216,33 @@ interface IIE11MediaKeys {
 }
 
 // TODO implement MediaKeySession completely
-class SessionProxy extends EventEmitter<Event> implements IMockMediaKeySession {
+class IE11MediaKeySession
+  extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
+  implements IMediaKeySession
+{
   public sessionId : string;
   public update : (
     license : ArrayBuffer,
     sessionId? : string
   ) => Promise<void>;
-  public load: (sessionId: string) => Promise<boolean>;
-  public remove: () => Promise<void>;
   public closed: Promise<void>;
   readonly expiration: number;
   public keyStatuses: MediaKeyStatusMap;
-  public dispatchEvent: (evt: Event) => boolean;
 
   private _mk : IIE11MediaKeys;
   private _ss? : MediaKeySession;
-  private _con? : Subscription;
+  private _closeSession$ : Subject<void>;
 
   constructor(mk : IIE11MediaKeys) {
     super();
     this.sessionId = "";
+    this.expiration = NaN;
+    this.keyStatuses = new Map();
     this._mk = mk;
+    this._closeSession$ = new Subject();
+    this.closed = new Promise((resolve) => {
+      this._closeSession$.subscribe(resolve);
+    });
 
     this.update = wrapUpdate((license, sessionId) => {
       if (!this._ss) {
@@ -221,11 +256,13 @@ class SessionProxy extends EventEmitter<Event> implements IMockMediaKeySession {
   generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
     return new Promise((resolve) => {
       this._ss = this._mk.memCreateSession("video/mp4", initData);
-      this._con = Observable.merge(
+      Observable.merge(
         events.onKeyMessage$(this._ss),
         events.onKeyAdded$(this._ss),
         events.onKeyError$(this._ss)
-      ).subscribe((evt : Event) => this.trigger(evt.type, evt));
+      )
+        .takeUntil(this._closeSession$)
+        .subscribe((evt : Event) => this.trigger(evt.type, evt));
       resolve();
     });
   }
@@ -238,10 +275,20 @@ class SessionProxy extends EventEmitter<Event> implements IMockMediaKeySession {
         /* tslint:enable no-floating-promises */
         this._ss = undefined;
       }
-      if (this._con) {
-        this._con.unsubscribe();
-        this._con = undefined;
-      }
+      this._closeSession$.next();
+      this._closeSession$.complete();
+      resolve();
+    });
+  }
+
+  load() : Promise<boolean> {
+    return new Promise((resolve) => {
+      resolve(false);
+    });
+  }
+
+  remove() : Promise<void> {
+    return new Promise((resolve) => {
       resolve();
     });
   }
@@ -255,7 +302,7 @@ let MockMediaKeys : IMockMediaKeysConstructor =
     _setVideo() : void {
       throw new Error("MediaKeys is not implemented in your browser");
     }
-    createSession() : IMockMediaKeySession {
+    createSession() : IMediaKeySession {
       throw new Error("MediaKeys is not implemented in your browser");
     }
     setServerCertificate() : Promise<void> {
@@ -270,10 +317,6 @@ if (navigator.requestMediaKeySystemAccess) {
 
   // XXX TODO Put wrapUpdate here
 
-  // Browser without any MediaKeys object: A mock for MediaKey and
-  // MediaKeySession are created, and the <video>.addKey api is used to
-  // pass the license.
-  //
   // This is for Chrome with unprefixed EME api
   if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
 
@@ -289,11 +332,11 @@ if (navigator.requestMediaKeySystemAccess) {
         this._vid = vid;
       }
 
-      createSession(/* sessionType */) : IMockMediaKeySession {
+      createSession(/* sessionType */) : IMediaKeySession {
         if (!this._vid) {
           throw new Error("Video not attached to the MediaKeys");
         }
-        return new MockMediaKeySession(this._vid, this.ks_);
+        return new WebkitMediaKeySession(this._vid, this.ks_);
       }
 
       setServerCertificate() : Promise<void> {
@@ -372,9 +415,6 @@ if (navigator.requestMediaKeySystemAccess) {
     };
   }
 
-  // A MediaKeys object exist (or a mock) but no create function is
-  // available. We need to add recent apis using Promises to mock the
-  // most recent MediaKeys apis.
   // This is for IE11
   else if (
     MediaKeys_ &&
@@ -382,15 +422,15 @@ if (navigator.requestMediaKeySystemAccess) {
     typeof MediaKeys_.prototype.createSession === "function" &&
     typeof MediaKeys_.isTypeSupported === "function"
   ) {
-    // XXX TODO Put SessionProxy here
+    // XXX TODO Put IE11MediaKeySession here
 
     // on IE11, each created session needs to be created on a new
     // MediaKeys object
     MediaKeys_.prototype.alwaysRenew = true;
     MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
-    MediaKeys_.prototype.createSession = function() : SessionProxy {
+    MediaKeys_.prototype.createSession = function() : IE11MediaKeySession {
       /* tslint:disable no-invalid-this */
-      return new SessionProxy(this as IIE11MediaKeys);
+      return new IE11MediaKeySession(this);
       /* tslint:enable no-invalid-this */
     };
 

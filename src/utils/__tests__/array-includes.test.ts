@@ -17,7 +17,9 @@
 import { expect } from "chai";
 import arrayIncludes from "../array-includes";
 
+/* tslint:disable no-unbound-method */
 const initialArrayIncludes = Array.prototype.includes;
+/* tslint:enable no-unbound-method */
 describe("utils - array-includes", () => {
   before(() => {
     (Array.prototype as any).includes = undefined;

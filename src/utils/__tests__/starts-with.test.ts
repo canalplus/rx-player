@@ -17,7 +17,10 @@
 import { expect } from "chai";
 import startsWith from "../starts-with";
 
+/* tslint:disable no-unbound-method */
 const initialStartsWith = String.prototype.startsWith;
+/* tslint:enable no-unbound-method */
+
 describe("utils - starts-with", () => {
   before(() => {
     (String.prototype as any).startsWith = undefined;

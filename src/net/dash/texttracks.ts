@@ -22,7 +22,7 @@ import { stringFromUTF8 } from "../../utils/strings";
 import { resolveURL } from "../../utils/url";
 
 import {
-  getMdat,
+  getMDAT,
   getMDHDTimescale,
   parseSidx,
 } from "../../parsers/containers/isobmff";
@@ -236,7 +236,7 @@ function TextTrackParser({
       }
 
       segmentData = objectAssign({
-        data: stringFromUTF8(getMdat(responseData as Uint8Array)),
+        data: stringFromUTF8(getMDAT(responseData as Uint8Array)),
         type,
       }, { timescale: 1 }, segmentDataBase);
 

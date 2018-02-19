@@ -16,13 +16,19 @@
 
 import { IMockMediaKeys } from "./MediaKeys";
 
+export interface IMediaKeySystemAccess {
+  readonly keySystem : string;
+  getConfiguration() : MediaKeySystemConfiguration;
+  createMediaKeys() : Promise<MediaKeys|IMockMediaKeys>;
+}
+
 /**
  * Simple implementation of the MediaKeySystemAccess EME API.
  *
  * All needed arguments are given to the constructor
  * @class CustomMediaKeySystemAccess
  */
-export default class CustomMediaKeySystemAccess implements MediaKeySystemAccess {
+export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess {
   constructor(
     private _keyType : string,
     private _mediaKeys : IMockMediaKeys|MediaKeys,

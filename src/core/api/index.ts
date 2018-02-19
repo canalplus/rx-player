@@ -114,11 +114,29 @@ interface IBitrateEstimate {
   bitrate : number|undefined;
 }
 
+type PLAYER_EVENT_STRINGS =
+  "playerStateChange" |
+  "positionUpdate" |
+  "audioTrackChange" |
+  "textTrackChange" |
+  "audioBitrateChange" |
+  "videoBitrateChange" |
+  "imageTrackUpdate" |
+  "fullscreenChange" |
+  "bitrateEstimationChange" |
+  "volumeChange" |
+  "error" |
+  "warning" |
+  "nativeTextTracksChange" |
+  "manifestChange" |
+  "manifestUpdate" |
+  "periodChange";
+
 /**
  * @class Player
  * @extends EventEmitter
  */
-class Player extends EventEmitter<any> {
+class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   /**
    * Current version of the RxPlayer.
    * @type {string}
@@ -1582,7 +1600,9 @@ class Player extends EventEmitter<any> {
     const prev = this._priv_contentEventsMemory[type];
     if (!deepEqual(prev, value)) {
       this._priv_contentEventsMemory[type] = value;
-      this.trigger(`${type}Change`, value);
+
+      // SAD
+      this.trigger(type + "Change" as PLAYER_EVENT_STRINGS, value);
     }
   }
 

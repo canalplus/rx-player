@@ -96,7 +96,13 @@ interface MediaKeysConstructor {
   // for IE11
   isTypeSupported? : (type : string) => boolean;
 
-  new(): MediaKeys;
+  // Argument for IE11
+  new(keyType? : string): MediaKeys;
+}
+
+interface MediaKeys {
+  // for IE11
+  createSession? : (codec : string, initData : ArrayBuffer) => MediaKeySession;
 }
 
 interface Element {
@@ -105,10 +111,22 @@ interface Element {
 }
 
 interface HTMLVideoElement {
-  webkitGenerateKeyRequest? : (key: string, initData : ArrayBuffer) => void;
+  webkitGenerateKeyRequest? : (keyType: string, initData : ArrayBuffer) => void;
+  webkitAddKey? : (
+    keyType: string,
+    key : ArrayBuffer|ArrayBufferView,
+    kid : ArrayBuffer|ArrayBufferView|null,
+    sessionId : string
+  ) => void;
 }
 interface HTMLMediaElement {
   webkitGenerateKeyRequest? : (key: string, initData : ArrayBuffer) => void;
+  webkitAddKey? : (
+    keyType: string,
+    key : ArrayBuffer|ArrayBufferView,
+    kid : ArrayBuffer|ArrayBufferView|null,
+    sessionId : string
+  ) => void;
 }
 
 interface Document {

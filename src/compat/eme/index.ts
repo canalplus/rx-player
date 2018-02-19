@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-import KeySystemAccess from "./keySystemAccess";
-import { requestMediaKeySystemAccess } from "./MediaKeys";
+import KeySystemAccess, {
+  IMediaKeySystemAccess,
+} from "./keySystemAccess";
+import {
+  IMediaKeySession,
+  IMockMediaKeys,
+  requestMediaKeySystemAccess,
+} from "./MediaKeys";
 import setMediaKeys from "./setMediaKeys";
 
 export {
+  IMediaKeySession,
+  IMediaKeySystemAccess,
+  IMockMediaKeys,
   requestMediaKeySystemAccess,
   setMediaKeys,
   KeySystemAccess,

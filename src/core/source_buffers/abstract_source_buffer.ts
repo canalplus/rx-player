@@ -40,7 +40,7 @@ export interface ICustomSourceBuffer<T> {
  * @extends EventEmitter
  */
 export default abstract class AbstractSourceBuffer<T>
-  extends EventEmitter<any>
+  extends EventEmitter<string, any>
   implements ICustomSourceBuffer<T>
 {
   public updating : boolean;

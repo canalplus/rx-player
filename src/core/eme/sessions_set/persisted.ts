@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { IMediaKeySession } from "../../../compat";
 import assert from "../../../utils/assert";
 import log from "../../../utils/log";
 import SessionSet from "./abstract";
@@ -27,6 +28,18 @@ interface IPersistedSessionData {
 export interface IPersistedSessionStorage {
   load() : IPersistedSessionData[];
   save(x : IPersistedSessionData[]) : void;
+}
+
+function checkStorage(storage : IPersistedSessionStorage) : void {
+  assert(
+    storage,
+    "no licenseStorage given for keySystem with persistentLicense"
+  );
+
+  assert.iface(
+    storage,
+    "licenseStorage", { save: "function", load: "function" }
+  );
 }
 
 /**
@@ -49,7 +62,9 @@ export default class PersistedSessionsSet
    */
   constructor(storage : IPersistedSessionStorage) {
     super();
-    this.setStorage(storage);
+    checkStorage(storage);
+    this._storage = storage;
+    this._loadStorage();
   }
 
   /**
@@ -60,29 +75,14 @@ export default class PersistedSessionsSet
    * @param {Function} storage.load
    * @param {Function} storage.save
    */
-  setStorage(storage : IPersistedSessionStorage) {
+  public setStorage(storage : IPersistedSessionStorage) : void {
     if (this._storage === storage) {
       return;
     }
 
-    assert(
-      storage,
-      "no licenseStorage given for keySystem with persistentLicense"
-    );
-
-    assert.iface(
-      storage,
-      "licenseStorage", { save: "function", load: "function" }
-    );
-
+    checkStorage(storage);
     this._storage = storage;
-    try {
-      this._entries = this._storage.load();
-      assert(Array.isArray(this._entries));
-    } catch (e) {
-      log.warn("eme-persitent-store: could not get entries from license storage", e);
-      this.dispose();
-    }
+    this._loadStorage();
   }
 
   /**
@@ -90,7 +90,7 @@ export default class PersistedSessionsSet
    * @param {Array|TypedArray|Number}  initData
    * @returns {Object|null}
    */
-  get(initData : Uint8Array|number[]|number) : IPersistedSessionData|null {
+  public get(initData : Uint8Array|number[]|number) : IPersistedSessionData|null {
     const hash = hashInitData(initData);
     const entry = this.find((e) => e.initData === hash);
     return entry || null;
@@ -101,7 +101,10 @@ export default class PersistedSessionsSet
    * @param {Array|TypedArray|Number}  initData
    * @param {MediaKeySession} session
    */
-  add(initData : Uint8Array|number, session : MediaKeySession) : void {
+  public add(
+    initData : Uint8Array|number,
+    session : IMediaKeySession|MediaKeySession
+  ) : void {
     const sessionId = session && session.sessionId;
     if (!sessionId) {
       return;
@@ -143,7 +146,7 @@ export default class PersistedSessionsSet
   /**
    * Delete all saved entries.
    */
-  dispose() : void {
+  public dispose() : void {
     this._entries = [];
     this._save();
   }
@@ -151,11 +154,24 @@ export default class PersistedSessionsSet
   /**
    * Use the given storage to store the current entries.
    */
-  _save() : void {
+  private _save() : void {
     try {
       this._storage.save(this._entries);
     } catch (e) {
       log.warn("eme-persitent-store: could not save licenses in localStorage");
+    }
+  }
+
+  /**
+   * Load in the state every entries in the current storage.
+   */
+  private _loadStorage() : void {
+    try {
+      this._entries = this._storage.load();
+      assert(Array.isArray(this._entries));
+    } catch (e) {
+      log.warn("eme-persitent-store: could not get entries from license storage", e);
+      this.dispose();
     }
   }
 }

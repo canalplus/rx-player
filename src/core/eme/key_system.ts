@@ -19,6 +19,9 @@ import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 
 import {
+  IMediaKeySession,
+  IMediaKeySystemAccess,
+  IMockMediaKeys,
   KeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
@@ -43,7 +46,7 @@ interface IKeySystemOption {
   persistentStateRequired? : boolean;
   distinctiveIdentifierRequired? : boolean;
   closeSessionsOnStop? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession)
+  onKeyStatusesChange? : (evt : Event, session : IMediaKeySession|MediaKeySession)
     => Promise<BufferSource>|BufferSource;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
@@ -56,7 +59,7 @@ const {
 
 interface IInstanceInfo {
   $keySystem: IKeySystemOption|null;
-  $mediaKeys: MediaKeys|null;
+  $mediaKeys: IMockMediaKeys|MediaKeys|null;
   $mediaKeySystemConfiguration: MediaKeySystemConfiguration|null;
   $videoElement: HTMLMediaElement|null;
 }
@@ -73,7 +76,7 @@ interface IKeySystemType {
 }
 
 interface IKeySystemPackage {
-  keySystemAccess: MediaKeySystemAccess;
+  keySystemAccess: IMediaKeySystemAccess;
   keySystem: IKeySystemOption;
 }
 

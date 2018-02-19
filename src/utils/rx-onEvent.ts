@@ -26,7 +26,7 @@ import EventEmitter from "./eventemitter";
  * @returns {Observable}
  */
 export default function onEvent<T>(
-  elt : EventTargetLike|EventEmitter<T>,
+  elt : EventTargetLike|EventEmitter<string, T>,
   evts : string|string[]
 ) : Observable<T> {
   if (Array.isArray(evts)) {

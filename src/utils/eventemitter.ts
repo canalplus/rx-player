@@ -14,60 +14,90 @@
  * limitations under the License.
  */
 
-import assert from "./assert";
 import log from "./log";
 
-type listenerFunction<T> = (payload : T) => void;
-interface IListeners<T> {
-  [propName: string] : Array<listenerFunction<T>>;
-}
+type IListeners<T extends string, U> =
+  Partial<Record<
+    T,
+    Array<listenerFunction<U>>
+  >>;
+type listenerFunction<U> = (payload : U) => void;
 
-export default class EventEmitter<T> {
-  public on = this.addEventListener;
-  public off = this.removeEventListener;
-  private _listeners : IListeners<T>;
+export default class EventEmitter<T extends string, U> {
+  /**
+   * @type {Object}
+   * @private
+   */
+  private _listeners : IListeners<T, U>;
 
   constructor() {
     this._listeners = {};
   }
 
-  public addEventListener(evt : string, fn : listenerFunction<T>) : void {
-    assert(typeof fn === "function",
-           "eventemitter: second argument should be a function");
-    if (!this._listeners[evt]) {
-      this._listeners[evt] = [];
+  /**
+   * Register a new callback for an event.
+   *
+   * @param {string} evt - The event to register a callback to
+   * @param {Function} fn - The callback to call as that event is triggered.
+   * The callback will take as argument the eventual payload of the event
+   * (single argument).
+   */
+  public addEventListener(evt : T, fn : listenerFunction<U>) : void {
+    const listeners = this._listeners[evt];
+    if (!listeners) {
+      this._listeners[evt] = [fn];
+    } else {
+      listeners.push(fn);
     }
-    this._listeners[evt].push(fn);
   }
 
-  public removeEventListener(evt : string, fn : listenerFunction<T>) : void {
-    if (arguments.length === 0) {
+  /**
+   * Unregister callbacks linked to events.
+   * @param {string} [evt] - The event for which the callback[s] should be
+   * unregistered. Set it to null or undefined to remove all callbacks
+   * currently registered (for any event).
+   * @param {Function} [fn] - The callback to unregister. If set to null
+   * or undefined while the evt argument is set, all callbacks linked to that
+   * event will be unregistered.
+   */
+  public removeEventListener(evt? : T, fn? : listenerFunction<U>) : void {
+    if (evt == null) {
       this._listeners = {};
       return;
     }
-    if (!this._listeners.hasOwnProperty(evt)) {
+
+    const listeners = this._listeners[evt];
+    if (!listeners) {
       return;
     }
-    if (arguments.length === 1) {
+    if (fn == null) {
       delete this._listeners[evt];
       return;
     }
-    const listeners = this._listeners[evt];
+
     const index = listeners.indexOf(fn);
     if (~index) {
       listeners.splice(index, 1);
     }
+
     if (!listeners.length) {
       delete this._listeners[evt];
     }
   }
 
-  public trigger(evt : string, arg : T) : void {
-    if (!this._listeners.hasOwnProperty(evt)) {
+  /**
+   * Trigger every registered callbacks for a given event
+   * @param {string} evt - The event to trigger
+   * @param {*} arg - The eventual payload for that event. All triggered
+   * callbacks will recieve this payload as argument.
+   */
+  public trigger(evt : T, arg : U) : void {
+    const listeners = this._listeners[evt];
+    if (!listeners) {
       return;
     }
-    const listeners = this._listeners[evt].slice();
-    listeners.forEach((listener) => {
+
+    listeners.slice().forEach((listener) => {
       try {
         listener(arg);
       } catch (e) {

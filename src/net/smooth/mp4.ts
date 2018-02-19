@@ -15,7 +15,10 @@
  */
 
 import { isIE } from "../../compat";
-
+import {
+  getMDAT,
+  getTRAF,
+} from "../../parsers/containers/isobmff";
 import assert from "../../utils/assert";
 import {
   be2toi,
@@ -136,35 +139,6 @@ function readUuid(
       return buf.subarray(i + 24, i + len);
     }
     i += len;
-  }
-}
-
-/**
- * @param {Uint8Array} buf
- * @param {Number} atomName
- * @returns {Uint8Array|null}
- */
-function findAtom(buf : Uint8Array, atomName : number) : Uint8Array|null {
-  const l = buf.length;
-  let i = 0;
-
-  let name;
-  let size = 0;
-  while (i + 8 < l) {
-    size = be4toi(buf, i);
-    name = be4toi(buf, i + 4);
-    assert(size > 0, "smooth: out of range size");
-    if (name === atomName) {
-      break;
-    } else {
-      i += size;
-    }
-  }
-
-  if (i < l) {
-    return buf.subarray(i + 8, i + size);
-  } else {
-    return null;
   }
 }
 
@@ -681,19 +655,6 @@ const atoms = {
 
 const reads = {
   /**
-   * @param {Uint8Array} buff
-   * @returns {Uint8Array|null}
-   */
-  traf(buff : Uint8Array) : Uint8Array|null {
-    const moof = findAtom(buff, 0x6D6F6F66);
-    if (moof) {
-      return findAtom(moof, 0x74726166);
-    } else {
-      return null;
-    }
-  },
-
-  /**
    * Extract senc data (derived from UUID MS Atom)
    * @param {Uint8Array} traf
    * @returns {Uint8Array|undefined}
@@ -718,14 +679,6 @@ const reads = {
    */
   tfrf(traf : Uint8Array) : Uint8Array|undefined {
     return readUuid(traf, 0xD4807EF2, 0XCA394695, 0X8E5426CB, 0X9E46A79F);
-  },
-
-  /**
-   * @param {Uint8Array} buff
-   * @returns {Uint8Array|null}
-   */
-  mdat(buff : Uint8Array) : Uint8Array|null {
-    return findAtom(buff, 0x6D646174 /* "mdat" */);
   },
 };
 
@@ -888,8 +841,8 @@ function createInitSegment(
 
 // TODO
 export default {
-  getMdat: reads.mdat,
-  getTraf: reads.traf,
+  getMdat: getMDAT,
+  getTraf: getTRAF,
 
   /**
    * @param {Uint8Array} traf

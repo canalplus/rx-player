@@ -25,7 +25,7 @@ import { Observable } from "rxjs/Observable";
 export default function tryCatch<T, I>(
   func : (args? : T) => Observable<I>,
   args? : T
-) : Observable<I>|Observable<any> {
+) : Observable<I>|Observable<never> {
   try {
     return func(args);
   } catch (e) {
