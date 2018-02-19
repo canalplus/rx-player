@@ -216,14 +216,14 @@ export default class Manifest {
    * @param {Period} period
    * @returns {Period|undefined}
    */
-  getPeriodAfter(period : Period) : Period|undefined {
+  getPeriodAfter(period : Period) : Period|null {
     const endOfPeriod = period.end;
     if (endOfPeriod == null) {
       return period;
     }
     return this.periods.find(_period => {
       return _period.end == null || endOfPeriod < _period.end;
-    });
+    }) || null;
   }
 
   /**

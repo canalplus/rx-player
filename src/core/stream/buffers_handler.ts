@@ -53,6 +53,7 @@ import SegmentBookkeeper from "./segment_bookkeeper";
 import EVENTS, {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
+  ICompletedBufferEvent,
   IEndOfStreamEvent,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
@@ -173,12 +174,10 @@ export default function BuffersHandler(
     const streamHasEnded$ =
       Observable
         .combineLatest(
-          buffersArray.map((obs) => obs.filter((evt) => evt.type === "last-full")
+          buffersArray.map((obs) => obs
+            .filter((evt) => evt.type === "completed")
         ))
-        .mapTo({
-          type: "end-of-stream",
-          value: undefined,
-        });
+        .mapTo(EVENTS.endOfStream());
 
   const activePeriod$ : Observable<Period> =
     ActivePeriodEmitter(addPeriodBuffer$, removePeriodBuffer$)
@@ -207,7 +206,7 @@ export default function BuffersHandler(
   function manageEveryBuffers(
     bufferType : SupportedBufferTypes,
     basePeriod : Period
-  ) : Observable<IMultiplePeriodBuffersEvent> {
+  ) : Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent> {
     /**
      * Keep a PeriodList for cases such as seeking ahead/before the
      * buffers already created.
@@ -315,7 +314,7 @@ export default function BuffersHandler(
     bufferType : SupportedBufferTypes,
     basePeriod : Period,
     destroy$ : Observable<void>
-  ) : Observable<IMultiplePeriodBuffersEvent> {
+  ) : Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent> {
     log.info("creating new Buffer for", bufferType, basePeriod);
 
     /**
@@ -336,8 +335,6 @@ export default function BuffersHandler(
      * @type {Subject}
      */
     const destroyNextBuffers$ = new Subject<void>();
-
-    const lastBufferCreated$ = new Subject<void>();
 
     /**
      * Emit when the current position goes over the end of the current buffer.
@@ -361,7 +358,6 @@ export default function BuffersHandler(
         const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
         if (!nextPeriod || nextPeriod === basePeriod) {
-          lastBufferCreated$.next();
           return Observable.empty();
         }
         return manageConsecutivePeriodBuffers(
@@ -394,10 +390,7 @@ export default function BuffersHandler(
 
     const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$)
       .do(({ type }) => {
-        if (type === "full") {
-          // current buffer is full, create the next one if not
-          createNextBuffers$.next();
-        } else if (type === "segments-queued") {
+        if (type === "segments-queued") {
           // current buffer is active, destroy next buffer if created
           destroyNextBuffers$.next();
         }
@@ -428,18 +421,24 @@ export default function BuffersHandler(
           .filter((evt) => evt.type === "full")
           .take(1);
       })
-      .withLatestFrom(lastBufferCreated$.take(1))
-      .mapTo({
-        type: "last-full",
-        value : bufferType,
-      });
+      .filter(() => {
+        const periodAfter =
+          manifest.getPeriodAfter(basePeriod);
+
+        if(periodAfter){
+          createNextBuffers$.next();
+        }
+
+        return periodAfter === null;
+      })
+      .mapTo(EVENTS.completed(bufferType));
 
     return Observable.merge(
       currentBuffer$,
       nextPeriodBuffer$,
       lastPeriodBuffer$,
       destroyAll$.ignoreElements()
-    ) as Observable<IMultiplePeriodBuffersEvent>;
+    ) as Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent>;
   }
 
   /**

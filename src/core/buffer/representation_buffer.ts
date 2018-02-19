@@ -78,17 +78,6 @@ export interface IBufferFullEvent {
   };
 }
 
-// Emit when the buffer from last period is full
-export interface ILastBufferFullEvent {
-  type: "last-full";
-  value : {
-    wantedRange : {
-      start : number;
-      end : number;
-    };
-  };
-}
-
 // Emit when segments are being queued for download
 // The Buffer emits this message just before downloading new segments
 export interface IBufferActiveEvent {
@@ -167,7 +156,6 @@ export type IRepresentationBufferEvent<T> =
   INeedingManifestRefreshEvent |
   IDiscontinuityEvent |
   IBufferActiveEvent |
-  ILastBufferFullEvent |
   IBufferFullEvent;
 
 // For internal use. Buffer statuses.
@@ -175,7 +163,6 @@ type IRepresentationBufferStatus =
   IBufferActiveEvent |
   IBufferFullEvent |
   IIdleBufferEvent |
-  ILastBufferFullEvent |
   IWaitingBufferEvent;
 
 const { BITRATE_REBUFFERING_RATIO } = config;

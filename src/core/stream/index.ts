@@ -16,14 +16,13 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
+import config from "../../config";
 import log from "../../utils/log";
 import { retryableFuncWithBackoff } from "../../utils/retry";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
-import {
-  onSourceOpen$,
- } from "../../compat/events";
+import { onSourceOpen$ } from "../../compat/events";
 import {
   CustomError,
   isKnownError,
@@ -74,8 +73,6 @@ import EVENTS, {
 } from "./stream_events";
 import handleInitialVideoEvents from "./video_events";
 
-import config from "../../config";
-
 function getManifestPipelineOptions(
   networkConfig: {
     manifestRetry? : number;
@@ -120,7 +117,6 @@ export interface IStreamOptions {
   transport : ITransportPipelines<any, any, any, any, any>;
   url : string;
   videoElement : HTMLMediaElement;
-  stopAtEnd : boolean;
 }
 
 /**
@@ -284,7 +280,10 @@ export default function Stream({
    * @returns {Observable}
    */
   function startStream(mediaSource : MediaSource) {
-    return Observable.combineLatest(fetchManifest(url), onSourceOpen$(mediaSource).take(1))
+    return Observable.combineLatest(
+      fetchManifest(url),
+      onSourceOpen$(mediaSource).take(1)
+    )
       .mergeMap(([manifest]) => initialize(mediaSource, manifest));
   }
 
@@ -384,7 +383,7 @@ export default function Stream({
     );
 
     /**
-     * MediaSource.prototype.endOfStream may throw an exception is one or more
+     * MediaSource.prototype.endOfStream may throw an exception if one or more
      * source buffers are being updated. This function allows to handle these exceptions
      * and direclty retry the end of stream.
      *
@@ -474,7 +473,6 @@ export default function Stream({
       buffers$,
       emeManager$,
       mediaErrorHandler$,
-      endOfStream$,
       speedManager$,
       stallingManager$
     ).finally(() => {

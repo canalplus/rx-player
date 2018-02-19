@@ -26,10 +26,8 @@ import "rxjs/add/observable/never";
 import "rxjs/add/observable/of";
 import "rxjs/add/observable/throw";
 import "rxjs/add/observable/timer";
-import "rxjs/add/observable/zip";
 
 import "rxjs/add/operator/catch";
-import "rxjs/add/operator/combineLatest";
 import "rxjs/add/operator/concat";
 import "rxjs/add/operator/concatAll";
 import "rxjs/add/operator/concatMap";
@@ -58,7 +56,6 @@ import "rxjs/add/operator/switchMapTo";
 import "rxjs/add/operator/take";
 import "rxjs/add/operator/takeUntil";
 import "rxjs/add/operator/timeout";
-import "rxjs/add/operator/withLatestFrom";
 
 import logger from "./utils/log";
 

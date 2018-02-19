@@ -282,7 +282,7 @@ function parseConstructorOptions(
 
   if (options.stopAtEnd == null) {
     stopAtEnd = true;
-  } else if(typeof options.stopAtEnd === "boolean"){
+  } else if (typeof options.stopAtEnd === "boolean") {
     stopAtEnd = options.stopAtEnd;
   } else {
     throw new Error("Invalid stopAtEnd parameter. Should be a boolean.");
