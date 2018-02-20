@@ -193,23 +193,28 @@ Can be either one of those strings:
 State chart:
 
 ```
-    -------------
-    |  STOPPED  | <-----------------+
-    -------------                   | stop() or "error" event
+    +---------+
+    | STOPPED | <-------------------+
+    +---------+                     | stop() or "error" event
        |                            |
--------| loadVideo() -------------------------------------------------------
-|      v                           -----------------------                 |
-|  -----------     ------------  play()  -----------     |    -----------  |
-|  | LOADING | --> |  LOADED  | ---|---> | PLAYING | ----|--> |  ENDED  |  |
-|  -----------     ------------ autoPlay -----------     |    -----------  |
-|                                  |         | ^         |                 |
-|           ---------------        |  play() | | pause() |                 |
-|           |  BUFFERING  | -----> |         v |         |                 |
-|           |     or      |        |     -----------     |                 |
-|           |   SEEKING   | <----- |     | PAUSED  |     |                 |
-|           ---------------        |     -----------     |                 |
-|                                  -----------------------                 |
-----------------------------------------------------------------------------
++------| loadVideo() ----------------------------------------------------+
+|      |                           +---------------------+               |
+|      V                           |                     |               |
+|  +---------+     +--------+   play()   +---------+     |    +-------+  |
+|  | LOADING | --> | LOADED | -----|---> | PLAYING | ----|--> | ENDED |  |
+|  +---------+     +--------+  autoPlay  +---------+     |    +-------+  |
+|                                  |         | ^         |               |
+|       +-----------+              |         | |         |               |
+|       | BUFFERING |  <-------->  |  play() | | pause() |               |
+|       +-----------+              |         | |         |               |
+|                                  |         | |         |               |
+|       +---------+    seekTo()    |         V |         |               |
+|       |         |  <-----------  |     +--------+      |               |
+|       | SEEKING |                |     | PAUSED |      |               |
+|       |         |  ----------->  |     +--------+      |               |
+|       +---------+                |                     |               |
+|                                  +---------------------+               |
++------------------------------------------------------------------------+
 ```
 
 #### Example
@@ -368,7 +373,7 @@ _return value_: ``string|undefined``
 
 Returns the URL of the downloaded manifest.
 
-Returns undefined if no content is loaded yet.
+Returns ``undefined`` if no content is loaded yet.
 
 ### <a name="meth-isFullscreen"></a>isFullscreen
 
@@ -390,19 +395,23 @@ The different bitrates available for the current audio adaptation, in bits per s
 
 ### <a name="meth-getVideoBitrate"></a>getVideoBitrate
 
-_return value_: ``Number``
+_return value_: ``Number|undefined``
 
 Returns the video bitrate of the last downloaded video segment, in bits per seconds.
 
+Returns ``undefined`` if no content is loaded.
+
 ### <a name="meth-getAudioBitrate"></a>getAudioBitrate
 
-_return value_: ``Number``
+_return value_: ``Number|undefined``
 
 Returns the audio bitrate of the last downloaded audio segment, in bits per seconds.
 
+Returns ``undefined`` if no content is loaded.
+
 ### <a name="meth-getMaxVideoBitrate"></a>getMaxVideoBitrate
 
-_return value_: ``Number``
+_return value_: ``Number|undefined``
 
 Returns the maximum set video bitrate to which switching is possible, in bits per seconds.
 
@@ -410,7 +419,7 @@ This only affects adaptive strategies (you can bypass this limit by calling ``se
 
 ### <a name="meth-getMaxAudioBitrate"></a>getMaxAudioBitrate
 
-_return value_: ``Number``
+_return value_: ``Number"undefined``
 
 Returns the maximum set audio bitrate to which switching is possible, in bits per seconds.
 
@@ -628,15 +637,17 @@ Each of the objects in the returned array have the following properties:
 
 ### <a name="meth-getAudioTrack"></a>getAudioTrack
 
-_returns_: ``Object``
+_returns_: ``Object|null|undefined``
 
-Get the audio track currently set.
+Get the audio track currently set. ``null`` if no audio track is enabled right now.
 
 The track is an object with the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for setting the track via ``setAudioTrack``.
   - ``language`` (``string``): The language the audio track is in, as set in the manifest.
   - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``audioDescription`` (``Boolean``): Whether the track is an audio description (for the visually impaired or not).
+
+``undefined`` if no content has been loaded yet.
 
 ### <a name="meth-getTextTrack"></a>getTextTrack
 
@@ -649,6 +660,8 @@ The track is an object with the following properties:
   - ``language`` (``string``): The language the text track is in, as set in the manifest.
   - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-3 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for the hard of hearing or not.
+
+``undefined`` if no content has been loaded yet.
 
 ### <a name="meth-setAudioTrack"></a>setAudioTrack
 
@@ -668,25 +681,33 @@ Deactivate the current text track, if one.
 
 ### <a name="meth-getManifest"></a>getManifest
 
-_return value_: ``Manifest``
+_return value_: ``Manifest|null``
 
 Returns the current loaded Manifest if one. A manifest object structure is relatively complex and is described in the [Manifest Object structure page](./manifest.md).
 
+``null`` if the player is either stopped or not loaded.
+
+The manifest will be available before the player reaches the ``"LOADED"`` state.
+
 ### <a name="meth-getCurrentAdaptations"></a>getCurrentAdaptations
 
-_return value_: ``Object``
+_return value_: ``Object|null``
 
-Returns the adaptations being loaded per type if a manifest is loaded. The returned object will have at most four keys for each type ("video", "audio", "text" and "image") which will each contain an array of Adaptation Objects.
+Returns the Adaptations being loaded per type if a manifest is loaded. The returned object will have at most a key for each type ("video", "audio", "text" and "image") which will each contain an array of Adaptation Objects.
 
 An Adaptation object structure is relatively complex and is described in the [Manifest Object structure page](./manifest.md#adaptation).
 
+``null`` if the current Adaptations are not known yet.
+
 ### <a name="meth-getCurrentRepresentations"></a>getCurrentRepresentations
 
-_return value_: ``Object``
+_return value_: ``Object|null``
 
-Returns the representations being loaded per type if a manifest is loaded. The returned object will have at most four keys for each type ("video", "audio", "text" and "image") which will each contain an array of Representation Objects.
+Returns the Representations being loaded per type if a manifest is loaded. The returned object will have at most a key for each type ("video", "audio", "text" and "image") which will each contain an array of Representation Objects.
 
 An Representation object structure is relatively complex and is described in the [Manifest Object structure page](./manifest.md#representation).
+
+``null`` if the current Representations are not known yet.
 
 ### <a name="meth-dispose"></a>dispose
 
@@ -734,15 +755,13 @@ Returns in seconds the difference between:
 
 _return value_: ``Number``
 
-Returns the current video normal playback rate (speed when playing). ``1`` for normal playbac , ``2`` when playing *2, etc.
+Returns the current video normal playback rate (speed when playing). ``1`` for normal playback, ``2`` when playing *2, etc.
 
 ### <a name="meth-setPlaybackRate"></a>setPlaybackRate
 
 _arguments_: ``Number``
 
 Updates the "normal" (when playing) playback rate for the video.
-
-/!\ Our adaptive strategies do not, for the moment, take into account the playback rate.
 
 ### <a name="meth-getCurrentKeySystem"></a>getCurrentKeySystem
 
@@ -762,7 +781,7 @@ The returned array follows the usual image playlist structure, defined [here](./
 
 _return value_: ``Number|null``
 
-The minimum seekable player position. Null if no content is loaded.
+The minimum seekable player position. ``null`` if no content is loaded.
 
 This is useful for live contents, where server-side buffer size are often not
 infinite. This method allows thus to seek at the earliest possible time.
@@ -781,7 +800,7 @@ player.seekTo({
 
 _return value_: ``Number|null``
 
-The maximum seekable player position. Null if no content is loaded.
+The maximum seekable player position. ``null`` if no content is loaded.
 
 This is useful for live contents, where the buffer end updates continously.
 This method allows thus to seek directly at the live edge of the content.
