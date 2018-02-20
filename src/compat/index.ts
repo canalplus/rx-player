@@ -107,13 +107,15 @@ function onSourceOpen$(
  * @param {HTMLMediaElement} videoElement
  * @returns {Observable}
  */
-function canSeek(
+function hasLoadedMetadata(
   videoElement : HTMLMediaElement
-) : Observable<Event>|Observable<null> {
+) : Observable<void> {
   if (videoElement.readyState >= READY_STATES.HAVE_METADATA) {
-    return Observable.of(null);
+    return Observable.of(undefined);
   } else {
-    return events.onLoadedMetadata$(videoElement).take(1);
+    return events.onLoadedMetadata$(videoElement)
+      .take(1)
+      .mapTo(undefined);
   }
 }
 
@@ -124,11 +126,13 @@ function canSeek(
  */
 function canPlay(
   videoElement : HTMLMediaElement
-) : Observable<Event>|Observable<null> {
+) : Observable<void> {
   if (videoElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
-    return Observable.of(null);
+    return Observable.of(undefined);
   } else {
-    return onEvent<Event>(videoElement, "canplay").take(1);
+    return onEvent<Event>(videoElement, "canplay")
+      .take(1)
+      .mapTo(undefined);
   }
 }
 
@@ -317,7 +321,7 @@ export {
   VTTCue_,
   addTextTrack,
   canPlay,
-  canSeek,
+  hasLoadedMetadata,
   clearVideoSrc,
   events,
   exitFullscreen,
