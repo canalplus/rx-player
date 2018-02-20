@@ -293,15 +293,14 @@ function createSessionAndKeyRequest(
   sessionType: MediaKeySessionType,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream,
-  mksConfig: MediaKeySystemConfiguration
+  errorStream: ErrorStream
 ): Observable<Event|ISessionEvent> {
   const {
     session,
     sessionEvents,
   } = createSession(mediaKeys, sessionType, keySystem, initData, errorStream);
 
-  $loadedSessions.add(initData, session, sessionEvents, mksConfig);
+  $loadedSessions.add(initData, session, sessionEvents);
   log.debug("eme: generate request", initDataType, initData);
 
   const generateRequest = castToObservable(
@@ -337,8 +336,7 @@ function createSessionAndKeyRequestWithRetry(
   sessionType: MediaKeySessionType,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream,
-  mksConfig: MediaKeySystemConfiguration
+  errorStream: ErrorStream
 ): Observable<Event|ISessionEvent> {
   return createSessionAndKeyRequest(
     mediaKeys,
@@ -346,8 +344,7 @@ function createSessionAndKeyRequestWithRetry(
     sessionType,
     initDataType,
     initData,
-    errorStream,
-    mksConfig
+    errorStream
   )
     .catch((error) => {
       if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
@@ -368,7 +365,7 @@ function createSessionAndKeyRequestWithRetry(
         .mergeMap(() =>
           createSessionAndKeyRequest(
             mediaKeys, keySystem, sessionType, initDataType,
-            initData, errorStream, mksConfig
+            initData, errorStream
           )
         );
     });
@@ -390,8 +387,7 @@ function createPersistentSessionAndLoad(
   storedSessionId: string,
   initDataType: string,
   initData: Uint8Array,
-  errorStream: ErrorStream,
-  mksConfig: MediaKeySystemConfiguration
+  errorStream: ErrorStream
 ): Observable<Event|ISessionEvent> {
   log.debug("eme: load persisted session", storedSessionId);
 
@@ -405,7 +401,7 @@ function createPersistentSessionAndLoad(
     .catch(() => Observable.of(false))
     .mergeMap((success) => {
       if (success) {
-        $loadedSessions.add(initData, session, sessionEvents, mksConfig);
+        $loadedSessions.add(initData, session, sessionEvents);
         $storedSessions.add(initData, session);
         return sessionEvents
           .startWith(
@@ -432,8 +428,7 @@ function createPersistentSessionAndLoad(
           sessionType,
           initDataType,
           initData,
-          errorStream,
-          mksConfig
+          errorStream
         ).startWith(
           createSessionEvent("loaded-session-failed", session, { storedSessionId })
         );
@@ -461,15 +456,10 @@ function manageSessionCreation(
 ): Observable<MediaKeys|ISessionEvent|Event> {
   return Observable.defer(() => {
     // reuse currently loaded sessions without making a new key request
-    const {
-      config,
-      session: loadedSession,
-    } = $loadedSessions.getConfigForInitData(initData);
+    const loadedSession= $loadedSessions.get(initData);
     if (
       loadedSession &&
-      loadedSession.sessionId &&
-      config &&
-      compareMksConfigurations(config, mksConfig)
+      loadedSession.sessionId
     ) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
       return Observable.of(createSessionEvent("reuse-session", loadedSession));
@@ -489,17 +479,24 @@ function manageSessionCreation(
       if (storedEntry) {
         return createPersistentSessionAndLoad(
           mediaKeys, keySystem, storedEntry.sessionId, initDataType,
-          initData, errorStream, mksConfig);
+          initData, errorStream);
       }
     }
 
     // we have a fresh session without persisted informations and need
     // to make a new key request that we will associate to this session
     return createSessionAndKeyRequestWithRetry(
-      mediaKeys, keySystem, sessionType, initDataType, initData, errorStream, mksConfig);
+      mediaKeys, keySystem, sessionType, initDataType, initData, errorStream);
   });
 }
 
+/**
+ * Compare MediaKeys configuration.
+ * Return true if the entire mediaKey objects contain the same values.
+ * @param {Object} A_config
+ * @param {Object} B_config
+ * @returns {boolean}
+ */
 function compareMksConfigurations(
   A_config: MediaKeySystemConfiguration,
   B_config: MediaKeySystemConfiguration

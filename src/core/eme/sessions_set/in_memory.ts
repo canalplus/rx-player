@@ -29,7 +29,6 @@ interface ISessionData {
   initData : number;
   session : IMediaKeySession|MediaKeySession;
   eventSubscription : Subscription;
-  mksConfig : MediaKeySystemConfiguration;
 }
 
 /**
@@ -85,8 +84,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   add(
     initData : Uint8Array|number[]|number,
     session : MediaKeySession,
-    sessionEvents : ConnectableObservable<Event|ISessionEvent>,
-    mksConfig: MediaKeySystemConfiguration
+    sessionEvents : ConnectableObservable<Event|ISessionEvent>
   ) : void {
     const hash = hashInitData(initData);
     const currentSession = this.get(hash);
@@ -99,7 +97,6 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
       session,
       initData: hash,
       eventSubscription,
-      mksConfig,
     };
     log.debug("eme-mem-store: add session", entry);
     this._entries.push(entry);
@@ -136,21 +133,6 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     this._entries.splice(idx, 1);
     eventSubscription.unsubscribe();
     return session;
-  }
-
-  getConfigForInitData(initData : Uint8Array) {
-    const entry = this
-      .find((e) => e.initData === hashInitData(initData));
-    if (!entry) {
-      return {
-        config: null,
-        session: null,
-      };
-    }
-    return {
-      config: entry.mksConfig,
-      session: entry.session,
-    };
   }
 
   /**

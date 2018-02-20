@@ -43,6 +43,10 @@ function setMediaKeysObs(
   instceInfos: IInstanceInfo
 ) : Observable<IMockMediaKeys|MediaKeys> {
   return Observable.defer(() => {
+    if (video.mediaKeys === mediaKeys) {
+      return Observable.of(mediaKeys);
+    }
+
     const {
       $videoElement,
       $mediaKeys,
