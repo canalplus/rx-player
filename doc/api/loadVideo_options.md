@@ -4,12 +4,12 @@
 
   - [Overview](#overview)
   - [Properties](#prop)
-    - [url](#prop-url)
     - [transport](#prop-transport)
-    - [transportOptions](#prop-transportOptions)
+    - [url](#prop-url)
     - [keySystems](#prop-keySystems)
     - [autoPlay](#prop-autoPlay)
     - [startAt](#prop-startAt)
+    - [transportOptions](#prop-transportOptions)
     - [defaultAudioTrack](#prop-defaultAudioTrack)
     - [defaultTextTrack](#prop-defaultTextTrack)
     - [textTrackMode](#prop-textTrackMode)
@@ -27,8 +27,8 @@ These options take the form of a single objects with multiple properties, like t
 ```js
 // Setting the only two mandatory keys for a clear content (without DRM).
 const options = {
-  url: myManifestUrl,
-  transport: "dash"
+  transport: "dash",
+  url: myManifestUrl
 };
 
 player.loadVideo(options);
@@ -36,36 +36,27 @@ player.loadVideo(options);
 
 ## <a name="overview"></a>Properties
 
-### <a name="prop-url"></a>url
-
-_type_: ``string|undefined``
-
-Url of the Smooth or DASH manifest.
-
-This property is mandatory.
-
 ### <a name="prop-transport"></a>transport
 
 _type_: ``string|undefined``
 
-The transport used for this content. Can be either:
+The transport protocol used for this content.
+
+Can be either:
+
   - ``"dash"`` - for DASH streams
+
   - ``"smooth"`` - for Microsoft Smooth Streaming streams
 
 This property is mandatory.
 
-### <a name="prop-transportOptions"></a>transportOptions
+### <a name="prop-url"></a>url
 
-_type_: ``Object|undefined``
+_type_: ``string|undefined``
 
-Options concerning the "transport".
-That is, the part of the code:
-  - performing manifest and segment requests
-  - parsing the manifest
-  - parsing/updating/creating segments
+The URL to the Smooth or DASH manifest.
 
-This Object can contain multiple properties. Only those documented here are considered stable:
-  - ``segmentLoader`` (``Function``): defines a custom segment loader. More info on it can be found [here](./plugins.md#segmentLoader).
+This property is mandatory.
 
 ### <a name="prop-keySystems"></a>keySystems
 
@@ -215,6 +206,20 @@ player.loadVideo({
 })
 ```
 
+### <a name="prop-transportOptions"></a>transportOptions
+
+_type_: ``Object|undefined``
+
+Options concerning the "transport".
+
+That is, the part of the code:
+  - performing manifest and segment requests
+  - parsing the manifest
+  - parsing/updating/creating segments
+
+This Object can contain multiple properties. Only those documented here are considered stable:
+  - ``segmentLoader`` (``Function``): defines a custom segment loader. More info on it can be found [here](./plugins.md#segmentLoader).
+
 ### <a name="prop-defaultAudioTrack"></a>defaultAudioTrack
 
 _type_: ``Object|string|undefined``
@@ -237,7 +242,6 @@ const defaultAudioTrack = "fra";
 ```
 
 If the corresponding audio track is not found, the first track defined will be taken instead.
-
 
 ### <a name="prop-defaultTextTrack"></a>defaultTextTrack
 
