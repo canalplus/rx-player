@@ -15,9 +15,9 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { getBackedoffDelay } from "./backoff";
-
 import { CustomError } from "../errors";
+import { getBackedoffDelay } from "./backoff";
+import log from "./log";
 
 /**
  * Simple debounce implementation.
@@ -124,6 +124,50 @@ function retryWithBackoff<T>(
 }
 
 /**
+ * Retry the given function (if it triggers an error) with an exponential
+ * backoff.
+ * The backoff behavior can be tweaked through the options given.
+ *
+ * @param {function} func
+ * @param {Number} totalRetry - The amount of time we should retry. 0
+ * means no retry, 1 means a single retry, Infinity means infinite retry etc.
+ * If the function still fails after this number of retry, the error will
+ * be throwed.
+ * @param {Number} retryDelay - The initial delay, in ms.
+ * Then, this delay will be multiplied by 2.
+ * @param {Function} [shouldRetry] - Function which will receive the
+ * error each time it fails, and should return a boolean. If this
+ * boolean is false, the error will be directly thrown (without anymore retry).
+ * @param {Function} [options.onRetry] - Function which will be triggered at
+ * each retry.
+ * @returns {function}
+ */
+function retryFuncWithBackoff(
+  func: () => void,
+  totalRetry: number,
+  retryDelay: number,
+  shouldRetry: boolean,
+  onRetry?: () => void
+) {
+  try {
+    return func();
+  } catch(error) {
+    if(onRetry){
+      return onRetry();
+    }
+    if (!shouldRetry || totalRetry <= 1) {
+        throw error;
+    } else {
+      log.warn(
+        "Error calling "+func+". Retrying."
+      );
+      setTimeout(() =>
+        retryFuncWithBackoff(func, totalRetry - 1, retryDelay*2, true), retryDelay);
+    }
+  }
+}
+
+/**
  * Same than retryWithBackoff, only with a function returning an observable
  * instead of an observable.
  * @param {Function} fn - Function returning an Observable which
@@ -186,5 +230,6 @@ function retryableFuncWithBackoff<T, I>(
 export {
   retryWithBackoff,
   retryableFuncWithBackoff,
+  retryFuncWithBackoff,
   CustomError,
 };

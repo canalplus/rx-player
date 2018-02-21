@@ -171,13 +171,20 @@ export default function BuffersHandler(
         }).share();
     });
 
-    const streamHasEnded$ =
-      Observable
-        .combineLatest(
-          buffersArray.map((obs) => obs
-            .filter((evt) => evt.type === "completed")
-        ))
-        .mapTo(EVENTS.endOfStream());
+  const streamHasEnded$ =
+    Observable
+      .combineLatest(
+        ...buffersArray.map((obs) => obs
+          .filter((evt) =>
+            evt.type === "completed" ||
+            evt.type === "periodBufferReady" ||
+            evt.type === "representationChange"
+      ))
+    ).filter((buffers) => {
+      const completed = buffers.filter((buffer) => buffer.type === "completed");
+      return completed.length === buffers.length;
+    })
+      .mapTo(EVENTS.endOfStream());
 
   const activePeriod$ : Observable<Period> =
     ActivePeriodEmitter(addPeriodBuffer$, removePeriodBuffer$)
@@ -234,6 +241,16 @@ export default function BuffersHandler(
     }
 
     /**
+     * Returns true if time is between start and end times from manifest.
+     * @param {number} time
+     */
+    function isInPlaybackTimeline(time : number) : boolean {
+      const head = manifest.periods[0];
+      const last = manifest.periods[manifest.periods.length - 1];
+      return time > head.start && time < (last.end || Infinity);
+    }
+
+    /**
      * Destroy the current set of consecutive buffers.
      * Used when the clocks goes out of the bounds of those, e.g. when the user
      * seeks.
@@ -244,7 +261,8 @@ export default function BuffersHandler(
 
     const restartBuffers$ = clock$
       .filter(({ currentTime, timeOffset }) =>
-        isOutOfPeriodList(timeOffset + currentTime)
+        isOutOfPeriodList(timeOffset + currentTime) &&
+        isInPlaybackTimeline(timeOffset + currentTime)
       )
       .take(1)
       .do(({ currentTime, timeOffset }) => {
@@ -255,27 +273,32 @@ export default function BuffersHandler(
       .mergeMap(({ currentTime, timeOffset }) => {
         const newInitialPeriod = manifest.getPeriodForTime(currentTime + timeOffset);
         if (newInitialPeriod == null) {
-          throw new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
-        }
-
+          const error = new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
+          errorStream.next(error);
+          return Observable.empty();
+        } else {
         // Note: For this to work, manageEveryBuffers should always emit the
         // "periodBufferReady" event for the new InitialPeriod synchronously
         return manageEveryBuffers(bufferType, newInitialPeriod);
+        }
       });
 
-    const currentBuffers$ = manageConsecutivePeriodBuffers(
-      bufferType,
-      basePeriod,
-      destroyCurrentBuffers
-    ).do((message) => {
-      if (message.type === "periodBufferReady") {
-        periodList.add(message.value.period);
-      } else if (message.type === "periodBufferCleared") {
-        periodList.removeFirst(message.value.period);
-      }
-    }).share(); // as always, with side-effects
+      const currentBuffers$ = manageConsecutivePeriodBuffers(
+        bufferType,
+        basePeriod,
+        destroyCurrentBuffers
+      ).do((message) => {
+        if (message.type === "periodBufferReady") {
+          periodList.add(message.value.period);
+        } else if (message.type === "periodBufferCleared") {
+          periodList.removeFirst(message.value.period);
+        }
+      }).share(); // as always, with side-effects
 
-    return Observable.merge(currentBuffers$, restartBuffers$);
+    return Observable.merge(
+      currentBuffers$,
+      restartBuffers$
+    ) as Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent>;
   }
 
   /**
@@ -390,7 +413,10 @@ export default function BuffersHandler(
 
     const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$)
       .do(({ type }) => {
-        if (type === "segments-queued") {
+        if (type === "full") {
+
+          createNextBuffers$.next();
+        } else if (type === "segments-queued") {
           // current buffer is active, destroy next buffer if created
           destroyNextBuffers$.next();
         }
@@ -401,9 +427,27 @@ export default function BuffersHandler(
      * Buffer for the current Period.
      * @type {Observable}
      */
-    const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent> =
+    const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent> =
       Observable.of(EVENTS.periodBufferReady(bufferType, basePeriod, adaptation$))
         .concat(periodBuffer$)
+        .exhaustMap((evt) => {
+          if (
+            evt.type === "periodBufferReady" ||
+            evt.type === "representationChange"
+          ) {
+            return Observable.of(evt)
+              .concat(periodBuffer$
+                .filter((_evt) => _evt.type === "full")
+                .take(1)
+                .filter(() => {
+                  const periodAfter = manifest.getPeriodAfter(basePeriod);
+                  return periodAfter === null;
+                })
+                .mapTo(EVENTS.completed(bufferType))
+              );
+          }
+          return Observable.of(evt);
+        })
         .takeUntil(killCurrentBuffer$)
         .concat(
           Observable.of(EVENTS.periodBufferCleared(bufferType, basePeriod))
@@ -412,31 +456,9 @@ export default function BuffersHandler(
             })
         );
 
-    const lastPeriodBuffer$ = currentBuffer$
-      .filter((evt) => {
-        return evt.type === "periodBufferReady" || evt.type === "representationChange";
-      })
-      .switchMap(() => {
-        return currentBuffer$
-          .filter((evt) => evt.type === "full")
-          .take(1);
-      })
-      .filter(() => {
-        const periodAfter =
-          manifest.getPeriodAfter(basePeriod);
-
-        if(periodAfter){
-          createNextBuffers$.next();
-        }
-
-        return periodAfter === null;
-      })
-      .mapTo(EVENTS.completed(bufferType));
-
     return Observable.merge(
       currentBuffer$,
       nextPeriodBuffer$,
-      lastPeriodBuffer$,
       destroyAll$.ignoreElements()
     ) as Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent>;
   }
