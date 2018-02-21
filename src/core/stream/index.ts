@@ -18,7 +18,10 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import config from "../../config";
 import log from "../../utils/log";
-import { retryableFuncWithBackoff } from "../../utils/retry";
+import {
+  retryableFuncWithBackoff,
+  retryFuncWithBackoff
+} from "../../utils/retry";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
@@ -380,7 +383,23 @@ export default function Stream({
         textTrackOptions,
       },
       warning$
-    );
+    ).do((evt) => {
+      if (
+        evt.type === "end-of-stream"
+      ){
+        log.info("Triggering end of stream.");
+        retryFuncWithBackoff(
+          () => mediaSource.endOfStream(),
+          10,
+          100,
+          true,
+          () => {
+            if(mediaSource.readyState === "ended"){
+              return;
+          }
+        });
+      }
+    });
 
     /**
      * MediaSource.prototype.endOfStream may throw an exception if one or more
@@ -399,28 +418,19 @@ export default function Stream({
         _mediaSource.endOfStream();
         return;
       } catch(error) {
+        if(_mediaSource.readyState === "ended"){
+          return;
+        }
         if (countDown <= 1) {
-          throw error;
+            throw error;
         } else {
           log.warn(
             "Error during endOfStream() call. Retrying "+(countDown - 1)+" times."
           );
-          setTimeout(() => triggerEndOfStream(_mediaSource, countDown - 1), 100);
+          setTimeout(() => triggerEndOfStream(_mediaSource, countDown - 1), 500);
         }
       }
     }
-
-    const endOfStream$ = handledBuffers$
-      .filter((evt) => {
-        return (
-          evt.type === "end-of-stream" &&
-          mediaSource.readyState === "open"
-        );
-      })
-      .do(() => {
-        log.info("Triggering end of stream.");
-        triggerEndOfStream(mediaSource, 5);
-      });
 
     /**
      * Add management of events linked to live Playback.
