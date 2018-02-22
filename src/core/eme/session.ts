@@ -31,7 +31,7 @@ import arrayIncludes from "../../utils/array-includes";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
-import { retryWithBackoff } from "../../utils/retry";
+import { retryObsWithBackoff } from "../../utils/retry";
 import tryCatch from "../../utils/rx-tryCatch";
 
 import {
@@ -204,7 +204,7 @@ function sessionEventsHandler(
           });
       });
 
-      return retryWithBackoff(getLicense, getLicenseRetryOptions);
+      return retryObsWithBackoff(getLicense, getLicenseRetryOptions);
     });
 
   const sessionUpdates: Observable<Event|ISessionEvent>

@@ -47,7 +47,6 @@ import {
   onEnded$,
   onFullscreenChange$,
   onPlayPause$,
-  onSeeked$,
   onTextTrackChanges$,
   videoWidth$,
 } from "../../compat/events";
@@ -168,8 +167,11 @@ class Player extends EventEmitter<any> {
   private _priv_streamLock$ : BehaviorSubject<boolean>;
 
   /**
-   * Emit false when the player is into a "paused" state, true when it goes into
-   * a "playing" state.
+   * Changes on "play" and "pause" events from the media elements.
+   * Switches to ``true`` whent the "play" event was the last received.
+   * Switches to ``false`` whent the "pause" event was the last received.
+   *
+   * ``false`` if no such event was received for the current loaded content.
    * @private
    * @type {ReplaySubject}
    */
@@ -706,8 +708,7 @@ class Player extends EventEmitter<any> {
      */
     const stalled$ = stream
       .filter(({ type }) => type === "stalled")
-      .map(x => x.value)
-      .startWith(null) as Observable<null|{ state : string}> ;
+      .map(x => x.value)  as Observable<null|{ state : string }>;
 
     /**
      * Emit when the stream is considered "loaded".
@@ -719,46 +720,47 @@ class Player extends EventEmitter<any> {
       .share();
 
     /**
+     * Emit when the media element emits an "ended" event.
+     * @type {Observable}
+     */
+    const endedEvent$ = onEnded$(videoElement);
+
+    /**
      * Emit the player state as it changes.
      * TODO only way to call setPlayerState?
      * @type {Observable.<string>}
      */
     const stateChanges$ = loaded.mapTo(PLAYER_STATES.LOADED)
       .concat(
-        Observable.merge(
-          Observable.combineLatest(this._priv_playing$, stalled$)
+          Observable.combineLatest(
+            this._priv_playing$,
+            stalled$.startWith(null),
+            endedEvent$.startWith(null)
+          )
             .takeUntil(this._priv_stopCurrentContent$)
-             .map(([isPlaying, stalledStatus]) => {
-               if (stalledStatus) {
-                 switch (stalledStatus.state) {
-                   case "seeking":
-                     return PLAYER_STATES.SEEKING;
-                   default:
+            .map(([isPlaying, stalledStatus]) => {
+              if (videoElement.ended) {
+                return PLAYER_STATES.ENDED;
+              }
+
+              if (stalledStatus) {
+                switch (stalledStatus.state) {
+                  case "seeking":
+                    return PLAYER_STATES.SEEKING;
+                  default:
                     return PLAYER_STATES.BUFFERING;
                 }
               }
               return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
             })
-            .distinctUntilChanged(),
-          onSeeked$(videoElement)
-            .map(() => {
-              const isPlaying = (
-                !videoElement.paused &&
-                !videoElement.ended &&
-                !videoElement.seeking
-              );
-              return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
-            }),
-          onEnded$(videoElement)
-            .mapTo(PLAYER_STATES.ENDED)
-        )
-          // begin emitting those only when the content start to play
-          .skipUntil(
-            this._priv_playing$.filter(isPlaying => isPlaying)
-          )
+
+            // begin emitting those only when the content start to play
+            .skipUntil(
+              this._priv_playing$.filter(isPlaying => isPlaying)
+            )
       )
-      .distinctUntilChanged()
-      .startWith(PLAYER_STATES.LOADING);
+        .distinctUntilChanged()
+        .startWith(PLAYER_STATES.LOADING);
 
     /**
      * Emit true each time the player goes into a "play" state.

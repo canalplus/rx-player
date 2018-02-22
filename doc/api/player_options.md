@@ -214,15 +214,14 @@ _type_: ``Boolean``
 
 _defaults_: ``true``
 
-If some cases, you may want the player to stop current playback when content is ended.
-At this point, the player is idle, and the content is no more loaded.
+By default, the player automatically _unload_ the content once it reaches its end (the player goes to the ``"ENDED"`` state).
 
-If players doesn't stop at end, it means that current content is still loaded. 
-You can perform trickmode.
+In that case, the only way to play the content again is to (re-)call the ``loadVideo`` API, which will trigger another download of the manifest and segments.
 
-To activate this feature, set it to ``true``.
+If you want to be able to seek back in the content after it ended, you may want to deactivate this behavior. To do so, set ``stopAtEnd`` to ``false``.
+
 ```js
 const player = Player({
-  stopAtEnd: true
+  stopAtEnd: false
 });
 ```

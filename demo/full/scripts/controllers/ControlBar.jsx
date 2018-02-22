@@ -13,12 +13,10 @@ const ControlBar = ({
   currentTime,
   duration,
   hasLoadedContent,
-  hasEnded,
   isLive,
   player,
-  stopAtEnd,
 }) => {
-  const displayControls = !stopAtEnd || (hasLoadedContent && !hasEnded);
+  const displayControls = hasLoadedContent;
 
   let positionElement;
   if (!displayControls) {
@@ -35,7 +33,7 @@ const ControlBar = ({
   return (
     <div className="controls-bar-container">
       { (!displayControls) ?
-          null : <Progressbar player={player} />
+        null : <Progressbar player={player} />
       }
       <div className="controls-bar">
         <PlayPauseButton
@@ -69,8 +67,6 @@ export default withModulesState({
     currentTime: "currentTime",
     duration: "duration",
     hasLoadedContent: "hasLoadedContent",
-    hasEnded: "hasEnded",
     isLive: "isLive",
-    stopAtEnd: "stopAtEnd",
   },
 })(ControlBar);

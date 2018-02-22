@@ -383,54 +383,20 @@ export default function Stream({
         textTrackOptions,
       },
       warning$
-    ).do((evt) => {
-      if (
-        evt.type === "end-of-stream"
-      ){
+    ).mergeMap((evt) => {
+      if (evt.type === "end-of-stream") {
         log.info("Triggering end of stream.");
-        retryFuncWithBackoff(
+        return retryFuncWithBackoff(
           () => mediaSource.endOfStream(),
-          10,
-          100,
-          true,
-          () => {
-            if(mediaSource.readyState === "ended"){
-              return;
+          {
+            totalRetry: 10,
+            retryDelay: 100,
+            shouldRetry: () => mediaSource.readyState !== "ended",
           }
-        });
+        ).ignoreElements() as Observable<never>;
       }
+      return Observable.of(evt);
     });
-
-    /**
-     * MediaSource.prototype.endOfStream may throw an exception if one or more
-     * source buffers are being updated. This function allows to handle these exceptions
-     * and direclty retry the end of stream.
-     *
-     * If source buffers are still being updated after 0.5 seconds, then throw.
-     * @param mediaSource
-     * @param countDown
-     */
-    function triggerEndOfStream(
-      _mediaSource: MediaSource,
-      countDown: number
-    ) {
-      try {
-        _mediaSource.endOfStream();
-        return;
-      } catch(error) {
-        if(_mediaSource.readyState === "ended"){
-          return;
-        }
-        if (countDown <= 1) {
-            throw error;
-        } else {
-          log.warn(
-            "Error during endOfStream() call. Retrying "+(countDown - 1)+" times."
-          );
-          setTimeout(() => triggerEndOfStream(_mediaSource, countDown - 1), 500);
-        }
-      }
-    }
 
     /**
      * Add management of events linked to live Playback.
