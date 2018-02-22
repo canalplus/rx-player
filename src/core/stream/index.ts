@@ -105,7 +105,6 @@ export interface IStreamOptions {
     maxBufferBehind$ : Observable<number>;
   };
   clock$ : Observable<IStreamClockTick>;
-  isDirectFile : boolean;
   keySystems : IKeySystemOption[];
   networkConfig: {
     manifestRetry? : number;
@@ -142,7 +141,6 @@ export default function Stream({
   autoPlay,
   bufferOptions,
   clock$,
-  isDirectFile = false,
   keySystems,
   networkConfig,
   speed$,
@@ -263,11 +261,6 @@ export default function Stream({
    */
   const startStreamWithRetry =
     retryableFuncWithBackoff<any, IStreamEvent>(startStream, streamRetryOptions);
-
-  // TODO Find what to do with the direct file API
-  if (isDirectFile) {
-    return Observable.throw(new MediaError("UNAVAILABLE_MEDIA_SOURCE", null, true));
-  }
 
   const stream$ = createMediaSource(videoElement)
     .mergeMap(startStreamWithRetry);

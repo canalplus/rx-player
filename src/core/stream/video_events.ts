@@ -25,12 +25,12 @@ import log from "../../utils/log";
  * Set the initial time given as soon as possible on the video element.
  * Emit "null" when done.
  * @param {HMTLMediaElement} videoElement
- * @param {number} startTime
+ * @param {number|Function} startTime
  * @returns {Observable}
  */
 function doInitialSeek(
   videoElement : HTMLMediaElement,
-  startTime : number
+  startTime : number|(() => number)
 ) : Observable<void> {
   return hasLoadedMetadata(videoElement)
     .do(() => {
@@ -39,7 +39,8 @@ function doInitialSeek(
       // reset playbackRate to 1 in case we were at 0 (from a stalled
       // retry for instance)
       videoElement.playbackRate = 1;
-      videoElement.currentTime = startTime;
+      videoElement.currentTime = typeof startTime === "function" ?
+        startTime() : startTime;
     })
     .share();
 }
@@ -67,13 +68,13 @@ function handleCanPlay(
 
 /**
  * @param {HTMLMediaElement} videoElement
- * @param {number} startTime
+ * @param {number|Function} startTime
  * @param {boolean} autoPlay
  * @returns {object}
  */
 export default function handleVideoEvents(
   videoElement : HTMLMediaElement,
-  startTime : number,
+  startTime : number|(() => number),
   autoPlay : boolean
 ) : {
   initialSeek$ : Observable<void>;
