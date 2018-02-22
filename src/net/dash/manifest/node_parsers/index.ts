@@ -250,8 +250,10 @@ export default function parseManifest(
       periodStart = period.attributes.start;
     } else {
       if (i === 0) {
-        periodStart = rootAttributes.availabilityStartTime == null ?
-          0 : rootAttributes.availabilityStartTime;
+        periodStart = (
+          rootAttributes.type === "static" ||
+          rootAttributes.availabilityStartTime == null
+        ) ?  0 : rootAttributes.availabilityStartTime;
       } else {
         const prevPeriod = parsedPeriods[i - 1];
         if (prevPeriod.duration != null) {
@@ -577,8 +579,10 @@ export default function parseManifest(
   }
 
   const parsedMPD : IParsedManifest = {
-    availabilityStartTime: rootAttributes.availabilityStartTime != null ?
-      rootAttributes.availabilityStartTime : 0,
+    availabilityStartTime: (
+        rootAttributes.type === "static" ||
+        rootAttributes.availabilityStartTime == null
+      ) ?  0 : rootAttributes.availabilityStartTime,
     duration: rootAttributes.duration == null ? Infinity : rootAttributes.duration,
     id: rootAttributes.id != null ?
       rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
@@ -596,7 +600,7 @@ export default function parseManifest(
   if (rootAttributes.profiles != null) {
     parsedMPD.profiles = rootAttributes.profiles;
   }
-  if (rootAttributes.availabilityEndTime != null) {
+  if (rootAttributes.type !== "static" && rootAttributes.availabilityEndTime != null) {
     parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime;
   }
   if (rootAttributes.publishTime != null) {
