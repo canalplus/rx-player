@@ -72,7 +72,8 @@ type IPeriodBufferEvent =
 type IMultiplePeriodBuffersEvent =
   IPeriodBufferEvent |
   IPeriodBufferReadyEvent |
-  IPeriodBufferClearedEvent;
+  IPeriodBufferClearedEvent |
+  ICompletedBufferEvent;
 
 /**
  * Every events sent by the BuffersHandler exported here.
@@ -158,7 +159,10 @@ export default function BuffersHandler(
   const addPeriodBuffer$ = new Subject<IPeriodBufferItem>();
   const removePeriodBuffer$ = new Subject<IPeriodBufferItem>();
 
-  // Manage Buffers for every possible types of content
+  /**
+   * Every PeriodBuffers for every possible types
+   * @type {Array.<Observable>}
+   */
   const buffersArray = BUFFER_TYPES
     .map((bufferType) => {
       return manageEveryBuffers(bufferType, firstPeriod)
@@ -171,31 +175,32 @@ export default function BuffersHandler(
         }).share();
     });
 
-  const streamHasEnded$ =
-    Observable
-      .combineLatest(
-        ...buffersArray.map((obs) => obs
-          .filter((evt) =>
-            evt.type === "completed" ||
-            evt.type === "periodBufferReady" ||
-            evt.type === "representationChange"
-      ))
-    ).filter((buffers) => {
-      const completed = buffers.filter((buffer) => buffer.type === "completed");
-      return completed.length === buffers.length;
-    })
-      .mapTo(EVENTS.endOfStream());
-
+  /**
+   * Emits the active Period every time it changes
+   * @type {Observable}
+   */
   const activePeriod$ : Observable<Period> =
     ActivePeriodEmitter(addPeriodBuffer$, removePeriodBuffer$)
       .filter((period) : period is Period => !!period);
+  /**
+   * Emits the activePeriodChanged events every time the active Period changes.
+   * @type {Observable}
+   */
+  const activePeriodChanged$ = activePeriod$
+    .do((period : Period) => {
+      log.info("new active period", period);
+    })
+    .map(period => EVENTS.activePeriodChanged(period));
+
+  /**
+   * Emits an "end-of-stream" event once every PeriodBuffer are complete.
+   * @type {Observable}
+   */
+  const streamHasEnded$ = buffersAreComplete$(...buffersArray)
+    .mapTo(EVENTS.endOfStream());
 
   return Observable.merge(
-    activePeriod$
-      .do((period : Period) => {
-        log.info("new active period", period);
-      })
-      .map(period => EVENTS.activePeriodChanged(period)),
+    activePeriodChanged$,
     ...buffersArray,
     streamHasEnded$
   );
@@ -213,7 +218,7 @@ export default function BuffersHandler(
   function manageEveryBuffers(
     bufferType : SupportedBufferTypes,
     basePeriod : Period
-  ) : Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent> {
+  ) : Observable<IMultiplePeriodBuffersEvent> {
     /**
      * Keep a PeriodList for cases such as seeking ahead/before the
      * buffers already created.
@@ -241,16 +246,6 @@ export default function BuffersHandler(
     }
 
     /**
-     * Returns true if time is between start and end times from manifest.
-     * @param {number} time
-     */
-    function isInPlaybackTimeline(time : number) : boolean {
-      const head = manifest.periods[0];
-      const last = manifest.periods[manifest.periods.length - 1];
-      return time > head.start && time < (last.end || Infinity);
-    }
-
-    /**
      * Destroy the current set of consecutive buffers.
      * Used when the clocks goes out of the bounds of those, e.g. when the user
      * seeks.
@@ -260,22 +255,27 @@ export default function BuffersHandler(
     const destroyCurrentBuffers = new Subject<void>();
 
     const restartBuffers$ = clock$
-      .filter(({ currentTime, timeOffset }) =>
-        isOutOfPeriodList(timeOffset + currentTime) &&
-        isInPlaybackTimeline(timeOffset + currentTime)
-      )
+
+      .filter(({ currentTime, timeOffset }) => {
+        if (!manifest.getPeriodForTime(timeOffset + currentTime)) {
+          // TODO Manage out-of-manifest situations
+          return false;
+        }
+        return isOutOfPeriodList(timeOffset + currentTime);
+      })
+
       .take(1)
+
       .do(({ currentTime, timeOffset }) => {
         log.info("Current position out of the bounds of the active periods," +
           "re-creating buffers.", bufferType, currentTime + timeOffset);
         destroyCurrentBuffers.next();
       })
+
       .mergeMap(({ currentTime, timeOffset }) => {
         const newInitialPeriod = manifest.getPeriodForTime(currentTime + timeOffset);
         if (newInitialPeriod == null) {
-          const error = new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
-          errorStream.next(error);
-          return Observable.empty();
+          throw new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
         } else {
         // Note: For this to work, manageEveryBuffers should always emit the
         // "periodBufferReady" event for the new InitialPeriod synchronously
@@ -283,22 +283,19 @@ export default function BuffersHandler(
         }
       });
 
-      const currentBuffers$ = manageConsecutivePeriodBuffers(
-        bufferType,
-        basePeriod,
-        destroyCurrentBuffers
-      ).do((message) => {
-        if (message.type === "periodBufferReady") {
-          periodList.add(message.value.period);
-        } else if (message.type === "periodBufferCleared") {
-          periodList.removeFirst(message.value.period);
-        }
-      }).share(); // as always, with side-effects
+    const currentBuffers$ = manageConsecutivePeriodBuffers(
+      bufferType,
+      basePeriod,
+      destroyCurrentBuffers
+    ).do((message) => {
+      if (message.type === "periodBufferReady") {
+        periodList.add(message.value.period);
+      } else if (message.type === "periodBufferCleared") {
+        periodList.removeFirst(message.value.period);
+      }
+    }).share(); // as always, with side-effects
 
-    return Observable.merge(
-      currentBuffers$,
-      restartBuffers$
-    ) as Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent>;
+    return Observable.merge(currentBuffers$, restartBuffers$);
   }
 
   /**
@@ -337,30 +334,30 @@ export default function BuffersHandler(
     bufferType : SupportedBufferTypes,
     basePeriod : Period,
     destroy$ : Observable<void>
-  ) : Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent> {
+  ) : Observable<IMultiplePeriodBuffersEvent> {
     log.info("creating new Buffer for", bufferType, basePeriod);
 
     /**
-     * Emit the chosen adaptation for the current type.
+     * Emits the chosen adaptation for the current type.
      * @type {ReplaySubject}
      */
     const adaptation$ = new ReplaySubject<Adaptation|null>(1);
 
     /**
-     * Will emit when the Buffer for the next Period can be created.
+     * Emits the Period of the next Period Buffer when it can be created.
      * @type {Subject}
      */
-    const createNextBuffers$ = new Subject<void>();
+    const createNextPeriodBuffer$ = new Subject<Period>();
 
     /**
-     * Will emit when the Buffers for the next Periods should be destroyed, if
+     * Emits when the Buffers for the next Periods should be destroyed, if
      * created.
      * @type {Subject}
      */
     const destroyNextBuffers$ = new Subject<void>();
 
     /**
-     * Emit when the current position goes over the end of the current buffer.
+     * Emits when the current position goes over the end of the current buffer.
      * @type {Subject}
      */
     const endOfCurrentBuffer$ = clock$
@@ -369,20 +366,11 @@ export default function BuffersHandler(
       );
 
     /**
-     * Prepare Buffer for the next Period.
+     * Create Period Buffer for the next Period.
      * @type {Observable}
      */
-    const nextPeriodBuffer$ = createNextBuffers$
-      .exhaustMap(() => {
-        /**
-         * The Period coming just after the current one.
-         * @type {Period|undefined}
-         */
-        const nextPeriod = manifest.getPeriodAfter(basePeriod);
-
-        if (!nextPeriod || nextPeriod === basePeriod) {
-          return Observable.empty();
-        }
+    const nextPeriodBuffer$ = createNextPeriodBuffer$
+      .exhaustMap((nextPeriod) => {
         return manageConsecutivePeriodBuffers(
           bufferType, nextPeriod, destroyNextBuffers$);
       });
@@ -398,7 +386,7 @@ export default function BuffersHandler(
         // first complete createNextBuffer$ to allow completion of the
         // nextPeriodBuffer$ observable once every further Buffers have been
         // cleared.
-        createNextBuffers$.complete();
+        createNextPeriodBuffer$.complete();
 
         // emit destruction signal to the next Buffer first
         destroyNextBuffers$.next();
@@ -412,14 +400,27 @@ export default function BuffersHandler(
     const killCurrentBuffer$ = Observable.merge(endOfCurrentBuffer$, destroyAll$);
 
     const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$)
-      .do(({ type }) => {
+      .mergeMap((evt) => {
+        const { type } = evt;
         if (type === "full") {
+          /**
+           * The Period coming just after the current one.
+           * @type {Period|undefined}
+           */
+          const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
-          createNextBuffers$.next();
+          if (nextPeriod == null) {
+            // no more period, emits buffer-complete event
+            return Observable.of(EVENTS.bufferComplete(bufferType));
+          } else {
+            // current buffer is full, create the next one if not
+            createNextPeriodBuffer$.next(nextPeriod);
+          }
         } else if (type === "segments-queued") {
           // current buffer is active, destroy next buffer if created
           destroyNextBuffers$.next();
         }
+        return Observable.of(evt);
       })
       .share();
 
@@ -427,27 +428,9 @@ export default function BuffersHandler(
      * Buffer for the current Period.
      * @type {Observable}
      */
-    const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent> =
+    const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent> =
       Observable.of(EVENTS.periodBufferReady(bufferType, basePeriod, adaptation$))
         .concat(periodBuffer$)
-        .exhaustMap((evt) => {
-          if (
-            evt.type === "periodBufferReady" ||
-            evt.type === "representationChange"
-          ) {
-            return Observable.of(evt)
-              .concat(periodBuffer$
-                .filter((_evt) => _evt.type === "full")
-                .take(1)
-                .filter(() => {
-                  const periodAfter = manifest.getPeriodAfter(basePeriod);
-                  return periodAfter === null;
-                })
-                .mapTo(EVENTS.completed(bufferType))
-              );
-          }
-          return Observable.of(evt);
-        })
         .takeUntil(killCurrentBuffer$)
         .concat(
           Observable.of(EVENTS.periodBufferCleared(bufferType, basePeriod))
@@ -460,7 +443,7 @@ export default function BuffersHandler(
       currentBuffer$,
       nextPeriodBuffer$,
       destroyAll$.ignoreElements()
-    ) as Observable<IMultiplePeriodBuffersEvent|ICompletedBufferEvent>;
+    ) as Observable<IMultiplePeriodBuffersEvent>;
   }
 
   /**
@@ -602,6 +585,49 @@ function getPipelineOptions(
     maxRetry,
     maxRetryOffline,
   };
+}
+
+/**
+ * Returns an Observable which emits ``undefined`` and complete when all
+ * buffers given are _complete_.
+ *
+ * A PeriodBuffer for a given type is considered _complete_ when both of these
+ * conditions are true:
+ *   - it is the last PeriodBuffer in the content for the given type
+ *   - it has finished downloading segments (it is _full_)
+ *
+ * Simply put a _complete_ PeriodBuffer for a given type means that every
+ * segments needed for this Buffer have been downloaded.
+ *
+ * When the Observable returned here emits, every Buffer are finished.
+ * @param {...Observable} buffers
+ * @returns {Observable}
+ */
+function buffersAreComplete$(
+  ...buffers : Array<Observable<IMultiplePeriodBuffersEvent>>
+) : Observable<void> {
+  /**
+   * Array of Observables linked to the Array of Buffers which emit:
+   *   - true when the corresponding buffer is considered _complete_.
+   *   - false when the corresponding buffer is considered _active_.
+   * @type {Array.<Observable>}
+   */
+  const isCompleteArray : Array<Observable<boolean>> = buffers
+    .map((buffer) => {
+      return buffer
+        .filter((evt) => {
+          return evt.type === "buffer-complete" || evt.type === "segments-queued";
+        })
+        .map((evt) => evt.type === "buffer-complete")
+        .startWith(false)
+        .distinctUntilChanged();
+    });
+
+  return Observable.combineLatest(...isCompleteArray)
+    .filter((areComplete) => {
+      return areComplete.every((isComplete) => isComplete);
+    })
+    .mapTo(undefined);
 }
 
 /**

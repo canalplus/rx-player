@@ -70,7 +70,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         speed: arg === "PLAYING" ? player.getPlaybackRate() : 0,
       };
 
-      if (arg === "PAUSED") {
+      if (arg === "ENDED" || arg === "PAUSED") {
         stateUpdates.isPaused = true;
       } else if (arg === "PLAYING") {
         stateUpdates.isPaused = false;

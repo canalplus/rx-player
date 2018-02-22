@@ -31,8 +31,10 @@ import { IStallingItem } from "./stalling_manager";
 
 // Emit when the buffer from last period is full
 export interface ICompletedBufferEvent {
-  type: "completed";
-  value : string;
+  type: "buffer-complete";
+  value : {
+    type: SupportedBufferTypes;
+  };
 }
 
 export interface IAdaptationChangeEvent {
@@ -43,11 +45,6 @@ export interface IAdaptationChangeEvent {
     adaptation : Adaptation|null;
   };
 }
-
-// Subjects given to allow a choice between the different adaptations available
-// export type IAdaptationsSubject = Partial<
-//   Record<SupportedBufferTypes, ReplaySubject<Adaptation|null>>
-// >;
 
 export interface IStreamStartedEvent {
   type : "started";
@@ -234,10 +231,12 @@ const STREAM_EVENTS = {
     };
   },
 
-  completed(bufferType: string) : ICompletedBufferEvent {
+  bufferComplete(bufferType: SupportedBufferTypes) : ICompletedBufferEvent {
     return {
-      type: "completed",
-      value: bufferType,
+      type: "buffer-complete",
+      value: {
+        type: bufferType,
+      },
     };
   },
 };

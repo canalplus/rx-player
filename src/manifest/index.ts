@@ -214,29 +214,16 @@ export default class Manifest {
    * Returns period coming just after a given period.
    * Returns undefined if not found.
    * @param {Period} period
-   * @returns {Period|undefined}
+   * @returns {Period|null}
    */
   getPeriodAfter(period : Period) : Period|null {
     const endOfPeriod = period.end;
     if (endOfPeriod == null) {
-      return period;
+      return null;
     }
     return this.periods.find(_period => {
       return _period.end == null || endOfPeriod < _period.end;
     }) || null;
-  }
-
-  /**
-   * Returns first period encountered during or after a given
-   * time.
-   * Returns undefined if there's no Period at or after the time asked.
-   * @param {number} time
-   * @returns {Period|undefined}
-   */
-  getNextPeriod(time : number) : Period|undefined {
-    return this.periods.find(period => {
-      return period.end == null || time < period.end;
-    });
   }
 
   /**
@@ -314,10 +301,6 @@ export default class Manifest {
 
   /**
    * Update the current manifest properties
-   * XXX TODO Also update attributes?
-   * XXX TODO How to add Periods?
-   * XXX TODO Recognizing Periods by their index in the manifest is not a good
-   * solution if those periods evolve.
    * @param {Object} Manifest
    */
   update(newManifest : Manifest) {
