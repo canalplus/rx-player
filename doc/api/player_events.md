@@ -62,6 +62,12 @@ The object emitted as the following properties:
 
 _payload type_: ``Object``
 
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 Information about the current audio track, each time it changes (the last received segment got a new one).
 
 The payload is an object describing the new track, with the following properties:
@@ -72,6 +78,12 @@ The payload is an object describing the new track, with the following properties
 ### <a name="events-textTrackChange"></a>textTrackChange
 
 _payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 Information about the current text track, each time it changes (the last received segment got a new one).
 
@@ -84,17 +96,35 @@ The payload is an object describing the new track, with the following properties
 
 _payload type_: ``Number``
 
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 The payload is the new audio bitrate, in bits per seconds. It is emitted every time it changes (based on the last received segment).
 
 ### <a name="events-videoBitrateChange"></a>videoBitrateChange
 
 _payload type_: ``Number``
 
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 The payload is the new video bitrate, in bits per seconds. It is emitted every time it changes (based on the last received segment).
 
 ### <a name="events-imageTrackUpdate"></a>imageTrackUpdate
 
 _payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 Triggered each time the current image playlist changes (has new images).
 
@@ -114,6 +144,12 @@ The payload is ``true`` if the player entered fullscreen, ``false`` if it exited
 ### <a name="events-bitrateEstimationChange"></a>bitrateEstimationChange
 
 _payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 Information about the last bitrate estimation performed, by type of buffer (``audio``, ``video`` etc.).
 
@@ -143,6 +179,12 @@ The payload is the corresponding error. See [the Player Error documentation](./e
 
 _payload type_: ``Array<TextTrackElement>``
 
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 Triggered each times a new ``<track>`` element is removed or added to the video element.
 
 The payload is the array of ``TextTrack`` elements. The RxPlayer will only set a single ``<track>`` when a text track is set.
@@ -150,6 +192,12 @@ The payload is the array of ``TextTrack`` elements. The RxPlayer will only set a
 ### <a name="events-periodChange"></a>periodChange
 
 _payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 Triggered when the current Period being seen changes.
 

@@ -48,13 +48,23 @@ Can be either:
 
   - ``"smooth"`` - for Microsoft Smooth Streaming streams
 
+  - ``"directfile"`` - for loading a video in _DirectFile_ mode, which allows to
+    directly play media files (example: ``.mp4`` or ``.webm`` files) without using
+    a transport protocol.
+
+    :warning: In that mode, multiple APIs won't have any effect.
+    This is documented in the documentation of each concerned method, option or event
+    in the API.
+
 This property is mandatory.
 
 ### <a name="prop-url"></a>url
 
 _type_: ``string|undefined``
 
-The URL to the Smooth or DASH manifest.
+For Smooth or DASH contents, the URL to the manifest.
+
+For _DirectFile_ mode contents, the URL of the content (the supported contents depends on the current browser).
 
 This property is mandatory.
 
@@ -210,6 +220,12 @@ player.loadVideo({
 
 _type_: ``Object|undefined``
 
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
+
 Options concerning the "transport".
 
 That is, the part of the code:
@@ -224,6 +240,12 @@ This Object can contain multiple properties. Only those documented here are cons
 ### <a name="prop-defaultAudioTrack"></a>defaultAudioTrack
 
 _type_: ``Object|string|undefined``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
 
 The starting default audio track.
 
@@ -247,6 +269,12 @@ If the corresponding audio track is not found, the first track defined will be t
 ### <a name="prop-defaultTextTrack"></a>defaultTextTrack
 
 _type_: ``Object|string|undefined``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
 
 The starting default text track.
 
@@ -274,6 +302,12 @@ _type_: ``string``
 
 _defaults_: ``"native"``
 
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
+
 This option allows to specify how the text tracks should be displayed.
 
 There is two possible values:
@@ -293,6 +327,12 @@ More infos on supported text tracks can be found in the [text track documentatio
 
 _type_: ``HTMLElement``
 
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
+
 ``textTrackElement`` is only required and used if you provided a ``"html"`` [textTrackMode](#prop-textTrackMode).
 
 This property will be the element on which text tracks will be set, as child elements, at the right time. We expect that this element is the exact same size than the media element it applies to (this allows us to properly place the subtitles position without polling where the video is in your UI). You can however re-size or update the style of it as you wish, to better suit your UI needs.
@@ -302,6 +342,12 @@ This property will be the element on which text tracks will be set, as child ele
 
 _type_: ``Array.<Object>|Object|undefined``
 _defaults_: ``[]``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
 
 This option allows to specify informations about supplementary text tracks you might want to
 add to those already declared in the manifest.
@@ -351,6 +397,12 @@ To know which type of formats are supported and how to add them, you can read th
 _type_: ``Array.<Object>|Object|undefined``
 _defaults_: ``[]``
 
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
+
 This option allows to specify informations about supplementary image tracks you might want to
 add to those already declared in the manifest.
 
@@ -376,6 +428,12 @@ _type_: ``Boolean``
 
 _defaults_: ``false``
 
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
+
 If set to ``true``, the eventual <track> element will be put on mode ``hidden`` when added to the video element, so it won't actually display the subtitles the rx-player add to it.
 
 This has an effect only if:
@@ -388,6 +446,12 @@ This has an effect only if:
 _type_: ``Object``
 
 _defaults_: ``{}``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport option](#prop-transport)).
+
+---
 
 Configuration linked to manifest and segment requests. This object can take the following properties (all are optional):
 

@@ -373,6 +373,8 @@ _return value_: ``string|undefined``
 
 Returns the URL of the downloaded manifest.
 
+In _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)), returns the URL of the content being played.
+
 Returns ``undefined`` if no content is loaded yet.
 
 ### <a name="meth-isFullscreen"></a>isFullscreen
@@ -387,11 +389,15 @@ _return value_: ``Array.<Number>``
 
 The different bitrates available for the current video adaptation, in bits per seconds.
 
+In _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+
 ### <a name="meth-getAvailableAudioBitrates"></a>getAvailableAudioBitrates
 
 _return value_: ``Array.<Number>``
 
 The different bitrates available for the current audio adaptation, in bits per seconds.
+
+In _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)), returns an empty Array.
 
 ### <a name="meth-getVideoBitrate"></a>getVideoBitrate
 
@@ -401,6 +407,8 @@ Returns the video bitrate of the last downloaded video segment, in bits per seco
 
 Returns ``undefined`` if no content is loaded.
 
+In _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
+
 ### <a name="meth-getAudioBitrate"></a>getAudioBitrate
 
 _return value_: ``Number|undefined``
@@ -408,6 +416,8 @@ _return value_: ``Number|undefined``
 Returns the audio bitrate of the last downloaded audio segment, in bits per seconds.
 
 Returns ``undefined`` if no content is loaded.
+
+In _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)), returns ``undefined``.
 
 ### <a name="meth-getMaxVideoBitrate"></a>getMaxVideoBitrate
 
@@ -446,6 +456,12 @@ You can use ``getAvailableVideoBitrates`` to get the list of available bitrates 
 Note that the value set is persistent between ``loadVideo`` calls.
 As such, this method can also be called when no content is playing (the same rules apply for future contents).
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 ### <a name="meth-setAudioBitrate"></a>setAudioBitrate
 
 _arguments_: ``Number``
@@ -466,6 +482,12 @@ You can use ``getAvailableAudioBitrates`` to get the list of available bitrates 
 
 Note that the value set is persistent between ``loadVideo`` calls.
 As such, this method can also be called when no content is playing (the same rules apply for future contents).
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 ### <a name="meth-getManualVideoBitrate"></a>getManualVideoBitrate
 
@@ -505,6 +527,12 @@ player.setMaxVideoBitrate(Infinity);
 
 This only affects adaptive strategies (you can bypass this limit by calling ``setVideoBitrate``).
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 ### <a name="meth-setMaxAudioBitrate"></a>setMaxAudioBitrate
 
 _arguments_: ``Number``
@@ -519,12 +547,24 @@ player.setMaxAudioBitrate(Infinity);
 
 This only affects adaptive strategies (you can bypass this limit by calling ``setAudioBitrate``).
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 ### <a name="meth-setWantedBufferAhead"></a>setWantedBufferAhead
 
 _arguments_: ``Number``
 
 Set the buffering goal, as a duration ahead of the current position, in seconds.
 Once this size of buffer reached, the player won't try to download new video segments anymore.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 ### <a name="meth-getWantedBufferAhead"></a>getWantedBufferAhead
 
@@ -543,6 +583,12 @@ Everything before that limit (``currentPosition - maxBufferBehind``) will be aut
 This feature is not necessary as the browser is already supposed to deallocate memory from old segments if/when the memory is scarce.
 
 However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 ### <a name="meth-getMaxBufferBehind"></a>getMaxBufferBehind
 
@@ -564,6 +610,12 @@ However on some custom targets, or just to better control the memory imprint of 
 The minimum value between this one and the one returned by ``getWantedBufferAhead`` will be considered when downloading new segments.
 
 :warning: Bear in mind that a too-low configuration there (e.g. inferior to ``10``) might prevent the browser to play the content at all.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 ### <a name="meth-getMaxBufferAhead"></a>getMaxBufferAhead
 
@@ -622,6 +674,8 @@ Each of the objects in the returned array have the following properties:
   - ``audioDescription`` (``Boolean``): Whether the track is an audio description (for the visually impaired or not).
   - ``active`` (``Boolean``): Whether the track is the one currently active or not.
 
+In _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+
 ### <a name="meth-getAvailableTextTracks"></a>getAvailableTextTracks
 
 _returns_: ``Array.<Object>``
@@ -634,6 +688,8 @@ Each of the objects in the returned array have the following properties:
   - ``normalized`` (``string``): An attempt to translate the ``language`` property into an ISO 639-3 language code (for now only support translations from ISO 639-1 and ISO 639-2 language codes). If the translation attempt fails (no corresponding ISO 639-3 language code is found), it will equal the value of ``language``
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for the hard of hearing or not.
   - ``active`` (``Boolean``): Whether the track is the one currently active or not.
+
+In _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)), returns an empty Array.
 
 ### <a name="meth-getAudioTrack"></a>getAudioTrack
 
@@ -649,6 +705,8 @@ The track is an object with the following properties:
 
 ``undefined`` if no content has been loaded yet.
 
+``undefined`` in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
 ### <a name="meth-getTextTrack"></a>getTextTrack
 
 _returns_: ``Object|null``
@@ -663,11 +721,19 @@ The track is an object with the following properties:
 
 ``undefined`` if no content has been loaded yet.
 
+``undefined`` in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
 ### <a name="meth-setAudioTrack"></a>setAudioTrack
 
 _arguments_: ``string|Number``
 
 Set a new audio track from its id, recuperated from ``getAvailableAudioTracks``.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 ### <a name="meth-setTextTrack"></a>setTextTrack
 
@@ -675,9 +741,21 @@ _arguments_: ``string``
 
 Set a new text track from its id, recuperated from ``getAvailableTextTracks``.
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 ### <a name="meth-disableTextTrack"></a>disableTextTrack
 
 Deactivate the current text track, if one.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 ### <a name="meth-getManifest"></a>getManifest
 
@@ -686,6 +764,8 @@ _return value_: ``Manifest|null``
 Returns the current loaded Manifest if one. A manifest object structure is relatively complex and is described in the [Manifest Object structure page](./manifest.md).
 
 ``null`` if the player is either stopped or not loaded.
+
+``null`` in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 The manifest will be available before the player reaches the ``"LOADED"`` state.
 
@@ -699,6 +779,8 @@ An Adaptation object structure is relatively complex and is described in the [Ma
 
 ``null`` if the current Adaptations are not known yet.
 
+``null`` in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
 ### <a name="meth-getCurrentRepresentations"></a>getCurrentRepresentations
 
 _return value_: ``Object|null``
@@ -708,6 +790,8 @@ Returns the Representations being loaded per type if a manifest is loaded. The r
 An Representation object structure is relatively complex and is described in the [Manifest Object structure page](./manifest.md#representation).
 
 ``null`` if the current Representations are not known yet.
+
+``null`` in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 ### <a name="meth-dispose"></a>dispose
 
@@ -776,6 +860,8 @@ _return value_: ``Array.<Object>|null``
 The current image track's data, null if no content is loaded / no image track data is available.
 
 The returned array follows the usual image playlist structure, defined [here](./images.md#api-structure).
+
+``null`` in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 ### <a name="meth-getMinimumPosition"></a>getMinimumPosition
 
