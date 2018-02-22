@@ -4,7 +4,7 @@ import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
-const STREAMING_TECHNOS = ["DASH", "Smooth"];
+const STREAMING_TECHNOS = ["DASH", "Smooth", "DirectFile"];
 const CONTENTS_PER_TECHNO = STREAMING_TECHNOS.reduce((acc, tech) => {
   acc[tech] = contentsDatabase.filter(({ transport }) =>
     transport === tech.toLowerCase()

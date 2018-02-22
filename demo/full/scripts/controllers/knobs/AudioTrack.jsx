@@ -14,17 +14,24 @@ const AudioTrackKnobBase = ({
   currentLanguage,
   availableLanguages = [],
 }) => {
+  let options = [];
+  let selectedIndex = 0;
 
-  const options = availableLanguages
-    .map(language => {
-      return translateLanguageCode(language.normalized) +
-        (language.audioDescription ?
-          (" " + AUDIO_DESCRIPTION_ICON) : "");
-    });
+  if (!availableLanguages.length) {
+    options = ["Not available"];
+    selectedIndex = 0;
+  } else {
+    options = availableLanguages
+      .map(language => {
+        return translateLanguageCode(language.normalized) +
+          (language.audioDescription ?
+            (" " + AUDIO_DESCRIPTION_ICON) : "");
+      });
 
-  const currentLanguageIndex = currentLanguage ?
-    Math.max(findLanguageIndex(currentLanguage, availableLanguages), 0)
-    : 0;
+    selectedIndex = currentLanguage ?
+      Math.max(findLanguageIndex(currentLanguage, availableLanguages), 0)
+      : 0;
+  }
 
   const onLanguageChange = (evt) => {
     const index = +evt.target.value;
@@ -38,7 +45,7 @@ const AudioTrackKnobBase = ({
       disabled={availableLanguages.length < 2}
       onChange={onLanguageChange}
       options={options}
-      selected={currentLanguageIndex}
+      selected={selectedIndex}
     />
   );
 };

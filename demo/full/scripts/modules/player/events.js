@@ -76,6 +76,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.isPaused = false;
       } else if (arg === "LOADED") {
         stateUpdates.isPaused = true;
+        stateUpdates.isLive = player.isLive();
       } else if (arg === "STOPPED") {
         stateUpdates.audioBitrate = undefined;
         stateUpdates.videoBitrate = undefined;
@@ -108,14 +109,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         availableLanguages: player.getAvailableAudioTracks(),
         availableSubtitles: player.getAvailableTextTracks(),
       });
-    });
-
-  fromPlayerEvent("manifestChange")
-    .map(() => player.isLive())
-    .distinctUntilChanged()
-    .takeUntil($destroy)
-    .subscribe((isLive) => {
-      state.set({ isLive });
     });
 };
 
