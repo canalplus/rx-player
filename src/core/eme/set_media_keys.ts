@@ -43,10 +43,6 @@ function setMediaKeysObs(
   instceInfos: IInstanceInfo
 ) : Observable<IMockMediaKeys|MediaKeys> {
   return Observable.defer(() => {
-    if (video.mediaKeys === mediaKeys) {
-      return Observable.of(mediaKeys);
-    }
-
     const {
       $videoElement,
       $mediaKeys,
@@ -58,6 +54,10 @@ function setMediaKeysObs(
     instceInfos.$mediaKeySystemConfiguration = mksConfig;
     instceInfos.$keySystem = keySystem;
     instceInfos.$videoElement = video;
+
+    if (video.mediaKeys === mediaKeys) {
+      return Observable.of(mediaKeys);
+    }
 
     if (oldMediaKeys && oldMediaKeys !== mediaKeys) {
       // if we change our mediaKeys singleton, we need to dispose all existing
