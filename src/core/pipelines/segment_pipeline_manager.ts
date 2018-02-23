@@ -59,7 +59,7 @@ export default class SegmentPipelinesManager {
   private _metrics$ : Subject<IABRMetric>;
   private _requestsInfos$ : Subject<Subject<IABRRequest>>;
   private _warning$ : Subject<Error | CustomError>;
-  private _transport : ITransportPipelines<any, any, any, any, any>;
+  private _transport : ITransportPipelines;
 
   /**
    * @param {Object} transport
@@ -68,7 +68,7 @@ export default class SegmentPipelinesManager {
    * @param {Subject} warning
    */
   constructor(
-    transport : ITransportPipelines<any, any, any, any, any>,
+    transport : ITransportPipelines,
     requestsInfos$ : Subject<Subject<IABRRequest>>,
     metrics$ : Subject<IABRMetric>,
     warning : Subject<Error | CustomError>

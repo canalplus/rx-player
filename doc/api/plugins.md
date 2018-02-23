@@ -95,6 +95,73 @@ const customSegmentLoader = (infos, callbacks) => {
   };
 };
 ```
+
+## <a name="manifestLoader"></a>manifestLoader
+
+The manifestLoader is a function that can be included in the ``transportOptions`` of the ``loadVideo`` API call.
+
+A manifestLoader allows to define a custom manifest loader.
+
+The manifest loader is the part performing the manifest request.
+
+Here is a manifest loader which uses an XHR (it has no use, as our implementation does the same thing and more):
+
+```js
+/**
+ * @param {string} url - the url the manifest request should normally be on
+
+ * @param {Object} callbacks
+ * @param {Function} callbacks.resolve - Callback to call when the request is
+ * finished with success. It should be called with an object with at least 3
+ * properties:
+ *   - data {Document|String} - the manifest data
+ *   - duration {Number} - the duration of the request, in ms
+ *   - size {Number} - size, in bytes, of the total downloaded response.
+ * @param {Function} callbacks.reject - Callback to call when an error is
+ * encountered. If you relied on an XHR, it is recommended to include it as an
+ * object property named "xhr" in the argument.
+ * @param {Function} callbacks.fallback - Callback to call if you want to call
+ * our default implementation instead for this segment. No argument is needed.
+
+ * @returns {Function|undefined} - If a function is defined in the return value,
+ * it will be called if and when the request is canceled.
+ */
+const customManifestLoader = (url, callbacks) => {
+
+  const xhr = new XMLHttpRequest();
+  const sentTime = Date.now();
+
+  xhr.onload = (r) => {
+    if (200 <= xhr.status && xhr.status < 300) {
+      const duration = Date.now() - sentTime;
+      const size = r.total;
+      const data = r.targget.response;
+      callbacks.resolve({ duration, size, data });
+    } else {
+      const err = new Error("didn't work");
+      err.xhr = xhr;
+      callbacks.reject(err);
+    }
+  };
+
+  xhr.onerror = () => {
+    const err = new Error("didn't work");
+    err.xhr = xhr;
+    callbacks.reject(err);
+  };
+
+  xhr.open("GET", infos.url);
+  xhr.responseType = "document";
+
+  xhr.send();
+
+  return () => {
+    xhr.abort();
+  };
+};
+```
+
+
 [1] [Adaptation structure](./manifest.md#adaptation)
 
 [2] [Representation structure](./manifest.md#representation)

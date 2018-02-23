@@ -15,7 +15,10 @@
  */
 
 import { IRepresentationIndex } from "../../manifest";
-import { CustomSegmentLoader } from "../types";
+import {
+  CustomManifestLoader,
+  CustomSegmentLoader
+} from "../types";
 
 interface IHSSKeySystem {
   systemId : string;
@@ -24,6 +27,7 @@ interface IHSSKeySystem {
 
 interface IHSSParserOptions {
   segmentLoader? : CustomSegmentLoader;
+  manifestLoader? : CustomManifestLoader;
   suggestedPresentationDelay? : number;
   referenceDateTime? : number;
   minRepresentationBitrate? : number;

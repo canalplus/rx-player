@@ -22,10 +22,8 @@ import {
 import parseBif from "../../parsers/images/bif";
 import request from "../../utils/request";
 import { resolveURL } from "../../utils/url";
+import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-// import dashManifestParser, {
-//   IContentProtectionParser,
-// } from "./manifest";
 import dashManifestParser from "./manifest";
 import generateSegmentLoader from "./segment_loader";
 import {
@@ -38,6 +36,7 @@ import {
 } from "./utils";
 
 import {
+  CustomManifestLoader,
   CustomSegmentLoader,
   ILoaderObservable,
   ImageParserObservable,
@@ -53,6 +52,7 @@ import {
 } from "../types";
 
 interface IDASHOptions {
+  manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
   // contentProtectionParser? : IContentProtectionParser;
 }
@@ -67,30 +67,26 @@ interface IDASHOptions {
  */
 export default function(
   options : IDASHOptions = {}
-) : ITransportPipelines<
-  Document,
-  ArrayBuffer|Uint8Array,
-  ArrayBuffer|Uint8Array,
-  ArrayBuffer|string,
-  ArrayBuffer
->{
+) : ITransportPipelines {
+  const manifestLoader = generateManifestLoader({
+    customManifestLoader: options.manifestLoader,
+  });
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
   // const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : ILoaderObservable<Document> {
-      return request({
-        url,
-        responseType: "document",
-      });
+    ) : ILoaderObservable<Document|string> {
+      return manifestLoader(url);
     },
 
     parser(
-      { response, url } : IManifestParserArguments<Document>
+      { response, url } : IManifestParserArguments<Document|string>
     ) : IManifestParserObservable {
-      const data = response.responseData;
+      const data = typeof response.responseData === "string" ?
+        new DOMParser().parseFromString(response.responseData, "text/xml") :
+        response.responseData;
       return Observable.of({
         manifest: dashManifestParser(data, url/*, contentProtectionParser*/),
         url: response.url,
@@ -186,7 +182,7 @@ export default function(
     },
 
     parser(
-      { response } : ISegmentParserArguments<ArrayBuffer>
+      { response } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : ImageParserObservable {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);
