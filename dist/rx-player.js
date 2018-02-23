@@ -27599,7 +27599,7 @@ var collections_1 = __webpack_require__(300);
 var log_1 = __webpack_require__(1);
 var force_garbage_collection_1 = __webpack_require__(301);
 var get_wanted_range_1 = __webpack_require__(302);
-var BITRATE_REBUFFERING_RATIO = config_1.default.BITRATE_REBUFFERING_RATIO;
+var BITRATE_REBUFFERING_RATIO = config_1.default.BITRATE_REBUFFERING_RATIO, MINIMUM_SEGMENT_SIZE = config_1.default.MINIMUM_SEGMENT_SIZE;
 /**
  * Get safety paddings (low and high) for the size of buffer that won't
  * be flushed when switching representation for smooth transitions
@@ -27717,6 +27717,9 @@ function RepresentationBuffer(_a) {
         var time = segment.time, duration = segment.duration, timescale = segment.timescale;
         if (!duration) {
             return true;
+        }
+        if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
+            return false;
         }
         var currentSegment = segmentBookkeeper.hasPlayableSegment(wantedRange, { time: time, duration: duration, timescale: timescale });
         if (!currentSegment) {
