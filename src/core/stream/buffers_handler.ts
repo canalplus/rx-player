@@ -400,7 +400,9 @@ export default function BuffersHandler(
     const killCurrentBuffer$ = Observable.merge(endOfCurrentBuffer$, destroyAll$);
 
     const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$)
-      .mergeMap((evt) => {
+      .mergeMap((
+        evt : IPeriodBufferEvent
+      ) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
         if (type === "full") {
           /**

@@ -110,152 +110,169 @@ export interface IEndOfStreamEvent {
   value: undefined;
 }
 
+function adaptationChange(
+  bufferType : SupportedBufferTypes,
+  adaptation : Adaptation|null,
+  period : Period
+) : IAdaptationChangeEvent {
+  return {
+    type: "adaptationChange",
+    value : {
+      type: bufferType,
+      adaptation,
+      period,
+    },
+  };
+}
+
+function loaded() : IStreamLoadedEvent {
+  return {
+    type: "loaded",
+    value: true,
+  };
+}
+
+function stalled(stalling : IStallingItem|null) : IStalledEvent {
+  return {
+    type: "stalled",
+    value: stalling,
+  };
+}
+
+function manifestReady(
+  abrManager : ABRManager,
+  manifest : Manifest
+) : IManifestReadyEvent {
+  return {
+    type: "manifestReady",
+    value: {
+      abrManager,
+      manifest,
+    },
+  };
+}
+
+function manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
+  return {
+    type: "manifestUpdate",
+    value: {
+      manifest,
+    },
+  };
+}
+
+function speedChanged(speed : number) : ISpeedChangedEvent {
+  return {
+    type: "speed",
+    value: speed,
+  };
+}
+
+function activePeriodChanged(period : Period) : IActivePeriodChangedEvent {
+  return {
+    type : "activePeriodChanged",
+    value : {
+      period,
+    },
+  };
+}
+
+function nullRepresentation(
+  type : SupportedBufferTypes,
+  period : Period
+) : IRepresentationChangeEvent {
+  return {
+    type: "representationChange",
+    value: {
+      type,
+      representation: null,
+      period,
+    },
+  };
+}
+
+function periodBufferReady(
+  type : SupportedBufferTypes,
+  period : Period,
+  adaptation$ : Subject<Adaptation|null>
+) : IPeriodBufferReadyEvent {
+  return {
+    type: "periodBufferReady",
+    value: {
+      type,
+      period,
+      adaptation$,
+    },
+  };
+}
+
+function periodBufferCleared(
+  type : SupportedBufferTypes,
+  period : Period
+) : IPeriodBufferClearedEvent {
+  return {
+    type: "periodBufferCleared",
+    value: {
+      type,
+      period,
+    },
+  };
+}
+
+function warning(value : Error | CustomError) : IStreamWarningEvent {
+  return {
+    type: "warning",
+    value,
+  };
+}
+
+function endOfStream() : IEndOfStreamEvent {
+  return {
+    type: "end-of-stream",
+    value: undefined,
+  };
+}
+
+function bufferComplete(bufferType: SupportedBufferTypes) : ICompletedBufferEvent {
+  return {
+    type: "buffer-complete",
+    value: {
+      type: bufferType,
+    },
+  };
+}
+
 const STREAM_EVENTS = {
-  adaptationChange(
-    bufferType : SupportedBufferTypes,
-    adaptation : Adaptation|null,
-    period : Period
-  ) : IAdaptationChangeEvent {
-    return {
-      type: "adaptationChange",
-      value : {
-        type: bufferType,
-        adaptation,
-        period,
-      },
-    };
-  },
-
-  loaded() : IStreamLoadedEvent {
-    return {
-      type: "loaded",
-      value: true,
-    };
-  },
-
-  manifestReady(abrManager : ABRManager, manifest : Manifest) : IManifestReadyEvent {
-    return {
-      type: "manifestReady",
-      value: {
-        abrManager,
-        manifest,
-      },
-    };
-  },
-
-  manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
-    return {
-      type: "manifestUpdate",
-      value: {
-        manifest,
-      },
-    };
-  },
-
-  speedChanged(speed : number) : ISpeedChangedEvent {
-    return {
-      type: "speed",
-      value: speed,
-    };
-  },
-
-  stalled(stalling : IStallingItem|null) : IStalledEvent {
-    return {
-      type: "stalled",
-      value: stalling,
-    };
-  },
-
-  activePeriodChanged(period : Period) : IActivePeriodChangedEvent {
-    return {
-      type : "activePeriodChanged",
-      value : {
-        period,
-      },
-    };
-  },
-
-  nullRepresentation(
-    type : SupportedBufferTypes,
-    period : Period
-  ) : IRepresentationChangeEvent {
-    return {
-      type: "representationChange",
-      value: {
-        type,
-        representation: null,
-        period,
-      },
-    };
-  },
-
-  periodBufferReady(
-    type : SupportedBufferTypes,
-    period : Period,
-    adaptation$ : Subject<Adaptation|null>
-  ) : IPeriodBufferReadyEvent {
-    return {
-      type: "periodBufferReady",
-      value: {
-        type,
-        period,
-        adaptation$,
-      },
-    };
-  },
-
-  periodBufferCleared(
-    type : SupportedBufferTypes,
-    period : Period
-  ) : IPeriodBufferClearedEvent {
-    return {
-      type: "periodBufferCleared",
-      value: {
-        type,
-        period,
-      },
-    };
-  },
-
-  warning(value : Error | CustomError) : IStreamWarningEvent {
-    return {
-      type: "warning",
-      value,
-    };
-  },
-
-  endOfStream() : IEndOfStreamEvent {
-    return {
-      type: "end-of-stream",
-      value: undefined,
-    };
-  },
-
-  bufferComplete(bufferType: SupportedBufferTypes) : ICompletedBufferEvent {
-    return {
-      type: "buffer-complete",
-      value: {
-        type: bufferType,
-      },
-    };
-  },
+  activePeriodChanged,
+  adaptationChange,
+  bufferComplete,
+  endOfStream,
+  loaded,
+  manifestReady,
+  manifestUpdate,
+  nullRepresentation,
+  periodBufferCleared,
+  periodBufferReady,
+  speedChanged,
+  stalled,
+  warning,
 };
 
 // Every possible item emitted by the Stream
 export type IStreamEvent =
+  IActivePeriodChangedEvent |
   IAdaptationBufferEvent |
   IAdaptationChangeEvent |
-  IPeriodBufferClearedEvent |
+  ICompletedBufferEvent |
+  IEndOfStreamEvent |
   IManifestReadyEvent |
   IManifestUpdateEvent |
-  IActivePeriodChangedEvent |
+  IPeriodBufferClearedEvent |
   IPeriodBufferReadyEvent |
   ISessionEvent |
   ISpeedChangedEvent |
   IStalledEvent |
   IStreamLoadedEvent |
-  IEndOfStreamEvent |
-  ICompletedBufferEvent |
   IStreamWarningEvent;
 
 export default STREAM_EVENTS;

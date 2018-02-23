@@ -449,7 +449,7 @@ export default function Stream({
       loadedEvent$,
       buffers$,
       emeManager$,
-      mediaErrorHandler$,
+      mediaErrorHandler$ as Observable<any>, // TODO RxJS Bug?
       speedManager$,
       stallingManager$
     ).finally(() => {

@@ -35,6 +35,9 @@ import {
 } from "./fullscreen";
 
 import {
+  IMediaKeySession,
+  IMediaKeySystemAccess,
+  IMockMediaKeys,
   KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
@@ -326,6 +329,9 @@ export {
   events,
   exitFullscreen,
   hasEMEAPIs,
+  IMediaKeySession,
+  IMediaKeySystemAccess,
+  IMockMediaKeys,
   isCodecSupported,
   isFirefox,
   isFullscreen,

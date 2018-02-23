@@ -35,6 +35,10 @@ import { retryObsWithBackoff } from "../../utils/retry";
 import tryCatch from "../../utils/rx-tryCatch";
 
 import {
+  IMediaKeySession,
+  IMockMediaKeys,
+} from "../../compat";
+import {
   onKeyError$,
   onKeyMessage$,
   onKeyStatusesChange$,
@@ -55,12 +59,12 @@ interface ISessionEvent {
   type : "ISessionEvent";
   value : {
     name : string;
-    session : MediaKeySession;
+    session : IMediaKeySession|MediaKeySession;
   };
 }
 
 interface ISessionEventOptions {
-  updatedWith?: Event;
+  updatedWith?: LicenseObject;
   initData?: Uint8Array;
   initDataType?: string;
   storedSessionId?: string;
@@ -72,6 +76,10 @@ type MediaKeySessionType =
   "persistent-release-message" |
   undefined;
 
+type LicenseObject =
+  BufferSource |
+  ArrayBuffer |
+  ArrayBufferView;
 /**
  * Create the Object emitted by the EME Observable.
  * @param {string} name - name of the event
@@ -82,7 +90,7 @@ type MediaKeySessionType =
  */
 function createSessionEvent(
   name : string,
-  session : MediaKeySession,
+  session : IMediaKeySession|MediaKeySession,
   options? : ISessionEventOptions
 ) : ISessionEvent {
   return {
@@ -101,7 +109,7 @@ function createSessionEvent(
  * @returns {Observable}
  */
 function sessionEventsHandler(
-  session: MediaKeySession,
+  session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
   errorStream: ErrorStream
 ): Observable<Event|ISessionEvent> {
@@ -138,8 +146,8 @@ function sessionEventsHandler(
     throw new EncryptedMediaError("KEY_ERROR", error, true);
   });
 
-  const keyStatusesChanges = onKeyStatusesChange$(session)
-    .mergeMap((keyStatusesEvent: Event) => {
+  const keyStatusesChanges : Observable<LicenseObject> =
+    onKeyStatusesChange$(session).mergeMap((keyStatusesEvent: Event) => {
       log.debug(
         "eme: keystatuseschange event",
         session,
@@ -167,22 +175,15 @@ function sessionEventsHandler(
         } else {
           return Observable.empty();
         }
-      }
-      );
+      });
 
-      if (license) {
-        return license.catch((error: Error) => {
-          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
-        });
-      }
-      log.info("eme: keystatuseschange event not handled");
-      return Observable.empty();
-
+      return license.catch((error: Error) => {
+        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
+      }) as Observable<LicenseObject>;
     });
 
-  const keyMessages = onKeyMessage$(session)
-    .mergeMap((messageEvent: MediaKeyMessageEvent) => {
-
+  const keyMessages$ : Observable<LicenseObject> =
+    onKeyMessage$(session).mergeMap((messageEvent: MediaKeyMessageEvent) => {
       const message = new Uint8Array(messageEvent.message);
       const messageType = messageEvent.messageType || "license-request";
 
@@ -192,8 +193,9 @@ function sessionEventsHandler(
         messageEvent
       );
 
-      const getLicense = Observable.defer(() => {
-        return castToObservable(keySystem.getLicense(message, messageType))
+      const getLicense$ : Observable<LicenseObject> = Observable.defer(() => {
+        const getLicense = keySystem.getLicense(message, messageType);
+        return castToObservable(getLicense)
           .timeout(10 * 1000)
           .catch(error => {
             if (error instanceof TimeoutError) {
@@ -201,28 +203,31 @@ function sessionEventsHandler(
             } else {
               throw error;
             }
-          });
+          }) as Observable<LicenseObject>;
       });
 
-      return retryObsWithBackoff(getLicense, getLicenseRetryOptions);
+      return retryObsWithBackoff(getLicense$, getLicenseRetryOptions);
     });
 
-  const sessionUpdates: Observable<Event|ISessionEvent>
-    = Observable.merge(keyMessages, keyStatusesChanges)
-      .concatMap((res: Event) => {
+  const sessionUpdates: Observable<Event|ISessionEvent> =
+    Observable.merge(keyMessages$, keyStatusesChanges)
+      .concatMap((res) => {
         log.debug("eme: update session", res);
 
+        const sessionEvent = createSessionEvent(
+          "session-update", session, { updatedWith: res });
         return castToObservable(
           session.update(res)
         )
           .catch((error) => {
             throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
           })
-          .mapTo(createSessionEvent("session-update", session, { updatedWith: res }));
+          .mapTo(sessionEvent);
       });
 
-  const sessionEvents: Observable<Event|ISessionEvent>
-    = Observable.merge(sessionUpdates, keyErrors);
+  const sessionEvents: Observable<Event|ISessionEvent> =
+    Observable.merge(sessionUpdates, keyErrors);
+
   if (session.closed) {
     return sessionEvents.takeUntil(castToObservable(session.closed));
   } else {
@@ -241,16 +246,19 @@ function sessionEventsHandler(
  * @returns {Observable}
  */
 function createSession(
-  mediaKeys: MediaKeys,
+  mediaKeys: IMockMediaKeys|MediaKeys,
   sessionType: MediaKeySessionType,
   keySystem: IKeySystemOption,
   initData: Uint8Array,
   errorStream: ErrorStream
 ): {
-  session: MediaKeySession;
+  session: IMediaKeySession|MediaKeySession;
   sessionEvents: ConnectableObservable<Event|ISessionEvent>;
 } {
   log.debug(`eme: create a new ${sessionType} session`);
+  if (mediaKeys.createSession == null) {
+    throw new Error("Invalid MediaKeys implementation: Missing createSession");
+  }
   const session = mediaKeys.createSession(sessionType);
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
@@ -278,7 +286,7 @@ function createSession(
  * @returns {Observable}
  */
 function createSessionAndKeyRequest(
-  mediaKeys: MediaKeys,
+  mediaKeys: IMockMediaKeys|MediaKeys,
   keySystem: IKeySystemOption,
   sessionType: MediaKeySessionType,
   initDataType: string,
@@ -321,7 +329,7 @@ function createSessionAndKeyRequest(
  * @returns {Observable}
  */
 function createSessionAndKeyRequestWithRetry(
-  mediaKeys: MediaKeys,
+  mediaKeys: IMockMediaKeys|MediaKeys,
   keySystem: IKeySystemOption,
   sessionType: MediaKeySessionType,
   initDataType: string,
@@ -372,7 +380,7 @@ function createSessionAndKeyRequestWithRetry(
  * @returns {Observable}
  */
 function createPersistentSessionAndLoad(
-  mediaKeys: MediaKeys,
+  mediaKeys: IMockMediaKeys|MediaKeys,
   keySystem: IKeySystemOption,
   storedSessionId: string,
   initDataType: string,
@@ -432,7 +440,7 @@ function createPersistentSessionAndLoad(
  * @returns {Observable}
  */
 function manageSessionCreation(
-  mediaKeys: MediaKeys,
+  mediaKeys: IMockMediaKeys|MediaKeys,
   mksConfig: MediaKeySystemConfiguration,
   keySystem: IKeySystemOption,
   initDataType: string,

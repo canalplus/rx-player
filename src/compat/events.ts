@@ -24,6 +24,7 @@ import { EventTargetLike } from "rxjs/observable/FromEventObservable";
 
 import config from "../config";
 
+import EventEmitter from "../utils/eventemitter";
 import log from "../utils/log";
 import onEvent from "../utils/rx-onEvent";
 
@@ -76,6 +77,10 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
       .map((p) => p + name)), []);
 }
 
+export type IEventTargetLike =
+  EventTargetLike|
+  EventEmitter<string, any>;
+
 /**
  * @param {Array.<string>} eventNames
  * @param {Array.<string>} prefixes
@@ -84,7 +89,7 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
 function compatibleListener<T extends Event>(
   eventNames : string[],
   prefixes? : string[]
-) : (element : EventTargetLike) => Observable<T> {
+) : (element : IEventTargetLike) => Observable<T> {
   let mem : string|undefined;
   const prefixedEvents = eventPrefixed(eventNames, prefixes);
   return (element) => {

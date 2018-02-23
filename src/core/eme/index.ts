@@ -17,6 +17,8 @@
 import { Observable } from "rxjs/Observable";
 import {
   hasEMEAPIs,
+  IMediaKeySystemAccess,
+  IMockMediaKeys,
   shouldUnsetMediaKeys,
 } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
@@ -57,10 +59,10 @@ const instanceInfos : IInstanceInfo = {
  * @returns {Observable}
  */
 function createMediaKeysObs(
-  keySystemAccess : MediaKeySystemAccess
-) : Observable<MediaKeys> {
+  keySystemAccess : IMediaKeySystemAccess
+) : Observable<IMockMediaKeys|MediaKeys> {
   // MediaKeySystemAccess.prototype.createMediaKeys returns a promise
-  return castToObservable<MediaKeys>(keySystemAccess.createMediaKeys());
+  return castToObservable(keySystemAccess.createMediaKeys());
 }
 
 /**
@@ -80,7 +82,7 @@ function handleEncryptedEvents(
   keySystemInfo: IKeySystemPackage,
   video : HTMLMediaElement,
   errorStream: ErrorStream
-): Observable<MediaKeys|ISessionEvent|Event> {
+): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   const { keySystem, keySystemAccess } = keySystemInfo;
   if (keySystem.persistentLicense) {
     if (keySystem.licenseStorage) {
@@ -135,7 +137,7 @@ function createEME(
   video : HTMLMediaElement,
   keySystems: IKeySystemOption[],
   errorStream: ErrorStream
-) : Observable<MediaKeys|ISessionEvent|Event> {
+) : Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   if (__DEV__) {
     keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
       getLicense: "function",
@@ -211,7 +213,7 @@ export default function EMEManager(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   errorStream : ErrorStream
-) :  Observable<MediaKeys|ISessionEvent|Event> {
+) :  Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {
       return onEncrypted$(videoElement).map(() => {

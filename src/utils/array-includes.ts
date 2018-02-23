@@ -20,7 +20,9 @@ export default function arrayIncludes<T>(
   searchElement : T,
   fromIndex? : number
 ) : boolean {
+  /* tslint:disable no-unbound-method */
   if (typeof Array.prototype.includes === "function") {
+  /* tslint:enable no-unbound-method */
     return arr.includes(searchElement, fromIndex);
   }
 

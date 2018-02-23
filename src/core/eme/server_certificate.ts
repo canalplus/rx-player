@@ -15,6 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { IMockMediaKeys } from "../../compat";
 import EncryptedMediaError from "../../errors/EncryptedMediaError";
 import castToObservable from "../../utils/castToObservable";
 import { ErrorStream } from "./session";
@@ -34,7 +35,7 @@ import { ErrorStream } from "./session";
  * @returns {Observable}
  */
 function setServerCertificate(
-  mediaKeys : MediaKeys,
+  mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : BufferSource
 ) : Observable<{}|void> {
   return Observable.defer(() => {
@@ -57,7 +58,7 @@ function setServerCertificate(
  * @returns {Observable}
  */
 function trySettingServerCertificate(
-  mediaKeys : MediaKeys,
+  mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : BufferSource,
   errorStream: ErrorStream
 ) : Observable<void|{}> {

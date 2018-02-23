@@ -200,18 +200,19 @@ export default function createPipeline(
   ) : Observable<any> {
     function loaderWithRetry(_resolvedInfos : any) {
       // TODO do something about bufferdepth to avoid infinite errors?
-      return downloadingBackoff(
+      return downloadingBackoff<any>(
         tryCatch(_loader, _resolvedInfos),
         backoffOptions
       )
         .catch((error : Error) => {
           throw errorSelector("PIPELINE_LOAD_ERROR", error);
         })
-        .do(({ type, value }) => {
+        .do((arg : { type : string; value : any }) => {
+          const { type, value } = arg;
           if (type === "response" && cache) {
             cache.add(_resolvedInfos, value);
           }
-        })
+        }, undefined, undefined)
         .startWith({
           type: "request",
           value: pipelineInputData,

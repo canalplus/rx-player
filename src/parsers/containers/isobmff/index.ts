@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import assert from "../../utils/assert";
+import assert from "../../../utils/assert";
 import {
   be2toi,
   be3toi,
@@ -24,7 +24,12 @@ import {
   hexToBytes,
   itobe4,
   strToBytes,
-} from "../../utils/bytes";
+} from "../../../utils/bytes";
+import {
+  getMDAT,
+  getMDIA,
+  getTRAF,
+} from "./read";
 
 interface IISOBMFFKeySystem {
   systemId : string;
@@ -181,12 +186,7 @@ function parseSidx(
  * @returns {Number}
  */
 function parseTfdt(buffer : Uint8Array) : number {
-  const moof = getAtomContent(buffer, 0x6d6f6f66 /* moof */);
-  if (!moof) {
-    return -1;
-  }
-
-  const traf = getAtomContent(moof, 0x74726166 /* traf */);
+  const traf = getTRAF(buffer);
   if (!traf) {
     return -1;
   }
@@ -239,12 +239,7 @@ function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
 }
 
 function getDurationFromTrun(buffer : Uint8Array) : number {
-  const moof = getAtomContent(buffer, 0x6d6f6f66 /* moof */);
-  if (!moof) {
-    return -1;
-  }
-
-  const traf = getAtomContent(moof, 0x74726166 /* traf */);
+  const traf = getTRAF(buffer);
   if (!traf) {
     return -1;
   }
@@ -319,17 +314,7 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
  * @returns {Number}
  */
 function getMDHDTimescale(buffer : Uint8Array) : number {
-  const moov = getAtomContent(buffer, 0x6d6f6f76 /* moov */);
-  if (!moov) {
-    return -1;
-  }
-
-  const trak = getAtomContent(moov, 0x7472616b /* "trak" */);
-  if (!trak) {
-    return -1;
-  }
-
-  const mdia = getAtomContent(trak, 0x6d646961 /* "mdia" */);
+  const mdia = getMDIA(buffer);
   if (!mdia) {
     return -1;
   }
@@ -351,44 +336,6 @@ function getMDHDTimescale(buffer : Uint8Array) : number {
   } else {
     return -1;
   }
-}
-
-/**
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} atomName - the 'name' of the box (e.g. 'sidx' or 'moov'),
- * hexa encoded
- * @returns {UInt8Array|null}
- */
-function getAtomContent(buf : Uint8Array, atomName : number) : Uint8Array|null {
-  const l = buf.length;
-  let i = 0;
-
-  let name : number;
-  let size : number = 0;
-  while (i + 8 < l) {
-    size = be4toi(buf, i);
-    name = be4toi(buf, i + 4);
-    assert(size > 0, "out of range size");
-    if (name === atomName) {
-      break;
-    } else {
-      i += size;
-    }
-  }
-
-  if (i < l) {
-    return buf.subarray(i + 8, i + size);
-  } else {
-    return null;
-  }
-}
-
-/**
- * @param {Uint8Array} buf - The isobmff
- * @returns {Uint8Array|null} - Content of the mdat atom, null if not found
- */
-function getMdat(buf : Uint8Array) : Uint8Array|null {
-  return getAtomContent(buf, 0x6D646174 /* "mdat" */);
 }
 
 /**
@@ -464,6 +411,8 @@ export {
   parseTfdt,
   getDurationFromTrun,
   parseSidx,
-  getMdat,
+  getMDAT,
+  getMDIA,
+  getTRAF,
   patchPssh,
 };

@@ -17,7 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
 import { Subscription } from "rxjs/Subscription";
-
+import { IMediaKeySession } from "../../../compat";
 import castToObservable from "../../../utils/castToObservable";
 import log from "../../../utils/log";
 import { ISessionEvent } from "../session";
@@ -27,7 +27,7 @@ import hashInitData from "./hash_init_data";
 // Cached data for a single MediaKeySession
 interface ISessionData {
   initData : number;
-  session : MediaKeySession;
+  session : IMediaKeySession|MediaKeySession;
   eventSubscription : Subscription;
 }
 
@@ -43,7 +43,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   /**
    * @returns {MediaKeySession|undefined}
    */
-  getFirst() : MediaKeySession|undefined {
+  getFirst() : IMediaKeySession|MediaKeySession|undefined {
     if (this._entries.length > 0) {
       return this._entries[0].session;
     }
@@ -66,7 +66,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    * @param {number|Uint8Array} initData
    * @returns {MediaKeySession|null}
    */
-  get(initData : number|Uint8Array) : MediaKeySession|null {
+  get(initData : number|Uint8Array) : IMediaKeySession|MediaKeySession|null {
     const hash = hashInitData(initData);
     const entry = this.find((e) => e.initData === hash);
     if (entry) {
@@ -83,7 +83,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    */
   add(
     initData : Uint8Array|number[]|number,
-    session : MediaKeySession,
+    session : IMediaKeySession|MediaKeySession,
     sessionEvents : ConnectableObservable<Event|ISessionEvent>
   ) : void {
     const hash = hashInitData(initData);
@@ -106,7 +106,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    * @param {string} sessionId
    * @returns {MediaKeySession|null}
    */
-  deleteById(sessionId : string) : MediaKeySession|null {
+  deleteById(sessionId : string) : IMediaKeySession|MediaKeySession|null {
     const entry = this.find((e) => e.session.sessionId === sessionId);
     if (entry) {
       return this.delete(entry.session);
@@ -119,7 +119,9 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    * @param {MediaKeySession} session_
    * @returns {MediaKeySession|null}
    */
-  delete(session_ : MediaKeySession) : MediaKeySession|null {
+  delete(
+    session_ : IMediaKeySession|MediaKeySession
+  ) : IMediaKeySession|MediaKeySession|null {
     const entry = this.find((e) => e.session === session_);
     if (!entry) {
       return null;
@@ -137,7 +139,9 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    * @param {MediaKeySession} session_
    * @returns {Observable}
    */
-  deleteAndClose(session_ : MediaKeySession) : Observable<void|null> {
+  deleteAndClose(
+    session_ : IMediaKeySession|MediaKeySession
+  ) : Observable<void|null> {
     const session = this.delete(session_);
     if (session) {
       log.debug("eme-mem-store: close session", session);

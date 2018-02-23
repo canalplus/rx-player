@@ -82,7 +82,7 @@
     "no-switch-case-fall-through": false,
     "no-this-assignment": [true, { "allow-destructuring": true }],
     "no-trailing-whitespace": true,
-    "no-unbound-method": [false, "ignore-static"], // TODO
+    "no-unbound-method": [true, "ignore-static"],
     "no-unnecessary-callback-wrapper": true,
     "no-unnecessary-class": true,
     "no-unnecessary-initializer": true,
@@ -138,7 +138,6 @@
     "type-literal-delimiter": true,
     "triple-equals": [true, "allow-null-check"],
     "typedef-whitespace": [true, "onespace", "onespace"],
-    "typeof-compare": true,
     "unified-signatures": true,
     "use-isnan": true,
     "variable-name": false,
