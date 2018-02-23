@@ -64,16 +64,14 @@ export interface IMediaKeySession
   remove(): Promise<void>;
 }
 
-type IMediaKeySessionType =
-  "temporary" | "persistent-license" | "persistent-release-message";
-
 interface IMockMediaKeys {
   _setVideo : (vid : HTMLMediaElement) => void;
-  createSession : (sessionType? : IMediaKeySessionType) => IMediaKeySession;
+  createSession : (sessionType? : MediaKeySessionType) => IMediaKeySession;
   setServerCertificate : (
-    setServerCertificate : ArrayBuffer|ArrayBufferView
+    setServerCertificate : BufferSource
   ) => Promise<void>;
 }
+
 interface IMockMediaKeysConstructor {
   new(ks : string) : IMockMediaKeys;
 }
