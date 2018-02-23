@@ -72,10 +72,10 @@ class Player extends React.Component {
   }
 
   onVideoClick() {
-    const { isPaused, hasLoadedContent, hasEnded } =
+    const { isPaused, hasLoadedContent } =
       this.state.player.get();
 
-    if (!hasLoadedContent || hasEnded) {
+    if (!hasLoadedContent) {
       return;
     }
 
