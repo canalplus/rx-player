@@ -48,6 +48,7 @@ import {
   onEnded$,
   onFullscreenChange$,
   onPlayPause$,
+  onSeeking$,
   onTextTrackChanges$,
   videoWidth$,
 } from "../../compat/events";
@@ -787,6 +788,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     const endedEvent$ = onEnded$(videoElement);
 
     /**
+     * Emit when the media element emits a "seeking" event.
+     * @type {Observable}
+     */
+    const seekingEvent$ = onSeeking$(videoElement);
+
+    /**
      * Emit the player state as it changes.
      * TODO only way to call setPlayerState?
      * @type {Observable.<string>}
@@ -796,7 +803,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           Observable.combineLatest(
             this._priv_playing$,
             stalled$.startWith(null),
-            endedEvent$.startWith(null)
+            endedEvent$.startWith(null),
+            seekingEvent$.startWith(null)
           )
             .takeUntil(this._priv_stopCurrentContent$)
             .map(([isPlaying, stalledStatus]) => {
