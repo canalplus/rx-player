@@ -29,6 +29,14 @@ import { ISessionEvent } from "../eme/session";
 import { SupportedBufferTypes } from "../source_buffers";
 import { IStallingItem } from "./stalling_manager";
 
+// Emit when the buffer from last period is full
+export interface ICompletedBufferEvent {
+  type: "buffer-complete";
+  value : {
+    type: SupportedBufferTypes;
+  };
+}
+
 export interface IAdaptationChangeEvent {
   type : "adaptationChange";
   value : {
@@ -37,11 +45,6 @@ export interface IAdaptationChangeEvent {
     adaptation : Adaptation|null;
   };
 }
-
-// Subjects given to allow a choice between the different adaptations available
-// export type IAdaptationsSubject = Partial<
-//   Record<SupportedBufferTypes, ReplaySubject<Adaptation|null>>
-// >;
 
 export interface IStreamStartedEvent {
   type : "started";
@@ -100,6 +103,11 @@ export interface IPeriodBufferClearedEvent {
     type : SupportedBufferTypes;
     period : Period;
   };
+}
+
+export interface IEndOfStreamEvent {
+  type: "end-of-stream";
+  value: undefined;
 }
 
 const STREAM_EVENTS = {
@@ -215,6 +223,22 @@ const STREAM_EVENTS = {
       value,
     };
   },
+
+  endOfStream() : IEndOfStreamEvent {
+    return {
+      type: "end-of-stream",
+      value: undefined,
+    };
+  },
+
+  bufferComplete(bufferType: SupportedBufferTypes) : ICompletedBufferEvent {
+    return {
+      type: "buffer-complete",
+      value: {
+        type: bufferType,
+      },
+    };
+  },
 };
 
 // Every possible item emitted by the Stream
@@ -230,6 +254,8 @@ export type IStreamEvent =
   IStalledEvent |
   IStreamLoadedEvent |
   IStreamStartedEvent |
+  IEndOfStreamEvent |
+  ICompletedBufferEvent |
   IStreamWarningEvent;
 
 export default STREAM_EVENTS;

@@ -227,10 +227,12 @@ export default class SourceBufferManager {
       }
 
       log.info("aborting native source buffer", bufferType);
-      try {
-        memorizedNativeSourceBuffer.sourceBuffer.abort();
-      } catch (e) {
-        log.warn("failed to abort a SourceBuffer:", e);
+      if (this._mediaSource.readyState === "open") {
+        try {
+          memorizedNativeSourceBuffer.sourceBuffer.abort();
+        } catch (e) {
+          log.warn("failed to abort a SourceBuffer:", e);
+        }
       }
       delete this._initializedNativeSourceBuffers[bufferType];
       return;

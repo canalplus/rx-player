@@ -14,6 +14,7 @@
     - [maxBufferBehind](#prop-maxBufferBehind)
     - [limitVideoWidth](#prop-limitVideoWidth)
     - [throttleWhenHidden](#prop-throttleWhenHidden)
+    - [stopAtEnd](#prop-stopAtEnd)
 
 
 ## <a name="overview"></a>Overview
@@ -204,5 +205,23 @@ To activate this feature, set it to ``true``.
 ```js
 const player = Player({
   throttleWhenHidden: true
+});
+```
+
+### <a name="prop-stopAtEnd"></a>stopAtEnd
+
+_type_: ``Boolean``
+
+_defaults_: ``true``
+
+By default, the player automatically _unload_ the content once it reaches its end (the player goes to the ``"ENDED"`` state).
+
+In that case, the only way to play the content again is to (re-)call the ``loadVideo`` API, which will trigger another download of the manifest and segments.
+
+If you want to be able to seek back in the content after it ended, you may want to deactivate this behavior. To do so, set ``stopAtEnd`` to ``false``.
+
+```js
+const player = Player({
+  stopAtEnd: false
 });
 ```

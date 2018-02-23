@@ -18,7 +18,10 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import config from "../../config";
 import log from "../../utils/log";
-import { retryableFuncWithBackoff } from "../../utils/retry";
+import {
+  retryableFuncWithBackoff,
+  retryFuncWithBackoff
+} from "../../utils/retry";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
@@ -72,8 +75,6 @@ import EVENTS, {
   IStreamEvent,
 } from "./stream_events";
 import handleInitialVideoEvents from "./video_events";
-
-const { END_OF_PLAY } = config;
 
 function getManifestPipelineOptions(
   networkConfig: {
@@ -206,17 +207,6 @@ export default function Stream({
     );
 
   /**
-   * End-Of-Play emit when the current clock is really close to the end.
-   * TODO Remove END_OF_PLAY constant
-   * @see END_OF_PLAY
-   * @type {Observable}
-   */
-  const endOfPlay = clock$
-    .filter(({ currentTime, duration }) =>
-      duration > 0 && duration - currentTime < END_OF_PLAY
-    );
-
-  /**
    * Retry the stream if ended for an unknown or non-fatal error.
    * TODO working? remove?
    * @see retryWithBackoff
@@ -284,8 +274,7 @@ export default function Stream({
 
   const warningEvents$ = warning$.map(EVENTS.warning);
 
-  return Observable.merge(stream$, warningEvents$)
-    .takeUntil(endOfPlay);
+  return Observable.merge(stream$, warningEvents$);
 
   /**
    * Begin the stream logic, starting by fetching the manifest and waiting for
@@ -294,7 +283,10 @@ export default function Stream({
    * @returns {Observable}
    */
   function startStream(mediaSource : MediaSource) {
-    return Observable.combineLatest(fetchManifest(url), onSourceOpen$(mediaSource))
+    return Observable.combineLatest(
+      fetchManifest(url),
+      onSourceOpen$(mediaSource).take(1)
+    )
       .mergeMap(([manifest]) => initialize(mediaSource, manifest));
   }
 
@@ -391,7 +383,20 @@ export default function Stream({
         textTrackOptions,
       },
       warning$
-    );
+    ).mergeMap((evt) => {
+      if (evt.type === "end-of-stream") {
+        log.info("Triggering end of stream.");
+        return retryFuncWithBackoff(
+          () => mediaSource.endOfStream(),
+          {
+            totalRetry: 10,
+            retryDelay: 100,
+            shouldRetry: () => mediaSource.readyState !== "ended",
+          }
+        ).ignoreElements() as Observable<never>;
+      }
+      return Observable.of(evt);
+    });
 
     /**
      * Add management of events linked to live Playback.

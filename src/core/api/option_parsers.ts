@@ -95,6 +95,7 @@ export interface IConstructorOptions {
   initialAudioBitrate? : number;
   maxAudioBitrate? : number;
   maxVideoBitrate? : number;
+  stopAtEnd? : boolean;
 }
 
 export interface IParsedConstructorOptions {
@@ -110,6 +111,7 @@ export interface IParsedConstructorOptions {
   initialAudioBitrate : number;
   maxAudioBitrate : number;
   maxVideoBitrate : number;
+  stopAtEnd : boolean;
 }
 
 interface ILoadVideoOptionsBase {
@@ -191,6 +193,7 @@ function parseConstructorOptions(
   let initialAudioBitrate : number;
   let maxAudioBitrate : number;
   let maxVideoBitrate : number;
+  let stopAtEnd : boolean;
 
   if (options.maxBufferAhead == null) {
     maxBufferAhead = DEFAULT_MAX_BUFFER_AHEAD;
@@ -277,6 +280,14 @@ function parseConstructorOptions(
     }
   }
 
+  if (options.stopAtEnd == null) {
+    stopAtEnd = true;
+  } else if (typeof options.stopAtEnd === "boolean") {
+    stopAtEnd = options.stopAtEnd;
+  } else {
+    throw new Error("Invalid stopAtEnd parameter. Should be a boolean.");
+  }
+
   return {
     maxBufferAhead,
     maxBufferBehind,
@@ -288,6 +299,7 @@ function parseConstructorOptions(
     initialVideoBitrate,
     maxAudioBitrate,
     maxVideoBitrate,
+    stopAtEnd,
   };
 }
 
