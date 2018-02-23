@@ -20,6 +20,8 @@ import {
   Representation,
 } from "../../manifest";
 import parseBif from "../../parsers/images/bif";
+import createSmoothManifestParser from "../../parsers/manifest/smooth";
+import { IHSSParserOptions } from "../../parsers/manifest/types";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
@@ -40,10 +42,8 @@ import {
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import extractTimingsInfos from "./isobmff_timings_infos";
-import createSmoothManifestParser from "./manifest";
 import mp4Utils from "./mp4";
 import generateSegmentLoader from "./segment_loader";
-import { IHSSParserOptions } from "./types";
 import {
   buildSegmentURL,
   extractISML,

@@ -16,6 +16,12 @@
 
 import config from "../../../../config";
 import { IRepresentationIndex } from "../../../../manifest";
+import {
+  IParsedAdaptation,
+  IParsedManifest,
+  IParsedPeriod,
+  IParsedRepresentation,
+} from "../../../../parsers/manifest/types";
 import arrayIncludes from "../../../../utils/array-includes";
 import generateNewId from "../../../../utils/id";
 import {
@@ -26,12 +32,6 @@ import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../../utils/url";
-import {
-  IParsedAdaptation,
-  IParsedManifest,
-  IParsedPeriod,
-  IParsedRepresentation,
-} from "../../../types";
 import {
   IRole,
   isHardOfHearing,
