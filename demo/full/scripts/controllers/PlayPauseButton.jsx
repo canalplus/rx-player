@@ -20,9 +20,8 @@ const PlayPauseButton = ({
   isPaused,
   hasLoadedContent,
   hasEnded,
-  stopAtEnd,
 }) => {
-  const disabled = (!hasLoadedContent || hasEnded) && stopAtEnd;
+  const disabled = !hasLoadedContent;
   const displayPause = !isPaused && hasLoadedContent &&
     !hasEnded;
 
