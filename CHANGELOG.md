@@ -6,6 +6,12 @@
 
   - dash: Handle multi-periods DASH manifests
   - api: add ``periodChange`` event
+  - api: add ``stopAtEnd`` option to the constructor, to deactivate automatic content un-loading when it ends
+
+### Bug Fixes
+
+  - stream: call ``endOfStream`` for better end detection and to allow the Chrome browser to display the last frames of a video
+  - buffer: always play the last possible milliseconds in the content (removed END_OF_PLAY config attribute)
 
 ## v3.1.0 (2018/01/30)
 
@@ -14,7 +20,7 @@
   - api: add ``networkConfig`` to ``loadVideo`` options
   - eme: add ``closeSessionsOnStop`` to the ``keySystems`` ``loadVideo`` option
 
-### Bug fixes
+### Bug Fixes
 
   - dash: fix Range request ranges for representations based on a SegmentList index
   - smooth: allows smooth Manifests for non-live contents to begin at a timestamp != 0
