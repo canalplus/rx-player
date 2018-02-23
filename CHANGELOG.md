@@ -17,6 +17,11 @@
   - vtt: fix WebVTT parsing when the last line of a WebVTT file is not a new line
   - dash: ignore availabilityStartTime settings for a static MPD
 
+### Other improvements
+
+  - update RxJS to v5.5.6
+  - update TypeScript to v2.7.2
+
 ## v3.1.0 (2018/01/30)
 
 ### Added
@@ -45,6 +50,7 @@
   - dash: fix issue which could led to segments being re-downloaded too much in a SegmentTemplate scheme
 
 ### Other improvements
+
   - demo: set "html" textTrackMode by default to have a better stylization of closed captions.
 
 ## v3.0.5 (2017/12/11)
