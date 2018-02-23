@@ -68,7 +68,7 @@ export default function parseWebVTT(
       // continue incrementing i until either:
       //   - empty line
       //   - end of file
-      while (!(linified[i].length === 0)) {
+      while (linified[i]) {
         i++;
       }
       const styleBlock = linified.slice(startOfStyleBlock, i);
@@ -86,7 +86,7 @@ export default function parseWebVTT(
         // continue incrementing i until either:
         //   - empty line
         //   - end of file
-        while (!(linified[i].length === 0)) {
+        while (linified[i]) {
           i++;
         }
         const cueBlock = linified.slice(startOfCueBlock, i);
@@ -95,7 +95,7 @@ export default function parseWebVTT(
           cuesArray.push(cue);
         }
       } else {
-        while (!(linified[i].length === 0)) {
+        while (linified[i]) {
           i++;
         }
       }
