@@ -378,15 +378,11 @@ if (navigator.requestMediaKeySystemAccess) {
   // This is for IE11
   else if (
     MediaKeys_ &&
+    MediaKeys_.prototype &&
+    typeof MediaKeys_.prototype.createSession === "function" &&
     typeof MediaKeys_.isTypeSupported === "function"
   ) {
     // XXX TODO Put SessionProxy here
-
-    // Add empty prototype for some IE targets which do not set one and just
-    // throws in the following lines
-    if (!MediaKeys_.prototype) {
-      (MediaKeys_ as any).prototype = {};
-    }
 
     // on IE11, each created session needs to be created on a new
     // MediaKeys object
