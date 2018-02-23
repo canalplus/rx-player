@@ -165,7 +165,10 @@ type IRepresentationBufferStatus =
   IIdleBufferEvent |
   IWaitingBufferEvent;
 
-const { BITRATE_REBUFFERING_RATIO } = config;
+const {
+  BITRATE_REBUFFERING_RATIO,
+  MINIMUM_SEGMENT_SIZE,
+} = config;
 
 /**
  * Get safety paddings (low and high) for the size of buffer that won't
@@ -317,6 +320,10 @@ export default function RepresentationBuffer<T>({
     const { time, duration, timescale } = segment;
     if (!duration) {
       return true;
+    }
+
+    if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
+      return false;
     }
 
     const currentSegment =
