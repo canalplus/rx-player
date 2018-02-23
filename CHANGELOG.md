@@ -16,6 +16,7 @@
   - eme: workaround a bug found on Chrome where setting a ``keySystems`` option in ``loadVideo`` would always throw on HTTP (not HTTPS) pages.
   - vtt: fix WebVTT parsing when the last line of a WebVTT file is not a new line
   - dash: ignore availabilityStartTime settings for a static MPD
+  - buffer: ignore segments for a duration inferior to the MINIMUM_SEGMENT_SIZE (200ms by default) to avoid infinite re-downloading
 
 ### Other improvements
 
