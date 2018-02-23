@@ -112,6 +112,6 @@ const manifestPreLoader = (
         }
       };
     });
-}
+};
 
 export default manifestPreLoader;
