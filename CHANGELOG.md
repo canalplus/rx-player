@@ -7,6 +7,7 @@
   - dash: Handle multi-periods DASH manifests
   - api: add ``periodChange`` event
   - api: add ``stopAtEnd`` option to the constructor, to deactivate automatic content un-loading when it ends
+  - api: add ``manifestLoader`` to the ``transportOptions`` of a ``loadVideo`` call
 
 ### Bug Fixes
 
@@ -14,6 +15,7 @@
   - buffer: always play the last possible milliseconds of a content (removed END_OF_PLAY config attribute)
   - eme: workaround a bug found on Chrome where setting a ``keySystems`` option in ``loadVideo`` would always throw on HTTP (not HTTPS) pages.
   - vtt: fix WebVTT parsing when the last line of a WebVTT file is not a new line
+  - dash: ignore availabilityStartTime settings for a static MPD
 
 ## v3.1.0 (2018/01/30)
 
