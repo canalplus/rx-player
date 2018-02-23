@@ -15,30 +15,30 @@
  */
 
 import config from "../../../config";
-import arrayIncludes from "../../../utils/array-includes";
-import assert from "../../../utils/assert";
-import {
-  bytesToUTF16Str,
-  concat,
-  guidToUuid,
-  hexToBytes,
-  le2toi,
-  strToBytes,
-} from "../../../utils/bytes";
-import generateNewId from "../../../utils/id";
-import { normalize as normalizeLang } from "../../../utils/languages";
-import log from "../../../utils/log";
-import {
-  normalizeBaseURL,
-  resolveURL,
-} from "../../../utils/url";
-import { IParsedManifest } from "../../types";
+ import arrayIncludes from "../../../utils/array-includes";
+ import assert from "../../../utils/assert";
+ import {
+   bytesToUTF16Str,
+   concat,
+   guidToUuid,
+   hexToBytes,
+   le2toi,
+   strToBytes,
+  } from "../../../utils/bytes";
+  import generateNewId from "../../../utils/id";
+  import { normalize as normalizeLang } from "../../../utils/languages";
+  import log from "../../../utils/log";
+  import {
+    normalizeBaseURL,
+    resolveURL,
+  } from "../../../utils/url";
 import {
   IAdaptationSmooth,
   IContentProtectionSmooth,
   IHSSKeySystem,
   IHSSManifestSegment,
   IHSSParserOptions,
+  IParsedManifest,
   IRepresentationSmooth,
  } from "../types";
 import RepresentationIndex from "./representationIndex";

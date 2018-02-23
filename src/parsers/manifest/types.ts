@@ -18,7 +18,7 @@ import { IRepresentationIndex } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader
-} from "../types";
+} from "../../net/types";
 
 interface IHSSKeySystem {
   systemId : string;
@@ -104,6 +104,103 @@ interface IAdaptationSmooth {
   name?: string;
   language?: string;
   normalizedLanguage?: string;
+}
+
+export interface IParsedRepresentation {
+  // required
+  baseURL : string;
+  bitrate : number;
+  index : IRepresentationIndex;
+  id: string;
+
+  // optional
+  audioSamplingRate?: string;
+  audiotag?: number;
+  codecs?: string;
+  codingDependency?: boolean;
+  frameRate?: number;
+  height?: number;
+  maxPlayoutRate?: number;
+  maximumSAPPeriod?: number;
+  mimeType?: string;
+  profiles?: string;
+  qualityRanking?: number;
+  segmentProfiles?: string;
+  width?: number;
+
+  // TODO move to DASH Segment's privateInfos
+  contentProtection?: IParsedContentProtection;
+}
+
+export interface IParsedAdaptation {
+  // required
+  id: string;
+  representations: IParsedRepresentation[];
+  type: string;
+
+  // optional
+  audioDescription? : boolean;
+  bitstreamSwitching?: boolean;
+  closedCaption? : boolean;
+  language?: string;
+  maxBitrate?: number;
+  maxFrameRate?: number;
+  maxHeight?: number;
+  maxWidth?: number;
+  minBitrate?: number;
+  minFrameRate?: number;
+  minHeight?: number;
+  minWidth?: number;
+  name? : string;
+  normalizedLanguage? : string;
+  par?: string;
+  segmentAlignment?: number|boolean;
+  subsegmentAlignment?: number|boolean;
+
+  // TODO move to DASH Segment's privateInfos
+  contentProtection?: IParsedContentProtection;
+}
+
+export interface IParsedPeriod {
+  // required
+  id : string;
+  start : number;
+  end? : number;
+  adaptations : IParsedAdaptation[];
+
+  // optional
+  duration? : number;
+  bitstreamSwitching? : boolean;
+}
+
+export interface IParsedManifest {
+  // required
+  availabilityStartTime : number;
+  duration: number;
+  id: string;
+  periods: IParsedPeriod[];
+  transportType: string; // "smooth", "dash" etc.
+  type: string; // "static" or "dynamic" TODO isLive?
+  uris: string[]; // uris where the manifest can be refreshed
+
+  // optional
+  availabilityEndTime?: number;
+  maxSegmentDuration?: number;
+  maxSubsegmentDuration?: number;
+  minBufferTime?: number;
+  minimumTime? : number;
+  minimumUpdatePeriod?: number;
+  presentationLiveGap?: number;
+  profiles?: string;
+  publishTime?: number;
+  suggestedPresentationDelay?: number;
+  timeShiftBufferDepth?: number;
+}
+
+// TODO move to DASH Segment's privateInfos
+export interface IParsedContentProtection {
+  schemeIdUri?: string;
+  value?: string;
 }
 
 export {
