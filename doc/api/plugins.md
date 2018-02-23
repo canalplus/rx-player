@@ -114,7 +114,7 @@ Here is a manifest loader which uses an XHR (it has no use, as our implementatio
  * @param {Function} callbacks.resolve - Callback to call when the request is
  * finished with success. It should be called with an object with at least 3
  * properties:
- *   - data {Document} - the manifest data
+ *   - data {Document|String} - the manifest data
  *   - duration {Number} - the duration of the request, in ms
  *   - size {Number} - size, in bytes, of the total downloaded response.
  * @param {Function} callbacks.reject - Callback to call when an error is

@@ -231,7 +231,7 @@ export type CustomManifestLoader = (
   // second argument: callbacks
   callbacks : {
     resolve : (args: {
-      data : Document;
+      data : Document|string;
       size : number;
       duration : number;
     }) => void;

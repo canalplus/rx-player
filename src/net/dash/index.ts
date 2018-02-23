@@ -22,9 +22,9 @@ import {
 import parseBif from "../../parsers/images/bif";
 import request from "../../utils/request";
 import { resolveURL } from "../../utils/url";
+import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import dashManifestParser from "./manifest";
-import generateManifestLoader from "./manifest_loader";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
@@ -74,21 +74,26 @@ export default function(
   ArrayBuffer|string,
   ArrayBuffer
 >{
-  const manifestLoader = generateManifestLoader(options.manifestLoader);
+  const manifestLoader =
+    generateManifestLoader({
+      customManifestLoader: options.manifestLoader
+    });
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
   // const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : ILoaderObservable<Document> {
+    ) : ILoaderObservable<Document|string> {
       return manifestLoader(url);
     },
 
     parser(
-      { response, url } : IManifestParserArguments<Document>
+      { response, url } : IManifestParserArguments<Document|string>
     ) : IManifestParserObservable {
-      const data = response.responseData;
+      const data = typeof response.responseData === "string" ?
+        new DOMParser().parseFromString(response.responseData, "text/xml") :
+        response.responseData;
       return Observable.of({
         manifest: dashManifestParser(data, url/*, contentProtectionParser*/),
         url: response.url,

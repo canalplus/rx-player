@@ -36,6 +36,7 @@ import {
   SegmentParserObservable,
   TextTrackParserObservable,
 } from "../types";
+import generateManifestLoader from "../utils/manifest_loader";
 import extractTimingsInfos from "./isobmff_timings_infos";
 import createSmoothManifestParser from "./manifest";
 import mp4Utils from "./mp4";
@@ -85,6 +86,12 @@ export default function(
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
+  const manifestLoaderOptions = {
+    customManifestLoader: options.manifestLoader,
+    ignoreProgressEvents: true as true,
+  };
+  const manifestLoader = generateManifestLoader(manifestLoaderOptions);
+
   const manifestPipeline = {
     resolver({ url } : IManifestLoaderArguments) : IResolverObservable {
       let resolving;
@@ -112,18 +119,17 @@ export default function(
         .map((_url) => ({ url: replaceToken(resolveManifest(_url), token) }));
     },
 
-    loader({ url } : IManifestLoaderArguments) : ILoaderObservable<Document> {
-      return request({
-        url,
-        responseType: "document",
-        ignoreProgressEvents: true,
-      });
+    loader({ url } : IManifestLoaderArguments) : ILoaderObservable<Document|string> {
+     return manifestLoader(url);
     },
 
     parser(
-      { response, url } : IManifestParserArguments<Document>
+      { response, url } : IManifestParserArguments<Document|string>
     ) : IManifestParserObservable {
-      const manifest = smoothManifestParser(response.responseData, url);
+      const data = typeof response.responseData === "string" ?
+        new DOMParser().parseFromString(response.responseData, "text/xml") :
+        response.responseData;
+      const manifest = smoothManifestParser(data, url);
       return Observable.of({
         manifest,
         url: response.url,
