@@ -17,7 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import {
   canPlay,
-  canSeek,
+  hasLoadedMetadata,
 } from "../../compat";
 import log from "../../utils/log";
 
@@ -28,11 +28,11 @@ import log from "../../utils/log";
  * @param {number} startTime
  * @returns {Observable}
  */
-function handleCanSeek(
+function doInitialSeek(
   videoElement : HTMLMediaElement,
   startTime : number
-) : Observable<null> {
-  return canSeek(videoElement)
+) : Observable<void> {
+  return hasLoadedMetadata(videoElement)
     .do(() => {
       log.info("set initial time", startTime);
 
@@ -41,7 +41,6 @@ function handleCanSeek(
       videoElement.playbackRate = 1;
       videoElement.currentTime = startTime;
     })
-    .mapTo(null)
     .share();
 }
 
@@ -53,7 +52,7 @@ function handleCanSeek(
 function handleCanPlay(
   videoElement : HTMLMediaElement,
   autoPlay : boolean
-) : Observable<null> {
+) : Observable<void> {
   return canPlay(videoElement)
     .do(() => {
       log.info("canplay event");
@@ -63,7 +62,6 @@ function handleCanPlay(
         /* tslint:enable no-floating-promises */
       }
     })
-    .mapTo(null)
     .share();
 }
 
@@ -78,18 +76,18 @@ export default function handleVideoEvents(
   startTime : number,
   autoPlay : boolean
 ) : {
-  hasDoneInitialSeek$ : Observable<null>;
-  isLoaded$ : Observable<null>;
+  initialSeek$ : Observable<void>;
+  loadAndPlay$ : Observable<void>;
 } {
-  const hasDoneInitialSeek$ = handleCanSeek(videoElement, startTime);
+  const initialSeek$ = doInitialSeek(videoElement, startTime);
   const hasHandledCanPlay$ = handleCanPlay(videoElement, autoPlay);
-  const isLoaded$ = Observable.combineLatest(
-    hasDoneInitialSeek$, hasHandledCanPlay$)
+  const loadAndPlay$ = Observable
+    .combineLatest(initialSeek$, hasHandledCanPlay$)
     .take(1)
-    .mapTo(null);
+    .mapTo(undefined);
 
   return {
-    hasDoneInitialSeek$,
-    isLoaded$,
+    initialSeek$,
+    loadAndPlay$,
   };
 }

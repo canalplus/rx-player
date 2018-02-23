@@ -81,14 +81,14 @@ function getSeekings$(clock$ : Observable<IStreamClockTick>) : Observable<null> 
  *   - seekings$ emits each time the player go in a seeking state.
  * @param {Object} manifest
  * @param {Observable} streamClock$
- * @param {Observable} hasDoneInitialSeek$
+ * @param {Observable} initialSeek$
  * @param {Number} startTime
  * @returns {Object}
  */
 export default function createBufferClock(
   manifest : Manifest,
   streamClock$ : Observable<IStreamClockTick>,
-  hasDoneInitialSeek$ : Observable<null>,
+  initialSeek$ : Observable<void>,
   startTime : number
 ) : {
   clock$ : Observable<IBufferClockTick>;
@@ -104,7 +104,7 @@ export default function createBufferClock(
    * @type {Number}
    */
   let timeOffset = startTime;
-  const updateTimeOffset$ = hasDoneInitialSeek$
+  const updateTimeOffset$ = initialSeek$
     .take(1)
     .do(() => {
       timeOffset = 0;

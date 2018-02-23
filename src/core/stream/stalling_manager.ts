@@ -17,7 +17,6 @@
 import { Observable } from "rxjs/Observable";
 import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
-import Manifest from "../../manifest";
 import log from "../../utils/log";
 import { getNextRangeGap } from "../../utils/ranges";
 import { IStreamClockTick } from "./clock";
@@ -33,13 +32,11 @@ export interface IStallingItem {
  * Receive "stalling" events from the clock, try to get out of it, and re-emit
  * them for the player if the stalling status changed.
  * @param {HTMLMediaElement} videoElement
- * @param {Manifest} manifest
  * @param {Observable} timings$
  * @returns {Observable}
  */
 function StallingManager(
   videoElement : HTMLMediaElement,
-  _manifest : Manifest,
   timings$ : Observable<IStreamClockTick>
 ) : Observable<IStallingItem|null> {
   return timings$

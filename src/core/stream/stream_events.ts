@@ -46,8 +46,8 @@ export interface IAdaptationChangeEvent {
   };
 }
 
-export interface IStreamStartedEvent {
-  type : "started";
+export interface IManifestReadyEvent {
+  type : "manifestReady";
   value : {
     abrManager : ABRManager;
     manifest : Manifest;
@@ -133,9 +133,9 @@ const STREAM_EVENTS = {
     };
   },
 
-  started(abrManager : ABRManager, manifest : Manifest) : IStreamStartedEvent {
+  manifestReady(abrManager : ABRManager, manifest : Manifest) : IManifestReadyEvent {
     return {
-      type: "started",
+      type: "manifestReady",
       value: {
         abrManager,
         manifest,
@@ -246,6 +246,7 @@ export type IStreamEvent =
   IAdaptationBufferEvent |
   IAdaptationChangeEvent |
   IPeriodBufferClearedEvent |
+  IManifestReadyEvent |
   IManifestUpdateEvent |
   IActivePeriodChangedEvent |
   IPeriodBufferReadyEvent |
@@ -253,7 +254,6 @@ export type IStreamEvent =
   ISpeedChangedEvent |
   IStalledEvent |
   IStreamLoadedEvent |
-  IStreamStartedEvent |
   IEndOfStreamEvent |
   ICompletedBufferEvent |
   IStreamWarningEvent;

@@ -1616,8 +1616,8 @@ class Player extends EventEmitter<any> {
       case "bitrateEstimationChange":
         this._priv_onBitrateEstimationChange(streamInfos.value);
         break;
-      case "started":
-        this._priv_onStreamStarted(streamInfos.value);
+      case "manifestReady":
+        this._priv_onManifestReady(streamInfos.value);
         break;
       case "warning":
         this._priv_onStreamWarning(streamInfos.value);
@@ -1698,7 +1698,7 @@ class Player extends EventEmitter<any> {
    * @param {Object} value.abrManager - ABR manager which can be used to select
    * the wanted bandwidth.
    */
-  private _priv_onStreamStarted(value : {
+  private _priv_onManifestReady(value : {
     abrManager : ABRManager;
     manifest : Manifest;
   }) : void {

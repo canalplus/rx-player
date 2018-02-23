@@ -313,14 +313,14 @@ export default function Stream({
     }
 
     const {
-      hasDoneInitialSeek$,
-      isLoaded$,
+      initialSeek$,
+      loadAndPlay$,
     } = handleInitialVideoEvents(videoElement, initialTime, autoPlay);
 
     const {
       clock$: bufferClock$,
       seekings$,
-    } = createBufferClock(manifest, clock$, hasDoneInitialSeek$, initialTime);
+    } = createBufferClock(manifest, clock$, initialSeek$, initialTime);
 
     /**
      * Subject through which network metrics will be sent by the segment
@@ -436,15 +436,16 @@ export default function Stream({
      * various infinite stalling issues
      * @type {Observable}
      */
-    const stallingManager$ = StallingManager(videoElement, manifest, clock$)
+    const stallingManager$ = StallingManager(videoElement, clock$)
       .map(EVENTS.stalled);
 
     // Single lifecycle events
-    const streamStartedEvent$ = Observable.of(EVENTS.started(abrManager, manifest));
-    const loadedEvent$ = isLoaded$.mapTo(EVENTS.loaded());
+    const manifestReadyEvent$ = Observable
+      .of(EVENTS.manifestReady(abrManager, manifest));
+    const loadedEvent$ = loadAndPlay$.mapTo(EVENTS.loaded());
 
     return Observable.merge(
-      streamStartedEvent$,
+      manifestReadyEvent$,
       loadedEvent$,
       buffers$,
       emeManager$,
