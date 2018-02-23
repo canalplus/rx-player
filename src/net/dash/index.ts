@@ -67,17 +67,10 @@ interface IDASHOptions {
  */
 export default function(
   options : IDASHOptions = {}
-) : ITransportPipelines<
-  Document,
-  ArrayBuffer|Uint8Array,
-  ArrayBuffer|Uint8Array,
-  ArrayBuffer|string,
-  ArrayBuffer
->{
-  const manifestLoader =
-    generateManifestLoader({
-      customManifestLoader: options.manifestLoader
-    });
+) : ITransportPipelines {
+  const manifestLoader = generateManifestLoader({
+    customManifestLoader: options.manifestLoader,
+  });
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
   // const { contentProtectionParser } = options;
 
@@ -189,7 +182,7 @@ export default function(
     },
 
     parser(
-      { response } : ISegmentParserArguments<ArrayBuffer>
+      { response } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : ImageParserObservable {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);

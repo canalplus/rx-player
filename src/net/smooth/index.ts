@@ -76,13 +76,7 @@ function addNextSegments(
 
 export default function(
   options : IHSSParserOptions = {}
-) : ITransportPipelines<
-  Document,               // manifest loader -> parser
-  ArrayBuffer|Uint8Array, // audio    loader -> parser
-  ArrayBuffer|Uint8Array, // video    loader -> parser
-  ArrayBuffer|string,     // text     loader -> parser
-  ArrayBuffer             // image    loader -> parser
-> {
+) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
@@ -119,8 +113,10 @@ export default function(
         .map((_url) => ({ url: replaceToken(resolveManifest(_url), token) }));
     },
 
-    loader({ url } : IManifestLoaderArguments) : ILoaderObservable<Document|string> {
-     return manifestLoader(url);
+    loader(
+      { url } : IManifestLoaderArguments
+    ) : ILoaderObservable<Document|string> {
+      return manifestLoader(url);
     },
 
     parser(
@@ -221,7 +217,7 @@ export default function(
         representation,
         adaptation,
         manifest,
-    } : ISegmentParserArguments<string|ArrayBuffer>
+    } : ISegmentParserArguments<string|ArrayBuffer|Uint8Array>
     ) : TextTrackParserObservable {
       const { language } = adaptation;
       const {
@@ -354,7 +350,7 @@ export default function(
     },
 
     parser(
-      { response } : ISegmentParserArguments<ArrayBuffer>
+      { response } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : ImageParserObservable {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);

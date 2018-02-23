@@ -117,7 +117,7 @@ export interface IStreamOptions {
   supplementaryImageTracks : ISupplementaryImageTrack[];
   supplementaryTextTracks : ISupplementaryTextTrack[];
   textTrackOptions : ITextTrackSourceBufferOptions;
-  transport : ITransportPipelines<any, any, any, any, any>;
+  transport : ITransportPipelines;
   url : string;
   videoElement : HTMLMediaElement;
 }
