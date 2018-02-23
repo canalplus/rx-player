@@ -333,6 +333,12 @@ function findCompatibleKeySystem(
         keySystemConfigurations
       );
 
+      if (requestMediaKeySystemAccess == null) {
+        throw new Error(
+          "requestMediaKeySystemAccess is not implemented in your browser."
+        );
+      }
+
       sub = requestMediaKeySystemAccess(keyType, keySystemConfigurations)
         .subscribe(
           (keySystemAccess) => {
