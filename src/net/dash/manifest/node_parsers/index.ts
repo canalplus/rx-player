@@ -262,6 +262,23 @@ export default function parseManifest(
       }
     }
 
+    let periodDuration : number|undefined;
+
+    if (period.attributes.duration != null) {
+      periodDuration = period.attributes.duration;
+    } else {
+      const nextPeriod = parsedPeriods[i + 1];
+      if (nextPeriod && nextPeriod.start != null) {
+        periodDuration = nextPeriod.start - periodStart;
+      } else if (
+        i === 0 &&
+        rootAttributes.duration &&
+        !nextPeriod
+      ){
+        periodDuration = rootAttributes.duration;
+      }
+    }
+
     // 4. Construct underlying adaptations
     const adaptations = period.children.adaptations.map((adaptation) => {
       const adaptationRootURL = resolveURL(periodRootURL, adaptation.children.baseURL);
@@ -562,12 +579,9 @@ export default function parseManifest(
     const parsedPeriod : IParsedPeriod = {
       id: periodID,
       start: periodStart,
+      duration: periodDuration,
       adaptations,
     };
-
-    if (period.attributes.duration != null) {
-      parsedPeriod.duration = period.attributes.duration;
-    }
 
     if (period.attributes.bitstreamSwitching != null) {
       parsedPeriod.bitstreamSwitching = period.attributes.bitstreamSwitching;

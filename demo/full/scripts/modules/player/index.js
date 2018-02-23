@@ -13,6 +13,7 @@ const RxPlayer = window.RxPlayer;
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   const player = new RxPlayer({
     limitVideoWidth: false,
+    stopAtEnd: false,
     throttleWhenHidden: true,
     videoElement,
   });

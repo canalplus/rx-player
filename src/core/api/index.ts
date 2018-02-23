@@ -44,6 +44,7 @@ import {
 } from "../../compat";
 import {
   isInBackground$,
+  onEnded$,
   onFullscreenChange$,
   onPlayPause$,
   onTextTrackChanges$,
@@ -166,8 +167,11 @@ class Player extends EventEmitter<any> {
   private _priv_streamLock$ : BehaviorSubject<boolean>;
 
   /**
-   * Emit false when the player is into a "paused" state, true when it goes into
-   * a "playing" state.
+   * Changes on "play" and "pause" events from the media elements.
+   * Switches to ``true`` whent the "play" event was the last received.
+   * Switches to ``false`` whent the "pause" event was the last received.
+   *
+   * ``false`` if no such event was received for the current loaded content.
    * @private
    * @type {ReplaySubject}
    */
@@ -368,6 +372,11 @@ class Player extends EventEmitter<any> {
   private _priv_currentImagePlaylist : IBifThumbnail[]|null;
 
   /**
+   * Determines whether or not player should stop at the end of video playback.
+   */
+  private _priv_stopAtEnd : boolean;
+
+  /**
    * @returns {Object}
    */
   static get ErrorTypes() : IDictionary<string> {
@@ -421,6 +430,7 @@ class Player extends EventEmitter<any> {
       throttleWhenHidden,
       videoElement,
       wantedBufferAhead,
+      stopAtEnd,
     } = parseConstructorOptions(options);
 
     // Workaround to support Firefox autoplay on FF 42.
@@ -514,6 +524,7 @@ class Player extends EventEmitter<any> {
 
     this._priv_fatalError = null;
     this._priv_currentImagePlaylist = null;
+    this._priv_stopAtEnd = stopAtEnd;
 
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
   }
@@ -661,6 +672,11 @@ class Player extends EventEmitter<any> {
       textTrackElement: options.textTrackElement,
     };
 
+    const closeStream$ = Observable.merge(
+      this._priv_stopCurrentContent$,
+      this._priv_stopAtEnd ? onEnded$(videoElement) : Observable.empty()
+    ).take(1);
+
     /**
      * Stream Observable, through which the content will be launched.
      * @type {Observable.<Object>}
@@ -682,8 +698,8 @@ class Player extends EventEmitter<any> {
       url,
       videoElement,
     })
-      .takeUntil(this._priv_stopCurrentContent$)
-      .publish();
+    .takeUntil(closeStream$)
+    .publish();
 
     /**
      * Emit a truthy value when the player stalls, a falsy value as it unstalls.
@@ -692,8 +708,7 @@ class Player extends EventEmitter<any> {
      */
     const stalled$ = stream
       .filter(({ type }) => type === "stalled")
-      .map(x => x.value)
-      .startWith(null) as Observable<null|{ state : string}> ;
+      .map(x => x.value)  as Observable<null|{ state : string }>;
 
     /**
      * Emit when the stream is considered "loaded".
@@ -705,29 +720,47 @@ class Player extends EventEmitter<any> {
       .share();
 
     /**
+     * Emit when the media element emits an "ended" event.
+     * @type {Observable}
+     */
+    const endedEvent$ = onEnded$(videoElement);
+
+    /**
      * Emit the player state as it changes.
      * TODO only way to call setPlayerState?
      * @type {Observable.<string>}
      */
     const stateChanges$ = loaded.mapTo(PLAYER_STATES.LOADED)
       .concat(
-        Observable.combineLatest(this._priv_playing$, stalled$)
-          .takeUntil(this._priv_stopCurrentContent$)
-          .map(([isPlaying, stalledStatus]) => {
-            if (stalledStatus) {
-              return (stalledStatus.state === "seeking") ?
-                PLAYER_STATES.SEEKING : PLAYER_STATES.BUFFERING;
-            }
-            return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
-          })
-
-          // begin emitting those only when the content start to play
-          .skipUntil(
-            this._priv_playing$.filter(isPlaying => isPlaying)
+          Observable.combineLatest(
+            this._priv_playing$,
+            stalled$.startWith(null),
+            endedEvent$.startWith(null)
           )
+            .takeUntil(this._priv_stopCurrentContent$)
+            .map(([isPlaying, stalledStatus]) => {
+              if (videoElement.ended) {
+                return PLAYER_STATES.ENDED;
+              }
+
+              if (stalledStatus) {
+                switch (stalledStatus.state) {
+                  case "seeking":
+                    return PLAYER_STATES.SEEKING;
+                  default:
+                    return PLAYER_STATES.BUFFERING;
+                }
+              }
+              return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
+            })
+
+            // begin emitting those only when the content start to play
+            .skipUntil(
+              this._priv_playing$.filter(isPlaying => isPlaying)
+            )
       )
-      .distinctUntilChanged()
-      .startWith(PLAYER_STATES.LOADING);
+        .distinctUntilChanged()
+        .startWith(PLAYER_STATES.LOADING);
 
     /**
      * Emit true each time the player goes into a "play" state.
@@ -1941,10 +1974,7 @@ class Player extends EventEmitter<any> {
       throw new Error("Disposed player");
     }
 
-    const videoElement = this.videoElement;
-    if (!videoElement.ended) {
-      this._priv_playing$.next(isPlaying);
-    }
+    this._priv_playing$.next(isPlaying);
   }
 
   /**

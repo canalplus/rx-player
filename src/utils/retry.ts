@@ -15,9 +15,9 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { getBackedoffDelay } from "./backoff";
-
+import { Observer } from "rxjs/Observer";
 import { CustomError } from "../errors";
+import { getBackedoffDelay } from "./backoff";
 
 /**
  * Simple debounce implementation.
@@ -80,7 +80,7 @@ interface IBackoffOptions {
  * TODO Take errorSelector out. Should probably be entirely managed in the
  * calling code via a catch (much simpler to use and to understand).
  */
-function retryWithBackoff<T>(
+function retryObsWithBackoff<T>(
   obs$ : Observable<T>,
   options : IBackoffOptions
 ) : Observable<T> {
@@ -124,7 +124,95 @@ function retryWithBackoff<T>(
 }
 
 /**
- * Same than retryWithBackoff, only with a function returning an observable
+ * Retry the given function (if it triggers an error) with an exponential
+ * backoff.
+ * The backoff behavior can be tweaked through the options given.
+ *
+ * @param {Number} options.retryDelay - The initial delay, in ms.
+ * This delay will be fuzzed to fall under the range +-30% each time a new retry
+ * is done.
+ * Then, this delay will be multiplied by 2^(n-1), n being the counter of retry
+ * we performed (beginning at 1 for the first retry).
+ * @param {Number} options.totalRetry - The amount of time we should retry. 0
+ * means no retry, 1 means a single retry, Infinity means infinite retry etc.
+ * If the observable still fails after this number of retry, the error will
+ * be throwed through this observable.
+ * @param {Number} [options.resetDelay] - Delay in ms since a retry after which
+ * the counter of retry will be reset if the observable wasn't retried a new
+ * time. 0 / undefined means no delay will be applied.
+ * @param {Function} [options.shouldRetry] - Function which will receive the
+ * observable error each time it fails, and should return a boolean. If this
+ * boolean is false, the error will be directly thrown (without anymore retry).
+ * @param {Function} [options.onRetry] - Function which will be triggered at
+ * each retry. Will receive two arguments:
+ *   1. The observable error
+ *   2. The current retry count, beginning at 1 for the first retry
+ * @param {Function} [options.errorSelector] - If and when the observable will
+ * definitely throw (without retrying), this function will be called with two
+ * arguments:
+ *   1. The observable error
+ *   2. The final retry count, beginning at 1 for the first retry
+ * The returned value will be what will be thrown by the observable.
+ * @returns {Observable}
+ * TODO Take errorSelector out. Should probably be entirely managed in the
+ * calling code via a catch (much simpler to use and to understand).
+ */
+function retryFuncWithBackoff<T>(
+  func: () => T,
+  options : IBackoffOptions
+) : Observable<T> {
+  const {
+    retryDelay,
+    totalRetry,
+    shouldRetry,
+    resetDelay,
+    errorSelector,
+    onRetry,
+  } = options;
+
+  let retryCount = 0;
+  let debounceRetryCount : () => void|undefined;
+  if (resetDelay != null && resetDelay > 0) {
+    debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
+  }
+
+  function doRetry() : Observable<T> {
+    const func$ = Observable.create((obs : Observer<T>) => {
+      obs.next(func());
+      obs.complete();
+    });
+
+    return func$.catch((error : Error|CustomError) => {
+      const wantRetry = !shouldRetry || shouldRetry(error);
+      if (!wantRetry || retryCount++ >= totalRetry) {
+        if (errorSelector) {
+          throw errorSelector(error, retryCount);
+        } else {
+          throw error;
+        }
+      }
+
+      if (onRetry) {
+        onRetry(error, retryCount);
+      }
+
+      const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
+      return Observable
+        .timer(fuzzedDelay)
+        .mergeMap(() => {
+          if (debounceRetryCount) {
+            debounceRetryCount();
+          }
+          return doRetry();
+        });
+    });
+  }
+
+  return doRetry();
+}
+
+/**
+ * Same than retryObsWithBackoff, only with a function returning an observable
  * instead of an observable.
  * @param {Function} fn - Function returning an Observable which
  * will (well, might) be retried.
@@ -184,7 +272,8 @@ function retryableFuncWithBackoff<T, I>(
 }
 
 export {
-  retryWithBackoff,
+  retryObsWithBackoff,
   retryableFuncWithBackoff,
+  retryFuncWithBackoff,
   CustomError,
 };
