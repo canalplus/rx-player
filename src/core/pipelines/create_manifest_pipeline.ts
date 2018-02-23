@@ -46,7 +46,7 @@ import Pipeline, {
  * @returns {Function}
  */
 export default function createManifestPipeline(
-  transport : ITransportPipelines<any, any, any, any, any>,
+  transport : ITransportPipelines,
   pipelineOptions : IPipelineOptions<any, any>,
   warning$ : Subject<Error|CustomError>,
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],

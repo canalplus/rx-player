@@ -120,7 +120,6 @@ export interface ISegmentParserArguments<T> {
 
 // -- response
 
-// TODO
 export type IManifestParserObservable = Observable<{
   manifest: IParsedManifest;
   url? : string;
@@ -160,43 +159,66 @@ export type ImageParserObservable = Observable<{
   segmentInfos : ISegmentTimingInfos;
 }>;
 
-// Type parameters:
-//   - T : Data returned by the Manifest loader fed into the Manifest
-//         parser
-//   - U : Data returned by the audio segment loader fed into the audio
-//         sergment parser
-//   - V : Data returned by the video segment loader fed into the video
-//         sergment parser
-//   - W : Data returned by the text segment loader fed into the text
-//         sergment parser
-//   - X : Data returned by the image segment loader fed into the image
-//         sergment parser
-export interface ITransportPipelines<T, U, V, W, X> {
+export interface ITransportPipelines {
+
   manifest: {
-    resolver?: (x : IManifestLoaderArguments) => IResolverObservable;
-    loader: (x : IManifestLoaderArguments) => ILoaderObservable<T>;
-    parser: (x : IManifestParserArguments<T>) => IManifestParserObservable;
+    // TODO Remove resolver
+    resolver?: (x : IManifestLoaderArguments) =>
+      IResolverObservable;
+    loader: (x : IManifestLoaderArguments) =>
+      ILoaderObservable<Document|string>;
+    parser: (x : IManifestParserArguments<Document|string>) =>
+      IManifestParserObservable;
   };
+
   audio: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<U>;
-    parser: (x : ISegmentParserArguments<U>) => SegmentParserObservable;
+    loader: (x : ISegmentLoaderArguments) =>
+      ILoaderObservable<Uint8Array|ArrayBuffer>;
+    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
+      SegmentParserObservable;
   };
+
   video: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<V>;
-    parser: (x : ISegmentParserArguments<V>) => SegmentParserObservable;
+    loader: (x : ISegmentLoaderArguments) =>
+      ILoaderObservable<Uint8Array|ArrayBuffer>;
+    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
+      SegmentParserObservable;
   };
+
   text: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<W>;
-    parser: (x : ISegmentParserArguments<W>) => TextTrackParserObservable;
+    loader: (x : ISegmentLoaderArguments) =>
+      ILoaderObservable<Uint8Array|ArrayBuffer|string>;
+    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string>) =>
+      TextTrackParserObservable;
   };
+
   image: {
-    loader: (x : ISegmentLoaderArguments) => ILoaderObservable<X>;
-    parser: (x : ISegmentParserArguments<X>) => ImageParserObservable;
+    loader: (x : ISegmentLoaderArguments) =>
+      ILoaderObservable<Uint8Array|ArrayBuffer>;
+    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
+      ImageParserObservable;
   };
 }
 
-export type ITransportFunction =
-  (options : any) => ITransportPipelines<any, any, any, any, any>;
+export interface ITransportOptions {
+  // every transports
+  segmentLoader? : CustomSegmentLoader;
+
+  // smooth only
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => Array<{
+    systemId : string;
+    privateData : Uint8Array;
+  }>;
+
+  // dash only
+  // contentProtectionParser? : IContentProtectionParser;
+}
+
+export type ITransportFunction = (options? : ITransportOptions) =>
+  ITransportPipelines;
 
 export type CustomSegmentLoader = (
   // first argument: infos on the segment

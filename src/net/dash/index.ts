@@ -67,20 +67,14 @@ interface IDASHOptions {
  */
 export default function(
   options : IDASHOptions = {}
-) : ITransportPipelines<
-  Document,
-  ArrayBuffer|Uint8Array,
-  ArrayBuffer|Uint8Array,
-  ArrayBuffer|string,
-  ArrayBuffer
->{
+) : ITransportPipelines {
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
   // const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : ILoaderObservable<Document> {
+    ) : ILoaderObservable<Document|string> {
       return request({
         url,
         responseType: "document",
@@ -88,11 +82,15 @@ export default function(
     },
 
     parser(
-      { response, url } : IManifestParserArguments<Document>
+      { response, url } : IManifestParserArguments<Document|string>
     ) : IManifestParserObservable {
-      const data = response.responseData;
+      const { responseData } = response;
+      const dataXML = typeof responseData === "string" ?
+        new DOMParser().parseFromString(responseData, "text/xml") :
+        responseData;
+
       return Observable.of({
-        manifest: dashManifestParser(data, url/*, contentProtectionParser*/),
+        manifest: dashManifestParser(dataXML, url/*, contentProtectionParser*/),
         url: response.url,
       });
     },
@@ -186,7 +184,7 @@ export default function(
     },
 
     parser(
-      { response } : ISegmentParserArguments<ArrayBuffer>
+      { response } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : ImageParserObservable {
       const responseData = response.responseData;
       const blob = new Uint8Array(responseData);
