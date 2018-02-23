@@ -159,7 +159,7 @@ function TextTrackParser({
   adaptation,
   representation,
   init,
-} : ISegmentParserArguments<ArrayBuffer|string>
+} : ISegmentParserArguments<Uint8Array|ArrayBuffer|string>
 ) : TextTrackParserObservable {
   const { language } = adaptation;
   const { isInit, indexRange } = segment;
