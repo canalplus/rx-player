@@ -12,6 +12,7 @@
 
   - stream: call ``endOfStream`` for better end detection and to allow the Chrome browser to display the last frames of a video
   - buffer: always play the last possible milliseconds in the content (removed END_OF_PLAY config attribute)
+  - vtt: fix webvtt parsing when last line is not a new line
 
 ## v3.1.0 (2018/01/30)
 
