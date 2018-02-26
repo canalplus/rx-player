@@ -15,8 +15,7 @@
  */
 
 // privateInfos specific to Smooth Initialization Segments
-export interface ISmoothInitSegmentPrivateInfos {
-  type : "smooth-init";
+interface ISmoothInitSegmentPrivateInfos {
   codecPrivateData : string;
   bitsPerSample? : number;
   channels? : number;
@@ -31,9 +30,12 @@ export interface ISmoothInitSegmentPrivateInfos {
   };
 }
 
-// Possible values for Segment's privateInfos
-export type ISegmentPrivateInfos =
-  ISmoothInitSegmentPrivateInfos;
+export interface ISegmentPrivateInfos {
+  [key:string]: ISmoothInitSegmentPrivateInfos|null|undefined;
+  "smooth-init"? : ISmoothInitSegmentPrivateInfos;
+  "dash"?: null;
+  "smooth"?: null;
+}
 
 // ISegment Object.
 // Represent a single Segment from a Representation.

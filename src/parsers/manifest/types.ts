@@ -20,6 +20,19 @@ import {
   CustomSegmentLoader
 } from "../../net/types";
 
+interface IKeySystem {
+  systemId : string;
+  privateData : Uint8Array;
+}
+
+interface IParserOptions {
+  segmentLoader? : CustomSegmentLoader;
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IKeySystem[];
+}
+
 interface IHSSKeySystem {
   systemId : string;
   privateData : Uint8Array;
@@ -204,8 +217,10 @@ export interface IParsedContentProtection {
 }
 
 export {
+  IKeySystem,
   IHSSKeySystem,
   IPeriodSmooth,
+  IParserOptions,
   IHSSParserOptions,
   IAdaptationSmooth,
   IHSSManifestSegment,

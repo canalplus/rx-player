@@ -179,12 +179,12 @@ export default function(
           segmentInfos: initSegmentInfos,
         });
       }
-      if (__DEV__) {
-        assert(responseData instanceof ArrayBuffer);
-      }
-      const responseBuffer = new Uint8Array(responseData as ArrayBuffer);
+      const responseBuffer = response.responseData instanceof Uint8Array
+      ? response.responseData
+       : new Uint8Array(response.responseData);
       const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
+
       const segmentData = patchSegment(responseBuffer, segmentInfos.time);
 
       if (nextSegments) {

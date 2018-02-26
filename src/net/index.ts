@@ -28,6 +28,9 @@ if (__FEATURES__.SMOOTH) {
 if (__FEATURES__.DASH) {
   exported.dash = require("./dash/index.ts").default;
 }
+if (__FEATURES__.METAPLAYLIST) {
+  exported.metaplaylist = require("./metaplaylist/index.ts").default;
+}
 /* tslint:enable no-var-requires */
 
 export {

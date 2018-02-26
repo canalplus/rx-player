@@ -42,9 +42,9 @@ export default class BoxPatchers {
     private topLevelBoxesToParse: string[] = [];
     private compositeBoxesToParse: string[] = [];
     private sizeChange = 0;
-    private tfdtValue?: number;
-    private duration?: number;
-    private ttmlSize?: number;
+    private tfdtValue: number = 0;
+    private duration: number = 0;
+    private ttmlSize: number = 0;
     private data: Uint8Array;
 
     constructor(
@@ -149,7 +149,7 @@ export default class BoxPatchers {
             output = this.trun(data);
             break;
           case "sidx":
-            output = this.sidx(data, true);
+            output = this.sidx(data, false);
             break;
           case "tfdt":
             output = this.tfdt(data);
@@ -265,7 +265,7 @@ export default class BoxPatchers {
       } else {
         pos += 4;
       }
-      if (tfFlags && 0x10 && this.ttmlSize) {
+      if (tfFlags && 0x10) {
         output = concat(input.subarray(0, pos), itobe4(this.ttmlSize));
       }
       else{

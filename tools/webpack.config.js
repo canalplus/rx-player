@@ -76,6 +76,10 @@ const config = {
           process.env.RXP_HTML_SRT === "true" :
           process.env.RXP_HTML_SRT !== "false",
 
+        METAPLAYLIST: isBarebone ?
+        process.env.RXP_METAPLAYLIST === "true" :
+        process.env.RXP_METAPLAYLIST !== "false",
+
         // TODO
         // EME: isBarebone ?
         //   process.env.RXP_EME === "true" :

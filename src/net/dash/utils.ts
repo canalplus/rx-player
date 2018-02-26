@@ -86,9 +86,9 @@ function replaceTokens(
     return path
       .replace(/\$\$/g, "$")
       .replace(/\$RepresentationID\$/g,
-        String(representation.id))
+      String(representation.id))
       .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
-        processFormatedToken(representation.bitrate))
+      processFormatedToken(representation.bitrate))
       .replace(/\$Number(|\%0(\d+)d)\$/g, (_x, _y, widthStr) => {
         if (segment.number == null) {
           throw new Error("Segment number not defined in a $Number$ scheme");
