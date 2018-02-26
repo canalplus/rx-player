@@ -40,6 +40,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       "__FEATURES__": {
+        METAPLAYLIST: true,
         SMOOTH: true,
         DASH: true,
         DIRECTFILE: true,

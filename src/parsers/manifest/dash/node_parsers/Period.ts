@@ -43,6 +43,7 @@ export interface IPeriodAttributes {
   start? : number;
   duration? : number;
   bitstreamSwitching? : boolean;
+  end?: number;
 }
 
 /**

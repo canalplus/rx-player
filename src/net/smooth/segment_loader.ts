@@ -81,11 +81,12 @@ const generateSegmentLoader = (
   init,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
   if (segment.isInit) {
-    if (!segment.privateInfos || segment.privateInfos.type !== "smooth-init") {
+    const privateInfos =
+      segment.privateInfos ? segment.privateInfos["smooth-init"] : undefined;
+    if (privateInfos === undefined) {
       throw new Error("Smooth: Invalid segment format");
     }
     let responseData : Uint8Array;
-    const privateInfos = segment.privateInfos;
     const protection = privateInfos.protection;
 
     switch (adaptation.type) {
