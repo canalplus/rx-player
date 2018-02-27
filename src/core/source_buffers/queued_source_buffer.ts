@@ -162,12 +162,17 @@ export default class QueuedSourceBuffer<T> {
    * @param {*|null} segment
    * @returns {Observable}
    */
-  appendBuffer(initSegment : T|null, segment : T|null) : Observable<void> {
-    return this._queueAction({
-      type: SourceBufferAction.Append,
-      segment,
-      initSegment,
-    });
+  public appendBuffer(
+    initSegment : T|null,
+    segment : T|null
+  ) : Observable<void> {
+    return Observable.defer(() =>
+      this._queueAction({
+        type: SourceBufferAction.Append,
+        segment,
+        initSegment,
+      })
+    );
   }
 
   /**
@@ -177,17 +182,19 @@ export default class QueuedSourceBuffer<T> {
    * @param {Number} range.end - end position, in seconds
    * @returns {Observable}
    */
-  removeBuffer(
+  public removeBuffer(
     { start, end } : {
       start : number;
       end : number;
     }
   ) : Observable<void> {
-    return this._queueAction({
-      type: SourceBufferAction.Remove,
-      start,
-      end,
-    });
+    return Observable.defer(() =>
+      this._queueAction({
+        type: SourceBufferAction.Remove,
+        start,
+        end,
+      })
+    );
   }
 
   /**
@@ -198,7 +205,7 @@ export default class QueuedSourceBuffer<T> {
    * function.
    * @private
    */
-  abort() : void {
+  public abort() : void {
     this.dispose();
     this._buffer.abort();
   }
@@ -207,7 +214,7 @@ export default class QueuedSourceBuffer<T> {
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
-  getBuffered() : TimeRanges|ICustomTimeRanges {
+  public getBuffered() : TimeRanges|ICustomTimeRanges {
     return this._buffer.buffered;
   }
 
@@ -217,7 +224,7 @@ export default class QueuedSourceBuffer<T> {
    * /!\ You won't be able to use the QueuedSourceBuffer after calling this
    * function.
    */
-  dispose() : void {
+  public dispose() : void {
     this._buffer.removeEventListener("update", this.__onUpdate);
     this._buffer.removeEventListener("error", this.__onError);
     this._buffer.removeEventListener("updateend", this.__flush);

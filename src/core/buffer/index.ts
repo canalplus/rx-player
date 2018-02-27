@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ErrorTypes } from "../../errors";
 import Manifest, {
@@ -30,19 +31,21 @@ import {
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
 import RepresentationBuffer, {
-  IAddedSegmentEvent,
-  IBufferActiveEvent,
   IBufferClockTick,
-  IBufferFullEvent,
-  IDiscontinuityEvent,
-  INeedingManifestRefreshEvent,
+  IBufferEventAddedSegment,
+  IBufferEventDiscontinuityEncountered,
+  IBufferEventNeedManifestRefresh,
+  IBufferStateActive,
+  IBufferStateFull,
   IRepresentationBufferEvent,
 } from "./representation_buffer";
 
 export interface IAdaptationBufferClockTick {
   bufferGap : number;
-  currentTime : number;
   duration : number;
+  isLive : boolean;
+  position : number;
+  speed : number;
 }
 
 export interface IBitrateEstimationChangeEvent {
@@ -79,7 +82,6 @@ export type IAdaptationBufferEvent =
  *   abrManager,
  *   abrClock$,
  *   speed$,
- *   seekings$
  * );
  *
  * const buffer$ = bufferManager.createBuffer(
@@ -96,27 +98,20 @@ export type IAdaptationBufferEvent =
 export default class AdaptationBufferManager {
   private readonly _abrManager : ABRManager;
   private readonly _abrBaseClock$ : Observable<IAdaptationBufferClockTick>;
-  private readonly _speed$ : Observable<number>;
-  private readonly _seeking$ : Observable<null>;
 
   /**
    * @param {ABRManager} abrManager
    * @param {Observable} abrBaseClock$ - Clock$ at which the ABR manager will
    * make estimates.
    * @param {BehaviorSubject} speed$ - emits the speed each time it changes
-   * @param {Observable} seeking$ - emits each time the user seeks
    * @param {Subject} warnings$ - Subject to emit non-fatal errors
    */
   constructor(
     abrManager : ABRManager,
-    abrBaseClock$ : Observable<IAdaptationBufferClockTick>,
-    speed$ : Observable<number>,
-    seeking$ : Observable<null>
+    abrBaseClock$ : Observable<IAdaptationBufferClockTick>
   ) {
     this._abrManager = abrManager;
     this._abrBaseClock$ = abrBaseClock$;
-    this._speed$ = speed$;
-    this._seeking$ = seeking$;
   }
 
   /**
@@ -143,7 +138,7 @@ export default class AdaptationBufferManager {
   ) : Observable<IAdaptationBufferEvent> {
 
     const { manifest, period, adaptation } = content;
-    const abr$ = this._getABRForAdaptation(manifest, adaptation);
+    const abr$ = this._getABRForAdaptation(adaptation);
 
     /**
      * Emit at each bitrate estimate done by the ABRManager
@@ -178,8 +173,10 @@ export default class AdaptationBufferManager {
      * @type {Observable}
      */
     const shouldSwitchRepresentationBuffer$ : Observable<Representation> =
-      Observable.combineLatest(representation$, this._seeking$)
-        .map(([representation]) => representation);
+      representation$
+        .distinctUntilChanged((oldRepresentation, newRepresentation) => {
+          return oldRepresentation.id === newRepresentation.id;
+        });
 
     /**
      * @type {Observable}
@@ -247,10 +244,12 @@ export default class AdaptationBufferManager {
     }
   }
 
-  private _getABRForAdaptation(
-    manifest : Manifest,
-    adaptation : Adaptation
-  ) {
+  /**
+   * Returns ABR Observable.
+   * @param {Object} adaptation
+   * @returns {Observable}
+   */
+  private _getABRForAdaptation(adaptation : Adaptation) {
     const representations = adaptation.representations;
 
     /**
@@ -261,32 +260,25 @@ export default class AdaptationBufferManager {
      */
     let currentRepresentation : Representation|null = null;
 
-    const abrClock$ = Observable.combineLatest(
-      this._abrBaseClock$,
-      this._speed$
-    ) .map(([timing, speed]) => {
-      let bitrate;
-      let lastIndexPosition;
+    const abrClock$ = this._abrBaseClock$
+      .map((tick) => {
+        let bitrate;
+        let lastIndexPosition;
 
-      if (currentRepresentation) {
-        bitrate = currentRepresentation.bitrate;
+        if (currentRepresentation) {
+          bitrate = currentRepresentation.bitrate;
 
-        if (currentRepresentation.index) {
-          lastIndexPosition =
-            currentRepresentation.index.getLastPosition();
+          if (currentRepresentation.index) {
+            lastIndexPosition =
+              currentRepresentation.index.getLastPosition();
+          }
         }
-      }
 
-      return {
-        bufferGap: timing.bufferGap,
-        duration: timing.duration,
-        position: timing.currentTime,
-        bitrate,
-        isLive: manifest.isLive,
-        lastIndexPosition,
-        speed,
-      };
-    }).share();  // side-effect === share to avoid doing it multiple times
+        return objectAssign({
+          bitrate,
+          lastIndexPosition,
+        }, tick);
+      });
 
     return this._abrManager.get$(adaptation.type, abrClock$, representations)
       .do(({ representation }) => {
@@ -309,32 +301,26 @@ export function createFakeBuffer(
   bufferClock$ : Observable<IBufferClockTick>,
   wantedBufferAhead$ : Observable<number>,
   content : { manifest : Manifest; period : Period }
-) : Observable<IBufferFullEvent> {
+) : Observable<IBufferStateFull> {
   const period = content.period;
   return Observable.combineLatest(bufferClock$, wantedBufferAhead$)
     .filter(([clockTick, wantedBufferAhead]) =>
       period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
     )
-    .map(([clockTick, wantedBufferAhead]) => {
-      const periodEnd = period.end || Infinity;
+    .map(() => {
       return {
-        type: "full" as "full",
-        value: {
-          wantedRange: {
-            start: Math.min(clockTick.currentTime, periodEnd),
-            end: Math.min(clockTick.currentTime + wantedBufferAhead, periodEnd),
-          },
-        },
+        type: "full-buffer" as "full-buffer",
+        value: undefined,
       };
     });
 }
 
 // Re-export RepresentationBuffer events used by the AdaptationBufferManager
 export {
-  IAddedSegmentEvent,
-  IBufferActiveEvent,
   IBufferClockTick,
-  IBufferFullEvent,
-  IDiscontinuityEvent,
-  INeedingManifestRefreshEvent,
+  IBufferEventAddedSegment,
+  IBufferEventDiscontinuityEncountered,
+  IBufferEventNeedManifestRefresh,
+  IBufferStateActive,
+  IBufferStateFull,
 };

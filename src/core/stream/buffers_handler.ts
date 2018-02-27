@@ -404,7 +404,7 @@ export default function BuffersHandler(
         evt : IPeriodBufferEvent
       ) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
-        if (type === "full") {
+        if (type === "full-buffer") {
           /**
            * The Period coming just after the current one.
            * @type {Period|undefined}
@@ -412,13 +412,13 @@ export default function BuffersHandler(
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
           if (nextPeriod == null) {
-            // no more period, emits buffer-complete event
+            // no more period, emits  event
             return Observable.of(EVENTS.bufferComplete(bufferType));
           } else {
             // current buffer is full, create the next one if not
             createNextPeriodBuffer$.next(nextPeriod);
           }
-        } else if (type === "segments-queued") {
+        } else if (type === "active-buffer") {
           // current buffer is active, destroy next buffer if created
           destroyNextBuffers$.next();
         }
@@ -619,9 +619,9 @@ function buffersAreComplete$(
     .map((buffer) => {
       return buffer
         .filter((evt) => {
-          return evt.type === "buffer-complete" || evt.type === "segments-queued";
+          return evt.type === "complete-buffer" || evt.type === "active-buffer";
         })
-        .map((evt) => evt.type === "buffer-complete")
+        .map((evt) => evt.type === "complete-buffer")
         .startWith(false)
         .distinctUntilChanged();
     });

@@ -18,19 +18,13 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import config from "../../config";
 import log from "../../utils/log";
-import {
-  retryableFuncWithBackoff,
-  retryFuncWithBackoff
-} from "../../utils/retry";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
 import { onSourceOpen$ } from "../../compat/events";
 import {
   CustomError,
-  isKnownError,
   MediaError,
-  OtherError,
 } from "../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
@@ -62,6 +56,7 @@ import createBufferClock, {
 import createMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
+import triggerEndOfStreamWithRetries from "./end_of_stream";
 import BufferGarbageCollector from "./garbage_collector";
 import getInitialTime, {
   IInitialTimeOptions,
@@ -205,83 +200,22 @@ export default function Stream({
     );
 
   /**
-   * Retry the stream if ended for an unknown or non-fatal error.
-   * TODO working? remove?
-   * @see retryWithBackoff
+   * Start the whole Stream.
+   * @type {Observable}
    */
-  const streamRetryOptions = {
-    totalRetry: 3,
-    retryDelay: 250,
-    resetDelay: 60 * 1000,
-
-    /**
-     * Only retry if the error is unknown or non-fatal
-     * @param {Error|CustomError}
-     * @returns {Boolean}
-     */
-    shouldRetry: (error : Error|CustomError) : boolean => {
-      if (isKnownError(error)) {
-        return !error.fatal;
-      }
-      return true;
-    },
-
-    /**
-     * Called when the stream truly throws
-     * @param {Error|CustomError}
-     * @returns {CustomError}
-     */
-    errorSelector: (error : Error|CustomError) : CustomError => {
-      if (!isKnownError(error)) {
-        return new OtherError("NONE", error, true);
-      }
-      error.fatal = true;
-      return error;
-    },
-
-    onRetry: (error : Error|CustomError, tryCount : number) : void => {
-      log.warn("stream retry", error, tryCount);
-      warning$.next(error);
-    },
-  };
-
-  /**
-   * On subscription:
-   *   - load the manifest (through its pipeline)
-   *   - wiat for the given mediasource to be open
-   * Once those are done, initialize the source duration and creates every
-   * SourceBuffers and Buffers instances.
-   *
-   * This Observable can be retried on the basis of the streamRetryOptions
-   * defined here.
-   * @param {Object} params
-   * @param {string} params.url
-   * @param {MediaSource|null} params.mediaSource
-   * @returns {Observable}
-   */
-  const startStreamWithRetry =
-    retryableFuncWithBackoff<any, IStreamEvent>(startStream, streamRetryOptions);
-
   const stream$ = createMediaSource(videoElement)
-    .mergeMap(startStreamWithRetry);
+    .mergeMap(mediaSource => {
+      return Observable.combineLatest(
+        fetchManifest(url),
+        onSourceOpen$(mediaSource).take(1)
+      ).mergeMap(([manifest]) => {
+        return initializeStream(mediaSource, manifest);
+      });
+    });
 
   const warningEvents$ = warning$.map(EVENTS.warning);
 
   return Observable.merge(stream$, warningEvents$);
-
-  /**
-   * Begin the stream logic, starting by fetching the manifest and waiting for
-   * the MediaSource to emit its open event.
-   * @param {MediaSource} mediaSource
-   * @returns {Observable}
-   */
-  function startStream(mediaSource : MediaSource) {
-    return Observable.combineLatest(
-      fetchManifest(url),
-      onSourceOpen$(mediaSource).take(1)
-    )
-      .mergeMap(([manifest]) => initialize(mediaSource, manifest));
-  }
 
   /**
    * Initialize stream playback by merging all observable that are required to
@@ -290,7 +224,7 @@ export default function Stream({
    * @param {Object} manifest
    * @returns {Observable}
    */
-  function initialize(
+  function initializeStream(
     mediaSource : MediaSource,
     manifest : Manifest
   ) : Observable<IStreamEvent> {
@@ -310,10 +244,7 @@ export default function Stream({
       loadAndPlay$,
     } = handleInitialVideoEvents(videoElement, initialTime, autoPlay);
 
-    const {
-      clock$: bufferClock$,
-      seekings$,
-    } = createBufferClock(manifest, clock$, initialSeek$, initialTime);
+    const bufferClock$ = createBufferClock(manifest, clock$, initialSeek$, initialTime);
 
     /**
      * Subject through which network metrics will be sent by the segment
@@ -344,11 +275,26 @@ export default function Stream({
     const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
 
     /**
+     * Clock needed by the BufferManager
+     * @type {Observable}
+     */
+    const abrClock$ = Observable.combineLatest(clock$, speed$)
+      .map(([tick, speed]) => {
+        return {
+          bufferGap: tick.bufferGap,
+          duration: tick.duration,
+          isLive: manifest.isLive,
+          position: tick.currentTime,
+          speed,
+        };
+      });
+
+    /**
      * Creates BufferManager allowing to easily create a Buffer linked to any
      * Adaptation from the current content.
      * @type {BufferManager}
      */
-    const bufferManager = new BufferManager(abrManager, clock$, speed$, seekings$);
+    const bufferManager = new BufferManager(abrManager, abrClock$);
 
     /**
      * Creates SourceBufferManager allowing to create and keep track of a single
@@ -376,17 +322,10 @@ export default function Stream({
         textTrackOptions,
       },
       warning$
-    ).mergeMap((evt) => {
+    ).mergeMap(function onBuffersHandlerEvent(evt) {
       if (evt.type === "end-of-stream") {
         log.info("Triggering end of stream.");
-        return retryFuncWithBackoff(
-          () => mediaSource.endOfStream(),
-          {
-            totalRetry: 10,
-            retryDelay: 100,
-            shouldRetry: () => mediaSource.readyState !== "ended",
-          }
-        ).ignoreElements() as Observable<never>;
+        return triggerEndOfStreamWithRetries(mediaSource);
       }
       return Observable.of(evt);
     });

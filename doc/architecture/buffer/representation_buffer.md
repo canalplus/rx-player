@@ -35,4 +35,65 @@ Such events tells us when:
   - A discontinuity is currently encountered in the Stream (TODO this might not
     be the job of the RepresentationBuffer)
 
-More soon...
+
+
+## Queue Algorithm #############################################################
+
+The RepresentationBuffer depends on a central algorithm to make sure that the
+right segments are scheduled for download at any time.
+
+This algorithm constructs a queue of segments to download at any time, and
+regularly checks that the segment currently downloaded still corresponds to the
+currently most needed Segment.
+
+This list of segments is based on a simple calculus between the current position
+and the buffer size we want to achieve.
+This list goes then through multiple filters to ensure we're not queueing them
+unnecessarly. Such cases would be, for example, if the segment is already
+present in the SourceBuffer at a better quality.
+
+For a clock based on various video events, the strategy is the following:
+
+  1. let ``segmentQueue`` be an empty array.
+
+  2. On each clock tick, calculate ``segmentsNeeded``, an Array of needed
+     segments (read: not yet downloaded) from the current time to the buffer
+     size goal.
+
+     Note that the steps _2_ to _5_ can run multiple times while waiting for
+     a request - happening in step _5_ and _8_. If that happens,
+     ``segmentQueue`` should equal the last value it has been given.
+
+  3. check if there's a segment currently downloaded (launched in step _8_)
+
+     3-1. If there is none, let segmentQueue be equal to ``segmentsNeeded``
+
+     3-2. If there is one but for a segment different than the first element
+          in ``segmentsNeeded`` or if ``segmentsNeeded`` is empty, abort
+          this request and let ``segmentQueue`` be equal to ``segmentsNeeded``.
+
+     3-3. If there is one and is for the same segment than the first element
+          in ``segmentsNeeded``, let ``segmentQueue`` be equal to
+          ``segmentsNeeded`` without its first element.
+
+  4. if ``segmentQueue`` is empty, go back to _2_.
+
+  5. check if there's a pending segment request (happening in step _8_):
+
+     5-1. if there's no segment request, continue
+
+     5-1. if there's a pending segment request, go back to _2_
+
+  6. Let ``currentSegment`` be the first segment of ``segmentQueue``
+
+  7. Remove the first segment from ``segmentQueue`` (a.k.a. ``currentSegment``)
+
+  8. perform a request for ``currentSegment`` and wait for it to finish.
+     During this time, step _2_ to _5_ can run in parallel, and as such
+     ``SegmentQueue`` can be mutated during this process.
+
+  9. Once the request is finished, run those tasks in parallel:
+
+     9-1. Append the segment to the corresponding SourceBuffer
+
+     9-1. go back to step _4_.

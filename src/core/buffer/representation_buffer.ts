@@ -16,12 +16,10 @@
 
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
+import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
 import config from "../../config";
-import {
-  IndexError,
-  MediaError,
-} from "../../errors";
+import { IndexError } from "../../errors";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -36,78 +34,34 @@ import {
   SupportedBufferTypes ,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
-import forceGarbageCollection from "./force_garbage_collection";
+import appendDataInSourceBuffer from "./append_data";
+import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
+import shouldDownloadSegment from "./segment_filter";
 
 // Emitted when a new segment has been added to the SourceBuffer
-export interface IAddedSegmentEvent<T> {
+export interface IBufferEventAddedSegment<T> {
   type : "added-segment";
   value : {
     bufferType : SupportedBufferTypes;
-    parsed : {
-      segmentData : T;
-      segmentInfos? : IBufferSegmentInfos|null;
-    };
+    segment : ISegment;
+    segmentData : T;
   };
 }
 
 // The Manifest needs to be refreshed.
 // The buffer might still download segments after this message
-export interface INeedingManifestRefreshEvent {
+export interface IBufferEventNeedManifestRefresh {
   type : "needs-manifest-refresh";
   value : Error;
 }
 
 // Emit when a discontinuity is encountered and the user is "stuck" on it.
-export interface IDiscontinuityEvent {
+export interface IBufferEventDiscontinuityEncountered {
   type : "discontinuity-encountered";
   value : {
     nextTime : number;
   };
-}
-
-// Emit when the buffer has reached its end in term of segment downloads.
-// The Buffer does not download segments after this message
-export interface IBufferFullEvent {
-  type: "full";
-  value : {
-    wantedRange : {
-      start : number;
-      end : number;
-    };
-  };
-}
-
-// Emit when segments are being queued for download
-// The Buffer emits this message just before downloading new segments
-export interface IBufferActiveEvent {
-  type: "segments-queued";
-  value : {
-    segments: ISegment[]; // The downloaded segments
-    wantedRange : {
-      start : number;
-      end : number;
-    };
-  };
-}
-
-// For internal usage. Emitted when the Buffer is wainting on segments to be
-// downloaded.
-interface IWaitingBufferEvent {
-  type : "waiting";
-  value : {
-    wantedRange : {
-      start : number;
-      end : number;
-    };
-  };
-}
-
-// For internal usage. Emitted when the Buffer is completely inactive (it has
-// downloaded all needed segments) but not full.
-interface IIdleBufferEvent {
-  type : "idle";
-  value : undefined;
 }
 
 export interface IBufferSegmentInfos {
@@ -152,37 +106,70 @@ export interface IRepresentationBufferArguments<T> {
 
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> =
-  IAddedSegmentEvent<T> |
-  INeedingManifestRefreshEvent |
-  IDiscontinuityEvent |
-  IBufferActiveEvent |
-  IBufferFullEvent;
+  IBufferEventAddedSegment<T> |
+  IBufferEventNeedManifestRefresh |
+  IBufferEventDiscontinuityEncountered |
+  IBufferState;
 
-// For internal use. Buffer statuses.
-type IRepresentationBufferStatus =
-  IBufferActiveEvent |
-  IBufferFullEvent |
-  IIdleBufferEvent |
-  IWaitingBufferEvent;
+// Buffer state exposed
+type IBufferState =
+  IBufferStateFull |
+  IBufferStateActive;
 
-const {
-  BITRATE_REBUFFERING_RATIO,
-  MINIMUM_SEGMENT_SIZE,
-} = config;
-
-/**
- * Get safety paddings (low and high) for the size of buffer that won't
- * be flushed when switching representation for smooth transitions
- * and avoiding buffer underflows.
- * @param {Object} adaptation
- * @returns {number}
- */
-function getBufferPaddings(
-  adaptation : Adaptation
-) : { high : number; low : number } {
-  return adaptation.type === "video" ?
-    { high: 6, low: 4 } : { high: 1, low: 1 };
+// State emitted when the Buffer is scheduling segments
+export interface IBufferStateActive {
+  type : "active-buffer";
+  value : undefined;
 }
+
+// State emitted when the buffer has been filled to the end
+export interface IBufferStateFull {
+  type : "full-buffer";
+  value : undefined;
+}
+
+// Buffer state used only internally
+type IBufferInternalState =
+  IBufferInternalStateFull |
+  IBufferInternalStateIdle |
+  IBufferInternalStateNeedSegments;
+
+// State emitted when the buffer has been filled to the end
+interface IBufferInternalStateFull {
+  type : "full-buffer";
+  value : undefined;
+}
+
+// State emitted when the buffer has nothing to do
+interface IBufferInternalStateIdle {
+  type : "idle-buffer";
+  value : undefined;
+}
+
+// State emitted when the buffer is scheduling segments
+interface IBufferInternalStateNeedSegments {
+  type : "need-segments";
+  value : {
+    segments : ISegment[];
+  };
+}
+
+interface IInitSegmentState<T> {
+  data : T|null;
+  infos: IBufferSegmentInfos|null;
+}
+
+interface IParsedPipelineData<T> {
+  segmentData : T;
+  segmentInfos : IBufferSegmentInfos|null;
+}
+
+interface IPipelineData<T> {
+  segment : ISegment;
+  parsed : IParsedPipelineData<T>;
+}
+
+const { BUFFER_PADDING } = config;
 
 /**
  * Build up buffer for a single Representation.
@@ -193,6 +180,12 @@ function getBufferPaddings(
  * Multiple RepresentationBuffer observables can be ran on the same
  * SourceBuffer.
  * This allows for example smooth transitions between multiple periods.
+ *
+ *
+ * The RepresentationBuffer tries to push the most needed segment first and
+ * abort pending requests if they do not correspond to needed segment anymore.
+ *
+ *
  *
  * @param {Object} opt
  * @returns {Observable}
@@ -212,225 +205,54 @@ export default function RepresentationBuffer<T>({
     representation,
   } = content;
 
-  // will be used to emit messages to the calling function
+  /**
+   * Will be used to emit messages to the calling function
+   * @type {Subject}
+   */
   const messageSubject : Subject<IRepresentationBufferEvent<T>> = new Subject();
 
-  const { high : highPadding, low : lowPadding } = getBufferPaddings(adaptation);
-
   /**
-   * Saved initSegment data for this representation.
-   * Is needed to push new segments associated to it to the QueuedSourceBuffer
-   */
-  let initSegmentData : T|null = null;
-
-  /**
-   * Saved information of the init segment for this representation to give it
-   * back to the pipeline on subsequent downloads.
-   * @type {Object|null}
-   */
-  let initSegmentInfos : IBufferSegmentInfos|null = null;
-
-  /**
-   * Keep track of currently downloaded segments:
-   *   - avoid re-downloading them when they are pending.
-   *   - allows to know if the buffer is idle or waiting on segments to be
-   *     downloaded.
+   * Compute paddings, then used to calculate the wanted range of Segments
+   * wanted.
    * @type {Object}
    */
-  const queuedSegments = new SimpleSet();
+  const paddings = getBufferPaddings(adaptation);
 
   /**
-   * Returns every segments currently wanted.
-   * @param {Object} representation - The representation of the chosen
-   * adaptation
-   * @param {BufferedRanges} buffered - The BufferedRanges of the corresponding
-   * sourceBuffer
-   * @param {Object} timing - The last item emitted from clock$
-   * @param {Boolean} needsInitSegment - Whether we're dealing with an init
-   * segment.
-   * @returns {Array.<Object>}
+   * Saved initSegment state for this representation.
+   * null when no initialization segment has been downloaded yet.
+   * @type {Object}
    */
-  function getSegmentsListToInject(
-    range : { start : number; end : number },
-    timing : IBufferClockTick,
-    needsInitSegment : boolean
-  ) : ISegment[] {
-    let initSegment : ISegment|null = null;
-
-    if (needsInitSegment) {
-      log.debug("add init segment", adaptation.type);
-      initSegment = representation.index.getInitSegment();
-    }
-
-    if (timing.readyState === 0) {
-      return initSegment ? [initSegment] : [];
-    }
-
-    const { start, end } = range;
-    const duration = end - start;
-
-    // TODO Better solution for HSS refresh?
-    // get every segments currently downloaded and loaded
-    const segments = segmentBookkeeper.inventory
-      .map(s => s.infos.segment);
-
-    const shouldRefresh = representation.index.shouldRefresh(segments, start, end);
-    if (shouldRefresh) {
-      const error = new IndexError("OUT_OF_INDEX_ERROR", false);
-      messageSubject.next({
-        type: "needs-manifest-refresh",
-        value: error,
-      });
-    }
-
-    // given the current timestamp and the previously calculated time gap and
-    // wanted buffer size, we can retrieve the list of segments to inject in
-    // our pipelines.
-    const mediaSegments = representation.index.getSegments(start, duration);
-
-    if (initSegment) {
-      mediaSegments.unshift(initSegment);
-    }
-
-    return mediaSegments;
-  }
+  let initSegmentState : IInitSegmentState<T>|null = null;
 
   /**
-   * Returns true if it considers that the segment given should be loaded.
-   * @param {Object} segment
-   * @param {Object} wantedRange
-   * @returns {Boolean}
+   * Subject to start/restart a Buffer Queue.
+   * @type {Subject}
    */
-  function segmentFilter(
-    segment : ISegment,
-    wantedRange : { start : number; end : number }
-  ) : boolean {
-    // if this segment is already in the pipeline
-    const isInQueue = queuedSegments.test(segment.id);
-    if (isInQueue) {
-      return false;
-    }
-
-    // segment without time info are usually init segments or some
-    // kind of metadata segment that we never filter out
-    if (segment.isInit || segment.time < 0) {
-      return true;
-    }
-
-    const { time, duration, timescale } = segment;
-    if (!duration) {
-      return true;
-    }
-
-    if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
-      return false;
-    }
-
-    const currentSegment =
-      segmentBookkeeper.hasPlayableSegment(wantedRange, { time, duration, timescale });
-
-    if (!currentSegment) {
-      return true;
-    }
-
-    if (
-      currentSegment.infos.period.id !== period.id ||
-      currentSegment.infos.adaptation.id !== adaptation.id
-    ) {
-      return true;
-    }
-
-    // only re-load comparatively-poor bitrates for the same adaptation.
-    const bitrateCeil = currentSegment.infos.representation.bitrate *
-      BITRATE_REBUFFERING_RATIO;
-    return representation.bitrate > bitrateCeil;
-  }
+  const startQueue$ = new ReplaySubject<void>(1);
 
   /**
-   * Append buffer to the queuedSourceBuffer.
-   * If it leads to a QuotaExceededError, try to run our custom range
-   * _garbage collector_.
-   * @returns {Observable}
+   * Keep track of the Segment for which a request is pending.
+   * @type {Object|null}
    */
-  function appendDataInBuffer(
-    pipelineData : {
-      segment : ISegment;
-      parsed : {
-        segmentData : T;
-        segmentInfos : IBufferSegmentInfos|null;
-      };
-    }
-  ) : Observable<IRepresentationBufferEvent<T>> {
-    const { segment, parsed } = pipelineData;
-    const { segmentData, segmentInfos } = parsed;
+  let currentSegmentRequested : ISegment|null = null;
 
-    /**
-     * Validate the segment downloaded:
-     *   - remove from the queued segment to re-allow its download
-     *   - insert it in the bufferedRanges object
-     */
-    function validateSegment() {
-      // Note: we should also clean when canceled/errored
-      // (TODO do it when canceled?)
-      queuedSegments.remove(segment.id);
+  /**
+   * Keep track of every segments currently queued for download.
+   * @type {Array.<Object>}
+   */
+  let downloadQueue : ISegment[] = [];
 
-      if (!segment.isInit) {
-        const { time, duration, timescale } = segmentInfos ?
-          segmentInfos : segment;
-
-        // current segment timings informations are used to update
-        // bufferedRanges informations
-        segmentBookkeeper.insert(
-          period,
-          adaptation,
-          representation,
-          segment,
-          time / timescale, // start
-          duration != null ? (time + duration) / timescale : undefined // end
-        );
-      }
-    }
-
-    /**
-     * Append data in the SourceBuffer if we have it.
-     * Emit when done.
-     * @returns {Observable}
-     */
-    function appendSegment() : Observable<void> {
-      let append$ : Observable<void>;
-
-      if (segment.isInit) {
-        initSegmentInfos = segmentInfos;
-        initSegmentData = segmentData;
-        append$ = initSegmentData == null ?
-          Observable.of(undefined) :
-          queuedSourceBuffer.appendBuffer(initSegmentData, null);
-      } else {
-        append$ = segmentData == null ?
-          Observable.of(undefined) :
-          queuedSourceBuffer.appendBuffer(initSegmentData, segmentData);
-      }
-      return append$.do(validateSegment);
-    }
-
-    return appendSegment()
-      .catch((appendError : Error) => {
-        if (!appendError || appendError.name !== "QuotaExceededError") {
-          queuedSegments.remove(segment.id);
-          throw new MediaError("BUFFER_APPEND_ERROR", appendError, true);
-        }
-
-        return forceGarbageCollection(clock$, queuedSourceBuffer)
-          .mergeMap(appendSegment)
-          .catch((forcedGCError : Error) => {
-            queuedSegments.remove(segment.id);
-            throw new MediaError("BUFFER_FULL_ERROR", forcedGCError, true);
-          });
-      }).map(() => ({
-        type: "added-segment" as "added-segment",
-        value: objectAssign({ bufferType: adaptation.type }, pipelineData),
-      }));
-  }
+  /**
+   * Keep track of downloaded segments currently awaiting to be appended to the
+   * SourceBuffer.
+   *
+   * This is to avoid scheduling another download for that segment.
+   * The ID of each segment (segment.id) is thus added before each append and
+   * removed after it.
+   * @type {Object}
+   */
+  const sourceBufferQueue = new SimpleSet();
 
   /**
    * Send a message downstream when bumping on an explicit
@@ -455,121 +277,281 @@ export default function RepresentationBuffer<T>({
   }
 
   /**
-   * Check what should be done with the current buffer.
+   * Send a message downstream when the manifest has to be refreshed.
+   * @param {Object} wantedRange
+   */
+  function checkManifestRefresh(
+    wantedRange : { start : number; end : number}
+  ) : void {
+    const { start, end } = wantedRange;
+
+    // TODO Better solution for HSS refresh?
+    // get every segments currently downloaded and loaded
+    const segments = segmentBookkeeper.inventory
+      .map(s => s.infos.segment);
+
+    const shouldRefresh = representation.index.shouldRefresh(segments, start, end);
+    if (shouldRefresh) {
+      const error = new IndexError("OUT_OF_INDEX_ERROR", false);
+      messageSubject.next({
+        type: "needs-manifest-refresh",
+        value: error,
+      });
+    }
+  }
+
+  /**
+   * Request every Segment in the ``downloadQueue`` on subscription.
+   * Emit the data of a segment when a request succeeded.
+   * @returns {Observable}
+   */
+  function requestSegments() : Observable<IPipelineData<T>> {
+    const requestNextSegment$ : Observable<IPipelineData<T>> =
+      Observable.defer(() => {
+        currentSegmentRequested = downloadQueue.shift() || null;
+        if (currentSegmentRequested == null) {
+          // queue is finished...
+          return Observable.empty();
+        }
+
+        const segment : ISegment = currentSegmentRequested;
+        const initSegmentInfos = initSegmentState && initSegmentState.infos;
+        const download$ = pipeline({
+          adaptation,
+          init: initSegmentInfos || undefined,
+          manifest,
+          period,
+          representation,
+          segment,
+        })
+        .map((args) => objectAssign({ segment, }, args));
+
+        return download$
+          .mergeMap((pipelineData) => {
+            return Observable.of(pipelineData)
+              .concat(requestNextSegment$);
+          });
+      });
+
+    return requestNextSegment$
+      .finally(() => {
+        currentSegmentRequested = null;
+      });
+  }
+
+  /**
+   * Append the given segment to the SourceBuffer.
+   * Emit the right event when it succeeds.
+   * @param {Object} data
+   * @returns {Observable}
+   */
+  function appendSegment(
+    data : IPipelineData<T>
+  ) : Observable<IBufferEventAddedSegment<T>> {
+    const { segment } = data;
+    const segmentInfos = data.parsed.segmentInfos;
+    const segmentData = data.parsed.segmentData;
+
+    if (segment.isInit) {
+      initSegmentState = {
+        data: segmentData,
+        infos: segmentInfos,
+      };
+    }
+    const initSegmentData = initSegmentState && initSegmentState.data;
+    const append$ = appendDataInSourceBuffer(
+      clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
+
+    sourceBufferQueue.add(segment.id);
+
+    return append$
+      .mapTo({
+        type: "added-segment" as "added-segment",
+        value : {
+          bufferType: adaptation.type,
+          segment,
+          segmentData,
+        },
+      })
+      .do(() => {
+        if (!segment.isInit) {
+          const { time, duration, timescale } = segmentInfos ?
+            segmentInfos : segment;
+
+          // current segment timings informations are used to update
+          // bufferedRanges informations
+          segmentBookkeeper.insert(
+            period,
+            adaptation,
+            representation,
+            segment,
+            time / timescale, // start
+            duration != null ?
+            (time + duration) / timescale : undefined // end
+          );
+        }
+      })
+      .finally(() => {
+        sourceBufferQueue.remove(segment.id);
+      });
+  }
+
+  /**
+   * Check for various things to do at a given time:
    *
-   * The returned status indicates whether the buffer should download segments,
-   * or if it is full, finished, idle etc.
-   * @param {Object} timing
-   * @param {number} bufferGoal
-   * @param {Number} injectCount
+   *   - indicates when the manifest should be refreshed (through the
+   *     messageSubject)
+   *
+   *   - indicates if a discontinuity is encountered (through the
+   *     messageSubject)
+   *
+   *   - synchronize the SegmentBookkeeper with the current buffered
+   *
+   *   - check if segments need to be downloaded
+   *
+   *   - Emit a description of the current state of the buffer
+   *
+   * @param {Array} arr
    * @returns {Object}
    */
-  function getCurrentStatus(
-    timing : IBufferClockTick,
-    bufferGoal : number,
-    needsInitSegment : boolean
-  ) : IRepresentationBufferStatus {
+  function checkInternalState(
+    [timing, bufferGoal] : [IBufferClockTick, number]
+  ) : IBufferInternalState {
     const buffered = queuedSourceBuffer.getBuffered();
+    const neededRange = getWantedRange(
+      period, buffered, timing, bufferGoal, paddings);
+
+    // --- side-effects
     segmentBookkeeper.synchronizeBuffered(buffered);
-
-    const basePosition = timing.currentTime + timing.timeOffset;
-    const limitEnd = timing.liveGap == null ?
-      period.end : Math.min(period.end || Infinity, basePosition + timing.liveGap);
-    const limits = {
-      start: Math.max(period.start, timing.currentTime + timing.timeOffset),
-      end: limitEnd,
-    };
-    const wantedRange = getWantedRange(
-      buffered,
-      basePosition,
-      bufferGoal,
-      limits,
-      { low: lowPadding, high: highPadding }
-    );
-
-    const neededSegments = getSegmentsListToInject(
-      wantedRange,
-      timing,
-      needsInitSegment
-    ).filter((segment) => segmentFilter(segment, wantedRange));
-
-    if (neededSegments.length) {
-      return {
-        type: "segments-queued",
-        value: {
-          segments: neededSegments,
-          wantedRange,
-        },
-      };
-    } else if (queuedSegments.isEmpty()) {
-      if (period.end != null && wantedRange.end >= period.end) {
-        return {
-          type: "full",
-          value: {
-            wantedRange,
-          },
-        };
-      } else {
-        return { type : "idle", value: void 0 };
-      }
-    }
-    return { type: "waiting", value: { wantedRange } };
-  }
-
-  /**
-   * @param {Object} segment
-   * @returns {Observable}
-   */
-  function loadNeededSegments(
-    segment : ISegment
-  ) : Observable<{ segment : ISegment } & IPipelineResponse<T>> {
-    return pipeline({
-      adaptation,
-      init: initSegmentInfos || undefined,
-      manifest,
-      period,
-      representation,
-      segment,
-    }).map((args) => objectAssign({ segment }, args));
-  }
-
-  /**
-   * @param {Object} timing
-   * @param {number} wantedBufferAhead
-   * @param {Boolean} needsInitSegment
-   * @returns {Observable}
-   */
-  function checkBufferStatus(
-    timing : IBufferClockTick,
-    wantedBufferAhead : number,
-    needsInitSegment : boolean
-  ) : Observable<IRepresentationBufferEvent<T>> {
     checkDiscontinuity(timing);
-    const bufferStatus = getCurrentStatus(timing, wantedBufferAhead, needsInitSegment);
+    checkManifestRefresh(neededRange);
+    // ---
 
-    if (bufferStatus.type === "idle" || bufferStatus.type === "waiting") {
-      return Observable.empty();
-    }
-
-    log.debug("Buffer status:", bufferStatus.type, bufferStatus.value, content);
-
-    if (bufferStatus.type === "segments-queued") {
-      const neededSegments = bufferStatus.value.segments;
-      for (let i = 0; i < neededSegments.length; i++) {
-        queuedSegments.add(neededSegments[i].id);
+    const neededSegments = getSegmentsNeeded(
+      representation,
+      neededRange,
+      {
+        addInitSegment: initSegmentState == null,
+        ignoreRegularSegments: timing.readyState === 0,
       }
+    ).filter((segment) => {
+      return shouldDownloadSegment(
+        segment, content, segmentBookkeeper, neededRange, sourceBufferQueue);
+    });
 
-      return Observable.of(...neededSegments)
-        .concatMap(loadNeededSegments)
-        .concatMap(appendDataInBuffer)
-        .startWith(bufferStatus);
+    if (!neededSegments.length) {
+      return period.end != null && neededRange.end >= period.end ?
+        { type: "full-buffer" as "full-buffer", value: undefined } :
+        { type: "idle-buffer" as "idle-buffer", value: undefined };
     }
 
-    return Observable.of(bufferStatus);
+    return {
+      type: "need-segments" as "need-segments",
+      value: { segments: neededSegments },
+    };
   }
 
-  const check$ = Observable.combineLatest(clock$, wantedBufferAhead$)
-    .concatMap((args, i) => checkBufferStatus(args[0], args[1], !i));
+  /**
+   * Exploit the internal state given by ``checkInternalState``:
+   *   - mutates the downloadQueue
+   *   - start/restart the current BufferQueue
+   *   - emit important events
+   * @param {Object} state
+   * @returns {Observable}
+   */
+  function handleInternalState(
+    state : IBufferInternalState
+  ) : Observable<IBufferState> {
+    if (state.type === "full-buffer") {
+      log.debug("finished downloading queue\n", adaptation.type);
+      if (currentSegmentRequested) {
+        log.debug("interrupting segment request.");
+      }
+      downloadQueue = [];
+      startQueue$.next(undefined); // (re-)start with an empty queue
+      return Observable.of(state);
+    }
 
-  return Observable.merge(check$, messageSubject);
+    if (state.type === "idle-buffer") {
+      downloadQueue = [];
+      startQueue$.next(undefined); // (re-)start with an empty queue
+    }
+
+    else if (state.type === "need-segments" && state.value.segments.length) {
+      const neededSegments = state.value.segments;
+      const firstNeededSegment = neededSegments[0];
+
+      if (
+        !currentSegmentRequested ||
+        currentSegmentRequested.id !== firstNeededSegment.id
+      ) {
+        log.debug("starting downloading queue", adaptation.type);
+        downloadQueue = neededSegments;
+        startQueue$.next(undefined); // restart the queue
+      } else {
+        // Update the previous queue to be all needed segments but the first one,
+        // for which a request is already pending
+        const newQueue = neededSegments
+          .slice() // clone previous
+          .splice(1, neededSegments.length); // remove first element
+                                             // (pending request)
+        log.debug("updating downloading queue", adaptation.type);
+        downloadQueue = newQueue;
+      }
+
+      return Observable.of({
+        type: "active-buffer" as "active-buffer",
+        value: undefined,
+      });
+    }
+
+    // else
+    return Observable.empty();
+  }
+
+  /**
+   * State Checker:
+   *   - indicates when the manifest should be refreshed (through the messageSubject)
+   *   - indicates if a discontinuity is encountered (through the messageSubject)
+   *   - emit state updates
+   *   - update the downloadQueue
+   *   - start/restart the BufferQueue
+   * @type {Observable}
+   */
+  const bufferState$ : Observable<IBufferState> =
+    Observable.combineLatest(clock$, wantedBufferAhead$)
+      .map(checkInternalState)
+      .mergeMap(handleInternalState);
+
+  /**
+   * Buffer Queue:
+   *   - download segment
+   *   - append them to the SourceBuffer
+   * @type {Observable}
+   */
+  const bufferQueue$ = startQueue$
+    .switchMap(requestSegments)
+    .mergeMap(appendSegment);
+
+  return Observable.merge(messageSubject, bufferState$, bufferQueue$)
+    .share();
+}
+
+/**
+ * Get safety paddings (low and high) for the size of buffer that won't
+ * be flushed when switching representation for smooth transitions
+ * and avoiding buffer underflows.
+ * @param {Object} adaptation
+ * @returns {number}
+ */
+function getBufferPaddings(
+  adaptation : Adaptation
+) : { high : number; low : number } {
+  switch (adaptation.type) {
+    case "audio":
+    case "video":
+      return BUFFER_PADDING[adaptation.type];
+    default:
+      return BUFFER_PADDING.other;
+  }
 }

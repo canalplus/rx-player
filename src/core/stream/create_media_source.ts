@@ -24,11 +24,10 @@ import MediaError from "../../errors/MediaError";
 import log from "../../utils/log";
 
 /**
- * Side effect that set the media duration in the mediaSource. This side
- * effect occurs when we receive the "sourceopen" from the
- * mediaSource.
+ * Side effect that set the media duration in the mediaSource.
+ *
  * @param {MediaSource} mediaSource
- * @param {Object} manifest
+ * @param {number} duration
  */
 export function setDurationToMediaSource(
   mediaSource : MediaSource,
@@ -38,16 +37,19 @@ export function setDurationToMediaSource(
     Number.MAX_VALUE : duration;
 
   if (mediaSource.duration !== newDuration) {
-    mediaSource.duration = newDuration;
     log.info("set duration", mediaSource.duration);
+    mediaSource.duration = newDuration;
   }
 }
 
 /**
+ * Dispose of ressources taken by the MediaSource:
+ *   - Clear the MediaSource' SourceBuffers
+ *   - Clear the video's src (stop the video)
+ *   - Revoke MediaSource' URL
  * @param {HTMLMediaElement} video
  * @param {MediaSource|null} mediaSource
  * @param {string|null} mediaSourceURL
- * @param {Object} sourceBufferMemory
  */
 export function resetMediaSource(
   video : HTMLMediaElement,
@@ -100,9 +102,6 @@ export function resetMediaSource(
  * customBuffers are aborted and some minor cleaning is done.
  *
  * @param {HTMLMediaElement} video
- * @param {Object} sourceBufferMemory
- * @param {Object} sourceBufferMemory.custom
- * @param {Object} sourceBufferMemory.native
  * @returns {Observable}
  */
 export default function createMediaSource(

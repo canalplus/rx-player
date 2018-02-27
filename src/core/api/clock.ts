@@ -75,6 +75,7 @@ const SCANNED_VIDEO_EVENTS = [
   "seeking",
   "seeked",
   "loadedmetadata",
+  "ratechange",
 ];
 
 /**
