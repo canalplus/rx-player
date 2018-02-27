@@ -36,10 +36,9 @@ export default function forceGarbageCollection(
   timings$ : Observable<{ currentTime: number }>,
   bufferingQueue : QueuedSourceBuffer<any> // The type of buffer has no importance here
 ) : Observable<void> {
-  log.warn("buffer: running garbage collector");
-
   // wait for next timing event
   return timings$.take(1).mergeMap((timing) => {
+    log.warn("buffer: running garbage collector");
     const buffered = bufferingQueue.getBuffered();
     let cleanedupRanges =
       selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);

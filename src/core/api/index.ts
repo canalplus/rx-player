@@ -1716,9 +1716,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         // Manage image tracks
         // TODO Better way? Perhaps linked to an ImageSourceBuffer
         // implementation
-        const { bufferType, parsed } = streamInfos.value;
+        const { bufferType, segmentData } = streamInfos.value;
         if (bufferType === "image") {
-          const segmentData = parsed.segmentData;
           if (segmentData != null && segmentData.type === "bif") {
             const imageData = segmentData.data as IBifThumbnail[];
 

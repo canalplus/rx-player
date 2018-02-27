@@ -14,39 +14,42 @@
  * limitations under the License.
  */
 
+import { Period } from "../../manifest";
 import { getLeftSizeOfRange } from "../../utils/ranges";
 
+// XXX TODO
+// Item emitted by the Buffer's clock$
+export interface IBufferClockTick {
+  currentTime : number;
+  readyState : number;
+
+  // TODO Rename "baseTime" or something which will be currentTime + timeOffset
+  timeOffset : number;
+  stalled : object|null;
+  liveGap? : number;
+}
+
 /**
- * Calculate start and end timestamps delimiting wanted segments for the current
- * buffer.
- *
- * @param {TimeRanges} buffered - TimeRanges coming from the concerned
- * SourceBuffer
- * @param {Number} currentTime - Time currently played
- * @param {Object} limits
- * @param {Number} limits.start - Minimum time we should have
- * @param {Number} [limits.end] - Maximum time we should have
- * @param {Number} bufferGoal - Current buffer goal (minimum time ahead of the
- * current time wanted in the buffer).
- * @param {Object} paddings - contains two number properties: low and high.
- * If the gap to the end of the current buffered range is superior to the low
- * value, we will offset the start of the range, at most to the high value.
- * This is to avoid having excessive re-buffering where we re-downloads segments
- * already in the buffer.
- * @param {Number} paddings.low
- * @param {Number} paddings.high
- * @returns {Object} - Start and end timestamps, in seconds, under an object
- * form with two properties:
- *   - start {Number}
- *   - end {Number}
+ * Returns the range needed for a particular point in time.
+ * @param {Object} timing
+ * @param {number} bufferGoal
+ * @returns {Object}
  */
-export default function getWantedBufferRange(
+export default function getWantedRange(
+  period : Period,
   buffered : TimeRanges,
-  currentTime : number,
+  timing : IBufferClockTick,
   bufferGoal : number,
-  limits : { start: number; end? : number },
   paddings : { low : number; high : number }
 ) : { start : number; end : number } {
+  const currentTime = timing.currentTime + timing.timeOffset;
+  const limitEnd = timing.liveGap == null ?
+    period.end : Math.min(period.end || Infinity, currentTime + timing.liveGap);
+  const limits = {
+    start: Math.max(period.start, timing.currentTime + timing.timeOffset),
+    end: limitEnd,
+  };
+
   const { low: lowPadding, high: highPadding } = paddings;
 
   // Difference between the current time and the end of the current range

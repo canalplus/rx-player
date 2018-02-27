@@ -458,6 +458,38 @@ export default {
   MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
 
   /**
+   * The Buffer padding is a time offset from the current time that affects
+   * the buffer.
+   *
+   * Basically, from a given time, if the current buffer gap number (time
+   * between the current time and the end of the downloaded buffer) is between
+   * the "high" and "low" described here (of the corresponding type), we won't
+   * reschedule segments for that range.
+   *
+   * This is to avoid excessive re-buffering.
+   *
+   * Keeping the "high"s too low would increase the risk of re-bufferings.
+   *
+   * Keeping the "high"s too high would delay visible quality increase.
+   *
+   * @type {Object}
+   */
+  BUFFER_PADDING: {
+    audio: {
+      high: 1,
+      low: 1,
+    }, // only "audio" segments
+    video: {
+      high: 8,
+      low: 2,
+    }, // only "video" segments
+    other: {
+      high: 1,
+      low: 1,
+    }, // tracks which are not audio/video (text images).
+  },
+
+  /**
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (EME).
    *

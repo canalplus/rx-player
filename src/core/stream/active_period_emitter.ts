@@ -22,10 +22,6 @@
  * The first chronological period for which all types of buffers are active.
  */
 
-// TODO
-// This turns out to be a mess
-// The Stream should probably emit a "currentPeriodChanged" event instead.
-
 import { Observable } from "rxjs/Observable";
 import { Period } from "../../manifest";
 import log from "../../utils/log";

@@ -31,7 +31,7 @@ import { IStallingItem } from "./stalling_manager";
 
 // Emit when the buffer from last period is full
 export interface ICompletedBufferEvent {
-  type: "buffer-complete";
+  type: "complete-buffer";
   value : {
     type: SupportedBufferTypes;
   };
@@ -235,7 +235,7 @@ function endOfStream() : IEndOfStreamEvent {
 
 function bufferComplete(bufferType: SupportedBufferTypes) : ICompletedBufferEvent {
   return {
-    type: "buffer-complete",
+    type: "complete-buffer",
     value: {
       type: bufferType,
     },
