@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { arrayCompare } from "../../utils/array-compare";
-
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
@@ -90,7 +88,7 @@ type LicenseObject =
  * session information in the returned object.
  * @returns {Object}
  */
-export function createSessionEvent(
+function createSessionEvent(
   name : string,
   session : IMediaKeySession|MediaKeySession,
   options? : ISessionEventOptions
@@ -423,12 +421,7 @@ function createPersistentSessionAndLoad(
         }
 
         return createSessionAndKeyRequestWithRetry(
-          mediaKeys,
-          keySystem,
-          sessionType,
-          initDataType,
-          initData,
-          errorStream
+          mediaKeys, keySystem, sessionType, initDataType, initData, errorStream
         ).startWith(
           createSessionEvent("loaded-session-failed", session, { storedSessionId })
         );
@@ -456,11 +449,8 @@ function manageSessionCreation(
 ): Observable<MediaKeys|ISessionEvent|Event> {
   return Observable.defer(() => {
     // reuse currently loaded sessions without making a new key request
-    const loadedSession= $loadedSessions.get(initData);
-    if (
-      loadedSession &&
-      loadedSession.sessionId
-    ) {
+    const loadedSession = $loadedSessions.get(initData);
+    if (loadedSession && loadedSession.sessionId) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
       return Observable.of(createSessionEvent("reuse-session", loadedSession));
     }
@@ -490,78 +480,9 @@ function manageSessionCreation(
   });
 }
 
-/**
- * Compare MediaKeys configuration.
- * Return true if the entire mediaKey objects contain the same values.
- * @param {Object} A_config
- * @param {Object} B_config
- * @returns {boolean}
- */
-function compareMksConfigurations(
-  A_config: MediaKeySystemConfiguration,
-  B_config: MediaKeySystemConfiguration
-){
-  if(A_config == null || B_config == null){
-    return false;
-  }
-  if(
-      (A_config.distinctiveIdentifier !== B_config.distinctiveIdentifier) ||
-      (A_config.persistentState !== B_config.persistentState) ||
-      (!arrayCompare(A_config.initDataTypes || [], B_config.initDataTypes || [])) ||
-      (!arrayCompare(A_config.sessionTypes, B_config.sessionTypes))
-  ) {
-      return false;
-  }
-
-  if(!(A_config.audioCapabilities == null && B_config.audioCapabilities == null)){
-    if(
-      A_config.audioCapabilities != null &&
-      B_config.audioCapabilities != null &&
-      A_config.audioCapabilities.length === B_config.audioCapabilities.length
-    ){
-      A_config.audioCapabilities.forEach((cap, idx) => {
-        const { contentType, robustness } = cap;
-        const Bcap = (B_config.audioCapabilities as MediaKeySystemMediaCapability[])[idx];
-        if(
-          Bcap.contentType !== contentType ||
-          Bcap.robustness !== robustness
-        ){
-          return false;
-        }
-      });
-    } else {
-      return false;
-    }
-  }
-
-  if(!(A_config.videoCapabilities == null && B_config.videoCapabilities == null)){
-    if(
-      A_config.videoCapabilities != null &&
-      B_config.videoCapabilities != null &&
-      A_config.videoCapabilities.length === B_config.videoCapabilities.length
-    ){
-      A_config.videoCapabilities.forEach((cap, idx) => {
-        const { contentType, robustness } = cap;
-        const Bcap = (B_config.videoCapabilities as MediaKeySystemMediaCapability[])[idx];
-        if(
-          Bcap.contentType !== contentType ||
-          Bcap.robustness !== robustness
-        ){
-          return false;
-        }
-      });
-    } else {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 export default manageSessionCreation;
 
 export {
   ISessionEvent,
   ErrorStream,
-  compareMksConfigurations,
 };

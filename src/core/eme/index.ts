@@ -22,7 +22,7 @@ import {
   shouldUnsetMediaKeys,
 } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
-import { EncryptedMediaError } from "../../errors";
+import { EncryptedMediaError, MediaError } from "../../errors";
 import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
@@ -39,7 +39,6 @@ import findCompatibleKeySystem, {
  } from "./key_system";
 import { trySettingServerCertificate } from "./server_certificate";
 import manageSessionCreation, {
-  compareMksConfigurations,
   ErrorStream,
   ISessionEvent,
  } from "./session";
@@ -101,8 +100,8 @@ function handleEncryptedEvent(
   keySystemInfo: IKeySystemPackage,
   video : HTMLMediaElement,
   errorStream: ErrorStream,
-  mediaKeys$: Observable<MediaKeys>
-): Observable<MediaKeys|ISessionEvent|Event> {
+  mediaKeys$: Observable<IMockMediaKeys|MediaKeys>
+): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   log.info("eme: encrypted event", encryptedEvent);
   if (encryptedEvent.initData == null) {
     const error = new Error("no init data found on media encrypted event.");
@@ -143,7 +142,7 @@ function handleFirstPlaybackEncryptedEvents(
   keySystemInfo: IKeySystemPackage,
   video : HTMLMediaElement,
   errorStream: ErrorStream
-): Observable<MediaKeys|ISessionEvent|Event> {
+): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
 
   const { keySystemAccess } = keySystemInfo;
 
@@ -168,22 +167,11 @@ function handleOngoingPlaybackEncryptedEvents(
   keySystemInfo: IKeySystemPackage,
   video : HTMLMediaElement,
   errorStream: ErrorStream
-): Observable<MediaKeys|ISessionEvent|Event> {
+): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
 
   if (video.mediaKeys == null) {
     const error = new Error("Video Element should have attached MediaKeys.");
-    throw new EncryptedMediaError("MEDIAKEYS_ERROR", error, true);
-  }
-
-  if(
-    !compareMksConfigurations(
-      keySystemInfo.keySystemAccess.getConfiguration(),
-      instanceInfos.$mediaKeySystemConfiguration as MediaKeySystemConfiguration
-    )
-  ){
-    const error =
-      new Error("Different configuration assignments for same media content.");
-    throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+    throw new MediaError("BAD_MEDIA_ELEMENT", error, true);
   }
 
   const mediaKeys$ = Observable.of(video.mediaKeys);

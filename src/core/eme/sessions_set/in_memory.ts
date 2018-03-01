@@ -83,7 +83,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    */
   add(
     initData : Uint8Array|number[]|number,
-    session : MediaKeySession,
+    session : IMediaKeySession|MediaKeySession,
     sessionEvents : ConnectableObservable<Event|ISessionEvent>
   ) : void {
     const hash = hashInitData(initData);
