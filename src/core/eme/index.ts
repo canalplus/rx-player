@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import {
   hasEMEAPIs,
@@ -34,8 +35,8 @@ import {
 import findCompatibleKeySystem, {
   getKeySystem,
   IInstanceInfo,
+  IKeySystemAccessInfos,
   IKeySystemOption,
-  IKeySystemPackage,
  } from "./key_system";
 import { trySettingServerCertificate } from "./server_certificate";
 import manageSessionCreation, {
@@ -43,6 +44,10 @@ import manageSessionCreation, {
   ISessionEvent,
  } from "./session";
 import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
+
+interface IMediaKeysInfos extends IKeySystemAccessInfos {
+  mediaKeys : MediaKeys|IMockMediaKeys;
+}
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
@@ -90,16 +95,14 @@ function setSessionStorage(keySystem: IKeySystemOption) : void {
  *
  * Manage session creation through all subsequent EME APIs.
  * @param {MediaEncryptedEvent} encryptedEvent
- * @param {Object} keySystemInfo
+ * @param {Object} mediaKeysInfos
  * @param {HTMLMediaElement} video
  * @param {Subject} ErrorStream
- * @param {Observable} mediaKeys$
  * @returns {Observable}
  */
 function handleEncryptedEvent(
   encryptedEvent : MediaEncryptedEvent,
-  mediaKeys : IMockMediaKeys|MediaKeys,
-  keySystemInfo : IKeySystemPackage,
+  mediaKeysInfos : IMediaKeysInfos,
   video : HTMLMediaElement,
   errorStream : ErrorStream
 ): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
@@ -111,9 +114,10 @@ function handleEncryptedEvent(
   }
 
   const {
+    mediaKeys,
     keySystem,
     keySystemAccess,
-  } = keySystemInfo;
+  } = mediaKeysInfos;
 
   setSessionStorage(keySystem);
 
@@ -159,32 +163,16 @@ function createEME(
     }));
   }
 
-  return Observable.combineLatest(
-    onEncrypted$(video).take(1),
-    findCompatibleKeySystem(keySystems, instanceInfos)
-  ).mergeMap(([
-    firstEncryptedEvent,
-    keySystemInfos,
-  ] : [MediaEncryptedEvent, IKeySystemPackage]) => {
-    const mediaKeys$ = createMediaKeysObs(keySystemInfos.keySystemAccess);
-
-    return mediaKeys$
-      .mergeMap((mediaKeys) => {
-        const handleCurrentEncryptedEvent$ = handleEncryptedEvent(
-          firstEncryptedEvent, mediaKeys, keySystemInfos, video, errorStream);
-
-        const handleSubsequentEncryptedEvent$ = onEncrypted$(video)
-          .mergeMap((encryptedEvent) => {
-            return handleEncryptedEvent(
-              encryptedEvent, mediaKeys, keySystemInfos, video, errorStream);
-          });
-
-        return Observable.merge(
-          handleCurrentEncryptedEvent$,
-          handleSubsequentEncryptedEvent$
-        );
-      });
+  const mediaKeysInfos$ = findCompatibleKeySystem(keySystems, instanceInfos)
+    .mergeMap((mediaKeysInfos) => {
+      return createMediaKeysObs(mediaKeysInfos.keySystemAccess)
+        .map((mediaKeys) => objectAssign({ mediaKeys }, mediaKeysInfos));
     });
+
+  return Observable.combineLatest(onEncrypted$(video), mediaKeysInfos$)
+    .mergeMap(([encryptedEvent, mediaKeysInfos]) =>
+      handleEncryptedEvent(encryptedEvent, mediaKeysInfos, video, errorStream)
+    );
 }
 
 /**

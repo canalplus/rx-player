@@ -75,7 +75,7 @@ interface IKeySystemType {
   keySystem: IKeySystemOption;
 }
 
-interface IKeySystemPackage {
+interface IKeySystemAccessInfos {
   keySystemAccess: IMediaKeySystemAccess;
   keySystem: IKeySystemOption;
 }
@@ -265,7 +265,7 @@ function buildKeySystemConfigurations(
 function findCompatibleKeySystem(
   keySystems: IKeySystemOption[],
   instanceInfos: IInstanceInfo
-) : Observable<IKeySystemPackage> {
+) : Observable<IKeySystemAccessInfos> {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
   const cachedKeySystemAccess =
@@ -305,7 +305,7 @@ function findCompatibleKeySystem(
     }
     , []);
 
-  return Observable.create((obs: Subject<IKeySystemPackage>) => {
+  return Observable.create((obs: Subject<IKeySystemAccessInfos>) => {
     let disposed = false;
     let sub: Subscription|null;
 
@@ -380,7 +380,7 @@ export {
   getKeySystem,
   IInstanceInfo,
   IMediaCapability,
-  IKeySystemPackage,
+  IKeySystemAccessInfos,
   IKeySystemOption,
 };
 
