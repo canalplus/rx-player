@@ -61,19 +61,20 @@ const instanceInfos : IInstanceInfo = {
 function createMediaKeysObs(
   keySystemAccess : IMediaKeySystemAccess
 ) : Observable<IMockMediaKeys|MediaKeys> {
+  return Observable.defer(() => {
   // MediaKeySystemAccess.prototype.createMediaKeys returns a promise
-  return castToObservable(keySystemAccess.createMediaKeys());
+    return castToObservable(keySystemAccess.createMediaKeys());
+  });
 }
 
 /**
- * Store licence if persistent
+ * Set the session storage given in options, if one.
  * @param {Object} keySystem
  */
-function handleSessionStorage(
-  keySystem: IKeySystemOption
-){
+function setSessionStorage(keySystem: IKeySystemOption) : void {
   if (keySystem.persistentLicense) {
     if (keySystem.licenseStorage) {
+      log.info("set the given license storage");
       $storedSessions.setStorage(keySystem.licenseStorage);
     } else {
       const error = new Error("no license storage found for persistent license.");
@@ -97,20 +98,26 @@ function handleSessionStorage(
  */
 function handleEncryptedEvent(
   encryptedEvent : MediaEncryptedEvent,
-  keySystemInfo: IKeySystemPackage,
+  keySystemInfo : IKeySystemPackage,
   video : HTMLMediaElement,
-  errorStream: ErrorStream,
-  mediaKeys$: Observable<IMockMediaKeys|MediaKeys>
+  errorStream : ErrorStream,
+  mediaKeys$ : Observable<IMockMediaKeys|MediaKeys>
 ): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   log.info("eme: encrypted event", encryptedEvent);
+
   if (encryptedEvent.initData == null) {
     const error = new Error("no init data found on media encrypted event.");
     throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
   }
 
-  const { keySystem, keySystemAccess } = keySystemInfo;
+  const {
+    keySystem,
+    keySystemAccess,
+  } = keySystemInfo;
   const { serverCertificate } = keySystem;
-  handleSessionStorage(keySystem);
+
+  setSessionStorage(keySystem);
+
   const initData = new Uint8Array(encryptedEvent.initData);
   const mksConfig = keySystemAccess.getConfiguration();
 
