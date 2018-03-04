@@ -1,88 +1,142 @@
-# Player errors and warnings
+# Player errors and warnings ###################################################
 
-## Table of Contents
+
+## Table of Contents ###########################################################
 
 - [Overview](#overview)
 - [Structure of an Error](#structure)
 - [Types](#types)
-    - [NETWORK_ERROR](#types-NETWORK_ERROR)
-    - [MEDIA_ERROR](#types-MEDIA_ERROR)
-    - [ENCRYPTED_MEDIA_ERROR](#types-ENCRYPTED_MEDIA_ERROR)
-    - [INDEX_ERROR](#types-INDEX_ERROR)
-    - [OTHER_ERROR](#types-OTHER_ERROR)
+    - [NETWORK_ERROR](#types-network_error)
+    - [MEDIA_ERROR](#types-media_error)
+    - [ENCRYPTED_MEDIA_ERROR](#types-encrypted_media_error)
+    - [INDEX_ERROR](#types-index_error)
+    - [OTHER_ERROR](#types-other_error)
 - [Codes](#codes)
 
-## <a name="overview"></a>Overview
+
+
+<a name="overview"></a>
+## Overview ####################################################################
 
 Various errors can happen when playing a media content:
   - The network is unreachable
   - The codecs are not supported
-  - We have no mean to decrypt the date
+  - We have no mean to decrypt the data
   - ...
 
-Some errors can be fatal to content playback and will stop the player, other can be managed.
+Some errors can be fatal to content playback and will stop the player, other can
+be managed.
 
 You can know which fatal error interrupted your playback either by:
-  - adding an event listener to the ``"error"`` event (see the [player events documentation](./player_events.md)).
-  - calling the ``getError`` API if the current state is ``STOPPED``. If different from ``null``, it means that a fatal error happened (see the [documentation for getError](./index.md#meth-getError)).
+
+  - adding an event listener to the ``"error"`` event (see the [player events
+    documentation](./player_events.md)).
+
+  - calling the ``getError`` API if the current state is ``STOPPED``. If
+    different from ``null``, it means that a fatal error happened (see the
+    [documentation for getError](./index.md#meth-getError)).
+
 
 You can also know any non-fatal error as they happen by:
-  - adding an event listener to the ``"warning"`` event (see the [player events documentation](./player_events.md)).
+  - adding an event listener to the ``"warning"`` event (see the [player events
+    documentation](./player_events.md)).
 
-All of those will return a JavaScript ``Error`` instance, with added informations described in this page.
+All of those will return a JavaScript ``Error`` instance, with added informations
+described in this page.
 
-## <a name="structure"></a>Structure of an Error
+
+
+<a name="structure"></a>
+## Structure of an Error #######################################################
 
 Each error linked to playback has at least those properties:
-  - ``type`` (``string``): A large category for the error (e.g. ``NETWORK_ERROR``, ``ENCRYPTED_MEDIA_ERROR`` ...)
+
+  - ``type`` (``string``): A large category for the error
+    (e.g. ``NETWORK_ERROR``, ``ENCRYPTED_MEDIA_ERROR`` ...)
+
   - ``code`` (``string``): A set identification "code" for the error encountered
-  - ``message`` (``string``): A displayable summary of the error. Human-readable.
+
+  - ``message`` (``string``): A displayable summary of the error.
+    Human-readable.
 
 The same ``code`` can be associated with multiple ``type`` values.
 
-## <a name="types"></a>Types
 
-The types are the different strings you can have as the ``type`` property of an error. Here is the exhaustive list of them:
 
-### <a name="types-network_error"></a>NETWORK_ERROR
+<a name="types"></a>
+## Types #######################################################################
+
+The types are the different strings you can have as the ``type`` property of an
+error. Here is the exhaustive list of them:
+
+
+<a name="types-network_error"></a>
+### NETWORK_ERROR ##############################################################
 
 Network-related error (timeout, bad http code).
 
-To give more informations about the problem, those errors have a `reason` attribute with the following properties:
+To give more informations about the problem, those errors have a `reason`
+attribute with the following properties:
+
   - ``url`` (``string``): The url the request has been on
+
   - ``xhr`` (``XMLHttpRequest``): The xhr associated with the request
+
   - ``status`` (``Number``): Shortcut to the status code of the xhr.
+
   - ``type`` (``string``): A sub-category for the request error.
 
     Those sub-categories can either be:
+
       - ``"TIMEOUT"``: the request timeouted
+
       - ``"ERROR_EVENT"``: the xhr emitted an ``"error"`` event.
-      - ``"ERROR_HTTP_CODE"``: The xhr finished on a HTTP code not in the 200 range.
-      - ``"PARSE_ERROR"``: We had a problem while immediately parsing the response.
 
-### <a name="types-media_error"></a>MEDIA_ERROR
+      - ``"ERROR_HTTP_CODE"``: The xhr finished on a HTTP code not in the 200
+        range.
 
-Error related to the media itself. It can both come from the player itself (manifest parsing) or from the browser itself (content playback).
+      - ``"PARSE_ERROR"``: We had a problem while immediately parsing the
+        response.
 
-### <a name="types-encrypted_media_error"></a>ENCRYPTED_MEDIA_ERROR
 
-Those errors are linked to the Encrypted Media Extensions. They concern various DRM-related problems
+<a name="types-media_error"></a>
+### MEDIA_ERROR ################################################################
 
-### <a name="types-index_error"></a>INDEX_ERROR
+Error related to the media itself. It can both come from the player itself
+(manifest parsing) or from the browser itself (content playback).
 
-Those errors are specific to the index, which is the place in the manifest describing how to access wanted segments.
 
-The different possible problems are not being able to parse this index or asking for segment which are either after or before the limits of it.
+<a name="types-encrypted_media_error"></a>
+### ENCRYPTED_MEDIA_ERROR ######################################################
 
-### <a name="types"-other_error></a>OTHER_ERROR
+Those errors are linked to the Encrypted Media Extensions. They concern various
+DRM-related problems
+
+
+<a name="types-index_error"></a>
+### INDEX_ERROR ################################################################
+
+Those errors are specific to the index, which is the place in the manifest
+describing how to access wanted segments.
+
+The different possible problems are not being able to parse this index or asking
+for segment which are either after or before the limits of it.
+
+
+<a name="types-other_error"></a>
+### OTHER_ERROR ################################################################
 
 Those errors are:
   - a fallback for non-categorized errors
   - pipelines error which are not related to requests
 
-## <a name="codes"></a>Codes
 
-The codes are the string you can have as a ``code`` property in a playback error. Here is a list of them:
+
+<a name="codes"></a>
+## Codes #######################################################################
+
+The codes are the string you can have as a ``code`` property in a playback
+error. Here is a list of them:
   - ``"PIPELINE_RESOLVE_ERROR"``
   - ``"PIPELINE_LOAD_ERROR"``
   - ``"PIPELINE_PARSING_ERROR"``

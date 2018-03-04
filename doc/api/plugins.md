@@ -1,20 +1,31 @@
-# Plugins
+# Plugins ######################################################################
 
-## Overview
+
+## Overview ####################################################################
 
 To allow the player to be extended, a system of "plugins" has been added.
 
-Those plugins are often under the form of functions passed as an argument to the ``loadVideo`` API call.
+Those plugins are often under the form of functions passed as an argument to the
+``loadVideo`` API call.
 
-## <a name="segmentLoader"></a>segmentLoader
 
-The segmentLoader is a function that can be included in the ``transportOptions`` of the ``loadVideo`` API call.
 
-A segmentLoader allows to define a custom audio/video segment loader (it might on the future work for other types of segments, so always check the type if you only want those two).
+<a name="segmentLoader"></a>
+## segmentLoader ###############################################################
 
-The segment loader is the part performing the segment request. One usecase where you might want to set your own segment loader is to integrate Peer-to-Peer segment downloading through the player.
+The segmentLoader is a function that can be included in the ``transportOptions``
+of the ``loadVideo`` API call.
 
-To give a complete example, here is a segment loader which uses an XHR (it has no use, as our implementation does the same thing and more):
+A segmentLoader allows to define a custom audio/video segment loader (it might
+on the future work for other types of segments, so always check the type if you
+only want those two).
+
+The segment loader is the part performing the segment request. One usecase where
+you might want to set your own segment loader is to integrate Peer-to-Peer
+segment downloading through the player.
+
+To give a complete example, here is a segment loader which uses an XHR (it has
+no use, as our implementation does the same thing and more):
 ```js
 /**
  * @param {Object} infos - infos about the segment to download
@@ -96,15 +107,26 @@ const customSegmentLoader = (infos, callbacks) => {
 };
 ```
 
-## <a name="manifestLoader"></a>manifestLoader
+[1] [Adaptation structure](./manifest.md#adaptation)
 
-The manifestLoader is a function that can be included in the ``transportOptions`` of the ``loadVideo`` API call.
+[2] [Representation structure](./manifest.md#representation)
+
+[3] [Segment structure](./manifest.md#segment)
+
+
+
+<a name="manifestLoader"></a>
+## manifestLoader ##############################################################
+
+The manifestLoader is a function that can be included in the
+``transportOptions`` of the ``loadVideo`` API call.
 
 A manifestLoader allows to define a custom manifest loader.
 
 The manifest loader is the part performing the manifest request.
 
-Here is a manifest loader which uses an XHR (it has no use, as our implementation does the same thing and more):
+Here is a manifest loader which uses an XHR (it has no use, as our
+implementation does the same thing and more):
 
 ```js
 /**
@@ -160,10 +182,3 @@ const customManifestLoader = (url, callbacks) => {
   };
 };
 ```
-
-
-[1] [Adaptation structure](./manifest.md#adaptation)
-
-[2] [Representation structure](./manifest.md#representation)
-
-[3] [Segment structure](./manifest.md#segment)
