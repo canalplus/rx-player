@@ -393,7 +393,7 @@ export default class LanguageManager {
     if (textInfos == null) {
       return null;
     }
-    const chosenTextAdaptation = this._audioChoiceMemory.get(period);
+    const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (!chosenTextAdaptation) {
       return null;
     }
