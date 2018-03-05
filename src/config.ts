@@ -455,7 +455,7 @@ export default {
    *
    * @type {Number}
    */
-  MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 100,
+  MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the

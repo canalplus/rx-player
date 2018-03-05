@@ -1,37 +1,65 @@
-# Rx-player
+# Rx-player ####################################################################
 
 [![Build Status](https://travis-ci.org/canalplus/rx-player.svg?branch=master)](https://travis-ci.org/canalplus/rx-player)
 [![npm version](https://badge.fury.io/js/rx-player.svg)](https://badge.fury.io/js/rx-player)
 [![Gitter](https://img.shields.io/gitter/room/canalplus/rx-player.svg)](https://gitter.im/canalplus/rx-player)
 
 
-The Rx-player is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP) and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming) video player directly on the browser, without plugins. It relies on HTML5 [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions) and [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions) and is written in [TypeScript](http://www.typescriptlang.org/), a superset of JavaScript.
+The Rx-player is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP)
+and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming)
+video player directly on the browser, without plugins.
+It relies on HTML5 [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions)
+and [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions)
+and is written in [TypeScript](http://www.typescriptlang.org/), a superset of
+JavaScript.
 
-It is currently used in production for premium services and targets several devices, such as computers, phones, but also set-top-boxes, smart TVs and other peculiar environments.
+It is currently used in production for premium services and targets several
+devices, such as computers, phones, but also set-top-boxes, smart TVs and other
+peculiar environments.
 
 Its main goals are:
-  - To play live and On Demand Smooth and DASH contents for extended amounts of time, with or without DRM
-  - To offer a first-class user experience (best quality without any buffering, low latency...)
-  - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB integration...)
+
+  - To play live and On Demand Smooth and DASH contents for extended amounts of
+    time, with or without DRM
+
+  - To offer a first-class user experience (best quality without any buffering,
+    low latency...)
+
+  - To be configurable and extendable (e.g. for Peer-to-Peer streaming, STB
+    integration...)
+
   - To be easy to integrate and use as a library in various codebases.
 
-We recently switched our codebase to TypeScript, [here's why](./doc/why_typescript.md).
 
-Latest release: ``v3.2.0``
+We recently switched our codebase to TypeScript, [here's
+why](./doc/why_typescript.md).
 
-## API
+Latest release: ``v3.3.0``
 
-We documented the API in every little details in [the API documentation](./doc/api/index.md).
 
-## Demo
 
-You can view our online Demo, built from our last version, [here](http://canalplus.github.io/rx-player/).
+## API #########################################################################
 
-This demo is a small application written in [React](https://github.com/facebook/react) demonstrating a simple usage of the player.
+We documented the API in every little details in [the API
+documentation](./doc/api/index.md).
 
-## How to use it?
 
-The fastest way to use our player directly in your code is to add this repository as a dependency. You can do it via npm:
+
+## Demo ########################################################################
+
+You can view our online Demo, built from our last version,
+[here](http://canalplus.github.io/rx-player/).
+
+This demo is a small application written in
+[React](https://github.com/facebook/react) demonstrating a simple usage of the
+player.
+
+
+
+## How to use it? ##############################################################
+
+The fastest way to use our player directly in your code is to add this
+repository as a dependency. You can do it via npm:
 ```
 npm install --save rx-player
 ```
@@ -45,7 +73,9 @@ import RxPlayer from "rx-player";
 // const RxPlayer = require("rx-player");
 
 // instantiate it
-const player = new RxPlayer({ videoElement: document.getElementById("my-video") });
+const player = new RxPlayer({
+  videoElement: document.getElementById("my-video")
+});
 
 // play a video
 player.loadVideo({
@@ -55,28 +85,45 @@ player.loadVideo({
 });
 ```
 
-You can now also perform your own [custom build](./doc/api/custom_builds.md) with only the features you need to reduce the file size.
+You can now also perform your own [custom build](./doc/api/custom_builds.md)
+with only the features you need to reduce the file size.
 
-## Your questions
 
-You can ask directly your questions about the project on [our gitter](https://gitter.im/canalplus/rx-player). We will try our best to answer them as quickly as possible.
 
-## Contribute
+## Your questions ##############################################################
+
+You can ask directly your questions about the project on [our
+gitter](https://gitter.im/canalplus/rx-player).
+We will try our best to answer them as quickly as possible.
+
+
+
+## Contribute ##################################################################
 
 You can help and contribute either by:
-  - reporting bugs directly on the [issues tab](https://github.com/canalplus/rx-player/issues) on top of this page.
-  - adding new features / fixing bugs and doing a pull request (please open an issue first for that).
 
-If you have any questions about contributing, you can ask it in our [gitter room](https://gitter.im/canalplus/rx-player). We also began to add a little architecture documentation (at the moment only about the file organization [here](./doc/architecture/files.md)). More is coming soon!
+  - reporting bugs directly on the [issues
+    tab](https://github.com/canalplus/rx-player/issues) on top of this page.
 
-### Dependencies
+  - adding new features / fixing bugs and doing a pull request (please open an
+    issue first for that).
 
-After cloning our repo, you should first install our dependencies via [npm](https://www.npmjs.com/):
+If you have any questions about contributing, you can ask it in our [gitter
+room](https://gitter.im/canalplus/rx-player). We also began to add a little
+architecture documentation [here](./doc/architecture/files.md)). More is coming
+soon!
+
+
+### Dependencies ###############################################################
+
+After cloning our repo, you should first install our dependencies via
+[npm](https://www.npmjs.com/):
 ```sh
 npm install
 ```
 
-### Build
+
+### Build ######################################################################
 
 We use npm scripts to bundle, lint and test the player. Here are some examples:
 ```sh
@@ -96,33 +143,59 @@ npm run test
 npm run info
 ```
 
-Builds are included in the ``dist/`` directory (builds based on the last version are already included there).
+Builds are included in the ``dist/`` directory (builds based on the last version
+are already included there).
 
-## Why a new player? Why Rx?
 
-Building a streaming video player for the web is a complex task due to the numerous interactions with the outside world it has to deal with. Whether they come from the user providing an input, network interactions or browser capabilities. If you also consider the multiplicity of browsers to support and the speed with which their APIs are changed and added, you end up with a really important (both in the significant and large sense) piece of software. The video player being the centerpiece of our applications, it needs to adapt very quickly and stay resilient to various errors.
 
-Many current video player implementations rely mostly on classical object-oriented hierarchy and imperative event callbacks with shared mutable objects to manage all these asynchronous tasks and states. We found that we could profit a lot more from adding a reactive-programming approach, with most notably the help of [the RxJS library](https://github.com/ReactiveX/rxjs).
+## Why a new player? Why Rx? ###################################################
 
-RxJS provides gracious interfaces and operators to compose asynchronous tasks together by representating changing states as observable stream of values. It also comes with a **cancelation** contract so that every asynchronous side-effect can be properly disposed when discarded by the system. This change of paradigm answers gracefully to most of our needs.
+Building a streaming video player for the web is a complex task due to the
+numerous interactions with the outside world it has to deal with. Whether they
+come from the user providing an input, network interactions or browser
+capabilities.
+If you also consider the multiplicity of browsers to support and the speed
+with which their APIs are changed and added, you end up with a really important
+(both in the significant and large sense) piece of software.
+The video player being the centerpiece of our applications, it needs to adapt
+very quickly and stay resilient to various errors.
 
-Moreover, writing the RxPlayer in TypeScript instead of plain JavaScript gives us more tools and confidence in our codebase. All of these elements helps us to build what we think is a _maintainable_ and _evolutive_ codebase, allowing us to adapt quickly to changing environments.
+Many current video player implementations rely mostly on classical
+object-oriented hierarchy and imperative event callbacks with shared mutable
+objects to manage all these asynchronous tasks and states.
+We found that we could profit a lot more from adding a reactive-programming
+approach, with most notably the help of [the RxJS
+library](https://github.com/ReactiveX/rxjs).
 
-## Target support
+RxJS provides gracious interfaces and operators to compose asynchronous tasks
+together by representating changing states as observable stream of values.
+It also comes with a **cancelation** contract so that every asynchronous
+side-effect can be properly disposed when discarded by the system.
+This change of paradigm answers gracefully to most of our needs.
+
+Moreover, writing the RxPlayer in TypeScript instead of plain JavaScript gives
+us more tools and confidence in our codebase.
+All of these elements helps us to build what we think is a _maintainable_ and
+_evolutive_ codebase, allowing us to adapt quickly to changing environments.
+
+
+
+## Target support ##############################################################
 
 Here is a basic list of supported platforms:
 
-|             |  Chrome   |   IE [1]  |  Edge   |  Firefox  |  Safari  |  Opera  |
-|-------------|:---------:|:---------:|:-------:|:---------:|:--------:|:-------:|
-| Windows     |   >= 30   |   >= 11   |  >= 12  |   >= 42   |   >= 8   |  >= 25  |
-| OSX         |   >= 30   |     -     |    -    |   >= 42   |   >= 8   |  >= 25  |
-| Linux       |   >= 37   |     -     |    -    |   >= 42   |    -     |  >= 25  |
-| Android [2] |   >= 30   |     -     |    -    |   >= 42   |    -     |  >= 15  |
-| iOS         |    No     |     -     |    -    |    No     |    No    |    No   |
+|             | Chrome  |  IE [1] |  Edge  |  Firefox  |  Safari  |  Opera  |
+|-------------|:-------:|:-------:|:------:|:---------:|:--------:|:-------:|
+| Windows     |  >= 30  |  >= 11  |  >= 12 |   >= 42   |   >= 8   |  >= 25  |
+| OSX         |  >= 30  |    -    |    -   |   >= 42   |   >= 8   |  >= 25  |
+| Linux       |  >= 37  |    -    |    -   |   >= 42   |    -     |  >= 25  |
+| Android [2] |  >= 30  |    -    |    -   |   >= 42   |    -     |  >= 15  |
+| iOS         |   No    |    -    |    -   |    No     |    No    |    No   |
 
 [1] Only on Windows >= 8.
 
 [2] Android version >= 4.2
 
-And more. A good way to know if the browser should be supported by our player is to go
-on the page https://www.youtube.com/html5 and check support for MSE & H.264.
+And more. A good way to know if the browser should be supported by our player is
+to go on the page https://www.youtube.com/html5 and check support for MSE and
+H.264.

@@ -23,6 +23,7 @@
 import deepEqual = require("deep-equal");
 import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from "rxjs/Observable";
+import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
@@ -47,6 +48,7 @@ import {
   onEnded$,
   onFullscreenChange$,
   onPlayPause$,
+  onSeeking$,
   onTextTrackChanges$,
   videoWidth$,
 } from "../../compat/events";
@@ -77,6 +79,7 @@ import { SupportedBufferTypes } from "../source_buffers";
 import Stream, {
   IStreamEvent,
 } from "../stream";
+import StreamDirectFile from "../stream/directfile";
 import createClock, {
   IClockTick
 } from "./clock";
@@ -160,6 +163,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @type {string}
    */
   public state : string;
+
+  /**
+   * URL of the content currently being played.
+   * undefined when no content is being played.
+   * @private
+   * @type {string|undefined}
+   */
+  private _priv_contentURL : string|undefined;
 
   /**
    * Emit when the player is disposed to perform clean-up.
@@ -250,6 +261,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   };
 
   /**
+   * true if the current content is in DirectFile mode.
+   * false is the current content has a transport protocol (Smooth/DASH...).
+   * null if no content is being loaded/played.
+   * @private
+   * @type {Boolean}
+   */
+  private _priv_isDirectFile : boolean|null;
+
+  /**
    * Store last wanted manual bitrates for the next ABRManager instanciation.
    * @private
    * @type {Object}
@@ -261,6 +281,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     image? : number;
   };
 
+  /**
+   * Current Period being played.
+   * null if no Period is being played.
+   * @private
+   * @type {Object}
+   */
   private _priv_currentPeriod : Period|null;
 
   /**
@@ -455,7 +481,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.2.0";
+    this.version = /*PLAYER_VERSION*/"3.3.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -526,6 +552,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_languageManager = null;
     this._priv_abrManager = null;
 
+    this._priv_contentURL = undefined;
+    this._priv_isDirectFile = null;
     this._priv_currentManifest = null;
     this._priv_activeRepresentations = null;
     this._priv_activeAdaptations = null;
@@ -617,20 +645,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       throw new Error("the attached video element is disposed");
     }
 
-    const transportFn = Transports[transport];
-    if (!transportFn) {
-      throw new Error(`transport "${transport}" not supported`);
-    }
-
-    const transportObj = transportFn(transportOptions);
-
     // now that every check has passed, stop previous content
     // TODO First stop?
     this.stop();
 
-    // prepare initial tracks played
-    this._priv_initialAudioTrack = defaultAudioTrack;
-    this._priv_initialTextTrack = defaultTextTrack;
+    this._priv_contentURL = url;
+    const isDirectFile = transport === "directfile";
+    this._priv_isDirectFile = isDirectFile;
 
     // inilialize to false
     this._priv_playing$.next(false);
@@ -638,86 +659,109 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // get every properties used from context for clarity
     const videoElement = this.videoElement;
 
-    // TODO either ditch or repair directFile playback
-    /** @type {Boolean} */
-    // const withMediaSource = !transport.directFile;
-    const withMediaSource = true;
-
     /**
      * Global clock used for the whole application.
      * @type {Observable.<Object>}
      */
-    const clock$ = createClock(videoElement, { withMediaSource });
-
-    /**
-     * Options used by the ABR Manager.
-     * @type {Object}
-     */
-    const adaptiveOptions = {
-      initialBitrates: this._priv_lastBitrates,
-      manualBitrates: this._priv_manualBitrates,
-      maxAutoBitrates: this._priv_initialMaxAutoBitrates,
-      throttle: this._priv_throttleWhenHidden ? {
-        video: isInBackground$()
-          .map(isBg => isBg ? 0 : Infinity)
-          .takeUntil(this._priv_stopCurrentContent$),
-      } : {},
-      limitWidth: this._priv_limitVideoWidth ? {
-        video: videoWidth$(videoElement)
-          .takeUntil(this._priv_stopCurrentContent$),
-      } : {},
-    };
-
-    /**
-     * Options related to the Buffer(s)
-     * @type {Object}
-     */
-    const bufferOptions = {
-      wantedBufferAhead$: this._priv_wantedBufferAhead$,
-      maxBufferAhead$: this._priv_maxBufferAhead$,
-      maxBufferBehind$: this._priv_maxBufferBehind$,
-    };
-
-    /**
-     * Options used by the TextTrack SourceBuffer
-     * @type {Object}
-     */
-    const textTrackOptions = options.textTrackMode === "native" ? {
-      textTrackMode: "native" as "native",
-      hideNativeSubtitle: options.hideNativeSubtitle,
-    } : {
-      textTrackMode: "html" as "html",
-      textTrackElement: options.textTrackElement,
-    };
+    const clock$ = createClock(videoElement, {
+      withMediaSource: !isDirectFile,
+    });
 
     const closeStream$ = Observable.merge(
       this._priv_stopCurrentContent$,
       this._priv_stopAtEnd ? onEnded$(videoElement) : Observable.empty()
     ).take(1);
 
-    /**
-     * Stream Observable, through which the content will be launched.
-     * @type {Observable.<Object>}
-     */
-    const stream = Stream({
-      adaptiveOptions,
-      autoPlay,
-      bufferOptions,
-      clock$,
-      isDirectFile: !withMediaSource,
-      keySystems,
-      networkConfig,
-      speed$: this._priv_speed$,
-      startAt,
-      supplementaryImageTracks,
-      supplementaryTextTracks,
-      textTrackOptions,
-      transport: transportObj,
-      url,
-      videoElement,
-    })
-    .takeUntil(closeStream$)
-    .publish();
+    let stream : ConnectableObservable<IStreamEvent>;
+
+    if (!isDirectFile) {
+      const transportFn = Transports[transport];
+      if (!transportFn) {
+        throw new Error(`transport "${transport}" not supported`);
+      }
+
+      const transportObj = transportFn(transportOptions);
+
+      // prepare initial tracks played
+      this._priv_initialAudioTrack = defaultAudioTrack;
+      this._priv_initialTextTrack = defaultTextTrack;
+
+      /**
+       * Options used by the ABR Manager.
+       * @type {Object}
+       */
+      const adaptiveOptions = {
+        initialBitrates: this._priv_lastBitrates,
+        manualBitrates: this._priv_manualBitrates,
+        maxAutoBitrates: this._priv_initialMaxAutoBitrates,
+        throttle: this._priv_throttleWhenHidden ? {
+          video: isInBackground$()
+          .map(isBg => isBg ? 0 : Infinity)
+          .takeUntil(this._priv_stopCurrentContent$),
+        } : {},
+        limitWidth: this._priv_limitVideoWidth ? {
+          video: videoWidth$(videoElement)
+          .takeUntil(this._priv_stopCurrentContent$),
+        } : {},
+      };
+
+      /**
+       * Options related to the Buffer(s)
+       * @type {Object}
+       */
+      const bufferOptions = {
+        wantedBufferAhead$: this._priv_wantedBufferAhead$,
+        maxBufferAhead$: this._priv_maxBufferAhead$,
+        maxBufferBehind$: this._priv_maxBufferBehind$,
+      };
+
+      /**
+       * Options used by the TextTrack SourceBuffer
+       * @type {Object}
+       */
+      const textTrackOptions = options.textTrackMode === "native" ? {
+        textTrackMode: "native" as "native",
+        hideNativeSubtitle: options.hideNativeSubtitle,
+      } : {
+        textTrackMode: "html" as "html",
+        textTrackElement: options.textTrackElement,
+      };
+
+      /**
+       * Stream Observable, through which the content will be launched.
+       * @type {Observable.<Object>}
+       */
+      stream = Stream({
+        adaptiveOptions,
+        autoPlay,
+        bufferOptions,
+        clock$,
+        keySystems,
+        networkConfig,
+        speed$: this._priv_speed$,
+        startAt,
+        supplementaryImageTracks,
+        supplementaryTextTracks,
+        textTrackOptions,
+        transport: transportObj,
+        url,
+        videoElement,
+      })
+        .takeUntil(closeStream$)
+        .publish();
+    } else {
+      stream = StreamDirectFile({
+        autoPlay,
+        clock$,
+        keySystems,
+        mediaElement: videoElement,
+        speed$: this._priv_speed$,
+        startAt,
+        url,
+      })
+        .takeUntil(closeStream$)
+        .publish();
+    }
 
     /**
      * Emit a truthy value when the player stalls, a falsy value as it unstalls.
@@ -744,6 +788,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     const endedEvent$ = onEnded$(videoElement);
 
     /**
+     * Emit when the media element emits a "seeking" event.
+     * @type {Observable}
+     */
+    const seekingEvent$ = onSeeking$(videoElement);
+
+    /**
      * Emit the player state as it changes.
      * TODO only way to call setPlayerState?
      * @type {Observable.<string>}
@@ -753,7 +803,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           Observable.combineLatest(
             this._priv_playing$,
             stalled$.startWith(null),
-            endedEvent$.startWith(null)
+            endedEvent$.startWith(null),
+            seekingEvent$.startWith(null)
           )
             .takeUntil(this._priv_stopCurrentContent$)
             .map(([isPlaying, stalledStatus]) => {
@@ -907,7 +958,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Boolean}
    */
   isLive() : boolean {
-    if (!this._priv_currentManifest) {
+    if (this._priv_isDirectFile || !this._priv_currentManifest) {
       return false;
     }
     return this._priv_currentManifest.isLive;
@@ -918,10 +969,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {string|undefined}
    */
   getUrl() : string|undefined {
-    if (!this._priv_currentManifest) {
-      return undefined;
+    if (this._priv_isDirectFile) {
+      return this._priv_contentURL;
     }
-    return this._priv_currentManifest.getUrl();
+    if (this._priv_currentManifest) {
+      return this._priv_currentManifest.getUrl();
+    }
+    return undefined;
   }
 
   /**
@@ -996,12 +1050,16 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
-    if (!this._priv_currentManifest) {
-      return 0;
+    if (this._priv_isDirectFile) {
+      return this.videoElement.currentTime;
     }
-    const ct = this.videoElement.currentTime;
-    return this.isLive() ?
-      (+toWallClockTime(ct, this._priv_currentManifest) / 1000) : ct;
+    if (this._priv_currentManifest) {
+      const currentTime = this.videoElement.currentTime;
+      return this.isLive() ?
+        (+toWallClockTime(currentTime, this._priv_currentManifest) / 1000) :
+        currentTime;
+    }
+    return 0;
   }
 
   /**
@@ -1185,8 +1243,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
-    if (!this._priv_currentManifest) {
-      throw new Error("player: no manifest loaded");
+    if (!this._priv_isDirectFile && !this._priv_currentManifest) {
+      throw new Error("player: no content loaded");
     }
 
     let positionWanted : number|undefined;
@@ -1201,11 +1259,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       } else if ((time as { position? : number }).position != null) {
         positionWanted = (time as { position : number }).position;
       } else if ((time as { wallClockTime? : number }).wallClockTime != null) {
-        const manifest = this._priv_currentManifest;
-        positionWanted = fromWallClockTime(
-          (time as { wallClockTime : number }).wallClockTime * 1000,
-          manifest
-        );
+        positionWanted = this._priv_isDirectFile ?
+          (time as { wallClockTime : number }).wallClockTime :
+          fromWallClockTime(
+            (time as { wallClockTime : number }).wallClockTime * 1000,
+            this._priv_currentManifest as Manifest // is TS or I dumb here?
+          );
       } else {
         throw new Error("invalid time object. You must set one of the " +
           "following properties: \"relative\", \"position\" or " +
@@ -1497,10 +1556,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {number}
    */
   getMinimumPosition() : number|null {
-    if (!this._priv_currentManifest) {
-      return null;
+    if (this._priv_isDirectFile) {
+      return 0;
     }
-    return getMinimumBufferPosition(this._priv_currentManifest);
+    if (this._priv_currentManifest) {
+      return getMinimumBufferPosition(this._priv_currentManifest);
+    }
+    return null;
   }
 
   /**
@@ -1508,10 +1570,16 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {number}
    */
   getMaximumPosition() : number|null {
-    if (!this._priv_currentManifest) {
-      return null;
+    if (this._priv_isDirectFile) {
+      if (!this.videoElement) {
+        throw new Error("Disposed player");
+      }
+      return this.videoElement.duration;
     }
-    return getMaximumBufferPosition(this._priv_currentManifest);
+    if (this._priv_currentManifest) {
+      return getMaximumBufferPosition(this._priv_currentManifest);
+    }
+    return null;
   }
 
   /**
@@ -1535,7 +1603,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // manifest
     this._priv_activeRepresentations = null;
     this._priv_activeAdaptations = null;
+    this._priv_isDirectFile = null;
     this._priv_currentManifest = null;
+    this._priv_contentURL = undefined;
 
     this._priv_contentEventsMemory = {
       period: null,
@@ -2031,7 +2101,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Object} clockTick
    */
   private _priv_triggerTimeChange(clockTick : IClockTick) : void {
-    if (!this._priv_currentManifest || !clockTick) {
+    if ((!this._priv_isDirectFile && !this._priv_currentManifest) || !clockTick) {
       return;
     }
 
@@ -2044,7 +2114,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       bufferGap: isFinite(clockTick.bufferGap) ? clockTick.bufferGap : 0,
     };
 
-    if (this._priv_currentManifest.isLive && clockTick.currentTime > 0) {
+    if (
+      this._priv_currentManifest &&
+      this._priv_currentManifest.isLive &&
+      clockTick.currentTime > 0
+    ) {
       positionData.wallClockTime =
         toWallClockTime(clockTick.currentTime, this._priv_currentManifest)
           .getTime() / 1000;

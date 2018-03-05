@@ -43,7 +43,7 @@ const toHours = (timeInSeconds) => {
   }
 
   const numberOfHours = parseInt(numberOfMinutes / 60);
-  const numberOfMinutesRemaining = numberOfHours % 60;
+  const numberOfMinutesRemaining = numberOfMinutes % 60;
   return (String(numberOfHours)).padStart(2, "0") +
     ":" + (String(numberOfMinutesRemaining)).padStart(2, "0") +
     ":" + (String(numberOfSecondsRemaining)).padStart(2, "0");

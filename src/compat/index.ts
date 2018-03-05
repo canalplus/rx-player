@@ -15,6 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { Observer } from "rxjs/Observer";
 
 import EventEmitter from "../utils/eventemitter";
 import log from "../utils/log";
@@ -79,7 +80,7 @@ function shouldRenewMediaKeys() : boolean {
 }
 
 /**
- * Returns true if the mediakeys associated to a video element should be
+ * Returns true if the mediakeys associated to a media element should be
  * unset once the content is stopped.
  * Depends on the target.
  * @returns {Boolean}
@@ -107,16 +108,16 @@ function onSourceOpen$(
 /**
  * Returns an observable emitting a single time, as soon as a seek is possible
  * (the metatada are loaded).
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function hasLoadedMetadata(
-  videoElement : HTMLMediaElement
+  mediaElement : HTMLMediaElement
 ) : Observable<void> {
-  if (videoElement.readyState >= READY_STATES.HAVE_METADATA) {
+  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
     return Observable.of(undefined);
   } else {
-    return events.onLoadedMetadata$(videoElement)
+    return events.onLoadedMetadata$(mediaElement)
       .take(1)
       .mapTo(undefined);
   }
@@ -124,16 +125,16 @@ function hasLoadedMetadata(
 
 /**
  * Returns ane observable emitting a single time, as soon as a play is possible.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function canPlay(
-  videoElement : HTMLMediaElement
+  mediaElement : HTMLMediaElement
 ) : Observable<void> {
-  if (videoElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
+  if (mediaElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
     return Observable.of(undefined);
   } else {
-    return onEvent<Event>(videoElement, "canplay")
+    return onEvent<Event>(mediaElement, "canplay")
       .take(1)
       .mapTo(undefined);
   }
@@ -193,12 +194,12 @@ if (
  *   - track {TextTrack}: the added text track
  *   - trackElement {HTMLElement|undefined}: the added <track> element.
  *     undefined if no trackElement was added.
- * @param {HTMLMediaElement} video
+ * @param {HTMLMediaElement} mediaElement
  * @param {Boolean} hidden
  * @returns {Object}
  */
 function addTextTrack(
-  video : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   hidden : boolean
 ) : {
   track : TextTrack;
@@ -209,15 +210,15 @@ function addTextTrack(
 
   const kind = "subtitles";
   if (isIE) {
-    const tracksLength = video.textTracks.length;
+    const tracksLength = mediaElement.textTracks.length;
     track = tracksLength > 0 ?
-      video.textTracks[tracksLength - 1] : video.addTextTrack(kind);
+      mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack(kind);
     track.mode = hidden ? track.HIDDEN : track.SHOWING;
   } else {
     // there is no removeTextTrack method... so we need to reuse old
     // text-tracks objects and clean all its pending cues
     trackElement = document.createElement("track");
-    video.appendChild(trackElement);
+    mediaElement.appendChild(trackElement);
     track = trackElement.track;
     trackElement.kind = kind;
     track.mode = hidden ? "hidden" : "showing";
@@ -242,7 +243,7 @@ function isPlaybackStuck(
   state : string,
   isStalled : boolean
 ) : boolean {
-  const FREEZE_THRESHOLD = 10; // video freeze threshold in seconds
+  const FREEZE_THRESHOLD = 10; // freeze threshold in seconds
   return (
     isFirefox && isStalled && state === "timeupdate" &&
     !!currentRange && currentRange.end - time > FREEZE_THRESHOLD
@@ -250,16 +251,41 @@ function isPlaybackStuck(
 }
 
 /**
- * Clear video src attribute.
+ * Clear element's src attribute.
  *
- * On IE11,  video.src = "" is not sufficient as it
+ * On IE11, element.src = "" is not sufficient as it
  * does not clear properly the current MediaKey Session.
- * Microsoft recommended to use video.removeAttr("src").
- * @param {HTMLMediaElement} video
+ * Microsoft recommended to use element.removeAttr("src").
+ * @param {HTMLMediaElement} element
  */
-function clearVideoSrc(video : HTMLMediaElement) : void {
-  video.src = "";
-  video.removeAttribute("src");
+function clearElementSrc(element : HTMLMediaElement) : void {
+  element.src = "";
+  element.removeAttribute("src");
+}
+
+/**
+ * Set an URL to the element's src.
+ * Emit ``undefined`` when done.
+ * Unlink src on unsubscription.
+ *
+ * @param {HTMLMediaElement} mediaElement
+ * @param {string} url
+ * @returns {Observable}
+ */
+function setElementSrc$(
+  mediaElement : HTMLMediaElement,
+  url : string
+) : Observable<void> {
+  return Observable.create((observer : Observer<void>) => {
+    log.info("Setting URL to Element", url, mediaElement);
+
+    mediaElement.src = url;
+
+    observer.next(undefined);
+    return () => {
+      clearElementSrc(mediaElement);
+    };
+  });
 }
 
 /**
@@ -325,7 +351,7 @@ export {
   addTextTrack,
   canPlay,
   hasLoadedMetadata,
-  clearVideoSrc,
+  clearElementSrc,
   events,
   exitFullscreen,
   hasEMEAPIs,
@@ -341,6 +367,7 @@ export {
   makeCue,
   requestFullscreen,
   requestMediaKeySystemAccess,
+  setElementSrc$,
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,

@@ -1,7 +1,7 @@
 import React from "react";
 import withModulesState from "../lib/withModulesState.jsx";
-import VideoBitrateKnob from "./knobs/VideoBitrate.jsx";
 import AudioBitrateKnob from "./knobs/AudioBitrate.jsx";
+import VideoBitrateKnob from "./knobs/VideoBitrate.jsx";
 import LanguageKnob from "./knobs/AudioTrack.jsx";
 import SubtitlesKnob from "./knobs/Subtitles.jsx";
 
