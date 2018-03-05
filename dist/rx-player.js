@@ -7394,7 +7394,7 @@ function createEME(video, keySystems, errorStream) {
             return _mediaKeysInfos$;
         });
     });
-    return Observable_1.Observable.combineLatest(events_1.onEncrypted$(video), mediaKeysInfos$)
+    return Observable_1.Observable.combineLatest(events_1.onEncrypted$(video).take(1), mediaKeysInfos$)
         .mergeMap(function (_a) {
         var encryptedEvent = _a[0], mediaKeysInfos = _a[1];
         return handleEncryptedEvent(encryptedEvent, mediaKeysInfos, video, errorStream);
