@@ -37,7 +37,7 @@ import { ErrorStream } from "./session";
 function setServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : BufferSource
-) : Observable<{}|void> {
+) : Observable<never> {
   return Observable.defer(() => {
     return castToObservable(
       mediaKeys.setServerCertificate(serverCertificate)
@@ -47,7 +47,7 @@ function setServerCertificate(
         throw new
           EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
       });
-  });
+  }) as Observable<never>;
 }
 
 /**
@@ -61,13 +61,13 @@ function trySettingServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : BufferSource,
   errorStream: ErrorStream
-) : Observable<void|{}> {
+) : Observable<never> {
   return setServerCertificate(mediaKeys, serverCertificate)
     .catch(error => {
       error.fatal = false;
       errorStream.next(error);
       return Observable.empty();
-    });
+    }) as Observable<never>;
 }
 
 export {
