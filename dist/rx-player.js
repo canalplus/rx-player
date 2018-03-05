@@ -1201,7 +1201,7 @@ exports.default = {
      *
      * @type {Number}
      */
-    MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 100,
+    MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
     /**
      * Robustnesses used in the {audio,video}Capabilities of the
      * MediaKeySystemConfiguration (EME).
@@ -30044,7 +30044,7 @@ var HTMLTextTrackSourceBuffer = /** @class */ (function (_super) {
             // As the clock is also based on real video events, we cannot just
             // divide by two the regular interval.
             var time = Math.max(_this._videoElement.currentTime -
-                MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 3000, 0);
+                MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 2000, 0);
             var cue = _this._buffer.get(time);
             if (!cue) {
                 safelyRemoveChild(textTrackElement, _this._currentElement);
