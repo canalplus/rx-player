@@ -175,7 +175,10 @@ function createEME(
         });
     });
 
-  return Observable.combineLatest(onEncrypted$(video), mediaKeysInfos$)
+  return Observable.combineLatest(
+    onEncrypted$(video).take(1),
+    mediaKeysInfos$
+  )
     .mergeMap(([encryptedEvent, mediaKeysInfos]) =>
       handleEncryptedEvent(encryptedEvent, mediaKeysInfos, video, errorStream)
     );
