@@ -34,7 +34,7 @@ Its main goals are:
 We recently switched our codebase to TypeScript, [here's
 why](./doc/why_typescript.md).
 
-Latest release: ``v3.2.0``
+Latest release: ``v3.3.0``
 
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.3.0 (2018/03/05)
+
+### Added
+
+  - api: add directfile API to allow the playback of files natively managed by the browser
+  - eme: decrypt multi-license contents 
+
+### Bug Fixes
+
+ - api: fix player state when seeking after the video ended
+
+
 ## v3.2.0 (2018/02/23)
 
 ### Added
@@ -23,6 +35,7 @@
   - update RxJS to v5.5.6
   - update TypeScript to v2.7.2
 
+
 ## v3.1.0 (2018/01/30)
 
 ### Added
@@ -35,11 +48,13 @@
   - dash: fix Range request ranges for representations based on a SegmentList index
   - smooth: allows smooth Manifests for non-live contents to begin at a timestamp != 0
 
+
 ## v3.0.7 (2018/01/19)
 
 ### Bug fixes
 
   - eme: fix bug which prevented to play encrypted contents on IE11
+
 
 ## v3.0.6 (2018/01/11)
 
@@ -54,11 +69,13 @@
 
   - demo: set "html" textTrackMode by default to have a better stylization of closed captions.
 
+
 ## v3.0.5 (2017/12/11)
 
 ### Bug Fixes
 
   - eme: consider unknown errors (e.g. errors coming from the user of the library) as fatal eme errors
+
 
 ## v3.0.4 (2017/12/05)
 
@@ -71,6 +88,7 @@
 
   - misc: remove multiple unneeded assertions in DEV mode
   - misc: update DEV mode default debug level from DEBUG to INFO
+
 
 ## v3.0.3 (2017/11/24)
 
@@ -86,11 +104,13 @@
   - demo: ``npm run start`` and ``npm run standalone`` now build the rx-player in the "development" environment
   - tools: add more logs in DEBUG mode
 
+
 ## v3.0.2 (2017/11/17)
 
 ### Bug Fixes
 
   - misc: work around typescript issue [20104](https://github.com/Microsoft/TypeScript/issues/20104) temporarly to launch in Chrome in HTTP
+
 
 ## v3.0.1 (2017/11/17)
 
@@ -103,6 +123,7 @@
 
   - Switch codebase to TypeScript
   - Add Travis CI
+
 
 ## v3.0.0 (2017/11/10)
 
@@ -233,17 +254,20 @@
   - tests: fixed and added integration tests
   - demo: the demo now manages most languages defined by in the ISO 639-3 standard
 
+
 ## v2.3.2 (2017/07/25)
 
 ### Bug Fixes
 
   - eme: update EME workflow to improve support (especially chromebooks)
 
+
 ## v2.3.1 (2017/07/10)
 
 ### Bug Fixes
 
   - buffer: improve buffer ranges "bookeeping" logic to avoid re-downloading the same segments
+
 
 ## v2.3.0 (2017/07/07)
 
@@ -270,11 +294,13 @@
   - general: add support for older browsers (which does not support array.prototype.{find,findIndex,includes})
   - general: use Object.assign ponyfill instead of the previous polyfill to avoid malicious interferences with other codebases
 
+
 ## v2.2.1 (2017/06/27)
 
 ### Bug fixes
 
   - adaptive: fix width limitation bug. Impacted limitVideoWidth + setMaxVideoBitrate APIs
+
 
 ## v2.2.0 (2017/06/19)
 
@@ -287,11 +313,13 @@
   - upgrade to rxjs 5.4.1 to escape memory leak
   - position: "liveGap" from currentTimeChange event now means the difference to the maximum "bufferisable" position to keep compatibility with the old API
 
+
 ## v2.1.3 (2017/06/15)
 
 ### Bug fixes
 
   - api: fix timeFragment.start handling
+
 
 ## v2.1.2 (2017/06/14)
 
@@ -304,6 +332,7 @@
   - position: fix typo which prevented to perform absolute seeks with the new api
   - buffer: automatically seek if there is discontinuity in a live stream
   - adaptive: take the lowest bitrate (instead of the initial/default one) when the player is not displayed/too small
+
 
 ## v2.1.1 (2017/06/02)
 
@@ -325,6 +354,7 @@
   - api: deprecated api now only warn once
   - tests: integration tests have been added
   - manifest: the manifest object and the management of its index has been refactored for future improvements
+
 
 ## v2.1.0 (2017/05/29)
 
@@ -429,6 +459,7 @@
 - demo: The Demo has been completely rewritten
 - demo: The bundle has been removed from the code committed.
 
+
 ## v2.0.0-alpha1 (2016/02/09)
 
 - RxJS: use RxJS5.beta1
@@ -446,6 +477,7 @@
 - refacto: clean pipelined objects and POO where needed
 
 - lint: add new rules (no-var, prefer-const, enforce brackets)
+
 
 ## v1.4.0 (2016/01/26)
 
@@ -471,11 +503,13 @@ Demo
 
 - allow to pass query parameters
 
+
 ## v1.3.1 (2015/10/14)
 
 ### Bug fixes
 
 - smooth: fix parseBoolean causing isLive to be always true
+
 
 ## v1.3.0 (2015/10/14)
 
@@ -485,11 +519,13 @@ Demo
 - timings: add progress sampling
 - compat: add firefox workaround for autoplay
 
+
 ## v1.2.1 (2015/09/23)
 
 ### Bug fixes
 
 - stream: do not stall on loadedmetadata event
+
 
 ## v1.2.0 (2015/09/23)
 
@@ -519,6 +555,7 @@ We also started using eslint as our main linter instead of jshint.
 - player: fix getUrl (577ce87)
 - manifest: enforce id setting to parsers (927d275)
 
+
 ## v1.1.0 (2015/08/14)
 
 ### Added
@@ -534,6 +571,7 @@ We also started using eslint as our main linter instead of jshint.
 - fix no retry for > 500 http codes
 - fix no MediaKeySession reuse on Chrome
 - fix quota error with MediaKeys attached to multiple video elements on Chrome
+
 
 ## v1.0.0 (2015/06/16)
 
