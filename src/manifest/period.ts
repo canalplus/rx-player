@@ -144,8 +144,8 @@ export default class Period {
       const langsToMapOn : string[] = language ? [language] : languages || [];
 
       return allSubs.concat(langsToMapOn.map((_language) => {
-        const adaptationID = "gen-image-ada-" + generateNewId();
-        const representationID = "gen-image-rep-" + generateNewId();
+        const adaptationID = "gen-text-ada-" + generateNewId();
+        const representationID = "gen-text-rep-" + generateNewId();
         return new Adaptation({
           id: adaptationID,
           type: "text",
