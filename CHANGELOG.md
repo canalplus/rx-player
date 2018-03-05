@@ -10,6 +10,8 @@
 ### Bug Fixes
 
  - api: fix player state when seeking after the video ended
+ - text/api: fix getTextTrack API which could return the current audio track instead
+ - text: clean-up custom HTML text track SourceBuffer's buffered when the text track is disabled
 
 
 ## v3.2.0 (2018/02/23)
