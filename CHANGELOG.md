@@ -5,7 +5,6 @@
 ### Added
 
   - api: add directfile API to allow the playback of files natively managed by the browser
-  - eme: decrypt multi-license contents 
 
 ### Bug Fixes
 
