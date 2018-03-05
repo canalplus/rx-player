@@ -194,12 +194,12 @@ if (
  *   - track {TextTrack}: the added text track
  *   - trackElement {HTMLElement|undefined}: the added <track> element.
  *     undefined if no trackElement was added.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @param {Boolean} hidden
  * @returns {Object}
  */
 function addTextTrack(
-  videoElement : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   hidden : boolean
 ) : {
   track : TextTrack;
@@ -210,15 +210,15 @@ function addTextTrack(
 
   const kind = "subtitles";
   if (isIE) {
-    const tracksLength = videoElement.textTracks.length;
+    const tracksLength = mediaElement.textTracks.length;
     track = tracksLength > 0 ?
-      videoElement.textTracks[tracksLength - 1] : videoElement.addTextTrack(kind);
+      mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack(kind);
     track.mode = hidden ? track.HIDDEN : track.SHOWING;
   } else {
     // there is no removeTextTrack method... so we need to reuse old
     // text-tracks objects and clean all its pending cues
     trackElement = document.createElement("track");
-    videoElement.appendChild(trackElement);
+    mediaElement.appendChild(trackElement);
     track = trackElement.track;
     trackElement.kind = kind;
     track.mode = hidden ? "hidden" : "showing";

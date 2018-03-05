@@ -1054,9 +1054,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return this.videoElement.currentTime;
     }
     if (this._priv_currentManifest) {
-      const ct = this.videoElement.currentTime;
+      const currentTime = this.videoElement.currentTime;
       return this.isLive() ?
-        (+toWallClockTime(ct, this._priv_currentManifest) / 1000) : ct;
+        (+toWallClockTime(currentTime, this._priv_currentManifest) / 1000) :
+        currentTime;
     }
     return 0;
   }
