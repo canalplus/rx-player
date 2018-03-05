@@ -28769,8 +28769,8 @@ var Manifest = /** @class */ (function () {
             var mimeType = _a.mimeType, codecs = _a.codecs, url = _a.url, language = _a.language, languages = _a.languages, closedCaption = _a.closedCaption;
             var langsToMapOn = language ? [language] : languages || [];
             return allSubs.concat(langsToMapOn.map(function (_language) {
-                var adaptationID = "gen-image-ada-" + id_1.default();
-                var representationID = "gen-image-rep-" + id_1.default();
+                var adaptationID = "gen-text-ada-" + id_1.default();
+                var representationID = "gen-text-rep-" + id_1.default();
                 return new adaptation_1.default({
                     id: adaptationID,
                     type: "text",
@@ -29077,8 +29077,8 @@ var Period = /** @class */ (function () {
             var mimeType = _a.mimeType, codecs = _a.codecs, url = _a.url, language = _a.language, languages = _a.languages, closedCaption = _a.closedCaption;
             var langsToMapOn = language ? [language] : languages || [];
             return allSubs.concat(langsToMapOn.map(function (_language) {
-                var adaptationID = "gen-image-ada-" + id_1.default();
-                var representationID = "gen-image-rep-" + id_1.default();
+                var adaptationID = "gen-text-ada-" + id_1.default();
+                var representationID = "gen-text-rep-" + id_1.default();
                 return new adaptation_1.default({
                     id: adaptationID,
                     type: "text",
@@ -30103,6 +30103,7 @@ var HTMLTextTrackSourceBuffer = /** @class */ (function (_super) {
     HTMLTextTrackSourceBuffer.prototype._remove = function (from, to) {
         log_1.default.debug("removing html text track data", from, to);
         this._buffer.remove(from, to);
+        this.buffered.remove(from, to);
     };
     /**
      * Free up ressources from this sourceBuffer
@@ -35786,7 +35787,7 @@ var LanguageManager = /** @class */ (function () {
         if (textInfos == null) {
             return null;
         }
-        var chosenTextAdaptation = this._audioChoiceMemory.get(period);
+        var chosenTextAdaptation = this._textChoiceMemory.get(period);
         if (!chosenTextAdaptation) {
             return null;
         }
