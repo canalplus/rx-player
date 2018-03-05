@@ -17,7 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import {
-  clearVideoSrc,
+  clearElementSrc,
   MediaSource_,
 } from "../../compat";
 import MediaError from "../../errors/MediaError";
@@ -75,7 +75,7 @@ export function resetMediaSource(
     }
   }
 
-  clearVideoSrc(video);
+  clearElementSrc(video);
 
   if (mediaSourceURL) {
     try {

@@ -9,18 +9,21 @@ const VideoBitrateKnobBase = ({
   availableVideoBitrates = [],
 }) => {
   let options = [];
-  let currentVideoBitrateIndex;
+  let selectedIndex = 0;
 
-  if (availableVideoBitrates.length > 1) {
+  if (!availableVideoBitrates.length) {
+    options = ["Not available"];
+    selectedIndex = 0;
+  } else if (availableVideoBitrates.length > 1) {
     const autoValue = videoBitrateAuto ?
       `auto (${videoBitrate})` : "auto";
     options = [autoValue, ...availableVideoBitrates];
 
-    currentVideoBitrateIndex = videoBitrateAuto ?
+    selectedIndex = videoBitrateAuto ?
       0 : (availableVideoBitrates.indexOf(videoBitrate) + 1 || 0);
   } else {
     options = availableVideoBitrates;
-    currentVideoBitrateIndex = 0;
+    selectedIndex = 0;
   }
 
   const onVideoBitrateChange = (evt) => {
@@ -39,7 +42,7 @@ const VideoBitrateKnobBase = ({
       disabled={availableVideoBitrates.length < 2}
       onChange={onVideoBitrateChange}
       options={options}
-      selected={currentVideoBitrateIndex}
+      selected={selectedIndex}
     />
   );
 };

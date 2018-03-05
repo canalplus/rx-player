@@ -4,8 +4,8 @@ import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
-const STREAMING_TECHNOS = ["DASH", "Smooth"];
-const CONTENTS_PER_TECHNO = STREAMING_TECHNOS.reduce((acc, tech) => {
+const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
+const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   acc[tech] = contentsDatabase.filter(({ transport }) =>
     transport === tech.toLowerCase()
   );
@@ -17,9 +17,9 @@ class ContentList extends React.Component {
     super(...args);
 
     this.state = {
-      techno: STREAMING_TECHNOS[0],
+      transportType: TRANSPORT_TYPES[0],
       choiceIndex: 0,
-      hasTextInput: !CONTENTS_PER_TECHNO[STREAMING_TECHNOS[0]].length,
+      hasTextInput: !CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length,
       textValue: "",
     };
   }
@@ -53,7 +53,7 @@ class ContentList extends React.Component {
     const { loadVideo } = this.props;
     loadVideo({
       url,
-      transport: this.state.techno.toLowerCase(),
+      transport: this.state.transportType.toLowerCase(),
       autoPlay: true, // TODO add checkBox
       // native browser subtitles engine (VTTCue) doesn't render stylized subs
       // we force HTML textTrackMode to vizualise styles
@@ -61,17 +61,17 @@ class ContentList extends React.Component {
     });
   }
 
-  changeTechno(techno) {
+  changeTransportType(transportType) {
     this.setState({
-      techno,
+      transportType,
       choiceIndex: 0,
-      hasTextInput: !CONTENTS_PER_TECHNO[techno].length,
+      hasTextInput: !CONTENTS_PER_TYPE[transportType].length,
     });
   }
 
   changeContentIndex(index) {
-    const { techno } = this.state;
-    const hasTextInput = CONTENTS_PER_TECHNO[techno].length === index;
+    const { transportType } = this.state;
+    const hasTextInput = CONTENTS_PER_TYPE[transportType].length === index;
     this.setState({
       choiceIndex: index,
       hasTextInput,
@@ -86,8 +86,8 @@ class ContentList extends React.Component {
   }
 
   render() {
-    const { techno, choiceIndex, hasTextInput, textValue } = this.state;
-    const contents = CONTENTS_PER_TECHNO[techno];
+    const { transportType, choiceIndex, hasTextInput, textValue } = this.state;
+    const contents = CONTENTS_PER_TYPE[transportType];
 
     const contentsName = contents.map(content =>
       `${content.name}${content.live ? " (live)" : ""}`
@@ -97,7 +97,7 @@ class ContentList extends React.Component {
     const onTechChange = (evt) => {
       const index = +evt.target.value;
       if (index >= 0) {
-        this.changeTechno(STREAMING_TECHNOS[index]);
+        this.changeTransportType(TRANSPORT_TYPES[index]);
       }
     };
 
@@ -124,9 +124,9 @@ class ContentList extends React.Component {
           className="content-inputs"
         >
           <Select
-            className="choice-input techno-choice"
+            className="choice-input transport-type-choice"
             onChange={onTechChange}
-            options={STREAMING_TECHNOS}
+            options={TRANSPORT_TYPES}
           />
           <Select
             className="choice-input content-choice"
@@ -145,7 +145,7 @@ class ContentList extends React.Component {
               className="choice-input text-input"
               onChange={onTextInput}
               value={textValue}
-              placeholder={`URL for the ${techno} manifest`}
+              placeholder={`URL for the ${transportType} manifest`}
             /> : null
         }
       </div>

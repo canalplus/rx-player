@@ -70,6 +70,12 @@ const player = new Player({
 });
 ```
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 
 ### <a name="prop-initialAudioBitrate"></a>initialAudioBitrate
 
@@ -93,6 +99,12 @@ const player = new Player({
 });
 ```
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 
 ### <a name="prop-maxVideoBitrate"></a>maxVideoBitrate
 
@@ -112,6 +124,12 @@ const player = new Player({
 You can update this limit at any moment with the ``setMaxVideoBitrate`` API call.
 
 This limit can be removed by setting it to ``Infinity`` (which is the default value).
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 
 ### <a name="prop-maxAudioBitrate"></a>maxAudioBitrate
@@ -133,6 +151,12 @@ You can update this limit at any moment with the ``setMaxAudioBitrate`` API call
 
 This limit can be removed by setting it to ``Infinity`` (which is the default value).
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 
 ### <a name="prop-wantedBufferAhead"></a>wantedBufferAhead
 
@@ -143,6 +167,12 @@ _defaults_: ``30``
 Set the default buffering goal, as a duration ahead of the current position, in seconds.
 
 Once this size of buffer is reached, the player won't try to download new video segments anymore.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 
 ### <a name="prop-maxBufferAhead"></a>maxBufferAhead
@@ -157,6 +187,12 @@ the browser is already supposed to deallocate memory from old segments if/when t
 
 However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 
 ### <a name="prop-maxBufferBehind"></a>maxBufferBehind
 
@@ -170,6 +206,12 @@ Everything before that limit (``currentPosition - maxBufferBehind``) will be aut
 This feature is not necessary as the browser is already supposed to deallocate memory from old segments if/when the memory is scarce.
 
 However on some custom targets, or just to better control the memory imprint of the player, you might want to set this limit. You can set it to ``Infinity`` to remove any limit and just let the browser do this job.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
 
 
 ### <a name="prop-limitVideoWidth"></a>limitVideoWidth
@@ -192,6 +234,12 @@ const player = Player({
 
 For some reasons (displaying directly a good quality when switching to fullscreen, specific environments), you might not want to activate this limit.
 
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 
 ### <a name="prop-throttleWhenHidden"></a>throttleWhenHidden
 
@@ -207,6 +255,13 @@ const player = Player({
   throttleWhenHidden: true
 });
 ```
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
 
 ### <a name="prop-stopAtEnd"></a>stopAtEnd
 

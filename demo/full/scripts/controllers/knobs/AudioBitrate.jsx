@@ -9,18 +9,21 @@ const AudioBitrateKnobBase = ({
   availableAudioBitrates = [],
 }) => {
   let options = [];
-  let currentAudioBitrateIndex;
+  let selectedIndex = 0;
 
-  if (availableAudioBitrates.length > 1) {
+  if (!availableAudioBitrates.length) {
+    options = ["Not available"];
+    selectedIndex = 0;
+  } else if (availableAudioBitrates.length > 1) {
     const autoValue = audioBitrateAuto ?
       `auto (${audioBitrate})` : "auto";
     options = [autoValue, ...availableAudioBitrates];
 
-    currentAudioBitrateIndex = audioBitrateAuto ?
+    selectedIndex = audioBitrateAuto ?
       0 : (availableAudioBitrates.indexOf(audioBitrate) + 1 || 0);
   } else {
     options = availableAudioBitrates;
-    currentAudioBitrateIndex = 0;
+    selectedIndex = 0;
   }
 
   const onAudioBitrateChange = (evt) => {
@@ -36,10 +39,10 @@ const AudioBitrateKnobBase = ({
   return (
     <Knob
       name="Audio Bitrate"
-      disabled={availableAudioBitrates.length < 2}
+      disabled={options.length < 2}
       onChange={onAudioBitrateChange}
       options={options}
-      selected={currentAudioBitrateIndex}
+      selected={selectedIndex}
     />
   );
 };
