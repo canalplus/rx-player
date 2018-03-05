@@ -187,6 +187,7 @@ export default class HTMLTextTrackSourceBuffer
   _remove(from : number, to : number) : void {
     log.debug("removing html text track data", from, to);
     this._buffer.remove(from, to);
+    this.buffered.remove(from, to);
   }
 
   /**
