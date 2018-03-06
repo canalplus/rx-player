@@ -82,7 +82,7 @@ const SCANNED_VIDEO_EVENTS = [
  * current position before resuming playback. Based on the infos of the stall.
  * Waiting time differs between a "seeking" stall and a buffering stall.
  * @param {Object|null} stalled
- * @returns {Boolean}
+ * @returns {Number}
  */
 function getResumeGap(stalled : stalledStatus) : number {
   if (!stalled) {
