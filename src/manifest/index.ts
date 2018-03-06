@@ -204,7 +204,7 @@ export default class Manifest {
    * @returns {Period|undefined}
    */
   getPeriodForTime(time : number) : Period|undefined {
-    return this.periods.find(period => {
+    return arrayFind(this.periods, (period) => {
      return time >= period.start &&
         (period.end == null || period.end > time);
     });
@@ -221,7 +221,7 @@ export default class Manifest {
     if (endOfPeriod == null) {
       return null;
     }
-    return this.periods.find(_period => {
+    return arrayFind(this.periods, (_period) => {
       return _period.end == null || endOfPeriod < _period.end;
     }) || null;
   }
