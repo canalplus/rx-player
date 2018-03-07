@@ -539,7 +539,7 @@ export default function BuffersHandler(
           log.error("custom buffer: ", bufferType,
             "has crashed. Aborting it.", error);
           errorStream.next(error);
-          return Observable.empty();
+          return createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period });
         }
 
         log.error(
