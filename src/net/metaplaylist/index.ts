@@ -330,11 +330,22 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
       },
     };
 
-      return {
-        manifest: manifestPipeline,
-        audio: segmentPipeline,
-        video: segmentPipeline,
-        text: textTrackPipeline,
-        image: imageTrackPipeline,
-      };
+  const overlayPipeline = {
+    loader() : never {
+      throw new Error("Overlay not implemented");
+    },
+
+    parser() : never {
+      throw new Error("Overlay not implemented");
+    },
+  };
+
+  return {
+    manifest: manifestPipeline,
+    audio: segmentPipeline,
+    video: segmentPipeline,
+    text: textTrackPipeline,
+    image: imageTrackPipeline,
+    overlay: overlayPipeline,
+  };
 }

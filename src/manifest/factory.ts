@@ -30,7 +30,8 @@ import Manifest, {
 } from "./index";
 import { IRepresentationArguments } from "./representation";
 
-const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
+const SUPPORTED_ADAPTATIONS_TYPE =
+  ["audio", "video", "text", "image", "overlay"];
 
 /**
  * Run multiple checks before creating the Manifest:

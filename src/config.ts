@@ -467,6 +467,23 @@ export default {
   MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
 
   /**
+   * Maximum interval at which an optional overlay image(s) is refreshed.
+   *
+   * It also refreshed on various video events, this interval will only
+   * trigger a refresh if none of those events was received during that
+   * timespan.
+   *
+   * Note that if the overlay image(s) did not change between two intervals or
+   * events, the DOM won't be refreshed.
+   *
+   * We should thus not have much of a performance impact here if we set a low
+   * interval.
+   *
+   * @type {Number}
+   */
+  MAXIMUM_OVERLAY_TRACK_UPDATE_INTERVAL: 100,
+
+  /**
    * The Buffer padding is a time offset from the current time that affects
    * the buffer.
    *

@@ -46,6 +46,7 @@ import {
 } from "../pipelines";
 import SourceBufferManager, {
   IBufferType ,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../source_buffers";
@@ -110,7 +111,10 @@ export interface IStreamOptions {
   startAt? : IInitialTimeOptions;
   supplementaryImageTracks : ISupplementaryImageTrack[];
   supplementaryTextTracks : ISupplementaryTextTrack[];
-  textTrackOptions : ITextTrackSourceBufferOptions;
+  sourceBufferOptions?: {
+    text?: ITextTrackSourceBufferOptions;
+    overlay?: IOverlaySourceBufferOptions;
+  };
   transport : ITransportPipelines;
   url : string;
   videoElement : HTMLMediaElement;
@@ -142,7 +146,7 @@ export default function Stream({
   startAt,
   supplementaryImageTracks, // eventual manually added images
   supplementaryTextTracks, // eventual manually added subtitles
-  textTrackOptions,
+  sourceBufferOptions,
   transport,
   url,
   videoElement,
@@ -319,7 +323,7 @@ export default function Stream({
       {
         maxRetry: networkConfig.segmentRetry,
         maxRetryOffline: networkConfig.offlineRetry,
-        textTrackOptions,
+        sourceBufferOptions,
       },
       warning$
     ).mergeMap(function onBuffersHandlerEvent(evt) {

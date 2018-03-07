@@ -26,6 +26,7 @@ class Player extends React.Component {
     const player = createModule(PlayerModule, {
       videoElement: this.videoElement,
       textTrackElement: this.textTrackElement,
+      overlayElement: this.overlayElement,
     });
 
     this._$destroySubject = new Subject();
@@ -100,12 +101,17 @@ class Player extends React.Component {
               onClick={() => this.onVideoClick()}
             >
               <ErrorDisplayer player={player} />
-              { displaySpinner ?
-                <img
-                  src="./assets/spinner.gif"r
-                  className="video-player-spinner"
-                /> : null
+              {
+                displaySpinner ?
+                  <img
+                    src="./assets/spinner.gif"r
+                    className="video-player-spinner"
+                  /> : null
               }
+              <div
+                className="overlay-wrapper"
+                ref={element => this.overlayElement = element }
+              />
               <div
                 className="text-track"
                 ref={element => this.textTrackElement = element }

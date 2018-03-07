@@ -160,6 +160,34 @@ export type ImageParserObservable = Observable<{
   segmentInfos : ISegmentTimingInfos|null;
 }>;
 
+export interface IMetaDashOverlayData {
+  start : number;
+  end : number;
+  version : number;
+  element : {
+    url : string;
+    format : string;
+    xAxis : string;
+    yAxis : string;
+    height : string;
+    width : string;
+  };
+}
+
+export interface IOverlayTrackSegmentData {
+  data : IMetaDashOverlayData[]; // overlay track data, in the given type
+  end : number; // end time time until which the segment apply
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each overlay
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data
+}
+
+export type IOverlayParserObservable = Observable<{
+  segmentData? : IOverlayTrackSegmentData;
+  segmentInfos : ISegmentTimingInfos;
+}>;
+
 interface ITransportManifestPipeline {
   // TODO Remove resolver
   resolver?: (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
@@ -196,11 +224,20 @@ export interface ITransportImageSegmentPipeline {
     ImageParserObservable;
 }
 
+export interface ITransportOverlaySegmentPipeline {
+  // Note: The segment's data can be null for init segments
+  loader: (x : ISegmentLoaderArguments) =>
+    ILoaderObservable<Uint8Array|ArrayBuffer|null>;
+  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
+    IOverlayParserObservable;
+}
+
 export type ITransportSegmentPipeline =
   ITransportAudioSegmentPipeline |
   ITransportVideoSegmentPipeline |
   ITransportTextSegmentPipeline |
-  ITransportImageSegmentPipeline;
+  ITransportImageSegmentPipeline |
+  ITransportOverlaySegmentPipeline;
 
 export type ITransportPipeline =
   ITransportManifestPipeline |
@@ -212,6 +249,7 @@ export interface ITransportPipelines {
   video : ITransportVideoSegmentPipeline;
   text : ITransportTextSegmentPipeline;
   image : ITransportImageSegmentPipeline;
+  overlay: ITransportOverlaySegmentPipeline;
 }
 
 interface IParsedKeySystem {
