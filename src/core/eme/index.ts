@@ -28,6 +28,8 @@ import { assertInterface } from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
+import hashInitData from "./sessions_set/hash_init_data";
+
 import {
   $loadedSessions,
   $storedSessions,
@@ -35,19 +37,17 @@ import {
 import findCompatibleKeySystem, {
   getKeySystem,
   IInstanceInfo,
-  IKeySystemAccessInfos,
   IKeySystemOption,
- } from "./key_system";
+} from "./key_system";
 import { trySettingServerCertificate } from "./server_certificate";
-import manageSessionCreation, {
+import {
+  createOrReuseSessionWithRetry,
   ErrorStream,
+  handleSessionEvents,
+  IMediaKeysInfos,
   ISessionEvent,
- } from "./session";
+} from "./session";
 import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
-
-interface IMediaKeysInfos extends IKeySystemAccessInfos {
-  mediaKeys : MediaKeys|IMockMediaKeys;
-}
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
@@ -89,43 +89,37 @@ function setSessionStorage(keySystem: IKeySystemOption) : void {
 }
 
 /**
- * React to each "encrypted" events.
- * @param {MediaEncryptedEvent} encryptedEvent
- * @param {Object} mediaKeysInfos
- * @param {HTMLMediaElement} video
- * @param {Subject} ErrorStream
+ * Create the right MediaKeys instance from the keySystems options given.
+ *
+ * Attach a server certificate to it if needed and return it.
+ * @param {Array.<Object>} keySystems
+ * @param {Subject} errorStream
  * @returns {Observable}
  */
-function handleEncryptedEvent(
-  encryptedEvent : MediaEncryptedEvent,
-  mediaKeysInfos : IMediaKeysInfos,
-  video : HTMLMediaElement,
+function createMediaKeys(
+  keySystems : IKeySystemOption[],
   errorStream : ErrorStream
-): Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
-  return Observable.defer(() => {
-    log.info("eme: encrypted event", encryptedEvent);
+) : Observable<IMediaKeysInfos> {
+  return findCompatibleKeySystem(keySystems, instanceInfos)
+    .mergeMap((keySystemAccessInfos) => {
+      return createMediaKeysObs(keySystemAccessInfos.keySystemAccess)
+        .mergeMap(function prepareMediaKeysConfiguration(mediaKeys) {
+          const { keySystem } = keySystemAccessInfos;
+          const { serverCertificate } = keySystem;
+          setSessionStorage(keySystem);
 
-    if (encryptedEvent.initData == null) {
-      const error = new Error("no init data found on media encrypted event.");
-      throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
-    }
-
-    const {
-      mediaKeys,
-      keySystem,
-      keySystemAccess,
-    } = mediaKeysInfos;
-    const mksConfig = keySystemAccess.getConfiguration();
-    const initData = new Uint8Array(encryptedEvent.initData);
-
-    // The mediaKeys is lazily attached to the media element
-    const setMediaKeys$ =
-      setMediaKeysObs(mediaKeys, mksConfig, video, keySystem, instanceInfos);
-    const manageSessionCreation$ = manageSessionCreation(
-      mediaKeys, mksConfig, keySystem, encryptedEvent.initDataType,
-      initData, errorStream);
-    return Observable.merge(setMediaKeys$, manageSessionCreation$);
- });
+          const _mediaKeysInfos$ = Observable
+            .of(objectAssign({ mediaKeys }, keySystemAccessInfos));
+          if (
+            serverCertificate != null &&
+            typeof mediaKeys.setServerCertificate === "function"
+          ) {
+            return trySettingServerCertificate(mediaKeys, serverCertificate, errorStream)
+              .concat(_mediaKeysInfos$);
+          }
+          return _mediaKeysInfos$;
+        });
+    });
 }
 
 /**
@@ -143,7 +137,7 @@ function createEME(
   video : HTMLMediaElement,
   keySystems: IKeySystemOption[],
   errorStream: ErrorStream
-) : Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
+) : Observable<ISessionEvent|Event> {
   if (__DEV__) {
     keySystems.forEach((ks) => assertInterface(ks, {
       getLicense: "function",
@@ -151,37 +145,71 @@ function createEME(
     }, "keySystem"));
   }
 
-  // get the MediaKeys element the associated options
-  // This is done as the "encrypted" event is not yet received for performance
-  const mediaKeysInfos$ = findCompatibleKeySystem(keySystems, instanceInfos)
-    .mergeMap((keySystemAccessInfos) => {
-      return createMediaKeysObs(keySystemAccessInfos.keySystemAccess)
-        .mergeMap(function prepareMediaKeysConfiguration(mediaKeys) {
-          const { keySystem } = keySystemAccessInfos;
-          const { serverCertificate } = keySystem;
-          setSessionStorage(keySystem);
-
-          const _mediaKeysInfos$ = Observable
-            .of(objectAssign({ mediaKeys }, keySystemAccessInfos));
-
-          if (
-            serverCertificate != null &&
-            typeof mediaKeys.setServerCertificate === "function"
-          ) {
-            return trySettingServerCertificate(mediaKeys, serverCertificate, errorStream)
-              .concat(_mediaKeysInfos$);
-          }
-          return _mediaKeysInfos$;
-        });
+  /**
+   * Encrypted event may be distinct until initData changes.
+   * It is usefull to trigger session creation on two consecutive init datas.
+   */
+  const encrypted$ = onEncrypted$(video)
+    .distinctUntilChanged(function isSameEncryptedEvent(prevEvt, evt) {
+      if (
+        evt.initData == null || prevEvt.initData == null ||
+        evt.initDataType !== prevEvt.initDataType
+      ) {
+        return false;
+      }
+      const evtHash = hashInitData(new Uint8Array(evt.initData));
+      const prevHash = hashInitData(new Uint8Array(prevEvt.initData));
+      return evtHash === prevHash;
     });
 
-  return Observable.combineLatest(
-    onEncrypted$(video).take(1),
-    mediaKeysInfos$
-  )
-    .mergeMap(([encryptedEvent, mediaKeysInfos]) =>
-      handleEncryptedEvent(encryptedEvent, mediaKeysInfos, video, errorStream)
-    );
+  // Create or get cached session.
+  return  Observable.combineLatest(
+    encrypted$,
+    createMediaKeys(keySystems, errorStream)
+  ).concatMap(
+    ([encryptedEvent, mediaKeysInfos]) => {
+      log.info("eme: encrypted event", encryptedEvent);
+
+      if (encryptedEvent.initData == null) {
+        const error = new Error("no init data found on media encrypted event.");
+        throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+      }
+
+      const events$ = createOrReuseSessionWithRetry(
+        encryptedEvent,
+        mediaKeysInfos
+      );
+
+      return Observable.combineLatest(
+        events$,
+        Observable.of(encryptedEvent),
+        Observable.of(mediaKeysInfos)
+      );
+    }
+  // Handle events from created session
+  ).mergeMap((
+      [event, encryptedEvent, mediaKeysInfos]:
+        [ISessionEvent, MediaEncryptedEvent, IMediaKeysInfos],
+      i: number
+    ) => {
+      const setMediaKeys$ = i === 0 ?
+        setMediaKeysObs(mediaKeysInfos, video, instanceInfos) :
+        Observable.empty();
+
+      const sessionEvents$ = event.value.name === "reuse-session" ?
+        Observable.of(event) :
+        handleSessionEvents(
+          event.value.session,
+          mediaKeysInfos.keySystem,
+          new Uint8Array(encryptedEvent.initData as ArrayBuffer),
+          errorStream
+        ).startWith(event);
+
+      return Observable.merge(
+        setMediaKeys$.ignoreElements() as Observable<never>,
+        sessionEvents$
+      );
+    });
 }
 
 /**
@@ -242,7 +270,7 @@ export default function EMEManager(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   errorStream : ErrorStream
-) :  Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
+) :  Observable<|ISessionEvent|Event> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {
       return onEncrypted$(videoElement).map(() => {

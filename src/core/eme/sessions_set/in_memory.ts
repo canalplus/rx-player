@@ -84,7 +84,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   add(
     initData : Uint8Array|number[]|number,
     session : IMediaKeySession|MediaKeySession,
-    sessionEvents : ConnectableObservable<Event|ISessionEvent>
+    sessionEvents? : ConnectableObservable<Event|ISessionEvent>
   ) : void {
     const hash = hashInitData(initData);
     const currentSession = this.get(hash);
@@ -92,7 +92,8 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
       this.deleteAndClose(currentSession);
     }
 
-    const eventSubscription = sessionEvents.connect();
+    const eventSubscription =
+      sessionEvents ? sessionEvents.connect() : new Subscription();
     const entry = {
       session,
       initData: hash,
