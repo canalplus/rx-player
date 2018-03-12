@@ -21,12 +21,14 @@ import {
 } from "../../manifest";
 import parseBif from "../../parsers/images/bif";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
-import { IHSSParserOptions } from "../../parsers/manifest/types";
+import { IKeySystem } from "../../parsers/manifest/types";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
 import { resolveURL } from "../../utils/url";
 import {
+  CustomManifestLoader,
+  CustomSegmentLoader,
   ILoaderObservable,
   ImageParserObservable,
   IManifestLoaderArguments,
@@ -51,6 +53,15 @@ import {
   replaceToken,
   resolveManifest,
 } from "./utils";
+
+interface IHSSParserOptions {
+  segmentLoader? : CustomSegmentLoader;
+  manifestLoader? : CustomManifestLoader;
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IKeySystem[];
+}
 
 const {
   patchSegment,

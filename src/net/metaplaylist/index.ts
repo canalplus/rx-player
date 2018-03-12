@@ -21,22 +21,31 @@ import BoxPatcher from "./isobmff_patcher";
 
 import { ISegmentPrivateInfos } from "../../manifest/representation_index/interfaces";
 import { generateManifest } from "../../parsers/manifest/metaplaylist/index";
-import { IParserOptions } from "../../parsers/manifest/types";
+import { IKeySystem } from "../../parsers/manifest/types";
 import {
-    ILoaderObservable,
-    ILoaderResponse,
-    ImageParserObservable,
-    IManifestLoaderArguments,
-    IManifestParserArguments,
-    IManifestParserObservable,
-    IMetaTransportPipelines,
-    ISegmentLoaderArguments,
-    ISegmentParserArguments,
-    SegmentParserObservable,
-  } from "../types";
+  CustomSegmentLoader,
+  ILoaderObservable,
+  ILoaderResponse,
+  ImageParserObservable,
+  IManifestLoaderArguments,
+  IManifestParserArguments,
+  IManifestParserObservable,
+  IMetaTransportPipelines,
+  ISegmentLoaderArguments,
+  ISegmentParserArguments,
+  SegmentParserObservable,
+} from "../types";
 
 import DASHTransport from "../dash";
 import SmoothTransport from "../smooth";
+
+interface IParserOptions {
+  segmentLoader? : CustomSegmentLoader;
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IKeySystem[];
+}
 
 export interface IMetaManifestInfo {
     manifests: Array<{
@@ -75,15 +84,7 @@ function loadMetaPlaylistData(data: string): Array<{
  * @param {Object} privateInfos
  */
 function getTypeFromPrivateInfos(privateInfos: ISegmentPrivateInfos): transportTypes {
-  const transportType =
-    transportTypes.reduce((acc: "dash"|"smooth"|undefined, val) => {
-      if (acc !== null &&
-        privateInfos[val] === null
-      ) {
-        return val;
-      }
-      return acc;
-    }, undefined);
+  const transportType = privateInfos.manifestType;
 
   if (!transportType) {
     throw new Error("Undefined transport for content for metaplaylist.");
@@ -94,7 +95,7 @@ function getTypeFromPrivateInfos(privateInfos: ISegmentPrivateInfos): transportT
 
 export default function(
     options: IParserOptions = {}
-): IMetaTransportPipelines{
+): IMetaTransportPipelines {
 
     const transports = {
       dash: DASHTransport(options),

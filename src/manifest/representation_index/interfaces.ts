@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-// privateInfos specific to Smooth Initialization Segments
-interface ISmoothInitSegmentPrivateInfos {
+type transportTypes = "dash"|"smooth";
+
+export interface ISegmentPrivateInfos {
+  manifestType?: transportTypes;
+  segmentType?: string;
   codecPrivateData : string;
   bitsPerSample? : number;
   channels? : number;
@@ -28,13 +31,6 @@ interface ISmoothInitSegmentPrivateInfos {
       privateData : Uint8Array;
     }>;
   };
-}
-
-export interface ISegmentPrivateInfos {
-  [key:string]: ISmoothInitSegmentPrivateInfos|null|undefined;
-  "smooth-init"? : ISmoothInitSegmentPrivateInfos;
-  "dash"?: null;
-  "smooth"?: null;
 }
 
 // ISegment Object.
