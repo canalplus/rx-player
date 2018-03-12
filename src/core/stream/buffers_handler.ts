@@ -538,6 +538,7 @@ export default function BuffersHandler(
         if (!SourceBufferManager.isNative(bufferType)) {
           log.error("custom buffer: ", bufferType,
             "has crashed. Aborting it.", error);
+          sourceBufferManager.disposeSourceBuffer(bufferType);
           errorStream.next(error);
           return createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period });
         }
