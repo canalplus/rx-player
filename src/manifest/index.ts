@@ -205,7 +205,7 @@ export default class Manifest {
    */
   getPeriodForTime(time : number) : Period|undefined {
     return arrayFind(this.periods, (period) => {
-     return time >= period.start &&
+      return time >= period.start &&
         (period.end == null || period.end > time);
     });
   }
