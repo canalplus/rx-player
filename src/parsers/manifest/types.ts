@@ -15,36 +15,10 @@
  */
 
 import { IRepresentationIndex } from "../../manifest";
-import {
-  CustomManifestLoader,
-  CustomSegmentLoader
-} from "../../net/types";
 
 interface IKeySystem {
   systemId : string;
   privateData : Uint8Array;
-}
-
-interface IParserOptions {
-  segmentLoader? : CustomSegmentLoader;
-  suggestedPresentationDelay? : number;
-  referenceDateTime? : number;
-  minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => IKeySystem[];
-}
-
-interface IHSSKeySystem {
-  systemId : string;
-  privateData : Uint8Array;
-}
-
-interface IHSSParserOptions {
-  segmentLoader? : CustomSegmentLoader;
-  manifestLoader? : CustomManifestLoader;
-  suggestedPresentationDelay? : number;
-  referenceDateTime? : number;
-  minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => IHSSKeySystem[];
 }
 
 interface IHSSManifestSegment {
@@ -68,7 +42,7 @@ interface IHSSManifestSegment {
 
 interface IContentProtectionSmooth {
   keyId : string;
-  keySystems: IHSSKeySystem[];
+  keySystems: IKeySystem[];
 }
 
 // interface ISmoothRepresentationIndexIndex {
@@ -218,10 +192,7 @@ export interface IParsedContentProtection {
 
 export {
   IKeySystem,
-  IHSSKeySystem,
   IPeriodSmooth,
-  IParserOptions,
-  IHSSParserOptions,
   IAdaptationSmooth,
   IHSSManifestSegment,
   IRepresentationSmooth,

@@ -35,9 +35,8 @@ import config from "../../../config";
 import {
   IAdaptationSmooth,
   IContentProtectionSmooth,
-  IHSSKeySystem,
   IHSSManifestSegment,
-  IHSSParserOptions,
+  IKeySystem,
   IParsedManifest,
   IRepresentationSmooth,
  } from "../types";
@@ -113,7 +112,7 @@ function parseBoolean(val : string|null) : boolean {
  */
 function getKeySystems(
   keyIdBytes : Uint8Array
-) : IHSSKeySystem[] {
+) : IKeySystem[] {
   return [
     {
       // Widevine
@@ -135,11 +134,18 @@ function getKeySystems(
   ];
 }
 
+interface IHSSParserConfiguration {
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IKeySystem[];
+}
+
 /**
  * @param {Object} [parserOptions={}]
  */
 function createSmoothStreamingParser(
-  parserOptions : IHSSParserOptions = {}
+  parserOptions : IHSSParserConfiguration = {}
 ) : (manifest : Document, url : string) => IParsedManifest {
 
   const SUGGESTED_PERSENTATION_DELAY =
@@ -200,7 +206,7 @@ function createSmoothStreamingParser(
     root : Element
   ) : {
     keyId : string;
-    keySystems: IHSSKeySystem[];
+    keySystems: IKeySystem[];
   } {
     const header = root.firstElementChild as Element;
     assert(
