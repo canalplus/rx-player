@@ -35,7 +35,7 @@ export interface IStreamClockTick {
   readyState : number;
   paused : boolean;
   stalled : {
-    state : string;
+    reason : "seeking" | "not-ready" | "buffering";
     timestamp : number;
   } | null;
 }

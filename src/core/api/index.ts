@@ -770,7 +770,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      */
     const stalled$ = stream
       .filter(({ type }) => type === "stalled")
-      .map(x => x.value)  as Observable<null|{ state : string }>;
+      .map(x => x.value)  as Observable<null|{ reason : string }>;
 
     /**
      * Emit when the stream is considered "loaded".
@@ -813,7 +813,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
               }
 
               if (stalledStatus) {
-                switch (stalledStatus.state) {
+                switch (stalledStatus.reason) {
                   case "seeking":
                     return PLAYER_STATES.SEEKING;
                   default:
