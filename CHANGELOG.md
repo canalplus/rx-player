@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.3.1 (2018/03/13)
+
+### Bug Fixes
+
+ - misc: fix missing browser API on IE11
+ - buffer: end correctly streams which experienced a custom sourcebuffer (text/image) crash
+
+### Other improvements
+
+ - tools: support development on windows
+
+
 ## v3.3.0 (2018/03/05)
 
 ### Added
