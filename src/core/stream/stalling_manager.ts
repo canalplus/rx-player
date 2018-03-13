@@ -24,7 +24,7 @@ import { IStreamClockTick } from "./clock";
 const { DISCONTINUITY_THRESHOLD } = config;
 
 export interface IStallingItem {
-  state : string;
+  reason : string;
   timestamp : number;
 }
 
@@ -76,7 +76,7 @@ function StallingManager(
     .map(timing => timing.stalled)
     .distinctUntilChanged((wasStalled, isStalled) => {
       return !wasStalled && !isStalled ||
-        (!!wasStalled && !!isStalled && wasStalled.state === isStalled.state);
+        (!!wasStalled && !!isStalled && wasStalled.reason === isStalled.reason);
     });
 }
 

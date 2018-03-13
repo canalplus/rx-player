@@ -53,7 +53,7 @@ const speedManager = (
         const wasStalled = prevTiming.stalled;
         if (
           !wasStalled !== !isStalled || // xor
-          (wasStalled && isStalled && wasStalled.state !== isStalled.state)
+          (wasStalled && isStalled && wasStalled.reason !== isStalled.reason)
         ) {
           return !wasStalled;
         }

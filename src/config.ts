@@ -348,14 +348,21 @@ export default {
    * seeking on an unbuffered part of the stream.
    * @type {Number}
    */
-  RESUME_AFTER_SEEKING_GAP: 1.5,
+  RESUME_GAP_AFTER_SEEKING: 1.5,
+
+  /**
+   * Number of seconds ahead in the buffer after which playback will resume when
+   * the player was stalled due to a low readyState.
+   * @type {Number}
+   */
+  RESUME_GAP_AFTER_NOT_ENOUGH_DATA: 0.5,
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume
    * after the player went through a buffering step.
    * @type {Number}
    */
-  RESUME_AFTER_BUFFERING_GAP: 5,
+  RESUME_GAP_AFTER_BUFFERING: 5,
 
   /**
    * Maximum number of seconds in the buffer based on which a "stalling"
