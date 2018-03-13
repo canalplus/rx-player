@@ -152,7 +152,7 @@ function clearBuffer<T>(
   collectBufferAhead();
   const clean$ = Observable.from(
     cleanedupRanges.map((range) => {
-      log.info("cleaning range from source buffer", range);
+      log.debug("cleaning range from source buffer", range);
       return qSourceBuffer.removeBuffer(range);
     })
   )
