@@ -34348,7 +34348,7 @@ function clearBuffer(qSourceBuffer, position, maxBufferBehind, maxBufferAhead) {
     collectBufferBehind();
     collectBufferAhead();
     var clean$ = Observable_1.Observable.from(cleanedupRanges.map(function (range) {
-        log_1.default.info("cleaning range from source buffer", range);
+        log_1.default.debug("cleaning range from source buffer", range);
         return qSourceBuffer.removeBuffer(range);
     }))
         .concatAll()
