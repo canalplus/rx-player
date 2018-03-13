@@ -18579,7 +18579,7 @@ var Player = /** @class */ (function (_super) {
         // Workaround to support Firefox autoplay on FF 42.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
         videoElement.preload = "auto";
-        _this.version = /*PLAYER_VERSION*/ "3.3.0";
+        _this.version = /*PLAYER_VERSION*/ "3.3.1";
         _this.log = log_1.default;
         _this.state = "STOPPED";
         _this.videoElement = videoElement;
@@ -28801,7 +28801,7 @@ var Manifest = /** @class */ (function () {
      * @returns {Period|undefined}
      */
     Manifest.prototype.getPeriodForTime = function (time) {
-        return this.periods.find(function (period) {
+        return arrayFind(this.periods, function (period) {
             return time >= period.start &&
                 (period.end == null || period.end > time);
         });
@@ -28817,7 +28817,7 @@ var Manifest = /** @class */ (function () {
         if (endOfPeriod == null) {
             return null;
         }
-        return this.periods.find(function (_period) {
+        return arrayFind(this.periods, function (_period) {
             return _period.end == null || endOfPeriod < _period.end;
         }) || null;
     };
@@ -33698,8 +33698,9 @@ function BuffersHandler(content, clock$, wantedBufferAhead$, bufferManager, sour
                 // continue streaming without any subtitles
                 if (!source_buffers_1.default.isNative(bufferType)) {
                     log_1.default.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
+                    sourceBufferManager.disposeSourceBuffer(bufferType);
                     errorStream.next(error);
-                    return Observable_1.Observable.empty();
+                    return buffer_1.createFakeBuffer(clock$, wantedBufferAhead$, { manifest: manifest, period: period });
                 }
                 log_1.default.error("native buffer: ", bufferType, "has crashed. Stopping playback.", error);
                 throw error; // else, throw
@@ -35282,7 +35283,7 @@ var SCANNED_VIDEO_EVENTS = [
  * current position before resuming playback. Based on the infos of the stall.
  * Waiting time differs between a "seeking" stall and a buffering stall.
  * @param {Object|null} stalled
- * @returns {Boolean}
+ * @returns {Number}
  */
 function getResumeGap(stalled) {
     if (!stalled) {
