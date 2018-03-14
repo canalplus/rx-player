@@ -21,24 +21,17 @@ import {
 } from "../../manifest";
 import parseBif from "../../parsers/images/bif";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
-import {
-  replaceRepresentationSmoothTokens,
-  replaceSegmentSmoothTokens
-} from "../../parsers/manifest/smooth/helpers";
-import { IKeySystem } from "../../parsers/manifest/types";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
-import { resolveURL } from "../../utils/url";
 import {
-  CustomManifestLoader,
-  CustomSegmentLoader,
   ILoaderObservable,
   ImageParserObservable,
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
+  IParserOptions,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
@@ -56,15 +49,6 @@ import {
   replaceToken,
   resolveManifest,
 } from "./utils";
-
-interface IHSSParserOptions {
-  segmentLoader? : CustomSegmentLoader;
-  manifestLoader? : CustomManifestLoader;
-  suggestedPresentationDelay? : number;
-  referenceDateTime? : number;
-  minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => IKeySystem[];
-}
 
 const {
   patchSegment,
@@ -91,7 +75,7 @@ function addNextSegments(
 }
 
 export default function(
-  options : IHSSParserOptions = {}
+  options : IParserOptions = {}
 ) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
@@ -193,12 +177,12 @@ export default function(
           segmentInfos: initSegmentInfos,
         });
       }
-      const responseBuffer = response.responseData instanceof Uint8Array
-      ? response.responseData
-       : new Uint8Array(response.responseData);
+      const responseBuffer = responseData instanceof Uint8Array ?
+        responseData :
+        new Uint8Array(responseData);
+
       const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
-
       const segmentData = patchSegment(responseBuffer, segmentInfos.time);
       if (nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
@@ -220,12 +204,8 @@ export default function(
         });
       }
 
-      // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
-      const baseURL = resolveURL(segment.media);
-      const intermediateURL = replaceRepresentationSmoothTokens(baseURL, representation);
-      const url = replaceSegmentSmoothTokens(intermediateURL, segment.time);
-      return request({ url, responseType });
+      return request({ url: segment.media, responseType });
     },
 
     parser({
@@ -370,7 +350,7 @@ export default function(
 
   const imageTrackPipeline = {
     loader(
-      { segment, representation } : ISegmentLoaderArguments
+      { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
       if (segment.isInit) {
         // image do not need an init segment. Passthrough directly to the parser
@@ -380,11 +360,7 @@ export default function(
         });
       }
 
-      const baseURL = resolveURL(segment.media);
-      const intermediateURL =
-        replaceRepresentationSmoothTokens(baseURL, representation);
-      const url = replaceSegmentSmoothTokens(intermediateURL, segment.time);
-      return request({ url, responseType: "arraybuffer" });
+      return request({ url: segment.media, responseType: "arraybuffer" });
     },
 
     parser(

@@ -23,7 +23,6 @@ import Manifest, {
   Representation,
 } from "../manifest";
 import IRepresentationIndex from "../manifest/representation_index/interfaces";
-import { IMetaManifestInfo } from "../net/metaplaylist/index";
 import { IBifThumbnail } from "../parsers/images/bif";
 import { IParsedManifest } from "../parsers/manifest/types";
 
@@ -116,7 +115,6 @@ export interface ISegmentParserArguments<T> {
   segment : ISegment;
   init? : ISegmentTimingInfos;
   period : Period;
-  timeOffset? : number;
 }
 
 // -- response
@@ -217,45 +215,18 @@ export interface ITransportPipelines {
   image : ITransportImageSegmentPipeline;
 }
 
-export interface IMetaTransportPipelines {
+interface IParsedKeySystem {
+  systemId : string;
+  privateData : Uint8Array;
+}
 
-  manifest: {
-    // TODO Remove resolver
-    resolver?: (x : IManifestLoaderArguments) =>
-      Observable<IManifestLoaderArguments>;
-    loader: (x : IManifestLoaderArguments) =>
-      ILoaderObservable<IMetaManifestInfo>;
-    parser: (x : IManifestParserArguments<IMetaManifestInfo>) =>
-      IManifestParserObservable;
-  };
-
-  audio: {
-    loader: (x : ISegmentLoaderArguments) =>
-      ILoaderObservable<Uint8Array|ArrayBuffer>;
-    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
-      SegmentParserObservable;
-  };
-
-  video: {
-    loader: (x : ISegmentLoaderArguments) =>
-      ILoaderObservable<Uint8Array|ArrayBuffer>;
-    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
-      SegmentParserObservable;
-  };
-
-  text: {
-    loader: (x : ISegmentLoaderArguments) =>
-      ILoaderObservable<Uint8Array|ArrayBuffer|string>;
-    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string>) =>
-      TextTrackParserObservable;
-  };
-
-  image: {
-    loader: (x : ISegmentLoaderArguments) =>
-      ILoaderObservable<Uint8Array|ArrayBuffer>;
-    parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
-      ImageParserObservable;
-  };
+export interface IParserOptions {
+  segmentLoader? : CustomSegmentLoader;
+  manifestLoader?: CustomManifestLoader;
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
 }
 
 export interface ITransportOptions {

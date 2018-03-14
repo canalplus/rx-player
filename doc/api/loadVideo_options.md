@@ -67,7 +67,7 @@ Can be either:
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
-  - ``"metaplaylist"`` for MetaPlaylist streams
+  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams
 
 This property is mandatory.
 

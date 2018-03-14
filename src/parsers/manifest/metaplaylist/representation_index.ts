@@ -17,7 +17,7 @@
 import IRepresentationIndex from "../../../manifest/representation_index";
 import { ISegment } from "../../../manifest/representation_index/interfaces";
 
-type transportTypes = "dash"|"smooth";
+type ITransportTypes = "dash"|"smooth";
 
 /**
  * The MetaRepresentationIndex is wrapper for all kind of indexes (dash, smooth, etc)
@@ -30,7 +30,7 @@ type transportTypes = "dash"|"smooth";
 export default class MetaRepresentationIndex implements IRepresentationIndex{
   private _wrappedIndex: IRepresentationIndex;
   private _timeOffset: number;
-  private _transport: transportTypes;
+  private _transport: ITransportTypes;
   private _contentEnd: number;
 
   constructor(
@@ -50,8 +50,8 @@ export default class MetaRepresentationIndex implements IRepresentationIndex{
     if (segment === null) {
       return null;
     }
-    segment.privateInfos = segment.privateInfos || { codecPrivateData: "" };
-    segment.privateInfos.manifestType = this._transport;
+    segment.privateInfos = segment.privateInfos || {};
+    segment.privateInfos.transportType = this._transport;
     return segment;
   }
 
@@ -60,8 +60,8 @@ export default class MetaRepresentationIndex implements IRepresentationIndex{
       up - this._timeOffset,
       duration
     ).map((segment) => {
-      segment.privateInfos = segment.privateInfos || { codecPrivateData: "" };
-      segment.privateInfos.manifestType = this._transport;
+      segment.privateInfos = segment.privateInfos || {};
+      segment.privateInfos.transportType = this._transport;
       segment.time += this._timeOffset * segment.timescale;
       return segment;
     });

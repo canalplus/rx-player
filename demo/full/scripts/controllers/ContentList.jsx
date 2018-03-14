@@ -4,7 +4,7 @@ import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
-const TRANSPORT_TYPES = ["MetaPLAYLIST", "DASH", "Smooth"];
+const TRANSPORT_TYPES = ["MetaPlaylist", "DASH", "Smooth", "DirectFile"];
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   acc[tech] = contentsDatabase.filter(({ transport }) =>
     transport === tech.toLowerCase()
