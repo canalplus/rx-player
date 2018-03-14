@@ -44,9 +44,10 @@ export default function getWantedRange(
 ) : { start : number; end : number } {
   const currentTime = timing.currentTime + timing.timeOffset;
   const limitEnd = timing.liveGap == null ?
-    period.end : Math.min(period.end || Infinity, currentTime + timing.liveGap);
+    period.end :
+    Math.min(period.end || Infinity, timing.currentTime + timing.liveGap);
   const limits = {
-    start: Math.max(period.start, timing.currentTime + timing.timeOffset),
+    start: Math.max(period.start, currentTime),
     end: limitEnd,
   };
 
