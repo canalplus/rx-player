@@ -77,8 +77,8 @@ export default function createBufferClock(
     .map((timing) =>
       objectAssign({
         liveGap: manifest.isLive ?
-        getMaximumBufferPosition(manifest) - timing.currentTime :
-        Infinity,
+          getMaximumBufferPosition(manifest) - timing.currentTime :
+          Infinity,
         timeOffset,
       }, timing)
     );
