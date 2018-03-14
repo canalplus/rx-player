@@ -19,6 +19,7 @@ import {
   ISegment,
 } from "../../../../manifest";
 import log from "../../../../utils/log";
+import { replaceSegmentDASHTokens } from "../helpers";
 import {
   getInitSegment,
   normalizeRange,
@@ -86,7 +87,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
         range,
         duration,
         timescale,
-        media,
+        media: replaceSegmentDASHTokens(media || "", i*duration),
       };
       segments.push(args);
       i++;

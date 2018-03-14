@@ -22,7 +22,6 @@ import {
 import parseBif from "../../parsers/images/bif";
 import dashManifestParser from "../../parsers/manifest/dash";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import generateSegmentLoader from "./segment_loader";
@@ -30,10 +29,7 @@ import {
   loader as TextTrackLoader,
   parser as TextTrackParser,
 } from "./texttracks";
-import {
-  addNextSegments,
-  replaceTokens,
-} from "./utils";
+import { addNextSegments } from "./utils";
 
 import {
   CustomManifestLoader,
@@ -145,7 +141,7 @@ export default function(
 
   const imageTrackPipeline = {
     loader(
-      { segment, representation } : ISegmentLoaderArguments
+      { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
       if (segment.isInit) {
         // image do not need an init segment. Passthrough directly to the parser
@@ -156,9 +152,7 @@ export default function(
       }
 
       const { media } = segment;
-      const path = media ? replaceTokens(media, segment, representation) : "";
-      const url = resolveURL(representation.baseURL, path);
-      return request({ url, responseType: "arraybuffer" });
+      return request({ url: media, responseType: "arraybuffer" });
     },
 
     parser(

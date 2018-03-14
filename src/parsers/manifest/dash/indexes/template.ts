@@ -18,6 +18,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import { replaceSegmentDASHTokens } from "../helpers";
 import {
   getInitSegment,
   normalizeRange,
@@ -92,7 +93,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         isInit: false,
         duration,
         timescale,
-        media,
+        media: replaceSegmentDASHTokens(media || "", time, number),
       };
       segments.push(args);
     }

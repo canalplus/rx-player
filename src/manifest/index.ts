@@ -136,11 +136,10 @@ export default class Manifest {
         type: "image",
         manuallyAdded: true,
         representations: [{
-          baseURL: url,
           bitrate: 0,
           id: representationID,
           mimeType,
-          index: new StaticRepresentationIndex(),
+          index: new StaticRepresentationIndex({ media: url }),
         }],
       });
     });
@@ -180,12 +179,11 @@ export default class Manifest {
           closedCaption,
           manuallyAdded: true,
           representations: [{
-            baseURL: url,
             bitrate: 0,
             id: representationID,
             mimeType,
             codecs,
-            index: new StaticRepresentationIndex(),
+            index: new StaticRepresentationIndex({ media: url }),
           }],
         });
       }));
@@ -355,7 +353,6 @@ export default class Manifest {
                 );
                 /* tslint:enable:max-line-length */
               } else {
-                oldRepresentation.baseURL = newRepresentation.baseURL;
                 oldRepresentations[k].index._update(newRepresentation.index);
               }
             }

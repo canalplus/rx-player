@@ -80,9 +80,9 @@ export function generateManifest(
     transport: "dash"|"smooth";
   }> = [];
 
-  for(let j = 0; j < durations.length; j++){
+  for(let j = 0; j < durations.length; j++) {
     const _newPeriods = parsedPeriodsMyManifest[j];
-    for(let m = 0; m < _newPeriods.length; m++){
+    for(let m = 0; m < _newPeriods.length; m++) {
       let elapsedTimeOnLoop = 0;
       const periods: IParsedPeriod[] = [];
       const newPeriod = _newPeriods[m];
