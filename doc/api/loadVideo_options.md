@@ -67,7 +67,7 @@ Can be either:
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
-  - ``"metaplaylist"`` for MetaPlaylist streams
+  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams
 
 This property is mandatory.
 
@@ -81,7 +81,7 @@ For Smooth or DASH contents, the URL to the manifest.
 
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
-The URL to the Smooth,DASH or MetaPlaylist manifest.
+The URL to the Smooth, DASH or MetaPlaylist manifest.
 
 This property is mandatory.
 

@@ -30,6 +30,10 @@ if (__FEATURES__.DASH) {
 }
 if (__FEATURES__.METAPLAYLIST) {
   exported.metaplaylist = require("./metaplaylist/index.ts").default;
+  // dash and smooth may be activated if metaplaylist is.
+  exported.dash = !exported.dash ? require("./dash/index.ts").default : exported.dash;
+  exported.smooth =
+    !exported.smooth ? require("./smooth/index.ts").default : exported.smooth;
 }
 /* tslint:enable no-var-requires */
 

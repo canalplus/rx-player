@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-type transportTypes = "dash"|"smooth";
+type ITransportTypes = "dash"|"smooth";
 
-export interface ISegmentPrivateInfos {
-  manifestType?: transportTypes;
-  segmentType?: string;
+export interface ISmoothInitSegmentPrivateInfos {
   codecPrivateData : string;
   bitsPerSample? : number;
   channels? : number;
@@ -31,6 +29,11 @@ export interface ISegmentPrivateInfos {
       privateData : Uint8Array;
     }>;
   };
+}
+
+export interface IPrivateInfos {
+    smoothInit?: ISmoothInitSegmentPrivateInfos;
+    transportType?: ITransportTypes;
 }
 
 // ISegment Object.
@@ -49,7 +52,7 @@ export interface ISegment {
   number? : number; // Optional number of the Segment
   range? : [number, number]; // Optional byte range to retrieve the Segment
 
-  privateInfos? : ISegmentPrivateInfos; // Allows a RepresentationIndex to store
+  privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
                                         // supplementary informations in a given
                                         // Segment for later downloading/parsing
 }

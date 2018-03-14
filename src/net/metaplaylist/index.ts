@@ -15,38 +15,30 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import assert from "../../utils/assert";
 import request from "../../utils/request";
-import BoxPatcher from "./isobmff_patcher";
 
-import { ISegmentPrivateInfos } from "../../manifest/representation_index/interfaces";
+import { IPrivateInfos } from "../../manifest/representation_index/interfaces";
 import { generateManifest } from "../../parsers/manifest/metaplaylist/index";
-import { IKeySystem } from "../../parsers/manifest/types";
 import {
-  CustomSegmentLoader,
   ILoaderObservable,
   ILoaderResponse,
   ImageParserObservable,
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
-  IMetaTransportPipelines,
+  IParserOptions,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
+  ITransportPipelines,
   SegmentParserObservable,
   TextTrackParserObservable,
 } from "../types";
 
-import DASHTransport from "../dash";
-import SmoothTransport from "../smooth";
+  import DASHTransport from "../dash";
+  import SmoothTransport from "../smooth";
+  import patchBox from "./isobmff_patcher";
 
-interface IParserOptions {
-  segmentLoader? : CustomSegmentLoader;
-  suggestedPresentationDelay? : number;
-  referenceDateTime? : number;
-  minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => IKeySystem[];
-}
+type ITransportTypes = "dash"|"smooth";
 
 export interface IMetaManifestInfo {
     manifests: Array<{
@@ -54,28 +46,43 @@ export interface IMetaManifestInfo {
       url: string;
       startTime: number;
       endTime: number;
-      transport: "dash"|"smooth";
+      transport: ITransportTypes;
     }>;
 }
 
-type transportTypes = "dash"|"smooth";
-
-const transportTypes: transportTypes[] = ["dash", "smooth"];
+interface IMetaPlaylistContent {
+  url: string;
+  startTime: number;
+  endTime: number;
+  transport: ITransportTypes;
+}
 
 /**
  * Parse playlist string to JSON.
  * Returns an array of contents.
  * @param {string} data
  */
-function loadMetaPlaylistData(data: string): Array<{
-    url: string;
-    startTime: number;
-    endTime: number;
-    transport: "dash"|"smooth";
-  }> {
-  const parsedMetaPlaylist = JSON.parse(data);
+function parseMetaPlaylistData(data: string): IMetaPlaylistContent[] {
+  let parsedMetaPlaylist;
+  try {
+    parsedMetaPlaylist = JSON.parse(data);
+  } catch (error) {
+    throw new Error("Bad MetaPlaylist file. Expected JSON.");
+  }
   const { contents } = parsedMetaPlaylist;
-  assert(contents);
+  if (!Array.isArray(contents)) {
+    throw new Error("Bad metaplaylist file.");
+  }
+  contents.forEach((content) => {
+    if (
+      content.url == null ||
+      content.startTime == null ||
+      content.endTime == null ||
+      content.transport == null
+    ) {
+      throw new Error("Bad metaplaylist file.");
+    }
+  });
 
   return contents;
 }
@@ -84,8 +91,10 @@ function loadMetaPlaylistData(data: string): Array<{
  * Get transport type from segment's privateInfos
  * @param {Object} privateInfos
  */
-function getTypeFromPrivateInfos(privateInfos: ISegmentPrivateInfos): transportTypes {
-  const transportType = privateInfos.manifestType;
+function getTransportTypeFromSegmentPrivateInfos(
+  privateInfos: IPrivateInfos
+): ITransportTypes {
+  const transportType = privateInfos.transportType;
 
   if (!transportType) {
     throw new Error("Undefined transport for content for metaplaylist.");
@@ -94,9 +103,7 @@ function getTypeFromPrivateInfos(privateInfos: ISegmentPrivateInfos): transportT
   return transportType;
 }
 
-export default function(
-    options: IParserOptions = {}
-): IMetaTransportPipelines {
+export default function(options: IParserOptions = {}): ITransportPipelines {
 
     const transports = {
       dash: DASHTransport(options),
@@ -106,84 +113,82 @@ export default function(
     const manifestPipeline = {
       loader(
         { url } : IManifestLoaderArguments
-      ) : ILoaderObservable<IMetaManifestInfo> {
+      ) : ILoaderObservable<Document|string> {
         return request({
           url,
           responseType: "text",
           ignoreProgressEvents: true,
-        }).mergeMap(({ value }) => {
-          const data = value.responseData;
-          const contents = loadMetaPlaylistData(data); // load data from meta document
-          const manifestsInfos$ = contents.map((content) => {
-            const transport = transports[content.transport];
-            const loader = transport.manifest.loader;
-
-            return loader({ url: content.url })
-              .filter((res) => res.type === "response")
-              .map((res) => {
-                return {
-                  // res has been filtered and is always a response event.
-                  // TS doesn't guess.
-                  manifest: (res as ILoaderResponse<Document>).value.responseData,
-                  url: content.url,
-                  startTime: content.startTime,
-                  endTime: content.endTime,
-                  transport: content.transport,
-                };
-              });
-          });
-
-          return Observable
-            .combineLatest(manifestsInfos$)
-            .map((manifestsInfos) => {
-              return {
-                type: "response" as "response",
-                value: {
-                  responseData: {
-                    manifests: manifestsInfos,
-                  },
-                },
-              };
-            });
+        }).map(({ value }) => {
+          return {
+            type: "response" as "response",
+            value: {
+              responseData: value.responseData,
+            },
+          };
         });
       },
 
       parser(
-        { response, url } : IManifestParserArguments<IMetaManifestInfo>
+        { response, url } : IManifestParserArguments<Document|string>
       ) : IManifestParserObservable {
+        if (typeof response.responseData !== "string") {
+          throw new Error("Parser input must be string.");
+        }
+        const contents = parseMetaPlaylistData(response.responseData);
+        const manifestsInfos$ = contents.map((content) => {
+          const transport = transports[content.transport];
+          if (transport == null) {
+            throw new Error(
+              "Transport" + content.transport + "not supported in MetaPlaylist.");
+          }
+          const loader = transport.manifest.loader;
 
-        const documents = response.responseData;
-        const manifestsInfos =  documents.manifests;
+          return loader({ url: content.url })
+            .filter((res): res is ILoaderResponse<Document> => res.type === "response")
+            .map((res) => {
+              return {
+                manifest: res.value.responseData,
+                url: content.url,
+                startTime: content.startTime,
+                endTime: content.endTime,
+                transport: content.transport,
+              };
+            });
+        });
 
-        const parsedManifestsInfo = manifestsInfos.map((manifestInfos) => {
-          const transport = transports[manifestInfos.transport];
-          const parser = transport.manifest.parser;
-          const fakeResponse = {
-            responseData: manifestInfos.manifest,
-          };
-          return parser({ response: fakeResponse, url: manifestInfos.url })
-          .map((mpd) => {
-            const type = mpd.manifest.type;
-            if (type !== "static") {
-              throw new Error("Content from metaplaylist is not static.");
-            }
-            return {
-              manifest: mpd.manifest,
-              transport: manifestInfos.transport,
-              url: manifestInfos.url,
-              startTime: manifestInfos.startTime,
-              endTime: manifestInfos.endTime,
-            };
+        return Observable
+          .combineLatest(manifestsInfos$)
+          .mergeMap((combinedManifest) => {
+            const manifestsInfos =  combinedManifest;
+            const parsedManifestsInfo = manifestsInfos.map((manifestInfos) => {
+              const transport = transports[manifestInfos.transport];
+              const parser = transport.manifest.parser;
+              const fakeResponse = {
+                responseData: manifestInfos.manifest,
+              };
+              return parser({ response: fakeResponse, url: manifestInfos.url })
+              .map((mpd) => {
+                const type = mpd.manifest.type;
+                if (type !== "static") {
+                  throw new Error("Content from metaplaylist is not static.");
+                }
+                return {
+                  manifest: mpd.manifest,
+                  transport: manifestInfos.transport,
+                  url: manifestInfos.url,
+                  startTime: manifestInfos.startTime,
+                  endTime: manifestInfos.endTime,
+                };
+              });
+            });
+            return Observable.combineLatest(parsedManifestsInfo).map((_contents) => {
+                const manifest = generateManifest(_contents, url);
+                return {
+                  manifest,
+                  url,
+                };
+            });
           });
-        });
-
-        return Observable.combineLatest(parsedManifestsInfo).map((contents) => {
-            const manifest = generateManifest(contents, url);
-            return {
-              manifest,
-              url,
-            };
-        });
       },
     };
 
@@ -199,7 +204,8 @@ export default function(
         if (!segment.privateInfos) {
           throw new Error("Segments from metaplaylist must have private infos.");
         }
-        const transportType = getTypeFromPrivateInfos(segment.privateInfos);
+        const transportType =
+          getTransportTypeFromSegmentPrivateInfos(segment.privateInfos);
         const transport = transports[transportType];
         const segmentLoader = transport.video.loader;
         return segmentLoader({
@@ -218,7 +224,8 @@ export default function(
           if (!segment.privateInfos) {
             throw new Error("Segments from metaplaylist must have private infos.");
           }
-          const transportType = getTypeFromPrivateInfos(segment.privateInfos);
+          const transportType =
+            getTransportTypeFromSegmentPrivateInfos(segment.privateInfos);
           const transport = transports[transportType];
 
           if (!transport) {
@@ -238,16 +245,14 @@ export default function(
 
               if (
                 segment.privateInfos &&
-                segment.privateInfos.manifestType === "smooth"
+                segment.privateInfos.transportType === "smooth"
               ) {
                 segmentPatchedData = responseData;
               } else {
-                segmentPatchedData = new BoxPatcher(
+                segmentPatchedData =  patchBox(
                   responseData,
-                  false,
-                  false,
                   offset
-                ).filter();
+                );
                 if (segmentInfos) {
                   segmentInfos.time += offset;
                 }
@@ -266,7 +271,8 @@ export default function(
         if (!args.segment.privateInfos) {
           throw new Error("Segments from metaplaylist must have private infos.");
         }
-        const transportType = getTypeFromPrivateInfos(args.segment.privateInfos);
+        const transportType =
+          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
         const transport = transports[transportType];
         return transport.text.loader(args);
       },
@@ -276,13 +282,14 @@ export default function(
         if (!args.segment.privateInfos) {
           throw new Error();
         }
-        const transportType = getTypeFromPrivateInfos(args.segment.privateInfos);
+        const transportType =
+          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
         const transport = transports[transportType];
-        return transport.text.parser(args).map((_args) => {
-          if (_args.segmentData != null) {
-            _args.segmentData.timeOffset = args.period.start;
+        return transport.text.parser(args).map((parsed) => {
+          if (parsed.segmentData != null) {
+            parsed.segmentData.timeOffset += args.period.start;
           }
-          return { segmentData: _args.segmentData, segmentInfos: _args.segmentInfos };
+          return { segmentData: parsed.segmentData, segmentInfos: parsed.segmentInfos };
         });
       },
     };
@@ -294,7 +301,8 @@ export default function(
         if (!args.segment.privateInfos) {
           throw new Error("Segments from metaplaylist must have private infos.");
         }
-        const transportType = getTypeFromPrivateInfos(args.segment.privateInfos);
+        const transportType =
+          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
         const transport = transports[transportType];
         return transport.image.loader(args);
       },
@@ -304,14 +312,15 @@ export default function(
         if (!args.segment.privateInfos) {
           throw new Error("Segments from metaplaylist must have private infos.");
         }
-        const transportType = getTypeFromPrivateInfos(args.segment.privateInfos);
+        const transportType =
+          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
         const transport = transports[transportType];
 
-        return transport.image.parser(args).map((_args) => {
-          if (_args.segmentData != null) {
-            _args.segmentData.timeOffset = args.period.start;
+        return transport.image.parser(args).map((parsed) => {
+          if (parsed.segmentData != null) {
+            parsed.segmentData.timeOffset += args.period.start;
           }
-          return _args;
+          return parsed;
         });
       },
     };

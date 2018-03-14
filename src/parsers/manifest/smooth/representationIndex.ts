@@ -333,13 +333,14 @@ export default class SmoothRepresentationIndex
         time: 0,
         timescale: index.timescale,
         privateInfos: {
-            manifestType: "smooth",
-            bitsPerSample: this._bitsPerSample,
-            channels: this._channels,
-            codecPrivateData: this._codecPrivateData,
-            packetSize: this._packetSize,
-            samplingRate: this._samplingRate,
-            protection: this._protection,
+            smoothInit: {
+              bitsPerSample: this._bitsPerSample,
+              channels: this._channels,
+              codecPrivateData: this._codecPrivateData,
+              packetSize: this._packetSize,
+              samplingRate: this._samplingRate,
+              protection: this._protection,
+            },
         },
         media: "",
       };
