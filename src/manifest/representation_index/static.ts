@@ -19,11 +19,20 @@ import IRepresentationIndex, {
   ISegment,
 } from "./interfaces";
 
+interface IStaticIndex {
+  media: string;
+}
+
 /**
  * Simple RepresentationIndex implementation for static files.
  * @class StaticRepresentationIndex
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
+  private _index: IStaticIndex;
+
+  constructor(index: IStaticIndex) {
+    this._index = index;
+  }
 
   /**
    * @returns {Object}
@@ -44,6 +53,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
       time: 0,
       duration: Number.MAX_VALUE,
       timescale: 1,
+      media: this._index.media,
     }];
   }
 

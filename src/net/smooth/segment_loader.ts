@@ -18,12 +18,8 @@ import { Observable } from "rxjs/Observable";
 
 import assert from "../../utils/assert";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import mp4Utils from "./mp4";
-import {
-  buildSegmentURL,
-  byteRange,
-} from "./utils";
+import { byteRange } from "./utils";
 
 import {
   CustomSegmentLoader,
@@ -125,11 +121,7 @@ const generateSegmentLoader = (
     });
   }
   else {
-    const url = buildSegmentURL(
-      resolveURL(representation.baseURL),
-      representation,
-      segment
-    );
+    const url = segment.media;
 
     const args = {
       adaptation,

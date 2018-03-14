@@ -36,6 +36,7 @@ import {
   IRole,
   isHardOfHearing,
   isVisuallyImpaired,
+  replaceRepresentationDASHTokens
 } from "../helpers";
 import BaseRepresentationIndex from "../indexes/base";
 import ListRepresentationIndex from "../indexes/list";
@@ -44,6 +45,11 @@ import TimelineRepresentationIndex from "../indexes/timeline";
 import {
   createMPDIntermediateRepresentation,
 } from "./MPD";
+
+import { IRepresentationIntermediateRepresentation } from "./Representation";
+import { IParsedSegmentBase } from "./SegmentBase";
+import { IParsedSegmentList } from "./SegmentList";
+import { IParsedSegmentTemplate, IParsedSegmentTimeline } from "./SegmentTemplate";
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -215,6 +221,52 @@ const getLastLiveTimeReference = (
   return representationsMin;
 };
 
+function buildRepresentationMedia(
+  segmentIndex: IParsedSegmentBase,
+  repURL: string,
+  repId: string,
+  repBitrate: number
+): IParsedSegmentBase;
+function buildRepresentationMedia(
+  segmentIndex: IParsedSegmentList,
+  repURL: string,
+  repId: string,
+  repBitrate: number
+): IParsedSegmentList;
+function buildRepresentationMedia(
+  segmentIndex: IParsedSegmentTemplate|IParsedSegmentTimeline,
+  repURL: string,
+  repId: string,
+  repBitrate: number
+): IParsedSegmentTemplate|IParsedSegmentTimeline;
+
+/**
+ * From parsed media url, build a representation based media url.
+ */
+function buildRepresentationMedia(
+  segmentIndex:
+    IParsedSegmentBase|IParsedSegmentList|IParsedSegmentTemplate|IParsedSegmentTimeline,
+  repURL: string,
+  repId: string,
+  repBitrate: number
+): IParsedSegmentBase|IParsedSegmentList|IParsedSegmentTemplate|IParsedSegmentTimeline{
+  const newIndex = JSON.parse(JSON.stringify(segmentIndex));
+  newIndex.media = replaceRepresentationDASHTokens(
+    repURL + (segmentIndex.media || ""),
+    repId,
+    repBitrate
+  );
+  if (segmentIndex.initialization) {
+    newIndex.initialization.media =
+      replaceRepresentationDASHTokens(
+        repURL + (segmentIndex.initialization.media || ""),
+        repId,
+        repBitrate
+      );
+  }
+  return newIndex;
+}
+
 export default function parseManifest(
   root: Node,
   uri : string
@@ -287,37 +339,69 @@ export default function parseManifest(
       const adaptationChildren = adaptation.children;
 
       // 4-1. Find Index
-      let adaptationIndex : IRepresentationIndex;
-      if (adaptationChildren.segmentBase != null) {
-        adaptationIndex = new BaseRepresentationIndex(
-          adaptationChildren.segmentBase,
-          periodStart
-        );
-      } else if (adaptationChildren.segmentList != null) {
-        adaptationIndex = new ListRepresentationIndex(
-          adaptationChildren.segmentList,
-          periodStart
-        );
-      } else if (adaptationChildren.segmentTemplate != null) {
-        const template = adaptationChildren.segmentTemplate;
-        template.presentationTimeOffset = periodStart * template.timescale;
-        adaptationIndex = template.indexType === "timeline" ?
-          // TODO Find a way with the optional 'd'
-          new TimelineRepresentationIndex(template as any, periodStart) :
-          new TemplateRepresentationIndex(template, periodStart);
-      } else {
-        adaptationIndex = new TemplateRepresentationIndex({
-          duration: Number.MAX_VALUE,
-          timescale: 1,
-          startNumber: 0,
-        }, periodStart);
+      function findAdaptationIndex(
+        representation : IRepresentationIntermediateRepresentation
+      ) {
+        const repId = representation.attributes.id || "";
+        const repBitrate = representation.attributes.bitrate;
+        const baseURL = representation.children.baseURL;
+        const representationURL = resolveURL(
+          adaptationRootURL, baseURL);
+        let adaptationIndex : IRepresentationIndex;
+        if (adaptationChildren.segmentBase != null) {
+          const segmentBase = buildRepresentationMedia(
+            adaptationChildren.segmentBase,
+            representationURL,
+            repId,
+            repBitrate || 0
+          );
+          adaptationIndex = new BaseRepresentationIndex(
+            segmentBase,
+            periodStart
+          );
+        } else if (adaptationChildren.segmentList != null) {
+          const segmentList = buildRepresentationMedia(
+            adaptationChildren.segmentList,
+            representationURL,
+            repId,
+            repBitrate || 0
+          ) as IParsedSegmentList;
+          adaptationIndex = new ListRepresentationIndex(
+            segmentList,
+            periodStart
+          );
+        } else if (adaptationChildren.segmentTemplate != null) {
+          const segmentTemplate = buildRepresentationMedia(
+            adaptationChildren.segmentTemplate,
+            representationURL,
+            repId,
+            repBitrate || 0
+          );
+          segmentTemplate.presentationTimeOffset =
+            periodStart * segmentTemplate.timescale;
+          adaptationIndex = segmentTemplate.indexType === "timeline" ?
+            // TODO Find a way with the optional 'd'
+            new TimelineRepresentationIndex(segmentTemplate as any, periodStart) :
+            new TemplateRepresentationIndex(segmentTemplate, periodStart);
+        } else {
+          adaptationIndex = new TemplateRepresentationIndex({
+            duration: Number.MAX_VALUE,
+            timescale: 1,
+            startNumber: 0,
+            initialization: {media: representation.children.baseURL},
+            media: representation.children.baseURL,
+          }, periodStart);
+        }
+        return adaptationIndex;
       }
 
       // 4-2. Construct Representations
       const representations = adaptation.children
         .representations.map((representation) => {
-          const representationURL = resolveURL(
-            adaptationRootURL, representation.children.baseURL);
+          const repId = representation.attributes.id || "";
+          const repBitrate = representation.attributes.bitrate;
+          const baseURL = representation.children.baseURL;
+          const representationURL = resolveURL(adaptationRootURL, baseURL);
 
           // 4-2-1. Find bitrate
           let representationBitrate : number;
@@ -331,23 +415,40 @@ export default function parseManifest(
           // 4-2-2. Find Index
           let representationIndex : IRepresentationIndex;
           if (representation.children.segmentBase != null) {
-            representationIndex = new BaseRepresentationIndex(
+            const segmentBase = buildRepresentationMedia(
               representation.children.segmentBase,
+              representationURL,
+              repId,
+              repBitrate || 0
+            );
+            representationIndex = new BaseRepresentationIndex(
+              segmentBase,
               periodStart
             );
           } else if (representation.children.segmentList != null) {
-            representationIndex = new ListRepresentationIndex(
+            const segmentList = buildRepresentationMedia(
               representation.children.segmentList,
+              representationURL,
+              repId,
+              repBitrate || 0
+            ) as IParsedSegmentList;
+            representationIndex = new ListRepresentationIndex(
+              segmentList,
               periodStart
             );
           } else if (representation.children.segmentTemplate != null) {
-            const template = representation.children.segmentTemplate;
-            representationIndex = template.indexType === "timeline" ?
+            const segmentTemplate = buildRepresentationMedia(
+              representation.children.segmentTemplate,
+              representationURL,
+              repId,
+              repBitrate || 0
+            );
+            representationIndex = segmentTemplate.indexType === "timeline" ?
               // TODO Find a way with the optional 'd'
-              new TimelineRepresentationIndex(template as any, periodStart) :
-              new TemplateRepresentationIndex(template, periodStart);
+              new TimelineRepresentationIndex(segmentTemplate as any, periodStart) :
+              new TemplateRepresentationIndex(segmentTemplate, periodStart);
           } else {
-            representationIndex = adaptationIndex;
+            representationIndex = findAdaptationIndex(representation);
           }
 
           // 4-2-3. Set ID
@@ -378,7 +479,6 @@ export default function parseManifest(
             bitrate: representationBitrate,
             index: representationIndex,
             id: representationID,
-            baseURL: representationURL,
           };
 
           // 4-2-5. Add optional attributes

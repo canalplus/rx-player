@@ -50,6 +50,7 @@ export interface IParsedSegmentBase extends ISegmentBaseAttributes {
   indexRangeExact : boolean;
   timeline : ISegmentBaseSegment[];
   timescale : number;
+  media? : string;
 }
 
 /**

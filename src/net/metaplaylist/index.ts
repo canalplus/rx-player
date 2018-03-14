@@ -236,15 +236,22 @@ export default function(
                 segmentData :
                 new Uint8Array(segmentData);
 
-              segmentPatchedData = new BoxPatcher(
-                responseData,
-                false,
-                false,
-                offset
-              ).filter();
-            }
-            if (segmentInfos) {
-              segmentInfos.time += offset;
+              if (
+                segment.privateInfos &&
+                segment.privateInfos.manifestType === "smooth"
+              ) {
+                segmentPatchedData = responseData;
+              } else {
+                segmentPatchedData = new BoxPatcher(
+                  responseData,
+                  false,
+                  false,
+                  offset
+                ).filter();
+                if (segmentInfos) {
+                  segmentInfos.time += offset;
+                }
+              }
             }
             return { segmentData: segmentPatchedData || null, segmentInfos };
           });

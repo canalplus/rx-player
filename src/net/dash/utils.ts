@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  ISegment,
-  Representation,
-} from "../../manifest";
+import { Representation } from "../../manifest";
 import {
   INextSegmentsInfos,
   ISegmentTimingInfos,
@@ -34,74 +31,6 @@ function addNextSegments(
   currentSegment? : ISegmentTimingInfos
 ) {
   representation.index._addSegments(nextSegments, currentSegment);
-}
-
-/**
- * Pad with 0 in the left of the given n argument to reach l length
- * @param {Number|string} n
- * @param {Number} l
- * @returns {string}
- */
-function pad(n : number|string, l : number) : string {
-  const nToString = n.toString();
-  if (nToString.length >= l) {
-    return nToString;
-  }
-  const arr = new Array(l + 1).join("0") + nToString;
-  return arr.slice(-l);
-}
-
-/**
- * Add formatting when asked in a token (add padding to numbers).
- * @param {string|Number} replacer - the token value
- * @returns {Function} - @see replaceTokens
- */
-function processFormatedToken(
-  replacer : string|number
-) : (x: string, y: number, widthStr: string) => string {
-  return (_match, _format, widthStr : string) => {
-    const width = widthStr ? parseInt(widthStr, 10) : 1;
-    return pad("" + replacer, width);
-  };
-}
-
-/**
- * Replace "tokens" written in a given path (e.g. $Time$) by the corresponding
- * infos, taken from the given segment.
- * @param {string} path
- * @param {Object} segment
- * @param {Representation} representation
- * @returns {string}
- *
- * @throws Error - Throws if we do not have enough data to construct the URL
- */
-function replaceTokens(
-  path : string,
-  segment : ISegment,
-  representation : Representation
-) : string {
-  if (path.indexOf("$") === -1) {
-    return path;
-  } else {
-    return path
-      .replace(/\$\$/g, "$")
-      .replace(/\$RepresentationID\$/g,
-      String(representation.id))
-      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
-      processFormatedToken(representation.bitrate))
-      .replace(/\$Number(|\%0(\d+)d)\$/g, (_x, _y, widthStr) => {
-        if (segment.number == null) {
-          throw new Error("Segment number not defined in a $Number$ scheme");
-        }
-        return processFormatedToken(segment.number)(_x, _y, widthStr);
-      })
-      .replace(/\$Time(|\%0(\d+)d)\$/g, (_x, _y, widthStr) => {
-        if (segment.time == null) {
-          throw new Error("Segment time not defined in a $Time$ scheme");
-        }
-        return processFormatedToken(segment.time)(_x, _y, widthStr);
-      });
-  }
 }
 
 /**
@@ -129,9 +58,6 @@ function byteRange([start, end] : [number, number]) : string {
 
 export {
   addNextSegments,
-  pad,
-  processFormatedToken,
-  replaceTokens,
   isMP4EmbeddedTrack,
   byteRange,
 };
