@@ -90,7 +90,7 @@ export default [
   },
   {
     "name": "Big Buck Bunny WEBM",
-    "url": "http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/88/Big_Buck_Bunny_alt.webm/Big_Buck_Bunny_alt.webm.360p.webm",
     "transport": "directfile",
     "live": false,
   },
