@@ -6,7 +6,7 @@
 The RepresentationBuffer download and push segments linked to a given
 Representation.
 
-It construct a list of segments to download, which depend on the current timing
+It constructs a list of segments to download, which depend on the current timing
 values and parameters.
 It then download and push them to a linked SourceBuffer.
 
