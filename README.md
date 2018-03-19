@@ -110,8 +110,10 @@ You can help and contribute either by:
 
 If you have any questions about contributing, you can ask it in our [gitter
 room](https://gitter.im/canalplus/rx-player). We also began to add a little
-architecture documentation [here](./doc/architecture/files.md)). More is coming
-soon!
+architecture documentation [in the ``doc/architecture`` directory.
+](https://github.com/canalplus/rx-player/tree/master/doc/architecture)
+
+More is coming soon!
 
 
 ### Dependencies ###############################################################
