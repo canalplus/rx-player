@@ -49,7 +49,6 @@ function StallingManager(
       //   1. is it a browser bug? -> force seek at the same current time
       //   2. is it a short discontinuity? -> Seek at the beginning of the
       //                                      next range
-      //   3. are we before the buffer depth? -> Seek a little after it
       const { buffered, currentTime } = timing;
       const nextRangeGap = getNextRangeGap(buffered, currentTime);
 

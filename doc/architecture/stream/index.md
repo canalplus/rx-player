@@ -23,7 +23,7 @@ to the API through events.
  1. LOAD VIDEO   |           |      2. CALLS
 ---------------> |    API    | -------------------+
                  |           |                    |
-                 +-----------+                    |       
+                 +-----------+                    |
                        ^                          v
                        |                    +--------------+
                        |   3. EMIT EVENTS   |              |
@@ -71,16 +71,18 @@ This Observable:
   - throw in the case of a fatal error (error interruption playback)
 
 
-### Communication API \<-\> Stream #############################################
+### Communication between the API and the Stream ###############################
 
 Objects emitted by the Observable is the only way the Stream should be able to
 communicate with the API.
 
-The API is then able to communicate back through observables, either:
+The API is then able to communicate back to the Stream, either:
 
-  - given as arguments when the Stream function was called
+  - by Observable provided by the API as arguments when the Stream function was
+    called
 
-  - given by the Stream itself as a payload of one of its event
+  - by emitting through Subject provided by the Stream, as a payload of one of
+    its event
 
 Thus, there is three ways the API and Stream can communicate:
 
@@ -88,10 +90,7 @@ Thus, there is three ways the API and Stream can communicate:
 
   - Stream -> API: Through events emitted by the returned Observable
 
-  - API -> Stream: Through Observables the Stream is in possession of.
-
-    These Observables are either given as arguments of the initial call or
-    communicated by the Stream through the payload of one of its events.
+  - API -> Stream: Through Observables/Subjects the Stream is in possession of.
 
 
 ### Emitted Events #############################################################
@@ -106,3 +105,45 @@ For example, as available audio languages are only known after the manifest has
 been downloaded and parsed, and as it is most of all a user preference, the
 Stream can emit to the API RxJS Subjects allowing the API to "choose" at any
 time the wanted language.
+
+
+
+## Building bricks #############################################################
+
+The Stream put in relation multiple part of the code to allow a qualitative
+playback experience.
+
+Multiple of those building bricks are considered as part of the Stream.
+
+Among them, you can find:
+
+  - __[the Buffer Handler](./buffer_handler.md)__
+
+    Create/destroy the Buffer and SourceBuffers needed, that will be used to
+    push new media segments.
+
+
+  - __[the Buffer Garbage Collector](./buffer_garbage_collector.md)__
+
+    Perform manual garbage collection on SourceBuffers periodically
+
+
+  - __[the Segment Bookkeeper](./segment_bookkeeper.md)__
+
+    Keep track of the informations of every segments currently present in the
+    buffer, e.g. to know which part of the buffer are linked to which
+    quality/language etc.
+
+    Also useful to know when segments have automatically been garbage-collected
+    by the browser.
+
+
+  - __[the Speed Manager](./speed_manager.md)__
+
+    Handle playback rate management. To pause when we should build buffer, for
+    example, and speed-up/lower-up the playback rate when the user ask for this.
+
+
+  - __the Stalling Manager__
+
+    Try to un-stall the player when it does so.

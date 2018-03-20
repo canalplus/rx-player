@@ -29,43 +29,47 @@ Such modules are (with link to their respective documentation, if one):
     Defines the public API of the RxPlayer and provides abstractions
     to help implementing it.
 
+
   - __the [Stream](./stream/index.md)__
 
-    starts playing a content and connects the
-    different modules between one another to allow continuous playback.
+    starts playing a content and connects the different modules between one
+    another to allow continuous playback.
 
     Various files documenting the Stream architecture should be available in the
     ``doc/architecture/stream`` directory.
 
+
   - __the EMEManager__
-  
-    Allows to handle contents with DRM (Digital Right
-    Management).
+
+    Allows to handle contents with DRM (Digital Right Management).
+
 
   - __the [ABRManager](./abr/index.md)__
-  
-    Helps to choose the best quality in the
-    current content by analyzing the current network, user settings and viewing
-    conditions.
 
-  - __the Buffer__
-  
-    Choose which segments to download and push them to the
-    corresponding SourceBuffer
+    Helps to choose the best quality in the current content by analyzing the
+    current network, user settings and viewing conditions.
+
+
+  - __the [Buffer](./buffer/index.md)__
+
+    Choose which segments to download and push them to the corresponding
+    SourceBuffer.
 
     Various files documenting the Stream architecture should be available in the
     ``doc/architecture/buffer`` directory.
 
+
   - __the Source Buffers__
-  
+
     Provides abstractions on top of the SourceBuffers,
     which are used to push media segments.
     These files help to handle "native" SourceBuffers already defined by the
     browser (for audio and video segments), but also define custom ones for
     media managed entirely by the RxPlayer (example: subtitles and thumbnails).
 
+
   - __Net__
-  
+
     Perform manifest/segment requests, and parse them.
     _Net_ in essence abstracts the transport protocol used (example:
     HSS/DASH) to provide an unified definition of a segment or manifest to
@@ -73,12 +77,17 @@ Such modules are (with link to their respective documentation, if one):
     In theory, it should be the only directory to update when adding /
     modifying / deleting a transport protocol
 
+
   - __the Pipelines__
-  
+
     Link the _Net_ module with the rest of the code, to
     download segments, download/refresh the manifest and collect data (such as
     the user's bandwidth) for the other modules.
 
+
 The RxPlayer also has multiple isolated helpers (for manifest management,
 segment parsing, browser compatibility) which are used by these different
 modules.
+
+A documentation about the file organization of the project is also available
+[here](./files.md).

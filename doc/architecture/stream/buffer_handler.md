@@ -260,13 +260,15 @@ Then we will destroy P2, to keep it from downloading segments:
 
 --------------------------------------------------------------------------------
 
-Once P1, goes full again, we still have the segment pushed to P2 available:
+Once P1, goes full again, we re-create P2:
 
 ```
    P1     P2
 |======|==    |
    ^
 ```
+
+_Note that we still have the segment pushed to P2 available_
 
 When the current position go ahead of a _PeriodBuffer_ (here ahead of P1):
 
@@ -302,8 +304,8 @@ Then we destroy all previous _PeriodBuffers_ and [re-]create the one needed:
     ^
 ```
 
-In this example, P1 is full so we also can re-create P2, which will also keep
-its already-pushed segments:
+In this example, P1 is full (as we already downloaded its segments) so we also
+can re-create P2, which will also keep its already-pushed segments:
 
 ```
    P1     P2
