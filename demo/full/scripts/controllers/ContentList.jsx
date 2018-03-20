@@ -135,18 +135,18 @@ class ContentList extends React.Component {
             selected={choiceIndex}
           />
           <Button
-            className="choice-input load-button"
+            className='choice-input load-button'
             onClick={onClickLoad}
             value={String.fromCharCode(0xf144)}
           />
         </div>
         { hasTextInput ?
-            <TextInput
-              className="choice-input text-input"
-              onChange={onTextInput}
-              value={textValue}
-              placeholder={`URL for the ${transportType} manifest`}
-            /> : null
+          <TextInput
+            className="choice-input text-input"
+            onChange={onTextInput}
+            value={textValue}
+            placeholder={`URL for the ${transportType} manifest`}
+          /> : null
         }
       </div>
     );

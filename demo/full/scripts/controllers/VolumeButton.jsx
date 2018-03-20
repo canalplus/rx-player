@@ -37,8 +37,8 @@ const VolumeButton = ({
         `volume-button ${className} ${volumeLevelClass}`
       }
       onClick={volume === 0 ?
-          () => player.dispatch("UNMUTE") :
-          () => player.dispatch("MUTE")
+        () => player.dispatch("UNMUTE") :
+        () => player.dispatch("MUTE")
       }
       value={String.fromCharCode(charCode)}
     />

@@ -111,6 +111,7 @@
 
     "indent": [1, 2, {
       "SwitchCase": 1,
+      "ignoreComments": true
     }],
     "quotes": [1, "double"],
     "linebreak-style": [1, "unix"],

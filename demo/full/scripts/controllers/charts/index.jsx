@@ -89,14 +89,14 @@ class ChartsManager extends React.Component {
         </div>
 
         { displayBufferSizeChart ?
-            <BufferSizeChart
-              module={this.bufferSizeChart}
-            /> : null }
+          <BufferSizeChart
+            module={this.bufferSizeChart}
+          /> : null }
 
         { displayBandwidthChart ?
-            <BandwidthChart
-              module={this.bandwidthChart}
-            /> : null }
+          <BandwidthChart
+            module={this.bandwidthChart}
+          /> : null }
       </div>
     );
   }

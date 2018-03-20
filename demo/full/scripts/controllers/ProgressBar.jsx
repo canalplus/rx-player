@@ -73,15 +73,15 @@ class Progressbar extends React.Component {
             xPosition={imageTipPosition - imageTipOffset}
           /> : null
         }
-          <ProgressbarComponent
-            seek={seek}
-            onMouseOut={onMouseOut}
-            onMouseMove={onMouseMove}
-            position={currentTime}
-            minimumPosition={minimumPosition}
-            maximumPosition={maximumPosition}
-            bufferGap={bufferGap}
-          />
+        <ProgressbarComponent
+          seek={seek}
+          onMouseOut={onMouseOut}
+          onMouseMove={onMouseMove}
+          position={currentTime}
+          minimumPosition={minimumPosition}
+          maximumPosition={maximumPosition}
+          bufferGap={bufferGap}
+        />
       </div>
     );
   }

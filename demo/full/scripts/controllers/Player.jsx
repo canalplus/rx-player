@@ -101,10 +101,10 @@ class Player extends React.Component {
             >
               <ErrorDisplayer player={player} />
               { displaySpinner ?
-                  <img
-                    src="./assets/spinner.gif"r
-                    className="video-player-spinner"
-                  /> : null
+                <img
+                  src="./assets/spinner.gif"r
+                  className="video-player-spinner"
+                /> : null
               }
               <div
                 className="text-track"

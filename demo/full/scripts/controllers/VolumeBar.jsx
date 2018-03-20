@@ -33,7 +33,7 @@ const VolumeBar = ({
       className="volume-bar-wrapper"
       ref={el => element = el }
       onClick={evt =>
-          player.dispatch("SET_VOLUME", getMouseVolume(evt))
+        player.dispatch("SET_VOLUME", getMouseVolume(evt))
       }
     >
       <div

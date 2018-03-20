@@ -34,8 +34,8 @@ export default ({
   );
 
   return (
-      <section className={"select " + className}>
-        {selectEl}
-      </section>
+    <section className={"select " + className}>
+      {selectEl}
+    </section>
   );
 };

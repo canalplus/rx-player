@@ -67,7 +67,7 @@
     "demo:watch": "webpack --progress --config tools/webpack-demo.config.js -w",
     "info": "npm-scripts-info",
     "lint": "tslint --project . -c tslint.json \"src/**/*.ts\"",
-    "lint:demo": "eslint demo/**/*.js",
+    "lint:demo": "eslint demo/**/*.js demo/**/*.jsx",
     "lint:tests": "eslint tests/**/*.js",
     "standalone": "cross-env RXP_ENV=development node ./tools/server.standalone.js",
     "start": "cross-env RXP_ENV=development node ./tools/server.js",

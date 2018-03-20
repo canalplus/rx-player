@@ -24,8 +24,8 @@ const FullscreenButton = ({
   <Button
     className={"fullscreen-button " + className}
     onClick={isFullscreen ?
-        () => player.dispatch("EXIT_FULL_SCREEN") :
-        () => player.dispatch("SET_FULL_SCREEN")
+      () => player.dispatch("EXIT_FULL_SCREEN") :
+      () => player.dispatch("SET_FULL_SCREEN")
     }
     disabled={!hasLoadedContent || hasEnded}
     value={String.fromCharCode(isFullscreen ? 0xf066 : 0xf065)}

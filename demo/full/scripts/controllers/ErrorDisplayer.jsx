@@ -36,7 +36,7 @@ const ErrorDisplayer = ({ error }) => {
       className="player-error"
     >
       { error ?
-          <PlayerError error={error} /> : null
+        <PlayerError error={error} /> : null
       }
     </div>
   );
