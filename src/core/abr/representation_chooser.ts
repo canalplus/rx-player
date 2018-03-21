@@ -308,12 +308,12 @@ export default class RepresentationChooser {
    */
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
-    representations$ : Observable<Representation[]>
+    currentRepresentations$ : Observable<Representation[]>
   ): Observable<{
     bitrate?: number; // bitrate estimation
     representation: Representation|null; // chosen representation
   }> {
-    return representations$.switchMap((representations) => {
+    return currentRepresentations$.switchMap((representations) => {
       if (representations.length && representations.length < 2) {
         return Observable.of({
           bitrate: undefined, // Bitrate estimation is deactivated here

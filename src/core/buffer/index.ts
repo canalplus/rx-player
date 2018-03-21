@@ -16,7 +16,6 @@
 
 import { Observable } from "rxjs/Observable";
 import { ErrorTypes } from "../../errors";
-import MediaError from "../../errors/MediaError";
 import Manifest, {
   Adaptation,
   Period,
@@ -30,9 +29,6 @@ import {
   SupportedBufferTypes,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
-import StreamRestrictionManager, {
-  IRights
-} from "../stream/restriction_manager";
 import RepresentationBuffer, {
   IAddedSegmentEvent,
   IBufferActiveEvent,
@@ -144,12 +140,12 @@ export default class AdaptationBufferManager {
     pipeline : (content : ISegmentLoaderArguments) => Observable<any>,
     wantedBufferAhead$ : Observable<number>,
     content : { manifest : Manifest; period : Period; adaptation : Adaptation },
-    restrictionManager : StreamRestrictionManager
+    currentRepresentations$ : Observable<Representation[]>
   ) : Observable<IAdaptationBufferEvent> {
 
     const { manifest, period, adaptation } = content;
-    const rights$ = restrictionManager.getRepresentationRights$();
-    const abr$ = this._getABRForAdaptation(manifest, adaptation, rights$);
+    const abr$ =
+      this._getABRForAdaptation(adaptation.type, currentRepresentations$, manifest);
 
     /**
      * Emit at each bitrate estimate done by the ABRManager
@@ -254,31 +250,10 @@ export default class AdaptationBufferManager {
   }
 
   private _getABRForAdaptation(
-    manifest : Manifest,
-    adaptation : Adaptation,
-    rights$: Observable<IRights>
+    adaptationType: SupportedBufferTypes,
+    currentRepresentations$: Observable<Representation[]>,
+    manifest : Manifest
   ) {
-    const representations = adaptation.representations;
-
-    const _representations$ = rights$.map((rights: IRights) => {
-
-      const _authorizedRepresentations = representations.filter((r) => {
-        const right = rights[r.id] ? rights[r.id].outputRestricted !== false : true;
-        if(!right){
-          log.warn(
-            "Output restricted for representation \"" +r.id+ "\" ("+r.mimeType+")");
-        }
-        return right;
-      });
-
-      if(representations.length > 0 && (_authorizedRepresentations.length === 0)){
-        const error = new Error("No playable stream found.");
-        throw new MediaError("OUTPUT_RESTRICTION", error, true);
-      }
-
-      return _authorizedRepresentations;
-    });
-
     /**
      * Keep track of the current representation to add informations to the
      * ABR clock.
@@ -314,7 +289,7 @@ export default class AdaptationBufferManager {
       };
     }).share();  // side-effect === share to avoid doing it multiple times
 
-    return this._abrManager.get$(adaptation.type, abrClock$, _representations$)
+    return this._abrManager.get$(adaptationType, abrClock$, currentRepresentations$)
       .do(({ representation }) => {
         currentRepresentation = representation;
       });

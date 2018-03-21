@@ -84,6 +84,14 @@ export type IBufferHandlerEvent =
   IMultiplePeriodBuffersEvent |
   IEndOfStreamEvent;
 
+interface IRights {
+  [key: string] : {
+      outputRestricted: boolean;
+      // TODO isDecodable: boolean
+      // TODO hasPoorQualityPlayback: boolean
+    };
+}
+
 /**
  * Create and manage the various Buffer Observables needed for the content to
  * stream:
@@ -525,6 +533,25 @@ export default function BuffersHandler(
       const pipeline = segmentPipelinesManager
         .createPipeline(bufferType, pipelineOptions);
 
+        const rights$ = restrictionManager.getRepresentationRights$();
+
+        const representations$ = rights$.map((rights: IRights) => {
+          const representations = adaptation.representations;
+          const _authorizedRepresentations = representations.filter((r) => {
+            const right = rights[r.id] ? rights[r.id].outputRestricted : true;
+            if(!right){
+              log.warn(
+                "Output restricted for representation \"" +r.id+ "\" ("+r.mimeType+")");
+            }
+            return right;
+          });
+          if(representations.length > 0 && (_authorizedRepresentations.length === 0)){
+            const error = new Error("No playable stream found.");
+            throw new MediaError("OUTPUT_RESTRICTION", error, true);
+          }
+          return _authorizedRepresentations;
+        });
+
       // 4 - create the Buffer
       const adaptationBuffer$ = bufferManager.createBuffer(
         clock$,
@@ -533,7 +560,7 @@ export default function BuffersHandler(
         pipeline,
         wantedBufferAhead$,
         { manifest, period, adaptation },
-        restrictionManager
+        representations$
       ).catch<IAdaptationBufferEvent, never>((error : Error) => {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to

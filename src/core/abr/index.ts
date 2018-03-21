@@ -220,13 +220,13 @@ export default class ABRManager {
   public get$(
     type : SupportedBufferTypes,
     clock$: Observable<IRepresentationChooserClockTick>,
-    representations$: Observable<Representation[]>
+    currentRepresentations$: Observable<Representation[]>
   ): Observable<{
-    bitrate: undefined|number;
+    bitrate?: number;
     representation: Representation|null;
   }> {
     this._lazilyCreateChooser(type);
-    return this._choosers[type].get$(clock$, representations$);
+    return this._choosers[type].get$(clock$, currentRepresentations$);
   }
 
   /**
