@@ -23,6 +23,7 @@ import { IStreamClockTick } from "./clock";
 import SegmentBookkeeper from "./segment_bookkeeper";
 
 import { getVideoPlaybackQuality } from "../../compat";
+import { IBufferClockTick } from "../buffer";
 
 const { ABR_MAX_FRAMEDROP_RATIO } = config;
 
@@ -33,12 +34,12 @@ const { ABR_MAX_FRAMEDROP_RATIO } = config;
 export default class FrameDropManager {
 
     private _droppedFrameRatio$: Observable<number>;
-    private _clock$: Observable<IStreamClockTick>;
+    private _clock$: Observable<IStreamClockTick|IBufferClockTick>;
     private _videoElement: HTMLMediaElement;
 
       constructor(
         videoElement: HTMLMediaElement,
-        clock$ : Observable<IStreamClockTick>,
+        clock$ : Observable<IStreamClockTick|IBufferClockTick>,
         endOfPlay : Observable<Event>
       ){
         this._clock$ = clock$;

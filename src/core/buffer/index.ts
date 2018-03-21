@@ -15,6 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { onEnded$ } from "../../compat/events";
 import { ErrorTypes } from "../../errors";
 import Manifest, {
   Adaptation,
@@ -99,6 +100,7 @@ export default class AdaptationBufferManager {
   private _abrBaseClock$ : Observable<IAdaptationBufferClockTick>;
   private _speed$ : Observable<number>;
   private _seeking$ : Observable<null>;
+  private _videoElement : HTMLMediaElement;
 
   /**
    * @param {ABRManager} abrManager
@@ -112,12 +114,14 @@ export default class AdaptationBufferManager {
     abrManager : ABRManager,
     abrBaseClock$ : Observable<IAdaptationBufferClockTick>,
     speed$ : Observable<number>,
-    seeking$ : Observable<null>
+    seeking$ : Observable<null>,
+    videoElement : HTMLMediaElement
   ) {
     this._abrManager = abrManager;
     this._abrBaseClock$ = abrBaseClock$;
     this._speed$ = speed$;
     this._seeking$ = seeking$;
+    this._videoElement = videoElement;
   }
 
   /**
@@ -136,7 +140,6 @@ export default class AdaptationBufferManager {
    */
   public createBuffer(
     bufferClock$ : Observable<IBufferClockTick>,
-    frameDropManager : FrameDropManager,
     queuedSourceBuffer : QueuedSourceBuffer<any>,
     segmentBookkeeper : SegmentBookkeeper,
     pipeline : (content : ISegmentLoaderArguments) => Observable<any>,
@@ -146,7 +149,7 @@ export default class AdaptationBufferManager {
 
     const { manifest, period, adaptation } = content;
     const abr$ = this._getABRForAdaptation(
-      manifest, adaptation, frameDropManager, segmentBookkeeper);
+      bufferClock$, manifest, adaptation, segmentBookkeeper);
 
     /**
      * Emit at each bitrate estimate done by the ABRManager
@@ -251,9 +254,9 @@ export default class AdaptationBufferManager {
   }
 
   private _getABRForAdaptation(
+    bufferClock$: Observable<IBufferClockTick>,
     manifest : Manifest,
     adaptation : Adaptation,
-    frameDropManager : FrameDropManager,
     segmentBookkeeper : SegmentBookkeeper
   ) {
     const representations = adaptation.representations;
@@ -292,6 +295,9 @@ export default class AdaptationBufferManager {
         speed,
       };
     }).share();  // side-effect === share to avoid doing it multiple times
+
+    const frameDropManager = new FrameDropManager(
+      this._videoElement, bufferClock$, onEnded$(this._videoElement));
 
     const maxDecodableBitrate$ = frameDropManager.getMaximumDecodableBitrate$(
       segmentBookkeeper,

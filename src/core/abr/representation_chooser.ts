@@ -371,7 +371,6 @@ export default class RepresentationChooser {
       let inStarvationMode = false;
       return Observable.combineLatest(clock$, maxAutoBitrate$, filters$)
         .map(([ clock, maxAutoBitrate, filters ]) => {
-          
           let nextBitrate;
           let bandwidthEstimate;
           const { bufferGap } = clock;

@@ -25,10 +25,7 @@ import {
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
-import {
-  onEnded$,
-  onSourceOpen$,
-} from "../../compat/events";
+import { onSourceOpen$ } from "../../compat/events";
 import {
   CustomError,
   isKnownError,
@@ -65,7 +62,6 @@ import createBufferClock, {
 import createMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
-import FrameDropManager from "./frame_drop_manager";
 import BufferGarbageCollector from "./garbage_collector";
 import getInitialTime, {
   IInitialTimeOptions,
@@ -207,9 +203,6 @@ export default function Stream({
     new WeakMapMemory<QueuedSourceBuffer<any>, SegmentBookkeeper>(() =>
       new SegmentBookkeeper()
     );
-
-  const frameDropManager =
-    new FrameDropManager(videoElement, clock$, onEnded$(videoElement));
 
   /**
    * Retry the stream if ended for an unknown or non-fatal error.
@@ -359,7 +352,8 @@ export default function Stream({
      * Adaptation from the current content.
      * @type {BufferManager}
      */
-    const bufferManager = new BufferManager(abrManager, clock$, speed$, seekings$);
+    const bufferManager = new BufferManager(
+      abrManager, clock$, speed$, seekings$, videoElement);
 
     /**
      * Creates SourceBufferManager allowing to create and keep track of a single
@@ -375,7 +369,6 @@ export default function Stream({
     const handledBuffers$ = BuffersHandler(
       { manifest, period: firstPeriodToPlay }, // content
       bufferClock$,
-      frameDropManager,
       wantedBufferAhead$,
       bufferManager,
       sourceBufferManager,
