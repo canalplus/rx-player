@@ -16,18 +16,18 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { CustomError } from "../../errors";
+import { CustomError } from "../../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
-} from "../../manifest";
-import createManifest from "../../manifest/factory";
-import { ITransportPipelines } from "../../net";
+} from "../../../manifest";
+import createManifest from "../../../manifest/factory";
+import { ITransportPipelines } from "../../../net";
 import Pipeline, {
   IPipelineCache,
   IPipelineData,
   IPipelineOptions,
-} from "./pipeline";
+} from "../pipeline";
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.

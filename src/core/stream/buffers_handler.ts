@@ -63,7 +63,7 @@ import EVENTS, {
  * Events coming from single PeriodBuffer (Buffer linked to a Period and a type).
  */
 type IPeriodBufferEvent =
-  IAdaptationBufferEvent |
+  IAdaptationBufferEvent<any> |
   IAdaptationChangeEvent;
 
 /**
@@ -531,7 +531,7 @@ export default function BuffersHandler(
         pipeline,
         wantedBufferAhead$,
         { manifest, period, adaptation }
-      ).catch<IAdaptationBufferEvent, never>((error : Error) => {
+      ).catch<IAdaptationBufferEvent<any>, never>((error : Error) => {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to
         // continue streaming without any subtitles
