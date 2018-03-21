@@ -261,7 +261,7 @@ const STREAM_EVENTS = {
 // Every possible item emitted by the Stream
 export type IStreamEvent =
   IActivePeriodChangedEvent |
-  IAdaptationBufferEvent |
+  IAdaptationBufferEvent<any> |
   IAdaptationChangeEvent |
   ICompletedBufferEvent |
   IEndOfStreamEvent |

@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { CustomError } from "../../errors";
-import { ITransportPipelines } from "../../net";
-import { ISegmentLoaderArguments } from "../../net/types";
+import { CustomError } from "../../../errors";
+import { ITransportPipelines } from "../../../net";
 import {
   IABRMetric,
   IABRRequest
-} from "../abr";
-import { SupportedBufferTypes } from "../source_buffers";
-import Pipeline, {
-  IPipelineOptions,
-} from "./pipeline";
-import streamPipelineFactory from "./stream_pipeline";
+} from "../../abr";
+import { SupportedBufferTypes } from "../../source_buffers";
+import { IPipelineOptions } from "../pipeline";
+import pipelineFactory from "./pipeline_factory";
+import createSegmentPipeline, {
+  ISegmentPipeline,
+} from "./segment_pipeline";
 
 /**
  * Interact with the networking pipelines to download segments and dispatch
@@ -41,18 +40,26 @@ import streamPipelineFactory from "./stream_pipeline";
  * const metrics$ = new Subject();
  * const warnings$ = new Subject();
  *
+ * // 1 - create the manager
  * const segmentPipelinesManager =
  *   new SegmentPipelinesManager(transport, requests$, metrics$, warnings$);
  *
+ * // Note:
  * // You can create an ABRManager with the same requests$ and metrics$ subjects.
- * // It will then be informed of when the SegmentPipelinesManager downloads and
- * // with which metrics. The format of those events is kept the same for ease of
- * // use.
+ * // It will then be informed of when the SegmentPipelinesManager downloads
+ * // segments and with which metrics.
+ * // The format of those events is kept the same for ease of use.
  * const abrManager = new ABRManager(requests$, metrics$);
  *
- * const pipeline = segmentPipelinesManager.createPipeline("audio");
- * pipeline(myContent)
- *  .subscribe((res) => console.log("audio segment downloaded:", res));
+ * // 2 - create a new pipeline with its own options
+ * const pipeline = segmentPipelinesManager.createPipeline("audio", {
+ *   maxRetry: Infinity,
+ *   maxRetryOffline: Infinity,
+ * });
+ *
+ * // 3 - request a content
+ * pipeline.createRequest(myContent)
+ *   .subscribe((res) => console.log("audio segment downloaded:", res));
  * ```
  */
 export default class SegmentPipelinesManager {
@@ -87,27 +94,21 @@ export default class SegmentPipelinesManager {
   createPipeline(
     bufferType : SupportedBufferTypes,
     options : IPipelineOptions<any, any>
-  ) : (content : ISegmentLoaderArguments) => Observable<any> {
-    const pipeline = Pipeline(
-      this._transport[bufferType],
+  ) {
+    const pipeline = pipelineFactory(
+      bufferType,
+      this._transport,
+      this._metrics$,
+      this._requestsInfos$,
+      this._warning$,
       options
     );
 
-    const streamPipeline = streamPipelineFactory(
-      this._metrics$,
-      this._requestsInfos$,
-      this._warning$
-    );
-
-    /**
-     * @param {Object} content
-     * @returns {Observable}
-     */
-    return function fetchSegment(content : ISegmentLoaderArguments) {
-      const pipeline$ = pipeline(content);
-      return streamPipeline(bufferType, pipeline$);
-    };
+    return createSegmentPipeline(pipeline);
   }
 }
 
-export { IPipelineOptions };
+export {
+  IPipelineOptions,
+  ISegmentPipeline,
+};

@@ -26,9 +26,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { ISegmentLoaderArguments } from "../../net/types";
 import { SimpleSet } from "../../utils/collections";
 import log from "../../utils/log";
+import { ISegmentPipeline } from "../pipelines";
 import {
   QueuedSourceBuffer,
   SupportedBufferTypes ,
@@ -70,14 +70,6 @@ export interface IBufferSegmentInfos {
   timescale : number;
 }
 
-// Response that should be emitted by the given Pipeline
-export interface IPipelineResponse<T> {
-  parsed: {
-    segmentData : T;
-    segmentInfos : IBufferSegmentInfos;
-  };
-}
-
 // Item emitted by the Buffer's clock$
 export interface IBufferClockTick {
   currentTime : number;
@@ -100,7 +92,7 @@ export interface IRepresentationBufferArguments<T> {
   };
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   segmentBookkeeper : SegmentBookkeeper;
-  pipeline : (x : ISegmentLoaderArguments) => Observable<IPipelineResponse<T>>;
+  pipeline : ISegmentPipeline<T>;
   wantedBufferAhead$ : Observable<number>;
 }
 
@@ -316,7 +308,7 @@ export default function RepresentationBuffer<T>({
 
         const segment : ISegment = currentSegmentRequested;
         const initSegmentInfos = initSegmentState && initSegmentState.infos;
-        const download$ = pipeline({
+        const request$ = pipeline.createRequest({
           adaptation,
           init: initSegmentInfos || undefined,
           manifest,
@@ -326,7 +318,7 @@ export default function RepresentationBuffer<T>({
         })
         .map((args) => objectAssign({ segment, }, args));
 
-        return download$
+        return request$
           .mergeMap((pipelineData) => {
             return Observable.of(pipelineData)
               .concat(requestNextSegment$);

@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
-import createManifestPipeline from "./manifest";
-import SegmentPipelinesManager, {
-  IPipelineOptions,
-  ISegmentPipeline,
-} from "./segment";
+import { Observable } from "rxjs/Observable";
+import { ISegmentLoaderArguments } from "../../../net/types";
+import {
+  IPipeline,
+  IPipelineResponse,
+} from "./pipeline_factory";
 
-export {
-  createManifestPipeline,
-  IPipelineOptions,
-  SegmentPipelinesManager,
-  ISegmentPipeline,
-};
+export interface ISegmentPipeline<T> {
+  createRequest : (
+    content : ISegmentLoaderArguments
+  ) => Observable<IPipelineResponse<T>>;
+}
+
+export default function createSegmentPipeline<T>(
+  pipeline : IPipeline<T>
+) : ISegmentPipeline<T> {
+  return {
+    createRequest(
+      content : ISegmentLoaderArguments
+    ) : Observable<IPipelineResponse<T>> {
+      return pipeline(content);
+    },
+  };
+}

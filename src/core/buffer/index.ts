@@ -22,9 +22,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { ISegmentLoaderArguments } from "../../net/types";
 import log from "../../utils/log";
 import ABRManager from "../abr";
+import { ISegmentPipeline } from "../pipelines";
 import {
   QueuedSourceBuffer,
   SupportedBufferTypes,
@@ -65,8 +65,8 @@ export interface IRepresentationChangeEvent {
   };
 }
 
-export type IAdaptationBufferEvent =
-  IRepresentationBufferEvent<any> |
+export type IAdaptationBufferEvent<T> =
+  IRepresentationBufferEvent<T> |
   IBitrateEstimationChangeEvent |
   IRepresentationChangeEvent;
 
@@ -101,10 +101,8 @@ export default class AdaptationBufferManager {
 
   /**
    * @param {ABRManager} abrManager
-   * @param {Observable} abrBaseClock$ - Clock$ at which the ABR manager will
-   * make estimates.
-   * @param {BehaviorSubject} speed$ - emits the speed each time it changes
-   * @param {Subject} warnings$ - Subject to emit non-fatal errors
+   * @param {Observable} abrBaseClock$ - Clock at which the ABR manager will
+   * estimate the right Representation to play.
    */
   constructor(
     abrManager : ABRManager,
@@ -121,21 +119,28 @@ export default class AdaptationBufferManager {
    * linked to a single Period.
    * It will emit various events to report its status to the caller.
    *
-   * @param {Observable} bufferClock$
-   * @param {QueuedSourceBuffer} queuedSourceBuffer
-   * @param {SegmentBookkeeper} segmentBookkeeper
-   * @param {Function} pipeline
-   * @param {Object} content
+   * @param {Observable} bufferClock$ - Clock at which the Buffer will check
+   * segments download
+   * @param {QueuedSourceBuffer} queuedSourceBuffer - QueuedSourceBuffer used
+   * to push segments and know about the current buffer's health on the browser
+   * side.
+   * @param {SegmentBookkeeper} segmentBookkeeper - Used to know which segments
+   * are present right now in the QueuedSourceBuffer
+   * @param {Function} pipeline - Function used to download segments
+   * @param {Object} content - Current content to play
+   * @param {Object} content.manifest
+   * @param {Object} content.period
+   * @param {Object} content.adaptation
    * @returns {Observable}
    */
-  public createBuffer(
+  public createBuffer<T>(
     bufferClock$ : Observable<IBufferClockTick>,
-    queuedSourceBuffer : QueuedSourceBuffer<any>,
+    queuedSourceBuffer : QueuedSourceBuffer<T>,
     segmentBookkeeper : SegmentBookkeeper,
-    pipeline : (content : ISegmentLoaderArguments) => Observable<any>,
+    pipeline : ISegmentPipeline<T>,
     wantedBufferAhead$ : Observable<number>,
     content : { manifest : Manifest; period : Period; adaptation : Adaptation }
-  ) : Observable<IAdaptationBufferEvent> {
+  ) : Observable<IAdaptationBufferEvent<T>> {
 
     const { manifest, period, adaptation } = content;
     const abr$ = this._getABRForAdaptation(adaptation);
@@ -203,7 +208,7 @@ export default class AdaptationBufferManager {
      */
     function createRepresentationBuffer(
       representation : Representation
-    ) : Observable<IRepresentationBufferEvent<any>> {
+    ) : Observable<IRepresentationBufferEvent<T>> {
 
       log.info("changing representation", adaptation.type, representation);
       return RepresentationBuffer({
