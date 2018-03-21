@@ -538,7 +538,26 @@ export default function BuffersHandler(
         const representations$ = rights$.map((rights: IRights) => {
           const representations = adaptation.representations;
           const _authorizedRepresentations = representations.filter((r) => {
-            return rights[r.id] ? rights[r.id].outputRestricted : true;
+            const result = rights[r.id] ? rights[r.id].outputRestricted : true;
+            if (!result) {
+              const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
+              const inventory = segmentBookkeeper.inventory;
+              const boundaries: Array<{start: number; end: number}> = [];
+              inventory.forEach((segment) => {
+                if (
+                  segment.infos.representation.id === r.id &&
+                  segment.bufferedStart &&
+                  segment.bufferedEnd
+                ) {
+                  boundaries.push(
+                    { start: segment.bufferedStart, end: segment.bufferedEnd });
+                }
+              });
+            boundaries.forEach((boundary) => {
+              _queuedSourceBuffer.removeBuffer(boundary);
+            });
+            }
+            return result;
           });
           if(representations.length > 0 && (_authorizedRepresentations.length === 0)){
             const error = new Error("No playable stream found.");
