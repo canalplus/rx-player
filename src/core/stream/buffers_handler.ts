@@ -538,12 +538,7 @@ export default function BuffersHandler(
         const representations$ = rights$.map((rights: IRights) => {
           const representations = adaptation.representations;
           const _authorizedRepresentations = representations.filter((r) => {
-            const right = rights[r.id] ? rights[r.id].outputRestricted : true;
-            if(!right){
-              log.warn(
-                "Output restricted for representation \"" +r.id+ "\" ("+r.mimeType+")");
-            }
-            return right;
+            return rights[r.id] ? rights[r.id].outputRestricted : true;
           });
           if(representations.length > 0 && (_authorizedRepresentations.length === 0)){
             const error = new Error("No playable stream found.");

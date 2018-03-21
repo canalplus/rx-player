@@ -576,6 +576,10 @@ export default function parseManifest(
         parsedAdaptationSet.audioDescription = audioDescription;
       }
 
+      if (adaptationChildren.contentProtection) {
+        parsedAdaptationSet.contentProtection = adaptationChildren.contentProtection;
+      }
+
       return parsedAdaptationSet;
     });
 

@@ -55,7 +55,7 @@ const protectedTypes = ["video", "audio"];
 export default class StreamRestrictionManager {
 
   // Defines for each ciphered representation, the associated key ID.
-  private representationInfos: Map<string|number, ISpecs>;
+  private representationInfos: Map<Representation, ISpecs>;
 
   // Defines for each DRM key ID, if associated content can be played.
   private keyIDauthorizations: Map<string, boolean>;
@@ -90,10 +90,10 @@ export default class StreamRestrictionManager {
             if(_kid){
               const reps: Representation[] = adaptation.representations;
               reps.forEach((rep: Representation) => {
-                const infos = this.representationInfos.get(rep.id);
+                const infos = this.representationInfos.get(rep);
                 if(infos == null){
                   this.representationInfos
-                    .set(rep.id, { keyID: _kid });
+                    .set(rep, { keyID: _kid });
                 }
               });
             }
@@ -108,10 +108,17 @@ export default class StreamRestrictionManager {
    * triggers right collect
    * @param {number} _kid
    */
-  public restrictForKeyID(_kid: Uint8Array){
+  public restrictForKeyID(_kid: Uint8Array) {
      const kid = bytesToHex(_kid);
      this.keyIDauthorizations.set(kid, false);
      this.rightsUpdate.next();
+     const representations: Representation[] = [];
+     this.representationInfos.forEach((obj, rep) => {
+       if (obj.keyID === kid) {
+        representations.push(rep);
+       }
+     });
+     return { representations, keyId: kid };
   }
 
   /**
@@ -135,7 +142,7 @@ export default class StreamRestrictionManager {
              this.keyIDauthorizations.get(obj.keyID) as boolean :
              true :
          true;
-         result[rep] = {
+         result[rep.id] = {
              outputRestricted,
              // isDecodable
              // hasPoorPlayback

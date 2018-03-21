@@ -169,10 +169,16 @@ function sessionEventsHandler(
             EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
         }
         // Handle restricted statuses.
+        let restrictionData;
         if (restrictionManager && KEY_STATUS_RESTRICTED[keyId]) {
-          restrictionManager.restrictForKeyID(new Uint8Array(keyId));
+          restrictionData =
+            restrictionManager.restrictForKeyID(new Uint8Array(keyStatus));
         } else if (restrictionManager && KEY_STATUS_RESTRICTED[keyStatus]) {
-          restrictionManager.restrictForKeyID(new Uint8Array(keyId));
+          restrictionData =
+            restrictionManager.restrictForKeyID(new Uint8Array(keyId));
+        }
+        if (restrictionData && restrictionData.representations.length > 0) {
+          log.warn("Output restricted.", restrictionData);
         }
       });
 
