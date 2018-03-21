@@ -28,7 +28,6 @@ import {
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
-  IResolverObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
@@ -87,7 +86,9 @@ export default function(
   const manifestLoader = generateManifestLoader(manifestLoaderOptions);
 
   const manifestPipeline = {
-    resolver({ url } : IManifestLoaderArguments) : IResolverObservable {
+    resolver(
+      { url } : IManifestLoaderArguments
+    ) : Observable<IManifestLoaderArguments> {
       let resolving;
       const token = extractToken(url);
 
