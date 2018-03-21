@@ -49,6 +49,7 @@ import SourceBufferManager, {
 import ActivePeriodEmitter, {
   IPeriodBufferItem,
 } from "./active_period_emitter";
+import StreamRestrictionManager from "./restriction_manager";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import EVENTS, {
   IActivePeriodChangedEvent,
@@ -82,6 +83,14 @@ export type IBufferHandlerEvent =
   IActivePeriodChangedEvent |
   IMultiplePeriodBuffersEvent |
   IEndOfStreamEvent;
+
+interface IRights {
+  [key: string] : {
+      outputRestricted: boolean;
+      // TODO isDecodable: boolean
+      // TODO hasPoorQualityPlayback: boolean
+    };
+}
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
@@ -139,7 +148,8 @@ export default function BuffersHandler(
     maxRetryOffline? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
   },
-  errorStream : Subject<Error | CustomError>
+  errorStream : Subject<Error | CustomError>,
+  restrictionManager : StreamRestrictionManager
 ) : Observable<IBufferHandlerEvent> {
   const manifest = content.manifest;
   const firstPeriod = content.period;
@@ -523,6 +533,39 @@ export default function BuffersHandler(
       const pipeline = segmentPipelinesManager
         .createPipeline(bufferType, pipelineOptions);
 
+        const rights$ = restrictionManager.getRepresentationRights$();
+
+        const representations$ = rights$.map((rights: IRights) => {
+          const representations = adaptation.representations;
+          const _authorizedRepresentations = representations.filter((r) => {
+            const result = rights[r.id] ? rights[r.id].outputRestricted : true;
+            if (!result) {
+              const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
+              const inventory = segmentBookkeeper.inventory;
+              const boundaries: Array<{start: number; end: number}> = [];
+              inventory.forEach((segment) => {
+                if (
+                  segment.infos.representation.id === r.id &&
+                  segment.bufferedStart &&
+                  segment.bufferedEnd
+                ) {
+                  boundaries.push(
+                    { start: segment.bufferedStart, end: segment.bufferedEnd });
+                }
+              });
+            boundaries.forEach((boundary) => {
+              _queuedSourceBuffer.removeBuffer(boundary);
+            });
+            }
+            return result;
+          });
+          if(representations.length > 0 && (_authorizedRepresentations.length === 0)){
+            const error = new Error("No playable stream found.");
+            throw new MediaError("OUTPUT_RESTRICTION", error, true);
+          }
+          return _authorizedRepresentations;
+        });
+
       // 4 - create the Buffer
       const adaptationBuffer$ = bufferManager.createBuffer(
         clock$,
@@ -530,7 +573,8 @@ export default function BuffersHandler(
         segmentBookkeeper,
         pipeline,
         wantedBufferAhead$,
-        { manifest, period, adaptation }
+        { manifest, period, adaptation },
+        representations$
       ).catch<IAdaptationBufferEvent, never>((error : Error) => {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to

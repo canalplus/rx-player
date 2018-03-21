@@ -139,11 +139,13 @@ export default class AdaptationBufferManager {
     segmentBookkeeper : SegmentBookkeeper,
     pipeline : (content : ISegmentLoaderArguments) => Observable<any>,
     wantedBufferAhead$ : Observable<number>,
-    content : { manifest : Manifest; period : Period; adaptation : Adaptation }
+    content : { manifest : Manifest; period : Period; adaptation : Adaptation },
+    currentRepresentations$ : Observable<Representation[]>
   ) : Observable<IAdaptationBufferEvent> {
 
     const { manifest, period, adaptation } = content;
-    const abr$ = this._getABRForAdaptation(manifest, adaptation);
+    const abr$ =
+      this._getABRForAdaptation(adaptation.type, currentRepresentations$, manifest);
 
     /**
      * Emit at each bitrate estimate done by the ABRManager
@@ -248,11 +250,10 @@ export default class AdaptationBufferManager {
   }
 
   private _getABRForAdaptation(
-    manifest : Manifest,
-    adaptation : Adaptation
+    adaptationType: SupportedBufferTypes,
+    currentRepresentations$: Observable<Representation[]>,
+    manifest : Manifest
   ) {
-    const representations = adaptation.representations;
-
     /**
      * Keep track of the current representation to add informations to the
      * ABR clock.
@@ -288,7 +289,7 @@ export default class AdaptationBufferManager {
       };
     }).share();  // side-effect === share to avoid doing it multiple times
 
-    return this._abrManager.get$(adaptation.type, abrClock$, representations)
+    return this._abrManager.get$(adaptationType, abrClock$, currentRepresentations$)
       .do(({ representation }) => {
         currentRepresentation = representation;
       });

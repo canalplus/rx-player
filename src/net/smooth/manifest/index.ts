@@ -474,6 +474,12 @@ function createSmoothStreamingParser(
         undefined : language,
       normalizedLanguage: normalizedLanguage == null ?
         undefined : normalizedLanguage,
+      contentProtection: protection ? protection.keySystems.map((ks) => {
+        return  {
+          kid: protection.keyId,
+          systemId: ks.systemId,
+        };
+      }) : [],
     };
 
     if (adaptationType === "text" && subType === "DESC") {
@@ -521,7 +527,6 @@ function createSmoothStreamingParser(
     const adaptations : IAdaptationSmooth[] = adaptationNodes.map(node => {
       return parseAdaptation(node, rootURL, timescale, protection);
     }).filter((adaptation) : adaptation is IAdaptationSmooth => !!adaptation);
-
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
     let timeShiftBufferDepth : number|undefined;
@@ -612,7 +617,7 @@ function createSmoothStreamingParser(
     const minimumTime = firstTimeReference != null ?
       firstTimeReference / timescale : undefined;
 
-    const manifest = {
+    const manifest: IParsedManifest = {
       id: "gen-smooth-manifest-" + generateNewId(),
       availabilityStartTime: availabilityStartTime || 0,
       duration,

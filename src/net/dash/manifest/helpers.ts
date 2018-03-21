@@ -20,11 +20,7 @@
 /* tslint:enable:max-line-length */
 
 import assert from "../../../utils/assert";
-
-export interface IScheme {
-  schemeIdUri? : string;
-  value? : string;
-}
+import { IScheme } from "../../types";
 
 export interface IAccessibility {
   schemeIdUri?: string;
@@ -192,6 +188,7 @@ function isHardOfHearing(accessibility: IAccessibility) {
 function parseScheme(root: Node): IScheme {
   let schemeIdUri : string|undefined;
   let value : string|undefined;
+  let kid : string|undefined;
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
@@ -202,12 +199,16 @@ function parseScheme(root: Node): IScheme {
       case "value":
         value = attribute.value;
         break;
+      case "cenc:default_KID":
+        kid = attribute.value.replace(/-/g, "");
+        break;
     }
   }
 
   return {
     schemeIdUri,
     value,
+    kid,
   };
 }
 

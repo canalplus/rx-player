@@ -68,6 +68,7 @@ import getInitialTime, {
 } from "./get_initial_time";
 import liveEventsHandler from "./live_events_handler";
 import createMediaErrorHandler from "./media_error_handler";
+import StreamRestrictionManager from "./restriction_manager";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
@@ -294,6 +295,9 @@ export default function Stream({
     mediaSource : MediaSource,
     manifest : Manifest
   ): Observable<IStreamEvent> {
+
+    const restrictionManager = new StreamRestrictionManager(manifest);
+
     setDurationToMediaSource(mediaSource, manifest.getDuration());
 
     log.debug("calculating initial time");
@@ -375,7 +379,8 @@ export default function Stream({
         maxRetryOffline: networkConfig.offlineRetry,
         textTrackOptions,
       },
-      warning$
+      warning$,
+      restrictionManager
     ).mergeMap((evt) => {
       if (evt.type === "end-of-stream") {
         log.info("Triggering end of stream.");
@@ -395,17 +400,27 @@ export default function Stream({
      * Add management of events linked to live Playback.
      * @type {Observable}
      */
-    const buffers$ = (manifest.isLive ?
+    const buffers$ = ((manifest.isLive ?
       handledBuffers$
         .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
-      handledBuffers$);
+      handledBuffers$))
+      .do((evt) => {
+        if(evt.type === "manifestUpdate"){
+          restrictionManager.updateWithManifest(evt.value.manifest);
+        }
+      });
 
     /**
      * Create EME Manager, an observable which will manage every EME-related
      * issue.
      * @type {Observable}
      */
-    const emeManager$ = EMEManager(videoElement, keySystems, warning$);
+    const emeManager$ = EMEManager(
+      videoElement,
+      keySystems,
+      warning$,
+      restrictionManager
+    );
 
     /**
      * Translate errors coming from the video element into RxPlayer errors

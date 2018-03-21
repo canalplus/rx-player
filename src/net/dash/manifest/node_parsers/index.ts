@@ -27,6 +27,7 @@ import {
   resolveURL,
 } from "../../../../utils/url";
 import {
+  IContentProtectionParser,
   IParsedAdaptation,
   IParsedManifest,
   IParsedPeriod,
@@ -217,14 +218,14 @@ const getLastLiveTimeReference = (
 
 export default function parseManifest(
   root: Node,
-  uri : string
-  // contentProtectionParser?: IContentProtectionParser
+  uri : string,
+  contentProtectionParser?: IContentProtectionParser
 ) : IParsedManifest {
   // Transform whole MPD into a parsed JS object representation
   const {
     children: rootChildren,
     attributes: rootAttributes,
-  } = createMPDIntermediateRepresentation(root);
+  } = createMPDIntermediateRepresentation(root, contentProtectionParser);
 
   const mpdRootURL = resolveURL(normalizeBaseURL(uri), rootChildren.baseURL);
 
@@ -573,6 +574,10 @@ export default function parseManifest(
 
       if (audioDescription != null) {
         parsedAdaptationSet.audioDescription = audioDescription;
+      }
+
+      if (adaptationChildren.contentProtection) {
+        parsedAdaptationSet.contentProtection = adaptationChildren.contentProtection;
       }
 
       return parsedAdaptationSet;
