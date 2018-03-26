@@ -18,29 +18,50 @@
  * Simple hash-based set.
  * @class SimpleSet
  */
-class SimpleSet {
-  private _hash : IDictionary<true>;
+export default class SimpleSet {
+  /**
+   * Hashes currently stored
+   * @type {Object}
+   * @private
+   */
+  private _hashes : IDictionary<true>;
 
   constructor() {
-    this._hash = {};
+    this._hashes = {};
   }
 
+  /**
+   * Add a new hash entry in the set.
+   * Do not have any effect on already-added hashes
+   * @param {string|number}
+   */
   public add(x : string|number) : void {
-    this._hash[x] = true;
+    this._hashes[x] = true;
   }
 
+  /**
+   * Remove an hash entry from the set.
+   * Do not have any effect on already-removed or inexistant hashes
+   * @param {string|number}
+   */
   public remove(x : string|number) : void {
-    delete this._hash[x];
+    delete this._hashes[x];
   }
 
+  /**
+   * Test if the given hash has an entry in the set.
+   * @param {string|number}
+   * @returns {boolean}
+   */
   public test(x : string|number) : boolean {
-    return !!this._hash[x];
+    return !!this._hashes[x];
   }
 
+  /**
+   * Returns true if there's currently no hash in this set.
+   * @returns {boolean}
+   */
   public isEmpty() : boolean {
-    return !Object.keys(this._hash).length;
+    return !Object.keys(this._hashes).length;
   }
 }
-
-// TODO export default
-export { SimpleSet };
