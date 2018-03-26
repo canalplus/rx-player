@@ -21,7 +21,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import { SimpleSet } from "../../utils/collections";
+import SimpleSet from "../../utils/simple_set";
 import { SegmentBookkeeper } from "../stream";
 
 const {

@@ -26,8 +26,8 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { SimpleSet } from "../../utils/collections";
 import log from "../../utils/log";
+import SimpleSet from "../../utils/simple_set";
 import { ISegmentPipeline } from "../pipelines";
 import {
   QueuedSourceBuffer,

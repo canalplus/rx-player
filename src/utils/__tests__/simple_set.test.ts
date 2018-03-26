@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import { SimpleSet } from "../collections";
+import SimpleSet from "../simple_set";
 
 describe("utils - collections", () => {
   it("should allow to push string or number and to test them", () => {
