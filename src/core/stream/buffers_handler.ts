@@ -47,7 +47,7 @@ import SourceBufferManager, {
   SupportedBufferTypes,
 } from "../source_buffers";
 import ActivePeriodEmitter, {
-  IPeriodBufferItem,
+  IPeriodBufferInfos,
 } from "./active_period_emitter";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import EVENTS, {
@@ -59,25 +59,19 @@ import EVENTS, {
   IPeriodBufferReadyEvent,
 } from "./stream_events";
 
-/**
- * Events coming from single PeriodBuffer (Buffer linked to a Period and a type).
- */
+// Events coming from single PeriodBuffer
 type IPeriodBufferEvent =
   IAdaptationBufferEvent<any> |
   IAdaptationChangeEvent;
 
-/**
- * Events coming from function(s) managing multiple PeriodBuffers.
- */
+// Events coming from function(s) managing multiple PeriodBuffers.
 type IMultiplePeriodBuffersEvent =
   IPeriodBufferEvent |
   IPeriodBufferReadyEvent |
   IPeriodBufferClearedEvent |
   ICompletedBufferEvent;
 
-/**
- * Every events sent by the BuffersHandler exported here.
- */
+// Every events sent by the BuffersHandler exported here.
 export type IBufferHandlerEvent =
   IActivePeriodChangedEvent |
   IMultiplePeriodBuffersEvent |
@@ -156,8 +150,8 @@ export default function BuffersHandler(
   //    does not support adding more tracks during playback.
   createNativeSourceBuffersForPeriod(sourceBufferManager, firstPeriod);
 
-  const addPeriodBuffer$ = new Subject<IPeriodBufferItem>();
-  const removePeriodBuffer$ = new Subject<IPeriodBufferItem>();
+  const addPeriodBuffer$ = new Subject<IPeriodBufferInfos>();
+  const removePeriodBuffer$ = new Subject<IPeriodBufferInfos>();
 
   /**
    * Every PeriodBuffers for every possible types

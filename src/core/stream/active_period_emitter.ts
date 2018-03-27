@@ -31,11 +31,14 @@ import {
   SupportedBufferTypes,
 } from "../source_buffers";
 
-export interface IPeriodBufferItem {
+// PeriodBuffer informations emitted to the ActivePeriodEmitted
+export interface IPeriodBufferInfos {
   period: Period;
   type: SupportedBufferTypes;
 }
 
+// structure used internally to keep track of which Period has which
+// PeriodBuffer
 interface IPeriodItem {
   period: Period;
   buffers: Set<SupportedBufferTypes>;
@@ -45,11 +48,12 @@ interface IPeriodItem {
  * Emit the active Period each times it changes.
  *
  * The active Period is the first Period (in chronological order) which has
- * PeriodBuffers for all BUFFER_TYPES.
+ * a PeriodBuffer for every defined BUFFER_TYPES.
  *
  * Emit null if no Period has PeriodBuffers for all types.
  *
  * @example
+ * For 4 BUFFER_TYPES: "AUDIO", "VIDEO", "TEXT" and "IMAGE":
  * ```
  *                     +-------------+
  *         Period 1    | Period 2    | Period 3
@@ -77,8 +81,8 @@ interface IPeriodItem {
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
-  addPeriodBuffer$ : Observable<IPeriodBufferItem>,
-  removePeriodBuffer$ : Observable<IPeriodBufferItem>
+  addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
+  removePeriodBuffer$ : Observable<IPeriodBufferInfos>
 ) : Observable<Period|null> {
   const periodsList : SortedList<IPeriodItem> =
     new SortedList((a, b) => a.period.start - b.period.start);
