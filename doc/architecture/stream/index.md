@@ -108,7 +108,7 @@ time the wanted language.
 
 
 
-## Building bricks #############################################################
+## Building blocks #############################################################
 
 The Stream put in relation multiple part of the code to allow a qualitative
 playback experience.

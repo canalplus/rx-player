@@ -1,11 +1,11 @@
 # ABRManager ###################################################################
 
+
 ## Overview ####################################################################
 
-The ABRManager (ABR for Adaptive BitRate) is a class which
-facilitates the choice between multiple audio/video qualities in function of the
-current bandwidth, the network capacities and other specific settings set by the
-client.
+The ABRManager (ABR for Adaptive BitRate) is a class which facilitates the
+choice between multiple audio/video qualities in function of the current
+bandwidth, the network capacities and other specific settings set by the client.
 
 It does so by receiving various values such as:
   - when network requests begin, progresses or end
@@ -22,4 +22,4 @@ be the most adapted, that is the quality which:
     network to handle would lead to excessive re-bufferings, but a too low would
     be not as pleasant to watch)
 
-More soon...
+More on it soon...
