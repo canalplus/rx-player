@@ -17,12 +17,14 @@
 import createManifestPipeline from "./manifest";
 import SegmentPipelinesManager, {
   IPipelineOptions,
-  ISegmentPipeline,
+  IPrioritizedSegmentFetcher,
+  ISegmentResponse,
 } from "./segment";
 
 export {
   createManifestPipeline,
   IPipelineOptions,
   SegmentPipelinesManager,
-  ISegmentPipeline,
+  IPrioritizedSegmentFetcher,
+  ISegmentResponse,
 };

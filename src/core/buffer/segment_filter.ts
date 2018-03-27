@@ -30,6 +30,13 @@ const {
 } = config;
 
 /**
+ * Returns true if the given Segment should be downloaded.
+ * false otherwise.
+ * @param {Object} segment
+ * @param {Object} content - The content the Segment depends on.
+ * @param {Object} segmentBookkeeper
+ * @param {Object} wantedRange
+ * @param {Object} segmentIDsToIgnore
  * @returns {boolean}
  */
 export default function shouldDownloadSegment(
@@ -41,15 +48,15 @@ export default function shouldDownloadSegment(
   },
   segmentBookkeeper: SegmentBookkeeper,
   wantedRange : { start : number; end : number },
-  sourceBufferQueue : SimpleSet
+  segmentIDsToIgnore : SimpleSet
 ) : boolean {
   const {
     period,
     adaptation,
     representation,
   } = content;
-  const isQueued = sourceBufferQueue.test(segment.id);
-  if (isQueued) {
+  const shouldIgnore = segmentIDsToIgnore.test(segment.id);
+  if (shouldIgnore) {
     return false;
   }
 

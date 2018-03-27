@@ -24,12 +24,13 @@ import Manifest, {
 } from "../../manifest";
 import log from "../../utils/log";
 import ABRManager from "../abr";
-import { ISegmentPipeline } from "../pipelines";
+import { IPrioritizedSegmentFetcher } from "../pipelines";
 import {
   QueuedSourceBuffer,
   SupportedBufferTypes,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
+import createFakeBuffer from "./create_fake_buffer";
 import RepresentationBuffer, {
   IBufferClockTick,
   IBufferEventAddedSegment,
@@ -40,6 +41,7 @@ import RepresentationBuffer, {
   IRepresentationBufferEvent,
 } from "./representation_buffer";
 
+// Clock wanted by the AdaptationBufferManager
 export interface IAdaptationBufferClockTick {
   bufferGap : number;
   duration : number;
@@ -48,6 +50,7 @@ export interface IAdaptationBufferClockTick {
   speed : number;
 }
 
+// Emitted as new bitrate estimations are done
 export interface IBitrateEstimationChangeEvent {
   type : "bitrateEstimationChange";
   value : {
@@ -56,6 +59,7 @@ export interface IBitrateEstimationChangeEvent {
   };
 }
 
+// Emitted when the current Representation considered changes
 export interface IRepresentationChangeEvent {
   type : "representationChange";
   value : {
@@ -65,30 +69,31 @@ export interface IRepresentationChangeEvent {
   };
 }
 
+// Every events sent by the AdaptationBufferManager
 export type IAdaptationBufferEvent<T> =
   IRepresentationBufferEvent<T> |
   IBitrateEstimationChangeEvent |
   IRepresentationChangeEvent;
 
 /**
- * Allows to create Buffers, each being linked to a single adaptation.
+ * Create Buffers linked to an Adaptation.
  *
- * They will download the right segments in the representations chosen by the
- * ABRManager.
+ * It will rely on the ABRManager to choose at any time the best Representation
+ * for this Adaptation and then run the logic to download and push the
+ * corresponding segments in the SourceBuffer.
  *
  * @example
  * ```js
  * const bufferManager = new AdaptationBufferManager(
  *   abrManager,
- *   abrClock$,
- *   speed$,
+ *   abrClock$
  * );
  *
  * const buffer$ = bufferManager.createBuffer(
  *  bufferClock$,
  *  queuedSourceBuffer,
  *  segmentBookkeeper,
- *  pipeline,
+ *  segmentFetcher,
  *  wantedBufferAhead$,
  *  { manifest, period, adaptation},
  * );
@@ -120,24 +125,21 @@ export default class AdaptationBufferManager {
    * It will emit various events to report its status to the caller.
    *
    * @param {Observable} bufferClock$ - Clock at which the Buffer will check
-   * segments download
+   * for segments download
    * @param {QueuedSourceBuffer} queuedSourceBuffer - QueuedSourceBuffer used
-   * to push segments and know about the current buffer's health on the browser
-   * side.
-   * @param {SegmentBookkeeper} segmentBookkeeper - Used to know which segments
-   * are present right now in the QueuedSourceBuffer
-   * @param {Function} pipeline - Function used to download segments
-   * @param {Object} content - Current content to play
-   * @param {Object} content.manifest
-   * @param {Object} content.period
-   * @param {Object} content.adaptation
+   * to push segments and know about the current real buffer's health.
+   * @param {SegmentBookkeeper} segmentBookkeeper - Used to synchronize and
+   * retrieve the Segments currently present in the QueuedSourceBuffer
+   * @param {Function} segmentFetcher - Function used to download segments
+   * @param {Observable} wantedBufferAhead$ - Emits the buffer goal
+   * @param {Object} content - Content to download
    * @returns {Observable}
    */
   public createBuffer<T>(
     bufferClock$ : Observable<IBufferClockTick>,
     queuedSourceBuffer : QueuedSourceBuffer<T>,
     segmentBookkeeper : SegmentBookkeeper,
-    pipeline : ISegmentPipeline<T>,
+    segmentFetcher : IPrioritizedSegmentFetcher<T>,
     wantedBufferAhead$ : Observable<number>,
     content : { manifest : Manifest; period : Period; adaptation : Adaptation }
   ) : Observable<IAdaptationBufferEvent<T>> {
@@ -221,7 +223,7 @@ export default class AdaptationBufferManager {
         },
         queuedSourceBuffer,
         segmentBookkeeper,
-        pipeline,
+        segmentFetcher,
         wantedBufferAhead$,
       })
       .catch((error) => {
@@ -292,36 +294,9 @@ export default class AdaptationBufferManager {
   }
 }
 
-/**
- * Create empty Buffer Observable, linked to a Period.
- *
- * This observable will never download any segment and just emit a "full"
- * event when reaching the end.
- * @param {Observable} bufferClock$
- * @param {Observable} wantedBufferAhead$
- * @param {Object} content
- * @returns {Observable}
- */
-export function createFakeBuffer(
-  bufferClock$ : Observable<IBufferClockTick>,
-  wantedBufferAhead$ : Observable<number>,
-  content : { manifest : Manifest; period : Period }
-) : Observable<IBufferStateFull> {
-  const period = content.period;
-  return Observable.combineLatest(bufferClock$, wantedBufferAhead$)
-    .filter(([clockTick, wantedBufferAhead]) =>
-      period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
-    )
-    .map(() => {
-      return {
-        type: "full-buffer" as "full-buffer",
-        value: undefined,
-      };
-    });
-}
-
 // Re-export RepresentationBuffer events used by the AdaptationBufferManager
 export {
+  createFakeBuffer,
   IBufferClockTick,
   IBufferEventAddedSegment,
   IBufferEventDiscontinuityEncountered,

@@ -264,7 +264,7 @@ export default function Stream({
      * Creates pipelines for downloading segments.
      * @type {SegmentPipelinesManager}
      */
-    const segmentPipelinesManager = new SegmentPipelinesManager(
+    const segmentPipelinesManager = new SegmentPipelinesManager<any>(
       transport, requestsInfos$, network$, warning$);
 
     /**

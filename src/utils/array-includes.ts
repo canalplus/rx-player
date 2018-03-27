@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-// inspired from MDN polyfill, but ponyfilled instead
+/**
+ * Ponyfill for the Array.prototype.includes function.
+ * Inspired from MDN polyfill, but ponyfilled instead
+ *
+ * @param {Array.<*>} arr
+ * @param {*} searchElement
+ * @param {number} [fromIndex]
+ * @returns {boolean}
+ */
 export default function arrayIncludes<T>(
   arr : T[],
   searchElement : T,

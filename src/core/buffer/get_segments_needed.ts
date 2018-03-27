@@ -24,8 +24,9 @@ import {
  * @param {Object} representation - The representation of the chosen
  * adaptation
  * @param {Object} range
- * @param {Boolean} shouldHaveInitSegment
- * @param {Boolean} shouldHaveRegularSegments
+ * @param {Object} options
+ * @param {Boolean} options.addInitSegment
+ * @param {Boolean} options.ignoreRegularSegments
  * @returns {Array.<Object>}
  */
 export default function getSegmentsNeeded(

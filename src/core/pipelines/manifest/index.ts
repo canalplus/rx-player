@@ -27,7 +27,7 @@ import Pipeline, {
   IPipelineCache,
   IPipelineData,
   IPipelineOptions,
-} from "../pipeline";
+} from "../core_pipeline";
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
@@ -56,15 +56,17 @@ export default function createManifestPipeline(
     const manifest$ = Pipeline(transport.manifest, pipelineOptions)({ url });
 
     return manifest$
+
       .do(({ type, value }) => {
         if (type === "error") {
           warning$.next(value);
         }
       })
-      .share()
+
       .filter((arg) : arg is IPipelineData|IPipelineCache =>
         arg.type === "data" || arg.type === "cache"
       )
+
       .map(({ value }) : Manifest => {
         return createManifest(
           value.parsed.manifest,
@@ -72,6 +74,7 @@ export default function createManifestPipeline(
           supplementaryImageTracks,
           warning$
         );
-      });
+      })
+      .share();
   };
 }
