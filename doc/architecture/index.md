@@ -24,10 +24,11 @@ one by one to a module in the code.
 
 Such modules are (with link to their respective documentation, if one):
 
-  - __the API__
+  - __the [API](./api/index.md)__
 
-    Defines the public API of the RxPlayer and provides abstractions
-    to help implementing it.
+    Defines the public API of the RxPlayer and provides abstractions to help
+    implementing it.
+
 
 
   - __the [Stream](./stream/index.md)__
@@ -78,11 +79,14 @@ Such modules are (with link to their respective documentation, if one):
     modifying / deleting a transport protocol
 
 
-  - __the Pipelines__
+  - __the [Pipelines](./pipelines/index.md)__
 
-    Link the _Net_ module with the rest of the code, to
-    download segments, download/refresh the manifest and collect data (such as
-    the user's bandwidth) for the other modules.
+    Link the _Net_ module with the rest of the code, to download segments,
+    download/refresh the manifest and collect data (such as the user's
+    bandwidth) for the other modules.
+
+    Various files documenting the Stream architecture should be available in the
+    ``doc/architecture/pipelines`` directory.
 
 
 The RxPlayer also has multiple isolated helpers (for manifest management,
