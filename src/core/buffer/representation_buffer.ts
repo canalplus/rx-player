@@ -18,7 +18,6 @@ import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import { Subject } from "rxjs/Subject";
-import config from "../../config";
 import { IndexError } from "../../errors";
 import Manifest, {
   Adaptation,
@@ -28,24 +27,30 @@ import Manifest, {
 } from "../../manifest";
 import log from "../../utils/log";
 import SimpleSet from "../../utils/simple_set";
-import { ISegmentPipeline } from "../pipelines";
+import {
+  IPrioritizedSegmentFetcher,
+  ISegmentResponse,
+} from "../pipelines";
 import {
   QueuedSourceBuffer,
   SupportedBufferTypes ,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
+
 import appendDataInSourceBuffer from "./append_data";
+import getBufferPaddings from "./get_buffer_paddings";
+import getSegmentPriority from "./get_segment_priority";
 import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
 import shouldDownloadSegment from "./segment_filter";
 
-// Emitted when a new segment has been added to the SourceBuffer
+// Emitted after a new segment has been added to the SourceBuffer
 export interface IBufferEventAddedSegment<T> {
   type : "added-segment";
   value : {
-    bufferType : SupportedBufferTypes;
-    segment : ISegment;
-    segmentData : T;
+    bufferType : SupportedBufferTypes; // The type of the Representation
+    segment : ISegment; // The concerned Segment
+    segmentData : T; // The data pushed
   };
 }
 
@@ -53,22 +58,40 @@ export interface IBufferEventAddedSegment<T> {
 // The buffer might still download segments after this message
 export interface IBufferEventNeedManifestRefresh {
   type : "needs-manifest-refresh";
-  value : Error;
+  value : IndexError;
 }
 
 // Emit when a discontinuity is encountered and the user is "stuck" on it.
 export interface IBufferEventDiscontinuityEncountered {
   type : "discontinuity-encountered";
   value : {
-    nextTime : number;
+    nextTime : number; // the time we should seek to TODO this is ugly
   };
 }
 
-export interface IBufferSegmentInfos {
-  duration : number;
-  time : number;
-  timescale : number;
+// State emitted when the Buffer is scheduling segments
+export interface IBufferStateActive {
+  type : "active-buffer";
+  value : undefined;
 }
+
+// State emitted when the buffer has been filled to the end
+export interface IBufferStateFull {
+  type : "full-buffer";
+  value : undefined;
+}
+
+// Buffer state exposed
+type IBufferState =
+  IBufferStateFull |
+  IBufferStateActive;
+
+// Events emitted by the Buffer
+export type IRepresentationBufferEvent<T> =
+  IBufferEventAddedSegment<T> |
+  IBufferEventNeedManifestRefresh |
+  IBufferEventDiscontinuityEncountered |
+  IBufferState;
 
 // Item emitted by the Buffer's clock$
 export interface IBufferClockTick {
@@ -92,32 +115,8 @@ export interface IRepresentationBufferArguments<T> {
   };
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   segmentBookkeeper : SegmentBookkeeper;
-  pipeline : ISegmentPipeline<T>;
+  segmentFetcher : IPrioritizedSegmentFetcher<T>;
   wantedBufferAhead$ : Observable<number>;
-}
-
-// Events emitted by the Buffer
-export type IRepresentationBufferEvent<T> =
-  IBufferEventAddedSegment<T> |
-  IBufferEventNeedManifestRefresh |
-  IBufferEventDiscontinuityEncountered |
-  IBufferState;
-
-// Buffer state exposed
-type IBufferState =
-  IBufferStateFull |
-  IBufferStateActive;
-
-// State emitted when the Buffer is scheduling segments
-export interface IBufferStateActive {
-  type : "active-buffer";
-  value : undefined;
-}
-
-// State emitted when the buffer has been filled to the end
-export interface IBufferStateFull {
-  type : "full-buffer";
-  value : undefined;
 }
 
 // Buffer state used only internally
@@ -138,56 +137,65 @@ interface IBufferInternalStateIdle {
   value : undefined;
 }
 
+// Informations about a Segment waiting for download
+interface IQueuedSegment {
+  priority : number; // the priority of the request
+  segment : ISegment; // the Segment wanted
+}
+
 // State emitted when the buffer is scheduling segments
 interface IBufferInternalStateNeedSegments {
   type : "need-segments";
   value : {
-    segments : ISegment[];
+    neededSegments : IQueuedSegment[]; // The whole Segment queue
   };
 }
 
-interface IInitSegmentState<T> {
-  data : T|null;
-  infos: IBufferSegmentInfos|null;
+// temporal informations of a Segment
+interface ISegmentInfos {
+  duration : number; // timescaled duration of the Segment
+  time : number; // timescaled start time of the Segment
+  timescale : number;
 }
 
-interface IParsedPipelineData<T> {
-  segmentData : T;
-  segmentInfos : IBufferSegmentInfos|null;
+// Informations about any Segment of a given Representation.
+interface ISegmentObject<T> {
+  segmentData : T; // What will be pushed to the SourceBuffer
+  segmentInfos : ISegmentInfos|null; // temporal information
 }
 
-interface IPipelineData<T> {
-  segment : ISegment;
-  parsed : IParsedPipelineData<T>;
+// Informations about a loaded Segment
+interface ILoadedSegmentObject<T> {
+  segment : ISegment; // Concerned Segment
+  parsed : ISegmentObject<T>; // Data and informations
 }
 
-const { BUFFER_PADDING } = config;
+// Object describing a pending Segment request
+interface ISegmentRequestObject<T> {
+  segment : ISegment; // The Segment the request is for
+  request$ : Observable<ISegmentResponse<T>>; // The request itself
+  priority : number; // The current priority of the request
+}
 
 /**
  * Build up buffer for a single Representation.
  *
  * Download and push segments linked to the given Representation according
- * to what is already in the SourceBuffer.
+ * to what is already in the SourceBuffer and where the playback currently is.
  *
  * Multiple RepresentationBuffer observables can be ran on the same
  * SourceBuffer.
  * This allows for example smooth transitions between multiple periods.
- *
- *
- * The RepresentationBuffer tries to push the most needed segment first and
- * abort pending requests if they do not correspond to needed segment anymore.
- *
- *
  *
  * @param {Object} opt
  * @returns {Observable}
  */
 export default function RepresentationBuffer<T>({
   clock$, // emit current playback informations
-  content, // all informations about the content we want
+  content, // all informations about the content we want to play
   queuedSourceBuffer, // allows to interact with the SourceBuffer
   segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
-  pipeline, // allows to download new segments
+  segmentFetcher, // allows to download new segments
   wantedBufferAhead$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   const {
@@ -198,8 +206,9 @@ export default function RepresentationBuffer<T>({
   } = content;
 
   /**
-   * Will be used to emit messages to the calling function
+   * Subject used to emit messages (e.g. manifest-refreshing warnings).
    * @type {Subject}
+   * TODO without a Subject
    */
   const messageSubject : Subject<IRepresentationBufferEvent<T>> = new Subject();
 
@@ -215,7 +224,7 @@ export default function RepresentationBuffer<T>({
    * null when no initialization segment has been downloaded yet.
    * @type {Object}
    */
-  let initSegmentState : IInitSegmentState<T>|null = null;
+  let initSegmentObject : ISegmentObject<T>|null = null;
 
   /**
    * Subject to start/restart a Buffer Queue.
@@ -224,16 +233,17 @@ export default function RepresentationBuffer<T>({
   const startQueue$ = new ReplaySubject<void>(1);
 
   /**
-   * Keep track of the Segment for which a request is pending.
+   * Keep track of the informations about the pending Segment request.
+   * null if no request is pending.
    * @type {Object|null}
    */
-  let currentSegmentRequested : ISegment|null = null;
+  let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
 
   /**
    * Keep track of every segments currently queued for download.
    * @type {Array.<Object>}
    */
-  let downloadQueue : ISegment[] = [];
+  let downloadQueue : IQueuedSegment[] = [];
 
   /**
    * Keep track of downloaded segments currently awaiting to be appended to the
@@ -297,28 +307,36 @@ export default function RepresentationBuffer<T>({
    * Emit the data of a segment when a request succeeded.
    * @returns {Observable}
    */
-  function requestSegments() : Observable<IPipelineData<T>> {
-    const requestNextSegment$ : Observable<IPipelineData<T>> =
+  function requestSegments() : Observable<ILoadedSegmentObject<T>> {
+    const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
       Observable.defer(() => {
-        currentSegmentRequested = downloadQueue.shift() || null;
-        if (currentSegmentRequested == null) {
+        const currentNeededSegment = downloadQueue.shift();
+        if (currentNeededSegment == null) {
           // queue is finished...
+          currentSegmentRequest = null;
           return Observable.empty();
         }
-
-        const segment : ISegment = currentSegmentRequested;
-        const initSegmentInfos = initSegmentState && initSegmentState.infos;
-        const request$ = pipeline.createRequest({
+        const { segment, priority } = currentNeededSegment;
+        const initSegmentInfos = initSegmentObject && initSegmentObject.segmentInfos;
+        const request$ = segmentFetcher.createRequest({
           adaptation,
           init: initSegmentInfos || undefined,
           manifest,
           period,
           representation,
           segment,
-        })
-        .map((args) => objectAssign({ segment, }, args));
+        }, priority);
 
-        return request$
+        currentSegmentRequest = {
+          segment,
+          priority,
+          request$,
+        };
+
+        const responseWithSegment$ = request$
+          .map((args) => objectAssign({ segment }, args));
+
+        return responseWithSegment$
           .mergeMap((pipelineData) => {
             return Observable.of(pipelineData)
               .concat(requestNextSegment$);
@@ -327,7 +345,7 @@ export default function RepresentationBuffer<T>({
 
     return requestNextSegment$
       .finally(() => {
-        currentSegmentRequested = null;
+        currentSegmentRequest = null;
       });
   }
 
@@ -338,19 +356,16 @@ export default function RepresentationBuffer<T>({
    * @returns {Observable}
    */
   function appendSegment(
-    data : IPipelineData<T>
+    data : ILoadedSegmentObject<T>
   ) : Observable<IBufferEventAddedSegment<T>> {
     const { segment } = data;
     const segmentInfos = data.parsed.segmentInfos;
     const segmentData = data.parsed.segmentData;
 
     if (segment.isInit) {
-      initSegmentState = {
-        data: segmentData,
-        infos: segmentInfos,
-      };
+      initSegmentObject = { segmentData, segmentInfos };
     }
-    const initSegmentData = initSegmentState && initSegmentState.data;
+    const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
     const append$ = appendDataInSourceBuffer(
       clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
 
@@ -423,13 +438,19 @@ export default function RepresentationBuffer<T>({
       representation,
       neededRange,
       {
-        addInitSegment: initSegmentState == null,
+        addInitSegment: initSegmentObject == null,
         ignoreRegularSegments: timing.readyState === 0,
       }
-    ).filter((segment) => {
-      return shouldDownloadSegment(
-        segment, content, segmentBookkeeper, neededRange, sourceBufferQueue);
-    });
+    )
+      .filter((segment) => { // filter unwanted
+        return shouldDownloadSegment(
+          segment, content, segmentBookkeeper, neededRange, sourceBufferQueue);
+      })
+
+      .map((segment) => ({ // add priority of the segment
+        priority: getSegmentPriority(segment, timing),
+        segment,
+      }));
 
     if (!neededSegments.length) {
       return period.end != null && neededRange.end >= period.end ?
@@ -439,7 +460,7 @@ export default function RepresentationBuffer<T>({
 
     return {
       type: "need-segments" as "need-segments",
-      value: { segments: neededSegments },
+      value: { neededSegments },
     };
   }
 
@@ -455,8 +476,8 @@ export default function RepresentationBuffer<T>({
     state : IBufferInternalState
   ) : Observable<IBufferState> {
     if (state.type === "full-buffer") {
-      log.debug("finished downloading queue\n", adaptation.type);
-      if (currentSegmentRequested) {
+      log.debug("finished downloading queue", adaptation.type);
+      if (currentSegmentRequest) {
         log.debug("interrupting segment request.");
       }
       downloadQueue = [];
@@ -465,29 +486,41 @@ export default function RepresentationBuffer<T>({
     }
 
     if (state.type === "idle-buffer") {
+      if (currentSegmentRequest) {
+        log.debug("interrupting segment request.");
+      }
       downloadQueue = [];
       startQueue$.next(undefined); // (re-)start with an empty queue
     }
 
-    else if (state.type === "need-segments" && state.value.segments.length) {
-      const neededSegments = state.value.segments;
-      const firstNeededSegment = neededSegments[0];
+    else if (state.type === "need-segments" && state.value.neededSegments.length) {
+      const neededSegments = state.value.neededSegments;
+      const mostNeededSegment = neededSegments[0];
 
-      if (
-        !currentSegmentRequested ||
-        currentSegmentRequested.id !== firstNeededSegment.id
-      ) {
+      if (!currentSegmentRequest) {
         log.debug("starting downloading queue", adaptation.type);
         downloadQueue = neededSegments;
         startQueue$.next(undefined); // restart the queue
+      } else if (
+        currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
+      ) {
+        log.debug("canceling old downloading queue and starting a new one",
+          adaptation.type);
+        downloadQueue = neededSegments;
+        startQueue$.next(undefined); // restart the queue
+      } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
+        log.debug("updating pending request priority", adaptation.type);
+        segmentFetcher.updatePriority(
+          currentSegmentRequest.request$, mostNeededSegment.priority);
       } else {
+        log.debug("updating downloading queue", adaptation.type);
+
         // Update the previous queue to be all needed segments but the first one,
         // for which a request is already pending
         const newQueue = neededSegments
           .slice() // clone previous
           .splice(1, neededSegments.length); // remove first element
                                              // (pending request)
-        log.debug("updating downloading queue", adaptation.type);
         downloadQueue = newQueue;
       }
 
@@ -527,23 +560,4 @@ export default function RepresentationBuffer<T>({
 
   return Observable.merge(messageSubject, bufferState$, bufferQueue$)
     .share();
-}
-
-/**
- * Get safety paddings (low and high) for the size of buffer that won't
- * be flushed when switching representation for smooth transitions
- * and avoiding buffer underflows.
- * @param {Object} adaptation
- * @returns {number}
- */
-function getBufferPaddings(
-  adaptation : Adaptation
-) : { high : number; low : number } {
-  switch (adaptation.type) {
-    case "audio":
-    case "video":
-      return BUFFER_PADDING[adaptation.type];
-    default:
-      return BUFFER_PADDING.other;
-  }
 }

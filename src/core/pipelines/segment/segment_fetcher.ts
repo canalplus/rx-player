@@ -33,10 +33,10 @@ import BasePipeline, {
   IPipelineCache,
   IPipelineData,
   IPipelineOptions,
-} from "../pipeline";
+} from "../core_pipeline";
 
 // Response that should be emitted by the given Pipeline
-export interface IPipelineResponse<T> {
+export interface ISegmentResponse<T> {
   parsed: {
     segmentData : T;
     segmentInfos : {
@@ -47,31 +47,36 @@ export interface IPipelineResponse<T> {
   };
 }
 
-export type IPipeline<T> = (
+export type ISegmentFetcher<T> = (
   content : ISegmentLoaderArguments
-) => Observable<IPipelineResponse<T>>;
+) => Observable<ISegmentResponse<T>>;
 
 /**
- * TODO merge with Pipeline
- * Allows to easily create a pipeline adapted to the rest of the code:
- *   - only emit the result
+ * Create a function which will fetch segments.
+ *
+ * This function will:
+ *   - only emit the resulting data
  *   - dispatch the other infos through the right subjects.
+ *
+ * @param {string} bufferType
+ * @param {Object} transport
  * @param {Subject} network$ - Subject through which network metrics will be
  * sent, for the ABR.
  * @param {Subject} requests$ - Subject through which requests infos will be
  * sent, for the ABR.
  * @param {Subject} warning$ - Subject through which minor requests error will
  * be sent.
+ * @param {Object} options
  * @returns {Function}
  */
-export default function PipelineFactory<T>(
+export default function createSegmentFetcher<T>(
   bufferType : SupportedBufferTypes,
   transport : ITransportPipelines,
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
   warning$ : Subject<Error|CustomError>,
-  options : IPipelineOptions<any, any>
-) : IPipeline<T> {
+  options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
+) : ISegmentFetcher<T> {
   const basePipeline$ = BasePipeline(transport[bufferType], options);
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;
@@ -86,9 +91,9 @@ export default function PipelineFactory<T>(
    * @param {Observable} pipeline$
    * @returns {Observable}
    */
-  return function createSegmentPipeline(
+  return function fetchSegment(
     content : ISegmentLoaderArguments
-  ) : Observable<IPipelineResponse<T>> {
+  ) : Observable<ISegmentResponse<T>> {
     return basePipeline$(content)
 
       .do(({ type, value }) => {

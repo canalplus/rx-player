@@ -17,16 +17,20 @@
 import { Subject } from "rxjs/Subject";
 import { CustomError } from "../../../errors";
 import { ITransportPipelines } from "../../../net";
+import { ISegmentLoaderArguments } from "../../../net/types";
 import {
   IABRMetric,
   IABRRequest
 } from "../../abr";
 import { SupportedBufferTypes } from "../../source_buffers";
-import { IPipelineOptions } from "../pipeline";
-import pipelineFactory from "./pipeline_factory";
-import createSegmentPipeline, {
-  ISegmentPipeline,
-} from "./segment_pipeline";
+import { IPipelineOptions } from "../core_pipeline";
+import applyPrioritizerToSegmentFetcher, {
+  IPrioritizedSegmentFetcher,
+} from "./prioritized_segment_fetcher";
+import ObservablePrioritizer from "./prioritizer";
+import createSegmentFetcher, {
+  ISegmentResponse,
+} from "./segment_fetcher";
 
 /**
  * Interact with the networking pipelines to download segments and dispatch
@@ -57,16 +61,17 @@ import createSegmentPipeline, {
  *   maxRetryOffline: Infinity,
  * });
  *
- * // 3 - request a content
- * pipeline.createRequest(myContent)
+ * // 3 - request a content with a given priority
+ * pipeline.createRequest(myContent, 1)
  *   .subscribe((res) => console.log("audio segment downloaded:", res));
  * ```
  */
-export default class SegmentPipelinesManager {
+export default class SegmentPipelinesManager<T> {
   private readonly _metrics$ : Subject<IABRMetric>;
   private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
   private readonly _warning$ : Subject<Error | CustomError>;
   private readonly _transport : ITransportPipelines;
+  private readonly _prioritizer : ObservablePrioritizer<ISegmentResponse<T>>;
 
   /**
    * @param {Object} transport
@@ -84,6 +89,8 @@ export default class SegmentPipelinesManager {
     this._metrics$ = metrics$;
     this._requestsInfos$ = requestsInfos$;
     this._warning$ = warning;
+
+    this._prioritizer = new ObservablePrioritizer();
   }
 
   /**
@@ -93,9 +100,9 @@ export default class SegmentPipelinesManager {
    */
   createPipeline(
     bufferType : SupportedBufferTypes,
-    options : IPipelineOptions<any, any>
+    options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
   ) {
-    const pipeline = pipelineFactory(
+    const segmentFetcher = createSegmentFetcher<T>(
       bufferType,
       this._transport,
       this._metrics$,
@@ -104,11 +111,15 @@ export default class SegmentPipelinesManager {
       options
     );
 
-    return createSegmentPipeline(pipeline);
+    return applyPrioritizerToSegmentFetcher<T>(
+      this._prioritizer,
+      segmentFetcher
+    );
   }
 }
 
 export {
   IPipelineOptions,
-  ISegmentPipeline,
+  IPrioritizedSegmentFetcher,
+  ISegmentResponse,
 };

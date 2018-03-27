@@ -497,6 +497,66 @@ export default {
   },
 
   /**
+   * Segments of different types are downloaded by steps:
+   *
+   *   - first the audio/video/text Segments which are immediately needed
+   *
+   *   - then once every of those Segments have been downloaded, less-needed
+   *     Segments
+   *
+   *   - then once every of those less-needed Segments have been downloaded,
+   *     even less-needed Segments
+   *
+   *   - etc.
+   *
+   * This stepped download strategy allows to make a better use of network
+   * ressources.
+   *
+   * For example, if sufficient audio buffer has been downloaded but the
+   * immediately-needed video Segment is still pending its request, we might
+   * be in a situation of rebuffering.
+   * In that case, a better strategy would be to make sure every network
+   * ressource is allocated for this video Segment.
+   *
+   * This is where those steps become useful.
+   *
+   * --
+   *
+   * The numbers defined in this Array describe what the steps are.
+   *
+   * Each number is linked to a distance from the current playing position, in
+   * seconds.
+   * Distances which will be used as limit points, from which a new step is
+   * reached (see example).
+   *
+   * Note: You can set an empty array to deactivate the steps feature (every
+   * Segments have the same priority).
+   *
+   * @example
+   *
+   * let's imagine the following SEGMENT_PRIORITIES_STEPS array:
+   * [5, 10, 17, 25]
+   *
+   * To link each Segments to a corresponding priority (and thus to a specific
+   * step), we have to consider the distance d between the current position and
+   * the start time of the Segment.
+   *
+   * We have in our example 5 groups, which correspond to the following possible
+   * d values:
+   *   1. inferior to 5
+   *   2. between 5 and 10
+   *   3. between 10 and 17
+   *   4. between 17 and 25
+   *   5. superior to 25
+   *
+   * Segments corresponding to a lower-step will need to all be downloaded
+   * before Segments of a newer step begin.
+   *
+   * @type {Array.<Number>}
+   */
+  SEGMENT_PRIORITIES_STEPS : [5, 10, 17, 25],
+
+  /**
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (EME).
    *

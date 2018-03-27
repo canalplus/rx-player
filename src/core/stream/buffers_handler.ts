@@ -131,7 +131,7 @@ export default function BuffersHandler(
   wantedBufferAhead$ : Observable<number>,
   bufferManager : BufferManager,
   sourceBufferManager : SourceBufferManager,
-  segmentPipelinesManager : SegmentPipelinesManager,
+  segmentPipelinesManager : SegmentPipelinesManager<any>,
   segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<any>, SegmentBookkeeper>,
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<any>, Observable<never>>,
   options: {
