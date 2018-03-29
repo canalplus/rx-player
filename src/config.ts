@@ -535,7 +535,7 @@ export default {
    * @example
    *
    * let's imagine the following SEGMENT_PRIORITIES_STEPS array:
-   * [5, 10, 17, 25]
+   * [5, 11, 17, 25]
    *
    * To link each Segments to a corresponding priority (and thus to a specific
    * step), we have to consider the distance d between the current position and
@@ -544,8 +544,8 @@ export default {
    * We have in our example 5 groups, which correspond to the following possible
    * d values:
    *   1. inferior to 5
-   *   2. between 5 and 10
-   *   3. between 10 and 17
+   *   2. between 5 and 11
+   *   3. between 11 and 17
    *   4. between 17 and 25
    *   5. superior to 25
    *
@@ -554,7 +554,7 @@ export default {
    *
    * @type {Array.<Number>}
    */
-  SEGMENT_PRIORITIES_STEPS : [5, 10, 17, 25],
+  SEGMENT_PRIORITIES_STEPS : [6, 14],
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
