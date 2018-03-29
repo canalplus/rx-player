@@ -17,8 +17,7 @@
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
-import { Subject } from "rxjs/Subject";
-import { IndexError } from "../../errors";
+// import { Subject } from "rxjs/Subject";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -56,18 +55,23 @@ export interface IBufferEventAddedSegment<T> {
 
 // The Manifest needs to be refreshed.
 // The buffer might still download segments after this message
-export interface IBufferEventNeedManifestRefresh {
+export interface IBufferNeedsManifestRefresh {
   type : "needs-manifest-refresh";
-  value : IndexError;
+  value : undefined;
 }
 
 // Emit when a discontinuity is encountered and the user is "stuck" on it.
-export interface IBufferEventDiscontinuityEncountered {
+export interface IBufferNeedsDiscontinuitySeek {
   type : "discontinuity-encountered";
   value : {
     nextTime : number; // the time we should seek to TODO this is ugly
   };
 }
+
+// Events communicating about actions that need to be taken
+type IBufferNeededActions =
+  IBufferNeedsManifestRefresh |
+  IBufferNeedsDiscontinuitySeek;
 
 // State emitted when the Buffer is scheduling segments
 export interface IBufferStateActive {
@@ -83,14 +87,13 @@ export interface IBufferStateFull {
 
 // Buffer state exposed
 type IBufferState =
+  IBufferNeededActions |
   IBufferStateFull |
   IBufferStateActive;
 
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> =
   IBufferEventAddedSegment<T> |
-  IBufferEventNeedManifestRefresh |
-  IBufferEventDiscontinuityEncountered |
   IBufferState;
 
 // Item emitted by the Buffer's clock$
@@ -124,6 +127,12 @@ type IBufferInternalState =
   IBufferInternalStateFull |
   IBufferInternalStateIdle |
   IBufferInternalStateNeedSegments;
+
+interface IBufferCurrentStatus {
+  discontinuity : number;
+  shouldRefreshManifest : boolean;
+  state : IBufferInternalState;
+}
 
 // State emitted when the buffer has been filled to the end
 interface IBufferInternalStateFull {
@@ -198,19 +207,13 @@ export default function RepresentationBuffer<T>({
   segmentFetcher, // allows to download new segments
   wantedBufferAhead$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
+  // unwrap components of the content
   const {
     manifest,
     period,
     adaptation,
     representation,
   } = content;
-
-  /**
-   * Subject used to emit messages (e.g. manifest-refreshing warnings).
-   * @type {Subject}
-   * TODO without a Subject
-   */
-  const messageSubject : Subject<IRepresentationBufferEvent<T>> = new Subject();
 
   /**
    * Compute paddings, then used to calculate the wanted range of Segments
@@ -233,17 +236,17 @@ export default function RepresentationBuffer<T>({
   const startQueue$ = new ReplaySubject<void>(1);
 
   /**
+   * Segments queued for download in the BufferQueue.
+   * @type {Array.<Object>}
+   */
+  let downloadQueue : IQueuedSegment[] = [];
+
+  /**
    * Keep track of the informations about the pending Segment request.
    * null if no request is pending.
    * @type {Object|null}
    */
   let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
-
-  /**
-   * Keep track of every segments currently queued for download.
-   * @type {Array.<Object>}
-   */
-  let downloadQueue : IQueuedSegment[] = [];
 
   /**
    * Keep track of downloaded segments currently awaiting to be appended to the
@@ -254,53 +257,7 @@ export default function RepresentationBuffer<T>({
    * removed after it.
    * @type {Object}
    */
-  const sourceBufferQueue = new SimpleSet();
-
-  /**
-   * Send a message downstream when bumping on an explicit
-   * discontinuity announced in the segment index.
-   * @param {Object} timing
-   */
-  function checkDiscontinuity(timing : IBufferClockTick) : void {
-    if (timing.stalled) {
-      if (manifest.isLive) {
-        const discontinuity =
-          representation.index.checkDiscontinuity(timing.currentTime);
-        if (discontinuity > 0) {
-          messageSubject.next({
-            type: "discontinuity-encountered",
-            value: {
-              nextTime: discontinuity + 1,
-            },
-          });
-        }
-      }
-    }
-  }
-
-  /**
-   * Send a message downstream when the manifest has to be refreshed.
-   * @param {Object} wantedRange
-   */
-  function checkManifestRefresh(
-    wantedRange : { start : number; end : number}
-  ) : void {
-    const { start, end } = wantedRange;
-
-    // TODO Better solution for HSS refresh?
-    // get every segments currently downloaded and loaded
-    const segments = segmentBookkeeper.inventory
-      .map(s => s.infos.segment);
-
-    const shouldRefresh = representation.index.shouldRefresh(segments, start, end);
-    if (shouldRefresh) {
-      const error = new IndexError("OUT_OF_INDEX_ERROR", false);
-      messageSubject.next({
-        type: "needs-manifest-refresh",
-        value: error,
-      });
-    }
-  }
+  const sourceBufferWaitingQueue = new SimpleSet();
 
   /**
    * Request every Segment in the ``downloadQueue`` on subscription.
@@ -358,32 +315,39 @@ export default function RepresentationBuffer<T>({
   function appendSegment(
     data : ILoadedSegmentObject<T>
   ) : Observable<IBufferEventAddedSegment<T>> {
-    const { segment } = data;
-    const segmentInfos = data.parsed.segmentInfos;
-    const segmentData = data.parsed.segmentData;
+    return Observable.defer(() => {
+      const { segment } = data;
+      const segmentInfos = data.parsed.segmentInfos;
+      const segmentData = data.parsed.segmentData;
 
-    if (segment.isInit) {
-      initSegmentObject = { segmentData, segmentInfos };
-    }
-    const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
-    const append$ = appendDataInSourceBuffer(
-      clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
+      if (segment.isInit) {
+        initSegmentObject = { segmentData, segmentInfos };
+      }
+      const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
+      const append$ = appendDataInSourceBuffer(
+        clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
 
-    sourceBufferQueue.add(segment.id);
+      sourceBufferWaitingQueue.add(segment.id);
 
-    return append$
-      .mapTo({
-        type: "added-segment" as "added-segment",
-        value : {
-          bufferType: adaptation.type,
-          segment,
-          segmentData,
-        },
-      })
-      .do(() => {
-        if (!segment.isInit) {
-          const { time, duration, timescale } = segmentInfos ?
-            segmentInfos : segment;
+      return append$
+        .mapTo({
+          type: "added-segment" as "added-segment",
+          value : {
+            bufferType: adaptation.type,
+            segment,
+            segmentData,
+          },
+        })
+        .do(() => {
+          if (segment.isInit) {
+            return;
+          }
+
+          const {
+            time,
+            duration,
+            timescale,
+          } = segmentInfos ? segmentInfos : segment;
 
           // current segment timings informations are used to update
           // bufferedRanges informations
@@ -396,43 +360,36 @@ export default function RepresentationBuffer<T>({
             duration != null ?
             (time + duration) / timescale : undefined // end
           );
-        }
-      })
-      .finally(() => {
-        sourceBufferQueue.remove(segment.id);
-      });
+        })
+        .finally(() => {
+          sourceBufferWaitingQueue.remove(segment.id);
+        });
+    });
   }
 
   /**
-   * Check for various things to do at a given time:
-   *
-   *   - indicates when the manifest should be refreshed (through the
-   *     messageSubject)
-   *
-   *   - indicates if a discontinuity is encountered (through the
-   *     messageSubject)
-   *
+   * Perform a check-up of the current status of the RepresentationBuffer:
    *   - synchronize the SegmentBookkeeper with the current buffered
-   *
+   *   - checks if the manifest should be refreshed
+   *   - checks if a discontinuity is encountered
    *   - check if segments need to be downloaded
-   *
    *   - Emit a description of the current state of the buffer
    *
    * @param {Array} arr
    * @returns {Object}
    */
-  function checkInternalState(
+  function getBufferStatus(
     [timing, bufferGoal] : [IBufferClockTick, number]
-  ) : IBufferInternalState {
+  ) : IBufferCurrentStatus {
     const buffered = queuedSourceBuffer.getBuffered();
     const neededRange = getWantedRange(
       period, buffered, timing, bufferGoal, paddings);
+    const discontinuity = getCurrentDiscontinuity(content, timing);
+    const shouldRefreshManifest =
+      shouldRefreshManifestForRange(content, segmentBookkeeper, neededRange);
 
-    // --- side-effects
+    // /!\ Side effect to a SegmentBookkeeper
     segmentBookkeeper.synchronizeBuffered(buffered);
-    checkDiscontinuity(timing);
-    checkManifestRefresh(neededRange);
-    // ---
 
     const neededSegments = getSegmentsNeeded(
       representation,
@@ -444,7 +401,7 @@ export default function RepresentationBuffer<T>({
     )
       .filter((segment) => { // filter unwanted
         return shouldDownloadSegment(
-          segment, content, segmentBookkeeper, neededRange, sourceBufferQueue);
+          segment, content, segmentBookkeeper, neededRange, sourceBufferWaitingQueue);
       })
 
       .map((segment) => ({ // add priority of the segment
@@ -452,29 +409,45 @@ export default function RepresentationBuffer<T>({
         segment,
       }));
 
+    let state : IBufferInternalState;
     if (!neededSegments.length) {
-      return period.end != null && neededRange.end >= period.end ?
+      state = period.end != null && neededRange.end >= period.end ?
         { type: "full-buffer" as "full-buffer", value: undefined } :
         { type: "idle-buffer" as "idle-buffer", value: undefined };
+    } else {
+      state = {
+        type: "need-segments" as "need-segments",
+        value: { neededSegments },
+      };
     }
 
     return {
-      type: "need-segments" as "need-segments",
-      value: { neededSegments },
+      discontinuity,
+      shouldRefreshManifest,
+      state,
     };
   }
 
   /**
-   * Exploit the internal state given by ``checkInternalState``:
+   * Exploit the internal state given by ``getBufferStatus``:
    *   - mutates the downloadQueue
    *   - start/restart the current BufferQueue
-   *   - emit important events
-   * @param {Object} state
+   *   - emit needed actions
+   *   - emit the state of the Buffer
+   * @param {Object} status
    * @returns {Observable}
    */
   function handleInternalState(
-    state : IBufferInternalState
+    status : IBufferCurrentStatus
   ) : Observable<IBufferState> {
+    const {
+      discontinuity,
+      shouldRefreshManifest,
+      state,
+    } = status;
+
+    const neededActions$ = buildNeededActions(discontinuity, shouldRefreshManifest);
+
     if (state.type === "full-buffer") {
       log.debug("finished downloading queue", adaptation.type);
       if (currentSegmentRequest) {
@@ -482,7 +455,8 @@ export default function RepresentationBuffer<T>({
       }
       downloadQueue = [];
       startQueue$.next(undefined); // (re-)start with an empty queue
-      return Observable.of(state);
+      return neededActions$
+        .concat(Observable.of(state));
     }
 
     if (state.type === "idle-buffer") {
@@ -524,20 +498,23 @@ export default function RepresentationBuffer<T>({
         downloadQueue = newQueue;
       }
 
-      return Observable.of({
+      const activeBufferEvent$ = Observable.of({
         type: "active-buffer" as "active-buffer",
         value: undefined,
       });
+
+      return neededActions$
+        .concat(activeBufferEvent$);
     }
 
     // else
-    return Observable.empty();
+    return neededActions$;
   }
 
   /**
    * State Checker:
-   *   - indicates when the manifest should be refreshed (through the messageSubject)
-   *   - indicates if a discontinuity is encountered (through the messageSubject)
+   *   - indicates when the manifest should be refreshed
+   *   - indicates if a discontinuity is encountered
    *   - emit state updates
    *   - update the downloadQueue
    *   - start/restart the BufferQueue
@@ -545,7 +522,7 @@ export default function RepresentationBuffer<T>({
    */
   const bufferState$ : Observable<IBufferState> =
     Observable.combineLatest(clock$, wantedBufferAhead$)
-      .map(checkInternalState)
+      .map(getBufferStatus)
       .mergeMap(handleInternalState);
 
   /**
@@ -558,6 +535,77 @@ export default function RepresentationBuffer<T>({
     .switchMap(requestSegments)
     .mergeMap(appendSegment);
 
-  return Observable.merge(messageSubject, bufferState$, bufferQueue$)
+  return Observable.merge(bufferState$, bufferQueue$)
     .share();
+}
+
+/**
+ * Emit the current discontinuity encountered.
+ * Inferior or equal to 0 if no discontinuity is currently happening.
+ * @param {Object} content
+ * @param {Object} timing
+ * @returns {number}
+ */
+function getCurrentDiscontinuity(
+  { manifest, representation } : {
+    manifest : Manifest;
+    representation : Representation;
+  },
+  timing : IBufferClockTick
+) : number {
+  return !timing.stalled || !manifest.isLive ?
+    -1 : representation.index.checkDiscontinuity(timing.currentTime);
+}
+
+/**
+ * Returns true if the current Manifest needs to be downloaded.
+ * @param {Object} content
+ * @param {Object} segmentBookkeeper
+ * @param {Object} wantedRange
+ * @returns {Boolean}
+ */
+function shouldRefreshManifestForRange(
+  { representation } : { representation : Representation },
+  segmentBookkeeper : SegmentBookkeeper,
+  wantedRange : { start : number; end : number}
+) : boolean {
+  const { start, end } = wantedRange;
+
+  // TODO Better solution for HSS refresh?
+  // get every segments currently downloaded and loaded
+  const segments = segmentBookkeeper.inventory
+    .map(s => s.infos.segment);
+
+  return representation.index.shouldRefresh(segments, start, end);
+}
+
+/**
+ * Returns an Observable emiting the various actions that need to be taken
+ * depending on the current conditions.
+ * @param {number} discontinuity
+ * @param {boolean} shouldRefreshManifest
+ * @returns {Observable}
+ */
+function buildNeededActions(
+  discontinuity : number,
+  shouldRefreshManifest : boolean
+) : Observable<IBufferNeededActions> {
+  // RxJS bug?
+  const empty$ = Observable.empty() as Observable<never>;
+
+  const discontinuityEvent$ = discontinuity > 1 ?
+  Observable.of({
+    type: "discontinuity-encountered" as "discontinuity-encountered",
+    value: {
+      nextTime: discontinuity + 1,
+    },
+  }) : empty$;
+
+  const shouldRefreshManifest$ = shouldRefreshManifest ?
+  Observable.of({
+    type: "needs-manifest-refresh" as "needs-manifest-refresh",
+    value: undefined,
+  }) : empty$;
+
+  return discontinuityEvent$.concat(shouldRefreshManifest$);
 }

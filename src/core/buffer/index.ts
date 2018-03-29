@@ -34,8 +34,8 @@ import createFakeBuffer from "./create_fake_buffer";
 import RepresentationBuffer, {
   IBufferClockTick,
   IBufferEventAddedSegment,
-  IBufferEventDiscontinuityEncountered,
-  IBufferEventNeedManifestRefresh,
+  IBufferNeedsDiscontinuitySeek,
+  IBufferNeedsManifestRefresh,
   IBufferStateActive,
   IBufferStateFull,
   IRepresentationBufferEvent,
@@ -299,8 +299,8 @@ export {
   createFakeBuffer,
   IBufferClockTick,
   IBufferEventAddedSegment,
-  IBufferEventDiscontinuityEncountered,
-  IBufferEventNeedManifestRefresh,
+  IBufferNeedsDiscontinuitySeek,
+  IBufferNeedsManifestRefresh,
   IBufferStateActive,
   IBufferStateFull,
 };
