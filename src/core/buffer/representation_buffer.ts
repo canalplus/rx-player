@@ -17,7 +17,6 @@
 import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
-// import { Subject } from "rxjs/Subject";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -85,8 +84,19 @@ export interface IBufferStateFull {
   value : undefined;
 }
 
-// Buffer state exposed
-type IBufferState =
+// State emitted when the buffer waits
+interface IBufferStateIdle {
+  type : "idle-buffer";
+  value : undefined;
+}
+
+// State after the download queue has been updated
+type IBufferDownloadQueueState =
+  IBufferStateFull |
+  IBufferStateActive |
+  IBufferStateIdle;
+
+type IBufferStateEvent =
   IBufferNeededActions |
   IBufferStateFull |
   IBufferStateActive;
@@ -94,7 +104,7 @@ type IBufferState =
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> =
   IBufferEventAddedSegment<T> |
-  IBufferState;
+  IBufferStateEvent;
 
 // Item emitted by the Buffer's clock$
 export interface IBufferClockTick {
@@ -388,7 +398,7 @@ export default function RepresentationBuffer<T>({
     const shouldRefreshManifest =
       shouldRefreshManifestForRange(content, segmentBookkeeper, neededRange);
 
-    // /!\ Side effect to a SegmentBookkeeper
+    // /!\ Side effect to the SegmentBookkeeper
     segmentBookkeeper.synchronizeBuffered(buffered);
 
     const neededSegments = getSegmentsNeeded(
@@ -429,86 +439,90 @@ export default function RepresentationBuffer<T>({
   }
 
   /**
-   * Exploit the internal state given by ``getBufferStatus``:
+   * Exploit the status given by ``getBufferStatus``:
+   *   - emit needed actions
    *   - mutates the downloadQueue
    *   - start/restart the current BufferQueue
-   *   - emit needed actions
    *   - emit the state of the Buffer
    * @param {Object} status
    * @returns {Observable}
    */
-  function handleInternalState(
+  function handleBufferStatus(
     status : IBufferCurrentStatus
-  ) : Observable<IBufferState> {
+  ) : Observable<IBufferStateEvent> {
     const {
       discontinuity,
       shouldRefreshManifest,
       state,
     } = status;
 
-    const neededActions$ = buildNeededActions(discontinuity, shouldRefreshManifest);
+    const neededActions = getNeededActions(discontinuity, shouldRefreshManifest);
+    const downloadQueueState = updateQueueFromInternalState(state);
 
-    if (state.type === "full-buffer") {
-      log.debug("finished downloading queue", adaptation.type);
+    return downloadQueueState.type === "idle-buffer" ?
+      Observable.of(...neededActions) :
+      Observable.of(...neededActions).concat(Observable.of(downloadQueueState));
+  }
+
+  /**
+   * Update the downloadQueue and start/restart the queue depending on the
+   * internalState and the current RepresentationBuffer's data.
+   *
+   * Returns the new state of the Downloading Queue.
+   *
+   * @param {Object} state
+   * @returns {Object}
+   */
+  function updateQueueFromInternalState(
+    state : IBufferInternalState
+  ) : IBufferDownloadQueueState {
+
+    if (state.type !== "need-segments" || !state.value.neededSegments.length) {
       if (currentSegmentRequest) {
         log.debug("interrupting segment request.");
       }
       downloadQueue = [];
       startQueue$.next(undefined); // (re-)start with an empty queue
-      return neededActions$
-        .concat(Observable.of(state));
-    }
-
-    if (state.type === "idle-buffer") {
-      if (currentSegmentRequest) {
-        log.debug("interrupting segment request.");
-      }
-      downloadQueue = [];
-      startQueue$.next(undefined); // (re-)start with an empty queue
-    }
-
-    else if (state.type === "need-segments" && state.value.neededSegments.length) {
-      const neededSegments = state.value.neededSegments;
-      const mostNeededSegment = neededSegments[0];
-
-      if (!currentSegmentRequest) {
-        log.debug("starting downloading queue", adaptation.type);
-        downloadQueue = neededSegments;
-        startQueue$.next(undefined); // restart the queue
-      } else if (
-        currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
-      ) {
-        log.debug("canceling old downloading queue and starting a new one",
-          adaptation.type);
-        downloadQueue = neededSegments;
-        startQueue$.next(undefined); // restart the queue
-      } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
-        log.debug("updating pending request priority", adaptation.type);
-        segmentFetcher.updatePriority(
-          currentSegmentRequest.request$, mostNeededSegment.priority);
-      } else {
-        log.debug("updating downloading queue", adaptation.type);
-
-        // Update the previous queue to be all needed segments but the first one,
-        // for which a request is already pending
-        const newQueue = neededSegments
-          .slice() // clone previous
-          .splice(1, neededSegments.length); // remove first element
-                                             // (pending request)
-        downloadQueue = newQueue;
-      }
-
-      const activeBufferEvent$ = Observable.of({
-        type: "active-buffer" as "active-buffer",
+      return state.type === "full-buffer" ? state : {
+        type: "idle-buffer",
         value: undefined,
-      });
-
-      return neededActions$
-        .concat(activeBufferEvent$);
+      };
     }
 
-    // else
-    return neededActions$;
+    const neededSegments = state.value.neededSegments;
+    const mostNeededSegment = neededSegments[0];
+
+    if (!currentSegmentRequest) {
+      log.debug("starting downloading queue", adaptation.type);
+      downloadQueue = neededSegments;
+      startQueue$.next(undefined); // restart the queue
+    } else if (
+      currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
+    ) {
+      log.debug("canceling old downloading queue and starting a new one",
+        adaptation.type);
+      downloadQueue = neededSegments;
+      startQueue$.next(undefined); // restart the queue
+    } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
+      log.debug("updating pending request priority", adaptation.type);
+      segmentFetcher.updatePriority(
+        currentSegmentRequest.request$, mostNeededSegment.priority);
+    } else {
+      log.debug("updating downloading queue", adaptation.type);
+
+      // Update the previous queue to be all needed segments but the first one,
+      // for which a request is already pending
+      const newQueue = neededSegments
+        .slice() // clone previous
+        .splice(1, neededSegments.length); // remove first element
+      // (pending request)
+      downloadQueue = newQueue;
+    }
+
+    return {
+      type: "active-buffer",
+      value: undefined,
+    };
   }
 
   /**
@@ -520,10 +534,10 @@ export default function RepresentationBuffer<T>({
    *   - start/restart the BufferQueue
    * @type {Observable}
    */
-  const bufferState$ : Observable<IBufferState> =
+  const bufferState$ : Observable<IBufferStateEvent> =
     Observable.combineLatest(clock$, wantedBufferAhead$)
       .map(getBufferStatus)
-      .mergeMap(handleInternalState);
+      .mergeMap(handleBufferStatus);
 
   /**
    * Buffer Queue:
@@ -580,32 +594,31 @@ function shouldRefreshManifestForRange(
 }
 
 /**
- * Returns an Observable emiting the various actions that need to be taken
- * depending on the current conditions.
  * @param {number} discontinuity
  * @param {boolean} shouldRefreshManifest
- * @returns {Observable}
+ * @returns {Array.<Object>}
  */
-function buildNeededActions(
+function getNeededActions(
   discontinuity : number,
   shouldRefreshManifest : boolean
-) : Observable<IBufferNeededActions> {
-  // RxJS bug?
-  const empty$ = Observable.empty() as Observable<never>;
+) : IBufferNeededActions[] {
+  const neededActions : IBufferNeededActions[] = [];
 
-  const discontinuityEvent$ = discontinuity > 1 ?
-  Observable.of({
-    type: "discontinuity-encountered" as "discontinuity-encountered",
-    value: {
-      nextTime: discontinuity + 1,
-    },
-  }) : empty$;
+  if (discontinuity > 1) {
+    neededActions.push({
+      type: "discontinuity-encountered" as "discontinuity-encountered",
+      value: {
+        nextTime: discontinuity + 1,
+      },
+    });
+  }
 
-  const shouldRefreshManifest$ = shouldRefreshManifest ?
-  Observable.of({
-    type: "needs-manifest-refresh" as "needs-manifest-refresh",
-    value: undefined,
-  }) : empty$;
+  if (shouldRefreshManifest) {
+    neededActions.push({
+      type: "needs-manifest-refresh" as "needs-manifest-refresh",
+      value: undefined,
+    });
+  }
 
-  return discontinuityEvent$.concat(shouldRefreshManifest$);
+  return neededActions;
 }

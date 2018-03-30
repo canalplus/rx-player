@@ -32,6 +32,7 @@ const {
 /**
  * Returns true if the given Segment should be downloaded.
  * false otherwise.
+ *
  * @param {Object} segment
  * @param {Object} content - The content the Segment depends on.
  * @param {Object} segmentBookkeeper

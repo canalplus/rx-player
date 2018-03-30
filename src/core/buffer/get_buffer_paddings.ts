@@ -23,8 +23,9 @@ const { BUFFER_PADDING } = config;
  * Get safety paddings (low and high) for the size of buffer that won't
  * be flushed when switching representation for smooth transitions
  * and avoiding buffer underflows.
+ *
  * @param {Object} adaptation
- * @returns {number}
+ * @returns {Object}
  */
 export default function getBufferPaddings(
   adaptation : Adaptation
