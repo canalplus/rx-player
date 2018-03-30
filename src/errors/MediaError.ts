@@ -32,7 +32,7 @@ export default class MediaError extends Error {
   public readonly type : string;
   public readonly message : string;
   public readonly code : string;
-  public readonly reason? : { message : string }|string|null;
+  public readonly reason? : Error|string|null;
   public fatal : boolean;
 
   constructor(code : string, reason? : Error|null, fatal? : boolean) {
