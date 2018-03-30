@@ -23,11 +23,22 @@ import Manifest, {
 } from "../../../manifest";
 import createManifest from "../../../manifest/factory";
 import { ITransportPipelines } from "../../../net";
+import {
+  IManifestLoaderArguments,
+  IManifestResult,
+} from "../../../net/types";
 import Pipeline, {
   IPipelineCache,
   IPipelineData,
   IPipelineOptions,
 } from "../core_pipeline";
+
+type IPipelineManifestResult =
+  IPipelineData<IManifestResult> |
+  IPipelineCache<IManifestResult>;
+
+type IPipelineManifestOptions =
+  IPipelineOptions<IManifestLoaderArguments, Document|string>;
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
@@ -47,23 +58,25 @@ import Pipeline, {
  */
 export default function createManifestPipeline(
   transport : ITransportPipelines,
-  pipelineOptions : IPipelineOptions<any, any>,
+  pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|CustomError>,
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
   supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {
   return function fetchManifest(url : string) {
-    const manifest$ = Pipeline(transport.manifest, pipelineOptions)({ url });
+    const manifest$ = Pipeline<
+      IManifestLoaderArguments, Document|string, IManifestResult
+    >(transport.manifest, pipelineOptions)({ url });
 
     return manifest$
 
-      .do(({ type, value }) => {
-        if (type === "error") {
-          warning$.next(value);
+      .do((arg) => {
+        if (arg.type === "error") {
+          warning$.next(arg.value);
         }
       })
 
-      .filter((arg) : arg is IPipelineData|IPipelineCache =>
+      .filter((arg) : arg is IPipelineManifestResult =>
         arg.type === "data" || arg.type === "cache"
       )
 

@@ -59,7 +59,7 @@ export interface ISegmentLoaderArguments {
 
 // -- response
 
-interface ILoaderResponseValue<T> {
+export interface ILoaderResponseValue<T> {
   responseData : T;
   duration? : number;
   size? : number;
@@ -90,11 +90,12 @@ interface ILoaderData<T> {
   };
 }
 
-export type ILoaderObserver<T> = Observer<
-  ILoaderProgress|ILoaderResponse<T>|ILoaderData<T>>;
+export type ILoaderEvent<T> =
+  ILoaderProgress|ILoaderResponse<T>|ILoaderData<T>;
 
-export type ILoaderObservable<T> = Observable<
-  ILoaderProgress|ILoaderResponse<T>|ILoaderData<T>>;
+export type ILoaderObserver<T> = Observer<ILoaderEvent<T>>;
+
+export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 
 // ---- PARSER ----
 
@@ -116,10 +117,12 @@ export interface ISegmentParserArguments<T> {
 
 // -- response
 
-export type IManifestParserObservable = Observable<{
+export interface IManifestResult {
   manifest: IParsedManifest;
   url? : string;
-}>;
+}
+
+export type IManifestParserObservable = Observable<IManifestResult>;
 
 export type SegmentParserObservable = Observable<{
   segmentData? : Uint8Array|ArrayBuffer;
