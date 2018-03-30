@@ -18,9 +18,7 @@ import { getLeftSizeOfRange } from "../../utils/ranges";
 
 export interface ITimingData {
   currentTime : number;
-  readyState : number;
   timeOffset : number;
-  stalled : object|null;
   liveGap? : number;
 }
 
