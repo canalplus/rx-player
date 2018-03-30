@@ -256,7 +256,7 @@ export default class LanguageManager {
   }
 
   /**
-   * Emit preferred text Adaptation through the given Subject based on:
+   * Emit initial text Adaptation through the given Subject based on:
    *   - the preferred text tracks
    *   - the last choice for this period, if one
    * @param {Period} period
