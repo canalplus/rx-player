@@ -35,16 +35,18 @@ import BasePipeline, {
   IPipelineOptions,
 } from "../core_pipeline";
 
+interface ISegmentResponseParsed<T> {
+  segmentData : T;
+  segmentInfos : {
+    duration : number;
+    time : number;
+    timescale : number;
+  };
+}
+
 // Response that should be emitted by the given Pipeline
 export interface ISegmentResponse<T> {
-  parsed: {
-    segmentData : T;
-    segmentInfos : {
-      duration : number;
-      time : number;
-      timescale : number;
-    };
-  };
+  parsed: ISegmentResponseParsed<T>;
 }
 
 export type ISegmentFetcher<T> = (
@@ -96,71 +98,90 @@ export default function createSegmentFetcher<T>(
   ) : Observable<ISegmentResponse<T>> {
     return basePipeline$(content)
 
-      .do(({ type, value }) => {
-        if (type === "error") {
-          // value is an Error. Add the pipeline type information to it.
-          warning$.next(objectAssign(value, { pipelineType: bufferType }));
-        } else {
-          switch (type) {
-            case "metrics": {
-              // format it for ABR Handling
-              network$.next({ type: bufferType, value });
-              break;
-            }
+      .do((arg) => {
+        switch (arg.type) {
+          case "error":
+            warning$.next(objectAssign(arg.value, { pipelineType: bufferType }));
+            break;
 
-            case "request": {
-              // format it for ABR Handling
-              const segment : ISegment|undefined = value && value.segment;
-              if (segment != null && segment.duration != null) {
-                request$ = new Subject();
-                requests$.next(request$);
+          case "metrics": {
+            const { value } = arg;
+            const { size, duration } = value; // unwrapping for TS
 
-                const duration = segment.duration / segment.timescale;
-                const time = segment.time / segment.timescale;
-                id = generateID();
-                request$.next({
-                  type: bufferType,
-                  event: "requestBegin",
-                  value: {
-                    duration,
-                    time,
-                    requestTimestamp: Date.now(),
-                    id,
-                  },
-                });
-              }
-              break;
+            // format it for ABR Handling
+            if (size != null && duration != null) {
+              network$.next({
+                type: bufferType,
+                value: {
+                  size,
+                  duration,
+                },
+              });
             }
+            break;
+          }
 
-            case "progress": {
-              if (
-                value.size < value.totalSize &&
-                id != null &&
-                request$ != null
-              ) {
-                request$.next({
-                  type: bufferType,
-                  event: "progress",
-                  value: {
-                    duration: value.duration,
-                    size: value.size,
-                    totalSize: value.totalSize,
-                    timestamp: Date.now(),
-                    id,
-                  },
-                });
-              }
-              break;
+          case "request": {
+            const { value } = arg;
+
+            // format it for ABR Handling
+            const segment : ISegment|undefined = value && value.segment;
+            if (segment != null && segment.duration != null) {
+              request$ = new Subject();
+              requests$.next(request$);
+
+              const duration = segment.duration / segment.timescale;
+              const time = segment.time / segment.timescale;
+              id = generateID();
+              request$.next({
+                type: bufferType,
+                event: "requestBegin",
+                value: {
+                  duration,
+                  time,
+                  requestTimestamp: Date.now(),
+                  id,
+                },
+              });
             }
+            break;
+          }
+
+          case "progress": {
+            const { value } = arg;
+            if (
+              value.totalSize != null &&
+              value.size < value.totalSize &&
+              id != null &&
+              request$ != null
+            ) {
+              request$.next({
+                type: bufferType,
+                event: "progress",
+                value: {
+                  duration: value.duration,
+                  size: value.size,
+                  totalSize: value.totalSize,
+                  timestamp: Date.now(),
+                  id,
+                },
+              });
+            }
+            break;
           }
         }
       })
 
-      .filter((arg) : arg is IPipelineData|IPipelineCache =>
+      .filter((
+        arg
+      ) : arg is
+        IPipelineData<ISegmentResponseParsed<T>>|
+        IPipelineCache<ISegmentResponseParsed<T>> =>
         arg.type === "data" || arg.type === "cache"
       )
 
-      .map(({ value }) => value) // take only value from data/cache events
+      // take only value from data/cache events
+      .map(({ value }) => value)
 
       .finally(() => {
         if (request$ != null) {
