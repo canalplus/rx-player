@@ -85,12 +85,12 @@ import createClock, {
 } from "./clock";
 import { PLAYER_STATES } from "./constants";
 import LanguageManager, {
-  IAudioTrackConfiguration,
+  IAudioTrackPreference,
   ILMAudioTrack,
-  ILMAudioTrackList,
+  ILMAudioTrackListItem,
   ILMTextTrack,
-  ILMTextTrackList,
-  ITextTrackConfiguration,
+  ILMTextTrackListItem,
+  ITextTrackPreference,
 } from "./language_manager";
 import {
   IConstructorOptions,
@@ -337,14 +337,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {undefined|null|Object}
    */
-  private _priv_initialAudioTrack : undefined|null|IAudioTrackConfiguration;
+  private _priv_initialAudioTrack : undefined|IAudioTrackPreference;
 
   /**
    * Store default text track for a loaded content.
    * @private
    * @type {undefined|null|Object}
    */
-  private _priv_initialTextTrack : undefined|null|ITextTrackConfiguration;
+  private _priv_initialTextTrack : undefined|ITextTrackPreference;
 
   /**
    * LanguageManager instance linked to the current content.
@@ -1458,7 +1458,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Returns every available audio tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
-  getAvailableAudioTracks() : ILMAudioTrackList | null {
+  getAvailableAudioTracks() : ILMAudioTrackListItem[] | null {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       return null;
     }
@@ -1469,7 +1469,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Returns every available text tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
-  getAvailableTextTracks() : ILMTextTrackList | null {
+  getAvailableTextTracks() : ILMTextTrackListItem[] | null {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       return null;
     }
@@ -1504,7 +1504,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - the current content has no LanguageManager.
    * @throws Error - the given id is linked to no audio track.
    */
-  setAudioTrack(audioId : string|number) : void {
+  setAudioTrack(audioId : string) : void {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       throw new Error("No compatible content launched.");
     }
@@ -1522,7 +1522,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - the current content has no LanguageManager.
    * @throws Error - the given id is linked to no text track.
    */
-  setTextTrack(textId : string|number) : void {
+  setTextTrack(textId : string) : void {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       throw new Error("No compatible content launched.");
     }
