@@ -28,6 +28,7 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  *
  * Try to clean up buffered ranges from a low gcGap at first.
  * If it does not succeed to clean up space, use a higher gcCap.
+ *
  * @param {Observable} timings$
  * @param {QueuedSourceBuffer} bufferingQueue
  * @returns {Observable}
@@ -62,6 +63,7 @@ export default function forceGarbageCollection(
  * Tries to free up some part of the ranges that are distant from the current
  * playing time.
  * See: https://w3c.github.io/media-source/#sourcebuffer-prepare-append
+ *
  * @param {Number} currentTime
  * @param {TimeRanges} buffered - current buffered ranges
  * @param {Number} gcGap - delta gap from current timestamp from which we

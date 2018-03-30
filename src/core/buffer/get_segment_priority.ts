@@ -23,7 +23,7 @@ const { SEGMENT_PRIORITIES_STEPS } = config;
  * Calculate the priority number of the Segment, in function of the distance
  * with the current time.
  *
- * The lower is this number, the higher should be the priority.
+ * The lower is this number, the higher should be the priority of the request.
  *
  * @param {Object} segment
  * @param {Object} clockTick

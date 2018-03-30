@@ -24,6 +24,11 @@ import forceGarbageCollection from "./force_garbage_collection";
  * Append buffer to the queuedSourceBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
  * _garbage collector_.
+ *
+ * @param {Object} queuedSourceBuffer
+ * @param {Object|null} initSegmentData
+ * @param {Object} segment
+ * @param {Object} segmentData
  * @returns {Observable}
  */
 function appendDataToSourceBuffer<T>(
@@ -50,6 +55,12 @@ function appendDataToSourceBuffer<T>(
  * Append buffer to the queuedSourceBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
  * _garbage collector_.
+ *
+ * @param {Observable} clock$
+ * @param {Object} queuedSourceBuffer
+ * @param {Object|null} initSegmentData
+ * @param {Object} segment
+ * @param {Object} segmentData
  * @returns {Observable}
  */
 export default function appendDataToSourceBufferWithRetries<T>(

@@ -14,40 +14,39 @@
  * limitations under the License.
  */
 
-import { Period } from "../../manifest";
 import { getLeftSizeOfRange } from "../../utils/ranges";
 
-// XXX TODO
-// Item emitted by the Buffer's clock$
-export interface IBufferClockTick {
+export interface ITimingData {
   currentTime : number;
   readyState : number;
-
-  // TODO Rename "baseTime" or something which will be currentTime + timeOffset
   timeOffset : number;
   stalled : object|null;
   liveGap? : number;
 }
 
 /**
- * Returns the range needed for a particular point in time.
+ * Returns the range of segments needed for a particular point in time.
+ *
+ * @param {Object} hardLimits
+ * @param {TimeRanges} buffered
  * @param {Object} timing
  * @param {number} bufferGoal
+ * @param {Object} paddings
  * @returns {Object}
  */
 export default function getWantedRange(
-  period : Period,
+  hardLimits : { start? : number; end? : number },
   buffered : TimeRanges,
-  timing : IBufferClockTick,
+  timing : ITimingData,
   bufferGoal : number,
   paddings : { low : number; high : number }
 ) : { start : number; end : number } {
   const currentTime = timing.currentTime + timing.timeOffset;
   const limitEnd = timing.liveGap == null ?
-    period.end :
-    Math.min(period.end || Infinity, timing.currentTime + timing.liveGap);
-  const limits = {
-    start: Math.max(period.start, currentTime),
+    hardLimits.end :
+    Math.min(hardLimits.end || Infinity, timing.currentTime + timing.liveGap);
+  const boundedLimits = {
+    start: Math.max(hardLimits.start || 0, currentTime),
     end: limitEnd,
   };
 
@@ -63,11 +62,13 @@ export default function getWantedRange(
     Math.min(bufferGap, highPadding) : 0;
 
   return {
+
     start: Math.min(
-      Math.max(currentTime + timestampPadding, limits.start),
-      limits.end || Infinity),
+      Math.max(currentTime + timestampPadding, boundedLimits.start),
+      boundedLimits.end || Infinity),
+
     end: Math.min(
-      Math.max(currentTime + bufferGoal, limits.start),
-      limits.end || Infinity),
+      Math.max(currentTime + bufferGoal, boundedLimits.start),
+      boundedLimits.end || Infinity),
   };
 }
