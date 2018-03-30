@@ -21,6 +21,9 @@ import {
 
 import errorMessage from "./errorMessage";
 
+type IEncryptedMediaErrorReason =
+  Error|Event|string|null;
+
 /**
  * Error linked to the encryption of the media.
  *
@@ -32,10 +35,14 @@ export default class EncryptedMediaError extends Error {
   public readonly type : string;
   public readonly message : string;
   public readonly code : string;
-  public readonly reason? : { message : string }|string|null;
+  public readonly reason? : IEncryptedMediaErrorReason;
   public fatal : boolean;
 
-  constructor(code : string, reason? : any, fatal? : boolean) {
+  constructor(
+    code : string,
+    reason? : IEncryptedMediaErrorReason,
+    fatal? : boolean
+  ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, EncryptedMediaError.prototype);
