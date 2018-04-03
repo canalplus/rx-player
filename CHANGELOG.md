@@ -6,6 +6,11 @@
 
   - eme/error: fix reason string and error message for KEY_STATUS_CHANGE_ERROR
 
+### Other improvements
+
+  - buffer: update download queue immediately when seeking to an already-buffered part to limit seeking time
+  - buffer: schedule segments per level of priority to lower some buffering/seeking/loading time
+
 
 ## v3.3.1 (2018/03/13)
 
