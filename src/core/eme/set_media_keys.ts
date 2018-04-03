@@ -26,10 +26,8 @@ import { IMediaKeysInfos } from "./session";
 
 /**
  * Set the MediaKeys object on the videoElement.
- * @param {MediaKeys} mediaKeys
- * @param {Object} mksConfig - MediaKeySystemConfiguration used
+ * @param {Object} mediaKeysInfos
  * @param {HTMLMediaElement} video
- * @param {Object} keySystem
  * @param {Object} instceInfos
  * @returns {Observable}
  */

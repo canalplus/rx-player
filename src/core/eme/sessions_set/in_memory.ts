@@ -36,6 +36,8 @@ interface ISessionData {
  * MediaKeySessions. This set allow to reuse sessions without re-
  * negotiating a license exchange if the key is already used in a
  * loaded session.
+ *
+ * TODO Add Cache maximum size
  * @class InMemorySessionsSet
  * @extends SessionSet
  */
