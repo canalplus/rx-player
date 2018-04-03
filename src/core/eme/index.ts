@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import {
   hasEMEAPIs,
@@ -28,8 +27,6 @@ import { assertInterface } from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
-import hashInitData from "./sessions_set/hash_init_data";
-
 import {
   $loadedSessions,
   $storedSessions,
@@ -47,6 +44,7 @@ import {
   IMediaKeysInfos,
   ISessionEvent,
 } from "./session";
+import hashInitData from "./sessions_set/hash_init_data";
 import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
@@ -73,7 +71,7 @@ function createMediaKeysObs(
 }
 
 /**
- * Set the session storage given in options, if one.
+ * Set the license storage given in options, if one.
  * @param {Object} keySystem
  */
 function setSessionStorage(keySystem: IKeySystemOption) : void {
@@ -102,14 +100,18 @@ function createMediaKeys(
 ) : Observable<IMediaKeysInfos> {
   return findCompatibleKeySystem(keySystems, instanceInfos)
     .mergeMap((keySystemAccessInfos) => {
-      return createMediaKeysObs(keySystemAccessInfos.keySystemAccess)
+      const {
+        keySystem,
+        keySystemAccess,
+      } = keySystemAccessInfos;
+      return createMediaKeysObs(keySystemAccess)
         .mergeMap(function prepareMediaKeysConfiguration(mediaKeys) {
-          const { keySystem } = keySystemAccessInfos;
-          const { serverCertificate } = keySystem;
-          setSessionStorage(keySystem);
+          setSessionStorage(keySystem); // TODO Should be done in this function?
 
+          const { serverCertificate } = keySystem;
           const _mediaKeysInfos$ = Observable
-            .of(objectAssign({ mediaKeys }, keySystemAccessInfos));
+            .of({ mediaKeys, keySystem, keySystemAccess });
+
           if (
             serverCertificate != null &&
             typeof mediaKeys.setServerCertificate === "function"
@@ -117,6 +119,7 @@ function createMediaKeys(
             return trySettingServerCertificate(mediaKeys, serverCertificate, errorStream)
               .concat(_mediaKeysInfos$);
           }
+
           return _mediaKeysInfos$;
         });
     });
@@ -129,9 +132,11 @@ function createMediaKeys(
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
  * @param {HTMLMediaElement} video
- * @param {Object} keySystems
+ * @param {Array.<Object>} keySystems
  * @param {Subject} errorStream
  * @returns {Observable}
+ * TODO we should not return raw events, but document each one which can be
+ * returned.
  */
 function createEME(
   video : HTMLMediaElement,
@@ -146,8 +151,10 @@ function createEME(
   }
 
   /**
-   * Encrypted event may be distinct until initData changes.
+   * Encrypted events may be distinct until initData changes.
    * It is usefull to trigger session creation on two consecutive init datas.
+   *
+   * @type {Observable}
    */
   const encrypted$ = onEncrypted$(video)
     .distinctUntilChanged(function isSameEncryptedEvent(prevEvt, evt) {
@@ -155,6 +162,7 @@ function createEME(
         evt.initData == null || prevEvt.initData == null ||
         evt.initDataType !== prevEvt.initDataType
       ) {
+
         return false;
       }
       const evtHash = hashInitData(new Uint8Array(evt.initData));
@@ -175,20 +183,20 @@ function createEME(
         throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
       }
 
-      const events$ = createOrReuseSessionWithRetry(
+      const sessionEvents = createOrReuseSessionWithRetry(
         encryptedEvent,
         mediaKeysInfos
       );
 
       return Observable.combineLatest(
-        events$,
+        sessionEvents,
         Observable.of(encryptedEvent),
         Observable.of(mediaKeysInfos)
       );
     }
   // Handle events from created session
   ).mergeMap((
-      [event, encryptedEvent, mediaKeysInfos]:
+      [sessionEvent, encryptedEvent, mediaKeysInfos]:
         [ISessionEvent, MediaEncryptedEvent, IMediaKeysInfos],
       i: number
     ) => {
@@ -196,14 +204,14 @@ function createEME(
         setMediaKeysObs(mediaKeysInfos, video, instanceInfos) :
         Observable.empty();
 
-      const sessionEvents$ = event.value.name === "reuse-session" ?
-        Observable.of(event) :
+      const sessionEvents$ = sessionEvent.value.name === "reuse-session" ?
+        Observable.of(sessionEvent) :
         handleSessionEvents(
-          event.value.session,
+          sessionEvent.value.session,
           mediaKeysInfos.keySystem,
           new Uint8Array(encryptedEvent.initData as ArrayBuffer),
           errorStream
-        ).startWith(event);
+        ).startWith(sessionEvent);
 
       return Observable.merge(
         setMediaKeys$.ignoreElements() as Observable<never>,
@@ -270,7 +278,7 @@ export default function EMEManager(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   errorStream : ErrorStream
-) :  Observable<|ISessionEvent|Event> {
+) :  Observable<ISessionEvent|Event> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {
       return onEncrypted$(videoElement).map(() => {

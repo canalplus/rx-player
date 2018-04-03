@@ -18,21 +18,6 @@ import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { TimeoutError } from "rxjs/util/TimeoutError";
-import arrayIncludes from "../../utils/array-includes";
-
-import {
-  CustomError,
-  EncryptedMediaError,
-  ErrorCodes,
-  ErrorTypes,
-  isKnownError,
-} from "../../errors";
-import castToObservable from "../../utils/castToObservable";
-import log from "../../utils/log";
-import noop from "../../utils/noop";
-import { retryObsWithBackoff } from "../../utils/retry";
-import tryCatch from "../../utils/rx-tryCatch";
-
 import {
   IMediaKeySession,
   IMockMediaKeys,
@@ -42,7 +27,19 @@ import {
   onKeyMessage$,
   onKeyStatusesChange$,
 } from "../../compat/events";
-
+import {
+  CustomError,
+  EncryptedMediaError,
+  ErrorCodes,
+  ErrorTypes,
+  isKnownError,
+} from "../../errors";
+import arrayIncludes from "../../utils/array-includes";
+import castToObservable from "../../utils/castToObservable";
+import log from "../../utils/log";
+import noop from "../../utils/noop";
+import { retryObsWithBackoff } from "../../utils/retry";
+import tryCatch from "../../utils/rx-tryCatch";
 import {
   KEY_STATUS_ERRORS,
 } from "./constants";
@@ -76,12 +73,6 @@ interface ISessionEventOptions {
   storedSessionId?: string;
 }
 
-type MediaKeySessionType =
-  "temporary" |
-  "persistent-license" |
-  "persistent-release-message" |
-  undefined;
-
 type LicenseObject =
   TypedArray |
   ArrayBuffer;
@@ -94,7 +85,7 @@ type LicenseObject =
  * session information in the returned object.
  * @returns {Object}
  */
-export function createSessionEvent(
+function createSessionEvent(
   name : string,
   session : IMediaKeySession|MediaKeySession,
   options? : ISessionEventOptions
@@ -240,16 +231,14 @@ function sessionEventsHandler(
 }
 
 /**
- * Create Key MediaKeySessionType and link MediaKeySession events to the right events
+ * Create Key MediaKeySession and link MediaKeySession events to the right events
  * handlers.
  * @param {MediaKeys} mediaKeys
- * @param {string} sessionType - Either "persistent-license" or "temporary"
- * @param {Object} keySystem
+ * @param {string} sessionType
  * @param {UInt8Array} initData
- * @param {Subject} errorStream
  * @returns {Observable}
  */
-export function createSession(
+function createSession(
   mediaKeys: IMockMediaKeys|MediaKeys,
   sessionType: MediaKeySessionType,
   initData: Uint8Array
@@ -258,7 +247,11 @@ export function createSession(
   if (mediaKeys.createSession == null) {
     throw new Error("Invalid MediaKeys implementation: Missing createSession");
   }
-  const session = mediaKeys.createSession(sessionType);
+
+  // TODO TS bug? I don't get the problem here.
+  const session : IMediaKeySession|MediaKeySession =
+    (mediaKeys as any).createSession(sessionType);
+
   $loadedSessions.add(initData, session);
   return Observable.of(session);
 }
@@ -271,10 +264,6 @@ export function handleSessionEvents(
 ): Observable<Event|ISessionEvent> {
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
-      // TODO subscribe to it
-      // Normally deleteAndClose should begin to emit (and do its side-effects)
-      // on subscription. It's however not the case here.
-      // If that was the case though, we should subscribe here.
       $loadedSessions.deleteAndClose(session);
       $storedSessions.delete(initData);
     });
@@ -282,12 +271,19 @@ export function handleSessionEvents(
   return sessionEvents;
 }
 
-export function generateKeyRequest(
+/**
+ * @param {MediaKeySession} session
+ * @param {Uint8Array} initData
+ * @param {string} initDataType
+ * @param {string} sessionType
+ * @returns {Observable}
+ */
+function generateKeyRequest(
   session: MediaKeySession|IMediaKeySession,
-  initData: any,
-  initDataType: any,
-  sessionType: any
-) {
+  initData: Uint8Array,
+  initDataType: string,
+  sessionType: string
+) : Observable<ISessionEvent> {
 
   const generateRequest = castToObservable(
     session.generateRequest(initDataType, initData)
@@ -295,11 +291,13 @@ export function generateKeyRequest(
     .catch((error) => {
       throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
     })
+
     .do(() => {
       if (sessionType === "persistent-license") {
         $storedSessions.add(initData, session);
       }
     })
+
     .mapTo(createSessionEvent("generated-request", session, { initData, initDataType }));
 
   return generateRequest;
@@ -307,10 +305,8 @@ export function generateKeyRequest(
 
 /**
  * React to each "encrypted" events.
+ * @param {MediaKeySession} session
  * @param {MediaEncryptedEvent} encryptedEvent
- * @param {Object} mediaKeysInfos
- * @param {HTMLMediaElement} video
- * @param {Subject} ErrorStream
  * @returns {Observable}
  */
 function generateRequestOnSession(
@@ -334,10 +330,15 @@ function generateRequestOnSession(
     });
 }
 
+/**
+ * @param {MediaEncryptedEvent} encryptedEvent
+ * @param {Object} mediaKeysInfos
+ * @returns {Observable}
+ */
 export function createOrReuseSessionWithRetry(
   encryptedEvent: MediaEncryptedEvent,
   mediaKeysInfos: IMediaKeysInfos
-) {
+) : Observable<ISessionEvent> {
   return createOrReuseSession(
     encryptedEvent,
     mediaKeysInfos
@@ -387,7 +388,7 @@ function createOrReuseSession(
         } = mediaKeysInfos;
         const mksConfig = keySystemAccess.getConfiguration();
 
-        let sessionType: MediaKeySessionType = "temporary"; // (default value)
+        let sessionType : MediaKeySessionType = "temporary"; // (default value)
         const sessionTypes = mksConfig.sessionTypes;
         const hasPersistence = (
           sessionTypes && arrayIncludes(sessionTypes, "persistent-license"));
