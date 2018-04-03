@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayFind = require("array-find");
 import { Observable } from "rxjs/Observable";
 import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
 import { Subscription } from "rxjs/Subscription";
@@ -21,7 +22,6 @@ import { IMediaKeySession } from "../../../compat";
 import castToObservable from "../../../utils/castToObservable";
 import log from "../../../utils/log";
 import { ISessionEvent } from "../session";
-import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
 
 // Cached data for a single MediaKeySession
@@ -32,43 +32,45 @@ interface ISessionData {
 }
 
 /**
- * Set maintaining a representation of all currently loaded
- * MediaKeySessions. This set allow to reuse sessions without re-
- * negotiating a license exchange if the key is already used in a
- * loaded session.
- * @class InMemorySessionsSet
- * @extends SessionSet
+ * Cache linking initData to a single MediaKeySession.
+ *
+ * TODO Maximum cache length
+ * TODO Either this is a cache and it does not interact with the MediaKeySession
+ * (like closing them or subscribing to its events) or it manages them and it
+ * should be some kind of wrapper on it.
+ * The problem with implementing a cache with a maximum size is that we don't
+ * know if the oldest MediaKeySession is used, so we cannot close it.
+ *
+ * @class MediaKeySessionCache
  */
-export default class InMemorySessionsSet extends SessionSet<ISessionData> {
+export default class MediaKeySessionCache {
+  private _entries : ISessionData[];
+
+  constructor() {
+    this._entries = [];
+  }
+
   /**
+   * Get oldest MediaKeySession cached.
    * @returns {MediaKeySession|undefined}
    */
-  getFirst() : IMediaKeySession|MediaKeySession|undefined {
-    if (this._entries.length > 0) {
-      return this._entries[0].session;
+  public getOldest() : IMediaKeySession|MediaKeySession|undefined {
+    if (!this._entries.length) {
+      return undefined;
     }
+    return this._entries[0].session;
   }
 
   /**
-   * @param {Function} func
-   * @returns {Object|null}
-   */
-  find(func : (x : ISessionData) => boolean) : ISessionData|null {
-    for (let i = 0; i < this._entries.length; i++) {
-      if (func(this._entries[i])) {
-        return this._entries[i];
-      }
-    }
-    return null;
-  }
-
-  /**
+   * Get the MediaKeySession linked to an initData.
+   * null if no MediaKeySession with this initData is stored.
+   *
    * @param {number|Uint8Array} initData
    * @returns {MediaKeySession|null}
    */
-  get(initData : number|Uint8Array) : IMediaKeySession|MediaKeySession|null {
+  public get(initData : number|Uint8Array) : IMediaKeySession|MediaKeySession|null {
     const hash = hashInitData(initData);
-    const entry = this.find((e) => e.initData === hash);
+    const entry = arrayFind(this._entries, (e) => e.initData === hash);
     if (entry) {
       return entry.session;
     } else {
@@ -77,19 +79,24 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   }
 
   /**
+   * Adds a new MediaKeySession and start subscription to its events.
+   *
+   * TODO Manage event subscription elsewhere.
    * @param {Uint8Array|Array.<number>|number} initData
    * @param {MediaKeySession} session
    * @param {ConnectableObservable} sessionEvents
    */
-  add(
+  public add(
     initData : Uint8Array|number[]|number,
     session : IMediaKeySession|MediaKeySession,
     sessionEvents : ConnectableObservable<Event|ISessionEvent>
   ) : void {
     const hash = hashInitData(initData);
+
     const currentSession = this.get(hash);
     if (currentSession) {
-      this.deleteAndClose(currentSession);
+      this.delete(currentSession);
+      currentSession.close(); // TODO we shouldn't close sessions like that here
     }
 
     const eventSubscription = sessionEvents.connect();
@@ -103,63 +110,69 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   }
 
   /**
+   * Delete Session reference from this cache and unsubscribe to its events by
+   * giving its sessionId.
+   *
+   * Returns true if the given session has been found and deleted, false
+   * otherwise.
+   *
    * @param {string} sessionId
    * @returns {MediaKeySession|null}
    */
-  deleteById(sessionId : string) : IMediaKeySession|MediaKeySession|null {
-    const entry = this.find((e) => e.session.sessionId === sessionId);
+  public deleteById(sessionId : string) : boolean {
+    const entry = arrayFind(this._entries,(e) => e.session.sessionId === sessionId);
+
     if (entry) {
       return this.delete(entry.session);
     } else {
-      return null;
+      return false;
     }
   }
 
   /**
+   * Delete Session reference from this cache and unsubscribe to its events by
+   * giving its session.
+   *
+   * Returns true if the given session has been found and deleted, false
+   * otherwise.
+   *
+   * /!\ Doesn't close the session
+   *
+   * TODO merge with deleteById?
+   * TODO Manage event subscription elsewhere.
    * @param {MediaKeySession} session_
-   * @returns {MediaKeySession|null}
+   * @returns {boolean}
    */
-  delete(
+  public delete(
     session_ : IMediaKeySession|MediaKeySession
-  ) : IMediaKeySession|MediaKeySession|null {
-    const entry = this.find((e) => e.session === session_);
+  ) : boolean {
+    const entry = arrayFind(this._entries, (e) => e.session === session_);
     if (!entry) {
-      return null;
+      return false;
     }
 
-    const { session, eventSubscription } = entry;
+    const { eventSubscription } = entry;
     log.debug("eme-mem-store: delete session", entry);
     const idx = this._entries.indexOf(entry);
     this._entries.splice(idx, 1);
     eventSubscription.unsubscribe();
-    return session;
+    return true;
   }
 
   /**
-   * @param {MediaKeySession} session_
+   * Free up all ressources taken by this class:
+   *   - stop subscribing to the events of all sessions
+   *   - Close the corresponding session
+   *   - remove their reference
+   *
    * @returns {Observable}
    */
-  deleteAndClose(
-    session_ : IMediaKeySession|MediaKeySession
-  ) : Observable<void|null> {
-    const session = this.delete(session_);
-    if (session) {
-      log.debug("eme-mem-store: close session", session);
-
-      // TODO This call will be active as soon as this line is read. We should
-      // probably defer the call on subscription
+  public dispose() : Observable<void|null> {
+    const disposed = this._entries.map(({ session }) => {
+      this.delete(session);
       return castToObservable(session.close())
-        .catch(() => Observable.of(null));
-    } else {
-      return Observable.of(null);
-    }
-  }
-
-  /**
-   * @returns {Observable}
-   */
-  dispose() : Observable<void|null> {
-    const disposed = this._entries.map((e) => this.deleteAndClose(e.session));
+        .catch(() => Observable.of(undefined));
+    });
     this._entries = [];
     return Observable.merge(...disposed);
   }
