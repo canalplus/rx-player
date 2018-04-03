@@ -262,7 +262,13 @@ function createSession(
     .finally(() => {
       $loadedSessions.delete(session);
       $storedSessions.delete(initData);
-      session.close();
+      session.close()
+        .then(() => {
+          log.debug("closed MediaKeySession", session);
+        })
+        .catch(() => {
+          log.warn("Failed to close MediaKeySession", session);
+        });
     })
     .publish();
 

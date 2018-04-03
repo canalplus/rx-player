@@ -96,7 +96,13 @@ export default class MediaKeySessionCache {
     const currentSession = this.get(hash);
     if (currentSession) {
       this.delete(currentSession);
-      currentSession.close(); // TODO we shouldn't close sessions like that here
+      currentSession.close() // TODO we shouldn't close sessions like that here
+        .then(() => {
+          log.debug("closed MediaKeySession", session);
+        })
+        .catch(() => {
+          log.warn("Failed to close MediaKeySession", session);
+        });
     }
 
     const eventSubscription = sessionEvents.connect();
