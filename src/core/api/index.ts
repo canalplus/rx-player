@@ -1631,7 +1631,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getMinimumPosition() : number|null {
     if (!this._priv_contentInfos || this._priv_contentInfos.isDirectFile) {
-      return 0;
+      return null;
     }
     const { manifest } = this._priv_contentInfos;
     if (manifest) {
@@ -1645,13 +1645,22 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {number}
    */
   getMaximumPosition() : number|null {
-    if (!this._priv_contentInfos || this._priv_contentInfos.isDirectFile) {
+    if (!this._priv_contentInfos) {
+      return null;
+    }
+
+    const {
+      isDirectFile,
+      manifest,
+    } = this._priv_contentInfos;
+
+    if (!isDirectFile) {
       if (!this.videoElement) {
         throw new Error("Disposed player");
       }
       return this.videoElement.duration;
     }
-    const { manifest } = this._priv_contentInfos;
+
     if (manifest) {
       return getMaximumBufferPosition(manifest);
     }
