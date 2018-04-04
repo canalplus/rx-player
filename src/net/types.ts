@@ -115,7 +115,6 @@ export interface ISegmentParserArguments<T> {
   segment : ISegment;
   init? : ISegmentTimingInfos;
   period : Period;
-  timeOffset? : number;
 }
 
 // -- response
