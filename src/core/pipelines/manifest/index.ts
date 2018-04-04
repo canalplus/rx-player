@@ -85,7 +85,8 @@ export default function createManifestPipeline(
           value.parsed.manifest,
           supplementaryTextTracks,
           supplementaryImageTracks,
-          warning$
+          warning$,
+          value.response.receivedTime / 1000
         );
       })
       .share();

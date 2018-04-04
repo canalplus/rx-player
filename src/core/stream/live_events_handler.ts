@@ -17,35 +17,8 @@
 import { Observable } from "rxjs/Observable";
 import Manifest from "../../manifest";
 import log from "../../utils/log";
-import EVENTS, {
-  IManifestUpdateEvent,
-  IStreamEvent,
-} from "./stream_events";
-
-/**
- * Re-fetch the manifest and merge it with the previous version.
- *
- * /!\ Mutates the given manifest
- * @param {Object} manifest
- * @returns {Observable}
- */
-export function refreshManifest(
-  manifestPipeline : (url : string) => Observable<Manifest>,
-  currentManifest : Manifest
-) : Observable<IManifestUpdateEvent> {
-  const refreshURL = currentManifest.getUrl();
-  if (!refreshURL) {
-    log.warn("Cannot refresh the manifest: no url");
-    return Observable.empty();
-  }
-
-  return manifestPipeline(refreshURL)
-    .do((parsed) => {
-      currentManifest.update(parsed);
-    })
-    .share() // share the previous side effect
-    .mapTo(EVENTS.manifestUpdate(currentManifest));
-}
+import refreshManifest from "./refresh_manifest";
+import { IStreamEvent } from "./stream_events";
 
 /**
  * Create handler for Buffer events happening only in live contexts.

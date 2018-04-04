@@ -79,19 +79,19 @@ export default class Manifest {
   public presentationLiveGap? : number;
   public timeShiftBufferDepth? : number;
   public minimumUpdatePeriod?: number;
-  public loadedAt: number;
 
+  private loadedAt: number;
   private _duration : number;
 
   /**
    * @constructor
    * @param {Object} args
    */
-  constructor(args : IManifestArguments) {
+  constructor(args : IManifestArguments, loadedAt: number) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
-
+    this.loadedAt = loadedAt;
     // TODO Real period management
     this.periods = args.periods.map((period) => {
       return new Period(period);
@@ -122,8 +122,6 @@ export default class Manifest {
       assert(this.presentationLiveGap != null);
       assert(this.timeShiftBufferDepth != null);
     }
-
-    this.loadedAt = Date.now() / 1000;
   }
 
   /**
@@ -293,6 +291,14 @@ export default class Manifest {
   }
 
   /**
+   * Get the manifest load time, in seconds.
+   * @returns {number}
+   */
+  getLoadTime() : number {
+    return this.loadedAt;
+  }
+
+  /**
    * @param {number} delta
    */
   updateLiveGap(delta : number) : void {
@@ -390,7 +396,7 @@ export default class Manifest {
       }
     }
     // update manifest attributes
-    this.loadedAt = Date.now() / 1000;
+    this.loadedAt = newManifest.getLoadTime();
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.availabilityStartTime = newManifest.availabilityStartTime;
     this.presentationLiveGap = newManifest.presentationLiveGap;

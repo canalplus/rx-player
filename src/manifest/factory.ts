@@ -55,7 +55,8 @@ export default function createManifest(
   manifestObject : IParsedManifest,
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
-  warning$ : Subject<Error|CustomError>
+  warning$ : Subject<Error|CustomError>,
+  loadedAt : number
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods).map((period) => {
     period.adaptations = checkAdaptations(period.adaptations, warning$);
@@ -63,7 +64,7 @@ export default function createManifest(
   });
 
   // TODO Better way than this "as"
-  const manifest = new Manifest(manifestObject as IManifestArguments);
+  const manifest = new Manifest(manifestObject as IManifestArguments, loadedAt);
   manifest.addSupplementaryTextAdaptations(externalTextTracks);
   manifest.addSupplementaryImageAdaptations(externalImageTracks);
   return manifest;
