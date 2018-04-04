@@ -274,6 +274,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   };
 
   /**
+   * Current fatal error which STOPPED the player.
+   * @type {Error|null}
+   */
+  private _priv_currentError : Error|null;
+
+  /**
    * Informations about the current content being played.
    * null when no content is launched.
    * @private
@@ -292,12 +298,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * @type {Boolean}
      */
     isDirectFile : boolean;
-
-    /**
-     * Current fatal error which STOPPED the player.
-     * @type {Error|null}
-     */
-    fatalError : Error|null;
 
     /**
      * Current Image Track Data associated to the content.
@@ -561,6 +561,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     this._priv_languageManager = null;
     this._priv_abrManager = null;
+    this._priv_currentError = null;
     this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {
@@ -653,10 +654,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     const isDirectFile = transport === "directfile";
 
+    this._priv_currentError = null;
     this._priv_contentInfos = {
       url,
       isDirectFile,
-      fatalError: null,
       thumbnails: null,
       manifest: null,
       currentPeriod: null,
@@ -865,7 +866,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Object|null}
    */
   getError() : Error|null {
-    return this._priv_contentInfos && this._priv_contentInfos.fatalError;
+    return this._priv_currentError;
   }
 
   /**
@@ -1818,20 +1819,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_onStreamError(error : Error) : void {
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
-    const contentInfos = this._priv_contentInfos;
-    if (contentInfos) {
-      contentInfos.fatalError = error;
-    }
+    this._priv_currentError = error;
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the
     // player state is updated can launch a new content, thus the error will not
     // be here anymore, in which case triggering the "error" event is unwanted.
-    if (
-      contentInfos &&
-      this._priv_contentInfos === contentInfos &&
-      this._priv_contentInfos.fatalError === error
-    ) {
+    // This is very ugly though, and we should probable have a better solution
+    if (this._priv_currentError === error) {
       this.trigger("error", error);
     }
   }
