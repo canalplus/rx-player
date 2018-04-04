@@ -15,10 +15,7 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import {
-  IMockMediaKeys,
-  setMediaKeys,
-} from "../../compat";
+import { setMediaKeys } from "../../compat";
 import log from "../../utils/log";
 import { $loadedSessions } from "./globals";
 import { IInstanceInfo } from "./key_system";
@@ -35,7 +32,7 @@ function setMediaKeysObs(
   mediaKeysInfos: IMediaKeysInfos,
   video : HTMLMediaElement,
   instceInfos: IInstanceInfo
-) : Observable<IMockMediaKeys|MediaKeys> {
+) : Observable<IMediaKeysInfos> {
   return Observable.defer(() => {
     const {
       $videoElement,
@@ -58,7 +55,7 @@ function setMediaKeysObs(
     instceInfos.$videoElement = video;
 
     if (video.mediaKeys === mediaKeys) {
-      return Observable.of(mediaKeys);
+      return Observable.of(mediaKeysInfos);
     }
 
     if (oldMediaKeys && oldMediaKeys !== mediaKeys) {
@@ -78,7 +75,7 @@ function setMediaKeysObs(
       mediaKeysSetter = setMediaKeys(video, mediaKeys);
     }
 
-    return mediaKeysSetter.mapTo(mediaKeys);
+    return mediaKeysSetter.mapTo(mediaKeysInfos);
   });
 }
 
