@@ -80,7 +80,7 @@ function parseInitializationAttribute(attrValue : string) : IParsedInitializatio
  */
 export default function parseSegmentTemplate(
   root: Node
-): IParsedSegmentTemplate|IParsedSegmentTimeline {
+) : IParsedSegmentTemplate|IParsedSegmentTimeline {
 
   const base = parseSegmentBase(root);
   let ret : IParsedSegmentTemplate|IParsedSegmentTimeline;
