@@ -347,21 +347,19 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         Period,
         Partial<Record<IBufferType, Representation|null>>
       > | null;
+
+    /**
+     * Store starting audio track if one.
+     * @type {undefined|null|Object}
+     */
+    initialAudioTrack : undefined|IAudioTrackPreference;
+
+    /**
+     * Store starting text track if one.
+     * @type {undefined|null|Object}
+     */
+    initialTextTrack : undefined|ITextTrackPreference;
   };
-
-  /**
-   * Store default audio track for a loaded content.
-   * @private
-   * @type {undefined|null|Object}
-   */
-  private _priv_initialAudioTrack : undefined|IAudioTrackPreference;
-
-  /**
-   * Store default text track for a loaded content.
-   * @private
-   * @type {undefined|null|Object}
-   */
-  private _priv_initialTextTrack : undefined|ITextTrackPreference;
 
   /**
    * LanguageManager instance linked to the current content.
@@ -561,8 +559,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_limitVideoWidth = limitVideoWidth;
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
-    this._priv_initialAudioTrack = undefined;
-    this._priv_initialTextTrack = undefined;
     this._priv_languageManager = null;
     this._priv_abrManager = null;
     this._priv_contentInfos = null;
@@ -666,6 +662,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       currentPeriod: null,
       activeAdaptations: null,
       activeRepresentations: null,
+      initialAudioTrack: defaultAudioTrack,
+      initialTextTrack: defaultTextTrack,
     };
 
     // inilialize to false
@@ -696,10 +694,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       }
 
       const transportObj = transportFn(transportOptions);
-
-      // prepare initial tracks played
-      this._priv_initialAudioTrack = defaultAudioTrack;
-      this._priv_initialTextTrack = defaultTextTrack;
 
       /**
        * Options used by the ABR Manager.
@@ -1671,19 +1665,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // lock creation of new streams while cleaning up is pending
     this._priv_streamLock$.next(true);
 
-    // language management
-    this._priv_initialAudioTrack = undefined;
-    this._priv_initialTextTrack = undefined;
+    this._priv_contentInfos = null;
     this._priv_languageManager = null;
 
-    // ABR management
     if (this._priv_abrManager) {
       this._priv_abrManager.dispose();
       this._priv_abrManager = null;
     }
-
-    // content infos
-    this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {
       period: null,
@@ -1882,11 +1870,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_contentInfos.manifest = manifest;
     this._priv_abrManager = abrManager;
 
+    const {
+      initialAudioTrack,
+      initialTextTrack,
+    } = this._priv_contentInfos;
     this._priv_languageManager = new LanguageManager({
-      preferredAudioTracks: this._priv_initialAudioTrack === undefined ?
-        undefined : [this._priv_initialAudioTrack],
-      preferredTextTracks: this._priv_initialTextTrack === undefined ?
-        undefined : [this._priv_initialTextTrack],
+      preferredAudioTracks: initialAudioTrack === undefined ?
+        undefined : [initialAudioTrack],
+      preferredTextTracks: initialTextTrack === undefined ?
+        undefined : [initialTextTrack],
     });
     this.trigger("manifestChange", manifest);
   }
