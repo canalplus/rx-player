@@ -166,14 +166,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   public state : string;
 
   /**
-   * URL of the content currently being played.
-   * undefined when no content is being played.
-   * @private
-   * @type {string|undefined}
-   */
-  private _priv_contentURL : string|undefined;
-
-  /**
    * Emit when the player is disposed to perform clean-up.
    * The player will be unusable after that.
    * @private
@@ -216,50 +208,78 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_speed$ : BehaviorSubject<number>;
 
   /**
-   * Emit the last wanted buffer goal.
-   * @private
-   * @type {BehaviorSubject}
-   */
-  private _priv_wantedBufferAhead$ : BehaviorSubject<number>;
-
-  /**
-   * Maximum kept buffer ahead in the current position, in seconds.
-   * @private
-   * @type {BehaviorSubject}
-   */
-  private _priv_maxBufferAhead$ : BehaviorSubject<number>;
-
-  /**
-   * Maximum kept buffer behind in the current position, in seconds.
-   * @private
-   * @type {BehaviorSubject}
-   */
-  private _priv_maxBufferBehind$ : BehaviorSubject<number>;
-
-  /**
-   * Store last bitrates for each type for ABRManager instanciation.
-   * Store the initial wanted bitrates at first.
+   * Store buffer-related infos and options used when calling the Stream.
    * @private
    * @type {Object}
    */
-  private _priv_lastBitrates : {
-    audio? : number;
-    video? : number;
-    text? : number;
-    image? : number;
+  private _priv_bufferOptions : {
+    /**
+     * Emit the last wanted buffer goal.
+     * @type {BehaviorSubject}
+     */
+    wantedBufferAhead$ : BehaviorSubject<number>;
+
+    /**
+     * Maximum kept buffer ahead in the current position, in seconds.
+     * @type {BehaviorSubject}
+     */
+    maxBufferAhead$ : BehaviorSubject<number>;
+
+    /**
+     * Maximum kept buffer behind in the current position, in seconds.
+     * @type {BehaviorSubject}
+     */
+    maxBufferBehind$ : BehaviorSubject<number>;
   };
 
   /**
-   * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
+   * Informations on the current bitrate settings.
    * @private
    * @type {Object}
    */
-  private _priv_initialMaxAutoBitrates : {
-    audio : number; // has a default in the config
-    video : number; // has a default in the config
-    text? : number;
-    image? : number;
+  private _priv_bitrateInfos : {
+    /**
+     * Store last bitrates for each type for ABRManager instanciation.
+     * Store the initial wanted bitrates at first.
+     * @type {Object}
+     */
+    lastBitrates : {
+      audio? : number;
+      video? : number;
+      text? : number;
+      image? : number;
+    };
+
+    /**
+     * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
+     * @type {Object}
+     */
+    initialMaxAutoBitrates : {
+      audio : number; // has a default in the config
+      video : number; // has a default in the config
+      text? : number;
+      image? : number;
+    };
+
+    /**
+     * Store last wanted manual bitrates for the next ABRManager instanciation.
+     * @type {Object}
+     */
+    manualBitrates : {
+      audio : number; // has a default in the config
+      video : number; // has a default in the config
+      text? : number;
+      image? : number;
+    };
   };
+
+  /**
+   * URL of the content currently being played.
+   * undefined when no content is being played.
+   * @private
+   * @type {string|undefined}
+   */
+  private _priv_contentURL : string|undefined;
 
   /**
    * true if the current content is in DirectFile mode.
@@ -271,16 +291,35 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_isDirectFile : boolean|null;
 
   /**
-   * Store last wanted manual bitrates for the next ABRManager instanciation.
+   * Manifest linked to the current content.
+   * Null if no content has been loaded or if the current content loaded
+   * has no manifest.
    * @private
-   * @type {Object}
+   * @type {Object|null}
    */
-  private _priv_manualBitrates : {
-    audio : number; // has a default in the config
-    video : number; // has a default in the config
-    text? : number;
-    image? : number;
-  };
+  private _priv_currentManifest : Manifest|null;
+
+  /**
+   * Current fatal error which STOPPED the player.
+   *
+   * null when the player is not STOPPED anymore or if STOPPED but not due to
+   * an error.
+   * @private
+   * @type {Error|null}
+   */
+  private _priv_fatalError : Error|null;
+
+  /**
+   * Current Image Track Data associated to the content.
+   *
+   * null if no content has been loaded or if the current content has no
+   * image playlist linked to it.
+   *
+   * TODO Need complete refactoring for live or multi-periods contents
+   * @private
+   * @type {Object|null}
+   */
+  private _priv_currentImagePlaylist : IBifThumbnail[]|null;
 
   /**
    * Current Period being played.
@@ -366,15 +405,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_abrManager : ABRManager|null;
 
   /**
-   * Manifest linked to the current content.
-   * Null if no content has been loaded or if the current content loaded
-   * has no manifest.
-   * @private
-   * @type {Object|null}
-   */
-  private _priv_currentManifest : Manifest|null;
-
-  /**
    * Store last state of various values sent as events, to avoid re-triggering
    * them multiple times in a row.
    *
@@ -393,28 +423,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     bitrateEstimation: undefined|IBitrateEstimate; // last calculated bitrate
                                                    // estimation for a type
   };
-
-  /**
-   * Current fatal error which STOPPED the player.
-   *
-   * null when the player is not STOPPED anymore or if STOPPED but not due to
-   * an error.
-   * @private
-   * @type {Error|null}
-   */
-  private _priv_fatalError : Error|null;
-
-  /**
-   * Current Image Track Data associated to the content.
-   *
-   * null if no content has been loaded or if the current content has no
-   * image playlist linked to it.
-   *
-   * TODO Need complete refactoring for live or multi-periods contents
-   * @private
-   * @type {Object|null}
-   */
-  private _priv_currentImagePlaylist : IBifThumbnail[]|null;
 
   /**
    * Determines whether or not player should stop at the end of video playback.
@@ -529,20 +537,24 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
     this._priv_stopCurrentContent$ = new Subject();
     this._priv_streamLock$ = new BehaviorSubject(false);
-    this._priv_wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
-    this._priv_maxBufferAhead$ = new BehaviorSubject(maxBufferAhead);
-    this._priv_maxBufferBehind$ = new BehaviorSubject(maxBufferBehind);
-    this._priv_lastBitrates = {
-      audio: initialAudioBitrate,
-      video: initialVideoBitrate,
+    this._priv_bufferOptions = {
+      wantedBufferAhead$: new BehaviorSubject(wantedBufferAhead),
+      maxBufferAhead$: new BehaviorSubject(maxBufferAhead),
+      maxBufferBehind$: new BehaviorSubject(maxBufferBehind),
     };
-    this._priv_initialMaxAutoBitrates = {
-      audio: maxAudioBitrate,
-      video: maxVideoBitrate,
-    };
-    this._priv_manualBitrates = {
-      audio: -1,
-      video: -1,
+    this._priv_bitrateInfos = {
+      lastBitrates: {
+        audio: initialAudioBitrate,
+        video: initialVideoBitrate,
+      },
+      initialMaxAutoBitrates: {
+        audio: maxAudioBitrate,
+        video: maxVideoBitrate,
+      },
+      manualBitrates: {
+        audio: -1,
+        video: -1,
+      },
     };
     this._priv_throttleWhenHidden = throttleWhenHidden;
     this._priv_limitVideoWidth = limitVideoWidth;
@@ -606,9 +618,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_playing$.complete();
     this._priv_speed$.complete();
     this._priv_streamLock$.complete();
-    this._priv_wantedBufferAhead$.complete();
-    this._priv_maxBufferAhead$.complete();
-    this._priv_maxBufferBehind$.complete();
+    this._priv_bufferOptions.wantedBufferAhead$.complete();
+    this._priv_bufferOptions.maxBufferAhead$.complete();
+    this._priv_bufferOptions.maxBufferBehind$.complete();
 
     // un-attach video element
     this.videoElement = null;
@@ -692,9 +704,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
        * @type {Object}
        */
       const adaptiveOptions = {
-        initialBitrates: this._priv_lastBitrates,
-        manualBitrates: this._priv_manualBitrates,
-        maxAutoBitrates: this._priv_initialMaxAutoBitrates,
+        initialBitrates: this._priv_bitrateInfos.lastBitrates,
+        manualBitrates: this._priv_bitrateInfos.manualBitrates,
+        maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
         throttle: this._priv_throttleWhenHidden ? {
           video: isInBackground$()
           .map(isBg => isBg ? 0 : Infinity)
@@ -704,16 +716,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           video: videoWidth$(videoElement)
           .takeUntil(this._priv_stopCurrentContent$),
         } : {},
-      };
-
-      /**
-       * Options related to the Buffer(s)
-       * @type {Object}
-       */
-      const bufferOptions = {
-        wantedBufferAhead$: this._priv_wantedBufferAhead$,
-        maxBufferAhead$: this._priv_maxBufferAhead$,
-        maxBufferBehind$: this._priv_maxBufferBehind$,
       };
 
       /**
@@ -735,7 +737,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       stream = Stream({
         adaptiveOptions,
         autoPlay,
-        bufferOptions,
+        bufferOptions: this._priv_bufferOptions,
         clock$,
         keySystems,
         networkConfig,
@@ -1133,7 +1135,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getManualAudioBitrate() : number {
-    return this._priv_manualBitrates.audio;
+    return this._priv_bitrateInfos.manualBitrates.audio;
   }
 
   /**
@@ -1141,7 +1143,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getManualVideoBitrate() : number {
-    return this._priv_manualBitrates.video;
+    return this._priv_bitrateInfos.manualBitrates.video;
   }
 
   /**
@@ -1174,7 +1176,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getMaxVideoBitrate() : number|undefined {
     if (!this._priv_abrManager) {
-      return this._priv_initialMaxAutoBitrates.video;
+      return this._priv_bitrateInfos.initialMaxAutoBitrates.video;
     }
     return this._priv_abrManager.getMaxAutoBitrate("video");
   }
@@ -1185,7 +1187,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getMaxAudioBitrate() : number|undefined {
     if (!this._priv_abrManager) {
-      return this._priv_initialMaxAutoBitrates.audio;
+      return this._priv_bitrateInfos.initialMaxAutoBitrates.audio;
     }
     return this._priv_abrManager.getMaxAutoBitrate("audio");
   }
@@ -1337,7 +1339,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} btr
    */
   setVideoBitrate(btr : number) : void {
-    this._priv_manualBitrates.video = btr;
+    this._priv_bitrateInfos.manualBitrates.video = btr;
     if (this._priv_abrManager) {
       this._priv_abrManager.setManualBitrate("video", btr);
     }
@@ -1349,7 +1351,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} btr
    */
   setAudioBitrate(btr : number) : void {
-    this._priv_manualBitrates.audio = btr;
+    this._priv_bitrateInfos.manualBitrates.audio = btr;
     if (this._priv_abrManager) {
       this._priv_abrManager.setManualBitrate("audio", btr);
     }
@@ -1361,7 +1363,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   setMaxVideoBitrate(btr : number) : void {
     // set it for the next content loaded
-    this._priv_initialMaxAutoBitrates.video = btr;
+    this._priv_bitrateInfos.initialMaxAutoBitrates.video = btr;
 
     // set it for the current if one is loaded
     if (this._priv_abrManager) {
@@ -1375,7 +1377,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   setMaxAudioBitrate(btr : number) : void {
     // set it for the next content loaded
-    this._priv_initialMaxAutoBitrates.audio = btr;
+    this._priv_bitrateInfos.initialMaxAutoBitrates.audio = btr;
 
     // set it for the current if one is loaded
     if (this._priv_abrManager) {
@@ -1389,7 +1391,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} depthInSeconds
    */
   setMaxBufferBehind(depthInSeconds : number) : void {
-    this._priv_maxBufferBehind$.next(depthInSeconds);
+    this._priv_bufferOptions.maxBufferBehind$.next(depthInSeconds);
   }
 
   /**
@@ -1398,7 +1400,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} depthInSeconds
    */
   setMaxBufferAhead(depthInSeconds : number) : void {
-    this._priv_maxBufferAhead$.next(depthInSeconds);
+    this._priv_bufferOptions.maxBufferAhead$.next(depthInSeconds);
   }
 
   /**
@@ -1407,7 +1409,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} sizeInSeconds
    */
   setWantedBufferAhead(sizeInSeconds : number) : void {
-    this._priv_wantedBufferAhead$.next(sizeInSeconds);
+    this._priv_bufferOptions.wantedBufferAhead$.next(sizeInSeconds);
   }
 
   /**
@@ -1415,7 +1417,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getMaxBufferBehind() : number {
-    return this._priv_maxBufferBehind$.getValue();
+    return this._priv_bufferOptions.maxBufferBehind$.getValue();
   }
 
   /**
@@ -1423,7 +1425,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getMaxBufferAhead() : number {
-    return this._priv_maxBufferAhead$.getValue();
+    return this._priv_bufferOptions.maxBufferAhead$.getValue();
   }
 
   /**
@@ -1431,7 +1433,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getWantedBufferAhead() : number {
-    return this._priv_wantedBufferAhead$.getValue();
+    return this._priv_bufferOptions.wantedBufferAhead$.getValue();
   }
 
   /**
@@ -2005,7 +2007,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     const bitrate = representation && representation.bitrate;
     if (bitrate != null) {
-      this._priv_lastBitrates[type] = bitrate;
+      this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
 
     if (period != null && this._priv_currentPeriod === period) {
