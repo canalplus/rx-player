@@ -293,7 +293,7 @@ export default function Stream({
   function initialize(
     mediaSource : MediaSource,
     manifest : Manifest
-  ): Observable<IStreamEvent> {
+  ) : Observable<IStreamEvent> {
     setDurationToMediaSource(mediaSource, manifest.getDuration());
 
     log.debug("calculating initial time");

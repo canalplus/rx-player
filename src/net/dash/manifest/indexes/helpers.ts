@@ -58,7 +58,7 @@ function normalizeRange(
   index: { presentationTimeOffset?: number; timescale?: number }, // TODO
   ts: number,
   duration: number
-): {
+) : {
   up: number;
   to: number;
 } {
@@ -80,7 +80,7 @@ function normalizeRange(
  * 2 elements etc.
  * @returns {Number} - absolute start time of the range
  */
-function getTimelineRangeStart({ ts, d, r }: IIndexSegment): number {
+function getTimelineRangeStart({ ts, d, r }: IIndexSegment) : number {
   return d === -1 ? ts : ts + r * d;
 }
 
@@ -93,7 +93,7 @@ function getTimelineRangeStart({ ts, d, r }: IIndexSegment): number {
  * 2 elements etc.
  * @returns {Number} - absolute end time of the range
  */
-function getTimelineRangeEnd({ ts, d, r }: IIndexSegment): number {
+function getTimelineRangeEnd({ ts, d, r }: IIndexSegment) : number {
   return d === -1 ? ts : ts + (r + 1) * d;
 }
 
@@ -113,7 +113,7 @@ function getInitSegment(
     initialization?: { media?: string; range?: [number, number] };
     indexRange?: [number, number];
   }
-): ISegment {
+) : ISegment {
   const { initialization = {} } = index;
 
   return {

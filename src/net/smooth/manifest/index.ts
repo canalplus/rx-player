@@ -299,7 +299,7 @@ function createSmoothStreamingParser(
      * @param {string} name
      * @returns {string|undefined}
      */
-    function getAttribute(name: string): string|undefined {
+    function getAttribute(name: string) : string|undefined {
       const attr = q.getAttribute(name);
       return attr == null ? undefined : attr;
     }
@@ -379,7 +379,7 @@ function createSmoothStreamingParser(
     rootURL : string,
     timescale : number,
     protection? : IContentProtectionSmooth
-  ): IAdaptationSmooth|null {
+  ) : IAdaptationSmooth|null {
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
 
@@ -483,7 +483,7 @@ function createSmoothStreamingParser(
     return parsedAdaptation;
   }
 
-  function parseFromDocument(doc : Document, url : string): IParsedManifest {
+  function parseFromDocument(doc : Document, url : string) : IParsedManifest {
     const rootURL = normalizeBaseURL(url);
     const root = doc.documentElement;
     assert.equal(

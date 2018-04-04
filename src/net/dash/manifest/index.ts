@@ -28,7 +28,7 @@ export default function parseFromDocument(
   document: Document,
   uri : string/*,*/
   // contentProtectionParser?: IContentProtectionParser
-): IParsedManifest {
+) : IParsedManifest {
   const root = document.documentElement;
   if (!root || root.nodeName !== "MPD") {
     throw new Error("document root should be MPD");

@@ -309,7 +309,7 @@ export default class RepresentationChooser {
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
-  ): Observable<{
+  ) : Observable<{
     bitrate: undefined|number; // bitrate estimation
     representation: Representation|null; // chosen representation
   }> {
@@ -474,7 +474,7 @@ export default class RepresentationChooser {
    * @param {number} duration
    * @param {number} size
    */
-  public addEstimate(duration : number, size : number): void {
+  public addEstimate(duration : number, size : number) : void {
     if (duration != null && size != null) {
       this.estimator.addSample(duration, size);
     }
@@ -484,7 +484,7 @@ export default class RepresentationChooser {
    * Reset all the estimates done until now.
    * Useful when the network situation changed completely.
    */
-  public resetEstimate(): void {
+  public resetEstimate() : void {
     this.estimator.reset();
   }
 
@@ -495,7 +495,7 @@ export default class RepresentationChooser {
    * @param {string|number} id
    * @param {Object} payload
    */
-  public addPendingRequest(id : string|number, payload: IBeginRequest): void {
+  public addPendingRequest(id : string|number, payload: IBeginRequest) : void {
     if (this._currentRequests[id]) {
       if (__DEV__) {
         throw new Error("ABR: request already added.");
@@ -521,7 +521,7 @@ export default class RepresentationChooser {
    * @param {string|number} id
    * @param {Object} progress
    */
-  public addRequestProgress(id : string|number, progress: IProgressRequest): void {
+  public addRequestProgress(id : string|number, progress: IProgressRequest) : void {
     if (!this._currentRequests[id]) {
       if (__DEV__) {
         throw new Error("ABR: progress for a request not added");
@@ -537,7 +537,7 @@ export default class RepresentationChooser {
    * method.
    * @param {string|number} id
    */
-  public removePendingRequest(id : string|number): void {
+  public removePendingRequest(id : string|number) : void {
     if (!this._currentRequests[id]) {
       if (__DEV__) {
         throw new Error("ABR: can't remove unknown request");
@@ -550,14 +550,14 @@ export default class RepresentationChooser {
   /**
    * Remove informations about all pending requests.
    */
-  public resetRequests(): void {
+  public resetRequests() : void {
     this._currentRequests = {};
   }
 
   /**
    * TODO See if we can avoid this
    */
-  public dispose(): void {
+  public dispose() : void {
     this._dispose$.next();
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();

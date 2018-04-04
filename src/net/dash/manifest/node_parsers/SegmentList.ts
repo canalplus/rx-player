@@ -31,7 +31,7 @@ export interface IParsedSegmentList extends IParsedSegmentBase {
  * @param {Node} root
  * @returns {Object}
  */
-export default function parseSegmentList(root: Node): IParsedSegmentList {
+export default function parseSegmentList(root: Node) : IParsedSegmentList {
   const base = parseSegmentBase(root);
   const list : IParsedSegmentURL[] = [];
 

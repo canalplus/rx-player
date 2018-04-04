@@ -59,7 +59,7 @@ const defaultChooserOptions = {
 const createChooser = (
   type : SupportedBufferTypes,
   options : IRepresentationChoosersOptions
-): RepresentationChooser => {
+) : RepresentationChooser => {
   return new RepresentationChooser({
     limitWidth$: options.limitWidth[type],
     throttle$: options.throttle[type],
@@ -221,7 +221,7 @@ export default class ABRManager {
     type : SupportedBufferTypes,
     clock$: Observable<IRepresentationChooserClockTick>,
     representations: Representation[] = []
-  ): Observable<{
+  ) : Observable<{
     bitrate: undefined|number;
     representation: Representation|null;
   }> {
@@ -241,7 +241,7 @@ export default class ABRManager {
    * @param {string} type
    * @param {number} bitrate
    */
-  public setManualBitrate(type : SupportedBufferTypes, bitrate : number): void {
+  public setManualBitrate(type : SupportedBufferTypes, bitrate : number) : void {
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -259,7 +259,7 @@ export default class ABRManager {
    * @param {string} supportedBufferTypes
    * @param {number} bitrate
    */
-  public setMaxAutoBitrate(type : SupportedBufferTypes, bitrate : number): void {
+  public setMaxAutoBitrate(type : SupportedBufferTypes, bitrate : number) : void {
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -275,7 +275,7 @@ export default class ABRManager {
    * @param {string} supportedBufferTypes
    * @returns {number|undefined}
    */
-  public getManualBitrate(type : SupportedBufferTypes): number|undefined {
+  public getManualBitrate(type : SupportedBufferTypes) : number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.manualBitrate$.getValue() :
@@ -287,7 +287,7 @@ export default class ABRManager {
    * @param {string} supportedBufferTypes
    * @returns {number|undefined}
    */
-  public getMaxAutoBitrate(type : SupportedBufferTypes): number|undefined {
+  public getMaxAutoBitrate(type : SupportedBufferTypes) : number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.maxAutoBitrate$.getValue() :
@@ -298,7 +298,7 @@ export default class ABRManager {
    * Clean every ressources linked to the ABRManager.
    * The ABRManager is unusable after calling this method.
    */
-  public dispose(): void {
+  public dispose() : void {
     Object.keys(this._choosers).forEach(type => {
       this._choosers[type].dispose();
     });
