@@ -91,7 +91,7 @@ function sessionEventsHandler(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
   errorStream: ErrorStream
-): Observable<IMediaKeyMessageEvent> {
+) : Observable<IMediaKeyMessageEvent> {
   log.debug("eme: handle message events", session);
 
   /**
@@ -102,7 +102,7 @@ function sessionEventsHandler(
   function licenseErrorSelector(
     error: CustomError|Error,
     fatal: boolean
-  ): CustomError|Error {
+  ) : CustomError|Error {
     if (isKnownError(error)) {
       if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
         error.fatal = fatal;
@@ -235,7 +235,7 @@ export function createSession(
   sessionType: MediaKeySessionType,
   initData: Uint8Array,
   initDataType: string
-): Observable<IMediaKeySession|MediaKeySession> {
+) : Observable<IMediaKeySession|MediaKeySession> {
   log.debug(`eme: create a new ${sessionType} session`);
   if (mediaKeys.createSession == null) {
     throw new Error("Invalid MediaKeys implementation: Missing createSession");
@@ -254,7 +254,7 @@ export function handleSessionEvents(
   keySystem: IKeySystemOption,
   initData: Uint8Array,
   errorStream: ErrorStream
-): Observable<IMediaKeyMessageEvent> {
+) : Observable<IMediaKeyMessageEvent> {
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
       $loadedSessions.deleteAndClose(session);
@@ -270,13 +270,13 @@ export function handleSessionEvents(
  * @param {Uint8Array} initData
  * @param {string} initDataType
  * @param {string} sessionType
- * @returns {Object}
+ * @returns {Observable}
  */
 export function generateKeyRequest(
   session: MediaKeySession|IMediaKeySession,
   initData: Uint8Array,
   initDataType: string
-): Observable<ISessionRequestEvent> {
+) : Observable<ISessionRequestEvent> {
   return Observable.defer(() => {
     return castToObservable(
       (session as any).generateRequest(initDataType, initData)
@@ -306,7 +306,7 @@ export function createOrReuseSessionWithRetry(
   initData: Uint8Array,
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
-): Observable<ISessionCreationEvent|ISessionManagementEvent> {
+) : Observable<ISessionCreationEvent|ISessionManagementEvent> {
   return createOrReuseSession(
     initData,
     initDataType,
@@ -345,7 +345,7 @@ function createOrReuseSession(
   initData: Uint8Array,
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
-): Observable<ISessionCreationEvent|ISessionManagementEvent> {
+) : Observable<ISessionCreationEvent|ISessionManagementEvent> {
 
   const loadedSession = $loadedSessions.get(initData, initDataType);
   if (loadedSession) {
@@ -406,7 +406,7 @@ function loadPersistentSession(
   initData: Uint8Array,
   initDataType: string,
   session: MediaKeySession|IMediaKeySession
-): Observable<ISessionCreationEvent|ISessionManagementEvent> {
+) : Observable<ISessionCreationEvent|ISessionManagementEvent> {
   log.debug("eme: load persisted session", storedSessionId);
 
   return castToObservable(session.load(storedSessionId))

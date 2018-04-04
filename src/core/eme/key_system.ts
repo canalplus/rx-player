@@ -313,7 +313,7 @@ function findCompatibleKeySystem(
      * Test the key system as defined in keySystemsType[index].
      * @param {Number} index
      */
-    function testKeySystem(index: number): void {
+    function testKeySystem(index: number) : void {
       // completely quit the loop if unsubscribed
       if (disposed) {
         return;
@@ -371,7 +371,7 @@ function findCompatibleKeySystem(
   });
 }
 
-function getKeySystem(instanceInfos : IInstanceInfo): string|null {
+function getKeySystem(instanceInfos : IInstanceInfo) : string|null {
   return instanceInfos.$keySystem && instanceInfos.$keySystem.type;
 }
 
