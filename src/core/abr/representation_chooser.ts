@@ -266,15 +266,15 @@ function requestTakesTime(
  * @class RepresentationChooser
  */
 export default class RepresentationChooser {
-  public manualBitrate$ : BehaviorSubject<number>;
-  public maxAutoBitrate$ : BehaviorSubject<number>;
+  public readonly manualBitrate$ : BehaviorSubject<number>;
+  public readonly maxAutoBitrate$ : BehaviorSubject<number>;
 
-  private _dispose$ : Subject<void>;
+  private readonly _dispose$ : Subject<void>;
+  private readonly _limitWidth$ : Observable<number>|undefined;
+  private readonly _throttle$ : Observable<number>|undefined;
+  private readonly estimator : BandwidthEstimator;
+  private readonly _initialBitrate : number;
   private _currentRequests : IDictionary<IRequestInfo>;
-  private _limitWidth$ : Observable<number>|undefined;
-  private _throttle$ : Observable<number>|undefined;
-  private estimator : BandwidthEstimator;
-  private _initialBitrate : number;
 
   /**
    * @param {Object} options

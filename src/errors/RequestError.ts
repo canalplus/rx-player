@@ -21,12 +21,12 @@
  * @extends Error
  */
 export default class RequestError extends Error {
-  public name : "RequestError";
-  public type : string;
-  public message : string;
-  public xhr : XMLHttpRequest;
-  public url : string;
-  public status : number;
+  public readonly name : "RequestError";
+  public readonly type : string;
+  public readonly message : string;
+  public readonly xhr : XMLHttpRequest;
+  public readonly url : string;
+  public readonly status : number;
 
   constructor(xhr : XMLHttpRequest, url : string, type : string) {
     super();

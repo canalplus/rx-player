@@ -73,7 +73,31 @@ export default class QueuedSourceBuffer<T> {
    * @private
    * @type {Object}
    */
-  private _buffer : ICustomSourceBuffer<T>;
+  private readonly _buffer : ICustomSourceBuffer<T>;
+
+  /**
+   * Binded reference to the _onUpdate private method.
+   * Used for binding/removing an event listener.
+   * @private
+   * @type {Function}
+   */
+  private readonly __onUpdate : (x: Event) => void;
+
+  /**
+   * Binded reference to the _onError private method.
+   * Used for binding/removing an event listener.
+   * @private
+   * @type {Function}
+   */
+  private readonly __onError : (x : Event) => void;
+
+  /**
+   * Binded reference to the _flush private method.
+   * Used for binding/removing an event listener.
+   * @private
+   * @type {Function}
+   */
+  private readonly __flush : () => void;
 
   /**
    * Queue of awaited buffer actions.
@@ -91,30 +115,6 @@ export default class QueuedSourceBuffer<T> {
    * @type {Subject}
    */
   private _flushing : Subject<Event>|null;
-
-  /**
-   * Binded reference to the _onUpdate private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
-  private __onUpdate : (x: Event) => void;
-
-  /**
-   * Binded reference to the _onError private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
-  private __onError : (x : Event) => void;
-
-  /**
-   * Binded reference to the _flush private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
-  private __flush : () => void;
 
   /**
    * Keep track of the latest init segment pushed in the current queue.

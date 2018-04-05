@@ -94,10 +94,10 @@ export type IAdaptationBufferEvent =
  * @class AdaptationBufferManager
  */
 export default class AdaptationBufferManager {
-  private _abrManager : ABRManager;
-  private _abrBaseClock$ : Observable<IAdaptationBufferClockTick>;
-  private _speed$ : Observable<number>;
-  private _seeking$ : Observable<null>;
+  private readonly _abrManager : ABRManager;
+  private readonly _abrBaseClock$ : Observable<IAdaptationBufferClockTick>;
+  private readonly _speed$ : Observable<number>;
+  private readonly _seeking$ : Observable<null>;
 
   /**
    * @param {ABRManager} abrManager

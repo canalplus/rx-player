@@ -30,9 +30,9 @@ export interface IMediaKeySystemAccess {
  */
 export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess {
   constructor(
-    private _keyType : string,
-    private _mediaKeys : IMockMediaKeys|MediaKeys,
-    private _configuration : MediaKeySystemConfiguration
+    private readonly _keyType : string,
+    private readonly _mediaKeys : IMockMediaKeys|MediaKeys,
+    private readonly _configuration : MediaKeySystemConfiguration
   ) {}
 
   get keySystem() : string {

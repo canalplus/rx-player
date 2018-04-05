@@ -80,8 +80,8 @@ export default class SourceBufferManager {
     return shouldHaveNativeSourceBuffer(bufferType);
   }
 
-  private _videoElement : HTMLMediaElement;
-  private _mediaSource : MediaSource;
+  private readonly _videoElement : HTMLMediaElement;
+  private readonly _mediaSource : MediaSource;
 
   private _initializedNativeSourceBuffers : {
     audio? : ICreatedNativeSourceBuffer;

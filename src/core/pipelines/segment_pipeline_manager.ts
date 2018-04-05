@@ -56,10 +56,10 @@ import streamPipelineFactory from "./stream_pipeline";
  * ```
  */
 export default class SegmentPipelinesManager {
-  private _metrics$ : Subject<IABRMetric>;
-  private _requestsInfos$ : Subject<Subject<IABRRequest>>;
-  private _warning$ : Subject<Error | CustomError>;
-  private _transport : ITransportPipelines;
+  private readonly _metrics$ : Subject<IABRMetric>;
+  private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
+  private readonly _warning$ : Subject<Error | CustomError>;
+  private readonly _transport : ITransportPipelines;
 
   /**
    * @param {Object} transport

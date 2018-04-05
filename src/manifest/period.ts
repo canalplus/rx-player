@@ -73,8 +73,8 @@ function createManifestAdaptations(
 }
 
 export default class Period {
-  public id : string;
-  public adaptations : ManifestAdaptations;
+  public readonly id : string;
+  public readonly adaptations : ManifestAdaptations;
   public duration? : number;
   public start : number;
   public end? : number;
