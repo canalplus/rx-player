@@ -897,7 +897,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getCurrentAdaptations(
   ) : Partial<Record<SupportedBufferTypes, Adaptation|null>> | null {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations){
+    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
       return null;
     }
     return this._priv_activeAdaptations.get(this._priv_currentPeriod) || null;
@@ -910,7 +910,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getCurrentRepresentations(
   ) : Partial<Record<SupportedBufferTypes, Representation|null>> | null {
-    if (!this._priv_currentPeriod || !this._priv_activeRepresentations){
+    if (!this._priv_currentPeriod || !this._priv_activeRepresentations) {
       return null;
     }
     return this._priv_activeRepresentations.get(this._priv_currentPeriod) || null;
@@ -1109,7 +1109,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() : number[] {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations){
+    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
       return [];
     }
     const adaptations = this._priv_activeAdaptations.get(this._priv_currentPeriod);
@@ -1126,7 +1126,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() : number[] {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations){
+    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
       return [];
     }
     const adaptations = this._priv_activeAdaptations.get(this._priv_currentPeriod);

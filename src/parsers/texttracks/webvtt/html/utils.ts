@@ -24,7 +24,7 @@ function getFirstLineAfterHeader(linified : string[]) : number {
   let i = 0;
   while (i < linified.length) {
     if (linified[i] === "") {
-      return i+1;
+      return i + 1;
     }
     i++;
   }

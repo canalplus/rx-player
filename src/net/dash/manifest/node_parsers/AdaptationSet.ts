@@ -110,7 +110,7 @@ function parseAdaptationSetChildren(
   for (let i = 0; i < adaptationSetChildren.length; i++) {
     const currentNode = adaptationSetChildren[i];
 
-    switch(currentNode.nodeName) {
+    switch (currentNode.nodeName) {
 
       case "Accessibility":
         children.accessibility = parseScheme(currentNode);

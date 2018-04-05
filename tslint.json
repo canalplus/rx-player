@@ -141,7 +141,17 @@
     "unified-signatures": true,
     "use-isnan": true,
     "variable-name": false,
-    "whitespace": true
+    "whitespace": [
+      true,
+      "check-branch",
+      "check-decl",
+      "check-operator",
+      "check-module",
+      "check-separator",
+      "check-type",
+      "check-typecast",
+      "check-preblock"
+    ]
   },
   "rulesDirectory": ["."]
 }
