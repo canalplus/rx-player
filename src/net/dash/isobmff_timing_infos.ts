@@ -108,7 +108,7 @@ function getISOBMFFTimingInfos(
 
   if (duration == null) {
     if (_sidxSegments.length) {
-      const sidxDuration = _sidxSegments.reduce((a,b) => a + (b.duration || 0), 0);
+      const sidxDuration = _sidxSegments.reduce((a, b) => a + (b.duration || 0), 0);
       duration = sidxDuration >= 0 ? sidxDuration : segmentDuration;
     } else {
       duration = segmentDuration;
