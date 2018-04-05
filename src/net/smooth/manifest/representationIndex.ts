@@ -197,7 +197,7 @@ function getTimelineRangeEnd({ ts, d, r }: {
   ts : number;
   d? : number;
   r : number;
-}): number {
+}) : number {
   return (d == null || d === -1) ? ts : ts + (r + 1) * d;
 }
 
@@ -223,7 +223,7 @@ function normalizeRange(
   index: { presentationTimeOffset?: number; timescale?: number }, // TODO
   ts: number,
   duration: number
-): {
+) : {
   up: number;
   to: number;
 } {

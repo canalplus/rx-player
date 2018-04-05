@@ -57,11 +57,11 @@ export interface IMediaKeySession
   onkeystatusesChange? : (evt : Event) => void;
 
   // Functions
-  generateRequest(initDataType: string, initData: BufferSource): Promise<void>;
-  load(sessionId: string): Promise<boolean>;
-  update(response: BufferSource): Promise<void>;
-  close(): Promise<void>;
-  remove(): Promise<void>;
+  generateRequest(initDataType: string, initData: BufferSource) : Promise<void>;
+  load(sessionId: string) : Promise<boolean>;
+  update(response: BufferSource) : Promise<void>;
+  close() : Promise<void>;
+  remove() : Promise<void>;
 }
 
 interface IMockMediaKeys {
@@ -179,7 +179,7 @@ class WebkitMediaKeySession
     });
   }
 
-  close(): Promise<void> {
+  close() : Promise<void> {
     return new Promise((resolve) => {
       this._closeSession$.next();
       this._closeSession$.complete();
@@ -265,7 +265,7 @@ class IE11MediaKeySession
     });
   }
 
-  close(): Promise<void> {
+  close() : Promise<void> {
     return new Promise((resolve) => {
       if (this._ss) {
         /* tslint:disable no-floating-promises */

@@ -57,7 +57,7 @@ export interface IParsedSegmentBase extends ISegmentBaseAttributes {
  * @param {Node} root
  * @returns {Object}
  */
-export default function parseSegmentBase(root: Node): IParsedSegmentBase {
+export default function parseSegmentBase(root: Node) : IParsedSegmentBase {
   const attributes : ISegmentBaseAttributes = {};
 
   const segmentBaseChildren = root.childNodes;

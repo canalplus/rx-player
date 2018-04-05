@@ -174,7 +174,7 @@ function inferAdaptationType(
  */
 const getLastLiveTimeReference = (
   adaptation: IParsedAdaptation
-): number|undefined => {
+) : number|undefined => {
   // Here's how we do, for each possibility:
   //  1. only the adaptation has an index (no representation has):
   //    - returns the index last time reference
