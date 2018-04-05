@@ -37,11 +37,11 @@ export interface IRepresentationArguments {
  */
 class Representation {
   // required
-  public id : string|number;
+  public readonly id : string|number;
   public index : IRepresentationIndex;
   public bitrate : number;
 
-  // optional
+  // opt readonly onal
   public baseURL? : string;
   public codec? : string;
   public height? : number;

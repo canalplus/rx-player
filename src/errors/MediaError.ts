@@ -28,12 +28,12 @@ import errorMessage from "./errorMessage";
  * @extends Error
  */
 export default class MediaError extends Error {
-  public name : "MediaError";
-  public type : string;
-  public message : string;
-  public code : string;
+  public readonly name : "MediaError";
+  public readonly type : string;
+  public readonly message : string;
+  public readonly code : string;
+  public readonly reason? : { message : string }|string|null;
   public fatal : boolean;
-  public reason? : { message : string }|string|null;
 
   constructor(code : string, reason? : Error|null, fatal? : boolean) {
     super();

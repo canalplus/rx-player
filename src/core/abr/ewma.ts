@@ -20,7 +20,7 @@
  * @class EWMA
  */
 export default class EWMA {
-  private _alpha : number;
+  private readonly _alpha : number;
   private _lastEstimate : number;
   private _totalWeight : number;
 

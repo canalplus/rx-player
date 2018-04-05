@@ -30,12 +30,12 @@ import errorMessage from "./errorMessage";
  * @extends Error
  */
 export default class IndexError extends Error {
-  public name : "IndexError";
-  public type : string;
-  public message : string;
-  public code : string;
+  public readonly name : "IndexError";
+  public readonly type : string;
+  public readonly message : string;
+  public readonly code : string;
+  public readonly reason? : { message : string }|string|null;
   public fatal : boolean;
-  public reason? : { message : string }|string|null;
 
   constructor(code : string, fatal? : boolean) {
     super();

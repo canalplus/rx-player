@@ -30,16 +30,16 @@ import RequestError from "./RequestError";
  * @extends Error
  */
 export default class NetworkError extends Error {
-  public name : "NetworkError";
-  public type : string;
-  public message : string;
-  public code : string|undefined;
+  public readonly name : "NetworkError";
+  public readonly type : string;
+  public readonly message : string;
+  public readonly code : string|undefined;
+  public readonly reason : RequestError;
+  public readonly xhr : XMLHttpRequest;
+  public readonly url : string;
+  public readonly status : number;
+  public readonly errorType : string;
   public fatal : boolean;
-  public reason : RequestError;
-  public xhr : XMLHttpRequest;
-  public url : string;
-  public status : number;
-  public errorType : string;
 
   constructor(code : string, requestError : RequestError, fatal? : boolean) {
     super();

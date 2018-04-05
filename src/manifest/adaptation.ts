@@ -50,9 +50,9 @@ export interface IAdaptationArguments {
  */
 class Adaptation {
   // required
-  public id : string|number;
-  public representations : Representation[];
-  public type : AdaptationType;
+  public readonly id : string|number;
+  public readonly representations : Representation[];
+  public readonly type : AdaptationType;
 
   // optional
   public contentProtection? : IContentProtectionDASH;

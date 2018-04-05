@@ -44,8 +44,8 @@
  * @class WeakMapMemory
  */
 export default class WeakMapMemory<T extends object, U> {
+  private readonly _fn : (obj : T) => U;
   private _weakMap : WeakMap<T, U>;
-  private _fn : (obj : T) => U;
 
   constructor(fn : (obj : T) => U) {
     this._weakMap = new WeakMap();
