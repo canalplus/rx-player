@@ -77,11 +77,10 @@ const createChooser = (
  * @class ABRManager
  */
 export default class ABRManager {
-  // TODO privatize
+  private readonly _dispose$: Subject<void>;
+
   private _choosers:  IDictionary<RepresentationChooser>;
   private _chooserInstanceOptions: IRepresentationChoosersOptions;
-
-  private _dispose$: Subject<void>;
 
   /**
    * @param {Observable} requests$ - Emit requests infos as they begin, progress

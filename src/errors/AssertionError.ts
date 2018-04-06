@@ -21,6 +21,9 @@
  * @extends Error
  */
 export default class AssertionError extends Error {
+  public readonly name : "AssertionError";
+  public readonly message : string;
+
   constructor(message : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class

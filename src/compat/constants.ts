@@ -42,10 +42,10 @@ if (!MediaKeys_) {
   };
 
   MediaKeys_ = class {
-    public create : () => never;
-    public isTypeSupported : () => never;
-    public createSession : () => never;
-    public setServerCertificate : () => never;
+    public readonly create : () => never;
+    public readonly isTypeSupported : () => never;
+    public readonly createSession : () => never;
+    public readonly setServerCertificate : () => never;
     constructor() {
       this.create = noMediaKeys;
       this.createSession = noMediaKeys;

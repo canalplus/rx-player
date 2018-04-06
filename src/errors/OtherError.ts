@@ -28,12 +28,12 @@ import errorMessage from "./errorMessage";
  * @extends Error
  */
 export default class OtherError extends Error {
-  public name : "OtherError";
-  public type : string;
-  public message : string;
-  public code : string;
+  public readonly name : "OtherError";
+  public readonly type : string;
+  public readonly message : string;
+  public readonly code : string;
+  public readonly reason? : { message : string }|string|null;
   public fatal : boolean;
-  public reason? : { message : string }|string|null;
 
   constructor(code : string, reason? : Error|null, fatal? : boolean) {
     super();

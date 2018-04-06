@@ -41,9 +41,9 @@ export default class NativeTextTrackSourceBuffer
   extends AbstractSourceBuffer<INativeTextTrackData>
   implements ICustomSourceBuffer<INativeTextTrackData>
 {
-  private _videoElement : HTMLMediaElement;
-  private _track : TextTrack;
-  private _trackElement? : HTMLTrackElement;
+  private readonly _videoElement : HTMLMediaElement;
+  private readonly _track : TextTrack;
+  private readonly _trackElement? : HTMLTrackElement;
 
   /**
    * @param {HTMLMediaElement} videoElement

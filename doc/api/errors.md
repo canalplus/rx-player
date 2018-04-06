@@ -18,48 +18,55 @@
 <a name="overview"></a>
 ## Overview ####################################################################
 
-Various errors can happen when playing a media content:
+Various errors can be triggered when playing a media content. Those can happen
+when:
   - The network is unreachable
   - The codecs are not supported
   - We have no mean to decrypt the data
   - ...
 
-Some errors can be fatal to content playback and will stop the player, other can
-be managed.
+Some errors can be fatal to content playback in which case they will stop the
+player, others act more as warnings and are more along the line of a minor
+problem notification.
 
-You can know which fatal error interrupted your playback either by:
+You can know if a fatal error interrupted your playback by:
 
   - adding an event listener to the ``"error"`` event (see the [player events
-    documentation](./player_events.md)).
+    documentation](./player_events.md)). This event listener will take the error
+    directly in argument.
 
   - calling the ``getError`` API if the current state is ``STOPPED``. If
     different from ``null``, it means that a fatal error happened (see the
     [documentation for getError](./index.md#meth-getError)).
 
 
-You can also know any non-fatal error as they happen by:
+You can also be warned of any non-fatal error by:
+
   - adding an event listener to the ``"warning"`` event (see the [player events
-    documentation](./player_events.md)).
+    documentation](./player_events.md)). The event listener will take the
+    non-fatal error directly in argument.
 
-All of those will return a JavaScript ``Error`` instance, with added informations
-described in this page.
+All of those are in essence ``Error`` instances with added informations.
 
+Those supplementary informations are described in this page.
 
 
 <a name="structure"></a>
 ## Structure of an Error #######################################################
 
-Each error linked to playback has at least those properties:
+Each of RxPlayer's error objects have at least those properties:
 
   - ``type`` (``string``): A large category for the error
     (e.g. ``NETWORK_ERROR``, ``ENCRYPTED_MEDIA_ERROR`` ...)
 
   - ``code`` (``string``): A set identification "code" for the error encountered
 
-  - ``message`` (``string``): A displayable summary of the error.
-    Human-readable.
+  - ``message`` (``string``): A displayable, human-readable, summary of the
+    error.
 
-The same ``code`` can be associated with multiple ``type`` values.
+  - ``fatal`` (``boolean``): If true, the error was fatal. Meaning that the
+    playback was interrupted by it
+
 
 
 
@@ -67,16 +74,29 @@ The same ``code`` can be associated with multiple ``type`` values.
 ## Types #######################################################################
 
 The types are the different strings you can have as the ``type`` property of an
-error. Here is the exhaustive list of them:
+error.
+
+This chapter provides an exhaustive list of the possible type of error
+encountered.
 
 
 <a name="types-network_error"></a>
 ### NETWORK_ERROR ##############################################################
 
-Network-related error (timeout, bad http code).
+A NetworkError is any Network-related error (HTTP 404, request timeout...), they
+all have a ``type`` property equal to ``"NETWORK_ERROR"``.
 
-To give more informations about the problem, those errors have a `reason`
-attribute with the following properties:
+#### codes #####################################################################
+
+A NetworkError can only have the following code (``code`` property):
+
+  - ``"PIPELINE_LOAD_ERROR"``: the manifest or segment request failed.
+
+#### more informations #########################################################
+
+A NetworkError provide much more infos than this code.
+
+Among its properties, you have:
 
   - ``url`` (``string``): The url the request has been on
 
@@ -84,19 +104,15 @@ attribute with the following properties:
 
   - ``status`` (``Number``): Shortcut to the status code of the xhr.
 
-  - ``type`` (``string``): A sub-category for the request error.
+  - ``errorType`` (``string``): Further precision about what went wrong.
 
-    Those sub-categories can either be:
+    This string can either be:
+      - ``"TIMEOUT"``: The request timeouted.
+      - ``"ERROR_EVENT"``: The XMLHttpRequest has sent an error event
+      - ``"PARSE_ERROR"``: No data could have been extracted from this request
+      - ``"ERROR_HTTP_CODE"``: The request finished with a status code not in
+        the 2xx range.
 
-      - ``"TIMEOUT"``: the request timeouted
-
-      - ``"ERROR_EVENT"``: the xhr emitted an ``"error"`` event.
-
-      - ``"ERROR_HTTP_CODE"``: The xhr finished on a HTTP code not in the 200
-        range.
-
-      - ``"PARSE_ERROR"``: We had a problem while immediately parsing the
-        response.
 
 
 <a name="types-media_error"></a>
@@ -105,12 +121,101 @@ attribute with the following properties:
 Error related to the media itself. It can both come from the player itself
 (manifest parsing) or from the browser itself (content playback).
 
+They all have a ``type`` property equal to ``"MEDIA_ERROR"``.
+
+#### codes #####################################################################
+
+A MediaError can have the following codes (``code`` property):
+
+  - ``"BUFFER_APPEND_ERROR"``: A media segment could not have been added to the
+    corresponding SourceBuffer. This often happens with malformed segments.
+
+  - ``"BUFFER_FULL_ERROR"``: The needed segment could not have been added
+    because the SourceBuffer was full.
+
+  - ``"BUFFER_TYPE_UNKNOWN"``: The type of buffer considered (e.g. "audio" /
+    "video" / "text") has no SourceBuffer implementation in your build.
+
+  - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``: An "Adaptation" (DASH's
+    AdaptationSet or Smooth's StreamIndex) has none of its "Representations"
+    (read quality) in a supported codec.
+
+  - ``"MANIFEST_PARSE_ERROR"``: Generic error to signal than the Manifest could
+    not be parsed.
+
+  - ``"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"``: One of the "Adaptation" (DASH's
+    AdaptationSet or Smooth's StreamIndex) has a type (e.g. "audio", "text" or
+    "video" which is not understood by the RxPlayer).
+
+  - ``"MEDIA_ERR_ABORTED"``: A crucial browser-side fetching operation was
+    aborted.
+
+  - ``"MEDIA_ERR_DECODE"``: A pushed segment/media could not be decoded by the
+    browser. This happens most-of-all with malformed segments.
+
+  - ``"MEDIA_ERR_NETWORK"``: A browser-side request failed.
+
+  - ``"MEDIA_ERR_SRC_NOT_SUPPORTED"``: The media associated to the video element
+    is not valid.
+
+  - ``"MEDIA_ERR_UNKNOWN"``: Media error impossible to characterize.
+
+  - ``"MEDIA_KEYS_NOT_SUPPORTED"``: The current browser has no MediaKeys
+    implementation and the content is encrypted.
+
+  - ``"MEDIA_SOURCE_NOT_SUPPORTED"``: No known MediaSource API is supported by
+    your browser and we need to create one.
+
+  - ``"MEDIA_STARTING_TIME_NOT_FOUND"``: The provided or calculated starting
+    time was not found in the corresponding media.
+
+
 
 <a name="types-encrypted_media_error"></a>
 ### ENCRYPTED_MEDIA_ERROR ######################################################
 
 Those errors are linked to the Encrypted Media Extensions. They concern various
-DRM-related problems
+DRM-related problems.
+
+They all have a ``type`` property equal to ``"ENCRYPTED_MEDIA_ERROR"``.
+
+#### codes #####################################################################
+
+An EncryptedMediaError can have the following codes (``code`` property):
+
+  - ``"INCOMPATIBLE_KEYSYSTEMS"``: None of the provided key systems was
+    compatible with the current browser.
+
+  - ``"INVALID_ENCRYPTED_EVENT"``: An encountered ``encrypted`` event was not
+    valid.
+
+  - ``"INVALID_KEY_SYSTEM"``: One of the given key system was not accepted by
+      the RxPlayer.
+
+  - ``"KEY_ERROR"``: The ``MediaKeySession`` emitted an error.
+
+  - ``"KEY_GENERATE_REQUEST_ERROR"``: An error happened when calling the
+    ``generateRequest`` API to generate a challenge.
+
+  - ``"KEY_LOAD_ERROR"``: An error was returned by the code fetching the
+    license.
+
+  - ``"KEY_LOAD_TIMEOUT"``: The request for fetching the license had a duration
+    of more than 10 seconds.
+
+  - ``"KEY_STATUS_CHANGE_ERROR"``: An error was detected when the
+    ``MediaKeySession`` emitted a keyStatuseschange event (e.g. the key
+    became ``"expired"``).
+
+  - ``"KEY_UPDATE_ERROR"``: An error was detected after a message (like a
+    license was given to the CDM).
+
+  - ``"LICENSE_SERVER_CERTIFICATE_ERROR"``: The server certificate of a
+    ``MediaKeys`` could not be set.
+
+  - ``"MEDIA_IS_ENCRYPTED_ERROR"``: The media is encrypted and no key system
+    was given to the RxPlayer's APIs.
+
 
 
 <a name="types-index_error"></a>
@@ -119,46 +224,32 @@ DRM-related problems
 Those errors are specific to the index, which is the place in the manifest
 describing how to access wanted segments.
 
-The different possible problems are not being able to parse this index or asking
-for segment which are either after or before the limits of it.
+They all have a ``type`` property equal to ``"INDEX_ERROR"``.
+
+#### codes #####################################################################
+
+An IndexERROR can only have the following code (``code`` property):
+
+  - ``"OUT_OF_INDEX_ERROR"``: The wanted segments are currently out of the
+    manifest's index.
 
 
 <a name="types-other_error"></a>
 ### OTHER_ERROR ################################################################
 
-Those errors are:
-  - a fallback for non-categorized errors
-  - pipelines error which are not related to requests
+Those errors are various other errors which does not belong to other types.
 
+They all have a ``type`` property equal to ``"OTHER_ERROR"``.
 
+#### codes #####################################################################
 
-<a name="codes"></a>
-## Codes #######################################################################
+An OtherError can have the following codes (``code`` property):
 
-The codes are the string you can have as a ``code`` property in a playback
-error. Here is a list of them:
-  - ``"PIPELINE_RESOLVE_ERROR"``
-  - ``"PIPELINE_LOAD_ERROR"``
-  - ``"PIPELINE_PARSING_ERROR"``
-  - ``"MANIFEST_PARSE_ERROR"``
-  - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``
-  - ``"LICENSE_SERVER_CERTIFICATE_ERROR"``
-  - ``"MEDIA_IS_ENCRYPTED_ERROR"``
-  - ``"KEY_ERROR"``
-  - ``"KEY_STATUS_CHANGE_ERROR"``
-  - ``"KEY_UPDATE_ERROR"``
-  - ``"KEY_LOAD_ERROR"``
-  - ``"KEY_LOAD_TIMEOUT"``
-  - ``"INCOMPATIBLE_KEYSYSTEMS"``
-  - ``"BUFFER_APPEND_ERROR"``
-  - ``"BUFFER_FULL_ERROR"``
-  - ``"BUFFER_INDEX_ERROR"``
-  - ``"BUFFER_TYPE_UNKNOWN"``
-  - ``"MEDIA_ERR_ABORTED"``
-  - ``"MEDIA_ERR_NETWORK"``
-  - ``"MEDIA_ERR_DECODE"``
-  - ``"MEDIA_ERR_SRC_NOT_SUPPORTED"``
-  - ``"MEDIA_SOURCE_NOT_SUPPORTED"``
-  - ``"MEDIA_KEYS_NOT_SUPPORTED"``
-  - ``"OUT_OF_INDEX_ERROR"``
-  - ``"UNKNOWN_INDEX"``
+  - ``"PIPELINE_LOAD_ERROR"``: The manifest or segment request failed and the
+    request has been done through a given callback (i.e. not the RxPlayer's
+    XMLHttpRequest implementation).
+
+  - ``"PIPELINE_PARSE_ERROR"``: The RxPlayer's manifest or segment parsing logic
+    failed. This is most likely due to a malformed manifest or segment.
+
+  - ``"NONE"``: The error cannot be characterized.

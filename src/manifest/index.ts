@@ -66,11 +66,11 @@ interface IManifestArguments {
  * @class Manifest
  */
 export default class Manifest {
-  public id : string;
-  public transport : string;
-  public adaptations : ManifestAdaptations;
-  public periods : Period[];
-  public isLive : boolean;
+  public readonly id : string;
+  public readonly transport : string;
+  public readonly adaptations : ManifestAdaptations;
+  public readonly periods : Period[];
+  public readonly isLive : boolean;
   public uris : string[];
   public suggestedPresentationDelay? : number;
   public availabilityStartTime? : number;

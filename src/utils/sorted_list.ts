@@ -42,7 +42,7 @@ import arrayIncludes from "./array-includes";
  * @class SortedList
  */
 export default class SortedList<T> {
-  private _sortingFn : (a : T, b : T) => number;
+  private readonly _sortingFn : (a : T, b : T) => number;
   private _array : T[];
 
   /**
