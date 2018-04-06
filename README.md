@@ -31,9 +31,6 @@ Its main goals are:
   - To be easy to integrate and use as a library in various codebases.
 
 
-We recently switched our codebase to TypeScript, [here's
-why](./doc/why_typescript.md).
-
 Latest release: ``v3.3.1``
 
 
