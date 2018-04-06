@@ -28,47 +28,50 @@ export interface IStyleObject {
 }
 
 /**
- * Retrieve the attributes given in arguments in the given elements and their
+ * Retrieve the attributes given in arguments in the given nodes and their
  * associated style(s)/region.
  * The first notion of the attribute encountered will be taken (by looping
- * through the given elements in order).
+ * through the given nodes in order).
  *
  * TODO manage IDREFS (plural) for styles and regions, that is, multiple one
  * @param {Array.<string>} attributes
- * @param {Array.<Node>} elements
+ * @param {Array.<Node>} nodes
  * @param {Array.<Object>} styles
  * @param {Array.<Object>} regions
  * @returns {Object}
  */
 export function getStylingAttributes(
   attributes : string[],
-  elements : Node[],
+  nodes : Node[],
   styles : IStyleObject[],
   regions : IStyleObject[]
 ) : IStyleList {
   const currentStyle : IStyleList = {};
   const leftAttributes = attributes.slice();
-  for (let i = 0; i <= elements.length - 1; i++) {
-    const element = elements[i];
-    if (element) {
+  for (let i = 0; i <= nodes.length - 1; i++) {
+    const node = nodes[i];
+    if (node) {
       let styleID : string|undefined;
       let regionID : string|undefined;
 
       // 1. the style is directly set on a "tts:" attribute
-      for (let j = 0; j <= element.attributes.length - 1; j++) {
-        const attribute = element.attributes[j];
-        const name = attribute.name;
-        if (name === "style") {
-          styleID = attribute.value;
-        } else if (name === "region") {
-          regionID = attribute.value;
-        } else {
-          const nameWithoutTTS = name.substr(4);
-          if (arrayIncludes(leftAttributes, nameWithoutTTS)) {
-            currentStyle[nameWithoutTTS] = attribute.value;
-            leftAttributes.splice(j, 1);
-            if (!leftAttributes.length) {
-              return currentStyle;
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as Element;
+        for (let j = 0; j <= element.attributes.length - 1; j++) {
+          const attribute = element.attributes[j];
+          const name = attribute.name;
+          if (name === "style") {
+            styleID = attribute.value;
+          } else if (name === "region") {
+            regionID = attribute.value;
+          } else {
+            const nameWithoutTTS = name.substr(4);
+            if (arrayIncludes(leftAttributes, nameWithoutTTS)) {
+              currentStyle[nameWithoutTTS] = attribute.value;
+              leftAttributes.splice(j, 1);
+              if (!leftAttributes.length) {
+                return currentStyle;
+              }
             }
           }
         }
@@ -94,7 +97,7 @@ export function getStylingAttributes(
         }
       }
 
-      // 3. the element reference a region (which can have a value for the
+      // 3. the node reference a region (which can have a value for the
       //    corresponding style)
       if (regionID) {
         const region = arrayFind(regions, (x : IStyleObject) =>
@@ -123,10 +126,14 @@ export function getStylingAttributes(
 
 /**
  * Returns the styling directly linked to an element.
- * @param {Node} element
+ * @param {Node} node
  * @returns {Object}
  */
-export function getStylingFromElement(element : Node) : IStyleList {
+export function getStylingFromElement(node : Node) : IStyleList {
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return {};
+  }
+  const element = node as Element;
   const currentStyle : IStyleList = {};
   for (let i = 0; i <= element.attributes.length - 1; i++) {
     const styleAttribute = element.attributes[i];

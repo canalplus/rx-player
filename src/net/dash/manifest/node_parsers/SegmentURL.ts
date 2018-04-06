@@ -27,10 +27,10 @@ export interface IParsedSegmentURL {
 }
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
-export default function parseSegmentURL(root : Node) : IParsedSegmentURL {
+export default function parseSegmentURL(root : Element) : IParsedSegmentURL {
   const parsedSegmentURL : IParsedSegmentURL = {};
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];

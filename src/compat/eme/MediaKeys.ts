@@ -57,19 +57,20 @@ export interface IMediaKeySession
   onkeystatusesChange? : (evt : Event) => void;
 
   // Functions
-  generateRequest(initDataType: string, initData: BufferSource) : Promise<void>;
+  generateRequest(
+    initDataType: string,
+    initData: ArrayBuffer | TypedArray | DataView | null
+  ): Promise<void>;
   load(sessionId: string) : Promise<boolean>;
-  update(response: BufferSource) : Promise<void>;
+  update(response: ArrayBuffer | TypedArray | DataView | null): Promise<void>;
   close() : Promise<void>;
   remove() : Promise<void>;
 }
 
-interface IMockMediaKeys {
+export interface IMockMediaKeys {
   _setVideo : (vid : HTMLMediaElement) => void;
-  createSession : (sessionType? : MediaKeySessionType) => IMediaKeySession;
-  setServerCertificate : (
-    setServerCertificate : BufferSource
-  ) => Promise<void>;
+  createSession(sessionType? : MediaKeySessionType) : IMediaKeySession;
+  setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 
 interface IMockMediaKeysConstructor {
@@ -485,7 +486,6 @@ if (navigator.requestMediaKeySystemAccess) {
 }
 
 export {
-  IMockMediaKeys,
   MockMediaKeys,
   requestMediaKeySystemAccess,
 };

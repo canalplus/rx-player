@@ -40,7 +40,7 @@ interface IKeySystemOption {
   type : string;
   getLicense : (message : Uint8Array, messageType : string)
     => Promise<BufferSource>|BufferSource;
-  serverCertificate? : BufferSource;
+  serverCertificate? : ArrayBuffer|TypedArray;
   persistentLicense? : boolean;
   licenseStorage? : IPersistedSessionStorage;
   persistentStateRequired? : boolean;

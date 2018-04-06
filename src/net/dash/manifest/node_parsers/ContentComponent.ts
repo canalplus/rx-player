@@ -26,11 +26,11 @@ export interface IParsedContentComponent {
 }
 
 /**
- * Parse a "ContentComponent" Node in a DASH MPD.
- * @param {Node} root
+ * Parse a "ContentComponent" Element in a DASH MPD.
+ * @param {Element} root
  * @returns {Object}
  */
-export default function parseContentComponent(root: Node) : IParsedContentComponent {
+export default function parseContentComponent(root: Element) : IParsedContentComponent {
   const ret : IParsedContentComponent = {};
 
   for (let i = 0; i < root.attributes.length; i++) {

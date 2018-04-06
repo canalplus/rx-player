@@ -75,36 +75,38 @@ function parseRepresentationChildren(
   };
 
   for (let i = 0; i < representationChildren.length; i++) {
-    const currentNode = representationChildren[i];
+    if (representationChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentElement = representationChildren[i] as Element;
 
-    switch (currentNode.nodeName) {
-      case "BaseURL":
-        children.baseURL = currentNode.textContent || "";
-        break;
-      case "SegmentBase":
-        children.segmentBase = parseSegmentBase(currentNode);
-        break;
-      case "SegmentList":
-        children.segmentList = parseSegmentList(currentNode);
-        break;
-      case "SegmentTemplate":
-        children.segmentTemplate = parseSegmentTemplate(currentNode);
-        break;
+      switch (currentElement.nodeName) {
+        case "BaseURL":
+          children.baseURL = currentElement.textContent || "";
+          break;
+        case "SegmentBase":
+          children.segmentBase = parseSegmentBase(currentElement);
+          break;
+        case "SegmentList":
+          children.segmentList = parseSegmentList(currentElement);
+          break;
+        case "SegmentTemplate":
+          children.segmentTemplate = parseSegmentTemplate(currentElement);
+          break;
+      }
     }
   }
   return children;
 }
 
 /**
- * @param {Node} representationNode
+ * @param {Element} representationElement
  * @returns {Object}
  */
 function parseRepresentationAttributes(
-  representationNode : Node
+  representationElement : Element
 ) : IRepresentationAttributes {
   const attributes : IRepresentationAttributes = {};
-  for (let i = 0; i < representationNode.attributes.length; i++) {
-    const attribute = representationNode.attributes[i];
+  for (let i = 0; i < representationElement.attributes.length; i++) {
+    const attribute = representationElement.attributes[i];
 
     switch (attribute.name) {
 
@@ -211,10 +213,10 @@ function parseRepresentationAttributes(
 }
 
 export function createRepresentationIntermediateRepresentation(
-  representationNode : Node
+  representationElement : Element
 ) : IRepresentationIntermediateRepresentation {
   return {
-    children: parseRepresentationChildren(representationNode.childNodes),
-    attributes: parseRepresentationAttributes(representationNode),
+    children: parseRepresentationChildren(representationElement.childNodes),
+    attributes: parseRepresentationAttributes(representationElement),
   };
 }
