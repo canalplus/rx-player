@@ -95,6 +95,10 @@ without notice (not considered as part of the API).
 Only use the documented variables and open an issue if you think it's not
 enough.
 
+_Note: As some terms used here might be too foreign or slightly different than
+the one you're used to, we also wrote a list of terms and definitions used by
+the RxPlayer [here](../terms.md)._
+
 
 
 <a name="instantiation"></a>
