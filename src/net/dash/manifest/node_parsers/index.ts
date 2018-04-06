@@ -276,7 +276,7 @@ export default function parseManifest(
         i === 0 &&
         rootAttributes.duration &&
         !nextPeriod
-      ){
+      ) {
         periodDuration = rootAttributes.duration;
       }
     }
