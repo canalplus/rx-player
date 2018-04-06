@@ -28,19 +28,21 @@ export interface IParsedSegmentList extends IParsedSegmentBase {
 }
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
-export default function parseSegmentList(root: Node) : IParsedSegmentList {
+export default function parseSegmentList(root: Element) : IParsedSegmentList {
   const base = parseSegmentBase(root);
   const list : IParsedSegmentURL[] = [];
 
   const segmentListChildren = root.childNodes;
   for (let i = 0; i < segmentListChildren.length; i++) {
-    const currentNode = segmentListChildren[i];
-    if (currentNode.nodeName === "SegmentURL") {
-      const segmentURL = parseSegmentURL(currentNode);
-      list.push(segmentURL);
+    if (segmentListChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentNode = segmentListChildren[i] as Element;
+      if (currentNode.nodeName === "SegmentURL") {
+        const segmentURL = parseSegmentURL(currentNode);
+        list.push(segmentURL);
+      }
     }
   }
 

@@ -186,10 +186,10 @@ function isHardOfHearing(accessibility: IAccessibility) {
 }
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
-function parseScheme(root: Node) : IScheme {
+function parseScheme(root: Element) : IScheme {
   let schemeIdUri : string|undefined;
   let value : string|undefined;
   for (let i = 0; i < root.attributes.length; i++) {
