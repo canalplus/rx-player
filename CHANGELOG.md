@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+  - eme/error: fix reason string and error message for KEY_STATUS_CHANGE_ERROR
+
+
 ## v3.3.1 (2018/03/13)
 
 ### Bug Fixes
