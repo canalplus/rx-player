@@ -8,6 +8,10 @@ the RxPlayer's architecture.
 They are here to help you understand the way the player works, by describing
 the different bricks and algorithms that come into play.
 
+_Note: As some terms used here might be too foreign or slightly different than
+the one you're used to, we also wrote a list of terms and definitions used by
+the RxPlayer [here](../terms.md)._
+
 
 
 ## Organization of the documentation ###########################################
