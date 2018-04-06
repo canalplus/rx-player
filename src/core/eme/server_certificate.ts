@@ -36,7 +36,7 @@ import { ErrorStream } from "./session";
  */
 function setServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
-  serverCertificate : BufferSource
+  serverCertificate : ArrayBuffer|TypedArray
 ) : Observable<never> {
   return Observable.defer(() => {
     return castToObservable(
@@ -59,7 +59,7 @@ function setServerCertificate(
  */
 function trySettingServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
-  serverCertificate : BufferSource,
+  serverCertificate : ArrayBuffer|TypedArray,
   errorStream: ErrorStream
 ) : Observable<never> {
   return setServerCertificate(mediaKeys, serverCertificate)
