@@ -310,7 +310,8 @@ function createClock(
         video.removeEventListener(eventName, emitSample));
     };
   })
-    .multicast(() => new ReplaySubject<IClockTick>(1))
+    .multicast(() => new ReplaySubject<IClockTick>(1)) // Always emit the last
+                                                       // item on subscription
     .refCount();
 }
 
