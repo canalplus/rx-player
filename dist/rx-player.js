@@ -1304,39 +1304,38 @@ exports.default = {
 Object.defineProperty(exports, "__esModule", { value: true });
 var AssertionError_1 = __webpack_require__(252);
 /**
- * @param {*} value
- * @param {string} message
- * @throws AssertionError - Throws if the value given is falsy
+ * Throw an AssertionError if the given assertion is false.
+ * @param {boolean} assertion
+ * @param {string} message - Optional message property for the AssertionError.
+ * @throws AssertionError - Throws if the assertion given is false
  */
-var assert = function (value, message) {
-    if (!value) {
+function assert(assertion, message) {
+    if (!assertion) {
         throw new AssertionError_1.default(message || "invalid assertion");
     }
-};
-// TODO Rename assertEqual
-assert.equal = function (a, b, message) {
-    return assert(a === b, message);
-};
-// TODO Rename assertInterface
+}
+exports.default = assert;
 /**
+ * Throws if the given Object does not respect the interface.
  * @param {Object} o
- * @param {string} name - name of the _interface_
- * @param {Object} iface - Contains the checked keynames of O and link them
+ * @param {Object} iface - Contains the checked keynames of o and link them
  * to their types (obtained through the typeof operator).
+ * @param {string} [name="object"] - name of the _interface_
  * @throws AssertionError - The argument o given is not an object
  * @throws AssertionError - The _interface_ is not respected.
  */
-assert.iface = function (o, name, iface) {
-    assert(o, name + " should be an object");
+function assertInterface(o, iface, name) {
+    if (name === void 0) { name = "object"; }
+    assert(o != null, name + " should be an object");
     for (var k in iface) {
         if (iface.hasOwnProperty(k)) {
             /* tslint:disable:max-line-length */
-            assert.equal(typeof o[k], iface[k], name + " should have property " + k + " as a " + iface[k]);
+            assert(typeof o[k] === iface[k], name + " should have property " + k + " as a " + iface[k]);
             /* tslint:enable:max-line-length */
         }
     }
-};
-exports.default = assert;
+}
+exports.assertInterface = assertInterface;
 
 
 /***/ }),
@@ -2050,7 +2049,7 @@ function parseDuration(date) {
         return 0;
     }
     var match = iso8601Duration.exec(date);
-    assert_1.default(match, date + " is not a valid ISO8601 duration");
+    assert_1.default(!!match, date + " is not a valid ISO8601 duration");
     return (parseFloat(match[2] || "0") * 365 * 24 * 60 * 60 +
         parseFloat(match[4] || "0") * 30 * 24 * 60 * 60 + // not precise +
         parseFloat(match[6] || "0") * 24 * 60 * 60 +
@@ -2382,10 +2381,38 @@ exports.default = castToObservable;
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
- * Ponyfill for the Array.prototype.includes function.
+ * Array.prototype.includes ponyfill.
+ * Returns ``true`` if the given array ``arr`` contains the element
+ * ``searchElement``. false ``otherwise``.
+ *
  * Inspired from MDN polyfill, but ponyfilled instead
  *
- * @param {Array.<*>} arr
+ * @example
+ * ```js
+ * arrayIncludes([1, 2, 3], 3);
+ * // => true
+ *
+ * arrayIncludes([1, 2, 3], 7);
+ * // => false
+ *
+ * const obj = { a: 4 };
+ * arrayIncludes([obj, { b: 7 }, { a: 3 }, obj);
+ * // => true
+ *
+ * // does not perform deep equality
+ * arrayIncludes([{ a: 4 }, { b: 7 }, { a: 3 }, { a: 4 });
+ * // => false
+ *
+ * // the third argument state the starting index. 0 if not set.
+ *
+ * arrayIncludes([1, 2, 3], 2, 1);
+ * // => true
+ *
+ * arrayIncludes([1, 2, 3], 2, 2);
+ * // => false
+ * ```
+ *
+ * @param {Array} arr
  * @param {*} searchElement
  * @param {number} [fromIndex]
  * @returns {boolean}
@@ -3984,7 +4011,7 @@ exports.itole8 = itole8;
  * @throws AssertionError - The uuid length is not 16
  */
 function guidToUuid(uuid) {
-    assert_1.default.equal(uuid.length, 16, "UUID length should be 16");
+    assert_1.default(uuid.length === 16, "UUID length should be 16");
     var buf = strToBytes(uuid);
     var p1A = buf[0];
     var p1B = buf[1];
@@ -6642,7 +6669,7 @@ var atoms = {
      */
     frma: function (dataFormat) {
         if (false) {
-            assert_1.default.equal(dataFormat.length, 4, "wrong data format length");
+            assert_1.default(dataFormat.length === 4, "wrong data format length");
         }
         return Atom("frma", bytes_1.strToBytes(dataFormat));
     },
@@ -6814,7 +6841,7 @@ var atoms = {
      */
     schm: function (schemeType, schemeVersion) {
         if (false) {
-            assert_1.default.equal(schemeType.length, 4, "wrong scheme type length");
+            assert_1.default(schemeType.length === 4, "wrong scheme type length");
         }
         return Atom("schm", bytes_1.concat(4, bytes_1.strToBytes(schemeType), bytes_1.itobe4(schemeVersion)));
     },
@@ -6882,7 +6909,7 @@ var atoms = {
      */
     tenc: function (algId, ivSize, keyId) {
         if (false) {
-            assert_1.default.equal(keyId.length, 32, "wrong default KID length");
+            assert_1.default(keyId.length === 32, "wrong default KID length");
         }
         return Atom("tenc", bytes_1.concat(6, [algId, ivSize], bytes_1.hexToBytes(keyId)));
     },
@@ -7474,10 +7501,10 @@ function handleEncryptedEvent(encryptedEvent, mediaKeysInfos, video, errorStream
  */
 function createEME(video, keySystems, errorStream) {
     if (false) {
-        keySystems.forEach(function (ks) { return assert_1.default.iface(ks, "keySystem", {
+        keySystems.forEach(function (ks) { return assert_1.assertInterface(ks, {
             getLicense: "function",
             type: "string",
-        }); });
+        }, "keySystem"); });
     }
     // get the MediaKeys element the associated options
     // This is done as the "encrypted" event is not yet received for performance
@@ -21808,7 +21835,7 @@ function createSmoothStreamingParser(parserOptions) {
      */
     function parseProtection(root) {
         var header = root.firstElementChild;
-        assert_1.default.equal(header.nodeName, "ProtectionHeader", "Protection should have ProtectionHeader child");
+        assert_1.default(header.nodeName === "ProtectionHeader", "Protection should have ProtectionHeader child");
         var privateData = bytes_1.strToBytes(atob(header.textContent || ""));
         var keyId = getHexKeyId(privateData);
         var keyIdBytes = bytes_1.hexToBytes(keyId);
@@ -21956,7 +21983,7 @@ function createSmoothStreamingParser(parserOptions) {
             language : languages_1.normalize(language);
         var baseURL = root.getAttribute("Url") || "";
         if (false) {
-            assert_1.default(baseURL);
+            assert_1.default(baseURL !== "");
         }
         var _a = reduceChildren(root, function (res, _name, node) {
             switch (_name) {
@@ -21986,7 +22013,7 @@ function createSmoothStreamingParser(parserOptions) {
         }), representations = _a.representations, index = _a.index;
         // we assume that all representations have the same
         // codec and mimeType
-        assert_1.default(representations.length, "adaptation should have at least one representation");
+        assert_1.default(representations.length !== 0, "adaptation should have at least one representation");
         var id = adaptationType + (language ? ("_" + language) : "");
         // apply default properties
         representations.forEach(function (representation) {
@@ -22029,7 +22056,7 @@ function createSmoothStreamingParser(parserOptions) {
     function parseFromDocument(doc, url) {
         var rootURL = url_1.normalizeBaseURL(url);
         var root = doc.documentElement;
-        assert_1.default.equal(root.nodeName, "SmoothStreamingMedia", "document root should be SmoothStreamingMedia");
+        assert_1.default(root.nodeName === "SmoothStreamingMedia", "document root should be SmoothStreamingMedia");
         assert_1.default(/^[2]-[0-2]$/
             .test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")), "Version should be 2.0, 2.1 or 2.2");
         var timescale = +(root.getAttribute("Timescale") || 10000000);
@@ -25733,7 +25760,7 @@ function TextTrackParser(_a) {
         segmentData = undefined;
     }
     else {
-        assert_1.default(segmentInfos);
+        assert_1.default(segmentInfos != null);
         var segmentDataBase = {
             start: segmentInfos.time,
             end: segmentInfos.time + (segmentInfos.duration || 0),
@@ -26026,8 +26053,8 @@ var log_1 = __webpack_require__(1);
 var abstract_1 = __webpack_require__(95);
 var hash_init_data_1 = __webpack_require__(96);
 function checkStorage(storage) {
-    assert_1.default(storage, "no licenseStorage given for keySystem with persistentLicense");
-    assert_1.default.iface(storage, "licenseStorage", { save: "function", load: "function" });
+    assert_1.default(storage != null, "no licenseStorage given for keySystem with persistentLicense");
+    assert_1.assertInterface(storage, { save: "function", load: "function" }, "licenseStorage");
 }
 /**
  * Set representing persisted licenses. Depends on a simple local-
@@ -27243,26 +27270,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *
  * @example
  * ```js
- * const memory = new WeakMapMemory(arg => [arg.a, arg.b]);
+ * // Initialize the WeakMapMemory with its logic:
+ * const memory = new WeakMapMemory(arg => {
+ *   console.log("side-effect");
+ *   return [arg.a, arg.b];
+ * });
  *
- * const obj = {
- *   a: 1,
- *   b: 2
- * };
- * const arr1 = memory.get(obj); // => [1, 2]
- * const arr2 = memory.get(obj); // => [1, 2]
+ * const obj = { a: 1, b: 2 };
+ *
+ * // first time obj is given: call the function, save the result and return it:
+ * const arr1 = memory.get(obj);
+ * // >  "side-effect"
+ * // <- [1, 2]
+ *
+ * // nth time obj is given, returns the saved result without calling the
+ * // function:
+ * const arr2 = memory.get(obj);
+ * // <- [1, 2]
  *
  * // both of these use the same object, so the result is also the exact same
  * // one
  * console.log(arr1 === arr2); // => true
  *
  * // /!\ with a new object however:
+ * const obj2 = { a: 1, b: 2 };
  *
- * const obj2 = {
- *   a: 1,
- *   b: 2
- * };
- * const arr3 = memory.get(obj2); // => [1, 2]
+ * const arr3 = memory.get(obj2);
+ * // >  "side-effect"
+ * // <- [1, 2]
+ *
  * console.log(arr1 === arr3); // => false
  * ```
  * @class WeakMapMemory
@@ -31586,7 +31622,7 @@ function parseSami(smi, timeOffset, lang) {
     var langs = getClassNameByLang(css);
     var pCSS = getPCSSRules(css);
     var klass = langs[lang];
-    assert_1.default(klass, "sami: could not find lang " + lang + " in CSS");
+    assert_1.default(!!klass, "sami: could not find lang " + lang + " in CSS");
     for (;;) {
         up = syncOpen.exec(smi);
         to = syncClose.exec(smi);
@@ -31814,7 +31850,16 @@ exports.default = parseTTMLStringToDIV;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-// inspired from MDN polyfill, but ponyfilled instead
+/**
+ * String.prototype.startsWith ponyfill.
+ * Indicates Whether a string starts with another substring.
+ *
+ * Inspired from MDN polyfill, but ponyfilled instead.
+ * @param {string} completeString
+ * @param {string} searchString
+ * @param {number} [position]
+ * @returns {boolean}
+ */
 function startsWith(completeString, searchString, position) {
     /* tslint:disable no-unbound-method */
     if (typeof String.prototype.startsWith === "function") {
@@ -34093,7 +34138,7 @@ function parseSami(smi, timeOffset, lang) {
     var to = syncClose.exec(smi);
     var langs = getClassNameByLang(css);
     var klass = langs[lang];
-    assert_1.default(klass, "sami: could not find lang " + lang + " in CSS");
+    assert_1.default(!!klass, "sami: could not find lang " + lang + " in CSS");
     for (;;) {
         up = syncOpen.exec(smi);
         to = syncClose.exec(smi);
