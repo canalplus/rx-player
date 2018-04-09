@@ -41,4 +41,12 @@ describe("utils - starts-with", () => {
     expect(startsWith("Come Down To Us", "")).to.eql(true);
     expect(startsWith("", "")).to.eql(true);
   });
+
+  it("should take a starting index as first argument", () => {
+    expect(startsWith("Shaka-Player", "Shaka", 0)).to.eql(true);
+    expect(startsWith("Shaka-Player", "Shaka", 1)).to.eql(false);
+    expect(startsWith("Shaka-Player", "haka", 0)).to.eql(false);
+    expect(startsWith("Shaka-Player", "haka", 1)).to.eql(true);
+    expect(startsWith("Shaka-Player", "haka", 2)).to.eql(false);
+  });
 });

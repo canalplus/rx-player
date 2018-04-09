@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
-// inspired from MDN polyfill, but ponyfilled instead
+/**
+ * String.prototype.startsWith ponyfill.
+ * Indicates Whether a string starts with another substring.
+ *
+ * Inspired from MDN polyfill, but ponyfilled instead.
+ * @param {string} completeString
+ * @param {string} searchString
+ * @param {number} [position]
+ * @returns {boolean}
+ */
 export default function startsWith(
   completeString : string,
   searchString : string,

@@ -19,26 +19,35 @@
  *
  * @example
  * ```js
- * const memory = new WeakMapMemory(arg => [arg.a, arg.b]);
+ * // Initialize the WeakMapMemory with its logic:
+ * const memory = new WeakMapMemory(arg => {
+ *   console.log("side-effect");
+ *   return [arg.a, arg.b];
+ * });
  *
- * const obj = {
- *   a: 1,
- *   b: 2
- * };
- * const arr1 = memory.get(obj); // => [1, 2]
- * const arr2 = memory.get(obj); // => [1, 2]
+ * const obj = { a: 1, b: 2 };
+ *
+ * // first time obj is given: call the function, save the result and return it:
+ * const arr1 = memory.get(obj);
+ * // >  "side-effect"
+ * // <- [1, 2]
+ *
+ * // nth time obj is given, returns the saved result without calling the
+ * // function:
+ * const arr2 = memory.get(obj);
+ * // <- [1, 2]
  *
  * // both of these use the same object, so the result is also the exact same
  * // one
  * console.log(arr1 === arr2); // => true
  *
  * // /!\ with a new object however:
+ * const obj2 = { a: 1, b: 2 };
  *
- * const obj2 = {
- *   a: 1,
- *   b: 2
- * };
- * const arr3 = memory.get(obj2); // => [1, 2]
+ * const arr3 = memory.get(obj2);
+ * // >  "side-effect"
+ * // <- [1, 2]
+ *
  * console.log(arr1 === arr3); // => false
  * ```
  * @class WeakMapMemory

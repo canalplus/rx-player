@@ -17,8 +17,9 @@
 import AssertionError from "../errors/AssertionError";
 
 /**
+ * Throw an AssertionError if the given assertion is false.
  * @param {boolean} assertion
- * @param {string} message
+ * @param {string} message - Optional message property for the AssertionError.
  * @throws AssertionError - Throws if the assertion given is false
  */
 export default function assert(assertion : boolean, message? : string) {
@@ -30,6 +31,7 @@ export default function assert(assertion : boolean, message? : string) {
 type IObjectInterface<T> = Partial<Record<keyof T, string>>;
 
 /**
+ * Throws if the given Object does not respect the interface.
  * @param {Object} o
  * @param {Object} iface - Contains the checked keynames of o and link them
  * to their types (obtained through the typeof operator).

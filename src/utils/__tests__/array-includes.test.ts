@@ -104,4 +104,18 @@ describe("utils - array-includes", () => {
     expect(arrayIncludes([obj1, obj2], obj2bis))
       .to.equal(false);
   });
+
+  it("should take a starting index as first argument", () => {
+    const obj1 = { a: 4, b: 3 };
+    const obj2 = { a: obj1, b: { a: 4 } };
+    const obj3 = { a: obj1, b: { a: 4 } };
+    expect(arrayIncludes([obj1, obj2, obj3], obj2))
+      .to.equal(true);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2, 0))
+      .to.equal(true);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2, 1))
+      .to.equal(true);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2, 2))
+      .to.equal(false);
+  });
 });
