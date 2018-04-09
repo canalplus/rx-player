@@ -66,8 +66,8 @@ function trySettingServerCertificate(
     .catch(error => {
       error.fatal = false;
       errorStream.next(error);
-      return Observable.empty();
-    }) as Observable<never>;
+      return Observable.empty<never>();
+    });
 }
 
 export {
