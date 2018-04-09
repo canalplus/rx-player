@@ -94,7 +94,7 @@ function parseDuration(date : string) : number {
   }
 
   const match = iso8601Duration.exec(date) as RegExpExecArray;
-  assert(match, `${date} is not a valid ISO8601 duration`);
+  assert(!!match, `${date} is not a valid ISO8601 duration`);
 
   return (
     parseFloat(match[2]  || "0") * 365 * 24 * 60 * 60 +

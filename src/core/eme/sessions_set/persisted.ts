@@ -15,7 +15,9 @@
  */
 
 import { IMediaKeySession } from "../../../compat";
-import assert from "../../../utils/assert";
+import assert, {
+  assertInterface,
+} from "../../../utils/assert";
 import log from "../../../utils/log";
 import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
@@ -32,13 +34,14 @@ export interface IPersistedSessionStorage {
 
 function checkStorage(storage : IPersistedSessionStorage) : void {
   assert(
-    storage,
+    storage != null,
     "no licenseStorage given for keySystem with persistentLicense"
   );
 
-  assert.iface(
+  assertInterface(
     storage,
-    "licenseStorage", { save: "function", load: "function" }
+    { save: "function", load: "function" },
+    "licenseStorage"
   );
 }
 

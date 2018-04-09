@@ -15,129 +15,52 @@
  */
 
 import { expect } from "chai";
-import assert from "../assert";
+import assert, {
+  assertInterface,
+} from "../assert";
 
 describe("utils - assert", () => {
-  it("should throw an error if the assertion is falsy", () => {
-    const FALSY_VALUES = ["", false, 0, undefined, null];
-
-    FALSY_VALUES.forEach(falsyValue => {
-      let error;
-      try {
-        assert(falsyValue);
-      } catch (e) {
-        error = e;
-        /* tslint:disable:no-unused-expression */
-        expect(e).to.exist;
-        /* tslint:enable:no-unused-expression */
-      }
+  it("should throw an error if the assertion is false", () => {
+    let error;
+    try {
+      assert(false);
+    } catch (e) {
+      error = e;
       /* tslint:disable:no-unused-expression */
-      expect(error).to.exist;
+      expect(e).to.exist;
       /* tslint:enable:no-unused-expression */
-      expect(error.message).to.equal("invalid assertion");
-      expect(error.name).to.equal("AssertionError");
-    });
+    }
+    /* tslint:disable:no-unused-expression */
+    expect(error).to.exist;
+    /* tslint:enable:no-unused-expression */
+    expect(error.message).to.equal("invalid assertion");
+    expect(error.name).to.equal("AssertionError");
   });
 
   it("should be able to take a message argument", () => {
-    const FALSY_VALUES = ["", false, 0, undefined, null];
     const myMessage = "foo bar\n\r";
-
-    FALSY_VALUES.forEach(falsyValue => {
-      let error;
-      try {
-        assert(falsyValue, myMessage);
-      } catch (e) {
-        error = e;
-        /* tslint:disable:no-unused-expression */
-        expect(e).to.exist;
-        /* tslint:enable:no-unused-expression */
-      }
+    let error;
+    try {
+      assert(false, myMessage);
+    } catch (e) {
+      error = e;
       /* tslint:disable:no-unused-expression */
-      expect(error).to.exist;
+      expect(e).to.exist;
       /* tslint:enable:no-unused-expression */
-      expect(error.message).to.equal(myMessage);
-      expect(error.name).to.equal("AssertionError");
-    });
+    }
+    /* tslint:disable:no-unused-expression */
+    expect(error).to.exist;
+    /* tslint:enable:no-unused-expression */
+    expect(error.message).to.equal(myMessage);
+    expect(error.name).to.equal("AssertionError");
   });
 
-  it("should not throw an error if the assertion is truthy", () => {
-    const TRUTHY_VALUES = ["a", true, -1, [], {}];
-
-    TRUTHY_VALUES.forEach(truthyValue => {
-      assert(truthyValue);
-    });
+  it("should not throw an error if the assertion is true", () => {
+    assert(true);
   });
 });
 
-describe("utils - assert.equal", () => {
-  it("should throw an error if the arguments are not strictly equal", () => {
-    const UNEQUAL_VALUES = [
-      [false, true],
-      [0, 1],
-      ["a", "aa"],
-      [{}, {}],
-      [[], []],
-    ];
-
-    UNEQUAL_VALUES.forEach(unequalValue => {
-      let error;
-      try {
-        assert.equal(unequalValue[0], unequalValue[1]);
-      } catch (e) {
-        error = e;
-      }
-      /* tslint:disable:no-unused-expression */
-      expect(error).to.exist;
-      /* tslint:enable:no-unused-expression */
-      expect(error.message).to.equal("invalid assertion");
-      expect(error.name).to.equal("AssertionError");
-    });
-  });
-
-  it("should be able to take a message argument", () => {
-    const UNEQUAL_VALUES = [
-      [false, true],
-      [0, 1],
-      ["a", "aa"],
-      [{}, {}],
-      [[], []],
-    ];
-    const myMessage = "foo bar\n\r";
-
-    UNEQUAL_VALUES.forEach(unequalValue => {
-      let error;
-      try {
-        assert.equal(unequalValue[0], unequalValue[1], myMessage);
-      } catch (e) {
-        error = e;
-      }
-      /* tslint:disable:no-unused-expression */
-      expect(error).to.exist;
-      /* tslint:enable:no-unused-expression */
-      expect(error.message).to.equal(myMessage);
-      expect(error.name).to.equal("AssertionError");
-    });
-  });
-
-  it("should not throw an error if the arguments are strictly equal", () => {
-    const obj = {a: 1};
-    const arr = [[[[[]]]]];
-    const EQUAL_VALUES = [
-      [true, true],
-      [0, 0],
-      ["a", "a"],
-      [obj, obj],
-      [arr, arr],
-    ];
-
-    EQUAL_VALUES.forEach(equalValues => {
-      assert.equal(equalValues[0], equalValues[1]);
-    });
-  });
-});
-
-describe("utils - assert.iface", () => {
+describe("utils - assertInterface", () => {
   it("should throw if undefined or null is given", () => {
     let error;
     const nameOfMyObj = "toto titi";
@@ -149,7 +72,7 @@ describe("utils - assert.iface", () => {
       e: "boolean",
     };
     try {
-      assert.iface(undefined, nameOfMyObj, objIface);
+      assertInterface(undefined, objIface, nameOfMyObj);
     } catch (e) {
       error = e;
     }
@@ -162,7 +85,7 @@ describe("utils - assert.iface", () => {
     error = null;
 
     try {
-      assert.iface(null, nameOfMyObj, objIface);
+      assertInterface(null, objIface, nameOfMyObj);
     } catch (e) {
       error = e;
     }
@@ -196,7 +119,7 @@ describe("utils - assert.iface", () => {
     };
 
     try {
-      assert.iface(myObj, nameOfMyObj, objIface);
+      assertInterface(myObj, objIface, nameOfMyObj);
     } catch (e) {
       error = e;
     }
@@ -205,6 +128,40 @@ describe("utils - assert.iface", () => {
     /* tslint:enable:no-unused-expression */
     expect(error.message)
       .to.equal(`${nameOfMyObj} should have property f as a function`);
+    expect(error.name).to.equal("AssertionError");
+  });
+
+  it("should name the interface 'object' if no name is specified", () => {
+    let error;
+    const myObj = {
+      a: 45,
+      b: {
+        c: "toto",
+      },
+      /* tslint:disable:no-empty */
+      d: () => {},
+      /* tslint:enable:no-empty */
+      e: true,
+    };
+
+    const objIface = {
+      a: "number",
+      b: "object",
+      d: "function",
+      e: "boolean",
+      f: "function", // one more key
+    };
+
+    try {
+      assertInterface(myObj, objIface);
+    } catch (e) {
+      error = e;
+    }
+    /* tslint:disable:no-unused-expression */
+    expect(error).to.exist;
+    /* tslint:enable:no-unused-expression */
+    expect(error.message)
+      .to.equal("object should have property f as a function");
     expect(error.name).to.equal("AssertionError");
   });
 
@@ -228,6 +185,6 @@ describe("utils - assert.iface", () => {
       e: "boolean",
     };
 
-    assert.iface(myObj, nameOfMyObj, objIface);
+    assertInterface(myObj, objIface, nameOfMyObj);
   });
 });

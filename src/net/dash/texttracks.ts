@@ -210,7 +210,7 @@ function TextTrackParser({
     }
     segmentData = undefined;
   } else { // if not init
-    assert(segmentInfos);
+    assert(segmentInfos != null);
     const segmentDataBase = {
       start: segmentInfos.time,
       end: segmentInfos.time + (segmentInfos.duration || 0),
