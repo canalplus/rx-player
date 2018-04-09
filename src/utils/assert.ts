@@ -16,47 +16,40 @@
 
 import AssertionError from "../errors/AssertionError";
 
-// TODO better syntax
-interface IAssertFunctions {
-  (a : any, message? : string) : void;
-  equal : (a : any, b : any, message? : string) => void;
-  iface : (o : any, name : string, iface : any) => void;
-}
-
 /**
- * @param {*} value
- * @param {string} message
- * @throws AssertionError - Throws if the value given is falsy
+ * Throw an AssertionError if the given assertion is false.
+ * @param {boolean} assertion
+ * @param {string} message - Optional message property for the AssertionError.
+ * @throws AssertionError - Throws if the assertion given is false
  */
-const assert = <IAssertFunctions> function(value : any, message? : string) {
-  if (!value) {
+export default function assert(assertion : boolean, message? : string) {
+  if (!assertion) {
     throw new AssertionError(message || "invalid assertion");
   }
-};
+}
 
-// TODO Rename assertEqual
-assert.equal = function(a : any, b : any, message? : string) {
-  return assert(a === b, message);
-};
+type IObjectInterface<T> = Partial<Record<keyof T, string>>;
 
-// TODO Rename assertInterface
 /**
+ * Throws if the given Object does not respect the interface.
  * @param {Object} o
- * @param {string} name - name of the _interface_
- * @param {Object} iface - Contains the checked keynames of O and link them
+ * @param {Object} iface - Contains the checked keynames of o and link them
  * to their types (obtained through the typeof operator).
+ * @param {string} [name="object"] - name of the _interface_
  * @throws AssertionError - The argument o given is not an object
  * @throws AssertionError - The _interface_ is not respected.
  */
-assert.iface = function(o, name, iface) {
-  assert(o, `${name} should be an object`);
+export function assertInterface<T>(
+  o: T,
+  iface: IObjectInterface<T>,
+  name: string = "object"
+) : void {
+  assert(o != null, `${name} should be an object`);
   for (const k in iface) {
     if (iface.hasOwnProperty(k)) {
       /* tslint:disable:max-line-length */
-      assert.equal(typeof o[k], iface[k], `${name} should have property ${k} as a ${iface[k]}`);
+      assert(typeof o[k] === iface[k], `${name} should have property ${k} as a ${iface[k]}`);
       /* tslint:enable:max-line-length */
     }
   }
-};
-
-export default assert;
+}

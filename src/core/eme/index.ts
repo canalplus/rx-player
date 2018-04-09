@@ -24,7 +24,7 @@ import {
 } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 import { EncryptedMediaError } from "../../errors";
-import assert from "../../utils/assert";
+import { assertInterface } from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
@@ -145,10 +145,10 @@ function createEME(
   errorStream: ErrorStream
 ) : Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   if (__DEV__) {
-    keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
+    keySystems.forEach((ks) => assertInterface(ks, {
       getLicense: "function",
       type: "string",
-    }));
+    }, "keySystem"));
   }
 
   // get the MediaKeys element the associated options
