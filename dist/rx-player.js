@@ -1295,7 +1295,7 @@ exports.default = {
      *
      * @type {Number|null}
      */
-    FORCED_ENDED_THRESHOLD: null,
+    FORCED_ENDED_THRESHOLD: 0.001,
 };
 
 
