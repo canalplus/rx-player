@@ -16,19 +16,21 @@
 
 import MediaError from "../../errors/MediaError";
 import log from "../../utils/log";
-import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import ImageSourceBuffer from "./image";
 import QueuedSourceBuffer from "./queued_source_buffer";
 import {
   HTMLTextSourceBuffer,
   NativeTextSourceBuffer,
 } from "./text";
-import ICustomTimeRanges from "./time_ranges";
 
-export const BUFFER_TYPES : SupportedBufferTypes[] =
+// Every SourceBuffer types managed here
+export type IBufferType = "audio"|"video"|"text"|"image";
+
+// Array of every SourceBuffer types managed here
+export const BUFFER_TYPES : IBufferType[] =
   ["audio", "video", "text", "image"];
-export type SupportedBufferTypes = "audio"|"video"|"text"|"image";
 
+// Options available for a "text" SourceBuffer
 export type ITextTrackSourceBufferOptions =
   {
     textTrackMode? : "native";
@@ -39,9 +41,11 @@ export type ITextTrackSourceBufferOptions =
     textTrackElement : HTMLElement;
   };
 
+// General Options available for any SourceBuffer
 export type ISourceBufferOptions =
   ITextTrackSourceBufferOptions;
 
+// Types of "native" SourceBuffers
 type INativeSourceBufferType = "audio" | "video";
 
 interface ICreatedSourceBuffer<T> {
@@ -111,7 +115,7 @@ export default class SourceBufferManager {
    * @param {string} bufferType
    * @returns {Boolean}
    */
-  public has(bufferType : SupportedBufferTypes) : boolean {
+  public has(bufferType : IBufferType) : boolean {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       return !!this._initializedNativeSourceBuffers[bufferType];
     }
@@ -125,7 +129,7 @@ export default class SourceBufferManager {
    * @param {string} bufferType
    * @returns {QueuedSourceBuffer}
    */
-  public get(bufferType : SupportedBufferTypes) : QueuedSourceBuffer<any> {
+  public get(bufferType : IBufferType) : QueuedSourceBuffer<any> {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       const sourceBufferInfos = this._initializedNativeSourceBuffers[bufferType];
       if (!sourceBufferInfos) {
@@ -151,7 +155,7 @@ export default class SourceBufferManager {
    * @returns {QueuedSourceBuffer}
    */
   public createSourceBuffer(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     codec : string,
     options : ISourceBufferOptions = {}
   ) : QueuedSourceBuffer<any> {
@@ -217,7 +221,7 @@ export default class SourceBufferManager {
    * Dispose of the active SourceBuffer for the given type.
    * @param {string} bufferType
    */
-  public disposeSourceBuffer(bufferType : SupportedBufferTypes) : void {
+  public disposeSourceBuffer(bufferType : IBufferType) : void {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       const memorizedNativeSourceBuffer = this
         ._initializedNativeSourceBuffers[bufferType];
@@ -261,7 +265,7 @@ export default class SourceBufferManager {
    * Dispose of all QueuedSourceBuffer created on this SourceBufferManager.
    */
   public disposeAll() {
-    BUFFER_TYPES.forEach((bufferType : SupportedBufferTypes) => {
+    BUFFER_TYPES.forEach((bufferType : IBufferType) => {
       if (this.has(bufferType)) {
         this.disposeSourceBuffer(bufferType);
       }
@@ -296,7 +300,5 @@ function shouldHaveNativeSourceBuffer(
 }
 
 export {
-  ICustomSourceBuffer,
-  ICustomTimeRanges,
   QueuedSourceBuffer,
 };

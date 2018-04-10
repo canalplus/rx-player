@@ -22,7 +22,7 @@ import {
   IABRMetric,
   IABRRequest
 } from "../../abr";
-import { SupportedBufferTypes } from "../../source_buffers";
+import { IBufferType } from "../../source_buffers";
 import { IPipelineOptions } from "../core_pipeline";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
@@ -99,7 +99,7 @@ export default class SegmentPipelinesManager<T> {
    * @returns {Function}
    */
   createPipeline(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
   ) {
     const segmentFetcher = createSegmentFetcher<T>(

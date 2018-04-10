@@ -28,7 +28,7 @@ import {
   IABRMetric,
   IABRRequest
 } from "../../abr";
-import { SupportedBufferTypes } from "../../source_buffers";
+import { IBufferType } from "../../source_buffers";
 import BasePipeline, {
   IPipelineCache,
   IPipelineData,
@@ -72,7 +72,7 @@ export type ISegmentFetcher<T> = (
  * @returns {Function}
  */
 export default function createSegmentFetcher<T>(
-  bufferType : SupportedBufferTypes,
+  bufferType : IBufferType,
   transport : ITransportPipelines,
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,

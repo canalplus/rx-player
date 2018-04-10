@@ -28,20 +28,20 @@ import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 import {
   BUFFER_TYPES,
-  SupportedBufferTypes,
+  IBufferType,
 } from "../source_buffers";
 
 // PeriodBuffer informations emitted to the ActivePeriodEmitted
 export interface IPeriodBufferInfos {
   period: Period;
-  type: SupportedBufferTypes;
+  type: IBufferType;
 }
 
 // structure used internally to keep track of which Period has which
 // PeriodBuffer
 interface IPeriodItem {
   period: Period;
-  buffers: Set<SupportedBufferTypes>;
+  buffers: Set<IBufferType>;
 }
 
 /**
@@ -94,7 +94,7 @@ export default function ActivePeriodEmitter(
       if (!periodItem) {
         periodItem = {
           period,
-          buffers: new Set<SupportedBufferTypes>(),
+          buffers: new Set<IBufferType>(),
         };
         periodsList.add(periodItem);
       }
@@ -143,6 +143,6 @@ export default function ActivePeriodEmitter(
  * @param {Set} bufferList
  * @returns {Boolean}
  */
-function isBufferListFull(bufferList : Set<SupportedBufferTypes>) : boolean {
+function isBufferListFull(bufferList : Set<IBufferType>) : boolean {
   return bufferList.size >= BUFFER_TYPES.length;
 }

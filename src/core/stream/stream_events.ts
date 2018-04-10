@@ -26,21 +26,21 @@ import {
   IRepresentationChangeEvent,
 } from "../buffer";
 import { ISessionEvent } from "../eme/session";
-import { SupportedBufferTypes } from "../source_buffers";
+import { IBufferType } from "../source_buffers";
 import { IStallingItem } from "./stalling_manager";
 
 // Emit when the buffer from last period is full
 export interface ICompletedBufferEvent {
   type: "complete-buffer";
   value : {
-    type: SupportedBufferTypes;
+    type: IBufferType;
   };
 }
 
 export interface IAdaptationChangeEvent {
   type : "adaptationChange";
   value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
     adaptation : Adaptation|null;
   };
@@ -91,7 +91,7 @@ export interface IActivePeriodChangedEvent {
 export interface IPeriodBufferReadyEvent {
   type : "periodBufferReady";
   value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
     adaptation$ : Subject<Adaptation|null>;
   };
@@ -100,7 +100,7 @@ export interface IPeriodBufferReadyEvent {
 export interface IPeriodBufferClearedEvent {
   type : "periodBufferCleared";
   value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
   };
 }
@@ -111,7 +111,7 @@ export interface IEndOfStreamEvent {
 }
 
 function adaptationChange(
-  bufferType : SupportedBufferTypes,
+  bufferType : IBufferType,
   adaptation : Adaptation|null,
   period : Period
 ) : IAdaptationChangeEvent {
@@ -178,7 +178,7 @@ function activePeriodChanged(period : Period) : IActivePeriodChangedEvent {
 }
 
 function nullRepresentation(
-  type : SupportedBufferTypes,
+  type : IBufferType,
   period : Period
 ) : IRepresentationChangeEvent {
   return {
@@ -192,7 +192,7 @@ function nullRepresentation(
 }
 
 function periodBufferReady(
-  type : SupportedBufferTypes,
+  type : IBufferType,
   period : Period,
   adaptation$ : Subject<Adaptation|null>
 ) : IPeriodBufferReadyEvent {
@@ -207,7 +207,7 @@ function periodBufferReady(
 }
 
 function periodBufferCleared(
-  type : SupportedBufferTypes,
+  type : IBufferType,
   period : Period
 ) : IPeriodBufferClearedEvent {
   return {
@@ -233,7 +233,7 @@ function endOfStream() : IEndOfStreamEvent {
   };
 }
 
-function bufferComplete(bufferType: SupportedBufferTypes) : ICompletedBufferEvent {
+function bufferComplete(bufferType: IBufferType) : ICompletedBufferEvent {
   return {
     type: "complete-buffer",
     value: {

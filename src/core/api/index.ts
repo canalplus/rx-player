@@ -71,11 +71,11 @@ import Transports from "../../net";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import ABRManager from "../abr";
 import {
-  clearEME,
-  dispose as emeDispose,
+  clearEMESession,
+  disposeEME,
   getCurrentKeySystem,
 } from "../eme";
-import { SupportedBufferTypes } from "../source_buffers";
+import { IBufferType } from "../source_buffers";
 import Stream, {
   IStreamEvent,
 } from "../stream";
@@ -114,7 +114,7 @@ interface IPositionUpdateItem {
 }
 
 interface IBitrateEstimate {
-  type : SupportedBufferTypes;
+  type : IBufferType;
   bitrate : number|undefined;
 }
 
@@ -298,7 +298,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @type {Map}
    */
   private _priv_activeAdaptations : Map<Period, Partial<
-    Record<SupportedBufferTypes, Adaptation|null>
+    Record<IBufferType, Adaptation|null>
     >> | null;
 
   /**
@@ -309,7 +309,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @type {Map}
    */
   private _priv_activeRepresentations : Map<Period, Partial<
-    Record<SupportedBufferTypes, Representation|null>
+    Record<IBufferType, Representation|null>
     >> | null;
 
   /**
@@ -595,7 +595,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this.stop();
 
     // free resources used for EME management
-    emeDispose();
+    disposeEME();
 
     // free Observables linked to the Player instance
     this._priv_destroy$.next();
@@ -885,7 +885,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Object|null}
    */
   getCurrentAdaptations(
-  ) : Partial<Record<SupportedBufferTypes, Adaptation|null>> | null {
+  ) : Partial<Record<IBufferType, Adaptation|null>> | null {
     if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
       return null;
     }
@@ -898,7 +898,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Object|null}
    */
   getCurrentRepresentations(
-  ) : Partial<Record<SupportedBufferTypes, Representation|null>> | null {
+  ) : Partial<Record<IBufferType, Representation|null>> | null {
     if (!this._priv_currentPeriod || !this._priv_activeRepresentations) {
       return null;
     }
@@ -1614,7 +1614,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_streamLock$.next(false);
     };
 
-    clearEME()
+    clearEMESession()
       .catch(() => Observable.empty())
       .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
   }
@@ -1846,7 +1846,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Subject} value.adaptation$
    */
   private _priv_onPeriodBufferReady(value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
     adaptation$ : Subject<Adaptation|null>;
   }) : void {
@@ -1894,7 +1894,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Period} value.period
    */
   private _priv_onPeriodBufferCleared(value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
   }) : void {
     const { type, period } = value;
@@ -1941,7 +1941,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     adaptation,
     period,
   } : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     adaptation : Adaptation|null;
     period : Period;
   }) : void {
@@ -1987,7 +1987,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     period,
     representation,
   }: {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
     representation : Representation|null;
   }) : void {
@@ -2030,7 +2030,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     type,
     bitrate,
   } : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     bitrate : number|undefined;
   }) : void {
     if (__DEV__) {
