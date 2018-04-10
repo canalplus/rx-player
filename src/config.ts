@@ -598,14 +598,16 @@ export default {
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
-   * The player relies on browser event and media element status to change its
-   * status to "ENDED".
+   * The player relies on a browser event and media element status to change its
+   * status to "ENDED". In some cases, browsers don't indicates that video has ended.
+   * For example in Chrome 54, some contents never end, probably due to a bug.
    *
    * This threshold allows to force the status to "ENDED", when player
    * is stalling and the difference between current playback time and duration
    * has passed under the given threshold.
    *
    * If it is null, the player only relies on browser informations.
+   * @type {Number|null}
    */
   FORCED_ENDED_THRESHOLD: null,
 };
