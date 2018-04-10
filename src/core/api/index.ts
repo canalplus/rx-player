@@ -84,6 +84,7 @@ import createClock, {
   IClockTick
 } from "./clock";
 import { PLAYER_STATES } from "./constants";
+import getPlayerState from "./get_player_state";
 import LanguageManager, {
   IAudioTrackPreference,
   ILMAudioTrack,
@@ -808,28 +809,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           )
             .takeUntil(this._priv_stopCurrentContent$)
             .map(([isPlaying, stalledStatus]) => {
-              if (videoElement.ended) {
-                return PLAYER_STATES.ENDED;
-              }
-
-              if (stalledStatus) {
-                const { FORCED_ENDED_THRESHOLD } = config; // TS Bug
-                const gapBetweenDurationAndCurrentTime =
-                  Math.abs(videoElement.duration - videoElement.currentTime);
-                if (
-                  FORCED_ENDED_THRESHOLD != null &&
-                  gapBetweenDurationAndCurrentTime < FORCED_ENDED_THRESHOLD
-                ) {
-                  return PLAYER_STATES.ENDED;
-                }
-                switch (stalledStatus.reason) {
-                  case "seeking":
-                    return PLAYER_STATES.SEEKING;
-                  default:
-                    return PLAYER_STATES.BUFFERING;
-                }
-              }
-              return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
+              return getPlayerState(videoElement, isPlaying, stalledStatus);
             })
 
             // begin emitting those only when the content start to play
