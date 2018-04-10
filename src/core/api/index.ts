@@ -813,6 +813,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
               }
 
               if (stalledStatus) {
+                const { FORCED_ENDED_THRESHOLD } = config; // TS Bug
+                const gapBetweenDurationAndCurrentTime =
+                  Math.abs(videoElement.duration - videoElement.currentTime);
+                if (
+                  FORCED_ENDED_THRESHOLD != null &&
+                  gapBetweenDurationAndCurrentTime < FORCED_ENDED_THRESHOLD
+                ) {
+                  return PLAYER_STATES.ENDED;
+                }
                 switch (stalledStatus.reason) {
                   case "seeking":
                     return PLAYER_STATES.SEEKING;

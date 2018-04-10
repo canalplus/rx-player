@@ -596,4 +596,16 @@ export default {
     ],
   } as IDictionary<string[]>,
   /* tslint:enable no-object-literal-type-assertion */
+
+  /**
+   * The player relies on browser event and media element status to change its
+   * status to "ENDED".
+   *
+   * This threshold allows to force the status to "ENDED", when player
+   * is stalling and the difference between current playback time and duration
+   * has passed under the given threshold.
+   *
+   * If it is null, the player only relies on browser informations.
+   */
+  FORCED_ENDED_THRESHOLD: null,
 };
