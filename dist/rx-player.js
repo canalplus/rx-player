@@ -7554,9 +7554,9 @@ exports.createEME = createEME;
 /**
  * Free up all ressources taken by the EME management.
  */
-function dispose() {
+function disposeEME() {
     // Remove MediaKey before to prevent MediaKey error
-    // if other instance is creating after dispose
+    // if other instance is creating after disposeEME
     set_media_keys_1.disposeMediaKeys(instanceInfos.$videoElement).subscribe(noop_1.default);
     instanceInfos.$mediaKeys = null;
     instanceInfos.$keySystem = null;
@@ -7564,11 +7564,11 @@ function dispose() {
     instanceInfos.$mediaKeySystemConfiguration = null;
     globals_1.$loadedSessions.dispose();
 }
-exports.dispose = dispose;
+exports.disposeEME = disposeEME;
 /**
  * Clear EME ressources as the current content stops its playback.
  */
-function clearEME() {
+function clearEMESession() {
     return Observable_1.Observable.defer(function () {
         var observablesArray = [];
         if (instanceInfos.$videoElement && _1.shouldUnsetMediaKeys()) {
@@ -7586,7 +7586,7 @@ function clearEME() {
         return observablesArray.length ? Observable_1.Observable.merge.apply(Observable_1.Observable, observablesArray) : Observable_1.Observable.empty();
     });
 }
-exports.clearEME = clearEME;
+exports.clearEMESession = clearEMESession;
 /**
  * Returns the name of the current key system used.
  * @returns {string}
@@ -19135,7 +19135,7 @@ var Player = /** @class */ (function (_super) {
         // free resources linked to the loaded content
         this.stop();
         // free resources used for EME management
-        eme_1.dispose();
+        eme_1.disposeEME();
         // free Observables linked to the Player instance
         this._priv_destroy$.next();
         this._priv_destroy$.complete();
@@ -20034,7 +20034,7 @@ var Player = /** @class */ (function (_super) {
         var freeUpStreamLock = function () {
             _this._priv_streamLock$.next(false);
         };
-        eme_1.clearEME()
+        eme_1.clearEMESession()
             .catch(function () { return Observable_1.Observable.empty(); })
             .subscribe(noop_1.default, freeUpStreamLock, freeUpStreamLock);
     };
