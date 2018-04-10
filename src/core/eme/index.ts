@@ -187,9 +187,9 @@ function createEME(
 /**
  * Free up all ressources taken by the EME management.
  */
-function dispose() : void {
+function disposeEME() : void {
   // Remove MediaKey before to prevent MediaKey error
-  // if other instance is creating after dispose
+  // if other instance is creating after disposeEME
   disposeMediaKeys(instanceInfos.$videoElement).subscribe(noop);
   instanceInfos.$mediaKeys = null;
   instanceInfos.$keySystem = null;
@@ -201,7 +201,7 @@ function dispose() : void {
 /**
  * Clear EME ressources as the current content stops its playback.
  */
-function clearEME(): Observable<never> {
+function clearEMESession(): Observable<never> {
   return Observable.defer(() => {
     const observablesArray : Array<Observable<never>> = [];
     if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
@@ -260,10 +260,10 @@ export default function EMEManager(
 }
 
 export {
-  createEME,
-  clearEME,
-  getCurrentKeySystem,
-  dispose,
-  IKeySystemOption,
   ErrorStream,
+  IKeySystemOption,
+  clearEMESession,
+  createEME,
+  disposeEME,
+  getCurrentKeySystem,
 };

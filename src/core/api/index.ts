@@ -71,8 +71,8 @@ import Transports from "../../net";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import ABRManager from "../abr";
 import {
-  clearEME,
-  dispose as emeDispose,
+  clearEMESession,
+  disposeEME,
   getCurrentKeySystem,
 } from "../eme";
 import { IBufferType } from "../source_buffers";
@@ -595,7 +595,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this.stop();
 
     // free resources used for EME management
-    emeDispose();
+    disposeEME();
 
     // free Observables linked to the Player instance
     this._priv_destroy$.next();
@@ -1614,7 +1614,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_streamLock$.next(false);
     };
 
-    clearEME()
+    clearEMESession()
       .catch(() => Observable.empty())
       .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
   }
