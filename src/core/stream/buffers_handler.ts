@@ -42,9 +42,9 @@ import {
 } from "../pipelines";
 import SourceBufferManager, {
   BUFFER_TYPES,
+  IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
-  SupportedBufferTypes,
 } from "../source_buffers";
 import ActivePeriodEmitter, {
   IPeriodBufferInfos,
@@ -210,7 +210,7 @@ export default function BuffersHandler(
    * @returns {Observable}
    */
   function manageEveryBuffers(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     basePeriod : Period
   ) : Observable<IMultiplePeriodBuffersEvent> {
     /**
@@ -325,7 +325,7 @@ export default function BuffersHandler(
    * @returns {Observable}
    */
   function manageConsecutivePeriodBuffers(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     basePeriod : Period,
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodBuffersEvent> {
@@ -460,7 +460,7 @@ export default function BuffersHandler(
    * @returns {Observable}
    */
   function createPeriodBuffer(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     period: Period,
     adaptation$ : Observable<Adaptation|null>
   ) : Observable<IPeriodBufferEvent> {

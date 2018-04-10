@@ -30,8 +30,8 @@ import {
   ISegmentResponse,
 } from "../pipelines";
 import {
+  IBufferType ,
   QueuedSourceBuffer,
-  SupportedBufferTypes ,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
 
@@ -46,7 +46,7 @@ import shouldDownloadSegment from "./segment_filter";
 export interface IBufferEventAddedSegment<T> {
   type : "added-segment";
   value : {
-    bufferType : SupportedBufferTypes; // The type of the Representation
+    bufferType : IBufferType; // The type of the Representation
     segment : ISegment; // The concerned Segment
     segmentData : T; // The data pushed
   };

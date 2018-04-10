@@ -26,8 +26,8 @@ import log from "../../utils/log";
 import ABRManager from "../abr";
 import { IPrioritizedSegmentFetcher } from "../pipelines";
 import {
+  IBufferType,
   QueuedSourceBuffer,
-  SupportedBufferTypes,
 } from "../source_buffers";
 import { SegmentBookkeeper } from "../stream";
 import createFakeBuffer from "./create_fake_buffer";
@@ -54,7 +54,7 @@ export interface IAdaptationBufferClockTick {
 export interface IBitrateEstimationChangeEvent {
   type : "bitrateEstimationChange";
   value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     bitrate : number|undefined;
   };
 }
@@ -63,7 +63,7 @@ export interface IBitrateEstimationChangeEvent {
 export interface IRepresentationChangeEvent {
   type : "representationChange";
   value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
     representation : Representation|null;
   };

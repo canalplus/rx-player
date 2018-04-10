@@ -25,9 +25,10 @@ import {
 } from "./text";
 import ICustomTimeRanges from "./time_ranges";
 
-export const BUFFER_TYPES : SupportedBufferTypes[] =
+export type IBufferType = "audio"|"video"|"text"|"image";
+
+export const BUFFER_TYPES : IBufferType[] =
   ["audio", "video", "text", "image"];
-export type SupportedBufferTypes = "audio"|"video"|"text"|"image";
 
 export type ITextTrackSourceBufferOptions =
   {
@@ -111,7 +112,7 @@ export default class SourceBufferManager {
    * @param {string} bufferType
    * @returns {Boolean}
    */
-  public has(bufferType : SupportedBufferTypes) : boolean {
+  public has(bufferType : IBufferType) : boolean {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       return !!this._initializedNativeSourceBuffers[bufferType];
     }
@@ -125,7 +126,7 @@ export default class SourceBufferManager {
    * @param {string} bufferType
    * @returns {QueuedSourceBuffer}
    */
-  public get(bufferType : SupportedBufferTypes) : QueuedSourceBuffer<any> {
+  public get(bufferType : IBufferType) : QueuedSourceBuffer<any> {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       const sourceBufferInfos = this._initializedNativeSourceBuffers[bufferType];
       if (!sourceBufferInfos) {
@@ -151,7 +152,7 @@ export default class SourceBufferManager {
    * @returns {QueuedSourceBuffer}
    */
   public createSourceBuffer(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     codec : string,
     options : ISourceBufferOptions = {}
   ) : QueuedSourceBuffer<any> {
@@ -217,7 +218,7 @@ export default class SourceBufferManager {
    * Dispose of the active SourceBuffer for the given type.
    * @param {string} bufferType
    */
-  public disposeSourceBuffer(bufferType : SupportedBufferTypes) : void {
+  public disposeSourceBuffer(bufferType : IBufferType) : void {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       const memorizedNativeSourceBuffer = this
         ._initializedNativeSourceBuffers[bufferType];
@@ -261,7 +262,7 @@ export default class SourceBufferManager {
    * Dispose of all QueuedSourceBuffer created on this SourceBufferManager.
    */
   public disposeAll() {
-    BUFFER_TYPES.forEach((bufferType : SupportedBufferTypes) => {
+    BUFFER_TYPES.forEach((bufferType : IBufferType) => {
       if (this.has(bufferType)) {
         this.disposeSourceBuffer(bufferType);
       }

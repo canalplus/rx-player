@@ -45,9 +45,9 @@ import {
   SegmentPipelinesManager,
 } from "../pipelines";
 import SourceBufferManager, {
+  IBufferType ,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
-  SupportedBufferTypes ,
 } from "../source_buffers";
 import BuffersHandler from "./buffers_handler";
 import createBufferClock, {
@@ -87,11 +87,11 @@ function getManifestPipelineOptions(
 
 export interface IStreamOptions {
   adaptiveOptions: {
-    initialBitrates : Partial<Record<SupportedBufferTypes, number>>;
-    manualBitrates : Partial<Record<SupportedBufferTypes, number>>;
-    maxAutoBitrates : Partial<Record<SupportedBufferTypes, number>>;
-    throttle : Partial<Record<SupportedBufferTypes, Observable<number>>>;
-    limitWidth : Partial<Record<SupportedBufferTypes, Observable<number>>>;
+    initialBitrates : Partial<Record<IBufferType, number>>;
+    manualBitrates : Partial<Record<IBufferType, number>>;
+    maxAutoBitrates : Partial<Record<IBufferType, number>>;
+    throttle : Partial<Record<IBufferType, Observable<number>>>;
+    limitWidth : Partial<Record<IBufferType, Observable<number>>>;
   };
   autoPlay : boolean;
   bufferOptions : {

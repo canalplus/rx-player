@@ -21,7 +21,7 @@ import { Subject } from "rxjs/Subject";
 import config from "../../config";
 import { Representation } from "../../manifest";
 import log from "../../utils/log";
-import { SupportedBufferTypes } from "../source_buffers";
+import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
 import filterByBitrate from "./filterByBitrate";
@@ -55,7 +55,7 @@ interface IRequestInfo {
 type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
 
 interface IProgressRequest {
-  type: SupportedBufferTypes;
+  type: IBufferType;
   event: "progress";
   value: {
     id: string|number;
@@ -65,7 +65,7 @@ interface IProgressRequest {
 }
 
 interface IBeginRequest {
-  type: SupportedBufferTypes;
+  type: IBufferType;
   event: "requestBegin";
   value: {
     id: string|number;
@@ -76,7 +76,7 @@ interface IBeginRequest {
 }
 
 interface IEndRequest {
-  type: SupportedBufferTypes;
+  type: IBufferType;
   event: "requestEnd";
   value: {
     id: string|number;
