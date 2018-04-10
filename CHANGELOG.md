@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 
+  - api: work around old Chrome bug where ENDED state would never be triggered at the end of the stream
   - eme/error: fix reason string and error message for KEY_STATUS_CHANGE_ERROR
 
 ### Other improvements
