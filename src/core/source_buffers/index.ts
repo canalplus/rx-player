@@ -16,20 +16,21 @@
 
 import MediaError from "../../errors/MediaError";
 import log from "../../utils/log";
-import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import ImageSourceBuffer from "./image";
 import QueuedSourceBuffer from "./queued_source_buffer";
 import {
   HTMLTextSourceBuffer,
   NativeTextSourceBuffer,
 } from "./text";
-import ICustomTimeRanges from "./time_ranges";
 
+// Every SourceBuffer types managed here
 export type IBufferType = "audio"|"video"|"text"|"image";
 
+// Array of every SourceBuffer types managed here
 export const BUFFER_TYPES : IBufferType[] =
   ["audio", "video", "text", "image"];
 
+// Options available for a "text" SourceBuffer
 export type ITextTrackSourceBufferOptions =
   {
     textTrackMode? : "native";
@@ -40,9 +41,11 @@ export type ITextTrackSourceBufferOptions =
     textTrackElement : HTMLElement;
   };
 
+// General Options available for any SourceBuffer
 export type ISourceBufferOptions =
   ITextTrackSourceBufferOptions;
 
+// Types of "native" SourceBuffers
 type INativeSourceBufferType = "audio" | "video";
 
 interface ICreatedSourceBuffer<T> {
@@ -297,7 +300,5 @@ function shouldHaveNativeSourceBuffer(
 }
 
 export {
-  ICustomSourceBuffer,
-  ICustomTimeRanges,
   QueuedSourceBuffer,
 };

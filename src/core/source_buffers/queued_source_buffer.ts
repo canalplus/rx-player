@@ -17,10 +17,8 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import log from "../../utils/log";
-import {
-  ICustomSourceBuffer,
-  ICustomTimeRanges,
-} from "./index";
+import { ICustomSourceBuffer } from "./abstract_source_buffer";
+import ICustomTimeRanges from "./time_ranges";
 
 enum SourceBufferAction { Append, Remove }
 
