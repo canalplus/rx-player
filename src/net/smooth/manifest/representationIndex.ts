@@ -421,46 +421,39 @@ export default class SmoothRepresentationIndex
     /**
      * Returns true if, based on the arguments, the index should be refreshed.
      * (If we should re-fetch the manifest)
-     * @param {Array.<Object>} parsedSegments
      * @param {Number} from
      * @param {Number} to
      * @returns {Boolean}
      */
-    shouldRefresh(parsedSegments : ISegment[], up : number, to : number) : boolean {
+    shouldRefresh(up : number, to : number) : boolean {
       const {
         timeline,
         timescale,
       } = this._index;
 
-      const lastSegmentInTimeline = timeline[timeline.length - 1];
-      if (!lastSegmentInTimeline) {
+      const lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
+      if (!lastSegmentInCurrentTimeline) {
         return false;
       }
 
-      const repeat = lastSegmentInTimeline.r || 0;
-      const endOfLastSegment =
-        lastSegmentInTimeline.ts + repeat * lastSegmentInTimeline.d;
+      const repeat = lastSegmentInCurrentTimeline.r || 0;
+      const endOfLastSegmentInCurrentTimeline =
+        lastSegmentInCurrentTimeline.ts + (repeat + 1) * lastSegmentInCurrentTimeline.d;
 
-      if (to * timescale < endOfLastSegment) {
+      if (to * timescale < endOfLastSegmentInCurrentTimeline) {
         return false;
       }
 
-      if (up * timescale >= endOfLastSegment) {
+      if (up * timescale >= endOfLastSegmentInCurrentTimeline) {
         return true;
       }
 
-      const lastParsedSegment = parsedSegments[parsedSegments.length - 1];
-      if (!lastParsedSegment) {
-        return false;
-      }
+      // ----
 
-      const startOfLastSegment =
-        lastSegmentInTimeline.ts + repeat * lastSegmentInTimeline.d;
-      if (startOfLastSegment > lastParsedSegment.time) {
-        return false;
-      }
+      const startOfLastSegmentInCurrentTimeline =
+        lastSegmentInCurrentTimeline.ts + repeat * lastSegmentInCurrentTimeline.d;
 
-      return true;
+      return up > startOfLastSegmentInCurrentTimeline;
     }
 
     /**

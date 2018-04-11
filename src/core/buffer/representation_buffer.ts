@@ -395,8 +395,7 @@ export default function RepresentationBuffer<T>({
     const neededRange = getWantedRange(
       period, buffered, timing, bufferGoal, paddings);
     const discontinuity = getCurrentDiscontinuity(content, timing);
-    const shouldRefreshManifest =
-      shouldRefreshManifestForRange(content, segmentBookkeeper, neededRange);
+    const shouldRefreshManifest = shouldRefreshManifestForRange(content, neededRange);
 
     // /!\ Side effect to the SegmentBookkeeper
     segmentBookkeeper.synchronizeBuffered(buffered);
@@ -579,18 +578,11 @@ function getCurrentDiscontinuity(
  * @returns {Boolean}
  */
 function shouldRefreshManifestForRange(
-  { representation } : { representation : Representation },
-  segmentBookkeeper : SegmentBookkeeper,
+  { representation } : { adaptation : Adaptation; representation : Representation },
   wantedRange : { start : number; end : number}
 ) : boolean {
   const { start, end } = wantedRange;
-
-  // TODO Better solution for HSS refresh?
-  // get every segments currently downloaded and loaded
-  const segments = segmentBookkeeper.inventory
-    .map(s => s.infos.segment);
-
-  return representation.index.shouldRefresh(segments, start, end);
+  return representation.index.shouldRefresh(start, end);
 }
 
 /**
