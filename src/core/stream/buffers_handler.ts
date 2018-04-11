@@ -467,20 +467,20 @@ export default function BuffersHandler(
     return adaptation$.switchMap((adaptation) => {
       if (adaptation == null) {
         log.info(`set no ${bufferType} Adaptation`, period);
+        let cleanBuffer$ : Observable<null>;
 
         if (sourceBufferManager.has(bufferType)) {
           log.info(`clearing previous ${bufferType} SourceBuffer`);
           const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
-
-          // TODO use SegmentBookeeper to remove the complete range of segments
-          // linked to this period (Min between that and period.start for example)
-          // const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
-          _queuedSourceBuffer
-            .removeBuffer({ start: period.start, end: period.end || Infinity });
+          cleanBuffer$ = _queuedSourceBuffer
+            .removeBuffer({ start: period.start, end: period.end || Infinity })
+            .mapTo(null);
+        } else {
+          cleanBuffer$ = Observable.of(null);
         }
 
-        return Observable
-          .of(EVENTS.adaptationChange(bufferType, null, period))
+        return cleanBuffer$
+          .mapTo(EVENTS.adaptationChange(bufferType, null, period))
           .concat(createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period }));
       }
 
