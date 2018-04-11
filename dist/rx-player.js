@@ -772,13 +772,15 @@ exports.default = {
      * @type {Boolean}
      */
     DEFAULT_SHOW_NATIVE_SUBTITLE: true,
-    /*
-     * Default buffer goal in seconds. Once this amount of time reached ahead in
-     * the buffer, the player won't automatically download segments.
+    /**
+     * Default buffer goal in seconds.
+     * Once enough content has been downloaded to fill the buffer up to
+     * ``current position + DEFAULT_WANTED_BUFFER_AHEAD", we will stop downloading
+     * content.
      * @type {Number}
      */
     DEFAULT_WANTED_BUFFER_AHEAD: 30,
-    /*
+    /**
      * Default max buffer size ahead of the current position in seconds.
      * The buffer _after_ this limit will be garbage collected.
      * Set to Infinity for no limit.
@@ -827,15 +829,10 @@ exports.default = {
     },
     /* tslint:enable no-object-literal-type-assertion */
     /**
-     * Buffer threshold ratio used as a lower bound margin to find the suitable
-     * representation.
-     * @param {Number}
-     */
-    DEFAULT_ADAPTIVE_BUFFER_THRESHOLD: 0.3,
-    /**
      * Delay after which, if the page is hidden, the user is considered inactive
-     * on the current video. Allow to enforce specific optimizations when the
-     * page is not shown.
+     * on the current video.
+     *
+     * Allow to enforce specific optimizations when the page is not shown.
      * @see DEFAULT_THROTTLE_WHEN_HIDDEN
      * @type {Number}
      */
@@ -850,6 +847,9 @@ exports.default = {
     /**
      * If true, the video representations you can switch to in adaptive mode
      * are limited by the video element's width.
+     *
+     * Basically in that case, we won't switch to a video Representation with
+     * a width higher than the current width of the video HTMLElement.
      * @type {Boolean}
      */
     DEFAULT_LIMIT_VIDEO_WIDTH: false,
@@ -1020,18 +1020,22 @@ exports.default = {
      */
     ABR_REGULAR_FACTOR: 0.90,
     /**
-     * If a SourceBuffer has less than this amount of seconds ahead of the current
-     * position in its buffer, the ABR manager will go into starvation mode.
+     * If a SourceBuffer has less than ABR_STARVATION_GAP in seconds ahead of the
+     * current position in its buffer, the ABR manager will go into starvation
+     * mode.
      *
      * It gets out of starvation mode when the OUT_OF_STARVATION_GAP value is
      * reached.
      *
-     * Under this mode:
+     * Under this starvation mode:
+     *
      *   - the bandwidth considered will be a little lower than the one estimated
+     *
      *   - the time the next important request take will be checked
      *     multiple times to detect when/if it takes too much time.
      *     If the request is considered too long, the bitrate will be hastily
      *     re-calculated from this single request.
+     *
      * @type {Number}
      */
     ABR_STARVATION_GAP: 5,
@@ -1196,11 +1200,11 @@ exports.default = {
      * This stepped download strategy allows to make a better use of network
      * ressources.
      *
-     * For example, if sufficient audio buffer has been downloaded but the
-     * immediately-needed video Segment is still pending its request, we might
+     * For example, if more than sufficient audio buffer has been downloaded but
+     * the immediately-needed video Segment is still pending its request, we might
      * be in a situation of rebuffering.
      * In that case, a better strategy would be to make sure every network
-     * ressource is allocated for this video Segment.
+     * ressource is allocated for this video Segment before rebuffering happens.
      *
      * This is where those steps become useful.
      *
