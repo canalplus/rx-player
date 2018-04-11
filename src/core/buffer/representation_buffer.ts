@@ -294,12 +294,7 @@ export default function RepresentationBuffer<T>({
           segment,
         }, priority);
 
-        currentSegmentRequest = {
-          segment,
-          priority,
-          request$,
-        };
-
+        currentSegmentRequest = { segment, priority, request$ };
         return request$
           .map((args) => objectAssign({ segment }, args))
           .concat(requestNextSegment$);
@@ -330,12 +325,14 @@ export default function RepresentationBuffer<T>({
       }
 
       if (segmentData == null) {
+        // no segmentData to add here (for example, a text init segment)
+        // just complete directly without appending anything
         return Observable.empty();
       }
 
       const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
       const append$ = appendDataInSourceBuffer(
-          clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
+        clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
 
       sourceBufferWaitingQueue.add(segment.id);
 

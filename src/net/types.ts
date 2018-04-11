@@ -155,7 +155,7 @@ export interface IImageTrackSegmentData {
 
 export type ImageParserObservable = Observable<{
   segmentData : IImageTrackSegmentData|null;
-  segmentInfos : ISegmentTimingInfos;
+  segmentInfos : ISegmentTimingInfos|null;
 }>;
 
 interface ITransportManifestPipeline {
@@ -180,6 +180,7 @@ export type ITransportAudioSegmentPipeline =
   ITransportSegmentPipelineBase<Uint8Array|ArrayBuffer>;
 
 export interface ITransportTextSegmentPipeline {
+  // Note: The segment's data can be null for init segments
   loader: (x : ISegmentLoaderArguments) =>
     ILoaderObservable<Uint8Array|ArrayBuffer|string|null>;
   parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>) =>
@@ -187,6 +188,7 @@ export interface ITransportTextSegmentPipeline {
 }
 
 export interface ITransportImageSegmentPipeline {
+  // Note: The segment's data can be null for init segments
   loader: (x : ISegmentLoaderArguments) =>
     ILoaderObservable<Uint8Array|ArrayBuffer|null>;
   parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>

@@ -15,7 +15,10 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { Adaptation } from "../../manifest";
+import {
+  Adaptation,
+  Representation,
+} from "../../manifest";
 import parseBif from "../../parsers/images/bif";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
@@ -200,21 +203,15 @@ export default function(
       if (segment.isInit) {
         return Observable.of({
           type: "data" as "data",
-          value: {
-            responseData: null,
-          },
+          value: { responseData: null },
         });
       }
 
-      const { mimeType } = representation;
+      // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
+      const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
       const base = resolveURL(representation.baseURL);
       const url = buildSegmentURL(base, representation, segment);
-
-      return request({
-        url,
-        responseType: (mimeType && mimeType.indexOf("mp4") >= 0) ?
-          "arraybuffer" : "text",
-      });
+      return request({ url, responseType });
     },
 
     parser({
@@ -235,32 +232,23 @@ export default function(
         if (segment.isInit) {
           assert(response.responseData === null);
         } else {
-          assert(typeof response.responseData === "string" ||
-            response.responseData instanceof ArrayBuffer);
+          assert(
+            typeof response.responseData === "string" ||
+            response.responseData instanceof ArrayBuffer
+          );
         }
       }
 
       const responseData = response.responseData;
 
       if (responseData === null) {
-        let time : number;
-        let duration : number|undefined;
-
-        if (segment.isInit) {
-          time = -1;
-          duration = 0;
-        } else {
-          time = segment.time;
-          duration = segment.duration;
-        }
-
         return Observable.of({
           segmentData: null,
-          segmentInfos: {
-            duration,
-            time,
+          segmentInfos: segment.timescale > 0 ? {
+            duration: segment.isInit ? 0 : segment.duration,
+            time: segment.isInit ? -1 : segment.time,
             timescale: segment.timescale,
-          },
+          } : null,
         });
       }
 
@@ -371,21 +359,16 @@ export default function(
       { segment, representation } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
       if (segment.isInit) {
+        // image do not need an init segment. Passthrough directly to the parser
         return Observable.of({
           type: "data" as "data",
-          value: {
-            responseData: null,
-          },
+          value: { responseData: null },
         });
       }
 
       const baseURL = resolveURL(representation.baseURL);
       const url = buildSegmentURL(baseURL, representation, segment);
-
-      return request({
-        url,
-        responseType: "arraybuffer",
-      });
+      return request({ url, responseType: "arraybuffer" });
     },
 
     parser(
@@ -394,46 +377,33 @@ export default function(
       const responseData = response.responseData;
 
       if (responseData === null) {
-        let time : number;
-        let duration : number|undefined;
-
-        if (segment.isInit) {
-          time = -1;
-          duration = 0;
-        } else {
-          time = segment.time;
-          duration = segment.duration;
-        }
-
         return Observable.of({
           segmentData: null,
-          segmentInfos: {
-            duration,
-            time,
+          segmentInfos: segment.timescale > 0 ? {
+            duration: segment.isInit ? 0 : segment.duration,
+            time: segment.isInit ? -1 : segment.time,
             timescale: segment.timescale,
-          },
+          } : null,
         });
       }
 
-      const blob = new Uint8Array(responseData);
-
-      const bif = parseBif(blob);
-      const data = bif.thumbs;
-
-      const segmentInfos = {
-        time: 0,
-        duration: Number.MAX_VALUE,
-        timescale: bif.timescale,
-      };
-      const segmentData = {
-        data,
-        start: 0,
-        end: Number.MAX_VALUE,
-        timescale: 1,
-        timeOffset: 0,
-        type: "bif",
-      };
-      return Observable.of({ segmentData, segmentInfos });
+      const bifObject = parseBif(new Uint8Array(responseData));
+      const data = bifObject.thumbs;
+      return Observable.of({
+        segmentData: {
+          data,
+          start: 0,
+          end: Number.MAX_VALUE,
+          timescale: 1,
+          timeOffset: 0,
+          type: "bif",
+        },
+        segmentInfos: {
+          time: 0,
+          duration: Number.MAX_VALUE,
+          timescale: bifObject.timescale,
+        },
+      });
     },
   };
 
@@ -444,4 +414,14 @@ export default function(
     text: textTrackPipeline,
     image: imageTrackPipeline,
   };
+}
+
+/**
+ * Returns true if the given texttrack segment represents a textrack embedded
+ * in a mp4 file.
+ * @param {Representation} representation
+ * @returns {Boolean}
+ */
+function isMP4EmbeddedTrack(representation : Representation) : boolean {
+  return !!representation.mimeType && representation.mimeType.indexOf("mp4") >= 0;
 }
