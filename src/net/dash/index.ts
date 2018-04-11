@@ -162,28 +162,54 @@ export default function(
   const imageTrackPipeline = {
     loader(
       { segment, representation } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer> {
-      const { isInit } = segment;
-
-      if (isInit) {
-        return Observable.empty();
-      } else {
-        const { media } = segment;
-
-        const path = media ?
-          replaceTokens(media, segment, representation) : "";
-        const mediaUrl = resolveURL(representation.baseURL, path);
-        return request({
-          url: mediaUrl,
-          responseType: "arraybuffer",
+    ) : ILoaderObservable<ArrayBuffer|null> {
+      if (segment.isInit) {
+        return Observable.of({
+          type: "data" as "data",
+          value: {
+            responseData: null,
+          },
         });
       }
+
+      const { media } = segment;
+
+      const path = media ?
+      replaceTokens(media, segment, representation) : "";
+      const mediaUrl = resolveURL(representation.baseURL, path);
+      return request({
+        url: mediaUrl,
+        responseType: "arraybuffer",
+      });
     },
 
     parser(
-      { response } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
+      { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : ImageParserObservable {
       const responseData = response.responseData;
+
+      if (responseData === null) {
+        let time : number;
+        let duration : number|undefined;
+
+        if (segment.isInit) {
+          time = -1;
+          duration = 0;
+        } else {
+          time = segment.time;
+          duration = segment.duration;
+        }
+
+        return Observable.of({
+          segmentData: null,
+          segmentInfos: {
+            duration,
+            time,
+            timescale: segment.timescale,
+          },
+        });
+      }
+
       const blob = new Uint8Array(responseData);
 
       const bif = parseBif(blob);

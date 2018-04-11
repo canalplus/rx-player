@@ -300,14 +300,9 @@ export default function RepresentationBuffer<T>({
           request$,
         };
 
-        const responseWithSegment$ = request$
-          .map((args) => objectAssign({ segment }, args));
-
-        return responseWithSegment$
-          .mergeMap((pipelineData) => {
-            return Observable.of(pipelineData)
-              .concat(requestNextSegment$);
-          });
+        return request$
+          .map((args) => objectAssign({ segment }, args))
+          .concat(requestNextSegment$);
       });
 
     return requestNextSegment$
@@ -333,9 +328,14 @@ export default function RepresentationBuffer<T>({
       if (segment.isInit) {
         initSegmentObject = { segmentData, segmentInfos };
       }
+
+      if (segmentData == null) {
+        return Observable.empty();
+      }
+
       const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
       const append$ = appendDataInSourceBuffer(
-        clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
+          clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
 
       sourceBufferWaitingQueue.add(segment.id);
 

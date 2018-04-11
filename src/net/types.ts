@@ -125,7 +125,7 @@ export interface IManifestResult {
 export type IManifestParserObservable = Observable<IManifestResult>;
 
 export type SegmentParserObservable = Observable<{
-  segmentData? : Uint8Array|ArrayBuffer;
+  segmentData : Uint8Array|ArrayBuffer|null;
   segmentInfos : ISegmentTimingInfos|null;
 }>;
 
@@ -140,7 +140,7 @@ export interface ITextTrackSegmentData {
 }
 
 export type TextTrackParserObservable = Observable<{
-  segmentData? : ITextTrackSegmentData;
+  segmentData : ITextTrackSegmentData|null;
   segmentInfos : ISegmentTimingInfos|null;
 }>;
 
@@ -154,7 +154,7 @@ export interface IImageTrackSegmentData {
 }
 
 export type ImageParserObservable = Observable<{
-  segmentData? : IImageTrackSegmentData;
+  segmentData : IImageTrackSegmentData|null;
   segmentInfos : ISegmentTimingInfos;
 }>;
 
@@ -181,15 +181,15 @@ export type ITransportAudioSegmentPipeline =
 
 export interface ITransportTextSegmentPipeline {
   loader: (x : ISegmentLoaderArguments) =>
-    ILoaderObservable<Uint8Array|ArrayBuffer|string>;
-  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string>) =>
+    ILoaderObservable<Uint8Array|ArrayBuffer|string|null>;
+  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>) =>
     TextTrackParserObservable;
 }
 
 export interface ITransportImageSegmentPipeline {
   loader: (x : ISegmentLoaderArguments) =>
-    ILoaderObservable<Uint8Array|ArrayBuffer>;
-  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer>) =>
+    ILoaderObservable<Uint8Array|ArrayBuffer|null>;
+  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
     ImageParserObservable;
 }
 

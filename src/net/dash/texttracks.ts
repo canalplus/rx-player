@@ -57,7 +57,7 @@ import {
  */
 function TextTrackLoader(
   { segment, representation } : ISegmentLoaderArguments
-) : ILoaderObservable<ArrayBuffer|string> {
+) : ILoaderObservable<ArrayBuffer|string|null> {
   const {
     media,
     range,
@@ -75,7 +75,12 @@ function TextTrackLoader(
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
   if (isInit && !(media || range || indexRange)) {
-    return Observable.empty();
+    return Observable.of({
+      type: "data" as "data",
+      value: {
+        responseData: null,
+      },
+    });
   }
 
   /**
@@ -159,15 +164,37 @@ function TextTrackParser({
   adaptation,
   representation,
   init,
-} : ISegmentParserArguments<Uint8Array|ArrayBuffer|string>
+} : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>
 ) : TextTrackParserObservable {
   const { language } = adaptation;
   const { isInit, indexRange } = segment;
 
+  if (response.responseData == null) {
+    let time : number;
+    let duration : number|undefined;
+
+    if (segment.isInit) {
+      time = -1;
+      duration = 0;
+    } else {
+      time = segment.time;
+      duration = segment.duration;
+    }
+
+    return Observable.of({
+      segmentData: null,
+      segmentInfos: {
+        duration,
+        time,
+        timescale: segment.timescale,
+      },
+    });
+  }
+
   let responseData : Uint8Array|string;
   let nextSegments : INextSegmentsInfos[]|undefined;
   let segmentInfos : ISegmentTimingInfos;
-  let segmentData : ITextTrackSegmentData|undefined;
+  let segmentData : ITextTrackSegmentData|null;
 
   const isMP4 = isMP4EmbeddedTrack(representation);
   if (isMP4) {
@@ -208,7 +235,7 @@ function TextTrackParser({
         };
       }
     }
-    segmentData = undefined;
+    segmentData = null;
   } else { // if not init
     assert(segmentInfos != null);
     const segmentDataBase = {
