@@ -22,6 +22,7 @@
 import arrayFind = require("array-find");
 import { Subject } from "rxjs/Subject";
 import { Adaptation, Period } from "../../manifest";
+import arrayIncludes from "../../utils/array-includes";
 import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 
@@ -240,7 +241,10 @@ export default class LanguageManager {
     const audioAdaptations = period.adaptations.audio || [];
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
-    if (chosenAudioAdaptation === undefined) {
+    if (
+      chosenAudioAdaptation === undefined ||
+      !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
+    ) {
       const optimalAdaptation = findFirstOptimalAudioAdaptation(
         audioAdaptations, preferredAudioTracks);
 
@@ -269,7 +273,10 @@ export default class LanguageManager {
     const preferredTextTracks = this._preferredTextTracks;
     const textAdaptations = period.adaptations.text || [];
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
-    if (chosenTextAdaptation === undefined) {
+    if (
+      chosenTextAdaptation === undefined ||
+      !arrayIncludes(textAdaptations, chosenTextAdaptation)
+    ) {
       const optimalAdaptation = findFirstOptimalTextAdaptation(
         textAdaptations, preferredTextTracks);
 
@@ -523,7 +530,10 @@ export default class LanguageManager {
       const audioAdaptations = period.adaptations.audio || [];
       const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
-      if (chosenAudioAdaptation !== undefined) {
+      if (
+        chosenAudioAdaptation !== undefined &&
+        arrayIncludes(audioAdaptations, chosenAudioAdaptation)
+      ) {
         // Already best audio for this Buffer, check next one
         recursiveUpdateAudioTrack(index + 1);
         return;
@@ -565,7 +575,10 @@ export default class LanguageManager {
       const textAdaptations = period.adaptations.text || [];
       const chosenTextAdaptation = this._textChoiceMemory.get(period);
 
-      if (chosenTextAdaptation !== undefined) {
+      if (
+        chosenTextAdaptation !== undefined &&
+        arrayIncludes(textAdaptations, chosenTextAdaptation)
+      ) {
         // Already best text for this Buffer, check next one
         recursiveUpdateTextTrack(index + 1);
         return;
