@@ -249,7 +249,7 @@ function buildRepresentationMedia(
   repURL: string,
   repId: string,
   repBitrate: number
-): IParsedSegmentBase|IParsedSegmentList|IParsedSegmentTemplate|IParsedSegmentTimeline{
+): IParsedSegmentBase|IParsedSegmentList|IParsedSegmentTemplate|IParsedSegmentTimeline {
   const newIndex = JSON.parse(JSON.stringify(segmentIndex));
   newIndex.media = replaceRepresentationDASHTokens(
     repURL + (segmentIndex.media || ""),

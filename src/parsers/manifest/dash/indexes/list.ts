@@ -87,7 +87,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
         range,
         duration,
         timescale,
-        media: replaceSegmentDASHTokens(media || "", i*duration),
+        media: replaceSegmentDASHTokens(media || "", i * duration),
       };
       segments.push(args);
       i++;
