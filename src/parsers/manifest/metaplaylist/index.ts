@@ -15,6 +15,7 @@
  */
 
 import config from "../../../config";
+import { StaticRepresentationIndex } from "../../../manifest/representation_index";
 import generateNewId from "../../../utils/id";
 import {
   IParsedManifest,
@@ -39,6 +40,11 @@ export function generateManifest(
       transport: "dash"|"smooth";
       startTime: number;
       endTime: number;
+      textTracks: Array<{
+        url: string;
+        language: string;
+        mimeType: string;
+      }>;
   }>,
   baseURL?: string
 ): IParsedManifest {
@@ -90,6 +96,23 @@ export function generateManifest(
       elapsedTimeOnLoop += newPeriod.duration || 0;
       newPeriod.end = newPeriod.start + (newPeriod.duration || 0);
       newPeriod.id = "p" + Math.round(newPeriod.start);
+      const textTracks = contents[j].textTracks;
+      if (textTracks && textTracks.length > 0) {
+        textTracks.forEach((track) => {
+          const textAdaptation = {
+            id: "gen-text-track-"+generateNewId(),
+            representations: [{
+              mimeType: track.mimeType,
+              bitrate: 0,
+              index: new StaticRepresentationIndex({ media: track.url }),
+              id: "gen-text-track-"+generateNewId(),
+            }],
+            type: "text",
+            language: track.language,
+          };
+          newPeriod.adaptations.push(textAdaptation);
+        });
+      }
       periods.push(newPeriod);
       newPeriods.push({periods, transport: contents[j].transport});
     }

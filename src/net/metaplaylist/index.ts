@@ -46,6 +46,11 @@ export interface IMetaManifestInfo {
       startTime: number;
       endTime: number;
       transport: ITransportTypes;
+      textTracks: [{
+        url: string;
+        language: string;
+        mimeType: string;
+      }];
     }>;
 }
 
@@ -54,6 +59,11 @@ interface IMetaPlaylistContent {
   startTime: number;
   endTime: number;
   transport: ITransportTypes;
+  textTracks: [{
+    url: string;
+    language: string;
+    mimeType: string;
+  }];
 }
 
 /**
@@ -151,6 +161,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
                 startTime: content.startTime,
                 endTime: content.endTime,
                 transport: content.transport,
+                textTracks: content.textTracks,
               };
             });
         });
@@ -177,6 +188,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
                   url: manifestInfos.url,
                   startTime: manifestInfos.startTime,
                   endTime: manifestInfos.endTime,
+                  textTracks: manifestInfos.textTracks,
                 };
               });
             });
