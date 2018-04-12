@@ -222,14 +222,14 @@ export default class LanguageManager {
   }
 
   /**
-   * Emit preferred audio Adaptation through the given Subject based on:
+   * Emit initial audio Adaptation through the given Subject based on:
    *   - the preferred audio tracks
    *   - the last choice for this period, if one
    * @param {Period} period
    *
    * @throws Error - Throws if the period given has not been added
    */
-  public setPreferredAudioTrack(period : Period) : void {
+  public setInitialAudioTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos || !periodItem) {
@@ -240,11 +240,7 @@ export default class LanguageManager {
     const audioAdaptations = period.adaptations.audio || [];
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
-    if (
-      chosenAudioAdaptation === undefined ||
-      !isAudioAdaptationOptimal(
-        chosenAudioAdaptation, audioAdaptations, preferredAudioTracks)
-    ) {
+    if (chosenAudioAdaptation === undefined) {
       const optimalAdaptation = findFirstOptimalAudioAdaptation(
         audioAdaptations, preferredAudioTracks);
 
@@ -263,7 +259,7 @@ export default class LanguageManager {
    *
    * @throws Error - Throws if the period given has not been added
    */
-  public setPreferredTextTrack(period : Period) : void {
+  public setInitialTextTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos || !periodItem) {
@@ -273,11 +269,7 @@ export default class LanguageManager {
     const preferredTextTracks = this._preferredTextTracks;
     const textAdaptations = period.adaptations.text || [];
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
-    if (
-      chosenTextAdaptation === undefined ||
-      !isTextAdaptationOptimal(
-        chosenTextAdaptation, textAdaptations, preferredTextTracks)
-    ) {
+    if (chosenTextAdaptation === undefined) {
       const optimalAdaptation = findFirstOptimalTextAdaptation(
         textAdaptations, preferredTextTracks);
 
