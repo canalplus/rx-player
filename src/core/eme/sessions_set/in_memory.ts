@@ -126,7 +126,7 @@ export default class MediaKeySessionCache {
    * @returns {MediaKeySession|null}
    */
   public deleteById(sessionId : string) : boolean {
-    const entry = arrayFind(this._entries,(e) => e.session.sessionId === sessionId);
+    const entry = arrayFind(this._entries, (e) => e.session.sessionId === sessionId);
 
     if (entry) {
       return this.delete(entry.session);
