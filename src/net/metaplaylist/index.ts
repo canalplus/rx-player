@@ -254,15 +254,13 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
                 segmentData :
                 new Uint8Array(segmentData);
 
-              segmentPatchedData = new BoxPatcher(
+              segmentPatchedData =  patchBox(
                 responseData,
-                false,
-                false,
                 offset
-              ).filter();
-            }
-            if(segmentInfos){
-              segmentInfos.time += offset;
+              );
+              if (segmentInfos) {
+                segmentInfos.time += offset;
+              }
             }
             return { segmentData: segmentPatchedData, segmentInfos };
           });
