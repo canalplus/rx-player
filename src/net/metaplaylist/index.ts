@@ -255,19 +255,12 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
                 segmentData :
                 new Uint8Array(segmentData);
 
-              if (
-                segment.privateInfos &&
-                segment.privateInfos.transportType === "smooth"
-              ) {
-                segmentPatchedData = responseData;
-              } else {
-                segmentPatchedData =  patchBox(
-                  responseData,
-                  offset
-                );
-                if (segmentInfos) {
-                  segmentInfos.time += offset;
-                }
+              segmentPatchedData =  patchBox(
+                responseData,
+                offset
+              );
+              if (segmentInfos) {
+                segmentInfos.time += offset;
               }
             }
             return { segmentData: segmentPatchedData || null, segmentInfos };

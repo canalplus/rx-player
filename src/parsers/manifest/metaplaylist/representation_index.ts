@@ -62,7 +62,6 @@ export default class MetaRepresentationIndex implements IRepresentationIndex{
     ).map((segment) => {
       segment.privateInfos = segment.privateInfos || {};
       segment.privateInfos.transportType = this._transport;
-      segment.time += this._timeOffset * segment.timescale;
       return segment;
     });
   }
