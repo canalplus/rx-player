@@ -61,7 +61,7 @@ export function generateManifest(
   const presentationLiveGap =
     (contents.map(content => content.manifest.presentationLiveGap)
       .reduce((acc, val) =>
-        Math.min(acc || DEFAULT_LIVE_GAP, val ||DEFAULT_LIVE_GAP), DEFAULT_LIVE_GAP
+        Math.min(acc || DEFAULT_LIVE_GAP, val || DEFAULT_LIVE_GAP), DEFAULT_LIVE_GAP
       )) || DEFAULT_LIVE_GAP;
 
   const suggestedPresentationDelay =
@@ -70,15 +70,15 @@ export function generateManifest(
 
   const maxSegmentDuration =
     contents.map(content => content.manifest.maxSegmentDuration)
-      .reduce((acc, val) => Math.min((acc || 0),(val || 0)), 0);
+      .reduce((acc, val) => Math.min((acc || 0), (val || 0)), 0);
 
   const minBufferTime =
     contents.map(content => content.manifest.minBufferTime)
-      .reduce((acc, val) => Math.min((acc || 0),(val || 0)), 0);
+      .reduce((acc, val) => Math.min((acc || 0), (val || 0)), 0);
 
   const timeShiftBufferDepth =
     durations.map(duration => duration)
-      .reduce((acc, val) => Math.max((acc || 20),(val || 20)), 20);
+      .reduce((acc, val) => Math.max((acc || 20), (val || 20)), 20);
 
   // 3 - Build new periods array
   const newPeriods: Array<{
@@ -86,9 +86,9 @@ export function generateManifest(
     transport: "dash"|"smooth";
   }> = [];
 
-  for(let j = 0; j < durations.length; j++) {
+  for (let j = 0; j < durations.length; j++) {
     const _newPeriods = parsedPeriodsMyManifest[j];
-    for(let m = 0; m < _newPeriods.length; m++) {
+    for (let m = 0; m < _newPeriods.length; m++) {
       let elapsedTimeOnLoop = 0;
       const periods: IParsedPeriod[] = [];
       const newPeriod = _newPeriods[m];
@@ -100,12 +100,12 @@ export function generateManifest(
       if (textTracks && textTracks.length > 0) {
         textTracks.forEach((track) => {
           const textAdaptation = {
-            id: "gen-text-track-"+generateNewId(),
+            id: "gen-text-track-" + generateNewId(),
             representations: [{
               mimeType: track.mimeType,
               bitrate: 0,
               index: new StaticRepresentationIndex({ media: track.url }),
-              id: "gen-text-track-"+generateNewId(),
+              id: "gen-text-track-" + generateNewId(),
             }],
             type: "text",
             language: track.language,
@@ -146,7 +146,7 @@ export function generateManifest(
     presentationLiveGap,
     timeShiftBufferDepth,
     duration: Infinity,
-    id: "gen-metaplaylist-man-"+generateNewId(),
+    id: "gen-metaplaylist-man-" + generateNewId(),
     maxSegmentDuration,
     minBufferTime,
     periods: finalPeriods,
