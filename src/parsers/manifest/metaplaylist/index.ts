@@ -100,15 +100,15 @@ export function generateManifest(
       if (textTracks && textTracks.length > 0) {
         textTracks.forEach((track) => {
           const textAdaptation = {
-            id: "gen-text-track-" + generateNewId(),
+            id: "gen-text-ada-" + generateNewId(),
             representations: [{
               mimeType: track.mimeType,
               bitrate: 0,
               index: new StaticRepresentationIndex({ media: track.url }),
-              id: "gen-text-track-" + generateNewId(),
+              id: "gen-text-rep-" + generateNewId(),
             }],
             type: "text",
-            language: track.language,
+            normalizedLanguage: track.language,
           };
           newPeriod.adaptations.push(textAdaptation);
         });
