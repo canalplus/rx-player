@@ -33,6 +33,8 @@ module.exports = {
           process.env.RXP_DASH === "true" :
           process.env.RXP_DASH !== "false",
 
+        METAPLAYLIST: process.env.RXP_METAPLAYLIST === "true",
+
         DIRECTFILE: isBarebone ?
           process.env.RXP_DIRECTFILE === "true" :
           process.env.RXP_DIRECTFILE !== "false",
@@ -68,8 +70,6 @@ module.exports = {
         HTML_SRT: isBarebone ?
           process.env.RXP_HTML_SRT === "true" :
           process.env.RXP_HTML_SRT !== "false",
-
-        METAPLAYLIST: process.env.RXP_METAPLAYLIST === "true",
 
         // TODO
         // EME: isBarebone ?

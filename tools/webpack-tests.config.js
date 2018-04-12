@@ -26,6 +26,7 @@ const config = {
       "__FEATURES__": {
         SMOOTH: true,
         DASH: true,
+        METAPLAYLIST: true,
         DIRECTFILE: true,
         NATIVE_TTML: true,
         NATIVE_SAMI: true,
@@ -35,7 +36,6 @@ const config = {
         HTML_SAMI: true,
         HTML_VTT: true,
         HTML_SRT: true,
-        METAPLAYLIST: true,
         // TODO
         // EME: true,
         // BIF: true,

@@ -70,3 +70,15 @@ module.exports = {
     setImmediate: false,
   },
 };
+
+if (shouldMinify) {
+  config.plugins.push(new ClosureCompiler({
+    options: {
+      compilation_level: "SIMPLE",
+      language_in: "ES5",
+      warning_level: "VERBOSE",
+    },
+  }));
+}
+
+module.exports = config;
