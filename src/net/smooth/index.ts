@@ -341,7 +341,7 @@ export default function(
           timescale: _sdTimescale,
           start: _sdStart,
           end: _sdEnd,
-          timeOffset: _sdStart / _sdTimescale,
+          timeOffset: 0,
         },
         segmentInfos,
       });
