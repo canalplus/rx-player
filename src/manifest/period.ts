@@ -157,7 +157,7 @@ export default class Period {
             id: representationID,
             mimeType,
             codecs,
-            index: new StaticRepresentationIndex({media: url}),
+            index: new StaticRepresentationIndex({ media: url }),
           }],
         });
       }));

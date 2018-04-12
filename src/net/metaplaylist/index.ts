@@ -18,7 +18,7 @@ import { Observable } from "rxjs/Observable";
 import request from "../../utils/request";
 
 import { IPrivateInfos } from "../../manifest/representation_index/interfaces";
-import { generateManifest } from "../../parsers/manifest/metaplaylist/index";
+import parseMetaManifest from "../../parsers/manifest/metaplaylist";
 import {
   ILoaderObservable,
   ILoaderResponse,
@@ -34,9 +34,9 @@ import {
   TextTrackParserObservable,
 } from "../types";
 
-  import DASHTransport from "../dash";
-  import SmoothTransport from "../smooth";
-  import patchBox from "./isobmff_patcher";
+import DASHTransport from "../dash";
+import SmoothTransport from "../smooth";
+import patchBox from "./isobmff_patcher";
 
 type ITransportTypes = "dash"|"smooth";
 
@@ -194,7 +194,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
               });
             });
             return Observable.combineLatest(parsedManifestsInfo).map((_contents) => {
-                const manifest = generateManifest(_contents, url);
+                const manifest = parseMetaManifest(_contents, url);
                 return {
                   manifest,
                   url,
