@@ -26,6 +26,7 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
+  IOverlayParserObservable,
   IParserOptions,
   ISegmentLoaderArguments,
   ISegmentParserArguments,

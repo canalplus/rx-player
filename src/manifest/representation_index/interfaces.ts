@@ -33,7 +33,6 @@ export interface ISmoothInitSegmentPrivateInfos {
 
 // privateInfos specific to overlay Segments
 export interface IOverlaySegmentPrivateInfos {
-  type : "overlay";
   start : number;
   end : number;
   version : number;

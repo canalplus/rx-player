@@ -160,7 +160,7 @@ export type ImageParserObservable = Observable<{
   segmentInfos : ISegmentTimingInfos|null;
 }>;
 
-export interface IMetaDashOverlayData {
+export interface IMetaPlOverlayData {
   start : number;
   end : number;
   version : number;
@@ -175,7 +175,7 @@ export interface IMetaDashOverlayData {
 }
 
 export interface IOverlayTrackSegmentData {
-  data : IMetaDashOverlayData[]; // overlay track data, in the given type
+  data : IMetaPlOverlayData[]; // overlay track data, in the given type
   end : number; // end time time until which the segment apply
   start : number; // start time from which the segment apply
   timeOffset : number; // time offset, in seconds, to add to each overlay
