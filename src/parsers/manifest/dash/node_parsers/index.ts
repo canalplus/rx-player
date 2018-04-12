@@ -388,8 +388,8 @@ export default function parseManifest(
             duration: Number.MAX_VALUE,
             timescale: 1,
             startNumber: 0,
-            initialization: {media: representation.children.baseURL},
-            media: representation.children.baseURL,
+            initialization: {media: representationURL},
+            media: representationURL,
           }, periodStart);
         }
         return adaptationIndex;
