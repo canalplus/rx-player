@@ -33,7 +33,7 @@ const { DEFAULT_LIVE_GAP } = config;
  * @param {Object} contents
  * @param {string} baseURL
  */
-export function generateManifest(
+export default function parseMetaManifest(
   contents: Array<{
       manifest: IParsedManifest;
       url: string;
@@ -46,7 +46,7 @@ export function generateManifest(
         mimeType: string;
       }>;
   }>,
-  baseURL?: string
+  baseURL: string
 ): IParsedManifest {
 
   // 1 - Get period durations
@@ -153,7 +153,7 @@ export function generateManifest(
     suggestedPresentationDelay,
     transportType: "metaplaylist",
     type: "dynamic",
-    uris: [baseURL || ""],
+    uris: [baseURL],
   };
 
   return manifest;

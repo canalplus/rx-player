@@ -178,8 +178,7 @@ export default function(
         });
       }
       const responseBuffer = responseData instanceof Uint8Array ?
-        responseData :
-        new Uint8Array(responseData);
+        responseData : new Uint8Array(responseData);
 
       const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);

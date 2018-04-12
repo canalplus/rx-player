@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-type ITransportTypes = "dash"|"smooth";
+export type IMetaPlaylistTransportTypePrivateInfos = "dash"|"smooth";
 
 export interface ISmoothInitSegmentPrivateInfos {
   codecPrivateData : string;
@@ -32,8 +32,8 @@ export interface ISmoothInitSegmentPrivateInfos {
 }
 
 export interface IPrivateInfos {
-    smoothInit?: ISmoothInitSegmentPrivateInfos;
-    transportType?: ITransportTypes;
+  smoothInit?: ISmoothInitSegmentPrivateInfos;
+  transportType?: IMetaPlaylistTransportTypePrivateInfos;
 }
 
 // ISegment Object.
@@ -53,8 +53,8 @@ export interface ISegment {
   range? : [number, number]; // Optional byte range to retrieve the Segment
 
   privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
-                                        // supplementary informations in a given
-                                        // Segment for later downloading/parsing
+                                 // supplementary informations in a given
+                                 // Segment for later downloading/parsing
 }
 
 export interface IRepresentationIndexSegmentInfos {
