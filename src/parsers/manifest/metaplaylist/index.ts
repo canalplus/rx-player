@@ -21,7 +21,22 @@ import {
   IParsedManifest,
   IParsedPeriod,
 } from "../types";
+import OverlayRepresentationIndex from "./overlayRepresentationIndex";
 import MetaRepresentationIndex from "./representation_index";
+
+export interface IMetaPlOverlayData {
+  start : number;
+  end : number;
+  version : number;
+  element : {
+    url : string;
+    format : string;
+    xAxis : string;
+    yAxis : string;
+    height : string;
+    width : string;
+  };
+}
 
 const { DEFAULT_LIVE_GAP } = config;
 
@@ -45,6 +60,7 @@ export default function parseMetaManifest(
         language: string;
         mimeType: string;
       }>;
+    overlays: IMetaPlOverlayData[];
   }>,
   baseURL: string
 ): IParsedManifest {
@@ -112,6 +128,21 @@ export default function parseMetaManifest(
           };
           newPeriod.adaptations.push(textAdaptation);
         });
+      }
+
+      const overlayTracks = contents[j].overlays;
+      if (overlayTracks && overlayTracks.length > 0) {
+        const overlayAdaptation = {
+          id: "gen-text-track-" + generateNewId(),
+          representations: [{
+            mimeType: "application/metaplaylist-overlay",
+            bitrate: 0,
+            index: new OverlayRepresentationIndex(overlayTracks),
+            id: "gen-overlay-track-" + generateNewId(),
+          }],
+          type: "overlay",
+        };
+        newPeriod.adaptations.push(overlayAdaptation);
       }
       periods.push(newPeriod);
       newPeriods.push({periods, transport: contents[j].transport});

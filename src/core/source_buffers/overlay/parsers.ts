@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IMetaDashOverlayData  } from "../../../net/types";
+import { IMetaPlOverlayData  } from "../../../net/types";
 import log from "../../../utils/log";
 
 export interface IHTMLOverlay {
@@ -24,7 +24,7 @@ export interface IHTMLOverlay {
 }
 
 type htmlParserFn = (
-  overlay : IMetaDashOverlayData[],
+  overlay : IMetaPlOverlayData[],
   timeOffset : number
 ) => IHTMLOverlay[];
 
@@ -47,7 +47,7 @@ const htmlParsers : { [format : string] : htmlParserFn } = {};
  */
 export default function parseTextTrackToElements(
   type : string,
-  data : IMetaDashOverlayData[],
+  data : IMetaPlOverlayData[],
   timeOffset : number
 ) : IHTMLOverlay[] {
   log.debug("finding parser for overlay of type type:", type);

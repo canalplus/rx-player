@@ -41,21 +41,6 @@ import patchBox from "./isobmff_patcher";
 
 type ITransportTypes = "dash"|"smooth";
 
-export interface IMetaManifestInfo {
-    manifests: Array<{
-      manifest: Document;
-      url: string;
-      startTime: number;
-      endTime: number;
-      transport: ITransportTypes;
-      textTracks: [{
-        url: string;
-        language: string;
-        mimeType: string;
-      }];
-    }>;
-}
-
 interface IMetaPlaylistContent {
   url: string;
   startTime: number;
@@ -66,6 +51,7 @@ interface IMetaPlaylistContent {
     language: string;
     mimeType: string;
   }];
+  overlays: any;
 }
 
 /**
@@ -164,6 +150,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
                 endTime: content.endTime,
                 transport: content.transport,
                 textTracks: content.textTracks,
+                overlays: content.overlays,
               };
             });
         });
@@ -191,6 +178,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
                   startTime: manifestInfos.startTime,
                   endTime: manifestInfos.endTime,
                   textTracks: manifestInfos.textTracks,
+                  overlays: manifestInfos.overlays,
                 };
               });
             });
@@ -332,12 +320,43 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
     };
 
   const overlayPipeline = {
-    loader() : never {
-      throw new Error("Overlay not implemented");
+    loader(
+      _args : ISegmentLoaderArguments
+    ) : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
+      // For now, nothing is downloaded.
+      // Everything is parsed from the segment
+      return Observable.of({
+        type: "data" as "data",
+        value: { responseData: null },
+      });
     },
 
-    parser() : never {
-      throw new Error("Overlay not implemented");
+    parser(
+      args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
+    ) : IOverlayParserObservable {
+      const { segment } = args;
+      const { privateInfos } = segment;
+      if (!privateInfos || privateInfos.overlayInfos == null) {
+        throw new Error("An overlay segment should have private infos.");
+      }
+      const { overlayInfos } = privateInfos;
+      const end = segment.duration != null ?
+        segment.duration - segment.time : overlayInfos.end;
+      return Observable.of({
+        segmentInfos: {
+          time: segment.time,
+          duration: segment.duration,
+          timescale: segment.timescale,
+        },
+        segmentData: {
+          data: [overlayInfos],
+          start: segment.time,
+          end,
+          timeOffset: 0,
+          timescale: segment.timescale,
+          type: "metadash",
+        },
+      });
     },
   };
 
