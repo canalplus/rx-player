@@ -83,4 +83,4 @@ if (shouldMinify) {
   }));
 }
 
-  module.exports = config;
+module.exports = config;
