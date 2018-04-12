@@ -294,20 +294,10 @@ export default function RepresentationBuffer<T>({
           segment,
         }, priority);
 
-        currentSegmentRequest = {
-          segment,
-          priority,
-          request$,
-        };
-
-        const responseWithSegment$ = request$
-          .map((args) => objectAssign({ segment }, args));
-
-        return responseWithSegment$
-          .mergeMap((pipelineData) => {
-            return Observable.of(pipelineData)
-              .concat(requestNextSegment$);
-          });
+        currentSegmentRequest = { segment, priority, request$ };
+        return request$
+          .map((args) => objectAssign({ segment }, args))
+          .concat(requestNextSegment$);
       });
 
     return requestNextSegment$
@@ -333,6 +323,13 @@ export default function RepresentationBuffer<T>({
       if (segment.isInit) {
         initSegmentObject = { segmentData, segmentInfos };
       }
+
+      if (segmentData == null) {
+        // no segmentData to add here (for example, a text init segment)
+        // just complete directly without appending anything
+        return Observable.empty();
+      }
+
       const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
       const append$ = appendDataInSourceBuffer(
         clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
@@ -395,8 +392,7 @@ export default function RepresentationBuffer<T>({
     const neededRange = getWantedRange(
       period, buffered, timing, bufferGoal, paddings);
     const discontinuity = getCurrentDiscontinuity(content, timing);
-    const shouldRefreshManifest =
-      shouldRefreshManifestForRange(content, segmentBookkeeper, neededRange);
+    const shouldRefreshManifest = shouldRefreshManifestForRange(content, neededRange);
 
     // /!\ Side effect to the SegmentBookkeeper
     segmentBookkeeper.synchronizeBuffered(buffered);
@@ -579,18 +575,11 @@ function getCurrentDiscontinuity(
  * @returns {Boolean}
  */
 function shouldRefreshManifestForRange(
-  { representation } : { representation : Representation },
-  segmentBookkeeper : SegmentBookkeeper,
+  { representation } : { adaptation : Adaptation; representation : Representation },
   wantedRange : { start : number; end : number}
 ) : boolean {
   const { start, end } = wantedRange;
-
-  // TODO Better solution for HSS refresh?
-  // get every segments currently downloaded and loaded
-  const segments = segmentBookkeeper.inventory
-    .map(s => s.infos.segment);
-
-  return representation.index.shouldRefresh(segments, start, end);
+  return representation.index.shouldRefresh(start, end);
 }
 
 /**

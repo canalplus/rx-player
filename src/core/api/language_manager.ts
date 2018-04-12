@@ -22,6 +22,7 @@
 import arrayFind = require("array-find");
 import { Subject } from "rxjs/Subject";
 import { Adaptation, Period } from "../../manifest";
+import arrayIncludes from "../../utils/array-includes";
 import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 
@@ -222,14 +223,14 @@ export default class LanguageManager {
   }
 
   /**
-   * Emit preferred audio Adaptation through the given Subject based on:
+   * Emit initial audio Adaptation through the given Subject based on:
    *   - the preferred audio tracks
    *   - the last choice for this period, if one
    * @param {Period} period
    *
    * @throws Error - Throws if the period given has not been added
    */
-  public setPreferredAudioTrack(period : Period) : void {
+  public setInitialAudioTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos || !periodItem) {
@@ -242,8 +243,7 @@ export default class LanguageManager {
 
     if (
       chosenAudioAdaptation === undefined ||
-      !isAudioAdaptationOptimal(
-        chosenAudioAdaptation, audioAdaptations, preferredAudioTracks)
+      !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
     ) {
       const optimalAdaptation = findFirstOptimalAudioAdaptation(
         audioAdaptations, preferredAudioTracks);
@@ -263,7 +263,7 @@ export default class LanguageManager {
    *
    * @throws Error - Throws if the period given has not been added
    */
-  public setPreferredTextTrack(period : Period) : void {
+  public setInitialTextTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos || !periodItem) {
@@ -275,8 +275,7 @@ export default class LanguageManager {
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (
       chosenTextAdaptation === undefined ||
-      !isTextAdaptationOptimal(
-        chosenTextAdaptation, textAdaptations, preferredTextTracks)
+      !arrayIncludes(textAdaptations, chosenTextAdaptation)
     ) {
       const optimalAdaptation = findFirstOptimalTextAdaptation(
         textAdaptations, preferredTextTracks);
@@ -533,8 +532,7 @@ export default class LanguageManager {
 
       if (
         chosenAudioAdaptation !== undefined &&
-        isAudioAdaptationOptimal(
-          chosenAudioAdaptation, audioAdaptations, preferredAudioTracks)
+        arrayIncludes(audioAdaptations, chosenAudioAdaptation)
       ) {
         // Already best audio for this Buffer, check next one
         recursiveUpdateAudioTrack(index + 1);
@@ -579,8 +577,7 @@ export default class LanguageManager {
 
       if (
         chosenTextAdaptation !== undefined &&
-        isTextAdaptationOptimal(
-          chosenTextAdaptation, textAdaptations, preferredTextTracks)
+        arrayIncludes(textAdaptations, chosenTextAdaptation)
       ) {
         // Already best text for this Buffer, check next one
         recursiveUpdateTextTrack(index + 1);
@@ -601,55 +598,55 @@ export default class LanguageManager {
   }
 }
 
-/**
- * Returns true if the given audio adaptation is an optimal choice for a period
- * given:
- *
- *   - the list of audio adaptations in the period
- *
- *   - an array of preferred audio configurations sorted from the most preferred
- *     to the least preferred.
- *
- * @param {Adaptation|null} adaptation
- * @param {Array.<Adaptation>} audioAdaptations
- * @param {Array.<Object>} preferredAudioTracks
- * @returns {Boolean}
- */
-function isAudioAdaptationOptimal(
-  adaptation : Adaptation|null,
-  audioAdaptations : Adaptation[],
-  preferredAudioTracks : IAudioTrackPreference[]
-) : boolean {
-  if (!audioAdaptations.length) {
-    return adaptation === null;
-  }
+// /**
+//  * Returns true if the given audio adaptation is an optimal choice for a period
+//  * given:
+//  *
+//  *   - the list of audio adaptations in the period
+//  *
+//  *   - an array of preferred audio configurations sorted from the most preferred
+//  *     to the least preferred.
+//  *
+//  * @param {Adaptation|null} adaptation
+//  * @param {Array.<Adaptation>} audioAdaptations
+//  * @param {Array.<Object>} preferredAudioTracks
+//  * @returns {Boolean}
+//  */
+// function isAudioAdaptationOptimal(
+//   adaptation : Adaptation|null,
+//   audioAdaptations : Adaptation[],
+//   preferredAudioTracks : IAudioTrackPreference[]
+// ) : boolean {
+//   if (!audioAdaptations.length) {
+//     return adaptation === null;
+//   }
 
-  for (let i = 0; i < preferredAudioTracks.length; i++) {
-    const preferredAudioTrack = preferredAudioTracks[i];
+//   for (let i = 0; i < preferredAudioTracks.length; i++) {
+//     const preferredAudioTrack = preferredAudioTracks[i];
 
-    if (preferredAudioTrack === null) {
-      return adaptation === null;
-    }
+//     if (preferredAudioTrack === null) {
+//       return adaptation === null;
+//     }
 
-    const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) =>
-      audioAdaptation.normalizedLanguage === preferredAudioTrack.normalized &&
-      !!audioAdaptation.isAudioDescription === preferredAudioTrack.audioDescription
-    );
+//     const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) =>
+//       audioAdaptation.normalizedLanguage === preferredAudioTrack.normalized &&
+//       !!audioAdaptation.isAudioDescription === preferredAudioTrack.audioDescription
+//     );
 
-    if (foundAdaptation !== undefined) {
-      if (adaptation === null) {
-        return false;
-      }
+//     if (foundAdaptation !== undefined) {
+//       if (adaptation === null) {
+//         return false;
+//       }
 
-      return (
-        (foundAdaptation.normalizedLanguage || "") ===
-        (adaptation.normalizedLanguage || "")
-      ) && !!foundAdaptation.isAudioDescription === !!adaptation.isAudioDescription;
-    }
+//       return (
+//         (foundAdaptation.normalizedLanguage || "") ===
+//         (adaptation.normalizedLanguage || "")
+//       ) && !!foundAdaptation.isAudioDescription === !!adaptation.isAudioDescription;
+//     }
 
-  }
-  return true; // no optimal adaptation, just return true
-}
+//   }
+//   return true; // no optimal adaptation, just return true
+// }
 
 /**
  * Find an optimal audio adaptation given their list and the array of preferred
@@ -689,55 +686,55 @@ function findFirstOptimalAudioAdaptation(
   return audioAdaptations[0];
 }
 
-/**
- * Returns true if the given text adaptation is an optimal choice for a period
- * given:
- *
- *   - the list of text adaptations in the period
- *
- *   - an array of preferred text configurations sorted from the most preferred
- *     to the least preferred.
- *
- * @param {Adaptation|null} adaptation
- * @param {Array.<Adaptation>} audioAdaptations
- * @param {Array.<Object>} preferredAudioTracks
- * @returns {Boolean}
- */
-function isTextAdaptationOptimal(
-  adaptation : Adaptation|null,
-  textAdaptations : Adaptation[],
-  preferredTextTracks : ITextTrackPreference[]
-) : boolean {
-  if (!textAdaptations.length) {
-    return adaptation === null;
-  }
+// /**
+//  * Returns true if the given text adaptation is an optimal choice for a period
+//  * given:
+//  *
+//  *   - the list of text adaptations in the period
+//  *
+//  *   - an array of preferred text configurations sorted from the most preferred
+//  *     to the least preferred.
+//  *
+//  * @param {Adaptation|null} adaptation
+//  * @param {Array.<Adaptation>} audioAdaptations
+//  * @param {Array.<Object>} preferredAudioTracks
+//  * @returns {Boolean}
+//  */
+// function isTextAdaptationOptimal(
+//   adaptation : Adaptation|null,
+//   textAdaptations : Adaptation[],
+//   preferredTextTracks : ITextTrackPreference[]
+// ) : boolean {
+//   if (!textAdaptations.length) {
+//     return adaptation === null;
+//   }
 
-  for (let i = 0; i < preferredTextTracks.length; i++) {
-    const preferredTextTrack = preferredTextTracks[i];
+//   for (let i = 0; i < preferredTextTracks.length; i++) {
+//     const preferredTextTrack = preferredTextTracks[i];
 
-    if (preferredTextTrack === null) {
-      return adaptation === null;
-    }
+//     if (preferredTextTrack === null) {
+//       return adaptation === null;
+//     }
 
-    const foundAdaptation = arrayFind(textAdaptations, (textAdaptation) =>
-      (textAdaptation.normalizedLanguage || "") === preferredTextTrack.normalized &&
-      !!textAdaptation.isClosedCaption === preferredTextTrack.closedCaption
-    );
+//     const foundAdaptation = arrayFind(textAdaptations, (textAdaptation) =>
+//       (textAdaptation.normalizedLanguage || "") === preferredTextTrack.normalized &&
+//       !!textAdaptation.isClosedCaption === preferredTextTrack.closedCaption
+//     );
 
-    if (foundAdaptation !== undefined) {
-      if (adaptation === null) {
-        return false;
-      }
+//     if (foundAdaptation !== undefined) {
+//       if (adaptation === null) {
+//         return false;
+//       }
 
-      return (
-        (foundAdaptation.normalizedLanguage || "") ===
-        (adaptation.normalizedLanguage || "")
-      ) && !!foundAdaptation.isClosedCaption === !!adaptation.isClosedCaption;
-    }
+//       return (
+//         (foundAdaptation.normalizedLanguage || "") ===
+//         (adaptation.normalizedLanguage || "")
+//       ) && !!foundAdaptation.isClosedCaption === !!adaptation.isClosedCaption;
+//     }
 
-  }
-  return adaptation === null;
-}
+//   }
+//   return adaptation === null;
+// }
 
 /**
  * Find an optimal text adaptation given their list and the array of preferred

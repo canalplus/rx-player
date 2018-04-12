@@ -43,10 +43,8 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
-  INextSegmentsInfos,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
-  ISegmentTimingInfos,
   ITransportPipelines,
   SegmentParserObservable,
 } from "../types";
@@ -95,14 +93,9 @@ export default function(
   };
 
   const segmentPipeline = {
-    loader({
-      adaptation,
-      init,
-      manifest,
-      period,
-      representation,
-      segment,
-    } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> {
+    loader({ adaptation, init, manifest, period, representation, segment }
+      : ISegmentLoaderArguments
+    ) : ILoaderObservable<Uint8Array|ArrayBuffer> {
       return segmentLoader({
         adaptation,
         init,
@@ -120,37 +113,28 @@ export default function(
       init,
     } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
     ) : SegmentParserObservable {
-      const responseData = response.responseData instanceof Uint8Array
-      ? response.responseData
-       : new Uint8Array(response.responseData);
-
-      let nextSegments : INextSegmentsInfos[]|undefined;
-      let segmentInfos : ISegmentTimingInfos|null = null;
-      const segmentData : Uint8Array = responseData;
-
+      const segmentData : Uint8Array = response.responseData instanceof Uint8Array ?
+        response.responseData :
+        new Uint8Array(response.responseData);
       const indexRange = segment.indexRange;
-      const sidxSegments =
-        parseSidx(responseData, indexRange ? indexRange[0] : 0);
+      const sidxSegments = parseSidx(segmentData, indexRange ? indexRange[0] : 0);
 
-      if (segment.isInit) {
-        if (sidxSegments) {
-          nextSegments = sidxSegments;
-          addNextSegments(representation, nextSegments);
-        }
-        const timescale = getMDHDTimescale(responseData);
-        if (timescale > 0) {
-          segmentInfos = {
-            time: -1,
-            duration: 0,
-            timescale,
-          };
-        }
-      } else {
-        segmentInfos =
-          getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
+      if (!segment.isInit) {
+        return Observable.of({
+          segmentData,
+          segmentInfos: getISOBMFFTimingInfos(segment, segmentData, sidxSegments, init),
+        });
       }
 
-      return Observable.of({ segmentData, segmentInfos });
+      if (sidxSegments) {
+        const nextSegments = sidxSegments;
+        addNextSegments(representation, nextSegments);
+      }
+      const timescale = getMDHDTimescale(segmentData);
+      return Observable.of({
+        segmentData,
+        segmentInfos: timescale > 0 ? { time: -1, duration: 0, timescale } : null,
+      });
     },
   };
 
@@ -162,47 +146,54 @@ export default function(
   const imageTrackPipeline = {
     loader(
       { segment, representation } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer> {
-      const { isInit } = segment;
-
-      if (isInit) {
-        return Observable.empty();
-      } else {
-        const { media } = segment;
-
-        const path = media ?
-          replaceTokens(media, segment, representation) : "";
-        const mediaUrl = resolveURL(representation.baseURL, path);
-        return request({
-          url: mediaUrl,
-          responseType: "arraybuffer",
+    ) : ILoaderObservable<ArrayBuffer|null> {
+      if (segment.isInit) {
+        // image do not need an init segment. Passthrough directly to the parser
+        return Observable.of({
+          type: "data" as "data",
+          value: { responseData: null },
         });
       }
+
+      const { media } = segment;
+      const path = media ? replaceTokens(media, segment, representation) : "";
+      const url = resolveURL(representation.baseURL, path);
+      return request({ url, responseType: "arraybuffer" });
     },
 
     parser(
-      { response } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
+      { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : ImageParserObservable {
       const responseData = response.responseData;
-      const blob = new Uint8Array(responseData);
 
-      const bif = parseBif(blob);
-      const data = bif.thumbs;
+      if (responseData === null) {
+        return Observable.of({
+          segmentData: null,
+          segmentInfos: segment.timescale > 0 ? {
+            duration: segment.isInit ? 0 : segment.duration,
+            time: segment.isInit ? -1 : segment.time,
+            timescale: segment.timescale,
+          } : null,
+        });
+      }
 
-      const segmentInfos = {
-        time: 0,
-        duration: Number.MAX_VALUE,
-        timescale: bif.timescale,
-      };
-      const segmentData = {
-        data,
-        start: 0,
-        end: Number.MAX_VALUE,
-        timescale: 1,
-        timeOffset: 0,
-        type: "bif",
-      };
-      return Observable.of({ segmentData, segmentInfos });
+      const bifObject = parseBif(new Uint8Array(responseData));
+      const data = bifObject.thumbs;
+      return Observable.of({
+        segmentData: {
+          data,
+          start: 0,
+          end: Number.MAX_VALUE,
+          timescale: 1,
+          timeOffset: 0,
+          type: "bif",
+        },
+        segmentInfos: {
+          time: 0,
+          duration: Number.MAX_VALUE,
+          timescale: bifObject.timescale,
+        },
+      });
     },
   };
 

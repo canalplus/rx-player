@@ -192,12 +192,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
-   * @param {Array.<Object>} _
    * @param {Number} _up
    * @param {Number} _to
    * @returns {Boolean}
    */
-  shouldRefresh(_ : ISegment[], _up : number, to : number) : boolean {
+  shouldRefresh(_up : number, to : number) : boolean {
     const {
       timeline,
       timescale,

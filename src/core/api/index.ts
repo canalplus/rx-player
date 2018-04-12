@@ -1860,7 +1860,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           adaptation$.next(null);
         } else {
           this._priv_languageManager.addPeriod(type, period, adaptation$);
-          this._priv_languageManager.setPreferredAudioTrack(period);
+          this._priv_languageManager.setInitialAudioTrack(period);
         }
         break;
 
@@ -1870,7 +1870,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           adaptation$.next(null);
         } else {
           this._priv_languageManager.addPeriod(type, period, adaptation$);
-          this._priv_languageManager.setPreferredTextTrack(period);
+          this._priv_languageManager.setInitialTextTrack(period);
         }
         break;
 

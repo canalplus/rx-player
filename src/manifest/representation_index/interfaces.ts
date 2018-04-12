@@ -80,13 +80,11 @@ export default interface IRepresentationIndex {
 
   /**
    * Returns true if, from the given situation, the manifest has to be refreshed
-   * @param {Array.<Object>} parsedSegments - list of downloaded and parsed
-   * segments for now.
    * @param {number} up - Beginning timestamp of what you want
    * @param {number} to - End timestamp of what you want
    * @returns {Boolean}
    */
-  shouldRefresh(parsedSegments : ISegment[], up : number, to : number) : boolean;
+  shouldRefresh(up : number, to : number) : boolean;
 
   /**
    * Returns the first time position declared in this index, in seconds.
