@@ -66,7 +66,7 @@ function safelyRemoveChild(element : Element, child : Element|null) {
     try {
       element.removeChild(child);
     } catch (e) {
-      log.warn("Can't remove text track: not in the element.");
+      log.warn("Can't remove overlay track: not in the element.");
     }
   }
 }
@@ -99,7 +99,7 @@ export default class OverlayTrackSourceBuffer
     videoElement : HTMLMediaElement,
     overlayTrackElement : HTMLElement
   ) {
-    log.debug("creating html text track source buffer");
+    log.debug("creating html overlay track source buffer");
     super();
     this._videoElement = videoElement;
     this._overlayTrackElement = overlayTrackElement;
@@ -134,18 +134,12 @@ export default class OverlayTrackSourceBuffer
   }
 
   /**
-   * Append text tracks.
+   * Append overlay tracks.
    * @param {Object} data
-   * @param {string} data.type
-   * @param {string} data.data
-   * @param {string} data.language
-   * @param {Number} data.timescale
-   * @param {Number} data.start
-   * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
   _append(data : IOverlayTrackSegmentData) : void {
-    log.debug("appending new html text tracks", data);
+    log.debug("appending new html overlay tracks", data);
     const {
       timescale,
       start: timescaledStart,
@@ -157,7 +151,7 @@ export default class OverlayTrackSourceBuffer
     if (timescaledEnd && timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
       /* tslint:disable:max-line-length */
-      log.warn("Invalid text track appended: the start time is inferior or equal to the end time.");
+      log.warn("Invalid overlay track appended: the start time is inferior or equal to the end time.");
       /* tslint:enable:max-line-length */
       return;
     }
@@ -185,7 +179,7 @@ export default class OverlayTrackSourceBuffer
    * @param {Number} to
    */
   _remove(from : number, to : number) : void {
-    log.debug("removing html text track data", from, to);
+    log.debug("removing html overlay track data", from, to);
     this._buffer.remove(from, to);
     this.buffered.remove(from, to);
   }
@@ -194,7 +188,7 @@ export default class OverlayTrackSourceBuffer
    * Free up ressources from this sourceBuffer
    */
   _abort() : void {
-    log.debug("aborting html text track source buffer");
+    log.debug("aborting html overlay track source buffer");
     this._destroy$.next();
     this._destroy$.complete();
     safelyRemoveChild(this._overlayTrackElement, this._currentElement);
