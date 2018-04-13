@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import parseMPD from "../../../parsers/manifest/dash/node_parsers";
 import {
   IParsedManifest,
-} from "../../types";
-import parseMPD from "./node_parsers";
+} from "../types";
 
 /**
  * @param {Document} manifest - Original manifest as returned by the server

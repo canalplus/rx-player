@@ -21,7 +21,7 @@ import {
   IParsedAdaptation,
   IParsedManifest,
   IParsedRepresentation,
-} from "../net/types";
+} from "../parsers/manifest/types";
 import log from "../utils/log";
 import Manifest, {
   IManifestArguments,
@@ -30,7 +30,8 @@ import Manifest, {
 } from "./index";
 import { IRepresentationArguments } from "./representation";
 
-const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
+const SUPPORTED_ADAPTATIONS_TYPE =
+  ["audio", "video", "text", "image", "overlay"];
 
 /**
  * Run multiple checks before creating the Manifest:

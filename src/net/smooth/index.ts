@@ -20,10 +20,10 @@ import {
   Representation,
 } from "../../manifest";
 import parseBif from "../../parsers/images/bif";
+import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
-import { resolveURL } from "../../utils/url";
 import {
   ILoaderObservable,
   ImageParserObservable,
@@ -31,6 +31,7 @@ import {
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
+  IParserOptions,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
@@ -40,12 +41,9 @@ import {
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import extractTimingsInfos from "./isobmff_timings_infos";
-import createSmoothManifestParser from "./manifest";
 import mp4Utils from "./mp4";
 import generateSegmentLoader from "./segment_loader";
-import { IHSSParserOptions } from "./types";
 import {
-  buildSegmentURL,
   extractISML,
   extractToken,
   replaceToken,
@@ -77,7 +75,7 @@ function addNextSegments(
 }
 
 export default function(
-  options : IHSSParserOptions = {}
+  options : IParserOptions = {}
 ) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
@@ -179,14 +177,12 @@ export default function(
           segmentInfos: initSegmentInfos,
         });
       }
-      if (__DEV__) {
-        assert(responseData instanceof ArrayBuffer);
-      }
-      const responseBuffer = new Uint8Array(responseData as ArrayBuffer);
+      const responseBuffer = responseData instanceof Uint8Array ?
+        responseData : new Uint8Array(responseData);
+
       const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
       const segmentData = patchSegment(responseBuffer, segmentInfos.time);
-
       if (nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
@@ -207,11 +203,8 @@ export default function(
         });
       }
 
-      // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
-      const base = resolveURL(representation.baseURL);
-      const url = buildSegmentURL(base, representation, segment);
-      return request({ url, responseType });
+      return request({ url: segment.media, responseType });
     },
 
     parser({
@@ -347,7 +340,7 @@ export default function(
           timescale: _sdTimescale,
           start: _sdStart,
           end: _sdEnd,
-          timeOffset: _sdStart / _sdTimescale,
+          timeOffset: 0,
         },
         segmentInfos,
       });
@@ -356,7 +349,7 @@ export default function(
 
   const imageTrackPipeline = {
     loader(
-      { segment, representation } : ISegmentLoaderArguments
+      { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
       if (segment.isInit) {
         // image do not need an init segment. Passthrough directly to the parser
@@ -366,9 +359,7 @@ export default function(
         });
       }
 
-      const baseURL = resolveURL(representation.baseURL);
-      const url = buildSegmentURL(baseURL, representation, segment);
-      return request({ url, responseType: "arraybuffer" });
+      return request({ url: segment.media, responseType: "arraybuffer" });
     },
 
     parser(
@@ -407,12 +398,23 @@ export default function(
     },
   };
 
+  const overlayTrackPipeline = {
+    loader() : never {
+      throw new Error("Overlay tracks not managed in HSS");
+    },
+
+    parser() : never {
+      throw new Error("Overlay tracks not yet in HSS");
+    },
+  };
+
   return {
     manifest: manifestPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,
     image: imageTrackPipeline,
+    overlay: overlayTrackPipeline,
   };
 }
 

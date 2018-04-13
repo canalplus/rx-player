@@ -110,11 +110,10 @@ export default class Period {
         type: "image",
         manuallyAdded: true,
         representations: [{
-          baseURL: url,
           bitrate: 0,
           id: representationID,
           mimeType,
-          index: new StaticRepresentationIndex(),
+          index: new StaticRepresentationIndex({ media: url }),
         }],
       });
     });
@@ -154,12 +153,11 @@ export default class Period {
           closedCaption,
           manuallyAdded: true,
           representations: [{
-            baseURL: url,
             bitrate: 0,
             id: representationID,
             mimeType,
             codecs,
-            index: new StaticRepresentationIndex(),
+            index: new StaticRepresentationIndex({ media: url }),
           }],
         });
       }));

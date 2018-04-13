@@ -42,6 +42,7 @@ const config = {
   plugins: [
     new webpack.DefinePlugin({
       "__FEATURES__": {
+        METAPLAYLIST: true,
         SMOOTH: true,
         DASH: true,
         DIRECTFILE: true,
@@ -82,4 +83,4 @@ if (shouldMinify) {
   }));
 }
 
-  module.exports = config;
+module.exports = config;

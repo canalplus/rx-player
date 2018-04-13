@@ -19,14 +19,25 @@ import IRepresentationIndex, {
   ISegment,
 } from "./interfaces";
 
+export interface IStaticRepresentationIndexInfos {
+  media: string;
+}
+
 /**
  * Simple RepresentationIndex implementation for static files.
  * @class StaticRepresentationIndex
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
+  private readonly _infos: IStaticRepresentationIndexInfos;
+
+  constructor(infos: IStaticRepresentationIndexInfos) {
+    this._infos = infos;
+  }
 
   /**
-   * @returns {Object}
+   * Static contents do not have any initialization segments.
+   * Just return null.
+   * @returns {null}
    */
   getInitSegment() : null {
     return null;
@@ -41,9 +52,10 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
       id: "0",
       isInit: false,
       number: 0,
-      time: 0,
-      duration: Number.MAX_VALUE,
+      time: 0, // XXX TODO Shouldn't that be start of period?
+      duration: Number.MAX_VALUE, // XXX TODO Shouldn't that be end of period?
       timescale: 1,
+      media: this._infos.media,
     }];
   }
 
@@ -54,7 +66,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   getFirstPosition() : undefined {
     // TODO tslint bug? Document.
     /* tslint:disable return-undefined */
-    return undefined;
+    return undefined; // XXX TODO Shouldn't that be start of period?
     /* tslint:enable return-undefined */
   }
 
@@ -65,12 +77,12 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   getLastPosition() : undefined {
     // TODO tslint bug? Document.
     /* tslint:disable return-undefined */
-    return undefined;
+    return undefined; // XXX TODO Shouldn't that be end of period?
     /* tslint:enable return-undefined */
   }
 
   /**
-   * Returns true if, based on the arguments, the index should be refreshed.
+   * Returns false as a static file never need to be refreshed.
    * @returns {Boolean}
    */
   shouldRefresh() : false {
@@ -84,9 +96,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return -1;
   }
 
-  /**
-   * @returns {Array}
-   */
   _addSegments() : void {
     if (__DEV__) {
       log.warn("Tried add Segments to a static RepresentationIndex");

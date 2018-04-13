@@ -161,7 +161,7 @@ it is the current last content of the current manifest.
 _type_: ``Object``
 
 The adaptations (tracks if you want) for the current content, per-type
-(audio/video/text/image).
+(audio/video/text/image/overlay).
 
 See [the Adaptation chapter](#adaptation) for more info about an Adaptation's
 structure.
@@ -171,6 +171,7 @@ The adaptation object _can_ contain any of the following keys:
   - video (``Array.<Adaptation>``): The video adaptation(s) available.
   - text (``Array.<Adaptation>``): The text adaptation(s) available.
   - image (``Array.<Adaptation>``): The image adaptation(s) available.
+  - overlay (``Array.<Adaptation>``): The overlay adaptation(s) available.
 
 
 
@@ -204,6 +205,7 @@ The type of the Adaptation. The possible types are:
   - ``"audio"``
   - ``"text"``
   - ``"image"``
+  - ``"overlay"``
 
 #### language
 

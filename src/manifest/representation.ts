@@ -23,7 +23,6 @@ export interface IRepresentationArguments {
   index : IRepresentationIndex;
 
   // -- optional
-  baseURL? : string;
   codecs? : string;
   height? : number;
   id? : string|number;
@@ -41,8 +40,7 @@ class Representation {
   public index : IRepresentationIndex;
   public bitrate : number;
 
-  // opt readonly onal
-  public baseURL? : string;
+  // optional
   public codec? : string;
   public height? : number;
   public mimeType? : string;
@@ -78,8 +76,6 @@ class Representation {
     }
 
     this.index = args.index;
-
-    this.baseURL = args.baseURL;
   }
 
   getMimeTypeString() {

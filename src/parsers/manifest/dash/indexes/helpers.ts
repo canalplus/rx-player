@@ -15,6 +15,7 @@
  */
 
 import { ISegment } from "../../../../manifest";
+import { replaceSegmentDASHTokens } from "../helpers";
 
 interface IIndexSegment {
   ts: number; // start timestamp
@@ -122,7 +123,7 @@ function getInitSegment(
     time: 0,
     range: initialization.range || undefined,
     indexRange: index.indexRange || undefined,
-    media: initialization.media,
+    media: initialization.media || "",
     timescale: index.timescale,
   };
 }
@@ -186,7 +187,8 @@ function getSegmentsFromTimeline(
           range,
           duration: undefined,
           timescale,
-          media,
+          media: replaceSegmentDASHTokens(
+            media || "", ts, currentNumber != null ? currentNumber : undefined),
           number: currentNumber != null ? currentNumber : undefined,
         };
         segments.push(segment);
@@ -205,9 +207,10 @@ function getSegmentsFromTimeline(
         range,
         duration: d,
         timescale,
-        media,
+        media: replaceSegmentDASHTokens(media || "", segmentTime,  currentNumber != null ?
+          currentNumber + segmentNumberInCurrentRange : undefined),
         number: currentNumber != null ?
-        currentNumber + segmentNumberInCurrentRange : undefined,
+          currentNumber + segmentNumberInCurrentRange : undefined,
       };
       segments.push(segment);
 

@@ -26,6 +26,7 @@ class Player extends React.Component {
     const player = createModule(PlayerModule, {
       videoElement: this.videoElement,
       textTrackElement: this.textTrackElement,
+      overlayElement: this.overlayElement,
     });
 
     this._$destroySubject = new Subject();
@@ -94,18 +95,26 @@ class Player extends React.Component {
             loadVideo={loadVideo}
             stopVideo={stopVideo}
           />
-          <div className="video-player-wrapper">
+          <div
+            className="video-player-wrapper"
+            ref={element => this.playerWrapperElement = element }
+          >
             <div
               className="video-wrapper"
               onClick={() => this.onVideoClick()}
             >
               <ErrorDisplayer player={player} />
-              { displaySpinner ?
-                <img
-                  src="./assets/spinner.gif"r
-                  className="video-player-spinner"
-                /> : null
+              {
+                displaySpinner ?
+                  <img
+                    src="./assets/spinner.gif"r
+                    className="video-player-spinner"
+                  /> : null
               }
+              <div
+                className="overlay-wrapper"
+                ref={element => this.overlayElement = element }
+              />
               <div
                 className="text-track"
                 ref={element => this.textTrackElement = element }
@@ -114,7 +123,13 @@ class Player extends React.Component {
                 ref={element => this.videoElement = element }
               />
             </div>
-            { player ? <ControlBar player={player} /> : null}
+            {
+              player ?
+                <ControlBar
+                  player={player}
+                  videoElement={this.playerWrapperElement}
+                /> : null
+            }
           </div>
           {player ?  <PlayerKnobsManager player={player} /> : null}
           {player ?  <ChartsManager player={player} /> : null }

@@ -18,12 +18,13 @@ import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import Manifest, {
   Adaptation,
-  IRepresentationIndex,
   ISegment,
   Period,
   Representation,
 } from "../manifest";
+import IRepresentationIndex from "../manifest/representation_index/interfaces";
 import { IBifThumbnail } from "../parsers/images/bif";
+import { IParsedManifest } from "../parsers/manifest/types";
 
 // contains timings info on a single audio/video/text/image segment
 export interface ISegmentTimingInfos {
@@ -113,6 +114,7 @@ export interface ISegmentParserArguments<T> {
   representation : Representation;
   segment : ISegment;
   init? : ISegmentTimingInfos;
+  period : Period;
 }
 
 // -- response
@@ -158,10 +160,37 @@ export type ImageParserObservable = Observable<{
   segmentInfos : ISegmentTimingInfos|null;
 }>;
 
+export interface IMetaPlOverlayData {
+  start : number;
+  end : number;
+  version : number;
+  element : {
+    url : string;
+    format : string;
+    xAxis : string;
+    yAxis : string;
+    height : string;
+    width : string;
+  };
+}
+
+export interface IOverlayTrackSegmentData {
+  data : IMetaPlOverlayData[]; // overlay track data, in the given type
+  end : number; // end time time until which the segment apply
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each overlay
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data
+}
+
+export type IOverlayParserObservable = Observable<{
+  segmentData? : IOverlayTrackSegmentData;
+  segmentInfos : ISegmentTimingInfos;
+}>;
+
 interface ITransportManifestPipeline {
   // TODO Remove resolver
-  resolver?: (x : IManifestLoaderArguments) =>
-    Observable<IManifestLoaderArguments>;
+  resolver?: (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
   loader: (x : IManifestLoaderArguments) =>
     ILoaderObservable<Document|string>;
   parser: (x : IManifestParserArguments<Document|string>) =>
@@ -195,11 +224,20 @@ export interface ITransportImageSegmentPipeline {
     ImageParserObservable;
 }
 
+export interface ITransportOverlaySegmentPipeline {
+  // Note: The segment's data can be null for init segments
+  loader: (x : ISegmentLoaderArguments) =>
+    ILoaderObservable<Uint8Array|ArrayBuffer|null>;
+  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
+    IOverlayParserObservable;
+}
+
 export type ITransportSegmentPipeline =
   ITransportAudioSegmentPipeline |
   ITransportVideoSegmentPipeline |
   ITransportTextSegmentPipeline |
-  ITransportImageSegmentPipeline;
+  ITransportImageSegmentPipeline |
+  ITransportOverlaySegmentPipeline;
 
 export type ITransportPipeline =
   ITransportManifestPipeline |
@@ -211,6 +249,21 @@ export interface ITransportPipelines {
   video : ITransportVideoSegmentPipeline;
   text : ITransportTextSegmentPipeline;
   image : ITransportImageSegmentPipeline;
+  overlay: ITransportOverlaySegmentPipeline;
+}
+
+interface IParsedKeySystem {
+  systemId : string;
+  privateData : Uint8Array;
+}
+
+export interface IParserOptions {
+  segmentLoader? : CustomSegmentLoader;
+  manifestLoader?: CustomManifestLoader;
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
 }
 
 export interface ITransportOptions {
@@ -285,8 +338,6 @@ export interface IParsedContentProtection {
 }
 
 export interface IParsedRepresentation {
-  // required
-  baseURL : string;
   bitrate : number;
   index : IRepresentationIndex;
   id: string;

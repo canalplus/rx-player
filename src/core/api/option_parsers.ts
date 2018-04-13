@@ -125,6 +125,7 @@ interface ILoadVideoOptionsBase {
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
   networkConfig? : INetworkConfigOption;
+  overlayElement? : HTMLElement;
   startAt? : { position : number } | { wallClockTime : Date|number } |
     { percentage : number } | { fromLastPosition : number } |
     { fromFirstPosition : number };
@@ -153,6 +154,7 @@ interface IParsedLoadVideoOptionsBase {
   supplementaryImageTracks : ISupplementaryImageTrackOption[];
   defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack : IDefaultTextTrackOption|null|undefined;
+  overlayElement? : HTMLElement;
   startAt : IParsedStartAtOption|undefined;
 }
 
@@ -468,6 +470,7 @@ function parseLoadVideoOptions(
     hideNativeSubtitle,
     keySystems,
     networkConfig,
+    overlayElement: options.overlayElement,
     startAt,
     supplementaryImageTracks,
     supplementaryTextTracks,

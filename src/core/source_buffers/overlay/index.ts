@@ -20,25 +20,16 @@ import {
   onEnded$,
   onSeeked$,
   onSeeking$,
-} from "../../../../compat/events";
-import config from "../../../../config";
-import log from "../../../../utils/log";
-import AbstractSourceBuffer from "../../abstract_source_buffer";
-import TimedDataBufferManager from "../../utils/buffer_manager";
-import parseTextTrackToElements from "./parsers";
-
-export interface IHTMLTextTrackData {
-  timescale : number;
-  start : number;
-  end? : number;
-  data : string;
-  type : string;
-  language : string;
-  timeOffset : number;
-}
+} from "../../../compat/events";
+import config from "../../../config";
+import { IOverlayTrackSegmentData } from "../../../net/types";
+import log from "../../../utils/log";
+import AbstractSourceBuffer from "../abstract_source_buffer";
+import TimedDataBufferManager from "../utils/buffer_manager";
+import parseOverlayToElements from "./parsers";
 
 const {
-  MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL,
+  MAXIMUM_OVERLAY_TRACK_UPDATE_INTERVAL,
 } = config;
 
 /**
@@ -53,7 +44,7 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
 
   const manualRefresh$ = Observable.merge(seeked$, ended$);
   const autoRefresh$ = Observable
-    .interval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
+    .interval(MAXIMUM_OVERLAY_TRACK_UPDATE_INTERVAL)
     .startWith(null);
 
   // TODO Better way to express that
@@ -75,37 +66,43 @@ function safelyRemoveChild(element : Element, child : Element|null) {
     try {
       element.removeChild(child);
     } catch (e) {
-      log.warn("Can't remove text track: not in the element.");
+      log.warn("Can't remove overlay track: not in the element.");
     }
   }
+}
+
+export interface IOverlayBufferElement {
+  start : number;
+  end : number;
+  element : HTMLElement;
 }
 
 /**
  * Source buffer to display TextTracks in the given HTML element.
  * @class HTMLTextTrackSourceBuffer
  */
-export default class HTMLTextTrackSourceBuffer
-  extends AbstractSourceBuffer<IHTMLTextTrackData>
+export default class OverlayTrackSourceBuffer
+  extends AbstractSourceBuffer<IOverlayTrackSegmentData>
 {
   private _videoElement : HTMLMediaElement;
   private _destroy$ : Subject<void>;
-  private _textTrackElement : HTMLElement;
+  private _overlayTrackElement : HTMLElement;
 
   private _buffer : TimedDataBufferManager<HTMLElement>;
   private _currentElement : HTMLElement|null;
 
   /**
    * @param {HTMLMediaElement} videoElement
-   * @param {HTMLElement} textTrackElement
+   * @param {HTMLElement} overlayTrackElement
    */
   constructor(
     videoElement : HTMLMediaElement,
-    textTrackElement : HTMLElement
+    overlayTrackElement : HTMLElement
   ) {
-    log.debug("creating html text track source buffer");
+    log.debug("creating html overlay track source buffer");
     super();
     this._videoElement = videoElement;
-    this._textTrackElement = textTrackElement;
+    this._overlayTrackElement = overlayTrackElement;
     this._destroy$ = new Subject();
     this._buffer = new TimedDataBufferManager<HTMLElement>();
     this._currentElement = null;
@@ -114,8 +111,6 @@ export default class HTMLTextTrackSourceBuffer
       .takeUntil(this._destroy$)
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
-          safelyRemoveChild(textTrackElement, this._currentElement);
-          this._currentElement = null;
           return;
         }
 
@@ -123,47 +118,40 @@ export default class HTMLTextTrackSourceBuffer
         // As the clock is also based on real video events, we cannot just
         // divide by two the regular interval.
         const time = Math.max(this._videoElement.currentTime -
-          MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 2000, 0);
-        const cue = this._buffer.get(time);
-        if (!cue) {
-          safelyRemoveChild(textTrackElement, this._currentElement);
+          MAXIMUM_OVERLAY_TRACK_UPDATE_INTERVAL / 3000, 0);
+        const overlay = this._buffer.get(time);
+        if (!overlay) {
+          safelyRemoveChild(overlayTrackElement, this._currentElement);
           this._currentElement = null;
           return;
-        } else if (this._currentElement === cue.data) {
+        } else if (this._currentElement === overlay.data) {
           return;
         }
-        safelyRemoveChild(textTrackElement, this._currentElement);
-        this._currentElement = cue.data;
-        textTrackElement.appendChild(this._currentElement);
+        safelyRemoveChild(overlayTrackElement, this._currentElement);
+        this._currentElement = overlay.data;
+        overlayTrackElement.appendChild(this._currentElement);
       });
   }
 
   /**
-   * Append text tracks.
+   * Append overlay tracks.
    * @param {Object} data
-   * @param {string} data.type
-   * @param {string} data.data
-   * @param {string} data.language
-   * @param {Number} data.timescale
-   * @param {Number} data.start
-   * @param {Number} data.timeOffset
    * @param {Number|undefined} data.end
    */
-  _append(data : IHTMLTextTrackData) : void {
-    log.debug("appending new html text tracks", data);
+  _append(data : IOverlayTrackSegmentData) : void {
+    log.debug("appending new html overlay tracks", data);
     const {
-      timescale, // timescale for the start and end
-      start: timescaledStart, // exact beginning to which the track applies
-      end: timescaledEnd, // exact end to which the track applies
-      data: dataString, // text track content. Should be a string
-      type, // type of texttracks (e.g. "ttml" or "vtt")
-      language, // language the texttrack is in
+      timescale,
+      start: timescaledStart,
+      end: timescaledEnd,
+      data: overlayData,
+      type,
       timeOffset,
     } = data;
     if (timescaledEnd && timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
       /* tslint:disable:max-line-length */
-      log.warn("Invalid text track appended: the start time is inferior or equal to the end time.");
+      log.warn("Invalid overlay track appended: the start time is inferior or equal to the end time.");
       /* tslint:enable:max-line-length */
       return;
     }
@@ -172,13 +160,12 @@ export default class HTMLTextTrackSourceBuffer
     const endTime = timescaledEnd != null ?
       timescaledEnd / timescale : undefined;
 
-    const cues = parseTextTrackToElements(
-      type, dataString, timeOffset, language);
+    const overlays = parseOverlayToElements(type, overlayData, timeOffset);
     const start = startTime;
-    const end = endTime != null ? endTime : cues[cues.length - 1].end;
+    const end = endTime != null ? endTime : overlays[overlays.length - 1].end;
 
     // TODO define "element" as "data" from the beginning?
-    const formattedData = cues.map((cue) => ({
+    const formattedData = overlays.map((cue) => ({
       start: cue.start,
       end: cue.end,
       data: cue.element,
@@ -192,7 +179,7 @@ export default class HTMLTextTrackSourceBuffer
    * @param {Number} to
    */
   _remove(from : number, to : number) : void {
-    log.debug("removing html text track data", from, to);
+    log.debug("removing html overlay track data", from, to);
     this._buffer.remove(from, to);
     this.buffered.remove(from, to);
   }
@@ -201,9 +188,9 @@ export default class HTMLTextTrackSourceBuffer
    * Free up ressources from this sourceBuffer
    */
   _abort() : void {
-    log.debug("aborting html text track source buffer");
+    log.debug("aborting html overlay track source buffer");
     this._destroy$.next();
     this._destroy$.complete();
-    safelyRemoveChild(this._textTrackElement, this._currentElement);
+    safelyRemoveChild(this._overlayTrackElement, this._currentElement);
   }
 }
