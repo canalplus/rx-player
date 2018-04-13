@@ -95,7 +95,10 @@ class Player extends React.Component {
             loadVideo={loadVideo}
             stopVideo={stopVideo}
           />
-          <div className="video-player-wrapper">
+          <div
+            className="video-player-wrapper"
+            ref={element => this.playerWrapperElement = element }
+          >
             <div
               className="video-wrapper"
               onClick={() => this.onVideoClick()}
@@ -120,7 +123,13 @@ class Player extends React.Component {
                 ref={element => this.videoElement = element }
               />
             </div>
-            { player ? <ControlBar player={player} /> : null}
+            {
+              player ?
+                <ControlBar
+                  player={player}
+                  videoElement={this.playerWrapperElement}
+                /> : null
+            }
           </div>
           {player ?  <PlayerKnobsManager player={player} /> : null}
           {player ?  <ChartsManager player={player} /> : null }

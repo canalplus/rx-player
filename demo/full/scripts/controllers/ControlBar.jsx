@@ -15,6 +15,7 @@ const ControlBar = ({
   hasLoadedContent,
   isLive,
   player,
+  videoElement,
 }) => {
   const displayControls = hasLoadedContent;
 
@@ -55,6 +56,7 @@ const ControlBar = ({
           <FullscreenButton
             className={"control-button"}
             player={player}
+            videoElement={videoElement}
           />
         </div>
       </div>
