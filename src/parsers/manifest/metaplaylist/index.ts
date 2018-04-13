@@ -46,6 +46,9 @@ export default function parseMetaManifest(
         mimeType: string;
       }>;
   }>,
+  attributes: {
+    timeShiftBufferDepth: number;
+  },
   baseURL: string
 ): IParsedManifest {
 
@@ -75,10 +78,6 @@ export default function parseMetaManifest(
   const minBufferTime =
     contents.map(content => content.manifest.minBufferTime)
       .reduce((acc, val) => Math.min((acc || 0), (val || 0)), 0);
-
-  const timeShiftBufferDepth =
-    durations.map(duration => duration)
-      .reduce((acc, val) => Math.max((acc || 20), (val || 20)), 20);
 
   // 3 - Build new periods array
   const newPeriods: Array<{
@@ -144,7 +143,7 @@ export default function parseMetaManifest(
   const manifest = {
     availabilityStartTime: 0,
     presentationLiveGap,
-    timeShiftBufferDepth,
+    timeShiftBufferDepth: attributes.timeShiftBufferDepth,
     duration: Infinity,
     id: "gen-metaplaylist-man-" + generateNewId(),
     maxSegmentDuration,
