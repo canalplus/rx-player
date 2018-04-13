@@ -7,10 +7,11 @@ import React from "react";
  */
 export default ({
   className = "",
+  currentReadableHour
 }) => {
   return (
     <div className={"position-infos live " + className}>
-      Live
+      {currentReadableHour}
     </div>
   );
 };
