@@ -20,6 +20,14 @@ The MetaPlaylist file (.json) contains JSON representing contents and the versio
 
 ```json
 {
+    "metadata": {
+        "name": "Example",
+        "mplVersion": "1",
+        "generatedAt": "2018-04-17T09:56:34.596Z"
+    },
+    "attributes": {
+        "timeShiftBufferDepth": 100,
+    },
     "contents": [
         {
             "url": "http://mydash/dash.mpd",
@@ -34,26 +42,29 @@ The MetaPlaylist file (.json) contains JSON representing contents and the versio
             "transport": "smooth",
             "textTracks": {
                 "url": "http://mysmooth/fre_sub.vtt",
-                "language": "fr-FR",
+                "language": "fra",
                 "mimeType": "text/vtt", 
             },
         },
     ],
-    "version": 1,
 }
 ```
 
-Mandatory parameters for each content are:
-- url ( _type_: ``string`` ): The URL of original static content.
-- startTime ( _type_: ``number`` ): The start time from EPOCH time of current content.
-- endTime ( _type_: ``number`` ): The end time from EPOCH time of current content (end - start must equal real duration of content).
-- transport ( _type_: ``string`` ): Define the type of transport of content. Either "dash" or "smooth".
+Mandatory parameters are:
+- attributes:
+    - timeShiftBufferDepth ( _type_: ``number`` ): Defines the time shift buffer depth of live metaplaylist.
+- content:
+    - url ( _type_: ``string`` ): The URL of original static content.
+    - startTime ( _type_: ``number`` ): The start time from EPOCH time of current content.
+    - endTime ( _type_: ``number`` ): The end time from EPOCH time of current content (end - start must equal real duration of content).
+    - transport ( _type_: ``string`` ): Define the type of transport of content. Either "dash" or "smooth".
 
-Optionnal parameters for each content are:
-- textTracks ( _type_: ``Object`` ): An array of text tracks info:
-    - url ( _type_: ``string``): The URL of the text track.
-    - language ( _type_ : ``string`` ): The language of the text track.
-    - mimeType ( _type_: ``string`` ): The mimeType of the text track.
+Optionnal parameters are:
+- content:
+    - textTracks ( _type_: ``Object`` ): An array of text tracks info:
+        - url ( _type_: ``string``): The URL of the text track.
+        - language ( _type_ : ``string`` ): The language of the text track (in ISO 639-2 or ISO 639-3 format).
+        - mimeType ( _type_: ``string`` ): The mimeType of the text track.
 
 ## <a name="logic"></a>The logic behind
 
