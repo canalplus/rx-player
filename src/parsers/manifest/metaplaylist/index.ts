@@ -97,7 +97,11 @@ export default function parseMetaManifest(
           representations: [{
             mimeType: track.mimeType,
             bitrate: 0,
-            index: new StaticRepresentationIndex({ media: track.url }),
+            index: new StaticRepresentationIndex({
+              media: track.url,
+              startTime: parsedPeriod.start,
+              endTime: parsedPeriod.end || Number.MAX_VALUE,
+            }),
             id: "gen-text-rep-" + generateNewId(),
           }],
           type: "text",
