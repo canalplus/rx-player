@@ -531,8 +531,11 @@ export default class LanguageManager {
       const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
       if (
-        chosenAudioAdaptation !== undefined &&
-        arrayIncludes(audioAdaptations, chosenAudioAdaptation)
+        chosenAudioAdaptation === null ||
+        (
+          chosenAudioAdaptation !== undefined &&
+          arrayIncludes(audioAdaptations, chosenAudioAdaptation)
+        )
       ) {
         // Already best audio for this Buffer, check next one
         recursiveUpdateAudioTrack(index + 1);
@@ -576,8 +579,11 @@ export default class LanguageManager {
       const chosenTextAdaptation = this._textChoiceMemory.get(period);
 
       if (
-        chosenTextAdaptation !== undefined &&
-        arrayIncludes(textAdaptations, chosenTextAdaptation)
+        chosenTextAdaptation === null ||
+        (
+          chosenTextAdaptation !== undefined &&
+          arrayIncludes(textAdaptations, chosenTextAdaptation)
+        )
       ) {
         // Already best text for this Buffer, check next one
         recursiveUpdateTextTrack(index + 1);
