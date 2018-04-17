@@ -12,7 +12,7 @@
 
 ### Other improvements
 
-  - buffer: update download queue immediately when seeking to an already-buffered part to limit seeking time
+  - buffer: update download queue immediately when seeking to an already-buffered part
   - buffer: schedule segments per level of priority to lower some buffering/seeking/loading time
   - demo: fix "Big Buck Bunny WEBM"'s URL
 
