@@ -2307,86 +2307,6 @@ exports.subscribeToResult = subscribeToResult;
 
 "use strict";
 
-
-function find(array, predicate, context) {
-  if (typeof Array.prototype.find === 'function') {
-    return array.find(predicate, context);
-  }
-
-  context = context || this;
-  var length = array.length;
-  var i;
-
-  if (typeof predicate !== 'function') {
-    throw new TypeError(predicate + ' is not a function');
-  }
-
-  for (i = 0; i < length; i++) {
-    if (predicate.call(context, array[i], i, array)) {
-      return array[i];
-    }
-  }
-}
-
-module.exports = find;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var Observable_1 = __webpack_require__(0);
-__webpack_require__(73);
-function castToObservable(value) {
-    if (value instanceof Observable_1.Observable) {
-        return value;
-    }
-    if (value && typeof value.subscribe === "function") {
-        var valObsLike_1 = value;
-        return new Observable_1.Observable(function (obs) {
-            var sub = valObsLike_1.subscribe(function (val) { obs.next(val); }, function (err) { obs.error(err); }, function () { obs.complete(); });
-            return function () {
-                if (sub && sub.dispose) {
-                    sub.dispose();
-                }
-                else if (sub && sub.unsubscribe) {
-                    sub.unsubscribe();
-                }
-            };
-        });
-    }
-    if (value && typeof value.then === "function") {
-        return Observable_1.Observable.fromPromise(value);
-    }
-    return Observable_1.Observable.of(value);
-}
-exports.default = castToObservable;
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -2467,6 +2387,86 @@ function arrayIncludes(arr, searchElement, fromIndex) {
     return false;
 }
 exports.default = arrayIncludes;
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function find(array, predicate, context) {
+  if (typeof Array.prototype.find === 'function') {
+    return array.find(predicate, context);
+  }
+
+  context = context || this;
+  var length = array.length;
+  var i;
+
+  if (typeof predicate !== 'function') {
+    throw new TypeError(predicate + ' is not a function');
+  }
+
+  for (i = 0; i < length; i++) {
+    if (predicate.call(context, array[i], i, array)) {
+      return array[i];
+    }
+  }
+}
+
+module.exports = find;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(0);
+__webpack_require__(73);
+function castToObservable(value) {
+    if (value instanceof Observable_1.Observable) {
+        return value;
+    }
+    if (value && typeof value.subscribe === "function") {
+        var valObsLike_1 = value;
+        return new Observable_1.Observable(function (obs) {
+            var sub = valObsLike_1.subscribe(function (val) { obs.next(val); }, function (err) { obs.error(err); }, function () { obs.complete(); });
+            return function () {
+                if (sub && sub.dispose) {
+                    sub.dispose();
+                }
+                else if (sub && sub.unsubscribe) {
+                    sub.unsubscribe();
+                }
+            };
+        });
+    }
+    if (value && typeof value.then === "function") {
+        return Observable_1.Observable.fromPromise(value);
+    }
+    return Observable_1.Observable.of(value);
+}
+exports.default = castToObservable;
 
 
 /***/ }),
@@ -7444,7 +7444,7 @@ var _1 = __webpack_require__(7);
 var events_1 = __webpack_require__(18);
 var errors_1 = __webpack_require__(8);
 var assert_1 = __webpack_require__(4);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 var log_1 = __webpack_require__(1);
 var noop_1 = __webpack_require__(24);
 var globals_1 = __webpack_require__(58);
@@ -7978,7 +7978,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var assert_1 = __webpack_require__(4);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 var eventemitter_1 = __webpack_require__(30);
 var rx_tryCatch_1 = __webpack_require__(59);
 var time_ranges_1 = __webpack_require__(327);
@@ -8123,8 +8123,8 @@ exports.default = getParentElementsByTagName;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
-var array_includes_1 = __webpack_require__(14);
+var arrayFind = __webpack_require__(13);
+var array_includes_1 = __webpack_require__(12);
 var starts_with_1 = __webpack_require__(335);
 /**
  * Retrieve the attributes given in arguments in the given elements and their
@@ -8330,8 +8330,8 @@ exports.REGXP_4_HEX_COLOR = REGXP_4_HEX_COLOR;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
-var array_includes_1 = __webpack_require__(14);
+var arrayFind = __webpack_require__(13);
+var array_includes_1 = __webpack_require__(12);
 /**
  * Creates an Array automatically sorted with the sorting function given to the
  * constructor when the add method is called.
@@ -9576,7 +9576,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Observable_1 = __webpack_require__(0);
 var Subject_1 = __webpack_require__(6);
 var bytes_1 = __webpack_require__(26);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 var eventemitter_1 = __webpack_require__(30);
 var constants_1 = __webpack_require__(53);
 var events = __webpack_require__(18);
@@ -11254,7 +11254,7 @@ exports.default = AdaptationBufferManager;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
 var objectAssign = __webpack_require__(5);
 var id_1 = __webpack_require__(20);
 var representation_1 = __webpack_require__(103);
@@ -11440,7 +11440,7 @@ var Observable_1 = __webpack_require__(0);
 var Subject_1 = __webpack_require__(6);
 var config_1 = __webpack_require__(3);
 var errors_1 = __webpack_require__(8);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 var rx_tryCatch_1 = __webpack_require__(59);
 var backoff_1 = __webpack_require__(321);
 var MAX_BACKOFF_DELAY_BASE = config_1.default.MAX_BACKOFF_DELAY_BASE, INITIAL_BACKOFF_DELAY_BASE = config_1.default.INITIAL_BACKOFF_DELAY_BASE;
@@ -20153,7 +20153,7 @@ var Player = /** @class */ (function (_super) {
                 }
                 else {
                     this._priv_languageManager.addPeriod(type, period, adaptation$);
-                    this._priv_languageManager.setPreferredAudioTrack(period);
+                    this._priv_languageManager.setInitialAudioTrack(period);
                 }
                 break;
             case "text":
@@ -20163,7 +20163,7 @@ var Player = /** @class */ (function (_super) {
                 }
                 else {
                     this._priv_languageManager.addPeriod(type, period, adaptation$);
-                    this._priv_languageManager.setPreferredTextTrack(period);
+                    this._priv_languageManager.setInitialTextTrack(period);
                 }
                 break;
             default:
@@ -20853,7 +20853,7 @@ exports.setMediaKeys = setMediaKeys_1.default;
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var Observable_1 = __webpack_require__(0);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 var MediaKeys_1 = __webpack_require__(86);
 /**
  * Set the MediaKeys given on the media element.
@@ -21321,26 +21321,41 @@ function default_1(options) {
         loader: function (_a) {
             var segment = _a.segment, representation = _a.representation;
             if (segment.isInit) {
-                return Observable_1.Observable.empty();
+                return Observable_1.Observable.of({
+                    type: "data",
+                    value: { responseData: null },
+                });
             }
-            var mimeType = representation.mimeType;
+            // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
+            var responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
             var base = url_1.resolveURL(representation.baseURL);
             var url = utils_1.buildSegmentURL(base, representation, segment);
-            return request_1.default({
-                url: url,
-                responseType: (mimeType && mimeType.indexOf("mp4") >= 0) ?
-                    "arraybuffer" : "text",
-            });
+            return request_1.default({ url: url, responseType: responseType });
         },
         parser: function (_a) {
             var response = _a.response, segment = _a.segment, representation = _a.representation, adaptation = _a.adaptation, manifest = _a.manifest;
             var language = adaptation.language;
             var _b = representation.mimeType, mimeType = _b === void 0 ? "" : _b, _c = representation.codec, codec = _c === void 0 ? "" : _c;
             if (false) {
-                assert_1.default(typeof response.responseData === "string" ||
-                    response.responseData instanceof ArrayBuffer);
+                if (segment.isInit) {
+                    assert_1.default(response.responseData === null);
+                }
+                else {
+                    assert_1.default(typeof response.responseData === "string" ||
+                        response.responseData instanceof ArrayBuffer);
+                }
             }
             var responseData = response.responseData;
+            if (responseData === null) {
+                return Observable_1.Observable.of({
+                    segmentData: null,
+                    segmentInfos: segment.timescale > 0 ? {
+                        duration: segment.isInit ? 0 : segment.duration,
+                        time: segment.isInit ? -1 : segment.time,
+                        timescale: segment.timescale,
+                    } : null,
+                });
+            }
             var parsedResponse;
             var nextSegments;
             var segmentInfos = null;
@@ -21438,37 +21453,46 @@ function default_1(options) {
         loader: function (_a) {
             var segment = _a.segment, representation = _a.representation;
             if (segment.isInit) {
-                return Observable_1.Observable.empty();
-            }
-            else {
-                var baseURL = url_1.resolveURL(representation.baseURL);
-                var url = utils_1.buildSegmentURL(baseURL, representation, segment);
-                return request_1.default({
-                    url: url,
-                    responseType: "arraybuffer",
+                // image do not need an init segment. Passthrough directly to the parser
+                return Observable_1.Observable.of({
+                    type: "data",
+                    value: { responseData: null },
                 });
             }
+            var baseURL = url_1.resolveURL(representation.baseURL);
+            var url = utils_1.buildSegmentURL(baseURL, representation, segment);
+            return request_1.default({ url: url, responseType: "arraybuffer" });
         },
         parser: function (_a) {
-            var response = _a.response;
+            var response = _a.response, segment = _a.segment;
             var responseData = response.responseData;
-            var blob = new Uint8Array(responseData);
-            var bif = bif_1.default(blob);
-            var data = bif.thumbs;
-            var segmentInfos = {
-                time: 0,
-                duration: Number.MAX_VALUE,
-                timescale: bif.timescale,
-            };
-            var segmentData = {
-                data: data,
-                start: 0,
-                end: Number.MAX_VALUE,
-                timescale: 1,
-                timeOffset: 0,
-                type: "bif",
-            };
-            return Observable_1.Observable.of({ segmentData: segmentData, segmentInfos: segmentInfos });
+            if (responseData === null) {
+                return Observable_1.Observable.of({
+                    segmentData: null,
+                    segmentInfos: segment.timescale > 0 ? {
+                        duration: segment.isInit ? 0 : segment.duration,
+                        time: segment.isInit ? -1 : segment.time,
+                        timescale: segment.timescale,
+                    } : null,
+                });
+            }
+            var bifObject = bif_1.default(new Uint8Array(responseData));
+            var data = bifObject.thumbs;
+            return Observable_1.Observable.of({
+                segmentData: {
+                    data: data,
+                    start: 0,
+                    end: Number.MAX_VALUE,
+                    timescale: 1,
+                    timeOffset: 0,
+                    type: "bif",
+                },
+                segmentInfos: {
+                    time: 0,
+                    duration: Number.MAX_VALUE,
+                    timescale: bifObject.timescale,
+                },
+            });
         },
     };
     return {
@@ -21480,6 +21504,15 @@ function default_1(options) {
     };
 }
 exports.default = default_1;
+/**
+ * Returns true if the given texttrack segment represents a textrack embedded
+ * in a mp4 file.
+ * @param {Representation} representation
+ * @returns {Boolean}
+ */
+function isMP4EmbeddedTrack(representation) {
+    return !!representation.mimeType && representation.mimeType.indexOf("mp4") >= 0;
+}
 
 
 /***/ }),
@@ -21686,7 +21719,7 @@ exports.getMDIA = getMDIA;
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var config_1 = __webpack_require__(3);
-var array_includes_1 = __webpack_require__(14);
+var array_includes_1 = __webpack_require__(12);
 var assert_1 = __webpack_require__(4);
 var bytes_1 = __webpack_require__(26);
 var id_1 = __webpack_require__(20);
@@ -22773,34 +22806,27 @@ var SmoothRepresentationIndex = /** @class */ (function () {
     /**
      * Returns true if, based on the arguments, the index should be refreshed.
      * (If we should re-fetch the manifest)
-     * @param {Array.<Object>} parsedSegments
      * @param {Number} from
      * @param {Number} to
      * @returns {Boolean}
      */
-    SmoothRepresentationIndex.prototype.shouldRefresh = function (parsedSegments, up, to) {
+    SmoothRepresentationIndex.prototype.shouldRefresh = function (up, to) {
         var _a = this._index, timeline = _a.timeline, timescale = _a.timescale;
-        var lastSegmentInTimeline = timeline[timeline.length - 1];
-        if (!lastSegmentInTimeline) {
+        var lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
+        if (!lastSegmentInCurrentTimeline) {
             return false;
         }
-        var repeat = lastSegmentInTimeline.r || 0;
-        var endOfLastSegment = lastSegmentInTimeline.ts + repeat * lastSegmentInTimeline.d;
-        if (to * timescale < endOfLastSegment) {
+        var repeat = lastSegmentInCurrentTimeline.r || 0;
+        var endOfLastSegmentInCurrentTimeline = lastSegmentInCurrentTimeline.ts + (repeat + 1) * lastSegmentInCurrentTimeline.d;
+        if (to * timescale < endOfLastSegmentInCurrentTimeline) {
             return false;
         }
-        if (up * timescale >= endOfLastSegment) {
+        if (up * timescale >= endOfLastSegmentInCurrentTimeline) {
             return true;
         }
-        var lastParsedSegment = parsedSegments[parsedSegments.length - 1];
-        if (!lastParsedSegment) {
-            return false;
-        }
-        var startOfLastSegment = lastSegmentInTimeline.ts + repeat * lastSegmentInTimeline.d;
-        if (startOfLastSegment > lastParsedSegment.time) {
-            return false;
-        }
-        return true;
+        // ----
+        var startOfLastSegmentInCurrentTimeline = lastSegmentInCurrentTimeline.ts + repeat * lastSegmentInCurrentTimeline.d;
+        return up > startOfLastSegmentInCurrentTimeline;
     };
     /**
      * Returns first position in the index.
@@ -23100,33 +23126,26 @@ function default_1(options) {
         },
         parser: function (_a) {
             var segment = _a.segment, representation = _a.representation, response = _a.response, init = _a.init;
-            var responseData = response.responseData instanceof Uint8Array
-                ? response.responseData
-                : new Uint8Array(response.responseData);
-            var nextSegments;
-            var segmentInfos = null;
-            var segmentData = responseData;
+            var segmentData = response.responseData instanceof Uint8Array ?
+                response.responseData :
+                new Uint8Array(response.responseData);
             var indexRange = segment.indexRange;
-            var sidxSegments = isobmff_1.parseSidx(responseData, indexRange ? indexRange[0] : 0);
-            if (segment.isInit) {
-                if (sidxSegments) {
-                    nextSegments = sidxSegments;
-                    utils_1.addNextSegments(representation, nextSegments);
-                }
-                var timescale = isobmff_1.getMDHDTimescale(responseData);
-                if (timescale > 0) {
-                    segmentInfos = {
-                        time: -1,
-                        duration: 0,
-                        timescale: timescale,
-                    };
-                }
+            var sidxSegments = isobmff_1.parseSidx(segmentData, indexRange ? indexRange[0] : 0);
+            if (!segment.isInit) {
+                return Observable_1.Observable.of({
+                    segmentData: segmentData,
+                    segmentInfos: isobmff_timing_infos_1.default(segment, segmentData, sidxSegments, init),
+                });
             }
-            else {
-                segmentInfos =
-                    isobmff_timing_infos_1.default(segment, responseData, sidxSegments, init);
+            if (sidxSegments) {
+                var nextSegments = sidxSegments;
+                utils_1.addNextSegments(representation, nextSegments);
             }
-            return Observable_1.Observable.of({ segmentData: segmentData, segmentInfos: segmentInfos });
+            var timescale = isobmff_1.getMDHDTimescale(segmentData);
+            return Observable_1.Observable.of({
+                segmentData: segmentData,
+                segmentInfos: timescale > 0 ? { time: -1, duration: 0, timescale: timescale } : null,
+            });
         },
     };
     var textTrackPipeline = {
@@ -23136,41 +23155,48 @@ function default_1(options) {
     var imageTrackPipeline = {
         loader: function (_a) {
             var segment = _a.segment, representation = _a.representation;
-            var isInit = segment.isInit;
-            if (isInit) {
-                return Observable_1.Observable.empty();
-            }
-            else {
-                var media = segment.media;
-                var path = media ?
-                    utils_1.replaceTokens(media, segment, representation) : "";
-                var mediaUrl = url_1.resolveURL(representation.baseURL, path);
-                return request_1.default({
-                    url: mediaUrl,
-                    responseType: "arraybuffer",
+            if (segment.isInit) {
+                // image do not need an init segment. Passthrough directly to the parser
+                return Observable_1.Observable.of({
+                    type: "data",
+                    value: { responseData: null },
                 });
             }
+            var media = segment.media;
+            var path = media ? utils_1.replaceTokens(media, segment, representation) : "";
+            var url = url_1.resolveURL(representation.baseURL, path);
+            return request_1.default({ url: url, responseType: "arraybuffer" });
         },
         parser: function (_a) {
-            var response = _a.response;
+            var response = _a.response, segment = _a.segment;
             var responseData = response.responseData;
-            var blob = new Uint8Array(responseData);
-            var bif = bif_1.default(blob);
-            var data = bif.thumbs;
-            var segmentInfos = {
-                time: 0,
-                duration: Number.MAX_VALUE,
-                timescale: bif.timescale,
-            };
-            var segmentData = {
-                data: data,
-                start: 0,
-                end: Number.MAX_VALUE,
-                timescale: 1,
-                timeOffset: 0,
-                type: "bif",
-            };
-            return Observable_1.Observable.of({ segmentData: segmentData, segmentInfos: segmentInfos });
+            if (responseData === null) {
+                return Observable_1.Observable.of({
+                    segmentData: null,
+                    segmentInfos: segment.timescale > 0 ? {
+                        duration: segment.isInit ? 0 : segment.duration,
+                        time: segment.isInit ? -1 : segment.time,
+                        timescale: segment.timescale,
+                    } : null,
+                });
+            }
+            var bifObject = bif_1.default(new Uint8Array(responseData));
+            var data = bifObject.thumbs;
+            return Observable_1.Observable.of({
+                segmentData: {
+                    data: data,
+                    start: 0,
+                    end: Number.MAX_VALUE,
+                    timescale: 1,
+                    timeOffset: 0,
+                    type: "bif",
+                },
+                segmentInfos: {
+                    time: 0,
+                    duration: Number.MAX_VALUE,
+                    timescale: bifObject.timescale,
+                },
+            });
         },
     };
     return {
@@ -23247,7 +23273,7 @@ exports.default = parseFromDocument;
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var config_1 = __webpack_require__(3);
-var array_includes_1 = __webpack_require__(14);
+var array_includes_1 = __webpack_require__(12);
 var id_1 = __webpack_require__(20);
 var languages_1 = __webpack_require__(34);
 var log_1 = __webpack_require__(1);
@@ -23989,12 +24015,11 @@ var ListRepresentationIndex = /** @class */ (function () {
     /**
      * Returns true if, based on the arguments, the index should be refreshed.
      * (If we should re-fetch the manifest)
-     * @param {Array.<Object>} _
      * @param {Number} up
      * @param {Number} to
      * @returns {Boolean}
      */
-    ListRepresentationIndex.prototype.shouldRefresh = function (_, _up, to) {
+    ListRepresentationIndex.prototype.shouldRefresh = function (_up, to) {
         var _a = this._index, timescale = _a.timescale, duration = _a.duration, list = _a.list, _b = _a.presentationTimeOffset, presentationTimeOffset = _b === void 0 ? 0 : _b;
         var scaledTo = to * timescale - presentationTimeOffset;
         var i = Math.floor(scaledTo / duration);
@@ -24322,12 +24347,11 @@ var TimelineRepresentationIndex = /** @class */ (function () {
     };
     /**
      * Returns true if, based on the arguments, the index should be refreshed.
-     * @param {Array.<Object>} _
      * @param {Number} _up
      * @param {Number} _to
      * @returns {Boolean}
      */
-    TimelineRepresentationIndex.prototype.shouldRefresh = function (_, _up, to) {
+    TimelineRepresentationIndex.prototype.shouldRefresh = function (_up, to) {
         var _a = this._index, timeline = _a.timeline, timescale = _a.timescale, _b = _a.presentationTimeOffset, presentationTimeOffset = _b === void 0 ? 0 : _b;
         var scaledTo = to * timescale - presentationTimeOffset;
         var last = timeline[timeline.length - 1];
@@ -25602,42 +25626,26 @@ var isobmff_timing_infos_1 = __webpack_require__(92);
 var utils_1 = __webpack_require__(56);
 /**
  * Perform requests for "text" segments
- * TODO DRY this (code too similar to segmentPipeline)
- *
  * @param {Object} infos
- * @param {Segment} infos.segment
- * @param {Representation} infos.representation
  * @returns {Observable.<Object>}
  */
 function TextTrackLoader(_a) {
     var segment = _a.segment, representation = _a.representation;
     var media = segment.media, range = segment.range, indexRange = segment.indexRange, isInit = segment.isInit;
-    /**
-     * ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
-     * @type string
-     */
-    var responseType = utils_1.isMP4EmbeddedTrack(representation) ?
-        "arraybuffer" : "text";
+    // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
+    var responseType = utils_1.isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
     // init segment without initialization media/range/indexRange:
     // we do nothing on the network
     if (isInit && !(media || range || indexRange)) {
-        return Observable_1.Observable.empty();
+        return Observable_1.Observable.of({
+            type: "data",
+            value: { responseData: null },
+        });
     }
-    /**
-     * filename
-     * @type string
-     */
-    var path = media ?
-        utils_1.replaceTokens(media, segment, representation) : "";
-    /**
-     * Complete path of the segment.
-     * @type string
-     */
+    var path = media ? utils_1.replaceTokens(media, segment, representation) : "";
     var mediaUrl = url_1.resolveURL(representation.baseURL, path);
-    // fire a single time contiguous init and index ranges.
-    // TODO Find a solution for indicating that special case to the parser
-    if (range && indexRange &&
-        range[1] === indexRange[0] - 1) {
+    // fire a single time for contiguous init and index ranges
+    if (range && indexRange && range[1] === indexRange[0] - 1) {
         return request_1.default({
             url: mediaUrl,
             responseType: responseType,
@@ -25646,55 +25654,49 @@ function TextTrackLoader(_a) {
             },
         });
     }
-    /**
-     * Segment request.
-     * @type Observable.<Object>
-     */
-    var mediaOrInitRequest = request_1.default({
+    var mediaRequest = request_1.default({
         url: mediaUrl,
         responseType: responseType,
         headers: range ? {
             Range: utils_1.byteRange(range),
         } : null,
     });
+    if (!indexRange) {
+        return mediaRequest;
+    }
     // If init segment has indexRange metadata, we need to fetch
     // both the initialization data and the index metadata. We do
     // this in parallel and send the both blobs into the pipeline.
     // TODO Find a solution for calling only one time the parser
-    if (indexRange) {
-        var indexRequest = request_1.default({
-            url: mediaUrl,
-            responseType: responseType,
-            headers: {
-                Range: utils_1.byteRange(indexRange),
-            },
-        });
-        // TypeScript just break here, supposedly for the responseType
-        // TODO A TS Bug? Open an issue. Investigate first.
-        return Observable_1.Observable.merge(mediaOrInitRequest, indexRequest);
-    }
-    else {
-        // TypeScript just break here, supposedly for the responseType
-        // TODO A TS Bug? Open an issue. Investigate first.
-        return mediaOrInitRequest;
-    }
+    var indexRequest = request_1.default({
+        url: mediaUrl,
+        responseType: responseType,
+        headers: {
+            Range: utils_1.byteRange(indexRange),
+        },
+    });
+    return Observable_1.Observable.merge(mediaRequest, indexRequest);
 }
 exports.loader = TextTrackLoader;
 /**
  * Parse TextTrack data.
- *
  * @param {Object} infos
- * @param {Segment} infos.segment
- * @param {Manifest} infos.manifest
- * @param {Adaptation} infos.adaptation
- * @param {Representation} infos.representation
- * @param {Object} infos.init
  * @returns {Observable.<Object>}
  */
 function TextTrackParser(_a) {
     var response = _a.response, segment = _a.segment, adaptation = _a.adaptation, representation = _a.representation, init = _a.init;
     var language = adaptation.language;
     var isInit = segment.isInit, indexRange = segment.indexRange;
+    if (response.responseData == null) {
+        return Observable_1.Observable.of({
+            segmentData: null,
+            segmentInfos: segment.timescale > 0 ? {
+                duration: segment.isInit ? 0 : segment.duration,
+                time: segment.isInit ? -1 : segment.time,
+                timescale: segment.timescale,
+            } : null,
+        });
+    }
     var responseData;
     var nextSegments;
     var segmentInfos;
@@ -25736,7 +25738,7 @@ function TextTrackParser(_a) {
                 };
             }
         }
-        segmentData = undefined;
+        segmentData = null;
     }
     else {
         assert_1.default(segmentInfos != null);
@@ -25864,7 +25866,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var Observable_1 = __webpack_require__(0);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 var log_1 = __webpack_require__(1);
 var abstract_1 = __webpack_require__(95);
 var hash_init_data_1 = __webpack_require__(96);
@@ -26183,7 +26185,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Observable_1 = __webpack_require__(0);
 var compat_1 = __webpack_require__(7);
 var config_1 = __webpack_require__(3);
-var array_includes_1 = __webpack_require__(14);
+var array_includes_1 = __webpack_require__(12);
 var log_1 = __webpack_require__(1);
 var errors_1 = __webpack_require__(8);
 var EME_DEFAULT_WIDEVINE_ROBUSTNESSES = config_1.default.EME_DEFAULT_WIDEVINE_ROBUSTNESSES, EME_KEY_SYSTEMS = config_1.default.EME_KEY_SYSTEMS;
@@ -26442,7 +26444,7 @@ exports.default = findCompatibleKeySystem;
 Object.defineProperty(exports, "__esModule", { value: true });
 var Observable_1 = __webpack_require__(0);
 var EncryptedMediaError_1 = __webpack_require__(87);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 /**
  * Call the setServerCertificate API with the given certificate.
  * Complete when worked, throw when failed.
@@ -26512,8 +26514,8 @@ var objectAssign = __webpack_require__(5);
 var Observable_1 = __webpack_require__(0);
 var TimeoutError_1 = __webpack_require__(83);
 var errors_1 = __webpack_require__(8);
-var array_includes_1 = __webpack_require__(14);
-var castToObservable_1 = __webpack_require__(13);
+var array_includes_1 = __webpack_require__(12);
+var castToObservable_1 = __webpack_require__(14);
 var log_1 = __webpack_require__(1);
 var noop_1 = __webpack_require__(24);
 var retry_1 = __webpack_require__(97);
@@ -27179,7 +27181,7 @@ exports.default = Stream;
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var Observable_1 = __webpack_require__(0);
-var castToObservable_1 = __webpack_require__(13);
+var castToObservable_1 = __webpack_require__(14);
 var noop_1 = __webpack_require__(24);
 /**
  * Throttle an asynchronous function (returning an Observable or Promise) to
@@ -28125,7 +28127,7 @@ exports.default = filterByBitrate;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
 /**
  * Filter representations based on their width:
  *   - the highest width considered will be the one linked to the first
@@ -28351,18 +28353,10 @@ function RepresentationBuffer(_a) {
                 representation: representation,
                 segment: segment,
             }, priority);
-            currentSegmentRequest = {
-                segment: segment,
-                priority: priority,
-                request$: request$,
-            };
-            var responseWithSegment$ = request$
-                .map(function (args) { return objectAssign({ segment: segment }, args); });
-            return responseWithSegment$
-                .mergeMap(function (pipelineData) {
-                return Observable_1.Observable.of(pipelineData)
-                    .concat(requestNextSegment$);
-            });
+            currentSegmentRequest = { segment: segment, priority: priority, request$: request$ };
+            return request$
+                .map(function (args) { return objectAssign({ segment: segment }, args); })
+                .concat(requestNextSegment$);
         });
         return requestNextSegment$
             .finally(function () {
@@ -28382,6 +28376,11 @@ function RepresentationBuffer(_a) {
             var segmentData = data.parsed.segmentData;
             if (segment.isInit) {
                 initSegmentObject = { segmentData: segmentData, segmentInfos: segmentInfos };
+            }
+            if (segmentData == null) {
+                // no segmentData to add here (for example, a text init segment)
+                // just complete directly without appending anything
+                return Observable_1.Observable.empty();
             }
             var initSegmentData = initSegmentObject && initSegmentObject.segmentData;
             var append$ = append_data_1.default(clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
@@ -28428,7 +28427,7 @@ function RepresentationBuffer(_a) {
         var buffered = queuedSourceBuffer.getBuffered();
         var neededRange = get_wanted_range_1.default(period, buffered, timing, bufferGoal, paddings);
         var discontinuity = getCurrentDiscontinuity(content, timing);
-        var shouldRefreshManifest = shouldRefreshManifestForRange(content, segmentBookkeeper, neededRange);
+        var shouldRefreshManifest = shouldRefreshManifestForRange(content, neededRange);
         // /!\ Side effect to the SegmentBookkeeper
         segmentBookkeeper.synchronizeBuffered(buffered);
         var neededSegments = get_segments_needed_1.default(representation, neededRange, {
@@ -28572,14 +28571,10 @@ function getCurrentDiscontinuity(_a, timing) {
  * @param {Object} wantedRange
  * @returns {Boolean}
  */
-function shouldRefreshManifestForRange(_a, segmentBookkeeper, wantedRange) {
+function shouldRefreshManifestForRange(_a, wantedRange) {
     var representation = _a.representation;
     var start = wantedRange.start, end = wantedRange.end;
-    // TODO Better solution for HSS refresh?
-    // get every segments currently downloaded and loaded
-    var segments = segmentBookkeeper.inventory
-        .map(function (s) { return s.infos.segment; });
-    return representation.index.shouldRefresh(segments, start, end);
+    return representation.index.shouldRefresh(start, end);
 }
 /**
  * @param {number} discontinuity
@@ -29370,7 +29365,7 @@ function filterSupportedRepresentations(adaptationType, representations) {
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
 var assert_1 = __webpack_require__(4);
 var id_1 = __webpack_require__(20);
 var languages_1 = __webpack_require__(34);
@@ -29692,7 +29687,7 @@ exports.default = Manifest;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
 var id_1 = __webpack_require__(20);
 var languages_1 = __webpack_require__(34);
 var adaptation_1 = __webpack_require__(102);
@@ -30196,7 +30191,7 @@ exports.default = applyPrioritizerToSegmentFetcher;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
 var Observable_1 = __webpack_require__(0);
 var Subject_1 = __webpack_require__(6);
 /**
@@ -31775,7 +31770,7 @@ exports.default = parseSami;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
 var objectAssign = __webpack_require__(5);
 var getParameters_1 = __webpack_require__(106);
 var getParentElementsByTagName_1 = __webpack_require__(62);
@@ -32984,7 +32979,7 @@ function parseCue(cueBlock, timeOffset, styleElements) {
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var array_includes_1 = __webpack_require__(14);
+var array_includes_1 = __webpack_require__(12);
 /**
  * Format WebVTT tags and classes into usual HTML.
  * <b *> => <b>
@@ -33546,7 +33541,7 @@ exports.default = parseTextTrackToCues;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var array_includes_1 = __webpack_require__(14);
+var array_includes_1 = __webpack_require__(12);
 var index_1 = __webpack_require__(7);
 // Simple VTT to VTTCue parser:
 // Just parse cues and associated settings.
@@ -33817,7 +33812,7 @@ function setSettingsOnCue(settings, cue) {
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
 var objectAssign = __webpack_require__(5);
 var compat_1 = __webpack_require__(7);
 var getParameters_1 = __webpack_require__(106);
@@ -34347,7 +34342,7 @@ var ReplaySubject_1 = __webpack_require__(38);
 var Subject_1 = __webpack_require__(6);
 var config_1 = __webpack_require__(3);
 var errors_1 = __webpack_require__(8);
-var array_includes_1 = __webpack_require__(14);
+var array_includes_1 = __webpack_require__(12);
 var initialization_segment_cache_1 = __webpack_require__(354);
 var log_1 = __webpack_require__(1);
 var sorted_list_1 = __webpack_require__(65);
@@ -34678,17 +34673,19 @@ function BuffersHandler(content, clock$, wantedBufferAhead$, bufferManager, sour
         return adaptation$.switchMap(function (adaptation) {
             if (adaptation == null) {
                 log_1.default.info("set no " + bufferType + " Adaptation", period);
+                var cleanBuffer$ = void 0;
                 if (sourceBufferManager.has(bufferType)) {
                     log_1.default.info("clearing previous " + bufferType + " SourceBuffer");
                     var _queuedSourceBuffer = sourceBufferManager.get(bufferType);
-                    // TODO use SegmentBookeeper to remove the complete range of segments
-                    // linked to this period (Min between that and period.start for example)
-                    // const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
-                    _queuedSourceBuffer
-                        .removeBuffer({ start: period.start, end: period.end || Infinity });
+                    cleanBuffer$ = _queuedSourceBuffer
+                        .removeBuffer({ start: period.start, end: period.end || Infinity })
+                        .mapTo(null);
                 }
-                return Observable_1.Observable
-                    .of(stream_events_1.default.adaptationChange(bufferType, null, period))
+                else {
+                    cleanBuffer$ = Observable_1.Observable.of(null);
+                }
+                return cleanBuffer$
+                    .mapTo(stream_events_1.default.adaptationChange(bufferType, null, period))
                     .concat(buffer_1.createFakeBuffer(clock$, wantedBufferAhead$, { manifest: manifest, period: period }));
             }
             log_1.default.info("updating " + bufferType + " adaptation", adaptation, period);
@@ -36359,18 +36356,19 @@ function isEnding(bufferGap, currentRange, duration) {
  * @returns {Object}
  */
 function getVideoInfos(video, currentState) {
-    var currentTime = video.currentTime, paused = video.paused, playbackRate = video.playbackRate, readyState = video.readyState, buffered = video.buffered, duration = video.duration, ended = video.ended;
+    var buffered = video.buffered, currentTime = video.currentTime, duration = video.duration, ended = video.ended, paused = video.paused, playbackRate = video.playbackRate, readyState = video.readyState, seeking = video.seeking;
     return {
-        currentTime: currentTime,
-        buffered: buffered,
-        duration: duration,
         bufferGap: ranges_1.getLeftSizeOfRange(buffered, currentTime),
-        state: currentState,
-        playbackRate: playbackRate,
+        buffered: buffered,
         currentRange: ranges_1.getRange(buffered, currentTime),
-        readyState: readyState,
-        paused: paused,
+        currentTime: currentTime,
+        duration: duration,
         ended: ended,
+        paused: paused,
+        playbackRate: playbackRate,
+        readyState: readyState,
+        seeking: seeking,
+        state: currentState,
     };
 }
 /**
@@ -36423,8 +36421,8 @@ function getStalledStatus(prevTimings, currentTimings, withMediaSource) {
     }
     if (shouldStall) {
         var reason = void 0;
-        if (currentState === "seeking") {
-            reason = currentState;
+        if (currentState === "seeking" || currentTimings.seeking) {
+            reason = "seeking";
         }
         else if (readyState === 1) {
             reason = "not-ready";
@@ -36595,7 +36593,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * This file is used to abstract the notion of text and audio language-switching
  * for an easier API management.
  */
-var arrayFind = __webpack_require__(12);
+var arrayFind = __webpack_require__(13);
+var array_includes_1 = __webpack_require__(12);
 var log_1 = __webpack_require__(1);
 var sorted_list_1 = __webpack_require__(65);
 /**
@@ -36685,14 +36684,14 @@ var LanguageManager = /** @class */ (function () {
         this._updateTextTrackChoices();
     };
     /**
-     * Emit preferred audio Adaptation through the given Subject based on:
+     * Emit initial audio Adaptation through the given Subject based on:
      *   - the preferred audio tracks
      *   - the last choice for this period, if one
      * @param {Period} period
      *
      * @throws Error - Throws if the period given has not been added
      */
-    LanguageManager.prototype.setPreferredAudioTrack = function (period) {
+    LanguageManager.prototype.setInitialAudioTrack = function (period) {
         var periodItem = getPeriodItem(this._periods, period);
         var audioInfos = periodItem && periodItem.audio;
         if (!audioInfos || !periodItem) {
@@ -36702,7 +36701,7 @@ var LanguageManager = /** @class */ (function () {
         var audioAdaptations = period.adaptations.audio || [];
         var chosenAudioAdaptation = this._audioChoiceMemory.get(period);
         if (chosenAudioAdaptation === undefined ||
-            !isAudioAdaptationOptimal(chosenAudioAdaptation, audioAdaptations, preferredAudioTracks)) {
+            !array_includes_1.default(audioAdaptations, chosenAudioAdaptation)) {
             var optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations, preferredAudioTracks);
             this._audioChoiceMemory.set(period, optimalAdaptation);
             audioInfos.adaptation$.next(optimalAdaptation);
@@ -36719,7 +36718,7 @@ var LanguageManager = /** @class */ (function () {
      *
      * @throws Error - Throws if the period given has not been added
      */
-    LanguageManager.prototype.setPreferredTextTrack = function (period) {
+    LanguageManager.prototype.setInitialTextTrack = function (period) {
         var periodItem = getPeriodItem(this._periods, period);
         var textInfos = periodItem && periodItem.text;
         if (!textInfos || !periodItem) {
@@ -36729,7 +36728,7 @@ var LanguageManager = /** @class */ (function () {
         var textAdaptations = period.adaptations.text || [];
         var chosenTextAdaptation = this._textChoiceMemory.get(period);
         if (chosenTextAdaptation === undefined ||
-            !isTextAdaptationOptimal(chosenTextAdaptation, textAdaptations, preferredTextTracks)) {
+            !array_includes_1.default(textAdaptations, chosenTextAdaptation)) {
             var optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations, preferredTextTracks);
             this._textChoiceMemory.set(period, optimalAdaptation);
             textInfos.adaptation$.next(optimalAdaptation);
@@ -36957,7 +36956,7 @@ var LanguageManager = /** @class */ (function () {
             var audioAdaptations = period.adaptations.audio || [];
             var chosenAudioAdaptation = _this._audioChoiceMemory.get(period);
             if (chosenAudioAdaptation !== undefined &&
-                isAudioAdaptationOptimal(chosenAudioAdaptation, audioAdaptations, preferredAudioTracks)) {
+                array_includes_1.default(audioAdaptations, chosenAudioAdaptation)) {
                 // Already best audio for this Buffer, check next one
                 recursiveUpdateAudioTrack(index + 1);
                 return;
@@ -36988,7 +36987,7 @@ var LanguageManager = /** @class */ (function () {
             var textAdaptations = period.adaptations.text || [];
             var chosenTextAdaptation = _this._textChoiceMemory.get(period);
             if (chosenTextAdaptation !== undefined &&
-                isTextAdaptationOptimal(chosenTextAdaptation, textAdaptations, preferredTextTracks)) {
+                array_includes_1.default(textAdaptations, chosenTextAdaptation)) {
                 // Already best text for this Buffer, check next one
                 recursiveUpdateTextTrack(index + 1);
                 return;
@@ -37004,48 +37003,49 @@ var LanguageManager = /** @class */ (function () {
     return LanguageManager;
 }());
 exports.default = LanguageManager;
-/**
- * Returns true if the given audio adaptation is an optimal choice for a period
- * given:
- *
- *   - the list of audio adaptations in the period
- *
- *   - an array of preferred audio configurations sorted from the most preferred
- *     to the least preferred.
- *
- * @param {Adaptation|null} adaptation
- * @param {Array.<Adaptation>} audioAdaptations
- * @param {Array.<Object>} preferredAudioTracks
- * @returns {Boolean}
- */
-function isAudioAdaptationOptimal(adaptation, audioAdaptations, preferredAudioTracks) {
-    if (!audioAdaptations.length) {
-        return adaptation === null;
-    }
-    var _loop_1 = function (i) {
-        var preferredAudioTrack = preferredAudioTracks[i];
-        if (preferredAudioTrack === null) {
-            return { value: adaptation === null };
-        }
-        var foundAdaptation = arrayFind(audioAdaptations, function (audioAdaptation) {
-            return audioAdaptation.normalizedLanguage === preferredAudioTrack.normalized &&
-                !!audioAdaptation.isAudioDescription === preferredAudioTrack.audioDescription;
-        });
-        if (foundAdaptation !== undefined) {
-            if (adaptation === null) {
-                return { value: false };
-            }
-            return { value: ((foundAdaptation.normalizedLanguage || "") ===
-                    (adaptation.normalizedLanguage || "")) && !!foundAdaptation.isAudioDescription === !!adaptation.isAudioDescription };
-        }
-    };
-    for (var i = 0; i < preferredAudioTracks.length; i++) {
-        var state_1 = _loop_1(i);
-        if (typeof state_1 === "object")
-            return state_1.value;
-    }
-    return true; // no optimal adaptation, just return true
-}
+// /**
+//  * Returns true if the given audio adaptation is an optimal choice for a period
+//  * given:
+//  *
+//  *   - the list of audio adaptations in the period
+//  *
+//  *   - an array of preferred audio configurations sorted from the most preferred
+//  *     to the least preferred.
+//  *
+//  * @param {Adaptation|null} adaptation
+//  * @param {Array.<Adaptation>} audioAdaptations
+//  * @param {Array.<Object>} preferredAudioTracks
+//  * @returns {Boolean}
+//  */
+// function isAudioAdaptationOptimal(
+//   adaptation : Adaptation|null,
+//   audioAdaptations : Adaptation[],
+//   preferredAudioTracks : IAudioTrackPreference[]
+// ) : boolean {
+//   if (!audioAdaptations.length) {
+//     return adaptation === null;
+//   }
+//   for (let i = 0; i < preferredAudioTracks.length; i++) {
+//     const preferredAudioTrack = preferredAudioTracks[i];
+//     if (preferredAudioTrack === null) {
+//       return adaptation === null;
+//     }
+//     const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) =>
+//       audioAdaptation.normalizedLanguage === preferredAudioTrack.normalized &&
+//       !!audioAdaptation.isAudioDescription === preferredAudioTrack.audioDescription
+//     );
+//     if (foundAdaptation !== undefined) {
+//       if (adaptation === null) {
+//         return false;
+//       }
+//       return (
+//         (foundAdaptation.normalizedLanguage || "") ===
+//         (adaptation.normalizedLanguage || "")
+//       ) && !!foundAdaptation.isAudioDescription === !!adaptation.isAudioDescription;
+//     }
+//   }
+//   return true; // no optimal adaptation, just return true
+// }
 /**
  * Find an optimal audio adaptation given their list and the array of preferred
  * audio tracks sorted from the most preferred to the least preferred.
@@ -37058,7 +37058,7 @@ function findFirstOptimalAudioAdaptation(audioAdaptations, preferredAudioTracks)
     if (!audioAdaptations.length) {
         return null;
     }
-    var _loop_2 = function (i) {
+    var _loop_1 = function (i) {
         var preferredAudioTrack = preferredAudioTracks[i];
         if (preferredAudioTrack === null) {
             return { value: null };
@@ -37072,55 +37072,56 @@ function findFirstOptimalAudioAdaptation(audioAdaptations, preferredAudioTracks)
         }
     };
     for (var i = 0; i < preferredAudioTracks.length; i++) {
-        var state_2 = _loop_2(i);
-        if (typeof state_2 === "object")
-            return state_2.value;
+        var state_1 = _loop_1(i);
+        if (typeof state_1 === "object")
+            return state_1.value;
     }
     // no optimal adaptation, just return the first one
     return audioAdaptations[0];
 }
-/**
- * Returns true if the given text adaptation is an optimal choice for a period
- * given:
- *
- *   - the list of text adaptations in the period
- *
- *   - an array of preferred text configurations sorted from the most preferred
- *     to the least preferred.
- *
- * @param {Adaptation|null} adaptation
- * @param {Array.<Adaptation>} audioAdaptations
- * @param {Array.<Object>} preferredAudioTracks
- * @returns {Boolean}
- */
-function isTextAdaptationOptimal(adaptation, textAdaptations, preferredTextTracks) {
-    if (!textAdaptations.length) {
-        return adaptation === null;
-    }
-    var _loop_3 = function (i) {
-        var preferredTextTrack = preferredTextTracks[i];
-        if (preferredTextTrack === null) {
-            return { value: adaptation === null };
-        }
-        var foundAdaptation = arrayFind(textAdaptations, function (textAdaptation) {
-            return (textAdaptation.normalizedLanguage || "") === preferredTextTrack.normalized &&
-                !!textAdaptation.isClosedCaption === preferredTextTrack.closedCaption;
-        });
-        if (foundAdaptation !== undefined) {
-            if (adaptation === null) {
-                return { value: false };
-            }
-            return { value: ((foundAdaptation.normalizedLanguage || "") ===
-                    (adaptation.normalizedLanguage || "")) && !!foundAdaptation.isClosedCaption === !!adaptation.isClosedCaption };
-        }
-    };
-    for (var i = 0; i < preferredTextTracks.length; i++) {
-        var state_3 = _loop_3(i);
-        if (typeof state_3 === "object")
-            return state_3.value;
-    }
-    return adaptation === null;
-}
+// /**
+//  * Returns true if the given text adaptation is an optimal choice for a period
+//  * given:
+//  *
+//  *   - the list of text adaptations in the period
+//  *
+//  *   - an array of preferred text configurations sorted from the most preferred
+//  *     to the least preferred.
+//  *
+//  * @param {Adaptation|null} adaptation
+//  * @param {Array.<Adaptation>} audioAdaptations
+//  * @param {Array.<Object>} preferredAudioTracks
+//  * @returns {Boolean}
+//  */
+// function isTextAdaptationOptimal(
+//   adaptation : Adaptation|null,
+//   textAdaptations : Adaptation[],
+//   preferredTextTracks : ITextTrackPreference[]
+// ) : boolean {
+//   if (!textAdaptations.length) {
+//     return adaptation === null;
+//   }
+//   for (let i = 0; i < preferredTextTracks.length; i++) {
+//     const preferredTextTrack = preferredTextTracks[i];
+//     if (preferredTextTrack === null) {
+//       return adaptation === null;
+//     }
+//     const foundAdaptation = arrayFind(textAdaptations, (textAdaptation) =>
+//       (textAdaptation.normalizedLanguage || "") === preferredTextTrack.normalized &&
+//       !!textAdaptation.isClosedCaption === preferredTextTrack.closedCaption
+//     );
+//     if (foundAdaptation !== undefined) {
+//       if (adaptation === null) {
+//         return false;
+//       }
+//       return (
+//         (foundAdaptation.normalizedLanguage || "") ===
+//         (adaptation.normalizedLanguage || "")
+//       ) && !!foundAdaptation.isClosedCaption === !!adaptation.isClosedCaption;
+//     }
+//   }
+//   return adaptation === null;
+// }
 /**
  * Find an optimal text adaptation given their list and the array of preferred
  * text tracks sorted from the most preferred to the least preferred.
@@ -37133,7 +37134,7 @@ function findFirstOptimalTextAdaptation(textAdaptations, preferredTextTracks) {
     if (!textAdaptations.length) {
         return null;
     }
-    var _loop_4 = function (i) {
+    var _loop_2 = function (i) {
         var preferredTextTrack = preferredTextTracks[i];
         if (preferredTextTrack === null) {
             return { value: null };
@@ -37147,9 +37148,9 @@ function findFirstOptimalTextAdaptation(textAdaptations, preferredTextTracks) {
         }
     };
     for (var i = 0; i < preferredTextTracks.length; i++) {
-        var state_4 = _loop_4(i);
-        if (typeof state_4 === "object")
-            return state_4.value;
+        var state_2 = _loop_2(i);
+        if (typeof state_2 === "object")
+            return state_2.value;
     }
     // no optimal adaptation
     return null;
