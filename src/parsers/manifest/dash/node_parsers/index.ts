@@ -49,7 +49,10 @@ import {
 import { IRepresentationIntermediateRepresentation } from "./Representation";
 import { IParsedSegmentBase } from "./SegmentBase";
 import { IParsedSegmentList } from "./SegmentList";
-import { IParsedSegmentTemplate, IParsedSegmentTimeline } from "./SegmentTemplate";
+import {
+  IParsedSegmentTemplate,
+  IParsedSegmentTimeline
+} from "./SegmentTemplate";
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -221,6 +224,13 @@ const getLastLiveTimeReference = (
   return representationsMin;
 };
 
+/**
+ * From parsed media url, build a representation based media url.
+ * @param {Object} segmentIndex
+ * @param {string} repURL
+ * @param {string} repId
+ * @param {number} repBitrate
+ */
 function buildRepresentationMedia(
   segmentIndex: IParsedSegmentBase,
   repURL: string,
@@ -239,10 +249,6 @@ function buildRepresentationMedia(
   repId: string,
   repBitrate: number
 ): IParsedSegmentTemplate|IParsedSegmentTimeline;
-
-/**
- * From parsed media url, build a representation based media url.
- */
 function buildRepresentationMedia(
   segmentIndex:
     IParsedSegmentBase|IParsedSegmentList|IParsedSegmentTemplate|IParsedSegmentTimeline,

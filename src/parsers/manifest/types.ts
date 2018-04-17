@@ -21,36 +21,10 @@ interface IKeySystem {
   privateData : Uint8Array;
 }
 
-interface IHSSManifestSegment {
-  ts : number;
-  d? : number;
-  r : number;
-}
-
-// interface IInitialization {
-//   range?: Array<number|null>|null;
-//   media?: string|null;
-//   indexRange?: Array<number|null>;
-// }
-
-// interface IIndex {
-//   timeline: IHSSManifestSegment[];
-//   timescale: number;
-//   initialization?: IInitialization;
-//   indexType?: string;
-// }
-
 interface IContentProtectionSmooth {
   keyId : string;
   keySystems: IKeySystem[];
 }
-
-// interface ISmoothRepresentationIndexIndex {
-//   timeline : IHSSManifestSegment[];
-//   indexType : "smooth";
-//   timescale : number;
-//   initialization : {};
-// }
 
 interface IRepresentationSmooth {
   // required
@@ -192,7 +166,6 @@ export {
   IKeySystem,
   IPeriodSmooth,
   IAdaptationSmooth,
-  IHSSManifestSegment,
   IRepresentationSmooth,
   IContentProtectionSmooth,
 };

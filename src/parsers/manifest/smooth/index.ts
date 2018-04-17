@@ -15,33 +15,38 @@
  */
 
 import config from "../../../config";
- import arrayIncludes from "../../../utils/array-includes";
- import assert from "../../../utils/assert";
- import {
-   bytesToUTF16Str,
-   concat,
-   guidToUuid,
-   hexToBytes,
-   le2toi,
-   strToBytes,
-  } from "../../../utils/bytes";
-  import generateNewId from "../../../utils/id";
-  import { normalize as normalizeLang } from "../../../utils/languages";
-  import log from "../../../utils/log";
-  import {
-    normalizeBaseURL,
-    resolveURL,
-  } from "../../../utils/url";
-  import {
-    IAdaptationSmooth,
-    IContentProtectionSmooth,
-    IHSSManifestSegment,
-    IKeySystem,
-    IParsedManifest,
-    IRepresentationSmooth,
-  } from "../types";
+import arrayIncludes from "../../../utils/array-includes";
+import assert from "../../../utils/assert";
+import {
+  bytesToUTF16Str,
+  concat,
+  guidToUuid,
+  hexToBytes,
+  le2toi,
+  strToBytes,
+} from "../../../utils/bytes";
+import generateNewId from "../../../utils/id";
+import { normalize as normalizeLang } from "../../../utils/languages";
+import log from "../../../utils/log";
+import {
+  normalizeBaseURL,
+  resolveURL,
+} from "../../../utils/url";
+import {
+  IAdaptationSmooth,
+  IContentProtectionSmooth,
+  IKeySystem,
+  IParsedManifest,
+  IRepresentationSmooth,
+} from "../types";
 import { replaceRepresentationSmoothTokens } from "./helpers";
 import RepresentationIndex from "./representationIndex";
+
+interface IHSSManifestSegment {
+  ts : number;
+  d? : number;
+  r : number;
+}
 
 const DEFAULT_MIME_TYPES: IDictionary<string> = {
   audio: "audio/mp4",
