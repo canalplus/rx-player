@@ -93,7 +93,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         isInit: false,
         duration,
         timescale,
-        media: replaceSegmentDASHTokens(media || "", time, number),
+        media: media ?
+          replaceSegmentDASHTokens(media, time, number) :
+          undefined,
       };
       segments.push(args);
     }

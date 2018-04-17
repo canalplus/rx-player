@@ -123,7 +123,7 @@ function getInitSegment(
     time: 0,
     range: initialization.range || undefined,
     indexRange: index.indexRange || undefined,
-    media: initialization.media || "",
+    media: initialization.media,
     timescale: index.timescale,
   };
 }
@@ -187,8 +187,8 @@ function getSegmentsFromTimeline(
           range,
           duration: undefined,
           timescale,
-          media: replaceSegmentDASHTokens(
-            media || "", ts, currentNumber != null ? currentNumber : undefined),
+          media: media ? replaceSegmentDASHTokens(
+            media, ts, currentNumber != null ? currentNumber : undefined) : undefined,
           number: currentNumber != null ? currentNumber : undefined,
         };
         segments.push(segment);
@@ -207,8 +207,10 @@ function getSegmentsFromTimeline(
         range,
         duration: d,
         timescale,
-        media: replaceSegmentDASHTokens(media || "", segmentTime,  currentNumber != null ?
-          currentNumber + segmentNumberInCurrentRange : undefined),
+        media: media ?
+          replaceSegmentDASHTokens(media, segmentTime,  currentNumber != null ?
+            currentNumber + segmentNumberInCurrentRange : undefined) :
+          undefined,
         number: currentNumber != null ?
           currentNumber + segmentNumberInCurrentRange : undefined,
       };

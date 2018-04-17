@@ -21,6 +21,7 @@ import {
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
 import dashManifestParser from "../../parsers/manifest/dash";
+import log from "../../utils/log";
 import request from "../../utils/request";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -92,6 +93,10 @@ export default function(
     loader({ adaptation, init, manifest, period, representation, segment }
       : ISegmentLoaderArguments
     ) : ILoaderObservable<Uint8Array|ArrayBuffer> {
+      if (!segment.media) {
+        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+        return Observable.empty();
+      }
       return segmentLoader({
         adaptation,
         init,
@@ -150,7 +155,10 @@ export default function(
           value: { responseData: null },
         });
       }
-
+      if (!segment.media) {
+        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+        return Observable.empty();
+      }
       const { media } = segment;
       return request({ url: media, responseType: "arraybuffer" });
     },

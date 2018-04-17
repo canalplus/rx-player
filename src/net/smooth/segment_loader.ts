@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 
 import assert from "../../utils/assert";
+import log from "../../utils/log";
 import request from "../../utils/request";
 import mp4Utils from "./mp4";
 import { byteRange } from "./utils";
@@ -121,6 +122,10 @@ const generateSegmentLoader = (
     });
   }
   else {
+    if (!segment.media) {
+      log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+      return Observable.empty();
+    }
     const url = segment.media;
 
     const args = {

@@ -342,7 +342,7 @@ export default class SmoothRepresentationIndex
               protection: this._protection,
             },
         },
-        media: "",
+        media: undefined,
       };
     }
 

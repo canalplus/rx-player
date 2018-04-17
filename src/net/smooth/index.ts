@@ -22,6 +22,7 @@ import {
 import parseBif from "../../parsers/images/bif";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
+import log from "../../utils/log";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
 import {
@@ -203,6 +204,10 @@ export default function(
         });
       }
 
+      if (!segment.media) {
+        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+        return Observable.empty();
+      }
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
       return request({ url: segment.media, responseType });
     },
@@ -359,6 +364,10 @@ export default function(
         });
       }
 
+      if (!segment.media) {
+        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+        return Observable.empty();
+      }
       return request({ url: segment.media, responseType: "arraybuffer" });
     },
 

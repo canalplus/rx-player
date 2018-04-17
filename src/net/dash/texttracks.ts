@@ -18,6 +18,7 @@ import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 
 import assert from "../../utils/assert";
+import log from "../../utils/log";
 import { stringFromUTF8 } from "../../utils/strings";
 
 import {
@@ -69,6 +70,11 @@ function TextTrackLoader(
       type: "data" as "data",
       value: { responseData: null },
     });
+  }
+
+  if (!media) {
+    log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+    return Observable.empty();
   }
 
   // fire a single time for contiguous init and index ranges
