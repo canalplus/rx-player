@@ -7,7 +7,8 @@
 const metaplaylistGenerator = function (
   baseContents,
   baseTime,
-  occurences
+  occurences,
+  attributes
 ) {
   function generateLoop(datas, times) {
     var contents = [];
@@ -22,7 +23,8 @@ const metaplaylistGenerator = function (
             url: datas[k].url,
             startTime: datas[k].startTime + (sum * (i)),
             endTime: datas[k].endTime + (sum * (i)),
-            transport: datas[k].transport
+            transport: datas[k].transport,
+            textTracks: datas[k].textTracks,
           }
         );
       }
@@ -30,23 +32,37 @@ const metaplaylistGenerator = function (
     return contents;
   }
 
-  var metaplaylist = [];
+  var playlist = [];
   for (var i = 0; i < baseContents.length; i++) {
     const beforeContent =
-      (metaplaylist.length != 0) ? metaplaylist[metaplaylist.length - 1] : undefined;
+      (playlist.length != 0) ? playlist[playlist.length - 1] : undefined;
     const url = baseContents[i].url;
     const transport = baseContents[i].transport;
     const startTime = beforeContent ? beforeContent.endTime : (0 + baseTime);
     const duration = baseContents[i].duration;
     const endTime = startTime + duration;
-    metaplaylist.push({
+    const textTracks = baseContents[i].textTracks;
+    playlist.push({
       url,
       startTime,
       endTime,
-      transport
+      transport,
+      textTracks
     });
   }
-  return JSON.stringify({ contents: generateLoop(metaplaylist, occurences) });
+  const contents = generateLoop(playlist, occurences);
+  const generatedAt = Date.now();
+  const mplVersion = "1";
+  const metaplaylist = {
+    metadata: {
+      name: "Demo HAPI contents",
+      mplVersion,
+      generatedAt,
+    },
+    contents,
+    attributes
+  }
+  return JSON.stringify(metaplaylist);
 }
 
 export default metaplaylistGenerator;

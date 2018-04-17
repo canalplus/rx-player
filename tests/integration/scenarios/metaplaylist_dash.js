@@ -14,7 +14,8 @@ describe("MetaPlaylist with DASH Content", function () {
     let player;
     let fakeServer;
     const startTime = (Date.now() / 1000) - 20;
-    const metaPlaylistMock = generateMockMetaPlaylist(startTime);
+    const timeShiftBufferDepth = 100;
+    const metaPlaylistMock = generateMockMetaPlaylist(startTime, timeShiftBufferDepth);
 
     beforeEach(() => {
       player = new RxPlayer();
@@ -47,7 +48,7 @@ describe("MetaPlaylist with DASH Content", function () {
       expect(manifest).not.to.equal(null);
       expect(manifest.transport).to.equal("metaplaylist");
       expect(manifest.isLive).to.equal(true);
-      expect(manifest.timeShiftBufferDepth).to.equal(101.568367);
+      expect(manifest.timeShiftBufferDepth).to.equal(100);
       expect(manifest.availabilityStartTime).to.equal(0);
       
       const periods = manifest.periods;
@@ -85,7 +86,7 @@ describe("MetaPlaylist with DASH Content", function () {
       expect(firstRepresentation).not.to.equal(null);
       expect(segmentTimelineIndex.getSegments(0, startTime).length).to.equal(0);
       expect(segmentTimelineIndex.getSegments(startTime, 102).length).to.equal(26);
-      expect(segmentTimelineIndex.shouldRefresh([], 0, startTime + 2200)).to.equal(true);
+      expect(segmentTimelineIndex.shouldRefresh(0, startTime + 2200)).to.equal(true);
     });
 
     it("should begin playback", async function() {

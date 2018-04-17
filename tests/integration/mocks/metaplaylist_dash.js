@@ -1,6 +1,6 @@
 import playListGenerator from "../utils/playlist_generator";
 
-const generateMockMetaPlaylist = (startTime) => {
+const generateMockMetaPlaylist = (startTime, timeShiftBufferDepth) => {
   const data = [
     {
       url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd",
@@ -8,7 +8,10 @@ const generateMockMetaPlaylist = (startTime) => {
       duration: 101.568367,
     },
   ];
-  const playlist = playListGenerator(data, startTime, 20);
+  const attributes = {
+    timeShiftBufferDepth,
+  };
+  const playlist = playListGenerator(data, startTime, 20, attributes);
   return {
     manifest: {
       url : "http://metaplaylist",
