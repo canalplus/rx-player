@@ -15,6 +15,10 @@
  */
 
 import config from "../../../config";
+import Manifest, {
+  Adaptation,
+  IManifestArguments,
+} from "../../../manifest";
 import { StaticRepresentationIndex } from "../../../manifest/representation_index";
 import generateNewId from "../../../utils/id";
 import {
@@ -22,6 +26,8 @@ import {
   IParsedPeriod,
 } from "../types";
 import MetaRepresentationIndex from "./representation_index";
+
+export type AdaptationType = "video"|"audio"|"text"|"image";
 
 const { DEFAULT_LIVE_GAP } = config;
 
@@ -52,20 +58,15 @@ export default function parseMetaManifest(
   baseURL: string
 ): IParsedManifest {
 
-  // 1 - Get period durations
-  const parsedPeriodsMyManifest = contents
-    .map((content) => content.manifest.periods);
-  const parsedPeriods = parsedPeriodsMyManifest
-    .reduce((acc, periods) => acc.concat(periods), []);
-  const durations : number[]
-    = parsedPeriods.map((period: IParsedPeriod) => period.duration || 0);
+  const parsedPeriods = contents
+    .map((content) => content.manifest.periods[0]);
 
-  // 2 - Build manifest live data
+  // Build manifest root attributes
   const presentationLiveGap =
-    (contents.map(content => content.manifest.presentationLiveGap)
-      .reduce((acc, val) =>
-        Math.min(acc || DEFAULT_LIVE_GAP, val || DEFAULT_LIVE_GAP), DEFAULT_LIVE_GAP
-      )) || DEFAULT_LIVE_GAP;
+  (contents.map(content => content.manifest.presentationLiveGap)
+    .reduce((acc, val) =>
+      Math.min(acc || DEFAULT_LIVE_GAP, val || DEFAULT_LIVE_GAP), DEFAULT_LIVE_GAP
+    )) || DEFAULT_LIVE_GAP;
 
   const suggestedPresentationDelay =
     (contents.map(content => content.manifest.suggestedPresentationDelay)
@@ -79,61 +80,77 @@ export default function parseMetaManifest(
     contents.map(content => content.manifest.minBufferTime)
       .reduce((acc, val) => Math.min((acc || 0), (val || 0)), 0);
 
-  // 3 - Build new periods array
+  // Build new period array
   const newPeriods: Array<{
-    periods: IParsedPeriod[];
+    period: IParsedPeriod;
     transport: "dash"|"smooth";
+    baseManifest: Manifest;
   }> = [];
 
-  for (let j = 0; j < durations.length; j++) {
-    const _newPeriods = parsedPeriodsMyManifest[j];
-    for (let m = 0; m < _newPeriods.length; m++) {
-      let elapsedTimeOnLoop = 0;
-      const periods: IParsedPeriod[] = [];
-      const newPeriod = _newPeriods[m];
-      newPeriod.start = contents[j].startTime + elapsedTimeOnLoop;
-      elapsedTimeOnLoop += newPeriod.duration || 0;
-      newPeriod.end = newPeriod.start + (newPeriod.duration || 0);
-      newPeriod.id = "p" + Math.round(newPeriod.start);
-      const textTracks = contents[j].textTracks;
-      if (textTracks && textTracks.length > 0) {
-        textTracks.forEach((track) => {
-          const textAdaptation = {
-            id: "gen-text-ada-" + generateNewId(),
-            representations: [{
-              mimeType: track.mimeType,
-              bitrate: 0,
-              index: new StaticRepresentationIndex({ media: track.url }),
-              id: "gen-text-rep-" + generateNewId(),
-            }],
-            type: "text",
-            normalizedLanguage: track.language,
-          };
-          newPeriod.adaptations.push(textAdaptation);
-        });
-      }
-      periods.push(newPeriod);
-      newPeriods.push({periods, transport: contents[j].transport});
+  for (let j = 0; j < parsedPeriods.length; j++) {
+    const baseManifest = new Manifest(contents[j].manifest as IManifestArguments);
+    const parsedPeriod = parsedPeriods[j];
+    let elapsedTimeOnLoop = 0;
+    parsedPeriod.start = contents[j].startTime + elapsedTimeOnLoop;
+    elapsedTimeOnLoop += parsedPeriod.duration || 0;
+    parsedPeriod.end = parsedPeriod.start + (parsedPeriod.duration || 0);
+    const textTracks = contents[j].textTracks;
+    if (textTracks && textTracks.length > 0) {
+      textTracks.forEach((track) => {
+        const textAdaptation = {
+          id: "gen-text-ada-" + generateNewId(),
+          representations: [{
+            mimeType: track.mimeType,
+            bitrate: 0,
+            index: new StaticRepresentationIndex({ media: track.url }),
+            id: "gen-text-rep-" + generateNewId(),
+          }],
+          type: "text",
+          normalizedLanguage: track.language,
+        };
+        parsedPeriod.adaptations.push(textAdaptation);
+      });
     }
+    newPeriods.push({
+      period: parsedPeriod,
+      transport: contents[j].transport,
+      baseManifest,
+    });
   }
 
-  // 4 - Generate final periods and wrap indexes.
+  // Generate final periods, wrap indexes and record
+  // base content infos on index.
   const contentEnding = contents[contents.length - 1].endTime;
   const finalPeriods = newPeriods
-    .map((a) => {
-      return a.periods.map((period) => {
-        return { period, transport: a.transport };
-      });
-    })
-    .reduce((acc, periods) => acc.concat(periods), [])
-    .map(({ period, transport }) => {
+    .map(({ period, transport, baseManifest }) => {
       const adaptations = period.adaptations;
       adaptations.forEach((adaptation) => {
         const representations = adaptation.representations;
         representations.forEach((representation) => {
           const index = representation.index;
+          const baseAdaptation = ["audio", "video", "image", "text"]
+            .reduce((acc: Adaptation[], type) => {
+              const _adaptation = baseManifest.adaptations[type as AdaptationType];
+              if (_adaptation) {
+                acc.concat(_adaptation);
+              }
+              return acc;
+            }, []).find((a: Adaptation) => a.id === adaptation.id);
+          const baseRepresentation =
+            baseAdaptation ?
+              baseAdaptation.representations.find((r) => r.id === representation.id) :
+              undefined;
+          const basePeriod =
+            baseManifest.periods.find((p) => p.id === period.id);
+          const baseContentInfos = {
+            manifest: baseManifest,
+            period: basePeriod,
+            adaptation: baseAdaptation,
+            representation: baseRepresentation,
+          };
+
           const newIndex = new MetaRepresentationIndex(
-            index, period.start, transport, contentEnding);
+            index, period.start, transport, contentEnding, baseContentInfos);
           representation.index = newIndex;
         });
       });

@@ -127,7 +127,7 @@ export interface IManifestResult {
 export type IManifestParserObservable = Observable<IManifestResult>;
 
 export type SegmentParserObservable = Observable<{
-  segmentData : Uint8Array|ArrayBuffer|null;
+  segmentData : Uint8Array|ArrayBuffer;
   segmentInfos : ISegmentTimingInfos|null;
 }>;
 

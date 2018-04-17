@@ -15,7 +15,10 @@
  */
 
 import IRepresentationIndex from "../../../manifest/representation_index";
-import { ISegment } from "../../../manifest/representation_index/interfaces";
+import {
+  IBaseContentInfos,
+  ISegment,
+} from "../../../manifest/representation_index/interfaces";
 
 type ITransportTypes = "dash"|"smooth";
 
@@ -32,17 +35,20 @@ export default class MetaRepresentationIndex implements IRepresentationIndex{
   private _timeOffset: number;
   private _transport: ITransportTypes;
   private _contentEnd: number;
+  private _baseContentInfos: IBaseContentInfos;
 
   constructor(
       index: IRepresentationIndex,
       timeOffset: number,
       transport: "dash"|"smooth",
-      contentEnd: number
-  ){
+      contentEnd: number,
+      baseContentInfos: IBaseContentInfos
+  ) {
     this._wrappedIndex = index;
     this._timeOffset = timeOffset;
     this._transport = transport;
     this._contentEnd = contentEnd;
+    this._baseContentInfos = baseContentInfos;
   }
 
   public getInitSegment() {
@@ -52,6 +58,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex{
     }
     segment.privateInfos = segment.privateInfos || {};
     segment.privateInfos.transportType = this._transport;
+    segment.privateInfos.baseContentInfos = this._baseContentInfos;
     return segment;
   }
 
@@ -62,6 +69,8 @@ export default class MetaRepresentationIndex implements IRepresentationIndex{
     ).map((segment) => {
       segment.privateInfos = segment.privateInfos || {};
       segment.privateInfos.transportType = this._transport;
+      segment.time += this._timeOffset * segment.timescale;
+      segment.privateInfos.baseContentInfos = this._baseContentInfos;
       return segment;
     });
   }
