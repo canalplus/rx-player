@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 
+  - api: emit SEEKING state instead of BUFFERING when the user seeks to an unbuffered part just after resuming playback
   - api: work around old Chrome bug where ENDED state would never be triggered at the end of the stream
   - api/language: fix bug where an audio or text language would not be switched to on certain conditions in live contents
   - smooth: fix frequent manifest refreshing happening immediately when changing audio/text language
