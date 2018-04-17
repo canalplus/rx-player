@@ -36955,8 +36955,9 @@ var LanguageManager = /** @class */ (function () {
             var period = periodItem.period, audioItem = periodItem.audio;
             var audioAdaptations = period.adaptations.audio || [];
             var chosenAudioAdaptation = _this._audioChoiceMemory.get(period);
-            if (chosenAudioAdaptation !== undefined &&
-                array_includes_1.default(audioAdaptations, chosenAudioAdaptation)) {
+            if (chosenAudioAdaptation === null ||
+                (chosenAudioAdaptation !== undefined &&
+                    array_includes_1.default(audioAdaptations, chosenAudioAdaptation))) {
                 // Already best audio for this Buffer, check next one
                 recursiveUpdateAudioTrack(index + 1);
                 return;
@@ -36986,8 +36987,9 @@ var LanguageManager = /** @class */ (function () {
             var period = periodItem.period, textItem = periodItem.text;
             var textAdaptations = period.adaptations.text || [];
             var chosenTextAdaptation = _this._textChoiceMemory.get(period);
-            if (chosenTextAdaptation !== undefined &&
-                array_includes_1.default(textAdaptations, chosenTextAdaptation)) {
+            if (chosenTextAdaptation === null ||
+                (chosenTextAdaptation !== undefined &&
+                    array_includes_1.default(textAdaptations, chosenTextAdaptation))) {
                 // Already best text for this Buffer, check next one
                 recursiveUpdateTextTrack(index + 1);
                 return;
