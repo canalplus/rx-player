@@ -30,7 +30,7 @@ export interface IParsedContentComponent {
  * @param {Node} root
  * @returns {Object}
  */
-export default function parseContentComponent(root: Node): IParsedContentComponent {
+export default function parseContentComponent(root: Node) : IParsedContentComponent {
   const ret : IParsedContentComponent = {};
 
   for (let i = 0; i < root.attributes.length; i++) {

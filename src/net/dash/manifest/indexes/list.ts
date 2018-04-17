@@ -97,12 +97,11 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
-   * @param {Array.<Object>} _
    * @param {Number} up
    * @param {Number} to
    * @returns {Boolean}
    */
-  shouldRefresh(_ : ISegment[], _up : number, to : number) : boolean {
+  shouldRefresh(_up : number, to : number) : boolean {
     const {
       timescale,
       duration,

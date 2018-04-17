@@ -31,23 +31,24 @@ import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 // Informations recuperated on the video element on each clock
 // tick
 interface IVideoInfos {
-  currentTime : number;
-  buffered : TimeRanges;
-  duration : number;
   bufferGap : number;
-  state : string;
-  playbackRate : number;
+  buffered : TimeRanges;
   currentRange : {
     start : number;
     end : number;
   }|null;
-  readyState : number;
-  paused : boolean;
+  currentTime : number;
+  duration : number;
   ended: boolean;
+  paused : boolean;
+  playbackRate : number;
+  readyState : number;
+  seeking : boolean;
+  state : string;
 }
 
 type stalledStatus = {
-  state : string;
+  reason : "seeking" | "not-ready" | "buffering";
   timestamp : number;
 } | null;
 
@@ -59,8 +60,9 @@ export interface IClockTick extends IVideoInfos {
 const {
   SAMPLING_INTERVAL_MEDIASOURCE,
   SAMPLING_INTERVAL_NO_MEDIASOURCE,
-  RESUME_AFTER_SEEKING_GAP,
-  RESUME_AFTER_BUFFERING_GAP,
+  RESUME_GAP_AFTER_SEEKING,
+  RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
+  RESUME_GAP_AFTER_BUFFERING,
   STALL_GAP,
 } = config;
 
@@ -75,6 +77,8 @@ const SCANNED_VIDEO_EVENTS = [
   "seeking",
   "seeked",
   "loadedmetadata",
+  "canplay",
+  "ratechange",
 ];
 
 /**
@@ -89,9 +93,14 @@ function getResumeGap(stalled : stalledStatus) : number {
     return 0;
   }
 
-  return stalled.state === "seeking"
-    ? RESUME_AFTER_SEEKING_GAP
-    : RESUME_AFTER_BUFFERING_GAP;
+  switch (stalled.reason) {
+    case "seeking":
+      return RESUME_GAP_AFTER_SEEKING;
+    case "not-ready":
+      return RESUME_GAP_AFTER_NOT_ENOUGH_DATA;
+    default:
+      return RESUME_GAP_AFTER_BUFFERING;
+  }
 }
 
 /**
@@ -126,26 +135,28 @@ function getVideoInfos(
   currentState : string
 ) : IVideoInfos {
   const {
+    buffered,
     currentTime,
+    duration,
+    ended,
     paused,
     playbackRate,
     readyState,
-    buffered,
-    duration,
-    ended,
+    seeking,
   } = video;
 
   return {
-    currentTime,
-    buffered,
-    duration,
     bufferGap: getLeftSizeOfRange(buffered, currentTime),
-    state: currentState,
-    playbackRate,
+    buffered,
     currentRange: getRange(buffered, currentTime),
-    readyState,
-    paused,
+    currentTime,
+    duration,
     ended,
+    paused,
+    playbackRate,
+    readyState,
+    seeking,
+    state: currentState,
   };
 }
 
@@ -234,7 +245,18 @@ function getStalledStatus(
   }
 
   if (shouldStall) {
-    return { state: currentState, timestamp: Date.now() };
+    let reason : "seeking" | "not-ready" | "buffering";
+    if (currentState === "seeking" || currentTimings.seeking) {
+      reason = "seeking";
+    } else if (readyState === 1) {
+      reason = "not-ready";
+    } else {
+      reason = "buffering";
+    }
+    return {
+      reason,
+      timestamp: Date.now(),
+    };
   }
   else if (shouldUnstall) {
     return null;
@@ -310,7 +332,8 @@ function createClock(
         video.removeEventListener(eventName, emitSample));
     };
   })
-    .multicast(() => new ReplaySubject<IClockTick>(1))
+    .multicast(() => new ReplaySubject<IClockTick>(1)) // Always emit the last
+                                                       // item on subscription
     .refCount();
 }
 

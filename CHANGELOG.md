@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+  - api: emit SEEKING state instead of BUFFERING when the user seeks to an unbuffered part just after resuming playback
+  - api: work around old Chrome bug where ENDED state would never be triggered at the end of the stream
+  - api/language: fix bug where an audio or text language would not be switched to on certain conditions in live contents
+  - smooth: fix frequent manifest refreshing happening immediately when changing audio/text language
+  - eme/error: fix reason string and error message for KEY_STATUS_CHANGE_ERROR
+
+### Other improvements
+
+  - buffer: update download queue immediately when seeking to an already-buffered part
+  - buffer: schedule segments per level of priority to lower some buffering/seeking/loading time
+  - demo: fix "Big Buck Bunny WEBM"'s URL
+
+
 ## v3.3.1 (2018/03/13)
 
 ### Bug Fixes

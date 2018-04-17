@@ -16,37 +16,38 @@
 
 import { getLeftSizeOfRange } from "../../utils/ranges";
 
+export interface ITimingData {
+  currentTime : number;
+  timeOffset : number;
+  liveGap? : number;
+}
+
 /**
- * Calculate start and end timestamps delimiting wanted segments for the current
- * buffer.
+ * Returns the range of segments needed for a particular point in time.
  *
- * @param {TimeRanges} buffered - TimeRanges coming from the concerned
- * SourceBuffer
- * @param {Number} currentTime - Time currently played
- * @param {Object} limits
- * @param {Number} limits.start - Minimum time we should have
- * @param {Number} [limits.end] - Maximum time we should have
- * @param {Number} bufferGoal - Current buffer goal (minimum time ahead of the
- * current time wanted in the buffer).
- * @param {Object} paddings - contains two number properties: low and high.
- * If the gap to the end of the current buffered range is superior to the low
- * value, we will offset the start of the range, at most to the high value.
- * This is to avoid having excessive re-buffering where we re-downloads segments
- * already in the buffer.
- * @param {Number} paddings.low
- * @param {Number} paddings.high
- * @returns {Object} - Start and end timestamps, in seconds, under an object
- * form with two properties:
- *   - start {Number}
- *   - end {Number}
+ * @param {Object} hardLimits
+ * @param {TimeRanges} buffered
+ * @param {Object} timing
+ * @param {number} bufferGoal
+ * @param {Object} paddings
+ * @returns {Object}
  */
-export default function getWantedBufferRange(
+export default function getWantedRange(
+  hardLimits : { start? : number; end? : number },
   buffered : TimeRanges,
-  currentTime : number,
+  timing : ITimingData,
   bufferGoal : number,
-  limits : { start: number; end? : number },
   paddings : { low : number; high : number }
 ) : { start : number; end : number } {
+  const currentTime = timing.currentTime + timing.timeOffset;
+  const limitEnd = timing.liveGap == null ?
+    hardLimits.end :
+    Math.min(hardLimits.end || Infinity, timing.currentTime + timing.liveGap);
+  const boundedLimits = {
+    start: Math.max(hardLimits.start || 0, currentTime),
+    end: limitEnd,
+  };
+
   const { low: lowPadding, high: highPadding } = paddings;
 
   // Difference between the current time and the end of the current range
@@ -59,11 +60,13 @@ export default function getWantedBufferRange(
     Math.min(bufferGap, highPadding) : 0;
 
   return {
+
     start: Math.min(
-      Math.max(currentTime + timestampPadding, limits.start),
-      limits.end || Infinity),
+      Math.max(currentTime + timestampPadding, boundedLimits.start),
+      boundedLimits.end || Infinity),
+
     end: Math.min(
-      Math.max(currentTime + bufferGoal, limits.start),
-      limits.end || Infinity),
+      Math.max(currentTime + bufferGoal, boundedLimits.start),
+      boundedLimits.end || Infinity),
   };
 }

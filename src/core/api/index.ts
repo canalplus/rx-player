@@ -71,11 +71,11 @@ import Transports from "../../net";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import ABRManager from "../abr";
 import {
-  clearEME,
-  dispose as emeDispose,
+  clearEMESession,
+  disposeEME,
   getCurrentKeySystem,
 } from "../eme";
-import { SupportedBufferTypes } from "../source_buffers";
+import { IBufferType } from "../source_buffers";
 import Stream, {
   IStreamEvent,
 } from "../stream";
@@ -84,13 +84,14 @@ import createClock, {
   IClockTick
 } from "./clock";
 import { PLAYER_STATES } from "./constants";
+import getPlayerState from "./get_player_state";
 import LanguageManager, {
-  IAudioTrackConfiguration,
+  IAudioTrackPreference,
   ILMAudioTrack,
-  ILMAudioTrackList,
+  ILMAudioTrackListItem,
   ILMTextTrack,
-  ILMTextTrackList,
-  ITextTrackConfiguration,
+  ILMTextTrackListItem,
+  ITextTrackPreference,
 } from "./language_manager";
 import {
   IConstructorOptions,
@@ -113,7 +114,7 @@ interface IPositionUpdateItem {
 }
 
 interface IBitrateEstimate {
-  type : SupportedBufferTypes;
+  type : IBufferType;
   bitrate : number|undefined;
 }
 
@@ -297,7 +298,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @type {Map}
    */
   private _priv_activeAdaptations : Map<Period, Partial<
-    Record<SupportedBufferTypes, Adaptation|null>
+    Record<IBufferType, Adaptation|null>
     >> | null;
 
   /**
@@ -308,7 +309,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @type {Map}
    */
   private _priv_activeRepresentations : Map<Period, Partial<
-    Record<SupportedBufferTypes, Representation|null>
+    Record<IBufferType, Representation|null>
     >> | null;
 
   /**
@@ -337,14 +338,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {undefined|null|Object}
    */
-  private _priv_initialAudioTrack : undefined|null|IAudioTrackConfiguration;
+  private _priv_initialAudioTrack : undefined|IAudioTrackPreference;
 
   /**
    * Store default text track for a loaded content.
    * @private
    * @type {undefined|null|Object}
    */
-  private _priv_initialTextTrack : undefined|null|ITextTrackConfiguration;
+  private _priv_initialTextTrack : undefined|ITextTrackPreference;
 
   /**
    * LanguageManager instance linked to the current content.
@@ -481,7 +482,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.3.1";
+    this.version = /*PLAYER_VERSION*/"3.3.2";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -594,7 +595,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this.stop();
 
     // free resources used for EME management
-    emeDispose();
+    disposeEME();
 
     // free Observables linked to the Player instance
     this._priv_destroy$.next();
@@ -770,7 +771,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      */
     const stalled$ = stream
       .filter(({ type }) => type === "stalled")
-      .map(x => x.value)  as Observable<null|{ state : string }>;
+      .map(x => x.value)  as Observable<null|{ reason : string }>;
 
     /**
      * Emit when the stream is considered "loaded".
@@ -808,19 +809,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           )
             .takeUntil(this._priv_stopCurrentContent$)
             .map(([isPlaying, stalledStatus]) => {
-              if (videoElement.ended) {
-                return PLAYER_STATES.ENDED;
-              }
-
-              if (stalledStatus) {
-                switch (stalledStatus.state) {
-                  case "seeking":
-                    return PLAYER_STATES.SEEKING;
-                  default:
-                    return PLAYER_STATES.BUFFERING;
-                }
-              }
-              return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
+              return getPlayerState(videoElement, isPlaying, stalledStatus);
             })
 
             // begin emitting those only when the content start to play
@@ -896,8 +885,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Object|null}
    */
   getCurrentAdaptations(
-  ) : Partial<Record<SupportedBufferTypes, Adaptation|null>> | null {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations){
+  ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
       return null;
     }
     return this._priv_activeAdaptations.get(this._priv_currentPeriod) || null;
@@ -909,8 +898,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Object|null}
    */
   getCurrentRepresentations(
-  ) : Partial<Record<SupportedBufferTypes, Representation|null>> | null {
-    if (!this._priv_currentPeriod || !this._priv_activeRepresentations){
+  ) : Partial<Record<IBufferType, Representation|null>> | null {
+    if (!this._priv_currentPeriod || !this._priv_activeRepresentations) {
       return null;
     }
     return this._priv_activeRepresentations.get(this._priv_currentPeriod) || null;
@@ -1109,7 +1098,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() : number[] {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations){
+    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
       return [];
     }
     const adaptations = this._priv_activeAdaptations.get(this._priv_currentPeriod);
@@ -1126,7 +1115,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() : number[] {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations){
+    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
       return [];
     }
     const adaptations = this._priv_activeAdaptations.get(this._priv_currentPeriod);
@@ -1458,7 +1447,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Returns every available audio tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
-  getAvailableAudioTracks() : ILMAudioTrackList | null {
+  getAvailableAudioTracks() : ILMAudioTrackListItem[] | null {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       return null;
     }
@@ -1469,7 +1458,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Returns every available text tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
-  getAvailableTextTracks() : ILMTextTrackList | null {
+  getAvailableTextTracks() : ILMTextTrackListItem[] | null {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       return null;
     }
@@ -1504,7 +1493,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - the current content has no LanguageManager.
    * @throws Error - the given id is linked to no audio track.
    */
-  setAudioTrack(audioId : string|number) : void {
+  setAudioTrack(audioId : string) : void {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       throw new Error("No compatible content launched.");
     }
@@ -1522,7 +1511,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - the current content has no LanguageManager.
    * @throws Error - the given id is linked to no text track.
    */
-  setTextTrack(textId : string|number) : void {
+  setTextTrack(textId : string) : void {
     if (!this._priv_languageManager || !this._priv_currentPeriod) {
       throw new Error("No compatible content launched.");
     }
@@ -1625,7 +1614,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_streamLock$.next(false);
     };
 
-    clearEME()
+    clearEMESession()
       .catch(() => Observable.empty())
       .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
   }
@@ -1716,9 +1705,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         // Manage image tracks
         // TODO Better way? Perhaps linked to an ImageSourceBuffer
         // implementation
-        const { bufferType, parsed } = streamInfos.value;
+        const { bufferType, segmentData } = streamInfos.value;
         if (bufferType === "image") {
-          const segmentData = parsed.segmentData;
           if (segmentData != null && segmentData.type === "bif") {
             const imageData = segmentData.data as IBifThumbnail[];
 
@@ -1858,7 +1846,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Subject} value.adaptation$
    */
   private _priv_onPeriodBufferReady(value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
     adaptation$ : Subject<Adaptation|null>;
   }) : void {
@@ -1872,7 +1860,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           adaptation$.next(null);
         } else {
           this._priv_languageManager.addPeriod(type, period, adaptation$);
-          this._priv_languageManager.setPreferredAudioTrack(period);
+          this._priv_languageManager.setInitialAudioTrack(period);
         }
         break;
 
@@ -1882,7 +1870,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           adaptation$.next(null);
         } else {
           this._priv_languageManager.addPeriod(type, period, adaptation$);
-          this._priv_languageManager.setPreferredTextTrack(period);
+          this._priv_languageManager.setInitialTextTrack(period);
         }
         break;
 
@@ -1906,7 +1894,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Period} value.period
    */
   private _priv_onPeriodBufferCleared(value : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
   }) : void {
     const { type, period } = value;
@@ -1953,7 +1941,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     adaptation,
     period,
   } : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     adaptation : Adaptation|null;
     period : Period;
   }) : void {
@@ -1999,7 +1987,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     period,
     representation,
   }: {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     period : Period;
     representation : Representation|null;
   }) : void {
@@ -2042,7 +2030,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     type,
     bitrate,
   } : {
-    type : SupportedBufferTypes;
+    type : IBufferType;
     bitrate : number|undefined;
   }) : void {
     if (__DEV__) {

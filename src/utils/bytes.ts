@@ -336,7 +336,7 @@ function itole8(num : number) : Uint8Array {
  * @throws AssertionError - The uuid length is not 16
  */
 function guidToUuid(uuid : string) : string {
-  assert.equal(uuid.length, 16, "UUID length should be 16");
+  assert(uuid.length === 16, "UUID length should be 16");
   const buf = strToBytes(uuid);
 
   const p1A = buf[0];

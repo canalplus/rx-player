@@ -47,7 +47,7 @@ const manifestPreLoader = (
   options: {
     customManifestLoader?: CustomManifestLoader;
     ignoreProgressEvents?: true;
-  }) => (url: string): ILoaderObservable<Document|string> => {
+  }) => (url: string) : ILoaderObservable<Document|string> => {
     const { customManifestLoader, ignoreProgressEvents } = options;
     if (!customManifestLoader) {
       return regularManifestLoader(url, ignoreProgressEvents);

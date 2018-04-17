@@ -159,11 +159,9 @@ function sessionEventsHandler(
         // Hack present because the order of the arguments has changed in spec
         // and is not the same between some versions of Edge and Chrome.
         if (KEY_STATUS_ERRORS[keyId]) {
-          throw new
-            EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
+          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
         } else if (KEY_STATUS_ERRORS[keyStatus]) {
-          throw new
-            EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
+          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
         }
       });
 
@@ -259,7 +257,7 @@ function createSession(
   if (mediaKeys.createSession == null) {
     throw new Error("Invalid MediaKeys implementation: Missing createSession");
   }
-  const session = mediaKeys.createSession(sessionType);
+  const session = (mediaKeys as any).createSession(sessionType); // TODO Weird TS Bug?
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
       // TODO subscribe to it

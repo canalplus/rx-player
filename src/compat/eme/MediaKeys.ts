@@ -47,21 +47,21 @@ export interface IMediaKeySession
   extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
 {
   // Attributes
-  readonly sessionId : string;
-  readonly expiration: number;
   readonly closed: Promise<void>;
-  readonly keyStatuses: MediaKeyStatusMap;
+  expiration: number;
+  keyStatuses: MediaKeyStatusMap;
+  sessionId : string;
 
   // Event handlers
   onmessage? : (message : MediaKeyMessageEvent) => void;
   onkeystatusesChange? : (evt : Event) => void;
 
   // Functions
-  generateRequest(initDataType: string, initData: BufferSource): Promise<void>;
-  load(sessionId: string): Promise<boolean>;
-  update(response: BufferSource): Promise<void>;
-  close(): Promise<void>;
-  remove(): Promise<void>;
+  generateRequest(initDataType: string, initData: BufferSource) : Promise<void>;
+  load(sessionId: string) : Promise<boolean>;
+  update(response: BufferSource) : Promise<void>;
+  close() : Promise<void>;
+  remove() : Promise<void>;
 }
 
 interface IMockMediaKeys {
@@ -123,18 +123,18 @@ class WebkitMediaKeySession
   extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
   implements IMediaKeySession
 {
-  public sessionId : string;
-  public closed: Promise<void>;
-  public readonly expiration: number;
-  public keyStatuses: MediaKeyStatusMap;
-  public update : (
+  public readonly update : (
     license : ArrayBuffer,
     sessionId? : string
   ) => Promise<void>;
+  public readonly closed: Promise<void>;
+  public expiration: number;
+  public keyStatuses: MediaKeyStatusMap;
+  public sessionId : string;
 
-  private _vid : HTMLMediaElement;
-  private _key : string;
-  private _closeSession$ : Subject<void>;
+  private readonly _vid : HTMLMediaElement;
+  private readonly _key : string;
+  private readonly _closeSession$ : Subject<void>;
 
   constructor(video : HTMLMediaElement, keySystem : string) {
     super();
@@ -179,7 +179,7 @@ class WebkitMediaKeySession
     });
   }
 
-  close(): Promise<void> {
+  close() : Promise<void> {
     return new Promise((resolve) => {
       this._closeSession$.next();
       this._closeSession$.complete();
@@ -218,18 +218,18 @@ class IE11MediaKeySession
   extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
   implements IMediaKeySession
 {
-  public sessionId : string;
-  public update : (
+  public readonly update : (
     license : ArrayBuffer,
     sessionId? : string
   ) => Promise<void>;
-  public closed: Promise<void>;
-  readonly expiration: number;
+  public readonly closed: Promise<void>;
+  public expiration: number;
   public keyStatuses: MediaKeyStatusMap;
+  public sessionId : string;
 
-  private _mk : IIE11MediaKeys;
+  private readonly _mk : IIE11MediaKeys;
+  private readonly _closeSession$ : Subject<void>;
   private _ss? : MediaKeySession;
-  private _closeSession$ : Subject<void>;
 
   constructor(mk : IIE11MediaKeys) {
     super();
@@ -265,7 +265,7 @@ class IE11MediaKeySession
     });
   }
 
-  close(): Promise<void> {
+  close() : Promise<void> {
     return new Promise((resolve) => {
       if (this._ss) {
         /* tslint:disable no-floating-promises */
@@ -319,7 +319,7 @@ if (navigator.requestMediaKeySystemAccess) {
   if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
 
     MockMediaKeys = class implements IMockMediaKeys {
-      private ks_ : string;
+      private readonly ks_ : string;
       private _vid? : HTMLMediaElement;
 
       constructor(keySystem : string) {

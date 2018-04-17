@@ -48,16 +48,12 @@ import {
 
 /**
  * Perform requests for "text" segments
- * TODO DRY this (code too similar to segmentPipeline)
- *
  * @param {Object} infos
- * @param {Segment} infos.segment
- * @param {Representation} infos.representation
  * @returns {Observable.<Object>}
  */
 function TextTrackLoader(
   { segment, representation } : ISegmentLoaderArguments
-) : ILoaderObservable<ArrayBuffer|string> {
+) : ILoaderObservable<ArrayBuffer|string|null> {
   const {
     media,
     range,
@@ -65,38 +61,23 @@ function TextTrackLoader(
     isInit,
   } = segment;
 
-  /**
-   * ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
-   * @type string
-   */
-  const responseType = isMP4EmbeddedTrack(representation) ?
-    "arraybuffer" : "text";
+  // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
+  const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
 
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
   if (isInit && !(media || range || indexRange)) {
-    return Observable.empty();
+    return Observable.of({
+      type: "data" as "data",
+      value: { responseData: null },
+    });
   }
 
-  /**
-   * filename
-   * @type string
-   */
-  const path = media ?
-    replaceTokens(media, segment, representation) : "";
-
-  /**
-   * Complete path of the segment.
-   * @type string
-   */
+  const path = media ? replaceTokens(media, segment, representation) : "";
   const mediaUrl = resolveURL(representation.baseURL, path);
 
-  // fire a single time contiguous init and index ranges.
-  // TODO Find a solution for indicating that special case to the parser
-  if (
-    range && indexRange &&
-    range[1] === indexRange[0] - 1
-  ) {
+  // fire a single time for contiguous init and index ranges
+  if (range && indexRange && range[1] === indexRange[0] - 1) {
     return request({
       url: mediaUrl,
       responseType,
@@ -106,11 +87,7 @@ function TextTrackLoader(
     });
   }
 
-  /**
-   * Segment request.
-   * @type Observable.<Object>
-   */
-  const mediaOrInitRequest = request({
+  const mediaRequest = request<ArrayBuffer|string>({
     url: mediaUrl,
     responseType,
     headers: range ? {
@@ -118,39 +95,27 @@ function TextTrackLoader(
     } : null,
   });
 
+  if (!indexRange) {
+    return mediaRequest;
+  }
+
   // If init segment has indexRange metadata, we need to fetch
   // both the initialization data and the index metadata. We do
   // this in parallel and send the both blobs into the pipeline.
   // TODO Find a solution for calling only one time the parser
-  if (indexRange) {
-    const indexRequest = request({
-      url: mediaUrl,
-      responseType,
-      headers: {
-        Range: byteRange(indexRange),
-      },
-    });
-    // TypeScript just break here, supposedly for the responseType
-    // TODO A TS Bug? Open an issue. Investigate first.
-    return Observable.merge(mediaOrInitRequest, indexRequest) as
-      ILoaderObservable<ArrayBuffer|string>;
-  }
-  else {
-    // TypeScript just break here, supposedly for the responseType
-    // TODO A TS Bug? Open an issue. Investigate first.
-    return mediaOrInitRequest as ILoaderObservable<ArrayBuffer|string>;
-  }
+  const indexRequest = request<ArrayBuffer|string>({
+    url: mediaUrl,
+    responseType,
+    headers: {
+      Range: byteRange(indexRange),
+    },
+  });
+  return Observable.merge(mediaRequest, indexRequest);
 }
 
 /**
  * Parse TextTrack data.
- *
  * @param {Object} infos
- * @param {Segment} infos.segment
- * @param {Manifest} infos.manifest
- * @param {Adaptation} infos.adaptation
- * @param {Representation} infos.representation
- * @param {Object} infos.init
  * @returns {Observable.<Object>}
  */
 function TextTrackParser({
@@ -159,15 +124,26 @@ function TextTrackParser({
   adaptation,
   representation,
   init,
-} : ISegmentParserArguments<Uint8Array|ArrayBuffer|string>
+} : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>
 ) : TextTrackParserObservable {
   const { language } = adaptation;
   const { isInit, indexRange } = segment;
 
+  if (response.responseData == null) {
+    return Observable.of({
+      segmentData: null,
+      segmentInfos: segment.timescale > 0 ? {
+        duration: segment.isInit ? 0 : segment.duration,
+        time: segment.isInit ? -1 : segment.time,
+        timescale: segment.timescale,
+      } : null,
+    });
+  }
+
   let responseData : Uint8Array|string;
   let nextSegments : INextSegmentsInfos[]|undefined;
   let segmentInfos : ISegmentTimingInfos;
-  let segmentData : ITextTrackSegmentData|undefined;
+  let segmentData : ITextTrackSegmentData|null;
 
   const isMP4 = isMP4EmbeddedTrack(representation);
   if (isMP4) {
@@ -208,9 +184,9 @@ function TextTrackParser({
         };
       }
     }
-    segmentData = undefined;
+    segmentData = null;
   } else { // if not init
-    assert(segmentInfos);
+    assert(segmentInfos != null);
     const segmentDataBase = {
       start: segmentInfos.time,
       end: segmentInfos.time + (segmentInfos.duration || 0),

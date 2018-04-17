@@ -17,7 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Representation } from "../../manifest";
-import { SupportedBufferTypes } from "../source_buffers";
+import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {
   IRepresentationChooserClockTick,
   IRequest,
@@ -29,17 +29,17 @@ interface IMetricValue {
 }
 
 interface IMetric {
-  type : SupportedBufferTypes;
+  type : IBufferType;
   value : IMetricValue;
 }
 
 // Options for every RepresentationChoosers
 interface IRepresentationChoosersOptions {
-  limitWidth: Partial<Record<SupportedBufferTypes, Observable<number>>>;
-  throttle: Partial<Record<SupportedBufferTypes, Observable<number>>>;
-  initialBitrates: Partial<Record<SupportedBufferTypes, number>>;
-  manualBitrates: Partial<Record<SupportedBufferTypes, number>>;
-  maxAutoBitrates: Partial<Record<SupportedBufferTypes, number>>;
+  limitWidth: Partial<Record<IBufferType, Observable<number>>>;
+  throttle: Partial<Record<IBufferType, Observable<number>>>;
+  initialBitrates: Partial<Record<IBufferType, number>>;
+  manualBitrates: Partial<Record<IBufferType, number>>;
+  maxAutoBitrates: Partial<Record<IBufferType, number>>;
 }
 
 const defaultChooserOptions = {
@@ -57,9 +57,9 @@ const defaultChooserOptions = {
  * @returns {RepresentationChooser} - The RepresentationChooser instance
  */
 const createChooser = (
-  type : SupportedBufferTypes,
+  type : IBufferType,
   options : IRepresentationChoosersOptions
-): RepresentationChooser => {
+) : RepresentationChooser => {
   return new RepresentationChooser({
     limitWidth$: options.limitWidth[type],
     throttle$: options.throttle[type],
@@ -77,11 +77,10 @@ const createChooser = (
  * @class ABRManager
  */
 export default class ABRManager {
-  // TODO privatize
+  private readonly _dispose$: Subject<void>;
+
   private _choosers:  IDictionary<RepresentationChooser>;
   private _chooserInstanceOptions: IRepresentationChoosersOptions;
-
-  private _dispose$: Subject<void>;
 
   /**
    * @param {Observable} requests$ - Emit requests infos as they begin, progress
@@ -218,10 +217,10 @@ export default class ABRManager {
    * @returns {Observable}
    */
   public get$(
-    type : SupportedBufferTypes,
+    type : IBufferType,
     clock$: Observable<IRepresentationChooserClockTick>,
     representations: Representation[] = []
-  ): Observable<{
+  ) : Observable<{
     bitrate: undefined|number;
     representation: Representation|null;
   }> {
@@ -241,7 +240,7 @@ export default class ABRManager {
    * @param {string} type
    * @param {number} bitrate
    */
-  public setManualBitrate(type : SupportedBufferTypes, bitrate : number): void {
+  public setManualBitrate(type : IBufferType, bitrate : number) : void {
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -259,7 +258,7 @@ export default class ABRManager {
    * @param {string} supportedBufferTypes
    * @param {number} bitrate
    */
-  public setMaxAutoBitrate(type : SupportedBufferTypes, bitrate : number): void {
+  public setMaxAutoBitrate(type : IBufferType, bitrate : number) : void {
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -275,7 +274,7 @@ export default class ABRManager {
    * @param {string} supportedBufferTypes
    * @returns {number|undefined}
    */
-  public getManualBitrate(type : SupportedBufferTypes): number|undefined {
+  public getManualBitrate(type : IBufferType) : number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.manualBitrate$.getValue() :
@@ -287,7 +286,7 @@ export default class ABRManager {
    * @param {string} supportedBufferTypes
    * @returns {number|undefined}
    */
-  public getMaxAutoBitrate(type : SupportedBufferTypes): number|undefined {
+  public getMaxAutoBitrate(type : IBufferType) : number|undefined {
     const chooser = this._choosers[type];
     return chooser ?
       chooser.maxAutoBitrate$.getValue() :
@@ -298,7 +297,7 @@ export default class ABRManager {
    * Clean every ressources linked to the ABRManager.
    * The ABRManager is unusable after calling this method.
    */
-  public dispose(): void {
+  public dispose() : void {
     Object.keys(this._choosers).forEach(type => {
       this._choosers[type].dispose();
     });
@@ -313,7 +312,7 @@ export default class ABRManager {
    * _choosers[bufferType] property.
    * @param {string} bufferType
    */
-  private _lazilyCreateChooser(bufferType : SupportedBufferTypes) {
+  private _lazilyCreateChooser(bufferType : IBufferType) {
     if (!this._choosers[bufferType]) {
       this._choosers[bufferType] =
         createChooser(bufferType, this._chooserInstanceOptions);

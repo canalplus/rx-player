@@ -17,10 +17,8 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import log from "../../utils/log";
-import {
-  ICustomSourceBuffer,
-  ICustomTimeRanges,
-} from "./index";
+import { ICustomSourceBuffer } from "./abstract_source_buffer";
+import ICustomTimeRanges from "./time_ranges";
 
 enum SourceBufferAction { Append, Remove }
 
@@ -73,7 +71,31 @@ export default class QueuedSourceBuffer<T> {
    * @private
    * @type {Object}
    */
-  private _buffer : ICustomSourceBuffer<T>;
+  private readonly _buffer : ICustomSourceBuffer<T>;
+
+  /**
+   * Binded reference to the _onUpdate private method.
+   * Used for binding/removing an event listener.
+   * @private
+   * @type {Function}
+   */
+  private readonly __onUpdate : (x: Event) => void;
+
+  /**
+   * Binded reference to the _onError private method.
+   * Used for binding/removing an event listener.
+   * @private
+   * @type {Function}
+   */
+  private readonly __onError : (x : Event) => void;
+
+  /**
+   * Binded reference to the _flush private method.
+   * Used for binding/removing an event listener.
+   * @private
+   * @type {Function}
+   */
+  private readonly __flush : () => void;
 
   /**
    * Queue of awaited buffer actions.
@@ -91,30 +113,6 @@ export default class QueuedSourceBuffer<T> {
    * @type {Subject}
    */
   private _flushing : Subject<Event>|null;
-
-  /**
-   * Binded reference to the _onUpdate private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
-  private __onUpdate : (x: Event) => void;
-
-  /**
-   * Binded reference to the _onError private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
-  private __onError : (x : Event) => void;
-
-  /**
-   * Binded reference to the _flush private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
-  private __flush : () => void;
 
   /**
    * Keep track of the latest init segment pushed in the current queue.
@@ -162,12 +160,17 @@ export default class QueuedSourceBuffer<T> {
    * @param {*|null} segment
    * @returns {Observable}
    */
-  appendBuffer(initSegment : T|null, segment : T|null) : Observable<void> {
-    return this._queueAction({
-      type: SourceBufferAction.Append,
-      segment,
-      initSegment,
-    });
+  public appendBuffer(
+    initSegment : T|null,
+    segment : T|null
+  ) : Observable<void> {
+    return Observable.defer(() =>
+      this._queueAction({
+        type: SourceBufferAction.Append,
+        segment,
+        initSegment,
+      })
+    );
   }
 
   /**
@@ -177,17 +180,19 @@ export default class QueuedSourceBuffer<T> {
    * @param {Number} range.end - end position, in seconds
    * @returns {Observable}
    */
-  removeBuffer(
+  public removeBuffer(
     { start, end } : {
       start : number;
       end : number;
     }
   ) : Observable<void> {
-    return this._queueAction({
-      type: SourceBufferAction.Remove,
-      start,
-      end,
-    });
+    return Observable.defer(() =>
+      this._queueAction({
+        type: SourceBufferAction.Remove,
+        start,
+        end,
+      })
+    );
   }
 
   /**
@@ -198,7 +203,7 @@ export default class QueuedSourceBuffer<T> {
    * function.
    * @private
    */
-  abort() : void {
+  public abort() : void {
     this.dispose();
     this._buffer.abort();
   }
@@ -207,7 +212,7 @@ export default class QueuedSourceBuffer<T> {
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
-  getBuffered() : TimeRanges|ICustomTimeRanges {
+  public getBuffered() : TimeRanges|ICustomTimeRanges {
     return this._buffer.buffered;
   }
 
@@ -217,7 +222,7 @@ export default class QueuedSourceBuffer<T> {
    * /!\ You won't be able to use the QueuedSourceBuffer after calling this
    * function.
    */
-  dispose() : void {
+  public dispose() : void {
     this._buffer.removeEventListener("update", this.__onUpdate);
     this._buffer.removeEventListener("error", this.__onError);
     this._buffer.removeEventListener("updateend", this.__flush);

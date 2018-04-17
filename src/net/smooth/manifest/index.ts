@@ -203,9 +203,8 @@ function createSmoothStreamingParser(
     keySystems: IHSSKeySystem[];
   } {
     const header = root.firstElementChild as Element;
-    assert.equal(
-      header.nodeName,
-      "ProtectionHeader",
+    assert(
+      header.nodeName === "ProtectionHeader",
       "Protection should have ProtectionHeader child"
     );
     const privateData = strToBytes(atob(header.textContent || ""));
@@ -299,7 +298,7 @@ function createSmoothStreamingParser(
      * @param {string} name
      * @returns {string|undefined}
      */
-    function getAttribute(name: string): string|undefined {
+    function getAttribute(name: string) : string|undefined {
       const attr = q.getAttribute(name);
       return attr == null ? undefined : attr;
     }
@@ -379,7 +378,7 @@ function createSmoothStreamingParser(
     rootURL : string,
     timescale : number,
     protection? : IContentProtectionSmooth
-  ): IAdaptationSmooth|null {
+  ) : IAdaptationSmooth|null {
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
 
@@ -395,7 +394,7 @@ function createSmoothStreamingParser(
       language : normalizeLang(language);
     const baseURL = root.getAttribute("Url") || "";
     if (__DEV__) {
-      assert(baseURL);
+      assert(baseURL !== "");
     }
 
     const {
@@ -435,7 +434,10 @@ function createSmoothStreamingParser(
 
     // we assume that all representations have the same
     // codec and mimeType
-    assert(representations.length, "adaptation should have at least one representation");
+    assert(
+      representations.length !== 0,
+      "adaptation should have at least one representation"
+    );
 
     const id = adaptationType + (language ? ("_" + language) : "");
 
@@ -483,12 +485,11 @@ function createSmoothStreamingParser(
     return parsedAdaptation;
   }
 
-  function parseFromDocument(doc : Document, url : string): IParsedManifest {
+  function parseFromDocument(doc : Document, url : string) : IParsedManifest {
     const rootURL = normalizeBaseURL(url);
     const root = doc.documentElement;
-    assert.equal(
-      root.nodeName,
-      "SmoothStreamingMedia",
+    assert(
+      root.nodeName === "SmoothStreamingMedia",
       "document root should be SmoothStreamingMedia"
     );
     assert(/^[2]-[0-2]$/

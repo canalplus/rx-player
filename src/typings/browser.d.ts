@@ -24,7 +24,7 @@ interface ObjectConstructor {
    * Creates an object that has the specified prototype or that has null prototype.
    * @param o Object to use as a prototype. May be null.
    */
-  create(o: object | null): any;
+  create(o: object | null) : any;
 
   /**
    * Sets the prototype of a specified object o to  object proto or null.
@@ -32,7 +32,7 @@ interface ObjectConstructor {
    * @param o The object to change its prototype.
    * @param proto The value of the new prototype or null.
    */
-  setPrototypeOf(o: any, proto: object | null): any;
+  setPrototypeOf(o: any, proto: object | null) : any;
 }
 
 // for some reasons, Typescript seem to forget about SessionTypes
@@ -74,22 +74,22 @@ interface WebKitSourceBuffer {
 }
 
 interface HTMLElementConstructor {
-  new(): HTMLElement;
+  new() : HTMLElement;
 }
 
 interface VTTCueConstructor {
-  new(start : number, end: number, text: string): VTTCue;
+  new(start : number, end: number, text: string) : VTTCue;
 }
 
 // TODO Open issue on TypeScript
 interface TextTrack {
-  addCue(cue: TextTrackCue|VTTCue): void;
-  removeCue(cue: TextTrackCue|VTTCue): void;
+  addCue(cue: TextTrackCue|VTTCue) : void;
+  removeCue(cue: TextTrackCue|VTTCue) : void;
 }
 
 interface MediaSourceConstructor {
   isTypeSupported? : (mimeType : string) => boolean;
-  new(): MediaSource;
+  new() : MediaSource;
 }
 
 interface MediaKeysConstructor {
@@ -97,7 +97,7 @@ interface MediaKeysConstructor {
   isTypeSupported? : (type : string) => boolean;
 
   // Argument for IE11
-  new(keyType? : string): MediaKeys;
+  new(keyType? : string) : MediaKeys;
 }
 
 interface MediaKeys {

@@ -117,7 +117,7 @@ function parseSami(smi : string, timeOffset : number, lang : string) : ISAMIHTML
   const pCSS = getPCSSRules(css);
   const klass = langs[lang];
 
-  assert(klass, `sami: could not find lang ${lang} in CSS`);
+  assert(!!klass, `sami: could not find lang ${lang} in CSS`);
 
   for (;;) {
     up = syncOpen.exec(smi);

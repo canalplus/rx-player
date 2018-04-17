@@ -24,7 +24,7 @@ import {
 } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 import { EncryptedMediaError } from "../../errors";
-import assert from "../../utils/assert";
+import { assertInterface } from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
@@ -145,10 +145,10 @@ function createEME(
   errorStream: ErrorStream
 ) : Observable<IMockMediaKeys|MediaKeys|ISessionEvent|Event> {
   if (__DEV__) {
-    keySystems.forEach((ks) => assert.iface(ks, "keySystem", {
+    keySystems.forEach((ks) => assertInterface(ks, {
       getLicense: "function",
       type: "string",
-    }));
+    }, "keySystem"));
   }
 
   // get the MediaKeys element the associated options
@@ -187,9 +187,9 @@ function createEME(
 /**
  * Free up all ressources taken by the EME management.
  */
-function dispose() : void {
+function disposeEME() : void {
   // Remove MediaKey before to prevent MediaKey error
-  // if other instance is creating after dispose
+  // if other instance is creating after disposeEME
   disposeMediaKeys(instanceInfos.$videoElement).subscribe(noop);
   instanceInfos.$mediaKeys = null;
   instanceInfos.$keySystem = null;
@@ -201,7 +201,7 @@ function dispose() : void {
 /**
  * Clear EME ressources as the current content stops its playback.
  */
-function clearEME(): Observable<never> {
+function clearEMESession(): Observable<never> {
   return Observable.defer(() => {
     const observablesArray : Array<Observable<never>> = [];
     if (instanceInfos.$videoElement && shouldUnsetMediaKeys()) {
@@ -260,10 +260,10 @@ export default function EMEManager(
 }
 
 export {
-  createEME,
-  clearEME,
-  getCurrentKeySystem,
-  dispose,
-  IKeySystemOption,
   ErrorStream,
+  IKeySystemOption,
+  clearEMESession,
+  createEME,
+  disposeEME,
+  getCurrentKeySystem,
 };

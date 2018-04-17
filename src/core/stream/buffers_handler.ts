@@ -42,12 +42,12 @@ import {
 } from "../pipelines";
 import SourceBufferManager, {
   BUFFER_TYPES,
+  IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
-  SupportedBufferTypes,
 } from "../source_buffers";
 import ActivePeriodEmitter, {
-  IPeriodBufferItem,
+  IPeriodBufferInfos,
 } from "./active_period_emitter";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import EVENTS, {
@@ -59,25 +59,19 @@ import EVENTS, {
   IPeriodBufferReadyEvent,
 } from "./stream_events";
 
-/**
- * Events coming from single PeriodBuffer (Buffer linked to a Period and a type).
- */
+// Events coming from single PeriodBuffer
 type IPeriodBufferEvent =
-  IAdaptationBufferEvent |
+  IAdaptationBufferEvent<any> |
   IAdaptationChangeEvent;
 
-/**
- * Events coming from function(s) managing multiple PeriodBuffers.
- */
+// Events coming from function(s) managing multiple PeriodBuffers.
 type IMultiplePeriodBuffersEvent =
   IPeriodBufferEvent |
   IPeriodBufferReadyEvent |
   IPeriodBufferClearedEvent |
   ICompletedBufferEvent;
 
-/**
- * Every events sent by the BuffersHandler exported here.
- */
+// Every events sent by the BuffersHandler exported here.
 export type IBufferHandlerEvent =
   IActivePeriodChangedEvent |
   IMultiplePeriodBuffersEvent |
@@ -131,7 +125,7 @@ export default function BuffersHandler(
   wantedBufferAhead$ : Observable<number>,
   bufferManager : BufferManager,
   sourceBufferManager : SourceBufferManager,
-  segmentPipelinesManager : SegmentPipelinesManager,
+  segmentPipelinesManager : SegmentPipelinesManager<any>,
   segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<any>, SegmentBookkeeper>,
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<any>, Observable<never>>,
   options: {
@@ -156,8 +150,8 @@ export default function BuffersHandler(
   //    does not support adding more tracks during playback.
   createNativeSourceBuffersForPeriod(sourceBufferManager, firstPeriod);
 
-  const addPeriodBuffer$ = new Subject<IPeriodBufferItem>();
-  const removePeriodBuffer$ = new Subject<IPeriodBufferItem>();
+  const addPeriodBuffer$ = new Subject<IPeriodBufferInfos>();
+  const removePeriodBuffer$ = new Subject<IPeriodBufferInfos>();
 
   /**
    * Every PeriodBuffers for every possible types
@@ -216,7 +210,7 @@ export default function BuffersHandler(
    * @returns {Observable}
    */
   function manageEveryBuffers(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     basePeriod : Period
   ) : Observable<IMultiplePeriodBuffersEvent> {
     /**
@@ -331,7 +325,7 @@ export default function BuffersHandler(
    * @returns {Observable}
    */
   function manageConsecutivePeriodBuffers(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     basePeriod : Period,
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodBuffersEvent> {
@@ -404,7 +398,7 @@ export default function BuffersHandler(
         evt : IPeriodBufferEvent
       ) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
-        if (type === "full") {
+        if (type === "full-buffer") {
           /**
            * The Period coming just after the current one.
            * @type {Period|undefined}
@@ -412,13 +406,13 @@ export default function BuffersHandler(
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
           if (nextPeriod == null) {
-            // no more period, emits buffer-complete event
+            // no more period, emits  event
             return Observable.of(EVENTS.bufferComplete(bufferType));
           } else {
             // current buffer is full, create the next one if not
             createNextPeriodBuffer$.next(nextPeriod);
           }
-        } else if (type === "segments-queued") {
+        } else if (type === "active-buffer") {
           // current buffer is active, destroy next buffer if created
           destroyNextBuffers$.next();
         }
@@ -466,27 +460,27 @@ export default function BuffersHandler(
    * @returns {Observable}
    */
   function createPeriodBuffer(
-    bufferType : SupportedBufferTypes,
+    bufferType : IBufferType,
     period: Period,
     adaptation$ : Observable<Adaptation|null>
   ) : Observable<IPeriodBufferEvent> {
     return adaptation$.switchMap((adaptation) => {
       if (adaptation == null) {
         log.info(`set no ${bufferType} Adaptation`, period);
+        let cleanBuffer$ : Observable<null>;
 
         if (sourceBufferManager.has(bufferType)) {
           log.info(`clearing previous ${bufferType} SourceBuffer`);
           const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
-
-          // TODO use SegmentBookeeper to remove the complete range of segments
-          // linked to this period (Min between that and period.start for example)
-          // const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
-          _queuedSourceBuffer
-            .removeBuffer({ start: period.start, end: period.end || Infinity });
+          cleanBuffer$ = _queuedSourceBuffer
+            .removeBuffer({ start: period.start, end: period.end || Infinity })
+            .mapTo(null);
+        } else {
+          cleanBuffer$ = Observable.of(null);
         }
 
-        return Observable
-          .of(EVENTS.adaptationChange(bufferType, null, period))
+        return cleanBuffer$
+          .mapTo(EVENTS.adaptationChange(bufferType, null, period))
           .concat(createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period }));
       }
 
@@ -531,7 +525,7 @@ export default function BuffersHandler(
         pipeline,
         wantedBufferAhead$,
         { manifest, period, adaptation }
-      ).catch<IAdaptationBufferEvent, never>((error : Error) => {
+      ).catch<IAdaptationBufferEvent<any>, never>((error : Error) => {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to
         // continue streaming without any subtitles
@@ -619,9 +613,9 @@ function buffersAreComplete$(
     .map((buffer) => {
       return buffer
         .filter((evt) => {
-          return evt.type === "buffer-complete" || evt.type === "segments-queued";
+          return evt.type === "complete-buffer" || evt.type === "active-buffer";
         })
-        .map((evt) => evt.type === "buffer-complete")
+        .map((evt) => evt.type === "complete-buffer")
         .startWith(false)
         .distinctUntilChanged();
     });

@@ -22,28 +22,33 @@
 import arrayFind = require("array-find");
 import { Subject } from "rxjs/Subject";
 import { Adaptation, Period } from "../../manifest";
+import arrayIncludes from "../../utils/array-includes";
 import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 
-export interface IAudioTrackConfiguration {
+// single preference for an audio track Adaptation
+export type IAudioTrackPreference = null | {
   language : string;
   normalized : string;
   audioDescription : boolean;
-}
-export interface ITextTrackConfiguration {
+};
+
+// single preference for a text track Adaptation
+export type ITextTrackPreference = null | {
   language : string;
   normalized : string;
   closedCaption : boolean;
-}
-type IAudioTrackPreference = null | IAudioTrackConfiguration;
-type ITextTrackPreference = null | ITextTrackConfiguration;
+};
 
+// audio track returned by the LanguageManager
 export interface ILMAudioTrack {
   language : string;
   normalized : string;
   audioDescription : boolean;
   id : number|string;
 }
+
+// text track returned by the LanguageManager
 export interface ILMTextTrack {
   language : string;
   normalized : string;
@@ -51,30 +56,33 @@ export interface ILMTextTrack {
   id : number|string;
 }
 
-export type ILMAudioTrackList = ILMAudioTrackListItem[];
-export type ILMTextTrackList = ILMTextTrackListItem[];
-
+// audio track from a list of audio tracks returned by the LanguageManager
 export interface ILMAudioTrackListItem extends ILMAudioTrack {
   active : boolean;
 }
+
+// text track from a list of text tracks returned by the LanguageManager
 export interface ILMTextTrackListItem extends ILMTextTrack {
   active : boolean;
 }
 
-interface ILMAudioInfos {
+// stored audio informations for a single period
+interface ILMPeriodAudioInfos {
   adaptations : Adaptation[];
   adaptation$ : Subject<Adaptation|null> ;
 }
 
-interface ILMTextInfos {
+// stored text informations for a single period
+interface ILMPeriodTextInfos {
   adaptations : Adaptation[];
   adaptation$ : Subject<Adaptation|null> ;
 }
 
-interface ILMPeriodItem {
+// stored informations for a single period
+interface ILMPeriodInfos {
   period : Period;
-  audio? : ILMAudioInfos;
-  text? : ILMTextInfos;
+  audio? : ILMPeriodAudioInfos;
+  text? : ILMPeriodTextInfos;
 }
 
 /**
@@ -87,11 +95,40 @@ interface ILMPeriodItem {
  * @class LanguageManager
  */
 export default class LanguageManager {
-  private _periods : SortedList<ILMPeriodItem>;
+  /**
+   * Current Periods considered by the LanguageManager.
+   * Sorted by start time ascending
+   * @type {SortedList}
+   * @private
+   */
+  private _periods : SortedList<ILMPeriodInfos>;
+
+  /**
+   * Array of preferred languages for audio tracks.
+   * Sorted by order of preference descending.
+   * @type {Array.<Object>}
+   * @private
+   */
   private _preferredAudioTracks : IAudioTrackPreference[];
+
+  /**
+   * Array of preferred languages for text tracks.
+   * Sorted by order of preference descending.
+   * @type {Array.<Object>}
+   * @private
+   */
   private _preferredTextTracks : ITextTrackPreference[];
 
+  /**
+   * Memoization of the previously-chosen audio Adaptation for each Period.
+   * @type {WeakMap}
+   */
   private _audioChoiceMemory : WeakMap<Period, Adaptation|null>;
+
+  /**
+   * Memoization of the previously-chosen text Adaptation for each Period.
+   * @type {WeakMap}
+   */
   private _textChoiceMemory : WeakMap<Period, Adaptation|null>;
 
   /**
@@ -112,18 +149,17 @@ export default class LanguageManager {
     this._audioChoiceMemory = new WeakMap();
     this._textChoiceMemory = new WeakMap();
 
-    // TODO limit to PREFERENCES_MAX_LENGTH
     this._preferredAudioTracks = preferredAudioTracks || [];
     this._preferredTextTracks = preferredTextTracks || [];
   }
 
   /**
-   * Add Subject for new "audio" or "text" PeriodBuffer.
+   * Add Subject to choose Adaptation for new "audio" or "text" Period.
    * @param {string} bufferType
    * @param {Period} period
    * @param {Subject} adaptations
    */
-  addPeriod(
+  public addPeriod(
     bufferType : "audio" | "text",
     period : Period,
     adaptation$ : Subject<Adaptation|null>
@@ -151,11 +187,11 @@ export default class LanguageManager {
   }
 
   /**
-   * Remove Subject for previously-added "audio" or "text" PeriodBuffer.
+   * Remove Subject to choose an "audio" or "text" Adaptation for a Period.
    * @param {string} bufferType
    * @param {Period} period
    */
-  removePeriod(
+  public removePeriod(
     bufferType : "audio" | "text",
     period : Period
   ) : void {
@@ -181,12 +217,20 @@ export default class LanguageManager {
    *   1. What was the last chosen adaptation
    *   2. If not found, the preferences
    */
-  update() {
-    this.updateAudioTrackChoices();
-    this.updateTextTrackChoices();
+  public update() : void {
+    this._updateAudioTrackChoices();
+    this._updateTextTrackChoices();
   }
 
-  setPreferredAudioTrack(period : Period) {
+  /**
+   * Emit initial audio Adaptation through the given Subject based on:
+   *   - the preferred audio tracks
+   *   - the last choice for this period, if one
+   * @param {Period} period
+   *
+   * @throws Error - Throws if the period given has not been added
+   */
+  public setInitialAudioTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos || !periodItem) {
@@ -194,12 +238,12 @@ export default class LanguageManager {
     }
 
     const preferredAudioTracks = this._preferredAudioTracks;
-    const audioAdaptations = periodItem.period.adaptations.audio || [];
+    const audioAdaptations = period.adaptations.audio || [];
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
+
     if (
       chosenAudioAdaptation === undefined ||
-      !isAudioAdaptationOptimal(
-        chosenAudioAdaptation, audioAdaptations, preferredAudioTracks)
+      !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
     ) {
       const optimalAdaptation = findFirstOptimalAudioAdaptation(
         audioAdaptations, preferredAudioTracks);
@@ -211,7 +255,15 @@ export default class LanguageManager {
     }
   }
 
-  setPreferredTextTrack(period : Period) {
+  /**
+   * Emit preferred text Adaptation through the given Subject based on:
+   *   - the preferred text tracks
+   *   - the last choice for this period, if one
+   * @param {Period} period
+   *
+   * @throws Error - Throws if the period given has not been added
+   */
+  public setInitialTextTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos || !periodItem) {
@@ -219,12 +271,11 @@ export default class LanguageManager {
     }
 
     const preferredTextTracks = this._preferredTextTracks;
-    const textAdaptations = periodItem.period.adaptations.text || [];
+    const textAdaptations = period.adaptations.text || [];
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (
       chosenTextAdaptation === undefined ||
-      !isTextAdaptationOptimal(
-        chosenTextAdaptation, textAdaptations, preferredTextTracks)
+      !arrayIncludes(textAdaptations, chosenTextAdaptation)
     ) {
       const optimalAdaptation = findFirstOptimalTextAdaptation(
         textAdaptations, preferredTextTracks);
@@ -238,133 +289,133 @@ export default class LanguageManager {
 
   /**
    * Set audio track based on the ID of its adaptation for a given added Period.
+   *
    * @param {Period} period - The concerned Period.
-   * @param {string|Number} wantedId - adaptation id of the wanted track
+   * @param {string} wantedId - adaptation id of the wanted track
+   *
+   * @throws Error - Throws if the period given has not been added
    * @throws Error - Throws if the given id is not found in any audio adaptation
    * of the given Period.
    */
-  setAudioTrackByID(period : Period, wantedId : string|number) : void {
+  public setAudioTrackByID(period : Period, wantedId : string) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos) {
       throw new Error("LanguageManager: Given Period not found.");
     }
 
-    const foundAdaptation = arrayFind(audioInfos.adaptations, ({ id }) =>
+    const wantedAdaptation = arrayFind(audioInfos.adaptations, ({ id }) =>
       id === wantedId);
 
-    if (foundAdaptation === undefined) {
+    if (wantedAdaptation === undefined) {
       throw new Error("Audio Track not found.");
     }
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
-    if (
-      chosenAudioAdaptation === undefined ||
-      chosenAudioAdaptation !== foundAdaptation
-    ) {
-      this._audioChoiceMemory.set(period, foundAdaptation);
-      audioInfos.adaptation$.next(foundAdaptation);
+    if (chosenAudioAdaptation === wantedAdaptation) {
+      return;
     }
 
-    // addPreference(this._preferredAudioTracks, {
-    //   language: foundAdaptation.language || "",
-    //   normalized: foundAdaptation.normalizedLanguage || "",
-    //   audioDescription: !!foundAdaptation.isAudioDescription,
-    // });
+    this._audioChoiceMemory.set(period, wantedAdaptation);
+    audioInfos.adaptation$.next(wantedAdaptation);
   }
 
   /**
    * Set text track based on the ID of its adaptation for a given added Period.
+   *
    * @param {Period} period - The concerned Period.
-   * @param {string|Number} wantedId - adaptation id of the wanted track
+   * @param {string} wantedId - adaptation id of the wanted track
+   *
+   * @throws Error - Throws if the period given has not been added
    * @throws Error - Throws if the given id is not found in any text adaptation
    * of the given Period.
    */
-  setTextTrackByID(period : Period, wantedId : string|number) : void {
+  public setTextTrackByID(period : Period, wantedId : string) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos) {
       throw new Error("LanguageManager: Given Period not found.");
     }
-    const foundAdaptation = arrayFind(textInfos.adaptations, ({ id }) =>
+    const wantedAdaptation = arrayFind(textInfos.adaptations, ({ id }) =>
       id === wantedId);
 
-    if (foundAdaptation === undefined) {
+    if (wantedAdaptation === undefined) {
       throw new Error("Text Track not found.");
     }
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
-    if (
-      chosenTextAdaptation === undefined ||
-      chosenTextAdaptation !== foundAdaptation
-    ) {
-      this._textChoiceMemory.set(period, foundAdaptation);
-      textInfos.adaptation$.next(foundAdaptation);
+    if (chosenTextAdaptation === wantedAdaptation) {
+      return;
     }
 
-    // addPreference(this._preferredTextTracks, {
-    //   language: foundAdaptation.language || "",
-    //   normalized: foundAdaptation.normalizedLanguage || "",
-    //   closedCaption: !!foundAdaptation.isClosedCaption,
-    // });
+    this._textChoiceMemory.set(period, wantedAdaptation);
+    textInfos.adaptation$.next(wantedAdaptation);
   }
 
   /**
    * Disable the given audio track for a given Period.
+   *
    * @param {Period} period - The concerned Period.
+   *
+   * @throws Error - Throws if the period given has not been added
    */
-  disableAudioTrack(period : Period) : void {
+  public disableAudioTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos) {
       throw new Error("LanguageManager: Given Period not found.");
     }
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
-    if (chosenAudioAdaptation !== null) {
-      this._audioChoiceMemory.set(period, null);
-      audioInfos.adaptation$.next(null);
+    if (chosenAudioAdaptation === null) {
+      return;
     }
+
+    this._audioChoiceMemory.set(period, null);
+    audioInfos.adaptation$.next(null);
   }
 
   /**
    * Disable the current text track for a given period.
+   *
    * @param {Period} period - The concerned Period.
+   *
+   * @throws Error - Throws if the period given has not been added
    */
-  disableTextTrack(period : Period) : void {
+  public disableTextTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos) {
       throw new Error("LanguageManager: Given Period not found.");
     }
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
-    if (chosenTextAdaptation !== null) {
-      this._textChoiceMemory.set(period, null);
-      textInfos.adaptation$.next(null);
+    if (chosenTextAdaptation === null) {
+      return;
     }
+
+    this._textChoiceMemory.set(period, null);
+    textInfos.adaptation$.next(null);
   }
 
   /**
    * Returns an object describing the chosen audio track for the given audio
    * Period.
-   * This object has the following keys:
-   *   - language {string}
-   *   - normalized {string}
-   *   - audioDescription {Boolean}
-   *   - id {number|string}
    *
    * Returns null is the the current audio track is disabled or not
    * set yet.
+   *
    * @param {Period} period
    * @returns {Object|null}
    */
-  getChosenAudioTrack(period : Period) : ILMAudioTrack|null {
+  public getChosenAudioTrack(period : Period) : ILMAudioTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (audioInfos == null) {
       return null;
     }
+
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
     if (!chosenAudioAdaptation) {
       return null;
     }
+
     return {
       language: chosenAudioAdaptation.language || "",
       normalized: chosenAudioAdaptation.normalizedLanguage || "",
@@ -376,27 +427,25 @@ export default class LanguageManager {
   /**
    * Returns an object describing the chosen text track for the given text
    * Period.
-   * This object has the following keys:
-   *   - language {string}
-   *   - normalized {string}
-   *   - closedCaption {Boolean}
-   *   - id {number|string}
    *
    * Returns null is the the current text track is disabled or not
    * set yet.
+   *
    * @param {Period} period
    * @returns {Object|null}
    */
-  getChosenTextTrack(period : Period) : ILMTextTrack|null {
+  public getChosenTextTrack(period : Period) : ILMTextTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (textInfos == null) {
       return null;
     }
+
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (!chosenTextAdaptation) {
       return null;
     }
+
     return {
       language: chosenTextAdaptation.language || "",
       normalized: chosenTextAdaptation.normalizedLanguage || "",
@@ -408,15 +457,10 @@ export default class LanguageManager {
   /**
    * Returns all available audio tracks for a given Period, as an array of
    * objects.
-   * Those objects have the following keys:
-   *   - language {string}
-   *   - normalized {string}
-   *   - audioDescription {Boolean}
-   *   - id {number|string}
-   *   - active {Boolean}
+   *
    * @returns {Array.<Object>}
    */
-  getAvailableAudioTracks(period : Period) : ILMAudioTrackList {
+  public getAvailableAudioTracks(period : Period) : ILMAudioTrackListItem[] {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (audioInfos == null) {
@@ -425,6 +469,7 @@ export default class LanguageManager {
 
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
     const currentId = chosenAudioAdaptation && chosenAudioAdaptation.id;
+
     return audioInfos.adaptations
       .map((adaptation) => ({
         language: adaptation.language || "",
@@ -438,18 +483,11 @@ export default class LanguageManager {
   /**
    * Returns all available text tracks for a given Period, as an array of
    * objects.
-   * Those objects have the following keys:
-   *   - language {string}
-   *   - normalized {string}
-   *   - closedCaption {Boolean}
-   *   - id {number|string}
-   *   - active {Boolean}
-   * @throws Error - Throws if the given Period has not been added to the
-   * LanguageManager.
+   *
    * @param {Period} period
    * @returns {Array.<Object>}
    */
-  getAvailableTextTracks(period : Period) : ILMTextTrackList {
+  public getAvailableTextTracks(period : Period) : ILMTextTrackListItem[] {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (textInfos == null) {
@@ -458,6 +496,7 @@ export default class LanguageManager {
 
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     const currentId = chosenTextAdaptation && chosenTextAdaptation.id;
+
     return textInfos.adaptations
       .map((adaptation) => ({
         language: adaptation.language || "",
@@ -468,7 +507,7 @@ export default class LanguageManager {
       }));
   }
 
-  public updateAudioTrackChoices() {
+  private _updateAudioTrackChoices() {
     const preferredAudioTracks = this._preferredAudioTracks;
 
     const recursiveUpdateAudioTrack = (index : number) : void => {
@@ -492,9 +531,11 @@ export default class LanguageManager {
       const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
       if (
-        chosenAudioAdaptation !== undefined &&
-        isAudioAdaptationOptimal(
-          chosenAudioAdaptation, audioAdaptations, preferredAudioTracks)
+        chosenAudioAdaptation === null ||
+        (
+          chosenAudioAdaptation !== undefined &&
+          arrayIncludes(audioAdaptations, chosenAudioAdaptation)
+        )
       ) {
         // Already best audio for this Buffer, check next one
         recursiveUpdateAudioTrack(index + 1);
@@ -514,7 +555,7 @@ export default class LanguageManager {
     recursiveUpdateAudioTrack(0);
   }
 
-  public updateTextTrackChoices() {
+  private _updateTextTrackChoices() {
     const preferredTextTracks = this._preferredTextTracks;
 
     const recursiveUpdateTextTrack = (index : number) : void => {
@@ -538,9 +579,11 @@ export default class LanguageManager {
       const chosenTextAdaptation = this._textChoiceMemory.get(period);
 
       if (
-        chosenTextAdaptation !== undefined &&
-        isTextAdaptationOptimal(
-          chosenTextAdaptation, textAdaptations, preferredTextTracks)
+        chosenTextAdaptation === null ||
+        (
+          chosenTextAdaptation !== undefined &&
+          arrayIncludes(textAdaptations, chosenTextAdaptation)
+        )
       ) {
         // Already best text for this Buffer, check next one
         recursiveUpdateTextTrack(index + 1);
@@ -561,50 +604,55 @@ export default class LanguageManager {
   }
 }
 
-/**
- * Returns true if the given audio adaptation is an optimal choice for a period
- * given the list of audio adaptations in the period and an array of preferred
- * audio configurations sorted from the most preferred to the least preferred.
- * @param {Adaptation|null} adaptation
- * @param {Array.<Adaptation>} audioAdaptations
- * @param {Array.<Object>} preferredAudioTracks
- * @returns {Boolean}
- */
-function isAudioAdaptationOptimal(
-  adaptation : Adaptation|null,
-  audioAdaptations : Adaptation[],
-  preferredAudioTracks : IAudioTrackPreference[]
-) : boolean {
-  if (!audioAdaptations.length) {
-    return adaptation === null;
-  }
+// /**
+//  * Returns true if the given audio adaptation is an optimal choice for a period
+//  * given:
+//  *
+//  *   - the list of audio adaptations in the period
+//  *
+//  *   - an array of preferred audio configurations sorted from the most preferred
+//  *     to the least preferred.
+//  *
+//  * @param {Adaptation|null} adaptation
+//  * @param {Array.<Adaptation>} audioAdaptations
+//  * @param {Array.<Object>} preferredAudioTracks
+//  * @returns {Boolean}
+//  */
+// function isAudioAdaptationOptimal(
+//   adaptation : Adaptation|null,
+//   audioAdaptations : Adaptation[],
+//   preferredAudioTracks : IAudioTrackPreference[]
+// ) : boolean {
+//   if (!audioAdaptations.length) {
+//     return adaptation === null;
+//   }
 
-  for (let i = 0; i < preferredAudioTracks.length; i++) {
-    const preferredAudioTrack = preferredAudioTracks[i];
+//   for (let i = 0; i < preferredAudioTracks.length; i++) {
+//     const preferredAudioTrack = preferredAudioTracks[i];
 
-    if (preferredAudioTrack === null) {
-      return adaptation === null;
-    }
+//     if (preferredAudioTrack === null) {
+//       return adaptation === null;
+//     }
 
-    const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) =>
-      audioAdaptation.normalizedLanguage === preferredAudioTrack.normalized &&
-      !!audioAdaptation.isAudioDescription === preferredAudioTrack.audioDescription
-    );
+//     const foundAdaptation = arrayFind(audioAdaptations, (audioAdaptation) =>
+//       audioAdaptation.normalizedLanguage === preferredAudioTrack.normalized &&
+//       !!audioAdaptation.isAudioDescription === preferredAudioTrack.audioDescription
+//     );
 
-    if (foundAdaptation !== undefined) {
-      if (adaptation === null) {
-        return false;
-      }
+//     if (foundAdaptation !== undefined) {
+//       if (adaptation === null) {
+//         return false;
+//       }
 
-      return (
-        (foundAdaptation.normalizedLanguage || "") ===
-        (adaptation.normalizedLanguage || "")
-      ) && !!foundAdaptation.isAudioDescription === !!adaptation.isAudioDescription;
-    }
+//       return (
+//         (foundAdaptation.normalizedLanguage || "") ===
+//         (adaptation.normalizedLanguage || "")
+//       ) && !!foundAdaptation.isAudioDescription === !!adaptation.isAudioDescription;
+//     }
 
-  }
-  return true; // no optimal adaptation, just return true
-}
+//   }
+//   return true; // no optimal adaptation, just return true
+// }
 
 /**
  * Find an optimal audio adaptation given their list and the array of preferred
@@ -644,50 +692,55 @@ function findFirstOptimalAudioAdaptation(
   return audioAdaptations[0];
 }
 
-/**
- * Returns true if the given text adaptation is an optimal choice for a period
- * given the list of text adaptations in the period and an array of preferred
- * text configurations sorted from the most preferred to the least preferred.
- * @param {Adaptation|null} adaptation
- * @param {Array.<Adaptation>} audioAdaptations
- * @param {Array.<Object>} preferredAudioTracks
- * @returns {Boolean}
- */
-function isTextAdaptationOptimal(
-  adaptation : Adaptation|null,
-  textAdaptations : Adaptation[],
-  preferredTextTracks : ITextTrackPreference[]
-) : boolean {
-  if (!textAdaptations.length) {
-    return adaptation === null;
-  }
+// /**
+//  * Returns true if the given text adaptation is an optimal choice for a period
+//  * given:
+//  *
+//  *   - the list of text adaptations in the period
+//  *
+//  *   - an array of preferred text configurations sorted from the most preferred
+//  *     to the least preferred.
+//  *
+//  * @param {Adaptation|null} adaptation
+//  * @param {Array.<Adaptation>} audioAdaptations
+//  * @param {Array.<Object>} preferredAudioTracks
+//  * @returns {Boolean}
+//  */
+// function isTextAdaptationOptimal(
+//   adaptation : Adaptation|null,
+//   textAdaptations : Adaptation[],
+//   preferredTextTracks : ITextTrackPreference[]
+// ) : boolean {
+//   if (!textAdaptations.length) {
+//     return adaptation === null;
+//   }
 
-  for (let i = 0; i < preferredTextTracks.length; i++) {
-    const preferredTextTrack = preferredTextTracks[i];
+//   for (let i = 0; i < preferredTextTracks.length; i++) {
+//     const preferredTextTrack = preferredTextTracks[i];
 
-    if (preferredTextTrack === null) {
-      return adaptation === null;
-    }
+//     if (preferredTextTrack === null) {
+//       return adaptation === null;
+//     }
 
-    const foundAdaptation = arrayFind(textAdaptations, (textAdaptation) =>
-      (textAdaptation.normalizedLanguage || "") === preferredTextTrack.normalized &&
-      !!textAdaptation.isClosedCaption === preferredTextTrack.closedCaption
-    );
+//     const foundAdaptation = arrayFind(textAdaptations, (textAdaptation) =>
+//       (textAdaptation.normalizedLanguage || "") === preferredTextTrack.normalized &&
+//       !!textAdaptation.isClosedCaption === preferredTextTrack.closedCaption
+//     );
 
-    if (foundAdaptation !== undefined) {
-      if (adaptation === null) {
-        return false;
-      }
+//     if (foundAdaptation !== undefined) {
+//       if (adaptation === null) {
+//         return false;
+//       }
 
-      return (
-        (foundAdaptation.normalizedLanguage || "") ===
-        (adaptation.normalizedLanguage || "")
-      ) && !!foundAdaptation.isClosedCaption === !!adaptation.isClosedCaption;
-    }
+//       return (
+//         (foundAdaptation.normalizedLanguage || "") ===
+//         (adaptation.normalizedLanguage || "")
+//       ) && !!foundAdaptation.isClosedCaption === !!adaptation.isClosedCaption;
+//     }
 
-  }
-  return adaptation === null;
-}
+//   }
+//   return adaptation === null;
+// }
 
 /**
  * Find an optimal text adaptation given their list and the array of preferred
@@ -728,7 +781,7 @@ function findFirstOptimalTextAdaptation(
 }
 
 function findPeriodIndex(
-  periods : SortedList<ILMPeriodItem>,
+  periods : SortedList<ILMPeriodInfos>,
   period : Period
 ) : number|undefined {
   for (let i = 0; i < periods.length(); i++) {
@@ -740,9 +793,9 @@ function findPeriodIndex(
 }
 
 function getPeriodItem(
-  periods : SortedList<ILMPeriodItem>,
+  periods : SortedList<ILMPeriodInfos>,
   period : Period
-) : ILMPeriodItem|undefined {
+) : ILMPeriodInfos|undefined {
   for (let i = 0; i < periods.length(); i++) {
     const periodI = periods.get(i);
     if (periodI.period.id === period.id) {
@@ -750,16 +803,3 @@ function getPeriodItem(
     }
   }
 }
-
-// const PREFERENCES_MAX_LENGTH = 10;
-
-// function addPreference<T extends IAudioTrackPreference|ITextTrackPreference>(
-//   preferences : T[],
-//   preference : T
-// ) {
-//   // TODO only one reference of the same language per Array?
-//   if (preferences.length >= PREFERENCES_MAX_LENGTH - 1) {
-//     preferences.pop();
-//   }
-//   preferences.unshift(preference);
-// }

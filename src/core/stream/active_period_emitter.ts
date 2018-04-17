@@ -22,38 +22,38 @@
  * The first chronological period for which all types of buffers are active.
  */
 
-// TODO
-// This turns out to be a mess
-// The Stream should probably emit a "currentPeriodChanged" event instead.
-
 import { Observable } from "rxjs/Observable";
 import { Period } from "../../manifest";
 import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 import {
   BUFFER_TYPES,
-  SupportedBufferTypes,
+  IBufferType,
 } from "../source_buffers";
 
-export interface IPeriodBufferItem {
+// PeriodBuffer informations emitted to the ActivePeriodEmitted
+export interface IPeriodBufferInfos {
   period: Period;
-  type: SupportedBufferTypes;
+  type: IBufferType;
 }
 
+// structure used internally to keep track of which Period has which
+// PeriodBuffer
 interface IPeriodItem {
   period: Period;
-  buffers: Set<SupportedBufferTypes>;
+  buffers: Set<IBufferType>;
 }
 
 /**
  * Emit the active Period each times it changes.
  *
  * The active Period is the first Period (in chronological order) which has
- * PeriodBuffers for all BUFFER_TYPES.
+ * a PeriodBuffer for every defined BUFFER_TYPES.
  *
  * Emit null if no Period has PeriodBuffers for all types.
  *
  * @example
+ * For 4 BUFFER_TYPES: "AUDIO", "VIDEO", "TEXT" and "IMAGE":
  * ```
  *                     +-------------+
  *         Period 1    | Period 2    | Period 3
@@ -81,8 +81,8 @@ interface IPeriodItem {
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
-  addPeriodBuffer$ : Observable<IPeriodBufferItem>,
-  removePeriodBuffer$ : Observable<IPeriodBufferItem>
+  addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
+  removePeriodBuffer$ : Observable<IPeriodBufferInfos>
 ) : Observable<Period|null> {
   const periodsList : SortedList<IPeriodItem> =
     new SortedList((a, b) => a.period.start - b.period.start);
@@ -94,7 +94,7 @@ export default function ActivePeriodEmitter(
       if (!periodItem) {
         periodItem = {
           period,
-          buffers: new Set<SupportedBufferTypes>(),
+          buffers: new Set<IBufferType>(),
         };
         periodsList.add(periodItem);
       }
@@ -143,6 +143,6 @@ export default function ActivePeriodEmitter(
  * @param {Set} bufferList
  * @returns {Boolean}
  */
-function isBufferListFull(bufferList : Set<SupportedBufferTypes>) : boolean {
+function isBufferListFull(bufferList : Set<IBufferType>) : boolean {
   return bufferList.size >= BUFFER_TYPES.length;
 }

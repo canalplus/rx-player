@@ -94,7 +94,7 @@ function parseDuration(date : string) : number {
   }
 
   const match = iso8601Duration.exec(date) as RegExpExecArray;
-  assert(match, `${date} is not a valid ISO8601 duration`);
+  assert(!!match, `${date} is not a valid ISO8601 duration`);
 
   return (
     parseFloat(match[2]  || "0") * 365 * 24 * 60 * 60 +
@@ -189,7 +189,7 @@ function isHardOfHearing(accessibility: IAccessibility) {
  * @param {Node} root
  * @returns {Object}
  */
-function parseScheme(root: Node): IScheme {
+function parseScheme(root: Node) : IScheme {
   let schemeIdUri : string|undefined;
   let value : string|undefined;
   for (let i = 0; i < root.attributes.length; i++) {

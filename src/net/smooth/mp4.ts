@@ -265,7 +265,7 @@ const atoms = {
    */
   frma(dataFormat : string) : Uint8Array {
     if (__DEV__) {
-      assert.equal(dataFormat.length, 4, "wrong data format length");
+      assert(dataFormat.length === 4, "wrong data format length");
     }
     return Atom("frma", strToBytes(dataFormat));
   },
@@ -499,7 +499,7 @@ const atoms = {
    */
   schm(schemeType : string, schemeVersion : number) : Uint8Array {
     if (__DEV__) {
-      assert.equal(schemeType.length, 4, "wrong scheme type length");
+      assert(schemeType.length === 4, "wrong scheme type length");
     }
     return Atom("schm", concat(
       4,
@@ -586,7 +586,7 @@ const atoms = {
    */
   tenc(algId : number, ivSize : number, keyId : string) : Uint8Array {
     if (__DEV__) {
-      assert.equal(keyId.length, 32, "wrong default KID length");
+      assert(keyId.length === 32, "wrong default KID length");
     }
     return Atom("tenc", concat(
       6,

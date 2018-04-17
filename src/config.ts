@@ -47,14 +47,16 @@ export default {
    */
   DEFAULT_SHOW_NATIVE_SUBTITLE: true,
 
-  /*
-   * Default buffer goal in seconds. Once this amount of time reached ahead in
-   * the buffer, the player won't automatically download segments.
+  /**
+   * Default buffer goal in seconds.
+   * Once enough content has been downloaded to fill the buffer up to
+   * ``current position + DEFAULT_WANTED_BUFFER_AHEAD", we will stop downloading
+   * content.
    * @type {Number}
    */
   DEFAULT_WANTED_BUFFER_AHEAD: 30,
 
-  /*
+  /**
    * Default max buffer size ahead of the current position in seconds.
    * The buffer _after_ this limit will be garbage collected.
    * Set to Infinity for no limit.
@@ -111,16 +113,10 @@ export default {
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
-   * Buffer threshold ratio used as a lower bound margin to find the suitable
-   * representation.
-   * @param {Number}
-   */
-  DEFAULT_ADAPTIVE_BUFFER_THRESHOLD: 0.3,
-
-  /**
    * Delay after which, if the page is hidden, the user is considered inactive
-   * on the current video. Allow to enforce specific optimizations when the
-   * page is not shown.
+   * on the current video.
+   *
+   * Allow to enforce specific optimizations when the page is not shown.
    * @see DEFAULT_THROTTLE_WHEN_HIDDEN
    * @type {Number}
    */
@@ -137,6 +133,9 @@ export default {
   /**
    * If true, the video representations you can switch to in adaptive mode
    * are limited by the video element's width.
+   *
+   * Basically in that case, we won't switch to a video Representation with
+   * a width higher than the current width of the video HTMLElement.
    * @type {Boolean}
    */
   DEFAULT_LIMIT_VIDEO_WIDTH: false,
@@ -325,22 +324,25 @@ export default {
   ABR_REGULAR_FACTOR: 0.90,
 
   /**
-   * If a SourceBuffer has less than this amount of seconds ahead of the current
-   * position in its buffer, the ABR manager will go into starvation mode.
+   * If a SourceBuffer has less than ABR_STARVATION_GAP in seconds ahead of the
+   * current position in its buffer, the ABR manager will go into starvation
+   * mode.
    *
    * It gets out of starvation mode when the OUT_OF_STARVATION_GAP value is
    * reached.
    *
-   * Under this mode:
+   * Under this starvation mode:
+   *
    *   - the bandwidth considered will be a little lower than the one estimated
+   *
    *   - the time the next important request take will be checked
    *     multiple times to detect when/if it takes too much time.
    *     If the request is considered too long, the bitrate will be hastily
    *     re-calculated from this single request.
+   *
    * @type {Number}
    */
   ABR_STARVATION_GAP: 5,
-
   OUT_OF_STARVATION_GAP: 7,
 
   /**
@@ -348,14 +350,21 @@ export default {
    * seeking on an unbuffered part of the stream.
    * @type {Number}
    */
-  RESUME_AFTER_SEEKING_GAP: 1.5,
+  RESUME_GAP_AFTER_SEEKING: 1.5,
+
+  /**
+   * Number of seconds ahead in the buffer after which playback will resume when
+   * the player was stalled due to a low readyState.
+   * @type {Number}
+   */
+  RESUME_GAP_AFTER_NOT_ENOUGH_DATA: 0.5,
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume
    * after the player went through a buffering step.
    * @type {Number}
    */
-  RESUME_AFTER_BUFFERING_GAP: 5,
+  RESUME_GAP_AFTER_BUFFERING: 5,
 
   /**
    * Maximum number of seconds in the buffer based on which a "stalling"
@@ -458,6 +467,98 @@ export default {
   MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
 
   /**
+   * The Buffer padding is a time offset from the current time that affects
+   * the buffer.
+   *
+   * Basically, from a given time, if the current buffer gap number (time
+   * between the current time and the end of the downloaded buffer) is between
+   * the "high" and "low" described here (of the corresponding type), we won't
+   * reschedule segments for that range.
+   *
+   * This is to avoid excessive re-buffering.
+   *
+   * Keeping the "high"s too low would increase the risk of re-bufferings.
+   *
+   * Keeping the "high"s too high would delay visible quality increase.
+   *
+   * @type {Object}
+   */
+  BUFFER_PADDING: {
+    audio: {
+      high: 1,
+      low: 1,
+    }, // only "audio" segments
+    video: {
+      high: 8,
+      low: 2,
+    }, // only "video" segments
+    other: {
+      high: 1,
+      low: 1,
+    }, // tracks which are not audio/video (text images).
+  },
+
+  /**
+   * Segments of different types are downloaded by steps:
+   *
+   *   - first the audio/video/text Segments which are immediately needed
+   *
+   *   - then once every of those Segments have been downloaded, less-needed
+   *     Segments
+   *
+   *   - then once every of those less-needed Segments have been downloaded,
+   *     even less-needed Segments
+   *
+   *   - etc.
+   *
+   * This stepped download strategy allows to make a better use of network
+   * ressources.
+   *
+   * For example, if more than sufficient audio buffer has been downloaded but
+   * the immediately-needed video Segment is still pending its request, we might
+   * be in a situation of rebuffering.
+   * In that case, a better strategy would be to make sure every network
+   * ressource is allocated for this video Segment before rebuffering happens.
+   *
+   * This is where those steps become useful.
+   *
+   * --
+   *
+   * The numbers defined in this Array describe what the steps are.
+   *
+   * Each number is linked to a distance from the current playing position, in
+   * seconds.
+   * Distances which will be used as limit points, from which a new step is
+   * reached (see example).
+   *
+   * Note: You can set an empty array to deactivate the steps feature (every
+   * Segments have the same priority).
+   *
+   * @example
+   *
+   * let's imagine the following SEGMENT_PRIORITIES_STEPS array:
+   * [5, 11, 17, 25]
+   *
+   * To link each Segments to a corresponding priority (and thus to a specific
+   * step), we have to consider the distance d between the current position and
+   * the start time of the Segment.
+   *
+   * We have in our example 5 groups, which correspond to the following possible
+   * d values:
+   *   1. inferior to 5
+   *   2. between 5 and 11
+   *   3. between 11 and 17
+   *   4. between 17 and 25
+   *   5. superior to 25
+   *
+   * Segments corresponding to a lower-step will need to all be downloaded
+   * before Segments of a newer step begin.
+   *
+   * @type {Array.<Number>}
+   */
+  SEGMENT_PRIORITIES_STEPS : [6, 14],
+
+  /**
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (EME).
    *
@@ -497,4 +598,23 @@ export default {
     ],
   } as IDictionary<string[]>,
   /* tslint:enable no-object-literal-type-assertion */
+
+  /**
+   * The player relies on browser events and properties to update its status to
+   * "ENDED".
+   *
+   * Sadly in some cases, like in Chrome 54, this event is never triggered on
+   * some contents probably due to a browser bug.
+   *
+   * This threshold resolves this issue by forcing the status to "ENDED" when:
+   *   1. the player is stalling
+   *   2. the absolute difference between current playback time and duration is
+   *      under this value
+   *
+   * If set to null, this workaround is disabled and the player only relies on
+   * browser events.
+   *
+   * @type {Number|null}
+   */
+  FORCED_ENDED_THRESHOLD: 0.001,
 };

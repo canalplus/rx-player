@@ -21,7 +21,7 @@ import { Subject } from "rxjs/Subject";
 import config from "../../config";
 import { Representation } from "../../manifest";
 import log from "../../utils/log";
-import { SupportedBufferTypes } from "../source_buffers";
+import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
 import filterByBitrate from "./filterByBitrate";
@@ -55,7 +55,7 @@ interface IRequestInfo {
 type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
 
 interface IProgressRequest {
-  type: SupportedBufferTypes;
+  type: IBufferType;
   event: "progress";
   value: {
     id: string|number;
@@ -65,7 +65,7 @@ interface IProgressRequest {
 }
 
 interface IBeginRequest {
-  type: SupportedBufferTypes;
+  type: IBufferType;
   event: "requestBegin";
   value: {
     id: string|number;
@@ -76,7 +76,7 @@ interface IBeginRequest {
 }
 
 interface IEndRequest {
-  type: SupportedBufferTypes;
+  type: IBufferType;
   event: "requestEnd";
   value: {
     id: string|number;
@@ -266,15 +266,15 @@ function requestTakesTime(
  * @class RepresentationChooser
  */
 export default class RepresentationChooser {
-  public manualBitrate$ : BehaviorSubject<number>;
-  public maxAutoBitrate$ : BehaviorSubject<number>;
+  public readonly manualBitrate$ : BehaviorSubject<number>;
+  public readonly maxAutoBitrate$ : BehaviorSubject<number>;
 
-  private _dispose$ : Subject<void>;
+  private readonly _dispose$ : Subject<void>;
+  private readonly _limitWidth$ : Observable<number>|undefined;
+  private readonly _throttle$ : Observable<number>|undefined;
+  private readonly estimator : BandwidthEstimator;
+  private readonly _initialBitrate : number;
   private _currentRequests : IDictionary<IRequestInfo>;
-  private _limitWidth$ : Observable<number>|undefined;
-  private _throttle$ : Observable<number>|undefined;
-  private estimator : BandwidthEstimator;
-  private _initialBitrate : number;
 
   /**
    * @param {Object} options
@@ -309,7 +309,7 @@ export default class RepresentationChooser {
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
-  ): Observable<{
+  ) : Observable<{
     bitrate: undefined|number; // bitrate estimation
     representation: Representation|null; // chosen representation
   }> {
@@ -474,7 +474,7 @@ export default class RepresentationChooser {
    * @param {number} duration
    * @param {number} size
    */
-  public addEstimate(duration : number, size : number): void {
+  public addEstimate(duration : number, size : number) : void {
     if (duration != null && size != null) {
       this.estimator.addSample(duration, size);
     }
@@ -484,7 +484,7 @@ export default class RepresentationChooser {
    * Reset all the estimates done until now.
    * Useful when the network situation changed completely.
    */
-  public resetEstimate(): void {
+  public resetEstimate() : void {
     this.estimator.reset();
   }
 
@@ -495,7 +495,7 @@ export default class RepresentationChooser {
    * @param {string|number} id
    * @param {Object} payload
    */
-  public addPendingRequest(id : string|number, payload: IBeginRequest): void {
+  public addPendingRequest(id : string|number, payload: IBeginRequest) : void {
     if (this._currentRequests[id]) {
       if (__DEV__) {
         throw new Error("ABR: request already added.");
@@ -521,7 +521,7 @@ export default class RepresentationChooser {
    * @param {string|number} id
    * @param {Object} progress
    */
-  public addRequestProgress(id : string|number, progress: IProgressRequest): void {
+  public addRequestProgress(id : string|number, progress: IProgressRequest) : void {
     if (!this._currentRequests[id]) {
       if (__DEV__) {
         throw new Error("ABR: progress for a request not added");
@@ -537,7 +537,7 @@ export default class RepresentationChooser {
    * method.
    * @param {string|number} id
    */
-  public removePendingRequest(id : string|number): void {
+  public removePendingRequest(id : string|number) : void {
     if (!this._currentRequests[id]) {
       if (__DEV__) {
         throw new Error("ABR: can't remove unknown request");
@@ -550,14 +550,14 @@ export default class RepresentationChooser {
   /**
    * Remove informations about all pending requests.
    */
-  public resetRequests(): void {
+  public resetRequests() : void {
     this._currentRequests = {};
   }
 
   /**
    * TODO See if we can avoid this
    */
-  public dispose(): void {
+  public dispose() : void {
     this._dispose$.next();
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();
