@@ -31,19 +31,20 @@ import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 // Informations recuperated on the video element on each clock
 // tick
 interface IVideoInfos {
-  currentTime : number;
-  buffered : TimeRanges;
-  duration : number;
   bufferGap : number;
-  state : string;
-  playbackRate : number;
+  buffered : TimeRanges;
   currentRange : {
     start : number;
     end : number;
   }|null;
-  readyState : number;
-  paused : boolean;
+  currentTime : number;
+  duration : number;
   ended: boolean;
+  paused : boolean;
+  playbackRate : number;
+  readyState : number;
+  seeking : boolean;
+  state : string;
 }
 
 type stalledStatus = {
@@ -134,26 +135,28 @@ function getVideoInfos(
   currentState : string
 ) : IVideoInfos {
   const {
+    buffered,
     currentTime,
+    duration,
+    ended,
     paused,
     playbackRate,
     readyState,
-    buffered,
-    duration,
-    ended,
+    seeking,
   } = video;
 
   return {
-    currentTime,
-    buffered,
-    duration,
     bufferGap: getLeftSizeOfRange(buffered, currentTime),
-    state: currentState,
-    playbackRate,
+    buffered,
     currentRange: getRange(buffered, currentTime),
-    readyState,
-    paused,
+    currentTime,
+    duration,
     ended,
+    paused,
+    playbackRate,
+    readyState,
+    seeking,
+    state: currentState,
   };
 }
 
@@ -243,8 +246,8 @@ function getStalledStatus(
 
   if (shouldStall) {
     let reason : "seeking" | "not-ready" | "buffering";
-    if (currentState === "seeking") {
-      reason = currentState;
+    if (currentState === "seeking" || currentTimings.seeking) {
+      reason = "seeking";
     } else if (readyState === 1) {
       reason = "not-ready";
     } else {
