@@ -81,18 +81,13 @@ export default function parseMetaManifest(
       .reduce((acc, val) => Math.min((acc || 0), (val || 0)), 0);
 
   // Build new period array
-  const newPeriods: Array<{
-    period: IParsedPeriod;
-    transport: "dash"|"smooth";
-    baseManifest: Manifest;
-  }> = [];
+  const newPeriods: IParsedPeriod[] = [];
+  const contentEnding = contents[contents.length - 1].endTime;
 
   for (let j = 0; j < parsedPeriods.length; j++) {
     const baseManifest = new Manifest(contents[j].manifest as IManifestArguments);
     const parsedPeriod = parsedPeriods[j];
-    let elapsedTimeOnLoop = 0;
-    parsedPeriod.start = contents[j].startTime + elapsedTimeOnLoop;
-    elapsedTimeOnLoop += parsedPeriod.duration || 0;
+    parsedPeriod.start = contents[j].startTime;
     parsedPeriod.end = parsedPeriod.start + (parsedPeriod.duration || 0);
     const textTracks = contents[j].textTracks;
     if (textTracks && textTracks.length > 0) {
@@ -111,51 +106,48 @@ export default function parseMetaManifest(
         parsedPeriod.adaptations.push(textAdaptation);
       });
     }
-    newPeriods.push({
-      period: parsedPeriod,
-      transport: contents[j].transport,
-      baseManifest,
-    });
-  }
 
-  // Generate final periods, wrap indexes and record
-  // base content infos on index.
-  const contentEnding = contents[contents.length - 1].endTime;
-  const finalPeriods = newPeriods
-    .map(({ period, transport, baseManifest }) => {
-      const adaptations = period.adaptations;
-      adaptations.forEach((adaptation) => {
-        const representations = adaptation.representations;
-        representations.forEach((representation) => {
-          const index = representation.index;
-          const baseAdaptation = ["audio", "video", "image", "text"]
-            .reduce((acc: Adaptation[], type) => {
-              const _adaptation = baseManifest.adaptations[type as AdaptationType];
-              if (_adaptation) {
-                acc.concat(_adaptation);
-              }
-              return acc;
-            }, []).find((a: Adaptation) => a.id === adaptation.id);
-          const baseRepresentation =
-            baseAdaptation ?
-              baseAdaptation.representations.find((r) => r.id === representation.id) :
-              undefined;
-          const basePeriod =
-            baseManifest.periods.find((p) => p.id === period.id);
-          const baseContentInfos = {
-            manifest: baseManifest,
-            period: basePeriod,
-            adaptation: baseAdaptation,
-            representation: baseRepresentation,
-          };
+    const adaptations = parsedPeriod.adaptations;
+    adaptations.forEach((adaptation) => {
+      const representations = adaptation.representations;
+      representations.forEach((representation) => {
+        const index = representation.index;
 
-          const newIndex = new MetaRepresentationIndex(
-            index, period.start, transport, contentEnding, baseContentInfos);
-          representation.index = newIndex;
-        });
+        // Store base contents info
+        const baseAdaptation = ["audio", "video", "image", "text"]
+          .reduce((acc: Adaptation[], type) => {
+            const _adaptation = baseManifest.adaptations[type as AdaptationType];
+            if (_adaptation) {
+              acc.concat(_adaptation);
+            }
+            return acc;
+          }, []).find((a: Adaptation) => a.id === adaptation.id);
+        const baseRepresentation =
+          baseAdaptation ?
+            baseAdaptation.representations.find((r) => r.id === representation.id) :
+            undefined;
+        const basePeriod =
+          baseManifest.periods.find((p) => p.id === parsedPeriod.id);
+        const baseContentInfos = {
+          manifest: baseManifest,
+          period: basePeriod,
+          adaptation: baseAdaptation,
+          representation: baseRepresentation,
+        };
+
+        const newIndex = new MetaRepresentationIndex(
+          index,
+          parsedPeriod.start,
+          contents[j].transport,
+          contentEnding,
+          baseContentInfos
+        );
+        representation.index = newIndex;
       });
-      return period;
     });
+
+    newPeriods.push(parsedPeriod);
+  }
 
   const manifest = {
     availabilityStartTime: 0,
@@ -165,7 +157,7 @@ export default function parseMetaManifest(
     id: "gen-metaplaylist-man-" + generateNewId(),
     maxSegmentDuration,
     minBufferTime,
-    periods: finalPeriods,
+    periods: newPeriods,
     suggestedPresentationDelay,
     transportType: "metaplaylist",
     type: "dynamic",

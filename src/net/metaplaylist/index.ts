@@ -99,6 +99,21 @@ function parseMetaPlaylistData(data: string): IMetaPlaylist {
     ) {
       throw new Error("Bad metaplaylist file.");
     }
+    if (content.textTracks) {
+      content.textTracks.forEach((textTrack: {
+        url: string;
+        language: string;
+        mimeType: string;
+      }) => {
+        if (
+          textTrack.url == null ||
+          textTrack.language == null ||
+          textTrack.mimeType == null
+        ) {
+          throw new Error("Bad metaplaylist file.");
+        }
+      });
+    }
   });
 
   return { contents, attributes };
@@ -106,6 +121,8 @@ function parseMetaPlaylistData(data: string): IMetaPlaylist {
 
 /**
  * Get parsers base arguments from segment indexes.
+ * Patches segment time and get Manifest, Period,
+ * Adaptation and Representation from base content.
  */
 function getParserBaseArguments<T>(
   segment: ISegment,
@@ -176,13 +193,6 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
           url,
           responseType: "text",
           ignoreProgressEvents: true,
-        }).map(({ value }) => {
-          return {
-            type: "response" as "response",
-            value: {
-              responseData: value.responseData,
-            },
-          };
         });
       },
 
@@ -193,7 +203,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
           throw new Error("Parser input must be string.");
         }
         const { contents, attributes } = parseMetaPlaylistData(response.responseData);
-        const manifestsInfos$ = contents.map((content) => {
+        const contents$ = contents.map((content) => {
           const transport = transports[content.transport];
           if (transport == null) {
             throw new Error(
@@ -203,52 +213,30 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
 
           return loader({ url: content.url })
             .filter((res): res is ILoaderResponse<Document> => res.type === "response")
-            .map((res) => {
-              return {
-                manifest: res.value.responseData,
-                url: content.url,
-                startTime: content.startTime,
-                endTime: content.endTime,
-                transport: content.transport,
-                textTracks: content.textTracks,
+            .mergeMap((res) => {
+              const parser = transports[content.transport].manifest.parser;
+              const fakeResponse = {
+                responseData: res.value.responseData,
               };
+
+              return parser({ response: fakeResponse, url: content.url })
+                .map((mpd) => {
+                  const type = mpd.manifest.type;
+                  if (type !== "static") {
+                    throw new Error("Content from metaplaylist is not static.");
+                  }
+                  return objectAssign(content, { manifest: mpd.manifest });
+                });
             });
         });
 
-        return Observable
-          .combineLatest(manifestsInfos$)
-          .mergeMap((combinedManifest) => {
-            const manifestsInfos =  combinedManifest;
-            const parsedManifestsInfo = manifestsInfos.map((manifestInfos) => {
-              const transport = transports[manifestInfos.transport];
-              const parser = transport.manifest.parser;
-              const fakeResponse = {
-                responseData: manifestInfos.manifest,
-              };
-              return parser({ response: fakeResponse, url: manifestInfos.url })
-              .map((mpd) => {
-                const type = mpd.manifest.type;
-                if (type !== "static") {
-                  throw new Error("Content from metaplaylist is not static.");
-                }
-                return {
-                  manifest: mpd.manifest,
-                  transport: manifestInfos.transport,
-                  url: manifestInfos.url,
-                  startTime: manifestInfos.startTime,
-                  endTime: manifestInfos.endTime,
-                  textTracks: manifestInfos.textTracks,
-                };
-              });
-            });
-            return Observable.combineLatest(parsedManifestsInfo).map((_contents) => {
-                const manifest = parseMetaManifest(_contents, attributes, url);
-                return {
-                  manifest,
-                  url,
-                };
-            });
-          });
+        return Observable.combineLatest(contents$).map((combinedContents) => {
+          const manifest = parseMetaManifest(combinedContents, attributes, url);
+          return {
+            manifest,
+            url,
+          };
+        });
       },
     };
 
