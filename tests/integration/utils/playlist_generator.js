@@ -1,28 +1,29 @@
 /**
- * Loop contents from a given start time, to build a metaplaylist.
+ * Loop a series of contents from a given start time, to build a metaplaylist.
  * @param {Array<Object>} baseContents // in format [{url, duration}, ...]
- * @param {number} startTime // in format timestamp e.g 1516961850
+ * @param {number} baseTime // in format timestamp e.g 1516961850
  * @param {number} occurences // number of loops to reproduce
+ * @param {Object} mplAttributes // metaplaylist root attributes
  */
 const metaplaylistGenerator = function (
   baseContents,
   baseTime,
   occurences,
-  attributes
+  mplAttributes
 ) {
-  function generateLoop(datas, times) {
-    var contents = [];
-    var durations = datas
+  function generateContentLoop(datas, times) {
+    const contents = [];
+    const durations = datas
       .map((data) => data.endTime - data.startTime);
-    var sum = durations.reduce((a, b) => a + b, 0);
+    const totalDuration = durations.reduce((a, b) => a + b, 0);
 
-    for (var i = 0; i <= times - 1; i++) {
-      for (var k = 0; k <= datas.length - 1; k++) {
+    for (let i = 0; i <= times - 1; i++) {
+      for (let k = 0; k <= datas.length - 1; k++) {
         contents.push(
           {
             url: datas[k].url,
-            startTime: datas[k].startTime + (sum * (i)),
-            endTime: datas[k].endTime + (sum * (i)),
+            startTime: datas[k].startTime + (totalDuration * (i)),
+            endTime: datas[k].endTime + (totalDuration * (i)),
             transport: datas[k].transport,
             textTracks: datas[k].textTracks,
           }
@@ -32,8 +33,8 @@ const metaplaylistGenerator = function (
     return contents;
   }
 
-  var playlist = [];
-  for (var i = 0; i < baseContents.length; i++) {
+  const playlist = [];
+  for (let i = 0; i < baseContents.length; i++) {
     const beforeContent =
       (playlist.length != 0) ? playlist[playlist.length - 1] : undefined;
     const url = baseContents[i].url;
@@ -50,17 +51,17 @@ const metaplaylistGenerator = function (
       textTracks
     });
   }
-  const contents = generateLoop(playlist, occurences);
+  const contentLoop = generateContentLoop(playlist, occurences);
   const generatedAt = Date.now();
   const mplVersion = "1";
   const metaplaylist = {
     metadata: {
-      name: "Demo HAPI contents",
+      name: "Test MetaPlaylist",
       mplVersion,
       generatedAt,
     },
-    contents,
-    attributes
+    contents: contentLoop,
+    attributes: mplAttributes
   }
   return JSON.stringify(metaplaylist);
 }
