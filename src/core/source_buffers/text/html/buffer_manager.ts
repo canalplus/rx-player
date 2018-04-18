@@ -83,7 +83,10 @@ function getCuesBefore(cues : IHTMLCue[], time : number) : IHTMLCue[] {
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
     if (time < cue.end) {
-      return cues.slice(0, i);
+      if (time >= cue.start) {
+        return cues.slice(0, i);
+      }
+      return cues.slice(0, i + 1);
     }
   }
   return cues.slice();
@@ -99,7 +102,10 @@ function getCuesAfter(cues : IHTMLCue[], time : number) : IHTMLCue[] {
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
     if (time < cue.end) {
-      return cues.slice(i + 1, cues.length);
+      if (time >= cue.start) {
+        return cues.slice(i + 1, cues.length);
+      }
+      return cues.slice(i, cues.length);
     }
   }
   return [];
@@ -116,14 +122,16 @@ function removeCuesInfosBetween(
   start : number,
   end : number
 ) : [ICuesGroup, ICuesGroup] {
+  const end1 = Math.max(cuesInfos.start, start);
   const cuesInfos1 = {
     start: cuesInfos.start,
-    end: start,
+    end: end1,
     cues: getCuesBefore(cuesInfos.cues, start),
   };
 
+  const start2 = Math.min(end, cuesInfos.end);
   const cuesInfos2 = {
-    start: end,
+    start: start2,
     end: cuesInfos.end,
     cues: getCuesAfter(cuesInfos.cues, end),
   };
@@ -197,32 +205,47 @@ export default class TextBufferManager {
     const cuesBuffer = this._cuesBuffer;
     const len = cuesBuffer.length;
     for (let i = 0; i < len; i++) {
-      const startCuesInfos = cuesBuffer[i];
+      if (cuesBuffer[i].end > from) {
+        const startCuesInfos = cuesBuffer[i];
 
-      if (startCuesInfos.end >= to) {
-        const [
-          cuesInfos1,
-          cuesInfos2,
-        ] = removeCuesInfosBetween(startCuesInfos, from, to);
-        this._cuesBuffer[i] = cuesInfos1;
-        cuesBuffer.splice(i + 1, 0, cuesInfos2);
-        return;
-      } else {
-        startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
-        startCuesInfos.end = from;
-      }
-
-      for (let j = i + 1; j < len; j++) {
-        const endCuesInfos = cuesBuffer[i];
-        if (to < endCuesInfos.end) {
-          cuesBuffer.splice(i + 1, j - (i + 1));
-          endCuesInfos.cues = getCuesAfter(endCuesInfos.cues, to);
-          endCuesInfos.start = to;
+        if (startCuesInfos.start >= to) {
+          // our cue is strictly after this interval, we have nothing to do
           return;
         }
+
+        // ``to`` is within this segment
+        if (startCuesInfos.end >= to) {
+          const [
+            cuesInfos1,
+            cuesInfos2,
+          ] = removeCuesInfosBetween(startCuesInfos, from, to);
+          this._cuesBuffer[i] = cuesInfos1;
+          cuesBuffer.splice(i + 1, 0, cuesInfos2);
+          return;
+        }
+
+        // Else remove the part of the segment after ``from``, and the concerned
+        // segments after that
+        startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
+        startCuesInfos.end = Math.max(from, startCuesInfos.start);
+
+        for (let j = i + 1; j < len; j++) {
+          const endCuesInfos = cuesBuffer[i];
+          if (to <= endCuesInfos.end) {
+            // remove all cues from the start to this one non-included
+            cuesBuffer.splice(i + 1, j - (i + 1));
+
+            // if ``to`` is in the middle of the last segment
+            if (to > endCuesInfos.start) {
+              endCuesInfos.cues = getCuesAfter(endCuesInfos.cues, to);
+              endCuesInfos.start = to;
+            }
+            return;
+          }
+        }
+        cuesBuffer.splice(i + 1, cuesBuffer.length - (i + 1));
+        return;
       }
-      cuesBuffer.splice(i + 1, cuesBuffer.length - (i + 1));
-      return;
     }
   }
 
