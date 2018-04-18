@@ -37,7 +37,7 @@ import {
 
 import DASHTransport from "../dash";
 import SmoothTransport from "../smooth";
-import patchBox from "./isobmff_patcher";
+import patchSegmentWithTimeOffset from "./isobmff_patcher";
 
 type ITransportTypes = "dash"|"smooth";
 
@@ -284,7 +284,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
               segmentData :
               new Uint8Array(segmentData);
 
-            const segmentPatchedData = patchBox(
+            const segmentPatchedData = patchSegmentWithTimeOffset(
               responseData,
               offset
             );

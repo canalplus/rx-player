@@ -34,17 +34,15 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
   return concat(itobe4(len), strToBytes(name), buff);
 }
 
-export default function patchBox(
+export default function patchSegmentWithTimeOffset(
       _data: Uint8Array,
       _offset: number,
-      _segNr?: number,
       _lmsg?: boolean
   ) {
       let sizeChange = 0;
       const segmentData = _data;
       const topLevelBoxesToParse = ["moov", "styp", "sidx", "moof", "mdat"];
       const compositeBoxesToParse = ["trak", "moov", "moof", "traf"];
-      const segNr = _segNr;
       const timeOffset = _offset;
       const lmsg = _lmsg || false;
 
@@ -52,7 +50,7 @@ export default function patchBox(
    * Get size and boxtype from current box
    * @param {Uint8Array} data
    */
-  function checkBox(boxData: Uint8Array) {
+  function getBoxInfos(boxData: Uint8Array) {
     const size = be4toi(boxData, 0);
     const boxtype = bytesToStr(boxData.subarray(4, 8));
     return {
@@ -64,15 +62,15 @@ export default function patchBox(
   /**
    * Triggers box processing
    */
-  function filter() {
+  function patchBoxes() {
     let output = new Uint8Array(0);
     let pos = 0;
     while (pos < segmentData.length) {
-      const { size, boxtype } = checkBox(segmentData.subarray(pos, pos + 8));
+      const { size, boxtype } = getBoxInfos(segmentData.subarray(pos, pos + 8));
       const boxdata = segmentData.subarray(pos, pos + size);
       const concatData = (topLevelBoxesToParse
         .indexOf(boxtype) >= 0) ?
-          filterBox(boxtype, boxdata, output.length) :
+          patchBox(boxtype, boxdata, output.length) :
           boxdata;
       output = concat(output, concatData);
       pos += size;
@@ -87,7 +85,7 @@ export default function patchBox(
    * @param {number} filePos
    * @param {string} _path
    */
-  function filterBox(
+  function patchBox(
     boxtype: string,
     boxSpecificData: Uint8Array,
     filePos: number,
@@ -102,9 +100,9 @@ export default function patchBox(
         const {
           size: childSize,
           boxtype: childBoxType,
-        } = checkBox(boxSpecificData.subarray(pos, pos + 8));
+        } = getBoxInfos(boxSpecificData.subarray(pos, pos + 8));
         const outputChildBox =
-          filterBox(
+          patchBox(
             childBoxType,
             boxSpecificData.subarray(pos, pos + childSize),
             filePos + pos,
@@ -119,28 +117,13 @@ export default function patchBox(
     } else {
       switch (boxtype) {
         case "styp":
-          output = styp(boxSpecificData);
-          break;
-        case "mfhd":
-          output = mfhd(boxSpecificData);
+          output = patchStyp(boxSpecificData);
           break;
         case "trun":
-          output = trun(boxSpecificData);
-          break;
-        case "sidx":
-          output = sidx(boxSpecificData, false);
+          output = patchTrun(boxSpecificData);
           break;
         case "tfdt":
-          output = tfdt(boxSpecificData);
-          break;
-        case "mdat":
-          output = boxSpecificData;
-          break;
-        case "mvhd":
-          output = mvhd(boxSpecificData);
-          break;
-        case "tkhd":
-          output = tkhd(boxSpecificData);
+          output = patchTfdt(boxSpecificData);
           break;
         default:
           output = boxSpecificData;
@@ -150,51 +133,12 @@ export default function patchBox(
     return output;
   }
 
-  function tkhd(input: Uint8Array): Uint8Array {
-    const version = input[8];
-    let output = new Uint8Array(0);
-    if (version === 1) {
-      output = concat(
-        input.subarray(0, 36),
-        itobe8(0),
-        input.subarray(44, input.length)
-      );
-    } else {
-      output = concat(
-        input.subarray(0, 28),
-        itobe4(0),
-        input.subarray(32, input.length)
-      );
-    }
-    return output;
-  }
-
-  function mvhd(input: Uint8Array): Uint8Array {
-    const version = input[8];
-    let output = new Uint8Array(0);
-    if (version === 1) {
-      output = concat(
-        input.subarray(0, 32),
-        itobe8(0),
-        input.subarray(40, input.length)
-      );
-    } else {
-      output = concat(
-        input.subarray(0, 24),
-        itobe4(0),
-        input.subarray(28, input.length)
-      );
-    }
-    return output;
-  }
-
   /**
    * Process styp and make sure lmsg presence follows the lmsg flag parameter.
-   * Add scte35 box if appropriate
    * @param {Uint8Array} input
    * @return {Uint8Array} patched box
    */
-  function styp(input: Uint8Array): Uint8Array {
+  function patchStyp(input: Uint8Array): Uint8Array {
     const size = be4toi(input, 0);
     let pos = 8;
     const brands = [];
@@ -216,27 +160,7 @@ export default function patchBox(
     return Atom("styp", stypData);
   }
 
-  /**
-   * Process mfhd box and set segmentNumber if requested.
-   * @param {Uint8Array} input
-   * @return {Uint8Array} patched box
-   */
-  function mfhd(input: Uint8Array): Uint8Array {
-    if (!segNr) {
-      return input;
-    }
-    const prefix = input.subarray(0, 12);
-    const segNrByte = itobe4(segNr);
-    return concat(prefix, segNrByte);
-  }
-
-  /**
-   * Get total duration from trun.
-   * Fix offset if self.sizeChange is non-zero.
-   * @param {Uint8Array} input
-   * @return {Uint8Array} patched box
-   */
-  function trun(input: Uint8Array): Uint8Array {
+  function patchTrun(input: Uint8Array): Uint8Array {
     const flags = be4toi(input, 8) & 0xFFFFFF;
     let dataOffsetPresent = false;
     // Data offset present
@@ -258,49 +182,11 @@ export default function patchBox(
   }
 
   /**
-   * Process sidx data and add to output.
-   * @param {Uint8Array} input
-   * @param {boolean} keepSidx
-   */
-  function sidx(input: Uint8Array, patchSidx: boolean): Uint8Array {
-    let output = new Uint8Array(0);
-    if (!patchSidx) {
-      return input;
-    }
-    let earliestPresentationTime;
-    let firstOffset;
-    const version = input[8];
-    const timescale = be4toi(input, 16);
-    if (version === 0) {
-      // Changing sidx version to 1
-      const size = be4toi(input, 0);
-      const sidxSizeExpansion = 8;
-      output = concat(
-        itobe4(size + sidxSizeExpansion),
-        input.subarray(4, 8),
-        new Uint8Array([1]),
-        input.subarray(9, 20));
-      earliestPresentationTime = be4toi(input, 20);
-      firstOffset = be4toi(input, 24);
-    }
-    else {
-      output = input.subarray(0, 20);
-      earliestPresentationTime = be8toi(input, 20);
-      firstOffset = be8toi(input, 28);
-    }
-    const newPresentationTime = earliestPresentationTime + timescale * timeOffset;
-    output = concat(output, itobe8(newPresentationTime), itobe8(firstOffset));
-    const suffixOffset = version === 0 ? 28 : 36;
-    output = concat(output, input.subarray(suffixOffset, input.length));
-    return output;
-  }
-
-  /**
    * Generate new timestamps for tfdt and change size of boxes above if needed.
    * Try to keep in 32 bits if possible.
    * @param input
    */
-  function tfdt(input: Uint8Array): Uint8Array {
+  function patchTfdt(input: Uint8Array): Uint8Array {
     const version = input[8];
     const tfdtOffset = timeOffset;
     let newBaseMediaDecodeTime;
@@ -330,5 +216,5 @@ export default function patchBox(
     return output;
   }
 
-    return filter();
+    return patchBoxes();
   }
