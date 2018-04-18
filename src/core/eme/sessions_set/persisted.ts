@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import arrayFind = require("array-find");
 import { IMediaKeySession } from "../../../compat";
 import assert, {
   assertInterface,
 } from "../../../utils/assert";
 import log from "../../../utils/log";
-import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
 
 interface IPersistedSessionData {
@@ -32,6 +32,12 @@ export interface IPersistedSessionStorage {
   save(x : IPersistedSessionData[]) : void;
 }
 
+/**
+ * Check that the storage argument is conform.
+ * @param {Object} storage
+ * @param {Function} storage.load
+ * @param {Function} storage.save
+ */
 function checkStorage(storage : IPersistedSessionStorage) : void {
   assert(
     storage != null,
@@ -46,26 +52,29 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
 }
 
 /**
- * Set representing persisted licenses. Depends on a simple local-
- * storage implementation with a `save`/`load` synchronous interface
- * to persist informations on persisted sessions.
+ * Store MediaKeySessions in a persistent way and retrieve them by linking
+ * them to a corresponding initData.
+ *
+ * Depends on a simple local-storage implementation with a `save`/`load`
+ * synchronous interface to persist informations on persisted sessions.
  *
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
+ *
+ * @class MediaKeySessionStorage
  */
-export default class PersistedSessionsSet
-  extends SessionSet<IPersistedSessionData>
-{
+export default class MediaKeySessionStorage {
+  private _entries : IPersistedSessionData[];
   private _storage : IPersistedSessionStorage;
 
-  /*
+  /**
    * @param {Object} storage
    * @param {Function} storage.load
    * @param {Function} storage.save
    */
   constructor(storage : IPersistedSessionStorage) {
-    super();
     checkStorage(storage);
+    this._entries = [];
     this._storage = storage;
     this._loadStorage();
   }
@@ -95,7 +104,7 @@ export default class PersistedSessionsSet
    */
   public get(initData : Uint8Array|number[]|number) : IPersistedSessionData|null {
     const hash = hashInitData(initData);
-    const entry = this.find((e) => e.initData === hash);
+    const entry = arrayFind(this._entries, (e) => e.initData === hash);
     return entry || null;
   }
 
@@ -133,10 +142,10 @@ export default class PersistedSessionsSet
    * Delete entry (sessionId + initData) based on its initData.
    * @param {Array|TypedArray|Number}  initData
    */
-  delete(initData : Uint8Array|number) : void {
+  public delete(initData : Uint8Array|number) : void {
     const hash = hashInitData(initData);
 
-    const entry = this.find((e) => e.initData === hash);
+    const entry = arrayFind(this._entries, (e) => e.initData === hash);
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
 

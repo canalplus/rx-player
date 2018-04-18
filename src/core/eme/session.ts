@@ -260,12 +260,15 @@ function createSession(
   const session = (mediaKeys as any).createSession(sessionType); // TODO Weird TS Bug?
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
-      // TODO subscribe to it
-      // Normally deleteAndClose should begin to emit (and do its side-effects)
-      // on subscription. It's however not the case here.
-      // If that was the case though, we should subscribe here.
-      $loadedSessions.deleteAndClose(session);
+      $loadedSessions.delete(session);
       $storedSessions.delete(initData);
+      session.close()
+        .then(() => {
+          log.debug("closed MediaKeySession", session);
+        })
+        .catch(() => {
+          log.warn("Failed to close MediaKeySession", session);
+        });
     })
     .publish();
 
@@ -277,7 +280,7 @@ function createSession(
  * communications...).
  * @param {MediaKeys} mediaKeys
  * @param {Object} keySystem
- * @param {string} sessionType - Either "persistent-license" or "temporary"
+ * @param {string} sessionType
  * @param {string} initDataType
  * @param {UInt8Array} initData
  * @param {Subject} errorStream
@@ -349,7 +352,7 @@ function createSessionAndKeyRequestWithRetry(
 
       // TODO In that case, the first in $loadedSessions could be this session,
       // is this wanted?
-      const firstLoadedSession = $loadedSessions.getFirst();
+      const firstLoadedSession = $loadedSessions.getOldest();
       if (!firstLoadedSession) {
         throw error;
       }
@@ -357,7 +360,9 @@ function createSessionAndKeyRequestWithRetry(
       log.warn("eme: could not create a new session, " +
                "retry after closing a currently loaded session", error);
 
-      return $loadedSessions.deleteAndClose(firstLoadedSession)
+      $loadedSessions.delete(firstLoadedSession);
+      return castToObservable(firstLoadedSession.close())
+        .catch(() => Observable.of(undefined))
         .mergeMap(() =>
           createSessionAndKeyRequest(
             mediaKeys, keySystem, sessionType, initDataType,
