@@ -294,12 +294,12 @@ export default class TextBufferManager {
             cuesInfos = cuesBuffer[i];
           } while (cuesInfos && end > cuesInfos.end);
 
-          if (!cuesInfos) {
-            // There was no more cue, add ours
+          if (
+            !cuesInfos || // There is no cue here
+            areNearlyEqual(end, cuesInfos.end) // this cue has the same end
+          ) {
+            // put in place
             cuesBuffer[i] = cuesInfosToInsert;
-            return;
-          } else if (areNearlyEqual(end, cuesInfos.end)) {
-            cuesBuffer[i] = cuesInfosToInsert; // replace
             return;
           }
           // else -> end < cuesInfos.end (overlapping case)
