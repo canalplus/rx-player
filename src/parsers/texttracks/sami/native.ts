@@ -114,7 +114,11 @@ function parseSami(
   const styleMatches = smi.match(STYLE);
   const css = styleMatches ? styleMatches[1] : "";
   let up;
-  let to = syncClose.exec(smi);
+  let to;
+
+  // XXX TODO FIXME Is that wanted?
+  // previously written as let to = SyncClose.exec(smi); but never used
+  syncClose.exec(smi);
 
   const langs = getClassNameByLang(css);
   const klass = langs[lang];
