@@ -194,15 +194,11 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       load() : Promise<boolean> {
-        return new Promise((resolve) => {
-          resolve(false);
-        });
+        return Promise.resolve(false);
       }
 
       remove() : Promise<void> {
-        return new Promise((resolve) => {
-          resolve();
-        });
+        return Promise.resolve();
       }
     }
 
@@ -379,15 +375,11 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       load() : Promise<boolean> {
-        return new Promise((resolve) => {
-          resolve(false);
-        });
+        return Promise.resolve(false);
       }
 
       remove() : Promise<void> {
-        return new Promise((resolve) => {
-          resolve();
-        });
+        return Promise.resolve();
       }
     }
 
