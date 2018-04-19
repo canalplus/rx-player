@@ -63,9 +63,6 @@ export interface IAdaptationSetChildren {
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
   segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;
-
-  // rating? : Node;
-  // viewpoint? : Node;
 }
 
 export interface IAdaptationSetAttributes {
@@ -108,62 +105,64 @@ function parseAdaptationSetChildren(
     representations: [],
   };
   for (let i = 0; i < adaptationSetChildren.length; i++) {
-    const currentNode = adaptationSetChildren[i];
+    if (adaptationSetChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentElement = adaptationSetChildren[i] as Element;
 
-    switch (currentNode.nodeName) {
+      switch (currentElement.nodeName) {
 
-      case "Accessibility":
-        children.accessibility = parseScheme(currentNode);
-        break;
+        case "Accessibility":
+          children.accessibility = parseScheme(currentElement);
+          break;
 
-      case "BaseURL":
-        children.baseURL = currentNode.textContent || "";
-        break;
+        case "BaseURL":
+          children.baseURL = currentElement.textContent || "";
+          break;
 
-      case "ContentComponent":
-        children.contentComponent = parseContentComponent(currentNode);
-        break;
+        case "ContentComponent":
+          children.contentComponent = parseContentComponent(currentElement);
+          break;
 
-      case "Representation":
-        const representation =
-          createRepresentationIntermediateRepresentation(currentNode);
-        children.representations.push(representation);
-        break;
+        case "Representation":
+          const representation =
+            createRepresentationIntermediateRepresentation(currentElement);
+          children.representations.push(representation);
+          break;
 
-      case "Role":
-        children.role = parseScheme(currentNode);
-        break;
+        case "Role":
+          children.role = parseScheme(currentElement);
+          break;
 
-      case "SegmentBase":
-        children.segmentBase = parseSegmentBase(currentNode);
-        break;
+        case "SegmentBase":
+          children.segmentBase = parseSegmentBase(currentElement);
+          break;
 
-      case "SegmentList":
-        children.segmentList = parseSegmentList(currentNode);
-        break;
+        case "SegmentList":
+          children.segmentList = parseSegmentList(currentElement);
+          break;
 
-      case "SegmentTemplate":
-        children.segmentTemplate = parseSegmentTemplate(currentNode);
-        break;
+        case "SegmentTemplate":
+          children.segmentTemplate = parseSegmentTemplate(currentElement);
+          break;
 
-      case "ContentProtection":
-        children.contentProtection = parseContentProtection(currentNode);
-        break;
+        case "ContentProtection":
+          children.contentProtection = parseContentProtection(currentElement);
+          break;
 
-      // case "Rating":
-      //   children.rating = currentNode;
-      //   break;
+          // case "Rating":
+          //   children.rating = currentElement;
+          //   break;
 
-      // case "Viewpoint":
-      //   children.viewpoint = currentNode;
-      //   break;
+          // case "Viewpoint":
+          //   children.viewpoint = currentElement;
+          //   break;
+      }
     }
   }
   return children;
 }
 
 function parseAdaptationSetAttributes(
-  root : Node
+  root : Element
 ) : IAdaptationSetAttributes {
   const parsedAdaptation : IAdaptationSetAttributes = {};
 
@@ -382,10 +381,10 @@ function parseAdaptationSetAttributes(
 }
 
 export function createAdaptationSetIntermediateRepresentation(
-  adaptationSetNode : Node
+  adaptationSetElement : Element
 ) : IAdaptationSetIntermediateRepresentation {
   return {
-    children: parseAdaptationSetChildren(adaptationSetNode.childNodes),
-    attributes: parseAdaptationSetAttributes(adaptationSetNode),
+    children: parseAdaptationSetChildren(adaptationSetElement.childNodes),
+    attributes: parseAdaptationSetAttributes(adaptationSetElement),
   };
 }

@@ -75,11 +75,11 @@ function parseInitializationAttribute(attrValue : string) : IParsedInitializatio
 }
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
 export default function parseSegmentTemplate(
-  root: Node
+  root: Element
 ) : IParsedSegmentTemplate|IParsedSegmentTimeline {
 
   const base = parseSegmentBase(root);
@@ -91,9 +91,11 @@ export default function parseSegmentTemplate(
   let timeline : IParsedTimeline|undefined;
 
   for (let i = 0; i < root.childNodes.length; i++) {
-    const currentNode = root.childNodes[i];
-    if (currentNode.nodeName === "SegmentTimeline") {
-      timeline = parseSegmentTimeline(currentNode);
+    if (root.childNodes[i].nodeType === Node.ELEMENT_NODE) {
+      const currentNode = root.childNodes[i] as Element;
+      if (currentNode.nodeName === "SegmentTimeline") {
+        timeline = parseSegmentTimeline(currentNode);
+      }
     }
   }
 

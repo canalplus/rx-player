@@ -25,12 +25,12 @@ export interface IParsedContentProtection {
 
 /**
  * Parse the "ContentProtection" node of a MPD.
- * @param {Node} root
+ * @param {Element} root
  * @param {Function} [contentProtectionParser]
  * @returns {Object}
  */
 export default function parseContentProtection(
-  root: Node
+  root: Element
 ) : IParsedContentProtection|undefined {
   return parseScheme(root);
 }

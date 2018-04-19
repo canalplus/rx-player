@@ -77,9 +77,9 @@ type MediaKeySessionType =
   undefined;
 
 type LicenseObject =
-  BufferSource |
-  ArrayBuffer |
-  ArrayBufferView;
+  TypedArray |
+  ArrayBuffer;
+
 /**
  * Create the Object emitted by the EME Observable.
  * @param {string} name - name of the event
@@ -155,7 +155,7 @@ function sessionEventsHandler(
       );
 
       // find out possible errors associated with this event
-      session.keyStatuses.forEach((keyStatus, keyId) => {
+      session.keyStatuses.forEach((keyStatus : string, keyId : string) => {
         // Hack present because the order of the arguments has changed in spec
         // and is not the same between some versions of Edge and Chrome.
         if (KEY_STATUS_ERRORS[keyId]) {

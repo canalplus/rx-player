@@ -26,10 +26,10 @@ export interface IParsedInitialization {
 }
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
-export default function parseInitialization(root: Node) : IParsedInitialization {
+export default function parseInitialization(root: Element) : IParsedInitialization {
   const parsedInitialization : IParsedInitialization = {};
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
