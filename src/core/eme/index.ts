@@ -153,7 +153,8 @@ function createEME(
   return createMediaKeys(keySystems, errorStream)
     .mergeMap((mediaKeysInfos) => {
       // 1 - Create or reuse session from loaded session.
-      const getSession$ = onEncrypted$(video).concatMap((encryptedEvent, i) => {
+      const getSession$ = onEncrypted$(video)
+        .concatMap((encryptedEvent, i) => {
           log.info("eme: encrypted event", encryptedEvent);
           if (encryptedEvent.initData == null) {
             const error = new Error("no init data found on media encrypted event.");

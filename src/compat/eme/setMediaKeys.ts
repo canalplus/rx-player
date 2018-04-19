@@ -57,6 +57,8 @@ function _setMediaKeys(
 }
 
 /**
+ * Set the given MediaKeys on the given HTMLMediaElement.
+ * Emits null when done then complete.
  * @param {HTMLMediaElement} elt
  * @param {Object} mediaKeys
  * @returns {Observable}
@@ -64,8 +66,8 @@ function _setMediaKeys(
 export default (
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|IMockMediaKeys|null
-) : Observable<any> => {
+) : Observable<null> => {
   return Observable.defer(() =>
-    castToObservable(_setMediaKeys(elt, mediaKeys))
+    castToObservable(_setMediaKeys(elt, mediaKeys)).mapTo(null)
   );
 };
