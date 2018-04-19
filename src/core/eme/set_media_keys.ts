@@ -32,7 +32,7 @@ function setMediaKeysObs(
   mediaKeysInfos: IMediaKeysInfos,
   video : HTMLMediaElement,
   instceInfos: IInstanceInfo
-) : Observable<IMediaKeysInfos> {
+) : Observable<null> {
   return Observable.defer(() => {
     const {
       $videoElement,
@@ -55,7 +55,7 @@ function setMediaKeysObs(
     instceInfos.$videoElement = video;
 
     if (video.mediaKeys === mediaKeys) {
-      return Observable.of(mediaKeysInfos);
+      return Observable.of(null);
     }
 
     if (oldMediaKeys && oldMediaKeys !== mediaKeys) {
@@ -64,7 +64,7 @@ function setMediaKeysObs(
       $loadedSessions.dispose();
     }
 
-    let mediaKeysSetter;
+    let mediaKeysSetter : Observable<null>;
     if ((oldVideoElement && oldVideoElement !== video)) {
       log.debug("eme: unlink old video element and set mediakeys");
       mediaKeysSetter = setMediaKeys(oldVideoElement, null)
@@ -75,13 +75,18 @@ function setMediaKeysObs(
       mediaKeysSetter = setMediaKeys(video, mediaKeys);
     }
 
-    return mediaKeysSetter.mapTo(mediaKeysInfos);
+    return mediaKeysSetter;
   });
 }
 
+/**
+ * Remove the MediaKeys from the given HTMLMediaElement.
+ * @param {HMTLMediaElement} videoElement
+ * @returns {Observable}
+ */
 function disposeMediaKeys(
   videoElement : HTMLMediaElement|null
-) : Observable<MediaKeys> {
+) : Observable<null> {
   if (videoElement) {
     return setMediaKeys(videoElement, null);
   }
