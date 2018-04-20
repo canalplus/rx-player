@@ -91,7 +91,7 @@ export default function patchSegmentWithTimeOffset(
     filePos: number,
     _path?: string
   ): Uint8Array {
-    let output = new Uint8Array(0);
+    let output;
     const path = _path ? (_path + "." + boxtype) : boxtype;
     if (compositeBoxesToParse.indexOf(boxtype) >= 0) {
       output = boxSpecificData.subarray(0, 8);
@@ -190,7 +190,7 @@ export default function patchSegmentWithTimeOffset(
     const version = input[8];
     const tfdtOffset = timeOffset;
     let newBaseMediaDecodeTime;
-    let output = new Uint8Array(0);
+    let output;
     // 32-bit baseMediaDecodeTime
     if (version === 0) {
       const baseMediaDecodeTime = be4toi(input, 12);
