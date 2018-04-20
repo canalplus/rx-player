@@ -29,15 +29,13 @@ export default function parseSegmentTimeline(root: Element) : IParsedTimeline {
   const timelineChildren = root.childNodes;
   for (let i = 0; i < timelineChildren.length; i++) {
     if (timelineChildren[i].nodeType === Node.ELEMENT_NODE) {
-      const currentNode = timelineChildren[i] as Element;
+      const currentElement = timelineChildren[i] as Element;
 
-      switch (currentNode.nodeName) {
-        case "S":
-          const s = parseS(currentNode, timeline[timeline.length - 1] || null);
-          if (s) {
-            timeline.push(s);
-          }
-          break;
+      if (currentElement.nodeName === "S") {
+        const s = parseS(currentElement, timeline[timeline.length - 1] || null);
+        if (s) {
+          timeline.push(s);
+        }
       }
     }
   }
