@@ -122,7 +122,7 @@ export default function parseMetaManifest(
           .reduce((acc: Adaptation[], type) => {
             const _adaptation = baseManifest.adaptations[type as AdaptationType];
             if (_adaptation) {
-              acc.concat(_adaptation);
+              return acc.concat(_adaptation);
             }
             return acc;
           }, []).find((a: Adaptation) => a.id === adaptation.id);
