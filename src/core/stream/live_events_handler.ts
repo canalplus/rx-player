@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import Manifest from "../../manifest";
 import log from "../../utils/log";
+import SourceBufferManager from "../source_buffers";
 import EVENTS, {
   IManifestUpdateEvent,
   IStreamEvent,
@@ -67,8 +68,10 @@ export default function liveEventsHandler(
   return function handleLiveEvents(message) {
     switch (message.type) {
       case "discontinuity-encountered":
-        log.warn("explicit discontinuity seek", message.value.nextTime);
-        videoElement.currentTime = message.value.nextTime;
+        if (SourceBufferManager.isNative(message.value.bufferType)) {
+          log.warn("explicit discontinuity seek", message.value.nextTime);
+          videoElement.currentTime = message.value.nextTime;
+        }
         break;
 
       case "needs-manifest-refresh":
