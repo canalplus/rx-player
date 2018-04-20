@@ -81,13 +81,10 @@ const APITools: IAPITools<IPolicy> = {
         .then((mediaKeys: MediaKeys) => {
           (mediaKeys as any).getStatusForPolicy(object)
             .then((result: IMediaKeyStatus) => {
-              switch (result) {
-                case "usable":
-                  resolve(2);
-                  break;
-                default:
-                  resolve(0);
-                  break;
+              if (result === "usable") {
+                resolve(2);
+              } else {
+                resolve(0);
               }
             });
         });
