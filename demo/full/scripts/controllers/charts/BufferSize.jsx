@@ -20,7 +20,7 @@ const filterData = (data, duration) => {
   return data;
 };
 
-class BufferSizeChart extends React.Component {
+export default class BufferSizeChart extends React.Component {
   constructor(...args) {
     super(...args);
     this.state = {
@@ -112,5 +112,3 @@ class BufferSizeChart extends React.Component {
     );
   }
 }
-
-export default BufferSizeChart;
