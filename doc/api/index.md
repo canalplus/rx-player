@@ -10,6 +10,8 @@
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
     - [LogLevel](#static-LogLevel)
+- [Tools](#tools)
+    - [MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -181,7 +183,19 @@ import RxPlayer from "rx-player";
 RxPlayer.LogLevel = "WARNING";
 ```
 
+<a name="tools"></a>
+## Tools #######################################################################
 
+<a name="tools-mediaCapabilitiesProber"></a>
+### MediaCapabilitiesProber ####################################################
+
+_type_: ``Object``
+
+A [tool](./mediaCapabilitiesProber/index.md) to probe browser media capabilities:
+- Decoding capabilities
+- DRM support
+- HDCP support
+- Display capabilities
 
 <a name="meth"></a>
 ## Methods #####################################################################
