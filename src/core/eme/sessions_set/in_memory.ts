@@ -115,15 +115,9 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     initData : Uint8Array,
     initDataType: string
   ) : IMediaKeySession|MediaKeySession|null {
-    const hash = hashInitData(initData);
-    const entry = this.find((e) => {
-      return(
-        e.initData === hash &&
-        e.initDataType === initDataType
-      );
-    });
-    if (entry) {
-      return this.delete(entry.session);
+    const session = this.get(initData, initDataType);
+    if (session) {
+      return this.delete(session);
     } else {
       return null;
     }
