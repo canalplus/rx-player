@@ -1,4 +1,4 @@
-import playListGenerator from "../utils/playlist_generator";
+import playListGenerator from "../utils/metaplaylistGenerator";
 
 const generateMockMetaPlaylist = (startTime, timeShiftBufferDepth) => {
   const data = [

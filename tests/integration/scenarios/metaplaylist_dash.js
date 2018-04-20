@@ -4,10 +4,9 @@ import RxPlayer from "../../../src";
 import {
   mockAllRequests,
   mockManifestRequest,
-  mockMetaPlaylistRequest,
 } from "../utils/mock_requests.js";
 import Mock from "../mocks/dash_static_SegmentTimeline.js";
-import generateMockMetaPlaylist from "../mocks/metaplaylist_dash.js";
+import generateMockMetaPlaylist from "../mocks/generateMockMetaPlaylist.js";
 import sleep from "../utils/sleep";
 
 describe("MetaPlaylist with DASH Content", function () {
