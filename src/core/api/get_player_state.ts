@@ -55,12 +55,9 @@ export default function getLoadedContentState(
       return PLAYER_STATES.ENDED;
     }
 
-    switch (stalledStatus.reason) {
-      case "seeking":
-        return PLAYER_STATES.SEEKING;
-      default:
-        return PLAYER_STATES.BUFFERING;
-    }
+    return stalledStatus.reason === "seeking" ?
+      PLAYER_STATES.SEEKING :
+      PLAYER_STATES.BUFFERING;
   }
   return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
 
