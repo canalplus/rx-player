@@ -31,6 +31,7 @@ declare const __FEATURES__ : {
   NATIVE_VTT : boolean;
   BIF_PARSER : boolean;
   EME : boolean;
+  TOOLS_MCP: boolean;
 };
 declare const __RELATIVE_PATH__ : {
   EME_MANAGER: string;

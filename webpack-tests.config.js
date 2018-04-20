@@ -37,6 +37,7 @@ const config = {
         HTML_SRT: true,
         EME: true,
         BIF_PARSER: true,
+        TOOLS_MCP: true,
       },
 
       // Path relative to src/features where optional features are implemented
