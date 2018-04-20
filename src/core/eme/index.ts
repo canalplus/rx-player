@@ -150,81 +150,77 @@ function createEME(
     }, "keySystem"));
   }
 
-  return createMediaKeys(keySystems, errorStream)
-    .mergeMap((mediaKeysInfos) => {
-      // 1 - Create or reuse session from loaded session.
-      const getSession$ = onEncrypted$(video)
-        .concatMap((encryptedEvent, i) => {
-          log.info("eme: encrypted event", encryptedEvent);
-          if (encryptedEvent.initData == null) {
-            const error = new Error("no init data found on media encrypted event.");
-            throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
-          }
-          const initData = new Uint8Array(encryptedEvent.initData);
-          const initDataType = encryptedEvent.initDataType;
+  const mediaKeysInfos$ = createMediaKeys(keySystems, errorStream);
 
-          const getSessionInfos$ = createOrReuseSessionWithRetry(
-            initData,
-            initDataType,
-            mediaKeysInfos
-          );
+  // 1 - Create or reuse session from loaded session.
+  const getSession$ = Observable.combineLatest(
+      onEncrypted$(video),
+      mediaKeysInfos$
+    )
+    .concatMap(([encryptedEvent, mediaKeysInfos], i) => {
+      log.info("eme: encrypted event", encryptedEvent);
+      if (encryptedEvent.initData == null) {
+        const error = new Error("no init data found on media encrypted event.");
+        throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+      }
+      const initData = new Uint8Array(encryptedEvent.initData);
+      const initDataType = encryptedEvent.initDataType;
 
-          const setMediaKeys$ = i === 0 ?
-            setMediaKeysObs(mediaKeysInfos, video, instanceInfos) :
-            Observable.of(mediaKeysInfos);
+      const getSessionInfos$ = createOrReuseSessionWithRetry(
+        initData,
+        initDataType,
+        mediaKeysInfos
+      );
 
-          return Observable.merge(
-            getSessionInfos$,
-            setMediaKeys$.ignoreElements() as Observable<never>
-          );
-        }
-      ).share();
-
-      // 2 - Generate request each time a new session is created.
-      const generateKeyRequest$ = getSession$
-        .mergeMap((evt) => {
-          const type = evt.type;
-          if (
-            type === "created-temporary-session" ||
-            type === "created-persistent-session"
-          ) {
-            const {
-              initData,
-              initDataType,
-            } = (evt as ISessionCreationEvent).value.sessionInfos;
-            return generateKeyRequest(evt.value.session, initData, initDataType);
-          }
-          return Observable.empty<never>();
-      });
-
-      // 3 - Handle every message comming from session
-      // (license update, key status message, etc)
-      const handleSessionEvents$ = getSession$
-        .mergeMap((sessionManagementEvents) => {
-          const type = sessionManagementEvents.type;
-          if (
-            type === "created-temporary-session" ||
-            type === "created-persistent-session"
-          ) {
-            const {
-              initData,
-            } = (sessionManagementEvents as ISessionCreationEvent).value.sessionInfos;
-            return handleSessionEvents(
-              sessionManagementEvents.value.session,
-              mediaKeysInfos.keySystem,
-              new Uint8Array(initData),
-              errorStream
-            );
-          }
-          return Observable.empty<never>();
-        });
+      const setMediaKeys$ = i === 0 ?
+        setMediaKeysObs(mediaKeysInfos, video, instanceInfos) :
+        Observable.of(mediaKeysInfos);
 
       return Observable.merge(
-        getSession$,
-        generateKeyRequest$,
-        handleSessionEvents$
+        getSessionInfos$,
+        setMediaKeys$.ignoreElements() as Observable<never>
+      );
+    }
+  ).share();
+
+  // 2 - Generate request each time a new session is created.
+  const generateKeyRequest$ = getSession$
+    .mergeMap((evt) => {
+      const type = evt.type;
+      if (
+        type === "created-temporary-session" ||
+        type === "created-persistent-session"
+      ) {
+        const {
+          initData,
+          initDataType,
+        } = (evt as ISessionCreationEvent).value.sessionInfos;
+        return generateKeyRequest(evt.value.session, initData, initDataType);
+      }
+      return Observable.empty<never>();
+  }).share();
+
+  // 3 - Handle every message comming from session
+  // (license update, key status message, etc)
+  const handleSessionEvents$ = generateKeyRequest$
+    .withLatestFrom(mediaKeysInfos$)
+    .mergeMap(([generatedRequestEvents, mediaKeysInfos]) => {
+      const {
+        initData,
+      } = generatedRequestEvents.value.sessionInfos;
+      return handleSessionEvents(
+        generatedRequestEvents.value.session,
+        mediaKeysInfos.keySystem,
+        new Uint8Array(initData),
+        errorStream
       );
     });
+
+  return Observable.merge(
+    getSession$,
+    generateKeyRequest$,
+    handleSessionEvents$
+  );
 }
 
 /**
