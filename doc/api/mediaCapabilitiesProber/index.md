@@ -174,10 +174,9 @@ const configuration = {
 Usage :
 
 ```js
-import RxPlayer from "rx-player";
+import { MediaCapabilitiesProber } from "rx-player";
 
-const mediaCapabilitiesProber = RxPlayer.MediaCapabilitiesProber;
-const configurationSupport = mediaCapabilitiesProber.getCapabilities(config);
+const configurationSupport = MediaCapabilitiesProber.getCapabilities(config);
 configurationSupport.then((result) => {
   // ...
 }); 

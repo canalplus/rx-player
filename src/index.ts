@@ -23,6 +23,7 @@
 
 import Player from "./core/api";
 import initializeFeatures from "./features/initialize_features";
+import MediaCapabilitiesProber from "./tools/mediaCapabilitiesProber";
 import logger from "./utils/log";
 
 // set initial features according to environment variables
@@ -32,4 +33,5 @@ if (__DEV__) {
   logger.setLevel(__LOGGER_LEVEL__);
 }
 
+export { MediaCapabilitiesProber };
 export default Player;
