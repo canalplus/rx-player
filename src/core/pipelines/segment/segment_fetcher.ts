@@ -175,8 +175,8 @@ export default function createSegmentFetcher<T>(
       .filter((
         arg
       ) : arg is
-        IPipelineData<ISegmentResponseParsed<T>>|
-        IPipelineCache<ISegmentResponseParsed<T>> =>
+        IPipelineData<ISegmentResponseParsed<T>, ISegmentResponse<T>>|
+        IPipelineCache<ISegmentResponseParsed<T>, ISegmentResponse<T>> =>
         arg.type === "data" || arg.type === "cache"
       )
 

@@ -55,17 +55,19 @@ export interface IPipelineMetrics {
   };
 }
 
-export interface IPipelineData<T> {
+export interface IPipelineData<T, U> {
   type : "data";
   value : {
     parsed : T;
+    response: ILoaderResponseValue<U>;
   };
 }
 
-export interface IPipelineCache<T> {
+export interface IPipelineCache<T, U> {
   type : "cache";
   value : {
     parsed : T;
+    response: ILoaderResponseValue<U>;
   };
 }
 
@@ -85,8 +87,8 @@ export type ICorePipelineEvent<T, U, V> =
   ILoaderResponse<U> |
   ILoaderProgress |
   IPipelineError |
-  IPipelineCache<V> |
-  IPipelineData<V> |
+  IPipelineCache<V, U> |
+  IPipelineData<V, U> |
   IPipelineMetrics;
 
 const {

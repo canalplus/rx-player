@@ -61,6 +61,7 @@ export interface ISegmentLoaderArguments {
 
 export interface ILoaderResponseValue<T> {
   responseData : T;
+  receivedTime?: number;
   duration? : number;
   size? : number;
   url? : string;

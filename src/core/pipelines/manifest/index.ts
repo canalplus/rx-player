@@ -34,8 +34,8 @@ import Pipeline, {
 } from "../core_pipeline";
 
 type IPipelineManifestResult =
-  IPipelineData<IManifestResult> |
-  IPipelineCache<IManifestResult>;
+  IPipelineData<IManifestResult, string|Document> |
+  IPipelineCache<IManifestResult, string|Document>;
 
 type IPipelineManifestOptions =
   IPipelineOptions<IManifestLoaderArguments, Document|string>;
@@ -81,12 +81,13 @@ export default function createManifestPipeline(
       )
 
       .map(({ value }) : Manifest => {
+        const receivedTime = value.response.receivedTime || Date.now();
         return createManifest(
           value.parsed.manifest,
           supplementaryTextTracks,
           supplementaryImageTracks,
           warning$,
-          value.response.receivedTime / 1000
+          receivedTime / 1000
         );
       })
       .share();
