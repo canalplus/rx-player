@@ -107,9 +107,5 @@ describe("MetaPlaylist with DASH Content", function () {
 
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(player.getPosition()).to.be.above(startTime);
-
-      const videoElement = player.getVideoElement();
-      const bufferStart = videoElement.buffered.start(0);
-      expect(bufferStart).to.equal(startTime);
     });
 });
