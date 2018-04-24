@@ -16,13 +16,20 @@
 
 import { IMediaKeySession } from "../../compat";
 
-type LicenseObject =
+// Data representing a License
+type ILicense =
   BufferSource |
   ArrayBuffer |
   ArrayBufferView;
 
-type sessionManagementEvents = "reuse-loaded-session" | "loaded-persistent-session";
-type sessionCreationEvents = "created-temporary-session" | "created-persistent-session";
+type sessionManagementEvents =
+  "reuse-loaded-session" |
+  "loaded-persistent-session";
+
+type sessionCreationEvents =
+  "created-temporary-session" |
+  "created-persistent-session";
+
 type mediaKeyMessageEvents =
   "license-request" |
   "license-renewal" |
@@ -56,7 +63,7 @@ interface IMediaKeyMessageEvent {
   value : {
     session : IMediaKeySession|MediaKeySession;
     sessionInfos: {
-      license: LicenseObject;
+      license: ILicense;
     };
   };
 }
@@ -141,7 +148,7 @@ function sessionRequestEvent(
 function mediaKeyMessageEvent(
   type: mediaKeyMessageEvents,
   session: IMediaKeySession|MediaKeySession,
-  license: LicenseObject
+  license: ILicense
 ): IMediaKeyMessageEvent {
   return {
     type,
