@@ -17,8 +17,8 @@
 import { Observable } from "rxjs/Observable";
 import { setMediaKeys } from "../../compat";
 import log from "../../utils/log";
+import { ICurrentMediaKeysInfos } from "./constants";
 import { $loadedSessions } from "./globals";
-import { IInstanceInfo } from "./key_system";
 import { IMediaKeysInfos } from "./session";
 
 /**
@@ -26,23 +26,21 @@ import { IMediaKeysInfos } from "./session";
  * element.
  * If a MediaKeys was already set on it, dispose of it before setting the new
  * one.
+ *
+ * /!\ Mutates heavily currentMediaKeysInfos
  * @param {Object} mediaKeysInfos
  * @param {HTMLMediaElement} mediaElement
- * @param {Object} instceInfos
+ * @param {Object} currentMediaKeysInfos
  * @returns {Observable}
  */
-function updateMediaKeys(
+export default function attachMediaKeys(
   mediaKeysInfos: IMediaKeysInfos,
   mediaElement : HTMLMediaElement,
-  instceInfos: IInstanceInfo
+  currentMediaKeysInfos: ICurrentMediaKeysInfos
 ) : Observable<null> {
   return Observable.defer(() => {
-    const {
-      $videoElement,
-      $mediaKeys,
-    } = instceInfos;
-    const oldVideoElement = $videoElement;
-    const oldMediaKeys = $mediaKeys;
+    const oldVideoElement = currentMediaKeysInfos.$videoElement;
+    const oldMediaKeys = currentMediaKeysInfos.$mediaKeys;
 
     const {
       mediaKeys,
@@ -52,10 +50,10 @@ function updateMediaKeys(
 
     const mksConfig = keySystemAccess.getConfiguration();
 
-    instceInfos.$mediaKeys = mediaKeys;
-    instceInfos.$mediaKeySystemConfiguration = mksConfig;
-    instceInfos.$keySystem = keySystem;
-    instceInfos.$videoElement = mediaElement;
+    currentMediaKeysInfos.$mediaKeys = mediaKeys;
+    currentMediaKeysInfos.$mediaKeySystemConfiguration = mksConfig;
+    currentMediaKeysInfos.$keySystem = keySystem;
+    currentMediaKeysInfos.$videoElement = mediaElement;
 
     if (mediaElement.mediaKeys === mediaKeys) {
       return Observable.of(null);
@@ -81,21 +79,3 @@ function updateMediaKeys(
     return mediaKeysSetter;
   });
 }
-
-/**
- * Remove the MediaKeys from the given HTMLMediaElement.
- * @param {HMTLMediaElement} mediaElement
- * @returns {Observable}
- */
-function disposeMediaKeys(
-  mediaElement : HTMLMediaElement|null
-) : Observable<null> {
-  return mediaElement ?
-    setMediaKeys(mediaElement, null) : Observable.empty();
-}
-
-export {
-  updateMediaKeys as setMediaKeys,
-  disposeMediaKeys,
-};
-export default updateMediaKeys;

@@ -38,32 +38,30 @@ import log from "../../utils/log";
 import { retryObsWithBackoff } from "../../utils/retry";
 import tryCatch from "../../utils/rx-tryCatch";
 import {
+  IKeySystemOption,
   KEY_STATUS_ERRORS,
 } from "./constants";
 import {
   IMediaKeyMessageEvent,
+  IMediaKeyMessageEventType,
   ISessionCreationEvent,
   ISessionEvent,
   ISessionManagementEvent,
   ISessionRequestEvent,
   mediaKeyMessageEvent,
-  mediaKeyMessageEvents,
   sessionCreationEvent,
   sessionManagementEvent,
   sessionRequestEvent,
 } from "./eme_events";
 import {
+  IKeySystemAccessInfos,
+} from "./find_key_system";
+import {
   $loadedSessions,
   $storedSessions,
 } from "./globals";
-import {
-  IKeySystemAccessInfos,
-  IKeySystemOption,
-} from "./key_system";
 
 import arrayIncludes from "../../utils/array-includes";
-
-type ErrorStream = Subject<Error|CustomError>;
 
 export interface IMediaKeysInfos extends IKeySystemAccessInfos {
   mediaKeys : MediaKeys|IMockMediaKeys;
@@ -71,7 +69,7 @@ export interface IMediaKeysInfos extends IKeySystemAccessInfos {
 
 interface IMediaKeyMessage {
   license: LicenseObject;
-  msg: mediaKeyMessageEvents;
+  msg: IMediaKeyMessageEventType;
 }
 
 type LicenseObject =
@@ -90,7 +88,7 @@ type LicenseObject =
 function sessionEventsHandler(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
-  errorStream: ErrorStream
+  errorStream: Subject<Error|CustomError>
 ) : Observable<IMediaKeyMessageEvent> {
   log.debug("eme: handle message events", session);
 
@@ -253,11 +251,11 @@ export function handleSessionEvents(
   session: MediaKeySession|IMediaKeySession,
   keySystem: IKeySystemOption,
   initData: Uint8Array,
-  errorStream: ErrorStream
+  errorStream: Subject<Error|CustomError>
 ) : Observable<IMediaKeyMessageEvent> {
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
-      $loadedSessions.deleteAndClose(session);
+      $loadedSessions.closeStoredSession(session);
       $storedSessions.delete(initData);
     });
 
@@ -315,7 +313,7 @@ export function createOrReuseSessionWithRetry(
     if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
       throw error;
     }
-    const firstLoadedSession = $loadedSessions.getFirst();
+    const firstLoadedSession = $loadedSessions.getOldestStoredSession();
     if (!firstLoadedSession) {
       throw error;
     }
@@ -323,7 +321,7 @@ export function createOrReuseSessionWithRetry(
     log.warn("eme: could not create a new session, " +
       "retry after closing a currently loaded session", error);
 
-    return $loadedSessions.deleteAndClose(firstLoadedSession)
+    return $loadedSessions.closeStoredSession(firstLoadedSession)
       .mergeMap(() => {
         return createOrReuseSession(
           initData,
@@ -414,7 +412,10 @@ function loadPersistentSession(
       log.warn("eme: no data stored for the loaded session.",
         storedSessionId);
 
-      $loadedSessions.deleteByInitData(initData, initDataType);
+      const loadedSession = $loadedSessions.get(initData, initDataType);
+      if (loadedSession != null) {
+        $loadedSessions.delete(loadedSession);
+      }
       $storedSessions.delete(initData);
 
       throw error;
@@ -442,7 +443,6 @@ function loadPersistentSession(
 export {
   ISessionManagementEvent,
   IMediaKeyMessageEvent,
-  ErrorStream,
   ISessionEvent,
   ISessionCreationEvent
 };

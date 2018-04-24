@@ -17,52 +17,27 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
-
 import {
-  IMediaKeySession,
   IMediaKeySystemAccess,
-  IMockMediaKeys,
   KeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
 } from "../../compat";
 import config from "../../config";
+import { EncryptedMediaError } from "../../errors";
 import arrayIncludes from "../../utils/array-includes";
 import log from "../../utils/log";
-
-import { EncryptedMediaError } from "../../errors";
-
-import { IPersistedSessionStorage } from "../eme/sessions_set/persisted";
+import {
+  ICurrentMediaKeysInfos,
+  IKeySystemOption,
+} from "./constants";
 
 type MediaKeysRequirement = "optional" | "required" | "not-allowed";
-
-interface IKeySystemOption {
-  type : string;
-  getLicense : (message : Uint8Array, messageType : string)
-    => Promise<BufferSource>|BufferSource;
-  serverCertificate? : ArrayBuffer|TypedArray;
-  persistentLicense? : boolean;
-  licenseStorage? : IPersistedSessionStorage;
-  persistentStateRequired? : boolean;
-  distinctiveIdentifierRequired? : boolean;
-  closeSessionsOnStop? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : IMediaKeySession|MediaKeySession)
-    => Promise<BufferSource>|BufferSource;
-  videoRobustnesses?: Array<string|undefined>;
-  audioRobustnesses?: Array<string|undefined>;
-}
 
 const {
   EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
   EME_KEY_SYSTEMS,
 } = config;
-
-interface IInstanceInfo {
-  $keySystem: IKeySystemOption|null;
-  $mediaKeys: IMockMediaKeys|MediaKeys|null;
-  $mediaKeySystemConfiguration: MediaKeySystemConfiguration|null;
-  $videoElement: HTMLMediaElement|null;
-}
 
 interface IMediaCapability {
   contentType?: string;
@@ -82,7 +57,7 @@ interface IKeySystemAccessInfos {
 
 function getCachedKeySystemAccess(
   keySystems: IKeySystemOption[],
-  instanceInfos: IInstanceInfo
+  currentMediaKeysInfos: ICurrentMediaKeysInfos
 ) : null|undefined|{
   keySystem: IKeySystemOption;
   keySystemAccess: KeySystemAccess;
@@ -91,7 +66,7 @@ function getCachedKeySystemAccess(
     $keySystem,
     $mediaKeys,
     $mediaKeySystemConfiguration,
-  } = instanceInfos;
+  } = currentMediaKeysInfos;
 
   // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
   // creation of a new MediaKeys instance for each session creation
@@ -264,12 +239,12 @@ function buildKeySystemConfigurations(
  */
 function findCompatibleKeySystem(
   keySystems: IKeySystemOption[],
-  instanceInfos: IInstanceInfo
+  currentMediaKeysInfos: ICurrentMediaKeysInfos
 ) : Observable<IKeySystemAccessInfos> {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
   const cachedKeySystemAccess =
-    getCachedKeySystemAccess(keySystems, instanceInfos);
+    getCachedKeySystemAccess(keySystems, currentMediaKeysInfos);
   if (cachedKeySystemAccess) {
     log.debug("eme: found compatible keySystem quickly", cachedKeySystemAccess);
     return Observable.of(cachedKeySystemAccess);
@@ -371,17 +346,8 @@ function findCompatibleKeySystem(
   });
 }
 
-function getKeySystem(instanceInfos : IInstanceInfo) : string|null {
-  return instanceInfos.$keySystem && instanceInfos.$keySystem.type;
-}
-
 export {
-  findCompatibleKeySystem,
-  getKeySystem,
-  IInstanceInfo,
-  IMediaCapability,
   IKeySystemAccessInfos,
-  IKeySystemOption,
 };
 
 export default findCompatibleKeySystem;
