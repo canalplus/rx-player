@@ -22,15 +22,18 @@ import { IInstanceInfo } from "./key_system";
 import { IMediaKeysInfos } from "./session";
 
 /**
- * Set the MediaKeys object on the videoElement.
+ * Set the MediaKeys object on the HTMLMediaElement if it is not already on the
+ * element.
+ * If a MediaKeys was already set on it, dispose of it before setting the new
+ * one.
  * @param {Object} mediaKeysInfos
- * @param {HTMLMediaElement} video
+ * @param {HTMLMediaElement} mediaElement
  * @param {Object} instceInfos
  * @returns {Observable}
  */
-function setMediaKeysObs(
+function updateMediaKeys(
   mediaKeysInfos: IMediaKeysInfos,
-  video : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   instceInfos: IInstanceInfo
 ) : Observable<null> {
   return Observable.defer(() => {
@@ -52,9 +55,9 @@ function setMediaKeysObs(
     instceInfos.$mediaKeys = mediaKeys;
     instceInfos.$mediaKeySystemConfiguration = mksConfig;
     instceInfos.$keySystem = keySystem;
-    instceInfos.$videoElement = video;
+    instceInfos.$videoElement = mediaElement;
 
-    if (video.mediaKeys === mediaKeys) {
+    if (mediaElement.mediaKeys === mediaKeys) {
       return Observable.of(null);
     }
 
@@ -65,14 +68,14 @@ function setMediaKeysObs(
     }
 
     let mediaKeysSetter : Observable<null>;
-    if ((oldVideoElement && oldVideoElement !== video)) {
-      log.debug("eme: unlink old video element and set mediakeys");
+    if ((oldVideoElement && oldVideoElement !== mediaElement)) {
+      log.debug("eme: unlink old media element and set mediakeys");
       mediaKeysSetter = setMediaKeys(oldVideoElement, null)
-        .concat(setMediaKeys(video, mediaKeys));
+        .concat(setMediaKeys(mediaElement, mediaKeys));
     }
     else {
       log.debug("eme: set mediakeys");
-      mediaKeysSetter = setMediaKeys(video, mediaKeys);
+      mediaKeysSetter = setMediaKeys(mediaElement, mediaKeys);
     }
 
     return mediaKeysSetter;
@@ -81,20 +84,18 @@ function setMediaKeysObs(
 
 /**
  * Remove the MediaKeys from the given HTMLMediaElement.
- * @param {HMTLMediaElement} videoElement
+ * @param {HMTLMediaElement} mediaElement
  * @returns {Observable}
  */
 function disposeMediaKeys(
-  videoElement : HTMLMediaElement|null
+  mediaElement : HTMLMediaElement|null
 ) : Observable<null> {
-  if (videoElement) {
-    return setMediaKeys(videoElement, null);
-  }
-  return Observable.empty();
+  return mediaElement ?
+    setMediaKeys(mediaElement, null) : Observable.empty();
 }
 
 export {
-  setMediaKeysObs as setMediaKeys,
+  updateMediaKeys as setMediaKeys,
   disposeMediaKeys,
 };
-export default setMediaKeysObs;
+export default updateMediaKeys;
