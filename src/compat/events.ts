@@ -34,7 +34,7 @@ import {
 } from "./constants";
 
 const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
-const pixelRatio = window.devicePixelRatio || 1;
+const pixelRatio = (typeof window !== "undefined" && window.devicePixelRatio) || 1;
 
 /**
  * Find the first supported event from the list given.
@@ -92,10 +92,11 @@ function compatibleListener<T extends Event>(
 ) : (element : IEventTargetLike) => Observable<T> {
   let mem : string|undefined;
   const prefixedEvents = eventPrefixed(eventNames, prefixes);
+
   return (element) => {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
-    if (element instanceof HTMLElement_) {
+    if (HTMLElement_ && element instanceof HTMLElement_) {
       if (typeof mem === "undefined") {
         mem = findSupportedEvent(element, prefixedEvents);
       }
@@ -127,6 +128,10 @@ function compatibleListener<T extends Event>(
  * @returns {Observable}
  */
 function visibilityChange() : Observable<boolean> {
+  if (typeof document === "undefined") {
+    return Observable.never();
+  }
+
   let prefix;
   if (document.hidden != null) {
     prefix = "";

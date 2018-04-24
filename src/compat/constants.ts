@@ -18,22 +18,26 @@ import MediaError from "../errors/MediaError";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
-const win = window;
-const HTMLElement_ : HTMLElementConstructor = win.HTMLElement;
-const VTTCue_ : VTTCueConstructor|undefined = win.VTTCue || win.TextTrackCue;
+const win = typeof window !== "undefined" ? window : undefined;
+const HTMLElement_ : HTMLElementConstructor|undefined = win && win.HTMLElement;
+const VTTCue_ : VTTCueConstructor|undefined = win && (win.VTTCue || win.TextTrackCue);
 
 const MediaSource_ : MediaSourceConstructor|undefined = (
-  win.MediaSource ||
-  win.MozMediaSource ||
-  win.WebKitMediaSource ||
-  win.MSMediaSource
+  win && (
+    win.MediaSource ||
+    win.MozMediaSource ||
+    win.WebKitMediaSource ||
+    win.MSMediaSource
+  )
 );
 
 let MediaKeys_ : MediaKeysConstructor|undefined = (
-  win.MediaKeys ||
-  win.MozMediaKeys ||
-  win.WebKitMediaKeys ||
-  win.MSMediaKeys
+  win && (
+    win.MediaKeys ||
+    win.MozMediaKeys ||
+    win.WebKitMediaKeys ||
+    win.MSMediaKeys
+  )
 );
 
 if (!MediaKeys_) {
@@ -57,11 +61,14 @@ if (!MediaKeys_) {
 
 // true for IE / Edge
 const isIE : boolean = (
-  navigator.appName === "Microsoft Internet Explorer" ||
-  navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
+  typeof navigator !== "undefined" && (
+    navigator.appName === "Microsoft Internet Explorer" ||
+    navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
+  )
 );
 
 const isFirefox : boolean = (
+  typeof navigator !== "undefined" &&
   navigator.userAgent.toLowerCase().indexOf("firefox") !== -1
 );
 

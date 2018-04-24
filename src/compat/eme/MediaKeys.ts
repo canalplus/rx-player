@@ -308,7 +308,9 @@ let MockMediaKeys : IMockMediaKeysConstructor =
     }
   };
 
-if (navigator.requestMediaKeySystemAccess) {
+if (typeof navigator === "undefined") {
+  requestMediaKeySystemAccess = null;
+} else if (navigator.requestMediaKeySystemAccess) {
   requestMediaKeySystemAccess = (a : string, b : MediaKeySystemConfiguration[]) =>
     castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 } else {
