@@ -19,18 +19,12 @@ import assert, {
   assertInterface,
 } from "../../../utils/assert";
 import log from "../../../utils/log";
+import {
+  IPersistedSessionData,
+  IPersistedSessionStorage,
+} from "../constants";
 import SessionSet from "./abstract";
 import hashInitData from "./hash_init_data";
-
-interface IPersistedSessionData {
-  sessionId : string;
-  initData : number;
-}
-
-export interface IPersistedSessionStorage {
-  load() : IPersistedSessionData[];
-  save(x : IPersistedSessionData[]) : void;
-}
 
 function checkStorage(storage : IPersistedSessionStorage) : void {
   assert(

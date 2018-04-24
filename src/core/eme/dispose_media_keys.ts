@@ -14,26 +14,17 @@
  * limitations under the License.
  */
 
-// TODO really needed?
-export default abstract class SessionSet<T> {
-  protected _entries : T[];
+import { Observable } from "rxjs/Observable";
+import { setMediaKeys } from "../../compat";
 
-  constructor() {
-    this._entries = [];
-  }
-
-  /**
-   * Find the first entry for which the predicate function returns true.
-   * Return null if no entry has been found.
-   * @param {Function} predicate
-   * @returns {Object|null}
-   */
-  find(predicate : (x : T) => boolean) : T|null {
-    for (let i = 0; i < this._entries.length; i++) {
-      if (predicate(this._entries[i])) {
-        return this._entries[i];
-      }
-    }
-    return null;
-  }
+/**
+ * Remove the MediaKeys from the given HTMLMediaElement.
+ * @param {HMTLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+export default function disposeMediaKeys(
+  mediaElement : HTMLMediaElement|null
+) : Observable<null> {
+  return mediaElement ?
+    setMediaKeys(mediaElement, null) : Observable.empty();
 }

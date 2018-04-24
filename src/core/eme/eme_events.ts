@@ -22,15 +22,15 @@ type ILicense =
   ArrayBuffer |
   ArrayBufferView;
 
-type sessionManagementEvents =
+type ISessionManagementEventType =
   "reuse-loaded-session" |
   "loaded-persistent-session";
 
-type sessionCreationEvents =
+type ISessionCreationEventType =
   "created-temporary-session" |
   "created-persistent-session";
 
-type mediaKeyMessageEvents =
+type IMediaKeyMessageEventType =
   "license-request" |
   "license-renewal" |
   "license-release" |
@@ -49,7 +49,7 @@ interface ISessionRequestEvent {
 }
 
 interface ISessionManagementEvent {
-  type : sessionManagementEvents;
+  type : ISessionManagementEventType;
   value : {
     session : IMediaKeySession|MediaKeySession;
     sessionInfos: {
@@ -59,7 +59,7 @@ interface ISessionManagementEvent {
 }
 
 interface IMediaKeyMessageEvent {
-  type : mediaKeyMessageEvents;
+  type : IMediaKeyMessageEventType;
   value : {
     session : IMediaKeySession|MediaKeySession;
     sessionInfos: {
@@ -69,7 +69,7 @@ interface IMediaKeyMessageEvent {
 }
 
 interface ISessionCreationEvent {
-  type: sessionCreationEvents;
+  type: ISessionCreationEventType;
   value: {
     session: IMediaKeySession|MediaKeySession;
     sessionInfos: {
@@ -94,7 +94,7 @@ type ISessionEvent =
  * @returns {Object}
  */
 function sessionManagementEvent(
-  type: sessionManagementEvents,
+  type: ISessionManagementEventType,
   session: IMediaKeySession|MediaKeySession,
   storedSessionId?: string
 ): ISessionManagementEvent {
@@ -110,7 +110,7 @@ function sessionManagementEvent(
 }
 
 function sessionCreationEvent(
-  type: sessionCreationEvents,
+  type: ISessionCreationEventType,
   session: IMediaKeySession|MediaKeySession,
   initData: Uint8Array,
   initDataType: string
@@ -146,7 +146,7 @@ function sessionRequestEvent(
 }
 
 function mediaKeyMessageEvent(
-  type: mediaKeyMessageEvents,
+  type: IMediaKeyMessageEventType,
   session: IMediaKeySession|MediaKeySession,
   license: ILicense
 ): IMediaKeyMessageEvent {
@@ -162,7 +162,7 @@ function mediaKeyMessageEvent(
 }
 
 export {
-  mediaKeyMessageEvents,
+  IMediaKeyMessageEventType,
   sessionManagementEvent,
   sessionCreationEvent,
   sessionRequestEvent,

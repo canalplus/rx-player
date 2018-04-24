@@ -14,6 +14,44 @@
  * limitations under the License.
  */
 
+import {
+  IMediaKeySession,
+  IMockMediaKeys,
+} from "../../compat";
+
+export interface IPersistedSessionData {
+  sessionId : string;
+  initData : number;
+}
+
+export interface IPersistedSessionStorage {
+  load() : IPersistedSessionData[];
+  save(x : IPersistedSessionData[]) : void;
+}
+
+export interface IKeySystemOption {
+  type : string;
+  getLicense : (message : Uint8Array, messageType : string)
+    => Promise<BufferSource>|BufferSource;
+  serverCertificate? : ArrayBuffer|TypedArray;
+  persistentLicense? : boolean;
+  licenseStorage? : IPersistedSessionStorage;
+  persistentStateRequired? : boolean;
+  distinctiveIdentifierRequired? : boolean;
+  closeSessionsOnStop? : boolean;
+  onKeyStatusesChange? : (evt : Event, session : IMediaKeySession|MediaKeySession)
+    => Promise<BufferSource>|BufferSource;
+  videoRobustnesses?: Array<string|undefined>;
+  audioRobustnesses?: Array<string|undefined>;
+}
+
+export interface ICurrentMediaKeysInfos {
+  $keySystem: IKeySystemOption|null;
+  $mediaKeys: IMockMediaKeys|MediaKeys|null;
+  $mediaKeySystemConfiguration: MediaKeySystemConfiguration|null;
+  $videoElement: HTMLMediaElement|null;
+}
+
 /* tslint:disable no-object-literal-type-assertion */
 export const KEY_STATUS_ERRORS = {
   expired: true,

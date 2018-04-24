@@ -15,10 +15,13 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
 import { IMockMediaKeys } from "../../compat";
-import EncryptedMediaError from "../../errors/EncryptedMediaError";
+import {
+  CustomError,
+  EncryptedMediaError,
+} from "../../errors";
 import castToObservable from "../../utils/castToObservable";
-import { ErrorStream } from "./session";
 
 /**
  * Call the setServerCertificate API with the given certificate.
@@ -60,7 +63,7 @@ function setServerCertificate(
 function trySettingServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray,
-  errorStream: ErrorStream
+  errorStream: Subject<Error|CustomError>
 ) : Observable<never> {
   return setServerCertificate(mediaKeys, serverCertificate)
     .catch(error => {
