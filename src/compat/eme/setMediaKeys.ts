@@ -25,7 +25,7 @@ import {
  * Set the MediaKeys given on the media element.
  * @param {HTMLMediaElement} elt
  * @param {Object} mediaKeys
- * @returns {Promise}
+ * @returns {*}
  */
 function _setMediaKeys(
   elt : HTMLMediaElement,
@@ -63,11 +63,11 @@ function _setMediaKeys(
  * @param {Object} mediaKeys
  * @returns {Observable}
  */
-export default (
+export default function setMediaKeys$(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|IMockMediaKeys|null
-) : Observable<null> => {
+) : Observable<null> {
   return Observable.defer(() =>
     castToObservable(_setMediaKeys(elt, mediaKeys)).mapTo(null)
   );
-};
+}
