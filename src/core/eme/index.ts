@@ -46,7 +46,7 @@ import {
   ISessionCreationEvent,
   ISessionEvent,
 } from "./session";
-import setMediaKeysObs, { disposeMediaKeys } from "./set_media_keys";
+import updateMediaKeys, { disposeMediaKeys } from "./update_media_keys";
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
@@ -174,7 +174,7 @@ function createEME(
       );
 
       const setMediaKeys$ = i === 0 ?
-        setMediaKeysObs(mediaKeysInfos, video, instanceInfos) :
+        updateMediaKeys(mediaKeysInfos, video, instanceInfos) :
         Observable.of(mediaKeysInfos);
 
       return Observable.merge(
