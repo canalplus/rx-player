@@ -86,7 +86,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     const currentSession = this.get(initDataHash, initDataType);
     if (currentSession) {
       log.warn("A MediaKeySession was already stored with that hash, removing it.");
-      this.closeStoredSession(currentSession);
+      this.closeSession(currentSession);
     }
 
     const entry = {
