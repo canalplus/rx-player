@@ -143,6 +143,7 @@ function canPlay(
 // old WebKit SourceBuffer implementation,
 // where a synchronous append is used instead of appendBuffer
 if (
+  typeof window !== "undefined" &&
   window.WebKitSourceBuffer &&
   !window.WebKitSourceBuffer.prototype.addEventListener
 ) {
