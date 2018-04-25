@@ -255,7 +255,7 @@ export function handleSessionEvents(
 ) : Observable<IMediaKeyMessageEvent> {
   const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
     .finally(() => {
-      $loadedSessions.closeStoredSession(session);
+      $loadedSessions.closeSession(session);
       $storedSessions.delete(initData);
     });
 
@@ -321,7 +321,7 @@ export function createOrReuseSessionWithRetry(
     log.warn("eme: could not create a new session, " +
       "retry after closing a currently loaded session", error);
 
-    return $loadedSessions.closeStoredSession(firstLoadedSession)
+    return $loadedSessions.closeSession(firstLoadedSession)
       .mergeMap(() => {
         return createOrReuseSession(
           initData,
@@ -414,7 +414,7 @@ function loadPersistentSession(
 
       const loadedSession = $loadedSessions.get(initData, initDataType);
       if (loadedSession != null) {
-        $loadedSessions.delete(loadedSession);
+        $loadedSessions.closeSession(loadedSession);
       }
       $storedSessions.delete(initData);
 
