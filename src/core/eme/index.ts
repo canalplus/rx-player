@@ -117,7 +117,7 @@ function createEME(
         createSessionForEncryptedEvent(encryptedEvent, mediaKeysInfos),
         i === 0 ?
           attachMediaKeys(mediaKeysInfos, video, currentMediaKeysInfos).ignoreElements() :
-          Observable.empty() as Observable<never>
+          Observable.empty()
       )
     ).mergeMap((sessionInfos) =>  {
       if (
