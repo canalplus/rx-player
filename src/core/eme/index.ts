@@ -121,6 +121,7 @@ function createEME(
       )
     ).mergeMap((sessionInfos) =>  {
       if (
+        // XXX TODO So impossible to listen to events if we zap back?
         sessionInfos.type === "reuse-loaded-session" ||
 
         // XXX TODO Are we sure about that?
@@ -135,6 +136,7 @@ function createEME(
         mediaKeySession,
         keySystemConfiguration,
       } = sessionInfos;
+
       return Observable.merge(
         handleSessionEvents(
           mediaKeySession,

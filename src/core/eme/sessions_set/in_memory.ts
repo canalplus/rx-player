@@ -124,7 +124,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    * @param {MediaKeySession} session_
    * @returns {Observable}
    */
-  closeStoredSession(
+  closeSession(
     session_ : IMediaKeySession|MediaKeySession
   ) : Observable<null> {
     const session = this.delete(session_);
@@ -145,7 +145,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    * @returns {Observable}
    */
   dispose() : Observable<void|null> {
-    const disposed = this._entries.map((e) => this.closeStoredSession(e.session));
+    const disposed = this._entries.map((e) => this.closeSession(e.session));
     this._entries = [];
     return Observable.merge(...disposed);
   }
