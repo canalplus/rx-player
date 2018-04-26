@@ -84,7 +84,7 @@ type LicenseObject =
  * @param {Subject} errorStream
  * @returns {Observable}
  */
-function sessionEventsHandler(
+export function handleSessionEvents(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
   errorStream: Subject<Error|CustomError>
@@ -244,16 +244,6 @@ export function createSession(
 
   $loadedSessions.add(initData, initDataType, session);
   return Observable.of(session);
-}
-
-export function handleSessionEvents(
-  session: MediaKeySession|IMediaKeySession,
-  keySystem: IKeySystemOption,
-  errorStream: Subject<Error|CustomError>
-) : Observable<IMediaKeyMessageEvent> {
-  const sessionEvents = sessionEventsHandler(session, keySystem, errorStream);
-
-  return sessionEvents;
 }
 
 /**
@@ -435,7 +425,6 @@ function loadPersistentSession(
     .map((success) => {
       if (success) {
         $loadedSessions.add(initData, initDataType, session);
-        $storedSessions.add(initData, session);
           return sessionManagementEvent(
             "loaded-persistent-session",
             session,
