@@ -19,7 +19,7 @@ import { IMediaKeySession } from "../../../compat";
 import castToObservable from "../../../utils/castToObservable";
 import log from "../../../utils/log";
 import SessionSet from "./abstract";
-import hashInitData from "./hash_init_data";
+import { hashBuffer } from "./hash_init_data";
 
 // Cached data for a single MediaKeySession
 interface ISessionData {
@@ -29,12 +29,11 @@ interface ISessionData {
 }
 
 /**
- * Store MediaKeySessions, roughly through a
- * Map<InitializationData, MediaKeySession>.
- * @class SessionsStore
+ * Store open MediaKeySessions.
+ * @class OpenSessionsStore
  * @extends SessionSet
  */
-export default class SessionsStore extends SessionSet<ISessionData> {
+export default class OpenSessionsStore extends SessionSet<ISessionData> {
   /**
    * Returns every MediaKeySession stored here from oldest to newest.
    * @returns {Array.<MediaKeySession>}
@@ -55,7 +54,7 @@ export default class SessionsStore extends SessionSet<ISessionData> {
     initData : Uint8Array,
     initDataType: string
   ) : IMediaKeySession|MediaKeySession|null {
-    const initDataHash = hashInitData(initData);
+    const initDataHash = hashBuffer(initData);
     const foundEntry = this.find((entry) => (
       entry.initData === initDataHash &&
       entry.initDataType === initDataType
@@ -82,9 +81,14 @@ export default class SessionsStore extends SessionSet<ISessionData> {
 
     const entry = {
       session,
-      initData: hashInitData(initData),
+      initData: hashBuffer(initData),
       initDataType,
     };
+    if (session.closed !== null) {
+      session.closed.then(() => {
+        this._delete(session);
+      });
+    }
     log.debug("eme-mem-store: add session", entry);
     this._entries.push(entry);
   }

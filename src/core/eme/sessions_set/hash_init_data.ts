@@ -19,7 +19,7 @@
  * @param {Array|TypedArray} buffer
  * @returns {Number}
  */
-function hashBuffer(buffer : Uint8Array|number[]) : number {
+export function hashBuffer(buffer : Uint8Array|number[]) : number {
   let hash = 0;
   let char;
   for (let i = 0; i < buffer.length; i++) {
@@ -34,6 +34,7 @@ function hashBuffer(buffer : Uint8Array|number[]) : number {
  * Convert given init data to a 32bit integer hash
  * @param {Array|TypedArray|number} buffer
  * @returns {Number}
+ * TODO This is ugly, to remove
  */
 function hashInitData(initData: Uint8Array|number[]|number) : number {
   if (typeof initData === "number") {
