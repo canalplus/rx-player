@@ -119,33 +119,32 @@ function createEME(
           attachMediaKeys(mediaKeysInfos, video, currentMediaKeysInfos).ignoreElements() :
           Observable.empty()
       )
-    ).mergeMap((sessionInfos) =>  {
-      if (
-        // XXX TODO So impossible to listen to events if we zap back?
-        sessionInfos.type === "reuse-loaded-session" ||
-
-        // XXX TODO Are we sure about that?
-        sessionInfos.type === "loaded-persistent-session"
-      ) {
-        return Observable.empty();
-      }
-
+    )
+    .switchMap((sessionInfos) =>  {
       const {
-        initData,
-        initDataType,
         mediaKeySession,
         keySystemConfiguration,
       } = sessionInfos;
 
       return Observable.merge(
+        Observable.of(sessionInfos),
         handleSessionEvents(
           mediaKeySession,
           keySystemConfiguration,
-          new Uint8Array(initData),
           errorStream
-        ),
-        generateKeyRequest(mediaKeySession, initData, initDataType)
+        ).ignoreElements()
       );
+    }).concatMap((sessionInfos) => {
+      const {
+        initData,
+        initDataType,
+        mediaKeySession,
+      } = sessionInfos;
+
+      const isSessionCreated = sessionInfos.type.match(/^created(.*?)/);
+      return (isSessionCreated !== null) ?
+        generateKeyRequest(mediaKeySession, initData, initDataType) :
+        Observable.empty<never>();
     });
 }
 
