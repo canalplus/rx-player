@@ -37,14 +37,13 @@ import createMediaKeys from "./create_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
 import findCompatibleKeySystem from "./find_key_system";
 import generateKeyRequest from "./generate_key_request";
+import getSessionForEncryptedEvent from "./get_session";
 import { $loadedSessions } from "./globals";
-import InitDataStore from "./init_data_store";
 import {
-  createOrReuseSessionWithRetry,
   handleSessionEvents,
-  IMediaKeysInfos,
   ISessionEvent,
-} from "./session";
+} from "./handle_session_events";
+import InitDataStore from "./init_data_store";
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
@@ -54,30 +53,6 @@ const currentMediaKeysInfos : ICurrentMediaKeysInfos = {
   $keySystem: null,
   $videoElement: null,
 };
-
-/**
- * Create or reuse a MediaKeySession for the EncryptedEvent.
- * @param {MediaEncryptedEvent} encryptedEvent
- * @param {Object} mediaKeysInfos
- * @returns {Observable}
- */
-function getSessionForEncryptedEvent(
-  initData : Uint8Array,
-  initDataType : string,
-  mediaKeysInfos : IMediaKeysInfos
-) : Observable<any> /* XXX TODO */ {
-  log.info("eme: encrypted event", initData, initDataType);
-  return createOrReuseSessionWithRetry(initData, initDataType, mediaKeysInfos)
-    .map((evt) => {
-      return {
-        type: evt.type,
-        keySystemConfiguration: mediaKeysInfos.keySystem,
-        initData,
-        initDataType,
-        mediaKeySession: evt.value.session,
-      };
-    });
-}
 
 /**
  * EME abstraction and event handler used to communicate with the Content-

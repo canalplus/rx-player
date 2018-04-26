@@ -24,9 +24,9 @@ import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import { IKeySystemOption } from "./constants";
 import { IKeySystemAccessInfos } from "./find_key_system";
+import { IMediaKeysInfos } from "./get_session";
 import { $storedSessions } from "./globals";
 import { trySettingServerCertificate } from "./server_certificate";
-import { IMediaKeysInfos } from "./session";
 
 /**
  * Set the license storage given in options, if one.

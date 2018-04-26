@@ -18,8 +18,8 @@ import { Observable } from "rxjs/Observable";
 import { setMediaKeys } from "../../compat";
 import log from "../../utils/log";
 import { ICurrentMediaKeysInfos } from "./constants";
+import { IMediaKeysInfos } from "./get_session";
 import { $loadedSessions } from "./globals";
-import { IMediaKeysInfos } from "./session";
 
 /**
  * Set the MediaKeys object on the HTMLMediaElement if it is not already on the
