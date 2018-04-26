@@ -33,6 +33,7 @@ import {
   ErrorTypes,
   isKnownError,
 } from "../../errors";
+import arrayIncludes from "../../utils/array-includes";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import { retryObsWithBackoff } from "../../utils/retry";
@@ -60,8 +61,6 @@ import {
   $loadedSessions,
   $storedSessions,
 } from "./globals";
-
-import arrayIncludes from "../../utils/array-includes";
 
 export interface IMediaKeysInfos extends IKeySystemAccessInfos {
   mediaKeys : MediaKeys|IMockMediaKeys;
@@ -250,14 +249,9 @@ export function createSession(
 export function handleSessionEvents(
   session: MediaKeySession|IMediaKeySession,
   keySystem: IKeySystemOption,
-  initData: Uint8Array,
   errorStream: Subject<Error|CustomError>
 ) : Observable<IMediaKeyMessageEvent> {
-  const sessionEvents = sessionEventsHandler(session, keySystem, errorStream)
-    .finally(() => {
-      $loadedSessions.closeSession(session);
-      $storedSessions.delete(initData);
-    });
+  const sessionEvents = sessionEventsHandler(session, keySystem, errorStream);
 
   return sessionEvents;
 }
@@ -346,13 +340,31 @@ function createOrReuseSession(
 ) : Observable<ISessionCreationEvent|ISessionManagementEvent> {
 
   const loadedSession = $loadedSessions.get(initData, initDataType);
+
   if (loadedSession) {
-    log.debug("eme: reuse loaded session", loadedSession.sessionId);
-    return Observable.of(
-      sessionManagementEvent(
-        "reuse-loaded-session",
-        loadedSession
-      ));
+    const keyStatusesMap = loadedSession.keyStatuses;
+    const keyStatuses: string[] = [];
+    keyStatusesMap.forEach((keyStatus: string) => {
+      keyStatuses.push(keyStatus);
+    });
+
+    if (
+      keyStatuses.length === 0 ||
+      (
+        !arrayIncludes(keyStatuses, "expired") &&
+        !arrayIncludes(keyStatuses, "internal-error")
+      )
+    ) {
+      log.debug("eme: reuse loaded session", loadedSession.sessionId);
+      return Observable.of(
+        sessionManagementEvent(
+          "reuse-loaded-session",
+          loadedSession
+        ));
+    } else {
+      $loadedSessions.closeSession(loadedSession);
+      $storedSessions.delete(initData);
+    }
   }
 
   const {
