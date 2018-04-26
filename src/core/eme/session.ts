@@ -297,15 +297,15 @@ export function createOrReuseSessionWithRetry(
     if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
       throw error;
     }
-    const firstLoadedSession = $loadedSessions.getOldestStoredSession();
-    if (!firstLoadedSession) {
+    const loadedSessions = $loadedSessions.getSessions();
+    if (!loadedSessions.length) {
       throw error;
     }
 
     log.warn("eme: could not create a new session, " +
       "retry after closing a currently loaded session", error);
 
-    return $loadedSessions.closeSession(firstLoadedSession)
+    return $loadedSessions.closeSession(loadedSessions[0])
       .mergeMap(() => {
         return createOrReuseSession(
           initData,

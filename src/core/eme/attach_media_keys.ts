@@ -62,7 +62,7 @@ export default function attachMediaKeys(
     if (oldMediaKeys && oldMediaKeys !== mediaKeys) {
       // if we change our mediaKeys singleton, we need to dispose all existing
       // sessions linked to the previous one.
-      $loadedSessions.dispose();
+      $loadedSessions.closeAllSessions().subscribe();
     }
 
     let mediaKeysSetter : Observable<null>;
