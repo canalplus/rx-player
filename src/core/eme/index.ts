@@ -124,20 +124,18 @@ function createEME(
       const initData = new Uint8Array(encryptedEvent.initData);
       const { initDataType } = encryptedEvent;
 
-      const sessionInfos$ = !$contentSessions.get(initData, initDataType) ?
-        getSessionForEncryptedEvent(
+      const sessionInfos$ = getSessionForEncryptedEvent(
+        initData,
+        initDataType,
+        mediaKeysInfos,
+        $contentSessions
+      ).do((sessionInfos) => {
+        $contentSessions.add(
           initData,
           initDataType,
-          mediaKeysInfos,
-          $contentSessions
-        ).do((sessionInfos) => {
-          $contentSessions.add(
-            initData,
-            initDataType,
-            sessionInfos.mediaKeySession
-          );
-        }) :
-        Observable.empty();
+          sessionInfos.mediaKeySession
+        );
+      });
 
       return Observable.merge(
         sessionInfos$,
