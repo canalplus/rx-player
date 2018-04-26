@@ -339,7 +339,7 @@ function createOrReuseSession(
     });
 
     if (
-      keyStatuses.length === 0 ||
+      keyStatuses.length > 0 &&
       (
         !arrayIncludes(keyStatuses, "expired") &&
         !arrayIncludes(keyStatuses, "internal-error")

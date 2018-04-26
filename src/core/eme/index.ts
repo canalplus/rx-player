@@ -44,6 +44,7 @@ import {
   IMediaKeysInfos,
   ISessionEvent,
 } from "./session";
+import { InMemorySessionsSet } from "./sessions_set";
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
 // CDM instances.
@@ -60,18 +61,18 @@ const currentMediaKeysInfos : ICurrentMediaKeysInfos = {
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
-function createSessionForEncryptedEvent(
-  encryptedEvent : MediaEncryptedEvent,
-  mediaKeysInfos : IMediaKeysInfos
+function getSessionForEncryptedEvent(
+  initData : Uint8Array,
+  initDataType : string,
+  mediaKeysInfos : IMediaKeysInfos,
+  $contentSessions : InMemorySessionsSet
 ) : Observable<any> /* XXX TODO */ {
-  log.info("eme: encrypted event", encryptedEvent);
-  if (encryptedEvent.initData == null) {
-    const error = new Error("no init data found on media encrypted event.");
-    throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
-  }
-  const initData = new Uint8Array(encryptedEvent.initData);
-  const initDataType = encryptedEvent.initDataType;
+  log.info("eme: encrypted event", initData, initDataType);
 
+  const currentSession = $contentSessions.get(initData, initDataType);
+  if (currentSession) {
+    return Observable.empty();
+  }
   return createOrReuseSessionWithRetry(initData, initDataType, mediaKeysInfos)
     .map((evt) => {
       return {
@@ -107,32 +108,50 @@ function createEME(
     }, "keySystem"));
   }
 
+  const $contentSessions = new InMemorySessionsSet();
+
   return Observable.combineLatest(
     onEncrypted$(video),
     findCompatibleKeySystem(keySystemOptions, currentMediaKeysInfos)
       .mergeMap((keySystemInfos) => createMediaKeys(keySystemInfos, errorStream))
   )
-    .concatMap(([encryptedEvent, mediaKeysInfos], i) =>
-      Observable.merge(
-        createSessionForEncryptedEvent(encryptedEvent, mediaKeysInfos),
+    .concatMap(([encryptedEvent, mediaKeysInfos], i) => {
+      if (encryptedEvent.initData == null) {
+        const error = new Error("no init data found on media encrypted event.");
+        throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
+      }
+
+      const initData = new Uint8Array(encryptedEvent.initData);
+      const { initDataType } = encryptedEvent;
+
+      const sessionInfos$ = !$contentSessions.get(initData, initDataType) ?
+        getSessionForEncryptedEvent(
+          initData,
+          initDataType,
+          mediaKeysInfos,
+          $contentSessions
+        ).do((sessionInfos) => {
+          $contentSessions.add(
+            initData,
+            initDataType,
+            sessionInfos.mediaKeySession
+          );
+        }) :
+        Observable.empty();
+
+      return Observable.merge(
+        sessionInfos$,
         i === 0 ?
           attachMediaKeys(mediaKeysInfos, video, currentMediaKeysInfos).ignoreElements() :
           Observable.empty()
-      )
+      );
+    }
     )
     /**
      * While the chosen session is the same ( Same ID for both lasts sessions,
      * Sames keyStatuses), we do not continue EME workflow.
      */
-    .distinctUntilChanged((oldSessionInfos, newSessionInfos) => {
-      const { id: oldId, keyStatuses: oldKeyStatuses } = oldSessionInfos.mediaKeySession;
-      const { id: newId, keyStatuses: newKeyStatuses } = newSessionInfos.mediaKeySession;
-
-      const isSameId = oldId === newId;
-      const isSameKeyStatuses = oldKeyStatuses === newKeyStatuses;
-      return isSameId && isSameKeyStatuses;
-    })
-    .switchMap((sessionInfos) =>  {
+    .mergeMap((sessionInfos) =>  {
       const {
         mediaKeySession,
         keySystemConfiguration,
@@ -157,6 +176,8 @@ function createEME(
       return (isSessionCreated !== null) ?
         generateKeyRequest(mediaKeySession, initData, initDataType) :
         Observable.empty<never>();
+    }).finally(() => {
+      $contentSessions.dispose();
     });
 }
 
