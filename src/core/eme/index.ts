@@ -177,7 +177,7 @@ function createEME(
         generateKeyRequest(mediaKeySession, initData, initDataType) :
         Observable.empty<never>();
     }).finally(() => {
-      $contentSessions.closeAllSessions();
+      $contentSessions.closeAllSessions().subscribe();
     });
 }
 
