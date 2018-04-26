@@ -120,6 +120,18 @@ function createEME(
           Observable.empty()
       )
     )
+    /**
+     * While the chosen session is the same ( Same ID for both lasts sessions,
+     * Sames keyStatuses), we do not continue EME workflow.
+     */
+    .distinctUntilChanged((oldSessionInfos, newSessionInfos) => {
+      const { id: oldId, keyStatuses: oldKeyStatuses } = oldSessionInfos.mediaKeySession;
+      const { id: newId, keyStatuses: newKeyStatuses } = newSessionInfos.mediaKeySession;
+
+      const isSameId = oldId === newId;
+      const isSameKeyStatuses = oldKeyStatuses === newKeyStatuses;
+      return isSameId && isSameKeyStatuses;
+    })
     .switchMap((sessionInfos) =>  {
       const {
         mediaKeySession,
