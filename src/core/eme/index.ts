@@ -36,10 +36,10 @@ import {
 import createMediaKeys from "./create_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
 import findCompatibleKeySystem from "./find_key_system";
+import generateKeyRequest from "./generate_key_request";
 import { $loadedSessions } from "./globals";
 import {
   createOrReuseSessionWithRetry,
-  generateKeyRequest,
   handleSessionEvents,
   IMediaKeysInfos,
   ISessionEvent,
