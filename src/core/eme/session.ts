@@ -48,11 +48,9 @@ import {
   ISessionCreationEvent,
   ISessionEvent,
   ISessionManagementEvent,
-  ISessionRequestEvent,
   mediaKeyMessageEvent,
   sessionCreationEvent,
   sessionManagementEvent,
-  sessionRequestEvent,
 } from "./eme_events";
 import {
   IKeySystemAccessInfos,
@@ -244,37 +242,6 @@ export function createSession(
 
   $loadedSessions.add(initData, initDataType, session);
   return Observable.of(session);
-}
-
-/**
- * Generate a request from session.
- * @param {MediaKeySession} session
- * @param {Uint8Array} initData
- * @param {string} initDataType
- * @param {string} sessionType
- * @returns {Observable}
- */
-export function generateKeyRequest(
-  session: MediaKeySession|IMediaKeySession,
-  initData: Uint8Array,
-  initDataType: string
-) : Observable<ISessionRequestEvent> {
-  return Observable.defer(() => {
-    return castToObservable(
-      (session as any).generateRequest(initDataType, initData)
-    )
-      .catch((error) => {
-        throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
-      })
-      .mapTo(
-        sessionRequestEvent(
-          "generated-request",
-          session,
-          initData,
-          initDataType
-        )
-      );
-  });
 }
 
 /**
