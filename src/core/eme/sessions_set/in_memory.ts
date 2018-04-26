@@ -29,37 +29,30 @@ interface ISessionData {
 }
 
 /**
- * Set maintaining a representation of all currently loaded
- * MediaKeySessions.
- * This set allow to reuse sessions without re-negotiating a license exchange
- * if the key is already used in a loaded session.
- *
- * TODO Add Cache maximum size
- * @class InMemorySessionsSet
+ * Store MediaKeySessions, roughly through a
+ * Map<InitializationData, MediaKeySession>.
+ * @class SessionsStore
  * @extends SessionSet
  */
-export default class InMemorySessionsSet extends SessionSet<ISessionData> {
+export default class SessionsStore extends SessionSet<ISessionData> {
   /**
-   * Return oldest MediaKeySession stored in this cache.
-   * undefined if no MediaKeySession has been stored.
-   * @returns {MediaKeySession|undefined}
+   * Returns every MediaKeySession stored here from oldest to newest.
+   * @returns {Array.<MediaKeySession>}
    */
-  getOldestStoredSession() : IMediaKeySession|MediaKeySession|undefined {
-    if (this._entries.length > 0) {
-      return this._entries[0].session;
-    }
+  getSessions() : Array<IMediaKeySession|MediaKeySession> {
+    return this._entries.map(e => e.session);
   }
 
   /**
    * Returns an entry in this cache with the initData and initDataType given.
    * null if no such session is stored.
-   * @param {number|Uint8Array} initData - Either the initDataHash representing the
-   * initData or the initData itself.
+   *
+   * @param {Uint8Array} initData
    * @param {string} initDataType
    * @returns {MediaKeySession|null}
    */
   get(
-    initData : number|Uint8Array,
+    initData : Uint8Array,
     initDataType: string
   ) : IMediaKeySession|MediaKeySession|null {
     const initDataHash = hashInitData(initData);
@@ -72,30 +65,63 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
   }
 
   /**
-   * Add a new entry to the cache.
-   * @param {Uint8Array|Array.<number>|number} initData
+   * Add a new entry to the store.
+   * Throw if this init data + init data type was already added
+   * @param {Uint8Array} initData
    * @param {string} initDataType
    * @param {MediaKeySession} session
    */
   add(
-    initData : Uint8Array|number[]|number,
+    initData : Uint8Array,
     initDataType : string,
     session : IMediaKeySession|MediaKeySession
   ) : void {
-    const initDataHash = hashInitData(initData);
-    const currentSession = this.get(initDataHash, initDataType);
-    if (currentSession) {
-      log.warn("A MediaKeySession was already stored with that hash, removing it.");
-      this.closeSession(currentSession);
+    if (this.get(initData, initDataType)) {
+      throw new Error("This initialization data was already stored.");
     }
 
     const entry = {
       session,
-      initData: initDataHash,
+      initData: hashInitData(initData),
       initDataType,
     };
     log.debug("eme-mem-store: add session", entry);
     this._entries.push(entry);
+  }
+
+  /**
+   * Close a MediaKeySession stored here and remove its entry in the store.
+   * @param {MediaKeySession} session_
+   * @returns {Observable}
+   */
+  closeSession(
+    session_ : IMediaKeySession|MediaKeySession
+  ) : Observable<null> {
+    const session = this._delete(session_);
+    if (session == null) {
+      return Observable.of(null);
+    }
+
+    log.debug("eme-mem-store: close session", session);
+
+    // XXX TODO This call will be active as soon as this line is read.
+    // We should probably defer the call on subscription
+    return castToObservable(session.close())
+      .mapTo(null)
+      .catch(() => Observable.of(null));
+  }
+
+  /**
+   * Close all sessions in this store.
+   * Emit null when done
+   * @returns {Observable}
+   */
+  closeAllSessions() : Observable<null> {
+    const disposed = this._entries.map((e) => this.closeSession(e.session));
+    this._entries = [];
+    return Observable.merge(...disposed)
+      .ignoreElements()
+      .concat(Observable.of(null));
   }
 
   /**
@@ -104,7 +130,7 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
    * @param {MediaKeySession} session_
    * @returns {MediaKeySession|null}
    */
-  delete(
+  private _delete(
     session_ : IMediaKeySession|MediaKeySession
   ) : IMediaKeySession|MediaKeySession|null {
     const entry = this.find((e) => e.session === session_);
@@ -117,36 +143,5 @@ export default class InMemorySessionsSet extends SessionSet<ISessionData> {
     const idx = this._entries.indexOf(entry);
     this._entries.splice(idx, 1);
     return session;
-  }
-
-  /**
-   * Close a MediaKeySession stored in this cache and delete it from there.
-   * @param {MediaKeySession} session_
-   * @returns {Observable}
-   */
-  closeSession(
-    session_ : IMediaKeySession|MediaKeySession
-  ) : Observable<null> {
-    const session = this.delete(session_);
-    if (session == null) {
-      return Observable.of(null);
-    }
-
-    log.debug("eme-mem-store: close session", session);
-
-    // TODO This call will be active as soon as this line is read. We should
-    // probably defer the call on subscription
-    return castToObservable(session.close())
-      .mapTo(null)
-      .catch(() => Observable.of(null));
-  }
-
-  /**
-   * @returns {Observable}
-   */
-  dispose() : Observable<void|null> {
-    const disposed = this._entries.map((e) => this.closeSession(e.session));
-    this._entries = [];
-    return Observable.merge(...disposed);
   }
 }

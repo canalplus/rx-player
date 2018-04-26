@@ -177,7 +177,7 @@ function createEME(
         generateKeyRequest(mediaKeySession, initData, initDataType) :
         Observable.empty<never>();
     }).finally(() => {
-      $contentSessions.dispose();
+      $contentSessions.closeAllSessions();
     });
 }
 
@@ -192,13 +192,13 @@ function disposeEME() : void {
   currentMediaKeysInfos.$keySystem = null;
   currentMediaKeysInfos.$videoElement = null;
   currentMediaKeysInfos.$mediaKeySystemConfiguration = null;
-  $loadedSessions.dispose();
+  $loadedSessions.closeAllSessions().subscribe();
 }
 
 /**
  * Clear EME ressources as the current content stops its playback.
  */
-function clearEMESession(): Observable<never> {
+function clearEMESession() : Observable<never> {
   return Observable.defer(() => {
     const observablesArray : Array<Observable<never>> = [];
     if (currentMediaKeysInfos.$videoElement && shouldUnsetMediaKeys()) {
@@ -214,7 +214,7 @@ function clearEMESession(): Observable<never> {
       currentMediaKeysInfos.$keySystem.closeSessionsOnStop
     ) {
       observablesArray.push(
-        $loadedSessions.dispose()
+        $loadedSessions.closeAllSessions()
           .ignoreElements() as Observable<never>
       );
     }
