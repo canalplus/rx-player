@@ -132,16 +132,18 @@ function loadPersistentSession(
 }
 
 /**
+ * If all key statuses attached to session are valid (either not
+ * "expired" or "internal-error"), return session.
+ * If not, close session and delete it from stored persistent session.
+ * Return null.
  * @param {Uint8Array} initData
- * @param {string} initDataType
- * @param {Object} mediaKeysInfos
- * @returns {Observable}
+ * @param {MediaKeySession} loadedSession
+ * @returns {MediaKeySession}
  */
-function createOrReuseSession(
+export function getValidLoadedSession(
   initData: Uint8Array,
-  initDataType: string,
-  mediaKeysInfos: IMediaKeysInfos
-) : Observable<IGetSessionEvent> {
+  initDataType: string
+) : MediaKeySession|IMediaKeySession|null {
   const loadedSession = $loadedSessions.get(initData, initDataType);
 
   if (loadedSession) {
@@ -162,16 +164,27 @@ function createOrReuseSession(
       )
     ) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
-      return Observable.of({
-        type: "reuse-loaded-session" as "reuse-loaded-session",
-        value: { session: loadedSession },
-      });
+      return loadedSession;
     }
 
     // else, trash this session
     $loadedSessions.closeSession(loadedSession);
     $storedSessions.delete(initData);
   }
+  return null;
+}
+
+/**
+ * Create session, or reuse persistent stored session.
+ * @param {Uint8Array} initData
+ * @param {string} initDataType
+ * @param {Object} mediaKeysInfos
+ */
+function createOrLoadSession(
+  initData: Uint8Array,
+  initDataType: string,
+  mediaKeysInfos: IMediaKeysInfos
+) : Observable<IGetSessionEvent> {
 
   const {
     keySystem,
@@ -213,12 +226,12 @@ function createOrReuseSession(
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
-export default function createOrReuseSessionWithRetry(
+export default function createSessionWithRetry(
   initData: Uint8Array,
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
 ) : Observable<IGetSessionEvent> {
-  return createOrReuseSession(initData, initDataType, mediaKeysInfos)
+  return createOrLoadSession(initData, initDataType, mediaKeysInfos)
     .catch((error) => {
       if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
         throw error;
@@ -234,7 +247,7 @@ export default function createOrReuseSessionWithRetry(
 
       return $loadedSessions.closeSession(loadedSessions[0])
         .mergeMap(() => {
-          return createOrReuseSession(initData, initDataType, mediaKeysInfos);
+          return createOrLoadSession(initData, initDataType, mediaKeysInfos);
         });
     });
 }
