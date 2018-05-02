@@ -131,7 +131,7 @@
     "file-loader": "^1.1.6",
     "istanbul-instrumenter-loader": "^3.0.0",
     "jsx-loader": "^0.13.2",
-    "karma": "^2.0.0",
+    "karma": "^2.0.2",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.1",
     "karma-firefox-launcher": "^1.1.0",
