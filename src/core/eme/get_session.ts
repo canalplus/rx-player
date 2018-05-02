@@ -86,13 +86,11 @@ function createSession(
 }
 
 /**
- * Load persistent session from stored session id.
- * If loading fails, delete persistent session from cache.
- * If loading succeed, update cache with new session.
- * @param {string} storedSessionId
- * @param {Uint8Array} initData
- * @param {string} initDataType
- * @param {MediaKeySession} session
+ * If session creating fails, retry once session creation/loading.
+ * @param initData
+ * @param initDataType
+ * @param mediaKeysInfos
+ * @returns {Observable}
  */
 function loadPersistentSession(
   storedSessionId: string,
@@ -165,7 +163,7 @@ export function isLoadedSessionValid(
 }
 
 /**
- * Create session, or reuse persistent stored session.
+ * Create session, or load persistent stored session.
  * @param {Uint8Array} initData
  * @param {string} initDataType
  * @param {Object} mediaKeysInfos
