@@ -112,7 +112,7 @@ function createEME(
           Observable.empty() // (mediaKeys already attached. Do nothing)
       );
     })
-    .mergeMap((sessionInfos) =>  {
+    .mergeMap((sessionInfos : any /** XXX TODO */) =>  {
       const {
         initData,
         initDataType,
@@ -120,14 +120,15 @@ function createEME(
         keySystemConfiguration,
       } = sessionInfos;
 
-      // XXX TODO - To clarify here.
-      // Also RegExp solutions are usually ugly and this seems one of such case
-      const isSessionCreated = sessionInfos.type.match(/^created(.*?)/);
+      const sessionHasAttachedKeys = mediaKeySession.keyStatuses.size !== 0;
+
+      const mediaKeyRequest$ = !sessionHasAttachedKeys ?
+        generateKeyRequest(mediaKeySession, initData, initDataType) :
+        Observable.empty<never>();
+
       return Observable.merge(
         handleSessionEvents(mediaKeySession, keySystemConfiguration, errorStream),
-        (isSessionCreated !== null) ?
-          generateKeyRequest(mediaKeySession, initData, initDataType) :
-          Observable.empty<never>()
+        mediaKeyRequest$
       ).ignoreElements() as Observable<never>;
     });
 }
