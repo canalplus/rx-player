@@ -37,23 +37,48 @@ import {
   IKeySystemOption,
   KEY_STATUS_ERRORS,
 } from "./constants";
-import {
-  IMediaKeyMessageEvent,
-  IMediaKeyMessageEventType,
-  ISessionCreationEvent,
-  ISessionEvent,
-  ISessionManagementEvent,
-  mediaKeyMessageEvent,
-} from "./eme_events";
 
 interface IMediaKeyMessage {
-  license: LicenseObject;
+  license: ILicense;
   msg: IMediaKeyMessageEventType;
 }
 
-type LicenseObject =
+type ILicense =
   TypedArray |
   ArrayBuffer;
+
+type IMediaKeyMessageEventType =
+  "license-request" |
+  "license-renewal" |
+  "license-release" |
+  "individualization-request" |
+  "key-status-change";
+
+export interface IMediaKeyMessageEvent {
+  type : IMediaKeyMessageEventType;
+  value : {
+    session : IMediaKeySession|MediaKeySession;
+    sessionInfos: {
+      license: ILicense;
+    };
+  };
+}
+
+function mediaKeyMessageEvent(
+  type: IMediaKeyMessageEventType,
+  session: IMediaKeySession|MediaKeySession,
+  license: ILicense
+): IMediaKeyMessageEvent {
+  return {
+    type,
+    value: {
+      session,
+      sessionInfos: {
+        license,
+      },
+    },
+  };
+}
 
 /**
  * listen to "message" events from session containing a challenge
@@ -64,7 +89,7 @@ type LicenseObject =
  * @param {Subject} errorStream
  * @returns {Observable}
  */
-export function handleSessionEvents(
+export default function handleSessionEvents(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
   errorStream: Subject<Error|CustomError>
@@ -135,7 +160,7 @@ export function handleSessionEvents(
         throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
       }).map((licenseObject) => {
         return {
-          license: licenseObject as LicenseObject,
+          license: licenseObject as ILicense,
           msg: "key-status-change" as "key-status-change",
         };
       });
@@ -152,7 +177,7 @@ export function handleSessionEvents(
         messageEvent
       );
 
-      const getLicense$ : Observable<LicenseObject> = Observable.defer(() => {
+      const getLicense$ : Observable<ILicense> = Observable.defer(() => {
         const getLicense = keySystem.getLicense(message, messageType);
         return castToObservable(getLicense)
           .timeout(10 * 1000)
@@ -162,7 +187,7 @@ export function handleSessionEvents(
             } else {
               throw error;
             }
-          }) as Observable<LicenseObject>;
+          }) as Observable<ILicense>;
       });
 
       return retryObsWithBackoff(getLicense$, getLicenseRetryOptions).map((license) => {
@@ -199,10 +224,3 @@ export function handleSessionEvents(
     return sessionEvents;
   }
 }
-
-export {
-  ISessionManagementEvent,
-  IMediaKeyMessageEvent,
-  ISessionEvent,
-  ISessionCreationEvent
-};

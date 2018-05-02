@@ -85,9 +85,13 @@ export default class OpenSessionsStore extends SessionSet<ISessionData> {
       initDataType,
     };
     if (session.closed !== null) {
-      session.closed.then(() => {
-        this._delete(session);
-      });
+      session.closed
+        .then(() => {
+          this._delete(session);
+        })
+        .catch((e) => {
+          log.warn(`session.closed rejected: ${e}`);
+        });
     }
     log.debug("eme-mem-store: add session", entry);
     this._entries.push(entry);

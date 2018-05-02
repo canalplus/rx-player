@@ -39,10 +39,7 @@ import findCompatibleKeySystem from "./find_key_system";
 import generateKeyRequest from "./generate_key_request";
 import getSessionForEncryptedEvent from "./get_session";
 import { $loadedSessions } from "./globals";
-import {
-  handleSessionEvents,
-  ISessionEvent,
-} from "./handle_session_events";
+import handleSessionEvents from "./handle_session_events";
 import InitDataStore from "./init_data_store";
 
 // Persisted singleton instance of MediaKeys. We do not allow multiple
@@ -69,7 +66,7 @@ function createEME(
   video : HTMLMediaElement,
   keySystemOptions: IKeySystemOption[],
   errorStream: Subject<Error|CustomError>
-) : Observable<ISessionEvent> {
+) : Observable<never> {
   if (__DEV__) {
     keySystemOptions.forEach((option) => assertInterface(option, {
       getLicense: "function",
@@ -103,10 +100,16 @@ function createEME(
       handledInitData.add(initDataBytes, initDataType);
 
       return Observable.merge(
-        getSessionForEncryptedEvent(initDataBytes, initDataType, mediaKeysInfos),
+        getSessionForEncryptedEvent(initDataBytes, initDataType, mediaKeysInfos)
+          .map((evt) => ({
+            keySystemConfiguration: mediaKeysInfos.keySystem,
+            initData,
+            initDataType,
+            mediaKeySession: evt.value.session,
+          })),
         i === 0 ?
           attachMediaKeys(mediaKeysInfos, video, currentMediaKeysInfos).ignoreElements() :
-          Observable.empty()
+          Observable.empty() // (mediaKeys already attached. Do nothing)
       );
     })
     .mergeMap((sessionInfos) =>  {
@@ -125,7 +128,7 @@ function createEME(
         (isSessionCreated !== null) ?
           generateKeyRequest(mediaKeySession, initData, initDataType) :
           Observable.empty<never>()
-      ).ignoreElements();
+      ).ignoreElements() as Observable<never>;
     });
 }
 
@@ -190,7 +193,7 @@ export default function EMEManager(
   videoElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   errorStream : Subject<Error|CustomError>
-) :  Observable<ISessionEvent> {
+) :  Observable<never> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {
       return onEncrypted$(videoElement).map(() => {

@@ -380,7 +380,7 @@ export default function Stream({
       manifestReadyEvent$,
       loadedEvent$,
       buffers$,
-      emeManager$,
+      emeManager$ as Observable<any>, // TODO RxJS Bug?
       mediaErrorHandler$ as Observable<any>, // TODO RxJS Bug?
       speedManager$,
       stallingManager$

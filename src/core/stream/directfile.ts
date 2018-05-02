@@ -166,7 +166,7 @@ export default function StreamDirectFile({
   const directFile$ : Observable<IStreamEvent> = Observable.merge(
     loadedEvent$,
     mutedInitialSeek$,
-    emeManager$,
+    emeManager$ as Observable<void>, // TODO RxJS do something weird here
     mediaErrorHandler$ as Observable<void>, // TODO RxJS do something weird here
     speedManager$,
     stallingManager$,

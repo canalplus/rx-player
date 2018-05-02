@@ -23,12 +23,6 @@ import { ErrorCodes } from "../../errors";
 import arrayIncludes from "../../utils/array-includes";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
-import {
-  ISessionCreationEvent,
-  ISessionManagementEvent,
-  sessionCreationEvent,
-  sessionManagementEvent,
-} from "./eme_events";
 import { IKeySystemAccessInfos } from "./find_key_system";
 import {
   $loadedSessions,
@@ -38,6 +32,32 @@ import {
 export interface IMediaKeysInfos extends IKeySystemAccessInfos {
   mediaKeys : MediaKeys|IMockMediaKeys;
 }
+
+export interface ICreatedSessionEvent {
+  type : "created-session";
+  value : {
+    session : MediaKeySession|IMediaKeySession;
+  };
+}
+
+export interface ILoadedSessionRecoveryEvent {
+  type : "reuse-loaded-session";
+  value : {
+    session : MediaKeySession|IMediaKeySession;
+  };
+}
+
+export interface IPersistentSessionRecoveryEvent {
+  type : "loaded-persistent-session";
+  value : {
+    session : MediaKeySession|IMediaKeySession;
+  };
+}
+
+export type IGetSessionEvent =
+  ICreatedSessionEvent |
+  ILoadedSessionRecoveryEvent |
+  IPersistentSessionRecoveryEvent;
 
 /**
  * Create MediaKeySession and cache loaded session.
@@ -66,57 +86,62 @@ function createSession(
 }
 
 /**
- * If session creating fails, retry once session creation/reuse.
- * @param initData
- * @param initDataType
- * @param mediaKeysInfos
- * @returns {Observable}
+ * Load persistent session from stored session id.
+ * If loading fails, delete persistent session from cache.
+ * If loading succeed, update cache with new session.
+ * @param {string} storedSessionId
+ * @param {Uint8Array} initData
+ * @param {string} initDataType
+ * @param {MediaKeySession} session
  */
-function createOrReuseSessionWithRetry(
+function loadPersistentSession(
+  storedSessionId: string,
   initData: Uint8Array,
   initDataType: string,
-  mediaKeysInfos: IMediaKeysInfos
-) : Observable<ISessionCreationEvent|ISessionManagementEvent> {
-  return createOrReuseSession(
-    initData,
-    initDataType,
-    mediaKeysInfos
-  ).catch((error) => {
-    if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
-      throw error;
-    }
-    const loadedSessions = $loadedSessions.getSessions();
-    if (!loadedSessions.length) {
-      throw error;
-    }
+  session: MediaKeySession|IMediaKeySession
+) : Observable<IGetSessionEvent> {
+  log.debug("eme: load persisted session", storedSessionId);
 
-    log.warn("eme: could not create a new session, " +
-      "retry after closing a currently loaded session", error);
+  return castToObservable(session.load(storedSessionId))
+    .catch((error) => {
+      log.warn("eme: no data stored for the loaded session.",
+        storedSessionId);
 
-    return $loadedSessions.closeSession(loadedSessions[0])
-      .mergeMap(() => {
-        return createOrReuseSession(
-          initData,
-          initDataType,
-          mediaKeysInfos
-        );
+      const loadedSession = $loadedSessions.get(initData, initDataType);
+      if (loadedSession != null) {
+        $loadedSessions.closeSession(loadedSession);
       }
-      );
-  });
+      $storedSessions.delete(initData);
+
+      throw error;
+    })
+    .map((success) => {
+      if (success) {
+        $loadedSessions.add(initData, initDataType, session);
+        return {
+          type: "loaded-persistent-session" as "loaded-persistent-session",
+          value: { session },
+        };
+      } else {
+        return {
+          type: "created-session" as "created-session",
+          value: { session },
+        };
+      }
+    }).do(() => $storedSessions.add(initData, session));
 }
 
 /**
- * Create session, or reuse persistent stored session.
  * @param {Uint8Array} initData
  * @param {string} initDataType
  * @param {Object} mediaKeysInfos
+ * @returns {Observable}
  */
 function createOrReuseSession(
   initData: Uint8Array,
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
-) : Observable<ISessionCreationEvent|ISessionManagementEvent> {
-
+) : Observable<IGetSessionEvent> {
   const loadedSession = $loadedSessions.get(initData, initDataType);
 
   if (loadedSession) {
@@ -126,6 +151,9 @@ function createOrReuseSession(
       keyStatuses.push(keyStatus);
     });
 
+    // XXX TODO Should probably do that not here, as we could close a session
+    // which is currently being dealt with, in which case we do not want to
+    // close it.
     if (
       keyStatuses.length > 0 &&
       (
@@ -134,15 +162,15 @@ function createOrReuseSession(
       )
     ) {
       log.debug("eme: reuse loaded session", loadedSession.sessionId);
-      return Observable.of(
-        sessionManagementEvent(
-          "reuse-loaded-session",
-          loadedSession
-        ));
-    } else {
-      $loadedSessions.closeSession(loadedSession);
-      $storedSessions.delete(initData);
+      return Observable.of({
+        type: "reuse-loaded-session" as "reuse-loaded-session",
+        value: { session: loadedSession },
+      });
     }
+
+    // else, trash this session
+    $loadedSessions.closeSession(loadedSession);
+    $storedSessions.delete(initData);
   }
 
   const {
@@ -171,84 +199,42 @@ function createOrReuseSession(
           );
         }
       }
-      return Observable.of(
-        sessionCreationEvent(
-          "created-temporary-session",
-          session,
-          initData,
-          initDataType
-        ));
+      return Observable.of({
+        type: "created-session" as "created-session",
+        value: { session },
+      });
     });
 }
 
 /**
- * Load persistent session from stored session id.
- * If loading fails, delete persistent session from cache.
- * If loading succeed, update cache with new session.
- * @param {string} storedSessionId
+ * If session creating fails, retry once session creation/reuse.
  * @param {Uint8Array} initData
- * @param {MediaKeySession} session
- */
-function loadPersistentSession(
-  storedSessionId: string,
-  initData: Uint8Array,
-  initDataType: string,
-  session: MediaKeySession|IMediaKeySession
-) : Observable<ISessionCreationEvent|ISessionManagementEvent> {
-  log.debug("eme: load persisted session", storedSessionId);
-
-  return castToObservable(session.load(storedSessionId))
-    .catch((error) => {
-      log.warn("eme: no data stored for the loaded session.",
-        storedSessionId);
-
-      const loadedSession = $loadedSessions.get(initData, initDataType);
-      if (loadedSession != null) {
-        $loadedSessions.closeSession(loadedSession);
-      }
-      $storedSessions.delete(initData);
-
-      throw error;
-    })
-    .map((success) => {
-      if (success) {
-        $loadedSessions.add(initData, initDataType, session);
-          return sessionManagementEvent(
-            "loaded-persistent-session",
-            session,
-            storedSessionId
-          );
-      } else {
-        return sessionCreationEvent(
-            "created-persistent-session",
-            session,
-            initData,
-            initDataType
-          );
-      }
-    }).do(() => $storedSessions.add(initData, session));
-}
-
-/**
- * Create or reuse a MediaKeySession for the EncryptedEvent.
- * @param {MediaEncryptedEvent} encryptedEvent
+ * @param {string} initDataType
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
-export default function getSessionForEncryptedEvent(
-  initData : Uint8Array,
-  initDataType : string,
-  mediaKeysInfos : IMediaKeysInfos
-) : Observable<any> /* XXX TODO */ {
-  log.info("eme: encrypted event", initData, initDataType);
-  return createOrReuseSessionWithRetry(initData, initDataType, mediaKeysInfos)
-    .map((evt) => {
-      return {
-        type: evt.type,
-        keySystemConfiguration: mediaKeysInfos.keySystem,
-        initData,
-        initDataType,
-        mediaKeySession: evt.value.session,
-      };
+export default function createOrReuseSessionWithRetry(
+  initData: Uint8Array,
+  initDataType: string,
+  mediaKeysInfos: IMediaKeysInfos
+) : Observable<IGetSessionEvent> {
+  return createOrReuseSession(initData, initDataType, mediaKeysInfos)
+    .catch((error) => {
+      if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
+        throw error;
+      }
+
+      const loadedSessions = $loadedSessions.getSessions();
+      if (!loadedSessions.length) {
+        throw error;
+      }
+
+      log.warn("eme: could not create a new session, " +
+        "retry after closing a currently loaded session", error);
+
+      return $loadedSessions.closeSession(loadedSessions[0])
+        .mergeMap(() => {
+          return createOrReuseSession(initData, initDataType, mediaKeysInfos);
+        });
     });
 }
