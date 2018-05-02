@@ -18,10 +18,6 @@ import { Observable } from "rxjs/Observable";
 import { IMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
-import {
-  ISessionRequestEvent,
-  sessionRequestEvent,
-} from "./eme_events";
 
 /**
  * Generate a request from session.
@@ -35,7 +31,7 @@ export default function generateKeyRequest(
   session: MediaKeySession|IMediaKeySession,
   initData: Uint8Array,
   initDataType: string
-) : Observable<ISessionRequestEvent> {
+) : Observable<null> {
   return Observable.defer(() => {
     return castToObservable(
       (session as MediaKeySession).generateRequest(initDataType, initData)
@@ -43,8 +39,6 @@ export default function generateKeyRequest(
       .catch((error) => {
         throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
       })
-      .mapTo(
-        sessionRequestEvent("generated-request", session, initData, initDataType)
-      );
+      .mapTo(null);
   });
 }
