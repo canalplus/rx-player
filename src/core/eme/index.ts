@@ -37,7 +37,9 @@ import createMediaKeys from "./create_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
 import findCompatibleKeySystem from "./find_key_system";
 import generateKeyRequest from "./generate_key_request";
-import getSessionForEncryptedEvent from "./get_session";
+import getSessionForEncryptedEvent, {
+  getValidLoadedSession,
+} from "./get_session";
 import { $loadedSessions } from "./globals";
 import handleSessionEvents from "./handle_session_events";
 import InitDataStore from "./init_data_store";
@@ -98,6 +100,22 @@ function createEME(
         return Observable.empty(); // Already handled, quit
       }
       handledInitData.add(initDataBytes, initDataType);
+
+      const loadedSession = $loadedSessions.get(initDataBytes, initDataType);
+
+      if (loadedSession) {
+        const validLoadedSession = getValidLoadedSession(initDataBytes, loadedSession);
+        if (validLoadedSession != null) {
+          return Observable.of(
+            {
+              keySystemConfiguration: mediaKeysInfos.keySystem,
+              initData: initDataBytes,
+              initDataType,
+              mediaKeySession: validLoadedSession,
+            }
+          );
+        }
+      }
 
       return Observable.merge(
         getSessionForEncryptedEvent(initDataBytes, initDataType, mediaKeysInfos)
