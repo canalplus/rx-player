@@ -133,45 +133,35 @@ function loadPersistentSession(
 
 /**
  * If all key statuses attached to session are valid (either not
- * "expired" or "internal-error"), return session.
- * If not, close session and delete it from stored persistent session.
- * Return null.
+ * "expired" or "internal-error"), return true.
+ * If not, return false.
  * @param {Uint8Array} initData
  * @param {MediaKeySession} loadedSession
  * @returns {MediaKeySession}
  */
-export function getValidLoadedSession(
-  initData: Uint8Array,
-  initDataType: string
-) : MediaKeySession|IMediaKeySession|null {
-  const loadedSession = $loadedSessions.get(initData, initDataType);
+export function isLoadedSessionValid(
+  loadedSession : MediaKeySession|IMediaKeySession
+) : boolean {
+  const keyStatusesMap = loadedSession.keyStatuses;
+  const keyStatuses: string[] = [];
+  keyStatusesMap.forEach((keyStatus: string) => {
+    keyStatuses.push(keyStatus);
+  });
 
-  if (loadedSession) {
-    const keyStatusesMap = loadedSession.keyStatuses;
-    const keyStatuses: string[] = [];
-    keyStatusesMap.forEach((keyStatus: string) => {
-      keyStatuses.push(keyStatus);
-    });
-
-    // XXX TODO Should probably do that not here, as we could close a session
-    // which is currently being dealt with, in which case we do not want to
-    // close it.
-    if (
-      keyStatuses.length > 0 &&
-      (
-        !arrayIncludes(keyStatuses, "expired") &&
-        !arrayIncludes(keyStatuses, "internal-error")
-      )
-    ) {
-      log.debug("eme: reuse loaded session", loadedSession.sessionId);
-      return loadedSession;
-    }
-
-    // else, trash this session
-    $loadedSessions.closeSession(loadedSession);
-    $storedSessions.delete(initData);
+  // XXX TODO Should probably do that not here, as we could close a session
+  // which is currently being dealt with, in which case we do not want to
+  // close it.
+  if (
+    keyStatuses.length > 0 &&
+    (
+      !arrayIncludes(keyStatuses, "expired") &&
+      !arrayIncludes(keyStatuses, "internal-error")
+    )
+  ) {
+    log.debug("eme: reuse loaded session", loadedSession.sessionId);
+    return true;
   }
-  return null;
+  return false;
 }
 
 /**

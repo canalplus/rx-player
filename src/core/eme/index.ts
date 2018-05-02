@@ -38,9 +38,12 @@ import disposeMediaKeys from "./dispose_media_keys";
 import findCompatibleKeySystem from "./find_key_system";
 import generateKeyRequest from "./generate_key_request";
 import getSessionForEncryptedEvent, {
-  getValidLoadedSession,
+  isLoadedSessionValid,
 } from "./get_session";
-import { $loadedSessions } from "./globals";
+import {
+  $loadedSessions,
+  $storedSessions,
+} from "./globals";
 import handleSessionEvents from "./handle_session_events";
 import InitDataStore from "./init_data_store";
 
@@ -103,28 +106,34 @@ function createEME(
 
       const loadedSession = $loadedSessions.get(initDataBytes, initDataType);
 
+      let loadedSessionInfo$ : any; // XXX TODO
+
       if (loadedSession) {
-        const validLoadedSession = getValidLoadedSession(initDataBytes, loadedSession);
-        if (validLoadedSession != null) {
-          return Observable.of(
-            {
-              keySystemConfiguration: mediaKeysInfos.keySystem,
-              initData: initDataBytes,
-              initDataType,
-              mediaKeySession: validLoadedSession,
-            }
-          );
+        if (isLoadedSessionValid(loadedSession)) {
+          loadedSessionInfo$ = Observable.of({
+            initData: initDataBytes,
+            initDataType,
+            mediaKeySession: loadedSession,
+          });
+        } else { // session is not valid anymore. Close session.
+          $loadedSessions.closeSession(loadedSession);
+          $storedSessions.delete(new Uint8Array(initData));
         }
       }
 
+      if (loadedSessionInfo$ == null) {
+        loadedSessionInfo$ =
+          getSessionForEncryptedEvent(initDataBytes, initDataType, mediaKeysInfos)
+            .map((evt) => ({
+              keySystemConfiguration: mediaKeysInfos.keySystem,
+              initData,
+              initDataType,
+              mediaKeySession: evt.value.session,
+            }));
+      }
+
       return Observable.merge(
-        getSessionForEncryptedEvent(initDataBytes, initDataType, mediaKeysInfos)
-          .map((evt) => ({
-            keySystemConfiguration: mediaKeysInfos.keySystem,
-            initData,
-            initDataType,
-            mediaKeySession: evt.value.session,
-          })),
+        loadedSessionInfo$,
         i === 0 ?
           attachMediaKeys(mediaKeysInfos, video, currentMediaKeysInfos).ignoreElements() :
           Observable.empty() // (mediaKeys already attached. Do nothing)
@@ -138,15 +147,13 @@ function createEME(
         keySystemConfiguration,
       } = sessionInfos;
 
-      const sessionHasAttachedKeys = mediaKeySession.keyStatuses.size !== 0;
-
-      const mediaKeyRequest$ = !sessionHasAttachedKeys ?
-        generateKeyRequest(mediaKeySession, initData, initDataType) :
-        Observable.empty<never>();
+      const areKeysAttachedToSession = mediaKeySession.keyStatuses.size !== 0;
 
       return Observable.merge(
         handleSessionEvents(mediaKeySession, keySystemConfiguration, errorStream),
-        mediaKeyRequest$
+        areKeysAttachedToSession ?
+          generateKeyRequest(mediaKeySession, initData, initDataType) :
+          Observable.empty<never>()
       ).ignoreElements() as Observable<never>;
     });
 }
