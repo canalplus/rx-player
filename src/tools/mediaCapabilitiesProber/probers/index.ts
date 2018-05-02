@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import decodingCapabilitiesProber from "./decodingCapabilitesProber";
-import drmSupportProber from "./drmSupportProber";
-import HDCPPolicyProber from "./HDCPPolicyProber";
-import mediaDisplayCapabilitiesProber from "./mediaDisplayCapabilitiesProber";
-import typeSupportProber from "./typeSupportProber";
-import typeWithFeaturesSupportProber from "./typeWithFeaturesSupportProber";
+import probeFromDecodingConfig from "./_decodingInfos_";
+import probeFromHDCPPolicyConfig from "./_getStatusForPolicy_";
+import probeFromContentType from "./_isTypeSupported_";
+import probeFromTypeAndFeatures from "./_isTypeSupportedWithFeatures_";
+import probeFromMediaDisplayConfig from "./_matchMedia_";
+import probeFromDRMInfos from "./_requestMediaKeySystemAccess_";
 
 import { IMediaConfiguration } from "../types";
 
@@ -29,12 +29,12 @@ const probers: {
     unknownCapabilities: IMediaConfiguration;
   }>;
 } = {
-  typeSupport: typeSupportProber,
-  typeWithFeaturesSupport: typeWithFeaturesSupportProber,
-  mediaDisplayCapabilities: mediaDisplayCapabilitiesProber,
-  decodingCapabilities: decodingCapabilitiesProber,
-  drmSupport: drmSupportProber,
-  HDCPPolicy: HDCPPolicyProber,
+  _isTypeSupported_: probeFromContentType,
+  _isTypeSupportedWithFeatures_: probeFromTypeAndFeatures,
+  _matchMedia_: probeFromMediaDisplayConfig,
+  _decodingInfos_: probeFromDecodingConfig,
+  _requestMediaKeySystemAccess_: probeFromDRMInfos,
+  _getStatusForPolicy_: probeFromHDCPPolicyConfig,
 };
 
 export default probers;

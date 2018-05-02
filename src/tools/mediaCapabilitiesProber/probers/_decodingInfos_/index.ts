@@ -31,32 +31,41 @@ const APITools: IAPITools<IMediaConfiguration> = {
 
   APIisAvailable: is_mediaCapabilities_APIAvailable,
 
-  buildAPIArguments: (object: IMediaConfiguration): {
+  buildAPIArguments: (config: IMediaConfiguration): {
     args: IMediaConfiguration|null; unknownCapabilities: IMediaConfiguration;
   } => {
     const unknownCapabilities: IMediaConfiguration =
-      JSON.parse(JSON.stringify(object));
+      JSON.parse(JSON.stringify(config));
 
-    if (!object.video && !object.audio && !object.type) {
-      return { args: null, unknownCapabilities };
-    }
-
-    const mediaCapabilitiesConfig = buildDefaultMediaCapabilites(object);
-
-    delete unknownCapabilities.audio;
-    delete unknownCapabilities.type;
-    if (unknownCapabilities.video) {
-      delete unknownCapabilities.video.contentType;
-      delete unknownCapabilities.video.width;
-      delete unknownCapabilities.video.height;
-      delete unknownCapabilities.video.framerate;
-      delete unknownCapabilities.video.bitrate;
-      if (isEmpty(unknownCapabilities.video)) {
-        delete unknownCapabilities.video;
+    if (
+      config.type &&
+      config.video &&
+      config.video.bitrate &&
+      config.video.contentType &&
+      config.video.framerate &&
+      config.video.height &&
+      config.video.width &&
+      config.audio &&
+      config.audio.bitrate &&
+      config.audio.channels &&
+      config.audio.contentType &&
+      config.audio.samplerate
+    ) {
+      delete unknownCapabilities.audio;
+      delete unknownCapabilities.type;
+      if (unknownCapabilities.video) {
+        delete unknownCapabilities.video.contentType;
+        delete unknownCapabilities.video.width;
+        delete unknownCapabilities.video.height;
+        delete unknownCapabilities.video.framerate;
+        delete unknownCapabilities.video.bitrate;
+        if (isEmpty(unknownCapabilities.video)) {
+          delete unknownCapabilities.video;
+        }
       }
+      return { args: config, unknownCapabilities };
     }
-
-    return { args: mediaCapabilitiesConfig, unknownCapabilities };
+    return { args: null, unknownCapabilities };
   },
 
   getAPIFormattedResponse: (object: IMediaConfiguration|null): Promise<number> => {

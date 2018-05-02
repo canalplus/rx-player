@@ -23,13 +23,13 @@ import filterEmptyFields from "../utils/filterEmptyFields";
 import intersectCapabilities from "../utils/intersectCapabilities";
 import isEmpty from "../utils/isEmpty";
 
-type mediaFeatures =
-  "typeSupport" |
-  "typeWithFeaturesSupport" |
-  "mediaDisplayCapabilities" |
-  "decodingCapabilities" |
-  "drmSupport" |
-  "HDCPPolicy";
+type IBrowserAPIS =
+  "_isTypeSupported_" |
+  "_isTypeSupportedWithFeatures_" |
+  "_matchMedia_" |
+  "_decodingInfos_" |
+  "_requestMediaKeySystemAccess_" |
+  "_getStatusForPolicy_";
 
 /**
  * Assert that configuration is valid before probing:
@@ -71,7 +71,7 @@ const validateConfiguration = (config: IMediaConfiguration) => {
  * @param {Object} config
  */
 const probeMediaConfiguration =
-  async (_config: IMediaConfiguration, features: mediaFeatures[]) => {
+  async (_config: IMediaConfiguration, browserAPIS: IBrowserAPIS[]) => {
     const config = validateConfiguration(_config);
 
     let isProbablySupported: boolean = false;
@@ -79,10 +79,10 @@ const probeMediaConfiguration =
     let isNotSupported: boolean = false;
 
     let unknownCapabilities: IMediaConfiguration = JSON.parse(JSON.stringify(config));
-    for (const feature of features) {
-      const probeConfiguration = probers[feature];
-      if (probeConfiguration) {
-        await probeConfiguration(config)
+    for (const browserAPI of browserAPIS) {
+      const probeWithBrowser = probers[browserAPI];
+      if (probeWithBrowser) {
+        await probeWithBrowser(config)
           .then(({
             result: probeResult,
             unknownCapabilities: probeUnknownCapabilities,

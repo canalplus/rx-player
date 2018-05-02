@@ -15,9 +15,9 @@
  */
 
 import { IMediaConfiguration } from "../types";
-import { IMediaKeySystemInfos } from "./drmSupportProber";
-import { IPolicy } from "./HDCPPolicyProber";
-import { ITypeWithFeatures } from "./typeWithFeaturesSupportProber";
+import { IPolicy } from "./_getStatusForPolicy_";
+import { ITypeWithFeatures } from "./_isTypeSupportedWithFeatures_";
+import { IMediaKeySystemInfos } from "./_requestMediaKeySystemAccess_";
 
 type proberInnerTypes =
   string |

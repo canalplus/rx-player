@@ -24,13 +24,13 @@ import probeMediaConfiguration from "./probeMediaConfiguration";
 
 import log from "../../../utils/log";
 
-type mediaFeatures =
-  "typeSupport" |
-  "typeWithFeaturesSupport" |
-  "mediaDisplayCapabilities" |
-  "decodingCapabilities" |
-  "drmSupport" |
-  "HDCPPolicy";
+type IBrowserAPIS =
+  "_isTypeSupported_" |
+  "_isTypeSupportedWithFeatures_" |
+  "_matchMedia_" |
+  "_decodingInfos_" |
+  "_requestMediaKeySystemAccess_" |
+  "_getStatusForPolicy_";
 
 /**
  * A set of API to probe media capabilites.
@@ -45,16 +45,16 @@ const mediaCapabilitiesProber = {
    * @param {Object} config
    */
   getCapabilities: async (config: IMediaConfiguration) => {
-    const features: mediaFeatures[] = [
-      "typeSupport",
-      "typeWithFeaturesSupport",
-      "mediaDisplayCapabilities",
-      "decodingCapabilities",
-      "drmSupport",
-      "HDCPPolicy",
+    const browserAPIS: IBrowserAPIS[] = [
+      "_isTypeSupported_",
+      "_isTypeSupportedWithFeatures_",
+      "_matchMedia_",
+      "_decodingInfos_",
+      "_requestMediaKeySystemAccess_",
+      "_getStatusForPolicy_",
     ];
 
-    return probeMediaConfiguration(config, features);
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -73,12 +73,12 @@ const mediaCapabilitiesProber = {
       },
     };
 
-    const features: mediaFeatures[] = [
-      "typeWithFeaturesSupport",
-      "HDCPPolicy",
+    const browserAPIS: IBrowserAPIS[] = [
+      "_isTypeSupportedWithFeatures_",
+      "_getStatusForPolicy_",
     ];
 
-    return probeMediaConfiguration(config, features);
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -94,12 +94,12 @@ const mediaCapabilitiesProber = {
       delete config.display;
       log.info("CONF_INFO: Display will not tested in that mode.");
     }
-    const features: mediaFeatures[] = [
-      "typeSupport",
-      "typeWithFeaturesSupport",
-      "decodingCapabilities",
+    const browserAPIS: IBrowserAPIS[] = [
+      "_isTypeSupported_",
+      "_isTypeSupportedWithFeatures_",
+      "_decodingInfos_",
     ];
-    return probeMediaConfiguration(config, features);
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -115,11 +115,11 @@ const mediaCapabilitiesProber = {
         },
       },
     };
-    const features: mediaFeatures[] = [
-      "typeWithFeaturesSupport",
-      "drmSupport",
+    const browserAPIS: IBrowserAPIS[] = [
+      "_isTypeSupportedWithFeatures_",
+      "_requestMediaKeySystemAccess_",
     ];
-    return probeMediaConfiguration(config, features);
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -130,11 +130,11 @@ const mediaCapabilitiesProber = {
     const config = {
       display: displayConfig,
     };
-    const features: mediaFeatures[] = [
-      "typeWithFeaturesSupport",
-      "mediaDisplayCapabilities",
+    const browserAPIS: IBrowserAPIS[] = [
+      "_isTypeSupportedWithFeatures_",
+      "_matchMedia_",
     ];
-    return probeMediaConfiguration(config, features);
+    return probeMediaConfiguration(config, browserAPIS);
   },
 };
 
