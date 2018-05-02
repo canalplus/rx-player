@@ -19,7 +19,6 @@ import isEmpty from "../../utils/isEmpty";
 import { IMediaConfiguration } from "../../types";
 import { is_mediaCapabilities_APIAvailable } from "../compatibility";
 import probeConfigWithAPITool, { IAPITools } from "../probeConfigWithAPITools";
-import buildDefaultMediaCapabilites from "./buildDefaultMediaCapabilites";
 
 export interface IDecodingInfos {
   supported: boolean;
