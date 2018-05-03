@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import {
   IMediaKeySession,
+  IMockMediaKeys
 } from "../../compat";
 import { ErrorCodes } from "../../errors";
 import arrayIncludes from "../../utils/array-includes";
@@ -27,6 +28,7 @@ import {
   $storedSessions,
   IMediaKeysInfos,
 } from "./constants";
+import { isLoadedSessionUsable } from "./handle_encrypted_event";
 
 export interface ICreatedSessionEvent {
   type : "created-session";
@@ -91,6 +93,62 @@ function loadPersistentSession(
 }
 
 /**
+ * Handle cases where session is persistent.
+ *
+ * If a persisted session exists in the store associated to this initData,
+ * we reuse it without a new license request through the `load` method.
+ * If we load a unusable session, create a new session from scratch.
+ *
+ * @param {Uint8Array} initData
+ * @param {string} initDataType
+ * @param {MediaKeySession|Object} session
+ * @param {MediaKeys|Object} mediaKeys
+ */
+function handlePersistentSession(
+  initData: Uint8Array,
+  initDataType: string,
+  session: IMediaKeySession|MediaKeySession,
+  mediaKeys: MediaKeys|IMockMediaKeys
+): Observable<IGetSessionEvent> {
+
+    let persistentSession: MediaKeySession|IMediaKeySession = session;
+    const storedEntry = $storedSessions.get(initData);
+
+    if (storedEntry) {
+      return loadPersistentSession(
+        storedEntry.sessionId, initData, initDataType, session
+      ).map((evt) => {
+        if (
+          evt.type === "loaded-persistent-session" &&
+          !isLoadedSessionUsable(evt.value.session)
+        ) {
+          // Recreate a new session from scratch.
+          $loadedSessions.closeSession(evt.value.session);
+          $storedSessions.delete(new Uint8Array(initData));
+
+          persistentSession =
+            (mediaKeys as any).createSession("persistent-license"); // TS Bug
+
+          $loadedSessions.add(initData, initDataType, session);
+          $storedSessions.add(initData, session);
+
+          return {
+            type: "created-session" as "created-session",
+            value: { session: persistentSession },
+          };
+        }
+        return evt;
+      });
+    }
+
+    $storedSessions.add(initData, session);
+    return Observable.of({
+      type: "created-session" as "created-session",
+      value: { session: persistentSession },
+    });
+}
+
+/**
  * Create a new Session on the given MediaKeys, corresponding to the given
  * initializationData.
  * If session creating fails, remove the oldest MediaKeySession loaded and
@@ -128,26 +186,18 @@ function createSession(
 
   log.debug(`eme: create a new ${sessionType} session`);
 
-  // TODO TS bug? I don't get the problem here.
-  const session : IMediaKeySession|MediaKeySession =
-    (mediaKeys as any).createSession(sessionType);
-
+  const session = mediaKeys.createSession(sessionType);
   $loadedSessions.add(initData, initDataType, session);
 
   if (hasPersistence && keySystemOptions.persistentLicense) {
-    // if a persisted session exists in the store associated to this initData,
-    // we reuse it without a new license request through the `load` method.
-    const storedEntry = $storedSessions.get(initData);
-    if (storedEntry) {
-      return loadPersistentSession(
-        storedEntry.sessionId, initData, initDataType, session
-      );
-    }
+    return handlePersistentSession(
+      initData, initDataType, session, mediaKeys);
+  } else {
+    return Observable.of({
+      type: "created-session" as "created-session",
+      value: { session },
+    });
   }
-  return Observable.of({
-    type: "created-session" as "created-session",
-    value: { session },
-  });
 }
 
 /**
