@@ -48,9 +48,8 @@ export type IGetSessionEvent =
  * If session creating fails, retry once session creation/loading.
  * Emit true, if it has succeeded to load, false if there is no data for the
  * given sessionId.
- * @param initData
- * @param initDataType
- * @param mediaKeysInfos
+ * @param {string} sessionId
+ * @param {MediaKeySession} session
  * @returns {Observable}
  */
 function loadPersistentSession(
@@ -73,6 +72,7 @@ function loadPersistentSession(
  * @param {Uint8Array} initData
  * @param {string} initDataType
  * @param {Object} mediaKeysInfos
+ * @returns {Observable}
  */
 function createSession(
   initData: Uint8Array,
