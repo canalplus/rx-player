@@ -118,7 +118,7 @@ export default class OpenSessionsStore {
 
     log.debug("eme-mem-store: close session", session);
 
-    // XXX TODO This call will be active as soon as this line is read.
+    // TODO This call will be active as soon as this line is read.
     // We should probably defer the call on subscription
     return castToObservable(session.close())
       .mapTo(null)

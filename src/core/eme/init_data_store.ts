@@ -15,7 +15,6 @@
  */
 
 import arrayIncludes from "../../utils/array-includes";
-// XXX TODO
 import hashBuffer from "./hash_buffer";
 
 /**
