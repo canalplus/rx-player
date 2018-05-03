@@ -104,6 +104,7 @@ function createEME(
           generateKeyRequest(mediaKeySession, initData, initDataType)
             .do(() => {
               if (sessionStorage != null) {
+                // XXX TODO Also add initDataType
                 sessionStorage.add(initData, mediaKeySession);
               }
             }) :
