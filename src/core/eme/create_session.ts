@@ -120,6 +120,8 @@ function createSession(
 
   return loadPersistentSession(storedEntry.sessionId, session)
     .catch((error) : never => {
+      // XXX TODO Either returns the session or create a new one if not possible?
+      // Throwing here seems a little hardcore
       $loadedSessions.closeSession(session);
       sessionStorage.delete(initData);
       throw error;
