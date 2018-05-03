@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import arrayFind = require("array-find");
 import { Observable } from "rxjs/Observable";
-import { IMediaKeySession } from "../../../compat";
-import castToObservable from "../../../utils/castToObservable";
-import log from "../../../utils/log";
-import SessionSet from "./abstract";
-import { hashBuffer } from "./hash_init_data";
+import { IMediaKeySession } from "../../compat";
+import castToObservable from "../../utils/castToObservable";
+import log from "../../utils/log";
+import hashBuffer from "./hash_buffer";
 
 // Cached data for a single MediaKeySession
 interface ISessionData {
@@ -33,7 +33,13 @@ interface ISessionData {
  * @class OpenSessionsStore
  * @extends SessionSet
  */
-export default class OpenSessionsStore extends SessionSet<ISessionData> {
+export default class OpenSessionsStore {
+  private _entries : ISessionData[];
+
+  constructor() {
+    this._entries = [];
+  }
+
   /**
    * Returns every MediaKeySession stored here from oldest to newest.
    * @returns {Array.<MediaKeySession>}
@@ -55,7 +61,7 @@ export default class OpenSessionsStore extends SessionSet<ISessionData> {
     initDataType: string
   ) : IMediaKeySession|MediaKeySession|null {
     const initDataHash = hashBuffer(initData);
-    const foundEntry = this.find((entry) => (
+    const foundEntry = arrayFind(this._entries, (entry) => (
       entry.initData === initDataHash &&
       entry.initDataType === initDataType
     ));
@@ -141,7 +147,7 @@ export default class OpenSessionsStore extends SessionSet<ISessionData> {
   private _delete(
     session_ : IMediaKeySession|MediaKeySession
   ) : IMediaKeySession|MediaKeySession|null {
-    const entry = this.find((e) => e.session === session_);
+    const entry = arrayFind(this._entries, (e) => e.session === session_);
     if (!entry) {
       return null;
     }

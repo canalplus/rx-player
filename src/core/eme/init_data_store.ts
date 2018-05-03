@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import arrayIncludes from "../../utils/array-includes";
 // XXX TODO
-import { hashBuffer } from "./sessions_set/hash_init_data";
+import hashBuffer from "./hash_buffer";
 
 /**
  * Memorize initialization data with straightforward methods.
@@ -38,11 +39,7 @@ export default class InitDataStore {
     if (!this._data[initDataType]) {
       return false;
     }
-
-    const arr = this._data[initDataType];
-
-    // XXX TODO
-    return arr.indexOf(hashBuffer(initData)) >= 0;
+    return arrayIncludes(this._data[initDataType], hashBuffer(initData));
   }
 
   /**

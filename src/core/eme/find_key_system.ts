@@ -18,7 +18,6 @@ import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 import {
-  IMediaKeySystemAccess,
   KeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
@@ -29,6 +28,7 @@ import arrayIncludes from "../../utils/array-includes";
 import log from "../../utils/log";
 import {
   ICurrentMediaKeysInfos,
+  IKeySystemAccessInfos,
   IKeySystemOption,
 } from "./constants";
 
@@ -47,37 +47,37 @@ interface IMediaCapability {
 interface IKeySystemType {
   keyName: string;
   keyType: string;
-  keySystem: IKeySystemOption;
+  keySystemOptions: IKeySystemOption;
 }
 
-interface IKeySystemAccessInfos {
-  keySystemAccess: IMediaKeySystemAccess;
-  keySystem: IKeySystemOption;
-}
-
+/**
+ * @param {Array.<Object>} keySystems
+ * @param {Object} currentMediaKeysInfos
+ * @returns {null|undefined|Object}
+ */
 function getCachedKeySystemAccess(
   keySystems: IKeySystemOption[],
   currentMediaKeysInfos: ICurrentMediaKeysInfos
 ) : null|undefined|{
-  keySystem: IKeySystemOption;
+  keySystemOptions: IKeySystemOption;
   keySystemAccess: KeySystemAccess;
 } {
   const {
-    $keySystem,
+    $keySystemOptions,
     $mediaKeys,
     $mediaKeySystemConfiguration,
   } = currentMediaKeysInfos;
 
   // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
   // creation of a new MediaKeys instance for each session creation
-  if (!$keySystem || !$mediaKeys || shouldRenewMediaKeys()) {
+  if (!$keySystemOptions || !$mediaKeys || shouldRenewMediaKeys()) {
     return null;
   }
 
   if ($mediaKeySystemConfiguration) {
   const configuration = $mediaKeySystemConfiguration;
   const foundKeySystem = keySystems.filter((ks) => {
-    if (ks.type !== $keySystem.type) {
+    if (ks.type !== $keySystemOptions.type) {
       return false;
     }
 
@@ -96,11 +96,12 @@ function getCachedKeySystemAccess(
 
   if (foundKeySystem) {
     return {
-      keySystem: foundKeySystem,
+      keySystemOptions: foundKeySystem,
       keySystemAccess: new KeySystemAccess(
-        $keySystem.type,
+        $keySystemOptions.type,
         $mediaKeys,
-        $mediaKeySystemConfiguration),
+        $mediaKeySystemConfiguration
+      ),
     };
   }
   else {
@@ -112,7 +113,7 @@ function getCachedKeySystemAccess(
 /**
  * Find key system canonical name from key system type.
  * @param {string} ksType - Obtained via inversion
- * @returns {string} - Either the canonical name, or undefined.
+ * @returns {string|undefined} - Either the canonical name, or undefined.
  */
 function findKeySystemCanonicalName(ksType: string)
 : string|undefined {
@@ -130,9 +131,6 @@ function findKeySystemCanonicalName(ksType: string)
  * @param {string} [ksName] - Generic name for the key system. e.g. "clearkey",
  * "widevine", "playready". Can be used to make exceptions depending on it.
  * @param {Object} keySystem
- * @param {Boolean} [keySystem.persistentLicense]
- * @param {Boolean} [keySystem.persistentStateRequired]
- * @param {Boolean} [keySystem.distinctiveIdentifierRequired]
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
@@ -235,16 +233,17 @@ function buildKeySystemConfigurations(
  *   - throw if no  compatible key system has been found.
  *
  * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Object} currentMediaKeysInfos
  * @returns {Observable}
  */
-function findCompatibleKeySystem(
-  keySystems: IKeySystemOption[],
+export default function findCompatibleKeySystem(
+  keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos: ICurrentMediaKeysInfos
 ) : Observable<IKeySystemAccessInfos> {
   // Fast way to find a compatible keySystem if the currently loaded
   // one as exactly the same compatibility options.
   const cachedKeySystemAccess =
-    getCachedKeySystemAccess(keySystems, currentMediaKeysInfos);
+    getCachedKeySystemAccess(keySystemsConfigs, currentMediaKeysInfos);
   if (cachedKeySystemAccess) {
     log.debug("eme: found compatible keySystem quickly", cachedKeySystemAccess);
     return Observable.of(cachedKeySystemAccess);
@@ -258,22 +257,22 @@ function findCompatibleKeySystem(
    *   - keySystem {Object}: the original keySystem object
    * @type {Array.<Object>}
    */
-  const keySystemsType: IKeySystemType[] = keySystems.reduce(
-    (arr: IKeySystemType[], keySystem) => {
+  const keySystemsType: IKeySystemType[] = keySystemsConfigs.reduce(
+    (arr: IKeySystemType[], keySystemOptions) => {
 
       let ksType;
 
-      if (EME_KEY_SYSTEMS[keySystem.type]) {
-        ksType = EME_KEY_SYSTEMS[keySystem.type].map((keyType) => {
-          const keyName = keySystem.type;
-          return { keyName, keyType, keySystem };
+      if (EME_KEY_SYSTEMS[keySystemOptions.type]) {
+        ksType = EME_KEY_SYSTEMS[keySystemOptions.type].map((keyType) => {
+          const keyName = keySystemOptions.type;
+          return { keyName, keyType, keySystemOptions };
         }
         );
       }
       else {
-        const keyName = findKeySystemCanonicalName(keySystem.type) || "";
-        const keyType = keySystem.type;
-        ksType = [{ keyName, keyType, keySystem }];
+        const keyName = findKeySystemCanonicalName(keySystemOptions.type) || "";
+        const keyType = keySystemOptions.type;
+        ksType = [{ keyName, keyType, keySystemOptions }];
       }
 
       return arr.concat(ksType);
@@ -300,10 +299,10 @@ function findCompatibleKeySystem(
         return;
       }
 
-      const { keyName, keyType, keySystem } = keySystemsType[index];
+      const { keyName, keyType, keySystemOptions } = keySystemsType[index];
 
       const keySystemConfigurations =
-        buildKeySystemConfigurations(keyName, keySystem);
+        buildKeySystemConfigurations(keyName, keySystemOptions);
 
       log.debug(
         `eme: request keysystem access ${keyType},` +
@@ -321,7 +320,7 @@ function findCompatibleKeySystem(
         .subscribe(
           (keySystemAccess) => {
             log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
-            obs.next({ keySystem, keySystemAccess });
+            obs.next({ keySystemOptions, keySystemAccess });
             obs.complete();
           },
           () => {
@@ -345,9 +344,3 @@ function findCompatibleKeySystem(
     };
   });
 }
-
-export {
-  IKeySystemAccessInfos,
-};
-
-export default findCompatibleKeySystem;

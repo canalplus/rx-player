@@ -17,31 +17,19 @@
 import { Observable } from "rxjs/Observable";
 import {
   IMediaKeySession,
-  IMockMediaKeys,
 } from "../../compat";
 import { ErrorCodes } from "../../errors";
 import arrayIncludes from "../../utils/array-includes";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
-import { IKeySystemAccessInfos } from "./find_key_system";
 import {
   $loadedSessions,
   $storedSessions,
-} from "./globals";
-
-export interface IMediaKeysInfos extends IKeySystemAccessInfos {
-  mediaKeys : MediaKeys|IMockMediaKeys;
-}
+  IMediaKeysInfos,
+} from "./constants";
 
 export interface ICreatedSessionEvent {
   type : "created-session";
-  value : {
-    session : MediaKeySession|IMediaKeySession;
-  };
-}
-
-export interface ILoadedSessionRecoveryEvent {
-  type : "reuse-loaded-session";
   value : {
     session : MediaKeySession|IMediaKeySession;
   };
@@ -56,34 +44,7 @@ export interface IPersistentSessionRecoveryEvent {
 
 export type IGetSessionEvent =
   ICreatedSessionEvent |
-  ILoadedSessionRecoveryEvent |
   IPersistentSessionRecoveryEvent;
-
-/**
- * Create MediaKeySession and cache loaded session.
- * @param {MediaKeys} mediaKeys
- * @param {string} sessionType - Either "persistent-license" or "temporary"
- * @param {UInt8Array} initData
- * @returns {Observable}
- */
-function createSession(
-  mediaKeys: IMockMediaKeys|MediaKeys,
-  sessionType: MediaKeySessionType,
-  initData: Uint8Array,
-  initDataType: string
-) : Observable<IMediaKeySession|MediaKeySession> {
-  log.debug(`eme: create a new ${sessionType} session`);
-  if (mediaKeys.createSession == null) {
-    throw new Error("Invalid MediaKeys implementation: Missing createSession");
-  }
-
-  // TODO TS bug? I don't get the problem here.
-  const session : IMediaKeySession|MediaKeySession =
-    (mediaKeys as any).createSession(sessionType);
-
-  $loadedSessions.add(initData, initDataType, session);
-  return Observable.of(session);
-}
 
 /**
  * If session creating fails, retry once session creation/loading.
@@ -130,85 +91,74 @@ function loadPersistentSession(
 }
 
 /**
- * If all key statuses attached to session are valid (either not
- * "expired" or "internal-error"), return true.
- * If not, return false.
- * @param {Uint8Array} initData
- * @param {MediaKeySession} loadedSession
- * @returns {MediaKeySession}
- */
-export function isLoadedSessionValid(
-  loadedSession : MediaKeySession|IMediaKeySession
-) : boolean {
-  const keyStatusesMap = loadedSession.keyStatuses;
-  const keyStatuses: string[] = [];
-  keyStatusesMap.forEach((keyStatus: string) => {
-    keyStatuses.push(keyStatus);
-  });
-
-  // XXX TODO Should probably do that not here, as we could close a session
-  // which is currently being dealt with, in which case we do not want to
-  // close it.
-  if (
-    keyStatuses.length > 0 &&
-    (
-      !arrayIncludes(keyStatuses, "expired") &&
-      !arrayIncludes(keyStatuses, "internal-error")
-    )
-  ) {
-    log.debug("eme: reuse loaded session", loadedSession.sessionId);
-    return true;
-  }
-  return false;
-}
-
-/**
- * Create session, or load persistent stored session.
+ * Create a new Session on the given MediaKeys, corresponding to the given
+ * initializationData.
+ * If session creating fails, remove the oldest MediaKeySession loaded and
+ * retry.
+ *
+ * /!\ This only creates new sessions.
+ * It will fail if $loadedSessions already has a MediaKeySession with
+ * the given initializationData.
  * @param {Uint8Array} initData
  * @param {string} initDataType
  * @param {Object} mediaKeysInfos
  */
-function createOrLoadSession(
+function createSession(
   initData: Uint8Array,
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
 ) : Observable<IGetSessionEvent> {
 
   const {
-    keySystem,
+    keySystemOptions,
     keySystemAccess,
     mediaKeys,
   } = mediaKeysInfos;
+  if (mediaKeys.createSession == null) {
+    throw new Error("Invalid MediaKeys implementation: Missing createSession");
+  }
+
   const mksConfig = keySystemAccess.getConfiguration();
   const sessionTypes = mksConfig.sessionTypes;
   const hasPersistence = (
     sessionTypes && arrayIncludes(sessionTypes, "persistent-license")
   );
-
-  const sessionType = hasPersistence && keySystem.persistentLicense ?
+  const sessionType = hasPersistence && keySystemOptions.persistentLicense ?
     "persistent-license" : "temporary";
 
-  return createSession(mediaKeys, sessionType, initData, initDataType)
-    .mergeMap((session) => {
-      if (hasPersistence && keySystem.persistentLicense) {
-        // if a persisted session exists in the store associated to this initData,
-        // we reuse it without a new license request through the `load` method.
-        const storedEntry = $storedSessions.get(initData);
-        if (storedEntry) {
-          return loadPersistentSession(
-            storedEntry.sessionId, initData, initDataType, session
-          );
-        }
-      }
-      return Observable.of({
-        type: "created-session" as "created-session",
-        value: { session },
-      });
-    });
+  log.debug(`eme: create a new ${sessionType} session`);
+
+  // TODO TS bug? I don't get the problem here.
+  const session : IMediaKeySession|MediaKeySession =
+    (mediaKeys as any).createSession(sessionType);
+
+  $loadedSessions.add(initData, initDataType, session);
+
+  if (hasPersistence && keySystemOptions.persistentLicense) {
+    // if a persisted session exists in the store associated to this initData,
+    // we reuse it without a new license request through the `load` method.
+    const storedEntry = $storedSessions.get(initData);
+    if (storedEntry) {
+      return loadPersistentSession(
+        storedEntry.sessionId, initData, initDataType, session
+      );
+    }
+  }
+  return Observable.of({
+    type: "created-session" as "created-session",
+    value: { session },
+  });
 }
 
 /**
- * If session creating fails, retry once session creation/reuse.
+ * Create a new Session on the given MediaKeys, corresponding to the given
+ * initializationData.
+ * If session creating fails, remove the oldest MediaKeySession loaded and
+ * retry.
+ *
+ * /!\ This only creates new sessions.
+ * It will fail if $loadedSessions already has a MediaKeySession with
+ * the given initializationData.
  * @param {Uint8Array} initData
  * @param {string} initDataType
  * @param {Object} mediaKeysInfos
@@ -219,7 +169,7 @@ export default function createSessionWithRetry(
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
 ) : Observable<IGetSessionEvent> {
-  return createOrLoadSession(initData, initDataType, mediaKeysInfos)
+  return createSession(initData, initDataType, mediaKeysInfos)
     .catch((error) => {
       if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
         throw error;
@@ -235,7 +185,7 @@ export default function createSessionWithRetry(
 
       return $loadedSessions.closeSession(loadedSessions[0])
         .mergeMap(() => {
-          return createOrLoadSession(initData, initDataType, mediaKeysInfos);
+          return createSession(initData, initDataType, mediaKeysInfos);
         });
     });
 }

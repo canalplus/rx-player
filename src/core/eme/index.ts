@@ -16,10 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import {
-  hasEMEAPIs,
-  shouldUnsetMediaKeys,
-} from "../../compat/";
+import { hasEMEAPIs } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 import {
   CustomError,
@@ -29,32 +26,19 @@ import { assertInterface } from "../../utils/assert";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
 import attachMediaKeys from "./attach_media_keys";
+import clearEMESession from "./clear_eme_session";
 import {
-  ICurrentMediaKeysInfos,
+  $loadedSessions,
+  currentMediaKeysInfos,
   IKeySystemOption,
 } from "./constants";
 import createMediaKeys from "./create_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
 import findCompatibleKeySystem from "./find_key_system";
 import generateKeyRequest from "./generate_key_request";
-import getSessionForEncryptedEvent, {
-  isLoadedSessionValid,
-} from "./get_session";
-import {
-  $loadedSessions,
-  $storedSessions,
-} from "./globals";
+import handleEncryptedEvent from "./handle_encrypted_event";
 import handleSessionEvents from "./handle_session_events";
 import InitDataStore from "./init_data_store";
-
-// Persisted singleton instance of MediaKeys. We do not allow multiple
-// CDM instances.
-const currentMediaKeysInfos : ICurrentMediaKeysInfos = {
-  $mediaKeys: null,  // MediaKeys instance
-  $mediaKeySystemConfiguration: null, // active MediaKeySystemConfiguration
-  $keySystem: null,
-  $videoElement: null,
-};
 
 /**
  * EME abstraction and event handler used to communicate with the Content-
@@ -62,18 +46,18 @@ const currentMediaKeysInfos : ICurrentMediaKeysInfos = {
  *
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
- * @param {HTMLMediaElement} video
+ * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystems
  * @param {Subject} errorStream
  * @returns {Observable}
  */
 function createEME(
-  video : HTMLMediaElement,
-  keySystemOptions: IKeySystemOption[],
+  mediaElement : HTMLMediaElement,
+  keySystemsConfigs: IKeySystemOption[],
   errorStream: Subject<Error|CustomError>
 ) : Observable<never> {
   if (__DEV__) {
-    keySystemOptions.forEach((option) => assertInterface(option, {
+    keySystemsConfigs.forEach((config) => assertInterface(config, {
       getLicense: "function",
       type: "string",
     }, "keySystem"));
@@ -84,74 +68,38 @@ function createEME(
   const handledInitData = new InitDataStore();
 
   return Observable.combineLatest(
-    onEncrypted$(video),
-    findCompatibleKeySystem(keySystemOptions, currentMediaKeysInfos)
-      .mergeMap((keySystemInfos) => createMediaKeys(keySystemInfos, errorStream))
+    // next encrypted event
+    onEncrypted$(mediaElement),
+
+    // creation of a media key, a single time
+    findCompatibleKeySystem(keySystemsConfigs, currentMediaKeysInfos)
+      .mergeMap((keySystemInfos) => {
+        return createMediaKeys(keySystemInfos, errorStream);
+      })
   )
     .mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
-      const {
-        initDataType,
-        initData,
-      } = encryptedEvent;
-      if (initData == null) {
-        const error = new Error("no init data found on media encrypted event.");
-        throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
-      }
-
-      const initDataBytes = new Uint8Array(initData);
-      if (handledInitData.has(initDataBytes, initDataType)) {
-        return Observable.empty(); // Already handled, quit
-      }
-      handledInitData.add(initDataBytes, initDataType);
-
-      const loadedSession = $loadedSessions.get(initDataBytes, initDataType);
-
-      let loadedSessionInfo$ : any; // XXX TODO
-
-      if (loadedSession) {
-        if (isLoadedSessionValid(loadedSession)) {
-          loadedSessionInfo$ = Observable.of({
-            initData: initDataBytes,
-            initDataType,
-            mediaKeySession: loadedSession,
-          });
-        } else { // session is not valid anymore. Close session.
-          $loadedSessions.closeSession(loadedSession);
-          $storedSessions.delete(new Uint8Array(initData));
-        }
-      }
-
-      if (loadedSessionInfo$ == null) {
-        loadedSessionInfo$ =
-          getSessionForEncryptedEvent(initDataBytes, initDataType, mediaKeysInfos)
-            .map((evt) => ({
-              keySystemConfiguration: mediaKeysInfos.keySystem,
-              initData,
-              initDataType,
-              mediaKeySession: evt.value.session,
-            }));
-      }
-
       return Observable.merge(
-        loadedSessionInfo$,
+        // create a new MediaKeySession if needed
+        handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos),
+
+        // attach MediaKeys to the media element if we're talking about the first event
         i === 0 ?
-          attachMediaKeys(mediaKeysInfos, video, currentMediaKeysInfos).ignoreElements() :
-          Observable.empty() // (mediaKeys already attached. Do nothing)
+          attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
+            .ignoreElements() as Observable<never> :
+          Observable.empty<never>()
       );
     })
-    .mergeMap((sessionInfos : any /** XXX TODO */) =>  {
+    .mergeMap((handledEncryptedEvent) =>  {
       const {
         initData,
         initDataType,
         mediaKeySession,
-        keySystemConfiguration,
-      } = sessionInfos;
-
-      const areKeysAttachedToSession = mediaKeySession.keyStatuses.size !== 0;
+        keySystemOptions,
+      } = handledEncryptedEvent.value;
 
       return Observable.merge(
-        handleSessionEvents(mediaKeySession, keySystemConfiguration, errorStream),
-        areKeysAttachedToSession ?
+        handleSessionEvents(mediaKeySession, keySystemOptions, errorStream),
+        handledEncryptedEvent.type === "created-session" ?
           generateKeyRequest(mediaKeySession, initData, initDataType) :
           Observable.empty<never>()
       ).ignoreElements() as Observable<never>;
@@ -166,38 +114,10 @@ function disposeEME() : void {
   // if other instance is creating after disposeEME
   disposeMediaKeys(currentMediaKeysInfos.$videoElement).subscribe(noop);
   currentMediaKeysInfos.$mediaKeys = null;
-  currentMediaKeysInfos.$keySystem = null;
+  currentMediaKeysInfos.$keySystemOptions = null;
   currentMediaKeysInfos.$videoElement = null;
   currentMediaKeysInfos.$mediaKeySystemConfiguration = null;
   $loadedSessions.closeAllSessions().subscribe();
-}
-
-/**
- * Clear EME ressources as the current content stops its playback.
- */
-function clearEMESession() : Observable<never> {
-  return Observable.defer(() => {
-    const observablesArray : Array<Observable<never>> = [];
-    if (currentMediaKeysInfos.$videoElement && shouldUnsetMediaKeys()) {
-      const obs$ = disposeMediaKeys(currentMediaKeysInfos.$videoElement)
-        .ignoreElements()
-        .finally(() => {
-          currentMediaKeysInfos.$videoElement = null;
-        }) as Observable<never>;
-      observablesArray.push(obs$);
-    }
-    if (
-      currentMediaKeysInfos.$keySystem &&
-      currentMediaKeysInfos.$keySystem.closeSessionsOnStop
-    ) {
-      observablesArray.push(
-        $loadedSessions.closeAllSessions()
-          .ignoreElements() as Observable<never>
-      );
-    }
-    return observablesArray.length ?
-      Observable.merge(...observablesArray) : Observable.empty();
-  });
 }
 
 /**
@@ -205,31 +125,32 @@ function clearEMESession() : Observable<never> {
  * @returns {string}
  */
 function getCurrentKeySystem() : string|null {
-  return currentMediaKeysInfos.$keySystem && currentMediaKeysInfos.$keySystem.type;
+  return currentMediaKeysInfos.$keySystemOptions &&
+    currentMediaKeysInfos.$keySystemOptions.type;
 }
 
 /**
  * Perform EME management if needed.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystems
  * @param {Subject} errorStream
  * @returns {Observable}
  */
 export default function EMEManager(
-  videoElement : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   errorStream : Subject<Error|CustomError>
 ) :  Observable<never> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {
-      return onEncrypted$(videoElement).map(() => {
+      return onEncrypted$(mediaElement).map(() => {
         log.error("eme: encrypted event but no EME API available");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
       });
     }
-    return createEME(videoElement, keySystems, errorStream);
+    return createEME(mediaElement, keySystems, errorStream);
   } else {
-    return onEncrypted$(videoElement).map(() => {
+    return onEncrypted$(mediaElement).map(() => {
       log.error("eme: ciphered media and no keySystem passed");
       throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
     });
