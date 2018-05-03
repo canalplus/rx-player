@@ -38,45 +38,22 @@ import {
   KEY_STATUS_ERRORS,
 } from "./constants";
 
-interface IMediaKeyMessage {
-  license: ILicense;
-  msg: IMediaKeyMessageEventType;
-}
-
-type ILicense =
+export type ILicense =
   TypedArray |
   ArrayBuffer;
 
-type IMediaKeyMessageEventType =
-  "license-request" |
-  "license-renewal" |
-  "license-release" |
-  "individualization-request" |
-  "key-status-change";
-
-export interface IMediaKeyMessageEvent {
-  type : IMediaKeyMessageEventType;
-  value : {
-    session : IMediaKeySession|MediaKeySession;
-    sessionInfos: {
-      license: ILicense;
-    };
+interface IMediaKeySessionEvents {
+  type: MediaKeyMessageType|"key-status-change";
+  value: {
+    license: ILicense;
   };
 }
 
-function mediaKeyMessageEvent(
-  type: IMediaKeyMessageEventType,
-  session: IMediaKeySession|MediaKeySession,
-  license: ILicense
-): IMediaKeyMessageEvent {
-  return {
-    type,
-    value: {
-      session,
-      sessionInfos: {
-        license,
-      },
-    },
+export interface IMediaKeySessionHandledEvents {
+  type : MediaKeyMessageType|"key-status-change";
+  value : {
+    session : IMediaKeySession|MediaKeySession;
+    license: ILicense;
   };
 }
 
@@ -93,7 +70,7 @@ export default function handleSessionEvents(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
   errorStream: Subject<Error|CustomError>
-) : Observable<IMediaKeyMessageEvent> {
+) : Observable<IMediaKeySessionHandledEvents> {
   log.debug("eme: handle message events", session);
 
   /**
@@ -123,11 +100,12 @@ export default function handleSessionEvents(
     ),
   };
 
-  const keyErrors: Observable<never> = onKeyError$(session).map((error) => {
-    throw new EncryptedMediaError("KEY_ERROR", error, true);
-  });
+  const keyErrors: Observable<never> = onKeyError$(session)
+    .map((error) => {
+      throw new EncryptedMediaError("KEY_ERROR", error, true);
+    });
 
-  const keyStatusesChanges : Observable<IMediaKeyMessage> =
+  const keyStatusesChanges : Observable<IMediaKeySessionEvents> =
     onKeyStatusesChange$(session).mergeMap((keyStatusesEvent: Event) => {
       log.debug(
         "eme: keystatuseschange event",
@@ -146,27 +124,28 @@ export default function handleSessionEvents(
         }
       });
 
-      const license = tryCatch(() => {
-        if (keySystem && keySystem.onKeyStatusesChange) {
-          return castToObservable(
+      const handledKeyStatusesChange$ = tryCatch(() => {
+        return keySystem && keySystem.onKeyStatusesChange ?
+          castToObservable(
             keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-          );
-        } else {
-          return Observable.empty();
-        }
+          ) as Observable<TypedArray|ArrayBuffer> : Observable.empty<never>();
       });
 
-      return license.catch((error: Error) => {
-        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
-      }).map((licenseObject) => {
-        return {
-          license: licenseObject as ILicense,
-          msg: "key-status-change" as "key-status-change",
-        };
-      });
+      return handledKeyStatusesChange$
+        .catch((error: Error) => {
+          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
+        })
+        .map((licenseObject) => {
+          return {
+            type: "key-status-change" as "key-status-change",
+            value : {
+              license: licenseObject as TypedArray|ArrayBuffer,
+            },
+          };
+        });
     });
 
-  const keyMessages$ : Observable<IMediaKeyMessage> =
+  const keyMessages$ : Observable<IMediaKeySessionEvents> =
     onKeyMessage$(session).mergeMap((messageEvent: MediaKeyMessageEvent) => {
       const message = new Uint8Array(messageEvent.message);
       const messageType = messageEvent.messageType || "license-request";
@@ -177,49 +156,52 @@ export default function handleSessionEvents(
         messageEvent
       );
 
-      const getLicense$ : Observable<ILicense> = Observable.defer(() => {
+      const getLicense$ = Observable.defer(() => {
         const getLicense = keySystem.getLicense(message, messageType);
         return castToObservable(getLicense)
           .timeout(10 * 1000)
-          .catch(error => {
-            if (error instanceof TimeoutError) {
-              throw new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false);
-            } else {
-              throw error;
-            }
-          }) as Observable<ILicense>;
+          .catch((error : Error) => {
+            throw error instanceof TimeoutError ?
+              new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false) :
+              error;
+          }) as Observable<TypedArray|ArrayBuffer>;
       });
 
-      return retryObsWithBackoff(getLicense$, getLicenseRetryOptions).map((license) => {
-        return {
-          license,
-          msg: messageType,
-        };
-      });
+      return retryObsWithBackoff(getLicense$, getLicenseRetryOptions)
+        .map((license) => {
+          return {
+            type: messageType,
+            value: {
+              license,
+            },
+          };
+        });
     });
 
-  const sessionUpdates: Observable<IMediaKeyMessageEvent> =
+  const sessionUpdates: Observable<IMediaKeySessionHandledEvents> =
     Observable.merge(keyMessages$, keyStatusesChanges)
-      .concatMap((res) => {
-        log.debug("eme: update session", res);
-
-        const { license, msg } = res;
-        const sessionEvent =
-          mediaKeyMessageEvent(msg, session, license);
-        return castToObservable(
-          (session as any).update(license)
-        )
+      .concatMap((evt) => {
+        log.debug("eme: update session", evt);
+        const license = evt.value.license;
+        return castToObservable((session as any).update(license))
           .catch((error) => {
             throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
           })
-          .mapTo(sessionEvent);
+          .mapTo({
+            type: evt.type,
+            value: {
+              session,
+              license,
+            },
+          });
       });
 
-  const sessionEvents: Observable<IMediaKeyMessageEvent> =
+  const sessionEvents: Observable<IMediaKeySessionHandledEvents> =
     Observable.merge(sessionUpdates, keyErrors);
 
   if (session.closed) {
-    return sessionEvents.takeUntil(castToObservable(session.closed));
+    return sessionEvents
+      .takeUntil(castToObservable(session.closed));
   } else {
     return sessionEvents;
   }

@@ -62,7 +62,7 @@ export interface IPersistedSessionStorage {
 export interface IKeySystemOption {
   type : string;
   getLicense : (message : Uint8Array, messageType : string)
-    => Promise<BufferSource>|BufferSource;
+    => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
   serverCertificate? : ArrayBuffer|TypedArray;
   persistentLicense? : boolean;
   licenseStorage? : IPersistedSessionStorage;
@@ -70,7 +70,7 @@ export interface IKeySystemOption {
   distinctiveIdentifierRequired? : boolean;
   closeSessionsOnStop? : boolean;
   onKeyStatusesChange? : (evt : Event, session : IMediaKeySession|MediaKeySession)
-    => Promise<BufferSource>|BufferSource;
+    => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
 }
