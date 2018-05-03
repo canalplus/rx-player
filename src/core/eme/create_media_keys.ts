@@ -23,28 +23,12 @@ import {
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import {
-  $storedSessions,
   IKeySystemAccessInfos,
-  IKeySystemOption,
+  // IKeySystemOption,
   IMediaKeysInfos,
 } from "./constants";
 import { trySettingServerCertificate } from "./set_server_certificate";
-
-/**
- * Set the license storage given in options, if one.
- * @param {Object} keySystem
- */
-function setSessionStorage(keySystem: IKeySystemOption) : void {
-  if (keySystem.persistentLicense) {
-    if (keySystem.licenseStorage) {
-      log.info("set the given license storage");
-      $storedSessions.setStorage(keySystem.licenseStorage);
-    } else {
-      const error = new Error("no license storage found for persistent license.");
-      throw new EncryptedMediaError("INVALID_KEY_SYSTEM", error, true);
-    }
-  }
-}
+import PersistedSessionsStore from "./utils/persisted_session_store";
 
 /**
  * Create the right MediaKeys instance from the keySystems options given.
@@ -66,11 +50,25 @@ export default function createMediaKeysWithKeySystemAccessInfos(
 
       return castToObservable(keySystemAccess.createMediaKeys())
         .mergeMap(function prepareMediaKeysConfiguration(mediaKeys) {
-          setSessionStorage(keySystemOptions); // TODO Should be done in this function?
+
+          let sessionStorage : PersistedSessionsStore|null;
+          if (keySystemOptions.persistentLicense) {
+            const { licenseStorage } = keySystemOptions;
+            if (licenseStorage) {
+              log.info("set the given license storage");
+              sessionStorage = new PersistedSessionsStore(licenseStorage);
+            } else {
+              const error =
+                new Error("no license storage found for persistent license.");
+              throw new EncryptedMediaError("INVALID_KEY_SYSTEM", error, true);
+            }
+          } else {
+            sessionStorage = null;
+          }
 
           const { serverCertificate } = keySystemOptions;
           const mediaKeysInfos$ = Observable
-            .of({ mediaKeys, keySystemOptions, keySystemAccess });
+            .of({ mediaKeys, keySystemOptions, keySystemAccess, sessionStorage });
 
           if (
             serverCertificate != null &&

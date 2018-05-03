@@ -19,9 +19,8 @@ import {
   IMediaKeySystemAccess,
   IMockMediaKeys,
 } from "../../compat";
-import noop from "../../utils/noop";
-import OpenSessionsStore from "./open_sessions_store";
-import PersistedSessionsStore from "./persisted_session_store";
+import OpenSessionsStore from "./utils/open_sessions_store";
+import PersistedSessionsStore from "./utils/persisted_session_store";
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
@@ -34,6 +33,7 @@ export interface IMediaKeysInfos {
   keySystemAccess: IMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
   mediaKeys : MediaKeys|IMockMediaKeys;
+  sessionStorage : PersistedSessionsStore|null;
 }
 
 // Infos identyfing a single MediaKeySession
@@ -41,6 +41,7 @@ export interface IMediaKeySessionInfos {
   keySystemAccess: IMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
   mediaKeys : MediaKeys|IMockMediaKeys;
+  sessionStorage : PersistedSessionsStore|null;
   mediaKeySession : MediaKeySession|IMediaKeySession;
   initData : Uint8Array;
   initDataType : string;
@@ -105,25 +106,14 @@ export const KEY_STATUS_ERRORS = {
 } as IDictionary<boolean>;
 /* tslint:enable no-object-literal-type-assertion */
 
-// default storage in a PersistedSessionSet
-// do nothing
-// TODO Should not be needed
-const emptyStorage = {
-  load() { return []; },
-  save: noop,
-};
-
-const $storedSessions = new PersistedSessionsStore(emptyStorage);
 const $loadedSessions = new OpenSessionsStore();
 
 if (__DEV__) {
   // disable typescript warning TODO better way?
   (window as any).$loadedSessions = $loadedSessions;
-  (window as any).$storedSessions = $storedSessions;
 }
 
 export {
   currentMediaKeysInfos,
-  $storedSessions,
   $loadedSessions,
 };

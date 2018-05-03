@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "../../utils/array-includes";
+import arrayIncludes from "../../../utils/array-includes";
 import hashBuffer from "./hash_buffer";
 
 /**

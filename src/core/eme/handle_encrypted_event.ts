@@ -15,48 +15,15 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { IMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
-import arrayIncludes from "../../utils/array-includes";
-import log from "../../utils/log";
 import {
   $loadedSessions,
-  $storedSessions,
   IMediaKeySessionInfos,
   IMediaKeysInfos,
 } from "./constants";
 import createSession from "./create_session";
-import InitDataStore from "./init_data_store";
-
-/**
- * If all key statuses attached to session are valid (either not
- * "expired" or "internal-error"), return true.
- * If not, return false.
- * @param {Uint8Array} initData
- * @param {MediaKeySession} loadedSession
- * @returns {MediaKeySession}
- */
-export function isLoadedSessionUsable(
-  loadedSession : MediaKeySession|IMediaKeySession
-) : boolean {
-  const keyStatusesMap = loadedSession.keyStatuses;
-  const keyStatuses: string[] = [];
-  keyStatusesMap.forEach((keyStatus: string) => {
-    keyStatuses.push(keyStatus);
-  });
-
-  if (
-    keyStatuses.length > 0 &&
-    (
-      !arrayIncludes(keyStatuses, "expired") &&
-      !arrayIncludes(keyStatuses, "internal-error")
-    )
-  ) {
-    log.debug("eme: reuse loaded session", loadedSession.sessionId);
-    return true;
-  }
-  return false;
-}
+import InitDataStore from "./utils/init_data_store";
+import isSessionUsable from "./utils/is_session_usable";
 
 export interface IHandledEncryptedEvent {
   type : "created-session" |
@@ -97,13 +64,14 @@ export default function handleEncryptedEvent(
 
     const loadedSession = $loadedSessions.get(initDataBytes, initDataType);
     if (loadedSession != null) {
-      if (isLoadedSessionUsable(loadedSession)) {
+      if (isSessionUsable(loadedSession)) {
         return Observable.of({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
             keySystemAccess: mediaKeysInfos.keySystemAccess,
             keySystemOptions: mediaKeysInfos.keySystemOptions,
             mediaKeys: mediaKeysInfos.mediaKeys,
+            sessionStorage: mediaKeysInfos.sessionStorage,
             mediaKeySession: loadedSession,
             initData: initDataBytes,
             initDataType,
@@ -111,7 +79,9 @@ export default function handleEncryptedEvent(
         });
       } else { // this session is not usable anymore. Close it and open a new one.
         $loadedSessions.closeSession(loadedSession);
-        $storedSessions.delete(new Uint8Array(initData));
+        if (mediaKeysInfos.sessionStorage) {
+          mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData));
+        }
       }
     }
 
@@ -122,6 +92,7 @@ export default function handleEncryptedEvent(
           keySystemAccess: mediaKeysInfos.keySystemAccess,
           keySystemOptions: mediaKeysInfos.keySystemOptions,
           mediaKeys: mediaKeysInfos.mediaKeys,
+          sessionStorage: mediaKeysInfos.sessionStorage,
           mediaKeySession: evt.value.session,
           initData: initDataBytes,
           initDataType,
