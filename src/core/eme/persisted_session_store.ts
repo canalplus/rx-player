@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { IMediaKeySession } from "../../../compat";
+import arrayFind = require("array-find");
+import { IMediaKeySession } from "../../compat";
 import assert, {
   assertInterface,
-} from "../../../utils/assert";
-import log from "../../../utils/log";
+} from "../../utils/assert";
+import log from "../../utils/log";
 import {
   IPersistedSessionData,
   IPersistedSessionStorage,
-} from "../constants";
-import SessionSet from "./abstract";
-import hashInitData from "./hash_init_data";
+} from "./constants";
+import hashBuffer from "./hash_buffer";
 
 function checkStorage(storage : IPersistedSessionStorage) : void {
   assert(
@@ -47,9 +47,8 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
  */
-export default class PersistedSessionsSet
-  extends SessionSet<IPersistedSessionData>
-{
+export default class PersistedSessionsStore {
+  private _entries : IPersistedSessionData[];
   private _storage : IPersistedSessionStorage;
 
   /*
@@ -58,8 +57,8 @@ export default class PersistedSessionsSet
    * @param {Function} storage.save
    */
   constructor(storage : IPersistedSessionStorage) {
-    super();
     checkStorage(storage);
+    this._entries = [];
     this._storage = storage;
     this._loadStorage();
   }
@@ -87,9 +86,9 @@ export default class PersistedSessionsSet
    * @param {Array|TypedArray|Number}  initData
    * @returns {Object|null}
    */
-  public get(initData : Uint8Array|number[]|number) : IPersistedSessionData|null {
-    const hash = hashInitData(initData);
-    const entry = this.find((e) => e.initData === hash);
+  public get(initData : Uint8Array|number[]) : IPersistedSessionData|null {
+    const hash = hashBuffer(initData);
+    const entry = arrayFind(this._entries, (e) => e.initData === hash);
     return entry || null;
   }
 
@@ -99,7 +98,7 @@ export default class PersistedSessionsSet
    * @param {MediaKeySession} session
    */
   public add(
-    initData : Uint8Array|number,
+    initData : Uint8Array,
     session : IMediaKeySession|MediaKeySession
   ) : void {
     const sessionId = session && session.sessionId;
@@ -107,18 +106,17 @@ export default class PersistedSessionsSet
       return;
     }
 
-    const hash = hashInitData(initData);
-    const currentEntry = this.get(hash);
+    const currentEntry = this.get(initData);
     if (currentEntry && currentEntry.sessionId === sessionId) {
       return;
     } else if (currentEntry) { // currentEntry has a different sessionId
-      this.delete(hash);
+      this.delete(initData);
     }
 
     log.info("eme-persitent-store: add new session", sessionId, session);
     this._entries.push({
       sessionId,
-      initData: hash,
+      initData: hashBuffer(initData),
     });
     this._save();
   }
@@ -127,10 +125,10 @@ export default class PersistedSessionsSet
    * Delete entry (sessionId + initData) based on its initData.
    * @param {Array|TypedArray|Number}  initData
    */
-  delete(initData : Uint8Array|number) : void {
-    const hash = hashInitData(initData);
+  delete(initData : Uint8Array) : void {
+    const hash = hashBuffer(initData);
 
-    const entry = this.find((e) => e.initData === hash);
+    const entry = arrayFind(this._entries, (e) => e.initData === hash);
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
 

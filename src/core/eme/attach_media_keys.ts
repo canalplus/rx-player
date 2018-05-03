@@ -17,9 +17,11 @@
 import { Observable } from "rxjs/Observable";
 import { setMediaKeys } from "../../compat";
 import log from "../../utils/log";
-import { ICurrentMediaKeysInfos } from "./constants";
-import { IMediaKeysInfos } from "./get_session";
-import { $loadedSessions } from "./globals";
+import {
+  $loadedSessions,
+  ICurrentMediaKeysInfos,
+  IMediaKeysInfos,
+} from "./constants";
 
 /**
  * Set the MediaKeys object on the HTMLMediaElement if it is not already on the
@@ -45,14 +47,14 @@ export default function attachMediaKeys(
     const {
       mediaKeys,
       keySystemAccess,
-      keySystem,
+      keySystemOptions,
     } = mediaKeysInfos;
 
     const mksConfig = keySystemAccess.getConfiguration();
 
     currentMediaKeysInfos.$mediaKeys = mediaKeys;
     currentMediaKeysInfos.$mediaKeySystemConfiguration = mksConfig;
-    currentMediaKeysInfos.$keySystem = keySystem;
+    currentMediaKeysInfos.$keySystemOptions = keySystemOptions;
     currentMediaKeysInfos.$videoElement = mediaElement;
 
     if (mediaElement.mediaKeys === mediaKeys) {

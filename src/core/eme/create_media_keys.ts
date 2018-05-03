@@ -22,11 +22,13 @@ import {
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
-import { IKeySystemOption } from "./constants";
-import { IKeySystemAccessInfos } from "./find_key_system";
-import { IMediaKeysInfos } from "./get_session";
-import { $storedSessions } from "./globals";
-import { trySettingServerCertificate } from "./server_certificate";
+import {
+  $storedSessions,
+  IKeySystemAccessInfos,
+  IKeySystemOption,
+  IMediaKeysInfos,
+} from "./constants";
+import { trySettingServerCertificate } from "./set_server_certificate";
 
 /**
  * Set the license storage given in options, if one.
@@ -58,17 +60,17 @@ export default function createMediaKeysWithKeySystemAccessInfos(
 ) : Observable<IMediaKeysInfos> {
   return Observable.defer(() => {
       const {
-        keySystem,
+        keySystemOptions,
         keySystemAccess,
       } = keySystemAccessInfos;
 
       return castToObservable(keySystemAccess.createMediaKeys())
         .mergeMap(function prepareMediaKeysConfiguration(mediaKeys) {
-          setSessionStorage(keySystem); // TODO Should be done in this function?
+          setSessionStorage(keySystemOptions); // TODO Should be done in this function?
 
-          const { serverCertificate } = keySystem;
+          const { serverCertificate } = keySystemOptions;
           const mediaKeysInfos$ = Observable
-            .of({ mediaKeys, keySystem, keySystemAccess });
+            .of({ mediaKeys, keySystemOptions, keySystemAccess });
 
           if (
             serverCertificate != null &&
