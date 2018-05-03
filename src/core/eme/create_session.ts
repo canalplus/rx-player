@@ -103,58 +103,58 @@ function createSession(
   const session = (mediaKeys as any /* TS bug */).createSession(sessionType);
   $loadedSessions.add(initData, initDataType, session);
 
-  if (hasPersistence && sessionStorage && keySystemOptions.persistentLicense) {
-    const storedEntry = sessionStorage.get(initData);
-    if (!storedEntry) {
-      return Observable.of({
-        type: "created-session" as "created-session",
-        value: { session },
-      });
-    }
-
-    return loadPersistentSession(storedEntry.sessionId, session)
-      .catch((error) : never => {
-        $loadedSessions.closeSession(session);
-        sessionStorage.delete(initData);
-        throw error;
-      })
-      .map((hasLoadedSession) => {
-        if (!hasLoadedSession) {
-          log.warn("eme: no data stored for the loaded session");
-          sessionStorage.delete(initData);
-          return {
-            type: "created-session" as "created-session",
-            value: { session },
-          };
-        }
-
-        if (hasLoadedSession && isSessionUsable(session)) {
-          sessionStorage.add(initData, session);
-          return {
-            type: "loaded-persistent-session" as "loaded-persistent-session",
-            value: { session },
-          };
-        }
-
-        // Unusable persistent session: recreate a new session from scratch.
-        $loadedSessions.closeSession(session);
-        sessionStorage.delete(initData);
-
-        const newSession =
-          (mediaKeys as any /* TS bug */).createSession("persistent-license");
-        $loadedSessions.add(initData, initDataType, newSession);
-
-        return {
-          type: "created-session" as "created-session",
-          value: { session: newSession },
-        };
-      });
-  } else {
+  if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) {
     return Observable.of({
       type: "created-session" as "created-session",
       value: { session },
     });
   }
+
+  const storedEntry = sessionStorage.get(initData);
+  if (!storedEntry) {
+    return Observable.of({
+      type: "created-session" as "created-session",
+      value: { session },
+    });
+  }
+
+  return loadPersistentSession(storedEntry.sessionId, session)
+  .catch((error) : never => {
+    $loadedSessions.closeSession(session);
+    sessionStorage.delete(initData);
+    throw error;
+  })
+  .map((hasLoadedSession) => {
+    if (!hasLoadedSession) {
+      log.warn("eme: no data stored for the loaded session");
+      sessionStorage.delete(initData);
+      return {
+        type: "created-session" as "created-session",
+        value: { session },
+      };
+    }
+
+    if (hasLoadedSession && isSessionUsable(session)) {
+      sessionStorage.add(initData, session);
+      return {
+        type: "loaded-persistent-session" as "loaded-persistent-session",
+        value: { session },
+      };
+    }
+
+    // Unusable persistent session: recreate a new session from scratch.
+    $loadedSessions.closeSession(session);
+    sessionStorage.delete(initData);
+
+    const newSession =
+      (mediaKeys as any /* TS bug */).createSession("persistent-license");
+    $loadedSessions.add(initData, initDataType, newSession);
+
+    return {
+      type: "created-session" as "created-session",
+      value: { session: newSession },
+    };
+  });
 }
 
 /**
