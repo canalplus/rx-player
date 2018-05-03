@@ -16,9 +16,9 @@
 
 import arrayFind = require("array-find");
 import { Observable } from "rxjs/Observable";
-import { IMediaKeySession } from "../../compat";
-import castToObservable from "../../utils/castToObservable";
-import log from "../../utils/log";
+import { IMediaKeySession } from "../../../compat";
+import castToObservable from "../../../utils/castToObservable";
+import log from "../../../utils/log";
 import hashBuffer from "./hash_buffer";
 
 // Cached data for a single MediaKeySession

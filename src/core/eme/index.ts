@@ -38,7 +38,7 @@ import findCompatibleKeySystem from "./find_key_system";
 import generateKeyRequest from "./generate_key_request";
 import handleEncryptedEvent from "./handle_encrypted_event";
 import handleSessionEvents from "./handle_session_events";
-import InitDataStore from "./init_data_store";
+import InitDataStore from "./utils/init_data_store";
 
 /**
  * EME abstraction and event handler used to communicate with the Content-
@@ -93,14 +93,20 @@ function createEME(
       const {
         initData,
         initDataType,
+        sessionStorage,
         mediaKeySession,
         keySystemOptions,
       } = handledEncryptedEvent.value;
 
       return Observable.merge(
         handleSessionEvents(mediaKeySession, keySystemOptions, errorStream),
-        handledEncryptedEvent.type === "created-session" ?
-          generateKeyRequest(mediaKeySession, initData, initDataType) :
+        mediaKeySession.sessionId === "" ?
+          generateKeyRequest(mediaKeySession, initData, initDataType)
+            .do(() => {
+              if (sessionStorage != null) {
+                sessionStorage.add(initData, mediaKeySession);
+              }
+            }) :
           Observable.empty<never>()
       ).ignoreElements() as Observable<never>;
     });

@@ -15,15 +15,15 @@
  */
 
 import arrayFind = require("array-find");
-import { IMediaKeySession } from "../../compat";
+import { IMediaKeySession } from "../../../compat";
 import assert, {
   assertInterface,
-} from "../../utils/assert";
-import log from "../../utils/log";
+} from "../../../utils/assert";
+import log from "../../../utils/log";
 import {
   IPersistedSessionData,
   IPersistedSessionStorage,
-} from "./constants";
+} from "../constants";
 import hashBuffer from "./hash_buffer";
 
 function checkStorage(storage : IPersistedSessionStorage) : void {
@@ -48,8 +48,8 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
  * supported.
  */
 export default class PersistedSessionsStore {
+  private readonly _storage : IPersistedSessionStorage;
   private _entries : IPersistedSessionData[];
-  private _storage : IPersistedSessionStorage;
 
   /*
    * @param {Object} storage
@@ -60,25 +60,13 @@ export default class PersistedSessionsStore {
     checkStorage(storage);
     this._entries = [];
     this._storage = storage;
-    this._loadStorage();
-  }
-
-  /**
-   * Set a new storage System.
-   * storages are user-provided objects which allow to save and load given
-   * informations.
-   * @param {Object} storage
-   * @param {Function} storage.load
-   * @param {Function} storage.save
-   */
-  public setStorage(storage : IPersistedSessionStorage) : void {
-    if (this._storage === storage) {
-      return;
+    try {
+      this._entries = this._storage.load();
+      assert(Array.isArray(this._entries));
+    } catch (e) {
+      log.warn("eme-persitent-store: could not get entries from license storage", e);
+      this.dispose();
     }
-
-    checkStorage(storage);
-    this._storage = storage;
-    this._loadStorage();
   }
 
   /**
@@ -154,19 +142,6 @@ export default class PersistedSessionsStore {
       this._storage.save(this._entries);
     } catch (e) {
       log.warn("eme-persitent-store: could not save licenses in localStorage");
-    }
-  }
-
-  /**
-   * Load in the state every entries in the current storage.
-   */
-  private _loadStorage() : void {
-    try {
-      this._entries = this._storage.load();
-      assert(Array.isArray(this._entries));
-    } catch (e) {
-      log.warn("eme-persitent-store: could not get entries from license storage", e);
-      this.dispose();
     }
   }
 }
