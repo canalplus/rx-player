@@ -85,6 +85,7 @@ function createEME(
             type: evt.type,
             value: {
               mediaKeySession: evt.value.mediaKeySession,
+              sessionType: evt.value.sessionType,
               initData: evt.value.initData,
               initDataType: evt.value.initDataType,
               sessionStorage: mediaKeysInfos.sessionStorage,
@@ -105,6 +106,7 @@ function createEME(
         initDataType,
         sessionStorage,
         mediaKeySession,
+        sessionType,
         keySystemOptions,
       } = handledEncryptedEvent.value;
 
@@ -115,7 +117,7 @@ function createEME(
         handledEncryptedEvent.type === "created-session" ?
           generateKeyRequest(mediaKeySession, initData, initDataType)
             .do(() => {
-              if (sessionStorage != null) {
+              if (sessionType === "persistent-license" && sessionStorage != null) {
                 sessionStorage.add(initData, initDataType, mediaKeySession);
               }
             }) :

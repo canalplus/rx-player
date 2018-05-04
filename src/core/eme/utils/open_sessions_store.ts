@@ -22,10 +22,17 @@ import log from "../../../utils/log";
 import hashBuffer from "./hash_buffer";
 
 // Cached data for a single MediaKeySession
-interface ISessionData {
+interface IOpenSessionsStoreEntry {
   initData : number;
   initDataType: string;
   session : IMediaKeySession|MediaKeySession;
+  sessionType : MediaKeySessionType;
+}
+
+// What is returned by the cache
+export interface IOpenSessionsStoreData {
+  session : IMediaKeySession|MediaKeySession;
+  sessionType : MediaKeySessionType;
 }
 
 /**
@@ -34,18 +41,10 @@ interface ISessionData {
  * @extends SessionSet
  */
 export default class OpenSessionsStore {
-  private _entries : ISessionData[];
+  private _entries : IOpenSessionsStoreEntry[];
 
   constructor() {
     this._entries = [];
-  }
-
-  /**
-   * Returns every MediaKeySession stored here from oldest to newest.
-   * @returns {Array.<MediaKeySession>}
-   */
-  getSessions() : Array<IMediaKeySession|MediaKeySession> {
-    return this._entries.map(e => e.session);
   }
 
   /**
@@ -54,19 +53,23 @@ export default class OpenSessionsStore {
    *
    * @param {Uint8Array} initData
    * @param {string} initDataType
-   * @returns {MediaKeySession|null}
+   * @returns {Object|null}
    */
   get(
     initData : Uint8Array,
     initDataType: string
-  ) : IMediaKeySession|MediaKeySession|null {
+  ) : IOpenSessionsStoreData|null {
     const initDataHash = hashBuffer(initData);
     const foundEntry = arrayFind(this._entries, (entry) => (
       entry.initData === initDataHash &&
       entry.initDataType === initDataType
     ));
 
-    return foundEntry ? foundEntry.session : null;
+    if (foundEntry) {
+      const { session, sessionType } = foundEntry;
+      return { session, sessionType };
+    }
+    return null;
   }
 
   /**
@@ -75,11 +78,13 @@ export default class OpenSessionsStore {
    * @param {Uint8Array} initData
    * @param {string} initDataType
    * @param {MediaKeySession} session
+   * @param {string} sessionType
    */
   add(
     initData : Uint8Array,
     initDataType : string,
-    session : IMediaKeySession|MediaKeySession
+    session : IMediaKeySession|MediaKeySession,
+    sessionType : MediaKeySessionType
   ) : void {
     if (this.get(initData, initDataType)) {
       throw new Error("This initialization data was already stored.");
@@ -87,6 +92,7 @@ export default class OpenSessionsStore {
 
     const entry = {
       session,
+      sessionType,
       initData: hashBuffer(initData),
       initDataType,
     };
