@@ -100,8 +100,6 @@ export default function createSession(
     sessionTypes && arrayIncludes(sessionTypes, "persistent-license")
   );
 
-  // XXX TODO Should we create a "persistent-license" session if we have no
-  // sessionStorage as we have no means to load the session in that case?
   const sessionType : MediaKeySessionType =
     hasPersistence &&
     sessionStorage &&
