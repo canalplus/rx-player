@@ -29,14 +29,14 @@ import isSessionUsable from "./utils/is_session_usable";
 export interface ICreatedSessionEvent {
   type : "created-session";
   value : {
-    session : MediaKeySession|IMediaKeySession;
+    mediaKeySession : MediaKeySession|IMediaKeySession;
   };
 }
 
 export interface IPersistentSessionRecoveryEvent {
   type : "loaded-persistent-session";
   value : {
-    session : MediaKeySession|IMediaKeySession;
+    mediaKeySession : MediaKeySession|IMediaKeySession;
   };
 }
 
@@ -106,7 +106,7 @@ function createSession(
   if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) {
     return Observable.of({
       type: "created-session" as "created-session",
-      value: { session },
+      value: { mediaKeySession: session },
     });
   }
 
@@ -114,7 +114,7 @@ function createSession(
   if (!storedEntry) {
     return Observable.of({
       type: "created-session" as "created-session",
-      value: { session },
+      value: { mediaKeySession: session },
     });
   }
 
@@ -132,7 +132,7 @@ function createSession(
         sessionStorage.delete(initData);
         return {
           type: "created-session" as "created-session",
-          value: { session },
+          value: { mediaKeySession: session },
         };
       }
 
@@ -140,7 +140,7 @@ function createSession(
         sessionStorage.add(initData, session);
         return {
           type: "loaded-persistent-session" as "loaded-persistent-session",
-          value: { session },
+          value: { mediaKeySession: session },
         };
       }
 
@@ -154,7 +154,7 @@ function createSession(
 
       return {
         type: "created-session" as "created-session",
-        value: { session: newSession },
+        value: { mediaKeySession: newSession },
       };
     });
 }
