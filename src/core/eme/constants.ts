@@ -31,20 +31,9 @@ export interface IKeySystemAccessInfos {
 // Infos identyfing a single MediaKey
 export interface IMediaKeysInfos {
   keySystemAccess: IMediaKeySystemAccess;
-  keySystemOptions: IKeySystemOption;
+  keySystemOptions: IKeySystemOption; // options set by the user
   mediaKeys : MediaKeys|IMockMediaKeys;
   sessionStorage : PersistedSessionsStore|null;
-}
-
-// Infos identyfing a single MediaKeySession
-export interface IMediaKeySessionInfos {
-  keySystemAccess: IMediaKeySystemAccess;
-  keySystemOptions: IKeySystemOption;
-  mediaKeys : MediaKeys|IMockMediaKeys;
-  sessionStorage : PersistedSessionsStore|null;
-  mediaKeySession : MediaKeySession|IMediaKeySession;
-  initData : Uint8Array;
-  initDataType : string;
 }
 
 // Data stored in a persistent MediaKeySession storage
