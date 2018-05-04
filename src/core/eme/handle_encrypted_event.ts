@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import { IMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
+import log from "../../utils/log";
 import {
   $loadedSessions,
   IMediaKeysInfos,
@@ -62,6 +63,7 @@ export default function handleEncryptedEvent(
 
     const initDataBytes = new Uint8Array(initData);
     if (handledInitData.has(initDataBytes, initDataType)) {
+      log.debug("init data already received. Skipping it.");
       return Observable.empty(); // Already handled, quit
     }
     handledInitData.add(initDataBytes, initDataType);
@@ -69,6 +71,7 @@ export default function handleEncryptedEvent(
     const loadedSession = $loadedSessions.get(initDataBytes, initDataType);
     if (loadedSession != null) {
       if (isSessionUsable(loadedSession)) {
+        log.debug("eme: reuse loaded session", loadedSession.sessionId);
         return Observable.of({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
