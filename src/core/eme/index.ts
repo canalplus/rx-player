@@ -117,7 +117,7 @@ function createEME(
             .do(() => {
               if (sessionStorage != null) {
                 // XXX TODO Also add initDataType
-                sessionStorage.add(initData, mediaKeySession);
+                sessionStorage.add(initData, initDataType, mediaKeySession);
               }
             }) :
           Observable.empty<never>()

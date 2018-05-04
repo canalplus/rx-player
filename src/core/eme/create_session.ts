@@ -110,7 +110,7 @@ function createSession(
     });
   }
 
-  const storedEntry = sessionStorage.get(initData);
+  const storedEntry = sessionStorage.get(initData, initDataType);
   if (!storedEntry) {
     return Observable.of({
       type: "created-session" as "created-session",
@@ -123,13 +123,13 @@ function createSession(
       // XXX TODO Either returns the session or create a new one if not possible?
       // Throwing here seems a little hardcore
       $loadedSessions.closeSession(session);
-      sessionStorage.delete(initData);
+      sessionStorage.delete(initData, initDataType);
       throw error;
     })
     .map((hasLoadedSession) => {
       if (!hasLoadedSession) {
         log.warn("eme: no data stored for the loaded session");
-        sessionStorage.delete(initData);
+        sessionStorage.delete(initData, initDataType);
         return {
           type: "created-session" as "created-session",
           value: { mediaKeySession: session },
@@ -137,7 +137,7 @@ function createSession(
       }
 
       if (hasLoadedSession && isSessionUsable(session)) {
-        sessionStorage.add(initData, session);
+        sessionStorage.add(initData, initDataType, session);
         return {
           type: "loaded-persistent-session" as "loaded-persistent-session",
           value: { mediaKeySession: session },
@@ -146,7 +146,7 @@ function createSession(
 
       // Unusable persistent session: recreate a new session from scratch.
       $loadedSessions.closeSession(session);
-      sessionStorage.delete(initData);
+      sessionStorage.delete(initData, initDataType);
 
       const newSession =
         (mediaKeys as any /* TS bug */).createSession("persistent-license");

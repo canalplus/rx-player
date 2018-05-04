@@ -51,10 +51,8 @@ export default class PersistedSessionsStore {
   private readonly _storage : IPersistedSessionStorage;
   private _entries : IPersistedSessionData[];
 
-  /*
+  /**
    * @param {Object} storage
-   * @param {Function} storage.load
-   * @param {Function} storage.save
    */
   constructor(storage : IPersistedSessionStorage) {
     checkStorage(storage);
@@ -71,22 +69,31 @@ export default class PersistedSessionsStore {
 
   /**
    * Retrieve entry (sessionId + initData) based on its initData.
-   * @param {Array|TypedArray|Number}  initData
+   * @param {Uint8Array}  initData
+   * @param {string} initDataType
    * @returns {Object|null}
    */
-  public get(initData : Uint8Array|number[]) : IPersistedSessionData|null {
+  public get(
+    initData : Uint8Array,
+    initDataType : string
+  ) : IPersistedSessionData|null {
     const hash = hashBuffer(initData);
-    const entry = arrayFind(this._entries, (e) => e.initData === hash);
+    const entry = arrayFind(this._entries, (e) =>
+      e.initData === hash &&
+      e.initDataType === initDataType
+    );
     return entry || null;
   }
 
   /**
    * Add a new entry in the storage.
-   * @param {Array|TypedArray|Number}  initData
+   * @param {Uint8Array}  initData
+   * @param {string} initDataType
    * @param {MediaKeySession} session
    */
   public add(
     initData : Uint8Array,
+    initDataType : string,
     session : IMediaKeySession|MediaKeySession
   ) : void {
     const sessionId = session && session.sessionId;
@@ -94,29 +101,34 @@ export default class PersistedSessionsStore {
       return;
     }
 
-    const currentEntry = this.get(initData);
+    const currentEntry = this.get(initData, initDataType);
     if (currentEntry && currentEntry.sessionId === sessionId) {
       return;
     } else if (currentEntry) { // currentEntry has a different sessionId
-      this.delete(initData);
+      this.delete(initData, initDataType);
     }
 
     log.info("eme-persitent-store: add new session", sessionId, session);
     this._entries.push({
       sessionId,
       initData: hashBuffer(initData),
+      initDataType,
     });
     this._save();
   }
 
   /**
    * Delete entry (sessionId + initData) based on its initData.
-   * @param {Array|TypedArray|Number}  initData
+   * @param {Uint8Array}  initData
+   * @param {string} initDataType
    */
-  delete(initData : Uint8Array) : void {
+  delete(initData : Uint8Array, initDataType : string) : void {
     const hash = hashBuffer(initData);
 
-    const entry = arrayFind(this._entries, (e) => e.initData === hash);
+    const entry = arrayFind(this._entries, (e) =>
+      e.initData === hash &&
+      e.initDataType === initDataType
+    );
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
 
