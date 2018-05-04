@@ -80,7 +80,7 @@ export default function handleEncryptedEvent(
       } else { // this session is not usable anymore. Close it and open a new one.
         $loadedSessions.closeSession(loadedSession);
         if (mediaKeysInfos.sessionStorage) {
-          mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData));
+          mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
         }
       }
     }

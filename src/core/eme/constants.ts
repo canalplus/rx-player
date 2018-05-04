@@ -40,6 +40,7 @@ export interface IMediaKeysInfos {
 export interface IPersistedSessionData {
   sessionId : string;
   initData : number;
+  initDataType : string;
 }
 
 // MediaKeySession storage interface
