@@ -29,6 +29,10 @@ import log from "../../../utils/log";
 export default function isSessionUsable(
   loadedSession : MediaKeySession|IMediaKeySession
 ) : boolean {
+  if (loadedSession.sessionId === "") {
+    return false;
+  }
+
   const keyStatusesMap = loadedSession.keyStatuses;
   const keyStatuses: string[] = [];
   keyStatusesMap.forEach((keyStatus: string) => {
