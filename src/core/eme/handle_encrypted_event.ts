@@ -89,7 +89,7 @@ export default function handleEncryptedEvent(
       .map((evt) => ({
         type: evt.type,
         value: {
-          mediaKeySession: evt.value.session,
+          mediaKeySession: evt.value.mediaKeySession,
           initData: initDataBytes,
           initDataType,
         },
