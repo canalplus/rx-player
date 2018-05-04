@@ -15,10 +15,10 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { IMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import {
   $loadedSessions,
-  IMediaKeySessionInfos,
   IMediaKeysInfos,
 } from "./constants";
 import createSession from "./create_session";
@@ -29,7 +29,11 @@ export interface IHandledEncryptedEvent {
   type : "created-session" |
     "loaded-open-session" |
     "loaded-persistent-session";
-  value : IMediaKeySessionInfos;
+  value : {
+    mediaKeySession : MediaKeySession|IMediaKeySession;
+    initData : Uint8Array; // assiociated initialization data
+    initDataType : string; // type of the associated initialization data
+  };
 }
 
 /**
@@ -68,10 +72,6 @@ export default function handleEncryptedEvent(
         return Observable.of({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
-            keySystemAccess: mediaKeysInfos.keySystemAccess,
-            keySystemOptions: mediaKeysInfos.keySystemOptions,
-            mediaKeys: mediaKeysInfos.mediaKeys,
-            sessionStorage: mediaKeysInfos.sessionStorage,
             mediaKeySession: loadedSession,
             initData: initDataBytes,
             initDataType,
@@ -89,10 +89,6 @@ export default function handleEncryptedEvent(
       .map((evt) => ({
         type: evt.type,
         value: {
-          keySystemAccess: mediaKeysInfos.keySystemAccess,
-          keySystemOptions: mediaKeysInfos.keySystemOptions,
-          mediaKeys: mediaKeysInfos.mediaKeys,
-          sessionStorage: mediaKeysInfos.sessionStorage,
           mediaKeySession: evt.value.session,
           initData: initDataBytes,
           initDataType,

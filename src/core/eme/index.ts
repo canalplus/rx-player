@@ -80,7 +80,19 @@ function createEME(
     .mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
       return Observable.merge(
         // create a new MediaKeySession if needed
-        handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos),
+        handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos)
+          .map((evt) => {
+            return {
+              type: evt.type,
+              value: {
+                mediaKeySession: evt.value.mediaKeySession,
+                initData: evt.value.initData,
+                initDataType: evt.value.initDataType,
+                sessionStorage: mediaKeysInfos.sessionStorage,
+                keySystemOptions: mediaKeysInfos.keySystemOptions,
+              },
+            };
+          }),
 
         // attach MediaKeys to the media element if we're talking about the first event
         i === 0 ?
