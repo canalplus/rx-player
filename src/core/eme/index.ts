@@ -81,18 +81,16 @@ function createEME(
       return Observable.merge(
         // create a new MediaKeySession if needed
         handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos)
-          .map((evt) => {
-            return {
-              type: evt.type,
-              value: {
-                mediaKeySession: evt.value.mediaKeySession,
-                initData: evt.value.initData,
-                initDataType: evt.value.initDataType,
-                sessionStorage: mediaKeysInfos.sessionStorage,
-                keySystemOptions: mediaKeysInfos.keySystemOptions,
-              },
-            };
-          }),
+          .map((evt) => ({
+            type: evt.type,
+            value: {
+              mediaKeySession: evt.value.mediaKeySession,
+              initData: evt.value.initData,
+              initDataType: evt.value.initDataType,
+              sessionStorage: mediaKeysInfos.sessionStorage,
+              keySystemOptions: mediaKeysInfos.keySystemOptions,
+            },
+          })),
 
         // attach MediaKeys to the media element if we're talking about the first event
         i === 0 ?
@@ -112,11 +110,12 @@ function createEME(
 
       return Observable.merge(
         handleSessionEvents(mediaKeySession, keySystemOptions, errorStream),
-        mediaKeySession.sessionId === "" ?
+
+        // only perform generate request on new sessions
+        handledEncryptedEvent.type === "created-session" ?
           generateKeyRequest(mediaKeySession, initData, initDataType)
             .do(() => {
               if (sessionStorage != null) {
-                // XXX TODO Also add initDataType
                 sessionStorage.add(initData, initDataType, mediaKeySession);
               }
             }) :
