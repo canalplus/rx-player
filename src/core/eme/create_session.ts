@@ -56,8 +56,10 @@ function loadPersistentSession(
   sessionId: string,
   session: MediaKeySession|IMediaKeySession
 ) : Observable<boolean> {
-  log.debug("eme: load persisted session", sessionId);
-  return castToObservable(session.load(sessionId));
+  return Observable.defer(() => {
+    log.debug("eme: load persisted session", sessionId);
+    return castToObservable(session.load(sessionId));
+  });
 }
 
 /**
