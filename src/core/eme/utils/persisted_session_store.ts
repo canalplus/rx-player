@@ -46,6 +46,7 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
  *
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
+ * @class PersistedSessionsStore
  */
 export default class PersistedSessionsStore {
   private readonly _storage : IPersistedSessionStorage;
