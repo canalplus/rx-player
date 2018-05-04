@@ -163,7 +163,7 @@ function createSession(
  * Create a new Session on the given MediaKeys, corresponding to the given
  * initializationData.
  * If session creating fails, remove the oldest MediaKeySession loaded and
- * retry.
+ * retry. It it fails again, throw.
  *
  * /!\ This only creates new sessions.
  * It will fail if $loadedSessions already has a MediaKeySession with
@@ -180,10 +180,15 @@ export default function createSessionWithRetry(
 ) : Observable<IGetSessionEvent> {
   return createSession(initData, initDataType, mediaKeysInfos)
     .catch((error) => {
+      // XXX TODO Move that code to where generateKeyRequest is called.
       if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
         throw error;
       }
 
+      const session = $loadedSessions.get(initData, initDataType);
+      if (session) {
+        $loadedSessions.closeSession(session);
+      }
       const loadedSessions = $loadedSessions.getSessions();
       if (!loadedSessions.length) {
         throw error;
