@@ -50,8 +50,8 @@ export default function createMediaKeysWithKeySystemAccessInfos(
 
       return castToObservable(keySystemAccess.createMediaKeys())
         .mergeMap(function prepareMediaKeysConfiguration(mediaKeys) {
-
           let sessionStorage : PersistedSessionsStore|null;
+
           if (keySystemOptions.persistentLicense) {
             const { licenseStorage } = keySystemOptions;
             if (licenseStorage) {
