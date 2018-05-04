@@ -16,8 +16,8 @@
 
 import { Observable } from "rxjs/Observable";
 import { IMediaKeySession } from "../../compat";
-import { ErrorCodes } from "../../errors";
 import arrayIncludes from "../../utils/array-includes";
+import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import {
@@ -30,6 +30,7 @@ export interface ICreatedSessionEvent {
   type : "created-session";
   value : {
     mediaKeySession : MediaKeySession|IMediaKeySession;
+    sessionType : MediaKeySessionType;
   };
 }
 
@@ -37,6 +38,7 @@ export interface IPersistentSessionRecoveryEvent {
   type : "loaded-persistent-session";
   value : {
     mediaKeySession : MediaKeySession|IMediaKeySession;
+    sessionType : MediaKeySessionType;
   };
 }
 
@@ -76,7 +78,7 @@ function loadPersistentSession(
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
-function createSession(
+export default function createSession(
   initData: Uint8Array,
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
@@ -100,26 +102,36 @@ function createSession(
 
   // XXX TODO Should we create a "persistent-license" session if we have no
   // sessionStorage as we have no means to load the session in that case?
-  const sessionType = hasPersistence && keySystemOptions.persistentLicense ?
+  const sessionType : MediaKeySessionType =
+    hasPersistence &&
+    sessionStorage &&
+    keySystemOptions.persistentLicense ?
     "persistent-license" : "temporary";
 
   log.debug(`eme: create a new ${sessionType} session`);
 
   const session = (mediaKeys as any /* TS bug */).createSession(sessionType);
-  $loadedSessions.add(initData, initDataType, session);
+  $loadedSessions.add(initData, initDataType, session, sessionType);
 
+  // Re-check for Dumb typescript
   if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) {
+    if (__DEV__) {
+      assert(sessionType === "temporary");
+    }
     return Observable.of({
       type: "created-session" as "created-session",
-      value: { mediaKeySession: session },
+      value: { mediaKeySession: session, sessionType },
     });
+  }
+  if (__DEV__) {
+    assert(sessionType === "persistent-license");
   }
 
   const storedEntry = sessionStorage.get(initData, initDataType);
   if (!storedEntry) {
     return Observable.of({
       type: "created-session" as "created-session",
-      value: { mediaKeySession: session },
+      value: { mediaKeySession: session, sessionType },
     });
   }
 
@@ -130,7 +142,7 @@ function createSession(
         sessionStorage.delete(initData, initDataType);
         return {
           type: "created-session" as "created-session",
-          value: { mediaKeySession: session },
+          value: { mediaKeySession: session, sessionType },
         };
       }
 
@@ -138,7 +150,7 @@ function createSession(
         sessionStorage.add(initData, initDataType, session);
         return {
           type: "loaded-persistent-session" as "loaded-persistent-session",
-          value: { mediaKeySession: session },
+          value: { mediaKeySession: session, sessionType },
         };
       }
 
@@ -148,11 +160,11 @@ function createSession(
 
       const newSession =
         (mediaKeys as any /* TS bug */).createSession("persistent-license");
-      $loadedSessions.add(initData, initDataType, newSession);
+      $loadedSessions.add(initData, initDataType, newSession, sessionType);
 
       return {
         type: "created-session" as "created-session",
-        value: { mediaKeySession: newSession },
+        value: { mediaKeySession: newSession, sessionType },
       };
     })
     .catch(() => {
@@ -162,56 +174,11 @@ function createSession(
 
       const newSession =
         (mediaKeys as any /* TS bug */).createSession("persistent-license");
-      $loadedSessions.add(initData, initDataType, newSession);
+      $loadedSessions.add(initData, initDataType, newSession, sessionType);
 
       return Observable.of({
         type: "created-session" as "created-session",
-        value: { mediaKeySession: newSession },
+        value: { mediaKeySession: newSession, sessionType },
       });
-    });
-}
-
-/**
- * Create a new Session on the given MediaKeys, corresponding to the given
- * initializationData.
- * If session creating fails, remove the oldest MediaKeySession loaded and
- * retry. It it fails again, throw.
- *
- * /!\ This only creates new sessions.
- * It will fail if $loadedSessions already has a MediaKeySession with
- * the given initializationData.
- * @param {Uint8Array} initData
- * @param {string} initDataType
- * @param {Object} mediaKeysInfos
- * @returns {Observable}
- */
-export default function createSessionWithRetry(
-  initData: Uint8Array,
-  initDataType: string,
-  mediaKeysInfos: IMediaKeysInfos
-) : Observable<IGetSessionEvent> {
-  return createSession(initData, initDataType, mediaKeysInfos)
-    .catch((error) => {
-      // XXX TODO Move that code to where generateKeyRequest is called.
-      if (error.code !== ErrorCodes.KEY_GENERATE_REQUEST_ERROR) {
-        throw error;
-      }
-
-      const session = $loadedSessions.get(initData, initDataType);
-      if (session) {
-        $loadedSessions.closeSession(session);
-      }
-      const loadedSessions = $loadedSessions.getSessions();
-      if (!loadedSessions.length) {
-        throw error;
-      }
-
-      log.warn("eme: could not create a new session, " +
-        "retry after closing a currently loaded session", error);
-
-      return $loadedSessions.closeSession(loadedSessions[0])
-        .mergeMap(() => {
-          return createSession(initData, initDataType, mediaKeysInfos);
-        });
     });
 }

@@ -32,6 +32,7 @@ export interface IHandledEncryptedEvent {
     "loaded-persistent-session";
   value : {
     mediaKeySession : MediaKeySession|IMediaKeySession;
+    sessionType : MediaKeySessionType;
     initData : Uint8Array; // assiociated initialization data
     initDataType : string; // type of the associated initialization data
   };
@@ -68,14 +69,16 @@ export default function handleEncryptedEvent(
     }
     handledInitData.add(initDataBytes, initDataType);
 
-    const loadedSession = $loadedSessions.get(initDataBytes, initDataType);
-    if (loadedSession != null) {
+    const entry = $loadedSessions.get(initDataBytes, initDataType);
+    if (entry != null) {
+      const { session: loadedSession } = entry;
       if (isSessionUsable(loadedSession)) {
         log.debug("eme: reuse loaded session", loadedSession.sessionId);
         return Observable.of({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
             mediaKeySession: loadedSession,
+            sessionType: entry.sessionType,
             initData: initDataBytes,
             initDataType,
           },
@@ -93,6 +96,7 @@ export default function handleEncryptedEvent(
         type: evt.type,
         value: {
           mediaKeySession: evt.value.mediaKeySession,
+          sessionType: evt.value.sessionType,
           initData: initDataBytes,
           initDataType,
         },
