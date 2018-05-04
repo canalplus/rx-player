@@ -74,15 +74,6 @@ export interface ICurrentMediaKeysInfos {
   $videoElement: HTMLMediaElement|null;
 }
 
-// Persisted singleton instance of MediaKeys. We do not allow multiple
-// CDM instances.
-const currentMediaKeysInfos : ICurrentMediaKeysInfos = {
-  $mediaKeys: null,  // MediaKeys instance
-  $mediaKeySystemConfiguration: null, // active MediaKeySystemConfiguration
-  $keySystemOptions: null,
-  $videoElement: null,
-};
-
 // Keys are the different key statuses possible.
 // Values are ``true`` if such key status defines an error
 /* tslint:disable no-object-literal-type-assertion */
@@ -95,6 +86,15 @@ export const KEY_STATUS_ERRORS = {
    // "status-pending",
 } as IDictionary<boolean>;
 /* tslint:enable no-object-literal-type-assertion */
+
+// Persisted singleton instance of MediaKeys. We do not allow multiple
+// CDM instances.
+const currentMediaKeysInfos : ICurrentMediaKeysInfos = {
+  $mediaKeys: null,  // MediaKeys instance
+  $mediaKeySystemConfiguration: null, // active MediaKeySystemConfiguration
+  $keySystemOptions: null,
+  $videoElement: null,
+};
 
 const $loadedSessions = new OpenSessionsStore();
 
