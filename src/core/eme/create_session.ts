@@ -97,6 +97,9 @@ function createSession(
   const hasPersistence = (
     sessionTypes && arrayIncludes(sessionTypes, "persistent-license")
   );
+
+  // XXX TODO Should we create a "persistent-license" session if we have no
+  // sessionStorage as we have no means to load the session in that case?
   const sessionType = hasPersistence && keySystemOptions.persistentLicense ?
     "persistent-license" : "temporary";
 
@@ -121,13 +124,6 @@ function createSession(
   }
 
   return loadPersistentSession(storedEntry.sessionId, session)
-    .catch((error) : never => {
-      // XXX TODO Either returns the session or create a new one if not possible?
-      // Throwing here seems a little hardcore
-      $loadedSessions.closeSession(session);
-      sessionStorage.delete(initData, initDataType);
-      throw error;
-    })
     .map((hasLoadedSession) => {
       if (!hasLoadedSession) {
         log.warn("eme: no data stored for the loaded session");
@@ -158,6 +154,20 @@ function createSession(
         type: "created-session" as "created-session",
         value: { mediaKeySession: newSession },
       };
+    })
+    .catch(() => {
+      // Failure to load persistent session: recreate a new session from scratch.
+      $loadedSessions.closeSession(session);
+      sessionStorage.delete(initData, initDataType);
+
+      const newSession =
+        (mediaKeys as any /* TS bug */).createSession("persistent-license");
+      $loadedSessions.add(initData, initDataType, newSession);
+
+      return Observable.of({
+        type: "created-session" as "created-session",
+        value: { mediaKeySession: newSession },
+      });
     });
 }
 
