@@ -37,8 +37,6 @@ export default function disposeMediaKeys(
     } = currentState;
     mediaKeysInfos.clearState();
     return sessionsStore.closeAllSessions()
-      .mergeMapTo(setMediaKeys(mediaElement, null))
-      .ignoreElements()
-      .concat(Observable.of(null));
+      .mergeMapTo(setMediaKeys(mediaElement, null));
   });
 }
