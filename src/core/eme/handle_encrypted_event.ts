@@ -94,8 +94,8 @@ export default function handleEncryptedEvent(
       }
     }
 
-    const entries = sessionsStore.getAllSessions().slice();
-    if (MAX_SESSIONS > 0 && MAX_SESSIONS >= entries.length) {
+    const entries = sessionsStore.getAll().slice();
+    if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
       for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {
         sessionsStore.closeSession(entries[i].session);
       }

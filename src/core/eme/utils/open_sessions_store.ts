@@ -26,7 +26,7 @@ import log from "../../../utils/log";
 import hashBuffer from "./hash_buffer";
 
 // Cached data for a single MediaKeySession
-interface ICachedMediaKeysSessionEntry {
+interface IStoreSessionEntry {
   initData : number;
   initDataType: string;
   session : IMediaKeySession|MediaKeySession;
@@ -34,21 +34,22 @@ interface ICachedMediaKeysSessionEntry {
 }
 
 // What is returned by the cache
-export interface ICachedMediaKeysSessionData {
+export interface IStoreSessionData {
   session : IMediaKeySession|MediaKeySession;
   sessionType : MediaKeySessionType;
 }
 
 /**
- * Create and store MediaKeySessions linked to a single MediaKeys.
+ * Create and store MediaKeySessions linked to a single MediaKeys
+ * instance.
  *
- * Keep track of the each sessionType and of initialization data each
+ * Keep track of sessionTypes and of the initialization data each
  * MediaKeySession is created for.
  * @class MediaKeySessionsStore
  */
 export default class MediaKeySessionsStore {
   private readonly _mediaKeys : MediaKeys|IMockMediaKeys;
-  private _entries : ICachedMediaKeysSessionEntry[];
+  private _entries : IStoreSessionEntry[];
 
   constructor(mediaKeys : MediaKeys|IMockMediaKeys) {
     this._mediaKeys = mediaKeys;
@@ -58,7 +59,7 @@ export default class MediaKeySessionsStore {
   /**
    * @returns {Array.<Object>}
    */
-  public getAllSessions() : ICachedMediaKeysSessionData[] {
+  public getAll() : IStoreSessionData[] {
     return this._entries.map(entry => ({
       session: entry.session,
       sessionType: entry.sessionType,
@@ -76,7 +77,7 @@ export default class MediaKeySessionsStore {
   public get(
     initData : Uint8Array,
     initDataType: string
-  ) : ICachedMediaKeysSessionData|null {
+  ) : IStoreSessionData|null {
     const initDataHash = hashBuffer(initData);
     const foundEntry = arrayFind(this._entries, (entry) => (
       entry.initData === initDataHash &&
