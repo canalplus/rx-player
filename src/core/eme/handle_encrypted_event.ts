@@ -94,22 +94,29 @@ export default function handleEncryptedEvent(
       }
     }
 
+    const cleaningOldSessions$ : Array<Observable<null>> = [];
     const entries = sessionsStore.getAll().slice();
     if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
       for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {
-        sessionsStore.closeSession(entries[i].session).subscribe();
+        cleaningOldSessions$.push(sessionsStore.closeSession(entries[i].session));
       }
     }
 
-    return createSession(initDataBytes, initDataType, mediaKeysInfos)
-      .map((evt) => ({
-        type: evt.type,
-        value: {
-          mediaKeySession: evt.value.mediaKeySession,
-          sessionType: evt.value.sessionType,
-          initData: initDataBytes,
-          initDataType,
-        },
-      }));
+    return (
+      Observable.merge(...cleaningOldSessions$)
+        .ignoreElements() as Observable<never>
+    )
+      .concat(
+        createSession(initDataBytes, initDataType, mediaKeysInfos)
+          .map((evt) => ({
+            type: evt.type,
+            value: {
+              mediaKeySession: evt.value.mediaKeySession,
+              sessionType: evt.value.sessionType,
+              initData: initDataBytes,
+              initDataType,
+            },
+          }))
+    );
   });
 }

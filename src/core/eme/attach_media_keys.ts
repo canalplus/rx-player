@@ -54,21 +54,22 @@ export default function attachMediaKeys(
       sessionsStore,
     });
 
-    if (previousState && previousState.sessionsStore !== sessionsStore) {
-      previousState.sessionsStore.closeAllSessions().subscribe();
-    }
+    return (
+      previousState && previousState.sessionsStore !== sessionsStore ?
+      previousState.sessionsStore.closeAllSessions() : Observable.of(null)
+    ).mergeMap(() => {
+      if (mediaElement.mediaKeys === mediaKeys) {
+        return Observable.of(null);
+      }
 
-    if (mediaElement.mediaKeys === mediaKeys) {
-      return Observable.of(null);
-    }
+      if (previousState && previousState.mediaElement !== mediaElement) {
+        log.debug("eme: unlink old media element and set mediakeys");
+        return setMediaKeys(previousState.mediaElement, null)
+          .concat(setMediaKeys(mediaElement, mediaKeys));
+      }
 
-    if (previousState && previousState.mediaElement !== mediaElement) {
-      log.debug("eme: unlink old media element and set mediakeys");
-      return setMediaKeys(previousState.mediaElement, null)
-        .concat(setMediaKeys(mediaElement, mediaKeys));
-    }
-
-    log.debug("eme: set mediakeys");
-    return setMediaKeys(mediaElement, mediaKeys);
+      log.debug("eme: set mediakeys");
+      return setMediaKeys(mediaElement, mediaKeys);
+    });
   });
 }
