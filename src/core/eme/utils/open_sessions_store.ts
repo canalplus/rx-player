@@ -137,18 +137,20 @@ export default class MediaKeySessionsStore {
   public closeSession(
     session_ : IMediaKeySession|MediaKeySession
   ) : Observable<null> {
-    const session = this._delete(session_);
-    if (session == null) {
-      return Observable.of(null);
-    }
+    return Observable.defer(() => {
+      const session = this._delete(session_);
+      if (session == null) {
+        return Observable.of(null);
+      }
 
-    log.debug("eme-mem-store: close session", session);
+      log.debug("eme-mem-store: close session", session);
 
-    // TODO This call will be active as soon as this line is read.
-    // We should probably defer the call on subscription
-    return castToObservable(session.close())
-      .mapTo(null)
-      .catch(() => Observable.of(null));
+      return castToObservable(session.close())
+        .mapTo(null)
+        .catch(() => {
+          return Observable.of(null);
+        });
+    });
   }
 
   /**
@@ -157,11 +159,13 @@ export default class MediaKeySessionsStore {
    * @returns {Observable}
    */
   public closeAllSessions() : Observable<null> {
-    const disposed = this._entries.map((e) => this.closeSession(e.session));
-    this._entries = [];
-    return Observable.merge(...disposed)
-      .ignoreElements()
-      .concat(Observable.of(null));
+    return Observable.defer(() => {
+      const disposed = this._entries.map((e) => this.closeSession(e.session));
+      this._entries = [];
+      return Observable.merge(...disposed)
+        .ignoreElements()
+        .concat(Observable.of(null));
+    });
   }
 
   /**
