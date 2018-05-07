@@ -16,6 +16,7 @@
 
 import { Observable } from "rxjs/Observable";
 import { IMediaKeySession } from "../../compat";
+import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../utils/log";
 import createSession from "./create_session";
@@ -34,6 +35,10 @@ export interface IHandledEncryptedEvent {
     initDataType : string; // type of the associated initialization data
   };
 }
+
+const {
+  EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: MAX_SESSIONS,
+} = config;
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:
@@ -86,6 +91,13 @@ export default function handleEncryptedEvent(
         if (mediaKeysInfos.sessionStorage) {
           mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
         }
+      }
+    }
+
+    const entries = sessionsStore.getAllSessions().slice();
+    if (MAX_SESSIONS > 0 && MAX_SESSIONS >= entries.length) {
+      for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {
+        sessionsStore.closeSession(entries[i].session);
       }
     }
 
