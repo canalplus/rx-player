@@ -36,10 +36,10 @@ export default function disposeMediaKeys(
       sessionsStore,
     } = currentState;
     mediaKeysInfos.clearState();
-    return Observable.merge(
-      sessionsStore.closeAllSessions(),
-      setMediaKeys(mediaElement, null)
-    )
+    return setMediaKeys(mediaElement, null)
+      .mergeMap(() => {
+        return sessionsStore.closeAllSessions();
+      })
       .ignoreElements()
       .concat(Observable.of(null));
   });
