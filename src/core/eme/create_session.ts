@@ -39,7 +39,7 @@ export interface IPersistentSessionRecoveryEvent {
   };
 }
 
-export type IGetSessionEvent =
+export type ICreateSessionEvent =
   ICreatedSessionEvent |
   IPersistentSessionRecoveryEvent;
 
@@ -79,7 +79,7 @@ export default function createSession(
   initData: Uint8Array,
   initDataType: string,
   mediaKeysInfos: IMediaKeysInfos
-) : Observable<IGetSessionEvent> {
+) : Observable<ICreateSessionEvent> {
   const {
     keySystemOptions,
     mediaKeySystemAccess,
