@@ -16,15 +16,31 @@
 
 import { Observable } from "rxjs/Observable";
 import { setMediaKeys } from "../../compat";
+import MediaKeysInfosStore from "./media_keys_infos_store";
 
 /**
- * Remove the MediaKeys from the given HTMLMediaElement.
- * @param {HMTLMediaElement} mediaElement
+ * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
 export default function disposeMediaKeys(
-  mediaElement : HTMLMediaElement|null
+  mediaKeysInfos : MediaKeysInfosStore
 ) : Observable<null> {
-  return mediaElement ?
-    setMediaKeys(mediaElement, null) : Observable.empty();
+  return Observable.defer(() => {
+    const currentState = mediaKeysInfos.getState();
+    if (!currentState) {
+      return Observable.of(null);
+    }
+
+    const {
+      mediaElement,
+      sessionsStore,
+    } = currentState;
+    mediaKeysInfos.clearState();
+    return Observable.merge(
+      sessionsStore.closeAllSessions(),
+      setMediaKeys(mediaElement, null)
+    )
+      .ignoreElements()
+      .concat(Observable.of(null));
+  });
 }

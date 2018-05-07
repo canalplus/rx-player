@@ -19,7 +19,7 @@ import {
   IMediaKeySystemAccess,
   IMockMediaKeys,
 } from "../../compat";
-import OpenSessionsStore from "./utils/open_sessions_store";
+import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
 // Infos indentifying a MediaKeySystemAccess
@@ -30,9 +30,10 @@ export interface IKeySystemAccessInfos {
 
 // Infos identyfing a single MediaKey
 export interface IMediaKeysInfos {
-  keySystemAccess: IMediaKeySystemAccess;
+  mediaKeySystemAccess: IMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption; // options set by the user
   mediaKeys : MediaKeys|IMockMediaKeys;
+  sessionsStore : SessionsStore;
   sessionStorage : PersistedSessionsStore|null;
 }
 
@@ -66,14 +67,6 @@ export interface IKeySystemOption {
   audioRobustnesses?: Array<string|undefined>;
 }
 
-// Infos about the current state of the videoElement
-export interface ICurrentMediaKeysInfos {
-  $keySystemOptions: IKeySystemOption|null;
-  $mediaKeys: IMockMediaKeys|MediaKeys|null;
-  $mediaKeySystemConfiguration: MediaKeySystemConfiguration|null;
-  $videoElement: HTMLMediaElement|null;
-}
-
 // Keys are the different key statuses possible.
 // Values are ``true`` if such key status defines an error
 /* tslint:disable no-object-literal-type-assertion */
@@ -86,24 +79,3 @@ export const KEY_STATUS_ERRORS = {
    // "status-pending",
 } as IDictionary<boolean>;
 /* tslint:enable no-object-literal-type-assertion */
-
-// Persisted singleton instance of MediaKeys. We do not allow multiple
-// CDM instances.
-const currentMediaKeysInfos : ICurrentMediaKeysInfos = {
-  $mediaKeys: null,  // MediaKeys instance
-  $mediaKeySystemConfiguration: null, // active MediaKeySystemConfiguration
-  $keySystemOptions: null,
-  $videoElement: null,
-};
-
-const $loadedSessions = new OpenSessionsStore();
-
-if (__DEV__) {
-  // disable typescript warning TODO better way?
-  (window as any).$loadedSessions = $loadedSessions;
-}
-
-export {
-  currentMediaKeysInfos,
-  $loadedSessions,
-};

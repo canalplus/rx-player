@@ -16,13 +16,17 @@
 
 import arrayFind = require("array-find");
 import { Observable } from "rxjs/Observable";
-import { IMediaKeySession } from "../../../compat";
+import {
+  IMediaKeySession,
+  IMockMediaKeys,
+} from "../../../compat";
+import { EncryptedMediaError } from "../../../errors";
 import castToObservable from "../../../utils/castToObservable";
 import log from "../../../utils/log";
 import hashBuffer from "./hash_buffer";
 
 // Cached data for a single MediaKeySession
-interface IOpenSessionsStoreEntry {
+interface ICachedMediaKeysSessionEntry {
   initData : number;
   initDataType: string;
   session : IMediaKeySession|MediaKeySession;
@@ -30,21 +34,35 @@ interface IOpenSessionsStoreEntry {
 }
 
 // What is returned by the cache
-export interface IOpenSessionsStoreData {
+export interface ICachedMediaKeysSessionData {
   session : IMediaKeySession|MediaKeySession;
   sessionType : MediaKeySessionType;
 }
 
 /**
- * Store open MediaKeySessions.
- * @class OpenSessionsStore
- * @extends SessionSet
+ * Create and store MediaKeySessions linked to a single MediaKeys.
+ *
+ * Keep track of the each sessionType and of initialization data each
+ * MediaKeySession is created for.
+ * @class MediaKeySessionsStore
  */
-export default class OpenSessionsStore {
-  private _entries : IOpenSessionsStoreEntry[];
+export default class MediaKeySessionsStore {
+  private readonly _mediaKeys : MediaKeys|IMockMediaKeys;
+  private _entries : ICachedMediaKeysSessionEntry[];
 
-  constructor() {
+  constructor(mediaKeys : MediaKeys|IMockMediaKeys) {
+    this._mediaKeys = mediaKeys;
     this._entries = [];
+  }
+
+  /**
+   * @returns {Array.<Object>}
+   */
+  public getAllSessions() : ICachedMediaKeysSessionData[] {
+    return this._entries.map(entry => ({
+      session: entry.session,
+      sessionType: entry.sessionType,
+    }));
   }
 
   /**
@@ -55,10 +73,10 @@ export default class OpenSessionsStore {
    * @param {string} initDataType
    * @returns {Object|null}
    */
-  get(
+  public get(
     initData : Uint8Array,
     initDataType: string
-  ) : IOpenSessionsStoreData|null {
+  ) : ICachedMediaKeysSessionData|null {
     const initDataHash = hashBuffer(initData);
     const foundEntry = arrayFind(this._entries, (entry) => (
       entry.initData === initDataHash &&
@@ -73,23 +91,23 @@ export default class OpenSessionsStore {
   }
 
   /**
-   * Add a new entry to the store.
-   * Throw if this init data + init data type was already added
    * @param {Uint8Array} initData
    * @param {string} initDataType
-   * @param {MediaKeySession} session
    * @param {string} sessionType
+   * @returns {MediaKeySession}
+   * @throws {EncryptedMediaError}
    */
-  add(
+  public createSession(
     initData : Uint8Array,
     initDataType : string,
-    session : IMediaKeySession|MediaKeySession,
     sessionType : MediaKeySessionType
-  ) : void {
+  ) : MediaKeySession|IMediaKeySession {
     if (this.get(initData, initDataType)) {
-      throw new Error("This initialization data was already stored.");
+      const error = new Error("This initialization data was already stored.");
+      throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA", error, true);
     }
 
+    const session = (this._mediaKeys as any /* TS bug */).createSession(sessionType);
     const entry = {
       session,
       sessionType,
@@ -101,12 +119,13 @@ export default class OpenSessionsStore {
         .then(() => {
           this._delete(session);
         })
-        .catch((e) => {
+        .catch((e : Error) => {
           log.warn(`session.closed rejected: ${e}`);
         });
     }
     log.debug("eme-mem-store: add session", entry);
     this._entries.push(entry);
+    return session;
   }
 
   /**
@@ -114,7 +133,7 @@ export default class OpenSessionsStore {
    * @param {MediaKeySession} session_
    * @returns {Observable}
    */
-  closeSession(
+  public closeSession(
     session_ : IMediaKeySession|MediaKeySession
   ) : Observable<null> {
     const session = this._delete(session_);
@@ -136,7 +155,7 @@ export default class OpenSessionsStore {
    * Emit null when done
    * @returns {Observable}
    */
-  closeAllSessions() : Observable<null> {
+  public closeAllSessions() : Observable<null> {
     const disposed = this._entries.map((e) => this.closeSession(e.session));
     this._entries = [];
     return Observable.merge(...disposed)

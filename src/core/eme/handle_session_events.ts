@@ -36,7 +36,7 @@ import tryCatch from "../../utils/rx-tryCatch";
 import {
   IKeySystemOption,
   KEY_STATUS_ERRORS,
-} from "./constants";
+} from "./types";
 
 export type ILicense =
   TypedArray |

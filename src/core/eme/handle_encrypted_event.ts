@@ -18,11 +18,8 @@ import { Observable } from "rxjs/Observable";
 import { IMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../utils/log";
-import {
-  $loadedSessions,
-  IMediaKeysInfos,
-} from "./constants";
 import createSession from "./create_session";
+import { IMediaKeysInfos } from "./types";
 import InitDataStore from "./utils/init_data_store";
 import isSessionUsable from "./utils/is_session_usable";
 
@@ -69,7 +66,8 @@ export default function handleEncryptedEvent(
     }
     handledInitData.add(initDataBytes, initDataType);
 
-    const entry = $loadedSessions.get(initDataBytes, initDataType);
+    const { sessionsStore } = mediaKeysInfos;
+    const entry = sessionsStore.get(initDataBytes, initDataType);
     if (entry != null) {
       const { session: loadedSession } = entry;
       if (isSessionUsable(loadedSession)) {
@@ -84,7 +82,7 @@ export default function handleEncryptedEvent(
           },
         });
       } else { // this session is not usable anymore. Close it and open a new one.
-        $loadedSessions.closeSession(loadedSession);
+        sessionsStore.closeSession(loadedSession);
         if (mediaKeysInfos.sessionStorage) {
           mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
         }
