@@ -16,7 +16,10 @@
 
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
-import { hasEMEAPIs } from "../../compat/";
+import {
+  hasEMEAPIs,
+  shouldUnsetMediaKeys,
+} from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 import {
   CustomError,
@@ -26,19 +29,37 @@ import { assertInterface } from "../../utils/assert";
 import log from "../../utils/log";
 import noop from "../../utils/noop";
 import attachMediaKeys from "./attach_media_keys";
-import clearEMESession from "./clear_eme_session";
-import {
-  $loadedSessions,
-  currentMediaKeysInfos,
-  IKeySystemOption,
-} from "./constants";
-import createMediaKeys from "./create_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
-import findCompatibleKeySystem from "./find_key_system";
 import generateKeyRequest from "./generate_key_request";
+import getMediaKeysInfos from "./get_media_keys";
 import handleEncryptedEvent from "./handle_encrypted_event";
 import handleSessionEvents from "./handle_session_events";
+import MediaKeysInfosStore from "./media_keys_infos_store";
+import { IKeySystemOption } from "./types";
 import InitDataStore from "./utils/init_data_store";
+
+const attachedMediaKeysInfos = new MediaKeysInfosStore();
+
+/**
+ * Clear EME ressources that should be cleared when the current content stops
+ * its playback.
+ * @returns {Observable}
+ */
+function clearEMESession() : Observable<never> {
+  return Observable.defer(() => {
+    if (shouldUnsetMediaKeys()) {
+      return disposeMediaKeys(attachedMediaKeysInfos)
+        .ignoreElements() as Observable<never>;
+    }
+
+    const currentState = attachedMediaKeysInfos.getState();
+    if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
+      return currentState.sessionsStore.closeAllSessions()
+        .ignoreElements() as Observable<never>;
+    }
+    return Observable.empty();
+  });
+}
 
 /**
  * EME abstraction and event handler used to communicate with the Content-
@@ -68,14 +89,8 @@ function createEME(
   const handledInitData = new InitDataStore();
 
   return Observable.combineLatest(
-    // next encrypted event
     onEncrypted$(mediaElement),
-
-    // creation of a media key, a single time
-    findCompatibleKeySystem(keySystemsConfigs, currentMediaKeysInfos)
-      .mergeMap((keySystemInfos) => {
-        return createMediaKeys(keySystemInfos, errorStream);
-      })
+    getMediaKeysInfos(keySystemsConfigs, attachedMediaKeysInfos, errorStream)
   )
     .mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
       return Observable.merge(
@@ -84,18 +99,18 @@ function createEME(
           .map((evt) => ({
             type: evt.type,
             value: {
-              mediaKeySession: evt.value.mediaKeySession,
-              sessionType: evt.value.sessionType,
               initData: evt.value.initData,
               initDataType: evt.value.initDataType,
-              sessionStorage: mediaKeysInfos.sessionStorage,
+              mediaKeySession: evt.value.mediaKeySession,
+              sessionType: evt.value.sessionType,
               keySystemOptions: mediaKeysInfos.keySystemOptions,
+              sessionStorage: mediaKeysInfos.sessionStorage,
             },
           })),
 
-        // attach MediaKeys to the media element if we're talking about the first event
+        // attach MediaKeys if we're handling the first event
         i === 0 ?
-          attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
+          attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos)
             .ignoreElements() as Observable<never> :
           Observable.empty<never>()
       );
@@ -104,10 +119,10 @@ function createEME(
       const {
         initData,
         initDataType,
-        sessionStorage,
         mediaKeySession,
         sessionType,
         keySystemOptions,
+        sessionStorage,
       } = handledEncryptedEvent.value;
 
       return Observable.merge(
@@ -130,14 +145,7 @@ function createEME(
  * Free up all ressources taken by the EME management.
  */
 function disposeEME() : void {
-  // Remove MediaKey before to prevent MediaKey error
-  // if other instance is creating after disposeEME
-  disposeMediaKeys(currentMediaKeysInfos.$videoElement).subscribe(noop);
-  currentMediaKeysInfos.$mediaKeys = null;
-  currentMediaKeysInfos.$keySystemOptions = null;
-  currentMediaKeysInfos.$videoElement = null;
-  currentMediaKeysInfos.$mediaKeySystemConfiguration = null;
-  $loadedSessions.closeAllSessions().subscribe();
+  disposeMediaKeys(attachedMediaKeysInfos).subscribe(noop);
 }
 
 /**
@@ -145,8 +153,8 @@ function disposeEME() : void {
  * @returns {string}
  */
 function getCurrentKeySystem() : string|null {
-  return currentMediaKeysInfos.$keySystemOptions &&
-    currentMediaKeysInfos.$keySystemOptions.type;
+  const currentState = attachedMediaKeysInfos.getState();
+  return currentState && currentState.keySystemOptions.type;
 }
 
 /**

@@ -20,10 +20,7 @@ import arrayIncludes from "../../utils/array-includes";
 import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
-import {
-  $loadedSessions,
-  IMediaKeysInfos,
-} from "./constants";
+import { IMediaKeysInfos } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 
 export interface ICreatedSessionEvent {
@@ -71,7 +68,7 @@ function loadPersistentSession(
  * retry.
  *
  * /!\ This only creates new sessions.
- * It will fail if $loadedSessions already has a MediaKeySession with
+ * It will fail if sessionsStore already has a MediaKeySession with
  * the given initializationData.
  * @param {Uint8Array} initData
  * @param {string} initDataType
@@ -85,16 +82,12 @@ export default function createSession(
 ) : Observable<IGetSessionEvent> {
   const {
     keySystemOptions,
-    keySystemAccess,
-    mediaKeys,
+    mediaKeySystemAccess,
+    sessionsStore,
     sessionStorage,
   } = mediaKeysInfos;
 
-  if (mediaKeys.createSession == null) {
-    throw new Error("Invalid MediaKeys implementation: Missing createSession");
-  }
-
-  const mksConfig = keySystemAccess.getConfiguration();
+  const mksConfig = mediaKeySystemAccess.getConfiguration();
   const sessionTypes = mksConfig.sessionTypes;
   const hasPersistence = (
     sessionTypes && arrayIncludes(sessionTypes, "persistent-license")
@@ -108,8 +101,7 @@ export default function createSession(
 
   log.debug(`eme: create a new ${sessionType} session`);
 
-  const session = (mediaKeys as any /* TS bug */).createSession(sessionType);
-  $loadedSessions.add(initData, initDataType, session, sessionType);
+  const session = sessionsStore.createSession(initData, initDataType, sessionType);
 
   // Re-check for Dumb typescript
   if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) {
@@ -153,12 +145,11 @@ export default function createSession(
       }
 
       // Unusable persistent session: recreate a new session from scratch.
-      $loadedSessions.closeSession(session);
+      sessionsStore.closeSession(session);
       sessionStorage.delete(initData, initDataType);
 
       const newSession =
-        (mediaKeys as any /* TS bug */).createSession("persistent-license");
-      $loadedSessions.add(initData, initDataType, newSession, sessionType);
+        sessionsStore.createSession(initData, initDataType, sessionType);
 
       return {
         type: "created-session" as "created-session",
@@ -167,12 +158,11 @@ export default function createSession(
     })
     .catch(() => {
       // Failure to load persistent session: recreate a new session from scratch.
-      $loadedSessions.closeSession(session);
+      sessionsStore.closeSession(session);
       sessionStorage.delete(initData, initDataType);
 
       const newSession =
-        (mediaKeys as any /* TS bug */).createSession("persistent-license");
-      $loadedSessions.add(initData, initDataType, newSession, sessionType);
+        sessionsStore.createSession(initData, initDataType, sessionType);
 
       return Observable.of({
         type: "created-session" as "created-session",

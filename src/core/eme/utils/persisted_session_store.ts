@@ -23,7 +23,7 @@ import log from "../../../utils/log";
 import {
   IPersistedSessionData,
   IPersistedSessionStorage,
-} from "../constants";
+} from "../types";
 import hashBuffer from "./hash_buffer";
 
 function checkStorage(storage : IPersistedSessionStorage) : void {

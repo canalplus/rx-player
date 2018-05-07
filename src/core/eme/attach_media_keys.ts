@@ -17,11 +17,8 @@
 import { Observable } from "rxjs/Observable";
 import { setMediaKeys } from "../../compat";
 import log from "../../utils/log";
-import {
-  $loadedSessions,
-  ICurrentMediaKeysInfos,
-  IMediaKeysInfos,
-} from "./constants";
+import MediaKeysInfosStore from "./media_keys_infos_store";
+import { IMediaKeysInfos } from "./types";
 
 /**
  * Set the MediaKeys object on the HTMLMediaElement if it is not already on the
@@ -38,46 +35,40 @@ import {
 export default function attachMediaKeys(
   mediaKeysInfos: IMediaKeysInfos,
   mediaElement : HTMLMediaElement,
-  currentMediaKeysInfos: ICurrentMediaKeysInfos
+  currentMediaKeysInfos: MediaKeysInfosStore
 ) : Observable<null> {
   return Observable.defer(() => {
-    const oldVideoElement = currentMediaKeysInfos.$videoElement;
-    const oldMediaKeys = currentMediaKeysInfos.$mediaKeys;
-
+    const previousState = currentMediaKeysInfos.getState();
     const {
       mediaKeys,
-      keySystemAccess,
+      sessionsStore,
+      mediaKeySystemAccess,
       keySystemOptions,
     } = mediaKeysInfos;
 
-    const mksConfig = keySystemAccess.getConfiguration();
+    currentMediaKeysInfos.setState({
+      mediaElement,
+      mediaKeySystemAccess,
+      keySystemOptions,
+      mediaKeys,
+      sessionsStore,
+    });
 
-    currentMediaKeysInfos.$mediaKeys = mediaKeys;
-    currentMediaKeysInfos.$mediaKeySystemConfiguration = mksConfig;
-    currentMediaKeysInfos.$keySystemOptions = keySystemOptions;
-    currentMediaKeysInfos.$videoElement = mediaElement;
+    if (previousState && previousState.sessionsStore !== sessionsStore) {
+      previousState.sessionsStore.closeAllSessions().subscribe();
+    }
 
     if (mediaElement.mediaKeys === mediaKeys) {
       return Observable.of(null);
     }
 
-    if (oldMediaKeys && oldMediaKeys !== mediaKeys) {
-      // if we change our mediaKeys singleton, we need to dispose all existing
-      // sessions linked to the previous one.
-      $loadedSessions.closeAllSessions().subscribe();
-    }
-
-    let mediaKeysSetter : Observable<null>;
-    if ((oldVideoElement && oldVideoElement !== mediaElement)) {
+    if (previousState && previousState.mediaElement !== mediaElement) {
       log.debug("eme: unlink old media element and set mediakeys");
-      mediaKeysSetter = setMediaKeys(oldVideoElement, null)
+      return setMediaKeys(previousState.mediaElement, null)
         .concat(setMediaKeys(mediaElement, mediaKeys));
     }
-    else {
-      log.debug("eme: set mediakeys");
-      mediaKeysSetter = setMediaKeys(mediaElement, mediaKeys);
-    }
 
-    return mediaKeysSetter;
+    log.debug("eme: set mediakeys");
+    return setMediaKeys(mediaElement, mediaKeys);
   });
 }
