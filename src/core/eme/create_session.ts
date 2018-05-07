@@ -145,7 +145,7 @@ export default function createSession(
       }
 
       // Unusable persistent session: recreate a new session from scratch.
-      sessionsStore.closeSession(session);
+      sessionsStore.closeSession(session).subscribe();
       sessionStorage.delete(initData, initDataType);
 
       const newSession =
@@ -158,7 +158,7 @@ export default function createSession(
     })
     .catch(() => {
       // Failure to load persistent session: recreate a new session from scratch.
-      sessionsStore.closeSession(session);
+      sessionsStore.closeSession(session).subscribe();
       sessionStorage.delete(initData, initDataType);
 
       const newSession =

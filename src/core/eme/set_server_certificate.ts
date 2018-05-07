@@ -44,11 +44,10 @@ function setServerCertificate(
   return Observable.defer(() => {
     return castToObservable(
       mediaKeys.setServerCertificate(serverCertificate)
-    )
-      .catch((error) => {
-        throw new
-          EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
-      });
+    ).catch((error) => {
+      throw new
+      EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
+    });
   }).mapTo(null);
 }
 

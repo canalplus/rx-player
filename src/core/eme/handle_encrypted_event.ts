@@ -87,7 +87,7 @@ export default function handleEncryptedEvent(
           },
         });
       } else { // this session is not usable anymore. Close it and open a new one.
-        sessionsStore.closeSession(loadedSession);
+        sessionsStore.closeSession(loadedSession).subscribe();
         if (mediaKeysInfos.sessionStorage) {
           mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
         }
@@ -97,7 +97,7 @@ export default function handleEncryptedEvent(
     const entries = sessionsStore.getAll().slice();
     if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
       for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {
-        sessionsStore.closeSession(entries[i].session);
+        sessionsStore.closeSession(entries[i].session).subscribe();
       }
     }
 
