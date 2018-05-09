@@ -192,7 +192,8 @@ page](./loadVideo_options.md).
 ```js
 player.loadVideo({
   url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
-  transport: "dash"
+  transport: "dash",
+  autoPlay: true,
 });
 ```
 
@@ -318,6 +319,13 @@ have the event payload as a single argument.
 To have the complete list of player events, consult the [Player events
 page](./player_events.md).
 
+#### Example
+```js
+player.addEventListener("Error", function(err) {
+  console.log(`The player crashed: ${err.message}`);
+});
+```
+
 
 <a name="meth-removeEventListener"></a>
 ### removeEventListener ########################################################
@@ -333,6 +341,11 @@ Remove an event listener. That is, stop your registered callback (with
 The callback given is optional: if not given, _every_ registered callback to
 that event will be removed. That's why using both arguments is recommended for
 most usecase.
+
+#### Example
+```js
+player.removeEventListener("playerStateChange", listenerCallback);
+```
 
 
 <a name="meth-play"></a>
@@ -387,6 +400,12 @@ Returns the video element's current position, in seconds.
 The difference with the ``getWallClockTime`` method is that for live contents
 the position is not re-calculated to match a live timestamp.
 
+#### Example
+```js
+const pos = player.getPosition();
+console.log(`The video element's current position is: ${pos} second(s)`);
+```
+
 
 <a name="meth-getWallClockTime"></a>
 ### getWallClockTime ###########################################################
@@ -401,6 +420,19 @@ That is:
 
 Use this method to display the current position to the user.
 
+#### Example
+```js
+const wallClockTime = player.getWallClockTime();
+const nowInSeconds = Date.now() / 1000;
+const delta = nowInSeconds - wallClockTime;
+
+if (delta < 5) { // (5 seconds of margin)
+  console.log("You're playing live");
+} else {
+  console.log(`You're playing ${delta} seconds behind the live content`);
+}
+```
+
 
 <a name="meth-getVideoDuration"></a>
 ### getVideoDuration ###########################################################
@@ -408,6 +440,14 @@ Use this method to display the current position to the user.
 _return value_: ``Number``
 
 Returns the duration of the current video, directly from the video element.
+
+#### Example
+```js
+const pos = player.getPosition();
+const dur = player.getVideoDuration();
+
+console.log(`current position: ${pos} / ${dur}`);
+```
 
 
 <a name="meth-getVolume"></a>
@@ -418,6 +458,21 @@ _return value_: ``Number``
 Current volume of the player, from 0 (no sound) to 1 (maximum sound). 0 if muted
 (different than videoElement.muted).
 
+#### Example
+```js
+const volume = player.getVolume();
+
+if (volume === 1) {
+  console.log("You're playing at maximum volume");
+} else if (volume === 0) {
+  console.log("You're playing at no volume");
+} else if (volume > 0.5) {
+  console.log("You're playing at a high volume");
+} else {
+  console.log("You're playing at a low volume");
+}
+```
+
 
 <a name="meth-getError"></a>
 ### getError ###################################################################
@@ -427,6 +482,19 @@ _return value_: ``Error|null``
 Returns the fatal error if it happened. null otherwise.
 
 See [the Player Error documentation](./errors.md) for more informations.
+
+#### Example
+```js
+const error = player.getError();
+
+if (!error) {
+  console.log("The player did not crash");
+} else if (error.code === "PIPELINE_LOAD_ERROR") {
+  console.error("The player crashed due to a failing request");
+} else {
+  console.error(`The player crashed: ${error.code}`);
+}
+```
 
 
 <a name="meth-seekTo"></a>
@@ -449,6 +517,24 @@ The argument can be an object with a single ``Number`` property, either:
 The argument can also just be a ``Number`` property, which will have the same
 effect than the ``position`` property (absolute position).
 
+#### Example
+```js
+// seeking to 54 seconds from the start of the content
+player.seekTo({ position: 54 });
+
+// equivalent to just:
+player.seekTo(54);
+
+// seeking 5 seconds after the current position
+player.seekTo({ relative: 5 });
+
+// seeking 5 seconds before the current position
+player.seekTo({ relative: -5 });
+
+// seeking to live content
+player.seekTo({ wallClockTime: Date.now() / 1000 });
+```
+
 
 <a name="meth-isLive"></a>
 ### isLive #####################################################################
@@ -458,6 +544,13 @@ _return value_: ``Boolean``
 Returns ``true`` if the content is "live". ``false`` otherwise.
 
 Also ``false`` if no content is loaded yet.
+
+#### Example
+```js
+if (player.isLive()) {
+  console.log("We're playing a live content");
+}
+```
 
 
 <a name="meth-getUrl"></a>
@@ -473,6 +566,14 @@ being played.
 
 Returns ``undefined`` if no content is loaded yet.
 
+#### Example
+```js
+const url = player.getUrl();
+if (url) {
+  console.log("We are playing the following content:", url);
+}
+```
+
 
 <a name="meth-isFullscreen"></a>
 ### isFullscreen ###############################################################
@@ -481,6 +582,13 @@ _return value_: ``Boolean``
 
 Returns ``true`` if the video element is in fullscreen mode, ``false``
 otherwise.
+
+#### Example
+```js
+if (player.isFullscreen()) {
+  console.log("The player is in fullscreen mode");
+}
+```
 
 
 <a name="meth-getAvailableVideoBitrates"></a>
@@ -494,6 +602,17 @@ seconds.
 In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns an empty Array.
 
+#### Example
+```js
+const videoBitrates = player.getAvailableVideoBitrates();
+if (videoBitrates.length) {
+  console.log(
+    "The current video is available in the following bitrates",
+    videoBitrates.join(", ")
+  );
+}
+```
+
 
 <a name="meth-getAvailableAudioBitrates"></a>
 ### getAvailableAudioBitrates ##################################################
@@ -505,6 +624,17 @@ seconds.
 
 In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+
+#### Example
+```js
+const audioBitrates = player.getAvailableAudioBitrates();
+if (audioBitrates.length) {
+  console.log(
+    "The current audio is available in the following bitrates",
+    audioBitrates.join(", ")
+  );
+}
+```
 
 
 <a name="meth-getVideoBitrate"></a>
