@@ -42,7 +42,7 @@ player.loadVideo(options);
 
 
 
-<a name="overview"></a>
+<a name="prop"></a>
 ## Properties ##################################################################
 
 
