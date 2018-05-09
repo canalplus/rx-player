@@ -64,7 +64,7 @@ function loadPersistentSession(
 
 /**
  * For a given initData and initDataType:
- *  - Delete session from persistent storage.
+ *  - Delete session from persistent storage, if a persistent session is stored.
  *  - Close session in store.
  *  - Create a new session.
  * @param {MediaKeySession} session
@@ -79,17 +79,13 @@ function recreateSessionForInitData(
   sessionsStore: SessionsStore,
   initDataBytes: Uint8Array,
   initDataType: string
-) {
-  sessionStorage.delete(initDataBytes, initDataType);
+): Observable<MediaKeySession|IMediaKeySession> {
+  if (sessionStorage.get(initDataBytes, initDataType) !== null) {
+    sessionStorage.delete(initDataBytes, initDataType);
+  }
   return sessionsStore.closeSession(session)
     .map(() => {
-      const newSession =
-        sessionsStore.createSession(initDataBytes, initDataType, sessionType);
-
-      return {
-        type: "created-session" as "created-session",
-        value: { mediaKeySession: newSession, sessionType },
-      };
+      return sessionsStore.createSession(initDataBytes, initDataType, sessionType);
     });
 }
 
@@ -179,12 +175,24 @@ export default function createSession(
 
         // Unusable persistent session: recreate a new session from scratch.
         return recreateSessionForInitData(
-          session, sessionType, sessionsStore, initData, initDataType);
+          session, sessionType, sessionsStore, initData, initDataType)
+            .map((newSession) => {
+              return {
+                type: "created-session" as "created-session",
+                value: { mediaKeySession: newSession, sessionType },
+              };
+            });
       })
       .catch(() : Observable<INewSessionCreatedEvent> => {
         // Failure to load persistent session: recreate a new session from scratch.
         return recreateSessionForInitData(
-          session, sessionType, sessionsStore, initData, initDataType);
+          session, sessionType, sessionsStore, initData, initDataType)
+            .map((newSession) => {
+              return {
+                type: "created-session" as "created-session",
+                value: { mediaKeySession: newSession, sessionType },
+              };
+            });
       });
   });
 }
