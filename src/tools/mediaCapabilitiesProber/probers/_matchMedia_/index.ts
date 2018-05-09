@@ -14,45 +14,24 @@
  * limitations under the License.
  */
 
-import isEmpty from "../../utils/isEmpty";
-
 import { IMediaConfiguration } from "../../types";
 import { is_matchMedia_APIAvailable } from "../compatibility";
-import probeConfigWithAPITool, { IAPITools } from "../probeConfigWithAPITools";
 
 import formatConfigFor_matchMedia_API from "./format";
 
-const APITools: IAPITools<string> = {
-  APIisAvailable: is_matchMedia_APIAvailable,
-
-  buildAPIArguments: (object: IMediaConfiguration): {
-    args: string|null; unknownCapabilities: IMediaConfiguration;
-  } => {
-    const unknownCapabilities = JSON.parse(JSON.stringify(object));
-    if (object.display) {
-      delete unknownCapabilities.display.colorSpace;
-      if (isEmpty(unknownCapabilities.display)) {
-        delete unknownCapabilities.display;
-      }
+const probe = (config: IMediaConfiguration): Promise<number> => {
+  return is_matchMedia_APIAvailable().then(() => {
+    if (config.display) {
       const format = formatConfigFor_matchMedia_API;
-      const formatted = format(object.display);
-      return { args: formatted, unknownCapabilities };
+      const formatted = format(config.display);
+      if (formatted) {
+        const match: MediaQueryList = window.matchMedia(formatted);
+        const result = match.matches && match.media !== "not all" ? 2 : 0;
+        return result;
+      }
     }
-    return { args: null, unknownCapabilities };
-  },
-
-  getAPIFormattedResponse: (object: string|null): Promise<number> => {
-    if (object === null) {
-      return Promise.reject("API_CALL: Not enough arguments for calling matchMedia.");
-    }
-    const match: MediaQueryList = window.matchMedia(object);
-    const result = match.matches && match.media !== "not all" ? 2 : 0;
-    return Promise.resolve(result);
-  },
-};
-
-const probe = (config: IMediaConfiguration) => {
-  return probeConfigWithAPITool(config, APITools);
+    throw new Error("API_CALL: Not enough arguments for calling matchMedia.");
+  });
 };
 
 export default probe;

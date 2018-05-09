@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import checkForNonSupportedConfig from "./checkForNonSupportedConfig";
 
 import probers from "../probers";
 import { IMediaConfiguration } from "../types";
 
 import log from "../../../utils/log";
 import filterEmptyFields from "../utils/filterEmptyFields";
-import intersectCapabilities from "../utils/intersectCapabilities";
 import isEmpty from "../utils/isEmpty";
 
 type IBrowserAPIS =
@@ -46,7 +44,6 @@ const validateConfiguration = (config: IMediaConfiguration) => {
   if (isEmpty(filteredConfig)) {
     throw new Error("MCP_CONF: Can't probe empty configuration.");
   }
-  checkForNonSupportedConfig(filteredConfig);
   return filteredConfig;
 };
 
@@ -70,40 +67,33 @@ const validateConfiguration = (config: IMediaConfiguration) => {
  * return "Maybe".
  * @param {Object} config
  */
+
+const browserAPIS: IBrowserAPIS[] = [
+  "_isTypeSupported_",
+  "_isTypeSupportedWithFeatures_",
+  "_matchMedia_",
+  "_decodingInfos_",
+  "_requestMediaKeySystemAccess_",
+  "_getStatusForPolicy_",
+];
+
 const probeMediaConfiguration =
-  async (_config: IMediaConfiguration, browserAPIS: IBrowserAPIS[]) => {
+  async (_config: IMediaConfiguration) => {
     const config = validateConfiguration(_config);
 
     let isProbablySupported: boolean = false;
     let isMaybeSupported: boolean = false;
     let isNotSupported: boolean = false;
 
-    let unknownCapabilities: IMediaConfiguration = JSON.parse(JSON.stringify(config));
     for (const browserAPI of browserAPIS) {
       const probeWithBrowser = probers[browserAPI];
       if (probeWithBrowser) {
-        await probeWithBrowser(config)
-          .then(({
-            result: probeResult,
-            unknownCapabilities: probeUnknownCapabilities,
-          }) => {
+        await probeWithBrowser(config).then((probeResult) => {
             isNotSupported = isNotSupported || probeResult === 0;
             isMaybeSupported = isMaybeSupported || probeResult === 1;
             isProbablySupported = isProbablySupported || probeResult === 2;
-
-            unknownCapabilities =
-              intersectCapabilities(unknownCapabilities, probeUnknownCapabilities);
-          }).catch((err) => {
-            log.debug(err);
-          });
+          }).catch((err) => log.debug(err));
       }
-    }
-    if (!isEmpty(unknownCapabilities)) {
-      isMaybeSupported = true;
-    }
-
-    if (__DEV__) {
-      log.debug(unknownCapabilities);
     }
 
     if (isNotSupported) {

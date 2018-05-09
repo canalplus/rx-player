@@ -30,7 +30,7 @@ type proberInnerTypes =
 export interface IAPITools<T> {
   APIisAvailable: () => Promise<{}>;
   buildAPIArguments: (args: IMediaConfiguration) => {
-      args: T|null; unknownCapabilities: IMediaConfiguration;
+      args: T|null;
   };
   getAPIFormattedResponse: (object: T|null) => Promise<number>;
 }
@@ -45,11 +45,11 @@ export interface IAPITools<T> {
 async function probeConfigWithAPITool<T extends proberInnerTypes>(
   config: IMediaConfiguration,
   APITools: IAPITools<T>
-): Promise<{ result: number; unknownCapabilities: IMediaConfiguration }> {
+): Promise<{ result: number }> {
   await APITools.APIisAvailable();
-  const { args, unknownCapabilities } = APITools.buildAPIArguments(config);
+  const { args } = APITools.buildAPIArguments(config);
   const result = await APITools.getAPIFormattedResponse(args);
-  return { result, unknownCapabilities };
+  return { result };
 }
 
 export default probeConfigWithAPITool;

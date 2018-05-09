@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import isEmpty from "../../utils/isEmpty";
-
 import { IMediaConfiguration } from "../../types";
 import { is_isTypeSupportedWithFeatures_APIAvailable } from "../compatibility";
-import probeConfigWithAPITool, { IAPITools } from "../probeConfigWithAPITools";
 
 import formatConfig from "./format";
 
@@ -29,52 +26,21 @@ export interface ITypeWithFeatures {
 
 export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
 
-const APITools: IAPITools<ITypeWithFeatures> = {
-  APIisAvailable: is_isTypeSupportedWithFeatures_APIAvailable,
-
-  buildAPIArguments: (object: IMediaConfiguration): {
-    args: ITypeWithFeatures|null; unknownCapabilities: IMediaConfiguration;
-  } => {
-    const unknownCapabilities: IMediaConfiguration = JSON.parse(JSON.stringify(object));
-    const mediaProtection = object.mediaProtection;
+const probe = (config: IMediaConfiguration) => {
+  return is_isTypeSupportedWithFeatures_APIAvailable().then(() => {
+    const mediaProtection = config.mediaProtection;
     const keySystem = mediaProtection ?
       (mediaProtection.drm ?
         mediaProtection.drm.type || "org.w3.clearkey" :
         "org.w3.clearkey") :
       "org.w3.clearkey";
     const output = mediaProtection ? mediaProtection.output : undefined;
-    delete unknownCapabilities.mediaProtection;
 
-    const video = object.video;
-    const audio = object.audio;
-    const display = object.display;
-
-    delete unknownCapabilities.video;
-    if (unknownCapabilities.audio) {
-      delete unknownCapabilities.audio.contentType;
-      if (isEmpty(unknownCapabilities.audio)) {
-        delete unknownCapabilities.audio;
-      }
-    }
-    if (unknownCapabilities.display) {
-      delete unknownCapabilities.display.width;
-      delete unknownCapabilities.display.height;
-      delete unknownCapabilities.display.bitsPerComponent;
-    }
+    const video = config.video;
+    const audio = config.audio;
+    const display = config.display;
 
     const features = formatConfig(video, output, audio, display);
-    return { args: { keySystem, features }, unknownCapabilities };
-  },
-
-  getAPIFormattedResponse: (object: ITypeWithFeatures|null): Promise<number> => {
-    if (object === null) {
-      return Promise.reject(
-        "API_CALL: Not enough arguments for calling isTypeSupportedWithFeatures.");
-    }
-    const {
-      keySystem,
-      features,
-    } = object;
 
     const result =
       (window as any).MSMediaKeys.isTypeSupportedWithFeatures(keySystem, features);
@@ -96,12 +62,8 @@ const APITools: IAPITools<ITypeWithFeatures> = {
       }
     }
 
-    return Promise.resolve(formatSupport(result));
-  },
-};
-
-const probe = (config: IMediaConfiguration) => {
-  return probeConfigWithAPITool(config, APITools);
+    return formatSupport(result);
+  });
 };
 
 export default probe;

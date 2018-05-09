@@ -13,61 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import isEmpty from "../../utils/isEmpty";
 
 import { IMediaConfiguration } from "../../types";
 import { is_isTypeSupported_Available } from "../compatibility";
-import probeConfigWithAPITool, { IAPITools } from "../probeConfigWithAPITools";
 
-const APITools: IAPITools<string[]> = {
-  APIisAvailable: is_isTypeSupported_Available,
-
-  buildAPIArguments: (object: IMediaConfiguration): {
-    args: string[]|null; unknownCapabilities: IMediaConfiguration;
-  } => {
-    const unknownCapabilities: IMediaConfiguration = JSON.parse(JSON.stringify(object));
-    const contentTypes = [];
+const probe = (config: IMediaConfiguration): Promise<number> => {
+  return is_isTypeSupported_Available().then(() => {
+    const contentTypes: string[] = [];
     if (
-      unknownCapabilities.video &&
-      object.video &&
-      object.video.contentType
+      config.video &&
+      config.video.contentType
     ) {
-      contentTypes.push(object.video.contentType);
-      delete unknownCapabilities.video.contentType;
-      if (isEmpty(unknownCapabilities.video)) {
-        delete unknownCapabilities.video;
-      }
+      contentTypes.push(config.video.contentType);
     }
     if (
-      unknownCapabilities.audio &&
-      object.audio &&
-      object.audio.contentType
+      config.audio &&
+      config.audio.contentType
     ) {
-      contentTypes.push(object.audio.contentType);
-      delete unknownCapabilities.audio.contentType;
-      if (isEmpty(unknownCapabilities.audio)) {
-        delete unknownCapabilities.audio;
-      }
+      contentTypes.push(config.audio.contentType);
     }
-    return { args: contentTypes, unknownCapabilities };
-  },
-
-  getAPIFormattedResponse: (object: string[]|null): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      if (object === null || !object.length) {
-        return reject("API_CALL: Not enough arguments for calling isTypeSupported.");
+      if (contentTypes === null || !contentTypes.length) {
+        throw new Error("API_CALL: Not enough arguments for calling isTypeSupported.");
       }
-      const result = object.reduce((acc, val) => {
+      const result = contentTypes.reduce((acc, val) => {
         const support = (window as any).MediaSource.isTypeSupported(val) ? 2 : 0;
         return Math.min(acc, support);
       }, 2);
-      return resolve(result);
+      return result;
     });
-  },
-};
-
-const probe = (config: IMediaConfiguration) => {
-  return probeConfigWithAPITool(config, APITools);
 };
 
 export default probe;

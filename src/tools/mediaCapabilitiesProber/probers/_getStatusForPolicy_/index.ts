@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import isEmpty from "../../utils/isEmpty";
-
 import { IMediaConfiguration } from "../../types";
 import { is_getStatusForPolicy_APIAvailable } from "../compatibility";
-import probeConfigWithAPITool, { IAPITools } from "../probeConfigWithAPITools";
 
 export interface IPolicy {
   minHdcpVersion: string;
@@ -33,67 +30,39 @@ export type IMediaKeyStatus =
   "status-pending" |
   "internal-error";
 
-const APITools: IAPITools<IPolicy> = {
-  APIisAvailable: is_getStatusForPolicy_APIAvailable,
-
-  buildAPIArguments: (config: IMediaConfiguration): {
-    args: IPolicy|null; unknownCapabilities: IMediaConfiguration;
-  } => {
-    const unknownCapabilities: IMediaConfiguration = JSON.parse(JSON.stringify(config));
+const probe = (config: IMediaConfiguration): Promise<number> => {
+  return is_getStatusForPolicy_APIAvailable().then(() => {
     if (
       config.mediaProtection &&
-      config.mediaProtection.output &&
-      unknownCapabilities.mediaProtection &&
-      unknownCapabilities.mediaProtection.output &&
-      unknownCapabilities.mediaProtection.output.hdcp
+      config.mediaProtection.output
     ) {
       const hdcp = "hdcp-" + config.mediaProtection.output.hdcp;
-      delete unknownCapabilities.mediaProtection.output.hdcp;
-      if (isEmpty(unknownCapabilities.mediaProtection.output)) {
-        delete unknownCapabilities.mediaProtection.output;
-      }
-      if (isEmpty(unknownCapabilities.mediaProtection)) {
-        delete unknownCapabilities.mediaProtection;
-      }
-      return { args: { minHdcpVersion: hdcp }, unknownCapabilities };
+      const object = { minHdcpVersion: hdcp };
+
+      const keySystem = "w3.org.clearkey";
+      const drmConfig = {
+        initDataTypes: ["cenc"],
+        videoCapabilities: [],
+        audioCapabilities: [],
+        distinctiveIdentifier: "optional",
+        persistentState: "optional",
+        sessionTypes: ["temporary"],
+      };
+        return (window as any).requestMediaKeySystemAccess(keySystem, drmConfig)
+          .then((mediaKeys: MediaKeys) => {
+            (mediaKeys as any).getStatusForPolicy(object)
+              .then((result: IMediaKeyStatus) => {
+                if (result === "usable") {
+                  return 2;
+                } else {
+                  return 0;
+                }
+              });
+          });
     }
-    return { args: null, unknownCapabilities };
-  },
 
-  getAPIFormattedResponse: (object: IPolicy|null): Promise<number> => {
-    if (object === null) {
-      return Promise.reject(
-        "API_CALL: Not enough arguments for calling getStatusForPolicy.");
-    }
-    // This config should work in any context
-    const keySystem = "w3.org.clearkey";
-    const config = {
-      initDataTypes: ["cenc"],
-      videoCapabilities: [],
-      audioCapabilities: [],
-      distinctiveIdentifier: "optional",
-      persistentState: "optional",
-      sessionTypes: ["temporary"],
-    };
-
-    return new Promise((resolve) => {
-      (window as any).requestMediaKeySystemAccess(keySystem, config)
-        .then((mediaKeys: MediaKeys) => {
-          (mediaKeys as any).getStatusForPolicy(object)
-            .then((result: IMediaKeyStatus) => {
-              if (result === "usable") {
-                resolve(2);
-              } else {
-                resolve(0);
-              }
-            });
-        });
-    });
-  },
-};
-
-const probe = (config: IMediaConfiguration) => {
-  return probeConfigWithAPITool(config, APITools);
+    throw new Error("API_CALL: Not enough arguments for calling getStatusForPolicy.");
+  });
 };
 
 export default probe;

@@ -24,10 +24,7 @@ import probeFromDRMInfos from "./_requestMediaKeySystemAccess_";
 import { IMediaConfiguration } from "../types";
 
 const probers: {
-  [id: string]: (config: IMediaConfiguration) => Promise<{
-    result: number;
-    unknownCapabilities: IMediaConfiguration;
-  }>;
+  [id: string]: (config: IMediaConfiguration) => Promise<number>;
 } = {
   _isTypeSupported_: probeFromContentType,
   _isTypeSupportedWithFeatures_: probeFromTypeAndFeatures,

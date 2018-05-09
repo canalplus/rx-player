@@ -14,28 +14,16 @@
  * limitations under the License.
  */
 
-import isEmpty from "../../utils/isEmpty";
-
 import { IMediaConfiguration } from "../../types";
 import { is_mediaCapabilities_APIAvailable } from "../compatibility";
-import probeConfigWithAPITool, { IAPITools } from "../probeConfigWithAPITools";
 
 export interface IDecodingInfos {
   supported: boolean;
   smooth: boolean;
   powerEfficient: boolean;
 }
-
-const APITools: IAPITools<IMediaConfiguration> = {
-
-  APIisAvailable: is_mediaCapabilities_APIAvailable,
-
-  buildAPIArguments: (config: IMediaConfiguration): {
-    args: IMediaConfiguration|null; unknownCapabilities: IMediaConfiguration;
-  } => {
-    const unknownCapabilities: IMediaConfiguration =
-      JSON.parse(JSON.stringify(config));
-
+const probe = (config: IMediaConfiguration): Promise<number> => {
+  return is_mediaCapabilities_APIAvailable().then(() => {
     if (
       config.type &&
       config.video &&
@@ -50,39 +38,15 @@ const APITools: IAPITools<IMediaConfiguration> = {
       config.audio.contentType &&
       config.audio.samplerate
     ) {
-      delete unknownCapabilities.audio;
-      delete unknownCapabilities.type;
-      if (unknownCapabilities.video) {
-        delete unknownCapabilities.video.contentType;
-        delete unknownCapabilities.video.width;
-        delete unknownCapabilities.video.height;
-        delete unknownCapabilities.video.framerate;
-        delete unknownCapabilities.video.bitrate;
-        if (isEmpty(unknownCapabilities.video)) {
-          delete unknownCapabilities.video;
-        }
-      }
-      return { args: config, unknownCapabilities };
+        return (navigator as any).mediaCapabilities.decodingInfo(config)
+          .then((result: IDecodingInfos) => {
+            return result.supported ? 2 : 0;
+          }).catch(() => {
+            throw new Error("API_CALL: Bad arguments for calling mediaCapabilities.");
+          });
     }
-    return { args: null, unknownCapabilities };
-  },
-
-  getAPIFormattedResponse: (object: IMediaConfiguration|null): Promise<number> => {
-    if (object === null) {
-      return Promise.reject(
-        "API_CALL: Not enough arguments for calling mediaCapabilites.");
-    }
-    return new Promise((resolve, reject) => {
-      (navigator as any).mediaCapabilities.decodingInfo(object)
-        .then((result: IDecodingInfos) => {
-          resolve(result.supported ? 2 : 0);
-        }).catch(() => reject("API_CALL: Bad arguments for calling mediaCapabilities."));
-    });
-  },
-};
-
-const probe = (config: IMediaConfiguration) => {
-  return probeConfigWithAPITool(config, APITools);
+    throw new Error("API_CALL: Not enough arguments for calling mediaCapabilites.");
+  });
 };
 
 export default probe;

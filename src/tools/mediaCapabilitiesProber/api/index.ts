@@ -15,22 +15,14 @@
  */
 
 import {
+  IAudioConfiguration,
   IDisplayConfiguration,
   IDRMConfiguration,
   IMediaConfiguration,
+  IVideoConfiguration,
 } from "../types";
 
 import probeMediaConfiguration from "./probeMediaConfiguration";
-
-import log from "../../../utils/log";
-
-type IBrowserAPIS =
-  "_isTypeSupported_" |
-  "_isTypeSupportedWithFeatures_" |
-  "_matchMedia_" |
-  "_decodingInfos_" |
-  "_requestMediaKeySystemAccess_" |
-  "_getStatusForPolicy_";
 
 /**
  * A set of API to probe media capabilites.
@@ -45,16 +37,7 @@ const mediaCapabilitiesProber = {
    * @param {Object} config
    */
   getCapabilities: async (config: IMediaConfiguration) => {
-    const browserAPIS: IBrowserAPIS[] = [
-      "_isTypeSupported_",
-      "_isTypeSupportedWithFeatures_",
-      "_matchMedia_",
-      "_decodingInfos_",
-      "_requestMediaKeySystemAccess_",
-      "_getStatusForPolicy_",
-    ];
-
-    return probeMediaConfiguration(config, browserAPIS);
+    return probeMediaConfiguration(config);
   },
 
   /**
@@ -73,33 +56,20 @@ const mediaCapabilitiesProber = {
       },
     };
 
-    const browserAPIS: IBrowserAPIS[] = [
-      "_isTypeSupportedWithFeatures_",
-      "_getStatusForPolicy_",
-    ];
-
-    return probeMediaConfiguration(config, browserAPIS);
+    return probeMediaConfiguration(config);
   },
 
   /**
    * Get decoding capabilities from a given video and/or audio
    * configuration.
    */
-  getDecodingCapabilities(config: IMediaConfiguration) {
-    if (config.mediaProtection) {
-      delete config.mediaProtection;
-      log.info("CONF_INFO: Media Protection will not tested in that mode.");
-    }
-    if (config.display) {
-      delete config.display;
-      log.info("CONF_INFO: Display will not tested in that mode.");
-    }
-    const browserAPIS: IBrowserAPIS[] = [
-      "_isTypeSupported_",
-      "_isTypeSupportedWithFeatures_",
-      "_decodingInfos_",
-    ];
-    return probeMediaConfiguration(config, browserAPIS);
+  getDecodingCapabilities(
+    type: "media-source"|"file",
+    video: IVideoConfiguration,
+    audio: IAudioConfiguration
+  ) {
+    const config = { type, video, audio };
+    return probeMediaConfiguration(config);
   },
 
   /**
@@ -115,11 +85,7 @@ const mediaCapabilitiesProber = {
         },
       },
     };
-    const browserAPIS: IBrowserAPIS[] = [
-      "_isTypeSupportedWithFeatures_",
-      "_requestMediaKeySystemAccess_",
-    ];
-    return probeMediaConfiguration(config, browserAPIS);
+    return probeMediaConfiguration(config);
   },
 
   /**
@@ -127,14 +93,8 @@ const mediaCapabilitiesProber = {
    * with specific video and/or audio constrains.
    */
   getDisplayCapabilities(displayConfig: IDisplayConfiguration) {
-    const config = {
-      display: displayConfig,
-    };
-    const browserAPIS: IBrowserAPIS[] = [
-      "_isTypeSupportedWithFeatures_",
-      "_matchMedia_",
-    ];
-    return probeMediaConfiguration(config, browserAPIS);
+    const config = { display: displayConfig };
+    return probeMediaConfiguration(config);
   },
 };
 
