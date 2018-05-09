@@ -22,7 +22,6 @@ import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
 import { IMediaKeysInfos } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
-import SessionsStore from "./utils/open_sessions_store";
 
 export interface INewSessionCreatedEvent {
   type : "created-session";
@@ -60,33 +59,6 @@ function loadPersistentSession(
     log.debug("eme: load persisted session", sessionId);
     return castToObservable(session.load(sessionId));
   });
-}
-
-/**
- * For a given initData and initDataType:
- *  - Delete session from persistent storage, if a persistent session is stored.
- *  - Close session in store.
- *  - Create a new session.
- * @param {MediaKeySession} session
- * @param {string} sessionType
- * @param {Object} sessionsStore
- * @param {Uint8Array} initData
- * @param {string} initDataType
- */
-function recreateSessionForInitData(
-  session: MediaKeySession|IMediaKeySession,
-  sessionType: MediaKeySessionType,
-  sessionsStore: SessionsStore,
-  initDataBytes: Uint8Array,
-  initDataType: string
-): Observable<MediaKeySession|IMediaKeySession> {
-  if (sessionStorage.get(initDataBytes, initDataType) !== null) {
-    sessionStorage.delete(initDataBytes, initDataType);
-  }
-  return sessionsStore.closeSession(session)
-    .map(() => {
-      return sessionsStore.createSession(initDataBytes, initDataType, sessionType);
-    });
 }
 
 /**
@@ -154,6 +126,26 @@ export default function createSession(
       });
     }
 
+    /**
+     * Helper function to close and restart the current persistent session
+     * considered, and re-create it from scratch.
+     * @returns {Observable}
+     */
+    const recreatePersistentSession = () : Observable<INewSessionCreatedEvent> => {
+      if (sessionStorage.get(initData, initDataType) !== null) {
+        sessionStorage.delete(initData, initDataType);
+      }
+      return sessionsStore.closeSession(session)
+        .map(() => {
+          const newSession =
+            sessionsStore.createSession(initData, initDataType, sessionType);
+          return {
+            type: "created-session" as "created-session",
+            value: { mediaKeySession: newSession, sessionType },
+          };
+        });
+    };
+
     return loadPersistentSession(storedEntry.sessionId, session)
       .mergeMap((hasLoadedSession) : Observable<ICreateSessionEvent> => {
         if (!hasLoadedSession) {
@@ -174,25 +166,10 @@ export default function createSession(
         }
 
         // Unusable persistent session: recreate a new session from scratch.
-        return recreateSessionForInitData(
-          session, sessionType, sessionsStore, initData, initDataType)
-            .map((newSession) => {
-              return {
-                type: "created-session" as "created-session",
-                value: { mediaKeySession: newSession, sessionType },
-              };
-            });
+        return recreatePersistentSession();
       })
       .catch(() : Observable<INewSessionCreatedEvent> => {
-        // Failure to load persistent session: recreate a new session from scratch.
-        return recreateSessionForInitData(
-          session, sessionType, sessionsStore, initData, initDataType)
-            .map((newSession) => {
-              return {
-                type: "created-session" as "created-session",
-                value: { mediaKeySession: newSession, sessionType },
-              };
-            });
+        return recreatePersistentSession();
       });
   });
 }
