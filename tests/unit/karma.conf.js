@@ -9,9 +9,10 @@ const karmaConf = {
 
   browsers: [
     // "Chrome",
-    "ChromeHeadless",
+    // "ChromeHeadless",
     // "ChromeCanary",
     "FirefoxHeadless",
+    "ChromeHeadlessAutoPlay",
   ],
 
   singleRun,
@@ -20,6 +21,13 @@ const karmaConf = {
     FirefoxHeadless: {
       base: "Firefox",
       flags: [ "-headless" ],
+    },
+
+    ChromeHeadlessAutoPlay: {
+      base: "ChromeHeadless",
+      flags: [
+        "--autoplay-policy=no-user-gesture-required",
+      ],
     },
   },
 
