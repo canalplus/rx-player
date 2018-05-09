@@ -15,10 +15,13 @@
  */
 
 import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
 import { IMockMediaKeys } from "../../compat";
-import EncryptedMediaError from "../../errors/EncryptedMediaError";
+import {
+  CustomError,
+  EncryptedMediaError,
+} from "../../errors";
 import castToObservable from "../../utils/castToObservable";
-import { ErrorStream } from "./session";
 
 /**
  * Call the setServerCertificate API with the given certificate.
@@ -37,17 +40,15 @@ import { ErrorStream } from "./session";
 function setServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
-) : Observable<never> {
+) : Observable<null> {
   return Observable.defer(() => {
     return castToObservable(
       mediaKeys.setServerCertificate(serverCertificate)
-    )
-      .ignoreElements()
-      .catch((error) => {
-        throw new
-          EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
-      });
-  }) as Observable<never>;
+    ).catch((error) => {
+      throw new
+      EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
+    });
+  }).mapTo(null);
 }
 
 /**
@@ -57,22 +58,21 @@ function setServerCertificate(
  * @param {ArrayBuffer} serverCertificate
  * @returns {Observable}
  */
-function trySettingServerCertificate(
+export default function trySettingServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray,
-  errorStream: ErrorStream
-) : Observable<never> {
-  return setServerCertificate(mediaKeys, serverCertificate)
-    .catch(error => {
-      error.fatal = false;
-      errorStream.next(error);
-      return Observable.empty();
-    }) as Observable<never>;
+  errorStream: Subject<Error|CustomError>
+) : Observable<null> {
+  return typeof mediaKeys.setServerCertificate === "function" ?
+    setServerCertificate(mediaKeys, serverCertificate)
+      .catch(error => {
+        error.fatal = false;
+        errorStream.next(error);
+        return Observable.of(null);
+      }) : Observable.of(null);
 }
 
 export {
   trySettingServerCertificate,
   setServerCertificate,
 };
-
-export default setServerCertificate;

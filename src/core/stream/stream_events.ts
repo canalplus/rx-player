@@ -25,7 +25,6 @@ import {
   IAdaptationBufferEvent,
   IRepresentationChangeEvent,
 } from "../buffer";
-import { ISessionEvent } from "../eme/session";
 import { IBufferType } from "../source_buffers";
 import { IStallingItem } from "./stalling_manager";
 
@@ -269,7 +268,6 @@ export type IStreamEvent =
   IManifestUpdateEvent |
   IPeriodBufferClearedEvent |
   IPeriodBufferReadyEvent |
-  ISessionEvent |
   ISpeedChangedEvent |
   IStalledEvent |
   IStreamLoadedEvent |

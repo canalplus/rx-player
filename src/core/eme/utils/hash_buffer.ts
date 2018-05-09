@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-/* tslint:disable no-object-literal-type-assertion */
-export const KEY_STATUS_ERRORS = {
-  expired: true,
-  "internal-error": true,
-   // "released",
-   // "output-restricted",
-   // "output-downscaled",
-   // "status-pending",
-} as IDictionary<boolean>;
-/* tslint:enable no-object-literal-type-assertion */
+/**
+ * Convert given buffer to a 32bit integer hash
+ * @param {Array|TypedArray} buffer
+ * @returns {Number}
+ */
+export default function hashBuffer(buffer : Uint8Array|number[]) : number {
+  let hash = 0;
+  let char;
+  for (let i = 0; i < buffer.length; i++) {
+    char = buffer[i];
+    hash = ((hash <<  5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}

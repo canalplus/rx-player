@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
+import arrayFind = require("array-find");
 import { IMediaKeySession } from "../../../compat";
 import assert, {
   assertInterface,
 } from "../../../utils/assert";
 import log from "../../../utils/log";
-import SessionSet from "./abstract";
-import hashInitData from "./hash_init_data";
-
-interface IPersistedSessionData {
-  sessionId : string;
-  initData : number;
-}
-
-export interface IPersistedSessionStorage {
-  load() : IPersistedSessionData[];
-  save(x : IPersistedSessionData[]) : void;
-}
+import {
+  IPersistedSessionData,
+  IPersistedSessionStorage,
+} from "../types";
+import hashBuffer from "./hash_buffer";
 
 function checkStorage(storage : IPersistedSessionStorage) : void {
   assert(
@@ -52,60 +46,55 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
  *
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
+ * @class PersistedSessionsStore
  */
-export default class PersistedSessionsSet
-  extends SessionSet<IPersistedSessionData>
-{
-  private _storage : IPersistedSessionStorage;
-
-  /*
-   * @param {Object} storage
-   * @param {Function} storage.load
-   * @param {Function} storage.save
-   */
-  constructor(storage : IPersistedSessionStorage) {
-    super();
-    checkStorage(storage);
-    this._storage = storage;
-    this._loadStorage();
-  }
+export default class PersistedSessionsStore {
+  private readonly _storage : IPersistedSessionStorage;
+  private _entries : IPersistedSessionData[];
 
   /**
-   * Set a new storage System.
-   * storages are user-provided objects which allow to save and load given
-   * informations.
    * @param {Object} storage
-   * @param {Function} storage.load
-   * @param {Function} storage.save
    */
-  public setStorage(storage : IPersistedSessionStorage) : void {
-    if (this._storage === storage) {
-      return;
-    }
-
+  constructor(storage : IPersistedSessionStorage) {
     checkStorage(storage);
+    this._entries = [];
     this._storage = storage;
-    this._loadStorage();
+    try {
+      this._entries = this._storage.load();
+      assert(Array.isArray(this._entries));
+    } catch (e) {
+      log.warn("eme-persitent-store: could not get entries from license storage", e);
+      this.dispose();
+    }
   }
 
   /**
    * Retrieve entry (sessionId + initData) based on its initData.
-   * @param {Array|TypedArray|Number}  initData
+   * @param {Uint8Array}  initData
+   * @param {string} initDataType
    * @returns {Object|null}
    */
-  public get(initData : Uint8Array|number[]|number) : IPersistedSessionData|null {
-    const hash = hashInitData(initData);
-    const entry = this.find((e) => e.initData === hash);
+  public get(
+    initData : Uint8Array,
+    initDataType : string
+  ) : IPersistedSessionData|null {
+    const hash = hashBuffer(initData);
+    const entry = arrayFind(this._entries, (e) =>
+      e.initData === hash &&
+      e.initDataType === initDataType
+    );
     return entry || null;
   }
 
   /**
    * Add a new entry in the storage.
-   * @param {Array|TypedArray|Number}  initData
+   * @param {Uint8Array}  initData
+   * @param {string} initDataType
    * @param {MediaKeySession} session
    */
   public add(
-    initData : Uint8Array|number,
+    initData : Uint8Array,
+    initDataType : string,
     session : IMediaKeySession|MediaKeySession
   ) : void {
     const sessionId = session && session.sessionId;
@@ -113,30 +102,34 @@ export default class PersistedSessionsSet
       return;
     }
 
-    const hash = hashInitData(initData);
-    const currentEntry = this.get(hash);
+    const currentEntry = this.get(initData, initDataType);
     if (currentEntry && currentEntry.sessionId === sessionId) {
       return;
     } else if (currentEntry) { // currentEntry has a different sessionId
-      this.delete(hash);
+      this.delete(initData, initDataType);
     }
 
     log.info("eme-persitent-store: add new session", sessionId, session);
     this._entries.push({
       sessionId,
-      initData: hash,
+      initData: hashBuffer(initData),
+      initDataType,
     });
     this._save();
   }
 
   /**
    * Delete entry (sessionId + initData) based on its initData.
-   * @param {Array|TypedArray|Number}  initData
+   * @param {Uint8Array}  initData
+   * @param {string} initDataType
    */
-  delete(initData : Uint8Array|number) : void {
-    const hash = hashInitData(initData);
+  delete(initData : Uint8Array, initDataType : string) : void {
+    const hash = hashBuffer(initData);
 
-    const entry = this.find((e) => e.initData === hash);
+    const entry = arrayFind(this._entries, (e) =>
+      e.initData === hash &&
+      e.initDataType === initDataType
+    );
     if (entry) {
       log.warn("eme-persitent-store: delete session from store", entry);
 
@@ -162,19 +155,6 @@ export default class PersistedSessionsSet
       this._storage.save(this._entries);
     } catch (e) {
       log.warn("eme-persitent-store: could not save licenses in localStorage");
-    }
-  }
-
-  /**
-   * Load in the state every entries in the current storage.
-   */
-  private _loadStorage() : void {
-    try {
-      this._entries = this._storage.load();
-      assert(Array.isArray(this._entries));
-    } catch (e) {
-      log.warn("eme-persitent-store: could not get entries from license storage", e);
-      this.dispose();
     }
   }
 }

@@ -600,6 +600,15 @@ export default {
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
+   * Max simultaneous MediaKeySessions that will be kept as a cache to avoid
+   * doing superfluous license requests.
+   * If this number is reached, any new session creation will close the oldest
+   * one.
+   * @type {Number}
+   */
+  EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 50,
+
+  /**
    * The player relies on browser events and properties to update its status to
    * "ENDED".
    *
