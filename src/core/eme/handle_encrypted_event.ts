@@ -65,49 +65,53 @@ export default function handleEncryptedEvent(
     }
 
     const initDataBytes = new Uint8Array(initData);
+
     if (handledInitData.has(initDataBytes, initDataType)) {
       log.debug("init data already received. Skipping it.");
       return Observable.empty(); // Already handled, quit
     }
     handledInitData.add(initDataBytes, initDataType);
 
+    // possible previous loaded session with the same initialization data
+    let previousLoadedSession : IMediaKeySession|MediaKeySession|null = null;
     const { sessionsStore } = mediaKeysInfos;
     const entry = sessionsStore.get(initDataBytes, initDataType);
     if (entry != null) {
-      const { session: loadedSession } = entry;
-      if (isSessionUsable(loadedSession)) {
-        log.debug("eme: reuse loaded session", loadedSession.sessionId);
+      previousLoadedSession = entry.session;
+      if (isSessionUsable(previousLoadedSession)) {
+        log.debug("eme: reuse loaded session", previousLoadedSession.sessionId);
         return Observable.of({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
-            mediaKeySession: loadedSession,
+            mediaKeySession: previousLoadedSession,
             sessionType: entry.sessionType,
             initData: initDataBytes,
             initDataType,
           },
         });
-      } else { // this session is not usable anymore. Close it and open a new one.
-        sessionsStore.closeSession(loadedSession).subscribe();
-        if (mediaKeysInfos.sessionStorage) {
-          mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
+      } else if (mediaKeysInfos.sessionStorage) {
+        mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
+      }
+    }
+
+    return (previousLoadedSession ?
+      sessionsStore.closeSession(previousLoadedSession) :
+      Observable.of(null)
+    ).mergeMap(() => {
+      const cleaningOldSessions$ : Array<Observable<null>> = [];
+      const entries = sessionsStore.getAll().slice();
+      if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
+        for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {
+          cleaningOldSessions$.push(sessionsStore.closeSession(entries[i].session));
         }
       }
-    }
 
-    const cleaningOldSessions$ : Array<Observable<null>> = [];
-    const entries = sessionsStore.getAll().slice();
-    if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
-      for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {
-        cleaningOldSessions$.push(sessionsStore.closeSession(entries[i].session));
-      }
-    }
-
-    return (
-      Observable.merge(...cleaningOldSessions$)
+      return (
+        Observable.merge(...cleaningOldSessions$)
         .ignoreElements() as Observable<never>
-    )
-      .concat(
-        createSession(initDataBytes, initDataType, mediaKeysInfos)
+      )
+        .concat(
+          createSession(initDataBytes, initDataType, mediaKeysInfos)
           .map((evt) => ({
             type: evt.type,
             value: {
@@ -117,6 +121,7 @@ export default function handleEncryptedEvent(
               initDataType,
             },
           }))
-    );
+        );
+    });
   });
 }
