@@ -103,6 +103,7 @@ module.exports = function constructHTMLPage(
   const styles = constructStylesHTML(css);
 
   return "<head>" +
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
     "<meta charset=\"utf-8\">" +
     styles +
     "<title>" + title + "</title>" +
