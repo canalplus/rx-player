@@ -243,11 +243,12 @@ function buildKeySystemConfigurations(
  * @returns {Observable}
  */
 export default function getMediaKeySystemAccess(
+  mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos: MediaKeysInfosStore
 ) : Observable<IFoundMediaKeySystemAccessEvent> {
   return Observable.defer(() => {
-    const currentState = currentMediaKeysInfos.getState();
+    const currentState = currentMediaKeysInfos.getState(mediaElement);
     if (currentState) {
       // Fast way to find a compatible keySystem if the currently loaded
       // one as exactly the same compatibility options.

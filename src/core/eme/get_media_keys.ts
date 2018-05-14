@@ -56,17 +56,22 @@ function createSessionStorage(
 }
 
 export default function getMediaKeysInfos(
+  mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos : MediaKeysInfosStore,
   errorStream: Subject<Error|CustomError>
 ) : Observable<IMediaKeysInfos> {
-    return getMediaKeySystemAccess(keySystemsConfigs, currentMediaKeysInfos)
+    return getMediaKeySystemAccess(
+      mediaElement,
+      keySystemsConfigs,
+      currentMediaKeysInfos
+    )
       .mergeMap((evt) => {
         const {
           options,
           mediaKeySystemAccess,
         } = evt.value;
-        const currentState = currentMediaKeysInfos.getState();
+        const currentState = currentMediaKeysInfos.getState(mediaElement);
 
         let mediaKeys$ : Observable<{
           mediaKeys : IMockMediaKeys|MediaKeys;
