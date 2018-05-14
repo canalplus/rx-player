@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+  - eme: allow multiple licenses per content
+  - eme: allow different MediaKeys to be attached on multiple media elements
+
+### Bug fixes
+
+  - source-buffer: clean properly the text SourceBuffer on deactivation (#210)
+  - buffer: perform discontinuity seeks only for native source buffers (#216)
+
+### Other improvements
+
+  - doc: generate documentation pages
+  - misc: add sonarqube quality pass
+  - code: set a clearer private state for the API
+  - tools: update to webpack v4.8.3
+  - tools: update to typescript v2.8.3
+
+
 ## v3.3.2 (2018/04/17)
 
 ### Bug Fixes
