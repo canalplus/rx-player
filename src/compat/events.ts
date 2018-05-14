@@ -19,10 +19,22 @@
  * RxJS Observables
  */
 
-import { Observable } from "rxjs";
-
+import {
+  fromEvent as observableFromEvent,
+  interval as observableInterval,
+  merge as observableMerge,
+  never as observableNever,
+  Observable,
+} from "rxjs";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  map,
+  mapTo,
+  startWith,
+} from "rxjs/operators";
 import config from "../config";
-
 import EventEmitter from "../utils/eventemitter";
 import log from "../utils/log";
 
@@ -106,7 +118,7 @@ function compatibleListener<T extends Event>(
       }
 
       if (mem) {
-        return Observable.fromEvent(element, mem) as Observable<T>;
+        return observableFromEvent(element, mem) as Observable<T>;
       } else {
         if (__DEV__) {
           /* tslint:disable:max-line-length */
@@ -115,15 +127,15 @@ function compatibleListener<T extends Event>(
             /* tslint:enable:max-line-length */
           );
         }
-        return Observable.never();
+        return observableNever();
       }
     }
 
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
-    return Observable.merge(
+    return observableMerge(
       ...prefixedEvents
-        .map(eventName => Observable.fromEvent(element, eventName))
+        .map(eventName => observableFromEvent(element, eventName))
     );
   };
 }
@@ -149,34 +161,38 @@ function visibilityChange() : Observable<boolean> {
   const hidden = prefix ? prefix + "Hidden" : "hidden";
   const visibilityChangeEvent = prefix + "visibilitychange";
 
-  return Observable.fromEvent(document, visibilityChangeEvent)
-    .map(() => document[hidden as "hidden"]);
+  return observableFromEvent(document, visibilityChangeEvent)
+    .pipe(map(() => document[hidden as "hidden"]));
 }
 
 function videoSizeChange() : Observable<null> {
-  return Observable.fromEvent(window, "resize")
-    .mapTo(null);
+  return observableFromEvent(window, "resize")
+    .pipe(mapTo(null));
 }
 
-const isVisible = visibilityChange() // emit false when visible
-  .filter((x) => !x);
+const isVisible = visibilityChange()
+  .pipe(filter((x) => !x)); // emit false when visible
 
 // Emit true if the visibility changed to hidden since 60s
 const isHidden = visibilityChange()
-  .debounceTime(INACTIVITY_DELAY)
-  .filter((x) => x);
+  .pipe(
+    debounceTime(INACTIVITY_DELAY),
+    filter((x) => x)
+  );
 
-const isInBackground$ = () => Observable.merge(isVisible, isHidden)
-  .startWith(false);
+const isInBackground$ = () => observableMerge(isVisible, isHidden)
+  .pipe(startWith(false));
 
 function videoWidth$(videoElement : HTMLMediaElement) : Observable<number> {
-  return Observable.merge(
-    Observable.interval(20000),
-    videoSizeChange().debounceTime(500)
+  return observableMerge(
+    observableInterval(20000).pipe(mapTo(null)),
+    videoSizeChange().pipe(debounceTime(500))
   )
-    .startWith(0) // emit on subscription
-    .map(() => videoElement.clientWidth * pixelRatio)
-    .distinctUntilChanged();
+    .pipe(
+      startWith(null), // emit on subscription
+      map(() => videoElement.clientWidth * pixelRatio),
+      distinctUntilChanged()
+    );
 }
 
 const onLoadedMetadata$ = compatibleListener(["loadedmetadata"]);
@@ -192,14 +208,14 @@ const onFullscreenChange$ = compatibleListener(
 );
 
 const onPlayPause$ = (videoElement : HTMLMediaElement) : Observable<Event> =>
-  Observable.merge(
+  observableMerge(
     compatibleListener(["play"])(videoElement),
     compatibleListener(["pause"])(videoElement)
   );
 
 const onTextTrackChanges$ =
   (textTrackList : TextTrackList) : Observable<TrackEvent> =>
-    Observable.merge(
+    observableMerge(
       compatibleListener<TrackEvent>(["addtrack"])(textTrackList),
       compatibleListener<TrackEvent>(["removetrack"])(textTrackList)
     );
