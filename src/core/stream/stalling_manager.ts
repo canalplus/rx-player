@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
 import log from "../../utils/log";

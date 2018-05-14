@@ -22,9 +22,11 @@
  */
 
 import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
-import { ReplaySubject } from "rxjs/ReplaySubject";
+import {
+  Observable,
+  Observer,
+  ReplaySubject,
+} from "rxjs";
 import config from "../../config";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 

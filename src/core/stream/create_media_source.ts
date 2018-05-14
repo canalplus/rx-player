@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
+import {
+  Observable,
+  Observer,
+} from "rxjs";
 import {
   clearElementSrc,
   MediaSource_,

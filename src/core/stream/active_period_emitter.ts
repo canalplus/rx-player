@@ -22,7 +22,7 @@
  * The first chronological period for which all types of buffers are active.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { Period } from "../../manifest";
 import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";

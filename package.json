@@ -105,7 +105,8 @@
     "deep-equal": "^1.0.1",
     "next-tick": "^1.0.0",
     "object-assign": "^4.1.1",
-    "rxjs": "^5.5.6"
+    "rxjs": "^6.1.0",
+    "rxjs-compat": "^6.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.3",

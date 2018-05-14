@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import config from "../../config";
 import log from "../../utils/log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  Observable,
+  Subject,
+} from "rxjs";
 import config from "../../config";
 import log from "../../utils/log";
 import throttle from "../../utils/rx-throttle";

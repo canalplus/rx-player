@@ -20,7 +20,7 @@
  */
 
 import arrayFind = require("array-find");
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
 import { Adaptation, Period } from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";
 import log from "../../utils/log";

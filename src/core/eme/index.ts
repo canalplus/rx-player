@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  EMPTY,
+  Observable,
+  Subject,
+} from "rxjs";
 import {
   hasEMEAPIs,
   shouldUnsetMediaKeys,
@@ -49,15 +52,15 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
   return Observable.defer(() => {
     if (shouldUnsetMediaKeys()) {
       return disposeMediaKeys(mediaElement, attachedMediaKeysInfos)
-        .ignoreElements() as Observable<never>;
+        .ignoreElements();
     }
 
     const currentState = attachedMediaKeysInfos.getState(mediaElement);
     if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
       return currentState.sessionsStore.closeAllSessions()
-        .ignoreElements() as Observable<never>;
+        .ignoreElements();
     }
-    return Observable.empty();
+    return EMPTY;
   });
 }
 
@@ -116,8 +119,8 @@ function createEME(
         // attach MediaKeys if we're handling the first event
         i === 0 ?
           attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos)
-            .ignoreElements() as Observable<never> :
-          Observable.empty<never>()
+            .ignoreElements() :
+          EMPTY
       );
     })
     .mergeMap((handledEncryptedEvent) =>  {
@@ -141,8 +144,8 @@ function createEME(
                 sessionStorage.add(initData, initDataType, mediaKeySession);
               }
             }) :
-          Observable.empty<never>()
-      ).ignoreElements() as Observable<never>;
+          EMPTY
+      ).ignoreElements();
     });
 }
 

@@ -21,12 +21,15 @@
  */
 
 import deepEqual = require("deep-equal");
-import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { Observable } from "rxjs/Observable";
+import {
+  BehaviorSubject,
+  EMPTY,
+  Observable,
+  ReplaySubject,
+  Subject,
+  Subscription,
+} from "rxjs";
 import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
-import { ReplaySubject } from "rxjs/ReplaySubject";
-import { Subject } from "rxjs/Subject";
-import { Subscription } from "rxjs/Subscription";
 import config from "../../config";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
@@ -685,7 +688,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     const closeStream$ = Observable.merge(
       this._priv_stopCurrentContent$,
-      this._priv_stopAtEnd ? onEnded$(videoElement) : Observable.empty()
+      this._priv_stopAtEnd ? onEnded$(videoElement) : EMPTY
     ).take(1);
 
     let stream : ConnectableObservable<IStreamEvent>;
@@ -1709,7 +1712,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     if (this.videoElement) {
       clearEMESession(this.videoElement)
-        .catch(() => Observable.empty())
+        .catch(() => EMPTY)
         .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
     } else {
       freeUpStreamLock();
