@@ -9,8 +9,9 @@
 
 ### Bug fixes
 
-  - source-buffer: clean properly the text SourceBuffer on deactivation (#210)
-  - buffer: perform discontinuity seeks only for native source buffers (#216)
+  - eme: limit simultaneous loaded MediaKeySession to 50 by default (configurable)
+  - source-buffer: clean properly the text SourceBuffer on deactivation
+  - buffer: perform discontinuity seeks only for native source buffers
 
 ### Other improvements
 
