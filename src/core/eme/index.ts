@@ -45,14 +45,14 @@ const attachedMediaKeysInfos = new MediaKeysInfosStore();
  * its playback.
  * @returns {Observable}
  */
-function clearEMESession() : Observable<never> {
+function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
   return Observable.defer(() => {
     if (shouldUnsetMediaKeys()) {
-      return disposeMediaKeys(attachedMediaKeysInfos)
+      return disposeMediaKeys(mediaElement, attachedMediaKeysInfos)
         .ignoreElements() as Observable<never>;
     }
 
-    const currentState = attachedMediaKeysInfos.getState();
+    const currentState = attachedMediaKeysInfos.getState(mediaElement);
     if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
       return currentState.sessionsStore.closeAllSessions()
         .ignoreElements() as Observable<never>;
@@ -90,7 +90,12 @@ function createEME(
 
   return Observable.combineLatest(
     onEncrypted$(mediaElement),
-    getMediaKeysInfos(keySystemsConfigs, attachedMediaKeysInfos, errorStream)
+    getMediaKeysInfos(
+      mediaElement,
+      keySystemsConfigs,
+      attachedMediaKeysInfos,
+      errorStream
+    )
   )
     .mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
       return Observable.merge(
@@ -144,16 +149,16 @@ function createEME(
 /**
  * Free up all ressources taken by the EME management.
  */
-function disposeEME() : void {
-  disposeMediaKeys(attachedMediaKeysInfos).subscribe(noop);
+function disposeEME(mediaElement : HTMLMediaElement) : void {
+  disposeMediaKeys(mediaElement, attachedMediaKeysInfos).subscribe(noop);
 }
 
 /**
  * Returns the name of the current key system used.
  * @returns {string}
  */
-function getCurrentKeySystem() : string|null {
-  const currentState = attachedMediaKeysInfos.getState();
+function getCurrentKeySystem(mediaElement : HTMLMediaElement) : string|null {
+  const currentState = attachedMediaKeysInfos.getState(mediaElement);
   return currentState && currentState.keySystemOptions.type;
 }
 

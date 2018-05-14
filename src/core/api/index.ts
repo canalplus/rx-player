@@ -596,8 +596,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // free resources linked to the loaded content
     this.stop();
 
-    // free resources used for EME management
-    disposeEME();
+    if (this.videoElement) {
+      // free resources used for EME management
+      disposeEME(this.videoElement);
+    }
 
     // free Observables linked to the Player instance
     this._priv_destroy$.next();
@@ -1498,7 +1500,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {string|null}
    */
   getCurrentKeySystem() : string|null {
-    return getCurrentKeySystem();
+    if (!this.videoElement) {
+      throw new Error("Disposed player");
+    }
+    return getCurrentKeySystem(this.videoElement);
   }
 
   /**
@@ -1702,9 +1707,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_streamLock$.next(false);
     };
 
-    clearEMESession()
-      .catch(() => Observable.empty())
-      .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
+    if (this.videoElement) {
+      clearEMESession(this.videoElement)
+        .catch(() => Observable.empty())
+        .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
+    } else {
+      freeUpStreamLock();
+    }
   }
 
   /**

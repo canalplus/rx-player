@@ -38,34 +38,28 @@ export default function attachMediaKeys(
   currentMediaKeysInfos: MediaKeysInfosStore
 ) : Observable<null> {
   return Observable.defer(() => {
-    const previousState = currentMediaKeysInfos.getState();
+    const previousState = currentMediaKeysInfos.getState(mediaElement);
     const {
+      keySystemOptions,
+      mediaKeySystemAccess,
       mediaKeys,
       sessionsStore,
-      mediaKeySystemAccess,
-      keySystemOptions,
     } = mediaKeysInfos;
 
-    currentMediaKeysInfos.setState({
-      mediaElement,
-      mediaKeySystemAccess,
+    currentMediaKeysInfos.setState(mediaElement, {
       keySystemOptions,
+      mediaKeySystemAccess,
       mediaKeys,
       sessionsStore,
     });
 
     return (
       previousState && previousState.sessionsStore !== sessionsStore ?
-      previousState.sessionsStore.closeAllSessions() : Observable.of(null)
+        previousState.sessionsStore.closeAllSessions() :
+        Observable.of(null)
     ).mergeMap(() => {
       if (mediaElement.mediaKeys === mediaKeys) {
         return Observable.of(null);
-      }
-
-      if (previousState && previousState.mediaElement !== mediaElement) {
-        log.debug("eme: unlink old media element and set mediakeys");
-        return setMediaKeys(previousState.mediaElement, null)
-          .concat(setMediaKeys(mediaElement, mediaKeys));
       }
 
       log.debug("eme: set mediakeys");

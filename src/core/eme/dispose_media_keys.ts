@@ -23,19 +23,17 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
  * @returns {Observable}
  */
 export default function disposeMediaKeys(
+  mediaElement : HTMLMediaElement,
   mediaKeysInfos : MediaKeysInfosStore
 ) : Observable<null> {
   return Observable.defer(() => {
-    const currentState = mediaKeysInfos.getState();
+    const currentState = mediaKeysInfos.getState(mediaElement);
     if (!currentState) {
       return Observable.of(null);
     }
 
-    const {
-      mediaElement,
-      sessionsStore,
-    } = currentState;
-    mediaKeysInfos.clearState();
+    const { sessionsStore } = currentState;
+    mediaKeysInfos.clearState(mediaElement);
     return sessionsStore.closeAllSessions()
       .mergeMapTo(setMediaKeys(mediaElement, null));
   });

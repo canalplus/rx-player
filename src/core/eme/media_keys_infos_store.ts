@@ -21,8 +21,7 @@ import {
 import { IKeySystemOption } from "./types";
 import SessionsStore from "./utils/open_sessions_store";
 
-export type ICurrentMediaKeysInfos = {
-  mediaElement : HTMLMediaElement;
+export type IMediaElementMediaKeysInfos = {
   keySystemOptions : IKeySystemOption;
   mediaKeySystemAccess : IMediaKeySystemAccess;
   mediaKeys : MediaKeys|IMockMediaKeys;
@@ -31,24 +30,27 @@ export type ICurrentMediaKeysInfos = {
 
 /**
  * Store the MediaKeys infos attached to a media element.
- * TODO This is obviously a hack find better solution
  * @class MediaKeysInfosStore
  */
 export default class MediaKeysInfosStore {
-  private _state : ICurrentMediaKeysInfos;
+  private _state : WeakMap<HTMLMediaElement, IMediaElementMediaKeysInfos>;
+
   constructor() {
-    this._state = null;
+    this._state = new WeakMap();
   }
 
-  setState(state : ICurrentMediaKeysInfos) {
-    this._state = state;
+  setState(
+    mediaElement : HTMLMediaElement,
+    state : IMediaElementMediaKeysInfos
+  ) : void {
+    this._state.set(mediaElement, state);
   }
 
-  getState() : ICurrentMediaKeysInfos {
-    return this._state;
+  getState(mediaElement : HTMLMediaElement) : IMediaElementMediaKeysInfos {
+    return this._state.get(mediaElement) || null;
   }
 
-  clearState() {
-    this._state = null;
+  clearState(mediaElement : HTMLMediaElement) : void {
+    this._state.set(mediaElement, null);
   }
 }
