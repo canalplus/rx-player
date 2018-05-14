@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  defer as observableDefer,
+  Observable
+} from "rxjs";
+import { mapTo } from "rxjs/operators";
 import castToObservable from "../../utils/castToObservable";
 import {
   IMockMediaKeys,
@@ -67,7 +71,8 @@ export default function setMediaKeys$(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|IMockMediaKeys|null
 ) : Observable<null> {
-  return Observable.defer(() =>
-    castToObservable(_setMediaKeys(elt, mediaKeys)).mapTo(null)
+  return observableDefer(() =>
+    castToObservable(_setMediaKeys(elt, mediaKeys))
+      .pipe(mapTo(null))
   );
 }

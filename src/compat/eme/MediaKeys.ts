@@ -15,10 +15,13 @@
  */
 
 import {
+  merge as observableMerge,
   Observable,
+  of as observableOf,
   Subject,
   throwError,
 } from "rxjs";
+import { takeUntil } from "rxjs/operators";
 import {
   bytesToStr,
   strToBytes,
@@ -157,12 +160,12 @@ if (navigator.requestMediaKeySystemAccess) {
         });
         this.keyStatuses = new Map();
         this.expiration = NaN;
-        Observable.merge(
+        observableMerge(
           events.onKeyMessage$(video),
           events.onKeyAdded$(video),
           events.onKeyError$(video)
         )
-          .takeUntil(this._closeSession$)
+          .pipe(takeUntil(this._closeSession$))
           .subscribe((evt : Event) => this.trigger(evt.type, evt));
 
         this.update = wrapUpdate((license, sessionId?) => {
@@ -286,7 +289,7 @@ if (navigator.requestMediaKeySystemAccess) {
             persistentState: "not-allowed" as "not-allowed",
           };
 
-          return Observable.of(
+          return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
               new MockMediaKeys(keyType),
@@ -352,12 +355,12 @@ if (navigator.requestMediaKeySystemAccess) {
       generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
         return new Promise((resolve) => {
           this._ss = this._mk.memCreateSession("video/mp4", initData);
-          Observable.merge(
+          observableMerge(
             events.onKeyMessage$(this._ss),
             events.onKeyAdded$(this._ss),
             events.onKeyError$(this._ss)
           )
-            .takeUntil(this._closeSession$)
+            .pipe(takeUntil(this._closeSession$))
             .subscribe((evt : Event) => this.trigger(evt.type, evt));
           resolve();
         });
@@ -429,7 +432,7 @@ if (navigator.requestMediaKeySystemAccess) {
             sessionTypes: ["temporary", "persistent-license"],
           };
 
-          return Observable.of(
+          return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
 
