@@ -18,6 +18,10 @@ import {
   Observable,
   Subject,
 } from "rxjs";
+import {
+  mergeMap,
+  takeUntil,
+} from "rxjs/operators";
 import { Representation } from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {
@@ -172,7 +176,7 @@ export default class ABRManager {
     };
 
     metrics$
-      .takeUntil(this._dispose$)
+      .pipe(takeUntil(this._dispose$))
       .subscribe(({ type, value }) => {
         this._lazilyCreateChooser(type);
         const { duration, size } = value;
@@ -183,9 +187,11 @@ export default class ABRManager {
       });
 
     requests$
-      // requests$ emits observables which are subscribed to
-      .mergeMap(request$ => request$)
-      .takeUntil(this._dispose$)
+      .pipe(
+        // requests$ emits observables which are subscribed to
+        mergeMap(request$ => request$),
+        takeUntil(this._dispose$)
+      )
       .subscribe((request) => {
         const { type, value } = request;
 
