@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { ReplaySubject } from "rxjs/ReplaySubject";
+import {
+  EMPTY,
+  Observable,
+  ReplaySubject,
+} from "rxjs";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -271,7 +274,7 @@ export default function RepresentationBuffer<T>({
       Observable.defer(() => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
-          return Observable.empty();
+          return EMPTY;
         }
 
         const initInfos = initSegmentObject &&
@@ -318,7 +321,7 @@ export default function RepresentationBuffer<T>({
       if (segmentData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
-        return Observable.empty();
+        return EMPTY;
       }
 
       const initSegmentData = initSegmentObject && initSegmentObject.segmentData;

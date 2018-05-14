@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  EMPTY,
+  Observable,
+} from "rxjs";
 import {
   getInitData,
   IMediaKeySession,
@@ -64,7 +67,7 @@ export default function handleEncryptedEvent(
 
     if (handledInitData.has(initData, initDataType)) {
       log.debug("init data already received. Skipping it.");
-      return Observable.empty(); // Already handled, quit
+      return EMPTY; // Already handled, quit
     }
     handledInitData.add(initData, initDataType);
 
@@ -104,7 +107,7 @@ export default function handleEncryptedEvent(
 
       return (
         Observable.merge(...cleaningOldSessions$)
-        .ignoreElements() as Observable<never>
+        .ignoreElements()
       )
         .concat(
           createSession(initData, initDataType, mediaKeysInfos)

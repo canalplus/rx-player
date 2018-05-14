@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { MediaError } from "../../errors";
 import { ISegment } from "../../manifest";
 import { QueuedSourceBuffer } from "../source_buffers";

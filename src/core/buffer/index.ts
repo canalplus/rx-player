@@ -15,7 +15,7 @@
  */
 
 import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { ErrorTypes } from "../../errors";
 import Manifest, {
   Adaptation,

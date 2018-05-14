@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
 import tryCatch from "../../utils/rx-tryCatch";

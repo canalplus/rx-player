@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  EMPTY,
+  Observable,
+  Subject,
+} from "rxjs";
 import { TimeoutError } from "rxjs/util/TimeoutError";
 import { IMediaKeySession } from "../../compat";
 import {
@@ -128,7 +131,7 @@ export default function handleSessionEvents(
         return keySystem && keySystem.onKeyStatusesChange ?
           castToObservable(
             keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-          ) as Observable<TypedArray|ArrayBuffer> : Observable.empty<never>();
+          ) as Observable<TypedArray|ArrayBuffer> : EMPTY;
       });
 
       return handledKeyStatusesChange$

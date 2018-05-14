@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  EMPTY,
+  Observable,
+} from "rxjs";
 import Manifest from "../../manifest";
 import log from "../../utils/log";
 import SourceBufferManager from "../source_buffers";
@@ -37,7 +40,7 @@ function refreshManifest(
   const refreshURL = currentManifest.getUrl();
   if (!refreshURL) {
     log.warn("Cannot refresh the manifest: no url");
-    return Observable.empty();
+    return EMPTY;
   }
 
   return manifestPipeline(refreshURL)

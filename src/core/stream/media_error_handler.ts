@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import MediaError from "../../errors/MediaError";
 import log from "../../utils/log";
-import onEvent from "../../utils/rx-onEvent";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
@@ -28,7 +27,7 @@ import onEvent from "../../utils/rx-onEvent";
 export default function createMediaErrorHandler(
   videoElement : HTMLMediaElement
 ) : Observable<never> {
-  return onEvent(videoElement, "error").mergeMap(() => {
+  return Observable.fromEvent(videoElement, "error").mergeMap(() => {
     const errorCode = videoElement.error && videoElement.error.code;
     let errorDetail;
 

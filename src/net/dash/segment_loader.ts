@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-
-import { resolveURL } from "../../utils/url";
-
-import request from "../../utils/request";
 import {
-  byteRange,
-  replaceTokens,
-} from "./utils";
-
+  EMPTY,
+  Observable,
+} from "rxjs";
+import request from "../../utils/request";
+import { resolveURL } from "../../utils/url";
 import {
   CustomSegmentLoader,
   ILoaderObservable,
   ILoaderObserver,
   ISegmentLoaderArguments,
 } from "../types";
+import {
+  byteRange,
+  replaceTokens,
+} from "./utils";
 
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
   url : string;
@@ -108,7 +108,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
   if (isInit && !(media || range || indexRange)) {
-    return Observable.empty();
+    return EMPTY;
   }
 
   // construct url for the segment

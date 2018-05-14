@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  Observable,
+  Subject,
+} from "rxjs";
 import { Representation } from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {

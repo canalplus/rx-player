@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  EMPTY,
+  Observable,
+} from "rxjs";
 import log from "../../utils/log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import { QueuedSourceBuffer } from "../source_buffers";
@@ -72,7 +75,7 @@ function clearBuffer<T>(
   maxBufferAhead : number
 ) : Observable<never> {
   if (!isFinite(maxBufferBehind) && !isFinite(maxBufferAhead)) {
-    return Observable.empty();
+    return EMPTY;
   }
 
   const cleanedupRanges : Array<{
@@ -159,5 +162,5 @@ function clearBuffer<T>(
     .concatAll()
     .ignoreElements();
 
-  return clean$ as Observable<never>; // ignoreElements == the Observerable never emits
+  return clean$;
 }

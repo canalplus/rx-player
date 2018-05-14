@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  Observable,
+  Subject,
+} from "rxjs";
 import {
   onEnded$,
   onSeeked$,
