@@ -151,7 +151,7 @@
     "style-loader": "^0.20.1",
     "ts-loader": "^3.3.1",
     "tslint": "^5.9.1",
-    "typescript": "^2.8.1",
+    "typescript": "^2.8.3",
     "url-loader": "^0.6.2",
     "webpack": "^3.10.0",
     "webpack-closure-compiler": "^2.1.6",
