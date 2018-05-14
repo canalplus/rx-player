@@ -1,15 +1,31 @@
 /* eslint-env node */
 
+const ClosureCompiler = require("webpack-closure-compiler");
 const webpack = require("webpack");
 const isBarebone = process.env.RXP_BAREBONE === "true";
 
 module.exports = {
-  mode: "development",
+  mode: "production",
   entry: "./src/exports.ts",
   output: {
     library: "RxPlayer",
     libraryTarget: "umd",
-    filename: "rx-player.js",
+    filename: "rx-player.min.js",
+  },
+  optimization: {
+    minimizer: [
+      new ClosureCompiler({
+        options: {
+          compilation_level: "SIMPLE",
+          language_in: "ES5",
+          warning_level: "VERBOSE",
+        },
+      }),
+    ],
+  },
+  performance: {
+    maxEntrypointSize: 400000,
+    maxAssetSize: 400000,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
@@ -77,9 +93,9 @@ module.exports = {
         //   process.env.RXP_BIF === "true" :
         //   process.env.RXP_BIF !== "false",
       },
-      __DEV__: true,
-      __LOGGER_LEVEL__: "\"INFO\"",
-      "process.env": { NODE_ENV: JSON.stringify("development") },
+      __DEV__: false,
+      __LOGGER_LEVEL__: "\"NONE\"",
+      "process.env": { NODE_ENV: JSON.stringify("production") },
     }),
   ],
   node: {
