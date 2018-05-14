@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  EMPTY,
+  Observable,
+} from "rxjs";
 import castToObservable from "./castToObservable";
 import noop from "./noop";
 
@@ -48,7 +51,7 @@ export default function throttle<T>(
 
   return (...args) => {
     if (isPending) {
-      return Observable.empty();
+      return EMPTY;
     }
 
     isPending = true;

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  Observable,
+  Subject,
+  throwError,
+} from "rxjs";
 import {
   bytesToStr,
   strToBytes,
@@ -243,7 +246,7 @@ if (navigator.requestMediaKeySystemAccess) {
       keySystemConfigurations : MediaKeySystemConfiguration[]
     ) : Observable<CustomMediaKeySystemAccess> {
       if (!isTypeSupported(keyType)) {
-        return Observable.throw(undefined);
+        return throwError(undefined);
       }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -293,7 +296,7 @@ if (navigator.requestMediaKeySystemAccess) {
         }
       }
 
-      return Observable.throw(undefined);
+      return throwError(undefined);
     };
   }
 
@@ -399,7 +402,7 @@ if (navigator.requestMediaKeySystemAccess) {
     ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
       // TODO Why TS Do not understand that isTypeSupported exists here?
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
-        return Observable.throw(undefined);
+        return throwError(undefined);
       }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -438,7 +441,7 @@ if (navigator.requestMediaKeySystemAccess) {
         }
       }
 
-      return Observable.throw(undefined);
+      return throwError(undefined);
     };
   } else {
     requestMediaKeySystemAccess = null;

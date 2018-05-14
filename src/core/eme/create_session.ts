@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { IMediaKeySession } from "../../compat";
 import arrayIncludes from "../../utils/array-includes";
 import assert from "../../utils/assert";

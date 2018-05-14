@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { setMediaKeys } from "../../compat";
 import log from "../../utils/log";
 import MediaKeysInfosStore from "./media_keys_infos_store";

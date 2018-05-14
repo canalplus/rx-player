@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
 import { CustomError } from "../../../errors";
 import { ITransportPipelines } from "../../../net";
 import { ISegmentLoaderArguments } from "../../../net/types";

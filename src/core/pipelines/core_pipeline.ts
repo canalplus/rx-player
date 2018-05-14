@@ -15,8 +15,11 @@
  */
 
 import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  EMPTY,
+  Observable,
+  Subject,
+} from "rxjs";
 import config from "../../config";
 import {
   CustomError,
@@ -319,7 +322,7 @@ export default function createPipeline<T, U, V>(
                         size: arg.value.size,
                         duration: arg.value.duration,
                       },
-                    }) : Observable.empty();
+                    }) : EMPTY;
 
                 return metrics
                   .concat(

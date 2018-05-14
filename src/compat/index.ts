@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
+import {
+  Observable,
+  Observer,
+} from "rxjs";
 
 import EventEmitter from "../utils/eventemitter";
 import log from "../utils/log";
-import onEvent from "../utils/rx-onEvent";
 
 import {
   isFirefox,
@@ -135,7 +136,7 @@ function canPlay(
   if (mediaElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
     return Observable.of(undefined);
   } else {
-    return onEvent<Event>(mediaElement, "canplay")
+    return Observable.fromEvent(mediaElement, "canplay")
       .take(1)
       .mapTo(undefined);
   }

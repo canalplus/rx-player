@@ -15,7 +15,7 @@
  */
 
 import arrayFind = require("array-find");
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import {
   IMediaKeySession,
   IMockMediaKeys,

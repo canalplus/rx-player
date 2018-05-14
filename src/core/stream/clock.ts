@@ -15,7 +15,7 @@
  */
 
 import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import Manifest from "../../manifest";
 import { getMaximumBufferPosition } from "../../manifest/timings";
 import { IBufferClockTick } from "../buffer";
@@ -71,7 +71,7 @@ export default function createBufferClock(
     .do(() => {
       timeOffset = 0; // (initial seek performed)
     })
-    .ignoreElements() as Observable<never>;
+    .ignoreElements();
 
   const clock$ : Observable<IBufferClockTick> = streamClock$
     .map((timing) =>

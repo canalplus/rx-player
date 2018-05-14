@@ -15,9 +15,11 @@
  */
 
 import objectAssign = require("object-assign");
-import { BehaviorSubject } from "rxjs/BehaviorSubject";
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+} from "rxjs";
 import config from "../../config";
 import { Representation } from "../../manifest";
 import log from "../../utils/log";

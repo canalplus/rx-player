@@ -19,14 +19,12 @@
  * RxJS Observables
  */
 
-import { Observable } from "rxjs/Observable";
-import { EventTargetLike } from "rxjs/observable/FromEventObservable";
+import { Observable } from "rxjs";
 
 import config from "../config";
 
 import EventEmitter from "../utils/eventemitter";
 import log from "../utils/log";
-import onEvent from "../utils/rx-onEvent";
 
 import {
   BROWSER_PREFIXES,
@@ -77,8 +75,15 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
       .map((p) => p + name)), []);
 }
 
+export interface IEventEmitterLike {
+  addEventListener : (eventName: string, handler: () => void) => void;
+  removeEventListener: (eventName: string, handler: () => void) => void;
+}
+
+// XXX TODO
 export type IEventTargetLike =
-  EventTargetLike|
+  HTMLElement |
+  IEventEmitterLike |
   EventEmitter<string, any>;
 
 /**
@@ -92,7 +97,7 @@ function compatibleListener<T extends Event>(
 ) : (element : IEventTargetLike) => Observable<T> {
   let mem : string|undefined;
   const prefixedEvents = eventPrefixed(eventNames, prefixes);
-  return (element) => {
+  return (element : IEventTargetLike) => {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
     if (element instanceof HTMLElement_) {
@@ -101,7 +106,7 @@ function compatibleListener<T extends Event>(
       }
 
       if (mem) {
-        return Observable.fromEvent(element, mem);
+        return Observable.fromEvent(element, mem) as Observable<T>;
       } else {
         if (__DEV__) {
           /* tslint:disable:max-line-length */
@@ -116,7 +121,10 @@ function compatibleListener<T extends Event>(
 
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
-    return onEvent(element, prefixedEvents);
+    return Observable.merge(
+      ...prefixedEvents
+        .map(eventName => Observable.fromEvent(element, eventName))
+    );
   };
 }
 
@@ -141,12 +149,13 @@ function visibilityChange() : Observable<boolean> {
   const hidden = prefix ? prefix + "Hidden" : "hidden";
   const visibilityChangeEvent = prefix + "visibilitychange";
 
-  return onEvent(document, visibilityChangeEvent)
+  return Observable.fromEvent(document, visibilityChangeEvent)
     .map(() => document[hidden as "hidden"]);
 }
 
-function videoSizeChange() : Observable<number> {
-  return onEvent(window, "resize");
+function videoSizeChange() : Observable<null> {
+  return Observable.fromEvent(window, "resize")
+    .mapTo(null);
 }
 
 const isVisible = visibilityChange() // emit false when visible

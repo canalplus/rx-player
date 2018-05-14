@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  Observable,
+  throwError,
+} from "rxjs";
 
 /**
  * @param {Function} func - A function you want to execute
@@ -29,6 +32,6 @@ export default function tryCatch<T, I>(
   try {
     return func(args);
   } catch (e) {
-    return Observable.throw(e);
+    return throwError(e);
   }
 }
