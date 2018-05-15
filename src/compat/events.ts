@@ -23,7 +23,7 @@ import {
   fromEvent as observableFromEvent,
   interval as observableInterval,
   merge as observableMerge,
-  never as observableNever,
+  NEVER,
   Observable,
 } from "rxjs";
 import {
@@ -127,7 +127,7 @@ function compatibleListener<T extends Event>(
             /* tslint:enable:max-line-length */
           );
         }
-        return observableNever();
+        return NEVER;
       }
     }
 

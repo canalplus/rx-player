@@ -16,6 +16,7 @@
 
 import objectAssign = require("object-assign");
 import {
+  concat as observableConcat,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -23,7 +24,6 @@ import {
 } from "rxjs";
 import {
   catchError,
-  concat,
   distinctUntilChanged,
   filter,
   map,
@@ -207,14 +207,17 @@ export default class AdaptationBufferManager {
      */
     const buffer$ = shouldSwitchRepresentationBuffer$.pipe(
       switchMap((representation) =>
-        observableOf({
-          type: "representationChange" as "representationChange",
-          value: {
-            type: adaptation.type,
-            period,
-            representation,
-          },
-        }).pipe(concat(createRepresentationBuffer(representation)))
+        observableConcat(
+          observableOf({
+            type: "representationChange" as "representationChange",
+            value: {
+              type: adaptation.type,
+              period,
+              representation,
+            },
+          }),
+          createRepresentationBuffer(representation)
+        )
       ));
 
     return observableMerge(buffer$, bitrateEstimate$);
