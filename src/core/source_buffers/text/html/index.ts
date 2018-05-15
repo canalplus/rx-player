@@ -15,6 +15,7 @@
  */
 
 import {
+  concat as observableConcat,
   interval as observableInterval,
   merge as observableMerge,
   Observable,
@@ -22,7 +23,6 @@ import {
   Subject,
 } from "rxjs";
 import {
-  concat,
   mapTo,
   startWith,
   switchMapTo,
@@ -71,8 +71,11 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
   return manualRefresh$.pipe(
     startWith(null),
     switchMapTo(
-      autoRefresh$
-        .pipe(mapTo(true), takeUntil(seeking$), concat(observableOf(false)))
+      observableConcat(
+        autoRefresh$
+          .pipe(mapTo(true), takeUntil(seeking$)),
+        observableOf(false)
+      )
     )
   );
 }

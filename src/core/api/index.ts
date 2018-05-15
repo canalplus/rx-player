@@ -24,6 +24,7 @@ import deepEqual = require("deep-equal");
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
   ConnectableObservable,
   EMPTY,
   merge as observableMerge,
@@ -34,7 +35,6 @@ import {
 } from "rxjs";
 import {
   catchError,
-  concat,
   distinctUntilChanged,
   filter,
   map,
@@ -769,10 +769,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         url,
         videoElement,
       })
-        .pipe(
-          takeUntil(closeStream$),
-          publish()
-        );
+        .pipe(takeUntil(closeStream$))
+        .pipe(publish()) as ConnectableObservable<IStreamEvent>;
     } else {
       stream = StreamDirectFile({
         autoPlay,
@@ -783,10 +781,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         startAt,
         url,
       })
-        .pipe(
-          takeUntil(closeStream$),
-          publish()
-        );
+        .pipe(takeUntil(closeStream$))
+        .pipe(publish()) as ConnectableObservable<IStreamEvent>;
     }
 
     /**
@@ -830,32 +826,28 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * TODO only way to call setPlayerState?
      * @type {Observable.<string>}
      */
-    const stateChanges$ = loaded
-      .pipe(
-        mapTo(PLAYER_STATES.LOADED),
-        concat(
-          observableCombineLatest(
-            this._priv_playing$,
-            stalled$.pipe(startWith(null as { reason : string }|null)),
-            endedEvent$.pipe(startWith(null)),
-            seekingEvent$.pipe(startWith(null))
-          )
-            .pipe(
-              takeUntil(this._priv_stopCurrentContent$),
-              map(([isPlaying, stalledStatus]) => {
-                return getPlayerState(videoElement, isPlaying, stalledStatus);
-              }),
+    const stateChanges$ = observableConcat(
+      loaded.pipe(mapTo(PLAYER_STATES.LOADED)),
 
-              // begin emitting those only when the content start to play
-              skipUntil(
-                this._priv_playing$
-                  .pipe(filter(isPlaying => isPlaying))
-              )
-            )
-        ),
-        distinctUntilChanged(),
-        startWith(PLAYER_STATES.LOADING)
-      );
+      observableCombineLatest(
+        this._priv_playing$,
+        stalled$.pipe(startWith(null as { reason : string }|null)),
+        endedEvent$.pipe(startWith(null)),
+        seekingEvent$.pipe(startWith(null))
+      )
+      .pipe(
+        takeUntil(this._priv_stopCurrentContent$),
+        map(([isPlaying, stalledStatus]) => {
+          return getPlayerState(videoElement, isPlaying, stalledStatus);
+        }),
+
+        // begin emitting those only when the content start to play
+        skipUntil(
+          this._priv_playing$
+          .pipe(filter(isPlaying => isPlaying))
+        )
+      )
+    ).pipe(distinctUntilChanged(), startWith(PLAYER_STATES.LOADING));
 
     /**
      * Emit true each time the player goes into a "play" state.

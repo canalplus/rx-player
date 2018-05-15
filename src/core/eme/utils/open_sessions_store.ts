@@ -16,6 +16,7 @@
 
 import arrayFind = require("array-find");
 import {
+  concat as observableConcat,
   defer as observableDefer,
   merge as observableMerge,
   Observable,
@@ -23,7 +24,6 @@ import {
 } from "rxjs";
 import {
   catchError,
-  concat,
   ignoreElements,
   mapTo,
 } from "rxjs/operators";
@@ -174,9 +174,9 @@ export default class MediaKeySessionsStore {
     return observableDefer(() => {
       const disposed = this._entries.map((e) => this.closeSession(e.session));
       this._entries = [];
-      return observableMerge(...disposed).pipe(
-        ignoreElements(),
-        concat(observableOf(null))
+      return observableConcat(
+        observableMerge(...disposed).pipe(ignoreElements()),
+        observableOf(null)
       );
     });
   }
