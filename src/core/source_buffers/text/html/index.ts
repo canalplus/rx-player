@@ -15,9 +15,19 @@
  */
 
 import {
+  interval as observableInterval,
+  merge as observableMerge,
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
+import {
+  concat,
+  mapTo,
+  startWith,
+  switchMapTo,
+  takeUntil,
+} from "rxjs/operators";
 import {
   onEnded$,
   onSeeked$,
@@ -49,23 +59,22 @@ const {
  * @returns {Observable}
  */
 function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
-  const seeking$ = onSeeking$(videoElement);
-  const seeked$ = onSeeked$(videoElement);
-  const ended$ = onEnded$(videoElement);
+  const seeking$ = onSeeking$(videoElement).pipe(mapTo(null));
+  const seeked$ = onSeeked$(videoElement).pipe(mapTo(null));
+  const ended$ = onEnded$(videoElement).pipe(mapTo(null));
 
-  const manualRefresh$ = Observable.merge(seeked$, ended$);
-  const autoRefresh$ = Observable
-    .interval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-    .startWith(null);
+  const manualRefresh$ = observableMerge(seeked$, ended$);
+  const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
+    .pipe(mapTo(null), startWith(null));
 
   // TODO Better way to express that
-  return manualRefresh$
-    .startWith(null)
-    .switchMapTo(
-      autoRefresh$.mapTo(true)
-      .takeUntil(seeking$)
-      .concat(Observable.of(false))
-    );
+  return manualRefresh$.pipe(
+    startWith(null),
+    switchMapTo(
+      autoRefresh$
+        .pipe(mapTo(true), takeUntil(seeking$), concat(observableOf(false)))
+    )
+  );
 }
 
 /**
@@ -113,7 +122,7 @@ export default class HTMLTextTrackSourceBuffer
     this._currentElement = null;
 
     generateClock(this._videoElement)
-      .takeUntil(this._destroy$)
+      .pipe(takeUntil(this._destroy$))
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
           safelyRemoveChild(textTrackElement, this._currentElement);
