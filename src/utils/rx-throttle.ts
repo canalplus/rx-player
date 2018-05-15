@@ -18,6 +18,7 @@ import {
   EMPTY,
   Observable,
 } from "rxjs";
+import { tap } from "rxjs/operators";
 import castToObservable from "./castToObservable";
 import noop from "./noop";
 
@@ -57,10 +58,10 @@ export default function throttle<T>(
     isPending = true;
 
     return castToObservable(func(...args))
-      .do(
+      .pipe(tap(
         noop,
         () => isPending = false,
         () => isPending = false
-      );
+      ));
   };
 }
