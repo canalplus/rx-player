@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
 import { isCodecSupported } from "../compat";
 import { CustomError, MediaError } from "../errors";
 import {
