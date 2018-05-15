@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-
-import "rxjs/add/observable/fromPromise";
+import {
+  from as observableFrom,
+  Observable,
+  of as observableOf,
+} from "rxjs";
 
 interface IObservableLike<T> {
   subscribe(
@@ -64,10 +66,10 @@ function castToObservable<T>(value? : any) : Observable<T> {
   }
 
   if (value && typeof value.then === "function") {
-    return Observable.fromPromise(value);
+    return observableFrom(value);
   }
 
-  return Observable.of(value);
+  return observableOf(value);
 }
 
 export default castToObservable;

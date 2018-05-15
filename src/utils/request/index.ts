@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
+import { Observable ,  Observer } from "rxjs";
 import { RequestError, RequestErrorTypes } from "../../errors";
 
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";

@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 
 import castToObservable from "../castToObservable";
 import noop from "../noop";
