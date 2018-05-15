@@ -15,7 +15,18 @@
  */
 
 import arrayFind = require("array-find");
-import { Observable } from "rxjs";
+import {
+  defer as observableDefer,
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  catchError,
+  concat,
+  ignoreElements,
+  mapTo,
+} from "rxjs/operators";
 import {
   IMediaKeySession,
   IMockMediaKeys,
@@ -137,19 +148,20 @@ export default class MediaKeySessionsStore {
   public closeSession(
     session_ : IMediaKeySession|MediaKeySession
   ) : Observable<null> {
-    return Observable.defer(() => {
+    return observableDefer(() => {
       const session = this._delete(session_);
       if (session == null) {
-        return Observable.of(null);
+        return observableOf(null);
       }
 
       log.debug("eme-mem-store: close session", session);
 
-      return castToObservable(session.close())
-        .mapTo(null)
-        .catch(() => {
-          return Observable.of(null);
-        });
+      return castToObservable(session.close()).pipe(
+        mapTo(null),
+        catchError(() => {
+          return observableOf(null);
+        })
+      );
     });
   }
 
@@ -159,12 +171,13 @@ export default class MediaKeySessionsStore {
    * @returns {Observable}
    */
   public closeAllSessions() : Observable<null> {
-    return Observable.defer(() => {
+    return observableDefer(() => {
       const disposed = this._entries.map((e) => this.closeSession(e.session));
       this._entries = [];
-      return Observable.merge(...disposed)
-        .ignoreElements()
-        .concat(Observable.of(null));
+      return observableMerge(...disposed).pipe(
+        ignoreElements(),
+        concat(observableOf(null))
+      );
     });
   }
 
