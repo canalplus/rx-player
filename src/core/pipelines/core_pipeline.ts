@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-
-import {merge as observableMerge, of as observableOf, 
-  EMPTY,
-  Observable,
-  Subject,
-} from 'rxjs';
-
-import {map, concat, catchError, mergeMap, finalize, tap} from 'rxjs/operators';
 import objectAssign = require("object-assign");
+import {
+  EMPTY,
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
+  Subject,
+} from "rxjs";
+import {
+  catchError,
+  concat,
+  finalize,
+  map,
+  mergeMap,
+  tap,
+} from "rxjs/operators";
 import config from "../../config";
 import {
   CustomError,
@@ -224,8 +231,9 @@ export default function createPipeline<T, U, V>(
    * @returns {Observable}
    */
   function callResolver(resolverArgument : T) : Observable<T> {
-    return tryCatch<T, T>(resolver, resolverArgument).pipe(
-      catchError((error : Error) : Observable<never> => {
+    return tryCatch<T, T>(resolver, resolverArgument)
+      .pipe()
+      .pipe(catchError((error : Error) : Observable<never> => {
         throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
       }));
   }
@@ -260,7 +268,8 @@ export default function createPipeline<T, U, V>(
           if (arg.type === "response" && cache) {
             cache.add(loaderArgument, arg.value);
           }
-        }),);
+        })
+      );
 
       return observableOf({
         type: "request" as "request",
@@ -278,7 +287,8 @@ export default function createPipeline<T, U, V>(
             value: response,
           };
         }),
-        catchError(startLoaderWithBackoff),);
+        catchError(startLoaderWithBackoff)
+      );
     }
 
     return startLoaderWithBackoff();
@@ -292,8 +302,9 @@ export default function createPipeline<T, U, V>(
    * @returns {Observable}
    */
   function callParser<Y>(parserArgument : Y) : Observable<V> {
-    return tryCatch<Y, V>(parser as any, parserArgument).pipe(
-      catchError((error) : Observable<never> => {
+    return tryCatch<Y, V>(parser as any, parserArgument)
+      .pipe()
+      .pipe(catchError((error) : Observable<never> => {
         throw errorSelector("PIPELINE_PARSING_ERROR", error);
       }));
   }
@@ -344,10 +355,11 @@ export default function createPipeline<T, U, V>(
             }
           }));
       }),
-      finalize(() => { retryErrorSubject.complete(); }),);
+      finalize(() => { retryErrorSubject.complete(); })
+    );
 
-    const retryError$ : Observable<IPipelineError> = retryErrorSubject.pipe(
-      map(error => ({
+    const retryError$ : Observable<IPipelineError> = retryErrorSubject
+      .pipe(map(error => ({
         type: "error" as "error",
         value: error,
       })));
