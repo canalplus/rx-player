@@ -27,6 +27,10 @@ import {
   Observer,
   ReplaySubject,
 } from "rxjs";
+import {
+  multicast,
+  refCount,
+} from "rxjs/operators";
 import config from "../../config";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
@@ -333,10 +337,10 @@ function createClock(
       SCANNED_VIDEO_EVENTS.forEach((eventName) =>
         video.removeEventListener(eventName, emitSample));
     };
-  })
-    .multicast(() => new ReplaySubject<IClockTick>(1)) // Always emit the last
-                                                       // item on subscription
-    .refCount();
+  }).pipe(
+    multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last
+    refCount()
+  );
 }
 
 export default createClock;
