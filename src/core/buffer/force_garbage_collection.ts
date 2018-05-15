@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  from as observableFrom,
+  Observable
+} from "rxjs";
+import {
+  concatAll,
+  mergeMap,
+  take,
+} from "rxjs/operators";
 import config from "../../config";
 import log from "../../utils/log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
@@ -38,23 +46,26 @@ export default function forceGarbageCollection(
   bufferingQueue : QueuedSourceBuffer<any> // The type of buffer has no importance here
 ) : Observable<void> {
   // wait for next timing event
-  return timings$.take(1).mergeMap((timing) => {
-    log.warn("buffer: running garbage collector");
-    const buffered = bufferingQueue.getBuffered();
-    let cleanedupRanges =
-      selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
+  return timings$.pipe(
+    take(1),
+    mergeMap((timing) => {
+      log.warn("buffer: running garbage collector");
+      const buffered = bufferingQueue.getBuffered();
+      let cleanedupRanges =
+        selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
 
-    // more aggressive GC if we could not find any range to clean
-    if (cleanedupRanges.length === 0) {
-      cleanedupRanges =
-        selectGCedRanges(timing.currentTime, buffered, GC_GAP_BEEFY);
-    }
+      // more aggressive GC if we could not find any range to clean
+      if (cleanedupRanges.length === 0) {
+        cleanedupRanges =
+          selectGCedRanges(timing.currentTime, buffered, GC_GAP_BEEFY);
+      }
 
-    log.debug("buffer: gc cleaning", cleanedupRanges);
-    return Observable.from(
-      cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
-    ).concatAll();
-  });
+      log.debug("buffer: gc cleaning", cleanedupRanges);
+      return observableFrom(
+        cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
+      ).pipe(concatAll());
+    })
+  );
 }
 
 /**

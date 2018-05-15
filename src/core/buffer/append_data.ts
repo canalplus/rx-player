@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  catchError,
+  mergeMapTo,
+} from "rxjs/operators";
 import { MediaError } from "../../errors";
 import { ISegment } from "../../manifest";
 import { QueuedSourceBuffer } from "../source_buffers";
@@ -41,11 +48,11 @@ function appendDataToSourceBuffer<T>(
   let append$ : Observable<void>;
   if (segment.isInit) {
     append$ = initSegmentData == null ?
-      Observable.of(undefined) :
+      observableOf(undefined) :
       queuedSourceBuffer.appendBuffer(initSegmentData, null);
   } else {
     append$ = segmentData == null ?
-      Observable.of(undefined) :
+      observableOf(undefined) :
       queuedSourceBuffer.appendBuffer(initSegmentData, segmentData);
   }
   return append$;
@@ -73,17 +80,17 @@ export default function appendDataToSourceBufferWithRetries<T>(
   const append$ = appendDataToSourceBuffer(
     queuedSourceBuffer, initSegmentData, segment, segmentData);
 
-  return append$
-    .catch((appendError : Error) : Observable<void> => {
+  return append$.pipe(
+    catchError((appendError : Error) : Observable<void> => {
       if (!appendError || appendError.name !== "QuotaExceededError") {
         throw new MediaError("BUFFER_APPEND_ERROR", appendError, true);
       }
 
-      return forceGarbageCollection(clock$, queuedSourceBuffer)
-        .mergeMapTo(append$)
-        .catch((forcedGCError : Error) : never|Observable<void> => {
+      return forceGarbageCollection(clock$, queuedSourceBuffer).pipe(
+        mergeMapTo(append$),
+        catchError((forcedGCError : Error) : never|Observable<void> => {
           // (weird Typing either due to TypeScript or RxJS bug)
           throw new MediaError("BUFFER_FULL_ERROR", forcedGCError, true);
-        });
-    });
+        }));
+    }));
 }

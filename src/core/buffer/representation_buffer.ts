@@ -15,10 +15,24 @@
  */
 
 import {
+  combineLatest as observableCombineLatest,
+  concat as observableConcat,
+  defer as observableDefer,
   EMPTY,
+  merge as observableMerge,
   Observable,
+  of as observableOf,
   ReplaySubject,
 } from "rxjs";
+import {
+  finalize,
+  map,
+  mapTo,
+  mergeMap,
+  share,
+  switchMap,
+  tap,
+} from "rxjs/operators";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -271,7 +285,7 @@ export default function RepresentationBuffer<T>({
    */
   function requestSegments() : Observable<ILoadedSegmentObject<T>> {
     const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
-      Observable.defer(() => {
+      observableDefer(() : Observable<ILoadedSegmentObject<T>> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
           return EMPTY;
@@ -290,15 +304,19 @@ export default function RepresentationBuffer<T>({
         }, priority);
 
         currentSegmentRequest = { segment, priority, request$ };
-        return request$
-          .map((args) => ({ segment, value: args.parsed }))
-          .concat(requestNextSegment$);
+        const response$ : Observable<ILoadedSegmentObject<T>> = request$
+          .pipe(map((args) => ({ segment, value: args.parsed })));
+
+        return observableConcat<ILoadedSegmentObject<T>>(
+          response$,
+          requestNextSegment$
+        );
       });
 
     return requestNextSegment$
-      .finally(() => {
+      .pipe(finalize(() => {
         currentSegmentRequest = null;
-      });
+      }));
   }
 
   /**
@@ -310,7 +328,7 @@ export default function RepresentationBuffer<T>({
   function appendSegment(
     data : ILoadedSegmentObject<T>
   ) : Observable<IBufferEventAddedSegment<T>> {
-    return Observable.defer(() => {
+    return observableDefer(() => {
       const { segment } = data;
       const { segmentInfos, segmentData } = data.value;
 
@@ -330,16 +348,16 @@ export default function RepresentationBuffer<T>({
 
       sourceBufferWaitingQueue.add(segment.id);
 
-      return append$
-        .mapTo({
+      return append$.pipe(
+        mapTo({
           type: "added-segment" as "added-segment",
           value : {
             bufferType,
             segment,
             segmentData,
           },
-        })
-        .do(() => {
+        }),
+        tap(() => {
           if (segment.isInit) {
             return;
           }
@@ -361,10 +379,10 @@ export default function RepresentationBuffer<T>({
             duration != null ?
             (time + duration) / timescale : undefined // end
           );
-        })
-        .finally(() => {
+        }),
+        finalize(() => {
           sourceBufferWaitingQueue.remove(segment.id);
-        });
+        }));
     });
   }
 
@@ -453,8 +471,11 @@ export default function RepresentationBuffer<T>({
     const downloadQueueState = updateQueueFromInternalState(state);
 
     return downloadQueueState.type === "idle-buffer" ?
-      Observable.of(...neededActions) :
-      Observable.of(...neededActions).concat(Observable.of(downloadQueueState));
+      observableOf(...neededActions) :
+      observableConcat(
+        observableOf(...neededActions),
+        observableOf(downloadQueueState)
+      );
   }
 
   /**
@@ -531,9 +552,10 @@ export default function RepresentationBuffer<T>({
    * @type {Observable}
    */
   const bufferState$ : Observable<IBufferStateEvent> =
-    Observable.combineLatest(clock$, wantedBufferAhead$)
-      .map(getBufferStatus)
-      .mergeMap(handleBufferStatus);
+    observableCombineLatest(clock$, wantedBufferAhead$).pipe(
+      map(getBufferStatus),
+      mergeMap(handleBufferStatus)
+    );
 
   /**
    * Buffer Queue:
@@ -541,12 +563,13 @@ export default function RepresentationBuffer<T>({
    *   - append them to the SourceBuffer
    * @type {Observable}
    */
-  const bufferQueue$ = startQueue$
-    .switchMap(requestSegments)
-    .mergeMap(appendSegment);
+  const bufferQueue$ = startQueue$.pipe(
+    switchMap(requestSegments),
+    mergeMap(appendSegment)
+  );
 
-  return Observable.merge(bufferState$, bufferQueue$)
-    .share();
+  return observableMerge(bufferState$, bufferQueue$)
+    .pipe(share());
 }
 
 /**
