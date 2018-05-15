@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import { map } from "rxjs/operators";
 import {
   Adaptation,
   Representation,
@@ -101,20 +105,23 @@ export default function(
           url: replaceToken(url, ""),
           responseType: "document",
           ignoreProgressEvents: true,
-        })
-          .map(({ value }) : string => {
+        }).pipe(
+          map(({ value }) : string => {
             const extractedURL = extractISML(value.responseData);
             if (!extractedURL) {
               throw new Error("Invalid ISML");
             }
             return extractedURL;
-          });
+          })
+        );
       } else {
-        resolving = Observable.of(url);
+        resolving = observableOf(url);
       }
 
       return resolving
-        .map((_url) => ({ url: replaceToken(resolveManifest(_url), token) }));
+        .pipe(map((_url) => ({
+          url: replaceToken(resolveManifest(_url), token),
+        })));
     },
 
     loader(
@@ -131,7 +138,7 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
       const manifest = smoothManifestParser(data, url);
-      return Observable.of({ manifest, url });
+      return observableOf({ manifest, url });
     },
   };
 
@@ -172,7 +179,7 @@ export default function(
           time: -1,
           duration: 0,
         };
-        return Observable.of({
+        return observableOf({
           segmentData: responseData,
           segmentInfos: initSegmentInfos,
         });
@@ -187,7 +194,7 @@ export default function(
       if (nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
-      return Observable.of({ segmentData, segmentInfos });
+      return observableOf({ segmentData, segmentInfos });
     },
   };
 
@@ -198,7 +205,7 @@ export default function(
     } : ISegmentLoaderArguments
     ) : ILoaderObservable<string|ArrayBuffer|null> {
       if (segment.isInit) {
-        return Observable.of({
+        return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
@@ -238,7 +245,7 @@ export default function(
       const responseData = response.responseData;
 
       if (responseData === null) {
-        return Observable.of({
+        return observableOf({
           segmentData: null,
           segmentInfos: segment.timescale > 0 ? {
             duration: segment.isInit ? 0 : segment.duration,
@@ -335,7 +342,7 @@ export default function(
       if (segmentInfos != null && nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
-      return Observable.of({
+      return observableOf({
         segmentData: {
           type: _sdType,
           data: _sdData,
@@ -356,7 +363,7 @@ export default function(
     ) : ILoaderObservable<ArrayBuffer|null> {
       if (segment.isInit) {
         // image do not need an init segment. Passthrough directly to the parser
-        return Observable.of({
+        return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
@@ -373,7 +380,7 @@ export default function(
       const responseData = response.responseData;
 
       if (responseData === null) {
-        return Observable.of({
+        return observableOf({
           segmentData: null,
           segmentInfos: segment.timescale > 0 ? {
             duration: segment.isInit ? 0 : segment.duration,
@@ -385,7 +392,7 @@ export default function(
 
       const bifObject = parseBif(new Uint8Array(responseData));
       const data = bifObject.thumbs;
-      return Observable.of({
+      return observableOf({
         segmentData: {
           data,
           start: 0,
