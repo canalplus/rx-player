@@ -15,7 +15,10 @@
  */
 
 import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
+import {
+  merge as observableMerge,
+  of as observableOf,
+} from "rxjs";
 
 import assert from "../../utils/assert";
 import { stringFromUTF8 } from "../../utils/strings";
@@ -67,7 +70,7 @@ function TextTrackLoader(
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
   if (isInit && !(media || range || indexRange)) {
-    return Observable.of({
+    return observableOf({
       type: "data" as "data",
       value: { responseData: null },
     });
@@ -110,7 +113,7 @@ function TextTrackLoader(
       Range: byteRange(indexRange),
     },
   });
-  return Observable.merge(mediaRequest, indexRequest);
+  return observableMerge(mediaRequest, indexRequest);
 }
 
 /**
@@ -130,7 +133,7 @@ function TextTrackParser({
   const { isInit, indexRange } = segment;
 
   if (response.responseData == null) {
-    return Observable.of({
+    return observableOf({
       segmentData: null,
       segmentInfos: segment.timescale > 0 ? {
         duration: segment.isInit ? 0 : segment.duration,
@@ -253,7 +256,7 @@ function TextTrackParser({
   if (nextSegments) {
     addNextSegments(representation, nextSegments, segmentInfos);
   }
-  return Observable.of({ segmentData, segmentInfos });
+  return observableOf({ segmentData, segmentInfos });
 }
 
 export {

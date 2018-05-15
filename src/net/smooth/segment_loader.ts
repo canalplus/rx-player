@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 
 import assert from "../../utils/assert";
 import request from "../../utils/request";
@@ -119,7 +122,7 @@ const generateSegmentLoader = (
       responseData = new Uint8Array(0);
     }
 
-    return Observable.of({
+    return observableOf({
       type: "data" as "data", // :/ TS Bug or I'm going insane?
       value: { responseData },
     });
