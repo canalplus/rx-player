@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  combineLatest as observableCombineLatest,
+  Observable,
+} from "rxjs";
+import {
+  filter,
+  map,
+} from "rxjs/operators";
 import Manifest, {
   Period,
 } from "../../manifest";
@@ -43,14 +50,15 @@ export default function createFakeBuffer(
   content : { manifest : Manifest; period : Period }
 ) : Observable<IBufferStateFull> {
   const { period } = content;
-  return Observable.combineLatest(bufferClock$, wantedBufferAhead$)
-    .filter(([clockTick, wantedBufferAhead]) =>
+  return observableCombineLatest(bufferClock$, wantedBufferAhead$).pipe(
+    filter(([clockTick, wantedBufferAhead]) =>
       period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
-    )
-    .map(() => {
+    ),
+    map(() => {
       return {
         type: "full-buffer" as "full-buffer",
         value: { bufferType },
       };
-    });
+    })
+  );
 }
