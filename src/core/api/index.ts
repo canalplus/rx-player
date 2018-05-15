@@ -23,13 +23,29 @@
 import deepEqual = require("deep-equal");
 import {
   BehaviorSubject,
+  combineLatest as observableCombineLatest,
+  ConnectableObservable,
   EMPTY,
+  merge as observableMerge,
   Observable,
   ReplaySubject,
   Subject,
   Subscription,
 } from "rxjs";
-import { ConnectableObservable } from "rxjs/observable/ConnectableObservable";
+import {
+  catchError,
+  concat,
+  distinctUntilChanged,
+  filter,
+  map,
+  mapTo,
+  publish,
+  share,
+  skipUntil,
+  startWith,
+  take,
+  takeUntil,
+} from "rxjs/operators";
 import config from "../../config";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
@@ -497,39 +513,38 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_destroy$ = new Subject();
 
     onFullscreenChange$(videoElement)
-      .takeUntil(this._priv_destroy$)
+      .pipe(takeUntil(this._priv_destroy$))
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
 
     onTextTrackChanges$(videoElement.textTracks)
-      .takeUntil(this._priv_destroy$)
-      .map((evt : Event) => { // prepare TextTrack array
-        const target = evt.target as TextTrackList;
-        const arr : TextTrack[] = [];
-        for (let i = 0; i < target.length; i++) {
-          const textTrack = target[i];
-          arr.push(textTrack);
-        }
-        return arr;
-      })
+      .pipe(
+        takeUntil(this._priv_destroy$),
+        map((evt : Event) => { // prepare TextTrack array
+          const target = evt.target as TextTrackList;
+          const arr : TextTrack[] = [];
+          for (let i = 0; i < target.length; i++) {
+            const textTrack = target[i];
+            arr.push(textTrack);
+          }
+          return arr;
+        }),
 
-      // We can have two consecutive textTrackChanges with the exact same
-      // payload when we perform multiple texttrack operations before the event
-      // loop is freed.
-      // In that case we only want to fire one time the observable.
-      .distinctUntilChanged((
-        textTracksA : TextTrack[],
-        textTracksB : TextTrack[]
-      ) => {
-        if (textTracksA.length !== textTracksB.length) {
-          return false;
-        }
-        for (let i = 0; i < textTracksA.length; i++) {
-          if (textTracksA[i] !== textTracksB[i]) {
+        // We can have two consecutive textTrackChanges with the exact same
+        // payload when we perform multiple texttrack operations before the event
+        // loop is freed.
+        // In that case we only want to fire one time the observable.
+        distinctUntilChanged((textTracksA, textTracksB) => {
+          if (textTracksA.length !== textTracksB.length) {
             return false;
           }
-        }
-        return true;
-      })
+          for (let i = 0; i < textTracksA.length; i++) {
+            if (textTracksA[i] !== textTracksB[i]) {
+              return false;
+            }
+          }
+          return true;
+        })
+      )
       .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
 
     this._priv_playing$ = new ReplaySubject(1);
@@ -686,10 +701,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       withMediaSource: !isDirectFile,
     });
 
-    const closeStream$ = Observable.merge(
+    const closeStream$ = observableMerge(
       this._priv_stopCurrentContent$,
       this._priv_stopAtEnd ? onEnded$(videoElement) : EMPTY
-    ).take(1);
+    ).pipe(take(1));
 
     let stream : ConnectableObservable<IStreamEvent>;
 
@@ -711,12 +726,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
         throttle: this._priv_throttleWhenHidden ? {
           video: isInBackground$()
-          .map(isBg => isBg ? 0 : Infinity)
-          .takeUntil(this._priv_stopCurrentContent$),
+          .pipe(
+            map(isBg => isBg ? 0 : Infinity),
+            takeUntil(this._priv_stopCurrentContent$)
+          ),
         } : {},
         limitWidth: this._priv_limitVideoWidth ? {
           video: videoWidth$(videoElement)
-          .takeUntil(this._priv_stopCurrentContent$),
+            .pipe(takeUntil(this._priv_stopCurrentContent$)),
         } : {},
       };
 
@@ -752,8 +769,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         url,
         videoElement,
       })
-        .takeUntil(closeStream$)
-        .publish();
+        .pipe(
+          takeUntil(closeStream$),
+          publish()
+        );
     } else {
       stream = StreamDirectFile({
         autoPlay,
@@ -764,8 +783,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         startAt,
         url,
       })
-        .takeUntil(closeStream$)
-        .publish();
+        .pipe(
+          takeUntil(closeStream$),
+          publish()
+        );
     }
 
     /**
@@ -774,80 +795,94 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * @type {Observable}
      */
     const stalled$ = stream
-      .filter(({ type }) => type === "stalled")
-      .map(x => x.value)  as Observable<null|{ reason : string }>;
+      .pipe(
+        filter(({ type }) => type === "stalled"),
+        map(x => x.value)
+      )  as Observable<null|{ reason : string }>;
 
     /**
      * Emit when the stream is considered "loaded".
      * @type {Observable}
      */
     const loaded = stream
-      .filter(({ type }) => type === "loaded")
-      .take(1)
-      .share();
+      .pipe(
+        filter(({ type }) => type === "loaded"),
+        take(1),
+        share()
+      );
 
     /**
      * Emit when the media element emits an "ended" event.
      * @type {Observable}
      */
-    const endedEvent$ = onEnded$(videoElement);
+    const endedEvent$ = onEnded$(videoElement)
+      .pipe(mapTo(null));
 
     /**
      * Emit when the media element emits a "seeking" event.
      * @type {Observable}
      */
-    const seekingEvent$ = onSeeking$(videoElement);
+    const seekingEvent$ = onSeeking$(videoElement)
+      .pipe(mapTo(null));
 
     /**
      * Emit the player state as it changes.
      * TODO only way to call setPlayerState?
      * @type {Observable.<string>}
      */
-    const stateChanges$ = loaded.mapTo(PLAYER_STATES.LOADED)
-      .concat(
-          Observable.combineLatest(
+    const stateChanges$ = loaded
+      .pipe(
+        mapTo(PLAYER_STATES.LOADED),
+        concat(
+          observableCombineLatest(
             this._priv_playing$,
-            stalled$.startWith(null),
-            endedEvent$.startWith(null),
-            seekingEvent$.startWith(null)
+            stalled$.pipe(startWith(null as { reason : string }|null)),
+            endedEvent$.pipe(startWith(null)),
+            seekingEvent$.pipe(startWith(null))
           )
-            .takeUntil(this._priv_stopCurrentContent$)
-            .map(([isPlaying, stalledStatus]) => {
-              return getPlayerState(videoElement, isPlaying, stalledStatus);
-            })
+            .pipe(
+              takeUntil(this._priv_stopCurrentContent$),
+              map(([isPlaying, stalledStatus]) => {
+                return getPlayerState(videoElement, isPlaying, stalledStatus);
+              }),
 
-            // begin emitting those only when the content start to play
-            .skipUntil(
-              this._priv_playing$.filter(isPlaying => isPlaying)
+              // begin emitting those only when the content start to play
+              skipUntil(
+                this._priv_playing$
+                  .pipe(filter(isPlaying => isPlaying))
+              )
             )
-      )
-        .distinctUntilChanged()
-        .startWith(PLAYER_STATES.LOADING);
+        ),
+        distinctUntilChanged(),
+        startWith(PLAYER_STATES.LOADING)
+      );
 
     /**
      * Emit true each time the player goes into a "play" state.
      * @type {Observable.<Boolean>}
      */
     const videoPlays$ = onPlayPause$(videoElement)
-      .map(evt => evt.type === "play");
+      .pipe(map(evt => evt.type === "play"));
 
     let streamDisposable : Subscription|undefined;
-    this._priv_stopCurrentContent$.take(1).subscribe(() => {
-      if (streamDisposable) {
-        streamDisposable.unsubscribe();
-      }
-    });
+    this._priv_stopCurrentContent$
+      .pipe(take(1))
+      .subscribe(() => {
+        if (streamDisposable) {
+          streamDisposable.unsubscribe();
+        }
+      });
 
     videoPlays$
-      .takeUntil(this._priv_stopCurrentContent$)
+      .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_onPlayPauseNext(x), noop);
 
     clock$
-      .takeUntil(this._priv_stopCurrentContent$)
+      .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_triggerTimeChange(x), noop);
 
     stateChanges$
-      .takeUntil(this._priv_stopCurrentContent$)
+      .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_setPlayerState(x), noop);
 
     stream.subscribe(
@@ -858,9 +893,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // connect the stream when the lock is inactive
     this._priv_streamLock$
-      .filter((isLocked) => !isLocked)
-      .take(1)
-      .takeUntil(this._priv_stopCurrentContent$)
+      .pipe(
+        filter((isLocked) => !isLocked),
+        take(1),
+        takeUntil(this._priv_stopCurrentContent$)
+      )
       .subscribe(() => {
         streamDisposable = stream.connect();
       });
@@ -1712,7 +1749,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     if (this.videoElement) {
       clearEMESession(this.videoElement)
-        .catch(() => EMPTY)
+        .pipe(catchError(() => EMPTY))
         .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
     } else {
       freeUpStreamLock();
