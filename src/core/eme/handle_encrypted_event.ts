@@ -15,9 +15,18 @@
  */
 
 import {
+  defer as observableDefer,
   EMPTY,
+  merge as observableMerge,
   Observable,
+  of as observableOf,
 } from "rxjs";
+import {
+  concat,
+  ignoreElements,
+  map,
+  mergeMap,
+} from "rxjs/operators";
 import {
   getInitData,
   IMediaKeySession,
@@ -59,7 +68,7 @@ export default function handleEncryptedEvent(
   handledInitData : InitDataStore,
   mediaKeysInfos : IMediaKeysInfos
 ) : Observable<IHandledEncryptedEvent> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     const {
       initData,
       initDataType,
@@ -79,7 +88,7 @@ export default function handleEncryptedEvent(
       previousLoadedSession = entry.session;
       if (isSessionUsable(previousLoadedSession)) {
         log.debug("eme: reuse loaded session", previousLoadedSession.sessionId);
-        return Observable.of({
+        return observableOf({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
             mediaKeySession: previousLoadedSession,
@@ -95,8 +104,8 @@ export default function handleEncryptedEvent(
 
     return (previousLoadedSession ?
       sessionsStore.closeSession(previousLoadedSession) :
-      Observable.of(null)
-    ).mergeMap(() => {
+      observableOf(null)
+    ).pipe(mergeMap(() => {
       const cleaningOldSessions$ : Array<Observable<null>> = [];
       const entries = sessionsStore.getAll().slice();
       if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
@@ -106,12 +115,11 @@ export default function handleEncryptedEvent(
       }
 
       return (
-        Observable.merge(...cleaningOldSessions$)
-        .ignoreElements()
-      )
-        .concat(
-          createSession(initData, initDataType, mediaKeysInfos)
-          .map((evt) => ({
+        observableMerge(...cleaningOldSessions$)
+          .pipe(ignoreElements())
+      ).pipe(concat(
+        createSession(initData, initDataType, mediaKeysInfos)
+          .pipe(map((evt) => ({
             type: evt.type,
             value: {
               mediaKeySession: evt.value.mediaKeySession,
@@ -119,8 +127,8 @@ export default function handleEncryptedEvent(
               initData,
               initDataType,
             },
-          }))
-        );
-    });
+          })))
+      ));
+    }));
   });
 }

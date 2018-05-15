@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  defer as observableDefer,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import { mergeMapTo } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 
@@ -26,15 +31,15 @@ export default function disposeMediaKeys(
   mediaElement : HTMLMediaElement,
   mediaKeysInfos : MediaKeysInfosStore
 ) : Observable<null> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     const currentState = mediaKeysInfos.getState(mediaElement);
     if (!currentState) {
-      return Observable.of(null);
+      return observableOf(null);
     }
 
     const { sessionsStore } = currentState;
     mediaKeysInfos.clearState(mediaElement);
     return sessionsStore.closeAllSessions()
-      .mergeMapTo(setMediaKeys(mediaElement, null));
+      .pipe(mergeMapTo(setMediaKeys(mediaElement, null)));
   });
 }
