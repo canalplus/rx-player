@@ -15,9 +15,12 @@
  */
 
 import {
+  defer as observableDefer,
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
+import { mapTo } from "rxjs/operators";
 import log from "../../utils/log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import ICustomTimeRanges from "./time_ranges";
@@ -166,7 +169,7 @@ export default class QueuedSourceBuffer<T> {
     initSegment : T|null,
     segment : T|null
   ) : Observable<void> {
-    return Observable.defer(() =>
+    return observableDefer(() =>
       this._queueAction({
         type: SourceBufferAction.Append,
         segment,
@@ -188,7 +191,7 @@ export default class QueuedSourceBuffer<T> {
       end : number;
     }
   ) : Observable<void> {
-    return Observable.defer(() =>
+    return observableDefer(() =>
       this._queueAction({
         type: SourceBufferAction.Remove,
         start,
@@ -290,7 +293,7 @@ export default class QueuedSourceBuffer<T> {
 
       if (initSegment === null && segment === null) {
         log.warn("QueuedSourceBuffer: no segment appended.");
-        return Observable.of(undefined);
+        return observableOf(undefined);
       }
 
       if (initSegment === null) {
@@ -302,7 +305,7 @@ export default class QueuedSourceBuffer<T> {
         });
       } else if (segment === null) {
         if (this._lastInitSegment === initSegment) {
-          return Observable.of(undefined);
+          return observableOf(undefined);
         }
         this._queue.unshift({
           type: SourceBufferAction.Append,
@@ -342,7 +345,7 @@ export default class QueuedSourceBuffer<T> {
       this._flush();
     }
 
-    return subject.mapTo(undefined);
+    return subject.pipe(mapTo(undefined));
   }
 
   /**

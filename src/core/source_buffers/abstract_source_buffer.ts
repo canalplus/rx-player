@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
 import tryCatch from "../../utils/rx-tryCatch";
@@ -97,7 +100,7 @@ export default abstract class AbstractSourceBuffer<T>
     this.trigger("updatestart", undefined);
     const result : Observable<void> = tryCatch(() => {
       func();
-      return Observable.of(undefined);
+      return observableOf(undefined);
     });
     result.subscribe(
       ()  => setTimeout(() => { this._unlock("update"); }, 0),
