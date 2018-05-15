@@ -16,6 +16,7 @@
 
 import {
   EMPTY,
+  merge as observableMerge,
   Observable,
 } from "rxjs";
 import request from "../../utils/request";
@@ -79,7 +80,7 @@ function regularSegmentLoader(
       responseType: "arraybuffer",
       headers: { Range: byteRange(indexRange) },
     });
-    return Observable.merge(mediaOrInitRequest, indexRequest);
+    return observableMerge(mediaOrInitRequest, indexRequest);
   }
   else {
     return mediaOrInitRequest;
