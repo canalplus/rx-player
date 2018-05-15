@@ -22,7 +22,15 @@
  * The first chronological period for which all types of buffers are active.
  */
 
-import { Observable } from "rxjs";
+import {
+  merge as observableMerge,
+  Observable
+} from "rxjs";
+import {
+  distinctUntilChanged,
+  map,
+  tap,
+} from "rxjs/operators";
 import { Period } from "../../manifest";
 import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
@@ -88,7 +96,7 @@ export default function ActivePeriodEmitter(
     new SortedList((a, b) => a.period.start - b.period.start);
 
   const onItemAdd$ = addPeriodBuffer$
-    .do(({ period, type }) => {
+    .pipe(tap(({ period, type }) => {
       // add or update the periodItem
       let periodItem = periodsList.find(p => p.period === period);
       if (!periodItem) {
@@ -103,10 +111,10 @@ export default function ActivePeriodEmitter(
         log.warn(`Buffer type ${type} already added to the period`);
       }
       periodItem.buffers.add(type);
-    });
+    }));
 
   const onItemRemove$ = removePeriodBuffer$
-    .do(({ period, type }) => {
+    .pipe(tap(({ period, type }) => {
       if (!periodsList || periodsList.length() === 0) {
         log.error("ActivePeriodStore: cannot remove, no period is active.");
         return ;
@@ -123,10 +131,10 @@ export default function ActivePeriodEmitter(
       if (!periodItem.buffers.size) {
         periodsList.removeFirst(periodItem);
       }
-    });
+    }));
 
-  return Observable.merge(onItemAdd$, onItemRemove$)
-    .map(() : Period|null => {
+  return observableMerge(onItemAdd$, onItemRemove$).pipe(
+    map(() : Period|null => {
       const head = periodsList.head();
       if (!head) {
         return null;
@@ -134,7 +142,9 @@ export default function ActivePeriodEmitter(
 
       const periodItem = periodsList.find(p => isBufferListFull(p.buffers));
       return periodItem != null ? periodItem.period : null;
-    }).distinctUntilChanged();
+    }),
+    distinctUntilChanged()
+  );
 }
 
 /**

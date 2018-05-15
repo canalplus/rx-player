@@ -15,10 +15,29 @@
  */
 
 import {
+  merge as observableMerge,
   Observable,
+  of as observableOf,
   ReplaySubject,
   Subject,
 } from "rxjs";
+import {
+  catchError,
+  concat,
+  distinctUntilChanged,
+  exhaustMap,
+  filter,
+  ignoreElements,
+  map,
+  mapTo,
+  mergeMap,
+  share,
+  startWith,
+  switchMap,
+  take,
+  takeUntil,
+  tap,
+} from "rxjs/operators";
 import config from "../../config";
 import {
   CustomError,
@@ -164,13 +183,16 @@ export default function BuffersHandler(
   const buffersArray = BUFFER_TYPES
     .map((bufferType) => {
       return manageEveryBuffers(bufferType, firstPeriod)
-        .do((evt) => {
-          if (evt.type === "periodBufferReady") {
-            addPeriodBuffer$.next(evt.value);
-          } else if (evt.type === "periodBufferCleared") {
-            removePeriodBuffer$.next(evt.value);
-          }
-        }).share();
+        .pipe(
+          tap((evt) => {
+            if (evt.type === "periodBufferReady") {
+              addPeriodBuffer$.next(evt.value);
+            } else if (evt.type === "periodBufferCleared") {
+              removePeriodBuffer$.next(evt.value);
+            }
+          }),
+          share()
+        );
     });
 
   /**
@@ -179,27 +201,29 @@ export default function BuffersHandler(
    */
   const activePeriod$ : Observable<Period> =
     ActivePeriodEmitter(addPeriodBuffer$, removePeriodBuffer$)
-      .filter((period) : period is Period => !!period);
+      .pipe(filter((period) : period is Period => !!period));
   /**
    * Emits the activePeriodChanged events every time the active Period changes.
    * @type {Observable}
    */
   const activePeriodChanged$ = activePeriod$
-    .do((period : Period) => {
-      log.info("new active period", period);
-    })
-    .map(period => EVENTS.activePeriodChanged(period));
+    .pipe(
+      tap((period : Period) => {
+        log.info("new active period", period);
+      }),
+      map(period => EVENTS.activePeriodChanged(period))
+    );
 
   /**
    * Emits an "end-of-stream" event once every PeriodBuffer are complete.
    * @type {Observable}
    */
   const streamHasEnded$ = buffersAreComplete(...buffersArray)
-    .map((areComplete) =>
+    .pipe(map((areComplete) =>
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
-    );
+    ));
 
-  return Observable.merge(
+  return observableMerge(
     activePeriodChanged$,
     ...buffersArray,
     streamHasEnded$
@@ -254,25 +278,25 @@ export default function BuffersHandler(
      */
     const destroyCurrentBuffers = new Subject<void>();
 
-    const restartBuffers$ = clock$
+    const restartBuffers$ = clock$.pipe(
 
-      .filter(({ currentTime, timeOffset }) => {
+      filter(({ currentTime, timeOffset }) => {
         if (!manifest.getPeriodForTime(timeOffset + currentTime)) {
           // TODO Manage out-of-manifest situations
           return false;
         }
         return isOutOfPeriodList(timeOffset + currentTime);
-      })
+      }),
 
-      .take(1)
+      take(1),
 
-      .do(({ currentTime, timeOffset }) => {
+      tap(({ currentTime, timeOffset }) => {
         log.info("Current position out of the bounds of the active periods," +
           "re-creating buffers.", bufferType, currentTime + timeOffset);
         destroyCurrentBuffers.next();
-      })
+      }),
 
-      .mergeMap(({ currentTime, timeOffset }) => {
+      mergeMap(({ currentTime, timeOffset }) => {
         const newInitialPeriod = manifest.getPeriodForTime(currentTime + timeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
@@ -281,21 +305,25 @@ export default function BuffersHandler(
         // "periodBufferReady" event for the new InitialPeriod synchronously
         return manageEveryBuffers(bufferType, newInitialPeriod);
         }
-      });
+      })
+    );
 
     const currentBuffers$ = manageConsecutivePeriodBuffers(
       bufferType,
       basePeriod,
       destroyCurrentBuffers
-    ).do((message) => {
-      if (message.type === "periodBufferReady") {
-        periodList.add(message.value.period);
-      } else if (message.type === "periodBufferCleared") {
-        periodList.removeFirst(message.value.period);
-      }
-    }).share(); // as always, with side-effects
+    ).pipe(
+        tap((message) => {
+        if (message.type === "periodBufferReady") {
+          periodList.add(message.value.period);
+        } else if (message.type === "periodBufferCleared") {
+          periodList.removeFirst(message.value.period);
+        }
+      }),
+      share() // as always, with side-effects
+    );
 
-    return Observable.merge(currentBuffers$, restartBuffers$);
+    return observableMerge(currentBuffers$, restartBuffers$);
   }
 
   /**
@@ -361,28 +389,28 @@ export default function BuffersHandler(
      * @type {Subject}
      */
     const endOfCurrentBuffer$ = clock$
-      .filter(({ currentTime, timeOffset }) =>
+      .pipe(filter(({ currentTime, timeOffset }) =>
         !!basePeriod.end && (currentTime + timeOffset) >= basePeriod.end
-      );
+      ));
 
     /**
      * Create Period Buffer for the next Period.
      * @type {Observable}
      */
     const nextPeriodBuffer$ = createNextPeriodBuffer$
-      .exhaustMap((nextPeriod) => {
+      .pipe(exhaustMap((nextPeriod) => {
         return manageConsecutivePeriodBuffers(
           bufferType, nextPeriod, destroyNextBuffers$);
-      });
+      }));
 
     /**
      * Allows to destroy each created Buffer, from the newest to the oldest,
      * once destroy$ emits.
      * @type {Observable}
      */
-    const destroyAll$ = destroy$
-      .take(1)
-      .do(() => {
+    const destroyAll$ = destroy$.pipe(
+      take(1),
+      tap(() => {
         // first complete createNextBuffer$ to allow completion of the
         // nextPeriodBuffer$ observable once every further Buffers have been
         // cleared.
@@ -391,16 +419,18 @@ export default function BuffersHandler(
         // emit destruction signal to the next Buffer first
         destroyNextBuffers$.next();
         destroyNextBuffers$.complete(); // we do not need it anymore
-      }).share(); // share side-effects
+      }),
+      share() // share side-effects
+    );
 
     /**
      * Will emit when the current buffer should be destroyed.
      * @type {Observable}
      */
-    const killCurrentBuffer$ = Observable.merge(endOfCurrentBuffer$, destroyAll$);
+    const killCurrentBuffer$ = observableMerge(endOfCurrentBuffer$, destroyAll$);
 
-    const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$)
-      .mergeMap((
+    const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$).pipe(
+      mergeMap((
         evt : IPeriodBufferEvent
       ) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
@@ -413,7 +443,7 @@ export default function BuffersHandler(
 
           if (nextPeriod == null) {
             // no more period, emits  event
-            return Observable.of(EVENTS.bufferComplete(bufferType));
+            return observableOf(EVENTS.bufferComplete(bufferType));
           } else {
             // current buffer is full, create the next one if not
             createNextPeriodBuffer$.next(nextPeriod);
@@ -422,29 +452,31 @@ export default function BuffersHandler(
           // current buffer is active, destroy next buffer if created
           destroyNextBuffers$.next();
         }
-        return Observable.of(evt);
-      })
-      .share();
+        return observableOf(evt);
+      }),
+      share()
+    );
 
     /**
      * Buffer for the current Period.
      * @type {Observable}
      */
     const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent> =
-      Observable.of(EVENTS.periodBufferReady(bufferType, basePeriod, adaptation$))
-        .concat(periodBuffer$)
-        .takeUntil(killCurrentBuffer$)
-        .concat(
-          Observable.of(EVENTS.periodBufferCleared(bufferType, basePeriod))
-            .do(() => {
+      observableOf(EVENTS.periodBufferReady(bufferType, basePeriod, adaptation$)).pipe(
+        concat(periodBuffer$),
+        takeUntil(killCurrentBuffer$),
+        concat(
+          observableOf(EVENTS.periodBufferCleared(bufferType, basePeriod)).pipe(
+            tap(() => {
               log.info("destroying buffer for", bufferType, basePeriod);
-            })
-        );
+            }))
+        )
+      );
 
-    return Observable.merge(
+    return observableMerge(
       currentBuffer$,
       nextPeriodBuffer$,
-      destroyAll$.ignoreElements()
+      destroyAll$.pipe(ignoreElements())
     );
   }
 
@@ -470,7 +502,7 @@ export default function BuffersHandler(
     period: Period,
     adaptation$ : Observable<Adaptation|null>
   ) : Observable<IPeriodBufferEvent> {
-    return adaptation$.switchMap((adaptation) => {
+    return adaptation$.pipe(switchMap((adaptation) => {
       if (adaptation == null) {
         log.info(`set no ${bufferType} Adaptation`, period);
         let cleanBuffer$ : Observable<null>;
@@ -480,15 +512,16 @@ export default function BuffersHandler(
           const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
           cleanBuffer$ = _queuedSourceBuffer
             .removeBuffer({ start: period.start, end: period.end || Infinity })
-            .mapTo(null);
+            .pipe(mapTo(null));
         } else {
-          cleanBuffer$ = Observable.of(null);
+          cleanBuffer$ = observableOf(null);
         }
 
-        return cleanBuffer$
-          .mapTo(EVENTS.adaptationChange(bufferType, null, period))
-          .concat(createFakeBuffer(
-            clock$, wantedBufferAhead$, bufferType, { manifest, period }));
+        return cleanBuffer$.pipe(
+          mapTo(EVENTS.adaptationChange(bufferType, null, period)),
+          concat(createFakeBuffer(
+            clock$, wantedBufferAhead$, bufferType, { manifest, period }))
+        );
       }
 
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
@@ -532,7 +565,7 @@ export default function BuffersHandler(
         pipeline,
         wantedBufferAhead$,
         { manifest, period, adaptation }
-      ).catch<IAdaptationBufferEvent<any>, never>((error : Error) => {
+      ).pipe(catchError<IAdaptationBufferEvent<any>, never>((error : Error) => {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to
         // continue streaming without any subtitles
@@ -548,13 +581,12 @@ export default function BuffersHandler(
         log.error(
           "native buffer: ", bufferType, "has crashed. Stopping playback.", error);
         throw error; // else, throw
-      });
+      }));
 
       // 5 - Return the buffer and send right events
-      return Observable
-        .of(EVENTS.adaptationChange(bufferType, adaptation, period))
-        .concat(Observable.merge(adaptationBuffer$, bufferGarbageCollector$));
-    });
+      return observableOf(EVENTS.adaptationChange(bufferType, adaptation, period))
+        .pipe(concat(observableMerge(adaptationBuffer$, bufferGarbageCollector$)));
+    }));
   }
 }
 
@@ -619,20 +651,21 @@ function buffersAreComplete(
    */
   const isCompleteArray : Array<Observable<boolean>> = buffers
     .map((buffer) => {
-      return buffer
-        .filter((evt) => {
+      return buffer.pipe(
+        filter((evt) => {
           return evt.type === "complete-buffer" || evt.type === "active-buffer";
-        })
-        .map((evt) => evt.type === "complete-buffer")
-        .startWith(false)
-        .distinctUntilChanged();
+        }),
+        map((evt) => evt.type === "complete-buffer"),
+        startWith(false),
+        distinctUntilChanged()
+      );
     });
 
   return Observable.combineLatest(...isCompleteArray)
-    .map((areComplete) => {
-      return areComplete.every((isComplete) => isComplete);
-    })
-    .distinctUntilChanged();
+    .pipe(
+      map((areComplete) => areComplete.every((isComplete) => isComplete)),
+      distinctUntilChanged()
+    );
 }
 
 /**
