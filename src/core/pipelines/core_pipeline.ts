@@ -16,6 +16,7 @@
 
 import objectAssign = require("object-assign");
 import {
+  concat as observableConcat,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -24,7 +25,6 @@ import {
 } from "rxjs";
 import {
   catchError,
-  concat,
   finalize,
   map,
   mergeMap,
@@ -271,10 +271,10 @@ export default function createPipeline<T, U, V>(
         })
       );
 
-      return observableOf({
-        type: "request" as "request",
-        value: loaderArgument,
-      }).pipe(concat(request$));
+      return observableConcat(
+        observableOf({ type: "request" as "request", value: loaderArgument }),
+        request$
+      );
     }
 
     const dataFromCache = cache ? cache.get(loaderArgument) : null;
@@ -338,10 +338,10 @@ export default function createPipeline<T, U, V>(
                       },
                     }) : EMPTY;
 
-                return metrics.pipe(
-                  concat(
-                    callParser(loadedDataInfos).pipe(
-                    map(parserResponse => {
+                return observableConcat(
+                  metrics,
+                  callParser(loadedDataInfos)
+                    .pipe(map(parserResponse => {
                       return {
                         type: "data" as "data",
                         value: objectAssign({
@@ -349,7 +349,7 @@ export default function createPipeline<T, U, V>(
                         }, loadedDataInfos),
                       };
                     }))
-                  ));
+                );
               default:
                 return observableOf(arg);
             }

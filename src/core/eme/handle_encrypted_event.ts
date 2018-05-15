@@ -15,6 +15,7 @@
  */
 
 import {
+  concat as observableConcat,
   defer as observableDefer,
   EMPTY,
   merge as observableMerge,
@@ -22,7 +23,6 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  concat,
   ignoreElements,
   map,
   mergeMap,
@@ -114,10 +114,8 @@ export default function handleEncryptedEvent(
         }
       }
 
-      return (
-        observableMerge(...cleaningOldSessions$)
-          .pipe(ignoreElements())
-      ).pipe(concat(
+      return observableConcat(
+        observableMerge(...cleaningOldSessions$).pipe(ignoreElements()),
         createSession(initData, initDataType, mediaKeysInfos)
           .pipe(map((evt) => ({
             type: evt.type,
@@ -128,7 +126,7 @@ export default function handleEncryptedEvent(
               initDataType,
             },
           })))
-      ));
+      );
     }));
   });
 }
