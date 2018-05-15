@@ -57,242 +57,25 @@ export interface IMediaKeySession
   onkeystatusesChange? : (evt : Event) => void;
 
   // Functions
-  generateRequest(initDataType: string, initData: BufferSource) : Promise<void>;
+  generateRequest(
+    initDataType: string,
+    initData: ArrayBuffer | TypedArray | DataView | null
+  ): Promise<void>;
   load(sessionId: string) : Promise<boolean>;
-  update(response: BufferSource) : Promise<void>;
+  update(response: ArrayBuffer | TypedArray | DataView | null): Promise<void>;
   close() : Promise<void>;
   remove() : Promise<void>;
 }
 
-interface IMockMediaKeys {
+export interface IMockMediaKeys {
   _setVideo : (vid : HTMLMediaElement) => void;
-  createSession : (sessionType? : MediaKeySessionType) => IMediaKeySession;
-  setServerCertificate : (
-    setServerCertificate : BufferSource
-  ) => Promise<void>;
+  createSession(sessionType? : MediaKeySessionType) : IMediaKeySession;
+  setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 
 interface IMockMediaKeysConstructor {
   new(ks : string) : IMockMediaKeys;
 }
-
-// XXX TODO Put that were the following comment is:
-// ```js
-// // XXX TODO Put wrapUpdate here
-// ```
-// This was put here because of:
-// https://github.com/Microsoft/TypeScript/issues/20104
-// ---------------------------------------------------------------
-type wrapUpdateFn =
-  (license : ArrayBuffer, sessionId? : string) => Promise<void>;
-type memUpdateFn =
-  (license : Uint8Array, sessionId : string) => void;
-
-// Wrap "MediaKeys.prototype.update" form an event based system to a
-// Promise based function.
-const wrapUpdate = (
-  memUpdate : memUpdateFn
-) : wrapUpdateFn => {
-  return function(
-    this : IMediaKeySession,
-    license : ArrayBuffer,
-    sessionId? : string
-  ) : Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        memUpdate.call(this, license, sessionId);
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-  };
-};
-// ---------------------------------------------------------------
-// End of the limitation
-
-// XXX TODO Put that after the:
-// ```js
-// if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
-// ```
-// line. This was put here because of:
-// https://github.com/Microsoft/TypeScript/issues/20104
-// ---------------------------------------------------------------
-
-class WebkitMediaKeySession
-  extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
-  implements IMediaKeySession
-{
-  public readonly update : (
-    license : ArrayBuffer,
-    sessionId? : string
-  ) => Promise<void>;
-  public readonly closed: Promise<void>;
-  public expiration: number;
-  public keyStatuses: MediaKeyStatusMap;
-  public sessionId : string;
-
-  private readonly _vid : HTMLMediaElement;
-  private readonly _key : string;
-  private readonly _closeSession$ : Subject<void>;
-
-  constructor(video : HTMLMediaElement, keySystem : string) {
-    super();
-    this._closeSession$ = new Subject();
-    this._vid = video;
-    this._key = keySystem;
-
-    this.sessionId = "";
-    this.closed = new Promise((resolve) => {
-      this._closeSession$.subscribe(resolve);
-    });
-    this.keyStatuses = new Map();
-    this.expiration = NaN;
-    Observable.merge(
-      events.onKeyMessage$(video),
-      events.onKeyAdded$(video),
-      events.onKeyError$(video)
-    )
-      .takeUntil(this._closeSession$)
-      .subscribe((evt : Event) => this.trigger(evt.type, evt));
-
-    this.update = wrapUpdate((license, sessionId?) => {
-      if (this._key.indexOf("clearkey") >= 0) {
-        const json = JSON.parse(bytesToStr(license));
-        const key = strToBytes(atob(json.keys[0].k));
-        const kid = strToBytes(atob(json.keys[0].kid));
-        (this._vid as any).webkitAddKey(this._key, key, kid, sessionId);
-      } else {
-        (this._vid as any).webkitAddKey(this._key, license, null, sessionId);
-      }
-      this.sessionId = sessionId;
-    });
-  }
-
-  generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
-    return new Promise((resolve) => {
-      if (typeof this._vid.webkitGenerateKeyRequest !== "function") {
-        throw new Error("impossible to generate a key request");
-      }
-      this._vid.webkitGenerateKeyRequest(this._key, initData);
-      resolve();
-    });
-  }
-
-  close() : Promise<void> {
-    return new Promise((resolve) => {
-      this._closeSession$.next();
-      this._closeSession$.complete();
-      resolve();
-    });
-  }
-
-  load() : Promise<boolean> {
-    return new Promise((resolve) => {
-      resolve(false);
-    });
-  }
-
-  remove() : Promise<void> {
-    return new Promise((resolve) => {
-      resolve();
-    });
-  }
-}
-// ---------------------------------------------------------------
-// End of the limitation
-
-// XXX TODO Put that were the following comment is:
-// ```js
-// // XXX TODO Put IE11MediaKeySession here
-// ```
-// This was put here because of:
-// https://github.com/Microsoft/TypeScript/issues/20104
-// ---------------------------------------------------------------
-interface IIE11MediaKeys {
-  memCreateSession(codec : string, initData : ArrayBuffer) : MediaKeySession;
-}
-
-// TODO implement MediaKeySession completely
-class IE11MediaKeySession
-  extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
-  implements IMediaKeySession
-{
-  public readonly update : (
-    license : ArrayBuffer,
-    sessionId? : string
-  ) => Promise<void>;
-  public readonly closed: Promise<void>;
-  public expiration: number;
-  public keyStatuses: MediaKeyStatusMap;
-  public sessionId : string;
-
-  private readonly _mk : IIE11MediaKeys;
-  private readonly _closeSession$ : Subject<void>;
-  private _ss? : MediaKeySession;
-
-  constructor(mk : IIE11MediaKeys) {
-    super();
-    this.sessionId = "";
-    this.expiration = NaN;
-    this.keyStatuses = new Map();
-    this._mk = mk;
-    this._closeSession$ = new Subject();
-    this.closed = new Promise((resolve) => {
-      this._closeSession$.subscribe(resolve);
-    });
-
-    this.update = wrapUpdate((license, sessionId) => {
-      if (!this._ss) {
-        throw new Error("MediaKeySession not set");
-      }
-      (this._ss as any).update(license, sessionId);
-      this.sessionId = sessionId;
-    });
-  }
-
-  generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
-    return new Promise((resolve) => {
-      this._ss = this._mk.memCreateSession("video/mp4", initData);
-      Observable.merge(
-        events.onKeyMessage$(this._ss),
-        events.onKeyAdded$(this._ss),
-        events.onKeyError$(this._ss)
-      )
-        .takeUntil(this._closeSession$)
-        .subscribe((evt : Event) => this.trigger(evt.type, evt));
-      resolve();
-    });
-  }
-
-  close() : Promise<void> {
-    return new Promise((resolve) => {
-      if (this._ss) {
-        /* tslint:disable no-floating-promises */
-        this._ss.close();
-        /* tslint:enable no-floating-promises */
-        this._ss = undefined;
-      }
-      this._closeSession$.next();
-      this._closeSession$.complete();
-      resolve();
-    });
-  }
-
-  load() : Promise<boolean> {
-    return new Promise((resolve) => {
-      resolve(false);
-    });
-  }
-
-  remove() : Promise<void> {
-    return new Promise((resolve) => {
-      resolve();
-    });
-  }
-}
-// ---------------------------------------------------------------
-// End of the limitation
 
 // Default MockMediaKeys implementation
 let MockMediaKeys : IMockMediaKeysConstructor =
@@ -313,10 +96,111 @@ if (navigator.requestMediaKeySystemAccess) {
     castToObservable(navigator.requestMediaKeySystemAccess(a, b));
 } else {
 
-  // XXX TODO Put wrapUpdate here
+  type wrapUpdateFn =
+    (license : ArrayBuffer, sessionId? : string) => Promise<void>;
+  type memUpdateFn =
+    (license : Uint8Array, sessionId : string) => void;
+
+  // Wrap "MediaKeys.prototype.update" form an event based system to a
+  // Promise based function.
+  const wrapUpdate = (
+    memUpdate : memUpdateFn
+  ) : wrapUpdateFn => {
+    return function(
+      this : IMediaKeySession,
+      license : ArrayBuffer,
+      sessionId? : string
+    ) : Promise<void> {
+      return new Promise((resolve, reject) => {
+        try {
+          memUpdate.call(this, license, sessionId);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    };
+  };
 
   // This is for Chrome with unprefixed EME api
   if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
+
+    class WebkitMediaKeySession
+    extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
+      implements IMediaKeySession
+    {
+      public readonly update : (
+        license : ArrayBuffer,
+        sessionId? : string
+      ) => Promise<void>;
+      public readonly closed: Promise<void>;
+      public expiration: number;
+      public keyStatuses: MediaKeyStatusMap;
+      public sessionId : string;
+
+      private readonly _vid : HTMLMediaElement;
+      private readonly _key : string;
+      private readonly _closeSession$ : Subject<void>;
+
+      constructor(video : HTMLMediaElement, keySystem : string) {
+        super();
+        this._closeSession$ = new Subject();
+        this._vid = video;
+        this._key = keySystem;
+
+        this.sessionId = "";
+        this.closed = new Promise((resolve) => {
+          this._closeSession$.subscribe(resolve);
+        });
+        this.keyStatuses = new Map();
+        this.expiration = NaN;
+        Observable.merge(
+          events.onKeyMessage$(video),
+          events.onKeyAdded$(video),
+          events.onKeyError$(video)
+        )
+          .takeUntil(this._closeSession$)
+          .subscribe((evt : Event) => this.trigger(evt.type, evt));
+
+        this.update = wrapUpdate((license, sessionId?) => {
+          if (this._key.indexOf("clearkey") >= 0) {
+            const json = JSON.parse(bytesToStr(license));
+            const key = strToBytes(atob(json.keys[0].k));
+            const kid = strToBytes(atob(json.keys[0].kid));
+            (this._vid as any).webkitAddKey(this._key, key, kid, sessionId);
+          } else {
+            (this._vid as any).webkitAddKey(this._key, license, null, sessionId);
+          }
+          this.sessionId = sessionId;
+        });
+      }
+
+      generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
+        return new Promise((resolve) => {
+          if (typeof this._vid.webkitGenerateKeyRequest !== "function") {
+            throw new Error("impossible to generate a key request");
+          }
+          this._vid.webkitGenerateKeyRequest(this._key, initData);
+          resolve();
+        });
+      }
+
+      close() : Promise<void> {
+        return new Promise((resolve) => {
+          this._closeSession$.next();
+          this._closeSession$.complete();
+          resolve();
+        });
+      }
+
+      load() : Promise<boolean> {
+        return Promise.resolve(false);
+      }
+
+      remove() : Promise<void> {
+        return Promise.resolve();
+      }
+    }
 
     MockMediaKeys = class implements IMockMediaKeys {
       private readonly ks_ : string;
@@ -381,7 +265,7 @@ if (navigator.requestMediaKeySystemAccess) {
         supported = supported && (
           !sessionTypes ||
           sessionTypes
-            .filter((sessionType) => sessionType === "temporary")
+          .filter((sessionType) => sessionType === "temporary")
             .length === sessionTypes.length
         );
         supported = supported && (distinctiveIdentifier !== "required");
@@ -420,7 +304,84 @@ if (navigator.requestMediaKeySystemAccess) {
     typeof MediaKeys_.prototype.createSession === "function" &&
     typeof MediaKeys_.isTypeSupported === "function"
   ) {
-    // XXX TODO Put IE11MediaKeySession here
+    interface IIE11MediaKeys {
+      memCreateSession(codec : string, initData : ArrayBuffer) : MediaKeySession;
+    }
+
+    // TODO implement MediaKeySession completely
+    class IE11MediaKeySession
+    extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
+      implements IMediaKeySession
+    {
+      public readonly update : (
+        license : ArrayBuffer,
+        sessionId? : string
+      ) => Promise<void>;
+      public readonly closed: Promise<void>;
+      public expiration: number;
+      public keyStatuses: MediaKeyStatusMap;
+      public sessionId : string;
+
+      private readonly _mk : IIE11MediaKeys;
+      private readonly _closeSession$ : Subject<void>;
+      private _ss? : MediaKeySession;
+
+      constructor(mk : IIE11MediaKeys) {
+        super();
+        this.sessionId = "";
+        this.expiration = NaN;
+        this.keyStatuses = new Map();
+        this._mk = mk;
+        this._closeSession$ = new Subject();
+        this.closed = new Promise((resolve) => {
+          this._closeSession$.subscribe(resolve);
+        });
+
+        this.update = wrapUpdate((license, sessionId) => {
+          if (!this._ss) {
+            throw new Error("MediaKeySession not set");
+          }
+          (this._ss as any).update(license, sessionId);
+          this.sessionId = sessionId;
+        });
+      }
+
+      generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
+        return new Promise((resolve) => {
+          this._ss = this._mk.memCreateSession("video/mp4", initData);
+          Observable.merge(
+            events.onKeyMessage$(this._ss),
+            events.onKeyAdded$(this._ss),
+            events.onKeyError$(this._ss)
+          )
+            .takeUntil(this._closeSession$)
+            .subscribe((evt : Event) => this.trigger(evt.type, evt));
+          resolve();
+        });
+      }
+
+      close() : Promise<void> {
+        return new Promise((resolve) => {
+          if (this._ss) {
+            /* tslint:disable no-floating-promises */
+            this._ss.close();
+            /* tslint:enable no-floating-promises */
+            this._ss = undefined;
+          }
+          this._closeSession$.next();
+          this._closeSession$.complete();
+          resolve();
+        });
+      }
+
+      load() : Promise<boolean> {
+        return Promise.resolve(false);
+      }
+
+      remove() : Promise<void> {
+        return Promise.resolve();
+      }
+    }
 
     // on IE11, each created session needs to be created on a new
     // MediaKeys object
@@ -485,7 +446,6 @@ if (navigator.requestMediaKeySystemAccess) {
 }
 
 export {
-  IMockMediaKeys,
   MockMediaKeys,
   requestMediaKeySystemAccess,
 };

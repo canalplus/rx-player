@@ -54,7 +54,7 @@ interface ICreatedSourceBuffer<T> {
 }
 
 type ICreatedNativeSourceBuffer =
-  ICreatedSourceBuffer<ArrayBuffer|ArrayBufferView>;
+  ICreatedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
 
 /**
  * Allows to easily create and dispose SourceBuffers.
@@ -282,7 +282,7 @@ export default class SourceBufferManager {
 function createNativeQueuedSourceBuffer(
   mediaSource : MediaSource,
   codec : string
-) : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView> {
+) : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null> {
   const sourceBuffer = mediaSource.addSourceBuffer(codec);
   return new QueuedSourceBuffer(sourceBuffer);
 }

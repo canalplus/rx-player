@@ -29,8 +29,9 @@ export default function filterByWidth(
   representations : Representation[],
   width : number
 ) : Representation[] {
-  const sortedRepsByWidth = representations.sort(
-    (a, b) => (a.width || 0) - (b.width || 0));
+  const sortedRepsByWidth = representations
+    .slice() // clone
+    .sort((a, b) => (a.width || 0) - (b.width || 0));
 
   const repWithMaxWidth =
     arrayFind(sortedRepsByWidth, (r) => (r.width || 0) >= width);

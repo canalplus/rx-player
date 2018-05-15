@@ -88,22 +88,24 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
   const periods : IPeriodIntermediateRepresentation[] = [];
 
   for (let i = 0; i < mpdChildren.length; i++) {
-    const currentNode = mpdChildren[i];
-    switch (currentNode.nodeName) {
+    if (mpdChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentNode = mpdChildren[i] as Element;
+      switch (currentNode.nodeName) {
 
-      case "BaseURL":
-        baseURL = currentNode.textContent || "";
-        break;
+        case "BaseURL":
+          baseURL = currentNode.textContent || "";
+          break;
 
-      case "Location":
-        locations.push(currentNode.textContent || "");
-        break;
+        case "Location":
+          locations.push(currentNode.textContent || "");
+          break;
 
-      case "Period":
-        const period =
-          createPeriodIntermediateRepresentation(currentNode);
-        periods.push(period);
-        break;
+        case "Period":
+          const period =
+            createPeriodIntermediateRepresentation(currentNode);
+          periods.push(period);
+          break;
+      }
     }
   }
 
@@ -111,10 +113,10 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
 }
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
-function parseMPDAttributes(root : Node) : IMPDAttributes {
+function parseMPDAttributes(root : Element) : IMPDAttributes {
   const res : IMPDAttributes = {};
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
@@ -165,7 +167,7 @@ function parseMPDAttributes(root : Node) : IMPDAttributes {
 }
 
 export function createMPDIntermediateRepresentation(
-  root : Node
+  root : Element
 ) : IMPDIntermediateRepresentation {
   return {
     children: parseMPDChildren(root.childNodes),

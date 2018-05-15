@@ -59,7 +59,9 @@ interface IProgressRequest {
   event: "progress";
   value: {
     id: string|number;
+    duration : number;
     size: number;
+    totalSize : number;
     timestamp: number;
   };
 }

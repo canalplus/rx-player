@@ -29,7 +29,7 @@ export default function createMediaErrorHandler(
   videoElement : HTMLMediaElement
 ) : Observable<never> {
   return onEvent(videoElement, "error").mergeMap(() => {
-    const errorCode = videoElement.error.code;
+    const errorCode = videoElement.error && videoElement.error.code;
     let errorDetail;
 
     switch (errorCode) {

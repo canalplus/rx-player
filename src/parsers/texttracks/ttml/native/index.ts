@@ -276,7 +276,7 @@ function addStyle(cue : VTTCue, style : IStyleList) {
   }
 
   const writingMode = style.writingMode;
-  let isVerticalText = true;
+  // let isVerticalText = true;
   switch (writingMode) {
     case "tb":
     case "tblr":
@@ -286,7 +286,7 @@ function addStyle(cue : VTTCue, style : IStyleList) {
       cue.vertical = "rl";
       break;
     default:
-      isVerticalText = false;
+      // isVerticalText = false;
       break;
   }
 
@@ -297,15 +297,15 @@ function addStyle(cue : VTTCue, style : IStyleList) {
       // for vertical text use first coordinate of tts:origin
       // to represent line of the cue and second - for position.
       // Otherwise (horizontal), use them the other way around.
-      if (isVerticalText) {
+      // if (isVerticalText) {
         // TODO check and uncomment
         // cue.position = Number(results[2]);
         // cue.line = Number(results[1]);
-      } else {
+      // } else {
         // TODO check and uncomment
         // cue.position = Number(results[1]);
         // cue.line = Number(results[2]);
-      }
+      // }
       // A boolean indicating whether the line is an integer
       // number of lines (using the line dimensions of the first
       // line of the cue), or whether it is a percentage of the

@@ -9,7 +9,7 @@ const AudioBitrateKnobBase = ({
   availableAudioBitrates = [],
 }) => {
   let options = [];
-  let selectedIndex = 0;
+  let selectedIndex;
 
   if (!availableAudioBitrates.length) {
     options = ["Not available"];

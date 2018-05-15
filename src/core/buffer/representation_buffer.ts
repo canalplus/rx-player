@@ -56,13 +56,16 @@ export interface IBufferEventAddedSegment<T> {
 // The buffer might still download segments after this message
 export interface IBufferNeedsManifestRefresh {
   type : "needs-manifest-refresh";
-  value : undefined;
+  value : {
+    bufferType : IBufferType; // The type of the Representation
+  };
 }
 
 // Emit when a discontinuity is encountered and the user is "stuck" on it.
 export interface IBufferNeedsDiscontinuitySeek {
   type : "discontinuity-encountered";
   value : {
+    bufferType : IBufferType; // The type of the Representation
     nextTime : number; // the time we should seek to TODO this is ugly
   };
 }
@@ -75,19 +78,25 @@ type IBufferNeededActions =
 // State emitted when the Buffer is scheduling segments
 export interface IBufferStateActive {
   type : "active-buffer";
-  value : undefined;
+  value : {
+    bufferType : IBufferType; // The type of the Representation
+  };
 }
 
 // State emitted when the buffer has been filled to the end
 export interface IBufferStateFull {
   type : "full-buffer";
-  value : undefined;
+  value : {
+    bufferType : IBufferType; // The type of the Representation
+  };
 }
 
 // State emitted when the buffer waits
 interface IBufferStateIdle {
   type : "idle-buffer";
-  value : undefined;
+  value : {
+    bufferType : IBufferType; // The type of the Representation
+  };
 }
 
 // State after the download queue has been updated
@@ -225,6 +234,8 @@ export default function RepresentationBuffer<T>({
     representation,
   } = content;
 
+  const bufferType = adaptation.type;
+
   /**
    * Compute paddings, then used to calculate the wanted range of Segments
    * wanted.
@@ -340,7 +351,7 @@ export default function RepresentationBuffer<T>({
         .mapTo({
           type: "added-segment" as "added-segment",
           value : {
-            bufferType: adaptation.type,
+            bufferType,
             segment,
             segmentData,
           },
@@ -452,7 +463,8 @@ export default function RepresentationBuffer<T>({
       state,
     } = status;
 
-    const neededActions = getNeededActions(discontinuity, shouldRefreshManifest);
+    const neededActions =
+      getNeededActions(bufferType, discontinuity, shouldRefreshManifest);
     const downloadQueueState = updateQueueFromInternalState(state);
 
     return downloadQueueState.type === "idle-buffer" ?
@@ -479,9 +491,12 @@ export default function RepresentationBuffer<T>({
       }
       downloadQueue = [];
       startQueue$.next(undefined); // (re-)start with an empty queue
-      return state.type === "full-buffer" ? state : {
-        type: "idle-buffer",
-        value: undefined,
+      return state.type === "full-buffer" ? {
+        type: "full-buffer" as "full-buffer",
+        value: { bufferType },
+      } : {
+        type: "idle-buffer" as "idle-buffer",
+        value: { bufferType },
       };
     }
 
@@ -517,7 +532,7 @@ export default function RepresentationBuffer<T>({
 
     return {
       type: "active-buffer",
-      value: undefined,
+      value: { bufferType },
     };
   }
 
@@ -588,6 +603,7 @@ function shouldRefreshManifestForRange(
  * @returns {Array.<Object>}
  */
 function getNeededActions(
+  bufferType: IBufferType,
   discontinuity : number,
   shouldRefreshManifest : boolean
 ) : IBufferNeededActions[] {
@@ -598,6 +614,7 @@ function getNeededActions(
       type: "discontinuity-encountered" as "discontinuity-encountered",
       value: {
         nextTime: discontinuity + 1,
+        bufferType,
       },
     });
   }
@@ -605,7 +622,7 @@ function getNeededActions(
   if (shouldRefreshManifest) {
     neededActions.push({
       type: "needs-manifest-refresh" as "needs-manifest-refresh",
-      value: undefined,
+      value: { bufferType },
     });
   }
 

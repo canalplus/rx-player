@@ -166,14 +166,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   public state : string;
 
   /**
-   * URL of the content currently being played.
-   * undefined when no content is being played.
-   * @private
-   * @type {string|undefined}
-   */
-  private _priv_contentURL : string|undefined;
-
-  /**
    * Emit when the player is disposed to perform clean-up.
    * The player will be unusable after that.
    * @private
@@ -216,101 +208,176 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_speed$ : BehaviorSubject<number>;
 
   /**
-   * Emit the last wanted buffer goal.
-   * @private
-   * @type {BehaviorSubject}
-   */
-  private _priv_wantedBufferAhead$ : BehaviorSubject<number>;
-
-  /**
-   * Maximum kept buffer ahead in the current position, in seconds.
-   * @private
-   * @type {BehaviorSubject}
-   */
-  private _priv_maxBufferAhead$ : BehaviorSubject<number>;
-
-  /**
-   * Maximum kept buffer behind in the current position, in seconds.
-   * @private
-   * @type {BehaviorSubject}
-   */
-  private _priv_maxBufferBehind$ : BehaviorSubject<number>;
-
-  /**
-   * Store last bitrates for each type for ABRManager instanciation.
-   * Store the initial wanted bitrates at first.
+   * Store buffer-related infos and options used when calling the Stream.
    * @private
    * @type {Object}
    */
-  private _priv_lastBitrates : {
-    audio? : number;
-    video? : number;
-    text? : number;
-    image? : number;
+  private _priv_bufferOptions : {
+    /**
+     * Emit the last wanted buffer goal.
+     * @type {BehaviorSubject}
+     */
+    wantedBufferAhead$ : BehaviorSubject<number>;
+
+    /**
+     * Maximum kept buffer ahead in the current position, in seconds.
+     * @type {BehaviorSubject}
+     */
+    maxBufferAhead$ : BehaviorSubject<number>;
+
+    /**
+     * Maximum kept buffer behind in the current position, in seconds.
+     * @type {BehaviorSubject}
+     */
+    maxBufferBehind$ : BehaviorSubject<number>;
   };
 
   /**
-   * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
+   * Informations on the current bitrate settings.
    * @private
    * @type {Object}
    */
-  private _priv_initialMaxAutoBitrates : {
-    audio : number; // has a default in the config
-    video : number; // has a default in the config
-    text? : number;
-    image? : number;
+  private _priv_bitrateInfos : {
+    /**
+     * Store last bitrates for each type for ABRManager instanciation.
+     * Store the initial wanted bitrates at first.
+     * @type {Object}
+     */
+    lastBitrates : {
+      audio? : number;
+      video? : number;
+      text? : number;
+      image? : number;
+    };
+
+    /**
+     * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
+     * @type {Object}
+     */
+    initialMaxAutoBitrates : {
+      audio : number; // has a default in the config
+      video : number; // has a default in the config
+      text? : number;
+      image? : number;
+    };
+
+    /**
+     * Store last wanted manual bitrates for the next ABRManager instanciation.
+     * @type {Object}
+     */
+    manualBitrates : {
+      audio : number; // has a default in the config
+      video : number; // has a default in the config
+      text? : number;
+      image? : number;
+    };
   };
 
   /**
-   * true if the current content is in DirectFile mode.
-   * false is the current content has a transport protocol (Smooth/DASH...).
-   * null if no content is being loaded/played.
-   * @private
-   * @type {Boolean}
+   * Current fatal error which STOPPED the player.
+   * @type {Error|null}
    */
-  private _priv_isDirectFile : boolean|null;
+  private _priv_currentError : Error|null;
 
   /**
-   * Store last wanted manual bitrates for the next ABRManager instanciation.
+   * Informations about the current content being played.
+   * null when no content is launched.
    * @private
-   * @type {Object}
+   * @type {Object|null}
    */
-  private _priv_manualBitrates : {
-    audio : number; // has a default in the config
-    video : number; // has a default in the config
-    text? : number;
-    image? : number;
+  private _priv_contentInfos : null | {
+    /**
+     * URL of the content currently being played.
+     * @type {string}
+     */
+    url : string;
+
+    /**
+     * true if the current content is in DirectFile mode.
+     * false is the current content has a transport protocol (Smooth/DASH...).
+     * @type {Boolean}
+     */
+    isDirectFile : boolean;
+
+    /**
+     * Current Image Track Data associated to the content.
+     *
+     * null if the current content has no image playlist linked to it.
+     *
+     * TODO Need complete refactoring for live or multi-periods contents
+     * @type {Object|null}
+     */
+    thumbnails : IBifThumbnail[]|null;
+
+    /**
+     * Manifest linked to the current content.
+     * Null if the current content loaded has no manifest or if the content is
+     * not yet loaded.
+     * @type {Object|null}
+     */
+    manifest : Manifest|null;
+
+    /**
+     * Current Period being played.
+     * null if no Period is being played.
+     * @type {Object}
+     */
+    currentPeriod : Period|null;
+
+    /**
+     * Store currently considered adaptations, per active period.
+     *
+     * null if no adaptation is active
+     * @type {Map}
+     */
+    activeAdaptations :
+      Map<
+        Period,
+        Partial<Record<IBufferType, Adaptation|null>>
+      > | null;
+
+    /**
+     * Store currently considered representations, per active period.
+     *
+     * null if no representation is active
+     * @type {Map}
+     */
+    activeRepresentations :
+      Map<
+        Period,
+        Partial<Record<IBufferType, Representation|null>>
+      > | null;
+
+    /**
+     * Store starting audio track if one.
+     * @type {undefined|null|Object}
+     */
+    initialAudioTrack : undefined|IAudioTrackPreference;
+
+    /**
+     * Store starting text track if one.
+     * @type {undefined|null|Object}
+     */
+    initialTextTrack : undefined|ITextTrackPreference;
   };
 
   /**
-   * Current Period being played.
-   * null if no Period is being played.
+   * LanguageManager instance linked to the current content.
+   * Null if no content has been loaded or if the current content loaded
+   * has no LanguageManager.
    * @private
-   * @type {Object}
+   * @type {Object|null}
    */
-  private _priv_currentPeriod : Period|null;
+  private _priv_languageManager : LanguageManager|null;
 
   /**
-   * Store currently considered adaptations, per active period.
-   *
-   * null if no adaptation is active
+   * ABRManager instance linked to the current content.
+   * Null if no content has been loaded or if the current content loaded
+   * has no ABRManager.
    * @private
-   * @type {Map}
+   * @type {Object|null}
    */
-  private _priv_activeAdaptations : Map<Period, Partial<
-    Record<IBufferType, Adaptation|null>
-    >> | null;
-
-  /**
-   * Store currently considered representations, per active period.
-   *
-   * null if no representation is active
-   * @private
-   * @type {Map}
-   */
-  private _priv_activeRepresentations : Map<Period, Partial<
-    Record<IBufferType, Representation|null>
-    >> | null;
+  private _priv_abrManager : ABRManager|null;
 
   /**
    * Store wanted configuration for the limitVideoWidth option.
@@ -334,47 +401,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_mutedMemory : number;
 
   /**
-   * Store default audio track for a loaded content.
-   * @private
-   * @type {undefined|null|Object}
-   */
-  private _priv_initialAudioTrack : undefined|IAudioTrackPreference;
-
-  /**
-   * Store default text track for a loaded content.
-   * @private
-   * @type {undefined|null|Object}
-   */
-  private _priv_initialTextTrack : undefined|ITextTrackPreference;
-
-  /**
-   * LanguageManager instance linked to the current content.
-   * Null if no content has been loaded or if the current content loaded
-   * has no LanguageManager.
-   * @private
-   * @type {Object|null}
-   */
-  private _priv_languageManager : LanguageManager|null;
-
-  /**
-   * ABRManager instance linked to the current content.
-   * Null if no content has been loaded or if the current content loaded
-   * has no ABRManager.
-   * @private
-   * @type {Object|null}
-   */
-  private _priv_abrManager : ABRManager|null;
-
-  /**
-   * Manifest linked to the current content.
-   * Null if no content has been loaded or if the current content loaded
-   * has no manifest.
-   * @private
-   * @type {Object|null}
-   */
-  private _priv_currentManifest : Manifest|null;
-
-  /**
    * Store last state of various values sent as events, to avoid re-triggering
    * them multiple times in a row.
    *
@@ -393,28 +419,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     bitrateEstimation: undefined|IBitrateEstimate; // last calculated bitrate
                                                    // estimation for a type
   };
-
-  /**
-   * Current fatal error which STOPPED the player.
-   *
-   * null when the player is not STOPPED anymore or if STOPPED but not due to
-   * an error.
-   * @private
-   * @type {Error|null}
-   */
-  private _priv_fatalError : Error|null;
-
-  /**
-   * Current Image Track Data associated to the content.
-   *
-   * null if no content has been loaded or if the current content has no
-   * image playlist linked to it.
-   *
-   * TODO Need complete refactoring for live or multi-periods contents
-   * @private
-   * @type {Object|null}
-   */
-  private _priv_currentImagePlaylist : IBifThumbnail[]|null;
 
   /**
    * Determines whether or not player should stop at the end of video playback.
@@ -482,7 +486,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.3.2";
+    this.version = /*PLAYER_VERSION*/"3.4.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -529,36 +533,36 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
     this._priv_stopCurrentContent$ = new Subject();
     this._priv_streamLock$ = new BehaviorSubject(false);
-    this._priv_wantedBufferAhead$ = new BehaviorSubject(wantedBufferAhead);
-    this._priv_maxBufferAhead$ = new BehaviorSubject(maxBufferAhead);
-    this._priv_maxBufferBehind$ = new BehaviorSubject(maxBufferBehind);
-    this._priv_lastBitrates = {
-      audio: initialAudioBitrate,
-      video: initialVideoBitrate,
+
+    this._priv_bufferOptions = {
+      wantedBufferAhead$: new BehaviorSubject(wantedBufferAhead),
+      maxBufferAhead$: new BehaviorSubject(maxBufferAhead),
+      maxBufferBehind$: new BehaviorSubject(maxBufferBehind),
     };
-    this._priv_initialMaxAutoBitrates = {
-      audio: maxAudioBitrate,
-      video: maxVideoBitrate,
+
+    this._priv_bitrateInfos = {
+      lastBitrates: {
+        audio: initialAudioBitrate,
+        video: initialVideoBitrate,
+      },
+      initialMaxAutoBitrates: {
+        audio: maxAudioBitrate,
+        video: maxVideoBitrate,
+      },
+      manualBitrates: {
+        audio: -1,
+        video: -1,
+      },
     };
-    this._priv_manualBitrates = {
-      audio: -1,
-      video: -1,
-    };
+
     this._priv_throttleWhenHidden = throttleWhenHidden;
     this._priv_limitVideoWidth = limitVideoWidth;
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
-    this._priv_initialAudioTrack = undefined;
-    this._priv_initialTextTrack = undefined;
     this._priv_languageManager = null;
     this._priv_abrManager = null;
-
-    this._priv_contentURL = undefined;
-    this._priv_isDirectFile = null;
-    this._priv_currentManifest = null;
-    this._priv_activeRepresentations = null;
-    this._priv_activeAdaptations = null;
-    this._priv_currentPeriod = null;
+    this._priv_currentError = null;
+    this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {
       period: null,
@@ -569,8 +573,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       bitrateEstimation: undefined,
     };
 
-    this._priv_fatalError = null;
-    this._priv_currentImagePlaylist = null;
     this._priv_stopAtEnd = stopAtEnd;
 
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
@@ -594,8 +596,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // free resources linked to the loaded content
     this.stop();
 
-    // free resources used for EME management
-    disposeEME();
+    if (this.videoElement) {
+      // free resources used for EME management
+      disposeEME(this.videoElement);
+    }
 
     // free Observables linked to the Player instance
     this._priv_destroy$.next();
@@ -606,9 +610,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_playing$.complete();
     this._priv_speed$.complete();
     this._priv_streamLock$.complete();
-    this._priv_wantedBufferAhead$.complete();
-    this._priv_maxBufferAhead$.complete();
-    this._priv_maxBufferBehind$.complete();
+    this._priv_bufferOptions.wantedBufferAhead$.complete();
+    this._priv_bufferOptions.maxBufferAhead$.complete();
+    this._priv_bufferOptions.maxBufferBehind$.complete();
 
     // un-attach video element
     this.videoElement = null;
@@ -650,9 +654,20 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // TODO First stop?
     this.stop();
 
-    this._priv_contentURL = url;
     const isDirectFile = transport === "directfile";
-    this._priv_isDirectFile = isDirectFile;
+
+    this._priv_currentError = null;
+    this._priv_contentInfos = {
+      url,
+      isDirectFile,
+      thumbnails: null,
+      manifest: null,
+      currentPeriod: null,
+      activeAdaptations: null,
+      activeRepresentations: null,
+      initialAudioTrack: defaultAudioTrack,
+      initialTextTrack: defaultTextTrack,
+    };
 
     // inilialize to false
     this._priv_playing$.next(false);
@@ -683,18 +698,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
       const transportObj = transportFn(transportOptions);
 
-      // prepare initial tracks played
-      this._priv_initialAudioTrack = defaultAudioTrack;
-      this._priv_initialTextTrack = defaultTextTrack;
-
       /**
        * Options used by the ABR Manager.
        * @type {Object}
        */
       const adaptiveOptions = {
-        initialBitrates: this._priv_lastBitrates,
-        manualBitrates: this._priv_manualBitrates,
-        maxAutoBitrates: this._priv_initialMaxAutoBitrates,
+        initialBitrates: this._priv_bitrateInfos.lastBitrates,
+        manualBitrates: this._priv_bitrateInfos.manualBitrates,
+        maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
         throttle: this._priv_throttleWhenHidden ? {
           video: isInBackground$()
           .map(isBg => isBg ? 0 : Infinity)
@@ -704,16 +715,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           video: videoWidth$(videoElement)
           .takeUntil(this._priv_stopCurrentContent$),
         } : {},
-      };
-
-      /**
-       * Options related to the Buffer(s)
-       * @type {Object}
-       */
-      const bufferOptions = {
-        wantedBufferAhead$: this._priv_wantedBufferAhead$,
-        maxBufferAhead$: this._priv_maxBufferAhead$,
-        maxBufferBehind$: this._priv_maxBufferBehind$,
       };
 
       /**
@@ -735,7 +736,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       stream = Stream({
         adaptiveOptions,
         autoPlay,
-        bufferOptions,
+        bufferOptions: this._priv_bufferOptions,
         clock$,
         keySystems,
         networkConfig,
@@ -867,7 +868,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Object|null}
    */
   getError() : Error|null {
-    return this._priv_fatalError;
+    return this._priv_currentError;
   }
 
   /**
@@ -876,7 +877,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Manifest|null}
    */
   getManifest() : Manifest|null {
-    return this._priv_currentManifest || null;
+    return this._priv_contentInfos && this._priv_contentInfos.manifest;
   }
 
   /**
@@ -886,10 +887,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getCurrentAdaptations(
   ) : Partial<Record<IBufferType, Adaptation|null>> | null {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
+    if (!this._priv_contentInfos) {
       return null;
     }
-    return this._priv_activeAdaptations.get(this._priv_currentPeriod) || null;
+    const {
+      currentPeriod,
+      activeAdaptations,
+    } = this._priv_contentInfos;
+    if (!currentPeriod || !activeAdaptations) {
+      return null;
+    }
+    return activeAdaptations.get(currentPeriod) || null;
   }
 
   /**
@@ -899,10 +907,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getCurrentRepresentations(
   ) : Partial<Record<IBufferType, Representation|null>> | null {
-    if (!this._priv_currentPeriod || !this._priv_activeRepresentations) {
+    if (!this._priv_contentInfos) {
       return null;
     }
-    return this._priv_activeRepresentations.get(this._priv_currentPeriod) || null;
+    const {
+      currentPeriod,
+      activeRepresentations,
+    } = this._priv_contentInfos;
+    if (!currentPeriod || !activeRepresentations) {
+      return null;
+    }
+    return activeRepresentations.get(currentPeriod) || null;
   }
 
   /**
@@ -947,10 +962,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Boolean}
    */
   isLive() : boolean {
-    if (this._priv_isDirectFile || !this._priv_currentManifest) {
+    if (!this._priv_contentInfos) {
       return false;
     }
-    return this._priv_currentManifest.isLive;
+    const {
+      isDirectFile,
+      manifest,
+    } = this._priv_contentInfos;
+    if (isDirectFile || !manifest) {
+      return false;
+    }
+    return manifest.isLive;
   }
 
   /**
@@ -958,11 +980,19 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {string|undefined}
    */
   getUrl() : string|undefined {
-    if (this._priv_isDirectFile) {
-      return this._priv_contentURL;
+    if (!this._priv_contentInfos) {
+      return undefined;
     }
-    if (this._priv_currentManifest) {
-      return this._priv_currentManifest.getUrl();
+    const {
+      isDirectFile,
+      manifest,
+      url,
+    } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return url;
+    }
+    if (manifest) {
+      return manifest.getUrl();
     }
     return undefined;
   }
@@ -1039,13 +1069,21 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
-    if (this._priv_isDirectFile) {
+    if (!this._priv_contentInfos) {
       return this.videoElement.currentTime;
     }
-    if (this._priv_currentManifest) {
+
+    const {
+      isDirectFile,
+      manifest,
+    } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return this.videoElement.currentTime;
+    }
+    if (manifest) {
       const currentTime = this.videoElement.currentTime;
       return this.isLive() ?
-        (+toWallClockTime(currentTime, this._priv_currentManifest) / 1000) :
+        (+toWallClockTime(currentTime, manifest) / 1000) :
         currentTime;
     }
     return 0;
@@ -1098,10 +1136,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() : number[] {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
+    if (!this._priv_contentInfos) {
       return [];
     }
-    const adaptations = this._priv_activeAdaptations.get(this._priv_currentPeriod);
+    const {
+      currentPeriod,
+      activeAdaptations,
+    } = this._priv_contentInfos;
+    if (!currentPeriod || !activeAdaptations) {
+      return [];
+    }
+    const adaptations = activeAdaptations.get(currentPeriod);
     const videoAdaptation = adaptations && adaptations.video;
     if (!videoAdaptation) {
       return [];
@@ -1115,10 +1160,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() : number[] {
-    if (!this._priv_currentPeriod || !this._priv_activeAdaptations) {
+    if (!this._priv_contentInfos) {
       return [];
     }
-    const adaptations = this._priv_activeAdaptations.get(this._priv_currentPeriod);
+    const {
+      currentPeriod,
+      activeAdaptations,
+    } = this._priv_contentInfos;
+    if (!currentPeriod || !activeAdaptations) {
+      return [];
+    }
+    const adaptations = activeAdaptations.get(currentPeriod);
     const audioAdaptation = adaptations && adaptations.audio;
     if (!audioAdaptation) {
       return [];
@@ -1133,7 +1185,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getManualAudioBitrate() : number {
-    return this._priv_manualBitrates.audio;
+    return this._priv_bitrateInfos.manualBitrates.audio;
   }
 
   /**
@@ -1141,7 +1193,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getManualVideoBitrate() : number {
-    return this._priv_manualBitrates.video;
+    return this._priv_bitrateInfos.manualBitrates.video;
   }
 
   /**
@@ -1174,7 +1226,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getMaxVideoBitrate() : number|undefined {
     if (!this._priv_abrManager) {
-      return this._priv_initialMaxAutoBitrates.video;
+      return this._priv_bitrateInfos.initialMaxAutoBitrates.video;
     }
     return this._priv_abrManager.getMaxAutoBitrate("video");
   }
@@ -1185,7 +1237,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   getMaxAudioBitrate() : number|undefined {
     if (!this._priv_abrManager) {
-      return this._priv_initialMaxAutoBitrates.audio;
+      return this._priv_bitrateInfos.initialMaxAutoBitrates.audio;
     }
     return this._priv_abrManager.getMaxAutoBitrate("audio");
   }
@@ -1232,8 +1284,16 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
-    if (!this._priv_isDirectFile && !this._priv_currentManifest) {
+    if (!this._priv_contentInfos) {
       throw new Error("player: no content loaded");
+    }
+
+    const {
+      isDirectFile,
+      manifest,
+    } = this._priv_contentInfos;
+    if (!isDirectFile && !manifest) {
+      throw new Error("player: the content did not load yet");
     }
 
     let positionWanted : number|undefined;
@@ -1248,11 +1308,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       } else if ((time as { position? : number }).position != null) {
         positionWanted = (time as { position : number }).position;
       } else if ((time as { wallClockTime? : number }).wallClockTime != null) {
-        positionWanted = this._priv_isDirectFile ?
+        positionWanted = isDirectFile ?
           (time as { wallClockTime : number }).wallClockTime :
           fromWallClockTime(
             (time as { wallClockTime : number }).wallClockTime * 1000,
-            this._priv_currentManifest as Manifest // is TS or I dumb here?
+            manifest as Manifest // is TS or I dumb here?
           );
       } else {
         throw new Error("invalid time object. You must set one of the " +
@@ -1337,7 +1397,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} btr
    */
   setVideoBitrate(btr : number) : void {
-    this._priv_manualBitrates.video = btr;
+    this._priv_bitrateInfos.manualBitrates.video = btr;
     if (this._priv_abrManager) {
       this._priv_abrManager.setManualBitrate("video", btr);
     }
@@ -1349,7 +1409,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} btr
    */
   setAudioBitrate(btr : number) : void {
-    this._priv_manualBitrates.audio = btr;
+    this._priv_bitrateInfos.manualBitrates.audio = btr;
     if (this._priv_abrManager) {
       this._priv_abrManager.setManualBitrate("audio", btr);
     }
@@ -1361,7 +1421,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   setMaxVideoBitrate(btr : number) : void {
     // set it for the next content loaded
-    this._priv_initialMaxAutoBitrates.video = btr;
+    this._priv_bitrateInfos.initialMaxAutoBitrates.video = btr;
 
     // set it for the current if one is loaded
     if (this._priv_abrManager) {
@@ -1375,7 +1435,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   setMaxAudioBitrate(btr : number) : void {
     // set it for the next content loaded
-    this._priv_initialMaxAutoBitrates.audio = btr;
+    this._priv_bitrateInfos.initialMaxAutoBitrates.audio = btr;
 
     // set it for the current if one is loaded
     if (this._priv_abrManager) {
@@ -1389,7 +1449,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} depthInSeconds
    */
   setMaxBufferBehind(depthInSeconds : number) : void {
-    this._priv_maxBufferBehind$.next(depthInSeconds);
+    this._priv_bufferOptions.maxBufferBehind$.next(depthInSeconds);
   }
 
   /**
@@ -1398,7 +1458,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} depthInSeconds
    */
   setMaxBufferAhead(depthInSeconds : number) : void {
-    this._priv_maxBufferAhead$.next(depthInSeconds);
+    this._priv_bufferOptions.maxBufferAhead$.next(depthInSeconds);
   }
 
   /**
@@ -1407,7 +1467,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Number} sizeInSeconds
    */
   setWantedBufferAhead(sizeInSeconds : number) : void {
-    this._priv_wantedBufferAhead$.next(sizeInSeconds);
+    this._priv_bufferOptions.wantedBufferAhead$.next(sizeInSeconds);
   }
 
   /**
@@ -1415,7 +1475,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getMaxBufferBehind() : number {
-    return this._priv_maxBufferBehind$.getValue();
+    return this._priv_bufferOptions.maxBufferBehind$.getValue();
   }
 
   /**
@@ -1423,7 +1483,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getMaxBufferAhead() : number {
-    return this._priv_maxBufferAhead$.getValue();
+    return this._priv_bufferOptions.maxBufferAhead$.getValue();
   }
 
   /**
@@ -1431,7 +1491,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Number}
    */
   getWantedBufferAhead() : number {
-    return this._priv_wantedBufferAhead$.getValue();
+    return this._priv_bufferOptions.wantedBufferAhead$.getValue();
   }
 
   /**
@@ -1440,7 +1500,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {string|null}
    */
   getCurrentKeySystem() : string|null {
-    return getCurrentKeySystem();
+    if (!this.videoElement) {
+      throw new Error("Disposed player");
+    }
+    return getCurrentKeySystem(this.videoElement);
   }
 
   /**
@@ -1448,10 +1511,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Object>|null}
    */
   getAvailableAudioTracks() : ILMAudioTrackListItem[] | null {
-    if (!this._priv_languageManager || !this._priv_currentPeriod) {
+    if (!this._priv_contentInfos) {
       return null;
     }
-    return this._priv_languageManager.getAvailableAudioTracks(this._priv_currentPeriod);
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_languageManager || !currentPeriod) {
+      return null;
+    }
+    return this._priv_languageManager.getAvailableAudioTracks(currentPeriod);
   }
 
   /**
@@ -1459,10 +1526,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Array.<Object>|null}
    */
   getAvailableTextTracks() : ILMTextTrackListItem[] | null {
-    if (!this._priv_languageManager || !this._priv_currentPeriod) {
+    if (!this._priv_contentInfos) {
       return null;
     }
-    return this._priv_languageManager.getAvailableTextTracks(this._priv_currentPeriod);
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_languageManager || !currentPeriod) {
+      return null;
+    }
+    return this._priv_languageManager.getAvailableTextTracks(currentPeriod);
   }
 
   /**
@@ -1470,10 +1541,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {string}
    */
   getAudioTrack() : ILMAudioTrack|null|undefined {
-    if (!this._priv_languageManager || !this._priv_currentPeriod) {
+    if (!this._priv_contentInfos) {
       return undefined;
     }
-    return this._priv_languageManager.getChosenAudioTrack(this._priv_currentPeriod);
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_languageManager || !currentPeriod) {
+      return undefined;
+    }
+    return this._priv_languageManager.getChosenAudioTrack(currentPeriod);
   }
 
   /**
@@ -1481,10 +1556,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {string}
    */
   getTextTrack() : ILMTextTrack|null|undefined {
-    if (!this._priv_languageManager || !this._priv_currentPeriod) {
+    if (!this._priv_contentInfos) {
       return undefined;
     }
-    return this._priv_languageManager.getChosenTextTrack(this._priv_currentPeriod);
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_languageManager || !currentPeriod) {
+      return undefined;
+    }
+    return this._priv_languageManager.getChosenTextTrack(currentPeriod);
   }
 
   /**
@@ -1494,11 +1573,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - the given id is linked to no audio track.
    */
   setAudioTrack(audioId : string) : void {
-    if (!this._priv_languageManager || !this._priv_currentPeriod) {
+    if (!this._priv_contentInfos) {
+      throw new Error("No content loaded");
+    }
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_languageManager || !currentPeriod) {
       throw new Error("No compatible content launched.");
     }
     try {
-      this._priv_languageManager.setAudioTrackByID(this._priv_currentPeriod, audioId);
+      this._priv_languageManager.setAudioTrackByID(currentPeriod, audioId);
     }
     catch (e) {
       throw new Error("player: unknown audio track");
@@ -1512,11 +1595,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - the given id is linked to no text track.
    */
   setTextTrack(textId : string) : void {
-    if (!this._priv_languageManager || !this._priv_currentPeriod) {
+    if (!this._priv_contentInfos) {
+      throw new Error("No content loaded");
+    }
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_languageManager || !currentPeriod) {
       throw new Error("No compatible content launched.");
     }
     try {
-      this._priv_languageManager.setTextTrackByID(this._priv_currentPeriod, textId);
+      this._priv_languageManager.setTextTrackByID(currentPeriod, textId);
     }
     catch (e) {
       throw new Error("player: unknown text track");
@@ -1527,17 +1614,21 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Disable subtitles for the current content.
    */
   disableTextTrack() : void {
-    if (!this._priv_languageManager || !this._priv_currentPeriod) {
+    if (!this._priv_contentInfos) {
       return;
     }
-    return this._priv_languageManager.disableTextTrack(this._priv_currentPeriod);
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_languageManager || !currentPeriod) {
+      return;
+    }
+    return this._priv_languageManager.disableTextTrack(currentPeriod);
   }
 
   /**
    * @returns {Array.<Object>|null}
    */
   getImageTrackData() : IBifThumbnail[] | null {
-    return this._priv_currentImagePlaylist;
+    return this._priv_contentInfos && this._priv_contentInfos.thumbnails;
   }
 
   /**
@@ -1545,11 +1636,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {number}
    */
   getMinimumPosition() : number|null {
-    if (this._priv_isDirectFile) {
+    if (!this._priv_contentInfos) {
+      return null;
+    }
+
+    if (this._priv_contentInfos.isDirectFile) {
       return 0;
     }
-    if (this._priv_currentManifest) {
-      return getMinimumBufferPosition(this._priv_currentManifest);
+
+    const { manifest } = this._priv_contentInfos;
+    if (manifest) {
+      return getMinimumBufferPosition(manifest);
     }
     return null;
   }
@@ -1559,14 +1656,24 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {number}
    */
   getMaximumPosition() : number|null {
-    if (this._priv_isDirectFile) {
+    if (!this._priv_contentInfos) {
+      return null;
+    }
+
+    const {
+      isDirectFile,
+      manifest,
+    } = this._priv_contentInfos;
+
+    if (isDirectFile) {
       if (!this.videoElement) {
         throw new Error("Disposed player");
       }
       return this.videoElement.duration;
     }
-    if (this._priv_currentManifest) {
-      return getMaximumBufferPosition(this._priv_currentManifest);
+
+    if (manifest) {
+      return getMaximumBufferPosition(manifest);
     }
     return null;
   }
@@ -1578,23 +1685,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // lock creation of new streams while cleaning up is pending
     this._priv_streamLock$.next(true);
 
-    // language management
-    this._priv_initialAudioTrack = undefined;
-    this._priv_initialTextTrack = undefined;
+    this._priv_contentInfos = null;
     this._priv_languageManager = null;
 
-    // ABR management
     if (this._priv_abrManager) {
       this._priv_abrManager.dispose();
       this._priv_abrManager = null;
     }
-
-    // manifest
-    this._priv_activeRepresentations = null;
-    this._priv_activeAdaptations = null;
-    this._priv_isDirectFile = null;
-    this._priv_currentManifest = null;
-    this._priv_contentURL = undefined;
 
     this._priv_contentEventsMemory = {
       period: null,
@@ -1605,18 +1702,18 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       bitrateEstimation: undefined,
     };
 
-    // misc
-    this._priv_fatalError = null;
-    this._priv_currentImagePlaylist = null;
-
     // EME cleaning
     const freeUpStreamLock = () => {
       this._priv_streamLock$.next(false);
     };
 
-    clearEMESession()
-      .catch(() => Observable.empty())
-      .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
+    if (this.videoElement) {
+      clearEMESession(this.videoElement)
+        .catch(() => Observable.empty())
+        .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
+    } else {
+      freeUpStreamLock();
+    }
   }
 
   /**
@@ -1702,6 +1799,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         this._priv_onStreamWarning(streamInfos.value);
         break;
       case "added-segment":
+
+        if (!this._priv_contentInfos) {
+          log.error("Added segment while no content is loaded");
+          return;
+        }
+
         // Manage image tracks
         // TODO Better way? Perhaps linked to an ImageSourceBuffer
         // implementation
@@ -1711,9 +1814,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
             const imageData = segmentData.data as IBifThumbnail[];
 
             // TODO merge multiple data from the same track together
-            this._priv_currentImagePlaylist = imageData;
+            this._priv_contentInfos.thumbnails = imageData;
             this.trigger("imageTrackUpdate", {
-              data: this._priv_currentImagePlaylist,
+              data: this._priv_contentInfos.thumbnails,
             });
           }
         }
@@ -1730,17 +1833,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_onStreamError(error : Error) : void {
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
-    this._priv_fatalError = error;
+    this._priv_currentError = error;
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the
     // player state is updated can launch a new content, thus the error will not
     // be here anymore, in which case triggering the "error" event is unwanted.
-    // This is not perfect however as technically, this condition could be true
-    // even for a new content (I cannot see it happen with the current code but
-    // that's not a reason). In that case, "error" would be triggered 2 times.
-    // Find a better solution.
-    if (this._priv_fatalError === error) {
+    // This is very ugly though, and we should probable have a better solution
+    if (this._priv_currentError === error) {
       this.trigger("error", error);
     }
   }
@@ -1780,15 +1880,23 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     abrManager : ABRManager;
     manifest : Manifest;
   }) : void {
+    if (!this._priv_contentInfos) {
+      log.error("The manifest is loaded but no content is.");
+      return;
+    }
     const { manifest, abrManager } = value;
-    this._priv_currentManifest = manifest;
+    this._priv_contentInfos.manifest = manifest;
     this._priv_abrManager = abrManager;
 
+    const {
+      initialAudioTrack,
+      initialTextTrack,
+    } = this._priv_contentInfos;
     this._priv_languageManager = new LanguageManager({
-      preferredAudioTracks: this._priv_initialAudioTrack === undefined ?
-        undefined : [this._priv_initialAudioTrack],
-      preferredTextTracks: this._priv_initialTextTrack === undefined ?
-        undefined : [this._priv_initialTextTrack],
+      preferredAudioTracks: initialAudioTrack === undefined ?
+        undefined : [initialAudioTrack],
+      preferredTextTracks: initialTextTrack === undefined ?
+        undefined : [initialTextTrack],
     });
     this.trigger("manifestChange", manifest);
   }
@@ -1802,7 +1910,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Period} value.period
    */
   private _priv_onActivePeriodChanged({ period } : { period : Period }) : void {
-    this._priv_currentPeriod = period;
+    if (!this._priv_contentInfos) {
+      log.error("The active period changed but no content is loaded");
+      return;
+    }
+    this._priv_contentInfos.currentPeriod = period;
     this._priv_triggerContentEvent("period", period);
 
     // Emit intial events for the Period
@@ -1915,8 +2027,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Manifest} value.manifest
    */
   private _priv_onManifestUpdate(value : { manifest : Manifest }) : void {
+    if (!this._priv_contentInfos) {
+      log.error("The manifest is updated but no content is loaded.");
+      return;
+    }
     const { manifest } = value;
-    this._priv_currentManifest = manifest;
+    this._priv_contentInfos.manifest = manifest;
 
     // Update the languages chosen if it changed
     if (this._priv_languageManager) {
@@ -1945,29 +2061,39 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     adaptation : Adaptation|null;
     period : Period;
   }) : void {
-    // lazily create this._priv_activeAdaptations
-    if (!this._priv_activeAdaptations) {
-      this._priv_activeAdaptations = new Map();
+    if (!this._priv_contentInfos) {
+      log.error("The adaptations changed but no content is loaded");
+      return;
     }
 
-    const activeAdaptations = this._priv_activeAdaptations.get(period);
-    if (!activeAdaptations) {
-      this._priv_activeAdaptations.set(period, { [type]: adaptation });
+    // lazily create this._priv_contentInfos.activeAdaptations
+    if (!this._priv_contentInfos.activeAdaptations) {
+      this._priv_contentInfos.activeAdaptations = new Map();
+    }
+
+    const {
+      activeAdaptations,
+      currentPeriod,
+    } = this._priv_contentInfos;
+
+    const activePeriodAdaptations = activeAdaptations.get(period);
+    if (!activePeriodAdaptations) {
+      activeAdaptations.set(period, { [type]: adaptation });
     } else {
-      activeAdaptations[type] = adaptation;
+      activePeriodAdaptations[type] = adaptation;
     }
 
     if (
       this._priv_languageManager &&
-      period != null && period === this._priv_currentPeriod
+      period != null && period === currentPeriod
     ) {
       if (type === "audio") {
         const audioTrack = this._priv_languageManager
-          .getChosenAudioTrack(this._priv_currentPeriod);
+          .getChosenAudioTrack(currentPeriod);
         this._priv_triggerContentEvent("audioTrack", audioTrack);
       } else if (type === "text") {
         const textTrack = this._priv_languageManager
-          .getChosenTextTrack(this._priv_currentPeriod);
+          .getChosenTextTrack(currentPeriod);
         this._priv_triggerContentEvent("textTrack", textTrack);
       }
     }
@@ -1991,24 +2117,34 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     period : Period;
     representation : Representation|null;
   }) : void {
-    // lazily create this._priv_activeRepresentations
-    if (!this._priv_activeRepresentations) {
-      this._priv_activeRepresentations = new Map();
+    if (!this._priv_contentInfos) {
+      log.error("The representations changed but no content is loaded");
+      return;
     }
 
-    const activeRepresentations = this._priv_activeRepresentations.get(period);
-    if (!activeRepresentations) {
-      this._priv_activeRepresentations.set(period, { [type]: representation });
+    // lazily create this._priv_contentInfos.activeRepresentations
+    if (!this._priv_contentInfos.activeRepresentations) {
+      this._priv_contentInfos.activeRepresentations = new Map();
+    }
+
+    const {
+      activeRepresentations,
+      currentPeriod,
+    } = this._priv_contentInfos;
+
+    const activePeriodRepresentations = activeRepresentations.get(period);
+    if (!activePeriodRepresentations) {
+      activeRepresentations.set(period, { [type]: representation });
     } else {
-      activeRepresentations[type] = representation;
+      activePeriodRepresentations[type] = representation;
     }
 
     const bitrate = representation && representation.bitrate;
     if (bitrate != null) {
-      this._priv_lastBitrates[type] = bitrate;
+      this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
 
-    if (period != null && this._priv_currentPeriod === period) {
+    if (period != null && currentPeriod === period) {
       if (type === "video") {
         this._priv_triggerContentEvent("videoBitrate", bitrate != null ? bitrate : -1);
       } else if (type === "audio") {
@@ -2089,7 +2225,16 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Object} clockTick
    */
   private _priv_triggerTimeChange(clockTick : IClockTick) : void {
-    if ((!this._priv_isDirectFile && !this._priv_currentManifest) || !clockTick) {
+    if (!this._priv_contentInfos) {
+      log.warn("Cannot perform time update: no content loaded.");
+      return;
+    }
+
+    const {
+      isDirectFile,
+      manifest,
+    } = this._priv_contentInfos;
+    if ((!isDirectFile && !manifest) || !clockTick) {
       return;
     }
 
@@ -2103,15 +2248,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     };
 
     if (
-      this._priv_currentManifest &&
-      this._priv_currentManifest.isLive &&
+      manifest &&
+      manifest.isLive &&
       clockTick.currentTime > 0
     ) {
       positionData.wallClockTime =
-        toWallClockTime(clockTick.currentTime, this._priv_currentManifest)
+        toWallClockTime(clockTick.currentTime, manifest)
           .getTime() / 1000;
       positionData.liveGap =
-        getMaximumBufferPosition(this._priv_currentManifest) - clockTick.currentTime;
+        getMaximumBufferPosition(manifest) - clockTick.currentTime;
     }
 
     this.trigger("positionUpdate", positionData);

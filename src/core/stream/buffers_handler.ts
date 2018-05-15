@@ -481,7 +481,8 @@ export default function BuffersHandler(
 
         return cleanBuffer$
           .mapTo(EVENTS.adaptationChange(bufferType, null, period))
-          .concat(createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period }));
+          .concat(createFakeBuffer(
+            clock$, wantedBufferAhead$, bufferType, { manifest, period }));
       }
 
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
@@ -534,7 +535,8 @@ export default function BuffersHandler(
             "has crashed. Aborting it.", error);
           sourceBufferManager.disposeSourceBuffer(bufferType);
           errorStream.next(error);
-          return createFakeBuffer(clock$, wantedBufferAhead$, { manifest, period });
+          return createFakeBuffer(
+            clock$, wantedBufferAhead$, bufferType, { manifest, period });
         }
 
         log.error(
@@ -654,7 +656,7 @@ function createNativeSourceBuffersForPeriod(
   sourceBufferManager : SourceBufferManager,
   period : Period
 ) : void {
-  Object.keys(period.adaptations).map(bufferType => {
+  Object.keys(period.adaptations).forEach(bufferType => {
     if (SourceBufferManager.isNative(bufferType)) {
       const adaptations = period.adaptations[bufferType] || [];
       const representations = adaptations ?

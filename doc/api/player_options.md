@@ -213,12 +213,6 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 ---
 
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
 
 <a name="prop-maxBufferAhead"></a>
 ### maxBufferAhead #############################################################
@@ -301,12 +295,6 @@ fullscreen, specific environments), you might not want to activate this limit.
 
 :warning: This option will have no effect for contents loaded in _DirectFile_
 mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 ---
 

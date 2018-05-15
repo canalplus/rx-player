@@ -54,17 +54,19 @@ export interface IParsedSegmentBase extends ISegmentBaseAttributes {
 
 /**
  * TODO Only for SegmentBase not for other types
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
-export default function parseSegmentBase(root: Node) : IParsedSegmentBase {
+export default function parseSegmentBase(root: Element) : IParsedSegmentBase {
   const attributes : ISegmentBaseAttributes = {};
 
   const segmentBaseChildren = root.childNodes;
   for (let i = 0; i < segmentBaseChildren.length; i++) {
-    const currentNode = segmentBaseChildren[i];
-    if (currentNode.nodeName === "Initialization") {
-      attributes.initialization = parseInitialization(currentNode);
+    if (segmentBaseChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentNode = segmentBaseChildren[i] as Element;
+      if (currentNode.nodeName === "Initialization") {
+        attributes.initialization = parseInitialization(currentNode);
+      }
     }
   }
 

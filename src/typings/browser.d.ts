@@ -114,8 +114,8 @@ interface HTMLVideoElement {
   webkitGenerateKeyRequest? : (keyType: string, initData : ArrayBuffer) => void;
   webkitAddKey? : (
     keyType: string,
-    key : ArrayBuffer|ArrayBufferView,
-    kid : ArrayBuffer|ArrayBufferView|null,
+    key : ArrayBuffer|TypedArray|DataView,
+    kid : ArrayBuffer|TypedArray|DataView|null,
     sessionId : string
   ) => void;
 }
@@ -123,8 +123,8 @@ interface HTMLMediaElement {
   webkitGenerateKeyRequest? : (key: string, initData : ArrayBuffer) => void;
   webkitAddKey? : (
     keyType: string,
-    key : ArrayBuffer|ArrayBufferView,
-    kid : ArrayBuffer|ArrayBufferView|null,
+    key : ArrayBuffer|TypedArray|DataView,
+    kid : ArrayBuffer|TypedArray|DataView|null,
     sessionId : string
   ) => void;
 }
@@ -153,5 +153,12 @@ declare class VTTCue {
   startTime : number;
   vertical : string;
   constructor(start : number, end : number, cueText : string);
+}
+
+// TypeScript seems to have problems with its MediaKeys definition
+// TODO Inspect why
+interface MediaKeys {
+  createSession(sessionType? : MediaKeySessionType) : IMediaKeySession;
+  setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 /* tslint:enable:interface-name */

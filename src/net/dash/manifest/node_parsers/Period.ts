@@ -54,19 +54,21 @@ function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
   const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
 
   for (let i = 0; i < periodChildren.length; i++) {
-    const currentNode = periodChildren[i];
+    if (periodChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentElement = periodChildren[i] as Element;
 
-    switch (currentNode.nodeName) {
+      switch (currentElement.nodeName) {
 
-      case "BaseURL":
-        baseURL = currentNode.textContent || "";
-        break;
+        case "BaseURL":
+          baseURL = currentElement.textContent || "";
+          break;
 
-      case "AdaptationSet":
-        const adaptation =
-          createAdaptationSetIntermediateRepresentation(currentNode);
-        adaptations.push(adaptation);
-        break;
+        case "AdaptationSet":
+          const adaptation =
+            createAdaptationSetIntermediateRepresentation(currentElement);
+          adaptations.push(adaptation);
+          break;
+      }
     }
   }
 
@@ -74,13 +76,13 @@ function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
 }
 
 /**
- * @param {Node} periodNode
+ * @param {Element} periodElement
  * @returns {Object}
  */
-function parsePeriodAttributes(periodNode : Node) : IPeriodAttributes {
+function parsePeriodAttributes(periodElement : Element) : IPeriodAttributes {
   const res : IPeriodAttributes = {};
-  for (let i = 0; i < periodNode.attributes.length; i++) {
-    const attribute = periodNode.attributes[i];
+  for (let i = 0; i < periodElement.attributes.length; i++) {
+    const attribute = periodElement.attributes[i];
 
     switch (attribute.name) {
       case "id":
@@ -114,10 +116,10 @@ function parsePeriodAttributes(periodNode : Node) : IPeriodAttributes {
 }
 
 export function createPeriodIntermediateRepresentation(
-  periodNode : Node
+  periodElement : Element
 ) : IPeriodIntermediateRepresentation {
   return {
-    children: parsePeriodChildren(periodNode.childNodes),
-    attributes: parsePeriodAttributes(periodNode),
+    children: parsePeriodChildren(periodElement.childNodes),
+    attributes: parsePeriodAttributes(periodElement),
   };
 }

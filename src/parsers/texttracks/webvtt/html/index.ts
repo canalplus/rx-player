@@ -125,12 +125,12 @@ function parseCue(
   const regionAttr = document.createAttribute("style");
   let index = 0;
   regionAttr.value =
-    "width:100%; \
-    height:100%; \
-    display:flex; \
-    flex-direction:column; \
-    justify-content:flex-end; \
-    align-items:center;";
+    "width:100%;" +
+    "height:100%;" +
+    "display:flex;" +
+    "flex-direction:column;" +
+    "justify-content:flex-end;" +
+    "align-items:center;";
   region.setAttributeNode(regionAttr);
 
   // Get Header. It may be a class name associated with cue.
@@ -159,8 +159,8 @@ function parseCue(
   // set color and background-color default values, as indicated in:
   // https://www.w3.org/TR/webvtt1/#applying-css-properties
   attr.value =
-    "background-color:rgba(0,0,0,0.8); \
-    color:white;";
+    "background-color:rgba(0,0,0,0.8);" +
+    "color:white;";
   spanElement.setAttributeNode(attr);
 
   const styles = styleElements

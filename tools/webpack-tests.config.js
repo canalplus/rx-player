@@ -5,6 +5,7 @@ const webpack = require("webpack");
 const coverageIsWanted = !!process.env.RXP_COVERAGE;
 
 const config = {
+  mode: "development",
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
   },
