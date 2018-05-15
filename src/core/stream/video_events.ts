@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  combineLatest as observableCombineLatest,
+  Observable
+} from "rxjs";
+import {
+  mapTo,
+  share,
+  take,
+  tap,
+} from "rxjs/operators";
 import {
   canPlay,
   hasLoadedMetadata,
@@ -33,16 +42,18 @@ function doInitialSeek(
   startTime : number|(() => number)
 ) : Observable<void> {
   return hasLoadedMetadata(videoElement)
-    .do(() => {
-      log.info("set initial time", startTime);
+    .pipe(
+      tap(() => {
+        log.info("set initial time", startTime);
 
-      // reset playbackRate to 1 in case we were at 0 (from a stalled
-      // retry for instance)
-      videoElement.playbackRate = 1;
-      videoElement.currentTime = typeof startTime === "function" ?
-        startTime() : startTime;
-    })
-    .share();
+        // reset playbackRate to 1 in case we were at 0 (from a stalled
+        // retry for instance)
+        videoElement.playbackRate = 1;
+        videoElement.currentTime = typeof startTime === "function" ?
+          startTime() : startTime;
+      }),
+      share()
+    );
 }
 
 /**
@@ -55,15 +66,17 @@ function handleCanPlay(
   autoPlay : boolean
 ) : Observable<void> {
   return canPlay(videoElement)
-    .do(() => {
-      log.info("canplay event");
-      if (autoPlay) {
-        /* tslint:disable no-floating-promises */
-        videoElement.play();
-        /* tslint:enable no-floating-promises */
-      }
-    })
-    .share();
+    .pipe(
+      tap(() => {
+        log.info("canplay event");
+        if (autoPlay) {
+          /* tslint:disable no-floating-promises */
+          videoElement.play();
+          /* tslint:enable no-floating-promises */
+        }
+      }),
+      share()
+    );
 }
 
 /**
@@ -82,10 +95,8 @@ export default function handleVideoEvents(
 } {
   const initialSeek$ = doInitialSeek(videoElement, startTime);
   const hasHandledCanPlay$ = handleCanPlay(videoElement, autoPlay);
-  const loadAndPlay$ = Observable
-    .combineLatest(initialSeek$, hasHandledCanPlay$)
-    .take(1)
-    .mapTo(undefined);
+  const loadAndPlay$ = observableCombineLatest(initialSeek$, hasHandledCanPlay$)
+    .pipe(take(1), mapTo(undefined));
 
   return {
     initialSeek$,

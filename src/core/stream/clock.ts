@@ -15,7 +15,16 @@
  */
 
 import objectAssign = require("object-assign");
-import { Observable } from "rxjs";
+import {
+  merge as observableMerge,
+  Observable,
+} from "rxjs";
+import {
+  ignoreElements,
+  map,
+  take,
+  tap,
+} from "rxjs/operators";
 import Manifest from "../../manifest";
 import { getMaximumBufferPosition } from "../../manifest/timings";
 import { IBufferClockTick } from "../buffer";
@@ -66,22 +75,21 @@ export default function createBufferClock(
    * @type {Number}
    */
   let timeOffset = startTime;
-  const updateTimeOffset$ = initialSeek$
-    .take(1)
-    .do(() => {
-      timeOffset = 0; // (initial seek performed)
-    })
-    .ignoreElements();
+  const updateTimeOffset$ = initialSeek$.pipe(
+    take(1),
+    tap(() => { timeOffset = 0; }), // (initial seek performed)
+    ignoreElements()
+  );
 
-  const clock$ : Observable<IBufferClockTick> = streamClock$
-    .map((timing) =>
+  const clock$ : Observable<IBufferClockTick> = streamClock$.pipe(
+    map((timing) =>
       objectAssign({
         liveGap: manifest.isLive ?
           getMaximumBufferPosition(manifest) - timing.currentTime :
           Infinity,
         timeOffset,
       }, timing)
-    );
+    ));
 
-  return Observable.merge(clock$, updateTimeOffset$);
+  return observableMerge(clock$, updateTimeOffset$);
 }

@@ -15,9 +15,15 @@
  */
 
 import {
+  merge as observableMerge,
   Observable,
   Subject,
 } from "rxjs";
+import {
+  ignoreElements,
+  map,
+  mapTo,
+} from "rxjs/operators";
 import {
   clearElementSrc,
   setElementSrc$,
@@ -110,7 +116,7 @@ export default function StreamDirectFile({
    * @type {Subject}
    */
   const warning$ = new Subject<Error|CustomError>();
-  const warningEvents$ = warning$.map(EVENTS.warning);
+  const warningEvents$ = warning$.pipe(map(EVENTS.warning));
 
   clearElementSrc(mediaElement);
 
@@ -146,7 +152,7 @@ export default function StreamDirectFile({
    */
   const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
     pauseWhenStalled: true,
-  }).map(EVENTS.speedChanged);
+  }).pipe(map(EVENTS.speedChanged));
 
   /**
    * Create Stalling Manager, an observable which will try to get out of
@@ -154,18 +160,18 @@ export default function StreamDirectFile({
    * @type {Observable}
    */
   const stallingManager$ = StallingManager(mediaElement, clock$)
-  .map(EVENTS.stalled);
+    .pipe(map(EVENTS.stalled));
 
   const loadedEvent$ = loadAndPlay$
-    .mapTo(EVENTS.loaded());
+    .pipe(mapTo(EVENTS.loaded()));
 
   const linkURL$ = setElementSrc$(mediaElement, url)
-    .ignoreElements();
+    .pipe(ignoreElements());
 
   const mutedInitialSeek$ = initialSeek$
-    .ignoreElements();
+    .pipe(ignoreElements());
 
-  const directFile$ : Observable<IStreamEvent> = Observable.merge(
+  const directFile$ : Observable<IStreamEvent> = observableMerge(
     loadedEvent$,
     mutedInitialSeek$,
     emeManager$ as Observable<void>, // TODO RxJS do something weird here
@@ -175,5 +181,5 @@ export default function StreamDirectFile({
     linkURL$
   );
 
-  return Observable.merge(directFile$, warningEvents$);
+  return observableMerge(directFile$, warningEvents$);
 }
