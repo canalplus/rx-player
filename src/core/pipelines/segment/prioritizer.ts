@@ -56,7 +56,7 @@ import {
  * const pObservable5 = prioritizer.create(observable5, 2);
  *
  * // start every Observables at the same time
- * Observable.merge(
+ * observableMerge(
  *   pObservable1,
  *   pObservable2,
  *   pObservable3,
