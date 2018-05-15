@@ -17,7 +17,13 @@
 import {
   EMPTY,
   Observable,
+  of as observableOf,
 } from "rxjs";
+import {
+  mapTo,
+  share,
+  tap,
+} from "rxjs/operators";
 import Manifest from "../../manifest";
 import log from "../../utils/log";
 import SourceBufferManager from "../source_buffers";
@@ -43,11 +49,13 @@ function refreshManifest(
     return EMPTY;
   }
 
-  return manifestPipeline(refreshURL)
-    .do((parsed) => {
+  return manifestPipeline(refreshURL).pipe(
+    tap((parsed) => {
       currentManifest.update(parsed);
-    })
-    .mapTo(EVENTS.manifestUpdate(currentManifest));
+    }),
+    share(), // share the previous side effect
+    mapTo(EVENTS.manifestUpdate(currentManifest))
+  );
 }
 
 /**
@@ -83,7 +91,7 @@ export default function liveEventsHandler(
         // manifest to refresh the current index
         return refreshManifest(fetchManifest, manifest);
     }
-    return Observable.of(message);
+    return observableOf(message);
   };
 
 }
