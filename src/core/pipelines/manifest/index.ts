@@ -18,6 +18,12 @@ import {
   Observable,
   Subject,
 } from "rxjs";
+import {
+  filter,
+  map,
+  share,
+  tap,
+} from "rxjs/operators";
 import { CustomError } from "../../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
@@ -70,26 +76,27 @@ export default function createManifestPipeline(
       IManifestLoaderArguments, Document|string, IManifestResult
     >(transport.manifest, pipelineOptions)({ url });
 
-    return manifest$
+    return manifest$.pipe(
 
-      .do((arg) => {
+      tap((arg) => {
         if (arg.type === "error") {
           warning$.next(arg.value);
         }
-      })
+      }),
 
-      .filter((arg) : arg is IPipelineManifestResult =>
+      filter((arg) : arg is IPipelineManifestResult =>
         arg.type === "data" || arg.type === "cache"
-      )
+      ),
 
-      .map(({ value }) : Manifest => {
+      map(({ value }) : Manifest => {
         return createManifest(
           value.parsed.manifest,
           supplementaryTextTracks,
           supplementaryImageTracks,
           warning$
         );
-      })
-      .share();
+      }),
+      share()
+    );
   };
 }

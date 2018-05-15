@@ -15,8 +15,15 @@
  */
 
 import arrayFind = require("array-find");
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  defer as observableDefer,
+  Observable,
+  Subject,
+} from "rxjs";
+import {
+  finalize,
+  mergeMap,
+} from "rxjs/operators";
 
 /**
  * Create Observables which can be priorized between one another.
@@ -131,7 +138,7 @@ export default class ObservablePrioritizer<T> {
    * @returns {Observable}
    */
   public create(obs : Observable<T>, priority : number) : Observable<T> {
-    return Observable.defer(() => {
+    return observableDefer(() => {
       if (this._pendingPriority == null || this._pendingPriority >= priority) {
         // Update the priority and start immediately the Observable
         this._pendingPriority = priority;
@@ -144,7 +151,7 @@ export default class ObservablePrioritizer<T> {
           trigger,
         });
         return trigger
-          .mergeMap(() => this._startObservable(obs));
+          .pipe(mergeMap(() => this._startObservable(obs)));
       }
     });
   }
@@ -209,6 +216,6 @@ export default class ObservablePrioritizer<T> {
 
     this._numberOfPendingObservables++;
     return obs
-      .finally(onObservableFinish);
+      .pipe(finalize(onObservableFinish));
   }
 }

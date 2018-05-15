@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
-import {
+
+import {merge as observableMerge, of as observableOf, 
   EMPTY,
   Observable,
   Subject,
-} from "rxjs";
+} from 'rxjs';
+
+import {map, concat, catchError, mergeMap, finalize, tap} from 'rxjs/operators';
+import objectAssign = require("object-assign");
 import config from "../../config";
 import {
   CustomError,
@@ -221,10 +224,10 @@ export default function createPipeline<T, U, V>(
    * @returns {Observable}
    */
   function callResolver(resolverArgument : T) : Observable<T> {
-    return tryCatch<T, T>(resolver, resolverArgument)
-      .catch((error : Error) : Observable<never> => {
+    return tryCatch<T, T>(resolver, resolverArgument).pipe(
+      catchError((error : Error) : Observable<never> => {
         throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
-      });
+      }));
   }
 
   /**
@@ -247,35 +250,35 @@ export default function createPipeline<T, U, V>(
       const request$ = downloadingBackoff<ILoaderEvent<U>>(
         tryCatch<T, ILoaderEvent<U>>(loader as any, loaderArgument),
         backoffOptions
-      )
+      ).pipe(
 
-        .catch((error : Error) : Observable<never> => {
+        catchError((error : Error) : Observable<never> => {
           throw errorSelector("PIPELINE_LOAD_ERROR", error);
-        })
+        }),
 
-        .do((arg) => {
+        tap((arg) => {
           if (arg.type === "response" && cache) {
             cache.add(loaderArgument, arg.value);
           }
-        });
+        }),);
 
-      return Observable.of({
+      return observableOf({
         type: "request" as "request",
         value: loaderArgument,
-      }).concat(request$);
+      }).pipe(concat(request$));
     }
 
     const dataFromCache = cache ? cache.get(loaderArgument) : null;
 
     if (dataFromCache != null) {
-      return castToObservable(dataFromCache)
-        .map(response => {
+      return castToObservable(dataFromCache).pipe(
+        map(response => {
           return {
             type: "cache" as "cache",
             value: response,
           };
-        })
-        .catch(startLoaderWithBackoff);
+        }),
+        catchError(startLoaderWithBackoff),);
     }
 
     return startLoaderWithBackoff();
@@ -289,19 +292,19 @@ export default function createPipeline<T, U, V>(
    * @returns {Observable}
    */
   function callParser<Y>(parserArgument : Y) : Observable<V> {
-    return tryCatch<Y, V>(parser as any, parserArgument)
-      .catch((error) : Observable<never> => {
+    return tryCatch<Y, V>(parser as any, parserArgument).pipe(
+      catchError((error) : Observable<never> => {
         throw errorSelector("PIPELINE_PARSING_ERROR", error);
-      });
+      }));
   }
 
   return function startPipeline(
     pipelineInputData : T
   ) : Observable<ICorePipelineEvent<T, U, V>> {
-    const pipeline$ = callResolver(pipelineInputData)
-      .mergeMap((resolverResponse : T) => {
-        return loadData(resolverResponse)
-          .mergeMap((arg) : Observable<ICorePipelineEvent<T, U, V>> => {
+    const pipeline$ = callResolver(pipelineInputData).pipe(
+      mergeMap((resolverResponse : T) => {
+        return loadData(resolverResponse).pipe(
+          mergeMap((arg) : Observable<ICorePipelineEvent<T, U, V>> => {
             // "cache": data taken from cache by the pipeline
             // "data": the data is available but no request has been done
             // "response": data received through a request
@@ -316,7 +319,7 @@ export default function createPipeline<T, U, V>(
                 // add metrics if a request was made
                 const metrics : Observable<IPipelineMetrics> =
                   arg.type === "response" ?
-                    Observable.of({
+                    observableOf({
                       type: "metrics" as "metrics",
                       value: {
                         size: arg.value.size,
@@ -324,31 +327,31 @@ export default function createPipeline<T, U, V>(
                       },
                     }) : EMPTY;
 
-                return metrics
-                  .concat(
-                    callParser(loadedDataInfos)
-                    .map(parserResponse => {
+                return metrics.pipe(
+                  concat(
+                    callParser(loadedDataInfos).pipe(
+                    map(parserResponse => {
                       return {
                         type: "data" as "data",
                         value: objectAssign({
                           parsed: parserResponse,
                         }, loadedDataInfos),
                       };
-                    })
-                  );
+                    }))
+                  ));
               default:
-                return Observable.of(arg);
+                return observableOf(arg);
             }
-          });
-      })
-      .finally(() => { retryErrorSubject.complete(); });
+          }));
+      }),
+      finalize(() => { retryErrorSubject.complete(); }),);
 
-    const retryError$ : Observable<IPipelineError> = retryErrorSubject
-      .map(error => ({
+    const retryError$ : Observable<IPipelineError> = retryErrorSubject.pipe(
+      map(error => ({
         type: "error" as "error",
         value: error,
-      }));
+      })));
 
-    return Observable.merge(pipeline$, retryError$);
+    return observableMerge(pipeline$, retryError$);
   };
 }

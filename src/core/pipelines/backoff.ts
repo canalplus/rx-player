@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  Observable,
+  timer as observableTimer,
+} from "rxjs";
+import {
+  catchError,
+  mergeMap,
+} from "rxjs/operators";
 import { isOffline } from "../../compat";
 import {
   RequestError,
@@ -101,38 +108,39 @@ function downloadingBackoff<T>(
   };
 
   let lastError = ERROR_TYPES.NONE;
-  return obs$.catch((error : Error, source) => {
-    if (!shouldRetry(error)) {
-      throw error;
-    }
-    const currentError = error instanceof RequestError &&
-      isOfflineRequestError(error) ?  ERROR_TYPES.OFFLINE : ERROR_TYPES.REGULAR;
+  return obs$
+    .pipe(catchError((error : Error, source) => {
+      if (!shouldRetry(error)) {
+        throw error;
+      }
+      const currentError = error instanceof RequestError &&
+        isOfflineRequestError(error) ?  ERROR_TYPES.OFFLINE : ERROR_TYPES.REGULAR;
 
-    const maxRetry = currentError === ERROR_TYPES.OFFLINE ?
-      maxRetryOffline : maxRetryRegular;
+      const maxRetry = currentError === ERROR_TYPES.OFFLINE ?
+        maxRetryOffline : maxRetryRegular;
 
-    if (currentError !== lastError) {
-      retryCount = 0;
-      lastError = currentError;
-    }
+      if (currentError !== lastError) {
+        retryCount = 0;
+        lastError = currentError;
+      }
 
-    if (++retryCount > maxRetry) {
-      throw error;
-    }
+      if (++retryCount > maxRetry) {
+        throw error;
+      }
 
-    if (onRetry) {
-      onRetry(error, retryCount);
-    }
+      if (onRetry) {
+        onRetry(error, retryCount);
+      }
 
-    const delay = Math.min(
-      baseDelay * Math.pow(2, retryCount - 1),
-      maxDelay
-    );
+      const delay = Math.min(
+        baseDelay * Math.pow(2, retryCount - 1),
+        maxDelay
+      );
 
-    const fuzzedDelay = getFuzzedDelay(delay);
-    return Observable.timer(fuzzedDelay)
-      .mergeMap(() => source);
-  });
+      const fuzzedDelay = getFuzzedDelay(delay);
+      return observableTimer(fuzzedDelay).pipe(
+        mergeMap(() => source));
+    }));
 }
 
 export default downloadingBackoff;
