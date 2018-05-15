@@ -190,7 +190,7 @@ function retryFuncWithBackoff<T>(
       obs.complete();
     });
 
-    return func$.catch((error : Error|CustomError) => {
+    return func$.pipe(catchError((error : Error|CustomError) => {
       const wantRetry = !shouldRetry || shouldRetry(error);
       if (!wantRetry || retryCount++ >= totalRetry) {
         if (errorSelector) {
@@ -212,7 +212,7 @@ function retryFuncWithBackoff<T>(
           }
           return doRetry();
         }));
-    });
+    }));
   }
 
   return doRetry();
