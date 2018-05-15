@@ -201,7 +201,7 @@ export default function createPipeline<T, U, V>(
 
   // TODO Remove the resolver completely
   const resolver = (transportPipeline as any).resolver != null ?
-    (transportPipeline as any).resolver : Observable.of.bind(Observable);
+    (transportPipeline as any).resolver : observableOf.bind(Observable);
 
   /**
    * Subject that will emit non-fatal errors.

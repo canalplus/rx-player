@@ -1,5 +1,12 @@
-import { Subject } from "rxjs/Subject";
-import { Observable } from "rxjs/Observable";
+import {
+  combineLatest as observableCombineLatest,
+  Subject,
+} from "rxjs";
+import {
+  distinctUntilChanged,
+  map,
+  takeUntil,
+} from "rxjs/operators";
 
 /**
  * Homemade redux and r9webapp-core inspired state management architecture.
@@ -121,8 +128,7 @@ const createModule = (module, payload) => {
 
   const moduleState = {};
   const $destroy = new Subject();
-  const $updates = new Subject()
-    .takeUntil($destroy);
+  const $updates = new Subject().pipe(takeUntil($destroy));
 
   const getFromModule = (...args) => {
     if (!args.length) {
@@ -141,18 +147,21 @@ const createModule = (module, payload) => {
 
     if (args.length === 1) {
       return $updates
-        .map(state => state[args])
-        .distinctUntilChanged();
+        .pipe(
+          map(state => state[args]),
+          distinctUntilChanged()
+        );
     }
 
     const observables = args.map(arg =>
       $updates
-        .map(state => state[arg])
-        .distinctUntilChanged()
+        .pipe(
+          map(state => state[arg]),
+          distinctUntilChanged()
+        )
     );
 
-    return Observable
-      .combineLatest(...observables);
+    return observableCombineLatest(...observables);
   };
 
   const moduleArgs = {

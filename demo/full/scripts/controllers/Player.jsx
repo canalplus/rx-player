@@ -1,5 +1,6 @@
 import React from "react";
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
+import { takeUntil } from "rxjs/operators";
 import { createModule } from "../lib/vespertine.js";
 import PlayerModule from "../modules/player";
 import ControlBar from "./ControlBar.jsx";
@@ -32,7 +33,7 @@ class Player extends React.Component {
     this._$destroySubject.subscribe(() => player.destroy());
 
     player.$get("isSeeking", "isBuffering", "isLoading")
-      .takeUntil(this._$destroySubject)
+      .pipe(takeUntil(this._$destroySubject))
       .subscribe(([isSeeking, isBuffering, isLoading]) => {
         if (isSeeking || isBuffering || isLoading) {
           this._displaySpinnerTimeout = setTimeout(() => {

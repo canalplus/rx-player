@@ -1,5 +1,10 @@
 import React from "react";
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
+import {
+  skip,
+  takeUntil,
+  filter,
+} from "rxjs/operators";
 
 const LogElement = ({ text, date }) => (
   <div
@@ -49,105 +54,105 @@ class LogDisplayer extends React.Component {
     this.destructionSubject = new Subject();
     const { player } = this.props;
 
-    player.$get("videoBitrateAuto")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .subscribe(vbAuto => {
-        const text = "Video Bitrate selection changed to " +
-          (vbAuto ? "automatic" : "manual");
-        this.addLog(text);
-      });
+    player.$get("videoBitrateAuto").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(vbAuto => {
+      const text = "Video Bitrate selection changed to " +
+        (vbAuto ? "automatic" : "manual");
+      this.addLog(text);
+    });
 
-    player.$get("audioBitrateAuto")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .subscribe(abAuto => {
-        const text = "Audio Bitrate selection changed to " +
-          (abAuto ? "automatic" : "manual");
-        this.addLog(text);
-      });
+    player.$get("audioBitrateAuto").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(abAuto => {
+      const text = "Audio Bitrate selection changed to " +
+        (abAuto ? "automatic" : "manual");
+      this.addLog(text);
+    });
 
-    player.$get("videoBitrate")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .subscribe(vb => {
-        const text = "Video Bitrate changed to " + vb;
-        this.addLog(text);
-      });
+    player.$get("videoBitrate").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(vb => {
+      const text = "Video Bitrate changed to " + vb;
+      this.addLog(text);
+    });
 
-    player.$get("audioBitrate")
-      .takeUntil(this.destructionSubject)
-      .skip(1) // skip initial value
-      .subscribe(ab => {
-        const text = "Audio Bitrate changed to " + ab;
-        this.addLog(text);
-      });
+    player.$get("audioBitrate").pipe(
+      takeUntil(this.destructionSubject),
+      skip(1) // skip initial value
+    ).subscribe(ab => {
+      const text = "Audio Bitrate changed to " + ab;
+      this.addLog(text);
+    });
 
-    player.$get("error")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .filter(x => x)
-      .subscribe(error => {
-        const message = error.message ? error.message : error;
-        const text = "The player encountered a fatal Error: " + message;
-        this.addLog(text);
-      });
+    player.$get("error").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject),
+      filter(x => x)
+    ).subscribe(error => {
+      const message = error.message ? error.message : error;
+      const text = "The player encountered a fatal Error: " + message;
+      this.addLog(text);
+    });
 
-    player.$get("isLoading")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .filter(x => x)
-      .subscribe(() => {
-        const text = "A new content is Loading.";
-        this.addLog(text);
-      });
+    player.$get("isLoading").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject),
+      filter(x => x),
+    ).subscribe(() => {
+      const text = "A new content is Loading.";
+      this.addLog(text);
+    });
 
-    player.$get("hasLoadedContent")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .filter(x => x)
-      .subscribe(() => {
-        const text = "The new content has been loaded.";
-        this.addLog(text);
-      });
+    player.$get("hasLoadedContent").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject),
+      filter(x => x)
+    ).subscribe(() => {
+      const text = "The new content has been loaded.";
+      this.addLog(text);
+    });
 
-    player.$get("isStopped")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .filter(x => x)
-      .subscribe(() => {
-        const text = "The current content is stopped";
-        this.addLog(text);
-      });
+    player.$get("isStopped").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject),
+      filter(x => x)
+    ).subscribe(() => {
+      const text = "The current content is stopped";
+      this.addLog(text);
+    });
 
-    player.$get("hasEnded")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .filter(x => x)
-      .subscribe(() => {
-        const text = "The current content has ended";
-        this.addLog(text);
-      });
+    player.$get("hasEnded").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject),
+      filter(x => x)
+    ).subscribe(() => {
+      const text = "The current content has ended";
+      this.addLog(text);
+    });
 
-    player.$get("isBuffering")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .subscribe((ib) => {
-        const text = ib ?
-          "The current content is buffering" :
-          "The current content is not buffering anymore";
-        this.addLog(text);
-      });
+    player.$get("isBuffering").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe((ib) => {
+      const text = ib ?
+        "The current content is buffering" :
+        "The current content is not buffering anymore";
+      this.addLog(text);
+    });
 
-    player.$get("isSeeking")
-      .skip(1) // skip initial value
-      .takeUntil(this.destructionSubject)
-      .subscribe((ib) => {
-        const text = ib ?
-          "The current content is seeking" :
-          "The current content is not seeking anymore";
-        this.addLog(text);
-      });
+    player.$get("isSeeking").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe((ib) => {
+      const text = ib ?
+        "The current content is seeking" :
+        "The current content is not seeking anymore";
+      this.addLog(text);
+    });
     this.scrollToBottom();
 
     const onScroll = () => {
