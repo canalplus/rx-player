@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
+import {
+  Observable,
+  Observer,
+  timer as observableTimer,
+} from "rxjs";
+import {
+  catchError,
+  mergeMap,
+} from "rxjs/operators";
 import { CustomError } from "../errors";
 import { getBackedoffDelay } from "./backoff";
 
@@ -99,7 +106,7 @@ function retryObsWithBackoff<T>(
     debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
   }
 
-  return obs$.catch((error, source) => {
+  return obs$.pipe(catchError((error, source) => {
     const wantRetry = !shouldRetry || shouldRetry(error);
     if (!wantRetry || retryCount++ >= totalRetry) {
       if (errorSelector) {
@@ -114,13 +121,14 @@ function retryObsWithBackoff<T>(
     }
 
     const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-    return Observable.timer(fuzzedDelay).mergeMap(() => {
-      if (debounceRetryCount) {
-        debounceRetryCount();
-      }
-      return source;
-    });
-  });
+    return observableTimer(fuzzedDelay)
+      .pipe(mergeMap(() => {
+        if (debounceRetryCount) {
+          debounceRetryCount();
+        }
+        return source;
+      }));
+  }));
 }
 
 /**
@@ -197,14 +205,13 @@ function retryFuncWithBackoff<T>(
       }
 
       const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return Observable
-        .timer(fuzzedDelay)
-        .mergeMap(() => {
+      return observableTimer(fuzzedDelay)
+        .pipe(mergeMap(() => {
           if (debounceRetryCount) {
             debounceRetryCount();
           }
           return doRetry();
-        });
+        }));
     });
   }
 
@@ -246,7 +253,7 @@ function retryableFuncWithBackoff<T, I>(
   }
 
   return function doRetry(...args : T[]) : Observable<I> {
-    return fn(...args).catch((error) => {
+    return fn(...args).pipe(catchError((error) => {
       const wantRetry = !shouldRetry || shouldRetry(error);
       if (!wantRetry || retryCount++ >= totalRetry) {
         if (errorSelector) {
@@ -261,13 +268,13 @@ function retryableFuncWithBackoff<T, I>(
       }
 
       const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return Observable.timer(fuzzedDelay).mergeMap(() => {
+      return observableTimer(fuzzedDelay).pipe(mergeMap(() => {
         if (debounceRetryCount) {
           debounceRetryCount();
         }
         return doRetry(...args);
-      });
-    });
+      }));
+    }));
   };
 }
 
