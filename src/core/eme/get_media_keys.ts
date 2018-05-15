@@ -16,8 +16,14 @@
 
 import {
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
+import {
+  map,
+  mapTo,
+  mergeMap,
+} from "rxjs/operators";
 import { IMockMediaKeys } from "../../compat/";
 import {
   CustomError,
@@ -67,43 +73,42 @@ export default function getMediaKeysInfos(
       mediaElement,
       keySystemsConfigs,
       currentMediaKeysInfos
-    )
-      .mergeMap((evt) => {
-        const {
-          options,
-          mediaKeySystemAccess,
-        } = evt.value;
-        const currentState = currentMediaKeysInfos.getState(mediaElement);
+    ).pipe(mergeMap((evt) => {
+      const {
+        options,
+        mediaKeySystemAccess,
+      } = evt.value;
+      const currentState = currentMediaKeysInfos.getState(mediaElement);
 
-        let mediaKeys$ : Observable<{
-          mediaKeys : IMockMediaKeys|MediaKeys;
-          sessionsStore : SessionsStore;
-        }>;
-        if (currentState != null && evt.type === "reuse-media-key-system-access") {
-          const { mediaKeys, sessionsStore } = currentState;
-          mediaKeys$ = Observable.of({ mediaKeys, sessionsStore });
-        } else {
-          mediaKeys$ = castToObservable(mediaKeySystemAccess.createMediaKeys())
-            .map((mediaKeys) => ({
-              mediaKeys,
-              sessionsStore: new SessionsStore(mediaKeys),
-            }));
-        }
+      let mediaKeys$ : Observable<{
+        mediaKeys : IMockMediaKeys|MediaKeys;
+        sessionsStore : SessionsStore;
+      }>;
+      if (currentState != null && evt.type === "reuse-media-key-system-access") {
+        const { mediaKeys, sessionsStore } = currentState;
+        mediaKeys$ = observableOf({ mediaKeys, sessionsStore });
+      } else {
+        mediaKeys$ = castToObservable(mediaKeySystemAccess.createMediaKeys())
+          .pipe(map((mediaKeys) => ({
+            mediaKeys,
+            sessionsStore: new SessionsStore(mediaKeys),
+          })));
+      }
 
-        return mediaKeys$
-          .mergeMap(({ mediaKeys, sessionsStore }) => {
-            const { serverCertificate } = options;
-            return (
-              serverCertificate != null ?
-                setServerCertificate(mediaKeys, serverCertificate, errorStream) :
-                Observable.of(null)
-            ).mapTo({
-              mediaKeySystemAccess,
-              keySystemOptions: options,
-              mediaKeys,
-              sessionsStore,
-              sessionStorage: createSessionStorage(options),
-            });
-          });
-      });
+      return mediaKeys$
+        .pipe(mergeMap(({ mediaKeys, sessionsStore }) => {
+          const { serverCertificate } = options;
+          return (
+            serverCertificate != null ?
+            setServerCertificate(mediaKeys, serverCertificate, errorStream) :
+            observableOf(null)
+          ).pipe(mapTo({
+            mediaKeySystemAccess,
+            keySystemOptions: options,
+            mediaKeys,
+            sessionsStore,
+            sessionStorage: createSessionStorage(options),
+          }));
+        }));
+    }));
 }

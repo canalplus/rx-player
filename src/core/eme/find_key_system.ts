@@ -15,7 +15,9 @@
  */
 
 import {
+  defer as observableDefer,
   Observable,
+  of as observableOf,
   Subject,
   Subscription,
 } from "rxjs";
@@ -249,7 +251,7 @@ export default function getMediaKeySystemAccess(
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos: MediaKeysInfosStore
 ) : Observable<IFoundMediaKeySystemAccessEvent> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     const currentState = currentMediaKeysInfos.getState(mediaElement);
     if (currentState) {
       // Fast way to find a compatible keySystem if the currently loaded
@@ -261,7 +263,7 @@ export default function getMediaKeySystemAccess(
       );
       if (cachedKeySystemAccess) {
         log.debug("eme: found cached compatible keySystem", cachedKeySystemAccess);
-        return Observable.of({
+        return observableOf({
           type: "reuse-media-key-system-access" as "reuse-media-key-system-access",
           value: {
             mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,

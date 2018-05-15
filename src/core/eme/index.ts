@@ -15,10 +15,19 @@
  */
 
 import {
+  combineLatest as observableCombineLatest,
+  defer as observableDefer,
   EMPTY,
+  merge as observableMerge,
   Observable,
   Subject,
 } from "rxjs";
+import {
+  ignoreElements,
+  map,
+  mergeMap,
+  tap,
+} from "rxjs/operators";
 import {
   hasEMEAPIs,
   shouldUnsetMediaKeys,
@@ -49,16 +58,16 @@ const attachedMediaKeysInfos = new MediaKeysInfosStore();
  * @returns {Observable}
  */
 function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     if (shouldUnsetMediaKeys()) {
       return disposeMediaKeys(mediaElement, attachedMediaKeysInfos)
-        .ignoreElements();
+        .pipe(ignoreElements());
     }
 
     const currentState = attachedMediaKeysInfos.getState(mediaElement);
     if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
       return currentState.sessionsStore.closeAllSessions()
-        .ignoreElements();
+        .pipe(ignoreElements());
     }
     return EMPTY;
   });
@@ -91,7 +100,7 @@ function createEME(
    // This is to avoid handling multiple times the same encrypted events.
   const handledInitData = new InitDataStore();
 
-  return Observable.combineLatest(
+  return observableCombineLatest(
     onEncrypted$(mediaElement),
     getMediaKeysInfos(
       mediaElement,
@@ -99,12 +108,12 @@ function createEME(
       attachedMediaKeysInfos,
       errorStream
     )
-  )
-    .mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
-      return Observable.merge(
+  ).pipe(
+    mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
+      return observableMerge(
         // create a new MediaKeySession if needed
-        handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos)
-          .map((evt) => ({
+        handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos).pipe(
+          map((evt) => ({
             type: evt.type,
             value: {
               initData: evt.value.initData,
@@ -114,16 +123,16 @@ function createEME(
               keySystemOptions: mediaKeysInfos.keySystemOptions,
               sessionStorage: mediaKeysInfos.sessionStorage,
             },
-          })),
+          }))),
 
         // attach MediaKeys if we're handling the first event
         i === 0 ?
-          attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos)
-            .ignoreElements() :
+          attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos).pipe(
+            ignoreElements()) :
           EMPTY
       );
-    })
-    .mergeMap((handledEncryptedEvent) =>  {
+    }),
+    mergeMap((handledEncryptedEvent) =>  {
       const {
         initData,
         initDataType,
@@ -133,20 +142,20 @@ function createEME(
         sessionStorage,
       } = handledEncryptedEvent.value;
 
-      return Observable.merge(
+      return observableMerge(
         handleSessionEvents(mediaKeySession, keySystemOptions, errorStream),
 
         // only perform generate request on new sessions
         handledEncryptedEvent.type === "created-session" ?
-          generateKeyRequest(mediaKeySession, initData, initDataType)
-            .do(() => {
+          generateKeyRequest(mediaKeySession, initData, initDataType).pipe(
+            tap(() => {
               if (sessionType === "persistent-license" && sessionStorage != null) {
                 sessionStorage.add(initData, initDataType, mediaKeySession);
               }
-            }) :
+            })) :
           EMPTY
-      ).ignoreElements();
-    });
+      ).pipe(ignoreElements());
+    }));
 }
 
 /**
@@ -179,17 +188,17 @@ export default function EMEManager(
 ) :  Observable<never> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {
-      return onEncrypted$(mediaElement).map(() => {
+      return onEncrypted$(mediaElement).pipe(map(() => {
         log.error("eme: encrypted event but no EME API available");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-      });
+      }));
     }
     return createEME(mediaElement, keySystems, errorStream);
   } else {
-    return onEncrypted$(mediaElement).map(() => {
+    return onEncrypted$(mediaElement).pipe(map(() => {
       log.error("eme: ciphered media and no keySystem passed");
       throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-    });
+    }));
   }
 }
 
