@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import getInitData from "./get_init_data";
 import KeySystemAccess, {
   IMediaKeySystemAccess,
 } from "./keySystemAccess";
@@ -25,6 +26,7 @@ import {
 import setMediaKeys from "./setMediaKeys";
 
 export {
+  getInitData,
   IMediaKeySession,
   IMediaKeySystemAccess,
   IMockMediaKeys,

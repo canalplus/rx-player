@@ -15,64 +15,92 @@
  */
 
 import arrayIncludes from "../../../utils/array-includes";
-import hashBuffer from "./hash_buffer";
+import hashBuffer from "../../../utils/hash_buffer";
 
 /**
  * Memorize initialization data with straightforward methods.
  * @class InitDataStore
  */
 export default class InitDataStore {
-  private _data : Record<string, number[]>;
+  private _namedTypeData : Record<string, number[]>;
+  private _undefinedTypeData : number[];
 
   constructor() {
-    this._data = {};
+    this._namedTypeData = {};
+    this._undefinedTypeData = [];
   }
 
   /**
    * Returns true if this instance has the given initData stored.
    * @param {Uint8Array} initData
-   * @param {string} initDataType
+   * @param {string|undefined} initDataType
    * @returns {boolean}
    */
-  public has(initData : Uint8Array, initDataType : string) : boolean {
-    if (!this._data[initDataType]) {
+  public has(
+    initData : Uint8Array,
+    initDataType : string|undefined
+  ) : boolean {
+    if (!initDataType) {
+      return arrayIncludes(this._undefinedTypeData, hashBuffer(initData));
+    }
+    if (!this._namedTypeData[initDataType]) {
       return false;
     }
-    return arrayIncludes(this._data[initDataType], hashBuffer(initData));
+    return arrayIncludes(this._namedTypeData[initDataType], hashBuffer(initData));
   }
 
   /**
    * Add initialization data to this memory.
    * @param {Uint8Array} initData
-   * @param {string} initDataType
+   * @param {string|_undefinedTypeData} initDataType
    */
-  public add(initData : Uint8Array, initDataType : string) {
+  public add(
+    initData : Uint8Array,
+    initDataType : string|undefined
+  ) {
     if (this.has(initData, initDataType)) {
       return;
     }
-    if (!this._data[initDataType]) {
-      this._data[initDataType] = [];
+    if (!initDataType) {
+      this._undefinedTypeData.push(hashBuffer(initData));
+      return;
     }
-    this._data[initDataType].push(hashBuffer(initData));
+
+    if (!this._namedTypeData[initDataType]) {
+      this._namedTypeData[initDataType] = [];
+    }
+    this._namedTypeData[initDataType].push(hashBuffer(initData));
   }
 
   /**
    * Remove the initialization data from this memory.
    * Returns true if this instance had the given initData stored.
    * @param {Uint8Array} initData
-   * @param {string} initDataType
+   * @param {string|undefined} initDataType
    * @returns {boolean}
    */
-  public remove(initData : Uint8Array, initDataType : string) : boolean {
-    if (!this._data[initDataType]) {
+  public remove(
+    initData : Uint8Array,
+    initDataType : string|undefined
+  ) : boolean {
+    if (!initDataType) {
+      const indexOf = this._undefinedTypeData.indexOf(hashBuffer(initData));
+      if (indexOf >= 0) {
+        this._undefinedTypeData.splice(indexOf, 1);
+        return true;
+      }
+      return false;
+    } else {
+      if (!this._namedTypeData[initDataType]) {
+        return false;
+      }
+      const arr = this._namedTypeData[initDataType];
+      const indexOf = arr.indexOf(hashBuffer(initData));
+      if (indexOf >= 0) {
+        arr.splice(indexOf, 1);
+        return true;
+      }
       return false;
     }
-    const arr = this._data[initDataType];
-    const indexOf = arr.indexOf(hashBuffer(initData));
-    if (indexOf >= 0) {
-      arr.splice(indexOf, 1);
-      return true;
-    }
-    return false;
   }
 }

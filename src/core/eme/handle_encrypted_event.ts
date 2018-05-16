@@ -15,9 +15,11 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { IMediaKeySession } from "../../compat";
+import {
+  getInitData,
+  IMediaKeySession,
+} from "../../compat";
 import config from "../../config";
-import { EncryptedMediaError } from "../../errors";
 import log from "../../utils/log";
 import createSession from "./create_session";
 import { IMediaKeysInfos } from "./types";
@@ -32,7 +34,7 @@ export interface IHandledEncryptedEvent {
     mediaKeySession : MediaKeySession|IMediaKeySession;
     sessionType : MediaKeySessionType;
     initData : Uint8Array; // assiociated initialization data
-    initDataType : string; // type of the associated initialization data
+    initDataType : string|undefined; // type of the associated initialization data
   };
 }
 
@@ -56,26 +58,20 @@ export default function handleEncryptedEvent(
 ) : Observable<IHandledEncryptedEvent> {
   return Observable.defer(() => {
     const {
-      initDataType,
       initData,
-    } = encryptedEvent;
-    if (initData == null) {
-      const error = new Error("no init data found on media encrypted event.");
-      throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
-    }
+      initDataType,
+    } = getInitData(encryptedEvent);
 
-    const initDataBytes = new Uint8Array(initData);
-
-    if (handledInitData.has(initDataBytes, initDataType)) {
+    if (handledInitData.has(initData, initDataType)) {
       log.debug("init data already received. Skipping it.");
       return Observable.empty(); // Already handled, quit
     }
-    handledInitData.add(initDataBytes, initDataType);
+    handledInitData.add(initData, initDataType);
 
     // possible previous loaded session with the same initialization data
     let previousLoadedSession : IMediaKeySession|MediaKeySession|null = null;
     const { sessionsStore } = mediaKeysInfos;
-    const entry = sessionsStore.get(initDataBytes, initDataType);
+    const entry = sessionsStore.get(initData, initDataType);
     if (entry != null) {
       previousLoadedSession = entry.session;
       if (isSessionUsable(previousLoadedSession)) {
@@ -85,7 +81,7 @@ export default function handleEncryptedEvent(
           value: {
             mediaKeySession: previousLoadedSession,
             sessionType: entry.sessionType,
-            initData: initDataBytes,
+            initData,
             initDataType,
           },
         });
@@ -111,13 +107,13 @@ export default function handleEncryptedEvent(
         .ignoreElements() as Observable<never>
       )
         .concat(
-          createSession(initDataBytes, initDataType, mediaKeysInfos)
+          createSession(initData, initDataType, mediaKeysInfos)
           .map((evt) => ({
             type: evt.type,
             value: {
               mediaKeySession: evt.value.mediaKeySession,
               sessionType: evt.value.sessionType,
-              initData: initDataBytes,
+              initData,
               initDataType,
             },
           }))

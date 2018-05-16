@@ -71,13 +71,13 @@ function loadPersistentSession(
  * It will fail if sessionsStore already has a MediaKeySession with
  * the given initializationData.
  * @param {Uint8Array} initData
- * @param {string} initDataType
+ * @param {string|undefined} initDataType
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
 export default function createSession(
   initData: Uint8Array,
-  initDataType: string,
+  initDataType: string|undefined,
   mediaKeysInfos: IMediaKeysInfos
 ) : Observable<ICreateSessionEvent> {
   return Observable.defer(() => {

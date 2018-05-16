@@ -22,13 +22,13 @@ import {
 } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
 import castToObservable from "../../../utils/castToObservable";
+import hashBuffer from "../../../utils/hash_buffer";
 import log from "../../../utils/log";
-import hashBuffer from "./hash_buffer";
 
 // Cached data for a single MediaKeySession
 interface IStoreSessionEntry {
   initData : number;
-  initDataType: string;
+  initDataType: string|undefined;
   session : IMediaKeySession|MediaKeySession;
   sessionType : MediaKeySessionType;
 }
@@ -71,12 +71,12 @@ export default class MediaKeySessionsStore {
    * null if no such session is stored.
    *
    * @param {Uint8Array} initData
-   * @param {string} initDataType
+   * @param {string|undefined} initDataType
    * @returns {Object|null}
    */
   public get(
     initData : Uint8Array,
-    initDataType: string
+    initDataType: string|undefined
   ) : IStoreSessionData|null {
     const initDataHash = hashBuffer(initData);
     const foundEntry = arrayFind(this._entries, (entry) => (
@@ -93,14 +93,14 @@ export default class MediaKeySessionsStore {
 
   /**
    * @param {Uint8Array} initData
-   * @param {string} initDataType
+   * @param {string|undefined} initDataType
    * @param {string} sessionType
    * @returns {MediaKeySession}
    * @throws {EncryptedMediaError}
    */
   public createSession(
     initData : Uint8Array,
-    initDataType : string,
+    initDataType : string|undefined,
     sessionType : MediaKeySessionType
   ) : MediaKeySession|IMediaKeySession {
     if (this.get(initData, initDataType)) {
