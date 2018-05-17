@@ -15,7 +15,6 @@
  */
 
 import { EncryptedMediaError } from "../../errors";
-import arrayIncludes from "../../utils/array-includes";
 import {
   be4toi,
   concat,
@@ -23,6 +22,7 @@ import {
 } from "../../utils/bytes";
 import hashBuffer from "../../utils/hash_buffer";
 import log from "../../utils/log";
+import SimpleSet from "../../utils/simple_set";
 
 const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
 
@@ -40,7 +40,7 @@ const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
  */
 function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
   let resInitData = new Uint8Array();
-  const currentHashes : number[] = [];
+  const currentHashes = new SimpleSet();
 
   let offset = 0;
   while (offset < initData.length) {
@@ -59,8 +59,8 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
     }
     const currentPSSH = initData.subarray(offset, offset + len);
     const currentPSSHHash = hashBuffer(currentPSSH);
-    if (!arrayIncludes(currentHashes, currentPSSHHash)) {
-      currentHashes.push(currentPSSHHash);
+    if (!currentHashes.test(currentPSSHHash)) {
+      currentHashes.add(currentPSSHHash);
       resInitData = concat(resInitData, currentPSSH);
     } else {
       log.warn("Duplicated PSSH found in initialization data, removing it.");

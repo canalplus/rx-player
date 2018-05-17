@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "../../../utils/array-includes";
 import hashBuffer from "../../../utils/hash_buffer";
+import SimpleSet from "../../../utils/simple_set";
 
 /**
  * Memorize initialization data with straightforward methods.
  * @class InitDataStore
  */
 export default class InitDataStore {
-  private _namedTypeData : Record<string, number[]>;
-  private _undefinedTypeData : number[];
+  private _namedTypeData : Record<string, SimpleSet>;
+  private _unnamedTypeData : SimpleSet;
 
   constructor() {
     this._namedTypeData = {};
-    this._undefinedTypeData = [];
+    this._unnamedTypeData = new SimpleSet();
   }
 
   /**
@@ -41,18 +41,18 @@ export default class InitDataStore {
     initDataType : string|undefined
   ) : boolean {
     if (!initDataType) {
-      return arrayIncludes(this._undefinedTypeData, hashBuffer(initData));
+      return this._unnamedTypeData.test(hashBuffer(initData));
     }
     if (!this._namedTypeData[initDataType]) {
       return false;
     }
-    return arrayIncludes(this._namedTypeData[initDataType], hashBuffer(initData));
+    return this._namedTypeData[initDataType].test(hashBuffer(initData));
   }
 
   /**
    * Add initialization data to this memory.
    * @param {Uint8Array} initData
-   * @param {string|_undefinedTypeData} initDataType
+   * @param {string|_unnamedTypeData} initDataType
    */
   public add(
     initData : Uint8Array,
@@ -62,14 +62,14 @@ export default class InitDataStore {
       return;
     }
     if (!initDataType) {
-      this._undefinedTypeData.push(hashBuffer(initData));
+      this._unnamedTypeData.add(hashBuffer(initData));
       return;
     }
 
     if (!this._namedTypeData[initDataType]) {
-      this._namedTypeData[initDataType] = [];
+      this._namedTypeData[initDataType] = new SimpleSet();
     }
-    this._namedTypeData[initDataType].push(hashBuffer(initData));
+    this._namedTypeData[initDataType].add(hashBuffer(initData));
   }
 
   /**
@@ -84,9 +84,9 @@ export default class InitDataStore {
     initDataType : string|undefined
   ) : boolean {
     if (!initDataType) {
-      const indexOf = this._undefinedTypeData.indexOf(hashBuffer(initData));
-      if (indexOf >= 0) {
-        this._undefinedTypeData.splice(indexOf, 1);
+      const hashed = hashBuffer(initData);
+      if (this._unnamedTypeData.test(hashed)) {
+        this._unnamedTypeData.remove(hashed);
         return true;
       }
       return false;
@@ -94,10 +94,10 @@ export default class InitDataStore {
       if (!this._namedTypeData[initDataType]) {
         return false;
       }
-      const arr = this._namedTypeData[initDataType];
-      const indexOf = arr.indexOf(hashBuffer(initData));
-      if (indexOf >= 0) {
-        arr.splice(indexOf, 1);
+      const hashed = hashBuffer(initData);
+      const simpleSet = this._namedTypeData[initDataType];
+      if (simpleSet.test(hashed)) {
+        simpleSet.remove(hashed);
         return true;
       }
       return false;
