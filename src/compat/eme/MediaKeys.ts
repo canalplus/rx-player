@@ -19,7 +19,7 @@ import {
   Observable,
   of as observableOf,
   Subject,
-  throwError,
+  throwError as observableThrow,
 } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import {
@@ -249,7 +249,7 @@ if (navigator.requestMediaKeySystemAccess) {
       keySystemConfigurations : MediaKeySystemConfiguration[]
     ) : Observable<CustomMediaKeySystemAccess> {
       if (!isTypeSupported(keyType)) {
-        return throwError(undefined);
+        return observableThrow(undefined);
       }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -299,7 +299,7 @@ if (navigator.requestMediaKeySystemAccess) {
         }
       }
 
-      return throwError(undefined);
+      return observableThrow(undefined);
     };
   }
 
@@ -405,7 +405,7 @@ if (navigator.requestMediaKeySystemAccess) {
     ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
       // TODO Why TS Do not understand that isTypeSupported exists here?
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
-        return throwError(undefined);
+        return observableThrow(undefined);
       }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -444,7 +444,7 @@ if (navigator.requestMediaKeySystemAccess) {
         }
       }
 
-      return throwError(undefined);
+      return observableThrow(undefined);
     };
   } else {
     requestMediaKeySystemAccess = null;
