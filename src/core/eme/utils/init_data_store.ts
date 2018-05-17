@@ -52,7 +52,7 @@ export default class InitDataStore {
   /**
    * Add initialization data to this memory.
    * @param {Uint8Array} initData
-   * @param {string|_unnamedTypeData} initDataType
+   * @param {string|undefined} initDataType
    */
   public add(
     initData : Uint8Array,
