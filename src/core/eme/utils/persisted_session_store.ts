@@ -19,12 +19,12 @@ import { IMediaKeySession } from "../../../compat";
 import assert, {
   assertInterface,
 } from "../../../utils/assert";
+import hashBuffer from "../../../utils/hash_buffer";
 import log from "../../../utils/log";
 import {
   IPersistedSessionData,
   IPersistedSessionStorage,
 } from "../types";
-import hashBuffer from "./hash_buffer";
 
 function checkStorage(storage : IPersistedSessionStorage) : void {
   assert(
@@ -71,12 +71,12 @@ export default class PersistedSessionsStore {
   /**
    * Retrieve entry (sessionId + initData) based on its initData.
    * @param {Uint8Array}  initData
-   * @param {string} initDataType
+   * @param {string|undefined} initDataType
    * @returns {Object|null}
    */
   public get(
     initData : Uint8Array,
-    initDataType : string
+    initDataType : string|undefined
   ) : IPersistedSessionData|null {
     const hash = hashBuffer(initData);
     const entry = arrayFind(this._entries, (e) =>
@@ -89,12 +89,12 @@ export default class PersistedSessionsStore {
   /**
    * Add a new entry in the storage.
    * @param {Uint8Array}  initData
-   * @param {string} initDataType
+   * @param {string|undefined} initDataType
    * @param {MediaKeySession} session
    */
   public add(
     initData : Uint8Array,
-    initDataType : string,
+    initDataType : string|undefined,
     session : IMediaKeySession|MediaKeySession
   ) : void {
     const sessionId = session && session.sessionId;
@@ -121,9 +121,12 @@ export default class PersistedSessionsStore {
   /**
    * Delete entry (sessionId + initData) based on its initData.
    * @param {Uint8Array}  initData
-   * @param {string} initDataType
+   * @param {string|undefined} initDataType
    */
-  delete(initData : Uint8Array, initDataType : string) : void {
+  delete(
+    initData : Uint8Array,
+    initDataType : string|undefined
+  ) : void {
     const hash = hashBuffer(initData);
 
     const entry = arrayFind(this._entries, (e) =>

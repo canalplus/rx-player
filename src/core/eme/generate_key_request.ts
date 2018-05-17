@@ -30,11 +30,11 @@ import castToObservable from "../../utils/castToObservable";
 export default function generateKeyRequest(
   session: MediaKeySession|IMediaKeySession,
   initData: Uint8Array,
-  initDataType: string
+  initDataType: string|undefined
 ) : Observable<null> {
   return Observable.defer(() => {
     return castToObservable(
-      (session as MediaKeySession).generateRequest(initDataType, initData)
+      (session as MediaKeySession).generateRequest(initDataType || "", initData)
     )
       .catch((error) => {
         throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
