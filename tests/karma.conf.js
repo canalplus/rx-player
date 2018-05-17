@@ -12,15 +12,23 @@ const karmaConf = {
 
   browsers: [
     // "Chrome",
-    "ChromeHeadless",
+    // "ChromeHeadless",
     // "ChromeCanary",
     "FirefoxHeadless",
+    "ChromeHeadlessAutoPlay",
   ],
 
   customLaunchers: {
     FirefoxHeadless: {
       base: "Firefox",
       flags: [ "-headless" ],
+    },
+
+    ChromeHeadlessAutoPlay: {
+      base: "ChromeHeadless",
+      flags: [
+        "--autoplay-policy=no-user-gesture-required",
+      ],
     },
   },
 

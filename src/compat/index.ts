@@ -36,6 +36,7 @@ import {
 } from "./fullscreen";
 
 import {
+  getInitData,
   IMediaKeySession,
   IMediaKeySystemAccess,
   IMockMediaKeys,
@@ -345,6 +346,7 @@ function makeCue(
 }
 
 export {
+  getInitData,
   KeySystemAccess,
   MediaSource_,
   VTTCue_,

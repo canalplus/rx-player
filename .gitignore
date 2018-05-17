@@ -13,3 +13,5 @@ dist/*
 !dist/rx-player.js
 !dist/rx-player.min.js
 test-output.xml
+
+.scannerwork

@@ -216,7 +216,7 @@ const getLastLiveTimeReference = (
 };
 
 export default function parseManifest(
-  root: Node,
+  root: Element,
   uri : string
   // contentProtectionParser?: IContentProtectionParser
 ) : IParsedManifest {

@@ -16,7 +16,6 @@
 
 import { Observable } from "rxjs/Observable";
 import assert from "../../utils/assert";
-import castToObservable from "../../utils/castToObservable";
 import EventEmitter from "../../utils/eventemitter";
 import tryCatch from "../../utils/rx-tryCatch";
 import ManualTimeRanges from "./time_ranges";
@@ -96,7 +95,10 @@ export default abstract class AbstractSourceBuffer<T>
     assert(!this.updating, "updating");
     this.updating = true;
     this.trigger("updatestart", undefined);
-    const result : Observable<void> = tryCatch(() => castToObservable(func()));
+    const result : Observable<void> = tryCatch(() => {
+      func();
+      return Observable.of(undefined);
+    });
     result.subscribe(
       ()  => setTimeout(() => { this._unlock("update"); }, 0),
       (e) => setTimeout(() => { this._unlock("error", e); }, 0)

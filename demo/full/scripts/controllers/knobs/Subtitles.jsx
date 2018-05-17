@@ -1,5 +1,5 @@
 import React from "react";
-import translateLanguageCode from "../../lib/language.js";
+import translateLanguageCode from "../../lib/translateLanguageCode.js";
 import withModulesState from "../../lib/withModulesState.jsx";
 import Knob from "../../components/Knob.jsx";
 

@@ -23,11 +23,11 @@ export interface IParsedS {
 }
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Object}
  */
 export default function parseS(
-  root : Node,
+  root : Element,
   previousS : IParsedS|null
 ) : IParsedS|undefined {
   let ts : number|undefined;
@@ -62,6 +62,6 @@ export default function parseS(
       r: r || 0,
     };
   } else {
-    log.warn("DASH: A \"S\" Node could not have been parsed.");
+    log.warn("DASH: A \"S\" Element could not have been parsed.");
   }
 }

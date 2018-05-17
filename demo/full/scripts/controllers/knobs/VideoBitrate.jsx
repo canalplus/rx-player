@@ -9,7 +9,7 @@ const VideoBitrateKnobBase = ({
   availableVideoBitrates = [],
 }) => {
   let options = [];
-  let selectedIndex = 0;
+  let selectedIndex;
 
   if (!availableVideoBitrates.length) {
     options = ["Not available"];

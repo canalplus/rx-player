@@ -21,22 +21,22 @@ import parseS, {
 export type IParsedTimeline = IParsedS[];
 
 /**
- * @param {Node} root
+ * @param {Element} root
  * @returns {Array.<Object>}
  */
-export default function parseSegmentTimeline(root: Node) : IParsedTimeline {
+export default function parseSegmentTimeline(root: Element) : IParsedTimeline {
   const timeline : IParsedS[] = [];
   const timelineChildren = root.childNodes;
   for (let i = 0; i < timelineChildren.length; i++) {
-    const currentNode = timelineChildren[i];
+    if (timelineChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentElement = timelineChildren[i] as Element;
 
-    switch (currentNode.nodeName) {
-      case "S":
-        const s = parseS(currentNode, timeline[timeline.length - 1] || null);
+      if (currentElement.nodeName === "S") {
+        const s = parseS(currentElement, timeline[timeline.length - 1] || null);
         if (s) {
           timeline.push(s);
         }
-        break;
+      }
     }
   }
   return timeline;
