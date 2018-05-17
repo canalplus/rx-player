@@ -16,7 +16,7 @@
 
 import {
   Observable,
-  throwError,
+  throwError as observableThrow,
 } from "rxjs";
 
 /**
@@ -32,6 +32,6 @@ export default function tryCatch<T, I>(
   try {
     return func(args);
   } catch (e) {
-    return throwError(e);
+    return observableThrow(e);
   }
 }
