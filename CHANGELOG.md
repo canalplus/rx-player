@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.4.0 (2018/05/17)
 
 ### Added
 
