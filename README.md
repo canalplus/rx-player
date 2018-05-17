@@ -38,7 +38,10 @@ Latest release: ``v3.4.0``
 ## API #########################################################################
 
 We documented the API in every little details in [the API
-documentation](./doc/api/index.md).
+documentation](https://canalplus.github.io/rx-player/doc/pages/api/index.html).
+
+This documentation is automatically generated from the content of the
+[doc/api](./doc/api/index.md) directory in this repository.
 
 
 
@@ -82,7 +85,8 @@ player.loadVideo({
 });
 ```
 
-You can now also perform your own [custom build](./doc/api/custom_builds.md)
+You can now also perform your own [custom build
+](https://canalplus.github.io/rx-player/doc/pages/api/custom_builds.html)
 with only the features you need to reduce the file size.
 
 
@@ -106,8 +110,12 @@ You can help and contribute either by:
     issue first for that).
 
 If you have any questions about contributing, you can ask it in our [gitter
-room](https://gitter.im/canalplus/rx-player). We also began to add a little
-architecture documentation [in the ``doc/architecture`` directory.
+room](https://gitter.im/canalplus/rx-player).
+
+We also began to add a little architecture documentation [here
+](https://canalplus.github.io/rx-player/doc/pages/architecture/index.html).
+Those pages are automatically generated from the content of [the
+``doc/architecture`` directory.
 ](https://github.com/canalplus/rx-player/tree/master/doc/architecture)
 
 More is coming soon!
