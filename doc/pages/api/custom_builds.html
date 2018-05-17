@@ -1,0 +1,116 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Custom Builds - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Custom%20Builds">Custom Builds</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Environment%20variables">Environment variables</a>
+<ul>
+<li><a href="#subchapter-RXP_SMOOTH">RXP_SMOOTH</a></li>
+<li><a href="#subchapter-RXP_DASH">RXP_DASH</a></li>
+<li><a href="#subchapter-RXP_NATIVE_TTML">RXP_NATIVE_TTML</a></li>
+<li><a href="#subchapter-RXP_NATIVE_SAMI">RXP_NATIVE_SAMI</a></li>
+<li><a href="#subchapter-RXP_NATIVE_VTT">RXP_NATIVE_VTT</a></li>
+<li><a href="#subchapter-RXP_NATIVE_SRT">RXP_NATIVE_SRT</a></li>
+<li><a href="#subchapter-RXP_HTML_TTML">RXP_HTML_TTML</a></li>
+<li><a href="#subchapter-RXP_HTML_SAMI">RXP_HTML_SAMI</a></li>
+<li><a href="#subchapter-RXP_HTML_VTT">RXP_HTML_VTT</a></li>
+<li><a href="#subchapter-RXP_HTML_SRT">RXP_HTML_SRT</a></li>
+<li><a href="#subchapter-RXP_ENV">RXP_ENV</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Notes">Notes</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Custom%20Builds"></a></p>
+<h1>Custom Builds</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The RxPlayer comes with many features, some of them you might not need.
+For example, you may only care for DASH with TTML subtitles and not about
+Smooth, VTT or SRT parsing.</p>
+<p>Because each implementation has its need, we included the possibility to build
+customized files without the features you don&#x2019;t care about.
+This principally lead to a smaller file size.</p>
+<p>This customization is done through environment variables. The code will be
+removed when the minified version of the RxPlayer is built.
+To avoid any conflict with other environment variables, all of those are named
+<code>RXP_&lt;FEATURE-NAME&gt;</code>.</p>
+<p>For example, the following will remove all code related to Microsoft Smooth
+Streaming from the build:</p>
+<pre><code class="language-sh">RXP_SMOOTH=<span class="hljs-literal">false</span> npm run build:min
+</code></pre>
+<p><a name="env"></a>
+<a name="chapter-Environment%20variables"></a></p>
+<h2>Environment variables</h2>
+<p>Here is the list of available environment variables:</p>
+<p><a name="env-smooth"></a>
+<a name="subchapter-RXP_SMOOTH"></a></p>
+<h3>RXP_SMOOTH</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to HSS streaming will be
+ignored during a build.</p>
+<p><a name="env-dash"></a>
+<a name="subchapter-RXP_DASH"></a></p>
+<h3>RXP_DASH</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to DASH streaming will be
+ignored during a build.</p>
+<p><a name="env-native-ttml"></a>
+<a name="subchapter-RXP_NATIVE_TTML"></a></p>
+<h3>RXP_NATIVE_TTML</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to TTML parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-native-sami"></a>
+<a name="subchapter-RXP_NATIVE_SAMI"></a></p>
+<h3>RXP_NATIVE_SAMI</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to SAMI parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-native-vtt"></a>
+<a name="subchapter-RXP_NATIVE_VTT"></a></p>
+<h3>RXP_NATIVE_VTT</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to VTT parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-native-srt"></a>
+<a name="subchapter-RXP_NATIVE_SRT"></a></p>
+<h3>RXP_NATIVE_SRT</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to SRT parsing for native
+text tracks will be ignored during a build.</p>
+<p><a name="env-html-ttml"></a>
+<a name="subchapter-RXP_HTML_TTML"></a></p>
+<h3>RXP_HTML_TTML</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to TTML parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-html-sami"></a>
+<a name="subchapter-RXP_HTML_SAMI"></a></p>
+<h3>RXP_HTML_SAMI</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to SAMI parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-html-vtt"></a>
+<a name="subchapter-RXP_HTML_VTT"></a></p>
+<h3>RXP_HTML_VTT</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to VTT parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-html-srt"></a>
+<a name="subchapter-RXP_HTML_SRT"></a></p>
+<h3>RXP_HTML_SRT</h3>
+<p>True by default. If set to &#x201C;false&#x201D;, all code relative to SRT parsing for html
+text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
+<p><a name="env-env"></a>
+<a name="subchapter-RXP_ENV"></a></p>
+<h3>RXP_ENV</h3>
+<p>Either &#x201C;production&#x201D; or &#x201C;development&#x201D;. &#x201C;production&#x201D; as a default.
+In the &#x201C;development&#x201D; case:</p>
+<ul>
+<li>logs will be activated</li>
+<li>the code will be less tolerant towards unwanted behavior</li>
+<li>the code will be less optimized</li>
+</ul>
+<p><a name="notes"></a>
+<a name="chapter-Notes"></a></p>
+<h2>Notes</h2>
+<p><a name="note-1"></a>[1] html text tracks are tracks which are added to a DOM</p>
+<p>element instead of a <code>&lt;track&gt;</code> (the latter here being called &#x201C;native&#x201D;) tag for
+a richer formatting.</p>
+<hr>
+<p>As you can see, this can lead to a lot of environment variable if you only need
+a handful of features. Their is no <em>barebone</em>/<em>minimal</em> option to set them all
+to false by default right now as more feature switch can come in the near
+future.</p>
+<p>Once this set is finalized, we will add the feature to set minimal builds.</p>
+</body></html></div></div></div></body>
