@@ -196,6 +196,9 @@ const onTextTrackChanges$ =
     );
 
 const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
+const onUpdate$ = compatibleListener(["update"]);
+const onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
+
 const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(["encrypted", "needkey"]);
 const onKeyMessage$ = compatibleListener<MediaKeyMessageEvent>(["keymessage", "message"]);
 const onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
@@ -214,6 +217,8 @@ export {
   onTimeUpdate$,
   onFullscreenChange$,
   onSourceOpen$,
+  onUpdate$,
+  onRemoveSourceBuffers$,
   onEncrypted$,
   onKeyMessage$,
   onKeyAdded$,

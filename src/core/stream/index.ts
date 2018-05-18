@@ -56,7 +56,7 @@ import createBufferClock, {
 import createMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
-import triggerEndOfStreamWithRetries from "./end_of_stream";
+import triggerEndOfStream from "./end_of_stream";
 import BufferGarbageCollector from "./garbage_collector";
 import getInitialTime, {
   IInitialTimeOptions,
@@ -333,8 +333,9 @@ export default function Stream({
     ).mergeMap((evt) : Observable<IStreamEvent> => {
         switch (evt.type) {
           case "end-of-stream":
-            return triggerEndOfStreamWithRetries(mediaSource)
-              .takeUntil(cancelEndOfStream$);
+            return triggerEndOfStream(mediaSource)
+              .ignoreElements()
+              .takeUntil(cancelEndOfStream$) as Observable<never>;
           case "resume-stream":
             cancelEndOfStream$.next();
             return Observable.empty();
