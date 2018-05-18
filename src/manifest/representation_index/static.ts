@@ -19,14 +19,31 @@ import IRepresentationIndex, {
   ISegment,
 } from "./interfaces";
 
+export interface IStaticRepresentationIndexInfos {
+  media: string;
+  startTime: number;
+  endTime: number;
+}
+
 /**
  * Simple RepresentationIndex implementation for static files.
  * @class StaticRepresentationIndex
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
+  private readonly _media: string;
+  private readonly _startTime: number;
+  private readonly _endTime: number;
+
+  constructor(infos: IStaticRepresentationIndexInfos) {
+    this._media = infos.media;
+    this._startTime = infos.startTime;
+    this._endTime = infos.endTime;
+  }
 
   /**
-   * @returns {Object}
+   * Static contents do not have any initialization segments.
+   * Just return null.
+   * @returns {null}
    */
   getInitSegment() : null {
     return null;
@@ -41,36 +58,31 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
       id: "0",
       isInit: false,
       number: 0,
-      time: 0,
-      duration: Number.MAX_VALUE,
+      time: this._startTime,
+      duration: this._endTime,
       timescale: 1,
+      media: this._media,
     }];
   }
 
   /**
    * Returns first position in index.
-   * @returns {undefined}
+   * @returns {number}
    */
-  getFirstPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
-    /* tslint:enable return-undefined */
+  getFirstPosition() : number {
+    return this._startTime;
   }
 
   /**
    * Returns last position in index.
-   * @returns {undefined}
+   * @returns {number}
    */
-  getLastPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
-    /* tslint:enable return-undefined */
+  getLastPosition() : number {
+    return this._endTime;
   }
 
   /**
-   * Returns true if, based on the arguments, the index should be refreshed.
+   * Returns false as a static file never need to be refreshed.
    * @returns {Boolean}
    */
   shouldRefresh() : false {
@@ -84,9 +96,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return -1;
   }
 
-  /**
-   * @returns {Array}
-   */
   _addSegments() : void {
     if (__DEV__) {
       log.warn("Tried add Segments to a static RepresentationIndex");

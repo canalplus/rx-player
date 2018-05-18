@@ -17,13 +17,10 @@
 import { Observable } from "rxjs/Observable";
 
 import assert from "../../utils/assert";
+import log from "../../utils/log";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import mp4Utils from "./mp4";
-import {
-  buildSegmentURL,
-  byteRange,
-} from "./utils";
+import { byteRange } from "./utils";
 
 import {
   CustomSegmentLoader,
@@ -81,11 +78,11 @@ const generateSegmentLoader = (
   init,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
   if (segment.isInit) {
-    if (!segment.privateInfos || segment.privateInfos.type !== "smooth-init") {
+    if (!segment.privateInfos || !segment.privateInfos.smoothInit) {
       throw new Error("Smooth: Invalid segment format");
     }
+    const privateInfos = segment.privateInfos.smoothInit;
     let responseData : Uint8Array;
-    const privateInfos = segment.privateInfos;
     const protection = privateInfos.protection;
 
     switch (adaptation.type) {
@@ -125,11 +122,11 @@ const generateSegmentLoader = (
     });
   }
   else {
-    const url = buildSegmentURL(
-      resolveURL(representation.baseURL),
-      representation,
-      segment
-    );
+    if (!segment.media) {
+      log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+      return Observable.empty();
+    }
+    const url = segment.media;
 
     const args = {
       adaptation,

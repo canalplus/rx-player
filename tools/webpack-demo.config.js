@@ -40,6 +40,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       "__FEATURES__": {
+        METAPLAYLIST: true,
         SMOOTH: true,
         DASH: true,
         DIRECTFILE: true,
@@ -69,3 +70,15 @@ module.exports = {
     setImmediate: false,
   },
 };
+
+if (shouldMinify) {
+  config.plugins.push(new ClosureCompiler({
+    options: {
+      compilation_level: "SIMPLE",
+      language_in: "ES5",
+      warning_level: "VERBOSE",
+    },
+  }));
+}
+
+module.exports = config;

@@ -18,7 +18,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import log from "../../../../utils/log";
+import { replaceSegmentDASHTokens } from "../helpers";
 import {
   getInitSegment,
   normalizeRange,
@@ -93,7 +93,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         isInit: false,
         duration,
         timescale,
-        media,
+        media: media ?
+          replaceSegmentDASHTokens(media, time, number) :
+          undefined,
       };
       segments.push(args);
     }
@@ -145,9 +147,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {Array}
    */
   _addSegments() : void {
-    if (__DEV__) {
-      log.warn("Tried to add Segments to a template RepresentationIndex");
-    }
+    return;
   }
 
   /**

@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-// for typings
-import {
-  ISegment,
-  Representation,
-} from "../../manifest";
-
 const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
 const TOKEN_REG = /\?token=(\S+)/;
 
@@ -77,27 +71,10 @@ function resolveManifest(url : string) : string {
   }
 }
 
-/**
- * @param {string} url
- * @param {Representation} representation
- * @param {Object} segment
- * @returns {string}
- */
-function buildSegmentURL(
-  url : string,
-  representation : Representation,
-  segment : ISegment
-) : string {
-  return url
-    .replace(/\{bitrate\}/g,    String(representation.bitrate))
-    .replace(/\{start time\}/g, String(segment.time));
-}
-
 export {
   byteRange,
   extractISML,
   extractToken,
   replaceToken,
   resolveManifest,
-  buildSegmentURL,
 };

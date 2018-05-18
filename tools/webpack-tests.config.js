@@ -26,6 +26,7 @@ const config = {
       "__FEATURES__": {
         SMOOTH: true,
         DASH: true,
+        METAPLAYLIST: true,
         DIRECTFILE: true,
         NATIVE_TTML: true,
         NATIVE_SAMI: true,

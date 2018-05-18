@@ -32,16 +32,21 @@ import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../utils/url";
-import { IParsedManifest } from "../../types";
 import {
   IAdaptationSmooth,
   IContentProtectionSmooth,
-  IHSSKeySystem,
-  IHSSManifestSegment,
-  IHSSParserOptions,
+  IKeySystem,
+  IParsedManifest,
   IRepresentationSmooth,
- } from "../types";
+} from "../types";
+import { replaceRepresentationSmoothTokens } from "./helpers";
 import RepresentationIndex from "./representationIndex";
+
+interface IHSSManifestSegment {
+  ts : number;
+  d? : number;
+  r : number;
+}
 
 const DEFAULT_MIME_TYPES: IDictionary<string> = {
   audio: "audio/mp4",
@@ -113,7 +118,7 @@ function parseBoolean(val : string|null) : boolean {
  */
 function getKeySystems(
   keyIdBytes : Uint8Array
-) : IHSSKeySystem[] {
+) : IKeySystem[] {
   return [
     {
       // Widevine
@@ -135,11 +140,18 @@ function getKeySystems(
   ];
 }
 
+interface IHSSParserConfiguration {
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IKeySystem[];
+}
+
 /**
  * @param {Object} [parserOptions={}]
  */
 function createSmoothStreamingParser(
-  parserOptions : IHSSParserOptions = {}
+  parserOptions : IHSSParserConfiguration = {}
 ) : (manifest : Document, url : string) => IParsedManifest {
 
   const SUGGESTED_PERSENTATION_DELAY =
@@ -200,7 +212,7 @@ function createSmoothStreamingParser(
     root : Element
   ) : {
     keyId : string;
-    keySystems: IHSSKeySystem[];
+    keySystems: IKeySystem[];
   } {
     const header = root.firstElementChild as Element;
     assert(
@@ -380,7 +392,7 @@ function createSmoothStreamingParser(
     protection? : IContentProtectionSmooth
   ) : IAdaptationSmooth|null {
     const _timescale = root.hasAttribute("Timescale") ?
-      +(root.getAttribute("Timescale") || 0) : timescale;
+      + (root.getAttribute("Timescale") || 0) : timescale;
 
     const adaptationType = root.getAttribute("Type");
     if (adaptationType == null) {
@@ -443,7 +455,13 @@ function createSmoothStreamingParser(
 
     // apply default properties
     representations.forEach((representation: IRepresentationSmooth) => {
-      representation.baseURL = resolveURL(rootURL, baseURL);
+      const repIndex = {
+        timeline: index.timeline,
+        timescale: index.timescale,
+        initialization: index.initialization,
+        media:
+          replaceRepresentationSmoothTokens(resolveURL(rootURL, baseURL), representation),
+      };
       representation.mimeType =
         representation.mimeType || DEFAULT_MIME_TYPES[adaptationType];
       representation.codecs = representation.codecs || DEFAULT_CODECS[adaptationType];
@@ -459,7 +477,7 @@ function createSmoothStreamingParser(
         samplingRate: representation.samplingRate,
         protection,
       };
-      representation.index = new RepresentationIndex(index, initSegmentInfos);
+      representation.index = new RepresentationIndex(repIndex, initSegmentInfos);
     });
 
     // TODO(pierre): real ad-insert support

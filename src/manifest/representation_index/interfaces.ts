@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-// privateInfos specific to Smooth Initialization Segments
+import Manifest, {
+  Adaptation,
+  Representation,
+} from "../../manifest";
+import Period from "../period";
+
+export type IMetaPlaylistTransportTypePrivateInfos = "dash"|"smooth";
+
 export interface ISmoothInitSegmentPrivateInfos {
-  type : "smooth-init";
   codecPrivateData : string;
   bitsPerSample? : number;
   channels? : number;
@@ -31,9 +37,18 @@ export interface ISmoothInitSegmentPrivateInfos {
   };
 }
 
-// Possible values for Segment's privateInfos
-export type ISegmentPrivateInfos =
-  ISmoothInitSegmentPrivateInfos;
+export interface IBaseContentInfos {
+  manifest: Manifest;
+  period?: Period;
+  adaptation?: Adaptation;
+  representation?: Representation;
+}
+
+export interface IPrivateInfos {
+  smoothInit?: ISmoothInitSegmentPrivateInfos;
+  transportType?: IMetaPlaylistTransportTypePrivateInfos;
+  baseContentInfos?: IBaseContentInfos;
+}
 
 // ISegment Object.
 // Represent a single Segment from a Representation.
@@ -42,8 +57,8 @@ export interface ISegment {
   isInit : boolean; // If true, it's an initialization Segment
   time : number; // Time of beginning for the segment
   timescale : number; // Timescale to convert time and duration into seconds
+  media? : string; // string used to link to the media
 
-  media? : string; // optional string used to link to the media
   duration? : number; // duration of the segment
   indexRange? : [number, number]; // If set, the corresponding byte Range in the
                                   // downloaded Segment will contain an index
@@ -51,9 +66,9 @@ export interface ISegment {
   number? : number; // Optional number of the Segment
   range? : [number, number]; // Optional byte range to retrieve the Segment
 
-  privateInfos? : ISegmentPrivateInfos; // Allows a RepresentationIndex to store
-                                        // supplementary informations in a given
-                                        // Segment for later downloading/parsing
+  privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
+                                 // supplementary informations in a given
+                                 // Segment for later downloading/parsing
 }
 
 export interface IRepresentationIndexSegmentInfos {

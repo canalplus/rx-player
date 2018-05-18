@@ -20,6 +20,8 @@ import {
 } from "../../../manifest";
 // import { IHSSManifestSegment } from "../types";
 
+import { replaceSegmentSmoothTokens } from "./helpers";
+
 export interface IIndexSegment {
   ts : number; // start timestamp
   d? : number; // duration
@@ -331,14 +333,16 @@ export default class SmoothRepresentationIndex
         time: 0,
         timescale: index.timescale,
         privateInfos: {
-          type: "smooth-init",
-          bitsPerSample: this._bitsPerSample,
-          channels: this._channels,
-          codecPrivateData: this._codecPrivateData,
-          packetSize: this._packetSize,
-          samplingRate: this._samplingRate,
-          protection: this._protection,
+            smoothInit: {
+              bitsPerSample: this._bitsPerSample,
+              channels: this._channels,
+              codecPrivateData: this._codecPrivateData,
+              packetSize: this._packetSize,
+              samplingRate: this._samplingRate,
+              protection: this._protection,
+            },
         },
+        media: undefined,
       };
     }
 
@@ -352,7 +356,7 @@ export default class SmoothRepresentationIndex
     getSegments(_up : number, _to : number) : ISegment[] {
       const index = this._index;
       const { up, to } = normalizeRange(index, _up, _to);
-      const { timeline, timescale } = index;
+      const { timeline, timescale, media } = index;
 
       let currentNumber : number|undefined;
       const segments : ISegment[] = [];
@@ -373,12 +377,14 @@ export default class SmoothRepresentationIndex
           // TODO what? May be to play it safe and avoid adding segments which are
           // not completely generated
           if (ts + maxEncounteredDuration < to) {
+            const time = ts;
             const segment = {
-              id: "" + ts,
-              time: ts,
+              id: "" + time,
+              time,
               isInit: false,
               timescale,
               number: currentNumber != null ? currentNumber : undefined,
+              media: replaceSegmentSmoothTokens(media, time),
             };
             segments.push(segment);
           }
@@ -389,14 +395,17 @@ export default class SmoothRepresentationIndex
         let segmentNumberInCurrentRange = getSegmentNumber(ts, up, d);
         let segmentTime = ts + segmentNumberInCurrentRange * (d == null ? 0 : d);
         while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
+          const time = segmentTime;
+          const number = currentNumber != null ?
+            currentNumber + segmentNumberInCurrentRange : undefined;
           const segment = {
             id: "" + segmentTime,
-            time: segmentTime,
+            time,
             isInit: false,
             duration: d,
             timescale,
-            number: currentNumber != null ?
-              currentNumber + segmentNumberInCurrentRange : undefined,
+            number,
+            media: replaceSegmentSmoothTokens(media, time),
           };
           segments.push(segment);
 

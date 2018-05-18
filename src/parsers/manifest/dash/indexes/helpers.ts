@@ -15,6 +15,7 @@
  */
 
 import { ISegment } from "../../../../manifest";
+import { replaceSegmentDASHTokens } from "../helpers";
 
 interface IIndexSegment {
   ts: number; // start timestamp
@@ -186,7 +187,8 @@ function getSegmentsFromTimeline(
           range,
           duration: undefined,
           timescale,
-          media,
+          media: media ? replaceSegmentDASHTokens(
+            media, ts, currentNumber != null ? currentNumber : undefined) : undefined,
           number: currentNumber != null ? currentNumber : undefined,
         };
         segments.push(segment);
@@ -205,9 +207,12 @@ function getSegmentsFromTimeline(
         range,
         duration: d,
         timescale,
-        media,
+        media: media ?
+          replaceSegmentDASHTokens(media, segmentTime,  currentNumber != null ?
+            currentNumber + segmentNumberInCurrentRange : undefined) :
+          undefined,
         number: currentNumber != null ?
-        currentNumber + segmentNumberInCurrentRange : undefined,
+          currentNumber + segmentNumberInCurrentRange : undefined,
       };
       segments.push(segment);
 
