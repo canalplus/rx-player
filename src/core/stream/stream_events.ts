@@ -36,6 +36,7 @@ export interface ICompletedBufferEvent {
   };
 }
 
+// Emit when the adaptation chosen for a type changes
 export interface IAdaptationChangeEvent {
   type : "adaptationChange";
   value : {
@@ -45,6 +46,7 @@ export interface IAdaptationChangeEvent {
   };
 }
 
+// Emit when the manifest has been downloaded and parsed
 export interface IManifestReadyEvent {
   type : "manifestReady";
   value : {
@@ -53,11 +55,13 @@ export interface IManifestReadyEvent {
   };
 }
 
+// Emit when a warning was arised
 export interface IStreamWarningEvent {
   type : "warning";
   value : Error|CustomError;
 }
 
+// Emit when the manifest has been refreshed
 export interface IManifestUpdateEvent {
   type : "manifestUpdate";
   value : {
@@ -65,21 +69,25 @@ export interface IManifestUpdateEvent {
   };
 }
 
+// Emit when the speed of the stream has been updated
 export interface ISpeedChangedEvent {
   type : "speed";
   value : number;
 }
 
+// Emit when the global buffer is stucked
 export interface IStalledEvent {
   type : "stalled";
   value : IStallingItem|null;
 }
 
+// Emit when the stream has been loaded
 export interface IStreamLoadedEvent {
   type : "loaded";
   value : true;
 }
 
+// Emit when the Period being played changes
 export interface IActivePeriodChangedEvent {
   type: "activePeriodChanged";
   value : {
@@ -87,6 +95,7 @@ export interface IActivePeriodChangedEvent {
   };
 }
 
+// Emit when a new Period is ready to be played for a type of buffer
 export interface IPeriodBufferReadyEvent {
   type : "periodBufferReady";
   value : {
@@ -96,6 +105,7 @@ export interface IPeriodBufferReadyEvent {
   };
 }
 
+// Emit when a previous Period is cleared for a type of buffer
 export interface IPeriodBufferClearedEvent {
   type : "periodBufferCleared";
   value : {
@@ -104,8 +114,15 @@ export interface IPeriodBufferClearedEvent {
   };
 }
 
+// Emit when the end of stream is reached (all buffers are complete)
 export interface IEndOfStreamEvent {
   type: "end-of-stream";
+  value: undefined;
+}
+
+// Emit when the stream is resuming (from start/an end of stream)
+export interface IResumeStreamEvent {
+  type: "resume-stream";
   value: undefined;
 }
 
@@ -232,6 +249,13 @@ function endOfStream() : IEndOfStreamEvent {
   };
 }
 
+function resumeStream() : IResumeStreamEvent {
+  return {
+    type: "resume-stream",
+    value: undefined,
+  };
+}
+
 function bufferComplete(bufferType: IBufferType) : ICompletedBufferEvent {
   return {
     type: "complete-buffer",
@@ -246,6 +270,7 @@ const STREAM_EVENTS = {
   adaptationChange,
   bufferComplete,
   endOfStream,
+  resumeStream,
   loaded,
   manifestReady,
   manifestUpdate,
@@ -264,6 +289,7 @@ export type IStreamEvent =
   IAdaptationChangeEvent |
   ICompletedBufferEvent |
   IEndOfStreamEvent |
+  IResumeStreamEvent |
   IManifestReadyEvent |
   IManifestUpdateEvent |
   IPeriodBufferClearedEvent |
