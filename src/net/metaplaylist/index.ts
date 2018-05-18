@@ -309,7 +309,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
         const parserArgs = getParserBaseArguments(args.segment, args, offset);
         return transport.text.loader(parserArgs);
       },
-      parser: (args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array>) => {
+      parser: (args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>) => {
         if (!args.segment.privateInfos) {
           throw new Error();
         }
@@ -331,7 +331,8 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
     };
 
     const imageTrackPipeline = {
-      loader(args : ISegmentLoaderArguments) : ILoaderObservable<ArrayBuffer|Uint8Array> {
+      loader(args : ISegmentLoaderArguments) :
+        ILoaderObservable<ArrayBuffer|Uint8Array|null> {
         if (!args.segment.privateInfos) {
           throw new Error("Segments from metaplaylist must have private infos.");
         }
@@ -343,7 +344,7 @@ export default function(options: IParserOptions = {}): ITransportPipelines {
         return transport.image.loader(parserArgs);
       },
       parser(
-        args : ISegmentParserArguments<ArrayBuffer|Uint8Array>
+        args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
       ) : ImageParserObservable {
         if (!args.segment.privateInfos) {
           throw new Error("Segments from metaplaylist must have private infos.");
