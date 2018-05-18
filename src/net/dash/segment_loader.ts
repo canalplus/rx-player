@@ -19,18 +19,15 @@ import {
   merge as observableMerge,
   Observable,
 } from "rxjs";
+import log from "../../utils/log";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import {
   CustomSegmentLoader,
   ILoaderObservable,
   ILoaderObserver,
   ISegmentLoaderArguments,
 } from "../types";
-import {
-  byteRange,
-  replaceTokens,
-} from "./utils";
+import { byteRange } from "./utils";
 
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
   url : string;
@@ -110,9 +107,10 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     return EMPTY;
   }
 
-  // construct url for the segment
-  const path = media ? replaceTokens(media, segment, representation) : "";
-  const url = resolveURL(representation.baseURL, path);
+  if (!media) {
+    log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+    return EMPTY;
+  }
 
   const args = {
     adaptation,
@@ -121,7 +119,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     representation,
     segment,
     transport: "dash",
-    url,
+    url: media,
   };
 
   if (!customSegmentLoader) {

@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  EMPTY,
+  of as observableOf
+} from "rxjs";
 import {
   getMDHDTimescale,
   parseSidx,
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
 import dashManifestParser from "../../parsers/manifest/dash";
+import log from "../../utils/log";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import generateSegmentLoader from "./segment_loader";
@@ -30,10 +33,7 @@ import {
   loader as TextTrackLoader,
   parser as TextTrackParser,
 } from "./texttracks";
-import {
-  addNextSegments,
-  replaceTokens,
-} from "./utils";
+import { addNextSegments } from "./utils";
 
 import {
   CustomManifestLoader,
@@ -92,6 +92,10 @@ export default function(
     loader({ adaptation, init, manifest, period, representation, segment }
       : ISegmentLoaderArguments
     ) : ILoaderObservable<Uint8Array|ArrayBuffer> {
+      if (!segment.media) {
+        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+        return EMPTY;
+      }
       return segmentLoader({
         adaptation,
         init,
@@ -141,7 +145,7 @@ export default function(
 
   const imageTrackPipeline = {
     loader(
-      { segment, representation } : ISegmentLoaderArguments
+      { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
       if (segment.isInit) {
         // image do not need an init segment. Passthrough directly to the parser
@@ -150,11 +154,12 @@ export default function(
           value: { responseData: null },
         });
       }
-
+      if (!segment.media) {
+        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+        return EMPTY;
+      }
       const { media } = segment;
-      const path = media ? replaceTokens(media, segment, representation) : "";
-      const url = resolveURL(representation.baseURL, path);
-      return request({ url, responseType: "arraybuffer" });
+      return request({ url: media, responseType: "arraybuffer" });
     },
 
     parser(
