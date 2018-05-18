@@ -16,13 +16,14 @@
 
 import objectAssign from "object-assign";
 import {
+  EMPTY,
   merge as observableMerge,
   of as observableOf,
 } from "rxjs";
 
 import assert from "../../utils/assert";
+import log from "../../utils/log";
 import { stringFromUTF8 } from "../../utils/strings";
-import { resolveURL } from "../../utils/url";
 
 import {
   getMDAT,
@@ -35,8 +36,7 @@ import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import {
   addNextSegments,
   byteRange,
-  isMP4EmbeddedTrack,
-  replaceTokens,
+  isMP4EmbeddedTrack
 } from "./utils";
 
 import {
@@ -76,13 +76,15 @@ function TextTrackLoader(
     });
   }
 
-  const path = media ? replaceTokens(media, segment, representation) : "";
-  const mediaUrl = resolveURL(representation.baseURL, path);
+  if (!media) {
+    log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
+    return EMPTY;
+  }
 
   // fire a single time for contiguous init and index ranges
   if (range && indexRange && range[1] === indexRange[0] - 1) {
     return request({
-      url: mediaUrl,
+      url: media,
       responseType,
       headers: {
         Range: byteRange([range[0], indexRange[1]]),
@@ -91,7 +93,7 @@ function TextTrackLoader(
   }
 
   const mediaRequest = request<ArrayBuffer|string>({
-    url: mediaUrl,
+    url: media,
     responseType,
     headers: range ? {
       Range: byteRange(range),
@@ -107,7 +109,7 @@ function TextTrackLoader(
   // this in parallel and send the both blobs into the pipeline.
   // TODO Find a solution for calling only one time the parser
   const indexRequest = request<ArrayBuffer|string>({
-    url: mediaUrl,
+    url: media,
     responseType,
     headers: {
       Range: byteRange(indexRange),
