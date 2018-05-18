@@ -31,7 +31,7 @@ import {
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
-} from "../../../types";
+} from "../../types";
 import {
   IRole,
   isHardOfHearing,

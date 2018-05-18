@@ -20,6 +20,7 @@ import {
   Representation,
 } from "../../manifest";
 import parseBif from "../../parsers/images/bif";
+import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
@@ -31,6 +32,7 @@ import {
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
+  IParserOptions,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
@@ -40,10 +42,8 @@ import {
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import extractTimingsInfos from "./isobmff_timings_infos";
-import createSmoothManifestParser from "./manifest";
 import mp4Utils from "./mp4";
 import generateSegmentLoader from "./segment_loader";
-import { IHSSParserOptions } from "./types";
 import {
   buildSegmentURL,
   extractISML,
@@ -77,7 +77,7 @@ function addNextSegments(
 }
 
 export default function(
-  options : IHSSParserOptions = {}
+  options : IParserOptions = {}
 ) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
@@ -177,10 +177,9 @@ export default function(
           segmentInfos: initSegmentInfos,
         });
       }
-      if (__DEV__) {
-        assert(responseData instanceof ArrayBuffer);
-      }
-      const responseBuffer = new Uint8Array(responseData as ArrayBuffer);
+      const responseBuffer = responseData instanceof Uint8Array ?
+        responseData : new Uint8Array(responseData);
+
       const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
       const segmentData = patchSegment(responseBuffer, segmentInfos.time);
@@ -205,7 +204,6 @@ export default function(
         });
       }
 
-      // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
       const base = resolveURL(representation.baseURL);
       const url = buildSegmentURL(base, representation, segment);

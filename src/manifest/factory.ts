@@ -21,7 +21,7 @@ import {
   IParsedAdaptation,
   IParsedManifest,
   IParsedRepresentation,
-} from "../net/types";
+} from "../parsers/manifest/types";
 import log from "../utils/log";
 import Manifest, {
   IManifestArguments,
