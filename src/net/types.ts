@@ -18,12 +18,12 @@ import { Observable } from "rxjs/Observable";
 import { Observer } from "rxjs/Observer";
 import Manifest, {
   Adaptation,
-  IRepresentationIndex,
   ISegment,
   Period,
   Representation,
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
+import { IParsedManifest } from "../parsers/manifest/types";
 
 // contains timings info on a single audio/video/text/image segment
 export interface ISegmentTimingInfos {
@@ -213,6 +213,20 @@ export interface ITransportPipelines {
   image : ITransportImageSegmentPipeline;
 }
 
+interface IParsedKeySystem {
+  systemId : string;
+  privateData : Uint8Array;
+}
+
+export interface IParserOptions {
+  segmentLoader? : CustomSegmentLoader;
+  manifestLoader?: CustomManifestLoader;
+  suggestedPresentationDelay? : number;
+  referenceDateTime? : number;
+  minRepresentationBitrate? : number;
+  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
+}
+
 export interface ITransportOptions {
   // every transports
   segmentLoader? : CustomSegmentLoader;
@@ -277,99 +291,3 @@ export type CustomManifestLoader = (
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
-
-// TODO move to DASH Segment's privateInfos
-export interface IParsedContentProtection {
-  schemeIdUri?: string;
-  value?: string;
-}
-
-export interface IParsedRepresentation {
-  // required
-  baseURL : string;
-  bitrate : number;
-  index : IRepresentationIndex;
-  id: string;
-
-  // optional
-  audioSamplingRate?: string;
-  audiotag?: number;
-  codecs?: string;
-  codingDependency?: boolean;
-  frameRate?: number;
-  height?: number;
-  maxPlayoutRate?: number;
-  maximumSAPPeriod?: number;
-  mimeType?: string;
-  profiles?: string;
-  qualityRanking?: number;
-  segmentProfiles?: string;
-  width?: number;
-
-  // TODO move to DASH Segment's privateInfos
-  contentProtection?: IParsedContentProtection;
-}
-
-export interface IParsedAdaptation {
-  // required
-  id: string;
-  representations: IParsedRepresentation[];
-  type: string;
-
-  // optional
-  audioDescription? : boolean;
-  bitstreamSwitching?: boolean;
-  closedCaption? : boolean;
-  language?: string;
-  maxBitrate?: number;
-  maxFrameRate?: number;
-  maxHeight?: number;
-  maxWidth?: number;
-  minBitrate?: number;
-  minFrameRate?: number;
-  minHeight?: number;
-  minWidth?: number;
-  name? : string;
-  normalizedLanguage? : string;
-  par?: string;
-  segmentAlignment?: number|boolean;
-  subsegmentAlignment?: number|boolean;
-
-  // TODO move to DASH Segment's privateInfos
-  contentProtection?: IParsedContentProtection;
-}
-
-export interface IParsedPeriod {
-  // required
-  id : string;
-  start : number;
-  adaptations : IParsedAdaptation[];
-
-  // optional
-  duration? : number;
-  bitstreamSwitching? : boolean;
-}
-
-export interface IParsedManifest {
-  // required
-  availabilityStartTime : number;
-  duration: number;
-  id: string;
-  periods: IParsedPeriod[];
-  transportType: string; // "smooth", "dash" etc.
-  type: string; // "static" or "dynamic" TODO isLive?
-  uris: string[]; // uris where the manifest can be refreshed
-
-  // optional
-  availabilityEndTime?: number;
-  maxSegmentDuration?: number;
-  maxSubsegmentDuration?: number;
-  minBufferTime?: number;
-  minimumTime? : number;
-  minimumUpdatePeriod?: number;
-  presentationLiveGap?: number;
-  profiles?: string;
-  publishTime?: number;
-  suggestedPresentationDelay?: number;
-  timeShiftBufferDepth?: number;
-}

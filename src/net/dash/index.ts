@@ -20,11 +20,11 @@ import {
   parseSidx,
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
+import dashManifestParser from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import { resolveURL } from "../../utils/url";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import dashManifestParser from "./manifest";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
