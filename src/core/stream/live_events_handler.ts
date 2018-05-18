@@ -44,7 +44,6 @@ function refreshManifest(
     .do((parsed) => {
       currentManifest.update(parsed);
     })
-    .share() // share the previous side effect
     .mapTo(EVENTS.manifestUpdate(currentManifest));
 }
 
