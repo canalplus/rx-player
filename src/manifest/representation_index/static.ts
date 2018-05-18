@@ -21,6 +21,8 @@ import IRepresentationIndex, {
 
 export interface IStaticRepresentationIndexInfos {
   media: string;
+  startTime: number;
+  endTime: number;
 }
 
 /**
@@ -29,9 +31,13 @@ export interface IStaticRepresentationIndexInfos {
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
   private readonly _media: string;
+  private readonly _startTime: number;
+  private readonly _endTime: number;
 
   constructor(infos: IStaticRepresentationIndexInfos) {
     this._media = infos.media;
+    this._startTime = infos.startTime;
+    this._endTime = infos.endTime;
   }
 
   /**
@@ -52,8 +58,8 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
       id: "0",
       isInit: false,
       number: 0,
-      time: 0,
-      duration: Number.MAX_VALUE,
+      time: this._startTime,
+      duration: this._endTime,
       timescale: 1,
       mediaURL: this._media,
     }];
@@ -63,22 +69,16 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns first position in index.
    * @returns {undefined}
    */
-  getFirstPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
-    /* tslint:enable return-undefined */
+  getFirstPosition() : number {
+    return this._startTime;
   }
 
   /**
    * Returns last position in index.
    * @returns {undefined}
    */
-  getLastPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
-    /* tslint:enable return-undefined */
+  getLastPosition() : number {
+    return this._endTime;
   }
 
   /**
