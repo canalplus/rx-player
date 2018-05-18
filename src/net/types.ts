@@ -124,6 +124,7 @@ export interface ISegmentParserArguments<T> {
   adaptation : Adaptation;
   representation : Representation;
   segment : ISegment;
+  period: Period;
   init? : ISegmentTimingInfos;
 }
 
