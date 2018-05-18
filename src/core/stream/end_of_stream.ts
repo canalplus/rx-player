@@ -15,29 +15,67 @@
  */
 
 import { Observable } from "rxjs/Observable";
-import { retryFuncWithBackoff } from "../../utils/retry";
+import {
+  onRemoveSourceBuffers$,
+  onUpdate$,
+} from "../../compat/events";
 
 /**
- * @param {MediaSource} mediaSource
+ * Get "updating" SourceBuffers from a SourceBufferList.
+ * @param {SourceBufferList} sourceBuffers
+ * @returns {Array.<SourceBuffer>}
  */
-function triggerEndOfStream(mediaSource : MediaSource) : void {
-  mediaSource.endOfStream();
+function getUpdatingSourceBuffers(
+  sourceBuffers : SourceBufferList
+) : SourceBuffer[] {
+  const updatingSourceBuffers : SourceBuffer[] = [];
+  for (let i = 0; i < sourceBuffers.length; i++) {
+    const SourceBuffer = sourceBuffers[i];
+    if (SourceBuffer.updating) {
+        updatingSourceBuffers.push(SourceBuffer);
+    }
+  }
+
+  return updatingSourceBuffers;
 }
 
 /**
- * Try to call endOfStream on the mediaSource multiple times.
+ * Trigger the `endOfStream` method of a MediaSource.
+ *
+ * If the MediaSource is ended/closed, do not call this method.
+ *
+ * If SourceBuffers are updating, wait for them to be updated before closing
+ * it.
  * @param {MediaSource} mediaSource
  * @returns {Observable}
  */
-export default function triggerEndOfStreamWithRetries(
+export default function triggerEndOfStream(
   mediaSource : MediaSource
-) : Observable<never> {
-  const retryOptions = {
-    totalRetry: 10,
-    retryDelay: 100,
-    shouldRetry: () => mediaSource.readyState !== "ended",
-  };
+) : Observable<null> {
+  if (mediaSource.readyState !== "open") {
+    // already done, exit
+    return Observable.of(null);
+  }
 
-  return retryFuncWithBackoff(() => triggerEndOfStream(mediaSource), retryOptions)
-    .ignoreElements() as Observable<never>;
+  const { sourceBuffers } = mediaSource;
+  const updatingSourceBuffers = getUpdatingSourceBuffers(sourceBuffers);
+
+  if (!updatingSourceBuffers.length) {
+    mediaSource.endOfStream();
+    return Observable.of(null);
+  }
+
+  const updatedSourceBuffers$ = updatingSourceBuffers
+    .map(onUpdate$);
+
+  return Observable.race(
+    Observable
+      .merge(...updatedSourceBuffers$)
+      .takeLast(1),
+
+    onRemoveSourceBuffers$(sourceBuffers)
+      .take(1)
+  ).mergeMap(() => {
+    return triggerEndOfStream(mediaSource);
+  });
 }

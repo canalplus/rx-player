@@ -24,6 +24,7 @@ import "rxjs/add/observable/interval";
 import "rxjs/add/observable/merge";
 import "rxjs/add/observable/never";
 import "rxjs/add/observable/of";
+import "rxjs/add/observable/race";
 import "rxjs/add/observable/throw";
 import "rxjs/add/observable/timer";
 
@@ -55,6 +56,7 @@ import "rxjs/add/operator/startWith";
 import "rxjs/add/operator/switchMap";
 import "rxjs/add/operator/switchMapTo";
 import "rxjs/add/operator/take";
+import "rxjs/add/operator/takeLast";
 import "rxjs/add/operator/takeUntil";
 import "rxjs/add/operator/timeout";
 import "rxjs/add/operator/withLatestFrom";
