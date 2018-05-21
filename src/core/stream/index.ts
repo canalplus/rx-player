@@ -304,7 +304,7 @@ export default function Stream({
     const sourceBufferManager = new SourceBufferManager(videoElement, mediaSource);
 
     // Will be used to cancel any endOfStream tries when the contents resume
-    const cancelEndOfStream$ = new Subject();
+    const cancelEndOfStream$ = new Subject<null>();
 
     // Will be used to process the events of the buffer
     const bufferEventHandler = manifest.isLive ?
@@ -337,7 +337,7 @@ export default function Stream({
               .ignoreElements()
               .takeUntil(cancelEndOfStream$) as Observable<never>;
           case "resume-stream":
-            cancelEndOfStream$.next();
+            cancelEndOfStream$.next(null);
             return Observable.empty();
           default:
             return bufferEventHandler(evt);
