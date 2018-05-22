@@ -17,6 +17,7 @@
 import { Observable } from "rxjs/Observable";
 import {
   onRemoveSourceBuffers$,
+  onSourceOpen$,
   onUpdate$,
 } from "../../compat/events";
 
@@ -52,30 +53,46 @@ function getUpdatingSourceBuffers(
 export default function triggerEndOfStream(
   mediaSource : MediaSource
 ) : Observable<null> {
-  if (mediaSource.readyState !== "open") {
-    // already done, exit
-    return Observable.of(null);
-  }
+  return Observable.defer(() => {
+    if (mediaSource.readyState !== "open") {
+      // already done, exit
+      return Observable.of(null);
+    }
 
-  const { sourceBuffers } = mediaSource;
-  const updatingSourceBuffers = getUpdatingSourceBuffers(sourceBuffers);
+    const { sourceBuffers } = mediaSource;
+    const updatingSourceBuffers = getUpdatingSourceBuffers(sourceBuffers);
 
-  if (!updatingSourceBuffers.length) {
-    mediaSource.endOfStream();
-    return Observable.of(null);
-  }
+    if (!updatingSourceBuffers.length) {
+      mediaSource.endOfStream();
+      return Observable.of(null);
+    }
 
-  const updatedSourceBuffers$ = updatingSourceBuffers
-    .map(onUpdate$);
+    const updatedSourceBuffers$ = updatingSourceBuffers
+      .map(onUpdate$);
 
-  return Observable.race(
-    Observable
+    return Observable.race(
+      Observable
       .merge(...updatedSourceBuffers$)
       .takeLast(1),
 
-    onRemoveSourceBuffers$(sourceBuffers)
+      onRemoveSourceBuffers$(sourceBuffers)
       .take(1)
-  ).mergeMap(() => {
-    return triggerEndOfStream(mediaSource);
+    ).mergeMap(() => {
+      return triggerEndOfStream(mediaSource);
+    });
   });
+}
+
+/**
+ * Trigger the `endOfStream` method of a MediaSource each times it opens.
+ * @see triggerEndOfStream
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
+export function maintainEndOfStream(mediaSource : MediaSource) : Observable<null> {
+  return triggerEndOfStream(mediaSource)
+    .concat(
+      onSourceOpen$(mediaSource)
+        .concatMapTo(triggerEndOfStream(mediaSource))
+    );
 }
