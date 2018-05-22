@@ -20,6 +20,7 @@ import {
   onSourceOpen$,
   onUpdate$,
 } from "../../compat/events";
+import log from "../../utils/log";
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.
@@ -63,6 +64,7 @@ export default function triggerEndOfStream(
     const updatingSourceBuffers = getUpdatingSourceBuffers(sourceBuffers);
 
     if (!updatingSourceBuffers.length) {
+      log.info("triggering end of stream");
       mediaSource.endOfStream();
       return Observable.of(null);
     }
