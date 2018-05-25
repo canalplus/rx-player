@@ -354,7 +354,7 @@ export default function RepresentationBuffer<T>({
               return [obj, ...segments];
             }
             return [...segments, obj];
-          }, [] as Array<ILoadedSegmentObject<T>>)
+          }, [])
           .mergeMap((segments) => {
             return initSegmentObject.isDownloaded ?
               Observable.of(...segments) :
