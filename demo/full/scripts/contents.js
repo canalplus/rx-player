@@ -24,7 +24,7 @@ export default [
     "name": "DASH-IF Multi-Subtitles",
     "url": "http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
     "transport": "dash",
-    "live": true,
+    "live": false,
   },
   {
     "name": "IRTDash Subtitles",
