@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import Manifest, {
@@ -202,7 +201,7 @@ interface IInitSegmentObject<T> {
 // Informations about a loaded Segment
 interface ILoadedSegmentObject<T> {
   segment : ISegment; // Concerned Segment
-  parsed : ISegmentObject<T>; // Data and informations
+  value : ISegmentObject<T>; // Data and informations
 }
 
 // Object describing a pending Segment request
@@ -324,7 +323,7 @@ export default function RepresentationBuffer<T>({
 
         if (initSegmentObject.isDownloaded || initSegment == null) {
           return request$
-            .map((args) => objectAssign({ segment }, args))
+            .map((args) => ({ segment, value: args.parsed }))
             .concat(requestNextSegment$);
         }
 
@@ -335,13 +334,13 @@ export default function RepresentationBuffer<T>({
           period,
           representation,
           segment: initSegment,
-        }, 0);
+        }, priority);
 
         return Observable.merge(
           initSegmentRequest$
-            .map((args) => objectAssign({ segment: initSegment }, args)),
+            .map((args) => ({ segment: initSegment, value: args.parsed })),
           request$
-            .map((args) => objectAssign({ segment }, args))
+            .map((args) => ({ segment, value: args.parsed }))
         )
           // Emit all segments once the init segment has finished to download
           // and always emit the init segment first.
@@ -351,7 +350,7 @@ export default function RepresentationBuffer<T>({
             }
             if (obj.segment.isInit) {
               initSegmentObject.isDownloaded = true;
-              initSegmentObject.value = obj.parsed;
+              initSegmentObject.value = obj.value;
               return [obj, ...segments];
             }
             return [...segments, obj];
@@ -381,8 +380,7 @@ export default function RepresentationBuffer<T>({
   ) : Observable<IBufferEventAddedSegment<T>> {
     return Observable.defer(() => {
       const { segment } = data;
-      const segmentInfos = data.parsed.segmentInfos;
-      const segmentData = data.parsed.segmentData;
+      const { segmentInfos, segmentData } = data.value;
 
       if (segmentData == null) {
         // no segmentData to add here (for example, a text init segment)
