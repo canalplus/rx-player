@@ -82,10 +82,8 @@ export default function parseWebVTT(
   for (let i = firstLineAfterHeader; i < linified.length; i++) {
     if (!(linified[i].length === 0)) {
       if (isStartOfCueBlock(linified, i)) {
-        const startOfCueBlock = i;
-
         const endOfCue = findEndOfCueBlock(linified, i);
-        const cueBlock = linified.slice(startOfCueBlock, endOfCue);
+        const cueBlock = linified.slice(i, endOfCue);
         const cue = parseCue(cueBlock, timeOffset, styleElements);
         if (cue) {
           cuesArray.push(cue);

@@ -49,10 +49,8 @@ export default function parseVTTStringToVTTCues(
 
   for (let i = 1; i < lines.length; i++) {
     if (isStartOfCueBlock(lines, i)) {
-      const startingI = i;
-
       const endOfCue = findEndOfCueBlock(lines, i);
-      cueBlocks.push(lines.slice(startingI, endOfCue));
+      cueBlocks.push(lines.slice(i, endOfCue));
       i = endOfCue;
     } else if (lines[i]) {
       // continue incrementing i until either:
