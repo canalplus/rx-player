@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { isStartOfCueBlock } from "../cue-blocks";
+
 /**
  * Returns first line after the WEBVTT header.
  * That is, the line after the first blank line after the first line!
@@ -56,18 +58,6 @@ function isStartOfNoteBlock(text : string) : boolean {
  */
 function isStartOfRegionBlock(text : string) : boolean {
   return /^REGION( .*)?$/g.test(text);
-}
-
-/**
- * Returns true if the given line looks like the beginning of a cue block.
- * @param {string} text
- * @returns {Boolean}
- */
-function isStartOfCueBlock(text : string) : boolean {
-  return (!isStartOfNoteBlock(text) &&
-   !isStartOfStyleBlock(text) &&
-   !isStartOfRegionBlock(text)) &&
-   text.length !== 0;
 }
 
 export {
