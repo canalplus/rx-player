@@ -1,13 +1,38 @@
 /* eslint-env node */
+const ClosureCompiler = require("webpack-closure-compiler");
 const path = require("path");
 const webpack = require("webpack");
 
+const RXP_ENV = process.env.RXP_ENV || "production";
+const shouldMinify = !!process.env.RXP_MINIFY;
+
+if (["development", "production"].indexOf(RXP_ENV) < 0) {
+  throw new Error("unknown RXP_ENV " + RXP_ENV);
+}
+
+const isDevMode = RXP_ENV === "development";
+
 module.exports = {
-  mode: "development",
+  mode: isDevMode ? "development" : "production",
   entry: path.join(__dirname, "../demo/full/scripts/index.js"),
   output: {
     path: path.join(__dirname, "../demo/full"),
     filename: "bundle.js",
+  },
+  optimization: {
+    minimizer: shouldMinify ? [
+      new ClosureCompiler({
+        options: {
+          compilation_level: "SIMPLE",
+          language_in: "ES5",
+          warning_level: "VERBOSE",
+        },
+      }),
+    ] : [],
+  },
+  performance: {
+    maxEntrypointSize: shouldMinify ? 1000000 : 2000000,
+    maxAssetSize: shouldMinify ? 1000000 : 2000000,
   },
   module: {
     rules: [
