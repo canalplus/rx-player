@@ -358,7 +358,9 @@ export default function RepresentationBuffer<T>({
           .mergeMap((segments) => {
             return initSegmentObject.isDownloaded ?
               Observable.of(...segments) :
+              /* tslint:disable no-unnecessary-type-assertion */
               Observable.empty() as Observable<never>;
+              /* tslint:enable no-unnecessary-type-assertion */
           })
           .concat(requestNextSegment$);
       });
