@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { isStartOfCueBlock } from "../cue-blocks";
-
 /**
  * Returns first line after the WEBVTT header.
  * That is, the line after the first blank line after the first line!
@@ -60,10 +58,60 @@ function isStartOfRegionBlock(text : string) : boolean {
   return /^REGION( .*)?$/g.test(text);
 }
 
+/**
+ * Returns true if the line given looks like the beginning of a cue.
+ * You should provide to this function only lines following "empty" lines.
+ * @param {string} line
+ * @returns {Boolean}
+ */
+function isStartOfCueBlock(lines : string[], index: number) : boolean {
+  // checked cases:
+  //   - empty lines
+  //   - start of a comment
+  //   - start of a region
+  //   - start of a style
+  // Anything else whose first or second line is a timestamp line is a cue.
+  const firstLine = lines[index];
+  const secondLine = lines[index + 1];
+  return (
+    !(!firstLine || !secondLine || /^(NOTE)|(REGION)|(STYLE)($| |\t)/.test(firstLine)) &&
+    (firstLine.indexOf("-->") > -1 || secondLine.indexOf("-->") > -1)
+  );
+}
+
+/**
+ * Find end of current WebVTT cue block.
+ * @param {Array<string>} linified
+ * @param {number} startOfCueBlock
+ */
+function findEndOfCueBlock(
+  linified: string[],
+  startOfCueBlock: number
+): number {
+  let endOfCue = startOfCueBlock + 1;
+  // continue incrementing i until either:
+  //   - empty line
+  //   - end
+  while (linified[endOfCue]) {
+    endOfCue++;
+  }
+  if (
+    linified[endOfCue + 1] !== undefined &&
+    !isStartOfCueBlock(linified, endOfCue + 1) &&
+    !isStartOfStyleBlock(linified[endOfCue + 1]) &&
+    !isStartOfNoteBlock(linified[endOfCue + 1]) &&
+    !isStartOfRegionBlock(linified[endOfCue + 1])
+  ) {
+    endOfCue = findEndOfCueBlock(linified, endOfCue);
+  }
+  return endOfCue;
+}
+
 export {
   getFirstLineAfterHeader,
   isStartOfCueBlock,
   isStartOfNoteBlock,
   isStartOfRegionBlock,
   isStartOfStyleBlock,
+  findEndOfCueBlock
 };
