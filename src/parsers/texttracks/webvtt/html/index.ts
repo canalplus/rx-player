@@ -15,12 +15,12 @@
  */
 
 import log from "../../../../utils/log";
-  import {
-    findEndOfCueBlock,
-    getFirstLineAfterHeader,
-    isStartOfCueBlock,
-    isStartOfStyleBlock,
-  } from "../utils";
+import {
+  findEndOfCueBlock,
+  getFirstLineAfterHeader,
+  isStartOfCueBlock,
+  isStartOfStyleBlock,
+} from "../utils";
 import formatCueLineToHTML from "./formatCueLineToHTML";
 import parseStyleBlock, {
   IStyleElement,
