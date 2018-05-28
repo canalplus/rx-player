@@ -55,9 +55,7 @@ export default function findEndOfCueBlock(
     // we only have empty lines until the end
     // empty lines are not part of a cue block, returns the first empty one
     return firstEmptyLineIndex;
-  }
-
-  if (linified[nextLineWithText].indexOf("-->") >= 0) {
+  } else if (linified[nextLineWithText].indexOf("-->") >= 0) {
     // nextLineWithText leads to the timing of the next cue block
     // empty lines are not part of a cue block, returns the first empty one
     return firstEmptyLineIndex;
