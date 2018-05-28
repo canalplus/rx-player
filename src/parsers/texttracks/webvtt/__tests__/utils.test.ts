@@ -16,6 +16,7 @@
 
 import { expect } from "chai";
 import {
+  findEndOfCueBlock,
   getFirstLineAfterHeader,
   isStartOfCueBlock,
   isStartOfNoteBlock,
@@ -244,6 +245,135 @@ describe("parsers - webvtt - utils", () => {
       expect(isStartOfStyleBlock("NOTESOMETHING")).to.equal(false);
       expect(isStartOfStyleBlock("REGIONSOMETHING")).to.equal(false);
       expect(isStartOfStyleBlock("STYLESOMETHING")).to.equal(false);
+    });
+  });
+
+  describe("findEndOfCueBlock", () => {
+    it.only("should return an index immediately after the end of a cue block", () => {
+      const vtt1 = [
+        "WEBVTT",                          // 0
+        "",                                // 1
+        "112",                             // 2
+        "00:17:31.080 --> 00:17:32.200",   // 3
+        "Je suis le petit chevalier",      // 4
+        "",                                // 5
+        "Avec le ciel dessus mes yeux",    // 6
+        "",                                // 7
+        "",                                // 8
+        "Je ne peux pas me effroyer",      // 9
+        "",                                // 10
+        "",                                // 11
+        "00:17:55.520 --> 00:17:57.640",   // 12
+        "Je suis le petit chevalier",      // 13
+        "",                                // 14
+        "00:18:01.520 --> 00:18:09.640",   // 15
+        "",                                // 16
+        "Avec la terre dessous mes pieds", // 17
+        "",                                // 18
+        "112",                             // 19
+        "00:18:31.080 --> 00:18:32.200",   // 20
+        "NOTE",                            // 21
+        "TOTO",                            // 22
+        "",                                // 23
+        "112",                             // 24
+        "00:18:51.080 --> 00:18:52.200",   // 25
+        "J'irai te visiter",               // 26
+        "J'irai te visiter",               // 27
+        "",                                // 28
+      ];
+
+      const vtt2 = [
+        "WEBVTT",                          // 0
+        "",                                // 1
+        "112",                             // 2
+        "00:17:31.080 --> 00:17:32.200",   // 3
+        "",                                // 4
+        "Ce que j'ai fais, ce soir la",    // 5
+        "Ce qu'elle a dit, ce soir la",    // 6
+        "",                                // 7
+        "",                                // 8
+        "",                                // 9
+        "Realisant mon espoir",            // 10
+        "",                                // 11
+        "",                                // 12
+        "",                                // 13
+        "Je me lance, vers la gloire, OK", // 14
+      ];
+
+      const vtt3 = [
+        "WEBVTT",                                // 0
+        "",                                      // 1
+        "",                                      // 2
+        "",                                      // 3
+        "1",                                     // 4
+        "00:17:31.080 --> 00:17:32.200",         // 5
+        "Je n'ai plus peur de perdre mon temps", // 6
+        "",                                      // 7
+        "00:18:51.080 --> 00:18:52.200",         // 8
+        "Je n'ai plus peur de perdre mes dents", // 9
+      ];
+
+      const vtt4 = [
+        "WEBVTT",                                  // 0
+        "",                                        // 1
+        "112",                                     // 2
+        "00:17:31.080 --> 00:17:32.200",           // 3
+        "",                                        // 4
+        "J'ai tres tres peur ca c'est certain",    // 5
+        "",                                        // 6
+        "NOTE",                                    // 7
+        "",                                        // 8
+        "J'ai tres tres peur mais beaucoup moins", // 9
+        "",                                        // 10
+        "",                                        // 11
+      ];
+
+      expect(findEndOfCueBlock(vtt1, 2)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 3)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 4)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 5)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 6)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 7)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 8)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 9)).to.equal(10);
+      expect(findEndOfCueBlock(vtt1, 12)).to.equal(14);
+      expect(findEndOfCueBlock(vtt1, 13)).to.equal(14);
+      expect(findEndOfCueBlock(vtt1, 15)).to.equal(18);
+      expect(findEndOfCueBlock(vtt1, 16)).to.equal(18);
+      expect(findEndOfCueBlock(vtt1, 17)).to.equal(18);
+      expect(findEndOfCueBlock(vtt1, 19)).to.equal(23);
+      expect(findEndOfCueBlock(vtt1, 20)).to.equal(23);
+      expect(findEndOfCueBlock(vtt1, 21)).to.equal(23);
+      expect(findEndOfCueBlock(vtt1, 22)).to.equal(23);
+      expect(findEndOfCueBlock(vtt1, 24)).to.equal(28);
+      expect(findEndOfCueBlock(vtt1, 25)).to.equal(28);
+      expect(findEndOfCueBlock(vtt1, 26)).to.equal(28);
+      expect(findEndOfCueBlock(vtt1, 27)).to.equal(28);
+
+      expect(findEndOfCueBlock(vtt2, 2)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 3)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 4)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 5)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 6)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 7)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 8)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 9)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 10)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 11)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 12)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 13)).to.equal(15);
+      expect(findEndOfCueBlock(vtt2, 14)).to.equal(15);
+
+      expect(findEndOfCueBlock(vtt3, 4)).to.equal(7);
+      expect(findEndOfCueBlock(vtt3, 5)).to.equal(7);
+      expect(findEndOfCueBlock(vtt3, 6)).to.equal(7);
+      expect(findEndOfCueBlock(vtt3, 8)).to.equal(10);
+      expect(findEndOfCueBlock(vtt3, 9)).to.equal(10);
+
+      expect(findEndOfCueBlock(vtt4, 2)).to.equal(6);
+      expect(findEndOfCueBlock(vtt4, 3)).to.equal(6);
+      expect(findEndOfCueBlock(vtt4, 4)).to.equal(6);
+      expect(findEndOfCueBlock(vtt4, 5)).to.equal(6);
     });
   });
 });
