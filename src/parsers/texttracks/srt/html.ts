@@ -45,9 +45,8 @@ export default function parseSRTStringToHTML(
 
   for (let i = 0; i < lines.length; i++) {
     if (lines[i]) { // if not empty line or EOF
-      const startingI = i;
       const endOfCue = findEndOfCueBlock(lines, i);
-      cueBlocks.push(lines.slice(startingI, endOfCue));
+      cueBlocks.push(lines.slice(i, endOfCue));
       i = endOfCue;
     }
   }
