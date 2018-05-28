@@ -70,26 +70,26 @@ describe("webvtt - html - utils", () => {
 
   describe("isStartOfCueBlock", () => {
     it("should return false if called on a note block", () => {
-      expect(isStartOfCueBlock("NOTE SOMETHING")).to.equal(false);
+      expect(isStartOfCueBlock("NOTE SOMETHING", "")).to.equal(false);
     });
 
     it("should return false if called on a region block", () => {
-      expect(isStartOfCueBlock("REGION SOMETHING")).to.equal(false);
+      expect(isStartOfCueBlock("REGION SOMETHING", "")).to.equal(false);
     });
 
     it("should return false if called on a style block", () => {
-      expect(isStartOfCueBlock("STYLE SOMETHING")).to.equal(false);
+      expect(isStartOfCueBlock("STYLE SOMETHING", "")).to.equal(false);
     });
 
     it("should return false if called on an empty line", () => {
-      expect(isStartOfCueBlock("")).to.equal(false);
+      expect(isStartOfCueBlock("", "00:00:01:00 --> 00:00:02:00")).to.equal(false);
     });
 
     it("should return true for any other cases", () => {
-      expect(isStartOfCueBlock("1")).to.equal(true);
-      expect(isStartOfCueBlock("ababa abs")).to.equal(true);
-      expect(isStartOfCueBlock("a")).to.equal(true);
-      expect(isStartOfCueBlock(" ")).to.equal(true);
+      expect(isStartOfCueBlock("1", "00:00:01:00 --> 00:00:02:00")).to.equal(true);
+      expect(isStartOfCueBlock("ababa abs", "00:00:01:00 --> 00:00:02:00")).to.equal(true);
+      expect(isStartOfCueBlock("00:00:01:00 --> 00:00:02:00", "a")).to.equal(true);
+      expect(isStartOfCueBlock("00:00:01:00 --> 00:00:02:00", " ")).to.equal(true);
     });
   });
 
