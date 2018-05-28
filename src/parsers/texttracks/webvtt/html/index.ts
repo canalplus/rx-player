@@ -15,17 +15,17 @@
  */
 
 import log from "../../../../utils/log";
-import { findEndOfCueBlock } from "../cue-blocks";
+  import {
+    findEndOfCueBlock,
+    getFirstLineAfterHeader,
+    isStartOfCueBlock,
+    isStartOfStyleBlock,
+  } from "../utils";
 import formatCueLineToHTML from "./formatCueLineToHTML";
 import parseStyleBlock, {
   IStyleElement,
 } from "./parseStyleBlock";
 import parseTimeCode from "./parseTimeCode";
-import {
-  getFirstLineAfterHeader,
-  isStartOfCueBlock,
-  isStartOfStyleBlock,
-} from "./utils";
 
 export interface IVTTHTMLCue {
   start : number;
@@ -81,7 +81,7 @@ export default function parseWebVTT(
   // Parse cues, format and apply style.
   for (let i = firstLineAfterHeader; i < linified.length; i++) {
     if (!(linified[i].length === 0)) {
-      if (isStartOfCueBlock(linified[i], linified[i + 1])) {
+      if (isStartOfCueBlock(linified, i)) {
         const startOfCueBlock = i;
 
         const endOfCue = findEndOfCueBlock(linified, i);
