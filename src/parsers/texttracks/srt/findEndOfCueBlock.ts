@@ -1,4 +1,3 @@
-
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -16,43 +15,59 @@
  */
 
 /**
- * Returns true if the given lines looks like the beginning of a cue.
- * You should provide to this function only lines following "empty" lines.
- * @param {string} line
- * @returns {Boolean}
- */
-function isStartOfCueBlock(lines : string[], index: number) : boolean {
-  const firstLine = lines[index];
-  const secondLine = lines[index + 1];
-  if (firstLine.indexOf("-->") > -1 || secondLine.indexOf("-->") > -1) {
-    return true;
-  }
-  return false;
-}
-
-/**
- * Find end of current SRT cue block.
- * @param {Array<string>} linified - Whole srt file. Line by line.
- * @param {number} index - Index in `linified` of the first line within the
+ * Returns the first line that is not apart of the given cue block.
+ * The index given can be anywhere in a known cue block.
+ * @param {Array<string>} linified - Whole srt. Line by line.
+ * @param {number} startIndex - Index in `linified` of the first line within the
  * block.
  * @returns {number}
  */
 export default function findEndOfCueBlock(
   linified: string[],
-  startOfCueBlock: number
+  startIndex: number
 ): number {
-  let endOfCue = startOfCueBlock + 1;
+  const length = linified.length;
+  let firstEmptyLineIndex = startIndex + 1;
+
   // continue incrementing i until either:
-  //   - empty line
-  //   - end
-  while (linified[endOfCue]) {
-    endOfCue++;
+  //   - an empty line
+  //   - the end
+  while (linified[firstEmptyLineIndex]) {
+    firstEmptyLineIndex++;
   }
-  if (
-      linified[endOfCue + 1] !== undefined &&
-      !isStartOfCueBlock(linified, endOfCue + 1)
-    ) {
-    endOfCue = findEndOfCueBlock(linified, endOfCue);
+
+  if (firstEmptyLineIndex >= length) {
+    // text of the cue goes until the end
+    return length;
   }
-  return endOfCue;
+
+  let nextLineWithText = firstEmptyLineIndex + 1;
+  while (nextLineWithText < length && linified[nextLineWithText] === "") {
+    nextLineWithText++;
+  }
+
+  if (nextLineWithText >= length) {
+    // we only have empty lines until the end
+    // empty lines are not part of a cue block, returns the first empty one
+    return firstEmptyLineIndex;
+  }
+
+  if (linified[nextLineWithText].indexOf("-->") >= 0) {
+    // nextLineWithText leads to the timing of the next cue block
+    // empty lines are not part of a cue block, returns the first empty one
+    return firstEmptyLineIndex;
+  } else if (nextLineWithText + 1 >= length) {
+    // let the last line, which contains some text, be part of the current cue
+    return length;
+  } else if (linified[nextLineWithText + 1].indexOf("-->") >= 0) {
+    // nextLineWithText is the cue identifier of the next cue block
+    // empty lines are not part of a cue block, returns the first empty one
+    return firstEmptyLineIndex;
+  } else {
+    // the text we encountered at nextLineWithText was separated by blank lines.
+    // This is not authorized by the specification, but we still include it
+    // in the current block, for format error resilience.
+    // Loop again from that point
+    return findEndOfCueBlock(linified, nextLineWithText);
+  }
 }
