@@ -21,7 +21,9 @@
  * @param {string} line
  * @returns {Boolean}
  */
-function isStartOfCueBlock(firstLine : string, secondLine: string) : boolean {
+function isStartOfCueBlock(lines : string[], index: number) : boolean {
+  const firstLine = lines[index];
+  const secondLine = lines[index + 1];
   if (firstLine.indexOf("-->") > -1 || secondLine.indexOf("-->") > -1) {
     return true;
   }
@@ -44,7 +46,10 @@ export default function findEndOfCueBlock(
   while (linified[endOfCue]) {
     endOfCue++;
   }
-  if (isStartOfCueBlock(linified[endOfCue + 1], linified[endOfCue + 2])) {
+  if (
+      linified[endOfCue + 1] !== undefined &&
+      !isStartOfCueBlock(linified, endOfCue + 1)
+    ) {
     endOfCue = findEndOfCueBlock(linified, endOfCue);
   }
   return endOfCue;

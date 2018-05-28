@@ -21,7 +21,7 @@ import { makeCue } from "../../../compat/index";
 import {
   findEndOfCueBlock,
   isStartOfCueBlock,
-} from "./cue-blocks";
+} from "./utils";
 
 // Simple VTT to VTTCue parser:
 // Just parse cues and associated settings.
@@ -48,7 +48,7 @@ export default function parseVTTStringToVTTCues(
   const cueBlocks : string[][] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    if (isStartOfCueBlock(lines[i], lines[i + 1])) {
+    if (isStartOfCueBlock(lines, i)) {
       const startingI = i;
 
       const endOfCue = findEndOfCueBlock(lines, i);
