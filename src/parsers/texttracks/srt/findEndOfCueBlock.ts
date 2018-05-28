@@ -32,8 +32,10 @@ function isStartOfCueBlock(lines : string[], index: number) : boolean {
 
 /**
  * Find end of current SRT cue block.
- * @param {Array<string>} linified
- * @param {number} index
+ * @param {Array<string>} linified - Whole srt file. Line by line.
+ * @param {number} index - Index in `linified` of the first line within the
+ * block.
+ * @returns {number}
  */
 export default function findEndOfCueBlock(
   linified: string[],
