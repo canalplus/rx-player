@@ -19,6 +19,7 @@
 // Done for fun. Understand <b>, <i>, <u> and <font color="#ff0000" /> type
 // of tags.
 
+import findEndOfCue from "../utils/findEndOfCue";
 import parseTimestamp from "./parseTimestamp";
 
 export interface ISRTHTMLCue {
@@ -45,12 +46,9 @@ export default function parseSRTStringToHTML(
   for (let i = 0; i < lines.length; i++) {
     if (lines[i]) {
       const startingI = i;
-      i++;
-
-      while (lines[i]) {
-        i++;
-      }
-      cueBlocks.push(lines.slice(startingI, i));
+      const endOfCue = findEndOfCue(lines, i, () => true);
+      cueBlocks.push(lines.slice(startingI, endOfCue));
+      i = endOfCue;
     }
   }
 
