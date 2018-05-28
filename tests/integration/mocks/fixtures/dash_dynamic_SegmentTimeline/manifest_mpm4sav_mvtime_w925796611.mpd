@@ -5,11 +5,11 @@
      xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
      profiles="urn:mpeg:dash:profile:isoff-live:2011"
      type="dynamic"
-     minimumUpdatePeriod="PT8.176S" 
-     publishTime="2017-05-31T16:43:32Z" 
-     availabilityStartTime="2017-04-26T16:48:11Z" 
+     minimumUpdatePeriod="PT8.176S"
+     publishTime="2017-05-31T16:43:32Z"
+     availabilityStartTime="2017-04-26T16:48:11Z"
      timeShiftBufferDepth="PT50.0S"
-     suggestedPresentationDelay="PT15.0S" 
+     suggestedPresentationDelay="PT15.0S"
      minBufferTime="PT6.0S">
 <ProgramInformation>
     <Title>bigbuckbunny</Title>
