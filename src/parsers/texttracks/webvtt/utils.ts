@@ -73,11 +73,21 @@ function isStartOfCueBlock(lines : string[], index : number) : boolean {
   //   - start of a style
   // Anything else whose first or second line is a timestamp line is a cue.
   const firstLine = lines[index];
+  if (
+    !firstLine ||
+    isStartOfStyleBlock(firstLine) ||
+    isStartOfRegionBlock(firstLine) ||
+    isStartOfRegionBlock(firstLine)
+  ) {
+    return false;
+  }
+
+  if (firstLine.indexOf("-->") >= 0) {
+    return true;
+  }
+
   const secondLine = lines[index + 1];
-  return (
-    !(!firstLine || !secondLine || /^(NOTE)|(REGION)|(STYLE)($| |\t)/.test(firstLine)) &&
-    (firstLine.indexOf("-->") > -1 || secondLine.indexOf("-->") > -1)
-  );
+  return !!secondLine && secondLine.indexOf("-->") >= 0;
 }
 
 /**
