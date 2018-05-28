@@ -17,6 +17,11 @@
 /**
  * Returns the first line that is not apart of the given cue block.
  * The index given can be anywhere in a known cue block.
+ *
+ * This function is extra-resilient due to observed real-life malformed
+ * subtitles.
+ * Basically, it allows some deviation from the specification as long as the
+ * intent is pretty clear.
  * @param {Array<string>} linified - Whole srt. Line by line.
  * @param {number} startIndex - Index in `linified` of the first line within the
  * block.

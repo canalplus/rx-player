@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import findEndOfCueBlock from "../findEndOfCueBlock";
 
-describe("srt - findEndOfCueBlock", () => {
+describe("parsers - srt - findEndOfCueBlock", () => {
   it.only("should return an index immediately after the end of a cue block", () => {
     const srt1 = [
       "112",                             // 0

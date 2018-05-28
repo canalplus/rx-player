@@ -40,10 +40,8 @@ export default function parseSRTStringToVTTCues(
 
   for (let i = 0; i < lines.length; i++) {
     if (lines[i]) {
-      const startingI = i;
-
       const endOfCue = findEndOfCueBlock(lines, i);
-      cueBlocks.push(lines.slice(startingI, endOfCue));
+      cueBlocks.push(lines.slice(i, endOfCue));
       i = endOfCue;
     }
   }
