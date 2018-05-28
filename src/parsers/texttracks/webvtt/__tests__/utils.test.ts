@@ -21,9 +21,9 @@ import {
   isStartOfNoteBlock,
   isStartOfRegionBlock,
   isStartOfStyleBlock,
-} from "../../utils";
+} from "../utils";
 
-describe("webvtt - html - utils", () => {
+describe("parsers - webvtt - utils", () => {
   describe("getFirstLineAfterHeader", () => {
     it("should give the second line after the WEBVTT one if no header", () => {
       const webvttFile = [
@@ -87,7 +87,8 @@ describe("webvtt - html - utils", () => {
 
     it("should return true for any other cases", () => {
       expect(isStartOfCueBlock(["1", "00:00:01:00 --> 00:00:02:00"], 0)).to.equal(true);
-      expect(isStartOfCueBlock(["ababa abs", "00:00:01:00 --> 00:00:02:00"], 0)).to.equal(true);
+      expect(isStartOfCueBlock(["ababa abs", "00:00:01:00 --> 00:00:02:00"], 0))
+        .to.equal(true);
       expect(isStartOfCueBlock(["00:00:01:00 --> 00:00:02:00", "a"], 0)).to.equal(true);
       expect(isStartOfCueBlock(["00:00:01:00 --> 00:00:02:00", " "], 0)).to.equal(true);
     });
