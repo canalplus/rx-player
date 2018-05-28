@@ -77,7 +77,7 @@ function isStartOfCueBlock(lines : string[], index : number) : boolean {
     !firstLine ||
     isStartOfStyleBlock(firstLine) ||
     isStartOfRegionBlock(firstLine) ||
-    isStartOfRegionBlock(firstLine)
+    isStartOfNoteBlock(firstLine)
   ) {
     return false;
   }
