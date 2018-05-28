@@ -20,26 +20,26 @@
  * @param {Array<string>} linified
  * @param {number} index
  */
-export default function findEndOfCue(
+export default function findEndOfCueBlock(
     linified: string[],
-    index: number,
+    startOfCueBlock: number,
     isStartOfCueBlock: (line: string) => boolean
-) {
-    let j = index + 1;
+): number {
+    let endOfCue = startOfCueBlock + 1;
     // continue incrementing i until either:
     //   - empty line
     //   - end
-    while (linified[j]) {
-      j++;
+    while (linified[endOfCue]) {
+      endOfCue++;
     }
     if (
-      isStartOfCueBlock(linified[j + 1]) &&
+      isStartOfCueBlock(linified[endOfCue + 1]) &&
       (
-        linified[j + 1].indexOf("-->") === -1 &&
-        linified[j + 2].indexOf("-->") === -1
+        linified[endOfCue + 1].indexOf("-->") === -1 &&
+        linified[endOfCue + 2].indexOf("-->") === -1
       )
     ) {
-      j = findEndOfCue(linified, j, isStartOfCueBlock);
+      endOfCue = findEndOfCueBlock(linified, endOfCue, isStartOfCueBlock);
     }
-    return j;
+    return endOfCue;
 }

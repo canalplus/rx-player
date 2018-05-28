@@ -18,7 +18,7 @@ import arrayIncludes from "../../../utils/array-includes";
 
 import { makeCue } from "../../../compat/index";
 
-import findEndOfCue from "../utils/findEndOfCue";
+import findEndOfCueBlock from "../utils/findEndOfCueBlock";
 
 // Simple VTT to VTTCue parser:
 // Just parse cues and associated settings.
@@ -48,7 +48,7 @@ export default function parseVTTStringToVTTCues(
     if (isStartOfCueBlock(lines[i])) {
       const startingI = i;
 
-      const endOfCue = findEndOfCue(lines, i, isStartOfCueBlock);
+      const endOfCue = findEndOfCueBlock(lines, i, isStartOfCueBlock);
       cueBlocks.push(lines.slice(startingI, endOfCue));
       i = endOfCue;
     } else if (lines[i]) {
