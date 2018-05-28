@@ -1,15 +1,40 @@
 /* eslint-env node */
 
+const ClosureCompiler = require("webpack-closure-compiler");
 const webpack = require("webpack");
+
+const RXP_ENV = process.env.RXP_ENV || "production";
+const shouldMinify = !!process.env.RXP_MINIFY;
 const isBarebone = process.env.RXP_BAREBONE === "true";
 
+if (["development", "production"].indexOf(RXP_ENV) < 0) {
+  throw new Error("unknown RXP_ENV " + RXP_ENV);
+}
+
+const isDevMode = RXP_ENV === "development";
+
 module.exports = {
-  mode: "development",
+  mode: isDevMode ? "development" : "production",
   entry: "./src/exports.ts",
   output: {
     library: "RxPlayer",
     libraryTarget: "umd",
-    filename: "rx-player.js",
+    filename: shouldMinify ? "rx-player.min.js" : "rx-player.js",
+  },
+  optimization: {
+    minimizer: shouldMinify ? [
+      new ClosureCompiler({
+        options: {
+          compilation_level: "SIMPLE",
+          language_in: "ES5",
+          warning_level: "VERBOSE",
+        },
+      }),
+    ] : [],
+  },
+  performance: {
+    maxEntrypointSize: shouldMinify ? 400000 : 1500000,
+    maxAssetSize: shouldMinify ? 400000 : 1500000,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
@@ -77,9 +102,11 @@ module.exports = {
         //   process.env.RXP_BIF === "true" :
         //   process.env.RXP_BIF !== "false",
       },
-      __DEV__: true,
-      __LOGGER_LEVEL__: "\"INFO\"",
-      "process.env": { NODE_ENV: JSON.stringify("development") },
+      __DEV__: isDevMode,
+      __LOGGER_LEVEL__: isDevMode ? "\"INFO\"" : "\"DEBUG\"",
+      "process.env": {
+        NODE_ENV: JSON.stringify(isDevMode ? "development" : "production"),
+      },
     }),
   ],
   node: {

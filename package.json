@@ -60,11 +60,11 @@
   },
   "scripts": {
     "build": "webpack --progress --config tools/webpack.config.js",
-    "build:min": "webpack --progress --config tools/webpack-prod.config.js",
+    "build:min": "cross-env RXP_MINIFY=true webpack --progress --config tools/webpack.config.js",
     "build:watch": "webpack --progress --config tools/webpack.config.js -w",
     "check": "npm run types && npm run lint && npm run test",
     "demo": "webpack --progress --config tools/webpack-demo.config.js",
-    "demo:min": "webpack --progress --config tools/webpack-demo-prod.config.js",
+    "demo:min": "cross-env RXP_MINIFY=true webpack --progress --config tools/webpack-demo.config.js",
     "demo:watch": "webpack --progress --config tools/webpack-demo.config.js -w",
     "doc": "rm -rf doc/generated; node tools/generate-doc/index.js doc/ doc/generated",
     "info": "npm-scripts-info",
