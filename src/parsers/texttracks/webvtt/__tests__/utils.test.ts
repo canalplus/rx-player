@@ -249,7 +249,7 @@ describe("parsers - webvtt - utils", () => {
   });
 
   describe("findEndOfCueBlock", () => {
-    it.only("should return an index immediately after the end of a cue block", () => {
+    it("should return an index immediately after the end of a cue block", () => {
       const vtt1 = [
         "WEBVTT",                          // 0
         "",                                // 1
