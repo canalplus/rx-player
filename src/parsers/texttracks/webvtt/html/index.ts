@@ -15,6 +15,7 @@
  */
 
 import log from "../../../../utils/log";
+import findEndOfCue from "../../utils/findEndOfCue";
 import formatCueLineToHTML from "./formatCueLineToHTML";
 import parseStyleBlock, {
   IStyleElement,
@@ -82,18 +83,14 @@ export default function parseWebVTT(
     if (!(linified[i].length === 0)) {
       if (isStartOfCueBlock(linified[i])) {
         const startOfCueBlock = i;
-        i++;
-        // continue incrementing i until either:
-        //   - empty line
-        //   - end of file
-        while (linified[i]) {
-          i++;
-        }
-        const cueBlock = linified.slice(startOfCueBlock, i);
+
+        const endOfCue = findEndOfCue(linified, i, isStartOfCueBlock);
+        const cueBlock = linified.slice(startOfCueBlock, endOfCue);
         const cue = parseCue(cueBlock, timeOffset, styleElements);
         if (cue) {
           cuesArray.push(cue);
         }
+        i = endOfCue;
       } else {
         while (linified[i]) {
           i++;
@@ -174,7 +171,7 @@ function parseCue(
     spanElement.setAttributeNode(attr);
   }
 
-  while (cueBlock[index]) {
+  while (cueBlock[index] !== undefined) {
 
     if (spanElement.childNodes.length !== 0) {
       spanElement.appendChild(document.createElement("br"));
