@@ -18,7 +18,10 @@ import arrayIncludes from "../../../utils/array-includes";
 
 import { makeCue } from "../../../compat/index";
 
-import findEndOfCueBlock from "../utils/findEndOfCueBlock";
+import {
+  findEndOfCueBlock,
+  isStartOfCueBlock,
+} from "./cue-blocks";
 
 // Simple VTT to VTTCue parser:
 // Just parse cues and associated settings.
@@ -45,10 +48,10 @@ export default function parseVTTStringToVTTCues(
   const cueBlocks : string[][] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    if (isStartOfCueBlock(lines[i])) {
+    if (isStartOfCueBlock(lines[i], lines[i + 1])) {
       const startingI = i;
 
-      const endOfCue = findEndOfCueBlock(lines, i, isStartOfCueBlock);
+      const endOfCue = findEndOfCueBlock(lines, i);
       cueBlocks.push(lines.slice(startingI, endOfCue));
       i = endOfCue;
     } else if (lines[i]) {
@@ -69,25 +72,6 @@ export default function parseVTTStringToVTTCues(
     }
   }
   return cues;
-}
-
-/**
- * Returns true if the line given looks like the beginning of a cue.
- * You should provide to this function only lines following "empty" lines.
- * @param {string} line
- * @returns {Boolean}
- */
-function isStartOfCueBlock(line : string) : boolean {
-  // checked cases:
-  //   - empty lines
-  //   - start of a comment
-  //   - start of a region
-  //   - start of a style
-  // Anything else should be a cue. TODO re-check with the spec
-  if (!line || /^(NOTE)|(REGION)|(STYLE)($| |\t)/.test(line)) {
-    return false;
-  }
-  return true;
 }
 
 /**

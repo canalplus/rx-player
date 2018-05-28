@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../utils/log";
-import findEndOfCueBlock from "../../utils/findEndOfCueBlock";
+import { findEndOfCueBlock } from "../cue-blocks";
 import formatCueLineToHTML from "./formatCueLineToHTML";
 import parseStyleBlock, {
   IStyleElement,
@@ -81,10 +81,10 @@ export default function parseWebVTT(
   // Parse cues, format and apply style.
   for (let i = firstLineAfterHeader; i < linified.length; i++) {
     if (!(linified[i].length === 0)) {
-      if (isStartOfCueBlock(linified[i])) {
+      if (isStartOfCueBlock(linified[i], linified[i + 1])) {
         const startOfCueBlock = i;
 
-        const endOfCue = findEndOfCueBlock(linified, i, isStartOfCueBlock);
+        const endOfCue = findEndOfCueBlock(linified, i);
         const cueBlock = linified.slice(startOfCueBlock, endOfCue);
         const cue = parseCue(cueBlock, timeOffset, styleElements);
         if (cue) {
