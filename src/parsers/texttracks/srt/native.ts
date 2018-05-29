@@ -18,6 +18,7 @@
 // Heavily inspired from the WebVTT implementation
 
 import { makeCue } from "../../../compat/index";
+import findEndOfCueBlock from "./findEndOfCueBlock";
 import parseTimestamp from "./parseTimestamp";
 
 /**
@@ -39,13 +40,9 @@ export default function parseSRTStringToVTTCues(
 
   for (let i = 0; i < lines.length; i++) {
     if (lines[i]) {
-      const startingI = i;
-      i++;
-
-      while (lines[i]) {
-        i++;
-      }
-      cueBlocks.push(lines.slice(startingI, i));
+      const endOfCue = findEndOfCueBlock(lines, i);
+      cueBlocks.push(lines.slice(i, endOfCue));
+      i = endOfCue;
     }
   }
 
