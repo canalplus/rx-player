@@ -109,7 +109,6 @@ function findEndOfCueBlock(
   linified : string[],
   startOfCueBlock : number
 ) : number {
-  const length = linified.length;
   let firstEmptyLineIndex = startOfCueBlock + 1;
 
   // continue incrementing i until either:
@@ -118,37 +117,7 @@ function findEndOfCueBlock(
   while (linified[firstEmptyLineIndex]) {
     firstEmptyLineIndex++;
   }
-
-  if (firstEmptyLineIndex >= length) {
-    // text of the cue goes until the end
-    return length;
-  }
-
-  let nextLineWithText = firstEmptyLineIndex + 1;
-  while (nextLineWithText < length && linified[nextLineWithText] === "") {
-    nextLineWithText++;
-  }
-
-  if (nextLineWithText >= length) {
-    // we only have empty lines until the end
-    // empty lines are not part of a cue block, returns the first empty one
-    return firstEmptyLineIndex;
-  } else if (isStartOfCueBlock(linified, nextLineWithText)) {
-    // nextLineWithText leads to the timing of the next cue block
-    // empty lines are not part of a cue block, returns the first empty one
-    return firstEmptyLineIndex;
-  } else if (isStartOfNoteBlock(linified, nextLineWithText)) {
-    return firstEmptyLineIndex;
-  } else if (nextLineWithText + 1 >= length) {
-    // let the last line, which contains some text, be part of the current cue
-    return length;
-  } else {
-    // the text we encountered at nextLineWithText was separated by blank lines.
-    // This is not authorized by the specification, but we still include it
-    // in the current block, for format error resilience.
-    // Loop again from that point
-    return findEndOfCueBlock(linified, nextLineWithText);
-  }
+  return firstEmptyLineIndex;
 }
 
 export {
