@@ -36,8 +36,11 @@ function getFirstLineAfterHeader(linified : string[]) : number {
  * @param {string} text
  * @returns {Boolean}
  */
-function isStartOfStyleBlock(text : string) : boolean {
-  return /^STYLE( .*)?$/g.test(text);
+function isStartOfStyleBlock(lines : string[], index : number) : boolean {
+  return !!lines[index] && /^STYLE( .*)?$/g.test(lines[index]) &&
+    // A cue identifer can also contain "STYLe". Check that we have no timings
+    // on the second line
+    (!lines[index + 1] || lines[index + 1].indexOf("-->") < 0);
 }
 
 /**
@@ -45,8 +48,11 @@ function isStartOfStyleBlock(text : string) : boolean {
  * @param {string} text
  * @returns {Boolean}
  */
-function isStartOfNoteBlock(text : string) : boolean {
-  return /^NOTE( .*)?$/g.test(text);
+function isStartOfNoteBlock(lines : string[], index : number) : boolean {
+  return !!lines[index] && /^NOTE( .*)?$/g.test(lines[index]) &&
+    // A cue identifer can also contain "NOTE". Check that we have no timings
+    // on the second line
+    (!lines[index + 1] || lines[index + 1].indexOf("-->") < 0);
 }
 
 /**
@@ -54,8 +60,11 @@ function isStartOfNoteBlock(text : string) : boolean {
  * @param {string} text
  * @returns {Boolean}
  */
-function isStartOfRegionBlock(text : string) : boolean {
-  return /^REGION( .*)?$/g.test(text);
+function isStartOfRegionBlock(lines : string[], index : number) : boolean {
+  return !!lines[index] && /^REGION( .*)?$/g.test(lines[index]) &&
+    // A cue identifer can also contain "REGION". Check that we have no timings
+    // on the second line
+    (!lines[index + 1] || lines[index + 1].indexOf("-->") < 0);
 }
 
 /**
@@ -75,9 +84,9 @@ function isStartOfCueBlock(lines : string[], index : number) : boolean {
   const firstLine = lines[index];
   if (
     !firstLine ||
-    isStartOfStyleBlock(firstLine) ||
-    isStartOfRegionBlock(firstLine) ||
-    isStartOfNoteBlock(firstLine)
+    isStartOfStyleBlock(lines, index) ||
+    isStartOfRegionBlock(lines, index) ||
+    isStartOfNoteBlock(lines, index)
   ) {
     return false;
   }
@@ -128,7 +137,7 @@ function findEndOfCueBlock(
     // nextLineWithText leads to the timing of the next cue block
     // empty lines are not part of a cue block, returns the first empty one
     return firstEmptyLineIndex;
-  } else if (isStartOfNoteBlock(linified[nextLineWithText])) {
+  } else if (isStartOfNoteBlock(linified, nextLineWithText)) {
     return firstEmptyLineIndex;
   } else if (nextLineWithText + 1 >= length) {
     // let the last line, which contains some text, be part of the current cue
