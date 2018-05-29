@@ -62,7 +62,7 @@ export default function parseWebVTT(
   const firstLineAfterHeader = getFirstLineAfterHeader(linified);
 
   for (let i = firstLineAfterHeader; i < linified.length; i++) {
-    if (isStartOfStyleBlock(linified[i])) {
+    if (isStartOfStyleBlock(linified, i)) {
       const startOfStyleBlock = i;
       i++;
 
