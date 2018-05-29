@@ -124,16 +124,14 @@ export default function(
     },
 
     parser(
-      { response, url } : IManifestParserArguments<Document|string>
+      { response, url: reqURL } : IManifestParserArguments<Document|string>
     ) : IManifestParserObservable {
+      const url = response.url == null ? reqURL : response.url;
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
       const manifest = smoothManifestParser(data, url);
-      return Observable.of({
-        manifest,
-        url: response.url,
-      });
+      return Observable.of({ manifest, url });
     },
   };
 
