@@ -15,16 +15,17 @@
  */
 
 import log from "../../../../utils/log";
+import {
+  findEndOfCueBlock,
+  getFirstLineAfterHeader,
+  isStartOfCueBlock,
+  isStartOfStyleBlock,
+} from "../utils";
 import formatCueLineToHTML from "./formatCueLineToHTML";
 import parseStyleBlock, {
   IStyleElement,
 } from "./parseStyleBlock";
 import parseTimeCode from "./parseTimeCode";
-import {
-  getFirstLineAfterHeader,
-  isStartOfCueBlock,
-  isStartOfStyleBlock,
-} from "./utils";
 
 export interface IVTTHTMLCue {
   start : number;
@@ -61,7 +62,7 @@ export default function parseWebVTT(
   const firstLineAfterHeader = getFirstLineAfterHeader(linified);
 
   for (let i = firstLineAfterHeader; i < linified.length; i++) {
-    if (isStartOfStyleBlock(linified[i])) {
+    if (isStartOfStyleBlock(linified, i)) {
       const startOfStyleBlock = i;
       i++;
 
@@ -80,20 +81,14 @@ export default function parseWebVTT(
   // Parse cues, format and apply style.
   for (let i = firstLineAfterHeader; i < linified.length; i++) {
     if (!(linified[i].length === 0)) {
-      if (isStartOfCueBlock(linified[i])) {
-        const startOfCueBlock = i;
-        i++;
-        // continue incrementing i until either:
-        //   - empty line
-        //   - end of file
-        while (linified[i]) {
-          i++;
-        }
-        const cueBlock = linified.slice(startOfCueBlock, i);
+      if (isStartOfCueBlock(linified, i)) {
+        const endOfCue = findEndOfCueBlock(linified, i);
+        const cueBlock = linified.slice(i, endOfCue);
         const cue = parseCue(cueBlock, timeOffset, styleElements);
         if (cue) {
           cuesArray.push(cue);
         }
+        i = endOfCue;
       } else {
         while (linified[i]) {
           i++;
@@ -174,7 +169,7 @@ function parseCue(
     spanElement.setAttributeNode(attr);
   }
 
-  while (cueBlock[index]) {
+  while (cueBlock[index] !== undefined) {
 
     if (spanElement.childNodes.length !== 0) {
       spanElement.appendChild(document.createElement("br"));
