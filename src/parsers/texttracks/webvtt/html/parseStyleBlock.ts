@@ -33,12 +33,20 @@ export default function parseStyleBlock(styleBlock : string[]) : IStyleElement[]
     isGlobalStyle : boolean;
     className? : string;
   }> = [];
-  if (styleBlock[index].match(/::cue {/)) {
+
+  if (styleBlock.length < 2) {
+    return [];
+  }
+
+  if (styleBlock[1].match(/::cue {/)) {
     classNames.push({ isGlobalStyle: true });
     index++;
   } else {
     let cueClassLine;
-    while (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)) {
+    while (
+      styleBlock[index] &&
+      (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
+    ) {
       classNames.push({
         className: cueClassLine[1],
         isGlobalStyle: false,
@@ -49,8 +57,10 @@ export default function parseStyleBlock(styleBlock : string[]) : IStyleElement[]
 
   let styleContent = "";
 
-  while (!(styleBlock[index].match(/}/)
-        || styleBlock[index].length === 0)) {
+  while (
+    styleBlock[index] &&
+    (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
+  ) {
     styleContent +=  styleBlock[index];
     index++;
   }

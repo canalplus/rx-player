@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "../../../utils/array-includes";
-
 import { makeCue } from "../../../compat/index";
-
-import {
-  findEndOfCueBlock,
-  isStartOfCueBlock,
-} from "./utils";
+import arrayIncludes from "../../../utils/array-includes";
+import getCueBlocks from "./getCueBlocks";
+import parseCueBlock from "./parseCueBlock";
+import { getFirstLineAfterHeader } from "./utils";
 
 // Simple VTT to VTTCue parser:
 // Just parse cues and associated settings.
@@ -45,162 +42,36 @@ export default function parseVTTStringToVTTCues(
     throw new Error("Can't parse WebVTT: Invalid file.");
   }
 
-  const cueBlocks : string[][] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    if (isStartOfCueBlock(lines, i)) {
-      const endOfCue = findEndOfCueBlock(lines, i);
-      cueBlocks.push(lines.slice(i, endOfCue));
-      i = endOfCue;
-    } else if (lines[i]) {
-      // continue incrementing i until either:
-      //   - empty line
-      //   - end
-      while (lines[i]) {
-        i++;
-      }
-    }
-  }
-
+  const firstLineAfterHeader = getFirstLineAfterHeader(lines);
+  const cueBlocks : string[][] = getCueBlocks(lines, firstLineAfterHeader);
   const cues : Array<VTTCue|TextTrackCue> = [];
   for (let i = 0; i < cueBlocks.length; i++) {
-    const cue = parseCue(cueBlocks[i], timeOffset);
-    if (cue) {
-      cues.push(cue);
+    const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
+    if (cueObject != null) {
+      const nativeCue = toNativeCue(cueObject);
+      if (nativeCue != null) {
+        if (nativeCue instanceof VTTCue) {
+          setSettingsOnCue(cueObject.settings, nativeCue);
+        }
+        cues.push(nativeCue);
+      }
     }
   }
   return cues;
 }
 
 /**
- * Parse cue block into a cue.
- * @param {Array.<string>} cueLines
- * @param {Number} timeOffset
- * @returns {TextTrackCue|VTTCue}
+ * @param {Object} cue Object
+ * @returns {TextTrackCue|VTTCue|null}
  */
-function parseCue(cueLines : string[], timeOffset : number) : TextTrackCue|VTTCue|null {
-  const timingRegexp = /-->/;
-  let timeString;
-  let payloadLines;
-
-  if (!timingRegexp.test(cueLines[0])) {
-    if (!timingRegexp.test(cueLines[1])) {
-      // not a cue
-      return null;
-    }
-    timeString = cueLines[1];
-    payloadLines = cueLines.slice(2, cueLines.length);
-  } else {
-    timeString = cueLines[0];
-    payloadLines = cueLines.slice(1, cueLines.length);
-  }
-
-  const timeAndSettings = parseTimeAndSettings(timeString);
-  if (!timeAndSettings) {
-    return null;
-  }
-
-  const { start, end, settings } = timeAndSettings;
-  const payload = payloadLines.join("\n");
-  const cue = makeCue(start + timeOffset, end + timeOffset, payload);
-  if (cue && cue instanceof VTTCue) {
-    setSettingsOnCue(settings, cue);
-  }
-
-  return cue;
-}
-
-/**
- * Parse a single WEBVTT timestamp into seconds
- * @param {string} timestampString
- * @returns {Number}
- */
-function parseTimestamp(timestampString : string) : number|undefined {
-  const splittedTS = timestampString.split(":");
-  if (splittedTS.length === 3) {
-    const hours = parseInt(splittedTS[0], 10);
-    const minutes = parseInt(splittedTS[1], 10);
-    const seconds = parseFloat(splittedTS[2]);
-    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-      return undefined;
-    }
-    return hours * 60 * 60 + minutes * 60 + seconds;
-  } else if (splittedTS.length === 2) {
-    const minutes = parseInt(splittedTS[0], 10);
-    const seconds = parseFloat(splittedTS[1]);
-    if (isNaN(minutes) || isNaN(seconds)) {
-      return undefined;
-    }
-    return minutes * 60 + seconds;
-  }
-}
-
-/**
- * Parse the settings part of a cue, into key-value object.
- * @param {string} settingsString
- * @returns {Object}
- */
-function parseSettings(
-  settingsString : string
-) : IDictionary<string> {
-  const splittedSettings = settingsString.split(/ |\t/);
-  return splittedSettings.reduce<IDictionary<string>>((
-    acc : IDictionary<string>,
-    setting : string
-  ) => {
-    const splittedSetting = setting.split(":");
-    if (splittedSetting.length === 2) {
-      acc[splittedSetting[0]] = splittedSetting[1];
-    }
-    return acc;
-  }, {});
-}
-
-/**
- * Parse the line containing the timestamp and settings in a cue.
- * The returned object has the following properties:
- *   - start {Number}: start of the cue, in seconds
- *   - end {Number}: end of the cue, in seconds
- *   - settings {Object}: settings for the cue as a key-value object.
- * @param {string} timeString
- * @returns {Object|null}
- */
-function parseTimeAndSettings(
-  timeString : string
-) : {
+function toNativeCue(cueObj : {
   start : number;
   end : number;
-  settings : { [settingName : string ] : string };
-}|null {
-  /*
-   * RegExp for the timestamps + settings line.
-   *
-   * Capture groups:
-   *   1 -> start timestamp
-   *   2 -> end timestamp
-   *   3 - settings
-   * @type {RegExp}
-   */
-  const lineRegex = /^([\d:.]+)[ |\t]+-->[ |\t]+([\d:.]+)[ |\t]*(.*)$/;
-
-  const matches = timeString.match(lineRegex);
-  if (!matches) {
-    return null;
-  }
-
-  const start = parseTimestamp(matches[1]);
-  const end = parseTimestamp(matches[2]);
-  if (start == null || end == null) {
-    return null;
-  }
-
-  const settings = parseSettings(matches[3]);
-
-  return {
-    start,
-    end,
-    settings,
-  };
+  payload : string[];
+}) : VTTCue|TextTrackCue|null {
+  const { start, end, payload } = cueObj;
+  const text = payload.join("\n");
+  return makeCue(start, end, text);
 }
 
 /**
@@ -281,7 +152,8 @@ function setSettingsOnCue(
 
   if (
     settings.align &&
-    arrayIncludes(["start", "center", "end", "left"], settings.align)) {
+    arrayIncludes(["start", "center", "end", "left"], settings.align)
+  ) {
     cue.align  = settings.align;
   }
 }

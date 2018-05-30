@@ -86,7 +86,9 @@ export default function formatCueLineToHTML(
           if (classIndexes.length !== 0) { // If style must be applied
             const attr = document.createAttribute("style");
             classIndexes.forEach(index => {
-              attr.value += styleElements[index].styleContent;
+              if (styleElements[index]) {
+                attr.value += styleElements[index].styleContent;
+              }
             });
             const nameClass = arrayIncludes(HTMLTags, mainTag) ? mainTag : "span";
             nodeWithStyle = document.createElement(nameClass);
