@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-import log from "../../../../utils/log";
-import {
-  findEndOfCueBlock,
-  getFirstLineAfterHeader,
-  isStartOfCueBlock,
-  isStartOfStyleBlock,
-} from "../utils";
+import getCueBlocks from "../getCueBlocks";
+import getStyleBlocks from "../getStyleBlocks";
+import parseCueBlock from "../parseCueBlock";
+import { getFirstLineAfterHeader } from "../utils";
 import formatCueLineToHTML from "./formatCueLineToHTML";
 import parseStyleBlock, {
   IStyleElement,
 } from "./parseStyleBlock";
-import parseTimeCode from "./parseTimeCode";
 
 export interface IVTTHTMLCue {
   start : number;
@@ -53,6 +49,10 @@ export default function parseWebVTT(
 ) : IVTTHTMLCue[] {
   const newLineChar = /\r\n|\n|\r/g;
   const linified = text.split(newLineChar);
+  if (!linified.length) {
+    return [];
+  }
+
   const cuesArray : IVTTHTMLCue[] = [];
   const styleElements : IStyleElement[] = [];
   if (!linified[0].match(/^WEBVTT( |\t|\n|\r|$)/)) {
@@ -60,39 +60,21 @@ export default function parseWebVTT(
   }
 
   const firstLineAfterHeader = getFirstLineAfterHeader(linified);
+  const styleBlocks = getStyleBlocks(linified, firstLineAfterHeader);
+  const cueBlocks = getCueBlocks(linified, firstLineAfterHeader);
 
-  for (let i = firstLineAfterHeader; i < linified.length; i++) {
-    if (isStartOfStyleBlock(linified, i)) {
-      const startOfStyleBlock = i;
-      i++;
-
-      // continue incrementing i until either:
-      //   - empty line
-      //   - end of file
-      while (linified[i]) {
-        i++;
-      }
-      const styleBlock = linified.slice(startOfStyleBlock, i);
-      const parsedStyles = parseStyleBlock(styleBlock);
-      styleElements.push(...parsedStyles);
-    }
+  for (let i = 0; i < styleBlocks.length; i++) {
+    const parsedStyles = parseStyleBlock(styleBlocks[i]);
+    styleElements.push(...parsedStyles);
   }
 
-  // Parse cues, format and apply style.
-  for (let i = firstLineAfterHeader; i < linified.length; i++) {
-    if (!(linified[i].length === 0)) {
-      if (isStartOfCueBlock(linified, i)) {
-        const endOfCue = findEndOfCueBlock(linified, i);
-        const cueBlock = linified.slice(i, endOfCue);
-        const cue = parseCue(cueBlock, timeOffset, styleElements);
-        if (cue) {
-          cuesArray.push(cue);
-        }
-        i = endOfCue;
-      } else {
-        while (linified[i]) {
-          i++;
-        }
+  for (let i = 0; i < cueBlocks.length; i++) {
+    const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
+
+    if (cueObject != null) {
+      const htmlCue = toHTML(cueObject, styleElements);
+      if (htmlCue) {
+        cuesArray.push(htmlCue);
       }
     }
   }
@@ -111,14 +93,19 @@ export default function parseWebVTT(
  * @param {Array.<Object>} styleElements
  * @returns {Object|undefined}
  */
-function parseCue(
-  cueBlock : string[],
-  timeOffset : number,
+function toHTML(
+  cueObj : {
+    start : number;
+    end : number;
+    header? : string;
+    payload : string[];
+  },
   styleElements : IStyleElement[]
 ) : IVTTHTMLCue|undefined {
+  const { start, end, header, payload } = cueObj;
+
   const region = document.createElement("div");
   const regionAttr = document.createAttribute("style");
-  let index = 0;
   regionAttr.value =
     "width:100%;" +
     "height:100%;" +
@@ -127,20 +114,6 @@ function parseCue(
     "justify-content:flex-end;" +
     "align-items:center;";
   region.setAttributeNode(regionAttr);
-
-  // Get Header. It may be a class name associated with cue.
-  const header = cueBlock[index];
-  index++;
-
-  // Get time ranges.
-  const timeCodes = cueBlock[index];
-  const range = parseTimeCode(timeCodes);
-  if (!range || range.start === undefined || range.end === undefined) {
-    log.warn("VTT: Invalid cue, the timecode line could not be parsed.");
-    return undefined; // cancel if we do not find the start or end of this cue
-  }
-
-  index++;
 
   // Get content, format and apply style.
   const pElement = document.createElement("p");
@@ -164,31 +137,26 @@ function parseCue(
       styleElement.isGlobalStyle
     ).map(styleElement => styleElement.styleContent);
 
-  if (styles) {
-    attr.value += styles.join();
-    spanElement.setAttributeNode(attr);
-  }
+  attr.value += styles.join();
+  spanElement.setAttributeNode(attr);
 
-  while (cueBlock[index] !== undefined) {
-
+  for (let i = 0; i < payload.length; i++) {
     if (spanElement.childNodes.length !== 0) {
       spanElement.appendChild(document.createElement("br"));
     }
 
-    formatCueLineToHTML(cueBlock[index], styleElements)
+    formatCueLineToHTML(payload[i], styleElements)
       .forEach(child => {
         spanElement.appendChild(child);
       });
-
-    index++;
   }
 
   region.appendChild(pElement) ;
   pElement.appendChild(spanElement);
 
   return {
-    start: range.start + timeOffset,
-    end: range.end + timeOffset,
+    start,
+    end,
     element: region,
   };
 }
