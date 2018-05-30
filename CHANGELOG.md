@@ -13,8 +13,6 @@
 
 ### Other improvements
 
-  - buffer: improve starting time for DASH contents by downloading the initialization segments and the first needed segment in parallel
-  - buffer: do not download the initialization segment when switching Representation (or qualities) until we need at least one segment from it
   - misc: move some dev dependencies from ``dependencies`` to ``devDependencies`` in ``package.json``
 
 
