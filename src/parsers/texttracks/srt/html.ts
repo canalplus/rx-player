@@ -19,8 +19,8 @@
 // Done for fun. Understand <b>, <i>, <u> and <font color="#ff0000" /> type
 // of tags.
 
-import findEndOfCueBlock from "./findEndOfCueBlock";
-import parseTimestamp from "./parseTimestamp";
+import getCueBlocks from "./getCueBlocks";
+import parseCueBlock from "./parseCue";
 
 export interface ISRTHTMLCue {
   start : number;
@@ -41,21 +41,16 @@ export default function parseSRTStringToHTML(
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);
 
-  const cueBlocks : string[][] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i]) { // if not empty line or EOF
-      const endOfCue = findEndOfCueBlock(lines, i);
-      cueBlocks.push(lines.slice(i, endOfCue));
-      i = endOfCue;
-    }
-  }
+  const cueBlocks : string[][] = getCueBlocks(lines);
 
   const cues : ISRTHTMLCue[] = [];
   for (let i = 0; i < cueBlocks.length; i++) {
-    const cue = parseCue(cueBlocks[i], timeOffset);
-    if (cue) {
-      cues.push(cue);
+    const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
+    if (cueObject != null) {
+      const htmlCue = toHTML(cueObject);
+      if (htmlCue != null) {
+        cues.push(htmlCue);
+      }
     }
   }
 
@@ -67,22 +62,12 @@ export default function parseSRTStringToHTML(
  * @param {Number} timeOffset
  * @returns {Object|null}
  */
-function parseCue(
-  cueLines : string[],
-  timeOffset : number
-) : ISRTHTMLCue|null {
-  const [startString, endString] = cueLines[1].split(" --> ");
-  const payloadLines = cueLines.slice(2, cueLines.length);
-  if (!startString || !endString || !payloadLines.length) {
-    return null;
-  }
-
-  const start = parseTimestamp(startString);
-  const end = parseTimestamp(endString);
-
-  if (start == null || end == null) {
-    return null;
-  }
+function toHTML(cueObj : {
+  start : number;
+  end : number;
+  payload : string[];
+}) : ISRTHTMLCue|null {
+  const { start, end, payload } = cueObj;
 
   const pEl = document.createElement("div");
   pEl.className = "rxp-texttrack-p";
@@ -97,17 +82,17 @@ function parseCue(
     "-1px 1px 2px #000," +
     "1px 1px 2px #000";
 
-  for (let i = 0; i < payloadLines.length; i++) {
+  for (let i = 0; i < payload.length; i++) {
     if (i) {
       pEl.appendChild(document.createElement("br"));
     }
-    const span = generateSpansFromSRTText(payloadLines[i]);
+    const span = generateSpansFromSRTText(payload[i]);
     pEl.appendChild(span);
   }
 
   return {
-    start: start + timeOffset,
-    end: end + timeOffset,
+    start,
+    end,
     element: pEl,
   };
 }

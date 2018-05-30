@@ -18,8 +18,8 @@
 // Heavily inspired from the WebVTT implementation
 
 import { makeCue } from "../../../compat/index";
-import findEndOfCueBlock from "./findEndOfCueBlock";
-import parseTimestamp from "./parseTimestamp";
+import getCueBlocks from "./getCueBlocks";
+import parseCueBlock from "./parseCue";
 
 /**
  * Parse whole srt file into an array of cues, to be inserted in a video's
@@ -36,47 +36,31 @@ export default function parseSRTStringToVTTCues(
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);
 
-  const cueBlocks : string[][] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i]) {
-      const endOfCue = findEndOfCueBlock(lines, i);
-      cueBlocks.push(lines.slice(i, endOfCue));
-      i = endOfCue;
-    }
-  }
+  const cueBlocks : string[][] = getCueBlocks(lines);
 
   const cues : Array<VTTCue|TextTrackCue> = [];
   for (let i = 0; i < cueBlocks.length; i++) {
-    const cue = parseCue(cueBlocks[i], timeOffset);
-    if (cue) {
-      cues.push(cue);
+    const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
+    if (cueObject) {
+      const nativeCue = toNativeCue(cueObject);
+      if (nativeCue) {
+        cues.push(nativeCue);
+      }
     }
   }
   return cues;
 }
 
 /**
- * Parse cue block into a cue.
- * @param {Array.<string>} cueLines
- * @param {Number} timeOffset
+ * @param {Object} cue Object
  * @returns {TextTrackCue|VTTCue|null}
  */
-function parseCue(
-  cueLines : string[],
-  timeOffset : number
-) : VTTCue|TextTrackCue|null {
-  const [startString, endString] = cueLines[1].split(" --> ");
-  const payloadLines = cueLines.slice(2, cueLines.length);
-  if (!startString || !endString || !payloadLines.length) {
-    return null;
-  }
-
-  const start = parseTimestamp(startString);
-  const end = parseTimestamp(endString);
-  if (start == null || end == null) {
-    return null;
-  }
-  const payload = payloadLines.join("\n");
-  return makeCue(start + timeOffset, end + timeOffset, payload);
+function toNativeCue(cueObj : {
+  start : number;
+  end : number;
+  payload : string[];
+}) : VTTCue|TextTrackCue|null {
+  const { start, end, payload } = cueObj;
+  const text = payload.join("\n");
+  return makeCue(start, end, text);
 }
