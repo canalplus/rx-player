@@ -20966,50 +20966,26 @@ function RepresentationBuffer(_a) {
     // unwrap components of the content
     var manifest = content.manifest, period = content.period, adaptation = content.adaptation, representation = content.representation;
     var bufferType = adaptation.type;
-    /**
-     * Compute paddings, then used to calculate the wanted range of Segments
-     * wanted.
-     * @type {Object}
-     */
+    var initSegment = representation.index.getInitSegment();
+    // Compute paddings, then used to calculate the wanted range of Segments
+    // wanted.
     var paddings = get_buffer_paddings_1.default(adaptation);
-    /**
-     * Saved initSegment state for this representation.
-     * @type {Object}
-     */
-    var initSegmentObject = {
-        initSegment: representation.index.getInitSegment(),
-        isDownloaded: false,
-        value: {
-            segmentData: null,
-            segmentInfos: null,
-        },
-    };
-    /**
-     * Subject to start/restart a Buffer Queue.
-     * @type {Subject}
-     */
+    // Saved initSegment state for this representation.
+    var initSegmentObject = initSegment == null ?
+        { segmentData: null, segmentInfos: null } : null;
+    // Subject to start/restart a Buffer Queue.
     var startQueue$ = new ReplaySubject_1.ReplaySubject(1);
-    /**
-     * Segments queued for download in the BufferQueue.
-     * @type {Array.<Object>}
-     */
+    // Segments queued for download in the BufferQueue.
     var downloadQueue = [];
-    /**
-     * Keep track of the informations about the pending regular (read non-init)
-     * Segment request.
-     * null if no request is pending.
-     * @type {Object|null}
-     */
+    // Keep track of the informations about the pending Segment request.
+    // null if no request is pending.
     var currentSegmentRequest = null;
-    /**
-     * Keep track of downloaded segments currently awaiting to be appended to the
-     * SourceBuffer.
-     *
-     * This is to avoid scheduling another download for that segment.
-     * The ID of each segment (segment.id) is thus added before each append and
-     * removed after it.
-     * @type {Object}
-     */
+    // Keep track of downloaded segments currently awaiting to be appended to the
+    // SourceBuffer.
+    //
+    // This is to avoid scheduling another download for that segment.
+    // The ID of each segment (segment.id) is thus added before each append and
+    // removed after it.
     var sourceBufferWaitingQueue = new simple_set_1.default();
     /**
      * Request every Segment in the ``downloadQueue`` on subscription.
@@ -21020,56 +20996,22 @@ function RepresentationBuffer(_a) {
         var requestNextSegment$ = Observable_1.Observable.defer(function () {
             var currentNeededSegment = downloadQueue.shift();
             if (currentNeededSegment == null) {
-                // queue is finished...
-                currentSegmentRequest = null;
                 return Observable_1.Observable.empty();
             }
-            var initSegment = initSegmentObject.initSegment;
+            var initInfos = initSegmentObject &&
+                initSegmentObject.segmentInfos || undefined;
             var segment = currentNeededSegment.segment, priority = currentNeededSegment.priority;
             var request$ = segmentFetcher.createRequest({
                 adaptation: adaptation,
-                init: initSegmentObject.value.segmentInfos || undefined,
+                init: initInfos,
                 manifest: manifest,
                 period: period,
                 representation: representation,
                 segment: segment,
             }, priority);
             currentSegmentRequest = { segment: segment, priority: priority, request$: request$ };
-            if (initSegmentObject.isDownloaded || initSegment == null) {
-                return request$
-                    .map(function (args) { return ({ segment: segment, value: args.parsed }); })
-                    .concat(requestNextSegment$);
-            }
-            var initSegmentRequest$ = segmentFetcher.createRequest({
-                adaptation: adaptation,
-                init: undefined,
-                manifest: manifest,
-                period: period,
-                representation: representation,
-                segment: initSegment,
-            }, priority);
-            return Observable_1.Observable.merge(initSegmentRequest$
-                .map(function (args) { return ({ segment: initSegment, value: args.parsed }); }), request$
-                .map(function (args) { return ({ segment: segment, value: args.parsed }); }))
-                // Emit all segments once the init segment has finished to download
-                // and always emit the init segment first.
-                .scan(function (segments, obj) {
-                if (initSegmentObject.isDownloaded) {
-                    return [obj];
-                }
-                if (obj.segment.isInit) {
-                    initSegmentObject.isDownloaded = true;
-                    initSegmentObject.value = obj.value;
-                    return [obj].concat(segments);
-                }
-                return segments.concat([obj]);
-            }, [])
-                .mergeMap(function (segments) {
-                return initSegmentObject.isDownloaded ? Observable_1.Observable.of.apply(Observable_1.Observable, segments) :
-                    /* tslint:disable no-unnecessary-type-assertion */
-                    Observable_1.Observable.empty();
-                /* tslint:enable no-unnecessary-type-assertion */
-            })
+            return request$
+                .map(function (args) { return ({ segment: segment, value: args.parsed }); })
                 .concat(requestNextSegment$);
         });
         return requestNextSegment$
@@ -21087,12 +21029,15 @@ function RepresentationBuffer(_a) {
         return Observable_1.Observable.defer(function () {
             var segment = data.segment;
             var _a = data.value, segmentInfos = _a.segmentInfos, segmentData = _a.segmentData;
+            if (segment.isInit) {
+                initSegmentObject = data.value;
+            }
             if (segmentData == null) {
                 // no segmentData to add here (for example, a text init segment)
                 // just complete directly without appending anything
                 return Observable_1.Observable.empty();
             }
-            var initSegmentData = initSegmentObject.value.segmentData;
+            var initSegmentData = initSegmentObject && initSegmentObject.segmentData;
             var append$ = append_data_1.default(clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
             sourceBufferWaitingQueue.add(segment.id);
             return append$
@@ -21148,6 +21093,14 @@ function RepresentationBuffer(_a) {
             priority: get_segment_priority_1.default(segment, timing),
             segment: segment,
         }); });
+        if (initSegment != null && initSegmentObject == null) {
+            neededSegments = [
+                {
+                    segment: initSegment,
+                    priority: get_segment_priority_1.default(initSegment, timing),
+                }
+            ].concat(neededSegments);
+        }
         var state;
         if (!neededSegments.length) {
             state = period.end != null && neededRange.end >= period.end ?
