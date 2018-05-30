@@ -16,6 +16,12 @@
 
 import findEndOfCueBlock from "./findEndOfCueBlock";
 
+/**
+ * Get cue blocks from a srt file.
+ * @param {Array.<string>} linified - Whole srt file. Each new element in this
+ * array is a new line.
+ * @returns {Array.<Array.<string>>}
+ */
 export default function getCueBlocks(linified : string[]) : string[][] {
   const cueBlocks : string[][] = [];
   for (let i = 0; i < linified.length; i++) {
