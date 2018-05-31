@@ -7,6 +7,7 @@
   - buffer: fix several bugs happening when calling ``endOfStream`` to announce the end of the current content. Especially prevalent on Chrome.
   - net: use redirected URL as a base for further requests when the manifest request led to a HTTP redirect.
   - vtt/srt: ignore silently (do not throw) when an unknown block has been detected in a vtt or srt file
+  - vtt/srt: support styling spans (like b, i and u XML tags) spanning multiple lines
   - api: ``getAvailableTextTracks`` and ``getAvailableAudioTracks`` now always return an array (and never null) as anounced in the API documentation
   - api: set default log level to ``"NONE"`` instead of ``"INFO"``
   - misc: remove development-only code from the non-minified code
