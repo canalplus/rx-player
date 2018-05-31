@@ -29,7 +29,7 @@ function createStyledElement(
   baseNode : Node,
   styleElements : IStyleElement[],
   styleClasses : string[]
-) : HTMLElement|Text {
+) : HTMLElement {
   const HTMLTags = ["u", "i", "b"];
   const authorizedNodeNames = ["u", "i", "b", "c", "#text"];
 
@@ -37,7 +37,19 @@ function createStyledElement(
   let nodeWithStyle;
   if (arrayIncludes(authorizedNodeNames, mainNodeName)) {
     if (mainNodeName === "#text") {
-      nodeWithStyle = document.createTextNode((baseNode as Text).wholeText);
+      const linifiedText = (baseNode as Text).wholeText
+        .split("\n");
+
+      nodeWithStyle = document.createElement("span");
+      for (let i = 0; i < linifiedText.length; i++) {
+        if (i) {
+          nodeWithStyle.appendChild(document.createElement("br"));
+        }
+        if (linifiedText[i].length > 0) {
+          const textNode = document.createTextNode(linifiedText[i]);
+          nodeWithStyle.appendChild(textNode);
+        }
+      }
     } else {
       const nodeClasses = baseNode.nodeName.toLowerCase().split(".");
       const classIndexes : number[] = [];
@@ -87,21 +99,14 @@ function createStyledElement(
 }
 
 /**
- * Format WebVTT tags and classes into usual HTML.
- * <b *> => <b>
- * <u *> => <u>
- * <i *> => <i>
- * <c.class *> => <c.class>
- * Style is inserted if associated to tag or class.
  * @param {string} text
  * @param {Array.<Object>} styleElements
- * @returns {Array.<Node>}
+ * @returns {Array.<HTMLElement>}
  */
-export default function formatCueLineToHTML(
+export default function convertPayloadToHTML(
   text : string,
   styleElements : IStyleElement[]
-) : Array<HTMLElement|Text> {
-
+) : HTMLElement[] {
   const styleClasses = styleElements
     .map(styleElement => styleElement.className)
     .filter((className) : className is string => className != null);
@@ -116,10 +121,11 @@ export default function formatCueLineToHTML(
   const parsedWebVTT = new DOMParser().parseFromString(filteredText, "text/html");
   const nodes = parsedWebVTT.body.childNodes;
 
-  const parsedNodeArray : Array<HTMLElement|Text> = [];
+  const styledElements : HTMLElement[] = [];
   for (let i = 0; i < nodes.length; i++) {
-    parsedNodeArray[i] = createStyledElement(nodes[i], styleElements, styleClasses);
+    styledElements.push(
+      createStyledElement(nodes[i], styleElements, styleClasses)
+    );
   }
-
-  return parsedNodeArray;
+  return styledElements;
 }

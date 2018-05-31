@@ -18,7 +18,7 @@ import getCueBlocks from "../getCueBlocks";
 import getStyleBlocks from "../getStyleBlocks";
 import parseCueBlock from "../parseCueBlock";
 import { getFirstLineAfterHeader } from "../utils";
-import formatCueLineToHTML from "./formatCueLineToHTML";
+import convertPayloadToHTML from "./convertPayloadToHTML";
 import parseStyleBlock, {
   IStyleElement,
 } from "./parseStyleBlock";
@@ -140,16 +140,10 @@ function toHTML(
   attr.value += styles.join();
   spanElement.setAttributeNode(attr);
 
-  for (let i = 0; i < payload.length; i++) {
-    if (spanElement.childNodes.length !== 0) {
-      spanElement.appendChild(document.createElement("br"));
-    }
-
-    formatCueLineToHTML(payload[i], styleElements)
-      .forEach(child => {
-        spanElement.appendChild(child);
-      });
-  }
+  convertPayloadToHTML(payload.join("\n"), styleElements)
+    .forEach(element => {
+      spanElement.appendChild(element);
+    });
 
   region.appendChild(pElement) ;
   pElement.appendChild(spanElement);
