@@ -122,7 +122,18 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
     for (let i = 0; i < childNodes.length; i++) {
       const currentNode = childNodes[i];
       if (currentNode.nodeName === "#text") {
-        span.innerHTML += currentNode.textContent;
+        const linifiedText = (currentNode as Text).wholeText
+          .split("\n");
+
+        for (let line = 0; line < linifiedText.length; line++) {
+          if (line) {
+            span.appendChild(document.createElement("br"));
+          }
+          if (linifiedText[line].length > 0) {
+            const textNode = document.createTextNode(linifiedText[line]);
+            span.appendChild(textNode);
+          }
+        }
       } else if (currentNode.nodeName === "B") {
         const spanChild = _loop(currentNode);
         spanChild.style.fontWeight = "bold";
