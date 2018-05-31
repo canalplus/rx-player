@@ -56,7 +56,7 @@ import createBufferClock, {
 import createMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
-import triggerEndOfStreamWithRetries from "./end_of_stream";
+import { maintainEndOfStream } from "./end_of_stream";
 import BufferGarbageCollector from "./garbage_collector";
 import getInitialTime, {
   IInitialTimeOptions,
@@ -303,11 +303,19 @@ export default function Stream({
      */
     const sourceBufferManager = new SourceBufferManager(videoElement, mediaSource);
 
+    // Will be used to cancel any endOfStream tries when the contents resume
+    const cancelEndOfStream$ = new Subject<null>();
+
+    // Will be used to process the events of the buffer
+    const bufferEventHandler = manifest.isLive ?
+      liveEventsHandler(videoElement, manifest, fetchManifest) :
+      Observable.of;
+
     /**
      * Creates Observable which will manage every Buffer for the given Content.
      * @type {Observable}
      */
-    const handledBuffers$ = BuffersHandler(
+    const buffers$ = BuffersHandler(
       { manifest, period: firstPeriodToPlay }, // content
       bufferClock$,
       wantedBufferAhead$,
@@ -322,22 +330,19 @@ export default function Stream({
         textTrackOptions,
       },
       warning$
-    ).mergeMap(function onBuffersHandlerEvent(evt) {
-      if (evt.type === "end-of-stream") {
-        log.info("Triggering end of stream.");
-        return triggerEndOfStreamWithRetries(mediaSource);
-      }
-      return Observable.of(evt);
-    });
-
-    /**
-     * Add management of events linked to live Playback.
-     * @type {Observable}
-     */
-    const buffers$ = (manifest.isLive ?
-      handledBuffers$
-        .mergeMap(liveEventsHandler(videoElement, manifest, fetchManifest)) :
-      handledBuffers$);
+    ).mergeMap((evt) : Observable<IStreamEvent> => {
+        switch (evt.type) {
+          case "end-of-stream":
+            return maintainEndOfStream(mediaSource)
+              .ignoreElements()
+              .takeUntil(cancelEndOfStream$) as Observable<never>;
+          case "resume-stream":
+            cancelEndOfStream$.next(null);
+            return Observable.empty();
+          default:
+            return bufferEventHandler(evt);
+        }
+      });
 
     /**
      * Create EME Manager, an observable which will manage every EME-related

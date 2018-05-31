@@ -357,12 +357,12 @@ describe("initial idle state", () => {
       expect(player.getWantedBufferAhead()).to.equal(Infinity);
     });
 
-    it("should return null through getAvailableAudioTracks by default", () => {
-      expect(player.getAvailableAudioTracks()).to.equal(null);
+    it("should return an empty array through getAvailableAudioTracks by default", () => {
+      expect(player.getAvailableAudioTracks()).to.eql([]);
     });
 
-    it("should return null through getAvailableTextTracks by default", () => {
-      expect(player.getAvailableTextTracks()).to.equal(null);
+    it("should return an empty array through getAvailableTextTracks by default", () => {
+      expect(player.getAvailableTextTracks()).to.eql([]);
     });
 
     it("should return undefined through getAudioTrack by default", () => {

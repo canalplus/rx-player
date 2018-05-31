@@ -30,37 +30,13 @@ import {
  */
 export default function getSegmentsNeeded(
   representation : Representation,
-  range : { start : number; end : number },
-  options : {
-    addInitSegment : boolean;
-    ignoreRegularSegments : boolean;
-  }
+  range : { start : number; end : number }
 ) : ISegment[] {
-  const {
-    addInitSegment,
-    ignoreRegularSegments,
-  } = options;
-  let initSegment : ISegment|null = null;
-
-  if (addInitSegment) {
-    initSegment = representation.index.getInitSegment();
-  }
-
-  if (ignoreRegularSegments) {
-    return initSegment ? [initSegment] : [];
-  }
-
   const { start, end } = range;
   const duration = end - start;
 
   // given the current timestamp and the previously calculated time gap and
   // wanted buffer size, we can retrieve the list of segments to inject in
   // our pipelines.
-  const mediaSegments = representation.index.getSegments(start, duration);
-
-  if (initSegment) {
-    mediaSegments.unshift(initSegment);
-  }
-
-  return mediaSegments;
+  return representation.index.getSegments(start, duration);
 }

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import sleep from "../utils/sleep.js";
 import sinon from "sinon";
 import RxPlayer from "../../../src";
-import DynamicMock from "../mocks/dash_dynamic_SegmentTimeline.js";
+import DynamicMock from "../mocks/dash-if_segment-timeline.js";
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on

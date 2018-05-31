@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
 import { Observable } from "rxjs/Observable";
 import { ReplaySubject } from "rxjs/ReplaySubject";
 import Manifest, {
@@ -188,14 +187,14 @@ interface ISegmentInfos {
 
 // Informations about any Segment of a given Representation.
 interface ISegmentObject<T> {
-  segmentData : T; // What will be pushed to the SourceBuffer
+  segmentData : T|null; // What will be pushed to the SourceBuffer
   segmentInfos : ISegmentInfos|null; // temporal information
 }
 
 // Informations about a loaded Segment
 interface ILoadedSegmentObject<T> {
   segment : ISegment; // Concerned Segment
-  parsed : ISegmentObject<T>; // Data and informations
+  value : ISegmentObject<T>; // Data and informations
 }
 
 // Object describing a pending Segment request
@@ -233,51 +232,33 @@ export default function RepresentationBuffer<T>({
     adaptation,
     representation,
   } = content;
-
   const bufferType = adaptation.type;
+  const initSegment = representation.index.getInitSegment();
 
-  /**
-   * Compute paddings, then used to calculate the wanted range of Segments
-   * wanted.
-   * @type {Object}
-   */
+  // Compute paddings, then used to calculate the wanted range of Segments
+  // wanted.
   const paddings = getBufferPaddings(adaptation);
 
-  /**
-   * Saved initSegment state for this representation.
-   * null when no initialization segment has been downloaded yet.
-   * @type {Object}
-   */
-  let initSegmentObject : ISegmentObject<T>|null = null;
+  // Saved initSegment state for this representation.
+  let initSegmentObject : ISegmentObject<T>|null = initSegment == null ?
+    { segmentData: null, segmentInfos: null } : null;
 
-  /**
-   * Subject to start/restart a Buffer Queue.
-   * @type {Subject}
-   */
+  // Subject to start/restart a Buffer Queue.
   const startQueue$ = new ReplaySubject<void>(1);
 
-  /**
-   * Segments queued for download in the BufferQueue.
-   * @type {Array.<Object>}
-   */
+  // Segments queued for download in the BufferQueue.
   let downloadQueue : IQueuedSegment[] = [];
 
-  /**
-   * Keep track of the informations about the pending Segment request.
-   * null if no request is pending.
-   * @type {Object|null}
-   */
+  // Keep track of the informations about the pending Segment request.
+  // null if no request is pending.
   let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
 
-  /**
-   * Keep track of downloaded segments currently awaiting to be appended to the
-   * SourceBuffer.
-   *
-   * This is to avoid scheduling another download for that segment.
-   * The ID of each segment (segment.id) is thus added before each append and
-   * removed after it.
-   * @type {Object}
-   */
+  // Keep track of downloaded segments currently awaiting to be appended to the
+  // SourceBuffer.
+  //
+  // This is to avoid scheduling another download for that segment.
+  // The ID of each segment (segment.id) is thus added before each append and
+  // removed after it.
   const sourceBufferWaitingQueue = new SimpleSet();
 
   /**
@@ -290,15 +271,15 @@ export default function RepresentationBuffer<T>({
       Observable.defer(() => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
-          // queue is finished...
-          currentSegmentRequest = null;
           return Observable.empty();
         }
+
+        const initInfos = initSegmentObject &&
+          initSegmentObject.segmentInfos || undefined;
         const { segment, priority } = currentNeededSegment;
-        const initSegmentInfos = initSegmentObject && initSegmentObject.segmentInfos;
         const request$ = segmentFetcher.createRequest({
           adaptation,
-          init: initSegmentInfos || undefined,
+          init: initInfos,
           manifest,
           period,
           representation,
@@ -307,7 +288,7 @@ export default function RepresentationBuffer<T>({
 
         currentSegmentRequest = { segment, priority, request$ };
         return request$
-          .map((args) => objectAssign({ segment }, args))
+          .map((args) => ({ segment, value: args.parsed }))
           .concat(requestNextSegment$);
       });
 
@@ -328,11 +309,10 @@ export default function RepresentationBuffer<T>({
   ) : Observable<IBufferEventAddedSegment<T>> {
     return Observable.defer(() => {
       const { segment } = data;
-      const segmentInfos = data.parsed.segmentInfos;
-      const segmentData = data.parsed.segmentData;
+      const { segmentInfos, segmentData } = data.value;
 
       if (segment.isInit) {
-        initSegmentObject = { segmentData, segmentInfos };
+        initSegmentObject = data.value;
       }
 
       if (segmentData == null) {
@@ -408,23 +388,25 @@ export default function RepresentationBuffer<T>({
     // /!\ Side effect to the SegmentBookkeeper
     segmentBookkeeper.synchronizeBuffered(buffered);
 
-    const neededSegments = getSegmentsNeeded(
-      representation,
-      neededRange,
-      {
-        addInitSegment: initSegmentObject == null,
-        ignoreRegularSegments: timing.readyState === 0,
-      }
-    )
-      .filter((segment) => { // filter unwanted
+    let neededSegments = getSegmentsNeeded(representation, neededRange)
+      .filter((segment) => {
         return shouldDownloadSegment(
           segment, content, segmentBookkeeper, neededRange, sourceBufferWaitingQueue);
       })
-
-      .map((segment) => ({ // add priority of the segment
+      .map((segment) => ({
         priority: getSegmentPriority(segment, timing),
         segment,
       }));
+
+    if (initSegment != null && initSegmentObject == null) {
+      neededSegments = [ // prepend initialization segment
+        {
+          segment: initSegment,
+          priority: getSegmentPriority(initSegment, timing),
+        },
+        ...neededSegments,
+      ];
+    }
 
     let state : IBufferInternalState;
     if (!neededSegments.length) {

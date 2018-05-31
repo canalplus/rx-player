@@ -165,14 +165,25 @@ describe("dash static SegmentTimeline content", function () {
       .to.equal(26);
 
     expect(fakeServer.requests.length).to.equal(3);
-
     const requestsDone = [
       fakeServer.requests[1].url,
       fakeServer.requests[2].url,
     ];
-
     expect(requestsDone).to.include(Mock.audio[0].init.url);
     expect(requestsDone).to.include(Mock.video[0].init.url);
+
+    // TODO Do the init segment and the first needed segment in parallel
+    // expect(fakeServer.requests.length).to.equal(5);
+
+    // const requestsDone = [
+    //   fakeServer.requests[1].url,
+    //   fakeServer.requests[2].url,
+    //   fakeServer.requests[3].url,
+    //   fakeServer.requests[4].url,
+    // ];
+
+    // expect(requestsDone).to.include(Mock.audio[0].init.url);
+    // expect(requestsDone).to.include(Mock.video[0].init.url);
   });
 
   it("should list the right bitrates", async function () {

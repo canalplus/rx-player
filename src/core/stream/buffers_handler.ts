@@ -57,6 +57,7 @@ import EVENTS, {
   IEndOfStreamEvent,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
+  IResumeStreamEvent,
 } from "./stream_events";
 
 // Events coming from single PeriodBuffer
@@ -75,7 +76,8 @@ type IMultiplePeriodBuffersEvent =
 export type IBufferHandlerEvent =
   IActivePeriodChangedEvent |
   IMultiplePeriodBuffersEvent |
-  IEndOfStreamEvent;
+  IEndOfStreamEvent |
+  IResumeStreamEvent;
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
@@ -190,8 +192,10 @@ export default function BuffersHandler(
    * Emits an "end-of-stream" event once every PeriodBuffer are complete.
    * @type {Observable}
    */
-  const streamHasEnded$ = buffersAreComplete$(...buffersArray)
-    .mapTo(EVENTS.endOfStream());
+  const streamHasEnded$ = buffersAreComplete(...buffersArray)
+    .map((areComplete) =>
+      areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
+    );
 
   return Observable.merge(
     activePeriodChanged$,
@@ -602,9 +606,9 @@ function getPipelineOptions(
  * @param {...Observable} buffers
  * @returns {Observable}
  */
-function buffersAreComplete$(
+function buffersAreComplete(
   ...buffers : Array<Observable<IMultiplePeriodBuffersEvent>>
-) : Observable<void> {
+) : Observable<boolean> {
   /**
    * Array of Observables linked to the Array of Buffers which emit:
    *   - true when the corresponding buffer is considered _complete_.
@@ -623,10 +627,10 @@ function buffersAreComplete$(
     });
 
   return Observable.combineLatest(...isCompleteArray)
-    .filter((areComplete) => {
+    .map((areComplete) => {
       return areComplete.every((isComplete) => isComplete);
     })
-    .mapTo(undefined);
+    .distinctUntilChanged();
 }
 
 /**
