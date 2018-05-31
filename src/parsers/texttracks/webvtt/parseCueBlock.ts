@@ -96,6 +96,7 @@ export interface IVTTCueObject {
  * Parse cue block into a cue object which contains:
  *   - start {number}: the start of the cue as a timestamp in seconds
  *   - end {number}: the end of the cue as a timestamp in seconds
+ *   - header {string|undefined}: The optional cue identifier
  *   - payload {Array.<string>}: the payload of the cue
  * @param {Array.<string>} cueLines
  * @param {Number} timeOffset
