@@ -496,7 +496,7 @@ export default function RepresentationBuffer<T>({
         log.debug("interrupting segment request.");
       }
       downloadQueue = [];
-      startQueue$.next(undefined); // (re-)start with an empty queue
+      startQueue$.next(); // (re-)start with an empty queue
       return state.type === "full-buffer" ? {
         type: "full-buffer" as "full-buffer",
         value: { bufferType },
@@ -512,14 +512,14 @@ export default function RepresentationBuffer<T>({
     if (!currentSegmentRequest) {
       log.debug("starting downloading queue", adaptation.type);
       downloadQueue = neededSegments;
-      startQueue$.next(undefined); // restart the queue
+      startQueue$.next(); // restart the queue
     } else if (
       currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
     ) {
       log.debug("canceling old downloading queue and starting a new one",
         adaptation.type);
       downloadQueue = neededSegments;
-      startQueue$.next(undefined); // restart the queue
+      startQueue$.next(); // restart the queue
     } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
       log.debug("updating pending request priority", adaptation.type);
       segmentFetcher.updatePriority(
