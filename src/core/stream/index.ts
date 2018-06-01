@@ -24,10 +24,12 @@ import {
 } from "rxjs";
 import {
   finalize,
+  ignoreElements,
   map,
   mapTo,
   mergeMap,
   take,
+  takeUntil,
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../utils/log";
@@ -344,19 +346,21 @@ export default function Stream({
         textTrackOptions,
       },
       warning$
-    ).mergeMap((evt) : Observable<IStreamEvent> => {
+    ).pipe(mergeMap((evt) : Observable<IStreamEvent> => {
         switch (evt.type) {
           case "end-of-stream":
             return maintainEndOfStream(mediaSource)
-              .ignoreElements()
-              .takeUntil(cancelEndOfStream$);
+              .pipe(
+                ignoreElements(),
+                takeUntil(cancelEndOfStream$)
+              );
           case "resume-stream":
             cancelEndOfStream$.next(null);
             return EMPTY;
           default:
             return bufferEventHandler(evt);
         }
-      });
+      }));
 
     /**
      * Create EME Manager, an observable which will manage every EME-related
