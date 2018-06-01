@@ -32,10 +32,10 @@ import {
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
-  IParserOptions,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
+  ITransportOptions,
   ITransportPipelines,
   SegmentParserObservable,
   TextTrackParserObservable,
@@ -77,7 +77,7 @@ function addNextSegments(
 }
 
 export default function(
-  options : IParserOptions = {}
+  options : ITransportOptions = {}
 ) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
