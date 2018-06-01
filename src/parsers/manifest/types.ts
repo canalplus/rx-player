@@ -16,55 +16,9 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
-interface IKeySystem {
+export interface IKeySystem {
   systemId : string;
   privateData : Uint8Array;
-}
-
-interface IContentProtectionSmooth {
-  keyId : string;
-  keySystems: IKeySystem[];
-}
-
-interface IRepresentationSmooth {
-  // required
-  baseURL: string;
-  bitrate: number;
-  codecPrivateData: string;
-  index: IRepresentationIndex;
-  id: string;
-
-  // optional
-  audiotag?: number;
-  bitsPerSample? : number;
-  channels? : number;
-  codecs?: string;
-  height?: number;
-  mimeType?: string;
-  packetSize?: number;
-  samplingRate?: number;
-  width?: number;
-}
-
-interface IPeriodSmooth {
-  id: string;
-  adaptations: IAdaptationSmooth[];
-  duration: number;
-  laFragCount?: number;
-}
-
-interface IAdaptationSmooth {
-  // -- required --
-  id: string;
-  type: string;
-  representations: IRepresentationSmooth[];
-
-  // -- optional --
-  closedCaption? : boolean;
-  audioDescription? : boolean;
-  name?: string;
-  language?: string;
-  normalizedLanguage?: string;
 }
 
 export interface IParsedRepresentation {
@@ -76,7 +30,10 @@ export interface IParsedRepresentation {
 
   // optional
   audioSamplingRate?: string;
-  audiotag?: number;
+  audiotag? : number;
+  bitsPerSample? : number;
+  channels? : number;
+  codecPrivateData? : string;
   codecs?: string;
   codingDependency?: boolean;
   frameRate?: number;
@@ -84,8 +41,10 @@ export interface IParsedRepresentation {
   maxPlayoutRate?: number;
   maximumSAPPeriod?: number;
   mimeType?: string;
+  packetSize? : number;
   profiles?: string;
   qualityRanking?: number;
+  samplingRate? : number;
   segmentProfiles?: string;
   width?: number;
 
@@ -163,11 +122,3 @@ export interface IParsedContentProtection {
   schemeIdUri?: string;
   value?: string;
 }
-
-export {
-  IKeySystem,
-  IPeriodSmooth,
-  IAdaptationSmooth,
-  IRepresentationSmooth,
-  IContentProtectionSmooth,
-};

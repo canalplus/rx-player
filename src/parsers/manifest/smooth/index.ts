@@ -33,11 +33,10 @@ import {
   resolveURL,
 } from "../../../utils/url";
 import {
-  IAdaptationSmooth,
-  IContentProtectionSmooth,
   IKeySystem,
+  IParsedAdaptation,
   IParsedManifest,
-  IRepresentationSmooth,
+  IParsedRepresentation,
 } from "../types";
 import RepresentationIndex from "./representationIndex";
 
@@ -139,11 +138,16 @@ function getKeySystems(
   ];
 }
 
-interface IHSSParserConfiguration {
+export interface IHSSParserConfiguration {
   suggestedPresentationDelay? : number;
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
   keySystems? : (hex? : Uint8Array) => IKeySystem[];
+}
+
+export interface IContentProtectionSmooth {
+  keyId : string;
+  keySystems: IKeySystem[];
 }
 
 /**
@@ -389,9 +393,9 @@ function createSmoothStreamingParser(
     rootURL : string,
     timescale : number,
     protection? : IContentProtectionSmooth
-  ) : IAdaptationSmooth|null {
+  ) : IParsedAdaptation|null {
     const _timescale = root.hasAttribute("Timescale") ?
-      + (root.getAttribute("Timescale") || 0) : timescale;
+      +(root.getAttribute("Timescale") || 0) : timescale;
 
     const adaptationType = root.getAttribute("Type");
     if (adaptationType == null) {
@@ -453,7 +457,7 @@ function createSmoothStreamingParser(
     const id = adaptationType + (language ? ("_" + language) : "");
 
     // apply default properties
-    representations.forEach((representation: IRepresentationSmooth) => {
+    representations.forEach((representation: IParsedRepresentation) => {
       representation.baseURL = resolveURL(rootURL, baseURL);
       representation.mimeType =
         representation.mimeType || DEFAULT_MIME_TYPES[adaptationType];
@@ -478,7 +482,7 @@ function createSmoothStreamingParser(
       return null;
     }
 
-    const parsedAdaptation : IAdaptationSmooth = {
+    const parsedAdaptation : IParsedAdaptation = {
       id,
       type: adaptationType,
       representations,
@@ -530,9 +534,9 @@ function createSmoothStreamingParser(
       adaptationNodes: [],
     });
 
-    const adaptations : IAdaptationSmooth[] = adaptationNodes.map(node => {
+    const adaptations : IParsedAdaptation[] = adaptationNodes.map(node => {
       return parseAdaptation(node, rootURL, timescale, protection);
-    }).filter((adaptation) : adaptation is IAdaptationSmooth => !!adaptation);
+    }).filter((adaptation) : adaptation is IParsedAdaptation => !!adaptation);
 
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
