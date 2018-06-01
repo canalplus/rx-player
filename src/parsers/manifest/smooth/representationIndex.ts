@@ -265,9 +265,9 @@ function calculateRepeat(
 }
 
 interface ISmoothInitSegmentPrivateInfos {
-  codecPrivateData : string;
   bitsPerSample? : number;
   channels? : number;
+  codecPrivateData? : string;
   packetSize? : number;
   samplingRate? : number;
   protection? : {
@@ -289,7 +289,7 @@ interface ISmoothInitSegmentPrivateInfos {
 export default class SmoothRepresentationIndex
   implements IRepresentationIndex {
 
-    private _codecPrivateData : string;
+    private _codecPrivateData? : string;
     private _bitsPerSample? : number;
     private _channels? : number;
     private _packetSize? : number;
@@ -334,7 +334,7 @@ export default class SmoothRepresentationIndex
           type: "smooth-init",
           bitsPerSample: this._bitsPerSample,
           channels: this._channels,
-          codecPrivateData: this._codecPrivateData,
+          codecPrivateData: this._codecPrivateData || "",
           packetSize: this._packetSize,
           samplingRate: this._samplingRate,
           protection: this._protection,

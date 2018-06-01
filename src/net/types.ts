@@ -218,27 +218,16 @@ interface IParsedKeySystem {
   privateData : Uint8Array;
 }
 
-export interface IParserOptions {
-  segmentLoader? : CustomSegmentLoader;
-  manifestLoader?: CustomManifestLoader;
-  suggestedPresentationDelay? : number;
-  referenceDateTime? : number;
-  minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
-}
-
 export interface ITransportOptions {
   // every transports
   segmentLoader? : CustomSegmentLoader;
+  manifestLoader?: CustomManifestLoader;
 
   // smooth only
   suggestedPresentationDelay? : number;
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => Array<{
-    systemId : string;
-    privateData : Uint8Array;
-  }>;
+  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
 
   // dash only
   // contentProtectionParser? : IContentProtectionParser;
