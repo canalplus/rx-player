@@ -92,7 +92,7 @@ export default function(
     loader({ adaptation, init, manifest, period, representation, segment }
       : ISegmentLoaderArguments
     ) : ILoaderObservable<Uint8Array|ArrayBuffer> {
-      if (!segment.media) {
+      if (!segment.mediaURL) {
         log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
         return EMPTY;
       }
@@ -154,12 +154,12 @@ export default function(
           value: { responseData: null },
         });
       }
-      if (!segment.media) {
+      if (!segment.mediaURL) {
         log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
         return EMPTY;
       }
-      const { media } = segment;
-      return request({ url: media, responseType: "arraybuffer" });
+      const { mediaURL } = segment;
+      return request({ url: mediaURL, responseType: "arraybuffer" });
     },
 
     parser(

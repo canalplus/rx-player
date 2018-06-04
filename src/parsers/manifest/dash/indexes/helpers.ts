@@ -98,19 +98,19 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment) : number {
 function getInitSegment(
   index: {
     timescale: number;
-    initialization?: { media?: string; range?: [number, number] };
+    initialization?: { media: string; range?: [number, number] };
     indexRange?: [number, number];
   }
 ) : ISegment {
-  const { initialization = {} } = index;
+  const { initialization } = index;
 
   return {
     id: "init",
     isInit: true,
     time: 0,
-    range: initialization.range || undefined,
+    range: initialization ? initialization.range || undefined : undefined,
     indexRange: index.indexRange || undefined,
-    media: initialization.media,
+    mediaURL: initialization ? initialization.media : "",
     timescale: index.timescale,
   };
 }
@@ -136,7 +136,7 @@ function getSegmentNumber(
 
 function getSegmentsFromTimeline(
   index : {
-    media? : string;
+    media : string;
     startNumber? : number;
     timeline : IIndexSegment[];
     timescale : number;
@@ -174,8 +174,8 @@ function getSegmentsFromTimeline(
           range,
           duration: undefined,
           timescale,
-          media: media ? replaceSegmentDASHTokens(
-            media, ts, currentNumber != null ? currentNumber : undefined) : undefined,
+          mediaURL: replaceSegmentDASHTokens(
+            media, ts, currentNumber != null ? currentNumber : undefined),
           number: currentNumber != null ? currentNumber : undefined,
         };
         segments.push(segment);
@@ -194,10 +194,8 @@ function getSegmentsFromTimeline(
         range,
         duration: d,
         timescale,
-        media: media ?
-          replaceSegmentDASHTokens(media, segmentTime,  currentNumber != null ?
-            currentNumber + segmentNumberInCurrentRange : undefined) :
-          undefined,
+        mediaURL: replaceSegmentDASHTokens(media, segmentTime,  currentNumber != null ?
+          currentNumber + segmentNumberInCurrentRange : undefined),
         number: currentNumber != null ?
           currentNumber + segmentNumberInCurrentRange : undefined,
       };
