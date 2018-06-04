@@ -258,7 +258,7 @@ function patchRepresentationIndex(
 ) {
   const newIndex = JSON.parse(JSON.stringify(segmentIndex));
   newIndex.media = replaceRepresentationDASHTokens(
-    repURL + (segmentIndex.media || ""),
+    resolveURL(repURL, segmentIndex.media),
     repId,
     repBitrate
   );
@@ -268,7 +268,7 @@ function patchRepresentationIndex(
       mediaRange? : [number, number];
     }) => {
       element.media = replaceRepresentationDASHTokens(
-        repURL + (element.media || ""),
+        resolveURL(repURL, element.media),
         repId,
         repBitrate
       );
@@ -277,7 +277,7 @@ function patchRepresentationIndex(
   if (segmentIndex.initialization) {
     newIndex.initialization.media =
       replaceRepresentationDASHTokens(
-        repURL + (segmentIndex.initialization.media || ""),
+        resolveURL(repURL, segmentIndex.initialization.media),
         repId,
         repBitrate
       );
