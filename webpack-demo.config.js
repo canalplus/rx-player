@@ -14,9 +14,9 @@ const isDevMode = RXP_ENV === "development";
 
 module.exports = {
   mode: isDevMode ? "development" : "production",
-  entry: path.join(__dirname, "../demo/full/scripts/index.js"),
+  entry: path.join(__dirname, "./demo/full/scripts/index.js"),
   output: {
-    path: path.join(__dirname, "../demo/full"),
+    path: path.join(__dirname, "./demo/full"),
     filename: "bundle.js",
   },
   optimization: {

@@ -61,7 +61,7 @@ if (coverageIsWanted) {
   config.module.rules.push({
     test: /\.js$/,
     enforce: "post",
-    include: path.resolve(__dirname, "../src/"),
+    include: path.resolve(__dirname, "./src/"),
     exclude: [/__tests__/],
     use: {
       loader: "istanbul-instrumenter-loader",
