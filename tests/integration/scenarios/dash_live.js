@@ -56,7 +56,6 @@ describe("dash live SegmentTimeline content", function () {
     expect(adaptations.video[0].getAvailableBitrates()).to.eql([300000]);
 
     const audioRepresentation = adaptations.audio[0].representations[0];
-    expect(audioRepresentation.baseURL).to.equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/");
     expect(audioRepresentation.bitrate).to.equal(48000);
     expect(audioRepresentation.codec).to.equal("mp4a.40.2");
     expect(audioRepresentation.id).to.equal("A48");
@@ -66,6 +65,8 @@ describe("dash live SegmentTimeline content", function () {
     const audioRepresentationIndex = audioRepresentation.index;
     const initAudioSegment = audioRepresentationIndex.getInitSegment();
     expect(initAudioSegment.id).to.equal("init");
+    expect(initAudioSegment.media).to
+      .equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/A48/init.mp4");
 
     const nextAudioSegment1 = audioRepresentationIndex
       .getSegments(1527507762, 5);
@@ -75,6 +76,8 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextAudioSegment1[0].isInit).to.equal(false);
     expect(nextAudioSegment1[0].time).to.equal(73320372578304);
     expect(nextAudioSegment1[0].timescale).to.equal(48000);
+    expect(nextAudioSegment1[0].media).to
+      .equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/A48/t73320372578304.m4s");
 
     const nextAudioSegment2 = audioRepresentationIndex
       .getSegments(1527507762, 11);
@@ -84,6 +87,8 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextAudioSegment2[1].isInit).to.equal(false);
     expect(nextAudioSegment2[1].time).to.equal(73320372867072);
     expect(nextAudioSegment2[1].timescale).to.equal(48000);
+    expect(nextAudioSegment2[1].media).to
+      .equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/A48/t73320372867072.m4s");
 
     expect(audioRepresentationIndex.getSegments(1527507762, 294).length)
       .to.equal(49);
@@ -94,7 +99,6 @@ describe("dash live SegmentTimeline content", function () {
     ).to.equal(50);
 
     const videoRepresentation = adaptations.video[0].representations[0];
-    expect(videoRepresentation.baseURL).to.equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/");
     expect(videoRepresentation.bitrate).to.equal(300000);
     expect(videoRepresentation.codec).to.equal("avc1.64001e");
     expect(videoRepresentation.id).to.equal("V300");
@@ -105,6 +109,11 @@ describe("dash live SegmentTimeline content", function () {
 
     const videoRepresentationIndex = videoRepresentation.index;
 
+    const initVideoSegment = videoRepresentationIndex.getInitSegment();
+    expect(initVideoSegment.id).to.equal("init");
+    expect(initVideoSegment.media).to
+      .equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/V300/init.mp4");
+
     const nextVideoSegment1 = videoRepresentationIndex
       .getSegments(1527507762, 5);
     expect(nextVideoSegment1.length).to.equal(1);
@@ -113,6 +122,8 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextVideoSegment1[0].isInit).to.equal(false);
     expect(nextVideoSegment1[0].time).to.equal(137475698580000);
     expect(nextVideoSegment1[0].timescale).to.equal(90000);
+    expect(nextVideoSegment1[0].media).to
+      .equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/V300/t137475698580000.m4s");
 
     const nextVideoSegment2 = videoRepresentationIndex
       .getSegments(1527507762, 11);
@@ -122,6 +133,8 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextVideoSegment2[1].isInit).to.equal(false);
     expect(nextVideoSegment2[1].time).to.equal(137475699120000);
     expect(nextVideoSegment2[1].timescale).to.equal(90000);
+    expect(nextVideoSegment2[1].media).to
+      .equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/V300/t137475699120000.m4s");
 
     expect(videoRepresentationIndex.getSegments(1527507762, 294).length)
       .to.equal(49);
