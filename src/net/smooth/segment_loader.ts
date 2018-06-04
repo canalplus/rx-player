@@ -124,11 +124,11 @@ const generateSegmentLoader = (
     });
   }
   else {
-    if (!segment.media) {
+    if (!segment.mediaURL) {
       log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
       return EMPTY;
     }
-    const url = segment.media;
+    const url = segment.mediaURL;
 
     const args = {
       adaptation,

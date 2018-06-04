@@ -95,7 +95,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
   segment,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
   const {
-    media,
+    mediaURL,
     range,
     indexRange,
     isInit,
@@ -103,11 +103,11 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
 
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
-  if (isInit && !(media || range || indexRange)) {
+  if (isInit && !(mediaURL || range || indexRange)) {
     return EMPTY;
   }
 
-  if (!media) {
+  if (!mediaURL) {
     log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
     return EMPTY;
   }
@@ -119,7 +119,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     representation,
     segment,
     transport: "dash",
-    url: media,
+    url: mediaURL,
   };
 
   if (!customSegmentLoader) {

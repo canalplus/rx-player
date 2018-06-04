@@ -329,6 +329,7 @@ export default class SmoothRepresentationIndex
           samplingRate: this._samplingRate,
           protection: this._protection,
         },
+        mediaURL: "",
       };
     }
 
@@ -370,7 +371,7 @@ export default class SmoothRepresentationIndex
               isInit: false,
               timescale,
               number: currentNumber != null ? currentNumber : undefined,
-              media: replaceSegmentSmoothTokens(media, time),
+              mediaURL: replaceSegmentSmoothTokens(media, time),
             };
             segments.push(segment);
           }
@@ -391,7 +392,7 @@ export default class SmoothRepresentationIndex
             duration: d,
             timescale,
             number,
-            media: replaceSegmentSmoothTokens(media, time),
+            mediaURL: replaceSegmentSmoothTokens(media, time),
           };
           segments.push(segment);
 

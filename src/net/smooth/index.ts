@@ -211,12 +211,12 @@ export default function(
         });
       }
 
-      if (!segment.media) {
+      if (!segment.mediaURL) {
         log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
         return EMPTY;
       }
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
-      return request({ url: segment.media, responseType });
+      return request({ url: segment.mediaURL, responseType });
     },
 
     parser({
@@ -371,11 +371,11 @@ export default function(
         });
       }
 
-      if (!segment.media) {
+      if (!segment.mediaURL) {
         log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
         return EMPTY;
       }
-      return request({ url: segment.media, responseType: "arraybuffer" });
+      return request({ url: segment.mediaURL, responseType: "arraybuffer" });
     },
 
     parser(
