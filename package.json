@@ -59,20 +59,20 @@
     "update-version": "Update the version in the codebase to what is given in argument"
   },
   "scripts": {
-    "build": "webpack --progress --config tools/webpack.config.js",
-    "build:min": "cross-env RXP_MINIFY=true webpack --progress --config tools/webpack.config.js",
-    "build:watch": "webpack --progress --config tools/webpack.config.js -w",
+    "build": "webpack --progress --config webpack.config.js",
+    "build:min": "cross-env RXP_MINIFY=true webpack --progress --config webpack.config.js",
+    "build:watch": "webpack --progress --config webpack.config.js -w",
     "check": "npm run types && npm run lint && npm run test",
-    "demo": "webpack --progress --config tools/webpack-demo.config.js",
-    "demo:min": "cross-env RXP_MINIFY=true webpack --progress --config tools/webpack-demo.config.js",
-    "demo:watch": "webpack --progress --config tools/webpack-demo.config.js -w",
-    "doc": "rm -rf doc/generated; node tools/generate-doc/index.js doc/ doc/generated",
+    "demo": "webpack --progress --config webpack-demo.config.js",
+    "demo:min": "cross-env RXP_MINIFY=true webpack --progress --config webpack-demo.config.js",
+    "demo:watch": "webpack --progress --config webpack-demo.config.js -w",
+    "doc": "rm -rf doc/generated; node ./scripts/doc-generator/index.js doc/ doc/generated",
     "info": "npm-scripts-info",
     "lint": "tslint --project . -c tslint.json \"src/**/*.ts\"",
     "lint:demo": "eslint demo/**/*.js demo/**/*.jsx",
     "lint:tests": "eslint tests/**/*.js",
-    "standalone": "cross-env RXP_ENV=development node ./tools/server.standalone.js",
-    "start": "cross-env RXP_ENV=development node ./tools/server.js",
+    "standalone": "cross-env RXP_ENV=development node ./demo/standalone/server.js",
+    "start": "cross-env RXP_ENV=development node ./demo/full/server.js",
     "test": "karma start tests/karma.conf.js",
     "test:chrome": "karma start tests/karma.conf.js --browsers Chrome",
     "test:coverage": "cross-env RXP_COVERAGE=true karma start tests/karma.conf.js --browsers Chrome,Firefox",
@@ -93,7 +93,7 @@
     "types": "tsc --noEmit --project .",
     "update-version": "npm run version --git-tag-version=false",
     "preversion": "npm run check",
-    "version": "./tools/bin/update-version"
+    "version": "./scripts/update-version"
   },
   "repository": {
     "type": "git",
