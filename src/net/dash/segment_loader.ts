@@ -19,7 +19,6 @@ import {
   merge as observableMerge,
   Observable,
 } from "rxjs";
-import log from "../../utils/log";
 import request from "../../utils/request";
 import {
   CustomSegmentLoader,
@@ -104,11 +103,6 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
   if (isInit && !(mediaURL || range || indexRange)) {
-    return EMPTY;
-  }
-
-  if (!mediaURL) {
-    log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
     return EMPTY;
   }
 
