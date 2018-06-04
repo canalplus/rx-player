@@ -4,11 +4,11 @@ const Webpack = require("webpack");
 const WebpackDevServer = require("webpack-dev-server");
 const path = require("path");
 
-const webpackDemoConfig = require("./webpack-demo.config.js");
-const webpackLibConfig = require("./webpack.config.js");
+const webpackDemoConfig = require("../../webpack-demo.config.js");
+const webpackLibConfig = require("../../webpack.config.js");
 
 // overwrite entries/output (ugly but just werks and did not find any better)
-webpackLibConfig.entry = path.join(__dirname, "../src/exports.ts");
+webpackLibConfig.entry = path.join(__dirname, "../../src/exports.ts");
 webpackLibConfig.output.path = path.join(__dirname, "../demo/full");
 webpackLibConfig.output.filename = "lib.js";
 
@@ -16,12 +16,12 @@ const demoCompiler = Webpack(webpackDemoConfig);
 const libCompiler = Webpack(webpackLibConfig);
 
 const serverDemo = new WebpackDevServer(demoCompiler, {
-  contentBase: path.join(__dirname, "../demo/full"),
+  contentBase: path.join(__dirname, "./"),
   compress: true,
 });
 
 const serverLib = new WebpackDevServer(libCompiler, {
-  contentBase: path.join(__dirname, "../demo/full"),
+  contentBase: path.join(__dirname, "./"),
   compress: true,
 });
 
