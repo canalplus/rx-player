@@ -460,12 +460,12 @@ function createSmoothStreamingParser(
 
     // apply default properties
     representations.forEach((representation: IParsedRepresentation) => {
+      const path = resolveURL(rootURL, baseURL);
       const repIndex = {
         timeline: index.timeline,
         timescale: index.timescale,
         initialization: index.initialization,
-        media:
-          replaceRepresentationSmoothTokens(resolveURL(rootURL, baseURL), representation),
+        media: replaceRepresentationSmoothTokens(path, representation),
       };
       representation.mimeType =
         representation.mimeType || DEFAULT_MIME_TYPES[adaptationType];

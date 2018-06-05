@@ -15,7 +15,6 @@
  */
 
 import {
-  EMPTY,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -27,7 +26,6 @@ import {
 import parseBif from "../../parsers/images/bif";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
-import log from "../../utils/log";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
 import {
@@ -151,7 +149,7 @@ export default function(
       representation,
       segment,
     } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer|Uint8Array> {
+    ) : ILoaderObservable<ArrayBuffer|Uint8Array|null> {
       return segmentLoader({
         adaptation,
         init,
@@ -167,9 +165,12 @@ export default function(
       response,
       adaptation,
       manifest,
-    } : ISegmentParserArguments<ArrayBuffer|Uint8Array>
+    } : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
     ) : SegmentParserObservable {
-      const responseData = response.responseData;
+      const { responseData } = response;
+      if (responseData == null) {
+        return observableOf({ segmentData: null, segmentInfos: null });
+      }
 
       if (segment.isInit) {
         // smooth init segments are crafted by hand. Their timescale is the one
@@ -204,16 +205,11 @@ export default function(
       representation,
     } : ISegmentLoaderArguments
     ) : ILoaderObservable<string|ArrayBuffer|null> {
-      if (segment.isInit) {
+      if (segment.isInit || segment.mediaURL == null) {
         return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
-      }
-
-      if (!segment.mediaURL) {
-        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
-        return EMPTY;
       }
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
       return request({ url: segment.mediaURL, responseType });
@@ -363,7 +359,7 @@ export default function(
     loader(
       { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
-      if (segment.isInit) {
+      if (segment.isInit || segment.mediaURL == null) {
         // image do not need an init segment. Passthrough directly to the parser
         return observableOf({
           type: "data" as "data",
@@ -371,10 +367,6 @@ export default function(
         });
       }
 
-      if (!segment.mediaURL) {
-        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
-        return EMPTY;
-      }
       return request({ url: segment.mediaURL, responseType: "arraybuffer" });
     },
 

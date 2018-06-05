@@ -16,13 +16,11 @@
 
 import objectAssign from "object-assign";
 import {
-  EMPTY,
   merge as observableMerge,
   of as observableOf,
 } from "rxjs";
 
 import assert from "../../utils/assert";
-import log from "../../utils/log";
 import { stringFromUTF8 } from "../../utils/strings";
 
 import {
@@ -69,16 +67,11 @@ function TextTrackLoader(
 
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
-  if (isInit && !(mediaURL || range || indexRange)) {
+  if (mediaURL == null || (isInit && !(mediaURL || range || indexRange))) {
     return observableOf({
       type: "data" as "data",
       value: { responseData: null },
     });
-  }
-
-  if (!mediaURL) {
-    log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
-    return EMPTY;
   }
 
   // fire a single time for contiguous init and index ranges

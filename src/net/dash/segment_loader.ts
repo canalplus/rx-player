@@ -15,9 +15,9 @@
  */
 
 import {
-  EMPTY,
   merge as observableMerge,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import request from "../../utils/request";
 import {
@@ -92,7 +92,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
   period,
   representation,
   segment,
-} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
+} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
   const {
     mediaURL,
     range,
@@ -100,10 +100,11 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     isInit,
   } = segment;
 
-  // init segment without initialization media/range/indexRange:
-  // we do nothing on the network
-  if (isInit && !(mediaURL || range || indexRange)) {
-    return EMPTY;
+  if (mediaURL == null || (isInit && !(range || indexRange))) {
+    return observableOf({
+      type: "data" as "data",
+      value: { responseData: null },
+    });
   }
 
   const args = {

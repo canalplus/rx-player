@@ -94,7 +94,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         isInit: false,
         duration,
         timescale,
-        mediaURL: replaceSegmentDASHTokens(media, time, number),
+        mediaURL: media ? // XXX TODO can media be not defined here?
+          replaceSegmentDASHTokens(media, time, number) : null,
       };
       segments.push(args);
     }
@@ -149,7 +150,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     if (__DEV__) {
       log.warn("Tried to add Segments to a template RepresentationIndex");
     }
-    return;
   }
 
   /**

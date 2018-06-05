@@ -27,8 +27,7 @@ function replaceRepresentationSmoothTokens(
     url : string,
     representation : IParsedRepresentation|Representation
   ) : string {
-    return url
-      .replace(/\{bitrate\}/g,    String(representation.bitrate));
+    return url.replace(/\{bitrate\}/g, String(representation.bitrate));
   }
 
 /**
@@ -36,12 +35,8 @@ function replaceRepresentationSmoothTokens(
  * @param {number} time
  * @returns {string}
  */
-function replaceSegmentSmoothTokens(
-  url : string,
-  time : number
-) : string {
-  return url
-    .replace(/\{start time\}/g, String(time));
+function replaceSegmentSmoothTokens(url : string, time : number) : string {
+  return url.replace(/\{start time\}/g, String(time));
 }
 
 export {
