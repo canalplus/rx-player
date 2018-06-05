@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  of as observableOf
-} from "rxjs";
+import { of as observableOf } from "rxjs";
 import {
   getMDHDTimescale,
   parseSidx,
