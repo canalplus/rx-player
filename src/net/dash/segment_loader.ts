@@ -93,14 +93,9 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
   representation,
   segment,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
-  const {
-    mediaURL,
-    range,
-    indexRange,
-    isInit,
-  } = segment;
+  const { mediaURL } = segment;
 
-  if (mediaURL == null || (isInit && !(range || indexRange))) {
+  if (mediaURL == null) {
     return observableOf({
       type: "data" as "data",
       value: { responseData: null },

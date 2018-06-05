@@ -59,7 +59,6 @@ function TextTrackLoader(
     mediaURL,
     range,
     indexRange,
-    isInit,
   } = segment;
 
   // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
@@ -67,7 +66,7 @@ function TextTrackLoader(
 
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
-  if (mediaURL == null || (isInit && !(mediaURL || range || indexRange))) {
+  if (mediaURL == null) {
     return observableOf({
       type: "data" as "data",
       value: { responseData: null },
