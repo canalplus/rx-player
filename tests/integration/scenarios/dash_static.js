@@ -94,7 +94,7 @@ describe("dash static SegmentTimeline content", function () {
 
     const audioRepresentationIndex = audioRepresentation.index;
     const initAudioSegment = audioRepresentationIndex.getInitSegment();
-    expect(initAudioSegment.media).to
+    expect(initAudioSegment.mediaURL).to
       .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000.dash");
     expect(initAudioSegment.id).to.equal("init");
 
@@ -103,7 +103,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextAudioSegment1[0].duration).to.equal(177341);
     expect(nextAudioSegment1[0].id).to.equal("0");
     expect(nextAudioSegment1[0].isInit).to.equal(false);
-    expect(nextAudioSegment1[0].media).to
+    expect(nextAudioSegment1[0].mediaURL).to
       .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000-0.dash");
     expect(nextAudioSegment1[0].time).to.equal(0);
     expect(nextAudioSegment1[0].timescale).to.equal(44100);
@@ -113,7 +113,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextAudioSegment2[1].duration).to.equal(176128);
     expect(nextAudioSegment2[1].id).to.equal("177341");
     expect(nextAudioSegment2[1].isInit).to.equal(false);
-    expect(nextAudioSegment2[1].media)
+    expect(nextAudioSegment2[1].mediaURL)
       .to.equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000-177341.dash");
     expect(nextAudioSegment2[1].time).to.equal(177341);
     expect(nextAudioSegment2[1].timescale).to.equal(44100);
@@ -136,7 +136,7 @@ describe("dash static SegmentTimeline content", function () {
 
     const videoRepresentationIndex = videoRepresentation.index;
     const initVideoSegment = videoRepresentationIndex.getInitSegment();
-    expect(initVideoSegment.media).to
+    expect(initVideoSegment.mediaURL).to
       .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000.dash");
     expect(initVideoSegment.id).to.equal("init");
 
@@ -145,7 +145,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextVideoSegment1[0].duration).to.equal(4004);
     expect(nextVideoSegment1[0].id).to.equal("0");
     expect(nextVideoSegment1[0].isInit).to.equal(false);
-    expect(nextVideoSegment1[0].media).to
+    expect(nextVideoSegment1[0].mediaURL).to
       .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000-0.dash");
     expect(nextVideoSegment1[0].time).to.equal(0);
     expect(nextVideoSegment1[0].timescale).to.equal(1000);
@@ -155,7 +155,7 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextVideoSegment2[1].duration).to.equal(4004);
     expect(nextVideoSegment2[1].id).to.equal("4004");
     expect(nextVideoSegment2[1].isInit).to.equal(false);
-    expect(nextVideoSegment2[1].media).to
+    expect(nextVideoSegment2[1].mediaURL).to
       .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000-4004.dash");
     expect(nextVideoSegment2[1].time).to.equal(4004);
     expect(nextVideoSegment2[1].timescale).to.equal(1000);
