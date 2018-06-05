@@ -408,7 +408,7 @@ export default function parseManifest(
             duration: Number.MAX_VALUE,
             timescale: 1,
             startNumber: 0,
-            initialization: {media: representationURL},
+            initialization: { media: representationURL },
             media: representationURL,
           }, periodStart);
         }
