@@ -176,10 +176,10 @@ interface ITransportSegmentPipelineBase<T> {
 }
 
 export type ITransportVideoSegmentPipeline =
-  ITransportSegmentPipelineBase<Uint8Array|ArrayBuffer>;
+  ITransportSegmentPipelineBase<Uint8Array|ArrayBuffer|null>;
 
 export type ITransportAudioSegmentPipeline =
-  ITransportSegmentPipelineBase<Uint8Array|ArrayBuffer>;
+  ITransportSegmentPipelineBase<Uint8Array|ArrayBuffer|null>;
 
 export interface ITransportTextSegmentPipeline {
   // Note: The segment's data can be null for init segments

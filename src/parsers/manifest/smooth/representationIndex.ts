@@ -329,7 +329,7 @@ export default class SmoothRepresentationIndex
           samplingRate: this._samplingRate,
           protection: this._protection,
         },
-        mediaURL: "",
+        mediaURL: null,
       };
     }
 

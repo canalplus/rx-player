@@ -76,7 +76,7 @@ const generateSegmentLoader = (
   period,
   manifest,
   init,
-} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
+} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
   if (segment.isInit) {
     if (!segment.privateInfos || segment.privateInfos.type !== "smooth-init") {
       throw new Error("Smooth: Invalid segment format");
@@ -119,6 +119,12 @@ const generateSegmentLoader = (
     return observableOf({
       type: "data" as "data", // :/ TS Bug or I'm going insane?
       value: { responseData },
+    });
+  }
+  else if (segment.mediaURL == null) {
+    return observableOf({
+      type: "data" as "data",
+      value: { responseData: null },
     });
   }
   else {

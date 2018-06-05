@@ -110,7 +110,7 @@ function getInitSegment(
     time: 0,
     range: initialization ? initialization.range || undefined : undefined,
     indexRange: index.indexRange || undefined,
-    mediaURL: initialization ? initialization.media : "",
+    mediaURL: initialization ? initialization.media : null,
     timescale: index.timescale,
   };
 }
@@ -167,6 +167,7 @@ function getSegmentsFromTimeline(
       // TODO what? May be to play it safe and avoid adding segments which are
       // not completely generated
       if (ts + maxEncounteredDuration < to) {
+        const number = currentNumber != null ? currentNumber : undefined;
         const segment = {
           id: "" + ts,
           time: ts,
@@ -174,9 +175,10 @@ function getSegmentsFromTimeline(
           range,
           duration: undefined,
           timescale,
-          mediaURL: replaceSegmentDASHTokens(
-            media, ts, currentNumber != null ? currentNumber : undefined),
-          number: currentNumber != null ? currentNumber : undefined,
+
+          // XXX TODO can media be not defined here?
+          mediaURL: media ? replaceSegmentDASHTokens(media, ts, number) : null,
+          number,
         };
         segments.push(segment);
       }
@@ -187,6 +189,8 @@ function getSegmentsFromTimeline(
     let segmentNumberInCurrentRange = getSegmentNumber(ts, up, d);
     let segmentTime = ts + segmentNumberInCurrentRange * d;
     while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
+      const number = currentNumber != null ?
+        currentNumber + segmentNumberInCurrentRange : undefined;
       const segment = {
         id: "" + segmentTime,
         time: segmentTime,
@@ -194,10 +198,9 @@ function getSegmentsFromTimeline(
         range,
         duration: d,
         timescale,
-        mediaURL: replaceSegmentDASHTokens(media, segmentTime,  currentNumber != null ?
-          currentNumber + segmentNumberInCurrentRange : undefined),
-        number: currentNumber != null ?
-          currentNumber + segmentNumberInCurrentRange : undefined,
+        mediaURL: media ? // XXX TODO can media be not defined here?
+          replaceSegmentDASHTokens(media, segmentTime, number) : null,
+        number,
       };
       segments.push(segment);
 

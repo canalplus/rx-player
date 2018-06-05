@@ -15,7 +15,6 @@
  */
 
 import {
-  EMPTY,
   of as observableOf
 } from "rxjs";
 import {
@@ -24,7 +23,6 @@ import {
 } from "../../parsers/containers/isobmff";
 import parseBif from "../../parsers/images/bif";
 import dashManifestParser from "../../parsers/manifest/dash";
-import log from "../../utils/log";
 import request from "../../utils/request";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -91,11 +89,7 @@ export default function(
   const segmentPipeline = {
     loader({ adaptation, init, manifest, period, representation, segment }
       : ISegmentLoaderArguments
-    ) : ILoaderObservable<Uint8Array|ArrayBuffer> {
-      if (!segment.mediaURL) {
-        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
-        return EMPTY;
-      }
+    ) : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
       return segmentLoader({
         adaptation,
         init,
@@ -111,11 +105,15 @@ export default function(
       representation,
       response,
       init,
-    } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
+    } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : SegmentParserObservable {
-      const segmentData : Uint8Array = response.responseData instanceof Uint8Array ?
-        response.responseData :
-        new Uint8Array(response.responseData);
+      const { responseData } = response;
+      if (responseData == null) {
+        return observableOf({ segmentData: null, segmentInfos: null });
+      }
+      const segmentData : Uint8Array = responseData instanceof Uint8Array ?
+        responseData :
+        new Uint8Array(responseData);
       const indexRange = segment.indexRange;
       const sidxSegments = parseSidx(segmentData, indexRange ? indexRange[0] : 0);
 
@@ -147,16 +145,11 @@ export default function(
     loader(
       { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
-      if (segment.isInit) {
-        // image do not need an init segment. Passthrough directly to the parser
+      if (segment.isInit || segment.mediaURL == null) {
         return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
-      }
-      if (!segment.mediaURL) {
-        log.warn("Couldn't load segment" + segment.id + " because no URL is defined.");
-        return EMPTY;
       }
       const { mediaURL } = segment;
       return request({ url: mediaURL, responseType: "arraybuffer" });
