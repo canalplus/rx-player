@@ -43,7 +43,7 @@ import RepresentationIndex from "./representationIndex";
 
 interface IHSSManifestSegment {
   ts : number;
-  d? : number;
+  d : number;
   r : number;
 }
 
@@ -284,7 +284,8 @@ function createSmoothStreamingParser(
       const ts = (t == null)
         ? prev.ts + (prev.d || 0) * (prev.r + 1)
         : t;
-      timeline.push({ d, ts, r });
+      const duration = d || ts - prev.ts;
+      timeline.push({ d: duration, ts, r });
     }
     return timeline;
   }
@@ -445,7 +446,6 @@ function createSmoothStreamingParser(
       index: {
         timeline: [] as IHSSManifestSegment[],
         timescale: _timescale,
-        initialization: {},
       },
     });
 
@@ -464,7 +464,6 @@ function createSmoothStreamingParser(
       const repIndex = {
         timeline: index.timeline,
         timescale: index.timescale,
-        initialization: index.initialization,
         media: replaceRepresentationSmoothTokens(path, representation),
       };
       representation.mimeType =
