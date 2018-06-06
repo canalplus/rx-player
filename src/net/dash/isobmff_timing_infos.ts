@@ -32,7 +32,7 @@ import { ISegmentTimingInfos } from "../types";
  *   4. As a fallback take segment infos.
  * @param {Object} segment
  * @param {UInt8Array} buffer - The entire isobmff container
- * @param {Array.<Object>} [sidxSegments=[]] - Segments from sidx. Here
+ * @param {Array.<Object>|undefined} sidxSegments - Segments from sidx. Here
  * pre-parsed for performance reasons as it is usually available when
  * this function is called.
  * @param {Object} initInfos

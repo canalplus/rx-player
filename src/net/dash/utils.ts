@@ -116,7 +116,7 @@ function isMP4EmbeddedTrack(representation : Representation) : boolean {
 
 /**
  * Returns text-formatted byteRange (`bytes=$start-$end?)`
- * @param {Array.<string|Number>}
+ * @param {Array.<string|Number>} arr
  * @returns {string}
  */
 function byteRange([start, end] : [number, number]) : string {

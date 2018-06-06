@@ -45,10 +45,6 @@ export interface IBaseIndex {
  * /!\ Mutate the given index
  * @param {Object} index
  * @param {Object} segmentInfos
- * @param {Number} segmentInfos.timescale
- * @param {Number} segmentInfos.duration
- * @param {Number} segmentInfos.count
- * @param {*} segmentInfos.range - TODO check type
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
@@ -159,7 +155,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @param {Array.<Object>}
+   * @param {Array.<Object>} nextSegments
    * @returns {Array.<Object>}
    */
   _addSegments(nextSegments : Array<{
@@ -175,7 +171,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @param {Object}
+   * @param {Object} newIndex
    */
   _update(
     newIndex : BaseRepresentationIndex /* TODO @ index refacto */

@@ -133,8 +133,6 @@ export default class LanguageManager {
 
   /**
    * @param {Object} defaults
-   * @param {Array.<Object>} defaults.preferredAudioTracks
-   * @param {Array.<Object>} defaults.preferredTextTracks
    */
   constructor(defaults : {
     preferredAudioTracks? : IAudioTrackPreference[];

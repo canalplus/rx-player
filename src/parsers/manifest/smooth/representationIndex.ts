@@ -40,12 +40,7 @@ interface ITimelineIndex {
  * /!\ Mutate the given index
  * @param {Object} index
  * @param {Object} newSegment
- * @param {Number} newSegment.timescale
- * @param {Number} newSegment.time
- * @param {Number} newSegment.duration
  * @param {Object} currentSegment
- * @param {Number} currentSegment.timescale
- * @param {Number} currentSegment.time
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
@@ -187,10 +182,6 @@ function getSegmentNumber(
 /**
  * Get end of the given index range, timescaled.
  * @param {Object} range
- * @param {Number} range.ts - the range's start time
- * @param {Number} range.d - the range's duration
- * @param {Number} range.r - the range's count. 0 for a single element, 1 for
- * 2 elements etc.
  * @returns {Number} - absolute end time of the range
  */
 function getTimelineRangeEnd({ ts, d, r }: {
@@ -239,10 +230,7 @@ function normalizeRange(
 /**
  * Calculate the number of times a segment repeat based on the next segment.
  * @param {Object} segment
- * @param {Number} segment.ts - beginning timescaled timestamp
- * @param {Number} segment.d - timescaled duration of the segment
  * @param {Object} nextSegment
- * @param {Number} nextSegment.ts
  * @returns {Number}
  */
 function calculateRepeat(

@@ -47,8 +47,6 @@ interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {Object} opt
- * @param {string} opt.url
- * @param {Segment} opt.segment
  * @returns {Observable}
  */
 function regularSegmentLoader(
@@ -153,6 +151,10 @@ const generateSegmentLoader = (
       let hasFinished = false;
       let hasFallbacked = false;
 
+      /**
+       * Callback triggered when the custom segment loader has a response.
+       * @param {Object} args
+       */
       const resolve = (_args : {
         data : ArrayBuffer|Uint8Array;
         size : number;
@@ -172,6 +174,10 @@ const generateSegmentLoader = (
         }
       };
 
+      /**
+       * Callback triggered when the custom segment loader fails
+       * @param {*} err - The corresponding error encountered
+       */
       const reject = (err = {}) => {
         if (!hasFallbacked) {
           hasFinished = true;

@@ -19,7 +19,7 @@ import { IParsedManifest } from "../types";
 
 /**
  * @param {Document} manifest - Original manifest as returned by the server
- * @param {Function} [contentProtectionParser]
+ * @param {string} uri
  * @returns {Object} - parsed manifest
  */
 export default function parseFromDocument(

@@ -363,7 +363,7 @@ function guidToUuid(uuid : string) : string {
 /**
  * Creates a base-64 encoded ASCII string from a string of binary data, with
  * possible trailing equal sign(s) stripped.
- * @param {string}
+ * @param {string} str
  * @returns {string}
  */
 function toBase64URL(str : string) : string {

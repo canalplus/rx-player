@@ -147,7 +147,7 @@ export default class ABRManager {
    *     - duration {number}: duration of the request, in seconds.
    *     - size {number}: size of the downloaded chunks, in bytes.
    *
-   * @param {ChooserOption} [options={}]
+   * @param {Object|undefined} options
    */
   constructor(
     requests$: Observable<Observable<IRequest>>,
@@ -221,7 +221,7 @@ export default class ABRManager {
    * state).
    * @param {string} type
    * @param {Observable<Object>} clock$
-   * @param {Array.<Representation>} [representations=[]]
+   * @param {Array.<Representation>|undefined} representations
    * @returns {Observable}
    */
   public get$(

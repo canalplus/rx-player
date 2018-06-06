@@ -117,24 +117,34 @@ export type IBufferHandlerEvent =
  * transitions between periods.
  * To do this, we dynamically create or destroy buffers as they are needed.
  *
- * @param {Object} content
- * @param {Manifest} content.manifest
- * @param {Period} content.period - The first period to play in the content
- * @param {Observable} clock$ - Emit current informations about the content
- * being played. Also regulate the frequencies of the time the Buffer check
- * for new its status / new segments.
- * @param {BufferManager} bufferManager - Will be used to create new
- * AdaptationBuffers at will
- * @param {SourceBufferManager} sourceBufferManager - Will be used to lazily
- * create SourceBuffer instances associated with the current content.
- * @param {SegmentPipelinesManager} segmentPipelinesManager - Used to download
- * segments.
- * @param {WeakMapMemory} segmentBookkeeper - Allow to easily retrieve
- * or create a unique SegmentBookkeeper per SourceBuffer
- * @param {WeakMapMemory} garbageCollectors - Allows to easily create a
- * unique Garbage Collector per SourceBuffer
- * @param {Object} options
- * @param {Subject} errorStream - Subject to emit minor errors
+ * @param {Object} content - The content to play. Contains the following
+ * properties:
+ *   - manifest {Manifest}
+ *
+ *   - period {Period} - The first period to play in the content
+ *
+ *   - clock$ {Observable} - Emit current informations about the content
+ *     being played. Also regulate the frequencies of the time the Buffer check
+ *     for new its status / new segments.
+ *
+ *   - bufferManager {BufferManager} -  Will be used to create new
+ *     AdaptationBuffers at will
+ *
+ *   - sourceBufferManager {SourceBufferManager} - Will be used to lazily
+ *     create SourceBuffer instances associated with the current content.
+ *
+ *   - segmentPipelinesManager {SegmentPipelinesManager} - Used to download
+ *     segments.
+ *
+ *   - segmentBookkeeper {WeakMapMemory} - Allow to easily retrieve or create
+ *     a unique SegmentBookkeeper per SourceBuffer
+ *
+ *   - garbageCollectors {WeakMapMemory} - Allow to easily retrieve or create
+ *     a unique Garbage Collector per SourceBuffer
+ *
+ *   - options {Object}
+ *
+ *   - errorStream {Subject} - Subject to emit minor errors
  * @returns {Observable}
  *
  * TODO Special case for image Buffer, where we want data for EVERY active
