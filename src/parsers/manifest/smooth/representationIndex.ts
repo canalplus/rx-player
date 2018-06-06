@@ -24,7 +24,7 @@ import { replaceSegmentSmoothTokens } from "./helpers";
 
 export interface IIndexSegment {
   ts : number; // start timestamp
-  d? : number; // duration
+  d : number; // duration
   r : number; // repeat counter
 }
 
@@ -292,13 +292,9 @@ export default class SmoothRepresentationIndex
       }>;
     };
 
-    private _index : any;
-    // private _index : {
-    //   timeline : IHSSManifestSegment[];
-    //   timescale : number;
-    // }; // TODO
+    private _index : ITimelineIndex;
 
-    constructor(index : any, infos : ISmoothInitSegmentPrivateInfos) { // TODO
+    constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
       this._index = index;
       this._bitsPerSample = infos.bitsPerSample;
       this._channels = infos.channels;
