@@ -34,8 +34,8 @@ export interface IBaseIndex {
   presentationTimeOffset? : number;
   duration? : number;
   indexRange?: [number, number];
-  initialization?: { media: string; range?: [number, number] };
-  media : string;
+  initialization?: { mediaURL: string; range?: [number, number] };
+  mediaURL : string;
   startNumber? : number;
 }
 
