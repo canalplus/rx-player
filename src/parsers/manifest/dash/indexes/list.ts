@@ -28,11 +28,11 @@ export interface IListIndex {
   timescale: number;
   duration : number;
   list: Array<{
-    media : string;
+    mediaURL : string;
     mediaRange? : [number, number];
   }>;
 
-  initialization?: { media: string; range?: [number, number] };
+  initialization?: { mediaURL: string; range?: [number, number] };
   indexRange?: [number, number];
   presentationTimeOffset? : number;
 }
@@ -78,7 +78,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     let i = Math.floor(up / duration);
     while (i <= length) {
       const range = list[i].mediaRange;
-      const mediaURL = list[i].media;
+      const mediaURL = list[i].mediaURL;
       const args = {
         id: "" + i,
         time: i * duration,

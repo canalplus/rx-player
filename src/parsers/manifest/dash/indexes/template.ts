@@ -30,8 +30,8 @@ export interface ITemplateIndex {
   timescale : number;
 
   indexRange?: [number, number];
-  initialization?: { media: string; range?: [number, number] };
-  media : string;
+  initialization?: { mediaURL: string; range?: [number, number] };
+  mediaURL : string;
   presentationTimeOffset? : number;
   startNumber? : number;
 }
@@ -74,7 +74,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       duration,
       startNumber,
       timescale,
-      media,
+      mediaURL,
       presentationTimeOffset,
     } = index;
 
@@ -94,8 +94,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         isInit: false,
         duration,
         timescale,
-        mediaURL: media ? // XXX TODO can media be not defined here?
-          replaceSegmentDASHTokens(media, time, number) : null,
+        mediaURL: replaceSegmentDASHTokens(mediaURL, time, number),
       };
       segments.push(args);
     }

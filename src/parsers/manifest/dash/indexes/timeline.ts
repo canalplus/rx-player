@@ -28,8 +28,8 @@ import {
 export interface ITimelineIndex {
   duration? : number;
   indexRange?: [number, number];
-  initialization? : { media: string; range?: [number, number] };
-  media : string;
+  initialization? : { mediaURL: string; range?: [number, number] };
+  mediaURL : string;
   presentationTimeOffset? : number;
   startNumber? : number;
   timeline : IIndexSegment[];

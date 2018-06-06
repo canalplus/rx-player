@@ -98,7 +98,7 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment) : number {
 function getInitSegment(
   index: {
     timescale: number;
-    initialization?: { media: string; range?: [number, number] };
+    initialization?: { mediaURL: string; range?: [number, number] };
     indexRange?: [number, number];
   }
 ) : ISegment {
@@ -110,7 +110,7 @@ function getInitSegment(
     time: 0,
     range: initialization ? initialization.range || undefined : undefined,
     indexRange: index.indexRange || undefined,
-    mediaURL: initialization ? initialization.media : null,
+    mediaURL: initialization ? initialization.mediaURL : null,
     timescale: index.timescale,
   };
 }
@@ -136,7 +136,7 @@ function getSegmentNumber(
 
 function getSegmentsFromTimeline(
   index : {
-    media : string;
+    mediaURL : string;
     startNumber? : number;
     timeline : IIndexSegment[];
     timescale : number;
@@ -145,7 +145,7 @@ function getSegmentsFromTimeline(
   _to : number
 ) : ISegment[] {
   const { up, to } = normalizeRange(index, _up, _to);
-  const { timeline, timescale, media, startNumber } = index;
+  const { timeline, timescale, mediaURL, startNumber } = index;
 
   let currentNumber = startNumber != null ? startNumber : undefined;
 
@@ -175,9 +175,7 @@ function getSegmentsFromTimeline(
           range,
           duration: undefined,
           timescale,
-
-          // XXX TODO can media be not defined here?
-          mediaURL: media ? replaceSegmentDASHTokens(media, ts, number) : null,
+          mediaURL: replaceSegmentDASHTokens(mediaURL, ts, number),
           number,
         };
         segments.push(segment);
@@ -198,8 +196,7 @@ function getSegmentsFromTimeline(
         range,
         duration: d,
         timescale,
-        mediaURL: media ? // XXX TODO can media be not defined here?
-          replaceSegmentDASHTokens(media, segmentTime, number) : null,
+        mediaURL: replaceSegmentDASHTokens(mediaURL, segmentTime, number),
         number,
       };
       segments.push(segment);
