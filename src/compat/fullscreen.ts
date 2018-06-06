@@ -16,7 +16,7 @@
 
 /**
  * Request fullScreen action on a given element.
- * @paras {HTMLElement} elt
+ * @param {HTMLElement} elt
  * rs-detect)
  */
 function requestFullscreen(elt : HTMLMediaElement) : void {

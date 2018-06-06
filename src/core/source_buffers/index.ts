@@ -151,7 +151,7 @@ export default class SourceBufferManager {
    * already exists. TODO Throw or abort old one instead?
    * @param {string} bufferType
    * @param {string} codec
-   * @param {Object} [options={}]
+   * @param {Object|undefined} options
    * @returns {QueuedSourceBuffer}
    */
   public createSourceBuffer(

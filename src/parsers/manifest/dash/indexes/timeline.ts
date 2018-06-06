@@ -71,12 +71,7 @@ function getSegmentIndex(
  * /!\ Mutate the given index
  * @param {Object} index
  * @param {Object} newSegment
- * @param {Number} newSegment.timescale
- * @param {Number} newSegment.time
- * @param {Number} newSegment.duration
  * @param {Object} currentSegment
- * @param {Number} currentSegment.timescale
- * @param {Number} currentSegment.time
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
@@ -286,7 +281,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * @param {Object}
+   * @param {Object} newIndex
    */
   _update(
     newIndex : TimelineRepresentationIndex /* TODO @ index refacto */
@@ -296,8 +291,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
   /**
    * We do not have to add new segments to SegmentList-based indexes.
-   * @param {Array.<Object>}
-   * @param {Object}
+   * @param {Array.<Object>} nextSegments
+   * @param {Object|undefined} currentSegment
    * @returns {Array}
    */
   _addSegments(

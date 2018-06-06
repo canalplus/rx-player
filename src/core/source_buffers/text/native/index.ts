@@ -68,12 +68,6 @@ export default class NativeTextTrackSourceBuffer
   /**
    * Append text tracks.
    * @param {Object} data
-   * @param {string} data.data
-   * @param {string} data.language
-   * @param {Number} data.timescale
-   * @param {Number} data.start
-   * @param {Number} data.timeOffset
-   * @param {Number|undefined} data.end
    */
   _append(data : INativeTextTrackData) : void {
     log.debug("appending new native text tracks", data);

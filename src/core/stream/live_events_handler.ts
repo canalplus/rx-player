@@ -70,11 +70,6 @@ export default function liveEventsHandler(
   manifest : Manifest,
   fetchManifest : (url : string) => Observable<Manifest>
 ) : (message : IStreamEvent) => Observable<IStreamEvent> {
-  /**
-   * Handle individual stream events
-   * @param {string} message
-   * @returns {Observable}
-   */
   return function handleLiveEvents(message) {
     switch (message.type) {
       case "discontinuity-encountered":

@@ -483,7 +483,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * private properties should be initialized here for better visibility.
    * @constructor
    * @param {Object} options
-   * @param {HTMLMediaElement} options.videoElement
    */
   constructor(options : IConstructorOptions = {}) {
     super();
@@ -749,10 +748,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         textTrackElement: options.textTrackElement,
       };
 
-      /**
-       * Stream Observable, through which the content will be launched.
-       * @type {Observable.<Object>}
-       */
+      // Stream Observable, through which the content will be launched.
       stream = Stream({
         adaptiveOptions,
         autoPlay,
@@ -1382,7 +1378,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
   /**
    * Set the player's volume. From 0 (muted volume) to 1 (maximum volume).
-   * @param {Number}
+   * @param {Number} volume
    */
   setVolume(volume : number) : void {
     if (!this.videoElement) {
@@ -1904,9 +1900,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Initialize various private properties and emit initial event.
    *
    * @param {Object} value
-   * @param {Manifest} value.manifest - The Manifest instance
-   * @param {Object} value.abrManager - ABR manager which can be used to select
-   * the wanted bandwidth.
    */
   private _priv_onManifestReady(value : {
     abrManager : ABRManager;
@@ -1939,7 +1932,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Store and emit initial state for the Period.
    *
    * @param {Object} value
-   * @param {Period} value.period
    */
   private _priv_onActivePeriodChanged({ period } : { period : Period }) : void {
     if (!this._priv_contentInfos) {
@@ -1985,9 +1977,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Choose the right Adaptation for the Period and emit it.
    *
    * @param {Object} value
-   * @param {string} value.type
-   * @param {Period} value.period
-   * @param {Subject} value.adaptation$
    */
   private _priv_onPeriodBufferReady(value : {
     type : IBufferType;
@@ -2035,7 +2024,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Update the LanguageManager to remove the corresponding Period.
    *
    * @param {Object} value
-   * @param {Period} value.period
    */
   private _priv_onPeriodBufferCleared(value : {
     type : IBufferType;
@@ -2056,7 +2044,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Update the LanguageManager and emit events.
    *
    * @param {Object} value
-   * @param {Manifest} value.manifest
    */
   private _priv_onManifestUpdate(value : { manifest : Manifest }) : void {
     if (!this._priv_contentInfos) {
@@ -2080,9 +2067,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Store given Adaptation and emit it if from the current Period.
    *
    * @param {Object} value
-   * @param {string} value.type
-   * @param {Period} value.period
-   * @param {Adaptation} value.adaptation
    */
   private _priv_onAdaptationChange({
     type,
@@ -2137,8 +2121,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Store given Representation and emit it if from the current Period.
    *
    * @param {Object} obj
-   * @param {string} obj.type
-   * @param {Object} obj.representation
    */
   private _priv_onRepresentationChange({
     type,
@@ -2191,8 +2173,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Emit it.
    *
    * @param {Object} value
-   * @param {string} value.type
-   * @param {number|undefined} value.bitrate
    */
   private _priv_onBitrateEstimationChange({
     type,
@@ -2228,7 +2208,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    *
    * Trigger the right Player Event.
    *
-   * @param {Array.<TextTrackElement} tracks
+   * @param {Array.<TextTrackElement>} tracks
    */
   private _priv_onNativeTextTracksNext(tracks : TextTrack[]) : void {
     this.trigger("nativeTextTracksChange", tracks);

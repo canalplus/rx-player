@@ -155,13 +155,6 @@ export default class HTMLTextTrackSourceBuffer
   /**
    * Append text tracks.
    * @param {Object} data
-   * @param {string} data.type
-   * @param {string} data.data
-   * @param {string} data.language
-   * @param {Number} data.timescale
-   * @param {Number} data.start
-   * @param {Number} data.timeOffset
-   * @param {Number|undefined} data.end
    */
   _append(data : IHTMLTextTrackData) : void {
     log.debug("appending new html text tracks", data);

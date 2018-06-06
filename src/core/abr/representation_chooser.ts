@@ -217,10 +217,11 @@ function estimateRequestBandwidth(
 /**
  * Filter representations given through filters options.
  * @param {Array.<Representation>} representations
- * @param {Object} filters
- * @param {number} [filters.bitrate] - max bitrate authorized (included).
- * @param {number} [filters.width] - max width authorized (included).
- * @returns {Representation[]}
+ * @param {Object} filters - Filter Object.
+ * _Can_ contain each of the following properties:
+ *   - bitrate {Number} - max bitrate authorized (included).
+ *   - width {Number} - max width authorized (included).
+ * @returns {Array.<Representation>}
  */
 function getFilteredRepresentations(
   representations : Representation[],

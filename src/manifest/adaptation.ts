@@ -116,7 +116,7 @@ class Adaptation {
 
   /**
    * @param {Number} bitrate
-   * @returns {Representations[]|null}
+   * @returns {Array.<Representations>|null}
    */
   getRepresentationsForBitrate(bitrate : number) : Representation[]|null {
     return this.representations.filter(r => r.bitrate === bitrate) || null;

@@ -59,10 +59,10 @@ const manifestPreLoader = (
 
       /**
        * Callback triggered when the custom manifest loader has a response.
-       * @param {Object} args
-       * @param {*} args.data - The manifest data
-       * @param {Number} args.size - The manifest size
-       * @param {Number} args.duration - The duration of the request, in ms
+       * @param {Object} args - Which contains:
+       *   - data {*} - The manifest data
+       *   - size {Number} - The manifest size
+       *   - duration {Number} - The duration of the request, in ms
        */
       const resolve = (_args : {
         data : Document|string;
@@ -85,7 +85,7 @@ const manifestPreLoader = (
 
       /**
        * Callback triggered when the custom manifest loader fails
-       * @param {*} [err={}] - The corresponding error encountered
+       * @param {*} err - The corresponding error encountered
        */
       const reject = (err = {}) => {
         if (!hasFallbacked) {

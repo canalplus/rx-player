@@ -33,7 +33,7 @@ export default class SimpleSet {
   /**
    * Add a new hash entry in the set.
    * Do not have any effect on already-added hashes
-   * @param {string|number}
+   * @param {string|number} x
    */
   public add(x : string|number) : void {
     this._hashes[x] = true;
@@ -42,7 +42,7 @@ export default class SimpleSet {
   /**
    * Remove an hash entry from the set.
    * Do not have any effect on already-removed or inexistant hashes
-   * @param {string|number}
+   * @param {string|number} x
    */
   public remove(x : string|number) : void {
     delete this._hashes[x];
@@ -50,7 +50,7 @@ export default class SimpleSet {
 
   /**
    * Test if the given hash has an entry in the set.
-   * @param {string|number}
+   * @param {string|number} x
    * @returns {boolean}
    */
   public test(x : string|number) : boolean {

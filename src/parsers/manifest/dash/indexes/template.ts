@@ -151,7 +151,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * @param {Object}
+   * @param {Object} newIndex
    */
   _update(
     newIndex : TemplateRepresentationIndex /* TODO @ index refacto */

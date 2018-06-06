@@ -69,23 +69,8 @@ interface IDownloadingBackoffOptions {
  *   - "offline" errors
  *   - other xhr errors
  * Both have their own counters which are resetted if the error type changes.
- * @param {Observable}
- * @param {Object} options
- * @param {Number} options.baseDelay - First delay set when and if:
- *   - the first observable throws
- *   - any observable throws an error which has a type different than the last
- *     one.
- * @param {Number} options.maxDelay - Maximum delay considered for the backoff.
- * Note that this delay is not exact as it will be "fuzzed".
- * @param {Number} options.maxRetryRegular - Maximum number of retry for
- * "regular" errors. That is, errors that are most likely due to the CDN.
- * @param {Number} options.maxRetryOffline - Maximum number of retry for
- * "offline" errors. That is, errors that are most likely due to the user being
- * offline.
- * @param {Function} [options.onRetry] - callback to call as an observable
- * throws. Will be called with two arguments:
- *   - The error thrown by the observable.
- *   - The counter for the current error type.
+ * @param {Observable} obs$
+ * @param {Object} options - Configuration options.
  * @returns {Observable}
  */
 function downloadingBackoff<T>(
