@@ -219,11 +219,13 @@ function createSmoothStreamingParser(
     keyId : string;
     keySystems: IKeySystem[];
   } {
-    const header = root.firstElementChild as Element;
-    assert(
-      header.nodeName === "ProtectionHeader",
-      "Protection should have ProtectionHeader child"
-    );
+    if (
+      !root.firstElementChild ||
+      root.firstElementChild.nodeName !== "ProtectionHeader"
+    ) {
+      throw new Error("Protection should have ProtectionHeader child");
+    }
+    const header = root.firstElementChild;
     const privateData = strToBytes(atob(header.textContent || ""));
     const keyId = getHexKeyId(privateData);
     const keyIdBytes = hexToBytes(keyId);
@@ -441,7 +443,7 @@ function createSmoothStreamingParser(
       }
       return res;
     }, {
-      representations: [] as any[],
+      representations: [] as any[] /* TODO */,
       cNodes: [] as Element[],
     });
 
