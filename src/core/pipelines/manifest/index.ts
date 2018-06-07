@@ -60,8 +60,8 @@ type IPipelineManifestOptions =
  *
  * @param {Object} transport
  * @param {Subject} warning$
- * @param {Array.<Object>} [supplementaryTextTracks=[]]
- * @param {Array.<Object>} [supplementaryImageTrack=[]]
+ * @param {Array.<Object>|undefined} supplementaryTextTracks
+ * @param {Array.<Object>|undefined} supplementaryImageTrack
  * @returns {Function}
  */
 export default function createManifestPipeline(

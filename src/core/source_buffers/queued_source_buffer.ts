@@ -180,9 +180,9 @@ export default class QueuedSourceBuffer<T> {
 
   /**
    * Remove data from the attached SourceBuffer, in a FIFO queue.
-   * @param {Object} range
-   * @param {Number} range.start - start position, in seconds
-   * @param {Number} range.end - end position, in seconds
+   * @param {Object} range - Range of positions. With two properties:
+   *   - start {Number} - start position, in seconds
+   *   - end {Number} - end position, in seconds
    * @returns {Observable}
    */
   public removeBuffer(

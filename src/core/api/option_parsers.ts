@@ -175,7 +175,7 @@ export type IParsedLoadVideoOptions = IParsedLoadVideoOptionsNative |
  *
  * Do not mutate anything, only cross the given options and sane default options
  * (most coming from the config).
- * @param {Object} [options={}]
+ * @param {Object|undefined} options
  * @returns {Object}
  */
 function parseConstructorOptions(
@@ -311,7 +311,7 @@ function parseConstructorOptions(
  * (most coming from the config).
  *
  * Throws if any mandatory option is not set.
- * @param {Object} [options={}]
+ * @param {Object|undefined} options
  * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */

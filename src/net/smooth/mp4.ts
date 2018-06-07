@@ -395,9 +395,9 @@ const atoms = {
 
   /**
    * @param {string} systemId - Hex string representing the CDM, 16 bytes.
-   * @param {Uint8Array} [privateData=[]] - Data associated to protection
+   * @param {Uint8Array|undefined} privateData - Data associated to protection
    * specific system.
-   * @param {[]Uint8Array} keyIds - List of key ids contained in the PSSH
+   * @param {Array.<Uint8Array>} keyIds - List of key ids contained in the PSSH
    * @returns {Uint8Array}
    */
   pssh(

@@ -74,10 +74,6 @@ function normalizeRange(
 /**
  * Get start of the given index range, timescaled.
  * @param {Object} range
- * @param {Number} range.ts - the range's start time
- * @param {Number} range.d - the range's duration
- * @param {Number} range.r - the range's count. 0 for a single element, 1 for
- * 2 elements etc.
  * @returns {Number} - absolute start time of the range
  */
 function getTimelineRangeStart({ ts, d, r }: IIndexSegment) : number {
@@ -87,10 +83,6 @@ function getTimelineRangeStart({ ts, d, r }: IIndexSegment) : number {
 /**
  * Get end of the given index range, timescaled.
  * @param {Object} range
- * @param {Number} range.ts - the range's start time
- * @param {Number} range.d - the range's duration
- * @param {Number} range.r - the range's count. 0 for a single element, 1 for
- * 2 elements etc.
  * @returns {Number} - absolute end time of the range
  */
 function getTimelineRangeEnd({ ts, d, r }: IIndexSegment) : number {
@@ -100,11 +92,6 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment) : number {
 /**
  * Construct init segment for the given index.
  * @param {Object} index
- * @param {Number} index.timescale
- * @param {Object} [index.initialization={}]
- * @param {Array.<Number>|null} [index.initialization.range=null]
- * @param {Array.<Number>|null} [index.initialization.indexRange=null]
- * @param {string} [index.initialization.media]
  * @returns {Object}
  */
 function getInitSegment(

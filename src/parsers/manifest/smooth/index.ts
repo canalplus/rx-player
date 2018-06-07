@@ -151,7 +151,8 @@ export interface IContentProtectionSmooth {
 }
 
 /**
- * @param {Object} [parserOptions={}]
+ * @param {Object|undefined} parserOptions
+ * @returns {Function}
  */
 function createSmoothStreamingParser(
   parserOptions : IHSSParserConfiguration = {}

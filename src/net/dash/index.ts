@@ -59,8 +59,6 @@ interface IDASHOptions {
  * Returns pipelines used for DASH streaming.
  * @param {Object} options
  * implementation. Used for each generated http request.
- * @param {Function} [options.contentProtectionParser] - Optional parser for the
- * manifest's content Protection.
  * @returns {Object}
  */
 export default function(

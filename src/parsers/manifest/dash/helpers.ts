@@ -52,7 +52,7 @@ function parseString(str : string) : string {
 
 /**
  * Parse MPD boolean attributes.
- * @param {string}
+ * @param {string} str
  * @returns {Boolean}
  */
 function parseBoolean(str : string) : boolean {
@@ -61,7 +61,7 @@ function parseBoolean(str : string) : boolean {
 
 /**
  * Parse some MPD attributes.
- * @param {string}
+ * @param {string} str
  * @returns {Boolean|Number}
  */
 function parseIntOrBoolean(str : string) : boolean|number {
@@ -76,7 +76,7 @@ function parseIntOrBoolean(str : string) : boolean|number {
 
 /**
  * Parse MPD date attributes.
- * @param {string}
+ * @param {string} str
  * @returns {Date}
  */
 function parseDateTime(str : string) : number {
@@ -85,7 +85,7 @@ function parseDateTime(str : string) : number {
 
 /**
  * Parse MPD ISO8601 duration attributes into seconds.
- * @param {string}
+ * @param {string} date
  * @returns {Number}
  */
 function parseDuration(date : string) : number {

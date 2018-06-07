@@ -42,9 +42,9 @@ export interface ISpeedManagerOptions {
  * @param {HTMLMediaElement} videoElement
  * @param {Observable} speed$ - emit speed set by the user
  * @param {Observable} clock$
- * @param {Object} options
- * @param {Boolean} [options.pauseWhenStalled=true] - true if the player
- * stalling should lead to a pause until it un-stalls.
+ * @param {Object} options - Contains the following properties:
+ *   - pauseWhenStalled {Boolean|undefined} - true if the player
+ *     stalling should lead to a pause until it un-stalls. True by default.
  * @returns {Observable}
  */
 const speedManager = (

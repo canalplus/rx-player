@@ -388,16 +388,6 @@ function applyPStyle(element : HTMLElement, style : IDictionary<string>) {
  * @param {Element} el - the #text element, which text content should be
  * displayed
  * @param {Object} style - the style object for the given text
- * @param {Array.<Element>} spans - <span> tags which contain the element. In
- * order of closeness (from the closest to the least one)
- * @param {Element|null} p - <p> tag which contain the element.
- * @param {Array.<Element>} divs - <div> tags which contain the element. In
- * order of closeness (from the closest to the least one)
- * @param {Element|null} body - <body> tag which contain the element.
- * @param {Array.<Object>} regions - Every <region> tag which can apply to
- * this element.
- * @param {Array.<Object>} styles - Every <style> tag which can apply to
- * this element.
  * @param {Boolean} shouldTrimWhiteSpaceParam - True if the space should be
  * trimmed by default. From the <tt> xml:space parameter.
  * @returns {HTMLElement}
@@ -501,7 +491,7 @@ function generateTextContent(
  * @param {Element} body
  * @param {Array.<Object>} regions
  * @param {Array.<Object>} styles
- * @param {Object} styles
+ * @param {Object} paragraphStyle
  * @param {Boolean} shouldTrimWhiteSpace
  * @returns {HTMLElement}
  */

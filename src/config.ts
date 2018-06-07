@@ -64,7 +64,7 @@ export default {
    */
   DEFAULT_MAX_BUFFER_AHEAD: Infinity,
 
-  /*
+  /**
    * Default max buffer size ahead of the current position in seconds.
    * The buffer _before_ this limit will be garbage collected.
    * Set to Infinity for no limit.
@@ -92,6 +92,7 @@ export default {
               // mechanism is triggered for them.
   },
 
+  /* tslint:disable no-object-literal-type-assertion */
   /**
    * Default bitrate ceil initially set to dictate the maximum bitrate the
    * ABR manager can automatically switch to.
@@ -102,7 +103,6 @@ export default {
    * Set to Infinity to discard any limit in the ABR strategy.
    * @type {Object}
    */
-  /* tslint:disable no-object-literal-type-assertion */
   DEFAULT_MAX_BITRATES: {
     audio: Infinity, // only "audio" segments
     video: Infinity, // only "video" segments

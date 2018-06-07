@@ -53,7 +53,7 @@ function parseTimeAndSettings(
   end : number;
   settings : { [settingName : string ] : string };
 }|null {
-  /*
+  /**
    * RegExp for the timestamps + settings line.
    *
    * Capture groups:

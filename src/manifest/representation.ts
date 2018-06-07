@@ -50,14 +50,7 @@ class Representation {
 
   /**
    * @constructor
-   * @param {Object} [args={}]
-   * @param {string|Number} [args.id]
-   * @param {Number} args.bitrate
-   * @param {string} args.codecs
-   * @param {Number} args.height
-   * @param {Number} args.width
-   * @param {string} args.mimeType
-   * @param {Object} args.index
+   * @param {Object|undefined} args
    */
   constructor(args : IRepresentationArguments) {
     const nId = generateNewId();

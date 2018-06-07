@@ -100,7 +100,7 @@ function shouldUnsetMediaKeys() : boolean {
 /**
  * Wait for the MediaSource's sourceopen event and emit. Emit immediatelly if
  * already received.
- * @param {MediaSource}
+ * @param {MediaSource} mediaSource
  * @returns {Observable}
  */
 function onSourceOpen$(
