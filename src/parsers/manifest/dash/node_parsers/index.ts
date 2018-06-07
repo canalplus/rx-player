@@ -257,25 +257,25 @@ function patchRepresentationIndex(
   repBitrate: number
 ) {
   const newIndex = JSON.parse(JSON.stringify(segmentIndex));
-  newIndex.media = replaceRepresentationDASHTokens(
+  newIndex.mediaURL = replaceRepresentationDASHTokens(
     resolveURL(repURL, segmentIndex.media),
     repId,
     repBitrate
   );
   if (newIndex.list) {
     newIndex.list.forEach((element: {
-      media : string;
+      mediaURL : string;
       mediaRange? : [number, number];
     }) => {
-      element.media = replaceRepresentationDASHTokens(
-        resolveURL(repURL, element.media),
+      element.mediaURL = replaceRepresentationDASHTokens(
+        resolveURL(repURL, element.mediaURL),
         repId,
         repBitrate
       );
     });
   }
   if (segmentIndex.initialization) {
-    newIndex.initialization.media =
+    newIndex.initialization.mediaURL =
       replaceRepresentationDASHTokens(
         resolveURL(repURL, segmentIndex.initialization.media),
         repId,
