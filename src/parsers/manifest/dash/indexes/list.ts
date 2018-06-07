@@ -19,6 +19,7 @@ import {
   ISegment,
 } from "../../../../manifest";
 import log from "../../../../utils/log";
+import { createIndexURL } from "../helpers";
 import {
   getInitSegment,
   normalizeRange,
@@ -37,6 +38,26 @@ export interface IListIndex {
   presentationTimeOffset? : number;
 }
 
+export interface IListIndexIndexArgument {
+  duration : number;
+  list: Array<{
+    media? : string;
+    mediaRange? : [number, number];
+  }>;
+  timescale : number;
+
+  indexRange?: [number, number];
+  initialization?: { media? : string; range?: [number, number] };
+  presentationTimeOffset?: number;
+}
+
+export interface IListIndexContextArgument {
+  periodStart : number;
+  representationURL : string;
+  representationId? : string;
+  representationBitrate? : number;
+}
+
 /**
  * Provide helpers for SegmentList-based DASH indexes.
  * @type {Object}
@@ -46,13 +67,43 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
 
   /**
    * @param {Object} index
+   * @param {Object} context
    */
-  constructor(index : IListIndex, periodStart : number) {
+  constructor(index : IListIndexIndexArgument, context : IListIndexContextArgument) {
+    const {
+      periodStart,
+      representationURL,
+      representationId,
+      representationBitrate,
+    } = context;
     if (index.presentationTimeOffset == null) {
       index.presentationTimeOffset = periodStart * index.timescale;
     }
 
-    this._index = index;
+    this._index = {
+      list: index.list.map((lItem) => ({
+        mediaURL: createIndexURL(
+          representationURL,
+          lItem.media,
+          representationId,
+          representationBitrate
+        ),
+        mediaRange: lItem.mediaRange,
+      })),
+      timescale: index.timescale,
+      duration: index.duration,
+      indexRange: index.indexRange,
+      presentationTimeOffset: index.presentationTimeOffset,
+      initialization: index.initialization && {
+        mediaURL: createIndexURL(
+          representationURL,
+          index.initialization.media,
+          representationId,
+          representationBitrate
+        ),
+        range: index.initialization.range,
+      },
+    };
   }
 
   /**

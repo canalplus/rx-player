@@ -36,19 +36,16 @@ import {
   IRole,
   isHardOfHearing,
   isVisuallyImpaired,
-  replaceRepresentationDASHTokens,
 } from "../helpers";
-import BaseRepresentationIndex, { IBaseIndex } from "../indexes/base";
-import ListRepresentationIndex, { IListIndex } from "../indexes/list";
-import TemplateRepresentationIndex, { ITemplateIndex } from "../indexes/template";
-import TimelineRepresentationIndex, { ITimelineIndex } from "../indexes/timeline";
+import BaseRepresentationIndex from "../indexes/base";
+import ListRepresentationIndex from "../indexes/list";
+import TemplateRepresentationIndex from "../indexes/template";
+import TimelineRepresentationIndex from "../indexes/timeline";
 import {
   createMPDIntermediateRepresentation,
 } from "./MPD";
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
-import { IParsedSegmentBase } from "./SegmentBase";
-import { IParsedSegmentList } from "./SegmentList";
 import {
   IParsedSegmentTemplate,
   IParsedSegmentTimeline
@@ -224,67 +221,6 @@ const getLastLiveTimeReference = (
   return representationsMin;
 };
 
-/**
- * From parsed media url, build a representation based media url.
- * @param {Object} segmentIndex
- * @param {string} repURL
- * @param {string} repId
- * @param {number} repBitrate
- */
-function patchRepresentationIndex(
-  segmentIndex: IParsedSegmentList,
-  repURL: string,
-  repId: string,
-  repBitrate: number
-): IListIndex;
-function patchRepresentationIndex(
-  segmentIndex: IParsedSegmentBase,
-  repURL: string,
-  repId: string,
-  repBitrate: number
-): IBaseIndex;
-function patchRepresentationIndex(
-  segmentIndex: IParsedSegmentTemplate|IParsedSegmentTimeline,
-  repURL: string,
-  repId: string,
-  repBitrate: number
-): ITemplateIndex|ITimelineIndex;
-function patchRepresentationIndex(
-  segmentIndex:
-    IParsedSegmentBase|IParsedSegmentList|IParsedSegmentTemplate|IParsedSegmentTimeline,
-  repURL: string,
-  repId: string,
-  repBitrate: number
-) {
-  const newIndex = JSON.parse(JSON.stringify(segmentIndex));
-  newIndex.mediaURL = replaceRepresentationDASHTokens(
-    resolveURL(repURL, segmentIndex.media),
-    repId,
-    repBitrate
-  );
-  if (newIndex.list) {
-    newIndex.list.forEach((element: {
-      mediaURL : string;
-      mediaRange? : [number, number];
-    }) => {
-      element.mediaURL = replaceRepresentationDASHTokens(
-        resolveURL(repURL, element.mediaURL),
-        repId,
-        repBitrate
-      );
-    });
-  }
-  if (segmentIndex.initialization) {
-    newIndex.initialization.mediaURL =
-      replaceRepresentationDASHTokens(
-        resolveURL(repURL, segmentIndex.initialization.media),
-        repId,
-        repBitrate
-      );
-  }
-  return newIndex;
-}
-
 export default function parseManifest(
   root: Element,
   uri : string
@@ -367,50 +303,49 @@ export default function parseManifest(
           adaptationRootURL, baseURL);
         let adaptationIndex : IRepresentationIndex;
         if (adaptationChildren.segmentBase != null) {
-          const segmentBase = patchRepresentationIndex(
-            adaptationChildren.segmentBase,
+          const { segmentBase } = adaptationChildren;
+          adaptationIndex = new BaseRepresentationIndex(segmentBase, {
+            periodStart,
             representationURL,
-            repId,
-            repBitrate || 0
-          );
-          adaptationIndex = new BaseRepresentationIndex(
-            segmentBase,
-            periodStart
-          );
+            representationId: repId,
+            representationBitrate: repBitrate,
+          });
         } else if (adaptationChildren.segmentList != null) {
-          const segmentList = patchRepresentationIndex(
-            adaptationChildren.segmentList,
+          const { segmentList } = adaptationChildren;
+          adaptationIndex = new ListRepresentationIndex(segmentList, {
+            periodStart,
             representationURL,
-            repId,
-            repBitrate || 0
-          );
-          adaptationIndex = new ListRepresentationIndex(
-            segmentList,
-            periodStart
-          );
+            representationId: repId,
+            representationBitrate: repBitrate,
+          });
         } else if (adaptationChildren.segmentTemplate != null) {
-          const segmentTemplate = patchRepresentationIndex(
-            adaptationChildren.segmentTemplate,
-            representationURL,
-            repId,
-            repBitrate || 0
-          );
-          segmentTemplate.presentationTimeOffset =
-            periodStart * segmentTemplate.timescale;
+          const { segmentTemplate } = adaptationChildren;
           adaptationIndex = adaptationChildren.segmentTemplate.indexType === "timeline" ?
-            // TODO Find a way with the optional 'd'
-            new TimelineRepresentationIndex(
-              segmentTemplate as ITimelineIndex, periodStart) :
-            new TemplateRepresentationIndex(
-              segmentTemplate as ITemplateIndex, periodStart);
+            new TimelineRepresentationIndex(segmentTemplate as IParsedSegmentTimeline, {
+              periodStart,
+              representationURL,
+              representationId: repId,
+              representationBitrate: repBitrate,
+            }) :
+            new TemplateRepresentationIndex(segmentTemplate as IParsedSegmentTemplate, {
+              periodStart,
+              representationURL,
+              representationId: repId,
+              representationBitrate: repBitrate,
+            });
         } else {
           adaptationIndex = new TemplateRepresentationIndex({
             duration: Number.MAX_VALUE,
             timescale: 1,
             startNumber: 0,
-            initialization: { mediaURL: representationURL },
-            mediaURL: representationURL,
-          }, periodStart);
+            initialization: { media: "" },
+            media: "",
+          }, {
+            periodStart,
+            representationURL,
+            representationId: repId,
+            representationBitrate: repBitrate,
+          });
         }
         return adaptationIndex;
       }
@@ -435,41 +370,41 @@ export default function parseManifest(
           // 4-2-2. Find Index
           let representationIndex : IRepresentationIndex;
           if (representation.children.segmentBase != null) {
-            const segmentBase = patchRepresentationIndex(
-              representation.children.segmentBase,
+            const { segmentBase } = representation.children;
+            representationIndex = new BaseRepresentationIndex(segmentBase, {
+              periodStart,
               representationURL,
-              repId,
-              repBitrate || 0
-            );
-            representationIndex = new BaseRepresentationIndex(
-              segmentBase,
-              periodStart
-            );
+              representationId: repId,
+              representationBitrate: repBitrate,
+            });
           } else if (representation.children.segmentList != null) {
-            const segmentList = patchRepresentationIndex(
-                  representation.children.segmentList,
-                  representationURL,
-                  repId,
-                  repBitrate || 0
-                );
-            representationIndex = new ListRepresentationIndex(
-              segmentList,
-              periodStart
-            );
+            const { segmentList } = representation.children;
+            representationIndex = new ListRepresentationIndex(segmentList, {
+              periodStart,
+              representationURL,
+              representationId: repId,
+              representationBitrate: repBitrate,
+            });
           } else if (representation.children.segmentTemplate != null) {
-            const segmentTemplate = patchRepresentationIndex(
-                  representation.children.segmentTemplate,
-                  representationURL,
-                  repId,
-                  repBitrate || 0
+            const { segmentTemplate } = representation.children;
+            representationIndex =
+              representation.children.segmentTemplate.indexType === "timeline" ?
+                new TimelineRepresentationIndex(
+                  segmentTemplate as IParsedSegmentTimeline, {
+                    periodStart,
+                    representationURL,
+                    representationId: repId,
+                    representationBitrate: repBitrate,
+                  }
+                ) :
+                new TemplateRepresentationIndex(
+                  segmentTemplate as IParsedSegmentTemplate, {
+                    periodStart,
+                    representationURL,
+                    representationId: repId,
+                    representationBitrate: repBitrate,
+                  }
                 );
-                representationIndex =
-                  representation.children.segmentTemplate.indexType === "timeline" ?
-              // TODO Find a way with the optional 'd'
-              new TimelineRepresentationIndex(
-                segmentTemplate as ITimelineIndex, periodStart) :
-              new TemplateRepresentationIndex(
-                segmentTemplate as ITemplateIndex, periodStart);
           } else {
             representationIndex = findAdaptationIndex(representation);
           }
