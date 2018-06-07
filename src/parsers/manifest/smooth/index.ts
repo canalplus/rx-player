@@ -244,50 +244,49 @@ function createSmoothStreamingParser(
   }
 
   /**
-   * @param {Element} node
-   * @param {Array.<Object>} timeline
-   * @returns {Array.<Object>}
+   * Parse C nodes to build index timeline.
+   * @param {Element} nodes
    */
-  function parseC(
-    node : Element,
-    timeline : IHSSManifestSegment[]
+  function parseCNodes(
+    nodes : Element[]
   ) : IHSSManifestSegment[] {
-    const len = timeline.length;
-    const prev = len > 0 ?
-      timeline[len - 1] : { d: 0, ts: 0, r: 0 };
-    const dAttr = node.getAttribute("d");
-    const tAttr = node.getAttribute("t");
-    const rAttr = node.getAttribute("r");
+    return nodes.reduce((timeline, node , i) => {
+      const dAttr = node.getAttribute("d");
+      const tAttr = node.getAttribute("t");
+      const rAttr = node.getAttribute("r");
 
-    // in smooth streaming format,
-    // r refers to number of same duration
-    // chunks, not repetitions (defers from DASH)
-    const r = rAttr ? +rAttr - 1 : 0;
-    const t = tAttr ? +tAttr : undefined;
-    const d = dAttr ? +dAttr : undefined;
+      const r = rAttr ? +rAttr - 1 : 0;
+      let ts = tAttr ? +tAttr : undefined;
+      let d = dAttr ? +dAttr : undefined;
 
-    if (len > 0 && !prev.d) {
-      if (__DEV__) {
-        assert(typeof t === "number");
+      if (i === 0) { // first node
+        ts = ts || 0;
+      } else { // from second node to the end
+        const prev = timeline[i - 1];
+        if (!ts) {
+          if (!prev.d) {
+            throw new Error();
+          }
+          ts = prev.ts + prev.d;
+        }
       }
-      prev.d = t != null ? t - prev.ts : 0;
-      timeline[len - 1] = prev; // TODO might not be needed
-    }
-
-    // if same segment than the last one, repeat the previous one
-    if (len > 0 && d === prev.d && t == null) {
-      prev.r += (r || 0) + 1;
-    } else {
-      if (__DEV__) {
-        assert(t != null || prev.d != null);
+      if (!d) {
+        const nextNode = nodes[i + 1];
+        if (nextNode) {
+          const nextTAttr = nextNode.getAttribute("t");
+          const nextTS = nextTAttr ? +nextTAttr : null;
+          if (nextTS === null) {
+            throw new Error(
+              "Can't build index timeline from Smooth Manifest.");
+          }
+          d = nextTS - ts;
+        } else {
+          return timeline;
+        }
       }
-      const ts = (t == null)
-        ? prev.ts + (prev.d || 0) * (prev.r + 1)
-        : t;
-      const duration = d || ts - prev.ts;
-      timeline.push({ d: duration, ts, r });
-    }
-    return timeline;
+      timeline.push({ d, ts, r });
+      return timeline;
+    }, [] as IHSSManifestSegment[]);
   }
 
   /**
@@ -417,7 +416,7 @@ function createSmoothStreamingParser(
 
     const {
       representations,
-      index,
+      cNodes,
     } = reduceChildren(root, (res, _name, node) => {
       switch (_name) {
         case "QualityLevel":
@@ -437,17 +436,19 @@ function createSmoothStreamingParser(
           }
           break;
         case "c":
-          res.index.timeline = parseC(node, res.index.timeline);
+          res.cNodes.push(node);
           break;
       }
       return res;
     }, {
       representations: [] as any[],
-      index: {
-        timeline: [] as IHSSManifestSegment[],
-        timescale: _timescale,
-      },
+      cNodes: [] as Element[],
     });
+
+    const index = {
+      timeline: parseCNodes(cNodes),
+      timescale: _timescale,
+    };
 
     // we assume that all representations have the same
     // codec and mimeType
