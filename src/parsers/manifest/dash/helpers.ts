@@ -20,6 +20,7 @@
 /* tslint:enable:max-line-length */
 
 import assert from "../../../utils/assert";
+import { resolveURL } from "../../../utils/url";
 
 export interface IScheme {
   schemeIdUri? : string;
@@ -236,14 +237,32 @@ function processFormatedToken(
 }
 
 /**
+ * @param {string} representationURL
+ * @param {string|undefined} media
+ * @param {string|undefined} id
+ * @param {number|undefined} bitrate
+ * @returns {string}
+ */
+function createIndexURL(
+  representationURL : string,
+  media?: string,
+  id?: string,
+  bitrate?: number
+): string {
+  return replaceRepresentationDASHTokens(
+    resolveURL(representationURL, media),
+    id,
+    bitrate
+  );
+}
+
+/**
  * Replace "tokens" written in a given path (e.g. $RepresentationID$) by the corresponding
  * infos, taken from the given segment.
  * @param {string} path
- * @param {string} id
- * @param {number} bitrate
+ * @param {string|undefined} id
+ * @param {number|undefined} bitrate
  * @returns {string}
- *
- * @throws Error - Throws if we do not have enough data to construct the URL
  */
 function replaceRepresentationDASHTokens(
   path: string,
@@ -255,11 +274,9 @@ function replaceRepresentationDASHTokens(
   } else {
     return path
       .replace(/\$\$/g, "$")
-      .replace(/\$RepresentationID\$/g,
-      String(id))
-      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
-      processFormatedToken(bitrate || 0));
-}
+      .replace(/\$RepresentationID\$/g, String(id))
+      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g, processFormatedToken(bitrate || 0));
+  }
 }
 
 /**
@@ -298,6 +315,7 @@ function replaceSegmentDASHTokens(
 }
 
 export {
+  createIndexURL,
   replaceSegmentDASHTokens,
   replaceRepresentationDASHTokens,
   isHardOfHearing,

@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-import log from "../../../../utils/log";
-
 export interface IParsedS {
-  ts: number; // Time of start, timescaled. TODO Rename
-  r: number; // Amount of repetition(s), 0 = no repeat. TODO Rename
-  d?: number; // Duration of a segment. TODO Rename
+  ts? : number; // Time of start, timescaled. TODO Rename
+  r? : number; // Amount of repetition(s), 0 = no repeat. TODO Rename
+  d? : number; // Duration of a segment. TODO Rename
 }
 
 /**
  * @param {Element} root
  * @returns {Object}
  */
-export default function parseS(
-  root : Element,
-  previousS : IParsedS|null
-) : IParsedS|undefined {
+export default function parseS(root : Element) : IParsedS {
   let ts : number|undefined;
   let d : number|undefined;
   let r : number|undefined;
@@ -48,20 +43,5 @@ export default function parseS(
         break;
     }
   }
-  if (ts == null && previousS && previousS.d != null) {
-    ts = previousS.ts + (previousS.d * (previousS.r + 1));
-  }
-  if (
-    (ts != null && !isNaN(ts)) &&
-    (d == null || !isNaN(d)) &&
-    (r == null || !isNaN(r))
-  ) {
-    return {
-      ts,
-      d,
-      r: r || 0,
-    };
-  } else {
-    log.warn("DASH: A \"S\" Element could not have been parsed.");
-  }
+  return { ts, d, r };
 }
