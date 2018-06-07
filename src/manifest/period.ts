@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayFind = require("array-find");
+import arrayFind from "array-find";
 
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";

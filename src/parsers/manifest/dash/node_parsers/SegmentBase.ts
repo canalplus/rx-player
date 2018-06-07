@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
+import objectAssign from "object-assign";
 import log from "../../../../utils/log";
 import {
   parseBoolean,

@@ -1,6 +1,6 @@
 /* eslint-env node */
-const ClosureCompiler = require("webpack-closure-compiler");
 const path = require("path");
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const webpack = require("webpack");
 
 const RXP_ENV = process.env.RXP_ENV || "production";
@@ -21,13 +21,7 @@ module.exports = {
   },
   optimization: {
     minimizer: shouldMinify ? [
-      new ClosureCompiler({
-        options: {
-          compilation_level: "SIMPLE",
-          language_in: "ES5",
-          warning_level: "VERBOSE",
-        },
-      }),
+      new UglifyJsPlugin(),
     ] : [],
   },
   performance: {
@@ -45,6 +39,8 @@ module.exports = {
             presets: [
               "react",
               ["es2015", { loose: true, modules: false }],
+              "es2016",
+              "es2017",
             ],
           },
         },
