@@ -21,5 +21,5 @@ declare module "deep-equal" {
     opts? : any
   ) : boolean;
 
-  export = deepEqual;
+  export default deepEqual;
 }

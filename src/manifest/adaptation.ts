@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayFind = require("array-find");
-import objectAssign = require("object-assign");
+import arrayFind from "array-find";
+import objectAssign from "object-assign";
 import generateNewId from "../utils/id";
 import Representation, {
   IRepresentationArguments

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayFindIndex = require("array-find-index");
+import arrayFindIndex from "array-find-index";
 import { Representation } from "../../manifest";
 
 /**

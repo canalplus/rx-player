@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayFind = require("array-find");
+import arrayFind from "array-find";
 import {
   concat as observableConcat,
   defer as observableDefer,

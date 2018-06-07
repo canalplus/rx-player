@@ -20,7 +20,7 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import deepEqual = require("deep-equal");
+import deepEqual from "deep-equal";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
