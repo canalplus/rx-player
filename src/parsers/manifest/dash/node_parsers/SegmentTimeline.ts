@@ -27,7 +27,7 @@ export interface ITimelineElement {
   d: number; // Duration of a segment. TODO Rename
 }
 
-function sToTimeline(
+function fromParsedSToTimelineElement(
   parsedS : IParsedS,
   previousS : ITimelineElement|null,
   nextS : IParsedS|null
@@ -82,7 +82,7 @@ export default function parseSegmentTimeline(root: Element) : IParsedTimeline {
   }
   for (let i = 0; i < parsedS.length; i++) {
     const s = parsedS[i];
-    const timelineElement = sToTimeline(
+    const timelineElement = fromParsedSToTimelineElement(
       s,
       timeline[timeline.length - 1] || null,
       parsedS[i + 1] || null
