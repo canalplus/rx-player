@@ -46,10 +46,6 @@ import {
 } from "./MPD";
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
-import {
-  IParsedSegmentTemplate,
-  IParsedSegmentTimeline
-} from "./SegmentTemplate";
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -320,14 +316,14 @@ export default function parseManifest(
           });
         } else if (adaptationChildren.segmentTemplate != null) {
           const { segmentTemplate } = adaptationChildren;
-          adaptationIndex = adaptationChildren.segmentTemplate.indexType === "timeline" ?
-            new TimelineRepresentationIndex(segmentTemplate as IParsedSegmentTimeline, {
+          adaptationIndex = segmentTemplate.indexType === "timeline" ?
+            new TimelineRepresentationIndex(segmentTemplate, {
               periodStart,
               representationURL,
               representationId: repId,
               representationBitrate: repBitrate,
             }) :
-            new TemplateRepresentationIndex(segmentTemplate as IParsedSegmentTemplate, {
+            new TemplateRepresentationIndex(segmentTemplate, {
               periodStart,
               representationURL,
               representationId: repId,
@@ -387,24 +383,19 @@ export default function parseManifest(
             });
           } else if (representation.children.segmentTemplate != null) {
             const { segmentTemplate } = representation.children;
-            representationIndex =
-              representation.children.segmentTemplate.indexType === "timeline" ?
-                new TimelineRepresentationIndex(
-                  segmentTemplate as IParsedSegmentTimeline, {
-                    periodStart,
-                    representationURL,
-                    representationId: repId,
-                    representationBitrate: repBitrate,
-                  }
-                ) :
-                new TemplateRepresentationIndex(
-                  segmentTemplate as IParsedSegmentTemplate, {
-                    periodStart,
-                    representationURL,
-                    representationId: repId,
-                    representationBitrate: repBitrate,
-                  }
-                );
+            representationIndex = segmentTemplate.indexType === "timeline" ?
+              new TimelineRepresentationIndex(segmentTemplate, {
+                periodStart,
+                representationURL,
+                representationId: repId,
+                representationBitrate: repBitrate,
+              }) :
+              new TemplateRepresentationIndex(segmentTemplate, {
+                periodStart,
+                representationURL,
+                representationId: repId,
+                representationBitrate: repBitrate,
+              });
           } else {
             representationIndex = findAdaptationIndex(representation);
           }
