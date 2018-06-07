@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-// import sinon = require("sinon");
+// import sinon from "sinon";
 
 import parseFromDocument from "../index";
 

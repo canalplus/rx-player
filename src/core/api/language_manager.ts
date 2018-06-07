@@ -19,7 +19,7 @@
  * for an easier API management.
  */
 
-import arrayFind = require("array-find");
+import arrayFind from "array-find";
 import { Subject } from "rxjs";
 import { Adaptation, Period } from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";

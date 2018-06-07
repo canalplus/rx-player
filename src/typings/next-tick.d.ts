@@ -19,5 +19,5 @@ declare module "next-tick" {
     fn : () => void
   ) : void;
 
-  export = nextTick;
+  export default nextTick;
 }

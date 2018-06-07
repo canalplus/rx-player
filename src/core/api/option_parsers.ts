@@ -19,7 +19,7 @@
  * throw if something is wrong, and return a normalized option object.
  */
 
-import objectAssign = require("object-assign");
+import objectAssign from "object-assign";
 import config from "../../config";
 import {
   normalizeAudioTrack,

@@ -21,7 +21,7 @@
  * video element to sub-parts of the player.
  */
 
-import objectAssign = require("object-assign");
+import objectAssign from "object-assign";
 import {
   Observable,
   Observer,

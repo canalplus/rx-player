@@ -44,5 +44,5 @@ declare module "object-assign" {
     source5 : Y
   ) : T & U & V & W & Y;
   function objectAssign(target : object, ...sources : any[]) : any;
-  export = objectAssign;
+  export default objectAssign;
 }
