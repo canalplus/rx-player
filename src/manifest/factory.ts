@@ -118,8 +118,12 @@ function checkAdaptations(
     // 3. filter those without representations
     .filter(({ representations }) => representations.length);
 
-  // 4. throw if no adaptation
-  if (adaptations.length === 0) {
+  // 4. throw if no video or audio adaptation
+  if (
+    adaptations
+      .filter((adaptation) => adaptation.type === "video" || adaptation.type === "audio")
+      .length === 0
+  ) {
     throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
   }
 
