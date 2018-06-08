@@ -265,14 +265,14 @@ function createSmoothStreamingParser(
         ts = ts || 0;
       } else { // from second node to the end
         const prev = timeline[i - 1];
-        if (!ts) {
-          if (!prev.d) {
-            throw new Error();
+        if (ts == null || isNaN(ts)) {
+          if (prev.d == null || isNaN(prev.d)) {
+            throw new Error("Smooth: Invalid CNodes. Missing timestamp.");
           }
           ts = prev.ts + prev.d * (prev.r + 1);
         }
       }
-      if (!d) {
+      if (d == null || isNaN(d)) {
         const nextNode = nodes[i + 1];
         if (nextNode) {
           const nextTAttr = nextNode.getAttribute("t");
