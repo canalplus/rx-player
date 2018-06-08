@@ -350,12 +350,14 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
 
 /**
  * Returns a PSSH Atom from a systemId and private data.
- * @param {Object} args
+ * @param {Array.<Object>} pssList - The content protections under the form of
+ * object containing two properties:
+ *   - systemId {string}: The uuid code. Should only contain 32 hexadecimal
+ *     numbers and hyphens
+ *   - privateData {Uint8Array} private data associated.
  * @returns {Uint8Array}
  */
-function createPssh(
-  { systemId, privateData } : IISOBMFFKeySystem
-) : Uint8Array {
+function createPssh({ systemId, privateData } : IISOBMFFKeySystem) : Uint8Array {
   const _systemId = systemId.replace(/-/g, "");
 
   assert(_systemId.length === 32);
@@ -375,7 +377,7 @@ function createPssh(
  * objects containing two properties:
  *   - systemId {string}: The uuid code. Should only contain 32 hexadecimal
  *     numbers and hyphens
- *   - privateData {*}: private data associated.
+ *   - privateData {Uint8Array} private data associated.
  * @returns {Uint8Array} - The new ISOBMFF generated.
  */
 function patchPssh(buf : Uint8Array, pssList : IISOBMFFKeySystem[]) : Uint8Array {
