@@ -20,6 +20,10 @@ import {
 } from "../../../../manifest";
 import log from "../../../../utils/log";
 import {
+  createIndexURL,
+  replaceSegmentDASHTokens,
+} from "../helpers";
+import {
   getInitSegment,
   normalizeRange,
 } from "./helpers";
@@ -29,10 +33,28 @@ export interface ITemplateIndex {
   timescale : number;
 
   indexRange?: [number, number];
-  initialization?: { media?: string; range?: [number, number] };
+  initialization?: { mediaURL: string; range?: [number, number] };
+  mediaURL : string;
+  presentationTimeOffset? : number;
+  startNumber? : number;
+}
+
+export interface ITemplateIndexIndexArgument {
+  duration : number;
+  timescale : number;
+
+  indexRange?: [number, number];
+  initialization?: { media? : string; range? : [number, number] };
   media? : string;
   presentationTimeOffset? : number;
   startNumber? : number;
+}
+
+export interface ITemplateIndexContextArgument {
+  periodStart : number;
+  representationURL : string;
+  representationId? : string;
+  representationBitrate? : number;
 }
 
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
@@ -40,13 +62,44 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
   /**
    * @param {Object} index
+   * @param {Object} context
    */
-  constructor(index : ITemplateIndex, periodStart : number) {
+  constructor(
+    index : ITemplateIndexIndexArgument,
+    context : ITemplateIndexContextArgument
+  ) {
+    const {
+      periodStart,
+      representationURL,
+      representationId,
+      representationBitrate,
+    } = context;
     if (index.presentationTimeOffset == null) {
       index.presentationTimeOffset = periodStart * index.timescale;
     }
 
-    this._index = index;
+    this._index = {
+      duration: index.duration,
+      timescale: index.timescale,
+      indexRange: index.indexRange,
+      initialization: index.initialization && {
+        mediaURL: createIndexURL(
+          representationURL,
+          index.initialization.media,
+          representationId,
+          representationBitrate
+        ),
+        range: index.initialization.range,
+      },
+      mediaURL: createIndexURL(
+        representationURL,
+        index.media,
+        representationId,
+        representationBitrate
+      ),
+      presentationTimeOffset: index.presentationTimeOffset,
+      startNumber: index.startNumber,
+    };
   }
 
   /**
@@ -73,7 +126,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       duration,
       startNumber,
       timescale,
-      media,
+      mediaURL,
       presentationTimeOffset,
     } = index;
 
@@ -93,7 +146,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         isInit: false,
         duration,
         timescale,
-        media,
+        mediaURL: replaceSegmentDASHTokens(mediaURL, time, number),
       };
       segments.push(args);
     }

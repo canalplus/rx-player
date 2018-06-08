@@ -28,7 +28,6 @@ import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
-import { resolveURL } from "../../utils/url";
 import {
   ILoaderObservable,
   ImageParserObservable,
@@ -49,7 +48,6 @@ import extractTimingsInfos from "./isobmff_timings_infos";
 import mp4Utils from "./mp4";
 import generateSegmentLoader from "./segment_loader";
 import {
-  buildSegmentURL,
   extractISML,
   extractToken,
   replaceToken,
@@ -151,7 +149,7 @@ export default function(
       representation,
       segment,
     } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer|Uint8Array> {
+    ) : ILoaderObservable<ArrayBuffer|Uint8Array|null> {
       return segmentLoader({
         adaptation,
         init,
@@ -167,9 +165,12 @@ export default function(
       response,
       adaptation,
       manifest,
-    } : ISegmentParserArguments<ArrayBuffer|Uint8Array>
+    } : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
     ) : SegmentParserObservable {
-      const responseData = response.responseData;
+      const { responseData } = response;
+      if (responseData == null) {
+        return observableOf({ segmentData: null, segmentInfos: null });
+      }
 
       if (segment.isInit) {
         // smooth init segments are crafted by hand. Their timescale is the one
@@ -204,17 +205,14 @@ export default function(
       representation,
     } : ISegmentLoaderArguments
     ) : ILoaderObservable<string|ArrayBuffer|null> {
-      if (segment.isInit) {
+      if (segment.isInit || segment.mediaURL == null) {
         return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
       }
-
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
-      const base = resolveURL(representation.baseURL);
-      const url = buildSegmentURL(base, representation, segment);
-      return request({ url, responseType });
+      return request({ url: segment.mediaURL, responseType });
     },
 
     parser({
@@ -359,9 +357,9 @@ export default function(
 
   const imageTrackPipeline = {
     loader(
-      { segment, representation } : ISegmentLoaderArguments
+      { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
-      if (segment.isInit) {
+      if (segment.isInit || segment.mediaURL == null) {
         // image do not need an init segment. Passthrough directly to the parser
         return observableOf({
           type: "data" as "data",
@@ -369,9 +367,7 @@ export default function(
         });
       }
 
-      const baseURL = resolveURL(representation.baseURL);
-      const url = buildSegmentURL(baseURL, representation, segment);
-      return request({ url, responseType: "arraybuffer" });
+      return request({ url: segment.mediaURL, responseType: "arraybuffer" });
     },
 
     parser(

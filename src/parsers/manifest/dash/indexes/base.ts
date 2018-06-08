@@ -18,6 +18,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import { createIndexURL } from "../helpers";
 import {
   getInitSegment,
   getSegmentsFromTimeline,
@@ -26,17 +27,37 @@ import {
 } from "./helpers";
 
 export interface IBaseIndex {
+  mediaURL : string;
   timeline : IIndexSegment[];
   timescale : number;
   // indexRangeExact : boolean;
   // availabilityTimeComplete : boolean;
 
-  presentationTimeOffset? : number;
   duration? : number;
   indexRange?: [number, number];
-  initialization?: { media?: string; range?: [number, number] };
-  media? : string;
+  initialization?: { mediaURL: string; range?: [number, number] };
+  presentationTimeOffset? : number;
   startNumber? : number;
+}
+
+// Parsed Index in the MPD
+export interface IBaseIndexIndexArgument {
+  timeline : IIndexSegment[];
+  timescale : number;
+  duration? : number;
+  media? : string;
+  indexRange?: [number, number];
+  initialization?: { media?: string; range?: [number, number] };
+  presentationTimeOffset? : number;
+  startNumber? : number;
+}
+
+// Context of the index
+export interface IBaseIndexContextArgument {
+  periodStart : number;
+  representationURL : string;
+  representationId? : string;
+  representationBitrate? : number;
 }
 
 /**
@@ -87,13 +108,42 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
   /**
    * @param {Object} index
+   * @param {Object} context
    */
-  constructor(index : IBaseIndex, periodStart : number) {
+  constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
+    const {
+      periodStart,
+      representationURL,
+      representationId,
+      representationBitrate,
+    } = context;
     if (index.presentationTimeOffset == null) {
       index.presentationTimeOffset = periodStart * index.timescale;
     }
 
-    this._index = index;
+    this._index = {
+      mediaURL: createIndexURL(
+        representationURL,
+        index.media,
+        representationId,
+        representationBitrate
+      ),
+      timeline: index.timeline,
+      timescale: index.timescale,
+      duration: index.duration,
+      indexRange: index.indexRange,
+      presentationTimeOffset: index.presentationTimeOffset,
+      startNumber: index.startNumber,
+      initialization: index.initialization && {
+        mediaURL: createIndexURL(
+          representationURL,
+          index.initialization.media,
+          representationId,
+          representationBitrate
+        ),
+        range: index.initialization.range,
+      },
+    };
   }
 
   /**

@@ -14,29 +14,81 @@
  * limitations under the License.
  */
 
+import log from "../../../../utils/log";
 import parseS, {
   IParsedS,
 } from "./S";
 
-export type IParsedTimeline = IParsedS[];
+export type IParsedTimeline = ITimelineElement[];
+
+export interface ITimelineElement {
+  ts: number; // Time of start, timescaled. TODO Rename
+  r: number; // Amount of repetition(s), 0 = no repeat. TODO Rename
+  d: number; // Duration of a segment. TODO Rename
+}
+
+function fromParsedSToTimelineElement(
+  parsedS : IParsedS,
+  previousS : ITimelineElement|null,
+  nextS : IParsedS|null
+) : ITimelineElement|null {
+  let ts = parsedS.ts;
+  let d = parsedS.d;
+  const r = parsedS.r;
+  if (ts == null && previousS && previousS.d != null) {
+    ts = previousS.ts + (previousS.d * (previousS.r + 1));
+  }
+  if (
+    (d == null || isNaN(d)) &&
+    nextS && nextS.ts != null && !isNaN(nextS.ts) &&
+    ts != null && !isNaN(ts)
+  ) {
+    d = nextS.ts - ts;
+  }
+  if (
+    (ts != null && !isNaN(ts)) &&
+    (d != null && !isNaN(d)) &&
+    (r == null || !isNaN(r))
+  ) {
+    return {
+      ts,
+      d,
+      r: r || 0,
+    };
+  }
+  log.warn("DASH: A \"S\" Element could not have been parsed.");
+  return null;
+}
 
 /**
  * @param {Element} root
  * @returns {Array.<Object>}
  */
 export default function parseSegmentTimeline(root: Element) : IParsedTimeline {
-  const timeline : IParsedS[] = [];
+  const timeline : ITimelineElement[] = [];
+  const parsedS : IParsedS[] = [];
   const timelineChildren = root.childNodes;
   for (let i = 0; i < timelineChildren.length; i++) {
     if (timelineChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = timelineChildren[i] as Element;
 
       if (currentElement.nodeName === "S") {
-        const s = parseS(currentElement, timeline[timeline.length - 1] || null);
+        const s = parseS(currentElement);
         if (s) {
-          timeline.push(s);
+          parsedS.push(s);
         }
       }
+    }
+  }
+  for (let i = 0; i < parsedS.length; i++) {
+    const s = parsedS[i];
+    const timelineElement = fromParsedSToTimelineElement(
+      s,
+      timeline[timeline.length - 1] || null,
+      parsedS[i + 1] || null
+    );
+    if (timelineElement) {
+      timeline.push(timelineElement);
     }
   }
   return timeline;

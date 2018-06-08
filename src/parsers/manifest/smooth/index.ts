@@ -38,11 +38,12 @@ import {
   IParsedManifest,
   IParsedRepresentation,
 } from "../types";
+import { replaceRepresentationSmoothTokens } from "./helpers";
 import RepresentationIndex from "./representationIndex";
 
 interface IHSSManifestSegment {
   ts : number;
-  d? : number;
+  d : number;
   r : number;
 }
 
@@ -218,11 +219,13 @@ function createSmoothStreamingParser(
     keyId : string;
     keySystems: IKeySystem[];
   } {
-    const header = root.firstElementChild as Element;
-    assert(
-      header.nodeName === "ProtectionHeader",
-      "Protection should have ProtectionHeader child"
-    );
+    if (
+      !root.firstElementChild ||
+      root.firstElementChild.nodeName !== "ProtectionHeader"
+    ) {
+      throw new Error("Protection should have ProtectionHeader child");
+    }
+    const header = root.firstElementChild;
     const privateData = strToBytes(atob(header.textContent || ""));
     const keyId = getHexKeyId(privateData);
     const keyIdBytes = hexToBytes(keyId);
@@ -243,49 +246,49 @@ function createSmoothStreamingParser(
   }
 
   /**
-   * @param {Element} node
-   * @param {Array.<Object>} timeline
-   * @returns {Array.<Object>}
+   * Parse C nodes to build index timeline.
+   * @param {Element} nodes
    */
-  function parseC(
-    node : Element,
-    timeline : IHSSManifestSegment[]
+  function parseCNodes(
+    nodes : Element[]
   ) : IHSSManifestSegment[] {
-    const len = timeline.length;
-    const prev = len > 0 ?
-      timeline[len - 1] : { d: 0, ts: 0, r: 0 };
-    const dAttr = node.getAttribute("d");
-    const tAttr = node.getAttribute("t");
-    const rAttr = node.getAttribute("r");
+    return nodes.reduce((timeline, node , i) => {
+      const dAttr = node.getAttribute("d");
+      const tAttr = node.getAttribute("t");
+      const rAttr = node.getAttribute("r");
 
-    // in smooth streaming format,
-    // r refers to number of same duration
-    // chunks, not repetitions (defers from DASH)
-    const r = rAttr ? +rAttr - 1 : 0;
-    const t = tAttr ? +tAttr : undefined;
-    const d = dAttr ? +dAttr : undefined;
+      const r = rAttr ? +rAttr - 1 : 0;
+      let ts = tAttr ? +tAttr : undefined;
+      let d = dAttr ? +dAttr : undefined;
 
-    if (len > 0 && !prev.d) {
-      if (__DEV__) {
-        assert(typeof t === "number");
+      if (i === 0) { // first node
+        ts = ts || 0;
+      } else { // from second node to the end
+        const prev = timeline[i - 1];
+        if (ts == null || isNaN(ts)) {
+          if (prev.d == null || isNaN(prev.d)) {
+            throw new Error("Smooth: Invalid CNodes. Missing timestamp.");
+          }
+          ts = prev.ts + prev.d * (prev.r + 1);
+        }
       }
-      prev.d = t != null ? t - prev.ts : 0;
-      timeline[len - 1] = prev; // TODO might not be needed
-    }
-
-    // if same segment than the last one, repeat the previous one
-    if (len > 0 && d === prev.d && t == null) {
-      prev.r += (r || 0) + 1;
-    } else {
-      if (__DEV__) {
-        assert(t != null || prev.d != null);
+      if (d == null || isNaN(d)) {
+        const nextNode = nodes[i + 1];
+        if (nextNode) {
+          const nextTAttr = nextNode.getAttribute("t");
+          const nextTS = nextTAttr ? +nextTAttr : null;
+          if (nextTS === null) {
+            throw new Error(
+              "Can't build index timeline from Smooth Manifest.");
+          }
+          d = nextTS - ts;
+        } else {
+          return timeline;
+        }
       }
-      const ts = (t == null)
-        ? prev.ts + (prev.d || 0) * (prev.r + 1)
-        : t;
       timeline.push({ d, ts, r });
-    }
-    return timeline;
+      return timeline;
+    }, [] as IHSSManifestSegment[]);
   }
 
   /**
@@ -415,7 +418,7 @@ function createSmoothStreamingParser(
 
     const {
       representations,
-      index,
+      cNodes,
     } = reduceChildren(root, (res, _name, node) => {
       switch (_name) {
         case "QualityLevel":
@@ -435,18 +438,19 @@ function createSmoothStreamingParser(
           }
           break;
         case "c":
-          res.index.timeline = parseC(node, res.index.timeline);
+          res.cNodes.push(node);
           break;
       }
       return res;
     }, {
-      representations: [] as any[],
-      index: {
-        timeline: [] as IHSSManifestSegment[],
-        timescale: _timescale,
-        initialization: {},
-      },
+      representations: [] as any[] /* TODO */,
+      cNodes: [] as Element[],
     });
+
+    const index = {
+      timeline: parseCNodes(cNodes),
+      timescale: _timescale,
+    };
 
     // we assume that all representations have the same
     // codec and mimeType
@@ -459,7 +463,12 @@ function createSmoothStreamingParser(
 
     // apply default properties
     representations.forEach((representation: IParsedRepresentation) => {
-      representation.baseURL = resolveURL(rootURL, baseURL);
+      const path = resolveURL(rootURL, baseURL);
+      const repIndex = {
+        timeline: index.timeline,
+        timescale: index.timescale,
+        media: replaceRepresentationSmoothTokens(path, representation),
+      };
       representation.mimeType =
         representation.mimeType || DEFAULT_MIME_TYPES[adaptationType];
       representation.codecs = representation.codecs || DEFAULT_CODECS[adaptationType];
@@ -470,12 +479,12 @@ function createSmoothStreamingParser(
       const initSegmentInfos = {
         bitsPerSample: representation.bitsPerSample,
         channels: representation.channels,
-        codecPrivateData: representation.codecPrivateData,
+        codecPrivateData: representation.codecPrivateData || "",
         packetSize: representation.packetSize,
         samplingRate: representation.samplingRate,
         protection,
       };
-      representation.index = new RepresentationIndex(index, initSegmentInfos);
+      representation.index = new RepresentationIndex(repIndex, initSegmentInfos);
     });
 
     // TODO(pierre): real ad-insert support

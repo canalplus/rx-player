@@ -22,7 +22,6 @@ import {
 
 import assert from "../../utils/assert";
 import { stringFromUTF8 } from "../../utils/strings";
-import { resolveURL } from "../../utils/url";
 
 import {
   getMDAT,
@@ -35,8 +34,7 @@ import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import {
   addNextSegments,
   byteRange,
-  isMP4EmbeddedTrack,
-  replaceTokens,
+  isMP4EmbeddedTrack
 } from "./utils";
 
 import {
@@ -58,10 +56,9 @@ function TextTrackLoader(
   { segment, representation } : ISegmentLoaderArguments
 ) : ILoaderObservable<ArrayBuffer|string|null> {
   const {
-    media,
+    mediaURL,
     range,
     indexRange,
-    isInit,
   } = segment;
 
   // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
@@ -69,20 +66,17 @@ function TextTrackLoader(
 
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
-  if (isInit && !(media || range || indexRange)) {
+  if (mediaURL == null) {
     return observableOf({
       type: "data" as "data",
       value: { responseData: null },
     });
   }
 
-  const path = media ? replaceTokens(media, segment, representation) : "";
-  const mediaUrl = resolveURL(representation.baseURL, path);
-
   // fire a single time for contiguous init and index ranges
   if (range && indexRange && range[1] === indexRange[0] - 1) {
     return request({
-      url: mediaUrl,
+      url: mediaURL,
       responseType,
       headers: {
         Range: byteRange([range[0], indexRange[1]]),
@@ -91,7 +85,7 @@ function TextTrackLoader(
   }
 
   const mediaRequest = request<ArrayBuffer|string>({
-    url: mediaUrl,
+    url: mediaURL,
     responseType,
     headers: range ? {
       Range: byteRange(range),
@@ -107,7 +101,7 @@ function TextTrackLoader(
   // this in parallel and send the both blobs into the pipeline.
   // TODO Find a solution for calling only one time the parser
   const indexRequest = request<ArrayBuffer|string>({
-    url: mediaUrl,
+    url: mediaURL,
     responseType,
     headers: {
       Range: byteRange(indexRange),

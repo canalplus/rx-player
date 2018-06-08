@@ -15,22 +15,18 @@
  */
 
 import {
-  EMPTY,
   merge as observableMerge,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import {
   CustomSegmentLoader,
   ILoaderObservable,
   ILoaderObserver,
   ISegmentLoaderArguments,
 } from "../types";
-import {
-  byteRange,
-  replaceTokens,
-} from "./utils";
+import { byteRange } from "./utils";
 
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
   url : string;
@@ -96,23 +92,15 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
   period,
   representation,
   segment,
-} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
-  const {
-    media,
-    range,
-    indexRange,
-    isInit,
-  } = segment;
+} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
+  const { mediaURL } = segment;
 
-  // init segment without initialization media/range/indexRange:
-  // we do nothing on the network
-  if (isInit && !(media || range || indexRange)) {
-    return EMPTY;
+  if (mediaURL == null) {
+    return observableOf({
+      type: "data" as "data",
+      value: { responseData: null },
+    });
   }
-
-  // construct url for the segment
-  const path = media ? replaceTokens(media, segment, representation) : "";
-  const url = resolveURL(representation.baseURL, path);
 
   const args = {
     adaptation,
@@ -121,7 +109,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     representation,
     segment,
     transport: "dash",
-    url,
+    url: mediaURL,
   };
 
   if (!customSegmentLoader) {

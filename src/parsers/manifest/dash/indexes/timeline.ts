@@ -18,6 +18,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import { createIndexURL } from "../helpers";
 import {
   getInitSegment,
   getSegmentsFromTimeline,
@@ -28,12 +29,30 @@ import {
 export interface ITimelineIndex {
   duration? : number;
   indexRange?: [number, number];
-  initialization? : { media?: string; range?: [number, number] };
+  initialization? : { mediaURL: string; range?: [number, number] };
+  mediaURL : string;
+  presentationTimeOffset? : number;
+  startNumber? : number;
+  timeline : IIndexSegment[];
+  timescale : number;
+}
+
+export interface ITimelineIndexIndexArgument {
+  duration? : number;
+  indexRange?: [number, number];
+  initialization? : { media? : string; range?: [number, number] };
   media? : string;
   presentationTimeOffset? : number;
   startNumber? : number;
   timeline : IIndexSegment[];
   timescale : number;
+}
+
+export interface ITimelineIndexContextArgument {
+  periodStart : number;
+  representationURL : string;
+  representationId? : string;
+  representationBitrate? : number;
 }
 
 /**
@@ -159,13 +178,45 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
   /**
    * @param {Object} index
+   * @param {Object} context
    */
-  constructor(index : ITimelineIndex, periodStart : number) {
+  constructor(
+    index : ITimelineIndexIndexArgument,
+    context : ITimelineIndexContextArgument
+  ) {
+    const {
+      periodStart,
+      representationURL,
+      representationId,
+      representationBitrate,
+    } = context;
     if (index.presentationTimeOffset == null) {
       index.presentationTimeOffset = periodStart * index.timescale;
     }
 
-    this._index = index;
+    this._index = {
+      duration: index.duration,
+      indexRange: index.indexRange,
+      initialization: index.initialization && {
+        mediaURL: createIndexURL(
+          representationURL,
+          index.initialization.media,
+          representationId,
+          representationBitrate
+        ),
+        range: index.initialization.range,
+      },
+      mediaURL: createIndexURL(
+        representationURL,
+        index.media,
+        representationId,
+        representationBitrate
+      ),
+      presentationTimeOffset: index.presentationTimeOffset,
+      startNumber: index.startNumber,
+      timeline: index.timeline,
+      timescale: index.timescale,
+    };
   }
 
   /**

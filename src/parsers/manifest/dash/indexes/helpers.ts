@@ -15,6 +15,7 @@
  */
 
 import { ISegment } from "../../../../manifest";
+import { replaceSegmentDASHTokens } from "../helpers";
 
 interface IIndexSegment {
   ts: number; // start timestamp
@@ -97,19 +98,19 @@ function getTimelineRangeEnd({ ts, d, r }: IIndexSegment) : number {
 function getInitSegment(
   index: {
     timescale: number;
-    initialization?: { media?: string; range?: [number, number] };
+    initialization?: { mediaURL: string; range?: [number, number] };
     indexRange?: [number, number];
   }
 ) : ISegment {
-  const { initialization = {} } = index;
+  const { initialization } = index;
 
   return {
     id: "init",
     isInit: true,
     time: 0,
-    range: initialization.range || undefined,
+    range: initialization ? initialization.range || undefined : undefined,
     indexRange: index.indexRange || undefined,
-    media: initialization.media,
+    mediaURL: initialization ? initialization.mediaURL : null,
     timescale: index.timescale,
   };
 }
@@ -135,7 +136,7 @@ function getSegmentNumber(
 
 function getSegmentsFromTimeline(
   index : {
-    media? : string;
+    mediaURL : string;
     startNumber? : number;
     timeline : IIndexSegment[];
     timescale : number;
@@ -144,7 +145,7 @@ function getSegmentsFromTimeline(
   _to : number
 ) : ISegment[] {
   const { up, to } = normalizeRange(index, _up, _to);
-  const { timeline, timescale, media, startNumber } = index;
+  const { timeline, timescale, mediaURL, startNumber } = index;
 
   let currentNumber = startNumber != null ? startNumber : undefined;
 
@@ -166,6 +167,7 @@ function getSegmentsFromTimeline(
       // TODO what? May be to play it safe and avoid adding segments which are
       // not completely generated
       if (ts + maxEncounteredDuration < to) {
+        const number = currentNumber != null ? currentNumber : undefined;
         const segment = {
           id: "" + ts,
           time: ts,
@@ -173,8 +175,8 @@ function getSegmentsFromTimeline(
           range,
           duration: undefined,
           timescale,
-          media,
-          number: currentNumber != null ? currentNumber : undefined,
+          mediaURL: replaceSegmentDASHTokens(mediaURL, ts, number),
+          number,
         };
         segments.push(segment);
       }
@@ -185,6 +187,8 @@ function getSegmentsFromTimeline(
     let segmentNumberInCurrentRange = getSegmentNumber(ts, up, d);
     let segmentTime = ts + segmentNumberInCurrentRange * d;
     while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
+      const number = currentNumber != null ?
+        currentNumber + segmentNumberInCurrentRange : undefined;
       const segment = {
         id: "" + segmentTime,
         time: segmentTime,
@@ -192,9 +196,8 @@ function getSegmentsFromTimeline(
         range,
         duration: d,
         timescale,
-        media,
-        number: currentNumber != null ?
-        currentNumber + segmentNumberInCurrentRange : undefined,
+        mediaURL: replaceSegmentDASHTokens(mediaURL, segmentTime, number),
+        number,
       };
       segments.push(segment);
 

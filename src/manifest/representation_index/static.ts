@@ -19,14 +19,25 @@ import IRepresentationIndex, {
   ISegment,
 } from "./interfaces";
 
+export interface IStaticRepresentationIndexInfos {
+  media: string;
+}
+
 /**
  * Simple RepresentationIndex implementation for static files.
  * @class StaticRepresentationIndex
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
+  private readonly _media: string;
+
+  constructor(infos: IStaticRepresentationIndexInfos) {
+    this._media = infos.media;
+  }
 
   /**
-   * @returns {Object}
+   * Static contents do not have any initialization segments.
+   * Just return null.
+   * @returns {null}
    */
   getInitSegment() : null {
     return null;
@@ -44,6 +55,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
       time: 0,
       duration: Number.MAX_VALUE,
       timescale: 1,
+      mediaURL: this._media,
     }];
   }
 
@@ -70,7 +82,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns true if, based on the arguments, the index should be refreshed.
+   * Returns false as a static file never need to be refreshed.
    * @returns {Boolean}
    */
   shouldRefresh() : false {
@@ -84,9 +96,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return -1;
   }
 
-  /**
-   * @returns {Array}
-   */
   _addSegments() : void {
     if (__DEV__) {
       log.warn("Tried add Segments to a static RepresentationIndex");
