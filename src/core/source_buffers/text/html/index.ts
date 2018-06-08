@@ -101,11 +101,11 @@ function safelyRemoveChild(element : Element, child : Element|null) {
 export default class HTMLTextTrackSourceBuffer
   extends AbstractSourceBuffer<IHTMLTextTrackData>
 {
-  private _videoElement : HTMLMediaElement;
-  private _destroy$ : Subject<void>;
-  private _textTrackElement : HTMLElement;
+  private readonly _videoElement : HTMLMediaElement;
+  private readonly _destroy$ : Subject<void>;
+  private readonly _textTrackElement : HTMLElement;
+  private readonly _buffer : TextBufferManager;
 
-  private _buffer : TextBufferManager;
   private _currentElement : HTMLElement|null;
 
   /**

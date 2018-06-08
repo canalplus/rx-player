@@ -205,6 +205,10 @@ function parseTfdt(buffer : Uint8Array) : number {
   return version ? be8toi(traf, pos) : be4toi(traf, pos);
 }
 
+/**
+ * @param {Uint8Array} traf
+ * @returns {number}
+ */
 function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
   const index = findAtom(traf, 0x74666864 /* tfhd */);
   if (index === -1) {
@@ -238,6 +242,10 @@ function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
   return defaultDuration;
 }
 
+/**
+ * @param {Uint8Array} buffer
+ * @returns {number}
+ */
 function getDurationFromTrun(buffer : Uint8Array) : number {
   const traf = getTRAF(buffer);
   if (!traf) {

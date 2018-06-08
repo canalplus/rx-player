@@ -125,7 +125,7 @@ function parseSami(
 
   assert(!!klass, `sami: could not find lang ${lang} in CSS`);
 
-  for (;;) {
+  while (true) {
     up = syncOpen.exec(smi);
     to = syncClose.exec(smi);
     if (!up && !to) {
