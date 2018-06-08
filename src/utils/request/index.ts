@@ -261,7 +261,7 @@ function request<T>(
           const loadedResponseType = xhr.responseType;
           const _url = xhr.responseURL || url;
 
-          let responseData;
+          let responseData : T;
           if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
             responseData = xhr.response !== "string" ?

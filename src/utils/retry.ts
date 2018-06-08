@@ -116,7 +116,7 @@ function retryObsWithBackoff<T>(
     debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
   }
 
-  return obs$.pipe(catchError((error, source) => {
+  return obs$.pipe(catchError((error : Error|CustomError, source : Observable<T>) => {
     const wantRetry = !shouldRetry || shouldRetry(error);
     if (!wantRetry || retryCount++ >= totalRetry) {
       if (errorSelector) {
@@ -169,7 +169,7 @@ function retryFuncWithBackoff<T>(
   }
 
   function doRetry() : Observable<T> {
-    const func$ = Observable.create((obs : Observer<T>) => {
+    const func$ : Observable<T> = Observable.create((obs : Observer<T>) => {
       obs.next(func());
       obs.complete();
     });
@@ -231,7 +231,7 @@ function retryableFuncWithBackoff<T, I>(
   }
 
   return function doRetry(...args : T[]) : Observable<I> {
-    return fn(...args).pipe(catchError((error) => {
+    return fn(...args).pipe(catchError((error : Error|CustomError) => {
       const wantRetry = !shouldRetry || shouldRetry(error);
       if (!wantRetry || retryCount++ >= totalRetry) {
         if (errorSelector) {

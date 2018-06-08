@@ -176,7 +176,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Logger the RxPlayer uses.
    * @type {Object}
    */
-  public log : ILogger;
+  public readonly log : ILogger;
 
   /**
    * Current state of the RxPlayer.
@@ -190,14 +190,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {Subject}
    */
-  private _priv_destroy$ : Subject<void>;
+  private readonly _priv_destroy$ : Subject<void>;
 
   /**
    * Emit to stop the current content and clean-up all related ressources.
    * @private
    * @type {Subject}
    */
-  private _priv_stopCurrentContent$ : Subject<void>;
+  private readonly _priv_stopCurrentContent$ : Subject<void>;
 
   /**
    * Emit true when the previous content is cleaning-up, false when it's done.
@@ -205,7 +205,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {BehaviorSubject}
    */
-  private _priv_streamLock$ : BehaviorSubject<boolean>;
+  private readonly _priv_streamLock$ : BehaviorSubject<boolean>;
 
   /**
    * Changes on "play" and "pause" events from the media elements.
@@ -216,7 +216,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {ReplaySubject}
    */
-  private _priv_playing$ : ReplaySubject<boolean>;
+  private readonly _priv_playing$ : ReplaySubject<boolean>;
 
   /**
    * Last speed set by the user.
@@ -224,14 +224,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {BehaviorSubject>}
    */
-  private _priv_speed$ : BehaviorSubject<number>;
+  private readonly _priv_speed$ : BehaviorSubject<number>;
 
   /**
    * Store buffer-related infos and options used when calling the Stream.
    * @private
    * @type {Object}
    */
-  private _priv_bufferOptions : {
+  private readonly _priv_bufferOptions : {
     /**
      * Emit the last wanted buffer goal.
      * @type {BehaviorSubject}
@@ -256,7 +256,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {Object}
    */
-  private _priv_bitrateInfos : {
+  private readonly _priv_bitrateInfos : {
     /**
      * Store last bitrates for each type for ABRManager instanciation.
      * Store the initial wanted bitrates at first.
@@ -442,7 +442,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   /**
    * Determines whether or not player should stop at the end of video playback.
    */
-  private _priv_stopAtEnd : boolean;
+  private readonly _priv_stopAtEnd : boolean;
 
   /**
    * @returns {Object}
