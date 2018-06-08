@@ -269,7 +269,7 @@ function createSmoothStreamingParser(
           if (!prev.d) {
             throw new Error();
           }
-          ts = prev.ts + prev.d;
+          ts = prev.ts + prev.d * (prev.r + 1);
         }
       }
       if (!d) {
