@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import smooth from "../../net/smooth";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+// Add SMOOTH transport streaming
+const feature : IFeatureListItem = {
+  id: "SMOOTH",
+  content: smooth,
 };
+
+export { feature as SMOOTH };
+export default feature;

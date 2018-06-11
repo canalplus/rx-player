@@ -38,9 +38,9 @@ import {
   onKeyStatusesChange$,
 } from "../../compat/events";
 import {
-  CustomError,
   EncryptedMediaError,
   ErrorTypes,
+  ICustomError,
   isKnownError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
@@ -83,7 +83,7 @@ export interface IMediaKeySessionHandledEvents {
 export default function handleSessionEvents(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
-  errorStream: Subject<Error|CustomError>
+  errorStream: Subject<Error|ICustomError>
 ) : Observable<IMediaKeySessionHandledEvents> {
   log.debug("eme: handle message events", session);
 
@@ -93,9 +93,9 @@ export default function handleSessionEvents(
    * @returns {Error|Object}
    */
   function licenseErrorSelector(
-    error: CustomError|Error,
+    error: ICustomError|Error,
     fatal: boolean
-  ) : CustomError|Error {
+  ) : ICustomError|Error {
     if (isKnownError(error)) {
       if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
         error.fatal = fatal;
@@ -108,9 +108,9 @@ export default function handleSessionEvents(
   const getLicenseRetryOptions = {
     totalRetry: 2,
     retryDelay: 200,
-    errorSelector: (error: CustomError|Error) => licenseErrorSelector(error, true),
+    errorSelector: (error: ICustomError|Error) => licenseErrorSelector(error, true),
     onRetry: (
-      error: CustomError|Error) => errorStream.next(licenseErrorSelector(error, false)
+      error: ICustomError|Error) => errorStream.next(licenseErrorSelector(error, false)
     ),
   };
 

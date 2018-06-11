@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import samiParser from "../../parsers/texttracks/sami/html";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+const feature : IFeatureListItem = {
+  id: "HTML_SAMI",
+  content: samiParser,
 };
+
+export { feature as HTML_SAMI_PARSER };
+export default feature;

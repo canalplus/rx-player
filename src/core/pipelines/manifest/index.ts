@@ -24,7 +24,7 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import { CustomError } from "../../../errors";
+import { ICustomError } from "../../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
@@ -67,7 +67,7 @@ type IPipelineManifestOptions =
 export default function createManifestPipeline(
   transport : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
-  warning$ : Subject<Error|CustomError>,
+  warning$ : Subject<Error|ICustomError>,
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
   supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {

@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Configuration file for the whole player.
+ * Feel free to tweak those values if you know what you're doing.
+ *
+ * Please not that you will need to re-build the whole project to take these
+ * modifications into account.
+ *
+ * @type {Object}
+ */
 export default {
   /**
    * Volume set on unMute if the volume is set to 0 and either:

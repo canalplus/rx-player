@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import srtParser from "../../parsers/texttracks/srt/native";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+const feature : IFeatureListItem = {
+  id: "NATIVE_SRT",
+  content: srtParser,
 };
+
+export { feature as NATIVE_SRT_PARSER };
+export default feature;

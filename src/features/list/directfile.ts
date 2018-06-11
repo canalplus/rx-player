@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import directfile from "../../core/stream/directfile";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+// Add ability to play file natively played by the browser
+// (`directfile` transport)
+const feature : IFeatureListItem = {
+  id: "DIRECTFILE",
+  content: directfile,
 };
+
+export { feature as DIRECTFILE };
+export default feature;

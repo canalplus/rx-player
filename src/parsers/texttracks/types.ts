@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+// Item returned by an HMTL text track parser
+export interface IHTMLCue {
+  start : number;
+  end: number;
+  element : HTMLElement;
+}
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
-};
+export type INativeTextTracksParserFn =
+  (texttrack : string, timeOffset : number, language? : string) =>
+    Array<VTTCue|TextTrackCue>;
+
+export type IHTMLTextTracksParserFn =
+  (texttrack : string, timeOffset : number, language? : string) =>
+    IHTMLCue[];

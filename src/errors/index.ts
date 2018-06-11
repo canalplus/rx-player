@@ -31,7 +31,7 @@ import NetworkError from "./NetworkError";
 // Error used for XHRs
 import RequestError from "./RequestError";
 
-export type CustomError =
+export type ICustomError =
   EncryptedMediaError |
   IndexError |
   MediaError |
@@ -39,11 +39,11 @@ export type CustomError =
   NetworkError;
 
 /**
- * Whether the error given is a CustomError.
+ * Whether the error given is a ICustomError.
  * @param {Error} error
  * @returns {Boolean}
  */
-function isKnownError(error : any) : error is CustomError {
+function isKnownError(error : any) : error is ICustomError {
   return (
     !!error &&
     !!error.type &&

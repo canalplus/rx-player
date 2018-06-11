@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import imageBuffer from "../../core/source_buffers/image";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+const feature : IFeatureListItem = {
+  id: "IMAGE_BUFFER",
+  content: imageBuffer,
 };
+
+export { feature as IMAGE_BUFFER };
+export default feature;

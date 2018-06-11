@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import htmlTextBuffer from "../../core/source_buffers/text/html";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+// Add ability to show subtitles as a HTML div
+const feature : IFeatureListItem = {
+  id: "HTML_TEXT_BUFFER",
+  content: htmlTextBuffer,
 };
+
+export { feature as HTML_TEXT_BUFFER };
+export default feature;

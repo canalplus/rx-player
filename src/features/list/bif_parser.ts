@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import bifParser from "../../parsers/images/bif";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+const feature : IFeatureListItem = {
+  id: "BIF_PARSER",
+  content: bifParser,
 };
+
+export { feature as BIF_PARSER };
+export default feature;

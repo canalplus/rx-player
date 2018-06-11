@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import { of as observableOf } from "rxjs";
+import features from "../../features";
 import {
   getMDHDTimescale,
   parseSidx,
 } from "../../parsers/containers/isobmff";
-import parseBif from "../../parsers/images/bif";
 import dashManifestParser from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import generateManifestLoader from "../utils/manifest_loader";
@@ -158,7 +163,8 @@ export default function(
     ) : ImageParserObservable {
       const responseData = response.responseData;
 
-      if (responseData === null) {
+      // TODO image Parsing should be more on the sourceBuffer side, no?
+      if (responseData === null || features.imageParser == null) {
         return observableOf({
           segmentData: null,
           segmentInfos: segment.timescale > 0 ? {
@@ -169,7 +175,7 @@ export default function(
         });
       }
 
-      const bifObject = parseBif(new Uint8Array(responseData));
+      const bifObject = features.imageParser(new Uint8Array(responseData));
       const data = bifObject.thumbs;
       return observableOf({
         segmentData: {

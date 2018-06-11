@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import {
   Observable,
   of as observableOf,
 } from "rxjs";
 import { map } from "rxjs/operators";
+import features from "../../features";
 import {
   Adaptation,
   Representation,
 } from "../../manifest";
-import parseBif from "../../parsers/images/bif";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
@@ -375,7 +380,8 @@ export default function(
     ) : ImageParserObservable {
       const responseData = response.responseData;
 
-      if (responseData === null) {
+      // TODO image Parsing should be more on the sourceBuffer side, no?
+      if (responseData === null || features.imageParser == null) {
         return observableOf({
           segmentData: null,
           segmentInfos: segment.timescale > 0 ? {
@@ -386,7 +392,7 @@ export default function(
         });
       }
 
-      const bifObject = parseBif(new Uint8Array(responseData));
+      const bifObject = features.imageParser(new Uint8Array(responseData));
       const data = bifObject.thumbs;
       return observableOf({
         segmentData: {

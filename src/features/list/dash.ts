@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import dash from "../../net/dash";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+// Add DASH transport streaming
+const feature : IFeatureListItem = {
+  id: "DASH",
+  content: dash,
 };
+
+export { feature as DASH };
+export default feature;

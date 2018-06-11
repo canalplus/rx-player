@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import {
   merge as observableMerge,
+  NEVER,
   Observable,
   Subject,
 } from "rxjs";
@@ -28,11 +34,10 @@ import {
   clearElementSrc,
   setElementSrc$,
 } from "../../compat";
-import { CustomError } from "../../errors";
+import { ICustomError } from "../../errors";
+import features from "../../features";
 import log from "../../utils/log";
-import EMEManager, {
-  IKeySystemOption,
-} from "../eme";
+import { IKeySystemOption } from "../eme/types";
 import { IStreamClockTick } from "./clock";
 import { IInitialTimeOptions } from "./get_initial_time";
 import createMediaErrorHandler from "./media_error_handler";
@@ -115,7 +120,7 @@ export default function StreamDirectFile({
    * Observable through which all warning events will be sent.
    * @type {Subject}
    */
-  const warning$ = new Subject<Error|CustomError>();
+  const warning$ = new Subject<Error|ICustomError>();
   const warningEvents$ = warning$.pipe(map(EVENTS.warning));
 
   clearElementSrc(mediaElement);
@@ -135,7 +140,8 @@ export default function StreamDirectFile({
    * issue.
    * @type {Observable}
    */
-  const emeManager$ = EMEManager(mediaElement, keySystems, warning$);
+  const emeManager$ = features.emeManager == null ?
+  NEVER : features.emeManager(mediaElement, keySystems, warning$);
 
   /**
    * Translate errors coming from the video element into RxPlayer errors

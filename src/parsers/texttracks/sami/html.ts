@@ -24,13 +24,13 @@
 // corresponding Class should be on the P elements. If we fail to find the
 // language in a "lang" property of a CSS class, the parser will throw.
 
-import assert from "../../../utils/assert";
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
 
-export interface ISAMIHTMLCue {
-  start : number;
-  end: number;
-  element : HTMLElement;
-}
+import assert from "../../../utils/assert";
+import { IHTMLCue } from "../types";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
@@ -102,11 +102,11 @@ function decodeEntities(text : string) : string {
  * @param {Number} timeOffset
  * @param {string} lang
  */
-function parseSami(smi : string, timeOffset : number, lang : string) : ISAMIHTMLCue[] {
+function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue[] {
   const syncOpen = /<sync[ >]/ig;
   const syncClose = /<sync[ >]|<\/body>/ig;
 
-  const subs : ISAMIHTMLCue[] = [];
+  const subs : IHTMLCue[] = [];
 
   const styleMatches = smi.match(STYLE);
   const css = styleMatches ? styleMatches[1] : "";
@@ -119,7 +119,7 @@ function parseSami(smi : string, timeOffset : number, lang : string) : ISAMIHTML
 
   const langs = getClassNameByLang(css);
   const pCSS = getPCSSRules(css);
-  const klass = langs[lang];
+  const klass = lang && langs[lang];
 
   assert(!!klass, `sami: could not find lang ${lang} in CSS`);
 
