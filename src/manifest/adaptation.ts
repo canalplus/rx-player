@@ -29,12 +29,17 @@ export interface IContentProtectionDASH {
   value?: string;
 }
 
+interface IRole {
+  schemeIdUri?: string;
+  value?: string;
+}
 export interface IAdaptationArguments {
   // -- required
   representations : IRepresentationArguments[];
   type : AdaptationType;
 
   // -- optional
+  role? : IRole;
   audioDescription? : boolean;
   closedCaption? : boolean;
   id? : number|string;
@@ -61,6 +66,7 @@ class Adaptation {
   public language? : string;
   public manuallyAdded? : boolean;
   public normalizedLanguage? : string;
+  public role? : IRole;
 
   /**
    * @constructor
@@ -92,6 +98,10 @@ class Adaptation {
     // TODO move to DASH's Segment private infos
     if (args.contentProtection != null) {
       this.contentProtection = args.contentProtection;
+    }
+
+    if (args.role != null) {
+      this.role = args.role;
     }
 
     // for manuallyAdded adaptations (not in the manifest)
