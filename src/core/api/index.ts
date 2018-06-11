@@ -2014,7 +2014,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       default:
         const adaptations = period.adaptations[type];
         if (adaptations && adaptations.length) {
-          adaptation$.next(adaptations[0]);
+          const mainAdaptation = adaptations.find((adaptation) => {
+            if (
+              adaptation.role &&
+              adaptation.role.value === "main" &&
+              adaptation.role.schemeIdUri === "urn:mpeg:dash:role:2011"
+            ) {
+              return true;
+            }
+            return false;
+          });
+          adaptation$.next(mainAdaptation || adaptations[0]);
         } else {
           adaptation$.next(null);
         }
