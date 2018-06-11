@@ -21,6 +21,7 @@
 
 import assert from "../../../utils/assert";
 import { resolveURL } from "../../../utils/url";
+import { IRole } from "../types";
 
 export interface IScheme {
   schemeIdUri? : string;
@@ -30,11 +31,6 @@ export interface IScheme {
 export interface IAccessibility {
   schemeIdUri?: string;
   value?: string|number;
-}
-
-export interface IRole {
-  schemeIdUri?: string;
-  value?: string;
 }
 
 const iso8601Duration =
