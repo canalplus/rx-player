@@ -18,22 +18,21 @@ import MediaError from "../errors/MediaError";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
-const win = window;
-const HTMLElement_ : HTMLElementConstructor = win.HTMLElement;
-const VTTCue_ : VTTCueConstructor|undefined = win.VTTCue || win.TextTrackCue;
+const HTMLElement_ : HTMLElementConstructor = window.HTMLElement;
+const VTTCue_ : VTTCueConstructor|undefined = window.VTTCue || window.TextTrackCue;
 
 const MediaSource_ : MediaSourceConstructor|undefined = (
-  win.MediaSource ||
-  win.MozMediaSource ||
-  win.WebKitMediaSource ||
-  win.MSMediaSource
+  window.MediaSource ||
+  window.MozMediaSource ||
+  window.WebKitMediaSource ||
+  window.MSMediaSource
 );
 
 let MediaKeys_ : MediaKeysConstructor|undefined = (
-  win.MediaKeys ||
-  win.MozMediaKeys ||
-  win.WebKitMediaKeys ||
-  win.MSMediaKeys
+  window.MediaKeys ||
+  window.MozMediaKeys ||
+  window.WebKitMediaKeys ||
+  window.MSMediaKeys
 );
 
 if (!MediaKeys_) {
