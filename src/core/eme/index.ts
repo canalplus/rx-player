@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import {
   combineLatest as observableCombineLatest,
   defer as observableDefer,
@@ -34,8 +39,8 @@ import {
 } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
 import {
-  CustomError,
   EncryptedMediaError,
+  ICustomError,
 } from "../../errors";
 import { assertInterface } from "../../utils/assert";
 import log from "../../utils/log";
@@ -87,7 +92,7 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
 function createEME(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
-  errorStream: Subject<Error|CustomError>
+  errorStream: Subject<Error|ICustomError>
 ) : Observable<never> {
   if (__DEV__) {
     keySystemsConfigs.forEach((config) => assertInterface(config, {
@@ -184,7 +189,7 @@ function getCurrentKeySystem(mediaElement : HTMLMediaElement) : string|null {
 export default function EMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
-  errorStream : Subject<Error|CustomError>
+  errorStream : Subject<Error|ICustomError>
 ) :  Observable<never> {
   if (keySystems && keySystems.length) {
     if (!hasEMEAPIs()) {

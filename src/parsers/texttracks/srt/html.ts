@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 // Parse SRT subtitles into HTML.
 
 // Done for fun. Understand <b>, <i>, <u> and <font color="#ff0000" /> type

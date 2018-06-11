@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import EMEManager from "../../core/eme";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+// Add ability to play encrypted contents
+const feature : IFeatureListItem = {
+  id: "EME",
+  content: EMEManager,
 };
+
+export { feature as EME };
+export default feature;

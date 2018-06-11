@@ -35,9 +35,8 @@ const config = {
         HTML_SAMI: true,
         HTML_VTT: true,
         HTML_SRT: true,
-        // TODO
-        // EME: true,
-        // BIF: true,
+        EME: true,
+        BIF_IMAGES: true,
       },
       __DEV__: true,
       __LOGGER_LEVEL__: "\"NONE\"",

@@ -18,6 +18,7 @@ import {
   combineLatest as observableCombineLatest,
   EMPTY,
   merge as observableMerge,
+  NEVER,
   Observable,
   of as observableOf,
   Subject,
@@ -32,13 +33,14 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import config from "../../config";
+import features from "../../features";
 import log from "../../utils/log";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 
 import { onSourceOpen$ } from "../../compat/events";
 import {
-  CustomError,
+  ICustomError,
   MediaError,
 } from "../../errors";
 import Manifest, {
@@ -51,9 +53,7 @@ import ABRManager, {
   IABRRequest,
 } from "../abr";
 import BufferManager from "../buffer";
-import EMEManager, {
-  IKeySystemOption,
-} from "../eme";
+import { IKeySystemOption } from "../eme/types";
 import {
   createManifestPipeline,
   IPipelineOptions,
@@ -173,7 +173,7 @@ export default function Stream({
    * Observable through which all warning events will be sent.
    * @type {Subject}
    */
-  const warning$ = new Subject<Error|CustomError>();
+  const warning$ = new Subject<Error|ICustomError>();
 
   /**
    * Fetch and parse the manifest from the URL given.
@@ -367,7 +367,8 @@ export default function Stream({
      * issue.
      * @type {Observable}
      */
-    const emeManager$ = EMEManager(videoElement, keySystems, warning$);
+    const emeManager$ = features.emeManager == null ?
+      NEVER : features.emeManager(videoElement, keySystems, warning$);
 
     /**
      * Translate errors coming from the video element into RxPlayer errors

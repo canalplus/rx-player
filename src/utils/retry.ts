@@ -23,7 +23,7 @@ import {
   catchError,
   mergeMap,
 } from "rxjs/operators";
-import { CustomError } from "../errors";
+import { ICustomError } from "../errors";
 import { getBackedoffDelay } from "./backoff";
 
 /**
@@ -45,10 +45,12 @@ function debounce(fn : () => void, delay : number) : () => void {
 interface IBackoffOptions {
   retryDelay : number;
   totalRetry : number;
-  shouldRetry? : (error : Error|CustomError) => boolean;
+  shouldRetry? : (error : Error|ICustomError) => boolean;
   resetDelay? : number;
-  errorSelector? : (error : Error|CustomError, retryCount : number) => Error|CustomError;
-  onRetry? : (error : Error|CustomError, retryCount : number) => void;
+  errorSelector? : (
+    error : Error|ICustomError, retryCount : number
+  ) => Error|ICustomError;
+  onRetry? : (error : Error|ICustomError, retryCount : number) => void;
 }
 
 /**
@@ -116,7 +118,7 @@ function retryObsWithBackoff<T>(
     debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
   }
 
-  return obs$.pipe(catchError((error : Error|CustomError, source : Observable<T>) => {
+  return obs$.pipe(catchError((error : Error|ICustomError, source : Observable<T>) => {
     const wantRetry = !shouldRetry || shouldRetry(error);
     if (!wantRetry || retryCount++ >= totalRetry) {
       if (errorSelector) {
@@ -174,7 +176,7 @@ function retryFuncWithBackoff<T>(
       obs.complete();
     });
 
-    return func$.pipe(catchError((error : Error|CustomError) => {
+    return func$.pipe(catchError((error : Error|ICustomError) => {
       const wantRetry = !shouldRetry || shouldRetry(error);
       if (!wantRetry || retryCount++ >= totalRetry) {
         if (errorSelector) {
@@ -231,7 +233,7 @@ function retryableFuncWithBackoff<T, I>(
   }
 
   return function doRetry(...args : T[]) : Observable<I> {
-    return fn(...args).pipe(catchError((error : Error|CustomError) => {
+    return fn(...args).pipe(catchError((error : Error|ICustomError) => {
       const wantRetry = !shouldRetry || shouldRetry(error);
       if (!wantRetry || retryCount++ >= totalRetry) {
         if (errorSelector) {
@@ -260,5 +262,5 @@ export {
   retryObsWithBackoff,
   retryableFuncWithBackoff,
   retryFuncWithBackoff,
-  CustomError,
+  ICustomError,
 };

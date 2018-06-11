@@ -29,6 +29,8 @@ declare const __FEATURES__ : {
   NATIVE_SRT : boolean;
   NATIVE_TTML : boolean;
   NATIVE_VTT : boolean;
+  BIF_IMAGES : boolean;
+  EME : boolean;
 };
 
 // Map of string to anything

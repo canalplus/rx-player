@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import features from "../../../../features";
 import log from "../../../../utils/log";
 
 export interface IHTMLCue {
@@ -21,32 +22,6 @@ export interface IHTMLCue {
   end: number;
   element : HTMLElement;
 }
-
-type htmlParserFn =
-  (texttrack : string, timeOffset : number, language? : string) => IHTMLCue[];
-const htmlParsers : { [format : string] : htmlParserFn } = {};
-
-/* tslint:disable no-var-requires */
-if (__FEATURES__.HTML_SAMI) {
-  htmlParsers.sami =
-    require("../../../../parsers/texttracks/sami/html.ts").default;
-}
-
-if (__FEATURES__.HTML_TTML) {
-  htmlParsers.ttml =
-    require("../../../../parsers/texttracks/ttml/html/index.ts").default;
-}
-
-if (__FEATURES__.HTML_SRT) {
-  htmlParsers.srt =
-    require("../../../../parsers/texttracks/srt/html.ts").default;
-}
-
-if (__FEATURES__.HTML_VTT) {
-  htmlParsers.vtt =
-    require("../../../../parsers/texttracks/webvtt/html/index.ts").default;
-}
-/* tslint:enable no-var-requires */
 
 /**
  * @param {string} type
@@ -63,7 +38,7 @@ export default function parseTextTrackToElements(
   language? : string
 ) : IHTMLCue[] {
   log.debug("finding parser for html text tracks:", type);
-  const parser = htmlParsers[type];
+  const parser = features.htmlTextTracksParsers[type];
 
   if (!parser) {
     throw new Error("no parser found for the given text track");

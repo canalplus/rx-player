@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import { makeCue } from "../../../compat/index";
 import arrayIncludes from "../../../utils/array-includes";
 import getCueBlocks from "./getCueBlocks";

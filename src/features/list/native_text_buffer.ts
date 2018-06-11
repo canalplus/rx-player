@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import nativeTextBuffer from "../../core/source_buffers/text/native";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+// Add ability to show subtitles through <tracks> tags
+const feature : IFeatureListItem = {
+  id: "NATIVE_TEXT_BUFFER",
+  content: nativeTextBuffer,
 };
+
+export { feature as NATIVE_TEXT_BUFFER };
+export default feature;

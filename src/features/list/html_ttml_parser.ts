@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import ttmlParser from "../../parsers/texttracks/ttml/html";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+const feature : IFeatureListItem = {
+  id: "HTML_TTML",
+  content: ttmlParser,
 };
+
+export { feature as HTML_TTML_PARSER };
+export default feature;

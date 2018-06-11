@@ -26,8 +26,8 @@ import {
 } from "rxjs/operators";
 import { IMockMediaKeys } from "../../compat/";
 import {
-  CustomError,
   EncryptedMediaError,
+  ICustomError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
 import log from "../../utils/log";
@@ -67,7 +67,7 @@ export default function getMediaKeysInfos(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos : MediaKeysInfosStore,
-  errorStream: Subject<Error|CustomError>
+  errorStream: Subject<Error|ICustomError>
 ) : Observable<IMediaKeysInfos> {
     return getMediaKeySystemAccess(
       mediaElement,

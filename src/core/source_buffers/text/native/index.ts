@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import { addTextTrack } from "../../../../compat";
 import log from "../../../../utils/log";
 import AbstractSourceBuffer, {

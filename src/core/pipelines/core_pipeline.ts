@@ -32,7 +32,7 @@ import {
 } from "rxjs/operators";
 import config from "../../config";
 import {
-  CustomError,
+  ICustomError,
   isKnownError,
   NetworkError,
   OtherError,
@@ -57,7 +57,7 @@ interface IPipelineLoaderCache<T> {
 
 export interface IPipelineError {
   type : "error";
-  value : Error|CustomError;
+  value : Error|ICustomError;
 }
 
 export interface IPipelineMetrics {
@@ -121,7 +121,7 @@ function errorSelector(
   code : string,
   error : Error,
   fatal : boolean = true
-) : CustomError {
+) : ICustomError {
   if (!isKnownError(error)) {
     if (error instanceof RequestError) {
       return new NetworkError(code, error, fatal);

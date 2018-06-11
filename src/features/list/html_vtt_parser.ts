@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+import vttParser from "../../parsers/texttracks/webvtt/html";
+import { IFeatureListItem } from "../types";
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
+const feature : IFeatureListItem = {
+  id: "HTML_VTT",
+  content: vttParser,
 };
+
+export { feature as HTML_VTT_PARSER };
+export default feature;

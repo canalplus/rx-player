@@ -26,8 +26,8 @@ import {
 } from "rxjs/operators";
 import { IMockMediaKeys } from "../../compat";
 import {
-  CustomError,
   EncryptedMediaError,
+  ICustomError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
 
@@ -69,7 +69,7 @@ function setServerCertificate(
 export default function trySettingServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray,
-  errorStream: Subject<Error|CustomError>
+  errorStream: Subject<Error|ICustomError>
 ) : Observable<null> {
   return typeof mediaKeys.setServerCertificate === "function" ?
     setServerCertificate(mediaKeys, serverCertificate)

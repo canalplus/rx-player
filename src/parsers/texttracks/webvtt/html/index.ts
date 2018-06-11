@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import getCueBlocks from "../getCueBlocks";
 import getStyleBlocks from "../getStyleBlocks";
 import parseCueBlock from "../parseCueBlock";
