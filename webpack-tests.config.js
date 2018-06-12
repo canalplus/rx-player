@@ -36,7 +36,7 @@ const config = {
         HTML_VTT: true,
         HTML_SRT: true,
         EME: true,
-        BIF_IMAGES: true,
+        BIF_PARSER: true,
       },
       __DEV__: true,
       __LOGGER_LEVEL__: "\"NONE\"",

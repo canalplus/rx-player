@@ -61,13 +61,13 @@ const plugins = [
         process.env.RXP_HTML_SRT === "true" :
         process.env.RXP_HTML_SRT !== "false",
 
-      // TODO
-      // EME: isBarebone ?
-      //   process.env.RXP_EME === "true" :
-      //   process.env.RXP_EME !== "false",
-      // BIF: isBarebone ?
-      //   process.env.RXP_BIF === "true" :
-      //   process.env.RXP_BIF !== "false",
+      EME: isBarebone ?
+        process.env.RXP_EME === "true" :
+        process.env.RXP_EME !== "false",
+
+      BIF_PARSER: isBarebone ?
+        process.env.RXP_BIF === "true" :
+        process.env.RXP_BIF !== "false",
     },
     __DEV__: isDevMode,
     __LOGGER_LEVEL__: isDevMode ? "\"INFO\"" : "\"DEBUG\"",
