@@ -73,7 +73,7 @@ module.exports = {
         HTML_SRT: true,
         HTML_VTT: true,
         EME: true,
-        BIF_IMAGES: true,
+        BIF_PARSER: true,
       },
       "__DEV__": true,
       "__LOGGER_LEVEL__": "\"INFO\"",

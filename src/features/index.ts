@@ -51,7 +51,7 @@ if (__FEATURES__.EME) {
 /* tslint:enable no-var-requires */
 
 /* tslint:disable no-var-requires */
-if (__FEATURES__.BIF_IMAGES) {
+if (__FEATURES__.BIF_PARSER) {
   features.imageBuffer = require("../core/source_buffers/image/index.ts").default;
   features.imageParser = require("../parsers/images/bif.ts").default;
 }
