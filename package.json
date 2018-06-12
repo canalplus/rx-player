@@ -23,6 +23,7 @@
   "homepage": "https://github.com/canalplus/rx-player",
   "bugs": "https://github.com/canalplus/rx-player/issues",
   "license": "Apache-2.0",
+  "sideEffects": false,
   "scripts-info": {
     "build": "Build the player in dist/rx-player.js",
     "build:min": "Build the player and minify it in dist/rx-player.min.js",
