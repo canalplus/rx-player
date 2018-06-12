@@ -30,8 +30,7 @@ import {
   IParsedAdaptation,
   IParsedManifest,
   IParsedPeriod,
-  IParsedRepresentation,
-  IRole,
+  IParsedRepresentation
 } from "../../types";
 import {
   isHardOfHearing,
@@ -46,6 +45,11 @@ import {
 } from "./MPD";
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
+
+export interface IRole {
+  schemeIdUri?: string;
+  value?: string;
+}
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -553,9 +557,7 @@ export default function parseManifest(
 
         const mainAdaptation = parsedAdaptations.find((_adaptation) => {
           if (
-            _adaptation.role &&
-            _adaptation.role.value === "main" &&
-            _adaptation.role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+            _adaptation.role === "main" &&
             type === _adaptation.type
           ) {
             return true;
@@ -563,7 +565,20 @@ export default function parseManifest(
           return false;
         });
 
-        if (mainAdaptation !== undefined) {
+        let adaptationRole;
+
+        if (
+          adaptation.children.role &&
+          adaptation.children.role.value === "main" &&
+          adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011"
+        ) {
+          adaptationRole = "main";
+        }
+
+        if (
+          mainAdaptation !== undefined &&
+          adaptationRole === "main"
+        ) {
           mainAdaptation.representations.push(...representations);
         } else {
 
@@ -620,8 +635,6 @@ export default function parseManifest(
 
             adaptationID = "adaptation-" + idString;
           }
-
-          const adaptationRole = adaptation.children.role;
 
           const parsedAdaptationSet : IParsedAdaptation = {
             id: adaptationID,

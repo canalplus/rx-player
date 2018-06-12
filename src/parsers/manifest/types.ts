@@ -16,11 +16,6 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
-export interface IRole {
-  schemeIdUri?: string;
-  value?: string;
-}
-
 export interface IKeySystem {
   systemId : string;
   privateData : Uint8Array;
@@ -63,7 +58,7 @@ export interface IParsedAdaptation {
   type: string;
 
   // optional
-  role? : IRole;
+  role? : string;
   audioDescription? : boolean;
   bitstreamSwitching?: boolean;
   closedCaption? : boolean;

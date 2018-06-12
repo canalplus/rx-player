@@ -710,22 +710,8 @@ function createNativeSourceBuffersForPeriod(
   Object.keys(period.adaptations).forEach(bufferType => {
     if (SourceBufferManager.isNative(bufferType)) {
       const adaptations = period.adaptations[bufferType] || [];
-      const mainAdaptation = adaptations.find((adaptation) => {
-        if (
-          adaptation.role &&
-          adaptation.role.value === "main" &&
-          adaptation.role.schemeIdUri === "urn:mpeg:dash:role:2011"
-        ) {
-          return true;
-        }
-        return false;
-      });
       const representations = adaptations ?
-        (
-          mainAdaptation ?
-            mainAdaptation.representations :
-            adaptations[0].representations
-        ) : [];
+        adaptations[0].representations : [];
       if (representations.length) {
         const codec = representations[0].getMimeTypeString();
         sourceBufferManager.createSourceBuffer(bufferType, codec);

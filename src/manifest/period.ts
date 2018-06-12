@@ -67,7 +67,12 @@ function createManifestAdaptations(
     if (!acc[type]) {
       acc[type] = [];
     }
-    (acc[type] as Adaptation[]).push(new Adaptation(adaptation));
+
+    if (adaptation.role === "main") {
+      (acc[type] as Adaptation[]).unshift(new Adaptation(adaptation));
+    } else {
+      (acc[type] as Adaptation[]).push(new Adaptation(adaptation));
+    }
     return acc;
   }, {});
 }
