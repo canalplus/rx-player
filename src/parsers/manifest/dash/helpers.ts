@@ -21,7 +21,6 @@
 
 import assert from "../../../utils/assert";
 import { resolveURL } from "../../../utils/url";
-import { IRole } from "../types";
 
 export interface IScheme {
   schemeIdUri? : string;
@@ -153,7 +152,7 @@ function parseByteRange(str : string) : [number, number]|null {
  * @param {Object} accessibility
  * @returns {Boolean}
  */
-function isVisuallyImpaired(accessibility: IRole) : boolean {
+function isVisuallyImpaired(accessibility: IScheme) : boolean {
   if (!accessibility) {
     return false;
   }

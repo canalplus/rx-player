@@ -66,7 +66,6 @@ class Adaptation {
   public language? : string;
   public manuallyAdded? : boolean;
   public normalizedLanguage? : string;
-  public role? : IRole;
 
   /**
    * @constructor
@@ -98,10 +97,6 @@ class Adaptation {
     // TODO move to DASH's Segment private infos
     if (args.contentProtection != null) {
       this.contentProtection = args.contentProtection;
-    }
-
-    if (args.role != null) {
-      this.role = args.role;
     }
 
     // for manuallyAdded adaptations (not in the manifest)
