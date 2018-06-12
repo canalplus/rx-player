@@ -27,6 +27,7 @@
   "scripts-info": {
     "build": "Build the player in dist/rx-player.js",
     "build:min": "Build the player and minify it in dist/rx-player.min.js",
+    "build:modules": "Build the base for the modular build in dist/_esm5.raw.",
     "build:watch": "Build the player in dist/rx-player.js each times the files update",
     "check": "Check validity of the src directory by running the linter and every tests",
     "demo": "Build the demo in demo/bundle.js",
@@ -62,6 +63,7 @@
   "scripts": {
     "build": "webpack --progress --config webpack.config.js",
     "build:min": "cross-env RXP_MINIFY=true webpack --progress --config webpack.config.js",
+    "build:modules": "tsc -p tsconfig.modules.json",
     "build:watch": "webpack --progress --config webpack.config.js -w",
     "check": "npm run types && npm run lint && npm run test",
     "demo": "webpack --progress --config webpack-demo.config.js",
