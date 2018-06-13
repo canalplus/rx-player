@@ -18,7 +18,6 @@ import {
   combineLatest as observableCombineLatest,
   EMPTY,
   merge as observableMerge,
-  NEVER,
   Observable,
   of as observableOf,
   Subject,
@@ -33,7 +32,6 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import config from "../../config";
-import features from "../../features";
 import log from "../../utils/log";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
@@ -68,6 +66,7 @@ import BuffersHandler from "./buffers_handler";
 import createBufferClock, {
   IStreamClockTick,
 } from "./clock";
+import createEMEManager from "./create_eme_manager";
 import createMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
@@ -367,8 +366,7 @@ export default function Stream({
      * issue.
      * @type {Observable}
      */
-    const emeManager$ = features.emeManager == null ?
-      NEVER : features.emeManager(videoElement, keySystems, warning$);
+    const emeManager$ = createEMEManager(videoElement, keySystems, warning$);
 
     /**
      * Translate errors coming from the video element into RxPlayer errors

@@ -21,7 +21,6 @@
 
 import {
   merge as observableMerge,
-  NEVER,
   Observable,
   Subject,
 } from "rxjs";
@@ -35,10 +34,10 @@ import {
   setElementSrc$,
 } from "../../compat";
 import { ICustomError } from "../../errors";
-import features from "../../features";
 import log from "../../utils/log";
 import { IKeySystemOption } from "../eme/types";
 import { IStreamClockTick } from "./clock";
+import createEMEManager from "./create_eme_manager";
 import { IInitialTimeOptions } from "./get_initial_time";
 import createMediaErrorHandler from "./media_error_handler";
 import SpeedManager from "./speed_manager";
@@ -140,8 +139,7 @@ export default function StreamDirectFile({
    * issue.
    * @type {Observable}
    */
-  const emeManager$ = features.emeManager == null ?
-  NEVER : features.emeManager(mediaElement, keySystems, warning$);
+  const emeManager$ = createEMEManager(mediaElement, keySystems, warning$);
 
   /**
    * Translate errors coming from the video element into RxPlayer errors
