@@ -15,7 +15,7 @@
  */
 
 /**
- * This file exports a Player class for which features can be lazy-loaded.
+ * This file exports a MinimalPlayer class for which features can be lazy-loaded.
  *
  * This allows to import a "minimal" player with a small bundle size and then
  * import only features that is needed.
@@ -31,11 +31,13 @@ if (__DEV__) {
 }
 
 /**
- * Extandable Player for which you can features at will.
+ * Minimal Player for which you can features at will:
+ *   - start with no features
+ *   - Allow to only load features wanted
  *
- * Allow to only loads features that you needs at the moment you need them.
+ * @class MinimalPlayer
  */
-export default class ExtendablePlayer extends Player {
+export default class MinimalPlayer extends Player {
   static addFeatures(featureList : IFeatureListItem[]) : void {
     addFeatures(featureList);
   }

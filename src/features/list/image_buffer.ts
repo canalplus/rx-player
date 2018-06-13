@@ -15,10 +15,13 @@
  */
 
 import imageBuffer from "../../core/source_buffers/image";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 const feature : IFeatureListItem = {
-  id: "IMAGE_BUFFER",
+  id: FEATURE_IDS.IMAGE_BUFFER,
   content: imageBuffer,
 };
 

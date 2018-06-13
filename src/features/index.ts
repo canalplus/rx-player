@@ -16,7 +16,6 @@
 
 /**
  * File allowing feature-switching.
- * Selects the features to include based on environment variables.
  *
  * Every optional feature is included here.
  * They all should subsequently be accessed in the code through the exported
@@ -32,6 +31,10 @@
 
 import { IFeaturesObject } from "./types";
 
+/**
+ * Initial features object, with no feature activated by default.
+ * @type {Object}
+ */
 const features : IFeaturesObject = {
   transports: {},
   imageBuffer: null,
@@ -43,99 +46,5 @@ const features : IFeaturesObject = {
   emeManager: null,
   directfile: null,
 };
-
-/* tslint:disable no-var-requires */
-if (__FEATURES__.EME) {
-  features.emeManager = require("../core/eme/index.ts").default;
-}
-/* tslint:enable no-var-requires */
-
-/* tslint:disable no-var-requires */
-if (__FEATURES__.BIF_PARSER) {
-  features.imageBuffer = require("../core/source_buffers/image/index.ts").default;
-  features.imageParser = require("../parsers/images/bif.ts").default;
-}
-/* tslint:enable no-var-requires */
-
-// Feature switching the Native TextTrack implementation
-const HAS_NATIVE_MODE =
-  __FEATURES__.NATIVE_VTT ||
-  __FEATURES__.NATIVE_SAMI ||
-  __FEATURES__.NATIVE_TTML ||
-  __FEATURES__.NATIVE_SRT;
-
-/* tslint:disable no-var-requires */
-if (__FEATURES__.SMOOTH) {
-  features.transports.smooth = require("../net/smooth/index.ts").default;
-}
-if (__FEATURES__.DASH) {
-  features.transports.dash = require("../net/dash/index.ts").default;
-}
-/* tslint:enable no-var-requires */
-
-/* tslint:disable no-var-requires */
-if (HAS_NATIVE_MODE) {
-  features.nativeTextTracksBuffer =
-    require("../core/source_buffers/text/native/index.ts").default;
-  if (__FEATURES__.NATIVE_VTT) {
-    features.nativeTextTracksParsers.vtt =
-      require("../parsers/texttracks/webvtt/native.ts").default;
-  }
-
-  if (__FEATURES__.NATIVE_TTML) {
-    features.nativeTextTracksParsers.ttml =
-      require("../parsers/texttracks/ttml/native/index.ts").default;
-  }
-
-  if (__FEATURES__.NATIVE_SAMI) {
-    features.nativeTextTracksParsers.sami =
-      require("../parsers/texttracks/sami/native.ts").default;
-  }
-
-  if (__FEATURES__.NATIVE_SRT) {
-    features.nativeTextTracksParsers.srt =
-      require("../parsers/texttracks/srt/native.ts").default;
-  }
-}
-/* tslint:enable no-var-requires */
-
-// Feature switching the HTML TextTrack implementation
-const HAS_HTML_MODE =
-  __FEATURES__.HTML_VTT ||
-  __FEATURES__.HTML_SAMI ||
-  __FEATURES__.HTML_TTML ||
-  __FEATURES__.HTML_SRT;
-
-/* tslint:disable no-var-requires */
-if (HAS_HTML_MODE) {
-  features.htmlTextTracksBuffer =
-    require("../core/source_buffers/text/html/index.ts").default;
-  if (__FEATURES__.HTML_SAMI) {
-    features.htmlTextTracksParsers.sami =
-      require("../parsers/texttracks/sami/html.ts").default;
-  }
-
-  if (__FEATURES__.HTML_TTML) {
-    features.htmlTextTracksParsers.ttml =
-      require("../parsers/texttracks/ttml/html/index.ts").default;
-  }
-
-  if (__FEATURES__.HTML_SRT) {
-    features.htmlTextTracksParsers.srt =
-      require("../parsers/texttracks/srt/html.ts").default;
-  }
-
-  if (__FEATURES__.HTML_VTT) {
-    features.htmlTextTracksParsers.vtt =
-      require("../parsers/texttracks/webvtt/html/index.ts").default;
-  }
-  /* tslint:enable no-var-requires */
-}
-
-/* tslint:disable no-var-requires */
-if (__FEATURES__.DIRECTFILE) {
-  features.directfile = require("../core/stream/directfile.ts").default;
-}
-/* tslint:enable no-var-requires */
 
 export default features;

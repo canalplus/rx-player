@@ -15,10 +15,13 @@
  */
 
 import samiParser from "../../parsers/texttracks/sami/html";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 const feature : IFeatureListItem = {
-  id: "HTML_SAMI",
+  id: FEATURE_IDS.HTML_SAMI,
   content: samiParser,
 };
 

@@ -85,24 +85,43 @@ export interface IImageBuffer {
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);
 
+export const enum FEATURE_IDS {
+  DASH,
+  SMOOTH,
+  EME,
+  NATIVE_VTT,
+  NATIVE_TTML,
+  NATIVE_SRT,
+  NATIVE_SAMI,
+  HTML_VTT,
+  HTML_TTML,
+  HTML_SRT,
+  HTML_SAMI,
+  NATIVE_TEXT_BUFFER,
+  HTML_TEXT_BUFFER,
+  IMAGE_BUFFER,
+  BIF_PARSER,
+  DIRECTFILE,
+}
+
 // feature item added through feature loading
 export type IFeatureListItem =
-  { id : "DASH"; content : ITransportFunction } |
-  { id : "SMOOTH"; content : ITransportFunction } |
-  { id : "EME"; content : IEMEManager } |
-  { id : "NATIVE_VTT"; content : INativeTextTracksParserFn } |
-  { id : "NATIVE_TTML"; content : INativeTextTracksParserFn } |
-  { id : "NATIVE_SRT"; content : INativeTextTracksParserFn } |
-  { id : "NATIVE_SAMI"; content : INativeTextTracksParserFn } |
-  { id : "HTML_VTT"; content : IHTMLTextTracksParserFn } |
-  { id : "HTML_TTML"; content : IHTMLTextTracksParserFn } |
-  { id : "HTML_SRT"; content : IHTMLTextTracksParserFn } |
-  { id : "HTML_SAMI"; content : IHTMLTextTracksParserFn } |
-  { id : "NATIVE_TEXT_BUFFER"; content : INativeTextTracksBuffer } |
-  { id : "HTML_TEXT_BUFFER"; content : IHTMLTextTracksBuffer } |
-  { id : "IMAGE_BUFFER"; content : IImageBuffer } |
-  { id : "BIF_PARSER"; content : IImageParser } |
-  { id : "DIRECTFILE"; content : IDirectFileStream };
+  { id : FEATURE_IDS.DASH; content : ITransportFunction } |
+  { id : FEATURE_IDS.SMOOTH; content : ITransportFunction } |
+  { id : FEATURE_IDS.EME; content : IEMEManager } |
+  { id : FEATURE_IDS.NATIVE_VTT; content : INativeTextTracksParserFn } |
+  { id : FEATURE_IDS.NATIVE_TTML; content : INativeTextTracksParserFn } |
+  { id : FEATURE_IDS.NATIVE_SRT; content : INativeTextTracksParserFn } |
+  { id : FEATURE_IDS.NATIVE_SAMI; content : INativeTextTracksParserFn } |
+  { id : FEATURE_IDS.HTML_VTT; content : IHTMLTextTracksParserFn } |
+  { id : FEATURE_IDS.HTML_TTML; content : IHTMLTextTracksParserFn } |
+  { id : FEATURE_IDS.HTML_SRT; content : IHTMLTextTracksParserFn } |
+  { id : FEATURE_IDS.HTML_SAMI; content : IHTMLTextTracksParserFn } |
+  { id : FEATURE_IDS.NATIVE_TEXT_BUFFER; content : INativeTextTracksBuffer } |
+  { id : FEATURE_IDS.HTML_TEXT_BUFFER; content : IHTMLTextTracksBuffer } |
+  { id : FEATURE_IDS.IMAGE_BUFFER; content : IImageBuffer } |
+  { id : FEATURE_IDS.BIF_PARSER; content : IImageParser } |
+  { id : FEATURE_IDS.DIRECTFILE; content : IDirectFileStream };
 
 // interface of the global `features` object through which features are
 // accessed.

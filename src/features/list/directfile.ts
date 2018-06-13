@@ -15,12 +15,15 @@
  */
 
 import directfile from "../../core/stream/directfile";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 // Add ability to play file natively played by the browser
 // (`directfile` transport)
 const feature : IFeatureListItem = {
-  id: "DIRECTFILE",
+  id: FEATURE_IDS.DIRECTFILE,
   content: directfile,
 };
 

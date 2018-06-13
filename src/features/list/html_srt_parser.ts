@@ -15,10 +15,13 @@
  */
 
 import srtParser from "../../parsers/texttracks/srt/html";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 const feature : IFeatureListItem = {
-  id: "HTML_SRT",
+  id: FEATURE_IDS.HTML_SRT,
   content: srtParser,
 };
 
