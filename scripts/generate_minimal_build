@@ -53,19 +53,9 @@ done
 
 rm -rf minimal
 mkdir minimal
-ln -s ../dist/_esm5.minimal/minimal.js minimal/index.js
+echo "import MinimalPlayer from \"../dist/_esm5.minimal/minimal.js\";
+export default MinimalPlayer;" > minimal/index.js
 
 rm -rf features
 mkdir features
-ln -s ../dist/_esm5.minimal/features/list/index.js features/index.js
-
-echo "done"
-
-# echo ""
-# REPLY=""
-# read -p "do you want to continue [y/n] ? " -n 1 -r
-# echo ""
-
-# if [[ ! $REPLY =~ ^[Yy](es)?$ ]]; then
-#   exit 1;
-# fi
+echo "export * from \"../dist/_esm5.minimal/features/list/index.js\";" > features/index.js;
