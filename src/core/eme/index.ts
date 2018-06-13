@@ -33,17 +33,10 @@ import {
   mergeMap,
   tap,
 } from "rxjs/operators";
-import {
-  hasEMEAPIs,
-  shouldUnsetMediaKeys,
-} from "../../compat/";
+import { shouldUnsetMediaKeys } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
-import {
-  EncryptedMediaError,
-  ICustomError,
-} from "../../errors";
+import { ICustomError } from "../../errors";
 import { assertInterface } from "../../utils/assert";
-import log from "../../utils/log";
 import noop from "../../utils/noop";
 import attachMediaKeys from "./attach_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
@@ -89,7 +82,7 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
  * @param {Subject} errorStream
  * @returns {Observable}
  */
-function createEME(
+export default function EMEManager(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   errorStream: Subject<Error|ICustomError>
@@ -177,34 +170,6 @@ function disposeEME(mediaElement : HTMLMediaElement) : void {
 function getCurrentKeySystem(mediaElement : HTMLMediaElement) : string|null {
   const currentState = attachedMediaKeysInfos.getState(mediaElement);
   return currentState && currentState.keySystemOptions.type;
-}
-
-/**
- * Perform EME management if needed.
- * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems
- * @param {Subject} errorStream
- * @returns {Observable}
- */
-export default function EMEManager(
-  mediaElement : HTMLMediaElement,
-  keySystems : IKeySystemOption[],
-  errorStream : Subject<Error|ICustomError>
-) :  Observable<never> {
-  if (keySystems && keySystems.length) {
-    if (!hasEMEAPIs()) {
-      return onEncrypted$(mediaElement).pipe(map(() => {
-        log.error("eme: encrypted event but no EME API available");
-        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-      }));
-    }
-    return createEME(mediaElement, keySystems, errorStream);
-  } else {
-    return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("eme: ciphered media and no keySystem passed");
-      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-    }));
-  }
 }
 
 export {
