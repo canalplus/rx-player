@@ -58,7 +58,7 @@ player.
 
 ## How to use it? ##############################################################
 
-The fastest way to use our player directly in your code is to add this
+The fastest way to use the player directly in your code is to add this
 repository as a dependency. You can do it via npm:
 ```
 npm install --save rx-player
@@ -85,9 +85,17 @@ player.loadVideo({
 });
 ```
 
-You can now also perform your own [custom build
-](https://canalplus.github.io/rx-player/doc/pages/api/custom_builds.html)
-with only the features you need to reduce the file size.
+To reduce the size of the final code, you can now also import a minimal version
+of the player and only import the features you need. This is documented [here
+](https://canalplus.github.io/rx-player/doc/pages/api/minimal_player.html):
+
+```js
+import RxPlayer from "rx-player/minimal";
+import { DASH, EME } from "rx-player/features";
+
+// Allow to play encrypted DASH contents
+RxPlayer.addFeatures([DASH, EME]);
+```
 
 
 

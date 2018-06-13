@@ -1,4 +1,4 @@
-# Minimal Player ###############################################################
+# Minimal player with Feature selection ########################################
 
 
 ## Overview ####################################################################
@@ -22,7 +22,8 @@ The first solution is the most straightforward and should be used in most
 usecases. The main disadvantages of this solution are that to reduce file size:
 
   - you will need to use a module-bundler or minifier which performs
-    [tree-shaking](https://en.wikipedia.org/wiki/Tree_shaking), like webpack.
+    [tree-shaking](https://en.wikipedia.org/wiki/Tree_shaking), like webpack's
+    production mode.
 
   - you will need to use the package published on npm (as opposed to the git
     repository directly).
