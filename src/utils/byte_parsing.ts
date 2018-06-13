@@ -333,6 +333,29 @@ function guidToUuid(uuid : string) : string {
   return bytesToHex(ord);
 }
 
+/**
+ * Decode string from bytes (UTF-8).
+ * Keeps reading until it reaches a byte that equals to zero.
+ * @param {Uint8Array} buf
+ * @param {number} offset
+ */
+function readTerminatedString(buf: Uint8Array, offset: number) {
+  let position = offset;
+  while (position < buf.length) {
+    const value = buf[position];
+    if (value === 0) {
+      break;
+    }
+    position += 1;
+  }
+
+  const bytes = new Uint8Array(buf.buffer, offset, position - offset);
+  return {
+    end: position + 1,
+    string: new TextDecoder().decode(bytes),
+  };
+}
+
 export {
   strToBytes,
   bytesToStr, bytesToUTF16Str,
@@ -344,4 +367,5 @@ export {
   itobe2, itobe4, itobe8,
   itole2, itole4,
   guidToUuid,
+  readTerminatedString
 };

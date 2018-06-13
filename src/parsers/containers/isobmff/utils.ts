@@ -24,13 +24,25 @@ import {
   concat,
   hexToBytes,
   itobe4,
+  readTerminatedString,
 } from "../../../utils/byte_parsing";
 import { createBox } from "./create_box";
 import { getPlayReadyKIDFromPrivateData } from "./drm";
 import {
+  getEMSG,
   getMDIA,
   getTRAF,
 } from "./read";
+
+interface IEMSG {
+  schemeId: string;
+  value: string;
+  timescale: number;
+  presentationTimeDelta: number;
+  eventDuration: number;
+  id: number;
+  messageData: Uint8Array;
+}
 
 interface IISOBMFFKeySystem {
   systemId : string;
@@ -404,6 +416,52 @@ function patchPssh(buf : Uint8Array, pssList : IISOBMFFKeySystem[]) : Uint8Array
   );
 }
 
+/**
+ * Parse EMSG box from ISOBMFF data.
+ * @param {Uint8Array} buf
+ * @returns {Object|null}
+ */
+function parseEmsg(buf: Uint8Array) : IEMSG|undefined {
+  const emsg = getEMSG(buf);
+  if (emsg === null) {
+    return undefined;
+  }
+
+  const length = emsg.length;
+
+  let position = 4; // skip version + flags
+
+  const { end: schemeIdEnd, string: schemeId } = readTerminatedString(emsg, position);
+  position = schemeIdEnd; // skip schemeId
+
+  const { end: valueEnd, string: value } = readTerminatedString(emsg, position);
+  position = valueEnd; // skip value
+
+  const timescale = be4toi(emsg, position);
+  position += 4; // skip timescale
+
+  const presentationTimeDelta = be4toi(emsg, position);
+  position += 4; // skip presentationTimeDelta
+
+  const eventDuration = be4toi(emsg, position);
+  position += 4; // skip eventDuration
+
+  const id = be4toi(emsg, position);
+  position += 4; // skip id
+
+  const messageData = emsg.subarray(position, length);
+
+  return {
+    schemeId,
+    value,
+    timescale,
+    presentationTimeDelta,
+    eventDuration,
+    id,
+    messageData,
+  };
+}
+
 export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
@@ -411,4 +469,5 @@ export {
   getDurationFromTrun,
   getSegmentsFromSidx,
   patchPssh,
+  parseEmsg,
 };
