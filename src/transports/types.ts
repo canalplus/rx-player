@@ -28,6 +28,7 @@ import Manifest, {
   Representation,
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
+import { ILocalManifest } from "../parsers/manifest/local";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
 
 // Contains timings information on a single segment.
@@ -127,7 +128,8 @@ export type ILoaderRegularDataEvent<T> = ILoaderProgress |
 
 export type ILoadedManifest = Document |
                               string |
-                              IMetaPlaylist;
+                              IMetaPlaylist |
+                              ILocalManifest;
 export type IManifestLoaderEvent = ILoaderDataLoaded<ILoadedManifest>;
 export type IManifestLoaderObservable = Observable<IManifestLoaderEvent>;
 export type IManifestLoaderObserver = Observer<IManifestLoaderEvent>;

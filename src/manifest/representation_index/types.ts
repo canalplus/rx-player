@@ -20,6 +20,10 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import {
+  ILocalManifestInitSegmentLoader,
+  ILocalManifestSegmentLoader,
+} from "../../parsers/manifest/local";
 
 // privateInfos specific to Smooth Initialization Segments
 export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
@@ -45,9 +49,22 @@ export interface IMetaPlaylistPrivateInfos { transportType : string;
                                              contentStart : number;
                                              contentEnd? : number; }
 
+// privateInfos specific to local Manifest's init segments
+export interface ILocalManifestInitSegmentPrivateInfos {
+  load : ILocalManifestInitSegmentLoader;
+}
+
+// privateInfos specific to local Manifests
+export interface ILocalManifestSegmentPrivateInfos {
+  load : ILocalManifestSegmentLoader;
+  segment : { time : number; duration : number; timescale : number };
+}
+
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
+  localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
+  localManifestSegment? : ILocalManifestSegmentPrivateInfos;
 }
 
 // ISegment Object.
