@@ -92,24 +92,24 @@ are all objects declared in upper-case.
 
 Here is the anotated exhaustive list (notes are at the bottom of the table):
 
-| Feature name           | Description of the feature                              |
-| ---------------------- | ------------------------------------------------------- |
-| SMOOTH                 | Enable Smooth streaming (HSS) playback                  |
-| DASH                   | Enable DASH playback                                    |
-| DIRECTFILE             | Enable playback of "directfile" contents                |
-| EME                    | Enable playback of encrypted contents                   |
-| NATIVE_TEXT_BUFFER [1] | Allow to manage text tracks through \<tracks\> elements |
-| HTML_TEXT_BUFFER [1]   | Allow to manage text tracks through HTML elements       |
-| IMAGE_BUFFER [1]       | Allow to manage images buffer                           |
-| NATIVE_SRT_PARSER [2]  | Parse SRT text tracks for the native text buffer        |
-| NATIVE_VTT_PARSER [2]  | Parse VTT text tracks for the native text buffer        |
-| NATIVE_TTML_PARSER [2] | Parse TTML text tracks for the native text buffer       |
-| NATIVE_SAMI_PARSER [2] | Parse SAMI text tracks for the native text buffer       |
-| HTML_SRT_PARSER [3]    | Parse SRT text tracks for the HTML text buffer          |
-| HTML_VTT_PARSER [3]    | Parse VTT text tracks for the HTML text buffer          |
-| HTML_TTML_PARSER [3]   | Parse TTML text tracks for the HTML text buffer         |
-| HTML_SAMI_PARSER [3]   | Parse SAMI text tracks for the HTML text buffer         |
-| BIF_PARSER [4]         | Parse BIF image tracks for the image buffer             |
+| Feature                  | Description of the feature                              |
+| ------------------------ | ------------------------------------------------------- |
+| `SMOOTH`                 | Enable Smooth streaming (HSS) playback                  |
+| `DASH`                   | Enable DASH playback                                    |
+| `DIRECTFILE`             | Enable playback of "directfile" contents                |
+| `EME`                    | Enable playback of encrypted contents                   |
+| `NATIVE_TEXT_BUFFER` [1] | Allow to manage text tracks through \<tracks\> elements |
+| `HTML_TEXT_BUFFER` [1]   | Allow to manage text tracks through HTML elements       |
+| `IMAGE_BUFFER` [1]       | Allow to manage images buffer                           |
+| `NATIVE_SRT_PARSER` [2]  | Parse SRT text tracks for the native text buffer        |
+| `NATIVE_VTT_PARSER` [2]  | Parse VTT text tracks for the native text buffer        |
+| `NATIVE_TTML_PARSER` [2] | Parse TTML text tracks for the native text buffer       |
+| `NATIVE_SAMI_PARSER` [2] | Parse SAMI text tracks for the native text buffer       |
+| `HTML_SRT_PARSER` [3]    | Parse SRT text tracks for the HTML text buffer          |
+| `HTML_VTT_PARSER` [3]    | Parse VTT text tracks for the HTML text buffer          |
+| `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer         |
+| `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer         |
+| `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer             |
 
 ---
 
