@@ -14,8 +14,19 @@
  * limitations under the License.
  */
 
+/**
+ * This file exports a Player class with a default feature set (depends on the
+ * environment variables set at build).
+ *
+ * This is the class used from a regular build.
+ */
+
 import Player from "./core/api";
+import initializeFeatures from "./features/initialize_features";
 import logger from "./utils/log";
+
+// set initial features according to environment variables
+initializeFeatures();
 
 if (__DEV__) {
   logger.setLevel(__LOGGER_LEVEL__);

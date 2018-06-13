@@ -15,10 +15,13 @@
  */
 
 import ttmlParser from "../../parsers/texttracks/ttml/native";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 const feature : IFeatureListItem = {
-  id: "NATIVE_TTML",
+  id: FEATURE_IDS.NATIVE_TTML,
   content: ttmlParser,
 };
 

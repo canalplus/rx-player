@@ -15,10 +15,13 @@
  */
 
 import bifParser from "../../parsers/images/bif";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 const feature : IFeatureListItem = {
-  id: "BIF_PARSER",
+  id: FEATURE_IDS.BIF_PARSER,
   content: bifParser,
 };
 

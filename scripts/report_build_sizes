@@ -1,0 +1,69 @@
+#!/bin/bash
+
+npm run build:min
+echo -n "REGULAR: " > sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_DASH=false npm run build:min
+echo -n "w/o DASH: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_SMOOTH=false npm run build:min
+echo -n "w/o SMOOTH: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_DIRECTFILE=false npm run build:min
+echo -n "w/o DIRECTFILE: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_NATIVE_TTML=false npm run build:min
+echo -n "w/o NATIVE_TTML: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_NATIVE_SAMI=false npm run build:min
+echo -n "w/o NATIVE_SAMI: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_NATIVE_VTT=false npm run build:min
+echo -n "w/o NATIVE_VTT: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_NATIVE_SRT=false npm run build:min
+echo -n "w/o NATIVE_SRT: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_HTML_TTML=false npm run build:min
+echo -n "w/o HTML_TTML: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_HTML_SAMI=false npm run build:min
+echo -n "w/o HTML_SAMI: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_HTML_VTT=false npm run build:min
+echo -n "w/o HTML_VTT: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_HTML_SRT=false npm run build:min
+echo -n "w/o HTML_SRT: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_EME=false npm run build:min
+echo -n "w/o EME: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_BIF_PARSER=false npm run build:min
+echo -n "w/o BIF_PARSER: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_BAREBONE=true npm run build:min
+echo -n "BAREBONE: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_NATIVE_TTML=false RXP_NATIVE_SAMI=false RXP_NATIVE_VTT=false RXP_NATIVE_SRT=false npm run build:min
+echo -n "w/o NATIVE TEXT TRACKS: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_HTML_TTML=false RXP_HTML_SAMI=false RXP_HTML_VTT=false RXP_HTML_SRT=false npm run build:min
+echo -n "w/o HTML TEXT TRACKS: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes

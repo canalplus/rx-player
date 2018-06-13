@@ -15,11 +15,14 @@
  */
 
 import dash from "../../net/dash";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 // Add DASH transport streaming
 const feature : IFeatureListItem = {
-  id: "DASH",
+  id: FEATURE_IDS.DASH,
   content: dash,
 };
 

@@ -15,11 +15,14 @@
  */
 
 import EMEManager from "../../core/eme";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 // Add ability to play encrypted contents
 const feature : IFeatureListItem = {
-  id: "EME",
+  id: FEATURE_IDS.EME,
   content: EMEManager,
 };
 

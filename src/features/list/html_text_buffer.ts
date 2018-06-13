@@ -15,11 +15,14 @@
  */
 
 import htmlTextBuffer from "../../core/source_buffers/text/html";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 // Add ability to show subtitles as a HTML div
 const feature : IFeatureListItem = {
-  id: "HTML_TEXT_BUFFER",
+  id: FEATURE_IDS.HTML_TEXT_BUFFER,
   content: htmlTextBuffer,
 };
 

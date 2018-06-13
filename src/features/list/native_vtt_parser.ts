@@ -15,10 +15,13 @@
  */
 
 import vttParser from "../../parsers/texttracks/webvtt/native";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 const feature : IFeatureListItem = {
-  id: "NATIVE_VTT",
+  id: FEATURE_IDS.NATIVE_VTT,
   content: vttParser,
 };
 

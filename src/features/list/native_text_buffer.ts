@@ -15,11 +15,14 @@
  */
 
 import nativeTextBuffer from "../../core/source_buffers/text/native";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 // Add ability to show subtitles through <tracks> tags
 const feature : IFeatureListItem = {
-  id: "NATIVE_TEXT_BUFFER",
+  id: FEATURE_IDS.NATIVE_TEXT_BUFFER,
   content: nativeTextBuffer,
 };
 

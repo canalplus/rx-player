@@ -15,11 +15,14 @@
  */
 
 import smooth from "../../net/smooth";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 // Add SMOOTH transport streaming
 const feature : IFeatureListItem = {
-  id: "SMOOTH",
+  id: FEATURE_IDS.SMOOTH,
   content: smooth,
 };
 

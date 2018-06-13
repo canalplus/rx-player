@@ -15,10 +15,13 @@
  */
 
 import ttmlParser from "../../parsers/texttracks/ttml/html";
-import { IFeatureListItem } from "../types";
+import {
+  FEATURE_IDS,
+  IFeatureListItem,
+} from "../types";
 
 const feature : IFeatureListItem = {
-  id: "HTML_TTML",
+  id: FEATURE_IDS.HTML_TTML,
   content: ttmlParser,
 };
 
