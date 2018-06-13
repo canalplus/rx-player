@@ -27,8 +27,12 @@ the player with limited features.
 This principally leads to a smaller file size.</p>
 <p>This customization can be done through two principal ways:</p>
 <ul>
-<li>by importing a minimal version and then adding only the features your want</li>
-<li>by setting environment variables at build time</li>
+<li>
+<p>by importing a minimal version and then adding only the features your want</p>
+</li>
+<li>
+<p>by setting environment variables at build time</p>
+</li>
 </ul>
 <p>The first solution is the most straightforward and should be used in most
 usecases. The main disadvantages of this solution are that to reduce file size:</p>
@@ -49,7 +53,7 @@ through our npm scripts.</p>
 <p><a name="subchapter-How%20it%20works"></a></p>
 <h3>How it works</h3>
 <p>If you imported the RxPlayer library through the npm package (like via the <code>npm install rx-player</code> command), you can import a minimal version of the player by
-importing from the path <code>&quot;rx-player/minimal&quot;</code>:</p>
+importing it from <code>&quot;rx-player/minimal&quot;</code>:</p>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/minimal&quot;</span>;
 
 <span class="hljs-comment">// This player has the same API than the RxPlayer, but with no feature</span>
@@ -59,9 +63,8 @@ importing from the path <code>&quot;rx-player/minimal&quot;</code>:</p>
 <span class="hljs-comment">// use the regular APIs...</span>
 player.setVolume(<span class="hljs-number">0.5</span>);
 </code></pre>
-<p>As an RxPlayer without features is not very useful, you will need to add the
-features you want on it.</p>
-<p>Those can be accessed through the path <code>&quot;rx-player/features&quot;</code>:</p>
+<p>You then will need to add the features you want on it. Those can be accessed
+through the path <code>&quot;rx-player/features&quot;</code>:</p>
 <pre><code class="language-js"><span class="hljs-comment">// import the DASH and Smooth features, which will be added to the RxPlayer</span>
 <span class="hljs-keyword">import</span> { DASH, SMOOTH } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/features&quot;</span>;
 </code></pre>
@@ -69,13 +72,13 @@ features you want on it.</p>
 special <code>addFeatures</code> static method, which is only present on the minimal
 version of the Player:</p>
 <pre><code class="language-js"><span class="hljs-comment">// addFeatures takes an array of features as argument</span>
-RxPlayer.addFeatures([DASH, SMOOTH]);
+MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
 </code></pre>
 <p>Here is the complete example:</p>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/minimal&quot;</span>;
 <span class="hljs-keyword">import</span> { DASH, SMOOTH } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/features&quot;</span>;
 
-RxPlayer.addFeatures([DASH, SMOOTH]);
+MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
 </code></pre>
 <p>By doing that, you will reduce the final bundle file <strong>if tree-shaking is
 performed on the final code</strong> (like in webpack&#x2019;s production mode).</p>
@@ -89,73 +92,73 @@ are all objects declared in upper-case.</p>
 <table>
 <thead>
 <tr>
-<th>Feature name</th>
+<th>Feature</th>
 <th>Description of the feature</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>SMOOTH</td>
+<td><code>SMOOTH</code></td>
 <td>Enable Smooth streaming (HSS) playback</td>
 </tr>
 <tr>
-<td>DASH</td>
+<td><code>DASH</code></td>
 <td>Enable DASH playback</td>
 </tr>
 <tr>
-<td>DIRECTFILE</td>
+<td><code>DIRECTFILE</code></td>
 <td>Enable playback of &#x201C;directfile&#x201D; contents</td>
 </tr>
 <tr>
-<td>EME</td>
+<td><code>EME</code></td>
 <td>Enable playback of encrypted contents</td>
 </tr>
 <tr>
-<td>NATIVE_TEXT_BUFFER [1]</td>
+<td><code>NATIVE_TEXT_BUFFER</code> [1]</td>
 <td>Allow to manage text tracks through &lt;tracks&gt; elements</td>
 </tr>
 <tr>
-<td>HTML_TEXT_BUFFER [1]</td>
+<td><code>HTML_TEXT_BUFFER</code> [1]</td>
 <td>Allow to manage text tracks through HTML elements</td>
 </tr>
 <tr>
-<td>IMAGE_BUFFER [1]</td>
+<td><code>IMAGE_BUFFER</code> [1]</td>
 <td>Allow to manage images buffer</td>
 </tr>
 <tr>
-<td>NATIVE_SRT_PARSER [2]</td>
+<td><code>NATIVE_SRT_PARSER</code> [2]</td>
 <td>Parse SRT text tracks for the native text buffer</td>
 </tr>
 <tr>
-<td>NATIVE_VTT_PARSER [2]</td>
+<td><code>NATIVE_VTT_PARSER</code> [2]</td>
 <td>Parse VTT text tracks for the native text buffer</td>
 </tr>
 <tr>
-<td>NATIVE_TTML_PARSER [2]</td>
+<td><code>NATIVE_TTML_PARSER</code> [2]</td>
 <td>Parse TTML text tracks for the native text buffer</td>
 </tr>
 <tr>
-<td>NATIVE_SAMI_PARSER [2]</td>
+<td><code>NATIVE_SAMI_PARSER</code> [2]</td>
 <td>Parse SAMI text tracks for the native text buffer</td>
 </tr>
 <tr>
-<td>HTML_SRT_PARSER [3]</td>
+<td><code>HTML_SRT_PARSER</code> [3]</td>
 <td>Parse SRT text tracks for the HTML text buffer</td>
 </tr>
 <tr>
-<td>HTML_VTT_PARSER [3]</td>
+<td><code>HTML_VTT_PARSER</code> [3]</td>
 <td>Parse VTT text tracks for the HTML text buffer</td>
 </tr>
 <tr>
-<td>HTML_TTML_PARSER [3]</td>
+<td><code>HTML_TTML_PARSER</code> [3]</td>
 <td>Parse TTML text tracks for the HTML text buffer</td>
 </tr>
 <tr>
-<td>HTML_SAMI_PARSER [3]</td>
+<td><code>HTML_SAMI_PARSER</code> [3]</td>
 <td>Parse SAMI text tracks for the HTML text buffer</td>
 </tr>
 <tr>
-<td>BIF_PARSER [4]</td>
+<td><code>BIF_PARSER</code> [4]</td>
 <td>Parse BIF image tracks for the image buffer</td>
 </tr>
 </tbody>
