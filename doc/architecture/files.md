@@ -9,13 +9,16 @@ a single directory or subdirectory, in alphabetical order.
 - [demo/: Demos of rx-player implementations](#demo)
 - [dist/: Player builds](#dist)
 - [doc/: Player documentation](#doc)
+- [scripts/: Tools and scripts](#scripts)
 - [src/: the source code](#src)
   - [src/compat/: The compatibility files](#src-compat)
   - [src/core/: The core files](#src-core)
   - [src/errors/: Error definitions](#src-errors)
+  - [src/features/: Feature switching](#src-features)
   - [src/manifest/: The Manifest class](#src-manifest)
   - [src/net/: The networking files](#src-net)
   - [src/parsers/: The parsing files](#src-parsers)
+  - [src/typings/: Typescript typings](#src-typings)
   - [src/utils/: The utils](#src-utils)
 - [src/core/: The core directory](#core)
   - [src/core/abr/: The adaptive bitrate code](#core-abr)
@@ -26,7 +29,6 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
   - [src/core/stream/: Media streaming logic](#core-stream)
 - [tests/: Test strategies and integration tests](#tests)
-- [tools/: Tools and scripts](#tools)
 
 
 <a name="demo"></a>
@@ -52,6 +54,10 @@ Store the player builds of the last version released.
 Contains two files: the minified (``rx-player.min.js``) and the non-minified
 files (``rx-player.js``). Both are automatically generated with scripts.
 
+Two directories, namely ``_esm5.raw`` and ``_esm5.minimal`` can also be
+generated in here if the right scripts are called.
+These allow to publish more modular codebases to npm.
+
 
 <a name="doc"></a>
 ## The doc/ directory: Player documentation ####################################
@@ -64,6 +70,17 @@ Documentation, mostly in markdown, of various subjects related to the rx-player:
 
   - documentation to help developpers (to use APIs, switch versions, know which
     APIs are deprecated)
+
+
+<a name="scripts"></a>
+## The scripts/ directory: scripts #####################################
+
+Contains various scripts used to help the test and the management of the player
+code.
+
+For example:
+  - deploying the demo or doc to github pages
+  - updating the player version...
 
 
 <a name="src"></a>
@@ -114,6 +131,16 @@ Contains the definition of the error classes used in the rx-player and
 accessible through the API.
 
 
+<a name="src-features"></a>
+### src/features/: Feature switching ###########################################
+
+This manage activated or deactivated features (e.g. DASH, TTML subtitles
+parsing).
+
+It exports an object defining the different activated features and provide utils
+to initialize and update them.
+
+
 <a name="src-manifest"></a>
 ### src/manifest/: The Manifest class ##########################################
 
@@ -142,6 +169,13 @@ the code is exported in the index.js file at the root of this directory.
 ### src/parsers/: The parsing files ############################################
 
 Functions to parse given formats (isobmff, ttml, sami etc.).
+
+
+<a name="src-typings"></a>
+### src/typings/: Typescript typings ###########################################
+
+This directory contains only declaration files for TypeScript. It is
+automatically added as a `typeRoots` when the TypeScript code is transpiled.
 
 
 <a name="src-utils"></a>
@@ -241,14 +275,3 @@ subdirectory.
 As for unit tests, they are written alongside the code, in ``__tests__``
 directories, the ``tests/unit`` directory only contains the configuration files
 to launch them.
-
-
-<a name="tools"></a>
-## The tools/ directory: Tools and scripts #####################################
-
-Contains various scripts used to help the test and the management of the player
-code.
-
-For example:
-  - building a demo
-  - updating the player version...
