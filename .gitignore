@@ -12,3 +12,9 @@ tools/tests/coverage/
 test-output.xml
 
 .scannerwork
+
+dist/_esm5.minimal
+dist/_esm5.raw
+
+features
+minimal
