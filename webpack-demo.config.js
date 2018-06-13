@@ -60,19 +60,6 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      "__FEATURES__": {
-        SMOOTH: true,
-        DASH: true,
-        DIRECTFILE: true,
-        NATIVE_TTML: true,
-        NATIVE_SAMI: true,
-        NATIVE_VTT: true,
-        NATIVE_SRT: true,
-        HTML_SAMI: true,
-        HTML_TTML: true,
-        HTML_SRT: true,
-        HTML_VTT: true,
-      },
       "__DEV__": true,
       "__LOGGER_LEVEL__": "\"INFO\"",
       "process.env": {

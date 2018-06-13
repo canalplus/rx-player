@@ -41,7 +41,7 @@ import {
 } from "rxjs/operators";
 import config from "../../config";
 import {
-  CustomError,
+  ICustomError,
   MediaError,
 } from "../../errors";
 import Manifest, {
@@ -63,7 +63,7 @@ import {
   SegmentPipelinesManager,
 } from "../pipelines";
 import SourceBufferManager, {
-  BUFFER_TYPES,
+  getBufferTypes,
   IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
@@ -167,7 +167,7 @@ export default function BuffersHandler(
     maxRetryOffline? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
   },
-  errorStream : Subject<Error | CustomError>
+  errorStream : Subject<Error | ICustomError>
 ) : Observable<IBufferHandlerEvent> {
   const manifest = content.manifest;
   const firstPeriod = content.period;
@@ -187,11 +187,13 @@ export default function BuffersHandler(
   const addPeriodBuffer$ = new Subject<IPeriodBufferInfos>();
   const removePeriodBuffer$ = new Subject<IPeriodBufferInfos>();
 
+  const bufferTypes = getBufferTypes();
+
   /**
    * Every PeriodBuffers for every possible types
    * @type {Array.<Observable>}
    */
-  const buffersArray = BUFFER_TYPES
+  const buffersArray = bufferTypes
     .map((bufferType) => {
       return manageEveryBuffers(bufferType, firstPeriod)
         .pipe(
@@ -211,7 +213,7 @@ export default function BuffersHandler(
    * @type {Observable}
    */
   const activePeriod$ : Observable<Period> =
-    ActivePeriodEmitter(addPeriodBuffer$, removePeriodBuffer$)
+    ActivePeriodEmitter(bufferTypes, addPeriodBuffer$, removePeriodBuffer$)
       .pipe(filter((period) : period is Period => !!period));
   /**
    * Emits the activePeriodChanged events every time the active Period changes.

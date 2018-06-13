@@ -26,7 +26,7 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import { CustomError } from "../../../errors";
+import { ICustomError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   ISegmentLoaderArguments,
@@ -85,7 +85,7 @@ export default function createSegmentFetcher<T>(
   transport : ITransportPipelines,
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
-  warning$ : Subject<Error|CustomError>,
+  warning$ : Subject<Error|ICustomError>,
   options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
 ) : ISegmentFetcher<T> {
   const basePipeline$ = BasePipeline(transport[bufferType], options);

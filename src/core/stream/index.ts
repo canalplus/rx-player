@@ -38,7 +38,7 @@ import WeakMapMemory from "../../utils/weak_map_memory";
 
 import { onSourceOpen$ } from "../../compat/events";
 import {
-  CustomError,
+  ICustomError,
   MediaError,
 } from "../../errors";
 import Manifest, {
@@ -51,9 +51,7 @@ import ABRManager, {
   IABRRequest,
 } from "../abr";
 import BufferManager from "../buffer";
-import EMEManager, {
-  IKeySystemOption,
-} from "../eme";
+import { IKeySystemOption } from "../eme/types";
 import {
   createManifestPipeline,
   IPipelineOptions,
@@ -68,6 +66,7 @@ import BuffersHandler from "./buffers_handler";
 import createBufferClock, {
   IStreamClockTick,
 } from "./clock";
+import createEMEManager from "./create_eme_manager";
 import createMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
@@ -173,7 +172,7 @@ export default function Stream({
    * Observable through which all warning events will be sent.
    * @type {Subject}
    */
-  const warning$ = new Subject<Error|CustomError>();
+  const warning$ = new Subject<Error|ICustomError>();
 
   /**
    * Fetch and parse the manifest from the URL given.
@@ -367,7 +366,7 @@ export default function Stream({
      * issue.
      * @type {Observable}
      */
-    const emeManager$ = EMEManager(videoElement, keySystems, warning$);
+    const emeManager$ = createEMEManager(videoElement, keySystems, warning$);
 
     /**
      * Translate errors coming from the video element into RxPlayer errors

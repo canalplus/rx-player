@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+
+echo "cleaning previous builds..."
+./scripts/clean-up_minimal_build
+
+echo "bundling modular version..."
+npm run build:modules
+rm -rf dist/_esm5.raw/export.ts
+
+echo "preparing minimal build..."
+cp -r dist/_esm5.raw/ dist/_esm5.minimal
+
+# TODO So ugly right now. We should find a way to transform the JS in a cleaner
+# way
+files="$(find dist/_esm5.minimal -type f -iname '*.js')"
+for f in "$files"; do
+  sed -i -E "s/\b__DEV__\b/false/g" $f
+
+  sed -i -E "s/\b__LOGGER_LEVEL__\b/\"NONE\"/g" $f
+
+  sed -i -E "s/\b__FEATURES__\.EME\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.SMOOTH\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.DASH\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.DIRECTFILE\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.HTML_SAMI\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.HTML_SRT\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.HTML_TTML\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.HTML_VTT\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.NATIVE_SAMI\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.NATIVE_SRT\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.NATIVE_TTML\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.NATIVE_VTT\b/false/g" $f
+  sed -i -E "s/\b__FEATURES__\.BIF_PARSER\b/false/g" $f
+
+  sed -i -E "s/\b__RELATIVE_PATH__\.EME_MANAGER\b/\"..\/core\/eme\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.IMAGE_BUFFER\b/\"..\/core\/source_buffers\/image\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/net\/smooth\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/net\/dash\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/native\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_VTT\b/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SRT\b/\"..\/parsers\/texttracks\/srt\/native.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TTML\b/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SAMI\b/\"..\/parsers\/texttracks\/sami\/native.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/html\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_VTT\b/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SRT\b/\"..\/parsers\/texttracks\/srt\/html.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TTML\b/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SAMI\b/\"..\/parsers\/texttracks\/sami\/html.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/stream\/directfile.js\"/g" $f
+done
+
+rm -rf minimal
+mkdir minimal
+echo "import MinimalPlayer from \"../dist/_esm5.minimal/minimal.js\";
+export default MinimalPlayer;" > minimal/index.js
+
+rm -rf features
+mkdir features
+echo "export * from \"../dist/_esm5.minimal/features/list/index.js\";" > features/index.js;

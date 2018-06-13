@@ -6,6 +6,7 @@ const webpack = require("webpack");
 
 const RXP_ENV = process.env.RXP_ENV || "production";
 const shouldMinify = !!process.env.RXP_MINIFY;
+const shouldReportSize = process.env.RXP_SIZE_REPORT === "true";
 const isBarebone = process.env.RXP_BAREBONE === "true";
 
 if (["development", "production"].indexOf(RXP_ENV) < 0) {
@@ -61,13 +62,33 @@ const plugins = [
         process.env.RXP_HTML_SRT === "true" :
         process.env.RXP_HTML_SRT !== "false",
 
-      // TODO
-      // EME: isBarebone ?
-      //   process.env.RXP_EME === "true" :
-      //   process.env.RXP_EME !== "false",
-      // BIF: isBarebone ?
-      //   process.env.RXP_BIF === "true" :
-      //   process.env.RXP_BIF !== "false",
+      EME: isBarebone ?
+        process.env.RXP_EME === "true" :
+        process.env.RXP_EME !== "false",
+
+      BIF_PARSER: isBarebone ?
+        process.env.RXP_BIF_PARSER === "true" :
+        process.env.RXP_BIF_PARSER !== "false",
+    },
+
+    // Path relative to src/features where optional features are implemented
+    __RELATIVE_PATH__: {
+      EME_MANAGER: JSON.stringify("../core/eme/index.ts"),
+      IMAGE_BUFFER: JSON.stringify("../core/source_buffers/image/index.ts"),
+      BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
+      SMOOTH: JSON.stringify("../net/smooth/index.ts"),
+      DASH: JSON.stringify("../net/dash/index.ts"),
+      NATIVE_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/native/index.ts"),
+      NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native.ts"),
+      NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
+      NATIVE_TTML: JSON.stringify("../parsers/texttracks/ttml/native/index.ts"),
+      NATIVE_SAMI: JSON.stringify("../parsers/texttracks/sami/native.ts"),
+      HTML_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/html/index.ts"),
+      HTML_VTT: JSON.stringify("../parsers/texttracks/webvtt/html/index.ts"),
+      HTML_SRT: JSON.stringify("../parsers/texttracks/srt/html.ts"),
+      HTML_TTML: JSON.stringify("../parsers/texttracks/ttml/html/index.ts"),
+      HTML_SAMI: JSON.stringify("../parsers/texttracks/sami/html.ts"),
+      DIRECTFILE: JSON.stringify("../core/stream/directfile.ts"),
     },
     __DEV__: isDevMode,
     __LOGGER_LEVEL__: isDevMode ? "\"INFO\"" : "\"DEBUG\"",
@@ -77,7 +98,7 @@ const plugins = [
   }),
 ];
 
-if (!isDevMode) {
+if (shouldReportSize) {
   plugins.push(new BundleAnalyzerPlugin());
 }
 

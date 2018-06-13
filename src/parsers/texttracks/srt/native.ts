@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 // srt to VTTCue parser, Done for fun.
 // Heavily inspired from the WebVTT implementation
 

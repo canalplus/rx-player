@@ -35,7 +35,6 @@ import { Period } from "../../manifest";
 import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 import {
-  BUFFER_TYPES,
   IBufferType,
 } from "../source_buffers";
 
@@ -89,6 +88,7 @@ interface IPeriodItem {
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
+  bufferTypes: IBufferType[],
   addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
   removePeriodBuffer$ : Observable<IPeriodBufferInfos>
 ) : Observable<Period|null> {
@@ -140,7 +140,9 @@ export default function ActivePeriodEmitter(
         return null;
       }
 
-      const periodItem = periodsList.find(p => isBufferListFull(p.buffers));
+      const periodItem = periodsList.find(p =>
+        isBufferListFull(bufferTypes, p.buffers)
+      );
       return periodItem != null ? periodItem.period : null;
     }),
     distinctUntilChanged()
@@ -153,6 +155,9 @@ export default function ActivePeriodEmitter(
  * @param {Set} bufferList
  * @returns {Boolean}
  */
-function isBufferListFull(bufferList : Set<IBufferType>) : boolean {
-  return bufferList.size >= BUFFER_TYPES.length;
+function isBufferListFull(
+  bufferTypes : IBufferType[],
+  bufferList : Set<IBufferType>
+) : boolean {
+  return bufferList.size >= bufferTypes.length;
 }

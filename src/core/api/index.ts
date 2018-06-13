@@ -75,6 +75,7 @@ import {
   ErrorCodes,
   ErrorTypes,
 } from "../../errors";
+import features from "../../features";
 import Manifest, {
   Adaptation,
   Period,
@@ -86,7 +87,6 @@ import {
   getMinimumBufferPosition,
   toWallClockTime,
 } from "../../manifest/timings";
-import Transports from "../../net";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import ABRManager from "../abr";
 import {
@@ -98,7 +98,6 @@ import { IBufferType } from "../source_buffers";
 import Stream, {
   IStreamEvent,
 } from "../stream";
-import StreamDirectFile from "../stream/directfile";
 import createClock, {
   IClockTick
 } from "./clock";
@@ -710,7 +709,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     let stream : ConnectableObservable<IStreamEvent>;
 
     if (!isDirectFile) {
-      const transportFn = Transports[transport];
+      const transportFn = features.transports[transport];
       if (!transportFn) {
         throw new Error(`transport "${transport}" not supported`);
       }
@@ -770,7 +769,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         .pipe(takeUntil(closeStream$))
         .pipe(publish()) as ConnectableObservable<IStreamEvent>;
     } else {
-      stream = StreamDirectFile({
+      if (features.directfile == null) {
+        throw new Error("DirectFile feature not activated in your build.");
+      }
+      stream = features.directfile({
         autoPlay,
         clock$,
         keySystems,

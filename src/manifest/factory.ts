@@ -16,7 +16,7 @@
 
 import { Subject } from "rxjs";
 import { isCodecSupported } from "../compat";
-import { CustomError, MediaError } from "../errors";
+import { ICustomError, MediaError } from "../errors";
 import {
   IParsedAdaptation,
   IParsedManifest,
@@ -55,7 +55,7 @@ export default function createManifest(
   manifestObject : IParsedManifest,
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
-  warning$ : Subject<Error|CustomError>
+  warning$ : Subject<Error|ICustomError>
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods).map((period) => {
     period.adaptations = checkAdaptations(period.adaptations, warning$);
@@ -80,7 +80,7 @@ export default function createManifest(
  */
 function checkAdaptations(
   initialAdaptations : IParsedAdaptation[],
-  warning$ : Subject<Error|CustomError>
+  warning$ : Subject<Error|ICustomError>
 ) : IParsedAdaptation[] {
   const adaptations = initialAdaptations
 

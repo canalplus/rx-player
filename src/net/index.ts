@@ -19,19 +19,7 @@ import {
   ITransportPipelines,
 } from "./types";
 
-const exported : IDictionary<ITransportFunction> = {};
-
-/* tslint:disable no-var-requires */
-if (__FEATURES__.SMOOTH) {
-  exported.smooth = require("./smooth/index.ts").default;
-}
-if (__FEATURES__.DASH) {
-  exported.dash = require("./dash/index.ts").default;
-}
-/* tslint:enable no-var-requires */
-
 export {
   ITransportFunction,
   ITransportPipelines,
 };
-export default exported;

@@ -24,6 +24,7 @@ For a shortcut, here are some other quick links you might want to check:
   - [Player Errors](./api/errors.md)
   - [Player Events](./api/events.md)
   - [Text track handling](./api/text_tracks.md)
+  - [Import a minimal version of the Player](./api/minimal_player.md)
 
 
 
