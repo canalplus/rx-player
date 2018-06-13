@@ -12,3 +12,4 @@ echo $version > VERSION
 npm install
 npm run build
 npm run build:min
+./scripts/generate_minimal_build
