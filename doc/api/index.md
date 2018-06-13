@@ -6,6 +6,7 @@
 - [Overview](#overview)
 - [Instantiation](#instantiation)
 - [Static properties](#static)
+    - [version](#static-version)
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
     - [LogLevel](#static-LogLevel)
@@ -117,6 +118,14 @@ page](./player_options.md).
 
 <a name="static"></a>
 ## Static properties ###########################################################
+
+<a name="static-version"></a>
+### version ####################################################################
+
+_type_: ``Number``
+
+The current version of the RxPlayer.
+
 
 <a name="static-ErrorTypes"></a>
 ### ErrorTypes #################################################################

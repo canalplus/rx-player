@@ -159,10 +159,12 @@ type PLAYER_EVENT_STRINGS =
  * @extends EventEmitter
  */
 class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
+
   /**
    * Current version of the RxPlayer.
    * @type {string}
    */
+  public static version = /*PLAYER_VERSION*/"3.4.1";
   public readonly version : string;
 
   /**
