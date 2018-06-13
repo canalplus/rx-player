@@ -1,20 +1,18 @@
-node_modules
-*.log
-*.keys
+/node_modules
+/*.log
+/*.keys
 
-demo/full/bundle.js
-demo/full/lib.js
-demo/standalone/lib.js
-demo/bundle.js
+/demo/full/bundle.js
+/demo/full/lib.js
+/demo/standalone/lib.js
+/demo/bundle.js
 
-tools/tests/coverage/
+/test-output.xml
 
-test-output.xml
+/.scannerwork
 
-.scannerwork
+/dist/_esm5.minimal
+/dist/_esm5.raw
 
-dist/_esm5.minimal
-dist/_esm5.raw
-
-features
-minimal
+/features
+/minimal
