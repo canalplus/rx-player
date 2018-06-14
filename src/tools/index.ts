@@ -17,5 +17,5 @@
 import MediaCapabilitiesProber from "./mediaCapabilitiesProber";
 
 export {
-    MediaCapabilitiesProber
+  MediaCapabilitiesProber
 };
