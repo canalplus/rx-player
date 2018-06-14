@@ -6,7 +6,7 @@ echo "cleaning previous builds..."
 
 echo "bundling modular version..."
 npm run build:modules
-rm -rf dist/_esm5.raw/export.ts
+rm dist/_esm5.raw/exports.js
 
 echo "preparing minimal build..."
 cp -r dist/_esm5.raw/ dist/_esm5.minimal
