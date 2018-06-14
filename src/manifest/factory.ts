@@ -23,7 +23,7 @@ import {
   IParsedRepresentation,
 } from "../parsers/manifest/types";
 import log from "../utils/log";
-import { AdaptationType } from "./adaptation";
+import { IAdaptationType } from "./adaptation";
 import Manifest, {
   IManifestArguments,
   ISupplementaryImageTrack,
@@ -31,7 +31,7 @@ import Manifest, {
 } from "./index";
 import { IRepresentationArguments } from "./representation";
 
-export const SUPPORTED_ADAPTATIONS_TYPE: AdaptationType[] =
+export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
   ["audio", "video", "text", "image"];
 
 /**

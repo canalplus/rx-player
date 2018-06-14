@@ -20,15 +20,15 @@ import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
 
 import Adaptation, {
-  AdaptationType,
   IAdaptationsArguments,
+  IAdaptationType,
 } from "./adaptation";
 
 import { SUPPORTED_ADAPTATIONS_TYPE } from "./factory";
 
 import { StaticRepresentationIndex } from "./representation_index";
 
-export type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
+export type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
 
 export interface ISupplementaryImageTrack {
   mimeType : string;
@@ -172,14 +172,14 @@ export default class Period {
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
         const adaptations =
-          adaptationsByType[adaptationType as AdaptationType] as Adaptation[];
+          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
         adaptationsList.push(...adaptations);
       }
     }
     return adaptationsList;
   }
 
-  getAdaptationsForType(adaptationType : AdaptationType) : Adaptation[] {
+  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
     const adaptations = this.adaptations[adaptationType];
     return adaptations || [];
   }

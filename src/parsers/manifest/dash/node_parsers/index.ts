@@ -16,7 +16,7 @@
 
 import config from "../../../../config";
 import { IRepresentationIndex } from "../../../../manifest";
-import { AdaptationType } from "../../../../manifest/adaptation";
+import { IAdaptationType } from "../../../../manifest/adaptation";
 import arrayIncludes from "../../../../utils/array-includes";
 import generateNewId from "../../../../utils/id";
 import {
@@ -549,13 +549,13 @@ export default function parseManifest(
           .map(r => r.codecs)
           .filter((codecs : string|undefined) : codecs is string => codecs != null);
 
-        const type: AdaptationType = inferAdaptationType(
+        const type: IAdaptationType = inferAdaptationType(
           adaptationMimeType || null,
           representationMimeTypes,
           adaptationCodecs || null,
           representationCodecs,
           adaptationChildren.role || null
-        ) as AdaptationType;
+        ) as IAdaptationType;
 
         const mainAdaptation = (parsedAdaptations[type] || []).find((_adaptation) => {
           if (

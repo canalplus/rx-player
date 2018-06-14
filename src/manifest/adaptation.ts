@@ -21,7 +21,7 @@ import Representation, {
   IRepresentationArguments
 } from "./representation";
 
-export type AdaptationType = "video"|"audio"|"text"|"image";
+export type IAdaptationType = "video"|"audio"|"text"|"image";
 
 // TODO
 export interface IContentProtectionDASH {
@@ -32,7 +32,7 @@ export interface IContentProtectionDASH {
 export interface IAdaptationArguments {
   // -- required
   representations : IRepresentationArguments[];
-  type : AdaptationType;
+  type : IAdaptationType;
 
   // -- optional
   audioDescription? : boolean;
@@ -45,7 +45,7 @@ export interface IAdaptationArguments {
 }
 
 export type IAdaptationsArguments =
-  Partial<Record<AdaptationType, IAdaptationArguments[]>>;
+  Partial<Record<IAdaptationType, IAdaptationArguments[]>>;
 
 /**
  * Normalized Adaptation structure.
@@ -55,7 +55,7 @@ class Adaptation {
   // required
   public readonly id : string|number;
   public readonly representations : Representation[];
-  public readonly type : AdaptationType;
+  public readonly type : IAdaptationType;
 
   // optional
   public contentProtection? : IContentProtectionDASH;
