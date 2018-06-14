@@ -24,8 +24,7 @@ import Adaptation, {
   IAdaptationType,
 } from "./adaptation";
 
-import { SUPPORTED_ADAPTATIONS_TYPE } from "./factory";
-
+import arrayIncludes from "../utils/array-includes";
 import { StaticRepresentationIndex } from "./representation_index";
 
 export type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
@@ -65,17 +64,21 @@ export default class Period {
   constructor(args : IPeriodArguments) {
     this.id = args.id;
     this.adaptations = {};
-    SUPPORTED_ADAPTATIONS_TYPE.forEach((type) => {
-      if (args.adaptations[type]) {
-        const adaptationsForType = args.adaptations[type];
-        if (adaptationsForType) {
-          this.adaptations[type] =
-            adaptationsForType.map((adaptation) => {
-              return new Adaptation(adaptation);
-            });
+    (Object.keys(args.adaptations) as IAdaptationType[])
+      .filter((type): type is "video"|"audio"|"text"|"image" =>
+        arrayIncludes(["video", "audio", "text", "image"], type)
+      )
+      .forEach((type) => {
+        if (args.adaptations[type]) {
+          const adaptationsForType = args.adaptations[type];
+          if (adaptationsForType) {
+            this.adaptations[type] =
+              adaptationsForType.map((adaptation) => {
+                return new Adaptation(adaptation);
+              });
+          }
         }
-      }
-    });
+      });
     this.duration = args.duration;
     this.start = args.start;
 

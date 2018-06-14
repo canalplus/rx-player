@@ -15,8 +15,6 @@
  */
 
 import config from "../../../config";
-import { IBufferType } from "../../../core/source_buffers";
-import { IAdaptationType } from "../../../manifest/adaptation";
 import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
@@ -38,14 +36,12 @@ import {
   IKeySystem,
   IParsedAdaptation,
   IParsedAdaptations,
+  IParsedAdaptationType,
   IParsedManifest,
   IParsedRepresentation,
 } from "../types";
 import { replaceRepresentationSmoothTokens } from "./helpers";
 import RepresentationIndex from "./representationIndex";
-
-const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
-  ["audio", "video", "text", "image"];
 
 interface IHSSManifestSegment {
   ts : number;
@@ -500,7 +496,7 @@ function createSmoothStreamingParser(
 
     const parsedAdaptation : IParsedAdaptation = {
       id,
-      type: adaptationType as IBufferType,
+      type: adaptationType as IParsedAdaptationType,
       representations,
       name: name == null ? undefined : name,
       language: language == null ?
@@ -554,7 +550,7 @@ function createSmoothStreamingParser(
       .map((node: Element) => {
         return parseAdaptation(node, rootURL, timescale, protection);
       })
-      .filter((adaptation) : adaptation is IParsedAdaptation => !!adaptation)
+      .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {
         const type = adaptation.type;
         if (acc[type] === undefined) {
@@ -692,7 +688,7 @@ function createSmoothStreamingParser(
 function checkManifestIDs(manifest : IParsedManifest) : void {
   manifest.periods.forEach(({ adaptations }) => {
     const adaptationIDs : string[] = [];
-    SUPPORTED_ADAPTATIONS_TYPE.forEach((type) => {
+    (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {
       (adaptations[type] || []).forEach(adaptation => {
         const adaptationID = adaptation.id;
         if (arrayIncludes(adaptationIDs, adaptationID)) {
