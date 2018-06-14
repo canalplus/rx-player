@@ -16,7 +16,7 @@
 
 import config from "../../../config";
 import { IBufferType } from "../../../core/source_buffers";
-import { AdaptationType } from "../../../manifest/adaptation";
+import { IAdaptationType } from "../../../manifest/adaptation";
 import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
@@ -44,7 +44,7 @@ import {
 import { replaceRepresentationSmoothTokens } from "./helpers";
 import RepresentationIndex from "./representationIndex";
 
-const SUPPORTED_ADAPTATIONS_TYPE: AdaptationType[] =
+const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
   ["audio", "video", "text", "image"];
 
 interface IHSSManifestSegment {

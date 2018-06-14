@@ -20,7 +20,7 @@ import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
 import log from "../utils/log";
 import Adaptation, {
-  AdaptationType,
+  IAdaptationType,
 } from "./adaptation";
 import Period, {
   IPeriodArguments,
@@ -31,7 +31,7 @@ import IRepresentationIndex, {
   StaticRepresentationIndex,
 } from "./representation_index";
 
-type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
+type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
 
 interface ISupplementaryImageTrack {
   mimeType : string;
@@ -253,7 +253,7 @@ export default class Manifest {
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
         const adaptations =
-          adaptationsByType[adaptationType as AdaptationType] as Adaptation[];
+          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
         adaptationsList.push(...adaptations);
       }
     }
@@ -265,7 +265,7 @@ export default class Manifest {
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
-  getAdaptationsForType(adaptationType : AdaptationType) : Adaptation[] {
+  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
     const firstPeriod = this.periods[0];
     if (!firstPeriod) {
       return [];
