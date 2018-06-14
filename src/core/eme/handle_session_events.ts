@@ -156,7 +156,7 @@ export default function handleSessionEvents(
             return {
               type: "key-status-change" as "key-status-change",
               value : {
-                license: licenseObject as TypedArray|ArrayBuffer,
+                license: licenseObject,
               },
             };
           })
@@ -183,8 +183,11 @@ export default function handleSessionEvents(
               new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false) :
               error;
           })
-        ) as Observable<TypedArray|ArrayBuffer>;
-      });
+        );
+      // TODO TypeScript/tslint/RxJS bug?
+      /* tslint:disable no-unnecessary-type-assertion */
+      }) as Observable<TypedArray|ArrayBuffer>;
+      /* tslint:enable no-unnecessary-type-assertion */
 
       return retryObsWithBackoff(getLicense$, getLicenseRetryOptions)
         .pipe(map((license) => {
