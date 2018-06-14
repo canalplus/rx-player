@@ -16,6 +16,7 @@
 
 import config from "../../../../config";
 import { IRepresentationIndex } from "../../../../manifest";
+import { AdaptationType } from "../../../../manifest/adaptation";
 import arrayIncludes from "../../../../utils/array-includes";
 import generateNewId from "../../../../utils/id";
 import {
@@ -28,9 +29,10 @@ import {
 } from "../../../../utils/url";
 import {
   IParsedAdaptation,
+  IParsedAdaptations,
   IParsedManifest,
   IParsedPeriod,
-  IParsedRepresentation
+  IParsedRepresentation,
 } from "../../types";
 import {
   isHardOfHearing,
@@ -288,8 +290,8 @@ export default function parseManifest(
     }
 
     // 4. Construct underlying adaptations
-    const adaptations = period.children.adaptations
-      .reduce((parsedAdaptations, adaptation) => {
+    const adaptations: IParsedAdaptations = period.children.adaptations
+      .reduce((parsedAdaptations: IParsedAdaptations, adaptation) => {
         const adaptationRootURL = resolveURL(periodRootURL, adaptation.children.baseURL);
         const adaptationChildren = adaptation.children;
 
@@ -547,15 +549,15 @@ export default function parseManifest(
           .map(r => r.codecs)
           .filter((codecs : string|undefined) : codecs is string => codecs != null);
 
-        const type = inferAdaptationType(
+        const type: AdaptationType = inferAdaptationType(
           adaptationMimeType || null,
           representationMimeTypes,
           adaptationCodecs || null,
           representationCodecs,
           adaptationChildren.role || null
-        );
+        ) as AdaptationType;
 
-        const mainAdaptation = parsedAdaptations.find((_adaptation) => {
+        const mainAdaptation = (parsedAdaptations[type] || []).find((_adaptation) => {
           if (
             _adaptation.role === "main" &&
             type === _adaptation.type
@@ -657,10 +659,16 @@ export default function parseManifest(
             parsedAdaptationSet.audioDescription = audioDescription;
           }
 
-          parsedAdaptations.push(parsedAdaptationSet);
+          const parsedAdaptation = parsedAdaptations[type];
+          if (parsedAdaptation) {
+            parsedAdaptation.push(parsedAdaptationSet);
+          } else {
+            parsedAdaptations[type] = [parsedAdaptationSet];
+          }
         }
         return parsedAdaptations;
-      }, [] as IParsedAdaptation[]);
+      }, {});
+
       const parsedPeriod : IParsedPeriod = {
         id: periodID,
         start: periodStart,
@@ -727,8 +735,11 @@ export default function parseManifest(
       parsedMPD.periods.length - 1
     ].adaptations;
 
-    const firstVideoAdaptationFromLastPeriod = lastPeriodAdaptations
-      .filter(a => a.type === "video")[0];
+    if (!lastPeriodAdaptations.video) {
+      throw new Error("Can't find first video adaptation from last period");
+    }
+
+    const firstVideoAdaptationFromLastPeriod = lastPeriodAdaptations.video[0];
 
     const lastRef = getLastLiveTimeReference(firstVideoAdaptationFromLastPeriod);
     parsedMPD.presentationLiveGap = lastRef != null ?

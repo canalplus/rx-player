@@ -23,6 +23,7 @@ import {
   IParsedRepresentation,
 } from "../parsers/manifest/types";
 import log from "../utils/log";
+import { AdaptationType } from "./adaptation";
 import Manifest, {
   IManifestArguments,
   ISupplementaryImageTrack,
@@ -30,7 +31,8 @@ import Manifest, {
 } from "./index";
 import { IRepresentationArguments } from "./representation";
 
-const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
+export const SUPPORTED_ADAPTATIONS_TYPE: AdaptationType[] =
+  ["audio", "video", "text", "image"];
 
 /**
  * Run multiple checks before creating the Manifest:
@@ -58,7 +60,13 @@ export default function createManifest(
   warning$ : Subject<Error|ICustomError>
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods).map((period) => {
-    period.adaptations = checkAdaptations(period.adaptations, warning$);
+    SUPPORTED_ADAPTATIONS_TYPE.forEach((type) => {
+      const adaptationsForType = period.adaptations[type];
+      if (adaptationsForType) {
+        period.adaptations[type] =
+        checkAdaptations(adaptationsForType, warning$);
+      }
+    });
     return period;
   });
 
