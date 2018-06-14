@@ -21,8 +21,11 @@ import { normalize as normalizeLang } from "../utils/languages";
 
 import Adaptation, {
   AdaptationType,
-  IAdaptationArguments,
+  IAdaptationsArguments,
 } from "./adaptation";
+
+import { SUPPORTED_ADAPTATIONS_TYPE } from "./factory";
+
 import { StaticRepresentationIndex } from "./representation_index";
 
 export type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
@@ -43,38 +46,9 @@ export interface ISupplementaryTextTrack {
 
 export interface IPeriodArguments {
   id: string;
-  adaptations: IAdaptationArguments[];
+  adaptations: IAdaptationsArguments;
   start: number;
   duration?: number;
-}
-
-/**
- * @param {Array.<Object>} adaptations
- * @returns {Object}
- */
-function createManifestAdaptations(
-  adaptations : IAdaptationArguments[]
-) : ManifestAdaptations {
-  return adaptations.reduce<ManifestAdaptations>((
-    acc : ManifestAdaptations,
-    adaptation
-  ) => {
-    const { type, representations } = adaptation;
-    if (!representations.length) {
-      return acc;
-    }
-
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-
-    if (adaptation.role === "main") {
-      (acc[type] as Adaptation[]).unshift(new Adaptation(adaptation));
-    } else {
-      (acc[type] as Adaptation[]).push(new Adaptation(adaptation));
-    }
-    return acc;
-  }, {});
 }
 
 export default class Period {
@@ -90,7 +64,18 @@ export default class Period {
    */
   constructor(args : IPeriodArguments) {
     this.id = args.id;
-    this.adaptations = createManifestAdaptations(args.adaptations);
+    this.adaptations = {};
+    SUPPORTED_ADAPTATIONS_TYPE.forEach((type) => {
+      if (args.adaptations[type]) {
+        const adaptationsForType = args.adaptations[type];
+        if (adaptationsForType) {
+          this.adaptations[type] =
+            adaptationsForType.map((adaptation) => {
+              return new Adaptation(adaptation);
+            });
+        }
+      }
+    });
     this.duration = args.duration;
     this.start = args.start;
 

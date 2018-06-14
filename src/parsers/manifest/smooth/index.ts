@@ -15,6 +15,8 @@
  */
 
 import config from "../../../config";
+import { IBufferType } from "../../../core/source_buffers";
+import { AdaptationType } from "../../../manifest/adaptation";
 import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
@@ -35,11 +37,15 @@ import {
 import {
   IKeySystem,
   IParsedAdaptation,
+  IParsedAdaptations,
   IParsedManifest,
   IParsedRepresentation,
 } from "../types";
 import { replaceRepresentationSmoothTokens } from "./helpers";
 import RepresentationIndex from "./representationIndex";
+
+const SUPPORTED_ADAPTATIONS_TYPE: AdaptationType[] =
+  ["audio", "video", "text", "image"];
 
 interface IHSSManifestSegment {
   ts : number;
@@ -494,7 +500,7 @@ function createSmoothStreamingParser(
 
     const parsedAdaptation : IParsedAdaptation = {
       id,
-      type: adaptationType,
+      type: adaptationType as IBufferType,
       representations,
       name: name == null ? undefined : name,
       language: language == null ?
@@ -544,9 +550,20 @@ function createSmoothStreamingParser(
       adaptationNodes: [],
     });
 
-    const adaptations : IParsedAdaptation[] = adaptationNodes.map(node => {
-      return parseAdaptation(node, rootURL, timescale, protection);
-    }).filter((adaptation) : adaptation is IParsedAdaptation => !!adaptation);
+    const adaptations: IParsedAdaptations = adaptationNodes
+      .map((node: Element) => {
+        return parseAdaptation(node, rootURL, timescale, protection);
+      })
+      .filter((adaptation) : adaptation is IParsedAdaptation => !!adaptation)
+      .reduce((acc: IParsedAdaptations, adaptation) => {
+        const type = adaptation.type;
+        if (acc[type] === undefined) {
+          acc[type] = [adaptation];
+        } else {
+          (acc[type] || []).push(adaptation);
+        }
+        return acc;
+      }, {});
 
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
@@ -554,8 +571,8 @@ function createSmoothStreamingParser(
     let availabilityStartTime : number|undefined;
     let duration : number;
 
-    const firstVideoAdaptation = adaptations.filter((a) => a.type === "video")[0];
-    const firstAudioAdaptation = adaptations.filter((a) => a.type === "audio")[0];
+    const firstVideoAdaptation = adaptations.video ? adaptations.video[0] : undefined;
+    const firstAudioAdaptation = adaptations.audio ? adaptations.audio[0] : undefined;
     let firstTimeReference : number|undefined;
     let lastTimeReference : number|undefined;
 
@@ -675,31 +692,33 @@ function createSmoothStreamingParser(
 function checkManifestIDs(manifest : IParsedManifest) : void {
   manifest.periods.forEach(({ adaptations }) => {
     const adaptationIDs : string[] = [];
-    adaptations.forEach(adaptation => {
-      const adaptationID = adaptation.id;
-      if (arrayIncludes(adaptationIDs, adaptationID)) {
-        log.warn("Smooth: Two adaptations with the same ID found. Updating.",
-          adaptationID);
-        const newID =  adaptationID + "-";
-        adaptation.id = newID;
-        checkManifestIDs(manifest);
-        adaptationIDs.push(newID);
-      } else {
-        adaptationIDs.push(adaptationID);
-      }
-      const representationIDs : string[] = [];
-      adaptation.representations.forEach(representation => {
-        const representationID = representation.id;
-        if (arrayIncludes(representationIDs, representationID)) {
-          log.warn("Smooth: Two representations with the same ID found. Updating.",
-            representationID);
-          const newID =  representationID + "-";
-          representation.id = newID;
+    SUPPORTED_ADAPTATIONS_TYPE.forEach((type) => {
+      (adaptations[type] || []).forEach(adaptation => {
+        const adaptationID = adaptation.id;
+        if (arrayIncludes(adaptationIDs, adaptationID)) {
+          log.warn("Smooth: Two adaptations with the same ID found. Updating.",
+            adaptationID);
+          const newID =  adaptationID + "-";
+          adaptation.id = newID;
           checkManifestIDs(manifest);
-          representationIDs.push(newID);
+          adaptationIDs.push(newID);
         } else {
-          representationIDs.push(representationID);
+          adaptationIDs.push(adaptationID);
         }
+        const representationIDs : string[] = [];
+        adaptation.representations.forEach(representation => {
+          const representationID = representation.id;
+          if (arrayIncludes(representationIDs, representationID)) {
+            log.warn("Smooth: Two representations with the same ID found. Updating.",
+              representationID);
+            const newID =  representationID + "-";
+            representation.id = newID;
+            checkManifestIDs(manifest);
+            representationIDs.push(newID);
+          } else {
+            representationIDs.push(representationID);
+          }
+        });
       });
     });
   });

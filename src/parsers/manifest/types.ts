@@ -51,11 +51,15 @@ export interface IParsedRepresentation {
   contentProtection?: IParsedContentProtection;
 }
 
+type AdaptationType = "video"|"audio"|"text"|"image";
+
+export type IParsedAdaptations = Partial<Record<AdaptationType, IParsedAdaptation[]>>;
+
 export interface IParsedAdaptation {
   // required
   id: string;
   representations: IParsedRepresentation[];
-  type: string;
+  type: AdaptationType;
 
   // optional
   role? : string;
@@ -86,7 +90,7 @@ export interface IParsedPeriod {
   id : string;
   start : number;
   end? : number;
-  adaptations : IParsedAdaptation[];
+  adaptations : IParsedAdaptations;
 
   // optional
   duration? : number;

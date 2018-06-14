@@ -29,17 +29,12 @@ export interface IContentProtectionDASH {
   value?: string;
 }
 
-interface IRole {
-  schemeIdUri?: string;
-  value?: string;
-}
 export interface IAdaptationArguments {
   // -- required
   representations : IRepresentationArguments[];
   type : AdaptationType;
 
   // -- optional
-  role? : IRole;
   audioDescription? : boolean;
   closedCaption? : boolean;
   id? : number|string;
@@ -48,6 +43,9 @@ export interface IAdaptationArguments {
   normalizedLanguage? : string;
   contentProtection? : IContentProtectionDASH;
 }
+
+export type IAdaptationsArguments =
+  Partial<Record<AdaptationType, IAdaptationArguments[]>>;
 
 /**
  * Normalized Adaptation structure.
