@@ -293,6 +293,8 @@ export default function parseManifest(
       }
     }
 
+    const initialParsedAdaptations: IParsedAdaptations = {};
+
     // 4. Construct underlying adaptations
     const adaptations: IParsedAdaptations = period.children.adaptations
       .reduce((parsedAdaptations: IParsedAdaptations, adaptation) => {
@@ -677,7 +679,7 @@ export default function parseManifest(
           }
         }
         return parsedAdaptations;
-      }, {});
+      }, initialParsedAdaptations);
 
       const parsedPeriod : IParsedPeriod = {
         id: periodID,

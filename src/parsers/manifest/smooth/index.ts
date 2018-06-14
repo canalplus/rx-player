@@ -546,6 +546,8 @@ function createSmoothStreamingParser(
       adaptationNodes: [],
     });
 
+    const initialAdaptations: IParsedAdaptations = {};
+
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
         return parseAdaptation(node, rootURL, timescale, protection);
@@ -559,7 +561,7 @@ function createSmoothStreamingParser(
           (acc[type] || []).push(adaptation);
         }
         return acc;
-      }, {});
+      }, initialAdaptations);
 
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
