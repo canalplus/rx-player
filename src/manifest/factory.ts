@@ -22,6 +22,7 @@ import {
   IParsedManifest,
   IParsedRepresentation,
 } from "../parsers/manifest/types";
+import arrayIncludes from "../utils/array-includes";
 import log from "../utils/log";
 import { IAdaptationType } from "./adaptation";
 import Manifest, {
@@ -60,13 +61,21 @@ export default function createManifest(
   warning$ : Subject<Error|ICustomError>
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods).map((period) => {
-    SUPPORTED_ADAPTATIONS_TYPE.forEach((type) => {
+    (Object.keys(period.adaptations) as IAdaptationType[]).forEach((type) => {
       const adaptationsForType = period.adaptations[type];
       if (adaptationsForType) {
         period.adaptations[type] =
-        checkAdaptations(adaptationsForType, warning$);
+          checkAdaptations(adaptationsForType, warning$);
       }
     });
+
+    if (
+      !period.adaptations.video &&
+      !period.adaptations.audio
+    ) {
+      throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+    }
+
     return period;
   });
 
@@ -94,7 +103,7 @@ function checkAdaptations(
 
     // 1. filter out adaptations from unsupported types
     .filter((adaptation) => {
-      if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
+      if (!arrayIncludes(["video", "audio", "text", "image"], adaptation.type)) {
         log.info("not supported adaptation type", adaptation.type);
         const error =
           new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false);
@@ -125,15 +134,6 @@ function checkAdaptations(
 
     // 3. filter those without representations
     .filter(({ representations }) => representations.length);
-
-  // 4. throw if no video or audio adaptation
-  if (
-    adaptations
-      .filter((adaptation) => adaptation.type === "video" || adaptation.type === "audio")
-      .length === 0
-  ) {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
 
   return adaptations;
 }

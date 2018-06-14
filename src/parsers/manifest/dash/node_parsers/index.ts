@@ -16,7 +16,6 @@
 
 import config from "../../../../config";
 import { IRepresentationIndex } from "../../../../manifest";
-import { IAdaptationType } from "../../../../manifest/adaptation";
 import arrayIncludes from "../../../../utils/array-includes";
 import generateNewId from "../../../../utils/id";
 import {
@@ -48,7 +47,9 @@ import {
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
 
-export interface IRole {
+export type IParsedAdaptationType = "video"|"audio"|"text"|"image"|"metadata"|"unknown";
+
+interface IRole {
   schemeIdUri?: string;
   value?: string;
 }
@@ -76,12 +77,15 @@ function inferAdaptationType(
   adaptationCodecs : string|null,
   representationCodecs : string[],
   adaptationRole : IRole|null
-) : string {
+) : IParsedAdaptationType {
 
-  function fromMimeType(mimeType : string, role : IRole|null) : string|undefined {
+  function fromMimeType(
+    mimeType : string,
+    role : IRole|null
+  ) : IParsedAdaptationType|undefined {
     const topLevel = mimeType.split("/")[0];
     if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
-      return topLevel;
+      return topLevel as IParsedAdaptationType;
     }
 
     if (mimeType === "application/bif") {
@@ -549,23 +553,25 @@ export default function parseManifest(
           .map(r => r.codecs)
           .filter((codecs : string|undefined) : codecs is string => codecs != null);
 
-        const type: IAdaptationType = inferAdaptationType(
+        const type = inferAdaptationType(
           adaptationMimeType || null,
           representationMimeTypes,
           adaptationCodecs || null,
           representationCodecs,
           adaptationChildren.role || null
-        ) as IAdaptationType;
+        );
 
-        const mainAdaptation = (parsedAdaptations[type] || []).find((_adaptation) => {
-          if (
-            _adaptation.role === "main" &&
-            type === _adaptation.type
-          ) {
-            return true;
-          }
-          return false;
-        });
+        const parsedAdaptationsForType = parsedAdaptations[type];
+        const mainAdaptation =
+          parsedAdaptationsForType ? parsedAdaptationsForType.find((_adaptation) => {
+            if (
+              _adaptation.role === "main" &&
+              type === _adaptation.type
+            ) {
+              return true;
+            }
+            return false;
+          }) : undefined;
 
         let adaptationRole;
 
@@ -661,7 +667,11 @@ export default function parseManifest(
 
           const parsedAdaptation = parsedAdaptations[type];
           if (parsedAdaptation) {
-            parsedAdaptation.push(parsedAdaptationSet);
+            if (parsedAdaptationSet.role === "main") {
+              parsedAdaptation.unshift(parsedAdaptationSet);
+            } else {
+              parsedAdaptation.push(parsedAdaptationSet);
+            }
           } else {
             parsedAdaptations[type] = [parsedAdaptationSet];
           }
