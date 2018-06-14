@@ -33,12 +33,9 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
         const keySystem = drm.type;
         const  configuration =
           buildKeySystemConfigurations(keySystem, drm.configuration || {});
-
-            return navigator.requestMediaKeySystemAccess(name, configuration).then(() => {
-              return 2;
-            }).catch(() => {
-              return 0;
-            });
+            return navigator.requestMediaKeySystemAccess(keySystem, configuration)
+              .then(() => 2)
+              .catch(() => 0);
       }
     }
     throw new Error(
