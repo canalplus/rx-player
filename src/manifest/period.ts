@@ -20,7 +20,7 @@ import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
 
 import Adaptation, {
-  IAdaptationsArguments,
+  IAdaptationArguments,
   IAdaptationType,
 } from "./adaptation";
 
@@ -28,6 +28,9 @@ import arrayIncludes from "../utils/array-includes";
 import { StaticRepresentationIndex } from "./representation_index";
 
 export type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+
+export type IAdaptationsArguments =
+  Partial<Record<IAdaptationType, IAdaptationArguments[]>>;
 
 export interface ISupplementaryImageTrack {
   mimeType : string;

@@ -19,6 +19,7 @@ import { isCodecSupported } from "../compat";
 import { ICustomError, MediaError } from "../errors";
 import {
   IParsedAdaptation,
+  IParsedAdaptationType,
   IParsedManifest,
   IParsedRepresentation,
 } from "../parsers/manifest/types";
@@ -61,7 +62,7 @@ export default function createManifest(
   warning$ : Subject<Error|ICustomError>
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods).map((period) => {
-    (Object.keys(period.adaptations) as IAdaptationType[]).forEach((type) => {
+    (Object.keys(period.adaptations) as IParsedAdaptationType[]).forEach((type) => {
       const adaptationsForType = period.adaptations[type];
       if (adaptationsForType) {
         period.adaptations[type] =
