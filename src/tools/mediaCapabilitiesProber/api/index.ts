@@ -43,7 +43,7 @@ const mediaCapabilitiesProber = {
    * Get HDCP status. Evaluates if current equipement support given
    * HDCP revision.
    */
-  getStatusForHDCP(hdcp: string): Promise<string> {
+  getStatusForHDCP(hdcp: string) {
     if (!hdcp) {
       return Promise.reject("BAD_ARGUMENT: No HDCP Policy specified.");
     }

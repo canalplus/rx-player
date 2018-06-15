@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import getProbedCapabilities, { ICapabilitiesTypes } from "../capabilities";
 import probers from "../probers";
 import { IMediaConfiguration } from "../types";
 
@@ -85,10 +86,12 @@ const probeMediaConfiguration =
     let isMaybeSupported: boolean = false;
     let isNotSupported: boolean = false;
 
+    const resultingAPI: ICapabilitiesTypes[] = [];
     for (const browserAPI of browserAPIS) {
       const probeWithBrowser = probers[browserAPI];
       if (probeWithBrowser) {
         await probeWithBrowser(config).then((probeResult) => {
+            resultingAPI.push(browserAPI);
             isNotSupported = isNotSupported || probeResult === 0;
             isMaybeSupported = isMaybeSupported || probeResult === 1;
             isProbablySupported = isProbablySupported || probeResult === 2;
@@ -96,14 +99,20 @@ const probeMediaConfiguration =
       }
     }
 
+    const probedCapabilities = getProbedCapabilities(resultingAPI);
+
+    let status = "Maybe";
     if (isNotSupported) {
-      return "Not Supported";
+      status = "Not Supported";
     } else if (isMaybeSupported) {
-      return "Maybe";
+      status = "Maybe";
     } else if (isProbablySupported) {
-      return "Probably";
+      status = "Probably";
     }
-    return "Maybe";
+    return {
+      probedCapabilities,
+      status,
+    };
   };
 
 export default probeMediaConfiguration;

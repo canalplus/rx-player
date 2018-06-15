@@ -36,6 +36,9 @@ After probing, the given configuration is either:
 - "__Maybe Supported__": A part of configuration is supported. Some fields could not be checked.
 - "__Not Supported__": The configuration is not supported.
 
+:warning: The status shall depend on the availability of probing APIS. The API returns an object with both
+__result__ and __probed__ __capabilities__. The result is meaningfull in the context of probed capabilities.
+
 #### Complete configuration example
 
 ```js
@@ -87,23 +90,21 @@ const configuration = {
 
 ### API
 
+  Each API returns:
+    _returns_:
+  - A promise wrapping an object with:
+    - The status of probed capability/capabilities. ("Supported", "Maybe Supported","Not Supported")
+    - An object with all probed fields on configuration.
+
   __getCapabilities()__
 
   _arguments_: 
   - config {``Object``} : Configuration as defined above.
 
-  _returns_:
-  - A promise wrapping an object with:
-    - The status of capability. ("Supported", "Maybe Supported","Not Supported")
-    - An object with all untested fields on configuration.
-
   __getStatusForHDCP()__
 
   _arguments_:
   - type {``string``}: The HDCP type.
-
-  _returns_:
-  - The status for a specific HDCP version.
 
   ```js
     const capabilities =
@@ -116,9 +117,6 @@ const configuration = {
   - type {``string``}: The DRM type
   - infos {``Object``}: MediaKeySystemConfiguration configuration, as defined in EME w3c spec.
 
-  _returns_:
-  - The status for a specific DRM.
-
   ```js
     const capabilities =
       await mediaCapabilitiesProber.getStatusForDRM("org.w3.clearkey");
@@ -129,9 +127,6 @@ const configuration = {
    _arguments_: 
   - config {``Object``} : Object with type, video and audio configuration.
   /!\ 
-
-  _returns_:
-  - The status of given capabilities.
 
   ```js
     const capabilities = await mediaCapabilitiesProber.getDecodingCapabilities(
@@ -159,9 +154,6 @@ const configuration = {
 
    _arguments_: 
   - config {``Object``} : Display configuration.
-
-  _returns_:
-  - The status of given capabilities.
 
   ```js
     const capabilities = await mediaCapabilitiesProber.getDisplayCapabilities(
