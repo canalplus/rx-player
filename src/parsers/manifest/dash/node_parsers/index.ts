@@ -29,6 +29,7 @@ import {
 import {
   IParsedAdaptation,
   IParsedAdaptations,
+  IParsedAdaptationType,
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
@@ -46,8 +47,6 @@ import {
 } from "./MPD";
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
-
-export type IParsedAdaptationType = "video"|"audio"|"text"|"image"|"metadata"|"unknown";
 
 interface IRole {
   schemeIdUri?: string;

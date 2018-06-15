@@ -44,9 +44,6 @@ export interface IAdaptationArguments {
   contentProtection? : IContentProtectionDASH;
 }
 
-export type IAdaptationsArguments =
-  Partial<Record<IAdaptationType, IAdaptationArguments[]>>;
-
 /**
  * Normalized Adaptation structure.
  * @class Adaptation
