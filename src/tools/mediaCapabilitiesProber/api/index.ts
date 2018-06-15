@@ -15,13 +15,12 @@
  */
 
 import {
-  IAudioConfiguration,
   IDisplayConfiguration,
   IDRMConfiguration,
   IMediaConfiguration,
-  IVideoConfiguration,
 } from "../types";
 
+import log from "../../../utils/log";
 import probeMediaConfiguration from "./probeMediaConfiguration";
 
 /**
@@ -64,11 +63,13 @@ const mediaCapabilitiesProber = {
    * configuration.
    */
   getDecodingCapabilities(
-    type: "media-source"|"file",
-    video: IVideoConfiguration,
-    audio: IAudioConfiguration
+    mediaConfig: IMediaConfiguration
   ) {
-    const config = { type, video, audio };
+    const config = {
+      type: mediaConfig.type,
+      video: mediaConfig.video,
+      audio: mediaConfig.audio,
+    };
     return probeMediaConfiguration(config);
   },
 
@@ -95,6 +96,21 @@ const mediaCapabilitiesProber = {
   getDisplayCapabilities(displayConfig: IDisplayConfiguration) {
     const config = { display: displayConfig };
     return probeMediaConfiguration(config);
+  },
+
+  /**
+   * Set logger level
+   * @param {string} level
+   */
+  setLogLevel(level: string) {
+    log.setLevel(level);
+  },
+
+  /**
+   * Get logger level
+   */
+  getLogLevel() {
+    log.getLevel();
   },
 };
 

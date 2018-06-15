@@ -127,28 +127,31 @@ const configuration = {
   __getDecodingCapabilities()__
 
    _arguments_: 
-  - config {``Object``} : Type, video and audio configuration.
+  - config {``Object``} : Object with type, video and audio configuration.
+  /!\ 
 
   _returns_:
   - The status of given capabilities.
 
   ```js
     const capabilities = await mediaCapabilitiesProber.getDecodingCapabilities(
-      type: "media-source",
-      video: {
-        contentType: "video/webm; codecs=\"vp09.00.10.08\"",
-        width: 1920,
-        height: 1080,
-        bitrate: 3450000,
-        framerate: '25',
-        bitsPerComponent: 8,
-      },
-      audio: {
-        contentType: "audio/webm; codecs=\"opus\"",
-        channels: 6,
-        bitrate: 1200,
-        samplerate: 44100,
-      },
+      {
+        type: "media-source",
+        video: {
+          contentType: "video/webm; codecs=\"vp09.00.10.08\"",
+          width: 1920,
+          height: 1080,
+          bitrate: 3450000,
+          framerate: '25',
+          bitsPerComponent: 8,
+        },
+        audio: {
+          contentType: "audio/webm; codecs=\"opus\"",
+          channels: 6,
+          bitrate: 1200,
+          samplerate: 44100,
+        },
+      }
     );
   ```
 
@@ -168,6 +171,23 @@ const configuration = {
         height: 2160,
         bitsPerComponent: 10,
       }
+    );
+  ```
+
+  __setLogLevel()__
+
+   _arguments_: 
+  - level {``string``} : Wanted log level
+
+  ```js
+    mediaCapabilitiesProber.setLogLevel("DEBUG");
+    );
+  ```
+
+  __getLogLevel()__
+
+  ```js
+    mediaCapabilitiesProber.getLogLevel();
     );
   ```
 
