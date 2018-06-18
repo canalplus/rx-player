@@ -30,7 +30,8 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
         return result;
       }
     }
-    throw new Error("API_CALL: Not enough arguments for calling matchMedia.");
+    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "Not enough arguments for calling matchMedia.");
   });
 };
 

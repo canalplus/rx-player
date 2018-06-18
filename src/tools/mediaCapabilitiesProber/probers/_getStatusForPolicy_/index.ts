@@ -61,7 +61,8 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
           });
     }
 
-    throw new Error("API_CALL: Not enough arguments for calling getStatusForPolicy.");
+    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "Not enough arguments for calling getStatusForPolicy.");
   });
 };
 

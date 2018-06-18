@@ -42,10 +42,12 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
           .then((result: IDecodingInfos) => {
             return result.supported ? 2 : 0;
           }).catch(() => {
-            throw new Error("API_CALL: Bad arguments for calling mediaCapabilities.");
+            throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+              "Bad arguments for calling mediaCapabilities.");
           });
     }
-    throw new Error("API_CALL: Not enough arguments for calling mediaCapabilites.");
+    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "Not enough arguments for calling mediaCapabilites.");
   });
 };
 

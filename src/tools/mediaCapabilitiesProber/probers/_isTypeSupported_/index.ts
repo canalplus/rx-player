@@ -33,7 +33,8 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
       contentTypes.push(config.audio.contentType);
     }
       if (contentTypes === null || !contentTypes.length) {
-        throw new Error("API_CALL: Not enough arguments for calling isTypeSupported.");
+        throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+          "Not enough arguments for calling isTypeSupported.");
       }
       const result = contentTypes.reduce((acc, val) => {
         const support = (window as any).MediaSource.isTypeSupported(val) ? 2 : 0;

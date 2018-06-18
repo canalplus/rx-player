@@ -45,7 +45,8 @@ const mediaCapabilitiesProber = {
    */
   getStatusForHDCP(hdcp: string) {
     if (!hdcp) {
-      return Promise.reject("BAD_ARGUMENT: No HDCP Policy specified.");
+      return Promise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
+        "No HDCP Policy specified.");
     }
     const config = {
       mediaProtection: {

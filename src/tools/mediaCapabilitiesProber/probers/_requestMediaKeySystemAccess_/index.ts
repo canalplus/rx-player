@@ -38,8 +38,8 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
               .catch(() => 0);
       }
     }
-    throw new Error(
-      "API_CALL: Not enough arguments for calling requestMediaKeySystemAccess.");
+    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "Not enough arguments for calling requestMediaKeySystemAccess.");
   });
 };
 
