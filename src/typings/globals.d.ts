@@ -39,6 +39,7 @@ declare const __RELATIVE_PATH__ : {
   BIF_PARSER: string;
   SMOOTH: string;
   DASH: string;
+  METAPLAYLIST: string;
   NATIVE_TEXT_BUFFER: string;
   NATIVE_VTT: string;
   NATIVE_SRT: string;
