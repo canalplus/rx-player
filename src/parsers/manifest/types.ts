@@ -51,6 +51,9 @@ export interface IParsedRepresentation {
   contentProtection?: IParsedContentProtection;
 }
 
+export type IParsedAdaptations =
+  Partial<Record<string, IParsedAdaptation[]>>;
+
 export interface IParsedAdaptation {
   // required
   id: string;
@@ -85,7 +88,7 @@ export interface IParsedPeriod {
   id : string;
   start : number;
   end? : number;
-  adaptations : IParsedAdaptation[];
+  adaptations : IParsedAdaptations;
 
   // optional
   duration? : number;

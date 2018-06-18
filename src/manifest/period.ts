@@ -15,17 +15,18 @@
  */
 
 import arrayFind from "array-find";
-
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
-
 import Adaptation, {
-  AdaptationType,
   IAdaptationArguments,
+  IAdaptationType,
 } from "./adaptation";
 import { StaticRepresentationIndex } from "./representation_index";
 
-export type ManifestAdaptations = Partial<Record<AdaptationType, Adaptation[]>>;
+export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+
+export type IAdaptationsArguments =
+  Partial<Record<IAdaptationType, IAdaptationArguments[]>>;
 
 export interface ISupplementaryImageTrack {
   mimeType : string;
@@ -43,38 +44,14 @@ export interface ISupplementaryTextTrack {
 
 export interface IPeriodArguments {
   id: string;
-  adaptations: IAdaptationArguments[];
+  adaptations: IAdaptationsArguments;
   start: number;
   duration?: number;
 }
 
-/**
- * @param {Array.<Object>} adaptations
- * @returns {Object}
- */
-function createManifestAdaptations(
-  adaptations : IAdaptationArguments[]
-) : ManifestAdaptations {
-  return adaptations.reduce<ManifestAdaptations>((
-    acc : ManifestAdaptations,
-    adaptation
-  ) => {
-    const { type, representations } = adaptation;
-    if (!representations.length) {
-      return acc;
-    }
-
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    (acc[type] as Adaptation[]).push(new Adaptation(adaptation));
-    return acc;
-  }, {});
-}
-
 export default class Period {
   public readonly id : string;
-  public readonly adaptations : ManifestAdaptations;
+  public readonly adaptations : IManifestAdaptations;
   public duration? : number;
   public start : number;
   public end? : number;
@@ -85,7 +62,19 @@ export default class Period {
    */
   constructor(args : IPeriodArguments) {
     this.id = args.id;
-    this.adaptations = createManifestAdaptations(args.adaptations);
+    this.adaptations =
+      (Object.keys(args.adaptations) as IAdaptationType[])
+        .reduce<IManifestAdaptations>((acc, type) => {
+          if (args.adaptations[type]) {
+            const adaptationsForType = args.adaptations[type];
+            if (adaptationsForType) {
+              acc[type] = adaptationsForType.map((adaptation) => {
+                return new Adaptation(adaptation);
+              });
+            }
+          }
+          return acc;
+        }, {});
     this.duration = args.duration;
     this.start = args.start;
 
@@ -182,14 +171,14 @@ export default class Period {
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
         const adaptations =
-          adaptationsByType[adaptationType as AdaptationType] as Adaptation[];
+          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
         adaptationsList.push(...adaptations);
       }
     }
     return adaptationsList;
   }
 
-  getAdaptationsForType(adaptationType : AdaptationType) : Adaptation[] {
+  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
     const adaptations = this.adaptations[adaptationType];
     return adaptations || [];
   }

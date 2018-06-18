@@ -139,7 +139,7 @@ function _addSegmentInfos(
  * @param {Number} ts
  * @returns {Number}
  */
-function getSegmentIndex(index : any, ts : number) : number {
+function getSegmentIndex(index : ITimelineIndex, ts : number) : number {
   const { timeline } = index;
 
   let low = 0;

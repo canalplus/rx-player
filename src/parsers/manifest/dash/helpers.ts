@@ -32,11 +32,6 @@ export interface IAccessibility {
   value?: string|number;
 }
 
-export interface IRole {
-  schemeIdUri?: string;
-  value?: string;
-}
-
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
@@ -157,7 +152,7 @@ function parseByteRange(str : string) : [number, number]|null {
  * @param {Object} accessibility
  * @returns {Boolean}
  */
-function isVisuallyImpaired(accessibility: IRole) : boolean {
+function isVisuallyImpaired(accessibility: IScheme) : boolean {
   if (!accessibility) {
     return false;
   }

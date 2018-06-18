@@ -28,12 +28,13 @@ import {
 } from "../../../../utils/url";
 import {
   IParsedAdaptation,
+  IParsedAdaptations,
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
 } from "../../types";
 import {
-  IRole,
+  IScheme,
   isHardOfHearing,
   isVisuallyImpaired,
 } from "../helpers";
@@ -46,6 +47,9 @@ import {
 } from "./MPD";
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
+
+type IMainAdaptations =
+  Partial<Record<string, IParsedAdaptation>>;
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -69,10 +73,13 @@ function inferAdaptationType(
   representationMimeTypes : string[],
   adaptationCodecs : string|null,
   representationCodecs : string[],
-  adaptationRole : IRole|null
+  adaptationRole : IScheme|null
 ) : string {
 
-  function fromMimeType(mimeType : string, role : IRole|null) : string|undefined {
+  function fromMimeType(
+    mimeType : string,
+    role : IScheme|null
+  ) : string|undefined {
     const topLevel = mimeType.split("/")[0];
     if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
       return topLevel;
@@ -284,106 +291,44 @@ export default function parseManifest(
     }
 
     // 4. Construct underlying adaptations
-    const adaptations = period.children.adaptations.map((adaptation) => {
-      const adaptationRootURL = resolveURL(periodRootURL, adaptation.children.baseURL);
-      const adaptationChildren = adaptation.children;
+    const { adaptations } = period.children.adaptations
+      .reduce<{
+        mainAdaptations : IMainAdaptations;
+        adaptations : IParsedAdaptations;
+      }>((acc, adaptation) => {
+        const parsedAdaptations = acc.adaptations;
+        const adaptationRootURL = resolveURL(periodRootURL, adaptation.children.baseURL);
+        const adaptationChildren = adaptation.children;
 
-      // 4-1. Find Index
-      function findAdaptationIndex(
-        representation : IRepresentationIntermediateRepresentation
-      ) {
-        const repId = representation.attributes.id || "";
-        const repBitrate = representation.attributes.bitrate;
-        const baseURL = representation.children.baseURL;
-        const representationURL = resolveURL(
-          adaptationRootURL, baseURL);
-        let adaptationIndex : IRepresentationIndex;
-        if (adaptationChildren.segmentBase != null) {
-          const { segmentBase } = adaptationChildren;
-          adaptationIndex = new BaseRepresentationIndex(segmentBase, {
-            periodStart,
-            representationURL,
-            representationId: repId,
-            representationBitrate: repBitrate,
-          });
-        } else if (adaptationChildren.segmentList != null) {
-          const { segmentList } = adaptationChildren;
-          adaptationIndex = new ListRepresentationIndex(segmentList, {
-            periodStart,
-            representationURL,
-            representationId: repId,
-            representationBitrate: repBitrate,
-          });
-        } else if (adaptationChildren.segmentTemplate != null) {
-          const { segmentTemplate } = adaptationChildren;
-          adaptationIndex = segmentTemplate.indexType === "timeline" ?
-            new TimelineRepresentationIndex(segmentTemplate, {
-              periodStart,
-              representationURL,
-              representationId: repId,
-              representationBitrate: repBitrate,
-            }) :
-            new TemplateRepresentationIndex(segmentTemplate, {
-              periodStart,
-              representationURL,
-              representationId: repId,
-              representationBitrate: repBitrate,
-            });
-        } else {
-          adaptationIndex = new TemplateRepresentationIndex({
-            duration: Number.MAX_VALUE,
-            timescale: 1,
-            startNumber: 0,
-            initialization: { media: "" },
-            media: "",
-          }, {
-            periodStart,
-            representationURL,
-            representationId: repId,
-            representationBitrate: repBitrate,
-          });
-        }
-        return adaptationIndex;
-      }
-
-      // 4-2. Construct Representations
-      const representations = adaptation.children
-        .representations.map((representation) => {
+        // 4-1. Find Index
+        function findAdaptationIndex(
+          representation : IRepresentationIntermediateRepresentation
+        ) {
           const repId = representation.attributes.id || "";
           const repBitrate = representation.attributes.bitrate;
           const baseURL = representation.children.baseURL;
-          const representationURL = resolveURL(adaptationRootURL, baseURL);
-
-          // 4-2-1. Find bitrate
-          let representationBitrate : number;
-          if (representation.attributes.bitrate == null) {
-            log.warn("DASH: No usable bitrate found in the Representation.");
-            representationBitrate = 0;
-          } else {
-            representationBitrate = representation.attributes.bitrate;
-          }
-
-          // 4-2-2. Find Index
-          let representationIndex : IRepresentationIndex;
-          if (representation.children.segmentBase != null) {
-            const { segmentBase } = representation.children;
-            representationIndex = new BaseRepresentationIndex(segmentBase, {
+          const representationURL = resolveURL(
+            adaptationRootURL, baseURL);
+          let adaptationIndex : IRepresentationIndex;
+          if (adaptationChildren.segmentBase != null) {
+            const { segmentBase } = adaptationChildren;
+            adaptationIndex = new BaseRepresentationIndex(segmentBase, {
               periodStart,
               representationURL,
               representationId: repId,
               representationBitrate: repBitrate,
             });
-          } else if (representation.children.segmentList != null) {
-            const { segmentList } = representation.children;
-            representationIndex = new ListRepresentationIndex(segmentList, {
+          } else if (adaptationChildren.segmentList != null) {
+            const { segmentList } = adaptationChildren;
+            adaptationIndex = new ListRepresentationIndex(segmentList, {
               periodStart,
               representationURL,
               representationId: repId,
               representationBitrate: repBitrate,
             });
-          } else if (representation.children.segmentTemplate != null) {
-            const { segmentTemplate } = representation.children;
-            representationIndex = segmentTemplate.indexType === "timeline" ?
+          } else if (adaptationChildren.segmentTemplate != null) {
+            const { segmentTemplate } = adaptationChildren;
+            adaptationIndex = segmentTemplate.indexType === "timeline" ?
               new TimelineRepresentationIndex(segmentTemplate, {
                 periodStart,
                 representationURL,
@@ -397,249 +342,339 @@ export default function parseManifest(
                 representationBitrate: repBitrate,
               });
           } else {
-            representationIndex = findAdaptationIndex(representation);
+            adaptationIndex = new TemplateRepresentationIndex({
+              duration: Number.MAX_VALUE,
+              timescale: 1,
+              startNumber: 0,
+              initialization: { media: "" },
+              media: "",
+            }, {
+              periodStart,
+              representationURL,
+              representationId: repId,
+              representationBitrate: repBitrate,
+            });
+          }
+          return adaptationIndex;
+        }
+
+        // 4-2. Construct Representations
+        const representations = adaptation.children
+          .representations.map((representation) => {
+            const repId = representation.attributes.id || "";
+            const repBitrate = representation.attributes.bitrate;
+            const baseURL = representation.children.baseURL;
+            const representationURL = resolveURL(adaptationRootURL, baseURL);
+
+            // 4-2-1. Find bitrate
+            let representationBitrate : number;
+            if (representation.attributes.bitrate == null) {
+              log.warn("DASH: No usable bitrate found in the Representation.");
+              representationBitrate = 0;
+            } else {
+              representationBitrate = representation.attributes.bitrate;
+            }
+
+            // 4-2-2. Find Index
+            let representationIndex : IRepresentationIndex;
+            if (representation.children.segmentBase != null) {
+              const { segmentBase } = representation.children;
+              representationIndex = new BaseRepresentationIndex(segmentBase, {
+                periodStart,
+                representationURL,
+                representationId: repId,
+                representationBitrate: repBitrate,
+              });
+            } else if (representation.children.segmentList != null) {
+              const { segmentList } = representation.children;
+              representationIndex = new ListRepresentationIndex(segmentList, {
+                periodStart,
+                representationURL,
+                representationId: repId,
+                representationBitrate: repBitrate,
+              });
+            } else if (representation.children.segmentTemplate != null) {
+              const { segmentTemplate } = representation.children;
+              representationIndex = segmentTemplate.indexType === "timeline" ?
+                new TimelineRepresentationIndex(segmentTemplate, {
+                  periodStart,
+                  representationURL,
+                  representationId: repId,
+                  representationBitrate: repBitrate,
+                }) :
+                new TemplateRepresentationIndex(segmentTemplate, {
+                  periodStart,
+                  representationURL,
+                  representationId: repId,
+                  representationBitrate: repBitrate,
+                });
+            } else {
+              representationIndex = findAdaptationIndex(representation);
+            }
+
+            // 4-2-3. Set ID
+            const representationID = representation.attributes.id != null ?
+              representation.attributes.id :
+              (
+                representation.attributes.bitrate +
+                (
+                  representation.attributes.height != null ?
+                    ("-" + representation.attributes.height) : ""
+                ) +
+                (
+                  representation.attributes.width != null ?
+                    ("-" + representation.attributes.width) : ""
+                ) +
+                (
+                  representation.attributes.mimeType != null ?
+                    ("-" + representation.attributes.mimeType) : ""
+                ) +
+                (
+                  representation.attributes.codecs != null ?
+                    ("-" + representation.attributes.codecs) : ""
+                )
+              );
+
+            // 4-2-4. Construct Representation Base
+            const parsedRepresentation : IParsedRepresentation = {
+              bitrate: representationBitrate,
+              index: representationIndex,
+              id: representationID,
+            };
+
+            // 4-2-5. Add optional attributes
+            let codecs : string|undefined;
+            if (representation.attributes.codecs != null) {
+              codecs = representation.attributes.codecs;
+            } else if (adaptation.attributes.codecs != null) {
+              codecs = adaptation.attributes.codecs;
+            }
+
+            if (codecs != null) {
+              codecs = codecs === "mp4a.40.02" ? "mp4a.40.2" : codecs;
+              parsedRepresentation.codecs = codecs;
+            }
+
+            if (representation.attributes.audioSamplingRate != null) {
+              parsedRepresentation.audioSamplingRate =
+                representation.attributes.audioSamplingRate;
+            } else if (adaptation.attributes.audioSamplingRate != null) {
+              parsedRepresentation.audioSamplingRate =
+                adaptation.attributes.audioSamplingRate;
+            }
+
+            if (representation.attributes.codingDependency != null) {
+              parsedRepresentation.codingDependency =
+                representation.attributes.codingDependency;
+            } else if (adaptation.attributes.codingDependency != null) {
+              parsedRepresentation.codingDependency =
+                adaptation.attributes.codingDependency;
+            }
+
+            if (representation.attributes.frameRate != null) {
+              parsedRepresentation.frameRate =
+                representation.attributes.frameRate;
+            } else if (adaptation.attributes.frameRate != null) {
+              parsedRepresentation.frameRate =
+                adaptation.attributes.frameRate;
+            }
+
+            if (representation.attributes.height != null) {
+              parsedRepresentation.height =
+                representation.attributes.height;
+            } else if (adaptation.attributes.height != null) {
+              parsedRepresentation.height =
+                adaptation.attributes.height;
+            }
+
+            if (representation.attributes.maxPlayoutRate != null) {
+              parsedRepresentation.maxPlayoutRate =
+                representation.attributes.maxPlayoutRate;
+            } else if (adaptation.attributes.maxPlayoutRate != null) {
+              parsedRepresentation.maxPlayoutRate =
+                adaptation.attributes.maxPlayoutRate;
+            }
+
+            if (representation.attributes.maximumSAPPeriod != null) {
+              parsedRepresentation.maximumSAPPeriod =
+                representation.attributes.maximumSAPPeriod;
+            } else if (adaptation.attributes.maximumSAPPeriod != null) {
+              parsedRepresentation.maximumSAPPeriod =
+                adaptation.attributes.maximumSAPPeriod;
+            }
+
+            if (representation.attributes.mimeType != null) {
+              parsedRepresentation.mimeType =
+                representation.attributes.mimeType;
+            } else if (adaptation.attributes.mimeType != null) {
+              parsedRepresentation.mimeType =
+                adaptation.attributes.mimeType;
+            }
+
+            if (representation.attributes.profiles != null) {
+              parsedRepresentation.profiles =
+                representation.attributes.profiles;
+            } else if (adaptation.attributes.profiles != null) {
+              parsedRepresentation.profiles =
+                adaptation.attributes.profiles;
+            }
+
+            if (representation.attributes.qualityRanking != null) {
+              parsedRepresentation.qualityRanking =
+                representation.attributes.qualityRanking;
+            }
+
+            if (representation.attributes.segmentProfiles != null) {
+              parsedRepresentation.segmentProfiles =
+                representation.attributes.segmentProfiles;
+            } else if (adaptation.attributes.segmentProfiles != null) {
+              parsedRepresentation.segmentProfiles =
+                adaptation.attributes.segmentProfiles;
+            }
+
+            if (representation.attributes.width != null) {
+              parsedRepresentation.width =
+                representation.attributes.width;
+            } else if (adaptation.attributes.width != null) {
+              parsedRepresentation.width =
+                adaptation.attributes.width;
+            }
+
+            return parsedRepresentation;
+          });
+
+        const adaptationMimeType = adaptation.attributes.mimeType;
+        const adaptationCodecs = adaptation.attributes.codecs;
+
+        const representationMimeTypes = representations
+          .map(r => r.mimeType)
+          .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
+
+        const representationCodecs = representations
+          .map(r => r.codecs)
+          .filter((codecs : string|undefined) : codecs is string => codecs != null);
+
+        const type = inferAdaptationType(
+          adaptationMimeType || null,
+          representationMimeTypes,
+          adaptationCodecs || null,
+          representationCodecs,
+          adaptationChildren.role || null
+        );
+
+        const isMainAdaptation = !!adaptation.children.role &&
+          adaptation.children.role.value === "main" &&
+          adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011";
+
+        const mainAdaptationForType = acc.mainAdaptations[type];
+
+        if (mainAdaptationForType !== undefined && isMainAdaptation) {
+          mainAdaptationForType.representations.push(...representations);
+        } else {
+          let closedCaption : boolean|undefined;
+          let audioDescription : boolean|undefined;
+
+          if (
+            type === "text" &&
+            adaptationChildren.accessibility &&
+            isHardOfHearing(adaptationChildren.accessibility)
+          ) {
+            closedCaption = true;
           }
 
-          // 4-2-3. Set ID
-          const representationID = representation.attributes.id != null ?
-            representation.attributes.id :
-            (
-              representation.attributes.bitrate +
-              (
-                representation.attributes.height != null ?
-                  ("-" + representation.attributes.height) : ""
-              ) +
-              (
-                representation.attributes.width != null ?
-                  ("-" + representation.attributes.width) : ""
-              ) +
-              (
-                representation.attributes.mimeType != null ?
-                  ("-" + representation.attributes.mimeType) : ""
-              ) +
-              (
-                representation.attributes.codecs != null ?
-                  ("-" + representation.attributes.codecs) : ""
-              )
-            );
+          if (
+            type === "audio" &&
+            adaptationChildren.accessibility &&
+            isVisuallyImpaired(adaptationChildren.accessibility)
+          ) {
+            audioDescription = true;
+          }
 
-          // 4-2-4. Construct Representation Base
-          const parsedRepresentation : IParsedRepresentation = {
-            bitrate: representationBitrate,
-            index: representationIndex,
-            id: representationID,
+          let adaptationID : string;
+          if (adaptation.attributes.id != null) {
+            adaptationID = adaptation.attributes.id;
+          } else {
+            let idString = type;
+            if (adaptation.attributes.language) {
+              idString += `-${adaptation.attributes.language}`;
+            }
+            if (closedCaption) {
+              idString += "-cc";
+            }
+            if (audioDescription) {
+              idString += "-ad";
+            }
+            if (adaptation.attributes.contentType) {
+              idString += `-${adaptation.attributes.contentType}`;
+            }
+            if (adaptation.attributes.codecs) {
+              idString += `-${adaptation.attributes.codecs}`;
+            }
+            if (adaptation.attributes.mimeType) {
+              idString += `-${adaptation.attributes.mimeType}`;
+            }
+            if (adaptation.attributes.frameRate) {
+              idString += `-${adaptation.attributes.frameRate}`;
+            }
+
+            if (idString.length === type.length) {
+              idString += representations.length ?
+                ("-" + representations[0].id) : "-empty";
+            }
+
+            adaptationID = "adaptation-" + idString;
+          }
+
+          const parsedAdaptationSet : IParsedAdaptation = {
+            id: adaptationID,
+            representations,
+            type,
           };
 
-          // 4-2-5. Add optional attributes
-          let codecs : string|undefined;
-          if (representation.attributes.codecs != null) {
-            codecs = representation.attributes.codecs;
-          } else if (adaptation.attributes.codecs != null) {
-            codecs = adaptation.attributes.codecs;
+          if (adaptation.attributes.language != null) {
+            parsedAdaptationSet.language = adaptation.attributes.language;
+            parsedAdaptationSet.normalizedLanguage =
+              normalizeLang(adaptation.attributes.language);
           }
 
-          if (codecs != null) {
-            codecs = codecs === "mp4a.40.02" ? "mp4a.40.2" : codecs;
-            parsedRepresentation.codecs = codecs;
+          if (closedCaption != null) {
+            parsedAdaptationSet.closedCaption = closedCaption;
           }
 
-          if (representation.attributes.audioSamplingRate != null) {
-            parsedRepresentation.audioSamplingRate =
-              representation.attributes.audioSamplingRate;
-          } else if (adaptation.attributes.audioSamplingRate != null) {
-            parsedRepresentation.audioSamplingRate =
-              adaptation.attributes.audioSamplingRate;
+          if (audioDescription != null) {
+            parsedAdaptationSet.audioDescription = audioDescription;
           }
 
-          if (representation.attributes.codingDependency != null) {
-            parsedRepresentation.codingDependency =
-              representation.attributes.codingDependency;
-          } else if (adaptation.attributes.codingDependency != null) {
-            parsedRepresentation.codingDependency =
-              adaptation.attributes.codingDependency;
+          const parsedAdaptation = parsedAdaptations[type];
+          if (!parsedAdaptation) {
+            parsedAdaptations[type] = [parsedAdaptationSet];
+          } else if (isMainAdaptation) {
+            // put "main" adaptation as the first
+            parsedAdaptation.unshift(parsedAdaptationSet);
+            acc.mainAdaptations[type] = parsedAdaptationSet;
+          } else {
+            parsedAdaptation.push(parsedAdaptationSet);
           }
-
-          if (representation.attributes.frameRate != null) {
-            parsedRepresentation.frameRate =
-              representation.attributes.frameRate;
-          } else if (adaptation.attributes.frameRate != null) {
-            parsedRepresentation.frameRate =
-              adaptation.attributes.frameRate;
-          }
-
-          if (representation.attributes.height != null) {
-            parsedRepresentation.height =
-              representation.attributes.height;
-          } else if (adaptation.attributes.height != null) {
-            parsedRepresentation.height =
-              adaptation.attributes.height;
-          }
-
-          if (representation.attributes.maxPlayoutRate != null) {
-            parsedRepresentation.maxPlayoutRate =
-              representation.attributes.maxPlayoutRate;
-          } else if (adaptation.attributes.maxPlayoutRate != null) {
-            parsedRepresentation.maxPlayoutRate =
-              adaptation.attributes.maxPlayoutRate;
-          }
-
-          if (representation.attributes.maximumSAPPeriod != null) {
-            parsedRepresentation.maximumSAPPeriod =
-              representation.attributes.maximumSAPPeriod;
-          } else if (adaptation.attributes.maximumSAPPeriod != null) {
-            parsedRepresentation.maximumSAPPeriod =
-              adaptation.attributes.maximumSAPPeriod;
-          }
-
-          if (representation.attributes.mimeType != null) {
-            parsedRepresentation.mimeType =
-              representation.attributes.mimeType;
-          } else if (adaptation.attributes.mimeType != null) {
-            parsedRepresentation.mimeType =
-              adaptation.attributes.mimeType;
-          }
-
-          if (representation.attributes.profiles != null) {
-            parsedRepresentation.profiles =
-              representation.attributes.profiles;
-          } else if (adaptation.attributes.profiles != null) {
-            parsedRepresentation.profiles =
-              adaptation.attributes.profiles;
-          }
-
-          if (representation.attributes.qualityRanking != null) {
-            parsedRepresentation.qualityRanking =
-              representation.attributes.qualityRanking;
-          }
-
-          if (representation.attributes.segmentProfiles != null) {
-            parsedRepresentation.segmentProfiles =
-              representation.attributes.segmentProfiles;
-          } else if (adaptation.attributes.segmentProfiles != null) {
-            parsedRepresentation.segmentProfiles =
-              adaptation.attributes.segmentProfiles;
-          }
-
-          if (representation.attributes.width != null) {
-            parsedRepresentation.width =
-              representation.attributes.width;
-          } else if (adaptation.attributes.width != null) {
-            parsedRepresentation.width =
-              adaptation.attributes.width;
-          }
-
-          return parsedRepresentation;
-        });
-
-      const adaptationMimeType = adaptation.attributes.mimeType;
-      const adaptationCodecs = adaptation.attributes.codecs;
-
-      const representationMimeTypes = representations
-        .map(r => r.mimeType)
-        .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
-
-      const representationCodecs = representations
-        .map(r => r.codecs)
-        .filter((codecs : string|undefined) : codecs is string => codecs != null);
-
-      const type = inferAdaptationType(
-        adaptationMimeType || null,
-        representationMimeTypes,
-        adaptationCodecs || null,
-        representationCodecs,
-        adaptationChildren.role || null
-      );
-
-      let closedCaption : boolean|undefined;
-      let audioDescription : boolean|undefined;
-
-      if (
-        type === "text" &&
-        adaptationChildren.accessibility &&
-        isHardOfHearing(adaptationChildren.accessibility)
-      ) {
-        closedCaption = true;
-      }
-
-      if (
-        type === "audio" &&
-        adaptationChildren.accessibility &&
-        isVisuallyImpaired(adaptationChildren.accessibility)
-      ) {
-        audioDescription = true;
-      }
-
-      let adaptationID : string;
-      if (adaptation.attributes.id != null) {
-        adaptationID = adaptation.attributes.id;
-      } else {
-        let idString = type;
-        if (adaptation.attributes.language) {
-          idString += `-${adaptation.attributes.language}`;
         }
-        if (closedCaption) {
-          idString += "-cc";
-        }
-        if (audioDescription) {
-          idString += "-ad";
-        }
-        if (adaptation.attributes.contentType) {
-          idString += `-${adaptation.attributes.contentType}`;
-        }
-        if (adaptation.attributes.codecs) {
-          idString += `-${adaptation.attributes.codecs}`;
-        }
-        if (adaptation.attributes.mimeType) {
-          idString += `-${adaptation.attributes.mimeType}`;
-        }
-        if (adaptation.attributes.frameRate) {
-          idString += `-${adaptation.attributes.frameRate}`;
-        }
+        return {
+          adaptations: parsedAdaptations,
+          mainAdaptations: acc.mainAdaptations,
+        };
+      }, { mainAdaptations: {}, adaptations: {} });
 
-        if (idString.length === type.length) {
-          idString += representations.length ?
-            ("-" + representations[0].id) : "-empty";
-        }
-
-        adaptationID = "adaptation-" + idString;
-      }
-
-      const parsedAdaptationSet : IParsedAdaptation = {
-        id: adaptationID,
-        representations,
-        type,
+      const parsedPeriod : IParsedPeriod = {
+        id: periodID,
+        start: periodStart,
+        duration: periodDuration,
+        adaptations,
       };
 
-      if (adaptation.attributes.language != null) {
-        parsedAdaptationSet.language = adaptation.attributes.language;
-        parsedAdaptationSet.normalizedLanguage =
-          normalizeLang(adaptation.attributes.language);
+      if (period.attributes.bitstreamSwitching != null) {
+        parsedPeriod.bitstreamSwitching = period.attributes.bitstreamSwitching;
       }
 
-      if (closedCaption != null) {
-        parsedAdaptationSet.closedCaption = closedCaption;
-      }
-
-      if (audioDescription != null) {
-        parsedAdaptationSet.audioDescription = audioDescription;
-      }
-
-      return parsedAdaptationSet;
-    });
-
-    const parsedPeriod : IParsedPeriod = {
-      id: periodID,
-      start: periodStart,
-      duration: periodDuration,
-      adaptations,
-    };
-
-    if (period.attributes.bitstreamSwitching != null) {
-      parsedPeriod.bitstreamSwitching = period.attributes.bitstreamSwitching;
+      parsedPeriods.push(parsedPeriod);
     }
-
-    parsedPeriods.push(parsedPeriod);
-  }
 
   const parsedMPD : IParsedManifest = {
     availabilityStartTime: (
@@ -693,8 +728,11 @@ export default function parseManifest(
       parsedMPD.periods.length - 1
     ].adaptations;
 
-    const firstVideoAdaptationFromLastPeriod = lastPeriodAdaptations
-      .filter(a => a.type === "video")[0];
+    if (!lastPeriodAdaptations.video) {
+      throw new Error("Can't find first video adaptation from last period");
+    }
+
+    const firstVideoAdaptationFromLastPeriod = lastPeriodAdaptations.video[0];
 
     const lastRef = getLastLiveTimeReference(firstVideoAdaptationFromLastPeriod);
     parsedMPD.presentationLiveGap = lastRef != null ?

@@ -35,6 +35,7 @@ import {
 import {
   IKeySystem,
   IParsedAdaptation,
+  IParsedAdaptations,
   IParsedManifest,
   IParsedRepresentation,
 } from "../types";
@@ -252,7 +253,7 @@ function createSmoothStreamingParser(
   function parseCNodes(
     nodes : Element[]
   ) : IHSSManifestSegment[] {
-    return nodes.reduce((timeline, node , i) => {
+    return nodes.reduce<IHSSManifestSegment[]>((timeline, node , i) => {
       const dAttr = node.getAttribute("d");
       const tAttr = node.getAttribute("t");
       const rAttr = node.getAttribute("r");
@@ -288,7 +289,7 @@ function createSmoothStreamingParser(
       }
       timeline.push({ d, ts, r });
       return timeline;
-    }, [] as IHSSManifestSegment[]);
+    }, []);
   }
 
   /**
@@ -419,7 +420,10 @@ function createSmoothStreamingParser(
     const {
       representations,
       cNodes,
-    } = reduceChildren(root, (res, _name, node) => {
+    } = reduceChildren<{
+      representations: any[]; /* TODO */
+      cNodes : Element[];
+    }>(root, (res, _name, node) => {
       switch (_name) {
         case "QualityLevel":
           const rep = parseQualityLevel(node, adaptationType);
@@ -443,8 +447,8 @@ function createSmoothStreamingParser(
       }
       return res;
     }, {
-      representations: [] as any[] /* TODO */,
-      cNodes: [] as Element[],
+      representations: [],
+      cNodes: [],
     });
 
     const index = {
@@ -544,9 +548,22 @@ function createSmoothStreamingParser(
       adaptationNodes: [],
     });
 
-    const adaptations : IParsedAdaptation[] = adaptationNodes.map(node => {
-      return parseAdaptation(node, rootURL, timescale, protection);
-    }).filter((adaptation) : adaptation is IParsedAdaptation => !!adaptation);
+    const initialAdaptations: IParsedAdaptations = {};
+
+    const adaptations: IParsedAdaptations = adaptationNodes
+      .map((node: Element) => {
+        return parseAdaptation(node, rootURL, timescale, protection);
+      })
+      .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
+      .reduce((acc: IParsedAdaptations, adaptation) => {
+        const type = adaptation.type;
+        if (acc[type] === undefined) {
+          acc[type] = [adaptation];
+        } else {
+          (acc[type] || []).push(adaptation);
+        }
+        return acc;
+      }, initialAdaptations);
 
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
@@ -554,8 +571,8 @@ function createSmoothStreamingParser(
     let availabilityStartTime : number|undefined;
     let duration : number;
 
-    const firstVideoAdaptation = adaptations.filter((a) => a.type === "video")[0];
-    const firstAudioAdaptation = adaptations.filter((a) => a.type === "audio")[0];
+    const firstVideoAdaptation = adaptations.video ? adaptations.video[0] : undefined;
+    const firstAudioAdaptation = adaptations.audio ? adaptations.audio[0] : undefined;
     let firstTimeReference : number|undefined;
     let lastTimeReference : number|undefined;
 
@@ -675,31 +692,33 @@ function createSmoothStreamingParser(
 function checkManifestIDs(manifest : IParsedManifest) : void {
   manifest.periods.forEach(({ adaptations }) => {
     const adaptationIDs : string[] = [];
-    adaptations.forEach(adaptation => {
-      const adaptationID = adaptation.id;
-      if (arrayIncludes(adaptationIDs, adaptationID)) {
-        log.warn("Smooth: Two adaptations with the same ID found. Updating.",
-          adaptationID);
-        const newID =  adaptationID + "-";
-        adaptation.id = newID;
-        checkManifestIDs(manifest);
-        adaptationIDs.push(newID);
-      } else {
-        adaptationIDs.push(adaptationID);
-      }
-      const representationIDs : string[] = [];
-      adaptation.representations.forEach(representation => {
-        const representationID = representation.id;
-        if (arrayIncludes(representationIDs, representationID)) {
-          log.warn("Smooth: Two representations with the same ID found. Updating.",
-            representationID);
-          const newID =  representationID + "-";
-          representation.id = newID;
+    Object.keys(adaptations).forEach((type) => {
+      (adaptations[type] || []).forEach(adaptation => {
+        const adaptationID = adaptation.id;
+        if (arrayIncludes(adaptationIDs, adaptationID)) {
+          log.warn("Smooth: Two adaptations with the same ID found. Updating.",
+            adaptationID);
+          const newID =  adaptationID + "-";
+          adaptation.id = newID;
           checkManifestIDs(manifest);
-          representationIDs.push(newID);
+          adaptationIDs.push(newID);
         } else {
-          representationIDs.push(representationID);
+          adaptationIDs.push(adaptationID);
         }
+        const representationIDs : string[] = [];
+        adaptation.representations.forEach(representation => {
+          const representationID = representation.id;
+          if (arrayIncludes(representationIDs, representationID)) {
+            log.warn("Smooth: Two representations with the same ID found. Updating.",
+              representationID);
+            const newID =  representationID + "-";
+            representation.id = newID;
+            checkManifestIDs(manifest);
+            representationIDs.push(newID);
+          } else {
+            representationIDs.push(representationID);
+          }
+        });
       });
     });
   });
