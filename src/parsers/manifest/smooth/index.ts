@@ -36,7 +36,6 @@ import {
   IKeySystem,
   IParsedAdaptation,
   IParsedAdaptations,
-  IParsedAdaptationType,
   IParsedManifest,
   IParsedRepresentation,
 } from "../types";
@@ -254,7 +253,7 @@ function createSmoothStreamingParser(
   function parseCNodes(
     nodes : Element[]
   ) : IHSSManifestSegment[] {
-    return nodes.reduce((timeline, node , i) => {
+    return nodes.reduce<IHSSManifestSegment[]>((timeline, node , i) => {
       const dAttr = node.getAttribute("d");
       const tAttr = node.getAttribute("t");
       const rAttr = node.getAttribute("r");
@@ -290,7 +289,7 @@ function createSmoothStreamingParser(
       }
       timeline.push({ d, ts, r });
       return timeline;
-    }, [] as IHSSManifestSegment[]);
+    }, []);
   }
 
   /**
@@ -421,7 +420,10 @@ function createSmoothStreamingParser(
     const {
       representations,
       cNodes,
-    } = reduceChildren(root, (res, _name, node) => {
+    } = reduceChildren<{
+      representations: any[]; /* TODO */
+      cNodes : Element[];
+    }>(root, (res, _name, node) => {
       switch (_name) {
         case "QualityLevel":
           const rep = parseQualityLevel(node, adaptationType);
@@ -445,8 +447,8 @@ function createSmoothStreamingParser(
       }
       return res;
     }, {
-      representations: [] as any[] /* TODO */,
-      cNodes: [] as Element[],
+      representations: [],
+      cNodes: [],
     });
 
     const index = {
@@ -496,7 +498,7 @@ function createSmoothStreamingParser(
 
     const parsedAdaptation : IParsedAdaptation = {
       id,
-      type: adaptationType as IParsedAdaptationType,
+      type: adaptationType,
       representations,
       name: name == null ? undefined : name,
       language: language == null ?
@@ -690,7 +692,7 @@ function createSmoothStreamingParser(
 function checkManifestIDs(manifest : IParsedManifest) : void {
   manifest.periods.forEach(({ adaptations }) => {
     const adaptationIDs : string[] = [];
-    (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {
+    Object.keys(adaptations).forEach((type) => {
       (adaptations[type] || []).forEach(adaptation => {
         const adaptationID = adaptation.id;
         if (arrayIncludes(adaptationIDs, adaptationID)) {

@@ -29,7 +29,6 @@ import {
 import {
   IParsedAdaptation,
   IParsedAdaptations,
-  IParsedAdaptationType,
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
@@ -50,7 +49,7 @@ import {
 import { IRepresentationIntermediateRepresentation } from "./Representation";
 
 type IMainAdaptations =
-  Partial<Record<IParsedAdaptationType, IParsedAdaptation>>;
+  Partial<Record<string, IParsedAdaptation>>;
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -75,15 +74,15 @@ function inferAdaptationType(
   adaptationCodecs : string|null,
   representationCodecs : string[],
   adaptationRole : IScheme|null
-) : IParsedAdaptationType {
+) : string {
 
   function fromMimeType(
     mimeType : string,
     role : IScheme|null
-  ) : IParsedAdaptationType|undefined {
+  ) : string|undefined {
     const topLevel = mimeType.split("/")[0];
     if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
-      return topLevel as IParsedAdaptationType;
+      return topLevel;
     }
 
     if (mimeType === "application/bif") {
