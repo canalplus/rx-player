@@ -201,7 +201,7 @@ const configuration = {
 Usage :
 
 ```js
-import { MediaCapabilitiesProber } from "rx-player/tools";
+import { MediaCapabilitiesProber } from "rx-player/experimental/tools";
 
 const configurationSupport = MediaCapabilitiesProber.getCapabilities(config);
 configurationSupport.then((result) => {

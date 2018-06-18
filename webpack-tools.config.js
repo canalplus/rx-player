@@ -32,7 +32,7 @@ if (shouldReportSize) {
 module.exports = {
   mode: isDevMode ? "development" : "production",
   entry: {
-    "../tools/index": "./src/tools/index.ts"
+    "../tools/index": "./src/experimental/tools/index.ts"
   },
   output: {
     libraryTarget: "umd",

@@ -11,7 +11,7 @@
     - [ErrorCodes](#static-ErrorCodes)
     - [LogLevel](#static-LogLevel)
 - [Tools](#tools)
-    - [MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
+    - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -191,7 +191,7 @@ RxPlayer.LogLevel = "WARNING";
 
 _type_: ``Object``
 
-A [tool](./mediaCapabilitiesProber/index.md) to probe browser media capabilities:
+An experimental [tool](./mediaCapabilitiesProber/index.md) to probe browser media capabilities:
 - Decoding capabilities
 - DRM support
 - HDCP support

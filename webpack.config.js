@@ -104,14 +104,11 @@ if (shouldReportSize) {
 
 module.exports = {
   mode: isDevMode ? "development" : "production",
-  entry: {
-    "rx-player": "./src/exports.ts",
-    "../tools/index": "./src/tools/index.ts"
-  },
+  entry: "./src/exports.ts",
   output: {
     library: "RxPlayer",
     libraryTarget: "umd",
-    filename: shouldMinify ? "[name].min.js" : "[name].js",
+    filename: shouldMinify ? "rx-player.min.js" : "rx-player.js",
   },
   optimization: {
     minimizer: shouldMinify ? [new UglifyJsPlugin()] : [
