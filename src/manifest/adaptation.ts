@@ -23,6 +23,9 @@ import Representation, {
 
 export type IAdaptationType = "video"|"audio"|"text"|"image";
 
+export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
+  ["audio", "video", "text", "image"];
+
 // TODO
 export interface IContentProtectionDASH {
   schemeIdUri?: string;

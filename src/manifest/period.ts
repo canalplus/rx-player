@@ -15,19 +15,15 @@
  */
 
 import arrayFind from "array-find";
-
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
-
 import Adaptation, {
   IAdaptationArguments,
   IAdaptationType,
 } from "./adaptation";
-
-import arrayIncludes from "../utils/array-includes";
 import { StaticRepresentationIndex } from "./representation_index";
 
-export type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
 
 export type IAdaptationsArguments =
   Partial<Record<IAdaptationType, IAdaptationArguments[]>>;
@@ -55,7 +51,7 @@ export interface IPeriodArguments {
 
 export default class Period {
   public readonly id : string;
-  public readonly adaptations : ManifestAdaptations;
+  public readonly adaptations : IManifestAdaptations;
   public duration? : number;
   public start : number;
   public end? : number;
@@ -66,22 +62,19 @@ export default class Period {
    */
   constructor(args : IPeriodArguments) {
     this.id = args.id;
-    this.adaptations = {};
-    (Object.keys(args.adaptations) as IAdaptationType[])
-      .filter((type): type is "video"|"audio"|"text"|"image" =>
-        arrayIncludes(["video", "audio", "text", "image"], type)
-      )
-      .forEach((type) => {
-        if (args.adaptations[type]) {
-          const adaptationsForType = args.adaptations[type];
-          if (adaptationsForType) {
-            this.adaptations[type] =
-              adaptationsForType.map((adaptation) => {
+    this.adaptations =
+      (Object.keys(args.adaptations) as IAdaptationType[])
+        .reduce<IManifestAdaptations>((acc, type) => {
+          if (args.adaptations[type]) {
+            const adaptationsForType = args.adaptations[type];
+            if (adaptationsForType) {
+              acc[type] = adaptationsForType.map((adaptation) => {
                 return new Adaptation(adaptation);
               });
+            }
           }
-        }
-      });
+          return acc;
+        }, {});
     this.duration = args.duration;
     this.start = args.start;
 

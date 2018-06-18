@@ -25,16 +25,13 @@ import {
 } from "../parsers/manifest/types";
 import arrayIncludes from "../utils/array-includes";
 import log from "../utils/log";
-import { IAdaptationType } from "./adaptation";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "./adaptation";
 import Manifest, {
   IManifestArguments,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "./index";
 import { IRepresentationArguments } from "./representation";
-
-export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
-  ["audio", "video", "text", "image"];
 
 /**
  * Run multiple checks before creating the Manifest:
@@ -64,9 +61,15 @@ export default function createManifest(
   manifestObject.periods = (manifestObject.periods).map((period) => {
     (Object.keys(period.adaptations) as IParsedAdaptationType[]).forEach((type) => {
       const adaptationsForType = period.adaptations[type];
-      if (adaptationsForType) {
-        period.adaptations[type] =
-          checkAdaptations(adaptationsForType, warning$);
+      if (!adaptationsForType) {
+        delete period.adaptations[type];
+      } else {
+        const checkedAdaptations = checkAdaptations(adaptationsForType, warning$);
+        if (!checkAdaptations.length) {
+          delete period.adaptations[type];
+        } else {
+          period.adaptations[type] = checkedAdaptations;
+        }
       }
     });
 
@@ -104,11 +107,11 @@ function checkAdaptations(
 
     // 1. filter out adaptations from unsupported types
     .filter((adaptation) => {
-      if (!arrayIncludes(["video", "audio", "text", "image"], adaptation.type)) {
+      if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
         log.info("not supported adaptation type", adaptation.type);
-        const error =
-          new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false);
-        warning$.next(error);
+        warning$.next(
+          new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false)
+        );
         return false;
       } else {
         return true;
