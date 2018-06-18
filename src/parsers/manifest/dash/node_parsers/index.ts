@@ -35,6 +35,7 @@ import {
   IParsedRepresentation,
 } from "../../types";
 import {
+  IScheme,
   isHardOfHearing,
   isVisuallyImpaired,
 } from "../helpers";
@@ -47,11 +48,6 @@ import {
 } from "./MPD";
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
-
-interface IRole {
-  schemeIdUri?: string;
-  value?: string;
-}
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -75,12 +71,12 @@ function inferAdaptationType(
   representationMimeTypes : string[],
   adaptationCodecs : string|null,
   representationCodecs : string[],
-  adaptationRole : IRole|null
+  adaptationRole : IScheme|null
 ) : IParsedAdaptationType {
 
   function fromMimeType(
     mimeType : string,
-    role : IRole|null
+    role : IScheme|null
   ) : IParsedAdaptationType|undefined {
     const topLevel = mimeType.split("/")[0];
     if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
