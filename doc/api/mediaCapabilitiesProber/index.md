@@ -36,8 +36,23 @@ After probing, the given configuration is either:
 - "__Maybe Supported__": A part of configuration is supported. Some fields could not be checked.
 - "__Not Supported__": The configuration is not supported.
 
-:warning: The status shall depend on the availability of probing APIS. The API returns an object with both
-__result__ and __probed__ __capabilities__. The result is meaningfull in the context of probed capabilities.
+:warning: The status shall depend on the availability of probing APIs, and given configuration.
+Hence, some of the capabilities may not be probed. As an example:
+If you call _getDecodingCapabilites_ with such configuration:
+```js
+  const configuration = {
+    type: "media-file",
+    video: {
+      contentType: "video/webm; codecs=\"vp09.00.10.08\"",
+      width: 1984,
+      height: 2012,
+    }
+  };
+```
+
+The given arguments are sufficient to call the _isTypeSupported_ browser API (for video _contentType_), but not for calling _decodingInfos_ (the video object is not complete).
+Thus, the given configuration will be "_Maybe_" supported, because not all capabilities will have been probed.
+The complete list of probed capabilities is logged under the __INFO__ level.
 
 #### Complete configuration example
 

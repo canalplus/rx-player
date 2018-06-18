@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { IMediaConfiguration } from "./types";
+
 export type ICapabilitiesTypes =
   "_decodingInfos_" |
   "_getStatusForPolicy_" |
@@ -193,8 +195,47 @@ function extend(target: ICapabilities, objects: ICapabilities[]) {
   return target;
 }
 
-export default function getProbedCapabilities(probers: ICapabilitiesTypes[]) {
+/**
+ * From input config object and probed capabilities, create
+ * probed configuration object.
+ * @param {Array<Object>} capabilities
+ * @param {Object} configuration
+ */
+function filterConfigurationWithProbedCapabilities(
+  capabilities: ICapabilities,
+  configuration: object
+): object {
+  const probedConfig = {};
+
+  capabilities.forEach((capability) => {
+    if (typeof capability === "string") {
+      if ((configuration as {[id: string]: string|object})[capability] !== undefined) {
+        (probedConfig as {[id: string]: string|object})[capability] =
+          (configuration as {[id: string]: string|object})[capability];
+      }
+    } else {
+      const [ key, value ] = Object.entries(capability)[0];
+      const subProbedConfig = filterConfigurationWithProbedCapabilities(
+        value, (configuration as {[id: string]: object})[key] || {});
+      if (Object.entries(subProbedConfig).length > 0) {
+        (probedConfig as {[id: string]: object})[key] = subProbedConfig;
+      }
+    }
+  });
+
+  return probedConfig;
+}
+
+/**
+ * Get probed configuration.
+ * @param {Object} config
+ * @param {Array<string>} probers
+ */
+export default function getProbedConfiguration(
+  config: IMediaConfiguration,
+  probers: ICapabilitiesTypes[]
+) {
   const target: ICapabilities = [];
   extend(target, probers.map((prober) => capabilites[prober]));
-  return target;
+  return filterConfigurationWithProbedCapabilities(target, config);
 }

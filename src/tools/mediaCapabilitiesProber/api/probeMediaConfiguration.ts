@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import getProbedCapabilities, { ICapabilitiesTypes } from "../capabilities";
+import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import probers from "../probers";
 import { IMediaConfiguration } from "../types";
 
@@ -99,20 +99,25 @@ const probeMediaConfiguration =
       }
     }
 
-    const probedCapabilities = getProbedCapabilities(resultingAPI);
+    const probedCapabilities = getProbedConfiguration(config, resultingAPI);
+    isMaybeSupported =
+      (JSON.stringify(probedCapabilities) !== JSON.stringify(config)) || isMaybeSupported;
 
-    let status = "Maybe";
+    log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
+      "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
+      "to call them. (See DEBUG logs for details)");
+
+    log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
+      probedCapabilities);
+
     if (isNotSupported) {
-      status = "Not Supported";
+      return "Not Supported";
     } else if (isMaybeSupported) {
-      status = "Maybe";
+      return "Maybe";
     } else if (isProbablySupported) {
-      status = "Probably";
+      return "Probably";
     }
-    return {
-      probedCapabilities,
-      status,
-    };
+    return "Maybe";
   };
 
 export default probeMediaConfiguration;
