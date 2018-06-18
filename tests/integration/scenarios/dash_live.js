@@ -64,7 +64,6 @@ describe("dash live SegmentTimeline content", function () {
 
     const audioRepresentationIndex = audioRepresentation.index;
     const initAudioSegment = audioRepresentationIndex.getInitSegment();
-    expect(initAudioSegment.media).to.equal("https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctaudio_cfm4s_ridp0aa0br96257_cinit_w925796611_mpd.m4s");
     expect(initAudioSegment.id).to.equal("init");
     expect(initAudioSegment.mediaURL).to
       .equal("http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/A48/init.mp4");
@@ -75,7 +74,6 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextAudioSegment1[0].duration).to.equal(288768);
     expect(nextAudioSegment1[0].id).to.equal("73320372578304");
     expect(nextAudioSegment1[0].isInit).to.equal(false);
-    expect(nextAudioSegment1[0].media).to.equal("https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctaudio_cfm4s_ridp0aa0br96257_cs145136233968_w925796611_mpd.m4s");
     expect(nextAudioSegment1[0].time).to.equal(73320372578304);
     expect(nextAudioSegment1[0].timescale).to.equal(48000);
     expect(nextAudioSegment1[0].mediaURL).to
@@ -87,7 +85,6 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextAudioSegment2[1].duration).to.equal(287744);
     expect(nextAudioSegment2[1].id).to.equal("73320372867072");
     expect(nextAudioSegment2[1].isInit).to.equal(false);
-    expect(nextAudioSegment2[1].media).to.equal("https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctaudio_cfm4s_ridp0aa0br96257_cs145136713200_w925796611_mpd.m4s");
     expect(nextAudioSegment2[1].time).to.equal(73320372867072);
     expect(nextAudioSegment2[1].timescale).to.equal(48000);
     expect(nextAudioSegment2[1].mediaURL).to
@@ -112,7 +109,6 @@ describe("dash live SegmentTimeline content", function () {
 
     const videoRepresentationIndex = videoRepresentation.index;
     const initVideoSegment = videoRepresentationIndex.getInitSegment();
-    expect(initVideoSegment.media).to.equal("https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctvideo_cfm4s_ridp0va0br601392_cinit_w925796611_mpd.m4s");
 
     const initVideoSegment = videoRepresentationIndex.getInitSegment();
     expect(initVideoSegment.id).to.equal("init");
@@ -125,7 +121,6 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextVideoSegment1[0].duration).to.equal(540000);
     expect(nextVideoSegment1[0].id).to.equal("137475698580000");
     expect(nextVideoSegment1[0].isInit).to.equal(false);
-    expect(nextVideoSegment1[0].media).to.equal("https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctvideo_cfm4s_ridp0va0br601392_cs272130436800_w925796611_mpd.m4s");
     expect(nextVideoSegment1[0].time).to.equal(137475698580000);
     expect(nextVideoSegment1[0].timescale).to.equal(90000);
     expect(nextVideoSegment1[0].mediaURL).to
@@ -137,7 +132,6 @@ describe("dash live SegmentTimeline content", function () {
     expect(nextVideoSegment2[1].duration).to.equal(540000);
     expect(nextVideoSegment2[1].id).to.equal("137475699120000");
     expect(nextVideoSegment2[1].isInit).to.equal(false);
-    expect(nextVideoSegment2[1].media).to.equal("https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/chunk_ctvideo_cfm4s_ridp0va0br601392_cs272131336800_w925796611_mpd.m4s");
     expect(nextVideoSegment2[1].time).to.equal(137475699120000);
     expect(nextVideoSegment2[1].timescale).to.equal(90000);
     expect(nextVideoSegment2[1].mediaURL).to
