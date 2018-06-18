@@ -23,9 +23,9 @@ describe("dash live SegmentTimeline content", function () {
     mockManifestRequest(fakeServer, Mock);
     player.loadVideo({ url: Mock.manifest.url, transport: "dash" });
     expect(fakeServer.requests.length).to.equal(1);
-    await sleep(5);
+    await sleep(10);
     fakeServer.respond();
-    await sleep(5);
+    await sleep(10);
 
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
