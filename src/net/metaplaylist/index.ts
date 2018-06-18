@@ -185,7 +185,7 @@ function getTransportTypeFromSegmentPrivateInfos(
   return transportType;
 }
 
-export default function(options: ITransportOptions): ITransportPipelines {
+export default function(options?: ITransportOptions): ITransportPipelines {
 
     const transports = {
       dash: DASHTransport(options),
