@@ -49,6 +49,9 @@ import {
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
 
+type IMainAdaptations =
+  Partial<Record<IParsedAdaptationType, IParsedAdaptation>>;
+
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
@@ -288,11 +291,13 @@ export default function parseManifest(
       }
     }
 
-    const initialParsedAdaptations: IParsedAdaptations = {};
-
     // 4. Construct underlying adaptations
-    const adaptations: IParsedAdaptations = period.children.adaptations
-      .reduce((parsedAdaptations: IParsedAdaptations, adaptation) => {
+    const { adaptations } = period.children.adaptations
+      .reduce<{
+        mainAdaptations : IMainAdaptations;
+        adaptations : IParsedAdaptations;
+      }>((acc, adaptation) => {
+        const parsedAdaptations = acc.adaptations;
         const adaptationRootURL = resolveURL(periodRootURL, adaptation.children.baseURL);
         const adaptationChildren = adaptation.children;
 
@@ -558,35 +563,15 @@ export default function parseManifest(
           adaptationChildren.role || null
         );
 
-        const parsedAdaptationsForType = parsedAdaptations[type];
-        const mainAdaptation =
-          parsedAdaptationsForType ? parsedAdaptationsForType.find((_adaptation) => {
-            if (
-              _adaptation.role === "main" &&
-              type === _adaptation.type
-            ) {
-              return true;
-            }
-            return false;
-          }) : undefined;
-
-        let adaptationRole;
-
-        if (
-          adaptation.children.role &&
+        const isMainAdaptation = !!adaptation.children.role &&
           adaptation.children.role.value === "main" &&
-          adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011"
-        ) {
-          adaptationRole = "main";
-        }
+          adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011";
 
-        if (
-          mainAdaptation !== undefined &&
-          adaptationRole === "main"
-        ) {
-          mainAdaptation.representations.push(...representations);
+        const mainAdaptationForType = acc.mainAdaptations[type];
+
+        if (mainAdaptationForType !== undefined && isMainAdaptation) {
+          mainAdaptationForType.representations.push(...representations);
         } else {
-
           let closedCaption : boolean|undefined;
           let audioDescription : boolean|undefined;
 
@@ -645,7 +630,6 @@ export default function parseManifest(
             id: adaptationID,
             representations,
             type,
-            role: adaptationRole,
           };
 
           if (adaptation.attributes.language != null) {
@@ -663,18 +647,21 @@ export default function parseManifest(
           }
 
           const parsedAdaptation = parsedAdaptations[type];
-          if (parsedAdaptation) {
-            if (parsedAdaptationSet.role === "main") {
-              parsedAdaptation.unshift(parsedAdaptationSet);
-            } else {
-              parsedAdaptation.push(parsedAdaptationSet);
-            }
-          } else {
+          if (!parsedAdaptation) {
             parsedAdaptations[type] = [parsedAdaptationSet];
+          } else if (isMainAdaptation) {
+            // put "main" adaptation as the first
+            parsedAdaptation.unshift(parsedAdaptationSet);
+            acc.mainAdaptations[type] = parsedAdaptationSet;
+          } else {
+            parsedAdaptation.push(parsedAdaptationSet);
           }
         }
-        return parsedAdaptations;
-      }, initialParsedAdaptations);
+        return {
+          adaptations: parsedAdaptations,
+          mainAdaptations: acc.mainAdaptations,
+        };
+      }, { mainAdaptations: {}, adaptations: {} });
 
       const parsedPeriod : IParsedPeriod = {
         id: periodID,
