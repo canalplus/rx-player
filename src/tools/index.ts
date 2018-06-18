@@ -17,9 +17,7 @@
 import logger from "../utils/log";
 import MediaCapabilitiesProber from "./mediaCapabilitiesProber";
 
-if (__DEV__) {
-  logger.setLevel(__LOGGER_LEVEL__);
-}
+logger.setLevel(__LOGGER_LEVEL__);
 
 export {
   MediaCapabilitiesProber
