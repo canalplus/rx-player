@@ -51,16 +51,14 @@ export interface IParsedRepresentation {
   contentProtection?: IParsedContentProtection;
 }
 
-export type IParsedAdaptationType = "video"|"audio"|"text"|"image"|"metadata"|"unknown";
-
 export type IParsedAdaptations =
-  Partial<Record<IParsedAdaptationType, IParsedAdaptation[]>>;
+  Partial<Record<string, IParsedAdaptation[]>>;
 
 export interface IParsedAdaptation {
   // required
   id: string;
   representations: IParsedRepresentation[];
-  type: IParsedAdaptationType;
+  type: string;
 
   // optional
   audioDescription? : boolean;
