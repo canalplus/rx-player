@@ -32,7 +32,7 @@ import { events } from "../../../../compat";
 import config from "../../../../config";
 import log from "../../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
-import TextBufferManager from "./buffer_manager";
+import TimedDataBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";
 
 const { onEnded$,
@@ -95,7 +95,7 @@ export default class HTMLTextSourceBuffer
   private readonly _videoElement : HTMLMediaElement;
   private readonly _destroy$ : Subject<void>;
   private readonly _textTrackElement : HTMLElement;
-  private readonly _buffer : TextBufferManager;
+  private readonly _buffer : TimedDataBufferManager<HTMLElement>;
 
   private _currentElement : HTMLElement|null;
 
@@ -112,7 +112,7 @@ export default class HTMLTextSourceBuffer
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
     this._destroy$ = new Subject();
-    this._buffer = new TextBufferManager();
+    this._buffer = new TimedDataBufferManager();
     this._currentElement = null;
 
     generateClock(this._videoElement)
@@ -135,11 +135,11 @@ export default class HTMLTextSourceBuffer
           safelyRemoveChild(textTrackElement, this._currentElement);
           this._currentElement = null;
           return;
-        } else if (this._currentElement === cue.element) {
+        } else if (this._currentElement === cue.data) {
           return;
         }
         safelyRemoveChild(textTrackElement, this._currentElement);
-        this._currentElement = cue.element;
+        this._currentElement = cue.data;
         textTrackElement.appendChild(this._currentElement);
       });
   }
@@ -197,7 +197,9 @@ export default class HTMLTextSourceBuffer
       return;
     }
 
-    this._buffer.insert(cues, start, end);
+    const formattedData = cues.map((cue) =>
+      ({ start: cue.start, end: cue.end, data: cue.element, }));
+    this._buffer.insert(formattedData, start, end);
     this.buffered.insert(start, end);
   }
 

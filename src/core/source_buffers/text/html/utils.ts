@@ -15,14 +15,13 @@
  */
 
 import {
-  ICuesGroup,
-  IHTMLCue,
+  ITimedData,
+  ITimedDataSegment,
 } from "./types";
 
 /**
- * Maximum time difference, in seconds, between two text segment's start times
- * and/or end times for them to be considered the same in the custom text's
- * SourceBuffer used for the "html" textTrackMode.
+ * Maximum time difference, in seconds, between two segment's start times
+ * and/or end times for them to be considered the same.
  *
  * For example for two segments s1 and s2 which have a start time respectively
  * of st1 and st2 and end time of et1 and et2:
@@ -43,16 +42,16 @@ import {
  *
  * Setting a value too low might lead to two segments targeting the same time,
  * both being present in the SourceBuffer. In worst case scenarios, this could
- * lead to indicate that an unwanted text track is still here (theorically
+ * lead to indicate that an unwanted segment is still here (theorically
  * though, this is a case that should never happen for reasons that might be too
  * long to explain here).
  *
  * Setting a value too high might lead to two segments targeting different times
  * to be wrongly believed to target the same time. In worst case scenarios, this
- * could lead to wanted text tracks being removed.
+ * could lead to wanted segments being removed.
  * @type Number
  */
-const MAX_DELTA_BUFFER_TIME = 0.2;
+const MAX_DELTA_BUFFER_TIME : number = 0.2;
 
 /**
  * @see MAX_DELTA_BUFFER_TIME
@@ -65,58 +64,62 @@ export function areNearlyEqual(a : number, b : number) : boolean {
 }
 
 /**
- * Get all cues strictly before the given time.
- * @param {Object} cues
+ * Get all timed data strictly before the given time.
+ * @param {Array.<Object>} timedData
  * @param {Number} time
  * @returns {Array.<Object>}
  */
-export function getCuesBefore(cues : IHTMLCue[], time : number) : IHTMLCue[] {
-  for (let i = 0; i < cues.length; i++) {
-    const cue = cues[i];
-    if (time < cue.end) {
-      return cues.slice(0, i);
+export function getDataBefore<T>(
+  timedData : Array<ITimedData<T>>,
+  time : number
+) : Array<ITimedData<T>> {
+  for (let i = 0; i < timedData.length; i++) {
+    const dataElement = timedData[i];
+    if (time < dataElement.end) {
+      return timedData.slice(0, i);
     }
   }
-  return cues.slice();
+  return timedData.slice();
 }
 
 /**
- * Get all cues strictly after the given time.
- * @param {Object} cues
+ * Get all timedData strictly after the given time.
+ * @param {Object} timedData
  * @param {Number} time
  * @returns {Array.<Object>}
  */
-export function getCuesAfter(cues : IHTMLCue[], time : number) : IHTMLCue[] {
-  for (let i = 0; i < cues.length; i++) {
-    const cue = cues[i];
-    if (cue.start > time) {
-      return cues.slice(i, cues.length);
+export function getDataAfter<T>(
+  timedData : Array<ITimedData<T>>,
+  time : number
+) : Array<ITimedData<T>> {
+  for (let i = 0; i < timedData.length; i++) {
+    const dataElement = timedData[i];
+    if (dataElement.start > time) {
+      return timedData.slice(i, timedData.length);
     }
   }
   return [];
 }
 
 /**
- * @param {Object} cuesInfos
+ * @param {Object} segment
  * @param {Number} start
  * @param {Number} end
  * @returns {Array.<Object>}
  */
-export function removeCuesInfosBetween(
-  cuesInfos : ICuesGroup,
+export function removeDataInfosBetween<T>(
+  segment : ITimedDataSegment<T>,
   start : number,
   end : number
-) : [ICuesGroup, ICuesGroup] {
-  const end1 = Math.max(cuesInfos.start, start);
-  const cues1 = getCuesBefore(cuesInfos.cues, start);
-  const cuesInfos1 = { start: cuesInfos.start,
-                       end: end1,
-                       cues: cues1 };
+) : [ITimedDataSegment<T>, ITimedDataSegment<T>] {
+  const end1 = Math.max(segment.start, start);
+  const segment1 = { start: segment.start,
+                     end: end1,
+                     content: getDataBefore(segment.content, start) };
 
-  const start2 = Math.min(end, cuesInfos.end);
-  const cues2 = getCuesAfter(cuesInfos.cues, end);
-  const cuesInfos2 = { start: start2,
-                       end: cuesInfos.end,
-                       cues: cues2 };
-  return [cuesInfos1, cuesInfos2];
+  const start2 = Math.min(end, segment.end);
+  const segment2 = { start: start2,
+                     end: segment.end,
+                     content: getDataAfter(segment.content, end) };
+  return [segment1, segment2];
 }

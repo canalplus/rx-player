@@ -16,37 +16,38 @@
 
 import assert from "../../../../utils/assert";
 import {
-  ICuesGroup,
-  IHTMLCue,
+  ITimedData,
+  ITimedDataSegment,
 } from "./types";
 import {
   areNearlyEqual,
-  getCuesAfter,
-  getCuesBefore,
-  removeCuesInfosBetween,
+  getDataAfter,
+  getDataBefore,
+  removeDataInfosBetween,
 } from "./utils";
 
 /**
- * Manage the buffer of the HTML text Sourcebuffer.
- * Allows to add, remove and recuperate cues at given times.
- * @class TextBufferManager
+ * Manage the buffer of custom Sourcebuffer relying on segments of Timed data
+ * (e.g., subtitles).
+ * Allows to add, remove and recuperate data at given times.
+ * @class TimedDataBufferManager
  */
-export default class TextBufferManager {
-  private _cuesBuffer : ICuesGroup[];
+export default class TimedDataBufferManager<T> {
+  private _buffer : Array<ITimedDataSegment<T>>;
 
   constructor() {
-    this._cuesBuffer = [];
+    this._buffer = [];
   }
 
   /**
-   * Get corresponding cue for the given time.
-   * A cue is an object with three properties:
-   *   - start {Number}: start time for which the cue should be displayed.
-   *   - end {Number}: end time for which the cue should be displayed.
-   *   - element {HTMLElement}: The cue to diplay
+   * Get corresponding data for the given time.
+   * The response is an object with three properties:
+   *   - start {Number}: start time for which the data should be applied.
+   *   - end {Number}: end time for which the data should be applied.
+   *   - data {*}: The data to apply
    *
-   * We do not mutate individual cue here.
-   * That is, if the ``get`` method returns the same cue's reference than a
+   * +   * Note: The data returned here is never mutated.
+   * That is, if the ``get`` method returns the same data's reference than a
    * previous ``get`` call, its properties are guaranteed to have the exact same
    * values than before, if you did not mutate it on your side.
    * The inverse is true, if the values are the same than before, the reference
@@ -54,20 +55,20 @@ export default class TextBufferManager {
    * updated, for example).
    *
    * @param {Number} time
-   * @returns {HTMLElement|undefined} - The cue to display
+   * @returns {Object|undefined}
    */
-  get(time : number) : IHTMLCue|undefined {
-    const cuesBuffer = this._cuesBuffer;
+  get(time : number) : ITimedData<T>|undefined {
+    const buffer = this._buffer;
 
     // begins at the end as most of the time the player will ask for the last
-    // CuesGroup
-    for (let i = cuesBuffer.length - 1; i >= 0; i--) {
-      const cues = cuesBuffer[i].cues;
-      for (let j = cues.length - 1; j >= 0; j--) {
-        const cue = cues[j];
-        if (time >= cue.start) {
-          if (time < cue.end) {
-            return cue;
+    // data
+    for (let i = buffer.length - 1; i >= 0; i--) {
+      const content = buffer[i].content;
+      for (let j = content.length - 1; j >= 0; j--) {
+        const data = content[j];
+        if (time >= data.start) {
+          if (time < data.end) {
+            return data;
           } else {
             return undefined;
           }
@@ -78,7 +79,7 @@ export default class TextBufferManager {
   }
 
   /**
-   * Remove cue from a certain range of time.
+   * Remove some data from a certain range of time.
    * @param {Number} from
    * @param {Number} to
    */
@@ -90,173 +91,173 @@ export default class TextBufferManager {
     }
 
     const to = Math.max(from, _to);
-    const cuesBuffer = this._cuesBuffer;
-    const len = cuesBuffer.length;
+    const buffer = this._buffer;
+    const len = buffer.length;
     for (let i = 0; i < len; i++) {
-      if (cuesBuffer[i].end > from) {
-        const startCuesInfos = cuesBuffer[i];
+      if (buffer[i].end > from) {
+        const segmentStart = buffer[i];
 
-        if (startCuesInfos.start >= to) {
-          // our cue is strictly after this interval, we have nothing to do
+        if (segmentStart.start >= to) {
+          // our segment is strictly after this interval, we have nothing to do
           return;
         }
 
         // ``to`` is within this segment
-        if (startCuesInfos.end >= to) {
-          const [ cuesInfos1,
-                  cuesInfos2 ] = removeCuesInfosBetween(startCuesInfos, from, to);
-          this._cuesBuffer[i] = cuesInfos1;
-          cuesBuffer.splice(i + 1, 0, cuesInfos2);
+        if (segmentStart.end >= to) {
+          const [ dataGroup1,
+                  dataGroup2 ] = removeDataInfosBetween(segmentStart, from, to);
+          this._buffer[i] = dataGroup1;
+          buffer.splice(i + 1, 0, dataGroup2);
           return;
         }
 
         // Else remove the part of the segment after ``from``, and the concerned
         // segments after that
-        startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
-        startCuesInfos.end = Math.max(from, startCuesInfos.start);
+        segmentStart.content = getDataBefore(segmentStart.content, from);
+        segmentStart.end = Math.max(from, segmentStart.start);
 
         for (let j = i + 1; j < len; j++) {
-          const endCuesInfos = cuesBuffer[i];
-          if (to <= endCuesInfos.end) {
-            // remove all cues from the start to this one non-included
-            cuesBuffer.splice(i + 1, j - (i + 1));
+          const segmentEnd = buffer[i];
+          if (to <= segmentEnd.end) {
+            // remove all data from the start to this one non-included
+            buffer.splice(i + 1, j - (i + 1));
 
             // if ``to`` is in the middle of the last segment
-            if (to > endCuesInfos.start) {
-              endCuesInfos.cues = getCuesAfter(endCuesInfos.cues, to);
-              endCuesInfos.start = to;
+            if (to > segmentEnd.start) {
+              segmentEnd.content = getDataAfter(segmentEnd.content, to);
+              segmentEnd.start = to;
             }
             return;
           }
         }
-        cuesBuffer.splice(i + 1, cuesBuffer.length - (i + 1));
+        buffer.splice(i + 1, buffer.length - (i + 1));
         return;
       }
     }
   }
 
   /**
-   * Insert new cues in our text buffer.
-   * cues is an array of objects with three properties:
-   *   - start {Number}: start time for which the cue should be displayed.
-   *   - end {Number}: end time for which the cue should be displayed.
-   *   - element {HTMLElement}: The cue to diplay
+   * Insert new data in our buffer.
    *
-   * @param {Array.<Object>} cues - CuesGroups, array of objects with the
-   * following properties:
-   *   - start {Number}: the time at which the cue will start to be displayed
-   *   - end {Number}: the time at which the cue will end to be displayed
-   *   - cue {HTMLElement}: The cue
-   * @param {Number} start - Start time at which the CuesGroup applies.
-   * This is different than the start of the first cue to display in it, this
-   * has more to do with the time at which the _text segment_ starts.
-   * @param {Number} end - End time at which the CuesGroup applies.
-   * This is different than the end of the last cue to display in it, this
-   * has more to do with the time at which the _text segment_ ends.
+   * @param {Array.<Object>} content - Array of objects with the following
+   * properties:
+   *   - start {Number}: start time for which the data should be applied.
+   *   - end {Number}: end time for which the data should be applied.
+   *   - data {*}: The data to apply
+   * @param {Number} start - Start time at which this group of data applies.
+   * This is different than the start of the first item to display in it, this
+   * has more to do with the time at which the _segment_ starts.
+   * @param {Number} end - End time at which the this group of data applies.
+   * This is different than the end of the last item to display in it, this
+   * has more to do with the time at which the _segment_ ends.
    *
    * TODO add securities to ensure that:
-   *   - the start of a CuesGroup is inferior or equal to the start of the first
-   *     cue in it
-   *   - the end of a CuesGroup is superior or equal to the end of the last
-   *     cue in it
-   * If those requirements are not met, we could delete some cues when adding
-   * a CuesGroup before/after. Find a solution.
+   *   - the start of a segment is inferior or equal to the start of the first
+   *     item in it
+   *   - the end of a segment is superior or equal to the end of the last
+   *     item in it
+   * If those requirements are not met, we could delete some data when adding
+   * a segment before/after. Find a solution.
    */
-  insert(cues : IHTMLCue[], start : number, end : number) : void {
-    const cuesBuffer = this._cuesBuffer;
-    const cuesInfosToInsert = { start, end, cues };
-    for (let i = 0; i < cuesBuffer.length; i++) {
-      let cuesInfos = cuesBuffer[i];
-      if (start < cuesInfos.end) {
-        if (areNearlyEqual(start, cuesInfos.start)) {
-          if (areNearlyEqual(end, cuesInfos.end)) {
+  insert(
+    content : Array<ITimedData<T>>,
+    start : number,
+    end : number
+  ) : void {
+    const buffer = this._buffer;
+    const segmentToInsert = { start, end, content };
+    for (let i = 0; i < buffer.length; i++) {
+      let segment = buffer[i];
+      if (start < segment.end) {
+        if (areNearlyEqual(start, segment.start)) {
+          if (areNearlyEqual(end, segment.end)) {
             // exact same segment
             //   ours:            |AAAAA|
             //   the current one: |BBBBB|
             //   Result:          |AAAAA|
             // Which means:
-            //   1. replace the current cue with ours
-            cuesBuffer[i] = cuesInfosToInsert;
+            //   1. replace the current segment with ours
+            buffer[i] = segmentToInsert;
             return;
-          } else if (end < cuesInfos.end) {
-            // our cue overlaps with the current one:
+          } else if (end < segment.end) {
+            // our segment overlaps with the current one:
             //   ours:            |AAAAA|
             //   the current one: |BBBBBBBB|
             //   Result:          |AAAAABBB|
             // Which means:
-            //   1. remove some cues at the start of the current one
+            //   1. remove some content at the start of the current one
             //   2. update start of current one
             //   3. add ours before the current one
-            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-            cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            segment.content = getDataAfter(segment.content, end);
+            segment.start = end;
+            buffer.splice(i, 0, segmentToInsert);
             return;
           }
-          // our cue goes beyond the current one:
+          // our segment goes beyond the current one:
           //   ours:            |AAAAAAA|
           //   the current one: |BBBB|
           //   Result:          |AAAAAAA|
-          // Here we have to delete any cuesInfos which end before ours end,
+          // Here we have to delete any segment which end before ours end,
           // and see about the following one.
           do {
-            cuesBuffer.splice(i, 1);
-            cuesInfos = cuesBuffer[i];
-          } while (cuesInfos && end > cuesInfos.end);
+            buffer.splice(i, 1);
+            segment = buffer[i];
+          } while (segment && end > segment.end);
 
           if (
-            !cuesInfos || // There is no cue here
-            areNearlyEqual(end, cuesInfos.end) // this cue has the same end
+            !segment || // There is no segment here
+            areNearlyEqual(end, segment.end) // this segment has the same end
           ) {
             // put in place
-            cuesBuffer[i] = cuesInfosToInsert;
+            buffer[i] = segmentToInsert;
             return;
           }
-          // else -> end < cuesInfos.end (overlapping case)
+          // else -> end < segment.end (overlapping case)
           //   ours:            |AAAAA|
           //   the current one: |BBBBBBBB|
           //   Result:          |AAAAABBB|
-          cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-          cuesInfos.start = end;
-          cuesBuffer.splice(i, 0, cuesInfosToInsert);
+          segment.content = getDataAfter(segment.content, end);
+          segment.start = end;
+          buffer.splice(i, 0, segmentToInsert);
           return;
-        } else if (start < cuesInfos.start) {
-          if (end < cuesInfos.start) {
-            // our cue goes strictly before the current one:
+        } else if (start < segment.start) {
+          if (end < segment.start) {
+            // our segment goes strictly before the current one:
             //   ours:            |AAAAAAA|
             //   the current one:           |BBBB|
             //   Result:          |AAAAAAA| |BBBB|
             // Which means:
             //   - add ours before the current one
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            buffer.splice(i, 0, segmentToInsert);
             return;
-          } else if (areNearlyEqual(end, cuesInfos.start)) {
-            // our cue goes just before the current one:
+          } else if (areNearlyEqual(end, segment.start)) {
+            // our segment goes just before the current one:
             //   ours:            |AAAAAAA|
             //   the current one:         |BBBB|
             //   Result:          |AAAAAAA|BBBB|
             // Which means:
             //   - update start time of the current one to be sure
             //   - add ours before the current one
-            cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            segment.start = end;
+            buffer.splice(i, 0, segmentToInsert);
             return;
           }
-          // our cue overlaps the current one:
+          // our segment overlaps the current one:
           //   ours:            |AAAAAAA|
           //   the current one:     |BBBBB|
           //   Result:          |AAAAAAABB|
           // Which means:
-          //   1. remove some cues at the start of the current one
+          //   1. remove some data at the start of the current one
           //   2. update start of current one
           //   3. add ours before the current one
-          cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-          cuesInfos.start = end;
-          cuesBuffer.splice(i, 0, cuesInfosToInsert);
+          segment.content = getDataAfter(segment.content, end);
+          segment.start = end;
+          buffer.splice(i, 0, segmentToInsert);
           return;
         }
-        // else -> start > cuesInfos.start
-        if (end > cuesInfos.end || areNearlyEqual(end, cuesInfos.end)) {
-          // our cue overlaps the current one:
+        // else -> start > segment.start
+        if (end > segment.end || areNearlyEqual(end, segment.end)) {
+          // our segment overlaps the current one:
           //   ours:              |AAAAAA|
           //   the current one: |BBBBB|
           //   Result:          |BBAAAAAA|
@@ -265,32 +266,32 @@ export default class TextBufferManager {
           //   the current one: |BBBBBB|
           //   Result:          |BBAAAA|
           // Which means:
-          //   1. remove some cues at the end of the current one
+          //   1. remove some data at the end of the current one
           //   2. update end of current one
           //   3. add ours after current one
-          cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
-          cuesInfos.end = start;
-          cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
+          segment.content = getDataBefore(segment.content, start);
+          segment.end = start;
+          buffer.splice(i + 1, 0, segmentToInsert);
           return;
         }
-        // else -> end < cuesInfos.end
-        // our cue is in the current one:
+        // else -> end < segment.end
+        // our segment is in the current one:
         //   ours:              |AAA|
         //   the current one: |BBBBBBB|
         //   Result:          |BBAAABB|
         // Which means:
-        //   1. split current one in two parts based on our cue.
-        //   2. insert our cue into it.
-        const [ cuesInfos1,
-                cuesInfos2 ] = removeCuesInfosBetween(cuesInfos, start, end);
-        this._cuesBuffer[i] = cuesInfos1;
-        cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
-        cuesBuffer.splice(i + 2, 0, cuesInfos2);
+        //   1. split current one in two parts based on our segment.
+        //   2. insert our segment into it.
+        const [ dataGroup1,
+                dataGroup2 ] = removeDataInfosBetween(segment, start, end);
+        this._buffer[i] = dataGroup1;
+        buffer.splice(i + 1, 0, segmentToInsert);
+        buffer.splice(i + 2, 0, dataGroup2);
         return;
       }
     }
-    // no cues group has the end after our current start.
-    // These cues should be the last one
-    cuesBuffer.push(cuesInfosToInsert);
+    // no segment has the end after our current start.
+    // These should be the last one
+    buffer.push(segmentToInsert);
   }
 }
