@@ -41,6 +41,10 @@ MetaPlaylist has several advantages. Some of them are:
   - this file rarely needs to be updated, improving the caching of this
     ressource.
 
+  - it manages "overlays" in its specification, which are images to display on
+    top of the current content at certain points in time (e.g.: the content
+    rating and/or the channel logo).
+
   - its format is extremely simple and in JSON, which is easy to integrate with
     JavaScript codebases. The file can even be very easily generated directly on
     the client's page. This paves the way for contents personalized to a single

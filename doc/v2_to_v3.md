@@ -732,10 +732,10 @@ seconds in argument.
 The only difference is that you cannot discriminate by type of buffer
 (audio/video) anymore. This is for done for multiple reasons:
 
-  - There are more than two types of buffers (for now there are four: audio,
-    video, text and image). Adding one methods per type could be cumbersome for
-    the user (for example, when wanting to set the limit for three or four of
-    them)
+  - There are more than two types of buffers (for now there are: audio, video,
+    text, image and overlay). Adding one methods per type could be cumbersome
+    for the user (for example, when wanting to set the limit for three or four
+    of them)
 
   - More buffer-related APIs were added which are type-agnostic. Adding one
     A per-type would be heavy both for the rx-player and for the application
@@ -754,7 +754,7 @@ The only difference is that you cannot discriminate by type of buffer
 // In the previous version
 player.setVideoBufferSize(15);
 
-// becomes (also affect audio, text and image buffer)
+// becomes (also affect audio, text and other buffers)
 player.setWantedBufferAhead(15);
 ```
 
@@ -764,7 +764,7 @@ player.setWantedBufferAhead(15);
 // In the previous version
 player.setAudioBufferSize(10);
 
-// becomes (also affect video, text and image buffer)
+// becomes (also affect video, text and other buffers)
 player.setWantedBufferAhead(10);
 ```
 
