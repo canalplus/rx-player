@@ -108,7 +108,6 @@ describe("dash live SegmentTimeline content", function () {
     expect(typeof videoRepresentation.index).to.equal("object");
 
     const videoRepresentationIndex = videoRepresentation.index;
-    const initVideoSegment = videoRepresentationIndex.getInitSegment();
 
     const initVideoSegment = videoRepresentationIndex.getInitSegment();
     expect(initVideoSegment.id).to.equal("init");
