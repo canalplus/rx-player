@@ -1481,8 +1481,8 @@ _return value_: ``Object|null``
 
 Returns the [Adaptations](../terms.md#adaptation) being loaded per type if a
 [Manifest](../terms.md#manifest) is loaded. The returned object will have at
-most a key for each type ("video", "audio", "text" and "image") which will each
-contain an array of Adaptation Objects.
+most a key for each type ("video", "audio", "text", "overlay" and "image") which
+will each contain an array of Adaptation Objects.
 
 The Adaptation object structure is relatively complex and is described in the
 [Manifest Object structure page](./manifest.md#adaptation).
@@ -1500,8 +1500,8 @@ _return value_: ``Object|null``
 
 Returns the [Representations](../terms.md#representation) being loaded per type
 if a [Manifest](../terms.md#manifest) is loaded. The returned object will have
-at most a key for each type ("video", "audio", "text" and "image") which will
-each contain an array of Representation Objects.
+at most a key for each type ("video", "audio", "text", "overlay" and "image")
+which will each contain an array of Representation Objects.
 
 An Representation object structure is relatively complex and is described in the
 [Manifest Object structure page](./manifest.md#representation).
