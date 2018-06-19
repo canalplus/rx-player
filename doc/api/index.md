@@ -1346,8 +1346,8 @@ The manifest will be available before the player reaches the ``"LOADED"`` state.
 _return value_: ``Object|null``
 
 Returns the Adaptations being loaded per type if a manifest is loaded. The
-returned object will have at most a key for each type ("video", "audio", "text"
-and "image") which will each contain an array of Adaptation Objects.
+returned object will have at most a key for each type (e.g. "video", "audio",
+"text", "image") which will each contain an array of Adaptation Objects.
 
 An Adaptation object structure is relatively complex and is described in the
 [Manifest Object structure page](./manifest.md#adaptation).
@@ -1364,8 +1364,8 @@ options](./loadVideo_options.md#prop-transport)).
 _return value_: ``Object|null``
 
 Returns the Representations being loaded per type if a manifest is loaded. The
-returned object will have at most a key for each type ("video", "audio", "text"
-and "image") which will each contain an array of Representation Objects.
+returned object will have at most a key for each type (e.g. "video", "audio",
+"text", "image") which will each contain an array of Representation Objects.
 
 An Representation object structure is relatively complex and is described in the
 [Manifest Object structure page](./manifest.md#representation).
