@@ -14,236 +14,233 @@
  * limitations under the License.
  */
 
-import { IHTMLCue } from "../types";
 import {
   areNearlyEqual,
-  getCuesAfter,
-  getCuesBefore,
-  removeCuesInfosBetween,
+  getDataAfter,
+  getDataBefore,
+  removeDataInfosBetween,
 } from "../utils";
 
-describe("HTML Buffer Manager utils - getCuesBefore", () => {
-  it("should get the right cues when time is the start of a cue", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 0, end: 1, element },
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
+describe("Buffer Manager utils - getDataBefore", () => {
+  it("should get the right content when time is the start of one", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 0, end: 1, data },
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
     ];
 
-    expect(getCuesBefore(cues, 1)).toEqual([
-      { start: 0, end: 1, element },
+    expect(getDataBefore(content, 1)).toEqual([
+      { start: 0, end: 1, data },
     ]);
   });
 
-  it("should get the right cues when time is between start and end of a cue", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 0, end: 1, element },
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
+  it("should get the right content when time is between start and end of one", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 0, end: 1, data },
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
     ];
 
-    expect(getCuesBefore(cues, 1.5)).toEqual([
-      { start: 0, end: 1, element },
+    expect(getDataBefore(content, 1.5)).toEqual([
+      { start: 0, end: 1, data },
     ]);
   });
 
-  it("should get the right cues when time is the end of a cue", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 0, end: 1, element },
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
+  it("should get the right content when time is the end of one", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 0, end: 1, data },
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
     ];
 
-    expect(getCuesBefore(cues, 2)).toEqual([
-      { start: 0, end: 1, element },
-      { start: 1, end: 2, element },
+    expect(getDataBefore(content, 2)).toEqual([
+      { start: 0, end: 1, data },
+      { start: 1, end: 2, data },
     ]);
   });
 
-  it("should get the right cues when time is between two cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 0, end: 1, element },
-      { start: 1, end: 2, element },
-      { start: 3, end: 4, element },
+  it("should get the right content when time is between two contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 0, end: 1, data },
+      { start: 1, end: 2, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesBefore(cues, 2.5)).toEqual([
-      { start: 0, end: 1, element },
-      { start: 1, end: 2, element },
+    expect(getDataBefore(content, 2.5)).toEqual([
+      { start: 0, end: 1, data },
+      { start: 1, end: 2, data },
     ]);
   });
 
-  it("should return empty array when time is before all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should return empty array when time is before all contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesBefore(cues, 0)).toEqual([]);
+    expect(getDataBefore(content, 0)).toEqual([]);
   });
 
-  it("should return empty array when time is the start of all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should return empty array when time is the start of all contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesBefore(cues, 1)).toEqual([]);
+    expect(getDataBefore(content, 1)).toEqual([]);
   });
 
-  it("should get the right cues when time is after all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should get the right content when time is after all contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesBefore(cues, 4.5)).toEqual([
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+    expect(getDataBefore(content, 4.5)).toEqual([
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ]);
   });
 
-  it("should get the right cues when time is the end of all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should get the right content when time is the end of all contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesBefore(cues, 4)).toEqual([
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+    expect(getDataBefore(content, 4)).toEqual([
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ]);
   });
 
-  it("should return empty array if no given cues", () => {
-    const cues: IHTMLCue[] = [];
-    expect(getCuesBefore(cues, 3945)).toEqual([]);
+  it("should return empty array if no content was given", () => {
+    expect(getDataBefore([], 3945)).toEqual([]);
   });
 });
 
-describe("HTML Buffer Manager utils - getCuesAfter", () => {
-  it("should get the right cues when time is between start and end of a cue", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+describe("Buffer Manager utils - getDataAfter", () => {
+  it("should get the right content when time is between start and end of one", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesAfter(cues, 2.5)).toEqual([
-      { start: 3, end: 4, element },
+    expect(getDataAfter(content, 2.5)).toEqual([
+      { start: 3, end: 4, data },
     ]);
   });
 
-  it("should get the right cues when time is a cue start", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should get the right content when time is the start of one", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesAfter(cues, 2)).toEqual([
-      { start: 3, end: 4, element },
+    expect(getDataAfter(content, 2)).toEqual([
+      { start: 3, end: 4, data },
     ]);
   });
 
-  it("should return an empty arraywhen time is a cue end", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should return an empty array when time is the start of the last content", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesAfter(cues, 3)).toEqual([]);
+    expect(getDataAfter(content, 3)).toEqual([]);
   });
 
-  it("should get the right cues when time is before the start of all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should get the right content when time is before the start of all contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesAfter(cues, 0)).toEqual([
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+    expect(getDataAfter(content, 0)).toEqual([
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ]);
   });
 
-  it("should get the right cues when time is the start of all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should get the right content when time is the start of the first content", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesAfter(cues, 1)).toEqual([
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+    expect(getDataAfter(content, 1)).toEqual([
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ]);
   });
 
-  it("should return an empty arraywhen time is the end of all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should return an empty array when time is the end of the last content", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesAfter(cues, 4)).toEqual([]);
+    expect(getDataAfter(content, 4)).toEqual([]);
   });
 
-  it("should return an empty arraywhen time is after the end of all cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
+  it("should return an empty array when time is after the end of all contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
     ];
 
-    expect(getCuesAfter(cues, 5)).toEqual([]);
+    expect(getDataAfter(content, 5)).toEqual([]);
   });
 
-  it("should get the right cues when time is between two cues", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 4, end: 5, element },
+  it("should get the right content when time is between two contents", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 4, end: 5, data },
     ];
 
-    expect(getCuesAfter(cues, 3.5)).toEqual([
-      { start: 4, end: 5, element },
+    expect(getDataAfter(content, 3.5)).toEqual([
+      { start: 4, end: 5, data },
     ]);
   });
 
-  it("should return an empty array when no cues are given", () => {
-    const cues: IHTMLCue[] = [];
-    expect(getCuesAfter(cues, 1418)).toEqual([]);
+  it("should return an empty array when no content is given", () => {
+    expect(getDataAfter([], 1418)).toEqual([]);
   });
 });
 
-describe("HTML Buffer Manager utils - areNearlyEqual", () => {
+describe("Buffer Manager utils - areNearlyEqual", () => {
   it("should return false if input number are not nearly equals", () => {
     expect(areNearlyEqual(5, 6)).toBe(false);
   });
@@ -257,68 +254,72 @@ describe("HTML Buffer Manager utils - areNearlyEqual", () => {
   });
 });
 
-describe("HTML Buffer Manager utils - removeCuesInfosBetween", () => {
-  it("should remove cues infos between end of a cue and start of another cue", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
-      { start: 4, end: 5, element },
-      { start: 5, end: 6, element },
+describe("Buffer Manager utils - removeDataInfosBetween", () => {
+  /* tslint:disable max-line-length */
+  it("should remove content infos between end of an element and start of another one", () => {
+  /* tslint:enable max-line-length */
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
+      { start: 4, end: 5, data },
+      { start: 5, end: 6, data },
     ];
 
     const cueInfo = {
       start: 1,
       end: 6,
-      cues,
+      content,
     };
 
-    expect(removeCuesInfosBetween(cueInfo, 2, 5)).toEqual([
-      { cues: [{ start: 1, end: 2, element }], start: 1, end: 2 },
-      { cues: [], start: 5, end: 6 },
+    expect(removeDataInfosBetween(cueInfo, 2, 5)).toEqual([
+      { content: [{ start: 1, end: 2, data }], start: 1, end: 2 },
+      { content: [], start: 5, end: 6 },
     ]);
   });
 
-  it("should remove cues infos between middle of a cue and middle of another cue", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
-      { start: 4, end: 5, element },
-      { start: 5, end: 6, element },
+  /* tslint:disable max-line-length */
+  it("should remove content infos between middle of an element and middle of another one", () => {
+  /* tslint:enable max-line-length */
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 2, end: 3, data },
+      { start: 3, end: 4, data },
+      { start: 4, end: 5, data },
+      { start: 5, end: 6, data },
     ];
 
     const cueInfo = {
       start: 1,
       end: 6,
-      cues,
+      content,
     };
 
-    expect(removeCuesInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
-      { cues: [{ start: 1, end: 2, element }], start: 1, end: 2.5 },
-      { cues: [{ start: 5, end: 6, element }], start: 4.5, end: 6 },
+    expect(removeDataInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
+      { content: [{ start: 1, end: 2, data }], start: 1, end: 2.5 },
+      { content: [{ start: 5, end: 6, data }], start: 4.5, end: 6 },
     ]);
   });
 
-  it("should remove cues infos between two cue gaps", () => {
-    const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 3, end: 4, element },
-      { start: 5, end: 6, element },
+  it("should remove content infos between two element gaps", () => {
+    const data = document.createElement("div");
+    const content = [
+      { start: 1, end: 2, data },
+      { start: 3, end: 4, data },
+      { start: 5, end: 6, data },
     ];
 
     const cueInfo = {
       start: 1,
       end: 6,
-      cues,
+      content,
     };
 
-    expect(removeCuesInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
-      { cues: [{ start: 1, end: 2, element }], start: 1, end: 2.5 },
-      { cues: [{ start: 5, end: 6, element }], start: 4.5, end: 6 },
+    expect(removeDataInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
+      { content: [{ start: 1, end: 2, data }], start: 1, end: 2.5 },
+      { content: [{ start: 5, end: 6, data }], start: 4.5, end: 6 },
     ]);
   });
 });
