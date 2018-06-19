@@ -171,7 +171,7 @@ it is the current last content of the current Manifest.
 _type_: ``Object``
 
 The [Adaptations](../terms.md#adaptation) (tracks if you want) for the current
-content, per-type (audio/video/text/image).
+content, per-type (audio/video/text/overlay/image).
 
 See [the Adaptation chapter](#adaptation) for more info about an Adaptation's
 structure.
@@ -180,6 +180,7 @@ The Adaptation object _can_ contain any of the following keys:
   - audio (``Array.<Adaptation>``): The audio Adaptation(s) available.
   - video (``Array.<Adaptation>``): The video Adaptation(s) available.
   - text (``Array.<Adaptation>``): The text Adaptation(s) available.
+  - overlay (``Array.<Adaptation>``): The overlay Adaptation(s) available.
   - image (``Array.<Adaptation>``): The image Adaptation(s) available.
 
 
@@ -213,6 +214,7 @@ The type of the Adaptation. The possible types are:
   - ``"video"``
   - ``"audio"``
   - ``"text"``
+  - ``"overlay"``
   - ``"image"``
 
 #### language
