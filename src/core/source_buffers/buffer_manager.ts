@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import assert from "../../../../utils/assert";
-import {
-  ITimedData,
-  ITimedDataSegment,
-} from "./types";
+import assert from "../../utils/assert";
 import {
   areNearlyEqual,
   getDataAfter,
   getDataBefore,
   removeDataInfosBetween,
-} from "./utils";
+} from "./buffer_manager_utils";
+import {
+  ITimedData,
+  ITimedDataSegment,
+} from "./types";
 
 /**
  * Manage the buffer of custom Sourcebuffer relying on segments of Timed data
