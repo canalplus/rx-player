@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-export interface IHTMLCue { start : number;
-                            end : number;
-                            element : HTMLElement; }
+export interface ITimedData<T> { start : number;
+                                 end : number;
+                                 data : T; }
 
-export interface ICuesGroup { start : number;
-                              end : number;
-                              cues : IHTMLCue[]; }
+export interface ITimedDataSegment<T> { start : number;
+                                        end : number;
+                                        content : Array<ITimedData<T>>; }
