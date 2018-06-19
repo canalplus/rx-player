@@ -144,9 +144,9 @@ declare class VTTCue {
   align : string;
   endTime : number;
   id : string;
-  line : string;
+  line : number|"auto";
   lineAlign : string;
-  position : number|string;
+  position : number|"auto";
   positionAlign : string;
   size : number|string;
   snapToLines : boolean;
