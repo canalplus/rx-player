@@ -23,7 +23,7 @@ import Period from "../period";
 export type IMetaPlaylistTransportTypePrivateInfos = string;
 
 export interface ISmoothInitSegmentPrivateInfos {
-  codecPrivateData? : string;
+  codecPrivateData : string;
   bitsPerSample? : number;
   channels? : number;
   packetSize? : number;
