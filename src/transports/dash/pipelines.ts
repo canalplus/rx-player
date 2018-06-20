@@ -257,11 +257,22 @@ export default function(
     },
   };
 
+  const overlayTrackPipeline = {
+    loader() : never {
+      throw new Error("Overlay tracks not managed in DASH");
+    },
+
+    parser() : never {
+      throw new Error("Overlay tracks not yet in DASH");
+    },
+  };
+
   return {
     manifest: manifestPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,
     image: imageTrackPipeline,
+    overlay: overlayTrackPipeline,
   };
 }

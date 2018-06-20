@@ -39,7 +39,8 @@ const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config;
 export type IBufferType = "audio" |
                           "video" |
                           "text" |
-                          "image";
+                          "image" |
+                          "overlay";
 
 enum SourceBufferAction { Append,
                           Remove }

@@ -423,12 +423,23 @@ export default function(
     },
   };
 
+  const overlayTrackPipeline = {
+    loader() : never {
+      throw new Error("Overlay tracks not managed in HSS");
+    },
+
+    parser() : never {
+      throw new Error("Overlay tracks not yet in HSS");
+    },
+  };
+
   return {
     manifest: manifestPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,
     image: imageTrackPipeline,
+    overlay: overlayTrackPipeline,
   };
 }
 

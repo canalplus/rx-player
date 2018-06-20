@@ -21,7 +21,10 @@ describe("Features list - METAPLAYLIST", () => {
 
   it("should add METAPLAYLIST in the current features", () => {
     const feat = {};
-    jest.mock("../../../transports/metaplaylist", () => ({ default: feat }));
+    jest.mock("../../../transports/metaplaylist", () => ({
+      __esModule: true,
+      default: feat,
+    }));
     const addDASHFeature = require("../metaplaylist").default;
 
     const featureObject : {

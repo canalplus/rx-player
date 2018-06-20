@@ -289,11 +289,22 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     },
   };
 
+  const overlayTrackPipeline = {
+    loader() : never {
+      throw new Error("Overlay tracks not managed in HSS");
+    },
+
+    parser() : never {
+      throw new Error("Overlay tracks not yet in HSS");
+    },
+  };
+
   return {
     manifest: manifestPipeline,
     audio: audioPipeline,
     video: videoPipeline,
     text: textTrackPipeline,
     image: imageTrackPipeline,
+    overlay: overlayTrackPipeline,
   };
 }

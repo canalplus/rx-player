@@ -205,6 +205,36 @@ export type ImageParserObservable = Observable<{
                           // "real" wanted effective times.
 }>;
 
+export interface IMetaplaylistOverlayData {
+  start : number;
+  end : number;
+  version : number;
+  elements : Array<{
+    url : string;
+    format : string;
+    xAxis : string;
+    yAxis : string;
+    height : string;
+    width : string;
+  }>;
+}
+
+export interface IOverlayTrackSegmentData {
+  data : IMetaplaylistOverlayData[]; // overlay track data, in the given type
+  end : number; // end time time until which the segment apply
+  start : number; // start time from which the segment apply
+  timeOffset : number; // time offset, in seconds, to add to each overlay
+  timescale : number; // timescale to convert the start and end into seconds
+  type : string; // the type of the data
+}
+
+export type IOverlayParserObservable = Observable<{
+  segmentData : IOverlayTrackSegmentData|null;
+  segmentInfos : ISegmentTimingInfos;
+}>;
+
+// -- Pipelines
+
 export interface ITransportManifestPipeline {
   // TODO Remove resolver
   resolver? : (x : IManifestLoaderArguments) =>
@@ -248,13 +278,29 @@ export interface ITransportImageSegmentPipeline {
                                          null >) => ImageParserObservable;
 }
 
+export interface ITransportOverlaySegmentPipeline {
+  // Note: The segment's data can be null for init segments
+  loader : (x : ISegmentLoaderArguments) =>
+    ILoaderObservable<Uint8Array|ArrayBuffer|null>;
+  parser : (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
+    IOverlayParserObservable;
+}
+
 export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |
                                         ITransportVideoSegmentPipeline |
                                         ITransportTextSegmentPipeline |
-                                        ITransportImageSegmentPipeline;
+                                        ITransportImageSegmentPipeline |
+                                        ITransportOverlaySegmentPipeline;
 
 export type ITransportPipeline = ITransportManifestPipeline |
                                  ITransportSegmentPipeline;
+
+export interface ITransportPipelines { manifest : ITransportManifestPipeline;
+                                       audio : ITransportAudioSegmentPipeline;
+                                       video : ITransportVideoSegmentPipeline;
+                                       text : ITransportTextSegmentPipeline;
+                                       image : ITransportImageSegmentPipeline;
+                                       overlay : ITransportOverlaySegmentPipeline; }
 
 export interface ITransportPipelines { manifest : ITransportManifestPipeline;
                                        audio : ITransportAudioSegmentPipeline;

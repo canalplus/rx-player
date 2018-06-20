@@ -121,7 +121,7 @@ export default {
    */
   MAXIMUM_MAX_BUFFER_AHEAD: {
     text: 5 * 60 * 60,
-  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  } as Partial<Record<"audio"|"video"|"image"|"text"|"overlay", number>>,
   /* tslint:enable no-object-literal-type-assertion */
 
   /* tslint:disable no-object-literal-type-assertion */
@@ -133,7 +133,7 @@ export default {
    */
   MAXIMUM_MAX_BUFFER_BEHIND: {
     text: 5 * 60 * 60,
-  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  } as Partial<Record<"audio"|"video"|"image"|"text"|"overlay", number>>,
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
@@ -151,7 +151,7 @@ export default {
   DEFAULT_INITIAL_BITRATES: {
     audio: 0, // only "audio" segments
     video: 0, // only "video" segments
-    other: 0, // tracks which are not audio/video (text images).
+    other: 0, // tracks which are not audio/video (text, images, overlay).
               // Though those are generally at a single bitrate, so no adaptive
               // mechanism is triggered for them.
   },
@@ -563,6 +563,23 @@ export default {
   MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
 
   /**
+   * Maximum interval at which an optional overlay image(s) is refreshed.
+   *
+   * It also refreshed on various video events, this interval will only
+   * trigger a refresh if none of those events was received during that
+   * timespan.
+   *
+   * Note that if the overlay image(s) did not change between two intervals or
+   * events, the DOM won't be refreshed.
+   *
+   * We should thus not have much of a performance impact here if we set a low
+   * interval.
+   *
+   * @type {Number}
+   */
+  MAXIMUM_OVERLAY_TRACK_UPDATE_INTERVAL: 100,
+
+  /**
    * The Buffer padding is a time offset from the current time that affects
    * the buffer.
    *
@@ -585,7 +602,7 @@ export default {
     video: { high: 3,
              low: 2 }, // only "video" segments
     other: { high: 1,
-             low: 1 }, // tracks which are not audio/video (text images).
+             low: 1 }, // tracks which are not audio/video (text, images, overlay)
   },
 
   /**
@@ -726,6 +743,7 @@ export default {
     audio: { before: 0.5, after: 2 },
     text: { before: 0, after: 0 }, // not managed natively, so no problem here
     image: { before: 0, after: 0 }, // not managed natively, so no problem here
+    overlay: { before: 0, after: 0 }, // not managed natively, so no problem here
   },
 
   /**

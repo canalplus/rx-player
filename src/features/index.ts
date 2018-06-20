@@ -47,7 +47,9 @@ const features : IFeaturesObject = { transports: {},
                                      htmlTextTracksBuffer: null,
                                      htmlTextTracksParsers: {},
                                      emeManager: null,
-                                     directfile: null };
+                                     directfile: null,
+                                     overlayParsers: {},
+                                     overlayBuffer: null, };
 
 export default features;
 export {
