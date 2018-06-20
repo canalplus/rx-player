@@ -47,6 +47,7 @@ import SourceBuffersManager, {
   BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../source_buffers";
@@ -120,6 +121,7 @@ export default function BufferOrchestrator(
     offlineRetry? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
     manualBitrateSwitchingMode : "seamless"|"direct";
+    overlayOptions? : IOverlaySourceBufferOptions;
   }
 ) : Observable<IBufferOrchestratorEvent> {
   const { manifest, initialPeriod } = content;

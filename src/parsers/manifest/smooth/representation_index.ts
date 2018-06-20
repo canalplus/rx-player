@@ -354,7 +354,7 @@ export default class SmoothRepresentationIndex
           smoothInit: {
             bitsPerSample: this._bitsPerSample,
             channels: this._channels,
-            codecPrivateData: this._codecPrivateData,
+            codecPrivateData: this._codecPrivateData || "",
             packetSize: this._packetSize,
             samplingRate: this._samplingRate,
             protection: this._protection,

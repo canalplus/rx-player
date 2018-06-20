@@ -27,10 +27,10 @@ import uniq from "../utils/uniq";
 import filterSupportedRepresentations from "./filter_supported_representations";
 import Representation from "./representation";
 
-export type IAdaptationType = "video"|"audio"|"text"|"image";
+export type IAdaptationType = "video"|"audio"|"text"|"image"|"overlay";
 
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
-  ["audio", "video", "text", "image"];
+  ["audio", "video", "text", "image", "overlay"];
 
 function isSupportedAdaptationType(
   adaptationType : string
