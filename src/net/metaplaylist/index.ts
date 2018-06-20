@@ -15,7 +15,10 @@
  */
 
 import objectAssign from "object-assign";
-import { combineLatest } from "rxjs";
+import {
+  combineLatest,
+  of as observableOf,
+} from "rxjs";
 import {
   filter,
   map,
@@ -33,6 +36,7 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
+  IOverlayParserObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ITransportOptions,
@@ -70,6 +74,20 @@ interface IMetaPlaylist {
   attributes: {
     timeShiftBufferDepth: number;
   };
+  overlays: Array<{
+    start : number;
+    end : number;
+    version : number;
+    timescale : number;
+    elements : Array<{
+      url : string;
+      format : string;
+      xAxis : string;
+      yAxis : string;
+      height : string;
+      width : string;
+    }>;
+  }>;
 }
 
 /**
@@ -84,7 +102,7 @@ function parseMetaPlaylistData(data: string): IMetaPlaylist {
   } catch (error) {
     throw new Error("Bad MetaPlaylist file. Expected JSON.");
   }
-  const { contents, attributes } = parsedMetaPlaylist;
+  const { contents, attributes, overlays } = parsedMetaPlaylist;
   if (!Array.isArray(contents)) {
     throw new Error("Bad metaplaylist file.");
   }
@@ -115,7 +133,7 @@ function parseMetaPlaylistData(data: string): IMetaPlaylist {
     }
   });
 
-  return { contents, attributes };
+  return { contents, attributes, overlays };
 }
 
 /**
@@ -211,7 +229,11 @@ export default function(options?: ITransportOptions): ITransportPipelines {
         if (typeof response.responseData !== "string") {
           throw new Error("Parser input must be string.");
         }
-        const { contents, attributes } = parseMetaPlaylistData(response.responseData);
+        const {
+          contents,
+          attributes,
+          overlays,
+        } = parseMetaPlaylistData(response.responseData);
         const contents$ = contents.map((content) => {
           const transport = transports[content.transport];
           if (transport == null) {
@@ -245,7 +267,12 @@ export default function(options?: ITransportOptions): ITransportPipelines {
         return combineLatest(contents$)
           .pipe(
             map((combinedContents) => {
-              const manifest = parseMetaManifest(combinedContents, attributes, url);
+              const manifest = parseMetaManifest(
+                combinedContents,
+                attributes,
+                overlays,
+                url
+              );
               return {
                 manifest,
                 url,
@@ -363,12 +390,41 @@ export default function(options?: ITransportOptions): ITransportPipelines {
     };
 
   const overlayTrackPipeline = {
-    loader() : never {
-      throw new Error("Overlay tracks not managed in DASH");
+    loader() : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
+      // For now, nothing is downloaded.
+      // Everything is parsed from the segment
+      return observableOf({
+        type: "data" as "data",
+        value: { responseData: null },
+      });
     },
 
-    parser() : never {
-      throw new Error("Overlay tracks not yet in DASH");
+    parser(
+      args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
+    ) : IOverlayParserObservable {
+      const { segment } = args;
+      const { privateInfos } = segment;
+      if (!privateInfos || privateInfos.overlayInfos == null) {
+        throw new Error("An overlay segment should have private infos.");
+      }
+      const { overlayInfos } = privateInfos;
+      const end = segment.duration != null ?
+        segment.duration - segment.time : overlayInfos.end;
+      return observableOf({
+        segmentInfos: {
+          time: segment.time,
+          duration: segment.duration,
+          timescale: segment.timescale,
+        },
+        segmentData: {
+          data: [overlayInfos],
+          start: segment.time,
+          end,
+          type: "metaplaylist",
+          timeOffset: 0,
+          timescale: segment.timescale,
+        },
+      });
     },
   };
 
