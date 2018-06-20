@@ -27,6 +27,7 @@ import {
   IParsedManifest,
   IParsedPeriod,
 } from "../types";
+import OverlayRepresentationIndex from "./overlay_representation_index";
 import MetaRepresentationIndex from "./representation_index";
 
 export type AdaptationType = "video"|"audio"|"text"|"image";
@@ -57,6 +58,20 @@ export default function parseMetaManifest(
   attributes: {
     timeShiftBufferDepth: number;
   },
+  overlays: Array<{
+    start : number;
+    end : number;
+    timescale : number;
+    version : number;
+    elements : Array<{
+      url : string;
+      format : string;
+      xAxis : string;
+      yAxis : string;
+      height : string;
+      width : string;
+    }>;
+  }>,
   baseURL: string
 ): IParsedManifest {
 
@@ -165,6 +180,18 @@ export default function parseMetaManifest(
 
     newPeriods.push(parsedPeriod);
   }
+
+  newPeriods.forEach(period => {
+    period.adaptations.overlay = [{
+      id: "ada_ov_" + generateNewId(),
+      type: "overlay",
+      representations: [{
+        id: "rep_ov_" + generateNewId(),
+        bitrate: 0,
+        index: new OverlayRepresentationIndex(overlays, period.start, period.end),
+      }],
+    }];
+  });
 
   const manifest = {
     availabilityStartTime: 0,
