@@ -27,7 +27,7 @@ import log from "../../log";
 import ICustomTimeRanges from "./time_ranges";
 
 // Every QueuedSourceBuffer types
-export type IBufferType = "audio"|"video"|"text"|"image";
+export type IBufferType = "audio"|"video"|"text"|"image"|"overlay";
 
 enum SourceBufferAction { Append, Remove }
 

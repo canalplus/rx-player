@@ -53,6 +53,7 @@ import {
 } from "../pipelines";
 import {
   IBufferType,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createEMEManager, {
@@ -120,8 +121,11 @@ export interface IStreamOptions {
   };
   speed$ : Observable<number>;
   startAt? : IInitialTimeOptions;
-  textTrackOptions : ITextTrackSourceBufferOptions;
   transport : IManifestTransportInfos;
+  sourceBufferOptions?: {
+    text?: ITextTrackSourceBufferOptions;
+    overlay?: IOverlaySourceBufferOptions;
+  };
   url : string;
 }
 
@@ -157,7 +161,7 @@ export default function Stream({
   networkConfig,
   speed$,
   startAt,
-  textTrackOptions,
+  sourceBufferOptions,
   transport,
   url,
 } : IStreamOptions) : Observable<IStreamEvent> {
@@ -235,9 +239,10 @@ export default function Stream({
       abrManager,
       segmentPipelinesManager,
       bufferOptions: objectAssign({
-        textTrackOptions,
         offlineRetry: networkConfig.offlineRetry,
         segmentRetry: networkConfig.segmentRetry,
+        textTrackOptions: sourceBufferOptions && sourceBufferOptions.text,
+        overlayOptions: sourceBufferOptions && sourceBufferOptions.overlay,
       }, bufferOptions),
     });
 

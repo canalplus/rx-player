@@ -282,6 +282,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       video? : number;
       text? : number;
       image? : number;
+      overlay? : number;
     };
 
     /**
@@ -293,6 +294,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       video : number; // has a default in the config
       text? : number;
       image? : number;
+      overlay? : number;
     };
 
     /**
@@ -304,6 +306,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       video : number; // has a default in the config
       text? : number;
       image? : number;
+      overlay? : number;
     };
   };
 
@@ -760,6 +763,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         textTrackElement: options.textTrackElement,
       };
 
+      const overlayOptions = options.overlayElement != null ?
+        { overlayElement: options.overlayElement } : undefined;
+
       // Stream Observable, through which the content will be launched.
       stream = Stream({
         adaptiveOptions,
@@ -773,7 +779,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         networkConfig,
         speed$: this._priv_speed$,
         startAt,
-        textTrackOptions,
+        sourceBufferOptions: {
+          text: textTrackOptions,
+          overlay: overlayOptions,
+        },
         transport: {
           pipelines,
           options: {
