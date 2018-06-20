@@ -26,6 +26,7 @@ import {
   IParsedManifest,
   IParsedPeriod,
 } from "../types";
+import OverlayRepresentationIndex from "./overlay_representation_index";
 import MetaRepresentationIndex from "./representation_index";
 
 export type AdaptationType = "video"|"audio"|"text"|"image";
@@ -48,6 +49,21 @@ export interface IMetaPlaylistTextTrack {
   codecs? : string;
 }
 
+export interface IMetaPlaylistOverlay {
+  start : number;
+  end : number;
+  timescale : number;
+  version : number;
+  elements : Array<{
+    url : string;
+    format : string;
+    xAxis : string;
+    yAxis : string;
+    height : string;
+    width : string;
+  }>;
+}
+
 export interface IMetaPlaylist {
   contents: Array<{
     url: string;
@@ -60,6 +76,7 @@ export interface IMetaPlaylist {
     version : string;
     timeShiftBufferDepth? : number;
     dynamic? : boolean;
+    overlays? : IMetaPlaylistOverlay[];
   };
 }
 
@@ -239,6 +256,22 @@ function createManifest(
       } else {
         duration += currentDuration;
       }
+    }
+  }
+
+  const { overlays } = mplData.attributes;
+  if (overlays != null && overlays.length > 0) {
+    for (let i = 0; i < periods.length; i++) {
+      const period = periods[i];
+      period.adaptations.overlay = [{
+        id: formatId(period.id) + "_" + "ada_ov",
+        type: "overlay",
+        representations: [{
+          id: "rep_ov_" + generateNewId(),
+          bitrate: 0,
+          index: new OverlayRepresentationIndex(overlays, period.start, period.end),
+        }],
+      }];
     }
   }
 
