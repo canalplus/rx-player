@@ -98,6 +98,7 @@ function playListGenerator(
     },
     contents: contentLoop,
     attributes: mplAttributes,
+    overlays: [],
   };
   return JSON.stringify(metaplaylist);
 }

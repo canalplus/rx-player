@@ -204,6 +204,7 @@ export type IImageParserResponse =
 export interface IMetaplaylistOverlayData {
   start : number;
   end : number;
+  timescale : number;
   version : number;
   elements : Array<{
     url : string;
