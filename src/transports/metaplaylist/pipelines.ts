@@ -43,6 +43,7 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
+  IOverlayParserObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
@@ -290,12 +291,42 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
   };
 
   const overlayTrackPipeline = {
-    loader() : never {
-      throw new Error("Overlay tracks not managed in HSS");
+    loader() : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
+      // For now, nothing is downloaded.
+      // Everything is parsed from the segment
+      return observableOf({
+        type: "data" as "data",
+        value: { responseData: null },
+      });
     },
 
-    parser() : never {
-      throw new Error("Overlay tracks not yet in HSS");
+    parser(
+      args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
+    ) : IOverlayParserObservable {
+      const { segment } = args;
+      const { privateInfos } = segment;
+      if (!privateInfos || privateInfos.overlayInfos == null) {
+        throw new Error("An overlay segment should have private infos.");
+      }
+      const { overlayInfos } = privateInfos;
+      const end = segment.duration != null ?
+        segment.duration - segment.time : overlayInfos.end;
+      return observableOf({
+        segmentOffset: 0,
+        segmentInfos: {
+          time: segment.time,
+          duration: segment.duration,
+          timescale: segment.timescale,
+        },
+        segmentData: {
+          data: [overlayInfos],
+          start: segment.time,
+          end,
+          type: "metaplaylist",
+          timeOffset: 0,
+          timescale: segment.timescale,
+        },
+      });
     },
   };
 
