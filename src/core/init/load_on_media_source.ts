@@ -40,6 +40,7 @@ import BufferOrchestrator, {
 } from "../buffers";
 import { SegmentPipelinesManager } from "../pipelines";
 import SourceBuffersManager, {
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createBufferClock from "./create_buffer_clock";
@@ -74,8 +75,9 @@ export interface IMediaSourceLoaderArguments {
     maxBufferBehind$ : Observable<number>;
     offlineRetry? : number;
     segmentRetry? : number;
-    textTrackOptions : ITextTrackSourceBufferOptions;
+    textTrackOptions? : ITextTrackSourceBufferOptions;
     manualBitrateSwitchingMode : "seamless"|"direct";
+    overlayOptions? : IOverlaySourceBufferOptions;
   };
 }
 

@@ -118,4 +118,10 @@ export default function initializeFeaturesObject() : void {
     features.directfile = require(__RELATIVE_PATH__.DIRECTFILE).default;
   }
   /* tslint:enable no-var-requires */
+
+  // XXX TODO
+  features.overlayParsers = {
+    metaplaylist: require("../parsers/overlay/metaplaylist.ts").default,
+  };
+  features.overlayBuffer = require("../core/source_buffers/overlay/index.ts").default;
 }

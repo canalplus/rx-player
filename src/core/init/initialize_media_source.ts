@@ -61,6 +61,7 @@ import {
 } from "../pipelines";
 import {
   IBufferType,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createEMEManager, {
@@ -122,10 +123,13 @@ export interface IInitializeOptions {
   networkConfig: { manifestRetry? : number;
                    offlineRetry? : number;
                    segmentRetry? : number; };
+  pipelines : ITransportPipelines;
   speed$ : Observable<number>;
   startAt? : IInitialTimeOptions;
-  textTrackOptions : ITextTrackSourceBufferOptions;
-  pipelines : ITransportPipelines;
+  sourceBufferOptions?: {
+    text?: ITextTrackSourceBufferOptions;
+    overlay?: IOverlaySourceBufferOptions;
+  };
   url : string;
 }
 
@@ -162,7 +166,7 @@ export default function InitializeOnMediaSource({
   networkConfig,
   speed$,
   startAt,
-  textTrackOptions,
+  sourceBufferOptions,
   pipelines,
   url,
 } : IInitializeOptions) : Observable<IInitEvent> {
@@ -248,10 +252,14 @@ export default function InitializeOnMediaSource({
       speed$,
       abrManager,
       segmentPipelinesManager,
-      bufferOptions: objectAssign({ textTrackOptions,
-                                    offlineRetry: networkConfig.offlineRetry,
-                                    segmentRetry: networkConfig.segmentRetry },
-                                  bufferOptions),
+      bufferOptions: objectAssign({
+        offlineRetry: networkConfig.offlineRetry,
+        segmentRetry: networkConfig.segmentRetry,
+        textTrackOptions: sourceBufferOptions &&
+                          sourceBufferOptions.text,
+        overlayOptions: sourceBufferOptions &&
+                        sourceBufferOptions.overlay,
+      }, bufferOptions),
     });
 
     log.debug("Init: Calculating initial time");

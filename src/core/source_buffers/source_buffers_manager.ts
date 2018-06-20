@@ -35,7 +35,8 @@ type TypedArray = Int8Array |
 const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
                                                 "video",
                                                 "text",
-                                                "image" ];
+                                                "image",
+                                                "overlay" ];
 
 /**
  * Get all currently available buffer types.
@@ -52,6 +53,9 @@ export function getBufferTypes() : IBufferType[] {
   if (features.imageBuffer != null) {
     bufferTypes.push("image");
   }
+  if (features.overlayParsers != null) {
+    bufferTypes.push("overlay");
+  }
   return bufferTypes;
 }
 
@@ -61,8 +65,14 @@ export type ITextTrackSourceBufferOptions = { textTrackMode? : "native";
                                             { textTrackMode : "html";
                                               textTrackElement : HTMLElement; };
 
+export interface IOverlaySourceBufferOptions {
+  overlayElement : HTMLElement;
+}
+
 // General Options available for any SourceBuffer
-export type ISourceBufferOptions = ITextTrackSourceBufferOptions;
+export type ISourceBufferOptions = ITextTrackSourceBufferOptions |
+                                   IOverlaySourceBufferOptions |
+                                   undefined;
 
 // Types of "native" SourceBuffers
 type INativeSourceBufferType = "audio" | "video";
@@ -103,6 +113,7 @@ export default class SourceBuffersManager {
     video? : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
     text? : QueuedSourceBuffer<unknown>;
     image? : QueuedSourceBuffer<unknown>;
+    overlay? : QueuedSourceBuffer<unknown>;
   };
 
   /**
@@ -165,46 +176,69 @@ export default class SourceBuffersManager {
       return memorizedSourceBuffer;
     }
 
-    if (bufferType === "text") {
-      log.info("SB: Creating a new text SourceBuffer with codec", codec);
+    switch (bufferType) {
+      case "text": {
+        log.info("SB: Creating a new text SourceBuffer with codec", codec);
+        let sourceBuffer : ICustomSourceBuffer<unknown>;
+        const opts = options as ITextTrackSourceBufferOptions; // XXX TODO
+        if (opts.textTrackMode === "html") {
+          if (features.htmlTextTracksBuffer == null) {
+            throw new Error("HTML Text track feature not activated");
+          }
+          sourceBuffer = new features
+            .htmlTextTracksBuffer(this._mediaElement, opts.textTrackElement);
+        } else {
+          if (features.nativeTextTracksBuffer == null) {
+            throw new Error("Native Text track feature not activated");
+          }
+          sourceBuffer = new features
+            .nativeTextTracksBuffer(this._mediaElement, !!opts.hideNativeSubtitle);
+        }
 
-      let sourceBuffer : ICustomSourceBuffer<unknown>;
-      if (options.textTrackMode === "html") {
-        if (features.htmlTextTracksBuffer == null) {
-          throw new Error("HTML Text track feature not activated");
-        }
-        sourceBuffer = new features.htmlTextTracksBuffer(this._mediaElement,
-                                                         options.textTrackElement);
-      } else {
-        if (features.nativeTextTracksBuffer == null) {
-          throw new Error("Native Text track feature not activated");
-        }
-        sourceBuffer = new features.nativeTextTracksBuffer(this._mediaElement,
-                                                           !!options.hideNativeSubtitle);
+        const queuedSourceBuffer =
+          new QueuedSourceBuffer<unknown>("text", codec, sourceBuffer);
+        this._initializedSourceBuffers.text = queuedSourceBuffer;
+        return queuedSourceBuffer;
       }
 
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("text",
-                                                                 codec,
-                                                                 sourceBuffer);
-      this._initializedSourceBuffers.text = queuedSourceBuffer;
-      return queuedSourceBuffer;
-    } else if (bufferType === "image") {
-      if (features.imageBuffer == null) {
-        throw new Error("Image buffer feature not activated");
+      case "image": {
+        if (features.imageBuffer == null) {
+          throw new Error("Image buffer feature not activated");
+        }
+        log.info("SB: Creating a new image SourceBuffer with codec", codec);
+        const sourceBuffer = new features.imageBuffer();
+        const queuedSourceBuffer =
+          new QueuedSourceBuffer<unknown>("image", codec, sourceBuffer);
+        this._initializedSourceBuffers.image = queuedSourceBuffer;
+        return queuedSourceBuffer;
       }
-      log.info("SB: Creating a new image SourceBuffer with codec", codec);
-      const sourceBuffer = new features.imageBuffer();
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("image",
-                                                                 codec,
-                                                                 sourceBuffer);
-      this._initializedSourceBuffers.image = queuedSourceBuffer;
-      return queuedSourceBuffer;
+
+      case "overlay": {
+        if (features.overlayBuffer == null) {
+          throw new Error("Image buffer feature not activated");
+        }
+        log.info("SB: Creating a new Overlay SourceBuffer with codec", codec);
+        if (
+          options == null ||
+          (options as IOverlaySourceBufferOptions).overlayElement == null
+        ) {
+          throw new Error("Cannot create Overlay SourceBuffer: Invalid options.");
+        }
+        const sourceBuffer = new features.overlayBuffer(
+          this._mediaElement,
+          (options as IOverlaySourceBufferOptions).overlayElement // XXX TODO
+        );
+        const queuedSourceBuffer =
+          new QueuedSourceBuffer("overlay", codec, sourceBuffer);
+        this._initializedSourceBuffers.overlay = queuedSourceBuffer;
+        return queuedSourceBuffer;
+      }
+
+      default:
+        log.error("SB: Unknown buffer type:", bufferType);
+        throw new MediaError("BUFFER_TYPE_UNKNOWN",
+          "The player wants to create a SourceBuffer of an unknown type.", true);
     }
-
-    log.error("SB: Unknown buffer type:", bufferType);
-    throw new MediaError("BUFFER_TYPE_UNKNOWN",
-                         "The player wants to create a SourceBuffer of an unknown type.",
-                         true);
   }
 
   /**

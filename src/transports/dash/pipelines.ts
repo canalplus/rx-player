@@ -133,6 +133,17 @@ export default function(
       }
     },
   };
+
+  const overlayTrackPipeline = {
+    loader() : never {
+      throw new Error("Overlay tracks not managed in DASH");
+    },
+
+    parser() : never {
+      throw new Error("Overlay tracks not yet in DASH");
+    },
+  };
+
   return { manifest: manifestPipeline,
            audio: { loader: segmentLoader,
                     parser: segmentParser },
@@ -141,5 +152,6 @@ export default function(
            text: { loader: TextTrackLoader,
                    parser: TextTrackParser },
            image: { loader: imageLoader,
-                    parser: imageParser } };
+                    parser: imageParser },
+           overlay: overlayTrackPipeline };
 }

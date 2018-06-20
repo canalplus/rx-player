@@ -283,6 +283,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       video? : number;
       text? : number;
       image? : number;
+      overlay? : number;
     };
 
     /**
@@ -294,6 +295,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       video : number; // has a default in the config
       text? : number;
       image? : number;
+      overlay? : number;
     };
 
     /**
@@ -305,6 +307,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       video : number; // has a default in the config
       text? : number;
       image? : number;
+      overlay? : number;
     };
   };
 
@@ -777,6 +780,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         { textTrackMode: "html" as const,
           textTrackElement: options.textTrackElement };
 
+      const overlayOptions = options.overlayElement != null ?
+        { overlayElement: options.overlayElement } : undefined;
+
       const bufferOptions = objectAssign({ manualBitrateSwitchingMode },
                                          this._priv_bufferOptions);
 
@@ -791,7 +797,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     pipelines,
                                                     speed$: this._priv_speed$,
                                                     startAt,
-                                                    textTrackOptions,
+                                                    sourceBufferOptions: {
+                                                      text: textTrackOptions,
+                                                      overlay: overlayOptions,
+                                                    },
                                                     url })
         .pipe(takeUntil(contentIsStopped$));
 

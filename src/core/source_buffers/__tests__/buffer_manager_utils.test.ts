@@ -20,7 +20,6 @@ import {
   getDataBefore,
   removeDataInfosBetween,
 } from "../buffer_manager_utils";
-import { ITimedData } from "../types";
 
 describe("Buffer Manager utils - getDataBefore", () => {
   it("should get the right content when time is the start of one", () => {

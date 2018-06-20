@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-import BufferGarbageCollector from "./garbage_collector";
-import QueuedSourceBuffer, {
-  IAppendBufferInfos,
-  IBufferType,
-} from "./queued_source_buffer";
-import SourceBuffersManager, {
-  getBufferTypes,
-  IOverlaySourceBufferOptions,
-  ISourceBufferOptions,
-  ITextTrackSourceBufferOptions,
-} from "./source_buffers_manager";
+export type IOverlayParserFn =
+  (
+    data : IOverlayData[],
+    timeOffset : number
+  ) => IHTMLOverlay[];
 
-export default SourceBuffersManager;
-export {
-  BufferGarbageCollector,
-  getBufferTypes,
-  IAppendBufferInfos,
-  IBufferType,
-  IOverlaySourceBufferOptions,
-  ISourceBufferOptions,
-  ITextTrackSourceBufferOptions,
-  QueuedSourceBuffer,
-};
+export interface IOverlayData {
+  start : number;
+  end : number;
+  version : number;
+  elements : Array<{
+    url : string;
+    format : string;
+    xAxis : string;
+    yAxis : string;
+    height : string;
+    width : string;
+  }>;
+}
+
+export interface IHTMLOverlay {
+  start : number;
+  end: number;
+  element : HTMLElement;
+}
