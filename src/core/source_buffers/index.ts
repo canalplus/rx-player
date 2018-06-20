@@ -22,7 +22,7 @@ import BufferGarbageCollector from "./garbage_collector";
 import QueuedSourceBuffer from "./queued_source_buffer";
 
 // Every SourceBuffer types managed here
-export type IBufferType = "audio"|"video"|"text"|"image";
+export type IBufferType = "audio"|"video"|"text"|"image"|"overlay";
 
 type TypedArray =
   Int8Array |
@@ -36,7 +36,7 @@ type TypedArray =
   Float64Array;
 
 const POSSIBLE_BUFFER_TYPES : IBufferType[] =
-  ["audio", "video", "text", "image"];
+  ["audio", "video", "text", "image", "overlay"];
 
 /**
  * Get all currently available buffer types.
@@ -54,6 +54,9 @@ export function getBufferTypes() : IBufferType[] {
   if (features.imageBuffer != null) {
     bufferTypes.push("image");
   }
+  if (features.overlayParsers != null) {
+    bufferTypes.push("overlay");
+  }
   return bufferTypes;
 }
 
@@ -68,20 +71,26 @@ export type ITextTrackSourceBufferOptions =
     textTrackElement : HTMLElement;
   };
 
+export interface IOverlaySourceBufferOptions {
+  overlayElement : HTMLElement;
+}
+
 // General Options available for any SourceBuffer
 export type ISourceBufferOptions =
-  ITextTrackSourceBufferOptions;
+  ITextTrackSourceBufferOptions |
+  IOverlaySourceBufferOptions |
+  undefined;
 
 // Types of "native" SourceBuffers
 type INativeSourceBufferType = "audio" | "video";
 
-interface ICreatedSourceBuffer<T> {
+interface ISourceBufferInfos<T> {
   codec : string;
   sourceBuffer : QueuedSourceBuffer<T>;
 }
 
-type ICreatedNativeSourceBuffer =
-  ICreatedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
+type INativeSourceBufferInfos =
+  ISourceBufferInfos<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
 
 /**
  * Allows to easily create and dispose SourceBuffers.
@@ -114,14 +123,15 @@ export default class SourceBufferManager {
   private readonly _mediaElement : HTMLMediaElement;
   private readonly _mediaSource : MediaSource;
 
-  private _initializedNativeSourceBuffers : {
-    audio? : ICreatedNativeSourceBuffer;
-    video? : ICreatedNativeSourceBuffer;
+  private _nativeSourceBuffers : {
+    audio? : INativeSourceBufferInfos;
+    video? : INativeSourceBufferInfos;
   };
 
-  private _initializedCustomSourceBuffers : {
-    text? : ICreatedSourceBuffer<unknown>;
-    image? : ICreatedSourceBuffer<unknown>;
+  private _customSourceBuffers : {
+    text? : ISourceBufferInfos<unknown>;
+    image? : ISourceBufferInfos<unknown>;
+    overlay? : ISourceBufferInfos<unknown>;
   };
 
   /**
@@ -132,8 +142,8 @@ export default class SourceBufferManager {
   constructor(mediaElement : HTMLMediaElement, mediaSource : MediaSource) {
     this._mediaElement = mediaElement;
     this._mediaSource = mediaSource;
-    this._initializedNativeSourceBuffers = {};
-    this._initializedCustomSourceBuffers = {};
+    this._nativeSourceBuffers = {};
+    this._customSourceBuffers = {};
   }
 
   /**
@@ -143,39 +153,30 @@ export default class SourceBufferManager {
    * @returns {Boolean}
    */
   public has(bufferType : IBufferType) : boolean {
-    if (shouldHaveNativeSourceBuffer(bufferType)) {
-      return !!this._initializedNativeSourceBuffers[bufferType];
-    }
-    return !!this._initializedCustomSourceBuffers[bufferType];
+    return shouldHaveNativeSourceBuffer(bufferType) ?
+      !!this._nativeSourceBuffers[bufferType] :
+      !!this._customSourceBuffers[bufferType];
   }
 
   /**
    * Returns the created QueuedSourceBuffer for the given type.
-   * Throws if no QueuedSourceBuffer were created for the given type.
+   * Returns null if no QueuedSourceBuffer were created for the given type.
    *
    * @param {string} bufferType
-   * @returns {QueuedSourceBuffer}
+   * @returns {QueuedSourceBuffer|null}
    */
-  public get(bufferType : IBufferType) : QueuedSourceBuffer<any> {
-    if (shouldHaveNativeSourceBuffer(bufferType)) {
-      const sourceBufferInfos = this._initializedNativeSourceBuffers[bufferType];
-      if (!sourceBufferInfos) {
-        throw new Error(`SourceBufferManager: no ${bufferType} initialized yet`);
-      }
-      return sourceBufferInfos.sourceBuffer;
-    } else {
-      const sourceBufferInfos = this._initializedCustomSourceBuffers[bufferType];
-      if (!sourceBufferInfos) {
-        throw new Error(`SourceBufferManager: no ${bufferType} initialized yet`);
-      }
-      return sourceBufferInfos.sourceBuffer;
-    }
+  public get(bufferType : IBufferType) : QueuedSourceBuffer<any>|null {
+    const sourceBufferInfos = shouldHaveNativeSourceBuffer(bufferType) ?
+      this._nativeSourceBuffers[bufferType] :
+      this._customSourceBuffers[bufferType];
+
+    return sourceBufferInfos ? sourceBufferInfos.sourceBuffer : null;
   }
 
   /**
    * Creates a new QueuedSourceBuffer for the given buffer type.
-   * Reuse an already created one if a QueuedSourceBuffer for the given type
-   * already exists. TODO Throw or abort old one instead?
+   *
+   * Throws if a SourceBuffer has already been created for the given type.
    * @param {string} bufferType
    * @param {string} codec
    * @param {Object|undefined} options
@@ -184,79 +185,94 @@ export default class SourceBufferManager {
   public createSourceBuffer(
     bufferType : IBufferType,
     codec : string,
-    options : ISourceBufferOptions = {}
+    options? : ISourceBufferOptions|undefined
   ) : QueuedSourceBuffer<any> {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
-      const memorizedSourceBuffer = this._initializedNativeSourceBuffers[bufferType];
-      if (memorizedSourceBuffer) {
-        if (memorizedSourceBuffer.codec !== codec) {
-          log.warn(
-            "reusing native SourceBuffer with codec", memorizedSourceBuffer.codec,
-            "for codec", codec
-          );
-        } else {
-          log.info("reusing native SourceBuffer with codec", codec);
-        }
-        return memorizedSourceBuffer.sourceBuffer;
+      if (this._nativeSourceBuffers[bufferType] != null) {
+        // XXX TODO MediaError
+        throw new Error(`A ${bufferType} has already been created.`);
       }
       log.info("adding native SourceBuffer with codec", codec);
       const nativeSourceBuffer = createNativeQueuedSourceBuffer(this._mediaSource, codec);
-      this._initializedNativeSourceBuffers[bufferType] = {
+      this._nativeSourceBuffers[bufferType] = {
         codec,
         sourceBuffer: nativeSourceBuffer,
       };
       return nativeSourceBuffer;
     }
 
-    const memorizedCustomSourceBuffer = this
-      ._initializedCustomSourceBuffers[bufferType];
-
-    if (memorizedCustomSourceBuffer) {
-      log.info("reusing a previous custom SourceBuffer for the type", bufferType);
-      return memorizedCustomSourceBuffer.sourceBuffer;
+    if (this._customSourceBuffers[bufferType] != null) {
+      // XXX TODO MediaError
+      throw new Error(`A ${bufferType} has already been created.`);
     }
 
-    if (bufferType === "text") {
-      log.info("creating a new text SourceBuffer with codec", codec);
+    switch (bufferType) {
+      case "text": {
+        log.info("creating a new text SourceBuffer with codec", codec);
+        const opts = options as ITextTrackSourceBufferOptions; // XXX TODO
 
-      let sourceBuffer : ICustomSourceBuffer<unknown>;
-      if (options.textTrackMode === "html") {
-        if (features.htmlTextTracksBuffer == null) {
-          throw new Error("HTML Text track feature not activated");
+        let sourceBuffer : ICustomSourceBuffer<unknown>;
+        if (opts.textTrackMode === "html") {
+          if (features.htmlTextTracksBuffer == null) {
+            throw new Error("HTML Text track feature not activated");
+          }
+          sourceBuffer = new features
+            .htmlTextTracksBuffer(this._mediaElement, opts.textTrackElement);
+        } else {
+          if (features.nativeTextTracksBuffer == null) {
+            throw new Error("Native Text track feature not activated");
+          }
+          sourceBuffer = new features
+            .nativeTextTracksBuffer(this._mediaElement, !!opts.hideNativeSubtitle);
         }
-        sourceBuffer = new features
-          .htmlTextTracksBuffer(this._mediaElement, options.textTrackElement);
-      } else {
-        if (features.nativeTextTracksBuffer == null) {
-          throw new Error("Native Text track feature not activated");
-        }
-        sourceBuffer = new features
-          .nativeTextTracksBuffer(this._mediaElement, !!options.hideNativeSubtitle);
+        const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
+
+        this._customSourceBuffers.text = {
+          codec,
+          sourceBuffer: queuedSourceBuffer,
+        };
+        return queuedSourceBuffer;
       }
 
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
-
-      this._initializedCustomSourceBuffers.text = {
-        codec,
-        sourceBuffer: queuedSourceBuffer,
-      };
-      return queuedSourceBuffer;
-    } else if (bufferType === "image") {
-      if (features.imageBuffer == null) {
-        throw new Error("Image buffer feature not activated");
+      case "image": {
+        if (features.imageBuffer == null) {
+          throw new Error("Image buffer feature not activated");
+        }
+        log.info("creating a new image SourceBuffer with codec", codec);
+        const sourceBuffer = new features.imageBuffer();
+        const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
+        this._customSourceBuffers.image = {
+          codec,
+          sourceBuffer: queuedSourceBuffer,
+        };
+        return queuedSourceBuffer;
       }
-      log.info("creating a new image SourceBuffer with codec", codec);
-      const sourceBuffer = new features.imageBuffer();
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
-      this._initializedCustomSourceBuffers.image = {
-        codec,
-        sourceBuffer: queuedSourceBuffer,
-      };
-      return queuedSourceBuffer;
+
+      case "overlay": {
+        if (features.overlayBuffer == null) {
+          throw new Error("Image buffer feature not activated");
+        }
+        log.info("creating a new overlay SourceBuffer with codec", codec);
+        if (!options) {
+          // XXX TODO Better error
+          throw new Error(`invalid ${bufferType} options`);
+        }
+        const sourceBuffer = new features.overlayBuffer(
+          this._mediaElement,
+          (options as IOverlaySourceBufferOptions).overlayElement // XXX TODO TS 2Dumb4me
+        );
+        const queuedSourceBuffer = new QueuedSourceBuffer(sourceBuffer);
+        this._customSourceBuffers.overlay = {
+          codec,
+          sourceBuffer: queuedSourceBuffer,
+        };
+        return queuedSourceBuffer;
+      }
+
+      default:
+        log.error("unknown buffer type:", bufferType);
+        throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
     }
-
-    log.error("unknown buffer type:", bufferType);
-    throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
   }
 
   /**
@@ -266,7 +282,7 @@ export default class SourceBufferManager {
   public disposeSourceBuffer(bufferType : IBufferType) : void {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       const memorizedNativeSourceBuffer = this
-        ._initializedNativeSourceBuffers[bufferType];
+        ._nativeSourceBuffers[bufferType];
 
       if (memorizedNativeSourceBuffer == null) {
         return;
@@ -280,27 +296,33 @@ export default class SourceBufferManager {
           log.warn("failed to abort a SourceBuffer:", e);
         }
       }
-      delete this._initializedNativeSourceBuffers[bufferType];
-      return;
-    } else if (bufferType === "text" || bufferType === "image") {
-      const memorizedSourceBuffer = this
-        ._initializedCustomSourceBuffers[bufferType];
-
-      if (memorizedSourceBuffer == null) {
-        return;
-      }
-
-      log.info("aborting custom source buffer", bufferType);
-      try {
-        memorizedSourceBuffer.sourceBuffer.abort();
-      } catch (e) {
-        log.warn("failed to abort a SourceBuffer:", e);
-      }
-      delete this._initializedCustomSourceBuffers[bufferType];
+      delete this._nativeSourceBuffers[bufferType];
       return;
     }
 
-    log.error("cannot dispose an unknown buffer type", bufferType);
+    switch (bufferType) {
+      case "text":
+      case "image":
+      case "overlay":
+        const memorizedSourceBuffer = this
+          ._customSourceBuffers[bufferType];
+
+        if (memorizedSourceBuffer == null) {
+          return;
+        }
+
+        log.info("aborting custom source buffer", bufferType);
+        try {
+          memorizedSourceBuffer.sourceBuffer.abort();
+        } catch (e) {
+          log.warn("failed to abort a SourceBuffer:", e);
+        }
+        delete this._customSourceBuffers[bufferType];
+        return;
+
+      default:
+        log.error("cannot dispose an unknown buffer type", bufferType);
+    }
   }
 
   /**

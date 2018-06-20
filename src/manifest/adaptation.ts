@@ -21,10 +21,10 @@ import Representation, {
   IRepresentationArguments
 } from "./representation";
 
-export type IAdaptationType = "video"|"audio"|"text"|"image";
+export type IAdaptationType = "video"|"audio"|"text"|"image"|"overlay";
 
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
-  ["audio", "video", "text", "image"];
+  ["audio", "video", "text", "image", "overlay"];
 
 export interface IAdaptationArguments {
   // -- required

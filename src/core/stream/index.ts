@@ -51,6 +51,7 @@ import {
 } from "../pipelines";
 import {
   IBufferType,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createEMEManager, {
@@ -117,7 +118,10 @@ export interface IStreamOptions {
   startAt? : IInitialTimeOptions;
   supplementaryImageTracks : ISupplementaryImageTrack[];
   supplementaryTextTracks : ISupplementaryTextTrack[];
-  textTrackOptions : ITextTrackSourceBufferOptions;
+  sourceBufferOptions?: {
+    text?: ITextTrackSourceBufferOptions;
+    overlay?: IOverlaySourceBufferOptions;
+  };
   transport : ITransportPipelines;
   url : string;
   mediaElement : HTMLMediaElement;
@@ -156,7 +160,7 @@ export default function Stream({
   startAt,
   supplementaryImageTracks, // eventual manually added images
   supplementaryTextTracks, // eventual manually added subtitles
-  textTrackOptions,
+  sourceBufferOptions,
   transport,
   url,
   mediaElement,
@@ -212,9 +216,10 @@ export default function Stream({
       segmentPipelinesManager,
       refreshManifest: fetchManifest,
       bufferOptions: objectAssign({
-        textTrackOptions,
         offlineRetry: networkConfig.offlineRetry,
         segmentRetry: networkConfig.segmentRetry,
+        textTrackOptions: sourceBufferOptions && sourceBufferOptions.text,
+        overlayOptions: sourceBufferOptions && sourceBufferOptions.overlay,
       }, bufferOptions),
     });
 
