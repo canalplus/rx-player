@@ -58,6 +58,7 @@ import SourceBufferManager, {
   BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../source_buffers";
@@ -134,6 +135,7 @@ export default function PeriodBufferManager(
     offlineRetry? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
     manualBitrateSwitchingMode : "seamless"|"direct";
+    overlayOptions? : IOverlaySourceBufferOptions;
   }
 ) : Observable<IPeriodBufferManagerEvent> {
   const { manifest$, initialPeriod } = content;

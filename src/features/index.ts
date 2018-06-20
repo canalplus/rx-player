@@ -45,6 +45,8 @@ const features : IFeaturesObject = {
   htmlTextTracksParsers: {},
   emeManager: null,
   directfile: null,
+  overlayParsers: {},
+  overlayBuffer: null,
 };
 
 export default features;

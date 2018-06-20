@@ -22,11 +22,16 @@ import {
   IDirectfileEvent,
   IDirectFileOptions,
 } from "../core/init/initialize_directfile";
+import { IOverlayParserFn } from "../parsers/overlay/types";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
 } from "../parsers/texttracks/types";
-import { ITransportFunction } from "../transports/types";
+import {
+  IImageTrackSegmentData,
+  IOverlayTrackSegmentData,
+  ITransportFunction,
+} from "../transports/types";
 
 export type IDirectFileInit =
   (args : IDirectFileOptions) => Observable<IDirectfileEvent>;
@@ -57,14 +62,6 @@ interface IBifThumbnail {
   data : Uint8Array;
 }
 
-interface IImageTrackSegmentData {
-  data : IBifThumbnail[]; // image track data, in the given type
-  end : number; // end time time until which the segment apply
-  start : number; // start time from which the segment apply
-  timescale : number; // timescale to convert the start and end into seconds
-  type : string; // the type of the data (example: "bif")
-}
-
 interface IBifObject {
   fileFormat : string;
   version : string;
@@ -80,6 +77,14 @@ interface IBifObject {
 export interface IImageBuffer {
   new() : ICustomSourceBuffer<IImageTrackSegmentData>;
 }
+
+export interface IOverlayBuffer {
+  new(
+    videoElement : HTMLMediaElement,
+    overlayElement : HTMLElement
+  ) : ICustomSourceBuffer<IOverlayTrackSegmentData>;
+}
+
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);
 
@@ -95,6 +100,8 @@ export interface IFeaturesObject {
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
   emeManager : IEMEManager|null;
   directfile : IDirectFileInit|null;
+  overlayParsers: Partial<Record<string, IOverlayParserFn>>;
+  overlayBuffer: IOverlayBuffer|null;
 }
 
 export type IFeatureFunction = (features : IFeaturesObject) => void;

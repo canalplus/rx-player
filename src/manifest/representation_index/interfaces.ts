@@ -23,7 +23,7 @@ import Period from "../period";
 export type IMetaPlaylistTransportTypePrivateInfos = string;
 
 export interface ISmoothInitSegmentPrivateInfos {
-  codecPrivateData? : string;
+  codecPrivateData : string;
   bitsPerSample? : number;
   channels? : number;
   packetSize? : number;
@@ -44,12 +44,28 @@ export interface IBaseContentInfos {
   representation: Representation;
 }
 
-export interface IPrivateInfos {
+// privateInfos specific to overlay Segments
+export interface IOverlaySegmentPrivateInfos {
+  start : number;
+  end : number;
+  version : number;
+  element : {
+    url : string;
+    format : string;
+    xAxis : string;
+    yAxis : string;
+    height : string;
+    width : string;
+  };
+}
+
+export interface ISegmentPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : {
     transportType : IMetaPlaylistTransportTypePrivateInfos;
     baseContent : IBaseContentInfos;
   };
+  overlayInfos? : IOverlaySegmentPrivateInfos;
 }
 
 // ISegment Object.
@@ -71,9 +87,9 @@ export interface ISegment {
   timestampOffset? : number; // Estimated time, in seconds, at which the
                              // concerned segment will be offseted when
                              // decoded.
-  privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
-                                 // supplementary informations in a given
-                                 // Segment for later downloading/parsing
+  privateInfos? : ISegmentPrivateInfos; // Allows a RepresentationIndex to store
+                                        // supplementary informations in a given
+                                        // Segment for later downloading/parsing
 }
 
 export interface IRepresentationIndexSegmentInfos {

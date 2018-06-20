@@ -287,11 +287,22 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     },
   };
 
+  const overlayTrackPipeline = {
+    loader() : never {
+      throw new Error("Overlay tracks not managed in DASH");
+    },
+
+    parser() : never {
+      throw new Error("Overlay tracks not yet in DASH");
+    },
+  };
+
   return {
     manifest: manifestPipeline,
     audio: audioPipeline,
     video: videoPipeline,
     text: textTrackPipeline,
     image: imageTrackPipeline,
+    overlay: overlayTrackPipeline,
   };
 }
