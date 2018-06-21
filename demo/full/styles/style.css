@@ -195,12 +195,19 @@ body {
   transform: translate(-50%, -50%);
 }
 
+.overlay-wrapper {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 100;
+}
+
 .text-track {
   color: white;
   position: absolute;
   height: 100%;
   width: 100%;
-  z-index: 100;
+  z-index: 101;
 }
 
 .video-player-spinner {
@@ -279,7 +286,7 @@ body {
 .controls-bar-container {
   background-color: #111111;
   margin-top: -4px;
-  z-index: 1000;
+  z-index: 1001;
 }
 
 .fullscreen .controls-bar-container {
