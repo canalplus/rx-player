@@ -311,17 +311,6 @@ export default function parseManifest(
           const baseURL = representation.children.baseURL;
           const representationURL = resolveURL(
             adaptationRootURL, baseURL);
-          console.warn(
-            "?????",
-            uri,
-            normalizeBaseURL(uri),
-            rootChildren.baseURL,
-            resolveURL(normalizeBaseURL(uri), rootChildren.baseURL),
-            mpdRootURL,
-            periodRootURL,
-            adaptationRootURL,
-            representationURL
-          );
           let adaptationIndex : IRepresentationIndex;
           if (adaptationChildren.segmentBase != null) {
             const { segmentBase } = adaptationChildren;
