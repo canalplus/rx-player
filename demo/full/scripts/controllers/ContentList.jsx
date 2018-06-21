@@ -7,7 +7,7 @@ import contentsDatabase from "../contents.js";
 
 const IS_HTTPS = window.location.protocol.startsWith("https");
 const HAS_EME_APIs = typeof navigator.requestMediaKeySystemAccess === "function";
-const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile", "MetaPlaylist"];
+const TRANSPORT_TYPES = ["BXF", "DASH", "Smooth", "DirectFile", "MetaPlaylist"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
 const URL_DENOMINATIONS = {
@@ -76,6 +76,7 @@ class ContentList extends React.Component {
 
     const {
       url,
+      beginning,
       transport,
       supplementaryImageTracks,
       supplementaryTextTracks,
@@ -86,6 +87,7 @@ class ContentList extends React.Component {
     parseDRMConfigurations(drmInfos)
       .then((keySystems) => {
         loadVideo({
+          beginning,
           url,
           transport,
           autoPlay: !(this.state.autoPlay === false),
