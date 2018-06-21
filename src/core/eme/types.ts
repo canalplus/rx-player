@@ -72,7 +72,7 @@ type TypedArray =
 // Options given by the caller
 export interface IKeySystemOption {
   type : string;
-  getLicense : (message : Uint8Array, messageType : string)
+  getLicense : (message : Uint8Array, messageType : string, initData: Uint8Array)
     => Promise<TypedArray|ArrayBuffer|null>|TypedArray|ArrayBuffer|null;
   serverCertificate? : ArrayBuffer|TypedArray;
   persistentLicense? : boolean;
