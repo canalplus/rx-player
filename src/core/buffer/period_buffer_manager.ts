@@ -496,12 +496,12 @@ export default function PeriodBufferManager(
 
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
 
-      let qSourceBuffer : QueuedSourceBuffer<any>;
-      if (oldSourceBuffer != null) {
-        log.info("reusing a previous SourceBuffer for the type", bufferType);
-        qSourceBuffer = oldSourceBuffer;
+      const qSourceBuffer =
+        createOrReuseQueuedSourceBuffer(bufferType, adaptation, oldSourceBuffer);
+      if (qSourceBuffer == null) {
+        return createFakeBuffer(
+          clock$, wantedBufferAhead$, bufferType, { manifest, period });
       }
-      qSourceBuffer = createQueuedSourceBuffer(bufferType, adaptation);
       const newBuffer$ = clock$.pipe(
         take(1),
         mergeMap<IPeriodBufferManagerClockTick, IPeriodBufferEvent>((tick) => {
@@ -540,15 +540,26 @@ export default function PeriodBufferManager(
    * @param {Object} adaptation
    * @returns {Object}
    */
-  function createQueuedSourceBuffer<T>(
+  function createOrReuseQueuedSourceBuffer<T>(
     bufferType : IBufferType,
-    adaptation : Adaptation
-  ) : QueuedSourceBuffer<T> {
+    adaptation : Adaptation,
+    oldSourceBuffer? : QueuedSourceBuffer<T>|null
+  ) : QueuedSourceBuffer<T>|null {
+    if (oldSourceBuffer != null) {
+      log.info("reusing a previous SourceBuffer for the type", bufferType);
+      return oldSourceBuffer;
+    }
     const codec = getFirstDeclaredMimeType(adaptation);
     const sbOptions =
       bufferType === "text" ? options.textTrackOptions :
       bufferType === "overlay" ? options.overlayOptions :
       undefined;
+
+    if (bufferType === "overlay" && sbOptions == null) {
+      log.warn("overlay adaptation encountered but no overlayOptions" +
+        "set. Ignoring the adaptation");
+      return null;
+    }
     return sourceBufferManager.createSourceBuffer(bufferType, codec, sbOptions);
   }
 
