@@ -183,13 +183,15 @@ export default class SourceBuffersManager {
         const opts = options as ITextTrackSourceBufferOptions; // XXX TODO
         if (opts.textTrackMode === "html") {
           if (features.htmlTextTracksBuffer == null) {
-            throw new Error("HTML Text track feature not activated");
+            const error = new Error("HTML Text track feature not activated");
+            throw new MediaError("BUFFER_TYPE_UNKNOWN", error, true);
           }
           sourceBuffer = new features
             .htmlTextTracksBuffer(this._mediaElement, opts.textTrackElement);
         } else {
           if (features.nativeTextTracksBuffer == null) {
-            throw new Error("Native Text track feature not activated");
+            const error = new Error("Native Text track feature not activated");
+            throw new MediaError("BUFFER_TYPE_UNKNOWN", error, true);
           }
           sourceBuffer = new features
             .nativeTextTracksBuffer(this._mediaElement, !!opts.hideNativeSubtitle);
@@ -203,7 +205,8 @@ export default class SourceBuffersManager {
 
       case "image": {
         if (features.imageBuffer == null) {
-          throw new Error("Image buffer feature not activated");
+          const error = new Error("Image buffer feature not activated");
+          throw new MediaError("BUFFER_TYPE_UNKNOWN", error, true);
         }
         log.info("SB: Creating a new image SourceBuffer with codec", codec);
         const sourceBuffer = new features.imageBuffer();
@@ -215,14 +218,16 @@ export default class SourceBuffersManager {
 
       case "overlay": {
         if (features.overlayBuffer == null) {
-          throw new Error("Image buffer feature not activated");
+          const error = new Error("Image buffer feature not activated");
+          throw new MediaError("BUFFER_TYPE_UNKNOWN", error, true);
         }
         log.info("SB: Creating a new Overlay SourceBuffer with codec", codec);
         if (
           options == null ||
           (options as IOverlaySourceBufferOptions).overlayElement == null
         ) {
-          throw new Error("Cannot create Overlay SourceBuffer: Invalid options.");
+          const error = new Error("Cannot create Overlay SourceBuffer: Invalid options.");
+          throw new MediaError("INVALID_SOURCE_BUFFER_ARGUMENTS", error, true);
         }
         const sourceBuffer = new features.overlayBuffer(
           this._mediaElement,
