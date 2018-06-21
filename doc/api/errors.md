@@ -137,12 +137,17 @@ A MediaError can have the following codes (``code`` property):
   - ``"BUFFER_TYPE_UNKNOWN"``: The type of buffer considered (e.g. "audio" /
     "video" / "text") has no SourceBuffer implementation in your build.
 
+  - ``"INVALID_SOURCE_BUFFER_ARGUMENTS"``: A SourceBuffer could not be created
+    because the arguments given were invalid.
+    This should never happen and is always an issue with the rx-player library.
+    Please come back to us if you encounter it.
+
   - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``: An
     [Adaptation](../terms.md#adaptation) (or track) has none of its
     [Representations](../terms.md#representation) (read quality) in a supported
     codec.
 
-  - ``"MANIFEST_PARSE_ERROR"``: Generic error to signal than the
+  - ``"MANIFEST_PARSE_ERROR"``: Generic error to signal that the
     [Manifest](../terms.md#manifest) could not be parsed.
 
   - ``"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"``: One of the
