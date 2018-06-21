@@ -135,11 +135,21 @@ A MediaError can have the following codes (``code`` property):
   - ``"BUFFER_TYPE_UNKNOWN"``: The type of buffer considered (e.g. "audio" /
     "video" / "text") has no SourceBuffer implementation in your build.
 
+  - ``"DUPLICATED_SOURCE_BUFFER"``: The code attempted to create multiple
+    SourceBuffers of the same type.
+    This should never happen and is always an issue with the rx-player library.
+    Please come back to us if you encounter it.
+
+  - ``"INVALID_SOURCE_BUFFER_ARGUMENTS"``: A SourceBuffer could not be created
+    because the arguments given were invalid.
+    This should never happen and is always an issue with the rx-player library.
+    Please come back to us if you encounter it.
+
   - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``: An "Adaptation" (DASH's
     AdaptationSet or Smooth's StreamIndex) has none of its "Representations"
     (read quality) in a supported codec.
 
-  - ``"MANIFEST_PARSE_ERROR"``: Generic error to signal than the Manifest could
+  - ``"MANIFEST_PARSE_ERROR"``: Generic error to signal that the Manifest could
     not be parsed.
 
   - ``"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"``: One of the "Adaptation" (DASH's
