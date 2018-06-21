@@ -4,6 +4,8 @@ import Button from "../components/Button.jsx";
 import PositionInfos from "../components/PositionInfos.jsx";
 import LivePosition from "../components/LivePosition.jsx";
 import PlayPauseButton from "./PlayPauseButton.jsx";
+import PreviousProgramButton from "./PreviousProgramButton.js";
+import NextProgramButton from "./NextProgramButton.js";
 import FullscreenButton from "./FullScreenButton.jsx";
 import Progressbar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
@@ -45,12 +47,22 @@ function ControlBar({
         />
         { positionElement }
         <div className="controls-right-side">
-          <div>
-            <Button
-              disabled={!isContentLoaded}
-              className='control-button'
-              onClick={onClickSettings}
-              value={String.fromCharCode(0xf013)}
+          <Button
+            disabled={!isContentLoaded}
+            className='control-button'
+            onClick={onClickSettings}
+            value={String.fromCharCode(0xf013)}
+          />
+          <div className="prev-next-prog">
+            <PreviousProgramButton
+              className={"control-button"}
+              player={player}
+              videoElement={videoElement}
+            />
+            <NextProgramButton
+              className={"control-button"}
+              player={player}
+              videoElement={videoElement}
             />
           </div>
           <div className="volume">
