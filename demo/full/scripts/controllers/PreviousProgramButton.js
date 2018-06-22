@@ -7,6 +7,7 @@ function PreviousProgramButton({
   currentPeriod,
   manifest,
   player,
+  position,
 }) {
   if (!manifest) {
     return (
@@ -30,7 +31,11 @@ function PreviousProgramButton({
   const newPeriod = indexOf === 0 ?
     currentPeriod : manifest.periods[indexOf - 1];
   const onClick = function onPreviousProgramClick() {
-    player.dispatch("SEEK", newPeriod.start);
+    if (position >= currentPeriod.start && position - currentPeriod.start < 3) {
+      player.dispatch("SEEK", newPeriod.start - 4);
+    } else {
+      player.dispatch("SEEK", currentPeriod.start - 4);
+    }
   };
   return (
     <Button
@@ -45,6 +50,7 @@ function PreviousProgramButton({
 export default withModulesState({
   player: {
     currentPeriod: "currentPeriod",
+    currentTime: "position",
     manifest: "manifest",
   },
 })(PreviousProgramButton);

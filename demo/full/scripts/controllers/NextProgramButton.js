@@ -29,7 +29,7 @@ function NextProgramButton({
   }
   const newPeriod = manifest.periods[indexOf + 1];
   const onClick = function onNextProgramClick() {
-    player.dispatch("SEEK", newPeriod.start);
+    player.dispatch("SEEK", newPeriod.start - 4);
   };
   return (
     <Button
