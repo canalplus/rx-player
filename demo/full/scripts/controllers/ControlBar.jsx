@@ -6,6 +6,7 @@ import LivePosition from "../components/LivePosition.jsx";
 import PlayPauseButton from "./PlayPauseButton.jsx";
 import PreviousProgramButton from "./PreviousProgramButton.js";
 import NextProgramButton from "./NextProgramButton.js";
+import LiveProgramButton from "./LiveProgramButton.js";
 import FullscreenButton from "./FullScreenButton.jsx";
 import Progressbar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
@@ -54,6 +55,11 @@ function ControlBar({
             value={String.fromCharCode(0xf013)}
           />
           <div className="prev-next-prog">
+            <LiveProgramButton
+              className={"control-button"}
+              player={player}
+              videoElement={videoElement}
+            />
             <PreviousProgramButton
               className={"control-button"}
               player={player}
