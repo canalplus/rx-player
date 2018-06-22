@@ -40,9 +40,7 @@ export default function getWantedRange(
   paddings : { low : number; high : number }
 ) : { start : number; end : number } {
   const currentTime = timing.currentTime + timing.wantedTimeOffset;
-  const limitEnd = timing.liveGap == null ?
-    hardLimits.end :
-    Math.min(hardLimits.end || Infinity, timing.currentTime + timing.liveGap);
+  const limitEnd = hardLimits.end;
   const boundedLimits = {
     start: Math.max(hardLimits.start || 0, currentTime),
     end: limitEnd,
