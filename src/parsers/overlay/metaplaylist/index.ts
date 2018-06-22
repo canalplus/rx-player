@@ -14,31 +14,5 @@
  * limitations under the License.
  */
 
-export type IOverlayParserFn =
-  (
-    data : IOverlayData[],
-    timeOffset : number
-  ) => IHTMLOverlay[];
-
-export interface IOverlayElement {
-  url : string;
-  format : string;
-  xAxis : string;
-  yAxis : string;
-  height : string;
-  width : string;
-}
-
-export interface IOverlayData {
-  start : number;
-  end : number;
-  timescale : number;
-  version : number;
-  elements : IOverlayElement[];
-}
-
-export interface IHTMLOverlay {
-  start : number;
-  end: number;
-  element : HTMLElement;
-}
+import createMetaPlaylistOverlays from "./create_mpl_overlays";
+export default createMetaPlaylistOverlays;
