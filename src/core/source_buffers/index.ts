@@ -136,10 +136,10 @@ export default class SourceBufferManager {
 
   /**
    * Returns the created QueuedSourceBuffer for the given type.
-   * Returns null if no QueuedSourceBuffer were created for the given type.
+   * Throws if no QueuedSourceBuffer were created for the given type.
    *
    * @param {string} bufferType
-   * @returns {QueuedSourceBuffer|null}
+   * @returns {QueuedSourceBuffer}
    */
   public get(bufferType : IBufferType) : QueuedSourceBuffer<any>|null {
     return this._initializedSourceBuffers[bufferType] || null;
@@ -157,7 +157,7 @@ export default class SourceBufferManager {
   public createSourceBuffer(
     bufferType : IBufferType,
     codec : string,
-    options? : ISourceBufferOptions|undefined
+    options : ISourceBufferOptions = {}
   ) : QueuedSourceBuffer<any> {
     const memorizedSourceBuffer = this._initializedSourceBuffers[bufferType];
     if (shouldHaveNativeSourceBuffer(bufferType)) {

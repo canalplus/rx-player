@@ -308,7 +308,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       }
       const { overlayInfos } = privateInfos;
       const end = segment.duration != null ?
-        segment.duration - segment.time : overlayInfos.end;
+        segment.duration + segment.time : overlayInfos.end;
       return observableOf({
         segmentOffset: 0,
         segmentInfos: {
