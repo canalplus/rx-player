@@ -69,7 +69,7 @@ export default class OverlayRepresentationIndex implements IRepresentationIndex 
   getSegments(up : number, to : number) : ISegment[] {
     return this._overlays
       .filter(({ start, end }) => {
-        return start < to && end > up;
+        return start < (to + up) && end > up;
       })
       .map(overlayData => {
         const time = Math.max(overlayData.start, this._periodStart);
