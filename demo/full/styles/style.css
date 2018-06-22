@@ -692,6 +692,10 @@ body {
   color: #fff;
 }
 
+.epg-program.unavailable {
+  color: #555;
+}
+
 .epg-program-hours {
   margin-right: 10px;
   font-style: italic;

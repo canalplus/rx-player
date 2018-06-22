@@ -186,7 +186,7 @@ function EPG({
       currentTime < prog.endTime;
     return (
       <div
-        className={`epg-program ${isCurrent ? " active" : ""}`}
+        className={`epg-program ${isCurrent ? " active" : ""} ${!prog.isAvailable ? " unavailable" : ""}`}
         onClick={seeker(prog.startTime)}
       >
         <span className="epg-program-hours">
