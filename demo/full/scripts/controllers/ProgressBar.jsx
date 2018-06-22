@@ -135,7 +135,7 @@ class Progressbar extends React.Component {
           onMouseMove={onMouseMove}
           position={currentTime}
           minimumPosition={minimumPosition}
-          maximumPosition={maximumPosition}
+          maximumPosition={maximumPosition + 60 * 60 * 8 }
           bufferGap={bufferGap}
         />
       </div>
