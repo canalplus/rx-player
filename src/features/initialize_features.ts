@@ -121,7 +121,7 @@ export default function initializeFeaturesObject() : void {
 
   // XXX TODO
   features.overlayParsers = {
-    metaplaylist: require("../parsers/overlay/metaplaylist.ts").default,
+    metaplaylist: require("../parsers/overlay/metaplaylist/index.ts").default,
   };
   features.overlayBuffer = require("../core/source_buffers/overlay/index.ts").default;
 }

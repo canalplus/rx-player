@@ -17,13 +17,21 @@
 import {
   IHTMLOverlay,
   IOverlayData,
-} from "./types";
+} from "../types";
+import parseOverlays from "./parse_overlays";
 
-export default function parseMetaDASHOverlay(
-  data : IOverlayData[],
+export default function createMetaPlaylistOverlays(
+  overlays : IOverlayData[],
   timeOffset : number
 ) : IHTMLOverlay[] {
-  return data.map(overlayData => {
+  // make sure they are sorted by start date
+  overlays.sort((overlayDataA, overlayDataB) => {
+    return overlayDataA.start - overlayDataB.start;
+  });
+
+  const parsedOverlays = parseOverlays(overlays);
+
+  return parsedOverlays.map(overlayData => {
     const div = document.createElement("div");
     div.style.position = "absolute";
     div.style.height = "100%";
