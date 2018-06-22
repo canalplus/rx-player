@@ -20,18 +20,21 @@ export type IOverlayParserFn =
     timeOffset : number
   ) => IHTMLOverlay[];
 
+export interface IOverlayElement {
+  url : string;
+  format : string;
+  xAxis : string;
+  yAxis : string;
+  height : string;
+  width : string;
+}
+
 export interface IOverlayData {
   start : number;
   end : number;
+  timescale : number;
   version : number;
-  elements : Array<{
-    url : string;
-    format : string;
-    xAxis : string;
-    yAxis : string;
-    height : string;
-    width : string;
-  }>;
+  elements : IOverlayElement[];
 }
 
 export interface IHTMLOverlay {
