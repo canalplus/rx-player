@@ -9,6 +9,7 @@ import ErrorDisplayer from "./ErrorDisplayer.jsx";
 import LogDisplayer from "./LogDisplayer.jsx";
 import ChartsManager from "./charts/index.jsx";
 import PlayerKnobsManager from "./PlayerKnobs.jsx";
+import withModulesState from "../lib/withModulesState.jsx";
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
@@ -21,6 +22,7 @@ class Player extends React.Component {
       displaySpinner: false,
       displaySettings: false,
       isStopped: true,
+      epg: null,
     };
   }
 
@@ -34,7 +36,7 @@ class Player extends React.Component {
     this._$destroySubject = new Subject();
     this._$destroySubject.subscribe(() => player.destroy());
 
-    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isStopped")
+    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isStopped", "epg")
       .pipe(takeUntil(this._$destroySubject))
       .subscribe(([
         isSeeking,
@@ -42,8 +44,9 @@ class Player extends React.Component {
         isLoading,
         isReloading,
         isStopped,
+        epg,
       ]) => {
-        this.setState({ isStopped });
+        this.setState({ epg, isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
         } else if (isSeeking || isBuffering) {
@@ -93,7 +96,7 @@ class Player extends React.Component {
   }
 
   render() {
-    const { player, displaySpinner, isStopped } = this.state;
+    const { player, displaySpinner, isStopped, epg } = this.state;
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
 
@@ -156,6 +159,7 @@ class Player extends React.Component {
                   toggleSettings={toggleSettings}
                 /> : null}
           </div>
+          {epg && epg.length ? <EpgState epg={epg} player={player} /> : null}
           {player ?  <ChartsManager player={player} /> : null }
           {player ?  <LogDisplayer player={player} /> : null}
         </div>
@@ -163,5 +167,51 @@ class Player extends React.Component {
     );
   }
 }
+
+function EPG({
+  epg,
+  player,
+  currentTime,
+}) {
+  const seeker = (startTime) => () => {
+    player.dispatch("SEEK", startTime);
+  };
+  const programs = epg.map((prog) => {
+    const date = new Date(prog.startTime * 1000);
+    const hours = ((date.getUTCHours() + 2) % 24).toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    const currentReadableHour =  hours + ":" + minutes + ":" + seconds;
+    const isCurrent = currentTime >= prog.startTime &&
+      currentTime < prog.endTime;
+    return (
+      <div
+        className={`epg-program ${isCurrent ? " active" : ""}`}
+        onClick={seeker(prog.startTime)}
+      >
+        <span className="epg-program-hours">
+          {currentReadableHour}
+        </span>
+        <span className="epg-program-title">
+          {prog.title}
+        </span>
+      </div>
+    );
+  });
+
+  return (
+    <div className="epg-grid-wrapper">
+      <div className="epg-grid">
+        {programs}
+      </div>
+    </div>
+  );
+}
+
+const EpgState = withModulesState({
+  player: {
+    currentTime: "currentTime",
+  },
+})(EPG);
 
 export default Player;

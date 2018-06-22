@@ -672,6 +672,35 @@ body {
   border: solid 1px #a9a9a9;
 }
 
+.epg-grid-wrapper {
+  margin: 5px;
+  text-align: center;
+}
+
+.epg-grid {
+  padding: 5px;
+  background-color: #fff;
+  display: inline-block
+}
+
+.epg-program {
+  margin: 10px;
+}
+
+.epg-program.active {
+  background-color: #000;
+  color: #fff;
+}
+
+.epg-program-hours {
+  margin-right: 10px;
+  font-style: italic;
+}
+
+.epg-program-title {
+  font-weight: bold;
+}
+
 @media only screen and (max-width: 660px) {
   .content-inputs {
     flex-direction: column;
