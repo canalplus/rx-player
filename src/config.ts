@@ -37,7 +37,7 @@ export default {
    * Default time interval after which a request will timeout, in ms.
    * @type {Number}
    */
-  DEFAULT_REQUEST_TIMEOUT: 30 * 1000,
+  DEFAULT_REQUEST_TIMEOUT: 60 * 1000,
 
   /**
    * Can be either:
