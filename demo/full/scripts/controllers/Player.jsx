@@ -176,28 +176,30 @@ function EPG({
   const seeker = (startTime) => () => {
     player.dispatch("SEEK", startTime);
   };
-  const programs = epg.map((prog) => {
-    const date = new Date(prog.startTime * 1000);
-    const hours = ((date.getUTCHours() + 2) % 24).toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const seconds = date.getSeconds().toString().padStart(2, "0");
-    const currentReadableHour =  hours + ":" + minutes + ":" + seconds;
-    const isCurrent = currentTime >= prog.startTime &&
-      currentTime < prog.endTime;
-    return (
-      <div
-        className={`epg-program ${isCurrent ? " active" : ""} ${!prog.isAvailable ? " unavailable" : ""}`}
-        onClick={seeker(prog.startTime)}
-      >
-        <span className="epg-program-hours">
-          {currentReadableHour}
-        </span>
-        <span className="epg-program-title">
-          {prog.title}
-        </span>
-      </div>
-    );
-  });
+  const programs = epg
+    .filter((prog) => prog.isAvailable)
+    .map((prog) => {
+      const date = new Date(prog.startTime * 1000);
+      const hours = ((date.getUTCHours() + 2) % 24).toString().padStart(2, "0");
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      const seconds = date.getSeconds().toString().padStart(2, "0");
+      const currentReadableHour =  hours + ":" + minutes + ":" + seconds;
+      const isCurrent = currentTime >= prog.startTime &&
+        currentTime < prog.endTime;
+      return (
+        <div
+          className={`epg-program ${isCurrent ? " active" : ""} ${!prog.isAvailable ? " unavailable" : ""}`}
+          onClick={seeker(prog.startTime)}
+        >
+          <span className="epg-program-hours">
+            {currentReadableHour}
+          </span>
+          <span className="epg-program-title">
+            {prog.title}
+          </span>
+        </div>
+      );
+    });
 
   return (
     <div className="epg-grid-wrapper">
