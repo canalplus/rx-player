@@ -98,7 +98,11 @@ class FullscreenButton extends React.Component {
     this.state = { isFullscreen: isFullscreen() };
 
     this._fullscreenListener = () => {
-      this.setState({ isFullscreen: isFullscreen() });
+      const isInFullscreen = isFullscreen();
+      if (!isInFullscreen) {
+        this.props.videoElement.classList.remove("fullscreen");
+      }
+      this.setState({ isFullscreen: isInFullscreen });
     };
     addFullscreenListener(this._fullscreenListener);
   }
@@ -113,13 +117,11 @@ class FullscreenButton extends React.Component {
       return;
     }
     requestFullscreen(this.props.videoElement);
-    this.props.videoElement.style.width = "100%";
-    this.setState({ isFullscreen: true });
+    this.props.videoElement.classList.add("fullscreen");
   }
 
   exitFullscreen() {
     exitFullscreen();
-    this.setState({ isFullscreen: false });
   }
 
   render() {
