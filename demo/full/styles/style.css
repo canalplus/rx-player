@@ -91,6 +91,10 @@ body {
   height: 100%;
 }
 
+.fullscreen.video-player-wrapper {
+  width: 100%;
+}
+
 .video-wrapper {
   position: relative;
 }
@@ -158,7 +162,6 @@ body {
   position: absolute;
   display: block;
   left: 0px;
-  border: 1px solid white;
   height: 100px;
   width: 180px;
   margin-left: -90px;
@@ -179,6 +182,17 @@ body {
 .controls-bar-container {
   background-color: #111;
   margin-top: -4px;
+  z-index: 1000;
+}
+
+.fullscreen .controls-bar-container {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
+
+.fullscreen .controls-bar {
+  display: none;
 }
 
 .progress-bar-parent {
