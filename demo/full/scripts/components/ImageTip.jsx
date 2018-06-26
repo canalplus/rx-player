@@ -59,7 +59,7 @@ class ImageTip extends React.Component {
     }
 
     const style = {
-      transform: `translate(${xPosition}px, -120px)`,
+      transform: `translate(${xPosition}px, -136px)`,
     };
 
     this.positionIsCorrected = true;

@@ -1,16 +1,41 @@
 import React from "react";
 import ProgressbarComponent from "../components/ProgressBar.jsx";
 import ImageTip from "../components/ImageTip.jsx";
+import TimeIndicator from "../components/TimeIndicator.jsx";
 import withModulesState from "../lib/withModulesState.jsx";
 
 class Progressbar extends React.Component {
   constructor(...args) {
     super(...args);
     this.state = {
+      timeIndicatorVisible: false,
+      timeIndicatorPosition: 0,
+      timeIndicatorText: "",
       imageTipVisible: false,
       imageTipPosition: 0,
       image: null,
     };
+  }
+
+  showTimeIndicator(wallClockTime, clientX) {
+    const date = new Date(wallClockTime * 1000);
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    const currentReadableTime =  hours + ":" + minutes + ":" + seconds;
+    this.setState({
+      timeIndicatorVisible: true,
+      timeIndicatorPosition: clientX,
+      timeIndicatorText: currentReadableTime,
+    });
+  }
+
+  hideTimeIndicator() {
+    this.setState({
+      timeIndicatorVisible: false,
+      timeIndicatorPosition: 0,
+      timeIndicatorText: "",
+    });
   }
 
   showImageTip(ts, clientX) {
@@ -44,7 +69,14 @@ class Progressbar extends React.Component {
   }
 
   render() {
-    const { imageTipVisible, imageTipPosition, image } = this.state;
+    const {
+      imageTipVisible,
+      imageTipPosition,
+      image,
+      timeIndicatorVisible,
+      timeIndicatorPosition,
+      timeIndicatorText,
+    } = this.state;
     const {
       currentTime,
       minimumPosition,
@@ -53,12 +85,18 @@ class Progressbar extends React.Component {
       player,
     } = this.props;
     const seek = position => player.dispatch("SEEK", position);
-    const onMouseOut = () => this.hideImageTip();
+    const onMouseOut = () => {
+      this.hideTimeIndicator();
+      this.hideImageTip();
+    };
     const onMouseMove = (position, event) => {
+      const wallClockDiff = player.get("wallClockDiff");
+      const wallClockTime = position + wallClockDiff;
+      this.showTimeIndicator(wallClockTime, event.clientX);
       this.showImageTip(position, event.clientX);
     };
 
-    const imageTipOffset = this.wrapperElement ?
+    const tipsOffset = this.wrapperElement ?
       this.wrapperElement.getBoundingClientRect().left : 0;
 
     return (
@@ -66,12 +104,21 @@ class Progressbar extends React.Component {
         className="progress-bar-parent"
         ref={el => this.wrapperElement = el}
       >
-        { imageTipVisible ?
-          <ImageTip
-            className="progress-tip"
-            image={image}
-            xPosition={imageTipPosition - imageTipOffset}
-          /> : null
+        {
+          timeIndicatorVisible ?
+            <TimeIndicator
+              className="progress-tip"
+              timeText={timeIndicatorText}
+              xPosition={timeIndicatorPosition - tipsOffset}
+            /> : null
+        }
+        {
+          imageTipVisible ?
+            <ImageTip
+              className="progress-tip"
+              image={image}
+              xPosition={imageTipPosition - tipsOffset}
+            /> : null
         }
         <ProgressbarComponent
           seek={seek}

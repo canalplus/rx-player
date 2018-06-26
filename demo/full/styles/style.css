@@ -395,3 +395,20 @@ body {
   overflow: auto;
   white-space: nowrap;
 }
+
+.time-indicator-wrapper {
+  position: absolute;
+  display: block;
+  left: 0px;
+  padding: 5px;
+  font-size: 12px;
+  z-index: 100;
+  transform:scaleY(1);
+  animation: fadein 0.6s;
+  background-color: #1d1d1d;
+  color: white;
+}
+
+.time-indicator {
+  height: 100%;
+}
