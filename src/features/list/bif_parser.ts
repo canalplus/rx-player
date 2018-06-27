@@ -15,15 +15,15 @@
  */
 
 import bifParser from "../../parsers/images/bif";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.BIF_PARSER,
-  content: bifParser,
-};
+/**
+ * Add ability to parse BIF thumbnails.
+ * @param {Object} features
+ */
+function addBIFParserFeature(features : IFeaturesObject) : void {
+  features.imageParser = bifParser;
+}
 
-export { feature as BIF_PARSER };
-export default feature;
+export { addBIFParserFeature as BIF_PARSER };
+export default addBIFParserFeature;

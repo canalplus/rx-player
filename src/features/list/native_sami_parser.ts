@@ -15,15 +15,15 @@
  */
 
 import samiParser from "../../parsers/texttracks/sami/native";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.NATIVE_SAMI,
-  content: samiParser,
-};
+/**
+ * Add ability to parse SAMI text tracks in a native textrack mode.
+ * @param {Object} features
+ */
+function addNativeSAMIFeature(features : IFeaturesObject) {
+  features.nativeTextTracksParsers.sami = samiParser;
+}
 
-export { feature as NATIVE_SAMI_PARSER };
-export default feature;
+export { addNativeSAMIFeature as NATIVE_SAMI_PARSER };
+export default addNativeSAMIFeature;

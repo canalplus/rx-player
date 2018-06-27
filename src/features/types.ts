@@ -85,44 +85,6 @@ export interface IImageBuffer {
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);
 
-export const enum FEATURE_IDS {
-  DASH,
-  SMOOTH,
-  EME,
-  NATIVE_VTT,
-  NATIVE_TTML,
-  NATIVE_SRT,
-  NATIVE_SAMI,
-  HTML_VTT,
-  HTML_TTML,
-  HTML_SRT,
-  HTML_SAMI,
-  NATIVE_TEXT_BUFFER,
-  HTML_TEXT_BUFFER,
-  IMAGE_BUFFER,
-  BIF_PARSER,
-  DIRECTFILE,
-}
-
-// feature item added through feature loading
-export type IFeatureListItem =
-  { id : FEATURE_IDS.DASH; content : ITransportFunction } |
-  { id : FEATURE_IDS.SMOOTH; content : ITransportFunction } |
-  { id : FEATURE_IDS.EME; content : IEMEManager } |
-  { id : FEATURE_IDS.NATIVE_VTT; content : INativeTextTracksParserFn } |
-  { id : FEATURE_IDS.NATIVE_TTML; content : INativeTextTracksParserFn } |
-  { id : FEATURE_IDS.NATIVE_SRT; content : INativeTextTracksParserFn } |
-  { id : FEATURE_IDS.NATIVE_SAMI; content : INativeTextTracksParserFn } |
-  { id : FEATURE_IDS.HTML_VTT; content : IHTMLTextTracksParserFn } |
-  { id : FEATURE_IDS.HTML_TTML; content : IHTMLTextTracksParserFn } |
-  { id : FEATURE_IDS.HTML_SRT; content : IHTMLTextTracksParserFn } |
-  { id : FEATURE_IDS.HTML_SAMI; content : IHTMLTextTracksParserFn } |
-  { id : FEATURE_IDS.NATIVE_TEXT_BUFFER; content : INativeTextTracksBuffer } |
-  { id : FEATURE_IDS.HTML_TEXT_BUFFER; content : IHTMLTextTracksBuffer } |
-  { id : FEATURE_IDS.IMAGE_BUFFER; content : IImageBuffer } |
-  { id : FEATURE_IDS.BIF_PARSER; content : IImageParser } |
-  { id : FEATURE_IDS.DIRECTFILE; content : IDirectFileStream };
-
 // interface of the global `features` object through which features are
 // accessed.
 export interface IFeaturesObject {
@@ -136,3 +98,5 @@ export interface IFeaturesObject {
   emeManager : IEMEManager|null;
   directfile : IDirectFileStream|null;
 }
+
+export type IFeatureFunction = (features : IFeaturesObject) => void;

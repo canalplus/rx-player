@@ -15,15 +15,15 @@
  */
 
 import vttParser from "../../parsers/texttracks/webvtt/native";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.NATIVE_VTT,
-  content: vttParser,
-};
+/**
+ * Add ability to parse WebVTT text tracks in a native textrack mode.
+ * @param {Object} features
+ */
+function addNativeVTTFeature(features : IFeaturesObject) {
+  features.nativeTextTracksParsers.vtt = vttParser;
+}
 
-export { feature as NATIVE_VTT_PARSER };
-export default feature;
+export { addNativeVTTFeature as NATIVE_VTT_PARSER };
+export default addNativeVTTFeature;

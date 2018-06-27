@@ -15,15 +15,15 @@
  */
 
 import srtParser from "../../parsers/texttracks/srt/native";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.NATIVE_SRT,
-  content: srtParser,
-};
+/**
+ * Add ability to parse SRT text tracks in a native textrack mode.
+ * @param {Object} features
+ */
+function addNativeSRTFeature(features : IFeaturesObject) {
+  features.nativeTextTracksParsers.srt = srtParser;
+}
 
-export { feature as NATIVE_SRT_PARSER };
-export default feature;
+export { addNativeSRTFeature as NATIVE_SRT_PARSER };
+export default addNativeSRTFeature;

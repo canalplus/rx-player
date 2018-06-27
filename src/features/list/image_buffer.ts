@@ -15,15 +15,15 @@
  */
 
 import imageBuffer from "../../core/source_buffers/image";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.IMAGE_BUFFER,
-  content: imageBuffer,
-};
+/**
+ * Add ability to display image tracks.
+ * @param {Object} features
+ */
+function addImageBufferFeature(features : IFeaturesObject) : void {
+  features.imageBuffer = imageBuffer;
+}
 
-export { feature as IMAGE_BUFFER };
-export default feature;
+export { addImageBufferFeature as IMAGE_BUFFER };
+export default addImageBufferFeature;

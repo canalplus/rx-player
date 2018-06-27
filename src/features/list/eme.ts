@@ -15,16 +15,15 @@
  */
 
 import EMEManager from "../../core/eme";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-// Add ability to play encrypted contents
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.EME,
-  content: EMEManager,
-};
+/**
+ * Add ability to play encrypted contents
+ * @param {Object} features
+ */
+function addEMEManagerFeature(features : IFeaturesObject) : void {
+  features.emeManager = EMEManager;
+}
 
-export { feature as EME };
-export default feature;
+export { addEMEManagerFeature as EME };
+export default addEMEManagerFeature;

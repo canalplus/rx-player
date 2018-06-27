@@ -15,15 +15,15 @@
  */
 
 import vttParser from "../../parsers/texttracks/webvtt/html";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.HTML_VTT,
-  content: vttParser,
-};
+/**
+ * Add ability to parse WebVTT text tracks in an HTML textrack mode.
+ * @param {Object} features
+ */
+function addHTMLVTTFeature(features : IFeaturesObject) {
+  features.htmlTextTracksParsers.vtt = vttParser;
+}
 
-export { feature as HTML_VTT_PARSER };
-export default feature;
+export { addHTMLVTTFeature as HTML_VTT_PARSER };
+export default addHTMLVTTFeature;

@@ -15,15 +15,15 @@
  */
 
 import ttmlParser from "../../parsers/texttracks/ttml/html";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.HTML_TTML,
-  content: ttmlParser,
-};
+/**
+ * Add ability to parse TTML text tracks in an HTML textrack mode.
+ * @param {Object} features
+ */
+function addHTMLTTMLFeature(features : IFeaturesObject) {
+  features.htmlTextTracksParsers.ttml = ttmlParser;
+}
 
-export { feature as HTML_TTML_PARSER };
-export default feature;
+export { addHTMLTTMLFeature as HTML_TTML_PARSER };
+export default addHTMLTTMLFeature;
