@@ -15,16 +15,15 @@
  */
 
 import nativeTextBuffer from "../../core/source_buffers/text/native";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-// Add ability to show subtitles through <tracks> tags
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.NATIVE_TEXT_BUFFER,
-  content: nativeTextBuffer,
-};
+/**
+ * Add ability to display text tracks in a native textrack mode.
+ * @param {Object} features
+ */
+function addNativeTextBuffer(features : IFeaturesObject) : void {
+  features.nativeTextTracksBuffer = nativeTextBuffer;
+}
 
-export { feature as NATIVE_TEXT_BUFFER };
-export default feature;
+export { addNativeTextBuffer as NATIVE_TEXT_BUFFER };
+export default addNativeTextBuffer;

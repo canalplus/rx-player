@@ -15,68 +15,17 @@
  */
 
 import features from "./index";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "./types";
+import { IFeatureFunction } from "./types";
 
 /**
- * @param {Array.<Object>} featureList
+ * @param {Array.<Object>} featureFuncList
  */
-export default function addFeatures(featureList : IFeatureListItem[]) : void {
-  for (let i = 0; i < featureList.length; i++) {
-    const feature = featureList[i] || {};
-    switch (feature.id) {
-      case FEATURE_IDS.SMOOTH:
-        features.transports.smooth = feature.content;
-        break;
-      case FEATURE_IDS.DASH:
-        features.transports.dash = feature.content;
-        break;
-      case FEATURE_IDS.DIRECTFILE:
-        features.directfile = feature.content;
-        break;
-      case FEATURE_IDS.NATIVE_TEXT_BUFFER:
-        features.nativeTextTracksBuffer = feature.content;
-        break;
-      case FEATURE_IDS.HTML_TEXT_BUFFER:
-        features.htmlTextTracksBuffer = feature.content;
-        break;
-      case FEATURE_IDS.HTML_TTML:
-        features.htmlTextTracksParsers.ttml = feature.content;
-        break;
-      case FEATURE_IDS.HTML_SAMI:
-        features.htmlTextTracksParsers.sami = feature.content;
-        break;
-      case FEATURE_IDS.HTML_SRT:
-        features.htmlTextTracksParsers.srt = feature.content;
-        break;
-      case FEATURE_IDS.HTML_VTT:
-        features.htmlTextTracksParsers.vtt = feature.content;
-        break;
-      case FEATURE_IDS.NATIVE_TTML:
-        features.nativeTextTracksParsers.ttml = feature.content;
-        break;
-      case FEATURE_IDS.NATIVE_SAMI:
-        features.nativeTextTracksParsers.sami = feature.content;
-        break;
-      case FEATURE_IDS.NATIVE_SRT:
-        features.nativeTextTracksParsers.srt = feature.content;
-        break;
-      case FEATURE_IDS.NATIVE_VTT:
-        features.nativeTextTracksParsers.vtt = feature.content;
-        break;
-      case FEATURE_IDS.IMAGE_BUFFER:
-        features.imageBuffer = feature.content;
-        break;
-      case FEATURE_IDS.BIF_PARSER:
-        features.imageParser = feature.content;
-        break;
-      case FEATURE_IDS.EME:
-        features.emeManager = feature.content;
-        break;
-      default:
-        throw new Error("Unrecognized feature");
+export default function addFeatures(featureFuncList : IFeatureFunction[]) : void {
+  for (let i = 0; i < featureFuncList.length; i++) {
+    const addFeature = featureFuncList[i];
+    if (typeof addFeature !== "function") {
+      throw new Error("Unrecognized feature");
     }
+    addFeature(features);
   }
 }

@@ -15,15 +15,15 @@
  */
 
 import samiParser from "../../parsers/texttracks/sami/html";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.HTML_SAMI,
-  content: samiParser,
-};
+/**
+ * Add ability to parse SAMI text tracks in an HTML textrack mode.
+ * @param {Object} features
+ */
+function addHTMLSAMIFeature(features : IFeaturesObject) {
+  features.htmlTextTracksParsers.sami = samiParser;
+}
 
-export { feature as HTML_SAMI_PARSER };
-export default feature;
+export { addHTMLSAMIFeature as HTML_SAMI_PARSER };
+export default addHTMLSAMIFeature;

@@ -15,15 +15,15 @@
  */
 
 import srtParser from "../../parsers/texttracks/srt/html";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.HTML_SRT,
-  content: srtParser,
-};
+/**
+ * Add ability to parse SRT text tracks in an HTML textrack mode.
+ * @param {Object} features
+ */
+function addHTMLSRTFeature(features : IFeaturesObject) {
+  features.htmlTextTracksParsers.srt = srtParser;
+}
 
-export { feature as HTML_SRT_PARSER };
-export default feature;
+export { addHTMLSRTFeature as HTML_SRT_PARSER };
+export default addHTMLSRTFeature;
