@@ -52,6 +52,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     videoBitrateAuto: true,
     videoBitrate: undefined,
     volume: player.getVolume(),
+    wallClockDiff: undefined,
   });
 
   linkPlayerEventsToState(player, state, $destroy);

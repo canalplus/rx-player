@@ -51,13 +51,17 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   // use an interval for current position
   // TODO Only active for content playback
   intervalObservable(POSITION_UPDATES_INTERVAL).pipe(
-    map(() => ({
-      currentTime: player.getPosition(),
-      bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
-      duration: player.getVideoDuration(),
-      minimumPosition: player.getMinimumPosition(),
-      maximumPosition: player.getMaximumPosition(),
-    })),
+    map(() => {
+      const position = player.getPosition();
+      return {
+        currentTime: player.getPosition(),
+        wallClockDiff: player.getWallClockTime() - position,
+        bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
+        duration: player.getVideoDuration(),
+        minimumPosition: player.getMinimumPosition(),
+        maximumPosition: player.getMaximumPosition(),
+      };
+    }),
     takeUntil($destroy)
   ).subscribe(arg => {
     state.set(arg);
@@ -93,6 +97,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       stateUpdates.availableSubtitles = [];
       stateUpdates.images = [];
       stateUpdates.currentTime = undefined;
+      stateUpdates.wallClockDiff = undefined;
       stateUpdates.bufferGap = undefined;
       stateUpdates.duration = undefined;
       stateUpdates.minimumPosition = undefined;
