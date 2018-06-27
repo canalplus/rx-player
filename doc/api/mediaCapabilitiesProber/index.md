@@ -83,11 +83,11 @@ const configuration = {
         videoRobustnesses: [
           "HW_SECURE_ALL",
           "HW_SECURE_DECODE",
-        ], 
+        ],
         audioRobustnesses: [
           "HW_SECURE_ALL",
           "HW_SECURE_DECODE",
-        ], 
+        ],
       }
     },
     output: {
@@ -113,7 +113,7 @@ const configuration = {
 
   __getCapabilities()__
 
-  _arguments_: 
+  _arguments_:
   - config {``Object``} : Configuration as defined above.
 
   __getStatusForHDCP()__
@@ -139,9 +139,9 @@ const configuration = {
 
   __getDecodingCapabilities()__
 
-   _arguments_: 
+   _arguments_:
   - config {``Object``} : Object with type, video and audio configuration.
-  /!\ 
+  /!\ TODO
 
   ```js
     const capabilities = await mediaCapabilitiesProber.getDecodingCapabilities(
@@ -167,7 +167,7 @@ const configuration = {
 
   __getDisplayCapabilities()__
 
-   _arguments_: 
+   _arguments_:
   - config {``Object``} : Display configuration.
 
   ```js
@@ -183,7 +183,7 @@ const configuration = {
 
   __setLogLevel()__
 
-   _arguments_: 
+   _arguments_:
   - level {``string``} : Wanted log level
 
   ```js
@@ -206,5 +206,5 @@ import { MediaCapabilitiesProber } from "rx-player/experimental/tools";
 const configurationSupport = MediaCapabilitiesProber.getCapabilities(config);
 configurationSupport.then((result) => {
   // ...
-}); 
+});
 ```
