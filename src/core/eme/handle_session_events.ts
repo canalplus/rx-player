@@ -151,6 +151,7 @@ export default function handleSessionEvents(
         .pipe(
           catchError((error: Error) => {
             throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
+            return EMPTY;
           }),
           map((licenseObject) => {
             return {
