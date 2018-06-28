@@ -103,8 +103,8 @@ export default function parseMetaManifest(
             bitrate: 0,
             index: new StaticRepresentationIndex({
               media: track.url,
-              startTime: parsedPeriod.start,
-              endTime: parsedPeriod.end || Number.MAX_VALUE,
+              startTime: 0,
+              endTime: parsedPeriod.duration || Number.MAX_VALUE,
             }),
             id: "gen-text-rep-" + generateNewId(),
           }],
