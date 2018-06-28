@@ -16,8 +16,7 @@
 
 // privateInfos specific to Smooth Initialization Segments
 export interface ISmoothInitSegmentPrivateInfos {
-  type : "smooth-init";
-  codecPrivateData : string;
+  codecPrivateData? : string;
   bitsPerSample? : number;
   channels? : number;
   packetSize? : number;
@@ -31,9 +30,9 @@ export interface ISmoothInitSegmentPrivateInfos {
   };
 }
 
-// Possible values for Segment's privateInfos
-export type ISegmentPrivateInfos =
-  ISmoothInitSegmentPrivateInfos;
+export interface IPrivateInfos {
+  smoothInit?: ISmoothInitSegmentPrivateInfos;
+}
 
 // ISegment Object.
 // Represent a single Segment from a Representation.
@@ -51,9 +50,9 @@ export interface ISegment {
   number? : number; // Optional number of the Segment
   range? : [number, number]; // Optional byte range to retrieve the Segment
 
-  privateInfos? : ISegmentPrivateInfos; // Allows a RepresentationIndex to store
-                                        // supplementary informations in a given
-                                        // Segment for later downloading/parsing
+  privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
+                                 // supplementary informations in a given
+                                 // Segment for later downloading/parsing
 }
 
 export interface IRepresentationIndexSegmentInfos {

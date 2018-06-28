@@ -78,12 +78,12 @@ const generateSegmentLoader = (
   init,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
   if (segment.isInit) {
-    if (!segment.privateInfos || segment.privateInfos.type !== "smooth-init") {
+    if (!segment.privateInfos || segment.privateInfos.smoothInit == null) {
       throw new Error("Smooth: Invalid segment format");
     }
-    const privateInfos = segment.privateInfos;
+    const smoothInitPrivateInfos = segment.privateInfos.smoothInit;
     let responseData : Uint8Array;
-    const protection = privateInfos.protection;
+    const protection = smoothInitPrivateInfos.protection;
 
     switch (adaptation.type) {
     case "video":
@@ -92,7 +92,7 @@ const generateSegmentLoader = (
         representation.width || 0,
         representation.height || 0,
         72, 72, 4, // vRes, hRes, nal
-        privateInfos.codecPrivateData,
+        smoothInitPrivateInfos.codecPrivateData || "",
         protection && protection.keyId,     // keyId
         protection && protection.keySystems // pssList
       );
@@ -100,11 +100,11 @@ const generateSegmentLoader = (
     case "audio":
       responseData = createAudioInitSegment(
         segment.timescale,
-        privateInfos.channels || 0,
-        privateInfos.bitsPerSample || 0,
-        privateInfos.packetSize || 0,
-        privateInfos.samplingRate || 0,
-        privateInfos.codecPrivateData,
+        smoothInitPrivateInfos.channels || 0,
+        smoothInitPrivateInfos.bitsPerSample || 0,
+        smoothInitPrivateInfos.packetSize || 0,
+        smoothInitPrivateInfos.samplingRate || 0,
+        smoothInitPrivateInfos.codecPrivateData || "",
         protection && protection.keyId,     // keyId
         protection && protection.keySystems // pssList
       );
