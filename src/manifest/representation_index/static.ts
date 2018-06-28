@@ -62,7 +62,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
       isInit: false,
       number: 0,
       time: this._startTime,
-      duration: this._endTime,
+      duration: this._endTime - this._startTime,
       timescale: 1,
       mediaURL: this._media,
     }];
