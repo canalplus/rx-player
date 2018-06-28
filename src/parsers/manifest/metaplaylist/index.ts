@@ -89,7 +89,10 @@ export default function parseMetaManifest(
     const baseManifest = new Manifest(contents[j].manifest as IManifestArguments);
     const parsedPeriod = parsedPeriods[j];
     parsedPeriod.start = contents[j].startTime;
-    parsedPeriod.end = parsedPeriod.start + (parsedPeriod.duration || 0);
+    parsedPeriod.end =
+      contents[j].endTime || (parsedPeriod.start + (parsedPeriod.duration || 0));
+    parsedPeriod.duration = parsedPeriod.end - parsedPeriod.start;
+
     const textTracks = contents[j].textTracks;
     if (textTracks && textTracks.length > 0) {
       textTracks.forEach((track) => {
