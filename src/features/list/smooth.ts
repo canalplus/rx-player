@@ -15,16 +15,15 @@
  */
 
 import smooth from "../../net/smooth";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-// Add SMOOTH transport streaming
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.SMOOTH,
-  content: smooth,
-};
+/**
+ * Add ability to play Microsoft Smooth Streaming contents.
+ * @param {Object} features
+ */
+function addSmoothFeature(features : IFeaturesObject) : void {
+  features.transports.smooth = smooth;
+}
 
-export { feature as SMOOTH };
-export default feature;
+export { addSmoothFeature as SMOOTH };
+export default addSmoothFeature;

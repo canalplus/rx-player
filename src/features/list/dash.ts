@@ -15,16 +15,15 @@
  */
 
 import dash from "../../net/dash";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-// Add DASH transport streaming
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.DASH,
-  content: dash,
-};
+/**
+ * Add ability to play DASH contents.
+ * @param {Object} features
+ */
+function addDASHFeature(features : IFeaturesObject) : void {
+  features.transports.dash = dash;
+}
 
-export { feature as DASH };
-export default feature;
+export { addDASHFeature as DASH };
+export default addDASHFeature;

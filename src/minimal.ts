@@ -23,7 +23,7 @@
 
 import Player from "./core/api";
 import addFeatures from "./features/add_features";
-import { IFeatureListItem } from "./features/types";
+import { IFeatureFunction } from "./features/types";
 import logger from "./utils/log";
 
 if (__DEV__) {
@@ -38,7 +38,7 @@ if (__DEV__) {
  * @class MinimalPlayer
  */
 export default class MinimalPlayer extends Player {
-  static addFeatures(featureList : IFeatureListItem[]) : void {
+  static addFeatures(featureList : IFeatureFunction[]) : void {
     addFeatures(featureList);
   }
 }

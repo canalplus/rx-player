@@ -15,16 +15,15 @@
  */
 
 import htmlTextBuffer from "../../core/source_buffers/text/html";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-// Add ability to show subtitles as a HTML div
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.HTML_TEXT_BUFFER,
-  content: htmlTextBuffer,
-};
+/**
+ * Add ability to display text tracks in an HTML textrack mode.
+ * @param {Object} features
+ */
+function addHTMLTextBuffer(features : IFeaturesObject) : void {
+  features.htmlTextTracksBuffer = htmlTextBuffer;
+}
 
-export { feature as HTML_TEXT_BUFFER };
-export default feature;
+export { addHTMLTextBuffer as HTML_TEXT_BUFFER };
+export default addHTMLTextBuffer;

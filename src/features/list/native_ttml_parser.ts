@@ -15,15 +15,15 @@
  */
 
 import ttmlParser from "../../parsers/texttracks/ttml/native";
-import {
-  FEATURE_IDS,
-  IFeatureListItem,
-} from "../types";
+import { IFeaturesObject } from "../types";
 
-const feature : IFeatureListItem = {
-  id: FEATURE_IDS.NATIVE_TTML,
-  content: ttmlParser,
-};
+/**
+ * Add ability to parse TTML text tracks in a native textrack mode.
+ * @param {Object} features
+ */
+function addNativeTTMLFeature(features : IFeaturesObject) {
+  features.nativeTextTracksParsers.ttml = ttmlParser;
+}
 
-export { feature as NATIVE_TTML_PARSER };
-export default feature;
+export { addNativeTTMLFeature as NATIVE_TTML_PARSER };
+export default addNativeTTMLFeature;
