@@ -126,20 +126,21 @@ const configuration = {
 
 ## API
 
-  Each API returns:
-    _returns_:
-  - A promise wrapping an object with:
-    - The status of probed capability/capabilities. ("Supported", "Maybe Supported","Not Supported")
-
   __getCapabilities()__
 
   _arguments_:
   - config {``Object``} : Configuration as defined above.
 
+  _returns_:
+  - {``string``} : The status of probed capability/capabilities. ("Supported", "Maybe Supported","Not Supported")
+
   __getStatusForHDCP()__
 
   _arguments_:
   - type {``string``}: The HDCP type.
+
+  _returns_:
+  - {``string``} : The status of HDCP support. ("Supported", "Maybe Supported","Not Supported")
 
   ```js
     const capabilities =
@@ -152,6 +153,9 @@ const configuration = {
   - type {``string``}: The DRM type
   - infos {``Object``}: MediaKeySystemConfiguration configuration, as defined in EME w3c spec.
 
+  _returns_:
+  - {``string``} : The status of DRM support. ("Supported", "Maybe Supported","Not Supported")
+
   ```js
     const capabilities =
       await mediaCapabilitiesProber.getStatusForDRM("org.w3.clearkey");
@@ -161,7 +165,9 @@ const configuration = {
 
    _arguments_:
   - config {``Object``} : Object with type, video and audio configuration.
-  /!\ TODO
+
+  _returns_:
+  - {``string``} : The status of decoding capabilities. ("Supported", "Maybe Supported","Not Supported")
 
   ```js
     const capabilities = await mediaCapabilitiesProber.getDecodingCapabilities(
@@ -188,7 +194,10 @@ const configuration = {
   __getDisplayCapabilities()__
 
    _arguments_:
-  - config {``Object``} : Display configuration.
+  - config {``Object``} : Object with display configuration.
+
+  _returns_:
+  - {``string``} : The status of display capabilities. ("Supported", "Maybe Supported","Not Supported")
 
   ```js
     const capabilities = await mediaCapabilitiesProber.getDisplayCapabilities(
@@ -204,7 +213,7 @@ const configuration = {
   __setLogLevel()__
 
    _arguments_:
-  - level {``string``} : Wanted log level
+  - level {``string``} : Wanted log level ("NONE", "INFO", "WARN", "DEBUG", "ERROR")
 
   ```js
     mediaCapabilitiesProber.setLogLevel("DEBUG");
@@ -212,6 +221,9 @@ const configuration = {
   ```
 
   __getLogLevel()__
+
+  _returns_:
+  - {``string``} : The current log level ("NONE", "INFO", "WARN", "DEBUG", "ERROR")
 
   ```js
     mediaCapabilitiesProber.getLogLevel();
