@@ -213,19 +213,18 @@ function getTimelineRangeEnd({ ts, d, r }: {
  *   - to {Number}: timescaled timestamp of the end time (start time + duration)
  */
 function normalizeRange(
-  index: { presentationTimeOffset?: number; timescale?: number }, // TODO
+  index: { timescale?: number }, // TODO
   ts: number,
   duration: number
 ) : {
   up: number;
   to: number;
 } {
-  const pto = index.presentationTimeOffset || 0;
   const timescale = index.timescale || 1;
 
   return {
-    up: (ts) * timescale - pto,
-    to: (ts + duration) * timescale - pto,
+    up: (ts) * timescale,
+    to: (ts + duration) * timescale,
   };
 }
 

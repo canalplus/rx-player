@@ -185,14 +185,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     context : ITimelineIndexContextArgument
   ) {
     const {
-      periodStart,
       representationURL,
       representationId,
       representationBitrate,
     } = context;
-    if (index.presentationTimeOffset == null) {
-      index.presentationTimeOffset = periodStart * index.timescale;
-    }
 
     this._index = {
       duration: index.duration,
@@ -212,7 +208,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
         representationId,
         representationBitrate
       ),
-      presentationTimeOffset: index.presentationTimeOffset,
       startNumber: index.startNumber,
       timeline: index.timeline,
       timescale: index.timescale,
@@ -246,10 +241,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const {
       timeline,
       timescale,
-      presentationTimeOffset = 0,
     } = this._index;
 
-    const scaledTo = to * timescale - presentationTimeOffset;
+    const scaledTo = to * timescale;
 
     let last = timeline[timeline.length - 1];
     if (!last) {

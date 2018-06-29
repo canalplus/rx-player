@@ -71,14 +71,10 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    */
   constructor(index : IListIndexIndexArgument, context : IListIndexContextArgument) {
     const {
-      periodStart,
       representationURL,
       representationId,
       representationBitrate,
     } = context;
-    if (index.presentationTimeOffset == null) {
-      index.presentationTimeOffset = periodStart * index.timescale;
-    }
 
     this._index = {
       list: index.list.map((lItem) => ({
@@ -93,7 +89,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
       timescale: index.timescale,
       duration: index.duration,
       indexRange: index.indexRange,
-      presentationTimeOffset: index.presentationTimeOffset,
       initialization: index.initialization && {
         mediaURL: createIndexURL(
           representationURL,
@@ -157,10 +152,9 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
       timescale,
       duration,
       list,
-      presentationTimeOffset = 0,
     } = this._index;
 
-    const scaledTo = to * timescale - presentationTimeOffset;
+    const scaledTo = to * timescale;
     const i = Math.floor(scaledTo / duration);
     return !(i >= 0 && i < list.length);
   }
