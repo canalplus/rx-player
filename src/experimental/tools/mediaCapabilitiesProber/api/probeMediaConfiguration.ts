@@ -37,7 +37,7 @@ type IBrowserAPIS =
  * 3 - Check for unsupported configuration attributes.
  * @param {Object} config
  */
-const validateConfiguration = (config: IMediaConfiguration) => {
+function validateConfiguration(config: IMediaConfiguration) {
   if (!config) {
     throw new Error("MCP_CONF: Configuration is not defined.");
   }
@@ -46,7 +46,7 @@ const validateConfiguration = (config: IMediaConfiguration) => {
     throw new Error("MCP_CONF: Can't probe empty configuration.");
   }
   return filteredConfig;
-};
+}
 
 const browserAPIS: IBrowserAPIS[] = [
   "_isTypeSupported_",
@@ -77,46 +77,45 @@ const browserAPIS: IBrowserAPIS[] = [
  * return "Maybe".
  * @param {Object} config
  */
-const probeMediaConfiguration =
-  async (_config: IMediaConfiguration) => {
-    const config = validateConfiguration(_config);
+async function probeMediaConfiguration(_config: IMediaConfiguration) {
+  const config = validateConfiguration(_config);
 
-    let isProbablySupported: boolean = false;
-    let isMaybeSupported: boolean = false;
-    let isNotSupported: boolean = false;
+  let isProbablySupported: boolean = false;
+  let isMaybeSupported: boolean = false;
+  let isNotSupported: boolean = false;
 
-    const resultingAPI: ICapabilitiesTypes[] = [];
-    for (const browserAPI of browserAPIS) {
-      const probeWithBrowser = probers[browserAPI];
-      if (probeWithBrowser) {
-        await probeWithBrowser(config).then((probeResult) => {
-            resultingAPI.push(browserAPI);
-            isNotSupported = isNotSupported || probeResult === 0;
-            isMaybeSupported = isMaybeSupported || probeResult === 1;
-            isProbablySupported = isProbablySupported || probeResult === 2;
-          }).catch((err) => log.debug(err));
-      }
+  const resultingAPI: ICapabilitiesTypes[] = [];
+  for (const browserAPI of browserAPIS) {
+    const probeWithBrowser = probers[browserAPI];
+    if (probeWithBrowser) {
+      await probeWithBrowser(config).then((probeResult) => {
+          resultingAPI.push(browserAPI);
+          isNotSupported = isNotSupported || probeResult === 0;
+          isMaybeSupported = isMaybeSupported || probeResult === 1;
+          isProbablySupported = isProbablySupported || probeResult === 2;
+        }).catch((err) => log.debug(err));
     }
+  }
 
-    const probedCapabilities = getProbedConfiguration(config, resultingAPI);
-    isMaybeSupported =
-      (JSON.stringify(probedCapabilities) !== JSON.stringify(config)) || isMaybeSupported;
+  const probedCapabilities = getProbedConfiguration(config, resultingAPI);
+  isMaybeSupported =
+    (JSON.stringify(probedCapabilities) !== JSON.stringify(config)) || isMaybeSupported;
 
-    log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
-      "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
-      "to call them. (See DEBUG logs for details)");
+  log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
+    "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
+    "to call them. (See DEBUG logs for details)");
 
-    log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
-      probedCapabilities);
+  log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
+    probedCapabilities);
 
-    if (isNotSupported) {
-      return "Not Supported";
-    } else if (isMaybeSupported) {
-      return "Maybe";
-    } else if (isProbablySupported) {
-      return "Probably";
-    }
+  if (isNotSupported) {
+    return "Not Supported";
+  } else if (isMaybeSupported) {
     return "Maybe";
-  };
+  } else if (isProbablySupported) {
+    return "Probably";
+  }
+  return "Maybe";
+}
 
 export default probeMediaConfiguration;

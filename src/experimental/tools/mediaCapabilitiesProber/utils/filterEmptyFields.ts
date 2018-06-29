@@ -16,7 +16,7 @@
 
 import isEmpty from "./isEmpty";
 
-const filterEmptyFields = (object: object) => {
+export default function filterEmptyFields(object: object) {
   const filtered: {[id: string]: object} = {};
   const entries = Object.entries(object);
   for (const entry of entries) {
@@ -31,6 +31,4 @@ const filterEmptyFields = (object: object) => {
     }
   }
   return filtered;
-};
-
-export default filterEmptyFields;
+}

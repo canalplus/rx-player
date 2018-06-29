@@ -16,10 +16,10 @@
 
 import { IDisplayConfiguration } from "../../types";
 
-const formatConfigForAPI = (display: IDisplayConfiguration): string|null => {
+function formatConfigForAPI(display: IDisplayConfiguration): string|null {
   const gamut = display.colorSpace;
   const str = gamut ? "(color-gamut: " + gamut + ")" : null;
   return str;
-};
+}
 
 export default formatConfigForAPI;

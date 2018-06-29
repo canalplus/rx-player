@@ -22,7 +22,7 @@ export interface IDecodingInfos {
   smooth: boolean;
   powerEfficient: boolean;
 }
-const probe = (config: IMediaConfiguration): Promise<number> => {
+function probe(config: IMediaConfiguration): Promise<number> {
   return is_mediaCapabilities_APIAvailable().then(() => {
     if (
       config.type &&
@@ -49,6 +49,6 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
       "Not enough arguments for calling mediaCapabilites.");
   });
-};
+}
 
 export default probe;

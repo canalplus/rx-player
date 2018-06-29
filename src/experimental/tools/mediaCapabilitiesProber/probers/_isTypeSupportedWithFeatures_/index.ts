@@ -26,7 +26,7 @@ export interface ITypeWithFeatures {
 
 export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
 
-const probe = (config: IMediaConfiguration) => {
+function probe(config: IMediaConfiguration) {
   return is_isTypeSupportedWithFeatures_APIAvailable().then(() => {
     const mediaProtection = config.mediaProtection;
     const keySystem = mediaProtection ?
@@ -64,6 +64,6 @@ const probe = (config: IMediaConfiguration) => {
 
     return formatSupport(result);
   });
-};
+}
 
 export default probe;

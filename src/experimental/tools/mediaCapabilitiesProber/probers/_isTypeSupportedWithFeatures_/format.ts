@@ -22,12 +22,12 @@ import {
 } from "../../types";
 import { findDefaultVideoCodec } from "../defaultCodecsFinder";
 
-const formatConfigForAPI = (
+function formatConfigForAPI(
   video?: IVideoConfiguration,
   outputProtection?: IOutputProtectionConfiguration,
   audio?: IAudioConfiguration,
   display?: IDisplayConfiguration
-): string|null => {
+): string|null {
   let str: string|null = null;
   const defaultVideoCodec = findDefaultVideoCodec();
   const contentType = video ?
@@ -82,6 +82,6 @@ const formatConfigForAPI = (
     str += "\"" + feat.join(",") + "\"";
   }
   return str;
-};
+}
 
 export default formatConfigForAPI;

@@ -24,7 +24,7 @@ export interface IMediaKeySystemInfos {
   configuration: MediaKeySystemConfiguration[];
 }
 
-const probe = (config: IMediaConfiguration): Promise<number> => {
+function probe(config: IMediaConfiguration): Promise<number> {
   return is_requestMKSA_APIAvailable().then(() => {
     const mediaProtection = config.mediaProtection;
     if (mediaProtection) {
@@ -41,6 +41,6 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
       "Not enough arguments for calling requestMediaKeySystemAccess.");
   });
-};
+}
 
 export default probe;

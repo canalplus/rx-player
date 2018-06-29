@@ -30,7 +30,7 @@ export type IMediaKeyStatus =
   "status-pending" |
   "internal-error";
 
-const probe = (config: IMediaConfiguration): Promise<number> => {
+function probe(config: IMediaConfiguration): Promise<number> {
   return is_getStatusForPolicy_APIAvailable().then(() => {
     if (
       config.mediaProtection &&
@@ -64,6 +64,6 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
       "Not enough arguments for calling getStatusForPolicy.");
   });
-};
+}
 
 export default probe;

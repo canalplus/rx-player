@@ -17,7 +17,7 @@
 import { IMediaConfiguration } from "../../types";
 import { is_isTypeSupported_Available } from "../compatibility";
 
-const probe = (config: IMediaConfiguration): Promise<number> => {
+function probe(config: IMediaConfiguration): Promise<number> {
   return is_isTypeSupported_Available().then(() => {
     const contentTypes: string[] = [];
     if (
@@ -42,6 +42,6 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
       }, 2);
       return result;
     });
-};
+}
 
 export default probe;

@@ -19,7 +19,7 @@ import { is_matchMedia_APIAvailable } from "../compatibility";
 
 import formatConfigFor_matchMedia_API from "./format";
 
-const probe = (config: IMediaConfiguration): Promise<number> => {
+function probe(config: IMediaConfiguration): Promise<number> {
   return is_matchMedia_APIAvailable().then(() => {
     if (config.display) {
       const format = formatConfigFor_matchMedia_API;
@@ -33,6 +33,6 @@ const probe = (config: IMediaConfiguration): Promise<number> => {
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
       "Not enough arguments for calling matchMedia.");
   });
-};
+}
 
 export default probe;
