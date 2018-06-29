@@ -191,7 +191,7 @@ RxPlayer.LogLevel = "WARNING";
 
 _type_: ``Object``
 
-An experimental [tool](./mediaCapabilitiesProber/index.md) to probe browser media capabilities:
+An experimental [tool](./mediaCapabilitiesProber.md) to probe browser media capabilities:
 - Decoding capabilities
 - DRM support
 - HDCP support

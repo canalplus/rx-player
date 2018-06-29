@@ -1,8 +1,29 @@
-## MediaCapabilitiesProber
+# MediaCapabilitiesProber
 
-The tool probes media capabilities from browsers (Chrome, Firefox, etc.) exploiting current available [media API](./browserAPI.md)
+The tool probes media capabilities from browsers (Chrome, Firefox, etc.) exploiting current available media API:
 
-### Configuration
+- __mediaCapabilities__ - Chrome >= 64 (https://github.com/WICG/media-capabilities)
+  - Check for decoding capabilites from video and audio attributes.
+
+- __isTypeSupportedWithFeatures__ - Microsoft EDGE
+  - Check for DRM support + decoding and displaying capabilites from video, audio, display and media protection configuration.
+
+- __isTypeSupported__ - Chrome >= 31 / Firefox >= 41 / EDGE / IE >= 11 / Safari >= 8
+(https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/isTypeSupported)
+  - Check for video and audio decoding support from content type.
+
+- __matchMedia__ (with color gamut support) - Chrome >= 58.
+  - Check for color space support.
+
+- __requestMediaKeySystemAccess__ - Chrome >= 42 / Firefox / EDGE / Safari
+(https://developer.mozilla.org/fr/docs/Web/API/Navigator/requestMediaKeySystemAccess)
+  - Check for DRM support.
+
+- __getStatusForPolicy__ - ?
+(https://github.com/WICG/media-capabilities/blob/master/eme-extension-policy-check.md)
+  - Query a hypothetical status associated with an HDCP policy.
+
+## Configuration
 
 This attributes are inspired from the tested API configurations.
 The prober attributes are:
@@ -54,7 +75,7 @@ The given arguments are sufficient to call the _isTypeSupported_ browser API (fo
 Thus, the given configuration will be "_Maybe_" supported, because not all capabilities will have been probed.
 The complete list of probed capabilities is logged under the __INFO__ level.
 
-#### Complete configuration example
+### Complete configuration example
 
 ```js
 const configuration = {
@@ -103,13 +124,12 @@ const configuration = {
 }
 ```
 
-### API
+## API
 
   Each API returns:
     _returns_:
   - A promise wrapping an object with:
     - The status of probed capability/capabilities. ("Supported", "Maybe Supported","Not Supported")
-    - An object with all probed fields on configuration.
 
   __getCapabilities()__
 
