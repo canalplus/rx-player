@@ -16,14 +16,6 @@
 
 import noop from "./noop";
 
-const LEVELS : { [level : string] : number } = {
-  NONE: 0,
-  ERROR: 1,
-  WARNING: 2,
-  INFO: 3,
-  DEBUG: 4,
-};
-
 type tConsoleFn = (...args : any[]) => void;
 
 export default class Logger {
@@ -32,14 +24,21 @@ export default class Logger {
   public info: tConsoleFn = noop;
   public debug: tConsoleFn = noop;
   private currentLevel : string;
+  private LEVELS : { [level : string] : number } = {
+    NONE: 0,
+    ERROR: 1,
+    WARNING: 2,
+    INFO: 3,
+    DEBUG: 4,
+  };
 
   constructor() {
-    this.currentLevel = Object.keys(LEVELS)[0];
+    this.currentLevel = Object.keys(this.LEVELS)[0];
   }
 
   public setLevel(levelStr : string) {
     let level;
-    const foundLevel = LEVELS[levelStr];
+    const foundLevel = this.LEVELS[levelStr];
     if (foundLevel) {
       level = foundLevel;
       this.currentLevel = levelStr;
@@ -49,13 +48,13 @@ export default class Logger {
     }
 
     /* tslint:disable no-invalid-this */
-    this.error = (level >= LEVELS.ERROR) ?
+    this.error = (level >= this.LEVELS.ERROR) ?
       console.error.bind(console) : noop;
-    this.warn = (level >= LEVELS.WARNING) ?
+    this.warn = (level >= this.LEVELS.WARNING) ?
       console.warn.bind(console) : noop;
-    this.info = (level >= LEVELS.INFO) ?
+    this.info = (level >= this.LEVELS.INFO) ?
       console.info.bind(console) : noop;
-    this.debug = (level >= LEVELS.DEBUG) ?
+    this.debug = (level >= this.LEVELS.DEBUG) ?
       console.log.bind(console) : noop;
     /* tslint:enable no-invalid-this */
   }
