@@ -25,7 +25,7 @@ import {
   ignoreElements,
   mergeMap,
 } from "rxjs/operators";
-import log from "../../utils/log";
+import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import { QueuedSourceBuffer } from "../source_buffers";
 

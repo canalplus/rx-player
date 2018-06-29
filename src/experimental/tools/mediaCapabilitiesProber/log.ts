@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import MediaCapabilitiesProber from "./api";
-import log from "./log";
+import Logger from "../../../utils/log";
 
-log.setLevel(__LOGGER_LEVEL__);
+const logger = new Logger();
 
-export default MediaCapabilitiesProber;
+export default logger;

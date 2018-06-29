@@ -24,7 +24,7 @@
 import Player from "./core/api";
 import addFeatures from "./features/add_features";
 import { IFeatureFunction } from "./features/types";
-import logger from "./utils/log";
+import logger from "./log";
 
 if (__DEV__) {
   logger.setLevel(__LOGGER_LEVEL__);

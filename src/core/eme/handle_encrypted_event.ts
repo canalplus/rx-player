@@ -32,7 +32,7 @@ import {
   IMediaKeySession,
 } from "../../compat";
 import config from "../../config";
-import log from "../../utils/log";
+import log from "../../log";
 import createSession from "./create_session";
 import { IMediaKeysInfos } from "./types";
 import InitDataStore from "./utils/init_data_store";

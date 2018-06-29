@@ -32,12 +32,12 @@ import {
   tap,
 } from "rxjs/operators";
 import { ErrorTypes } from "../../errors";
+import log from "../../log";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../manifest";
-import log from "../../utils/log";
 import ABRManager from "../abr";
 import { IPrioritizedSegmentFetcher } from "../pipelines";
 import {

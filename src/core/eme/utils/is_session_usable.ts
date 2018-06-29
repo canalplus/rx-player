@@ -15,8 +15,8 @@
  */
 
 import { IMediaKeySession } from "../../../compat";
+import log from "../../../log";
 import arrayIncludes from "../../../utils/array-includes";
-import log from "../../../utils/log";
 
 /**
  * If all key statuses attached to session are valid (either not

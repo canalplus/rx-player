@@ -28,7 +28,7 @@ import {
   canPlay,
   hasLoadedMetadata,
 } from "../../compat";
-import log from "../../utils/log";
+import log from "../../log";
 
 /**
  * Set the initial time given as soon as possible on the video element.

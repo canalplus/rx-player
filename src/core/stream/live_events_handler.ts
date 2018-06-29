@@ -24,8 +24,8 @@ import {
   share,
   tap,
 } from "rxjs/operators";
+import log from "../../log";
 import Manifest from "../../manifest";
-import log from "../../utils/log";
 import SourceBufferManager from "../source_buffers";
 import EVENTS, {
   IManifestUpdateEvent,

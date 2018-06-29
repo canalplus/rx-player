@@ -27,7 +27,7 @@ import {
   switchMap,
   tap,
 } from "rxjs/operators";
-import log from "../../utils/log";
+import log from "../../log";
 import { IStreamClockTick } from "./clock";
 
 export interface ISpeedManagerOptions {

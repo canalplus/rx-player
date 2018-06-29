@@ -21,7 +21,7 @@ import {
   Subject,
 } from "rxjs";
 import { mapTo } from "rxjs/operators";
-import log from "../../utils/log";
+import log from "../../log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import ICustomTimeRanges from "./time_ranges";
 

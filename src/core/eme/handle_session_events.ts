@@ -43,8 +43,8 @@ import {
   ICustomError,
   isKnownError,
 } from "../../errors";
+import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
-import log from "../../utils/log";
 import { retryObsWithBackoff } from "../../utils/retry";
 import tryCatch from "../../utils/rx-tryCatch";
 import {

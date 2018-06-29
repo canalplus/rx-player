@@ -15,13 +15,13 @@
  */
 
 import config from "../../config";
+import log from "../../log";
 import {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../manifest";
-import log from "../../utils/log";
 import { convertToRanges } from "../../utils/ranges";
 import takeFirstSet from "../../utils/takeFirstSet";
 

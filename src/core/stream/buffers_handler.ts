@@ -44,13 +44,13 @@ import {
   ICustomError,
   MediaError,
 } from "../../errors";
+import log from "../../log";
 import Manifest, {
   Adaptation,
   Period,
 } from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";
 import InitializationSegmentCache from "../../utils/initialization_segment_cache";
-import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import BufferManager, {

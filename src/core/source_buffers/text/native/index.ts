@@ -20,7 +20,7 @@
  */
 
 import { addTextTrack } from "../../../../compat";
-import log from "../../../../utils/log";
+import log from "../../../../log";
 import AbstractSourceBuffer, {
   ICustomSourceBuffer,
 } from "../../abstract_source_buffer";

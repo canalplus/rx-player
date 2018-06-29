@@ -15,13 +15,13 @@
  */
 
 import config from "../../../../config";
+import log from "../../../../log";
 import { IRepresentationIndex } from "../../../../manifest";
 import arrayIncludes from "../../../../utils/array-includes";
 import generateNewId from "../../../../utils/id";
 import {
   normalize as normalizeLang,
 } from "../../../../utils/languages";
-import log from "../../../../utils/log";
 import {
   normalizeBaseURL,
   resolveURL,

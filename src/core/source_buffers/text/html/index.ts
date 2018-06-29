@@ -39,7 +39,7 @@ import {
   onSeeking$,
 } from "../../../../compat/events";
 import config from "../../../../config";
-import log from "../../../../utils/log";
+import log from "../../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
 import TextBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";

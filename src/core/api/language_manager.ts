@@ -21,9 +21,9 @@
 
 import arrayFind from "array-find";
 import { Subject } from "rxjs";
+import log from "../../log";
 import { Adaptation, Period } from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";
-import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 
 // single preference for an audio track Adaptation

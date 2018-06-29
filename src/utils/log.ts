@@ -26,34 +26,26 @@ const LEVELS : { [level : string] : number } = {
 
 type tConsoleFn = (...args : any[]) => void;
 
-let currentLevel : string = Object.keys(LEVELS)[0];
+export default class Logger {
+  public error: tConsoleFn = noop;
+  public warn: tConsoleFn = noop;
+  public info: tConsoleFn = noop;
+  public debug: tConsoleFn = noop;
+  private currentLevel : string;
 
-export interface ILogger {
-  LEVELS : string[];
-  error : tConsoleFn;
-  warn : tConsoleFn;
-  info : tConsoleFn;
-  debug : tConsoleFn;
-  setLevel(levelStr : string) : void;
-  getLevel() : string;
-}
+  constructor() {
+    this.currentLevel = Object.keys(LEVELS)[0];
+  }
 
-const logger : ILogger = {
-  LEVELS: Object.keys(LEVELS),
-  error: noop,
-  warn: noop,
-  info: noop,
-  debug: noop,
-
-  setLevel(levelStr : string) {
+  public setLevel(levelStr : string) {
     let level;
     const foundLevel = LEVELS[levelStr];
     if (foundLevel) {
       level = foundLevel;
-      currentLevel = levelStr;
+      this.currentLevel = levelStr;
     } else { // either 0 or not found
       level = 0;
-      currentLevel = "NONE";
+      this.currentLevel = "NONE";
     }
 
     /* tslint:disable no-invalid-this */
@@ -66,11 +58,9 @@ const logger : ILogger = {
     this.debug = (level >= LEVELS.DEBUG) ?
       console.log.bind(console) : noop;
     /* tslint:enable no-invalid-this */
-  },
+  }
 
-  getLevel() : string {
-    return currentLevel;
-  },
-};
-
-export default logger;
+  public getLevel() : string {
+    return this.currentLevel;
+  }
+}

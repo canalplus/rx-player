@@ -33,13 +33,13 @@ import {
   switchMap,
   tap,
 } from "rxjs/operators";
+import log from "../../log";
 import Manifest, {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../manifest";
-import log from "../../utils/log";
 import SimpleSet from "../../utils/simple_set";
 import {
   IPrioritizedSegmentFetcher,

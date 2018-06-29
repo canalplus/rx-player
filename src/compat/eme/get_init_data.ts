@@ -15,13 +15,13 @@
  */
 
 import { EncryptedMediaError } from "../../errors";
+import log from "../../log";
 import {
   be4toi,
   concat,
   strToBytes,
 } from "../../utils/bytes";
 import hashBuffer from "../../utils/hash_buffer";
-import log from "../../utils/log";
 import SimpleSet from "../../utils/simple_set";
 
 const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);

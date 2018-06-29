@@ -17,13 +17,13 @@
 import { Subject } from "rxjs";
 import { isCodecSupported } from "../compat";
 import { ICustomError, MediaError } from "../errors";
+import log from "../log";
 import {
   IParsedAdaptation,
   IParsedManifest,
   IParsedRepresentation,
 } from "../parsers/manifest/types";
 import arrayIncludes from "../utils/array-includes";
-import log from "../utils/log";
 import { SUPPORTED_ADAPTATIONS_TYPE } from "./adaptation";
 import Manifest, {
   IManifestArguments,

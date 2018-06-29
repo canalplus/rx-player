@@ -29,8 +29,8 @@ import {
   EncryptedMediaError,
   ICustomError,
 } from "../../errors";
+import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
-import log from "../../utils/log";
 import getMediaKeySystemAccess from "./find_key_system";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import setServerCertificate from "./set_server_certificate";

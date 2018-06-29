@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import log from "../../../../utils/log";
+import log from "../../../../log";
 import {
   parseBoolean,
   parseDuration,

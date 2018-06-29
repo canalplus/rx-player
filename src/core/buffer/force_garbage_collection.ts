@@ -24,7 +24,7 @@ import {
   take,
 } from "rxjs/operators";
 import config from "../../config";
-import log from "../../utils/log";
+import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import { QueuedSourceBuffer } from "../source_buffers";
 

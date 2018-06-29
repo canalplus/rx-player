@@ -35,8 +35,8 @@ import {
   startWith,
 } from "rxjs/operators";
 import config from "../config";
+import log from "../log";
 import EventEmitter from "../utils/eventemitter";
-import log from "../utils/log";
 
 import {
   BROWSER_PREFIXES,

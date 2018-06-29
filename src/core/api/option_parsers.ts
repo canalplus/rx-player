@@ -21,11 +21,11 @@
 
 import objectAssign from "object-assign";
 import config from "../../config";
+import log from "../../log";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
-import log from "../../utils/log";
 import { IKeySystemOption } from "../eme";
 
 const {

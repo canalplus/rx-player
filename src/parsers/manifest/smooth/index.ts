@@ -15,6 +15,7 @@
  */
 
 import config from "../../../config";
+import log from "../../../log";
 import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
@@ -27,7 +28,6 @@ import {
 } from "../../../utils/bytes";
 import generateNewId from "../../../utils/id";
 import { normalize as normalizeLang } from "../../../utils/languages";
-import log from "../../../utils/log";
 import {
   normalizeBaseURL,
   resolveURL,

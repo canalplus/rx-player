@@ -20,7 +20,7 @@ import {
 } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import MediaError from "../../errors/MediaError";
-import log from "../../utils/log";
+import log from "../../log";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"

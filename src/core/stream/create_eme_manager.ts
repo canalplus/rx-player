@@ -26,7 +26,7 @@ import {
   ICustomError,
 } from "../../errors";
 import features from "../../features";
-import log from "../../utils/log";
+import log from "../../log";
 import { IKeySystemOption } from "../eme/types";
 
 export default function createEMEManager(

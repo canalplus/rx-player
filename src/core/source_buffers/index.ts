@@ -16,7 +16,7 @@
 
 import MediaError from "../../errors/MediaError";
 import features from "../../features";
-import log from "../../utils/log";
+import log from "../../log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import QueuedSourceBuffer from "./queued_source_buffer";
 

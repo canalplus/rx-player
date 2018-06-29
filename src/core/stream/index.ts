@@ -32,7 +32,7 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import config from "../../config";
-import log from "../../utils/log";
+import log from "../../log";
 import throttle from "../../utils/rx-throttle";
 import WeakMapMemory from "../../utils/weak_map_memory";
 

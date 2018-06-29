@@ -33,7 +33,7 @@ import {
   onSourceOpen$,
   onUpdate$,
 } from "../../compat/events";
-import log from "../../utils/log";
+import log from "../../log";
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.

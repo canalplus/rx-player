@@ -34,7 +34,7 @@ import {
   setElementSrc$,
 } from "../../compat";
 import { ICustomError } from "../../errors";
-import log from "../../utils/log";
+import log from "../../log";
 import { IKeySystemOption } from "../eme/types";
 import { IStreamClockTick } from "./clock";
 import createEMEManager from "./create_eme_manager";

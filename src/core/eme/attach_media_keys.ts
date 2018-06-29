@@ -21,7 +21,7 @@ import {
 } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
-import log from "../../utils/log";
+import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IMediaKeysInfos } from "./types";
 

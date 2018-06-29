@@ -25,10 +25,10 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import { IMediaKeySession } from "../../compat";
+import log from "../../log";
 import arrayIncludes from "../../utils/array-includes";
 import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
-import log from "../../utils/log";
 import { IMediaKeysInfos } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 

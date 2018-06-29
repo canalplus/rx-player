@@ -28,8 +28,8 @@ import {
 } from "../../compat";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
+import log from "../../log";
 import arrayIncludes from "../../utils/array-includes";
-import log from "../../utils/log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IKeySystemOption } from "./types";
 

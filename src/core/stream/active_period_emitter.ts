@@ -31,8 +31,8 @@ import {
   map,
   tap,
 } from "rxjs/operators";
+import log from "../../log";
 import { Period } from "../../manifest";
-import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 import {
   IBufferType,

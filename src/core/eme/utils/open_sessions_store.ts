@@ -32,9 +32,9 @@ import {
   IMockMediaKeys,
 } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
+import log from "../../../log";
 import castToObservable from "../../../utils/castToObservable";
 import hashBuffer from "../../../utils/hash_buffer";
-import log from "../../../utils/log";
 
 // Cached data for a single MediaKeySession
 interface IStoreSessionEntry {

@@ -15,10 +15,10 @@
  */
 
 import arrayFind from "array-find";
+import log from "../log";
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
-import log from "../utils/log";
 import Adaptation, {
   IAdaptationType,
 } from "./adaptation";

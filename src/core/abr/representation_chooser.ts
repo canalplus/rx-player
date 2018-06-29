@@ -30,8 +30,8 @@ import {
   tap,
 } from "rxjs/operators";
 import config from "../../config";
+import log from "../../log";
 import { Representation } from "../../manifest";
-import log from "../../utils/log";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";

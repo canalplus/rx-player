@@ -47,9 +47,10 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import config from "../../config";
+import log from "../../log";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
-import log, { ILogger } from "../../utils/log";
+import Logger from "../../utils/log";
 import noop from "../../utils/noop";
 import {
   getLeftSizeOfRange,
@@ -177,7 +178,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Logger the RxPlayer uses.
    * @type {Object}
    */
-  public readonly log : ILogger;
+  public readonly log : Logger;
 
   /**
    * Current state of the RxPlayer.

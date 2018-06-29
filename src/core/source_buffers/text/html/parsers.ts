@@ -15,7 +15,7 @@
  */
 
 import features from "../../../../features";
-import log from "../../../../utils/log";
+import log from "../../../../log";
 
 export interface IHTMLCue {
   start : number;

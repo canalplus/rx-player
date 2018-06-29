@@ -23,7 +23,7 @@ import {
 } from "rxjs/operators";
 import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
-import log from "../../utils/log";
+import log from "../../log";
 import { getNextRangeGap } from "../../utils/ranges";
 import { IStreamClockTick } from "./clock";
 

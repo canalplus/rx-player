@@ -15,7 +15,7 @@
  */
 
 import objectAssign from "object-assign";
-import log from "../../../../utils/log";
+import log from "../../../../log";
 import {
   parseBoolean,
   parseByteRange,

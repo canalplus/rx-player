@@ -25,8 +25,8 @@ import {
   take,
 } from "rxjs/operators";
 
+import log from "../log";
 import EventEmitter from "../utils/eventemitter";
-import log from "../utils/log";
 
 import {
   isFirefox,
