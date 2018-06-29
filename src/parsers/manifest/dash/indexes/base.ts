@@ -112,14 +112,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
     const {
-      periodStart,
       representationURL,
       representationId,
       representationBitrate,
     } = context;
-    if (index.presentationTimeOffset == null) {
-      index.presentationTimeOffset = periodStart * index.timescale;
-    }
 
     this._index = {
       mediaURL: createIndexURL(
@@ -132,7 +128,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       timescale: index.timescale,
       duration: index.duration,
       indexRange: index.indexRange,
-      presentationTimeOffset: index.presentationTimeOffset,
       startNumber: index.startNumber,
       initialization: index.initialization && {
         mediaURL: createIndexURL(

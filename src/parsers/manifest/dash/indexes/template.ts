@@ -59,6 +59,7 @@ export interface ITemplateIndexContextArgument {
 
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
   private _index : ITemplateIndex;
+  private _periodStart : number;
 
   /**
    * @param {Object} index
@@ -74,9 +75,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       representationId,
       representationBitrate,
     } = context;
-    if (index.presentationTimeOffset == null) {
-      index.presentationTimeOffset = periodStart * index.timescale;
-    }
+
+    this._periodStart = periodStart;
 
     this._index = {
       duration: index.duration,
@@ -97,7 +97,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         representationId,
         representationBitrate
       ),
-      presentationTimeOffset: index.presentationTimeOffset,
       startNumber: index.startNumber,
     };
   }
@@ -127,17 +126,16 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       startNumber,
       timescale,
       mediaURL,
-      presentationTimeOffset,
     } = index;
 
     const segments : ISegment[] = [];
     for (let baseTime = up; baseTime <= to; baseTime += duration) {
-      const number = Math.floor(baseTime / duration) +
+
+      const periodRelativeNumber = baseTime - (this._periodStart * timescale);
+      const number = Math.floor((periodRelativeNumber / duration)) +
         (startNumber == null ? 1 : startNumber);
 
-      const time = (number -
-        (startNumber == null ? 1 : startNumber)
-      ) * duration + (presentationTimeOffset || 0);
+      const time = (number * duration) / timescale;
 
       const args = {
         id: "" + number,
