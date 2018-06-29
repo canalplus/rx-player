@@ -111,7 +111,7 @@ const mediaCapabilitiesProber = {
    * Get logger level
    */
   getLogLevel() {
-    log.getLevel();
+    return log.getLevel();
   },
 };
 
