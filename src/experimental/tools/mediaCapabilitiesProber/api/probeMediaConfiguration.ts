@@ -23,12 +23,12 @@ import filterEmptyFields from "../utils/filterEmptyFields";
 import isEmpty from "../utils/isEmpty";
 
 type IBrowserAPIS =
-  "_isTypeSupported_" |
-  "_isTypeSupportedWithFeatures_" |
-  "_matchMedia_" |
-  "_decodingInfos_" |
-  "_requestMediaKeySystemAccess_" |
-  "_getStatusForPolicy_";
+  "isTypeSupported" |
+  "isTypeSupportedWithFeatures" |
+  "matchMedia" |
+  "decodingInfos" |
+  "requestMediaKeySystemAccess" |
+  "getStatusForPolicy";
 
 /**
  * Assert that configuration is valid before probing:
@@ -49,12 +49,12 @@ function validateConfiguration(config: IMediaConfiguration) {
 }
 
 const browserAPIS: IBrowserAPIS[] = [
-  "_isTypeSupported_",
-  "_isTypeSupportedWithFeatures_",
-  "_matchMedia_",
-  "_decodingInfos_",
-  "_requestMediaKeySystemAccess_",
-  "_getStatusForPolicy_",
+  "isTypeSupported",
+  "isTypeSupportedWithFeatures",
+  "matchMedia",
+  "decodingInfos",
+  "requestMediaKeySystemAccess",
+  "getStatusForPolicy",
 ];
 
 /**

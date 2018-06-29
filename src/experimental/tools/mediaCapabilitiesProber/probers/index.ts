@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-import probeFromDecodingConfig from "./_decodingInfos_";
-import probeFromHDCPPolicyConfig from "./_getStatusForPolicy_";
-import probeFromContentType from "./_isTypeSupported_";
-import probeFromTypeAndFeatures from "./_isTypeSupportedWithFeatures_";
-import probeFromMediaDisplayConfig from "./_matchMedia_";
-import probeFromDRMInfos from "./_requestMediaKeySystemAccess_";
+import probeFromDecodingConfig from "./decodingInfos";
+import probeFromDRMInfos from "./DRMInfos";
+import probeFromHDCPPolicy from "./HDCPPolicy";
+import probeFromMediaContentType from "./mediaContentType";
+import probeFromMediaContentTypeWithFeatures from "./mediaContentTypeWithFeatures";
+import probeFromMediaDisplayInfos from "./mediaDisplayInfos";
 
 import { IMediaConfiguration } from "../types";
 
 const probers: {
   [id: string]: (config: IMediaConfiguration) => Promise<number>;
 } = {
-  _isTypeSupported_: probeFromContentType,
-  _isTypeSupportedWithFeatures_: probeFromTypeAndFeatures,
-  _matchMedia_: probeFromMediaDisplayConfig,
-  _decodingInfos_: probeFromDecodingConfig,
-  _requestMediaKeySystemAccess_: probeFromDRMInfos,
-  _getStatusForPolicy_: probeFromHDCPPolicyConfig,
+  isTypeSupported: probeFromMediaContentType,
+  isTypeSupportedWithFeatures: probeFromMediaContentTypeWithFeatures,
+  matchMedia: probeFromMediaDisplayInfos,
+  decodingInfos: probeFromDecodingConfig,
+  requestMediaKeySystemAccess: probeFromDRMInfos,
+  getStatusForPolicy: probeFromHDCPPolicy,
 };
 
 export default probers;

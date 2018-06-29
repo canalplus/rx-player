@@ -15,7 +15,20 @@
  */
 
 import { IMediaConfiguration } from "../../types";
-import { is_mediaCapabilities_APIAvailable } from "../compatibility";
+
+function isAPIAvailable(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("mediaCapabilities" in navigator)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "MediaCapabilities API not available");
+    }
+    if (!("decodingInfo" in (navigator as any).mediaCapabilities)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Decoding Info not available");
+    }
+    resolve();
+  });
+}
 
 export interface IDecodingInfos {
   supported: boolean;
@@ -23,7 +36,7 @@ export interface IDecodingInfos {
   powerEfficient: boolean;
 }
 function probe(config: IMediaConfiguration): Promise<number> {
-  return is_mediaCapabilities_APIAvailable().then(() => {
+  return isAPIAvailable().then(() => {
     if (
       config.type &&
       config.video &&

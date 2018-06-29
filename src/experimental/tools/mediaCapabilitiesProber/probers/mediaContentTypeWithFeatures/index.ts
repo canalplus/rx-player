@@ -15,7 +15,6 @@
  */
 
 import { IMediaConfiguration } from "../../types";
-import { is_isTypeSupportedWithFeatures_APIAvailable } from "../compatibility";
 
 import formatConfig from "./format";
 
@@ -26,8 +25,22 @@ export interface ITypeWithFeatures {
 
 export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
 
-function probe(config: IMediaConfiguration) {
-  return is_isTypeSupportedWithFeatures_APIAvailable().then(() => {
+function isAPIAvailable(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("MSMediaKeys" in window)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "MSMediaKeys API not available");
+    }
+    if (!("isTypeSupportedWithFeatures" in (window as any).MSMediaKeys)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Decoding Info not available");
+    }
+    resolve();
+  });
+}
+
+export default function probe(config: IMediaConfiguration) {
+  return isAPIAvailable().then(() => {
     const mediaProtection = config.mediaProtection;
     const keySystem = mediaProtection ?
       (mediaProtection.drm ?
@@ -65,5 +78,3 @@ function probe(config: IMediaConfiguration) {
     return formatSupport(result);
   });
 }
-
-export default probe;

@@ -17,16 +17,16 @@
 import { IMediaConfiguration } from "./types";
 
 export type ICapabilitiesTypes =
-  "_decodingInfos_" |
-  "_getStatusForPolicy_" |
-  "_isTypeSupported_" |
-  "_isTypeSupportedWithFeatures_" |
-  "_matchMedia_" |
-  "_requestMediaKeySystemAccess_";
+  "decodingInfos" |
+  "getStatusForPolicy" |
+  "isTypeSupported" |
+  "isTypeSupportedWithFeatures" |
+  "matchMedia" |
+  "requestMediaKeySystemAccess";
 
 type ICapabilities = Array<(string|{ [key: string]: ICapabilities })>;
 
-const _decodingInfos_: ICapabilities = [
+const decodingInfos: ICapabilities = [
   "type",
   {
     video: [
@@ -48,7 +48,7 @@ const _decodingInfos_: ICapabilities = [
   },
 ];
 
-const _getStatusForPolicy_: ICapabilities = [
+const getStatusForPolicy: ICapabilities = [
   {
     mediaProtection: [
       {
@@ -60,7 +60,7 @@ const _getStatusForPolicy_: ICapabilities = [
   },
 ];
 
-const _isTypeSupported_: ICapabilities = [
+const isTypeSupported: ICapabilities = [
   {
     video: [
       "contentType",
@@ -73,7 +73,7 @@ const _isTypeSupported_: ICapabilities = [
   },
 ];
 
-const _matchMedia_: ICapabilities = [
+const matchMedia: ICapabilities = [
   {
     display: [
       "colorSpace",
@@ -81,7 +81,7 @@ const _matchMedia_: ICapabilities = [
   },
 ];
 
-const _requestMediaKeySystemAccess_: ICapabilities = [
+const requestMediaKeySystemAccess: ICapabilities = [
   {
     mediaProtection: [
       {
@@ -102,7 +102,7 @@ const _requestMediaKeySystemAccess_: ICapabilities = [
   },
 ];
 
-const _isTypeSupportedWithFeatures_: ICapabilities = [
+const isTypeSupportedWithFeatures: ICapabilities = [
   "type",
   {
     video: [
@@ -154,12 +154,12 @@ const _isTypeSupportedWithFeatures_: ICapabilities = [
 ];
 
 const capabilites: {[key: string]: ICapabilities} = {
-  _decodingInfos_,
-  _getStatusForPolicy_,
-  _isTypeSupported_,
-  _matchMedia_,
-  _requestMediaKeySystemAccess_,
-  _isTypeSupportedWithFeatures_,
+  decodingInfos,
+  getStatusForPolicy,
+  isTypeSupported,
+  matchMedia,
+  requestMediaKeySystemAccess,
+  isTypeSupportedWithFeatures,
 };
 
 /**

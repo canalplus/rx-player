@@ -15,7 +15,6 @@
  */
 
 import { IMediaConfiguration } from "../../types";
-import { is_requestMKSA_APIAvailable } from "../compatibility";
 
 import buildKeySystemConfigurations from "./buildKeySystemConfiguration";
 
@@ -24,8 +23,18 @@ export interface IMediaKeySystemInfos {
   configuration: MediaKeySystemConfiguration[];
 }
 
-function probe(config: IMediaConfiguration): Promise<number> {
-  return is_requestMKSA_APIAvailable().then(() => {
+function isAPIAvailable(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("requestMediaKeySystemAccess" in navigator)) {
+      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+        "API not available");
+    }
+    resolve();
+  });
+}
+
+export default function probe(config: IMediaConfiguration): Promise<number> {
+  return isAPIAvailable().then(() => {
     const mediaProtection = config.mediaProtection;
     if (mediaProtection) {
       const drm = mediaProtection.drm;
@@ -42,5 +51,3 @@ function probe(config: IMediaConfiguration): Promise<number> {
       "Not enough arguments for calling requestMediaKeySystemAccess.");
   });
 }
-
-export default probe;

@@ -15,10 +15,28 @@
  */
 
 import { IMediaConfiguration } from "../../types";
-import { is_getStatusForPolicy_APIAvailable } from "../compatibility";
 
 export interface IPolicy {
   minHdcpVersion: string;
+}
+
+function isAPIAvailable(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("requestMediaKeySystemAccess" in navigator)) {
+      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+        "API not available");
+    }
+    resolve();
+  }).then(() => {
+    if (!("MediaKeys" in window)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "MediaKeys API not available");
+    }
+    if (!("getStatusForPolicy" in (window as any).MediaKeys as any)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "getStatusForPolicy API not available");
+    }
+  });
 }
 
 export type IMediaKeyStatus =
@@ -30,8 +48,8 @@ export type IMediaKeyStatus =
   "status-pending" |
   "internal-error";
 
-function probe(config: IMediaConfiguration): Promise<number> {
-  return is_getStatusForPolicy_APIAvailable().then(() => {
+export default function probe(config: IMediaConfiguration): Promise<number> {
+  return isAPIAvailable().then(() => {
     if (
       config.mediaProtection &&
       config.mediaProtection.output
@@ -65,5 +83,3 @@ function probe(config: IMediaConfiguration): Promise<number> {
       "Not enough arguments for calling getStatusForPolicy.");
   });
 }
-
-export default probe;

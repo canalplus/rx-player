@@ -15,10 +15,23 @@
  */
 
 import { IMediaConfiguration } from "../../types";
-import { is_isTypeSupported_Available } from "../compatibility";
 
-function probe(config: IMediaConfiguration): Promise<number> {
-  return is_isTypeSupported_Available().then(() => {
+function isAPIAvailable(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("MediaSource" in window)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "MediaSource API not available");
+    }
+    if (!("isTypeSupported" in (window as any).MediaSource)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Decoding Info not available");
+    }
+    resolve();
+  });
+}
+
+export default function probe(config: IMediaConfiguration): Promise<number> {
+  return isAPIAvailable().then(() => {
     const contentTypes: string[] = [];
     if (
       config.video &&
@@ -43,5 +56,3 @@ function probe(config: IMediaConfiguration): Promise<number> {
       return result;
     });
 }
-
-export default probe;

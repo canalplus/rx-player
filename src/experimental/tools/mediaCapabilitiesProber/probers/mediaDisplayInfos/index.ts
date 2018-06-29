@@ -15,12 +15,21 @@
  */
 
 import { IMediaConfiguration } from "../../types";
-import { is_matchMedia_APIAvailable } from "../compatibility";
 
 import formatConfigFor_matchMedia_API from "./format";
 
-function probe(config: IMediaConfiguration): Promise<number> {
-  return is_matchMedia_APIAvailable().then(() => {
+function isAPIAvailable(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("matchMedia" in window)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "matchMedia API not available");
+    }
+    resolve();
+  });
+}
+
+export default function probe(config: IMediaConfiguration): Promise<number> {
+  return isAPIAvailable().then(() => {
     if (config.display) {
       const format = formatConfigFor_matchMedia_API;
       const formatted = format(config.display);
@@ -34,5 +43,3 @@ function probe(config: IMediaConfiguration): Promise<number> {
       "Not enough arguments for calling matchMedia.");
   });
 }
-
-export default probe;
