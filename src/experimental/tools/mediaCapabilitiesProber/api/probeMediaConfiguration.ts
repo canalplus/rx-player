@@ -18,9 +18,9 @@ import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import probers from "../probers";
 import { IMediaConfiguration } from "../types";
 
-import log from "../../../utils/log";
 import filterEmptyFields from "../utils/filterEmptyFields";
 import isEmpty from "../utils/isEmpty";
+import log from "../utils/log";
 
 type IBrowserAPIS =
   "_isTypeSupported_" |

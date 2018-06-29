@@ -20,7 +20,7 @@ import {
   IMediaConfiguration,
 } from "../types";
 
-import log from "../../../utils/log";
+import log from "../utils/log";
 import probeMediaConfiguration from "./probeMediaConfiguration";
 
 /**

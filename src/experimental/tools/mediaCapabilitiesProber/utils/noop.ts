@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
-import MediaCapabilitiesProber from "./api";
-
-export default MediaCapabilitiesProber;
+/**
+ * Do nothing, well.
+ */
+/* tslint:disable:no-empty */
+export default function() : void {}
+/* tslint:enable:no-empty */
