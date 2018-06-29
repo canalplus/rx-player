@@ -101,12 +101,16 @@ async function probeMediaConfiguration(_config: IMediaConfiguration) {
   await Promise.all(promises);
 
   const probedCapabilities = getProbedConfiguration(config, resultingAPI);
-  isMaybeSupported =
-    (JSON.stringify(probedCapabilities) !== JSON.stringify(config)) || isMaybeSupported;
+  const areUnprobedCapabilities =
+    JSON.stringify(probedCapabilities) !== JSON.stringify(config);
 
-  log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
-    "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
-    "to call them. (See DEBUG logs for details)");
+  isMaybeSupported = areUnprobedCapabilities || isMaybeSupported;
+
+  if (areUnprobedCapabilities) {
+    log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
+      "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
+      "to call them. (See DEBUG logs for details)");
+  }
 
   log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
     probedCapabilities);
