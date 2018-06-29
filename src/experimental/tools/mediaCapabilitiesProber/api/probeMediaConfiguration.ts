@@ -85,17 +85,20 @@ async function probeMediaConfiguration(_config: IMediaConfiguration) {
   let isNotSupported: boolean = false;
 
   const resultingAPI: ICapabilitiesTypes[] = [];
+  const promises = [];
   for (const browserAPI of browserAPIS) {
     const probeWithBrowser = probers[browserAPI];
     if (probeWithBrowser) {
-      await probeWithBrowser(config).then((probeResult) => {
-          resultingAPI.push(browserAPI);
-          isNotSupported = isNotSupported || probeResult === 0;
-          isMaybeSupported = isMaybeSupported || probeResult === 1;
-          isProbablySupported = isProbablySupported || probeResult === 2;
-        }).catch((err) => log.debug(err));
+      promises.push(probeWithBrowser(config).then((probeResult) => {
+        resultingAPI.push(browserAPI);
+        isNotSupported = isNotSupported || probeResult === 0;
+        isMaybeSupported = isMaybeSupported || probeResult === 1;
+        isProbablySupported = isProbablySupported || probeResult === 2;
+      }).catch((err) => log.debug(err)));
     }
   }
+
+  await Promise.all(promises);
 
   const probedCapabilities = getProbedConfiguration(config, resultingAPI);
   isMaybeSupported =
