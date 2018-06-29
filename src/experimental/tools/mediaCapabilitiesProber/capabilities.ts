@@ -167,7 +167,7 @@ const capabilites: {[key: string]: ICapabilities} = {
  * @param {Array<Object>} target
  * @param {Array<Object>} objects
  */
-function extend(target: ICapabilities, objects: ICapabilities[]) {
+function extend(target: ICapabilities, objects: ICapabilities[]): ICapabilities {
   objects.forEach((object) => {
     object.forEach((element) => {
       if (typeof element === "string") {

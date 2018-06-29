@@ -48,6 +48,15 @@ const validateConfiguration = (config: IMediaConfiguration) => {
   return filteredConfig;
 };
 
+const browserAPIS: IBrowserAPIS[] = [
+  "_isTypeSupported_",
+  "_isTypeSupportedWithFeatures_",
+  "_matchMedia_",
+  "_decodingInfos_",
+  "_requestMediaKeySystemAccess_",
+  "_getStatusForPolicy_",
+];
+
 /**
  * Probe media capabilities, evaluating capabilities with available browsers API.
  *
@@ -68,16 +77,6 @@ const validateConfiguration = (config: IMediaConfiguration) => {
  * return "Maybe".
  * @param {Object} config
  */
-
-const browserAPIS: IBrowserAPIS[] = [
-  "_isTypeSupported_",
-  "_isTypeSupportedWithFeatures_",
-  "_matchMedia_",
-  "_decodingInfos_",
-  "_requestMediaKeySystemAccess_",
-  "_getStatusForPolicy_",
-];
-
 const probeMediaConfiguration =
   async (_config: IMediaConfiguration) => {
     const config = validateConfiguration(_config);
