@@ -1,4 +1,4 @@
-# MediaCapabilitiesProber
+# MediaCapabilitiesProber #####################################################
 
 The tool probes media capabilities from browsers (Chrome, Firefox, etc.) exploiting current available media API:
 
