@@ -16,6 +16,7 @@
 
 import Logger from "./utils/log";
 
+// create a logger specifically for the RxPlayer.
 const logger = new Logger();
 
 export default logger;
