@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Logger from "../../../utils/log";
+import Logger from "../../../utils/logger";
 
 const logger = new Logger();
 

@@ -50,7 +50,7 @@ import config from "../../config";
 import log from "../../log";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
-import Logger from "../../utils/log";
+import Logger from "../../utils/logger";
 import noop from "../../utils/noop";
 import {
   getLeftSizeOfRange,

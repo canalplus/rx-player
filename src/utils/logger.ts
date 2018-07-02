@@ -16,15 +16,24 @@
 
 import noop from "./noop";
 
+export type ILoggerLevel =
+  "NONE" |
+  "ERROR" |
+  "WARNING" |
+  "INFO" |
+  "DEBUG";
+
 type tConsoleFn = (...args : any[]) => void;
 
+const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
+
 export default class Logger {
-  public error: tConsoleFn = noop;
-  public warn: tConsoleFn = noop;
-  public info: tConsoleFn = noop;
-  public debug: tConsoleFn = noop;
-  private currentLevel : string;
-  private LEVELS : { [level : string] : number } = {
+  public error : tConsoleFn = noop;
+  public warn : tConsoleFn = noop;
+  public info : tConsoleFn = noop;
+  public debug : tConsoleFn = noop;
+  private currentLevel : ILoggerLevel;
+  private readonly LEVELS : Record<ILoggerLevel, number> = {
     NONE: 0,
     ERROR: 1,
     WARNING: 2,
@@ -33,15 +42,15 @@ export default class Logger {
   };
 
   constructor() {
-    this.currentLevel = Object.keys(this.LEVELS)[0];
+    this.currentLevel = DEFAULT_LOG_LEVEL;
   }
 
   public setLevel(levelStr : string) {
-    let level;
-    const foundLevel = this.LEVELS[levelStr];
-    if (foundLevel) {
+    let level : number;
+    const foundLevel = this.LEVELS[levelStr as ILoggerLevel];
+    if (foundLevel) { // levelStr is a ILoggerLevel
       level = foundLevel;
-      this.currentLevel = levelStr;
+      this.currentLevel = levelStr as ILoggerLevel;
     } else { // either 0 or not found
       level = 0;
       this.currentLevel = "NONE";
@@ -59,7 +68,7 @@ export default class Logger {
     /* tslint:enable no-invalid-this */
   }
 
-  public getLevel() : string {
+  public getLevel() : ILoggerLevel {
     return this.currentLevel;
   }
 }
