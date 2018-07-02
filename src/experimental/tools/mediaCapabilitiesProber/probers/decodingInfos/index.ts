@@ -37,20 +37,26 @@ export interface IDecodingInfos {
 }
 function probe(config: IMediaConfiguration): Promise<number> {
   return isAPIAvailable().then(() => {
-    if (
+    const hasVideoConfig = (
       config.type &&
       config.video &&
       config.video.bitrate &&
       config.video.contentType &&
       config.video.framerate &&
       config.video.height &&
-      config.video.width &&
+      config.video.width
+    );
+
+    const hasAudioConfig = (
+      config.type &&
       config.audio &&
       config.audio.bitrate &&
       config.audio.channels &&
       config.audio.contentType &&
       config.audio.samplerate
-    ) {
+    );
+
+    if (hasVideoConfig || hasAudioConfig) {
         return (navigator as any).mediaCapabilities.decodingInfo(config)
           .then((result: IDecodingInfos) => {
             return result.supported ? 2 : 0;
