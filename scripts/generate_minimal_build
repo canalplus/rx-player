@@ -59,3 +59,7 @@ export default MinimalPlayer;" > minimal/index.js
 rm -rf features
 mkdir features
 echo "export * from \"../dist/_esm5.minimal/features/list/index.js\";" > features/index.js;
+
+rm -rf experimental
+mkdir -p experimental/tools
+echo "export * from \"../../dist/_esm5.minimal/experimental/tools/index.js\";" > experimental/tools/index.js;

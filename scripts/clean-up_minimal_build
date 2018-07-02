@@ -6,3 +6,5 @@ rm -rf dist/_esm5.raw
 
 rm -rf features
 rm -rf minimal
+rm -rf experimental
+rm -rf tools
