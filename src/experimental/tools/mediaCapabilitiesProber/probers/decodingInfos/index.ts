@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log";
 import { IMediaConfiguration } from "../../types";
 
 export interface IDecodingInfos {
@@ -66,13 +67,14 @@ export default function probeDecodingInfos(config: IMediaConfiguration): Promise
     );
 
     if (hasVideoConfig || hasAudioConfig) {
-        return (navigator as any).mediaCapabilities.decodingInfo(config)
-          .then((result: IDecodingInfos) => {
-            return result.supported ? 2 : 0;
-          }).catch(() => {
-            throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-              "Bad arguments for calling mediaCapabilities.");
-          });
+      return (navigator as any).mediaCapabilities.decodingInfo(config)
+        .then((result: IDecodingInfos) => {
+          return result.supported ? 2 : 0;
+        }).catch(() => {
+          log.warn("MediaCapabilitiesProber >>> API_CALL: " +
+            "Bad arguments for calling mediaCapabilities.");
+          return 0;
+        });
     }
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
       "Not enough arguments for calling mediaCapabilites.");
