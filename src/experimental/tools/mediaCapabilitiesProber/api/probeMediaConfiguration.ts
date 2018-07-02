@@ -102,7 +102,7 @@ async function probeMediaConfiguration(_config: IMediaConfiguration) {
 
   const probedCapabilities = getProbedConfiguration(config, resultingAPI);
   const areUnprobedCapabilities =
-    JSON.stringify(probedCapabilities) !== JSON.stringify(config);
+    JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
   isMaybeSupported = areUnprobedCapabilities || isMaybeSupported;
 
