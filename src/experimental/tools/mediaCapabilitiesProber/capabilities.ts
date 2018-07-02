@@ -49,15 +49,7 @@ const decodingInfos: ICapabilities = [
 ];
 
 const getStatusForPolicy: ICapabilities = [
-  {
-    mediaProtection: [
-      {
-        output: [
-          "hdcp",
-        ],
-      },
-    ],
-  },
+  "hdcp",
 ];
 
 const isTypeSupported: ICapabilities = [
@@ -83,19 +75,15 @@ const matchMedia: ICapabilities = [
 
 const requestMediaKeySystemAccess: ICapabilities = [
   {
-    mediaProtection: [
+    keySystem: [
+      "type",
       {
-        drm: [
-          "type",
-          {
-            configuration: [
-              "persistentLicense",
-              "persistentStateRequired",
-              "distinctiveIdentifierRequired",
-              "videoRobustnesses",
-              "audioRobustnesses",
-            ],
-          },
+        configuration: [
+          "persistentLicense",
+          "persistentStateRequired",
+          "distinctiveIdentifierRequired",
+          "videoRobustnesses",
+          "audioRobustnesses",
         ],
       },
     ],
@@ -122,23 +110,17 @@ const isTypeSupportedWithFeatures: ICapabilities = [
       "samplerate",
     ],
   },
+  "hdcp",
   {
-    mediaProtection: [
+    keySystem: [
+      "type",
       {
-        output: [
-          "hdcp",
-        ],
-        drm: [
-          "type",
-          {
-            configuration: [
-              "persistentLicense",
-              "persistentStateRequired",
-              "distinctiveIdentifierRequired",
-              "videoRobustnesses",
-              "audioRobustnesses",
-            ],
-          },
+        configuration: [
+          "persistentLicense",
+          "persistentStateRequired",
+          "distinctiveIdentifierRequired",
+          "videoRobustnesses",
+          "audioRobustnesses",
         ],
       },
     ],
