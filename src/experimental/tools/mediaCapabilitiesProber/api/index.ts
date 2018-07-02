@@ -20,7 +20,7 @@ import {
   IDRMConfiguration,
   IMediaConfiguration,
 } from "../types";
-import probeMediaConfiguration from "./probeMediaConfiguration";
+import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
 
 /**
  * A set of API to probe media capabilites.
@@ -51,8 +51,16 @@ const mediaCapabilitiesProber = {
    * @param {Object} config
    * @returns {Promise}
    */
-  getCapabilities(config: IMediaConfiguration) : Promise<string> {
-    return probeMediaConfiguration(config);
+  getCapabilities: async (config: IMediaConfiguration) => {
+    const browserAPIS: IBrowserAPIS[] = [
+      "isTypeSupported",
+      "isTypeSupportedWithFeatures",
+      "matchMedia",
+      "decodingInfos",
+      "requestMediaKeySystemAccess",
+      "getStatusForPolicy",
+    ];
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -73,8 +81,11 @@ const mediaCapabilitiesProber = {
         },
       },
     };
-
-    return probeMediaConfiguration(config);
+    const browserAPIS: IBrowserAPIS[] = [
+      "isTypeSupportedWithFeatures",
+      "getStatusForPolicy",
+    ];
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -91,7 +102,12 @@ const mediaCapabilitiesProber = {
       video: mediaConfig.video,
       audio: mediaConfig.audio,
     };
-    return probeMediaConfiguration(config);
+    const browserAPIS: IBrowserAPIS[] = [
+      "isTypeSupported",
+      "isTypeSupportedWithFeatures",
+      "decodingInfos",
+    ];
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -113,7 +129,8 @@ const mediaCapabilitiesProber = {
         },
       },
     };
-    return probeMediaConfiguration(config);
+    const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
+    return probeMediaConfiguration(config, browserAPIS);
   },
 
   /**
@@ -126,7 +143,8 @@ const mediaCapabilitiesProber = {
     displayConfig: IDisplayConfiguration
   ) : Promise<string> {
     const config = { display: displayConfig };
-    return probeMediaConfiguration(config);
+    const browserAPIS: IBrowserAPIS[] = ["matchMedia"];
+    return probeMediaConfiguration(config, browserAPIS);
   },
 };
 

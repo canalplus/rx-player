@@ -19,22 +19,13 @@ import log from "../log";
 import probers from "../probers";
 import { IMediaConfiguration } from "../types";
 
-type IBrowserAPIS =
+export type IBrowserAPIS =
   "isTypeSupported" |
   "isTypeSupportedWithFeatures" |
   "matchMedia" |
   "decodingInfos" |
   "requestMediaKeySystemAccess" |
   "getStatusForPolicy";
-
-const browserAPIS: IBrowserAPIS[] = [
-  "isTypeSupported",
-  "isTypeSupportedWithFeatures",
-  "matchMedia",
-  "decodingInfos",
-  "requestMediaKeySystemAccess",
-  "getStatusForPolicy",
-];
 
 /**
  * Probe media capabilities, evaluating capabilities with available browsers API.
@@ -58,8 +49,10 @@ const browserAPIS: IBrowserAPIS[] = [
  * @returns {Promise}
  */
 async function probeMediaConfiguration(
-  config: IMediaConfiguration
-) : Promise<string> {
+  config: IMediaConfiguration,
+  browserAPIS: IBrowserAPIS[]
+): Promise<string> {
+
   let isProbablySupported: boolean = false;
   let isMaybeSupported: boolean = false;
   let isNotSupported: boolean = false;
