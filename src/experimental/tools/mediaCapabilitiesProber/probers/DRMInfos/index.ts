@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log";
 import { IMediaConfiguration } from "../../types";
 
 import buildKeySystemConfigurations from "./buildKeySystemConfiguration";
@@ -24,34 +25,28 @@ export interface IMediaKeySystemInfos {
 }
 
 /**
- * @returns {Promise}
- */
-function isRequestMediaKeySystemAccessAvailable(): Promise<void> {
-  return new Promise((resolve) => {
-    if (!("requestMediaKeySystemAccess" in navigator)) {
-      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
-        "API not available");
-    }
-    resolve();
-  });
-}
-
-/**
  * @param {Object} config
  * @returns {Promise}
  */
 export default function probeDRMInfos(config: IMediaConfiguration): Promise<number> {
-  return isRequestMediaKeySystemAccessAvailable().then(() => {
+  return new Promise((resolve) => {
+    if (!("requestMediaKeySystemAccess" in navigator)) {
+      log.warn("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+        "API not available");
+      // In that case, the API lack means that no EME workflow may be started.
+      // So, the DRM configuration is not supported.
+      resolve(0);
+    }
     const mediaProtection = config.mediaProtection;
     if (mediaProtection) {
       const drm = mediaProtection.drm;
       if (drm && drm.type) {
         const keySystem = drm.type;
-        const  configuration =
+        const configuration =
           buildKeySystemConfigurations(keySystem, drm.configuration || {});
-            return navigator.requestMediaKeySystemAccess(keySystem, configuration)
-              .then(() => 2)
-              .catch(() => 0);
+        return navigator.requestMediaKeySystemAccess(keySystem, configuration)
+          .then(() => resolve(2))
+          .catch(() => resolve(0));
       }
     }
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
