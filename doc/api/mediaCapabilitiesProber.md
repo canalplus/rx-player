@@ -90,6 +90,7 @@ mediaCapabilitiesProber.LogLevel = "WARNING";
 ### getStatusForHDCP ###########################################################
 
   _arguments_:
+
     - type (``string``): The HDCP type (e.g. "1.0", "1.1" or "2.0")
 
   _return value_: ``string``
@@ -131,6 +132,7 @@ mediaCapabilitiesProber.getStatusForHDCP("1.1")
 ### getStatusForDRM ############################################################
 
   _arguments_:
+
     - _type_ (``string``): DRM reverse domain name, identifying the keySystem in
       the browser.
 
@@ -169,6 +171,7 @@ mediaCapabilitiesProber.getStatusForDRM("com.widevine.alpha", {
 ### getDecodingCapabilities ####################################################
 
   _arguments_:
+
     - config (``Object``): Object with type, video and audio configuration.
 
   _return value_: ``string``
@@ -253,6 +256,7 @@ mediaCapabilitiesProber.getDecodingCapabilities({
 ### getDisplayCapabilities
 
   _arguments_:
+
     - config (``Object``): Object with display configuration.
 
   _return value_: ``string``
@@ -308,6 +312,7 @@ mediaCapabilitiesProber.getDisplayCapabilities({
 ### getCapabilities ############################################################
 
   _arguments_:
+
     - _config_ (``Object``): Configuration as defined below.
 
   _return value_: ``string``

@@ -96,8 +96,9 @@ mediaCapabilitiesProber.LogLevel = <span class="hljs-string">&quot;WARNING&quot;
 <h2>Functions</h2>
 <p><a name="subchapter-getStatusForHDCP"></a></p>
 <h3>getStatusForHDCP</h3>
-<p><em>arguments</em>:
-- type (<code>string</code>): The HDCP type (e.g. &#x201C;1.0&#x201D;, &#x201C;1.1&#x201D; or &#x201C;2.0&#x201D;)</p>
+<p><em>arguments</em>:</p>
+<pre><code>- type (``string``): The HDCP type (e.g. &quot;1.0&quot;, &quot;1.1&quot; or &quot;2.0&quot;)
+</code></pre>
 <p><em>return value</em>: <code>string</code></p>
 <p>Test for an HDCP configuration.</p>
 <p>The returned string of this function is either:</p>
@@ -133,10 +134,11 @@ HDCP type is supported.</p>
 </code></pre>
 <p><a name="subchapter-getStatusForDRM"></a></p>
 <h3>getStatusForDRM</h3>
-<p><em>arguments</em>:
-- <em>type</em> (<code>string</code>): DRM reverse domain name, identifying the keySystem in
-the browser.</p>
-<pre><code>- _configuration_ (``Object``): MediaKeySystemConfiguration for this key
+<p><em>arguments</em>:</p>
+<pre><code>- _type_ (``string``): DRM reverse domain name, identifying the keySystem in
+  the browser.
+
+- _configuration_ (``Object``): MediaKeySystemConfiguration for this key
   system as defined in [the EME w3c specification
   ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 </code></pre>
@@ -168,8 +170,9 @@ The returned string of this function is either:</p>
 </code></pre>
 <p><a name="subchapter-getDecodingCapabilities"></a></p>
 <h3>getDecodingCapabilities</h3>
-<p><em>arguments</em>:
-- config (<code>Object</code>): Object with type, video and audio configuration.</p>
+<p><em>arguments</em>:</p>
+<pre><code>- config (``Object``): Object with type, video and audio configuration.
+</code></pre>
 <p><em>return value</em>: <code>string</code></p>
 <p>Probe for audio/video decoding capabilities.</p>
 <h4>Argument</h4>
@@ -257,8 +260,9 @@ not enough information was provided.</p>
 </code></pre>
 <p><a name="subchapter-getDisplayCapabilities"></a></p>
 <h3>getDisplayCapabilities</h3>
-<p><em>arguments</em>:
-- config (<code>Object</code>): Object with display configuration.</p>
+<p><em>arguments</em>:</p>
+<pre><code>- config (``Object``): Object with display configuration.
+</code></pre>
 <p><em>return value</em>: <code>string</code></p>
 <p>Probe what can be displayed on the screen.</p>
 <h4>Argument</h4>
@@ -308,8 +312,9 @@ not enough information was provided.</p>
 </code></pre>
 <p><a name="subchapter-getCapabilities"></a></p>
 <h3>getCapabilities</h3>
-<p><em>arguments</em>:
-- <em>config</em> (<code>Object</code>): Configuration as defined below.</p>
+<p><em>arguments</em>:</p>
+<pre><code>- _config_ (``Object``): Configuration as defined below.
+</code></pre>
 <p><em>return value</em>: <code>string</code></p>
 <p>This is a global prober for checking a battery of media-related capabilities.</p>
 <p>This function can be used for having a global status for a given content.</p>
