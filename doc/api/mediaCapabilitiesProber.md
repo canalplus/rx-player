@@ -89,11 +89,11 @@ mediaCapabilitiesProber.LogLevel = "WARNING";
 
 ### getStatusForHDCP ###########################################################
 
-  _arguments_:
+_arguments_:
 
-    - type (``string``): The HDCP type (e.g. "1.0", "1.1" or "2.0")
+  - _type_ (``string``): The HDCP type (e.g. "1.0", "1.1" or "2.0")
 
-  _return value_: ``string``
+_return value_: ``string``
 
 Test for an HDCP configuration.
 
@@ -131,16 +131,16 @@ mediaCapabilitiesProber.getStatusForHDCP("1.1")
 
 ### getStatusForDRM ############################################################
 
-  _arguments_:
+_arguments_:
 
-    - _type_ (``string``): DRM reverse domain name, identifying the keySystem in
-      the browser.
+  - _type_ (``string``): DRM reverse domain name, identifying the keySystem in
+    the browser.
 
-    - _configuration_ (``Object``): MediaKeySystemConfiguration for this key
-      system as defined in [the EME w3c specification
-      ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
+  - _configuration_ (``Object``): MediaKeySystemConfiguration for this key
+    system as defined in [the EME w3c specification
+    ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 
-  _return value_: ``string``
+_return value_: ``string``
 
 Probe for DRM support.
 The returned string of this function is either:
@@ -170,11 +170,11 @@ mediaCapabilitiesProber.getStatusForDRM("com.widevine.alpha", {
 
 ### getDecodingCapabilities ####################################################
 
-  _arguments_:
+_arguments_:
 
-    - config (``Object``): Object with type, video and audio configuration.
+  - _config_ (``Object``): Object with type, video and audio configuration.
 
-  _return value_: ``string``
+_return value_: ``string``
 
 Probe for audio/video decoding capabilities.
 
@@ -255,11 +255,11 @@ mediaCapabilitiesProber.getDecodingCapabilities({
 
 ### getDisplayCapabilities
 
-  _arguments_:
+_arguments_:
 
-    - config (``Object``): Object with display configuration.
+  - _config_ (``Object``): Object with display configuration.
 
-  _return value_: ``string``
+_return value_: ``string``
 
 Probe what can be displayed on the screen.
 
@@ -311,11 +311,11 @@ mediaCapabilitiesProber.getDisplayCapabilities({
 
 ### getCapabilities ############################################################
 
-  _arguments_:
+_arguments_:
 
-    - _config_ (``Object``): Configuration as defined below.
+  - _config_ (``Object``): Configuration as defined below.
 
-  _return value_: ``string``
+_return value_: ``string``
 
 This is a global prober for checking a battery of media-related capabilities.
 
