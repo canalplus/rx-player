@@ -21,7 +21,7 @@ export interface IPolicy {
 }
 
 function isAPIAvailable(): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     if (!("requestMediaKeySystemAccess" in navigator)) {
       throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
         "API not available");
