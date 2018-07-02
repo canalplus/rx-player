@@ -16,10 +16,9 @@
 
 import { IDisplayConfiguration } from "../../types";
 
-function formatConfigForAPI(display: IDisplayConfiguration): string|null {
+export default function formatMediaDisplayInfosConfigForAPI(
+  display: IDisplayConfiguration
+) : string|null {
   const gamut = display.colorSpace;
-  const str = gamut ? "(color-gamut: " + gamut + ")" : null;
-  return str;
+  return gamut ? "(color-gamut: " + gamut + ")" : null;
 }
-
-export default formatConfigForAPI;

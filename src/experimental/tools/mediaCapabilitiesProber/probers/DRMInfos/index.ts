@@ -23,7 +23,10 @@ export interface IMediaKeySystemInfos {
   configuration: MediaKeySystemConfiguration[];
 }
 
-function isAPIAvailable(): Promise<void> {
+/**
+ * @returns {Promise}
+ */
+function isRequestMediaKeySystemAccessAvailable(): Promise<void> {
   return new Promise((resolve) => {
     if (!("requestMediaKeySystemAccess" in navigator)) {
       throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
@@ -33,8 +36,12 @@ function isAPIAvailable(): Promise<void> {
   });
 }
 
-export default function probe(config: IMediaConfiguration): Promise<number> {
-  return isAPIAvailable().then(() => {
+/**
+ * @param {Object} config
+ * @returns {Promise}
+ */
+export default function probeDRMInfos(config: IMediaConfiguration): Promise<number> {
+  return isRequestMediaKeySystemAccessAvailable().then(() => {
     const mediaProtection = config.mediaProtection;
     if (mediaProtection) {
       const drm = mediaProtection.drm;

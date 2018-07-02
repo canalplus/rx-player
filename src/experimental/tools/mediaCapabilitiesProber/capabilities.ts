@@ -166,10 +166,11 @@ const capabilites: {[key: string]: ICapabilities} = {
  * Extends a capabilities array with others.
  * @param {Array<Object>} target
  * @param {Array<Object>} objects
+ * @returns {Array.<Object>}
  */
 function extend(target: ICapabilities, objects: ICapabilities[]): ICapabilities {
-  objects.forEach((object) => {
-    object.forEach((element) => {
+  objects.forEach((obj) => {
+    obj.forEach((element) => {
       if (typeof element === "string") {
         if (!target.find((targetElement) => targetElement === element)) {
           target.push(element);
@@ -200,25 +201,28 @@ function extend(target: ICapabilities, objects: ICapabilities[]): ICapabilities 
  * probed configuration object.
  * @param {Array<Object>} capabilities
  * @param {Object} configuration
+ * @returns {Object}
  */
 function filterConfigurationWithProbedCapabilities(
   capabilities: ICapabilities,
-  configuration: object
-): object {
+  configuration: IMediaConfiguration
+): IMediaConfiguration {
   const probedConfig = {};
 
   capabilities.forEach((capability) => {
     if (typeof capability === "string") {
-      if ((configuration as {[id: string]: string|object})[capability] !== undefined) {
-        (probedConfig as {[id: string]: string|object})[capability] =
-          (configuration as {[id: string]: string|object})[capability];
+      if ((configuration as {
+        [id: string]: string|IMediaConfiguration;
+      })[capability] !== undefined) {
+        (probedConfig as {[id: string]: string|IMediaConfiguration})[capability] =
+          (configuration as {[id: string]: string|IMediaConfiguration})[capability];
       }
     } else {
       const [ key, value ] = Object.entries(capability)[0];
       const subProbedConfig = filterConfigurationWithProbedCapabilities(
-        value, (configuration as {[id: string]: object})[key] || {});
+        value, (configuration as {[id: string]: IMediaConfiguration})[key] || {});
       if (Object.entries(subProbedConfig).length > 0) {
-        (probedConfig as {[id: string]: object})[key] = subProbedConfig;
+        (probedConfig as {[id: string]: IMediaConfiguration})[key] = subProbedConfig;
       }
     }
   });
@@ -230,11 +234,12 @@ function filterConfigurationWithProbedCapabilities(
  * Get probed configuration.
  * @param {Object} config
  * @param {Array<string>} probers
+ * @returns {Object}
  */
 export default function getProbedConfiguration(
   config: IMediaConfiguration,
   probers: ICapabilitiesTypes[]
-) {
+) : IMediaConfiguration {
   const target: ICapabilities = [];
   extend(target, probers.map((prober) => capabilites[prober]));
   return filterConfigurationWithProbedCapabilities(target, config);

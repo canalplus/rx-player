@@ -22,7 +22,14 @@ import {
 } from "../../types";
 import { findDefaultVideoCodec } from "../defaultCodecsFinder";
 
-function formatConfigForAPI(
+/**
+ * @param {Object} [video]
+ * @param {Object} [outputProtection]
+ * @param {Object} [audio]
+ * @param {Object} [display]
+ * @returns {string|null}
+ */
+export default function formatTypeSupportedWithFeaturesConfigForAPI(
   video?: IVideoConfiguration,
   outputProtection?: IOutputProtectionConfiguration,
   audio?: IAudioConfiguration,
@@ -83,5 +90,3 @@ function formatConfigForAPI(
   }
   return str;
 }
-
-export default formatConfigForAPI;

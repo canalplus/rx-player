@@ -15,10 +15,12 @@
  */
 
 import { IMediaConfiguration } from "../../types";
-
 import formatConfigFor_matchMedia_API from "./format";
 
-function isAPIAvailable(): Promise<void> {
+/**
+ * @returns {Promise}
+ */
+function isMatchMediaAPIAvailable(): Promise<void> {
   return new Promise((resolve) => {
     if (!("matchMedia" in window)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
@@ -28,8 +30,14 @@ function isAPIAvailable(): Promise<void> {
   });
 }
 
-export default function probe(config: IMediaConfiguration): Promise<number> {
-  return isAPIAvailable().then(() => {
+/**
+ * @param {Object} config
+ * @returns {Promise}
+ */
+export default function probeMatchMedia(
+  config: IMediaConfiguration
+): Promise<number> {
+  return isMatchMediaAPIAvailable().then(() => {
     if (config.display) {
       const format = formatConfigFor_matchMedia_API;
       const formatted = format(config.display);

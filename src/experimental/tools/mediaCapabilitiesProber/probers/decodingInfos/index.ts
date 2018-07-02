@@ -16,7 +16,17 @@
 
 import { IMediaConfiguration } from "../../types";
 
-function isAPIAvailable(): Promise<void> {
+export interface IDecodingInfos {
+  supported: boolean;
+  smooth: boolean;
+  powerEfficient: boolean;
+}
+
+/**
+ * Check if the required APIs are available.
+ * @returns {Promise}
+ */
+function isMediaCapabilitiesAPIAvailable(): Promise<void> {
   return new Promise((resolve) => {
     if (!("mediaCapabilities" in navigator)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
@@ -30,13 +40,12 @@ function isAPIAvailable(): Promise<void> {
   });
 }
 
-export interface IDecodingInfos {
-  supported: boolean;
-  smooth: boolean;
-  powerEfficient: boolean;
-}
-function probe(config: IMediaConfiguration): Promise<number> {
-  return isAPIAvailable().then(() => {
+/**
+ * @param {Object} config
+ * @returns {Promise}
+ */
+export default function probeDecodingInfos(config: IMediaConfiguration): Promise<number> {
+  return isMediaCapabilitiesAPIAvailable().then(() => {
     const hasVideoConfig = (
       config.type &&
       config.video &&
@@ -69,5 +78,3 @@ function probe(config: IMediaConfiguration): Promise<number> {
       "Not enough arguments for calling mediaCapabilites.");
   });
 }
-
-export default probe;

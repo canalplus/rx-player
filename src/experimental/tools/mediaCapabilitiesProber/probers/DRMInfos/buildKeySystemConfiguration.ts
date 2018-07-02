@@ -30,6 +30,11 @@ interface IKeySystem {
   audioRobustnesses?: Array<(string|undefined)>;
 }
 
+/**
+ * @param {string} ksName
+ * @param {Object} keySystem
+ * @returns {Array.<Object>}
+ */
 export default function buildKeySystemConfigurations(
   ksName: string,
   keySystem: IKeySystem

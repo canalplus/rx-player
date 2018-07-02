@@ -15,12 +15,9 @@
  */
 
 import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
+import log from "../log";
 import probers from "../probers";
 import { IMediaConfiguration } from "../types";
-
-import log from "../log";
-import filterEmptyFields from "../utils/filterEmptyFields";
-import isEmpty from "../utils/isEmpty";
 
 type IBrowserAPIS =
   "isTypeSupported" |
@@ -29,24 +26,6 @@ type IBrowserAPIS =
   "decodingInfos" |
   "requestMediaKeySystemAccess" |
   "getStatusForPolicy";
-
-/**
- * Assert that configuration is valid before probing:
- * 1 - Filter empty fields.
- * 2 - Check for emptyness.
- * 3 - Check for unsupported configuration attributes.
- * @param {Object} config
- */
-function validateConfiguration(config: IMediaConfiguration) {
-  if (!config) {
-    throw new Error("MCP_CONF: Configuration is not defined.");
-  }
-  const filteredConfig: IMediaConfiguration = filterEmptyFields(config);
-  if (isEmpty(filteredConfig)) {
-    throw new Error("MCP_CONF: Can't probe empty configuration.");
-  }
-  return filteredConfig;
-}
 
 const browserAPIS: IBrowserAPIS[] = [
   "isTypeSupported",
@@ -76,10 +55,11 @@ const browserAPIS: IBrowserAPIS[] = [
  * If no API was called or some capabilites could not be probed and status is "Probably",
  * return "Maybe".
  * @param {Object} config
+ * @returns {Promise}
  */
-async function probeMediaConfiguration(_config: IMediaConfiguration) {
-  const config = validateConfiguration(_config);
-
+async function probeMediaConfiguration(
+  config: IMediaConfiguration
+) : Promise<string> {
   let isProbablySupported: boolean = false;
   let isMaybeSupported: boolean = false;
   let isNotSupported: boolean = false;

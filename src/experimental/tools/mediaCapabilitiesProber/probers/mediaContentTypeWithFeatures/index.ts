@@ -25,7 +25,10 @@ export interface ITypeWithFeatures {
 
 export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
 
-function isAPIAvailable(): Promise<void> {
+/**
+ * @returns {Promise}
+ */
+function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
   return new Promise((resolve) => {
     if (!("MSMediaKeys" in window)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
@@ -39,8 +42,14 @@ function isAPIAvailable(): Promise<void> {
   });
 }
 
-export default function probe(config: IMediaConfiguration) {
-  return isAPIAvailable().then(() => {
+/**
+ * @param {Object} config
+ * @returns {Promise}
+ */
+export default function probeTypeWithFeatures(
+  config: IMediaConfiguration
+) : Promise<number> {
+  return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
     const mediaProtection = config.mediaProtection;
     const keySystem = mediaProtection ?
       (mediaProtection.drm ?

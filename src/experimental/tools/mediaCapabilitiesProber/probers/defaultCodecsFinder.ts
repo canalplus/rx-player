@@ -16,7 +16,9 @@
 
  /**
   * Check if one of given video codecs are supported for decode.
-  * These video codecs are chose for their wide proven compatibility and popularity.
+  * These video codecs are chose for their wide proven compatibility and
+  * popularity.
+  * @returns {string}
   */
 export function findDefaultVideoCodec(): string {
   const videoCodecs =
@@ -34,7 +36,9 @@ export function findDefaultVideoCodec(): string {
 
 /**
  * Check if one of given audio codecs are supported for decode.
- * These audio codecs are chose for their wide proven compatibility and popularity.
+ * These audio codecs are chose for their wide proven compatibility and
+ * popularity.
+ * @returns {string}
  */
 export function findDefaultAudioCodec(): string {
   const audioCodecs = ["audio/webm; codecs=opus", "audio/mp4; codecs=\"mp4a.40.2\""];

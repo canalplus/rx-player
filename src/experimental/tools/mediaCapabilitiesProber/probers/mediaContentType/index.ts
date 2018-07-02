@@ -16,7 +16,10 @@
 
 import { IMediaConfiguration } from "../../types";
 
-function isAPIAvailable(): Promise<void> {
+/**
+ * @returns {Promise}
+ */
+function isContentTypeAPISupported(): Promise<void> {
   return new Promise((resolve) => {
     if (!("MediaSource" in window)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
@@ -30,8 +33,12 @@ function isAPIAvailable(): Promise<void> {
   });
 }
 
-export default function probe(config: IMediaConfiguration): Promise<number> {
-  return isAPIAvailable().then(() => {
+/**
+ * @param {Object} config
+ * @returns {Promise}
+ */
+export default function probeContentType(config: IMediaConfiguration): Promise<number> {
+  return isContentTypeAPISupported().then(() => {
     const contentTypes: string[] = [];
     if (
       config.video &&

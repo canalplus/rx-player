@@ -49,16 +49,19 @@ const mediaCapabilitiesProber = {
    * Get capabilities for any configuration.
    * All possible attributes are accepted as argument.
    * @param {Object} config
+   * @returns {Promise}
    */
-  getCapabilities: async (config: IMediaConfiguration) => {
+  getCapabilities(config: IMediaConfiguration) : Promise<string> {
     return probeMediaConfiguration(config);
   },
 
   /**
    * Get HDCP status. Evaluates if current equipement support given
    * HDCP revision.
+   * @param {string}
+   * @returns {Promise}
    */
-  getStatusForHDCP(hdcp: string) {
+  getStatusForHDCP(hdcp: string) : Promise<string> {
     if (!hdcp) {
       return Promise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
         "No HDCP Policy specified.");
@@ -77,10 +80,12 @@ const mediaCapabilitiesProber = {
   /**
    * Get decoding capabilities from a given video and/or audio
    * configuration.
+   * @param {Object} mediaConfig
+   * @returns {Promise}
    */
   getDecodingCapabilities(
     mediaConfig: IMediaConfiguration
-  ) {
+  ) : Promise<string> {
     const config = {
       type: mediaConfig.type,
       video: mediaConfig.video,
@@ -92,8 +97,14 @@ const mediaCapabilitiesProber = {
   /**
    * Get Status For DRM. Tells if browser support deciphering
    * with given drm type and configuration.
+   * @param {string} type
+   * @param {Object} drmConfig
+   * @returns {Promise}
    */
-  getStatusForDRM(type: string, drmConfig: IDRMConfiguration) {
+  getStatusForDRM(
+    type: string,
+    drmConfig: IDRMConfiguration
+  ) : Promise<string> {
     const config = {
       mediaProtection: {
         drm: {
@@ -108,8 +119,12 @@ const mediaCapabilitiesProber = {
   /**
    * Get display capabilites. Tells if display can output
    * with specific video and/or audio constrains.
+   * @param {Object} displayConfig
+   * @returns {Promise}
    */
-  getDisplayCapabilities(displayConfig: IDisplayConfiguration) {
+  getDisplayCapabilities(
+    displayConfig: IDisplayConfiguration
+  ) : Promise<string> {
     const config = { display: displayConfig };
     return probeMediaConfiguration(config);
   },

@@ -20,7 +20,19 @@ export interface IPolicy {
   minHdcpVersion: string;
 }
 
-function isAPIAvailable(): Promise<void> {
+export type IMediaKeyStatus =
+  "usable" |
+  "expired" |
+  "released" |
+  "output-restricted" |
+  "output-downscaled" |
+  "status-pending" |
+  "internal-error";
+
+/**
+ * @returns {Promise}
+ */
+function isHDCPAPIAvailable(): Promise<void> {
   return new Promise<void>((resolve) => {
     if (!("requestMediaKeySystemAccess" in navigator)) {
       throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
@@ -39,17 +51,12 @@ function isAPIAvailable(): Promise<void> {
   });
 }
 
-export type IMediaKeyStatus =
-  "usable" |
-  "expired" |
-  "released" |
-  "output-restricted" |
-  "output-downscaled" |
-  "status-pending" |
-  "internal-error";
-
-export default function probe(config: IMediaConfiguration): Promise<number> {
-  return isAPIAvailable().then(() => {
+/**
+ * @param {Object} config
+ * @returns {Promise}
+ */
+export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<number> {
+  return isHDCPAPIAvailable().then(() => {
     if (
       config.mediaProtection &&
       config.mediaProtection.output
