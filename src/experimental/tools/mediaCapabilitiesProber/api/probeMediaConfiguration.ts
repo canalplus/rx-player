@@ -67,7 +67,7 @@ async function probeMediaConfiguration(
         isNotSupported = isNotSupported || probeResult === 0;
         isMaybeSupported = isMaybeSupported || probeResult === 1;
         isProbablySupported = isProbablySupported || probeResult === 2;
-      }).catch((err) => log.debug(err)));
+      }).catch((err) => log.warn(err)));
     }
   }
 
