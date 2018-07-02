@@ -57,11 +57,8 @@ function isHDCPAPIAvailable(): Promise<void> {
  */
 export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<number> {
   return isHDCPAPIAvailable().then(() => {
-    if (
-      config.mediaProtection &&
-      config.mediaProtection.output
-    ) {
-      const hdcp = "hdcp-" + config.mediaProtection.output.hdcp;
+    if (config.hdcp) {
+      const hdcp = "hdcp-" + config.hdcp;
       const object = { minHdcpVersion: hdcp };
 
       const keySystem = "w3.org.clearkey";

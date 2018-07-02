@@ -50,22 +50,18 @@ export default function probeTypeWithFeatures(
   config: IMediaConfiguration
 ) : Promise<number> {
   return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
-    const mediaProtection = config.mediaProtection;
-    const keySystem = mediaProtection ?
-      (mediaProtection.drm ?
-        mediaProtection.drm.type || "org.w3.clearkey" :
-        "org.w3.clearkey") :
-      "org.w3.clearkey";
-    const output = mediaProtection ? mediaProtection.output : undefined;
+    const keySystem = config.keySystem;
+    const type = keySystem ? (keySystem.type || "org.w3.clearkey") : "org.w3.clearkey";
+    const hdcp = config.hdcp;
 
     const video = config.video;
     const audio = config.audio;
     const display = config.display;
 
-    const features = formatConfig(video, output, audio, display);
+    const features = formatConfig(video, hdcp, audio, display);
 
     const result =
-      (window as any).MSMediaKeys.isTypeSupportedWithFeatures(keySystem, features);
+      (window as any).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
 
     function formatSupport(support: ISupportWithFeatures) {
       if (support === "") {

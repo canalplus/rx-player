@@ -37,14 +37,12 @@ export default function probeDRMInfos(config: IMediaConfiguration): Promise<numb
       // So, the DRM configuration is not supported.
       resolve(0);
     }
-    const mediaProtection = config.mediaProtection;
-    if (mediaProtection) {
-      const drm = mediaProtection.drm;
-      if (drm && drm.type) {
-        const keySystem = drm.type;
+    const keySystem = config.keySystem;
+    if (keySystem) {
+      if (keySystem.type) {
         const configuration =
-          buildKeySystemConfigurations(keySystem, drm.configuration || {});
-        return navigator.requestMediaKeySystemAccess(keySystem, configuration)
+          buildKeySystemConfigurations(keySystem.type, keySystem.configuration || {});
+        return navigator.requestMediaKeySystemAccess(keySystem.type, configuration)
           .then(() => resolve(2))
           .catch(() => resolve(0));
       }

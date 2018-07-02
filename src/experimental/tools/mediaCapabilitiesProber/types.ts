@@ -38,18 +38,13 @@ export interface IDRMConfiguration {
   audioRobustnesses?: string[];
 }
 
-export interface IDRMInfos {
+export interface IKeySystem {
   type?: string;
   configuration?: IDRMConfiguration;
 }
 
 export interface IOutputProtectionConfiguration {
   hdcp?: string;
-}
-
-export interface IMediaProtectionConfiguration {
-  drm?: IDRMInfos;
-  output?: IOutputProtectionConfiguration;
 }
 
 export interface IDisplayConfiguration {
@@ -63,6 +58,7 @@ export interface IMediaConfiguration {
   type?: "media-source"|"file";
   video?: IVideoConfiguration;
   audio?: IAudioConfiguration;
-  mediaProtection?: IMediaProtectionConfiguration;
+  keySystem?: IKeySystem;
+  hdcp?: string;
   display?: IDisplayConfiguration;
 }

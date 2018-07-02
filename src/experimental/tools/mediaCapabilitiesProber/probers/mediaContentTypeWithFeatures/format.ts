@@ -17,7 +17,6 @@
 import {
   IAudioConfiguration,
   IDisplayConfiguration,
-  IOutputProtectionConfiguration,
   IVideoConfiguration,
 } from "../../types";
 import { findDefaultVideoCodec } from "../defaultCodecsFinder";
@@ -31,7 +30,7 @@ import { findDefaultVideoCodec } from "../defaultCodecsFinder";
  */
 export default function formatTypeSupportedWithFeaturesConfigForAPI(
   video?: IVideoConfiguration,
-  outputProtection?: IOutputProtectionConfiguration,
+  outputHdcp?: string,
   audio?: IAudioConfiguration,
   display?: IDisplayConfiguration
 ): string|null {
@@ -79,8 +78,8 @@ export default function formatTypeSupportedWithFeaturesConfigForAPI(
     }
   }
 
-  if (outputProtection && outputProtection.hdcp) {
-    const specifiedHDCPinConfig = parseFloat(outputProtection.hdcp);
+  if (outputHdcp) {
+    const specifiedHDCPinConfig = parseFloat(outputHdcp);
     const hdcp = specifiedHDCPinConfig >= 2.2 ? 2 : 1;
     feat.push("hdcp=" + hdcp);
   }

@@ -75,11 +75,7 @@ const mediaCapabilitiesProber = {
         "No HDCP Policy specified.");
     }
     const config = {
-      mediaProtection: {
-        output: {
-          hdcp,
-        },
-      },
+      hdcp,
     };
     const browserAPIS: IBrowserAPIS[] = [
       "isTypeSupportedWithFeatures",
@@ -122,11 +118,9 @@ const mediaCapabilitiesProber = {
     drmConfig: IDRMConfiguration
   ) : Promise<string> {
     const config = {
-      mediaProtection: {
-        drm: {
-          type,
-          configuration: drmConfig,
-        },
+      keySystem: {
+        type,
+        configuration: drmConfig,
       },
     };
     const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
