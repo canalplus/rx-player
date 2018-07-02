@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import {
   IDisplayConfiguration,
   IDRMConfiguration,
   IMediaConfiguration,
 } from "../types";
-
-import log from "../log";
 import probeMediaConfiguration from "./probeMediaConfiguration";
 
 /**
@@ -29,6 +28,22 @@ import probeMediaConfiguration from "./probeMediaConfiguration";
  * and relies on different browser API to probe capabilites.
  */
 const mediaCapabilitiesProber = {
+
+  /**
+   * Set logger level
+   * @param {string} level
+   */
+  set LogLevel(level: string) {
+    log.setLevel(level);
+  },
+
+  /**
+   * Get logger level
+   * @returns {string}
+   */
+  get LogLevel() : string {
+    return log.getLevel();
+  },
 
   /**
    * Get capabilities for any configuration.
@@ -97,21 +112,6 @@ const mediaCapabilitiesProber = {
   getDisplayCapabilities(displayConfig: IDisplayConfiguration) {
     const config = { display: displayConfig };
     return probeMediaConfiguration(config);
-  },
-
-  /**
-   * Set logger level
-   * @param {string} level
-   */
-  setLogLevel(level: string) {
-    log.setLevel(level);
-  },
-
-  /**
-   * Get logger level
-   */
-  getLogLevel() {
-    return log.getLevel();
   },
 };
 
