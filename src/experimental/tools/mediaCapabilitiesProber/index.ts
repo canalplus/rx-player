@@ -17,6 +17,6 @@
 import MediaCapabilitiesProber from "./api";
 import log from "./log";
 
-log.setLevel(__LOGGER_LEVEL__);
+log.setLevel("WARNING");
 
 export default MediaCapabilitiesProber;

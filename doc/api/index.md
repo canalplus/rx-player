@@ -183,6 +183,8 @@ import RxPlayer from "rx-player";
 RxPlayer.LogLevel = "WARNING";
 ```
 
+
+
 <a name="tools"></a>
 ## Tools #######################################################################
 
@@ -191,11 +193,15 @@ RxPlayer.LogLevel = "WARNING";
 
 _type_: ``Object``
 
-An experimental [tool](./mediaCapabilitiesProber.md) to probe browser media capabilities:
-- Decoding capabilities
-- DRM support
-- HDCP support
-- Display capabilities
+An experimental tool to probe browser media capabilities:
+  - Decoding capabilities
+  - DRM support
+  - HDCP support
+  - Display capabilities
+
+You can find its documentation [here](./mediaCapabilitiesProber.md).
+
+
 
 <a name="meth"></a>
 ## Methods #####################################################################
