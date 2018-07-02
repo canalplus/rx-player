@@ -114,7 +114,12 @@ module.exports = {
     minimizer: shouldMinify ? [new UglifyJsPlugin()] : [
       new UglifyJsPlugin({
         uglifyOptions: {
-          compress: { keep_infinity: true },
+          compress: {
+            keep_infinity: true,
+            inline: false,
+            reduce_funcs: false, // does not work well on commentated funcs.
+                                 // TODO open issue on uglify
+          },
           keep_fnames: true,
           keep_classnames: true,
           keep_fargs: true,
