@@ -53,6 +53,7 @@ async function probeMediaConfiguration(
   browserAPIS: IBrowserAPIS[]
 ): Promise<string> {
 
+  let isSupported: boolean = false;
   let isProbablySupported: boolean = false;
   let isMaybeSupported: boolean = false;
   let isNotSupported: boolean = false;
@@ -67,6 +68,7 @@ async function probeMediaConfiguration(
         isNotSupported = isNotSupported || probeResult === 0;
         isMaybeSupported = isMaybeSupported || probeResult === 1;
         isProbablySupported = isProbablySupported || probeResult === 2;
+        isSupported = isSupported || probeResult === 3;
       }).catch((err) => log.warn(err)));
     }
   }
@@ -89,11 +91,13 @@ async function probeMediaConfiguration(
     probedCapabilities);
 
   if (isNotSupported) {
-    return "Not Supported";
+    return "NotSupported";
   } else if (isMaybeSupported) {
-    return "Maybe";
+    return "MaybeSupported";
   } else if (isProbablySupported) {
     return "Probably";
+  } else if (isSupported) {
+    return "Supported";
   }
   return "Maybe";
 }

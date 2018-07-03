@@ -81,7 +81,12 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "getStatusForPolicy",
     ];
-    return probeMediaConfiguration(config, browserAPIS);
+    return probeMediaConfiguration(config, browserAPIS).then((result) => {
+      if (result === "MaybeSupported") {
+        return "Unknown";
+      }
+      return result;
+    });
   },
 
   /**
@@ -103,20 +108,24 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "decodingInfos",
     ];
-    return probeMediaConfiguration(config, browserAPIS);
+    return probeMediaConfiguration(config, browserAPIS).then((result) => {
+      if (result === "Probably") {
+        return "Supported";
+      }
+      return result;
+    });
   },
 
   /**
-   * Get Status For DRM. Tells if browser support deciphering
-   * with given drm type and configuration.
+   * Tells if browser support deciphering with given drm type and configuration.
    * @param {string} type
    * @param {Object} drmConfig
    * @returns {Promise}
    */
-  getStatusForDRM(
+  isDRMSupported(
     type: string,
     drmConfig: IDRMConfiguration
-  ) : Promise<string> {
+  ) : Promise<boolean> {
     const config = {
       keySystem: {
         type,
@@ -124,7 +133,9 @@ const mediaCapabilitiesProber = {
       },
     };
     const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
-    return probeMediaConfiguration(config, browserAPIS);
+    return probeMediaConfiguration(config, browserAPIS).then((result) => {
+      return result === "Supported" ? true : false;
+    });
   },
 
   /**
@@ -137,8 +148,16 @@ const mediaCapabilitiesProber = {
     displayConfig: IDisplayConfiguration
   ) : Promise<string> {
     const config = { display: displayConfig };
-    const browserAPIS: IBrowserAPIS[] = ["matchMedia"];
-    return probeMediaConfiguration(config, browserAPIS);
+    const browserAPIS: IBrowserAPIS[] = [
+      "matchMedia",
+      "isTypeSupportedWithFeatures",
+    ];
+    return probeMediaConfiguration(config, browserAPIS).then((result) => {
+      if (result === "Probably") {
+        return "Supported";
+      }
+      return result;
+    });
   },
 };
 

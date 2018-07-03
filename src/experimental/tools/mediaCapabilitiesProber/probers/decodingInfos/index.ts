@@ -69,7 +69,7 @@ export default function probeDecodingInfos(config: IMediaConfiguration): Promise
     if (hasVideoConfig || hasAudioConfig) {
       return (navigator as any).mediaCapabilities.decodingInfo(config)
         .then((result: IDecodingInfos) => {
-          return result.supported ? 2 : 0;
+          return result.supported ? 3 : 0;
         }).catch(() => {
           log.warn("MediaCapabilitiesProber >>> API_CALL: " +
             "Bad arguments for calling mediaCapabilities.");

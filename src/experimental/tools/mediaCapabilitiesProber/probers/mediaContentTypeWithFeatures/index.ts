@@ -65,7 +65,8 @@ export default function probeTypeWithFeatures(
 
     function formatSupport(support: ISupportWithFeatures) {
       if (support === "") {
-        return 1;
+        throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+          "Bad arguments for calling isTypeSupportedWithFeatures");
       } else {
         switch (support) {
           case "Maybe":

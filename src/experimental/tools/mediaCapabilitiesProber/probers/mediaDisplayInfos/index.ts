@@ -43,7 +43,11 @@ export default function probeMatchMedia(
       const formatted = format(config.display);
       if (formatted) {
         const match: MediaQueryList = window.matchMedia(formatted);
-        const result = match.matches && match.media !== "not all" ? 2 : 0;
+        if (match.media === "not all") {
+          throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+            "Bad arguments for calling matchMedia.");
+        }
+        const result = match.matches && match.media !== "not all" ? 3 : 0;
         return result;
       }
     }
