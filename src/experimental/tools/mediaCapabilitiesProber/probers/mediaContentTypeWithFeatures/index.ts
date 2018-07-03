@@ -36,7 +36,7 @@ function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
     }
     if (!("isTypeSupportedWithFeatures" in (window as any).MSMediaKeys)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Decoding Info not available");
+        "isTypeSupportedWithFeatures not available");
     }
     resolve();
   });

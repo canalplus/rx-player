@@ -32,7 +32,7 @@ export default function probeDRMInfos(config: IMediaConfiguration): Promise<numb
   return new Promise((resolve) => {
     if (!("requestMediaKeySystemAccess" in navigator)) {
       log.warn("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
-        "API not available");
+        "requestMediaKeySystemAccess not available");
       // In that case, the API lack means that no EME workflow may be started.
       // So, the DRM configuration is not supported.
       resolve(0);

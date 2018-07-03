@@ -24,7 +24,7 @@ function isMatchMediaAPIAvailable(): Promise<void> {
   return new Promise((resolve) => {
     if (!("matchMedia" in window)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "matchMedia API not available");
+        "matchMedia not available");
     }
     resolve();
   });
