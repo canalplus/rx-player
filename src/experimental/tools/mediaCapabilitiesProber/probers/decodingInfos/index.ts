@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import log from "../../log";
 import { IMediaConfiguration } from "../../types";
 
 export interface IDecodingInfos {
@@ -71,8 +70,6 @@ export default function probeDecodingInfos(config: IMediaConfiguration): Promise
         .then((result: IDecodingInfos) => {
           return result.supported ? 3 : 0;
         }).catch(() => {
-          log.warn("MediaCapabilitiesProber >>> API_CALL: " +
-            "Bad arguments for calling mediaCapabilities.");
           return 0;
         });
     }
