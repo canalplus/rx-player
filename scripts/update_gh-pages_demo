@@ -30,11 +30,13 @@ if ! [ $current_branch == "master" ]; then
   exit 1;
 fi
 
+tmpStylesDir=$(mktemp -d)
 tmpDemoFile=$(mktemp)
 tmpRxPlayerFile=$(mktemp)
 
 # Generate demo
 npm run demo:min
+cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
 cp dist/rx-player.min.js $tmpRxPlayerFile -v
 
@@ -64,6 +66,7 @@ if [ -n "$(git status --porcelain demo/full)" ]; then
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Aa]bort?$ ]]; then
       echo "exiting"
+      rm -r $tmpStylesDir
       rm $tmpRxPlayerFile $tmpDemoFile
       exit 0
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
@@ -89,6 +92,7 @@ fi
 # update gh-pages
 git checkout gh-pages
 git pull origin gh-pages
+mv $tmpStylesDir styles
 mv $tmpRxPlayerFile rx-player.js
 mv $tmpDemoFile bundle.js
 
