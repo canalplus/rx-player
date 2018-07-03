@@ -21,5 +21,5 @@ declare module "array-find-index" {
     thisArg? : any
   ) : number;
 
-  export = arrayFindIndex;
+  export default arrayFindIndex;
 }

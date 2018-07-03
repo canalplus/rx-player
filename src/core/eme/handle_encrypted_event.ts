@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  concat as observableConcat,
+  defer as observableDefer,
+  EMPTY,
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  ignoreElements,
+  map,
+  mergeMap,
+} from "rxjs/operators";
 import {
   getInitData,
   IMediaKeySession,
 } from "../../compat";
 import config from "../../config";
-import log from "../../utils/log";
+import log from "../../log";
 import createSession from "./create_session";
 import { IMediaKeysInfos } from "./types";
 import InitDataStore from "./utils/init_data_store";
@@ -56,7 +68,7 @@ export default function handleEncryptedEvent(
   handledInitData : InitDataStore,
   mediaKeysInfos : IMediaKeysInfos
 ) : Observable<IHandledEncryptedEvent> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     const {
       initData,
       initDataType,
@@ -64,7 +76,7 @@ export default function handleEncryptedEvent(
 
     if (handledInitData.has(initData, initDataType)) {
       log.debug("init data already received. Skipping it.");
-      return Observable.empty(); // Already handled, quit
+      return EMPTY; // Already handled, quit
     }
     handledInitData.add(initData, initDataType);
 
@@ -76,7 +88,7 @@ export default function handleEncryptedEvent(
       previousLoadedSession = entry.session;
       if (isSessionUsable(previousLoadedSession)) {
         log.debug("eme: reuse loaded session", previousLoadedSession.sessionId);
-        return Observable.of({
+        return observableOf({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
             mediaKeySession: previousLoadedSession,
@@ -92,8 +104,8 @@ export default function handleEncryptedEvent(
 
     return (previousLoadedSession ?
       sessionsStore.closeSession(previousLoadedSession) :
-      Observable.of(null)
-    ).mergeMap(() => {
+      observableOf(null)
+    ).pipe(mergeMap(() => {
       const cleaningOldSessions$ : Array<Observable<null>> = [];
       const entries = sessionsStore.getAll().slice();
       if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
@@ -102,13 +114,10 @@ export default function handleEncryptedEvent(
         }
       }
 
-      return (
-        Observable.merge(...cleaningOldSessions$)
-        .ignoreElements() as Observable<never>
-      )
-        .concat(
-          createSession(initData, initDataType, mediaKeysInfos)
-          .map((evt) => ({
+      return observableConcat(
+        observableMerge(...cleaningOldSessions$).pipe(ignoreElements()),
+        createSession(initData, initDataType, mediaKeysInfos)
+          .pipe(map((evt) => ({
             type: evt.type,
             value: {
               mediaKeySession: evt.value.mediaKeySession,
@@ -116,8 +125,8 @@ export default function handleEncryptedEvent(
               initData,
               initDataType,
             },
-          }))
-        );
-    });
+          })))
+      );
+    }));
   });
 }

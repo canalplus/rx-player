@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-import arrayFind = require("array-find");
-import objectAssign = require("object-assign");
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
+import arrayFind from "array-find";
+import objectAssign from "object-assign";
 
 import { makeCue } from "../../../../compat";
 

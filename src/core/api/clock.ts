@@ -21,10 +21,16 @@
  * video element to sub-parts of the player.
  */
 
-import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
-import { ReplaySubject } from "rxjs/ReplaySubject";
+import objectAssign from "object-assign";
+import {
+  Observable,
+  Observer,
+  ReplaySubject,
+} from "rxjs";
+import {
+  multicast,
+  refCount,
+} from "rxjs/operators";
 import config from "../../config";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
@@ -331,10 +337,10 @@ function createClock(
       SCANNED_VIDEO_EVENTS.forEach((eventName) =>
         video.removeEventListener(eventName, emitSample));
     };
-  })
-    .multicast(() => new ReplaySubject<IClockTick>(1)) // Always emit the last
-                                                       // item on subscription
-    .refCount();
+  }).pipe(
+    multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last
+    refCount()
+  );
 }
 
 export default createClock;

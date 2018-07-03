@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  defer as observableDefer,
+  Observable,
+  of as observableOf,
+  Subject,
+} from "rxjs";
+import {
+  catchError,
+  mapTo,
+} from "rxjs/operators";
 import { IMockMediaKeys } from "../../compat";
 import {
-  CustomError,
   EncryptedMediaError,
+  ICustomError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
 
@@ -41,14 +49,14 @@ function setServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
 ) : Observable<null> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     return castToObservable(
       mediaKeys.setServerCertificate(serverCertificate)
-    ).catch((error) => {
+    ).pipe(catchError((error) => {
       throw new
       EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
-    });
-  }).mapTo(null);
+    }));
+  }).pipe(mapTo(null));
 }
 
 /**
@@ -61,15 +69,16 @@ function setServerCertificate(
 export default function trySettingServerCertificate(
   mediaKeys : IMockMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray,
-  errorStream: Subject<Error|CustomError>
+  errorStream: Subject<Error|ICustomError>
 ) : Observable<null> {
   return typeof mediaKeys.setServerCertificate === "function" ?
     setServerCertificate(mediaKeys, serverCertificate)
-      .catch(error => {
+      .pipe(catchError(error => {
         error.fatal = false;
         errorStream.next(error);
-        return Observable.of(null);
-      }) : Observable.of(null);
+        return observableOf(null);
+      })) :
+    observableOf(null);
 }
 
 export {

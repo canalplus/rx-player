@@ -14,57 +14,19 @@
  * limitations under the License.
  */
 
-import "rxjs/add/observable/combineLatest";
-import "rxjs/add/observable/defer";
-import "rxjs/add/observable/empty";
-import "rxjs/add/observable/from";
-import "rxjs/add/observable/fromEvent";
-import "rxjs/add/observable/fromPromise";
-import "rxjs/add/observable/interval";
-import "rxjs/add/observable/merge";
-import "rxjs/add/observable/never";
-import "rxjs/add/observable/of";
-import "rxjs/add/observable/race";
-import "rxjs/add/observable/throw";
-import "rxjs/add/observable/timer";
-
-import "rxjs/add/operator/catch";
-import "rxjs/add/operator/concat";
-import "rxjs/add/operator/concatAll";
-import "rxjs/add/operator/concatMap";
-import "rxjs/add/operator/concatMapTo";
-import "rxjs/add/operator/debounceTime";
-import "rxjs/add/operator/distinctUntilChanged";
-import "rxjs/add/operator/do";
-import "rxjs/add/operator/exhaustMap";
-import "rxjs/add/operator/filter";
-import "rxjs/add/operator/finally";
-import "rxjs/add/operator/ignoreElements";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/mapTo";
-import "rxjs/add/operator/merge";
-import "rxjs/add/operator/mergeMap";
-import "rxjs/add/operator/mergeMapTo";
-import "rxjs/add/operator/multicast";
-import "rxjs/add/operator/pairwise";
-import "rxjs/add/operator/publish";
-import "rxjs/add/operator/scan";
-import "rxjs/add/operator/share";
-import "rxjs/add/operator/skip";
-import "rxjs/add/operator/skipUntil";
-import "rxjs/add/operator/skipWhile";
-import "rxjs/add/operator/startWith";
-import "rxjs/add/operator/switchMap";
-import "rxjs/add/operator/switchMapTo";
-import "rxjs/add/operator/take";
-import "rxjs/add/operator/takeLast";
-import "rxjs/add/operator/takeUntil";
-import "rxjs/add/operator/timeout";
-import "rxjs/add/operator/withLatestFrom";
-
-import logger from "./utils/log";
+/**
+ * This file exports a Player class with a default feature set (depends on the
+ * environment variables set at build).
+ *
+ * This is the class used from a regular build.
+ */
 
 import Player from "./core/api";
+import initializeFeatures from "./features/initialize_features";
+import logger from "./log";
+
+// set initial features according to environment variables
+initializeFeatures();
 
 if (__DEV__) {
   logger.setLevel(__LOGGER_LEVEL__);

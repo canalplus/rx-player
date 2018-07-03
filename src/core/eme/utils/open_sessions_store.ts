@@ -14,16 +14,27 @@
  * limitations under the License.
  */
 
-import arrayFind = require("array-find");
-import { Observable } from "rxjs/Observable";
+import arrayFind from "array-find";
+import {
+  concat as observableConcat,
+  defer as observableDefer,
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  catchError,
+  ignoreElements,
+  mapTo,
+} from "rxjs/operators";
 import {
   IMediaKeySession,
   IMockMediaKeys,
 } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
+import log from "../../../log";
 import castToObservable from "../../../utils/castToObservable";
 import hashBuffer from "../../../utils/hash_buffer";
-import log from "../../../utils/log";
 
 // Cached data for a single MediaKeySession
 interface IStoreSessionEntry {
@@ -137,19 +148,20 @@ export default class MediaKeySessionsStore {
   public closeSession(
     session_ : IMediaKeySession|MediaKeySession
   ) : Observable<null> {
-    return Observable.defer(() => {
+    return observableDefer(() => {
       const session = this._delete(session_);
       if (session == null) {
-        return Observable.of(null);
+        return observableOf(null);
       }
 
       log.debug("eme-mem-store: close session", session);
 
-      return castToObservable(session.close())
-        .mapTo(null)
-        .catch(() => {
-          return Observable.of(null);
-        });
+      return castToObservable(session.close()).pipe(
+        mapTo(null),
+        catchError(() => {
+          return observableOf(null);
+        })
+      );
     });
   }
 
@@ -159,12 +171,13 @@ export default class MediaKeySessionsStore {
    * @returns {Observable}
    */
   public closeAllSessions() : Observable<null> {
-    return Observable.defer(() => {
+    return observableDefer(() => {
       const disposed = this._entries.map((e) => this.closeSession(e.session));
       this._entries = [];
-      return Observable.merge(...disposed)
-        .ignoreElements()
-        .concat(Observable.of(null));
+      return observableConcat(
+        observableMerge(...disposed).pipe(ignoreElements()),
+        observableOf(null)
+      );
     });
   }
 

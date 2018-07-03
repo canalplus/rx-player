@@ -26,11 +26,7 @@ export interface ITTParameters {
  * TODO Missing parameters.
  * @param {Element} tt - <tt> node
  * @throws Error - Throws if the spacing style is invalid.
- * @returns {Object} params
- * @returns {Number} params.frameRate
- * @returns {Number} params.subFrameRate
- * @returns {Number} params.tickRate
- * @returns {string} params.spaceStyle
+ * @returns {Object}
  */
 export default function getParameters(tt : Element) : ITTParameters {
   const parsedFrameRate = tt.getAttribute("ttp:frameRate");

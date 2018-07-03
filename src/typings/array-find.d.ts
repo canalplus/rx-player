@@ -21,5 +21,5 @@ declare module "array-find" {
     thisArg? : any
   ) : T | undefined;
 
-  export = arrayFind;
+  export default arrayFind;
 }

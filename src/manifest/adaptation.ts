@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-import arrayFind = require("array-find");
-import objectAssign = require("object-assign");
+import arrayFind from "array-find";
+import objectAssign from "object-assign";
 import generateNewId from "../utils/id";
 import Representation, {
   IRepresentationArguments
 } from "./representation";
 
-export type AdaptationType = "video"|"audio"|"text"|"image";
+export type IAdaptationType = "video"|"audio"|"text"|"image";
+
+export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
+  ["audio", "video", "text", "image"];
 
 // TODO
 export interface IContentProtectionDASH {
@@ -32,7 +35,7 @@ export interface IContentProtectionDASH {
 export interface IAdaptationArguments {
   // -- required
   representations : IRepresentationArguments[];
-  type : AdaptationType;
+  type : IAdaptationType;
 
   // -- optional
   audioDescription? : boolean;
@@ -52,7 +55,7 @@ class Adaptation {
   // required
   public readonly id : string|number;
   public readonly representations : Representation[];
-  public readonly type : AdaptationType;
+  public readonly type : IAdaptationType;
 
   // optional
   public contentProtection? : IContentProtectionDASH;
@@ -116,7 +119,7 @@ class Adaptation {
 
   /**
    * @param {Number} bitrate
-   * @returns {Representations[]|null}
+   * @returns {Array.<Representations>|null}
    */
   getRepresentationsForBitrate(bitrate : number) : Representation[]|null {
     return this.representations.filter(r => r.bitrate === bitrate) || null;

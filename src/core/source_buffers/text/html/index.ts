@@ -14,15 +14,32 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
+import {
+  concat as observableConcat,
+  interval as observableInterval,
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
+  Subject,
+} from "rxjs";
+import {
+  mapTo,
+  startWith,
+  switchMapTo,
+  takeUntil,
+} from "rxjs/operators";
 import {
   onEnded$,
   onSeeked$,
   onSeeking$,
 } from "../../../../compat/events";
 import config from "../../../../config";
-import log from "../../../../utils/log";
+import log from "../../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
 import TextBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";
@@ -47,23 +64,25 @@ const {
  * @returns {Observable}
  */
 function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
-  const seeking$ = onSeeking$(videoElement);
-  const seeked$ = onSeeked$(videoElement);
-  const ended$ = onEnded$(videoElement);
+  const seeking$ = onSeeking$(videoElement).pipe(mapTo(null));
+  const seeked$ = onSeeked$(videoElement).pipe(mapTo(null));
+  const ended$ = onEnded$(videoElement).pipe(mapTo(null));
 
-  const manualRefresh$ = Observable.merge(seeked$, ended$);
-  const autoRefresh$ = Observable
-    .interval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-    .startWith(null);
+  const manualRefresh$ = observableMerge(seeked$, ended$);
+  const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
+    .pipe(mapTo(null), startWith(null));
 
   // TODO Better way to express that
-  return manualRefresh$
-    .startWith(null)
-    .switchMapTo(
-      autoRefresh$.mapTo(true)
-      .takeUntil(seeking$)
-      .concat(Observable.of(false))
-    );
+  return manualRefresh$.pipe(
+    startWith(null),
+    switchMapTo(
+      observableConcat(
+        autoRefresh$
+          .pipe(mapTo(true), takeUntil(seeking$)),
+        observableOf(false)
+      )
+    )
+  );
 }
 
 /**
@@ -87,11 +106,11 @@ function safelyRemoveChild(element : Element, child : Element|null) {
 export default class HTMLTextTrackSourceBuffer
   extends AbstractSourceBuffer<IHTMLTextTrackData>
 {
-  private _videoElement : HTMLMediaElement;
-  private _destroy$ : Subject<void>;
-  private _textTrackElement : HTMLElement;
+  private readonly _videoElement : HTMLMediaElement;
+  private readonly _destroy$ : Subject<void>;
+  private readonly _textTrackElement : HTMLElement;
+  private readonly _buffer : TextBufferManager;
 
-  private _buffer : TextBufferManager;
   private _currentElement : HTMLElement|null;
 
   /**
@@ -111,7 +130,7 @@ export default class HTMLTextTrackSourceBuffer
     this._currentElement = null;
 
     generateClock(this._videoElement)
-      .takeUntil(this._destroy$)
+      .pipe(takeUntil(this._destroy$))
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
           safelyRemoveChild(textTrackElement, this._currentElement);
@@ -141,13 +160,6 @@ export default class HTMLTextTrackSourceBuffer
   /**
    * Append text tracks.
    * @param {Object} data
-   * @param {string} data.type
-   * @param {string} data.data
-   * @param {string} data.language
-   * @param {Number} data.timescale
-   * @param {Number} data.start
-   * @param {Number} data.timeOffset
-   * @param {Number|undefined} data.end
    */
   _append(data : IHTMLTextTrackData) : void {
     log.debug("appending new html text tracks", data);

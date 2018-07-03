@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { CustomError } from "../../../errors";
+import {
+  Observable,
+  Subject,
+} from "rxjs";
+import {
+  filter,
+  map,
+  share,
+  tap,
+} from "rxjs/operators";
+import { ICustomError } from "../../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
@@ -52,14 +60,14 @@ type IPipelineManifestOptions =
  *
  * @param {Object} transport
  * @param {Subject} warning$
- * @param {Array.<Object>} [supplementaryTextTracks=[]]
- * @param {Array.<Object>} [supplementaryImageTrack=[]]
+ * @param {Array.<Object>|undefined} supplementaryTextTracks
+ * @param {Array.<Object>|undefined} supplementaryImageTrack
  * @returns {Function}
  */
 export default function createManifestPipeline(
   transport : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
-  warning$ : Subject<Error|CustomError>,
+  warning$ : Subject<Error|ICustomError>,
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
   supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {
@@ -68,26 +76,27 @@ export default function createManifestPipeline(
       IManifestLoaderArguments, Document|string, IManifestResult
     >(transport.manifest, pipelineOptions)({ url });
 
-    return manifest$
+    return manifest$.pipe(
 
-      .do((arg) => {
+      tap((arg) => {
         if (arg.type === "error") {
           warning$.next(arg.value);
         }
-      })
+      }),
 
-      .filter((arg) : arg is IPipelineManifestResult =>
+      filter((arg) : arg is IPipelineManifestResult =>
         arg.type === "data" || arg.type === "cache"
-      )
+      ),
 
-      .map(({ value }) : Manifest => {
+      map(({ value }) : Manifest => {
         return createManifest(
           value.parsed.manifest,
           supplementaryTextTracks,
           supplementaryImageTracks,
           warning$
         );
-      })
-      .share();
+      }),
+      share()
+    );
   };
 }

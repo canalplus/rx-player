@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
+import { of as observableOf } from "rxjs";
+import features from "../../features";
 import {
   getMDHDTimescale,
   parseSidx,
 } from "../../parsers/containers/isobmff";
-import parseBif from "../../parsers/images/bif";
+import dashManifestParser from "../../parsers/manifest/dash";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import dashManifestParser from "./manifest";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
   parser as TextTrackParser,
 } from "./texttracks";
-import {
-  addNextSegments,
-  replaceTokens,
-} from "./utils";
+import { addNextSegments } from "./utils";
 
 import {
   CustomManifestLoader,
@@ -59,8 +60,6 @@ interface IDASHOptions {
  * Returns pipelines used for DASH streaming.
  * @param {Object} options
  * implementation. Used for each generated http request.
- * @param {Function} [options.contentProtectionParser] - Optional parser for the
- * manifest's content Protection.
  * @returns {Object}
  */
 export default function(
@@ -86,17 +85,14 @@ export default function(
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
-      return Observable.of({
-        manifest: dashManifestParser(data, url),
-        url,
-      });
+      return observableOf({ manifest: dashManifestParser(data, url), url });
     },
   };
 
   const segmentPipeline = {
     loader({ adaptation, init, manifest, period, representation, segment }
       : ISegmentLoaderArguments
-    ) : ILoaderObservable<Uint8Array|ArrayBuffer> {
+    ) : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
       return segmentLoader({
         adaptation,
         init,
@@ -112,16 +108,20 @@ export default function(
       representation,
       response,
       init,
-    } : ISegmentParserArguments<Uint8Array|ArrayBuffer>
+    } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : SegmentParserObservable {
-      const segmentData : Uint8Array = response.responseData instanceof Uint8Array ?
-        response.responseData :
-        new Uint8Array(response.responseData);
+      const { responseData } = response;
+      if (responseData == null) {
+        return observableOf({ segmentData: null, segmentInfos: null });
+      }
+      const segmentData : Uint8Array = responseData instanceof Uint8Array ?
+        responseData :
+        new Uint8Array(responseData);
       const indexRange = segment.indexRange;
       const sidxSegments = parseSidx(segmentData, indexRange ? indexRange[0] : 0);
 
       if (!segment.isInit) {
-        return Observable.of({
+        return observableOf({
           segmentData,
           segmentInfos: getISOBMFFTimingInfos(segment, segmentData, sidxSegments, init),
         });
@@ -132,7 +132,7 @@ export default function(
         addNextSegments(representation, nextSegments);
       }
       const timescale = getMDHDTimescale(segmentData);
-      return Observable.of({
+      return observableOf({
         segmentData,
         segmentInfos: timescale > 0 ? { time: -1, duration: 0, timescale } : null,
       });
@@ -146,20 +146,16 @@ export default function(
 
   const imageTrackPipeline = {
     loader(
-      { segment, representation } : ISegmentLoaderArguments
+      { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
-      if (segment.isInit) {
-        // image do not need an init segment. Passthrough directly to the parser
-        return Observable.of({
+      if (segment.isInit || segment.mediaURL == null) {
+        return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
       }
-
-      const { media } = segment;
-      const path = media ? replaceTokens(media, segment, representation) : "";
-      const url = resolveURL(representation.baseURL, path);
-      return request({ url, responseType: "arraybuffer" });
+      const { mediaURL } = segment;
+      return request({ url: mediaURL, responseType: "arraybuffer" });
     },
 
     parser(
@@ -167,8 +163,9 @@ export default function(
     ) : ImageParserObservable {
       const responseData = response.responseData;
 
-      if (responseData === null) {
-        return Observable.of({
+      // TODO image Parsing should be more on the sourceBuffer side, no?
+      if (responseData === null || features.imageParser == null) {
+        return observableOf({
           segmentData: null,
           segmentInfos: segment.timescale > 0 ? {
             duration: segment.isInit ? 0 : segment.duration,
@@ -178,9 +175,9 @@ export default function(
         });
       }
 
-      const bifObject = parseBif(new Uint8Array(responseData));
+      const bifObject = features.imageParser(new Uint8Array(responseData));
       const data = bifObject.thumbs;
-      return Observable.of({
+      return observableOf({
         segmentData: {
           data,
           start: 0,

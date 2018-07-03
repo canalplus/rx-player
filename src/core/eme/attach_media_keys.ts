@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  defer as observableDefer,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
-import log from "../../utils/log";
+import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IMediaKeysInfos } from "./types";
 
@@ -37,7 +42,7 @@ export default function attachMediaKeys(
   mediaElement : HTMLMediaElement,
   currentMediaKeysInfos: MediaKeysInfosStore
 ) : Observable<null> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     const previousState = currentMediaKeysInfos.getState(mediaElement);
     const {
       keySystemOptions,
@@ -56,14 +61,14 @@ export default function attachMediaKeys(
     return (
       previousState && previousState.sessionsStore !== sessionsStore ?
         previousState.sessionsStore.closeAllSessions() :
-        Observable.of(null)
-    ).mergeMap(() => {
+        observableOf(null)
+    ).pipe(mergeMap(() => {
       if (mediaElement.mediaKeys === mediaKeys) {
-        return Observable.of(null);
+        return observableOf(null);
       }
 
       log.debug("eme: set mediakeys");
       return setMediaKeys(mediaElement, mediaKeys);
-    });
+    }));
   });
 }

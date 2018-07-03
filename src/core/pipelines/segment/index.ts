@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs/Subject";
-import { CustomError } from "../../../errors";
+import { Subject } from "rxjs";
+import { ICustomError } from "../../../errors";
 import { ITransportPipelines } from "../../../net";
 import { ISegmentLoaderArguments } from "../../../net/types";
 import {
@@ -69,7 +69,7 @@ import createSegmentFetcher, {
 export default class SegmentPipelinesManager<T> {
   private readonly _metrics$ : Subject<IABRMetric>;
   private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
-  private readonly _warning$ : Subject<Error | CustomError>;
+  private readonly _warning$ : Subject<Error | ICustomError>;
   private readonly _transport : ITransportPipelines;
   private readonly _prioritizer : ObservablePrioritizer<ISegmentResponse<T>>;
 
@@ -83,7 +83,7 @@ export default class SegmentPipelinesManager<T> {
     transport : ITransportPipelines,
     requestsInfos$ : Subject<Subject<IABRRequest>>,
     metrics$ : Subject<IABRMetric>,
-    warning : Subject<Error | CustomError>
+    warning : Subject<Error | ICustomError>
   ) {
     this._transport = transport;
     this._metrics$ = metrics$;

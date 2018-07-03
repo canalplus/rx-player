@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  Observable,
+  Subject,
+} from "rxjs";
+import {
+  mergeMap,
+  takeUntil,
+} from "rxjs/operators";
 import { Representation } from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {
@@ -141,7 +147,7 @@ export default class ABRManager {
    *     - duration {number}: duration of the request, in seconds.
    *     - size {number}: size of the downloaded chunks, in bytes.
    *
-   * @param {ChooserOption} [options={}]
+   * @param {Object|undefined} options
    */
   constructor(
     requests$: Observable<Observable<IRequest>>,
@@ -170,7 +176,7 @@ export default class ABRManager {
     };
 
     metrics$
-      .takeUntil(this._dispose$)
+      .pipe(takeUntil(this._dispose$))
       .subscribe(({ type, value }) => {
         this._lazilyCreateChooser(type);
         const { duration, size } = value;
@@ -181,9 +187,11 @@ export default class ABRManager {
       });
 
     requests$
-      // requests$ emits observables which are subscribed to
-      .mergeMap(request$ => request$)
-      .takeUntil(this._dispose$)
+      .pipe(
+        // requests$ emits observables which are subscribed to
+        mergeMap(request$ => request$),
+        takeUntil(this._dispose$)
+      )
       .subscribe((request) => {
         const { type, value } = request;
 
@@ -213,7 +221,7 @@ export default class ABRManager {
    * state).
    * @param {string} type
    * @param {Observable<Object>} clock$
-   * @param {Array.<Representation>} [representations=[]]
+   * @param {Array.<Representation>|undefined} representations
    * @returns {Observable}
    */
   public get$(

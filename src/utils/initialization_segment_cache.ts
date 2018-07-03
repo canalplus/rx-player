@@ -32,8 +32,6 @@ class InitializationSegmentCache<T> {
 
   /**
    * @param {Object} obj
-   * @param {Object} obj.representation
-   * @param {Object} obj.segment
    * @param {*} response
    */
   public add(
@@ -53,7 +51,6 @@ class InitializationSegmentCache<T> {
 
   /**
    * @param {Object} obj
-   * @param {Object} obj.segment
    * @returns {*} response
    * TODO just add segment directly, not in an object?
    */

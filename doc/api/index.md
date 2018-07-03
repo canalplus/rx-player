@@ -6,9 +6,12 @@
 - [Overview](#overview)
 - [Instantiation](#instantiation)
 - [Static properties](#static)
+    - [version](#static-version)
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
     - [LogLevel](#static-LogLevel)
+- [Tools](#tools)
+    - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -118,6 +121,14 @@ page](./player_options.md).
 <a name="static"></a>
 ## Static properties ###########################################################
 
+<a name="static-version"></a>
+### version ####################################################################
+
+_type_: ``Number``
+
+The current version of the RxPlayer.
+
+
 <a name="static-ErrorTypes"></a>
 ### ErrorTypes #################################################################
 
@@ -171,6 +182,24 @@ automatically set to ``"NONE"``.
 import RxPlayer from "rx-player";
 RxPlayer.LogLevel = "WARNING";
 ```
+
+
+
+<a name="tools"></a>
+## Tools #######################################################################
+
+<a name="tools-mediaCapabilitiesProber"></a>
+### MediaCapabilitiesProber ####################################################
+
+_type_: ``Object``
+
+An experimental tool to probe browser media capabilities:
+  - Decoding capabilities
+  - DRM support
+  - HDCP support
+  - Display capabilities
+
+You can find its documentation [here](./mediaCapabilitiesProber.md).
 
 
 

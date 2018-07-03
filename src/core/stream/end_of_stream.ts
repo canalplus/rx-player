@@ -14,13 +14,26 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  concat as observableConcat,
+  defer as observableDefer,
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
+  race as observableRace,
+} from "rxjs";
+import {
+  concatMapTo,
+  mergeMap,
+  take,
+  takeLast,
+} from "rxjs/operators";
 import {
   onRemoveSourceBuffers$,
   onSourceOpen$,
   onUpdate$,
 } from "../../compat/events";
-import log from "../../utils/log";
+import log from "../../log";
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.
@@ -54,10 +67,10 @@ function getUpdatingSourceBuffers(
 export default function triggerEndOfStream(
   mediaSource : MediaSource
 ) : Observable<null> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     if (mediaSource.readyState !== "open") {
       // already done, exit
-      return Observable.of(null);
+      return observableOf(null);
     }
 
     const { sourceBuffers } = mediaSource;
@@ -66,22 +79,21 @@ export default function triggerEndOfStream(
     if (!updatingSourceBuffers.length) {
       log.info("triggering end of stream");
       mediaSource.endOfStream();
-      return Observable.of(null);
+      return observableOf(null);
     }
 
     const updatedSourceBuffers$ = updatingSourceBuffers
       .map(onUpdate$);
 
-    return Observable.race(
-      Observable
-      .merge(...updatedSourceBuffers$)
-      .takeLast(1),
+    return observableRace(
+      observableMerge(...updatedSourceBuffers$)
+        .pipe(takeLast(1)),
 
       onRemoveSourceBuffers$(sourceBuffers)
-      .take(1)
-    ).mergeMap(() => {
+        .pipe(take(1))
+    ).pipe(mergeMap(() => {
       return triggerEndOfStream(mediaSource);
-    });
+    }));
   });
 }
 
@@ -92,9 +104,9 @@ export default function triggerEndOfStream(
  * @returns {Observable}
  */
 export function maintainEndOfStream(mediaSource : MediaSource) : Observable<null> {
-  return triggerEndOfStream(mediaSource)
-    .concat(
-      onSourceOpen$(mediaSource)
-        .concatMapTo(triggerEndOfStream(mediaSource))
-    );
+  return observableConcat(
+    triggerEndOfStream(mediaSource),
+    onSourceOpen$(mediaSource)
+      .pipe(concatMapTo(triggerEndOfStream(mediaSource)))
+  );
 }

@@ -29,6 +29,26 @@ declare const __FEATURES__ : {
   NATIVE_SRT : boolean;
   NATIVE_TTML : boolean;
   NATIVE_VTT : boolean;
+  BIF_PARSER : boolean;
+  EME : boolean;
+};
+declare const __RELATIVE_PATH__ : {
+  EME_MANAGER: string;
+  IMAGE_BUFFER: string;
+  BIF_PARSER: string;
+  SMOOTH: string;
+  DASH: string;
+  NATIVE_TEXT_BUFFER: string;
+  NATIVE_VTT: string;
+  NATIVE_SRT: string;
+  NATIVE_TTML: string;
+  NATIVE_SAMI: string;
+  HTML_TEXT_BUFFER: string;
+  HTML_VTT: string;
+  HTML_SRT: string;
+  HTML_TTML: string;
+  HTML_SAMI: string;
+  DIRECTFILE: string;
 };
 
 // Map of string to anything

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import arrayFind = require("array-find");
+import arrayFind from "array-find";
 import { IMediaKeySession } from "../../../compat";
+import log from "../../../log";
 import assert, {
   assertInterface,
 } from "../../../utils/assert";
 import hashBuffer from "../../../utils/hash_buffer";
-import log from "../../../utils/log";
 import {
   IPersistedSessionData,
   IPersistedSessionStorage,

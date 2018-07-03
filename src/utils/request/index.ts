@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
+import { Observable ,  Observer } from "rxjs";
 import { RequestError, RequestErrorTypes } from "../../errors";
 
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
@@ -262,7 +261,7 @@ function request<T>(
           const loadedResponseType = xhr.responseType;
           const _url = xhr.responseURL || url;
 
-          let responseData;
+          let responseData : T;
           if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
             responseData = xhr.response !== "string" ?

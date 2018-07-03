@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
 import { isCodecSupported } from "../compat";
-import { CustomError, MediaError } from "../errors";
+import { ICustomError, MediaError } from "../errors";
+import log from "../log";
 import {
   IParsedAdaptation,
   IParsedManifest,
   IParsedRepresentation,
-} from "../net/types";
-import log from "../utils/log";
+} from "../parsers/manifest/types";
+import arrayIncludes from "../utils/array-includes";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "./adaptation";
 import Manifest, {
   IManifestArguments,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "./index";
 import { IRepresentationArguments } from "./representation";
-
-const SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
 
 /**
  * Run multiple checks before creating the Manifest:
@@ -55,10 +55,30 @@ export default function createManifest(
   manifestObject : IParsedManifest,
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
-  warning$ : Subject<Error|CustomError>
+  warning$ : Subject<Error|ICustomError>
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods).map((period) => {
-    period.adaptations = checkAdaptations(period.adaptations, warning$);
+    Object.keys(period.adaptations).forEach((type) => {
+      const adaptationsForType = period.adaptations[type];
+      if (!adaptationsForType) {
+        delete period.adaptations[type];
+      } else {
+        const checkedAdaptations = checkAdaptations(adaptationsForType, warning$);
+        if (!checkAdaptations.length) {
+          delete period.adaptations[type];
+        } else {
+          period.adaptations[type] = checkedAdaptations;
+        }
+      }
+    });
+
+    if (
+      !period.adaptations.video &&
+      !period.adaptations.audio
+    ) {
+      throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+    }
+
     return period;
   });
 
@@ -80,17 +100,17 @@ export default function createManifest(
  */
 function checkAdaptations(
   initialAdaptations : IParsedAdaptation[],
-  warning$ : Subject<Error|CustomError>
+  warning$ : Subject<Error|ICustomError>
 ) : IParsedAdaptation[] {
   const adaptations = initialAdaptations
 
     // 1. filter out adaptations from unsupported types
     .filter((adaptation) => {
-      if (SUPPORTED_ADAPTATIONS_TYPE.indexOf(adaptation.type) < 0) {
+      if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
         log.info("not supported adaptation type", adaptation.type);
-        const error =
-          new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false);
-        warning$.next(error);
+        warning$.next(
+          new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false)
+        );
         return false;
       } else {
         return true;
@@ -117,11 +137,6 @@ function checkAdaptations(
 
     // 3. filter those without representations
     .filter(({ representations }) => representations.length);
-
-  // 4. throw if no adaptation
-  if (adaptations.length === 0) {
-    throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
-  }
 
   return adaptations;
 }

@@ -15,13 +15,13 @@
  */
 
 import config from "../../config";
+import log from "../../log";
 import {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../manifest";
-import log from "../../utils/log";
 import { convertToRanges } from "../../utils/ranges";
 import takeFirstSet from "../../utils/takeFirstSet";
 
@@ -561,7 +561,7 @@ export default class SegmentBookkeeper {
 
     // -- Helpers
 
-    /*
+    /**
      * Check if segment can be evaluated.
      * @param {Object} currentSegmentI
      * @param {Object} prevSegmentI
@@ -588,7 +588,8 @@ export default class SegmentBookkeeper {
       return true;
     }
 
-    /* Returns true if the segment given can be played for the wanted range.
+    /**
+     * Returns true if the segment given can be played for the wanted range.
      * @param {Object} _wantedRange
      * @param {Object} currentSegmentI
      * @param {Object} prevSegmentI

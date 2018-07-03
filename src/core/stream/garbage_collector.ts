@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import log from "../../utils/log";
+import {
+  combineLatest as observableCombineLatest,
+  EMPTY,
+  from as observableFrom,
+  Observable,
+} from "rxjs";
+import {
+  concatAll,
+  ignoreElements,
+  mergeMap,
+} from "rxjs/operators";
+import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import { QueuedSourceBuffer } from "../source_buffers";
 
@@ -38,15 +48,15 @@ export default function BufferGarbageCollector<T>({
   maxBufferBehind$ : Observable<number>;
   maxBufferAhead$ : Observable<number>;
 }) : Observable<never> {
-  return Observable.combineLatest(clock$, maxBufferBehind$, maxBufferAhead$)
-    .mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
+  return observableCombineLatest(clock$, maxBufferBehind$, maxBufferAhead$).pipe(
+    mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
       return clearBuffer(
         queuedSourceBuffer,
         currentTime,
         maxBufferBehind,
         maxBufferAhead
       );
-    });
+    }));
 }
 
 /**
@@ -72,7 +82,7 @@ function clearBuffer<T>(
   maxBufferAhead : number
 ) : Observable<never> {
   if (!isFinite(maxBufferBehind) && !isFinite(maxBufferAhead)) {
-    return Observable.empty();
+    return EMPTY;
   }
 
   const cleanedupRanges : Array<{
@@ -150,14 +160,12 @@ function clearBuffer<T>(
 
   collectBufferBehind();
   collectBufferAhead();
-  const clean$ = Observable.from(
+  const clean$ = observableFrom(
     cleanedupRanges.map((range) => {
       log.debug("cleaning range from source buffer", range);
       return qSourceBuffer.removeBuffer(range);
     })
-  )
-    .concatAll()
-    .ignoreElements();
+  ).pipe(concatAll(), ignoreElements());
 
-  return clean$ as Observable<never>; // ignoreElements == the Observerable never emits
+  return clean$;
 }

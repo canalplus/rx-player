@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  defer as observableDefer,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  catchError,
+  map,
+  mergeMap,
+} from "rxjs/operators";
 import { IMediaKeySession } from "../../compat";
+import log from "../../log";
 import arrayIncludes from "../../utils/array-includes";
 import assert from "../../utils/assert";
 import castToObservable from "../../utils/castToObservable";
-import log from "../../utils/log";
 import { IMediaKeysInfos } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 
@@ -55,7 +64,7 @@ function loadPersistentSession(
   sessionId: string,
   session: MediaKeySession|IMediaKeySession
 ) : Observable<boolean> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     log.debug("eme: load persisted session", sessionId);
     return castToObservable(session.load(sessionId));
   });
@@ -80,7 +89,7 @@ export default function createSession(
   initDataType: string|undefined,
   mediaKeysInfos: IMediaKeysInfos
 ) : Observable<ICreateSessionEvent> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     const {
       keySystemOptions,
       mediaKeySystemAccess,
@@ -109,7 +118,7 @@ export default function createSession(
       if (__DEV__) {
         assert(sessionType === "temporary");
       }
-      return Observable.of({
+      return observableOf({
         type: "created-session" as "created-session",
         value: { mediaKeySession: session, sessionType },
       });
@@ -120,7 +129,7 @@ export default function createSession(
 
     const storedEntry = sessionStorage.get(initData, initDataType);
     if (!storedEntry) {
-      return Observable.of({
+      return observableOf({
         type: "created-session" as "created-session",
         value: { mediaKeySession: session, sessionType },
       });
@@ -137,22 +146,22 @@ export default function createSession(
         sessionStorage.delete(initData, initDataType);
       }
       return sessionsStore.closeSession(session)
-        .map(() => {
+        .pipe(map(() => {
           const newSession =
             sessionsStore.createSession(initData, initDataType, sessionType);
           return {
             type: "created-session" as "created-session",
             value: { mediaKeySession: newSession, sessionType },
           };
-        });
+        }));
     };
 
-    return loadPersistentSession(storedEntry.sessionId, session)
-      .mergeMap((hasLoadedSession) : Observable<ICreateSessionEvent> => {
+    return loadPersistentSession(storedEntry.sessionId, session).pipe(
+      mergeMap((hasLoadedSession) : Observable<ICreateSessionEvent> => {
         if (!hasLoadedSession) {
           log.warn("eme: no data stored for the loaded session");
           sessionStorage.delete(initData, initDataType);
-          return Observable.of({
+          return observableOf({
             type: "created-session" as "created-session",
             value: { mediaKeySession: session, sessionType },
           });
@@ -161,7 +170,7 @@ export default function createSession(
         if (hasLoadedSession && isSessionUsable(session)) {
           sessionStorage.add(initData, initDataType, session);
           log.info("eme: succeeded to load persistent session.");
-          return Observable.of({
+          return observableOf({
             type: "loaded-persistent-session" as "loaded-persistent-session",
             value: { mediaKeySession: session, sessionType },
           });
@@ -170,10 +179,11 @@ export default function createSession(
         // Unusable persistent session: recreate a new session from scratch.
         log.warn("eme: previous persistent session not usable anymore.");
         return recreatePersistentSession();
-      })
-      .catch(() : Observable<INewSessionCreatedEvent> => {
+      }),
+      catchError(() : Observable<INewSessionCreatedEvent> => {
         log.warn("eme: unable to load persistent session.");
         return recreatePersistentSession();
-      });
+      })
+    );
   });
 }

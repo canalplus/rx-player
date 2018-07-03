@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
+import {
+  Observable,
+  Observer,
+} from "rxjs";
 import {
   clearElementSrc,
   MediaSource_,
 } from "../../compat";
 import MediaError from "../../errors/MediaError";
-import log from "../../utils/log";
+import log from "../../log";
 
 /**
  * Side effect that set the media duration in the mediaSource.

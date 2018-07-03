@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import { makeCue } from "../../../compat/index";
 import arrayIncludes from "../../../utils/array-includes";
 import getCueBlocks from "./getCueBlocks";
@@ -104,7 +109,7 @@ function setSettingsOnCue(
     const percentagePosition = /^(\d+(\.\d+)?)%(,([a-z]+))?/;
     const percentageMatches = settings.line.match(percentagePosition);
     if (percentageMatches) {
-      cue.line = percentageMatches[1];
+      cue.line = Number(percentageMatches[1]);
       cue.snapToLines = false;
       if (arrayIncludes(["start", "center", "end"], percentageMatches[4])) {
         cue.lineAlign = percentageMatches[4];
@@ -121,7 +126,7 @@ function setSettingsOnCue(
       const lineMatches = settings.line.match(linePosition);
 
       if (lineMatches) {
-        cue.line = lineMatches[1];
+        cue.line = Number(lineMatches[1]);
         cue.snapToLines = true;
 
         if (arrayIncludes(["start", "center", "end"], lineMatches[3])) {

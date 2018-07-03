@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import log from "./log";
+import log from "../log";
 
 type IListeners<T extends string, U> =
   Partial<Record<

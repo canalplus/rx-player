@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
 
 import assert from "../../utils/assert";
 import request from "../../utils/request";
-import { resolveURL } from "../../utils/url";
 import mp4Utils from "./mp4";
-import {
-  buildSegmentURL,
-  byteRange,
-} from "./utils";
+import { byteRange } from "./utils";
 
 import {
   CustomSegmentLoader,
@@ -44,8 +43,6 @@ interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {Object} opt
- * @param {string} opt.url
- * @param {Segment} opt.segment
  * @returns {Observable}
  */
 function regularSegmentLoader(
@@ -79,14 +76,14 @@ const generateSegmentLoader = (
   period,
   manifest,
   init,
-} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer> => {
+} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
   if (segment.isInit) {
-    if (!segment.privateInfos || segment.privateInfos.type !== "smooth-init") {
+    if (!segment.privateInfos || segment.privateInfos.smoothInit == null) {
       throw new Error("Smooth: Invalid segment format");
     }
+    const smoothInitPrivateInfos = segment.privateInfos.smoothInit;
     let responseData : Uint8Array;
-    const privateInfos = segment.privateInfos;
-    const protection = privateInfos.protection;
+    const protection = smoothInitPrivateInfos.protection;
 
     switch (adaptation.type) {
     case "video":
@@ -95,7 +92,7 @@ const generateSegmentLoader = (
         representation.width || 0,
         representation.height || 0,
         72, 72, 4, // vRes, hRes, nal
-        privateInfos.codecPrivateData,
+        smoothInitPrivateInfos.codecPrivateData || "",
         protection && protection.keyId,     // keyId
         protection && protection.keySystems // pssList
       );
@@ -103,11 +100,11 @@ const generateSegmentLoader = (
     case "audio":
       responseData = createAudioInitSegment(
         segment.timescale,
-        privateInfos.channels || 0,
-        privateInfos.bitsPerSample || 0,
-        privateInfos.packetSize || 0,
-        privateInfos.samplingRate || 0,
-        privateInfos.codecPrivateData,
+        smoothInitPrivateInfos.channels || 0,
+        smoothInitPrivateInfos.bitsPerSample || 0,
+        smoothInitPrivateInfos.packetSize || 0,
+        smoothInitPrivateInfos.samplingRate || 0,
+        smoothInitPrivateInfos.codecPrivateData || "",
         protection && protection.keyId,     // keyId
         protection && protection.keySystems // pssList
       );
@@ -119,17 +116,19 @@ const generateSegmentLoader = (
       responseData = new Uint8Array(0);
     }
 
-    return Observable.of({
+    return observableOf({
       type: "data" as "data", // :/ TS Bug or I'm going insane?
       value: { responseData },
     });
   }
+  else if (segment.mediaURL == null) {
+    return observableOf({
+      type: "data" as "data",
+      value: { responseData: null },
+    });
+  }
   else {
-    const url = buildSegmentURL(
-      resolveURL(representation.baseURL),
-      representation,
-      segment
-    );
+    const url = segment.mediaURL;
 
     const args = {
       adaptation,
@@ -150,6 +149,10 @@ const generateSegmentLoader = (
       let hasFinished = false;
       let hasFallbacked = false;
 
+      /**
+       * Callback triggered when the custom segment loader has a response.
+       * @param {Object} args
+       */
       const resolve = (_args : {
         data : ArrayBuffer|Uint8Array;
         size : number;
@@ -169,6 +172,10 @@ const generateSegmentLoader = (
         }
       };
 
+      /**
+       * Callback triggered when the custom segment loader fails
+       * @param {*} err - The corresponding error encountered
+       */
       const reject = (err = {}) => {
         if (!hasFallbacked) {
           hasFinished = true;

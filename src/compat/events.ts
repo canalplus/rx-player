@@ -19,14 +19,24 @@
  * RxJS Observables
  */
 
-import { Observable } from "rxjs/Observable";
-import { EventTargetLike } from "rxjs/observable/FromEventObservable";
-
+import {
+  fromEvent as observableFromEvent,
+  interval as observableInterval,
+  merge as observableMerge,
+  NEVER,
+  Observable,
+} from "rxjs";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  map,
+  mapTo,
+  startWith,
+} from "rxjs/operators";
 import config from "../config";
-
+import log from "../log";
 import EventEmitter from "../utils/eventemitter";
-import log from "../utils/log";
-import onEvent from "../utils/rx-onEvent";
 
 import {
   BROWSER_PREFIXES,
@@ -77,8 +87,15 @@ function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
       .map((p) => p + name)), []);
 }
 
+export interface IEventEmitterLike {
+  addEventListener : (eventName: string, handler: () => void) => void;
+  removeEventListener: (eventName: string, handler: () => void) => void;
+}
+
+// XXX TODO
 export type IEventTargetLike =
-  EventTargetLike|
+  HTMLElement |
+  IEventEmitterLike |
   EventEmitter<string, any>;
 
 /**
@@ -92,7 +109,7 @@ function compatibleListener<T extends Event>(
 ) : (element : IEventTargetLike) => Observable<T> {
   let mem : string|undefined;
   const prefixedEvents = eventPrefixed(eventNames, prefixes);
-  return (element) => {
+  return (element : IEventTargetLike) => {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
     if (element instanceof HTMLElement_) {
@@ -101,7 +118,7 @@ function compatibleListener<T extends Event>(
       }
 
       if (mem) {
-        return Observable.fromEvent(element, mem);
+        return observableFromEvent(element, mem) as Observable<T>;
       } else {
         if (__DEV__) {
           /* tslint:disable:max-line-length */
@@ -110,13 +127,16 @@ function compatibleListener<T extends Event>(
             /* tslint:enable:max-line-length */
           );
         }
-        return Observable.never();
+        return NEVER;
       }
     }
 
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
-    return onEvent(element, prefixedEvents);
+    return observableMerge(
+      ...prefixedEvents
+        .map(eventName => observableFromEvent(element, eventName))
+    );
   };
 }
 
@@ -141,33 +161,38 @@ function visibilityChange() : Observable<boolean> {
   const hidden = prefix ? prefix + "Hidden" : "hidden";
   const visibilityChangeEvent = prefix + "visibilitychange";
 
-  return onEvent(document, visibilityChangeEvent)
-    .map(() => document[hidden as "hidden"]);
+  return observableFromEvent(document, visibilityChangeEvent)
+    .pipe(map(() => document[hidden as "hidden"]));
 }
 
-function videoSizeChange() : Observable<number> {
-  return onEvent(window, "resize");
+function videoSizeChange() : Observable<null> {
+  return observableFromEvent(window, "resize")
+    .pipe(mapTo(null));
 }
 
-const isVisible = visibilityChange() // emit false when visible
-  .filter((x) => !x);
+const isVisible = visibilityChange()
+  .pipe(filter((x) => !x)); // emit false when visible
 
 // Emit true if the visibility changed to hidden since 60s
 const isHidden = visibilityChange()
-  .debounceTime(INACTIVITY_DELAY)
-  .filter((x) => x);
+  .pipe(
+    debounceTime(INACTIVITY_DELAY),
+    filter((x) => x)
+  );
 
-const isInBackground$ = () => Observable.merge(isVisible, isHidden)
-  .startWith(false);
+const isInBackground$ = () => observableMerge(isVisible, isHidden)
+  .pipe(startWith(false));
 
 function videoWidth$(videoElement : HTMLMediaElement) : Observable<number> {
-  return Observable.merge(
-    Observable.interval(20000),
-    videoSizeChange().debounceTime(500)
+  return observableMerge(
+    observableInterval(20000).pipe(mapTo(null)),
+    videoSizeChange().pipe(debounceTime(500))
   )
-    .startWith(0) // emit on subscription
-    .map(() => videoElement.clientWidth * pixelRatio)
-    .distinctUntilChanged();
+    .pipe(
+      startWith(null), // emit on subscription
+      map(() => videoElement.clientWidth * pixelRatio),
+      distinctUntilChanged()
+    );
 }
 
 const onLoadedMetadata$ = compatibleListener(["loadedmetadata"]);
@@ -183,14 +208,14 @@ const onFullscreenChange$ = compatibleListener(
 );
 
 const onPlayPause$ = (videoElement : HTMLMediaElement) : Observable<Event> =>
-  Observable.merge(
+  observableMerge(
     compatibleListener(["play"])(videoElement),
     compatibleListener(["pause"])(videoElement)
   );
 
 const onTextTrackChanges$ =
   (textTrackList : TextTrackList) : Observable<TrackEvent> =>
-    Observable.merge(
+    observableMerge(
       compatibleListener<TrackEvent>(["addtrack"])(textTrackList),
       compatibleListener<TrackEvent>(["removetrack"])(textTrackList)
     );

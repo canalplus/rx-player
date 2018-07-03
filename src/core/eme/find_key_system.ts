@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { Subscription } from "rxjs/Subscription";
+import {
+  defer as observableDefer,
+  Observable,
+  of as observableOf,
+  Subject,
+  Subscription,
+} from "rxjs";
 import {
   IMediaKeySystemAccess,
   requestMediaKeySystemAccess,
@@ -24,8 +28,8 @@ import {
 } from "../../compat";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
+import log from "../../log";
 import arrayIncludes from "../../utils/array-includes";
-import log from "../../utils/log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IKeySystemOption } from "./types";
 
@@ -247,7 +251,7 @@ export default function getMediaKeySystemAccess(
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos: MediaKeysInfosStore
 ) : Observable<IFoundMediaKeySystemAccessEvent> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     const currentState = currentMediaKeysInfos.getState(mediaElement);
     if (currentState) {
       // Fast way to find a compatible keySystem if the currently loaded
@@ -259,7 +263,7 @@ export default function getMediaKeySystemAccess(
       );
       if (cachedKeySystemAccess) {
         log.debug("eme: found cached compatible keySystem", cachedKeySystemAccess);
-        return Observable.of({
+        return observableOf({
           type: "reuse-media-key-system-access" as "reuse-media-key-system-access",
           value: {
             mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,

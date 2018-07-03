@@ -16,8 +16,7 @@
 
 // privateInfos specific to Smooth Initialization Segments
 export interface ISmoothInitSegmentPrivateInfos {
-  type : "smooth-init";
-  codecPrivateData : string;
+  codecPrivateData? : string;
   bitsPerSample? : number;
   channels? : number;
   packetSize? : number;
@@ -31,9 +30,9 @@ export interface ISmoothInitSegmentPrivateInfos {
   };
 }
 
-// Possible values for Segment's privateInfos
-export type ISegmentPrivateInfos =
-  ISmoothInitSegmentPrivateInfos;
+export interface IPrivateInfos {
+  smoothInit?: ISmoothInitSegmentPrivateInfos;
+}
 
 // ISegment Object.
 // Represent a single Segment from a Representation.
@@ -42,8 +41,8 @@ export interface ISegment {
   isInit : boolean; // If true, it's an initialization Segment
   time : number; // Time of beginning for the segment
   timescale : number; // Timescale to convert time and duration into seconds
+  mediaURL : string|null; // string used to link to the media
 
-  media? : string; // optional string used to link to the media
   duration? : number; // duration of the segment
   indexRange? : [number, number]; // If set, the corresponding byte Range in the
                                   // downloaded Segment will contain an index
@@ -51,9 +50,9 @@ export interface ISegment {
   number? : number; // Optional number of the Segment
   range? : [number, number]; // Optional byte range to retrieve the Segment
 
-  privateInfos? : ISegmentPrivateInfos; // Allows a RepresentationIndex to store
-                                        // supplementary informations in a given
-                                        // Segment for later downloading/parsing
+  privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
+                                 // supplementary informations in a given
+                                 // Segment for later downloading/parsing
 }
 
 export interface IRepresentationIndexSegmentInfos {

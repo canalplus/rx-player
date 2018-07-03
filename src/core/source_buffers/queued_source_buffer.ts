@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import log from "../../utils/log";
+import {
+  defer as observableDefer,
+  Observable,
+  of as observableOf,
+  Subject,
+} from "rxjs";
+import { mapTo } from "rxjs/operators";
+import log from "../../log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import ICustomTimeRanges from "./time_ranges";
 
@@ -164,7 +169,7 @@ export default class QueuedSourceBuffer<T> {
     initSegment : T|null,
     segment : T|null
   ) : Observable<void> {
-    return Observable.defer(() =>
+    return observableDefer(() =>
       this._queueAction({
         type: SourceBufferAction.Append,
         segment,
@@ -175,9 +180,9 @@ export default class QueuedSourceBuffer<T> {
 
   /**
    * Remove data from the attached SourceBuffer, in a FIFO queue.
-   * @param {Object} range
-   * @param {Number} range.start - start position, in seconds
-   * @param {Number} range.end - end position, in seconds
+   * @param {Object} range - Range of positions. With two properties:
+   *   - start {Number} - start position, in seconds
+   *   - end {Number} - end position, in seconds
    * @returns {Observable}
    */
   public removeBuffer(
@@ -186,7 +191,7 @@ export default class QueuedSourceBuffer<T> {
       end : number;
     }
   ) : Observable<void> {
-    return Observable.defer(() =>
+    return observableDefer(() =>
       this._queueAction({
         type: SourceBufferAction.Remove,
         start,
@@ -288,7 +293,7 @@ export default class QueuedSourceBuffer<T> {
 
       if (initSegment === null && segment === null) {
         log.warn("QueuedSourceBuffer: no segment appended.");
-        return Observable.of(undefined);
+        return observableOf(undefined);
       }
 
       if (initSegment === null) {
@@ -300,7 +305,7 @@ export default class QueuedSourceBuffer<T> {
         });
       } else if (segment === null) {
         if (this._lastInitSegment === initSegment) {
-          return Observable.of(undefined);
+          return observableOf(undefined);
         }
         this._queue.unshift({
           type: SourceBufferAction.Append,
@@ -340,7 +345,7 @@ export default class QueuedSourceBuffer<T> {
       this._flush();
     }
 
-    return subject.mapTo(undefined);
+    return subject.pipe(mapTo(undefined));
   }
 
   /**

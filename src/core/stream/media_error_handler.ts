@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  fromEvent as observableFromEvent,
+  Observable
+} from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import MediaError from "../../errors/MediaError";
-import log from "../../utils/log";
-import onEvent from "../../utils/rx-onEvent";
+import log from "../../log";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
@@ -28,28 +31,29 @@ import onEvent from "../../utils/rx-onEvent";
 export default function createMediaErrorHandler(
   videoElement : HTMLMediaElement
 ) : Observable<never> {
-  return onEvent(videoElement, "error").mergeMap(() => {
-    const errorCode = videoElement.error && videoElement.error.code;
-    let errorDetail;
+  return observableFromEvent(videoElement, "error")
+    .pipe(mergeMap(() => {
+      const errorCode = videoElement.error && videoElement.error.code;
+      let errorDetail;
 
-    switch (errorCode) {
-      case 1:
-        errorDetail = "MEDIA_ERR_ABORTED";
-        break;
-      case 2:
-        errorDetail = "MEDIA_ERR_NETWORK";
-        break;
-      case 3:
-        errorDetail = "MEDIA_ERR_DECODE";
-        break;
-      case 4:
-        errorDetail = "MEDIA_ERR_SRC_NOT_SUPPORTED";
-        break;
-      default:
-        errorDetail = "MEDIA_ERR_UNKNOWN";
-        break;
-    }
-    log.error(`stream: video element MEDIA_ERR(${errorDetail})`);
-    throw new MediaError(errorDetail, null, true);
-  });
+      switch (errorCode) {
+        case 1:
+          errorDetail = "MEDIA_ERR_ABORTED";
+          break;
+        case 2:
+          errorDetail = "MEDIA_ERR_NETWORK";
+          break;
+        case 3:
+          errorDetail = "MEDIA_ERR_DECODE";
+          break;
+        case 4:
+          errorDetail = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+          break;
+        default:
+          errorDetail = "MEDIA_ERR_UNKNOWN";
+          break;
+      }
+      log.error(`stream: video element MEDIA_ERR(${errorDetail})`);
+      throw new MediaError(errorDetail, null, true);
+    }));
 }

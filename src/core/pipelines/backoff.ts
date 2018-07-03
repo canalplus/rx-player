@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  Observable,
+  timer as observableTimer,
+} from "rxjs";
+import {
+  catchError,
+  mergeMap,
+} from "rxjs/operators";
 import { isOffline } from "../../compat";
 import {
   RequestError,
@@ -62,23 +69,8 @@ interface IDownloadingBackoffOptions {
  *   - "offline" errors
  *   - other xhr errors
  * Both have their own counters which are resetted if the error type changes.
- * @param {Observable}
- * @param {Object} options
- * @param {Number} options.baseDelay - First delay set when and if:
- *   - the first observable throws
- *   - any observable throws an error which has a type different than the last
- *     one.
- * @param {Number} options.maxDelay - Maximum delay considered for the backoff.
- * Note that this delay is not exact as it will be "fuzzed".
- * @param {Number} options.maxRetryRegular - Maximum number of retry for
- * "regular" errors. That is, errors that are most likely due to the CDN.
- * @param {Number} options.maxRetryOffline - Maximum number of retry for
- * "offline" errors. That is, errors that are most likely due to the user being
- * offline.
- * @param {Function} [options.onRetry] - callback to call as an observable
- * throws. Will be called with two arguments:
- *   - The error thrown by the observable.
- *   - The counter for the current error type.
+ * @param {Observable} obs$
+ * @param {Object} options - Configuration options.
  * @returns {Observable}
  */
 function downloadingBackoff<T>(
@@ -101,38 +93,39 @@ function downloadingBackoff<T>(
   };
 
   let lastError = ERROR_TYPES.NONE;
-  return obs$.catch((error : Error, source) => {
-    if (!shouldRetry(error)) {
-      throw error;
-    }
-    const currentError = error instanceof RequestError &&
-      isOfflineRequestError(error) ?  ERROR_TYPES.OFFLINE : ERROR_TYPES.REGULAR;
+  return obs$
+    .pipe(catchError((error : Error, source) => {
+      if (!shouldRetry(error)) {
+        throw error;
+      }
+      const currentError = error instanceof RequestError &&
+        isOfflineRequestError(error) ?  ERROR_TYPES.OFFLINE : ERROR_TYPES.REGULAR;
 
-    const maxRetry = currentError === ERROR_TYPES.OFFLINE ?
-      maxRetryOffline : maxRetryRegular;
+      const maxRetry = currentError === ERROR_TYPES.OFFLINE ?
+        maxRetryOffline : maxRetryRegular;
 
-    if (currentError !== lastError) {
-      retryCount = 0;
-      lastError = currentError;
-    }
+      if (currentError !== lastError) {
+        retryCount = 0;
+        lastError = currentError;
+      }
 
-    if (++retryCount > maxRetry) {
-      throw error;
-    }
+      if (++retryCount > maxRetry) {
+        throw error;
+      }
 
-    if (onRetry) {
-      onRetry(error, retryCount);
-    }
+      if (onRetry) {
+        onRetry(error, retryCount);
+      }
 
-    const delay = Math.min(
-      baseDelay * Math.pow(2, retryCount - 1),
-      maxDelay
-    );
+      const delay = Math.min(
+        baseDelay * Math.pow(2, retryCount - 1),
+        maxDelay
+      );
 
-    const fuzzedDelay = getFuzzedDelay(delay);
-    return Observable.timer(fuzzedDelay)
-      .mergeMap(() => source);
-  });
+      const fuzzedDelay = getFuzzedDelay(delay);
+      return observableTimer(fuzzedDelay).pipe(
+        mergeMap(() => source));
+    }));
 }
 
 export default downloadingBackoff;

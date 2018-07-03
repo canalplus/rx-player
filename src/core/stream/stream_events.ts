@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs/Subject";
-import { CustomError } from "../../errors";
+import { Subject } from "rxjs";
+import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
   Period,
@@ -58,7 +58,7 @@ export interface IManifestReadyEvent {
 // Emit when a warning was arised
 export interface IStreamWarningEvent {
   type : "warning";
-  value : Error|CustomError;
+  value : Error|ICustomError;
 }
 
 // Emit when the manifest has been refreshed
@@ -235,7 +235,7 @@ function periodBufferCleared(
   };
 }
 
-function warning(value : Error | CustomError) : IStreamWarningEvent {
+function warning(value : Error | ICustomError) : IStreamWarningEvent {
   return {
     type: "warning",
     value,

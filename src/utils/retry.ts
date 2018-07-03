@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
-import { CustomError } from "../errors";
+import {
+  Observable,
+  Observer,
+  timer as observableTimer,
+} from "rxjs";
+import {
+  catchError,
+  mergeMap,
+} from "rxjs/operators";
+import { ICustomError } from "../errors";
 import { getBackedoffDelay } from "./backoff";
 
 /**
@@ -38,10 +45,12 @@ function debounce(fn : () => void, delay : number) : () => void {
 interface IBackoffOptions {
   retryDelay : number;
   totalRetry : number;
-  shouldRetry? : (error : Error|CustomError) => boolean;
+  shouldRetry? : (error : Error|ICustomError) => boolean;
   resetDelay? : number;
-  errorSelector? : (error : Error|CustomError, retryCount : number) => Error|CustomError;
-  onRetry? : (error : Error|CustomError, retryCount : number) => void;
+  errorSelector? : (
+    error : Error|ICustomError, retryCount : number
+  ) => Error|ICustomError;
+  onRetry? : (error : Error|ICustomError, retryCount : number) => void;
 }
 
 /**
@@ -50,32 +59,42 @@ interface IBackoffOptions {
  * The backoff behavior can be tweaked through the options given.
  *
  * @param {Observable} obs$
- * @param {Object} options
- * @param {Number} options.retryDelay - The initial delay, in ms.
- * This delay will be fuzzed to fall under the range +-30% each time a new retry
- * is done.
- * Then, this delay will be multiplied by 2^(n-1), n being the counter of retry
- * we performed (beginning at 1 for the first retry).
- * @param {Number} options.totalRetry - The amount of time we should retry. 0
- * means no retry, 1 means a single retry, Infinity means infinite retry etc.
- * If the observable still fails after this number of retry, the error will
- * be throwed through this observable.
- * @param {Number} [options.resetDelay] - Delay in ms since a retry after which
- * the counter of retry will be reset if the observable wasn't retried a new
- * time. 0 / undefined means no delay will be applied.
- * @param {Function} [options.shouldRetry] - Function which will receive the
- * observable error each time it fails, and should return a boolean. If this
- * boolean is false, the error will be directly thrown (without anymore retry).
- * @param {Function} [options.onRetry] - Function which will be triggered at
- * each retry. Will receive two arguments:
- *   1. The observable error
- *   2. The current retry count, beginning at 1 for the first retry
- * @param {Function} [options.errorSelector] - If and when the observable will
- * definitely throw (without retrying), this function will be called with two
- * arguments:
- *   1. The observable error
- *   2. The final retry count, beginning at 1 for the first retry
- * The returned value will be what will be thrown by the observable.
+ * @param {Object} options - Configuration object.
+ * This object contains the following properties:
+ *
+ *   - retryDelay {Number} - The initial delay, in ms.
+ *     This delay will be fuzzed to fall under the range +-30% each time a new
+ *     retry is done.
+ *     Then, this delay will be multiplied by 2^(n-1), n being the counter of
+ *     retry we performed (beginning at 1 for the first retry).
+ *
+ *   - totalRetry {Number} - The amount of time we should retry. 0
+ *     means no retry, 1 means a single retry, Infinity means infinite retry
+ *     etc.
+ *     If the observable still fails after this number of retry, the error will
+ *     be throwed through this observable.
+ *
+ *   - resetDelay {Number|undefined} - Delay in ms since a retry after which the
+ *     counter of retry will be reset if the observable wasn't retried a new
+ *     time. 0 / undefined means no delay will be applied.
+ *
+ *   - shouldRetry {Function|undefined} -  Function which will receive the
+ *     observable error each time it fails, and should return a boolean. If this
+ *     boolean is false, the error will be directly thrown (without anymore
+ *     retry).
+ *
+ *   - onRetry {Function|undefined} - Function which will be triggered at
+ *     each retry. Will receive two arguments:
+ *       1. The observable error
+ *       2. The current retry count, beginning at 1 for the first retry
+ *
+ *   - errorSelector {Function|undefined} - If and when the observable will
+ *     definitely throw (without retrying), this function will be called with
+ *     two arguments:
+ *       1. The observable error
+ *       2. The final retry count, beginning at 1 for the first retry
+ *     The returned value will be what will be thrown by the observable.
+ *
  * @returns {Observable}
  * TODO Take errorSelector out. Should probably be entirely managed in the
  * calling code via a catch (much simpler to use and to understand).
@@ -99,7 +118,7 @@ function retryObsWithBackoff<T>(
     debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
   }
 
-  return obs$.catch((error, source) => {
+  return obs$.pipe(catchError((error : Error|ICustomError, source : Observable<T>) => {
     const wantRetry = !shouldRetry || shouldRetry(error);
     if (!wantRetry || retryCount++ >= totalRetry) {
       if (errorSelector) {
@@ -114,13 +133,14 @@ function retryObsWithBackoff<T>(
     }
 
     const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-    return Observable.timer(fuzzedDelay).mergeMap(() => {
-      if (debounceRetryCount) {
-        debounceRetryCount();
-      }
-      return source;
-    });
-  });
+    return observableTimer(fuzzedDelay)
+      .pipe(mergeMap(() => {
+        if (debounceRetryCount) {
+          debounceRetryCount();
+        }
+        return source;
+      }));
+  }));
 }
 
 /**
@@ -128,34 +148,8 @@ function retryObsWithBackoff<T>(
  * backoff.
  * The backoff behavior can be tweaked through the options given.
  *
- * @param {Number} options.retryDelay - The initial delay, in ms.
- * This delay will be fuzzed to fall under the range +-30% each time a new retry
- * is done.
- * Then, this delay will be multiplied by 2^(n-1), n being the counter of retry
- * we performed (beginning at 1 for the first retry).
- * @param {Number} options.totalRetry - The amount of time we should retry. 0
- * means no retry, 1 means a single retry, Infinity means infinite retry etc.
- * If the observable still fails after this number of retry, the error will
- * be throwed through this observable.
- * @param {Number} [options.resetDelay] - Delay in ms since a retry after which
- * the counter of retry will be reset if the observable wasn't retried a new
- * time. 0 / undefined means no delay will be applied.
- * @param {Function} [options.shouldRetry] - Function which will receive the
- * observable error each time it fails, and should return a boolean. If this
- * boolean is false, the error will be directly thrown (without anymore retry).
- * @param {Function} [options.onRetry] - Function which will be triggered at
- * each retry. Will receive two arguments:
- *   1. The observable error
- *   2. The current retry count, beginning at 1 for the first retry
- * @param {Function} [options.errorSelector] - If and when the observable will
- * definitely throw (without retrying), this function will be called with two
- * arguments:
- *   1. The observable error
- *   2. The final retry count, beginning at 1 for the first retry
- * The returned value will be what will be thrown by the observable.
+ * @param {Object} options - Configuration object. @see retryObsWithBackoff
  * @returns {Observable}
- * TODO Take errorSelector out. Should probably be entirely managed in the
- * calling code via a catch (much simpler to use and to understand).
  */
 function retryFuncWithBackoff<T>(
   func: () => T,
@@ -177,12 +171,12 @@ function retryFuncWithBackoff<T>(
   }
 
   function doRetry() : Observable<T> {
-    const func$ = Observable.create((obs : Observer<T>) => {
+    const func$ : Observable<T> = Observable.create((obs : Observer<T>) => {
       obs.next(func());
       obs.complete();
     });
 
-    return func$.catch((error : Error|CustomError) => {
+    return func$.pipe(catchError((error : Error|ICustomError) => {
       const wantRetry = !shouldRetry || shouldRetry(error);
       if (!wantRetry || retryCount++ >= totalRetry) {
         if (errorSelector) {
@@ -197,15 +191,14 @@ function retryFuncWithBackoff<T>(
       }
 
       const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return Observable
-        .timer(fuzzedDelay)
-        .mergeMap(() => {
+      return observableTimer(fuzzedDelay)
+        .pipe(mergeMap(() => {
           if (debounceRetryCount) {
             debounceRetryCount();
           }
           return doRetry();
-        });
-    });
+        }));
+    }));
   }
 
   return doRetry();
@@ -216,13 +209,7 @@ function retryFuncWithBackoff<T>(
  * instead of an observable.
  * @param {Function} fn - Function returning an Observable which
  * will (well, might) be retried.
- * @param {Object} options
- * @param {Number} options.retryDelay
- * @param {Number} options.totalRetry
- * @param {Number} [options.resetDelay]
- * @param {Function} [options.shouldRetry]
- * @param {Function} [options.errorSelector]
- * @param {Function} [options.onRetry]
+ * @param {Object} options - Configuration object. @see retryObsWithBackoff
  * @returns {Function} - take in argument fn's arguments, returns
  * an Observable.
  */
@@ -246,7 +233,7 @@ function retryableFuncWithBackoff<T, I>(
   }
 
   return function doRetry(...args : T[]) : Observable<I> {
-    return fn(...args).catch((error) => {
+    return fn(...args).pipe(catchError((error : Error|ICustomError) => {
       const wantRetry = !shouldRetry || shouldRetry(error);
       if (!wantRetry || retryCount++ >= totalRetry) {
         if (errorSelector) {
@@ -261,13 +248,13 @@ function retryableFuncWithBackoff<T, I>(
       }
 
       const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return Observable.timer(fuzzedDelay).mergeMap(() => {
+      return observableTimer(fuzzedDelay).pipe(mergeMap(() => {
         if (debounceRetryCount) {
           debounceRetryCount();
         }
         return doRetry(...args);
-      });
-    });
+      }));
+    }));
   };
 }
 
@@ -275,5 +262,5 @@ export {
   retryObsWithBackoff,
   retryableFuncWithBackoff,
   retryFuncWithBackoff,
-  CustomError,
+  ICustomError,
 };

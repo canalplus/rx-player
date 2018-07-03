@@ -86,7 +86,6 @@ describe("dash static SegmentTimeline content", function () {
 
 
     const audioRepresentation = adaptations.audio[0].representations[0];
-    expect(audioRepresentation.baseURL).to.equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/");
     expect(audioRepresentation.bitrate).to.equal(128000);
     expect(audioRepresentation.codec).to.equal("mp4a.40.2");
     expect(audioRepresentation.id).to.equal("audio=128000");
@@ -95,7 +94,8 @@ describe("dash static SegmentTimeline content", function () {
 
     const audioRepresentationIndex = audioRepresentation.index;
     const initAudioSegment = audioRepresentationIndex.getInitSegment();
-    expect(initAudioSegment.media).to.equal("ateam-$RepresentationID$.dash");
+    expect(initAudioSegment.mediaURL).to
+      .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000.dash");
     expect(initAudioSegment.id).to.equal("init");
 
     const nextAudioSegment1 = audioRepresentationIndex.getSegments(0, 4);
@@ -103,8 +103,8 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextAudioSegment1[0].duration).to.equal(177341);
     expect(nextAudioSegment1[0].id).to.equal("0");
     expect(nextAudioSegment1[0].isInit).to.equal(false);
-    expect(nextAudioSegment1[0].media).to
-      .equal("ateam-$RepresentationID$-$Time$.dash");
+    expect(nextAudioSegment1[0].mediaURL).to
+      .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000-0.dash");
     expect(nextAudioSegment1[0].time).to.equal(0);
     expect(nextAudioSegment1[0].timescale).to.equal(44100);
 
@@ -113,8 +113,8 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextAudioSegment2[1].duration).to.equal(176128);
     expect(nextAudioSegment2[1].id).to.equal("177341");
     expect(nextAudioSegment2[1].isInit).to.equal(false);
-    expect(nextAudioSegment2[1].media)
-      .to.equal("ateam-$RepresentationID$-$Time$.dash");
+    expect(nextAudioSegment2[1].mediaURL)
+      .to.equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000-177341.dash");
     expect(nextAudioSegment2[1].time).to.equal(177341);
     expect(nextAudioSegment2[1].timescale).to.equal(44100);
 
@@ -126,8 +126,6 @@ describe("dash static SegmentTimeline content", function () {
     // ---- Video Adaptations / Representations / Segments ----
 
     const videoRepresentation = adaptations.video[0].representations[0];
-    expect(videoRepresentation.baseURL)
-      .to.equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/");
     expect(videoRepresentation.bitrate).to.equal(400000);
     expect(videoRepresentation.codec).to.equal("avc1.42C014");
     expect(videoRepresentation.id).to.equal("video=400000");
@@ -138,7 +136,8 @@ describe("dash static SegmentTimeline content", function () {
 
     const videoRepresentationIndex = videoRepresentation.index;
     const initVideoSegment = videoRepresentationIndex.getInitSegment();
-    expect(initVideoSegment.media).to.equal("ateam-$RepresentationID$.dash");
+    expect(initVideoSegment.mediaURL).to
+      .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000.dash");
     expect(initVideoSegment.id).to.equal("init");
 
     const nextVideoSegment1 = videoRepresentationIndex.getSegments(0, 4);
@@ -146,7 +145,8 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextVideoSegment1[0].duration).to.equal(4004);
     expect(nextVideoSegment1[0].id).to.equal("0");
     expect(nextVideoSegment1[0].isInit).to.equal(false);
-    expect(nextVideoSegment1[0].media).to.equal("ateam-$RepresentationID$-$Time$.dash");
+    expect(nextVideoSegment1[0].mediaURL).to
+      .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000-0.dash");
     expect(nextVideoSegment1[0].time).to.equal(0);
     expect(nextVideoSegment1[0].timescale).to.equal(1000);
 
@@ -155,7 +155,8 @@ describe("dash static SegmentTimeline content", function () {
     expect(nextVideoSegment2[1].duration).to.equal(4004);
     expect(nextVideoSegment2[1].id).to.equal("4004");
     expect(nextVideoSegment2[1].isInit).to.equal(false);
-    expect(nextVideoSegment2[1].media).to.equal("ateam-$RepresentationID$-$Time$.dash");
+    expect(nextVideoSegment2[1].mediaURL).to
+      .equal("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000-4004.dash");
     expect(nextVideoSegment2[1].time).to.equal(4004);
     expect(nextVideoSegment2[1].timescale).to.equal(1000);
 

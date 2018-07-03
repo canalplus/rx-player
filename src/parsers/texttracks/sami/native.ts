@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
 import { makeCue } from "../../../compat";
 import assert from "../../../utils/assert";
 
@@ -104,7 +109,7 @@ function decodeEntities(text : string) : string {
 function parseSami(
   smi : string,
   timeOffset : number,
-  lang : string
+  lang? : string
 ) : Array<TextTrackCue|VTTCue> {
   const syncOpen = /<sync[ >]/ig;
   const syncClose = /<sync[ >]|<\/body>/ig;
@@ -121,11 +126,11 @@ function parseSami(
   syncClose.exec(smi);
 
   const langs = getClassNameByLang(css);
-  const klass = langs[lang];
+  const klass = lang && langs[lang];
 
   assert(!!klass, `sami: could not find lang ${lang} in CSS`);
 
-  for (;;) {
+  while (true) {
     up = syncOpen.exec(smi);
     to = syncClose.exec(smi);
     if (!up && !to) {

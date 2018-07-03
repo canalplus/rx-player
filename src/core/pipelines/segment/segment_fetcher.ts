@@ -14,10 +14,19 @@
  * limitations under the License.
  */
 
-import objectAssign = require("object-assign");
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { CustomError } from "../../../errors";
+import objectAssign from "object-assign";
+import {
+  Observable ,
+  Subject
+} from "rxjs";
+import {
+  filter,
+  finalize,
+  map,
+  share,
+  tap,
+} from "rxjs/operators";
+import { ICustomError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   ISegmentLoaderArguments,
@@ -76,7 +85,7 @@ export default function createSegmentFetcher<T>(
   transport : ITransportPipelines,
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
-  warning$ : Subject<Error|CustomError>,
+  warning$ : Subject<Error|ICustomError>,
   options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
 ) : ISegmentFetcher<T> {
   const basePipeline$ = BasePipeline(transport[bufferType], options);
@@ -96,9 +105,9 @@ export default function createSegmentFetcher<T>(
   return function fetchSegment(
     content : ISegmentLoaderArguments
   ) : Observable<ISegmentResponse<T>> {
-    return basePipeline$(content)
+    return basePipeline$(content).pipe(
 
-      .do((arg) => {
+      tap((arg) => {
         switch (arg.type) {
           case "error":
             warning$.next(objectAssign(arg.value, { pipelineType: bufferType }));
@@ -170,20 +179,20 @@ export default function createSegmentFetcher<T>(
             break;
           }
         }
-      })
+      }),
 
-      .filter((
+      filter((
         arg
       ) : arg is
         IPipelineData<ISegmentResponseParsed<T>>|
         IPipelineCache<ISegmentResponseParsed<T>> =>
         arg.type === "data" || arg.type === "cache"
-      )
+      ),
 
       // take only value from data/cache events
-      .map(({ value }) => value)
+      map(({ value }) => value),
 
-      .finally(() => {
+      finalize(() => {
         if (request$ != null) {
           if (id != null) {
             request$.next({
@@ -194,8 +203,9 @@ export default function createSegmentFetcher<T>(
           }
           request$.complete();
         }
-      })
+      }),
 
-      .share(); // avoid multiple side effects if multiple subs
+      share() // avoid multiple side effects if multiple subs
+    );
   };
 }

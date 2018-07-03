@@ -14,18 +14,30 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
+import {
+  merge as observableMerge,
+  Observable,
+  Subject,
+} from "rxjs";
+import {
+  ignoreElements,
+  map,
+  mapTo,
+} from "rxjs/operators";
 import {
   clearElementSrc,
   setElementSrc$,
 } from "../../compat";
-import { CustomError } from "../../errors";
-import log from "../../utils/log";
-import EMEManager, {
-  IKeySystemOption,
-} from "../eme";
+import { ICustomError } from "../../errors";
+import log from "../../log";
+import { IKeySystemOption } from "../eme/types";
 import { IStreamClockTick } from "./clock";
+import createEMEManager from "./create_eme_manager";
 import { IInitialTimeOptions } from "./get_initial_time";
 import createMediaErrorHandler from "./media_error_handler";
 import SpeedManager from "./speed_manager";
@@ -107,8 +119,8 @@ export default function StreamDirectFile({
    * Observable through which all warning events will be sent.
    * @type {Subject}
    */
-  const warning$ = new Subject<Error|CustomError>();
-  const warningEvents$ = warning$.map(EVENTS.warning);
+  const warning$ = new Subject<Error|ICustomError>();
+  const warningEvents$ = warning$.pipe(map(EVENTS.warning));
 
   clearElementSrc(mediaElement);
 
@@ -127,7 +139,7 @@ export default function StreamDirectFile({
    * issue.
    * @type {Observable}
    */
-  const emeManager$ = EMEManager(mediaElement, keySystems, warning$);
+  const emeManager$ = createEMEManager(mediaElement, keySystems, warning$);
 
   /**
    * Translate errors coming from the video element into RxPlayer errors
@@ -144,7 +156,7 @@ export default function StreamDirectFile({
    */
   const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
     pauseWhenStalled: true,
-  }).map(EVENTS.speedChanged);
+  }).pipe(map(EVENTS.speedChanged));
 
   /**
    * Create Stalling Manager, an observable which will try to get out of
@@ -152,18 +164,18 @@ export default function StreamDirectFile({
    * @type {Observable}
    */
   const stallingManager$ = StallingManager(mediaElement, clock$)
-  .map(EVENTS.stalled);
+    .pipe(map(EVENTS.stalled));
 
   const loadedEvent$ = loadAndPlay$
-    .mapTo(EVENTS.loaded());
+    .pipe(mapTo(EVENTS.loaded()));
 
   const linkURL$ = setElementSrc$(mediaElement, url)
-    .ignoreElements();
+    .pipe(ignoreElements());
 
   const mutedInitialSeek$ = initialSeek$
-    .ignoreElements();
+    .pipe(ignoreElements());
 
-  const directFile$ : Observable<IStreamEvent> = Observable.merge(
+  const directFile$ : Observable<IStreamEvent> = observableMerge(
     loadedEvent$,
     mutedInitialSeek$,
     emeManager$ as Observable<void>, // TODO RxJS do something weird here
@@ -173,5 +185,5 @@ export default function StreamDirectFile({
     linkURL$
   );
 
-  return Observable.merge(directFile$, warningEvents$);
+  return observableMerge(directFile$, warningEvents$);
 }

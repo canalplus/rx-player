@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
+import {
+  distinctUntilChanged,
+  map,
+  share,
+  tap,
+} from "rxjs/operators";
 import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
-import log from "../../utils/log";
+import log from "../../log";
 import { getNextRangeGap } from "../../utils/ranges";
 import { IStreamClockTick } from "./clock";
 
@@ -39,8 +45,8 @@ function StallingManager(
   videoElement : HTMLMediaElement,
   timings$ : Observable<IStreamClockTick>
 ) : Observable<IStallingItem|null> {
-  return timings$
-    .do((timing) => {
+  return timings$.pipe(
+    tap((timing) => {
       if (!timing.stalled) {
         return;
       }
@@ -71,13 +77,14 @@ function StallingManager(
         log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
         videoElement.currentTime = seekTo;
       }
-    })
-    .share()
-    .map(timing => timing.stalled)
-    .distinctUntilChanged((wasStalled, isStalled) => {
+    }),
+    share(),
+    map(timing => timing.stalled),
+    distinctUntilChanged((wasStalled, isStalled) => {
       return !wasStalled && !isStalled ||
         (!!wasStalled && !!isStalled && wasStalled.reason === isStalled.reason);
-    });
+    })
+  );
 }
 
 export default StallingManager;

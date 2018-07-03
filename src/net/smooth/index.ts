@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+
+import {
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import { map } from "rxjs/operators";
+import features from "../../features";
 import {
   Adaptation,
   Representation,
 } from "../../manifest";
-import parseBif from "../../parsers/images/bif";
+import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
-import { resolveURL } from "../../utils/url";
 import {
   ILoaderObservable,
   ImageParserObservable,
@@ -34,18 +43,16 @@ import {
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentTimingInfos,
+  ITransportOptions,
   ITransportPipelines,
   SegmentParserObservable,
   TextTrackParserObservable,
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import extractTimingsInfos from "./isobmff_timings_infos";
-import createSmoothManifestParser from "./manifest";
 import mp4Utils from "./mp4";
 import generateSegmentLoader from "./segment_loader";
-import { IHSSParserOptions } from "./types";
 import {
-  buildSegmentURL,
   extractISML,
   extractToken,
   replaceToken,
@@ -77,7 +84,7 @@ function addNextSegments(
 }
 
 export default function(
-  options : IHSSParserOptions = {}
+  options : ITransportOptions = {}
 ) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
@@ -101,20 +108,23 @@ export default function(
           url: replaceToken(url, ""),
           responseType: "document",
           ignoreProgressEvents: true,
-        })
-          .map(({ value }) : string => {
+        }).pipe(
+          map(({ value }) : string => {
             const extractedURL = extractISML(value.responseData);
             if (!extractedURL) {
               throw new Error("Invalid ISML");
             }
             return extractedURL;
-          });
+          })
+        );
       } else {
-        resolving = Observable.of(url);
+        resolving = observableOf(url);
       }
 
       return resolving
-        .map((_url) => ({ url: replaceToken(resolveManifest(_url), token) }));
+        .pipe(map((_url) => ({
+          url: replaceToken(resolveManifest(_url), token),
+        })));
     },
 
     loader(
@@ -131,7 +141,7 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
       const manifest = smoothManifestParser(data, url);
-      return Observable.of({ manifest, url });
+      return observableOf({ manifest, url });
     },
   };
 
@@ -144,7 +154,7 @@ export default function(
       representation,
       segment,
     } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer|Uint8Array> {
+    ) : ILoaderObservable<ArrayBuffer|Uint8Array|null> {
       return segmentLoader({
         adaptation,
         init,
@@ -160,9 +170,12 @@ export default function(
       response,
       adaptation,
       manifest,
-    } : ISegmentParserArguments<ArrayBuffer|Uint8Array>
+    } : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
     ) : SegmentParserObservable {
-      const responseData = response.responseData;
+      const { responseData } = response;
+      if (responseData == null) {
+        return observableOf({ segmentData: null, segmentInfos: null });
+      }
 
       if (segment.isInit) {
         // smooth init segments are crafted by hand. Their timescale is the one
@@ -172,15 +185,14 @@ export default function(
           time: -1,
           duration: 0,
         };
-        return Observable.of({
+        return observableOf({
           segmentData: responseData,
           segmentInfos: initSegmentInfos,
         });
       }
-      if (__DEV__) {
-        assert(responseData instanceof ArrayBuffer);
-      }
-      const responseBuffer = new Uint8Array(responseData as ArrayBuffer);
+      const responseBuffer = responseData instanceof Uint8Array ?
+        responseData : new Uint8Array(responseData);
+
       const { nextSegments, segmentInfos } =
         extractTimingsInfos(responseBuffer, segment, manifest.isLive);
       const segmentData = patchSegment(responseBuffer, segmentInfos.time);
@@ -188,7 +200,7 @@ export default function(
       if (nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
-      return Observable.of({ segmentData, segmentInfos });
+      return observableOf({ segmentData, segmentInfos });
     },
   };
 
@@ -198,18 +210,14 @@ export default function(
       representation,
     } : ISegmentLoaderArguments
     ) : ILoaderObservable<string|ArrayBuffer|null> {
-      if (segment.isInit) {
-        return Observable.of({
+      if (segment.isInit || segment.mediaURL == null) {
+        return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
       }
-
-      // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
-      const base = resolveURL(representation.baseURL);
-      const url = buildSegmentURL(base, representation, segment);
-      return request({ url, responseType });
+      return request({ url: segment.mediaURL, responseType });
     },
 
     parser({
@@ -240,7 +248,7 @@ export default function(
       const responseData = response.responseData;
 
       if (responseData === null) {
-        return Observable.of({
+        return observableOf({
           segmentData: null,
           segmentInfos: segment.timescale > 0 ? {
             duration: segment.isInit ? 0 : segment.duration,
@@ -337,7 +345,7 @@ export default function(
       if (segmentInfos != null && nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
-      return Observable.of({
+      return observableOf({
         segmentData: {
           type: _sdType,
           data: _sdData,
@@ -354,19 +362,17 @@ export default function(
 
   const imageTrackPipeline = {
     loader(
-      { segment, representation } : ISegmentLoaderArguments
+      { segment } : ISegmentLoaderArguments
     ) : ILoaderObservable<ArrayBuffer|null> {
-      if (segment.isInit) {
+      if (segment.isInit || segment.mediaURL == null) {
         // image do not need an init segment. Passthrough directly to the parser
-        return Observable.of({
+        return observableOf({
           type: "data" as "data",
           value: { responseData: null },
         });
       }
 
-      const baseURL = resolveURL(representation.baseURL);
-      const url = buildSegmentURL(baseURL, representation, segment);
-      return request({ url, responseType: "arraybuffer" });
+      return request({ url: segment.mediaURL, responseType: "arraybuffer" });
     },
 
     parser(
@@ -374,8 +380,9 @@ export default function(
     ) : ImageParserObservable {
       const responseData = response.responseData;
 
-      if (responseData === null) {
-        return Observable.of({
+      // TODO image Parsing should be more on the sourceBuffer side, no?
+      if (responseData === null || features.imageParser == null) {
+        return observableOf({
           segmentData: null,
           segmentInfos: segment.timescale > 0 ? {
             duration: segment.isInit ? 0 : segment.duration,
@@ -385,9 +392,9 @@ export default function(
         });
       }
 
-      const bifObject = parseBif(new Uint8Array(responseData));
+      const bifObject = features.imageParser(new Uint8Array(responseData));
       const data = bifObject.thumbs;
-      return Observable.of({
+      return observableOf({
         segmentData: {
           data,
           start: 0,

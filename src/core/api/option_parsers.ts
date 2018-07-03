@@ -19,13 +19,13 @@
  * throw if something is wrong, and return a normalized option object.
  */
 
-import objectAssign = require("object-assign");
+import objectAssign from "object-assign";
 import config from "../../config";
+import log from "../../log";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
-import log from "../../utils/log";
 import { IKeySystemOption } from "../eme";
 
 const {
@@ -175,7 +175,7 @@ export type IParsedLoadVideoOptions = IParsedLoadVideoOptionsNative |
  *
  * Do not mutate anything, only cross the given options and sane default options
  * (most coming from the config).
- * @param {Object} [options={}]
+ * @param {Object|undefined} options
  * @returns {Object}
  */
 function parseConstructorOptions(
@@ -311,7 +311,7 @@ function parseConstructorOptions(
  * (most coming from the config).
  *
  * Throws if any mandatory option is not set.
- * @param {Object} [options={}]
+ * @param {Object|undefined} options
  * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */

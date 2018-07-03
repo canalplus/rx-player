@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
+import {
+  merge as observableMerge,
+  Observable,
+  of as observableOf,
+  Subject,
+  throwError as observableThrow,
+} from "rxjs";
+import { takeUntil } from "rxjs/operators";
 import {
   bytesToStr,
   strToBytes,
@@ -154,12 +160,12 @@ if (navigator.requestMediaKeySystemAccess) {
         });
         this.keyStatuses = new Map();
         this.expiration = NaN;
-        Observable.merge(
+        observableMerge(
           events.onKeyMessage$(video),
           events.onKeyAdded$(video),
           events.onKeyError$(video)
         )
-          .takeUntil(this._closeSession$)
+          .pipe(takeUntil(this._closeSession$))
           .subscribe((evt : Event) => this.trigger(evt.type, evt));
 
         this.update = wrapUpdate((license, sessionId?) => {
@@ -243,7 +249,7 @@ if (navigator.requestMediaKeySystemAccess) {
       keySystemConfigurations : MediaKeySystemConfiguration[]
     ) : Observable<CustomMediaKeySystemAccess> {
       if (!isTypeSupported(keyType)) {
-        return Observable.throw(undefined);
+        return observableThrow(undefined);
       }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -283,7 +289,7 @@ if (navigator.requestMediaKeySystemAccess) {
             persistentState: "not-allowed" as "not-allowed",
           };
 
-          return Observable.of(
+          return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
               new MockMediaKeys(keyType),
@@ -293,7 +299,7 @@ if (navigator.requestMediaKeySystemAccess) {
         }
       }
 
-      return Observable.throw(undefined);
+      return observableThrow(undefined);
     };
   }
 
@@ -349,12 +355,12 @@ if (navigator.requestMediaKeySystemAccess) {
       generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
         return new Promise((resolve) => {
           this._ss = this._mk.memCreateSession("video/mp4", initData);
-          Observable.merge(
+          observableMerge(
             events.onKeyMessage$(this._ss),
             events.onKeyAdded$(this._ss),
             events.onKeyError$(this._ss)
           )
-            .takeUntil(this._closeSession$)
+            .pipe(takeUntil(this._closeSession$))
             .subscribe((evt : Event) => this.trigger(evt.type, evt));
           resolve();
         });
@@ -399,7 +405,7 @@ if (navigator.requestMediaKeySystemAccess) {
     ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
       // TODO Why TS Do not understand that isTypeSupported exists here?
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
-        return Observable.throw(undefined);
+        return observableThrow(undefined);
       }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -426,7 +432,7 @@ if (navigator.requestMediaKeySystemAccess) {
             sessionTypes: ["temporary", "persistent-license"],
           };
 
-          return Observable.of(
+          return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
 
@@ -438,7 +444,7 @@ if (navigator.requestMediaKeySystemAccess) {
         }
       }
 
-      return Observable.throw(undefined);
+      return observableThrow(undefined);
     };
   } else {
     requestMediaKeySystemAccess = null;

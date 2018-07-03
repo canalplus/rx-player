@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  defer as observableDefer,
+  Observable,
+} from "rxjs";
+import {
+  catchError,
+  mapTo,
+} from "rxjs/operators";
 import { IMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
@@ -32,13 +39,14 @@ export default function generateKeyRequest(
   initData: Uint8Array,
   initDataType: string|undefined
 ) : Observable<null> {
-  return Observable.defer(() => {
+  return observableDefer(() => {
     return castToObservable(
       (session as MediaKeySession).generateRequest(initDataType || "", initData)
-    )
-      .catch((error) => {
+    ).pipe(
+      catchError((error) => {
         throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
-      })
-      .mapTo(null);
+      }),
+      mapTo(null)
+    );
   });
 }

@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
-import { Observer } from "rxjs/Observer";
+import {
+  fromEvent as observableFromEvent,
+  Observable,
+  Observer,
+  of as observableOf,
+} from "rxjs";
+import {
+  mapTo,
+  take,
+} from "rxjs/operators";
 
+import log from "../log";
 import EventEmitter from "../utils/eventemitter";
-import log from "../utils/log";
-import onEvent from "../utils/rx-onEvent";
 
 import {
   isFirefox,
@@ -93,16 +100,17 @@ function shouldUnsetMediaKeys() : boolean {
 /**
  * Wait for the MediaSource's sourceopen event and emit. Emit immediatelly if
  * already received.
- * @param {MediaSource}
+ * @param {MediaSource} mediaSource
  * @returns {Observable}
  */
 function onSourceOpen$(
   mediaSource : MediaSource
-) : Observable<Event>|Observable<null> {
+) : Observable<Event|null> {
   if (mediaSource.readyState === "open") {
-    return Observable.of(null);
+    return observableOf(null);
   } else {
-    return events.onSourceOpen$(mediaSource).take(1);
+    return events.onSourceOpen$(mediaSource)
+      .pipe(take(1));
   }
 }
 
@@ -116,11 +124,13 @@ function hasLoadedMetadata(
   mediaElement : HTMLMediaElement
 ) : Observable<void> {
   if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
-    return Observable.of(undefined);
+    return observableOf(undefined);
   } else {
     return events.onLoadedMetadata$(mediaElement)
-      .take(1)
-      .mapTo(undefined);
+      .pipe(
+        take(1),
+        mapTo(undefined)
+      );
   }
 }
 
@@ -133,11 +143,13 @@ function canPlay(
   mediaElement : HTMLMediaElement
 ) : Observable<void> {
   if (mediaElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
-    return Observable.of(undefined);
+    return observableOf(undefined);
   } else {
-    return onEvent<Event>(mediaElement, "canplay")
-      .take(1)
-      .mapTo(undefined);
+    return observableFromEvent(mediaElement, "canplay")
+      .pipe(
+        take(1),
+        mapTo(undefined)
+      );
   }
 }
 

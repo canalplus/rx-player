@@ -19,11 +19,11 @@
  * for an easier API management.
  */
 
-import arrayFind = require("array-find");
-import { Subject } from "rxjs/Subject";
+import arrayFind from "array-find";
+import { Subject } from "rxjs";
+import log from "../../log";
 import { Adaptation, Period } from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";
-import log from "../../utils/log";
 import SortedList from "../../utils/sorted_list";
 
 // single preference for an audio track Adaptation
@@ -133,8 +133,6 @@ export default class LanguageManager {
 
   /**
    * @param {Object} defaults
-   * @param {Array.<Object>} defaults.preferredAudioTracks
-   * @param {Array.<Object>} defaults.preferredTextTracks
    */
   constructor(defaults : {
     preferredAudioTracks? : IAudioTrackPreference[];

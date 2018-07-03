@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs/Observable";
+import {
+  EMPTY,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  mapTo,
+  share,
+  tap,
+} from "rxjs/operators";
+import log from "../../log";
 import Manifest from "../../manifest";
-import log from "../../utils/log";
 import SourceBufferManager from "../source_buffers";
 import EVENTS, {
   IManifestUpdateEvent,
@@ -37,14 +46,16 @@ function refreshManifest(
   const refreshURL = currentManifest.getUrl();
   if (!refreshURL) {
     log.warn("Cannot refresh the manifest: no url");
-    return Observable.empty();
+    return EMPTY;
   }
 
-  return manifestPipeline(refreshURL)
-    .do((parsed) => {
+  return manifestPipeline(refreshURL).pipe(
+    tap((parsed) => {
       currentManifest.update(parsed);
-    })
-    .mapTo(EVENTS.manifestUpdate(currentManifest));
+    }),
+    share(), // share the previous side effect
+    mapTo(EVENTS.manifestUpdate(currentManifest))
+  );
 }
 
 /**
@@ -59,11 +70,6 @@ export default function liveEventsHandler(
   manifest : Manifest,
   fetchManifest : (url : string) => Observable<Manifest>
 ) : (message : IStreamEvent) => Observable<IStreamEvent> {
-  /**
-   * Handle individual stream events
-   * @param {string} message
-   * @returns {Observable}
-   */
   return function handleLiveEvents(message) {
     switch (message.type) {
       case "discontinuity-encountered":
@@ -80,7 +86,7 @@ export default function liveEventsHandler(
         // manifest to refresh the current index
         return refreshManifest(fetchManifest, manifest);
     }
-    return Observable.of(message);
+    return observableOf(message);
   };
 
 }
