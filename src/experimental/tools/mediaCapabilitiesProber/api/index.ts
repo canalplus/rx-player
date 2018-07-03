@@ -64,10 +64,16 @@ const mediaCapabilitiesProber = {
       "getStatusForPolicy",
     ];
     return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      if (result === "MaybeSupported") {
-        return "Unknown";
+      switch (result) {
+        case 0:
+          return "NotSupported";
+        case 3:
+          return "Supported";
+        case 1:
+          return "Unknown";
+        default:
+          return "NotSupported";
       }
-      return result;
     });
   },
 
@@ -91,10 +97,16 @@ const mediaCapabilitiesProber = {
       "decodingInfos",
     ];
     return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      if (result === "Probably") {
-        return "Supported";
+      switch (result) {
+        case 0:
+          return "NotSupported";
+        case 3:
+          return "Supported";
+        case 2:
+          return "Supported";
+        default:
+          return "NotSupported";
       }
-      return result;
     });
   },
 
@@ -116,7 +128,7 @@ const mediaCapabilitiesProber = {
     };
     const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
     return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      return result === "Supported" ? true : false;
+      return result === 3 ? true : false;
     });
   },
 
@@ -135,10 +147,16 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
     ];
     return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      if (result === "Probably") {
-        return "Supported";
+      switch (result) {
+        case 0:
+          return "NotSupported";
+        case 3:
+          return "Supported";
+        case 2:
+          return "Supported";
+        default:
+          return "NotSupported";
       }
-      return result;
     });
   },
 };

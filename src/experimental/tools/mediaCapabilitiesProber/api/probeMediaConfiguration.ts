@@ -51,12 +51,9 @@ export type IBrowserAPIS =
 async function probeMediaConfiguration(
   config: IMediaConfiguration,
   browserAPIS: IBrowserAPIS[]
-): Promise<string> {
+): Promise<number> {
 
-  let isSupported: boolean = false;
-  let isProbablySupported: boolean = false;
-  let isMaybeSupported: boolean = false;
-  let isNotSupported: boolean = false;
+  let statusNumber = Infinity;
 
   const resultingAPI: ICapabilitiesTypes[] = [];
   const promises = [];
@@ -66,10 +63,7 @@ async function probeMediaConfiguration(
     if (probeWithBrowser) {
       promises.push(probeWithBrowser(config).then((probeResult) => {
         resultingAPI.push(browserAPI);
-        isNotSupported = isNotSupported || probeResult === 0;
-        isMaybeSupported = isMaybeSupported || probeResult === 1;
-        isProbablySupported = isProbablySupported || probeResult === 2;
-        isSupported = isSupported || probeResult === 3;
+        statusNumber = Math.min(statusNumber, probeResult);
       }).catch((err) => {
         switch (wantedLogLevel) {
           case "warn":
@@ -98,7 +92,7 @@ async function probeMediaConfiguration(
   const areUnprobedCapabilities =
     JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
-  isMaybeSupported = areUnprobedCapabilities || isMaybeSupported;
+  statusNumber = Math.min((areUnprobedCapabilities ? 1 : Infinity), statusNumber);
 
   if (areUnprobedCapabilities) {
     log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
@@ -109,16 +103,7 @@ async function probeMediaConfiguration(
   log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
     probedCapabilities);
 
-  if (isNotSupported) {
-    return "NotSupported";
-  } else if (isMaybeSupported) {
-    return "MaybeSupported";
-  } else if (isProbablySupported) {
-    return "Probably";
-  } else if (isSupported) {
-    return "Supported";
-  }
-  return "Maybe";
+  return statusNumber;
 }
 
 export default probeMediaConfiguration;
