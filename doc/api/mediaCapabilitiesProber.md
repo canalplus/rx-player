@@ -216,7 +216,7 @@ All its properties are optional, here are what you can set.
 
   - _audio_ (``Object``): The video capabilities you want to probe.
     - _contentType_ (``string``): Media codec in mimeType format.
-    - _channels_ (``number``): Audio channels used by the track.
+    - _channels_ (``string``): Audio channels used by the track.
     - _bitrate_ (``number``): Bitrate from stream (bits/second).
     - _samplerate_ (``number``): Number of samples of audio carried per second.
 
