@@ -43,7 +43,7 @@ export default function probeDRMInfos(config: IMediaConfiguration): Promise<numb
         const configuration =
           buildKeySystemConfigurations(keySystem.type, keySystem.configuration || {});
         return navigator.requestMediaKeySystemAccess(keySystem.type, configuration)
-          .then(() => resolve(3))
+          .then(() => resolve(2))
           .catch(() => resolve(0));
       }
     }

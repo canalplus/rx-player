@@ -47,7 +47,7 @@ export default function probeMatchMedia(
           throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
             "Bad arguments for calling matchMedia.");
         }
-        const result = match.matches && match.media !== "not all" ? 3 : 0;
+        const result = match.matches && match.media !== "not all" ? 2 : 0;
         return result;
       }
     }

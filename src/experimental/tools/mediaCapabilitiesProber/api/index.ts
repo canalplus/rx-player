@@ -67,10 +67,10 @@ const mediaCapabilitiesProber = {
       switch (result) {
         case 0:
           return "NotSupported";
-        case 3:
-          return "Supported";
         case 1:
           return "Unknown";
+        case 2:
+          return "Supported";
         default:
           return "NotSupported";
       }
@@ -100,8 +100,8 @@ const mediaCapabilitiesProber = {
       switch (result) {
         case 0:
           return "NotSupported";
-        case 3:
-          return "Supported";
+        case 1:
+          return "MaybeSupported";
         case 2:
           return "Supported";
         default:
@@ -128,7 +128,7 @@ const mediaCapabilitiesProber = {
     };
     const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
     return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      return result === 3 ? true : false;
+      return result === 2 ? true : false;
     });
   },
 
@@ -150,8 +150,8 @@ const mediaCapabilitiesProber = {
       switch (result) {
         case 0:
           return "NotSupported";
-        case 3:
-          return "Supported";
+        case 1:
+          return "MaybeSupported";
         case 2:
           return "Supported";
         default:

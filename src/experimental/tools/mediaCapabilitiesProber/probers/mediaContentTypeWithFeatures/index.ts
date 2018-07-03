@@ -69,12 +69,12 @@ export default function probeTypeWithFeatures(
           "Bad arguments for calling isTypeSupportedWithFeatures");
       } else {
         switch (support) {
+          case "Not Supported":
+            return 0;
           case "Maybe":
             return 1;
           case "Probably":
             return 2;
-          case "Not Supported":
-            return 0;
           default:
             return 1;
         }
