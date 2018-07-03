@@ -24,14 +24,14 @@ import probeFromMediaDisplayInfos from "./mediaDisplayInfos";
 import { IMediaConfiguration } from "../types";
 
 const probers: {
-  [id: string]: (config: IMediaConfiguration) => Promise<number>;
+  [id: string]: [(config: IMediaConfiguration) => Promise<number>, string];
 } = {
-  isTypeSupported: probeFromMediaContentType,
-  isTypeSupportedWithFeatures: probeFromMediaContentTypeWithFeatures,
-  matchMedia: probeFromMediaDisplayInfos,
-  decodingInfos: probeFromDecodingConfig,
-  requestMediaKeySystemAccess: probeFromDRMInfos,
-  getStatusForPolicy: probeFromHDCPPolicy,
+  isTypeSupported: [probeFromMediaContentType, "warn"],
+  isTypeSupportedWithFeatures: [probeFromMediaContentTypeWithFeatures, "debug"],
+  matchMedia: [probeFromMediaDisplayInfos, "warn"],
+  decodingInfos: [probeFromDecodingConfig, "warn"],
+  requestMediaKeySystemAccess: [probeFromDRMInfos, "warn"],
+  getStatusForPolicy: [probeFromHDCPPolicy, "warn"],
 };
 
 export default probers;

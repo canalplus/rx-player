@@ -61,7 +61,8 @@ async function probeMediaConfiguration(
   const resultingAPI: ICapabilitiesTypes[] = [];
   const promises = [];
   for (const browserAPI of browserAPIS) {
-    const probeWithBrowser = probers[browserAPI];
+    const probeWithBrowser = probers[browserAPI][0];
+    const wantedLogLevel = probers[browserAPI][1];
     if (probeWithBrowser) {
       promises.push(probeWithBrowser(config).then((probeResult) => {
         resultingAPI.push(browserAPI);
@@ -69,7 +70,25 @@ async function probeMediaConfiguration(
         isMaybeSupported = isMaybeSupported || probeResult === 1;
         isProbablySupported = isProbablySupported || probeResult === 2;
         isSupported = isSupported || probeResult === 3;
-      }).catch((err) => log.warn(err)));
+      }).catch((err) => {
+        switch (wantedLogLevel) {
+          case "warn":
+            log.warn(err);
+            break;
+          case "debug":
+            log.debug(err);
+            break;
+          case "info":
+            log.info(err);
+            break;
+          case "error":
+            log.error(err);
+            break;
+          default:
+            log.debug(err);
+            break;
+        }
+      }));
     }
   }
 
