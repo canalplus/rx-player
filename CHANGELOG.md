@@ -1,5 +1,37 @@
 # Changelog
 
+## v3.5.0 (2018/07/03)
+
+### Added
+
+  - tools: add ``mediaCapabilitiesProber`` tool as an experimental tool
+  - builds: add minimal import with feature selection (allowing cleaner feature switching or lazy-loading)
+  - dash: allow multiple "main" adaptation
+  - api: add static ``version`` property to the RxPlayer API
+
+### Bug fixes
+
+  - vtt: fix ``line`` setting for vtt tracks in ``"native"`` textTrackMode
+  - dash: always play "main" adaptation first
+  - misc: don't interfere with a client's RxJS implementation by switching to RxJS 6
+  - dash: presentationTimeOffset doesn't have an influence on requested segment anymore
+  - smooth/dash: throw a ``"MANIFEST_PARSE_ERROR"`` if no audio and video adaptations/StreamIndex are available in the current content
+
+### Other improvements
+
+  - builds: Reduce size of the builds
+  - builds: use uglifyJS instead of Closure-compiler
+  - builds: update to typescript 2.9
+  - rxjs: update to RxJS version 6 (v6.2.1)
+  - code: set complete URL in segment's media property
+  - demo: add time indicator on the progress bar
+  - demo: update fullscreen mode to also display the text track element
+  - misc: moved demo server scripts to the respective demo directories
+  - misc: moved manifest parsers to the ``src/parsers`` directory
+  - misc: moved scripts from ``./tools`` to ``./scripts``
+  - misc: moved webpack configs to the root of the project
+
+
 ## v3.4.1 (2018/05/31)
 
 ### Bug fixes
