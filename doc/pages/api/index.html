@@ -4,9 +4,15 @@
 <li><a href="#chapter-Instantiation">Instantiation</a></li>
 <li><a href="#chapter-Static%20properties">Static properties</a>
 <ul>
+<li><a href="#subchapter-version">version</a></li>
 <li><a href="#subchapter-ErrorTypes">ErrorTypes</a></li>
 <li><a href="#subchapter-ErrorCodes">ErrorCodes</a></li>
 <li><a href="#subchapter-LogLevel">LogLevel</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Tools">Tools</a>
+<ul>
+<li><a href="#subchapter-MediaCapabilitiesProber">MediaCapabilitiesProber</a></li>
 </ul>
 </li>
 <li><a href="#chapter-Methods">Methods</a>
@@ -111,6 +117,11 @@ page</a>.</p>
 <p><a name="static"></a>
 <a name="chapter-Static%20properties"></a></p>
 <h2>Static properties</h2>
+<p><a name="static-version"></a>
+<a name="subchapter-version"></a></p>
+<h3>version</h3>
+<p><em>type</em>: <code>Number</code></p>
+<p>The current version of the RxPlayer.</p>
 <p><a name="static-ErrorTypes"></a>
 <a name="subchapter-ErrorTypes"></a></p>
 <h3>ErrorTypes</h3>
@@ -156,6 +167,21 @@ automatically set to <code>&quot;NONE&quot;</code>.</p>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
 RxPlayer.LogLevel = <span class="hljs-string">&quot;WARNING&quot;</span>;
 </code></pre>
+<p><a name="tools"></a>
+<a name="chapter-Tools"></a></p>
+<h2>Tools</h2>
+<p><a name="tools-mediaCapabilitiesProber"></a>
+<a name="subchapter-MediaCapabilitiesProber"></a></p>
+<h3>MediaCapabilitiesProber</h3>
+<p><em>type</em>: <code>Object</code></p>
+<p>An experimental tool to probe browser media capabilities:</p>
+<ul>
+<li>Decoding capabilities</li>
+<li>DRM support</li>
+<li>HDCP support</li>
+<li>Display capabilities</li>
+</ul>
+<p>You can find its documentation <a href="mediaCapabilitiesProber.html">here</a>.</p>
 <p><a name="meth"></a>
 <a name="chapter-Methods"></a></p>
 <h2>Methods</h2>
