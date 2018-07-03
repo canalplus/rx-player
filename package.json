@@ -76,6 +76,7 @@
     "lint": "tslint --project . -c tslint.json \"src/**/*.ts\"",
     "lint:demo": "eslint demo/**/*.js demo/**/*.jsx",
     "lint:tests": "eslint tests/**/*.js",
+    "prepublish": "npm run build:modular",
     "standalone": "cross-env RXP_ENV=development node ./demo/standalone/server.js",
     "start": "cross-env RXP_ENV=development node ./demo/full/server.js",
     "test": "karma start tests/karma.conf.js",
