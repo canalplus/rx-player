@@ -46,24 +46,6 @@ const mediaCapabilitiesProber = {
   },
 
   /**
-   * Get capabilities for any configuration.
-   * All possible attributes are accepted as argument.
-   * @param {Object} config
-   * @returns {Promise}
-   */
-  getCapabilities: async (config: IMediaConfiguration) => {
-    const browserAPIS: IBrowserAPIS[] = [
-      "isTypeSupported",
-      "isTypeSupportedWithFeatures",
-      "matchMedia",
-      "decodingInfos",
-      "requestMediaKeySystemAccess",
-      "getStatusForPolicy",
-    ];
-    return probeMediaConfiguration(config, browserAPIS);
-  },
-
-  /**
    * Get HDCP status. Evaluates if current equipement support given
    * HDCP revision.
    * @param {string}
