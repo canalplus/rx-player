@@ -92,7 +92,8 @@ fi
 # update gh-pages
 git checkout gh-pages
 git pull origin gh-pages
-mv $tmpStylesDir styles
+rm -rf styles
+mv $tmpStylesDir/styles .
 mv $tmpRxPlayerFile rx-player.js
 mv $tmpDemoFile bundle.js
 
