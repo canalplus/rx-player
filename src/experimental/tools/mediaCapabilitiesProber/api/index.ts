@@ -128,7 +128,7 @@ const mediaCapabilitiesProber = {
     };
     const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
     return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      return result === 2 ? true : false;
+      return result === 2;
     });
   },
 
