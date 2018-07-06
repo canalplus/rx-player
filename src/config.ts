@@ -355,6 +355,12 @@ export default {
   OUT_OF_STARVATION_GAP: 7,
 
   /**
+   * Defines the degree of weighting decrease for EMA.
+   */
+  ABR_FAST_EMA: 2,
+  ABR_SLOW_EMA: 10,
+
+  /**
    * Number of seconds ahead in the buffer after which playback will resume when
    * seeking on an unbuffered part of the stream.
    * @type {Number}
