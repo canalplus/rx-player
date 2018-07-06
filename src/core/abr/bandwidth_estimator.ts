@@ -17,12 +17,11 @@
 import config from "../../config";
 import EWMA from "./ewma";
 
-const FAST_EMA  = 2;
-const SLOW_EMA  = 10;
-
 const {
   ABR_MINIMUM_TOTAL_BYTES,
   ABR_MINIMUM_CHUNK_SIZE,
+  ABR_FAST_EMA,
+  ABR_SLOW_EMA,
 } = config;
 
 /**
@@ -42,13 +41,13 @@ export default class BandwidthEstimator {
      * A fast-moving average.
      * @private
      */
-    this._fast = new EWMA(FAST_EMA);
+    this._fast = new EWMA(ABR_FAST_EMA);
 
     /**
      * A slow-moving average.
      * @private
      */
-    this._slow = new EWMA(SLOW_EMA);
+    this._slow = new EWMA(ABR_SLOW_EMA);
 
     /**
      * Number of bytes sampled.
@@ -96,8 +95,8 @@ export default class BandwidthEstimator {
    * Reset the bandwidth estimation.
    */
   public reset() : void {
-    this._fast = new EWMA(FAST_EMA);
-    this._slow = new EWMA(SLOW_EMA);
+    this._fast = new EWMA(ABR_FAST_EMA);
+    this._slow = new EWMA(ABR_SLOW_EMA);
     this._bytesSampled = 0;
   }
 }
