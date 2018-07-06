@@ -243,17 +243,37 @@ function getFilteredRepresentations(
 /**
  * Returns true if the request takes too much time relatively to how much we
  * should actually wait.
- * Depends on the chunk duration.
- * @param {number} durationOfRequest - time, in s, since the request has been
- * performed.
- * @param {number} chunkDuration - duration, in s, of a single chunk
+ * First, we try to calculate remaining request time, and return true if the request
+ * ends after buffer gap.
+ * If it can't be done, we return true if request duration is longer than
+ * estimated request duration (calculated from chunk duration).
+ * @param {number} elapsedTimeOnRequest
+ * @param {number} chunkDuration
+ * @param {number} playableRemainingTime
+ * @param {Object} lastProgressEvent
+ * @param {number} bandwidthEstimate
  * @returns {Boolean}
  */
-function requestTakesTime(
-  durationOfRequest : number,
-  chunkDuration : number
-) : boolean {
-  return durationOfRequest > chunkDuration * 1.2 + 1;
+function requestTakesTooMuchTime(
+  elapsedTimeOnRequest : number,
+  chunkDuration : number,
+  playableRemainingTime: number,
+  lastProgressEvent: {
+    size: number;
+    timestamp: number;
+    totalSize: number;
+  } | null,
+  bandwidthEstimate?: number
+) {
+  if (lastProgressEvent != null && bandwidthEstimate) {
+    const remainingData =
+      (lastProgressEvent.totalSize - lastProgressEvent.size) * 8;
+    const remainingTime = remainingData / bandwidthEstimate;
+    return (remainingTime < 0 || (remainingTime * 1.2) > playableRemainingTime);
+  }
+
+  // TODO Is this reliable ?
+  return elapsedTimeOnRequest > chunkDuration * 1.2 + 1;
 }
 
 /**
@@ -418,13 +438,22 @@ export default class RepresentationChooser {
 
                 const now = Date.now();
                 const requestTimeInSeconds = (now - requestTimestamp) / 1000;
-                if (
-                  chunkDuration &&
-                  requestTakesTime(requestTimeInSeconds, chunkDuration)
-                ) {
-                  bandwidthEstimate = estimateRequestBandwidth(
-                    request, requestTimeInSeconds, bitrate);
+                bandwidthEstimate = estimateRequestBandwidth(
+                  request, requestTimeInSeconds, bitrate);
 
+                const lastProgressRequest = request.progress ?
+                  request.progress[request.progress.length - 1] :
+                  null;
+
+                if (
+                  requestTakesTooMuchTime(
+                    requestTimeInSeconds,
+                    chunkDuration,
+                    bufferGap,
+                    lastProgressRequest,
+                    bandwidthEstimate
+                  )
+                ) {
                   if (bandwidthEstimate != null) {
                     // Reset all estimations to zero
                     // Note: this is weird to do this type of "global" side effect
