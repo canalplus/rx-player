@@ -146,7 +146,7 @@ function getConcernedRequest(
   const currentRequestIds = Object.keys(requests);
   const len = currentRequestIds.length;
 
-  for (let i = 0; i < len - 1; i++) {
+  for (let i = 0; i < len; i++) {
     const request = requests[currentRequestIds[i]];
 
     const {
@@ -154,8 +154,7 @@ function getConcernedRequest(
       duration: chunkDuration,
     } = request;
 
-    // TODO review this
-    if (Math.abs(segmentPosition - chunkTime) < chunkDuration) {
+    if ((chunkTime - segmentPosition) < chunkDuration) {
       return request;
     }
   }
