@@ -135,7 +135,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       const number = Math.floor((periodRelativeNumber / duration)) +
         (startNumber == null ? 1 : startNumber);
 
-      const time = (number * duration) / timescale;
+      const time = (number * duration);
 
       const args = {
         id: "" + number,
