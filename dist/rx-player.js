@@ -11874,7 +11874,7 @@ object-assign
                 var index = this._index, _normalizeRange = normalizeRange(index, _up, _to), up = _normalizeRange.up, to = _normalizeRange.to;
                 if (to <= up) return [];
                 for (var duration = index.duration, startNumber = index.startNumber, timescale = index.timescale, mediaURL = index.mediaURL, segments = [], baseTime = up; baseTime <= to; baseTime += duration) {
-                    var periodRelativeNumber = baseTime - this._periodStart * timescale, number = Math.floor(periodRelativeNumber / duration) + (null == startNumber ? 1 : startNumber), time = number * duration / timescale, args = {
+                    var periodRelativeNumber = baseTime - this._periodStart * timescale, number = Math.floor(periodRelativeNumber / duration) + (null == startNumber ? 1 : startNumber), time = number * duration, args = {
                         id: "" + number,
                         number: number,
                         time: time,
@@ -14517,7 +14517,7 @@ object-assign
  * @param {number} segmentPosition
  * @returns {IRequestInfo|undefined}
  */        function getConcernedRequest(requests, segmentPosition) {
-            for (var currentRequestIds = Object.keys(requests), len = currentRequestIds.length, i = 0; i < len - 1; i++) {
+            for (var currentRequestIds = Object.keys(requests), len = currentRequestIds.length, i = 0; i < len; i++) {
                 var request = requests[currentRequestIds[i]], chunkTime = request.time, chunkDuration = request.duration;
                 // TODO review this
                 if (Math.abs(segmentPosition - chunkTime) < chunkDuration) return request;
@@ -20127,7 +20127,7 @@ object-assign
                 var _this = _possibleConstructorReturn(this, _EventEmitter.call(this)), _parseConstructorOpti = parseConstructorOptions(options), initialAudioBitrate = _parseConstructorOpti.initialAudioBitrate, initialVideoBitrate = _parseConstructorOpti.initialVideoBitrate, limitVideoWidth = _parseConstructorOpti.limitVideoWidth, maxAudioBitrate = _parseConstructorOpti.maxAudioBitrate, maxBufferAhead = _parseConstructorOpti.maxBufferAhead, maxBufferBehind = _parseConstructorOpti.maxBufferBehind, maxVideoBitrate = _parseConstructorOpti.maxVideoBitrate, throttleWhenHidden = _parseConstructorOpti.throttleWhenHidden, videoElement = _parseConstructorOpti.videoElement, wantedBufferAhead = _parseConstructorOpti.wantedBufferAhead, stopAtEnd = _parseConstructorOpti.stopAtEnd;
                 // Workaround to support Firefox autoplay on FF 42.
                 // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
-                return videoElement.preload = "auto", _this.version = /*PLAYER_VERSION*/ "3.5.0", 
+                return videoElement.preload = "auto", _this.version = /*PLAYER_VERSION*/ "3.5.1", 
                 _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, _this._priv_destroy$ = new Subject.a(), 
                 Object(events.d)(videoElement).pipe(Object(takeUntil.a)(_this._priv_destroy$)).subscribe(function() {
                     return _this.trigger("fullscreenChange", _this.isFullscreen());
@@ -21253,7 +21253,7 @@ object-assign
  * Current version of the RxPlayer.
  * @type {string}
  */
-        api_Player.version = "3.5.0";
+        api_Player.version = "3.5.1";
         /* harmony default export */ var api = api_Player;
         // CONCATENATED MODULE: ./src/features/initialize_features.ts
         /**
