@@ -1,7 +1,7 @@
 {
   "name": "rx-player",
   "author": "Canal+",
-  "version": "3.5.0",
+  "version": "3.5.1",
   "description": "Canal+ HTML5 Video Player",
   "main": "./dist/rx-player.js",
   "keywords": [
@@ -98,7 +98,6 @@
     "test:watch": "cross-env RXP_TESTS_WATCH=true karma start tests/karma.conf.js",
     "types": "tsc --noEmit --project .",
     "update-version": "npm run version --git-tag-version=false",
-    "preversion": "npm run check",
     "version": "./scripts/update-version"
   },
   "repository": {
