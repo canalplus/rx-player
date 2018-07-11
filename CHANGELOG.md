@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.5.1 (2018/07/11)
+
+### Bug fixes
+
+  - parsers: fix wrong computation of segment time in template index
+  - abr: get concerned request in starvation mode
+
 ## v3.5.0 (2018/07/03)
 
 ### Added
