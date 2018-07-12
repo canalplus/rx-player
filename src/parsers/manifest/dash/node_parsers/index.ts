@@ -648,6 +648,9 @@ export default function parseManifest(
           const parsedAdaptation = parsedAdaptations[type];
           if (!parsedAdaptation) {
             parsedAdaptations[type] = [parsedAdaptationSet];
+            if (isMainAdaptation) {
+              acc.mainAdaptations[type] = parsedAdaptationSet;
+            }
           } else if (isMainAdaptation) {
             // put "main" adaptation as the first
             parsedAdaptation.unshift(parsedAdaptationSet);
