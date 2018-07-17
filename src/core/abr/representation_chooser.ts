@@ -356,8 +356,8 @@ export default class RepresentationChooser {
     return authorizedRepresentations$.pipe(
       switchMap((authorizedRepresentations) => {
         if (authorizedRepresentations.length === 0) {
-          throw new Error("ABR: No representations can be played, \
-            due to license restrictions.");
+          throw new Error("ABR: No representations can be played, " +
+            "due to license restrictions.");
         }
         if (authorizedRepresentations.length < 2) {
           return observableOf({
