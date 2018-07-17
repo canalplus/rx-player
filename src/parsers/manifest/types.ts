@@ -48,7 +48,7 @@ export interface IParsedRepresentation {
   width?: number;
 
   // TODO move to DASH Segment's privateInfos
-  contentProtection?: IParsedContentProtection;
+  contentProtection?: IParsedContentProtection[];
 }
 
 export type IParsedAdaptations =
@@ -123,4 +123,6 @@ export interface IParsedManifest {
 export interface IParsedContentProtection {
   schemeIdUri?: string;
   value?: string;
+  KID?: string;
+  pssh?: string;
 }

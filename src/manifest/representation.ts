@@ -17,6 +17,13 @@
 import generateNewId from "../utils/id";
 import IRepresentationIndex from "./representation_index";
 
+interface IContentProtection {
+  schemeIdUri?: string;
+  value?: string;
+  KID?: string;
+  pssh?: string;
+}
+
 export interface IRepresentationArguments {
   // -- required
   bitrate : number;
@@ -28,6 +35,7 @@ export interface IRepresentationArguments {
   id? : string|number;
   mimeType? : string;
   width? : number;
+  contentProtection? : IContentProtection[];
 }
 
 /**
@@ -45,6 +53,7 @@ class Representation {
   public height? : number;
   public mimeType? : string;
   public width? : number;
+  public contentProtection? : IContentProtection[];
 
   /**
    * @constructor
@@ -66,6 +75,10 @@ class Representation {
 
     if (args.mimeType != null) {
       this.mimeType = args.mimeType;
+    }
+
+    if (args.contentProtection) {
+      this.contentProtection = args.contentProtection;
     }
 
     this.index = args.index;
