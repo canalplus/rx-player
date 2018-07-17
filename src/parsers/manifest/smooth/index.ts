@@ -19,11 +19,8 @@ import log from "../../../log";
 import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
 import {
-  bytesToUTF16Str,
   concat,
-  guidToUuid,
   hexToBytes,
-  le2toi,
   strToBytes,
 } from "../../../utils/bytes";
 import generateNewId from "../../../utils/id";
@@ -32,6 +29,7 @@ import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../utils/url";
+import getKID from "../../drm/playready";
 import {
   IKeySystem,
   IParsedAdaptation,
@@ -173,22 +171,6 @@ function createSmoothStreamingParser(
   const keySystems = parserOptions.keySystems || getKeySystems;
 
   /**
-   * @param {Uint8Array} buf
-   * @returns {string}
-   */
-  function getHexKeyId(buf : Uint8Array) : string {
-    const len = le2toi(buf, 8);
-    const xml = bytesToUTF16Str(buf.subarray(10, len + 10));
-    const doc = new DOMParser().parseFromString(xml, "application/xml");
-    const kidElement = doc.querySelector("KID");
-    if (!kidElement) {
-      throw new Error("invalid XML");
-    }
-    const kid = kidElement.textContent || "";
-    return guidToUuid(atob(kid)).toLowerCase();
-  }
-
-  /**
    * Reduce implementation for the children of the given element.
    * TODO better typings
    * @param {Element} root
@@ -228,7 +210,7 @@ function createSmoothStreamingParser(
     }
     const header = root.firstElementChild;
     const privateData = strToBytes(atob(header.textContent || ""));
-    const keyId = getHexKeyId(privateData);
+    const keyId = getKID(privateData);
     const keyIdBytes = hexToBytes(keyId);
 
     // remove possible braces
