@@ -540,6 +540,11 @@ export default function parseManifest(
                 adaptation.attributes.width;
             }
 
+            if (adaptation.children.contentProtection) {
+              parsedRepresentation.contentProtection =
+                adaptation.children.contentProtection;
+            }
+
             return parsedRepresentation;
           });
 
