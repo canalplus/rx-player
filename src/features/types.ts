@@ -21,6 +21,7 @@ import {
 import { IKeySystemOption } from "../core/eme/types";
 import { ICustomSourceBuffer } from "../core/source_buffers/abstract_source_buffer";
 import { IDirectFileStreamOptions } from "../core/stream/directfile";
+import StreamAuthorizationManager from "../core/stream/stream_authorization_manager";
 import { IStreamEvent } from "../core/stream/stream_events";
 import { ICustomError } from "../errors";
 import { ITransportFunction } from "../net/types";
@@ -35,7 +36,8 @@ export type IDirectFileStream =
 export type IEMEManager = (
   mediaElement : HTMLMediaElement,
   keySystems: IKeySystemOption[],
-  errorStream : Subject<Error|ICustomError>
+  errorStream : Subject<Error|ICustomError>,
+  streamAuthorizationManager?: StreamAuthorizationManager
 ) => Observable<never>;
 
 export interface INativeTextTracksBuffer {

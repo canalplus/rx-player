@@ -80,6 +80,7 @@ import createMediaErrorHandler from "./media_error_handler";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
+import StreamAuthorizationManager from "./stream_authorization_manager";
 import EVENTS, {
   IStreamEvent,
 } from "./stream_events";
@@ -260,6 +261,9 @@ export default function Stream({
 
     const bufferClock$ = createBufferClock(manifest, clock$, initialSeek$, initialTime);
 
+    const streamAuthorizationManager = new StreamAuthorizationManager(manifest);
+    (window as any).streamAuthorizationManager = streamAuthorizationManager;
+
     /**
      * Subject through which network metrics will be sent by the segment
      * pipelines to the ABR manager.
@@ -286,7 +290,8 @@ export default function Stream({
      * given "Adaptation".
      * @type {ABRManager}
      */
-    const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
+    const abrManager = new ABRManager(
+      requestsInfos$, network$, adaptiveOptions, streamAuthorizationManager);
 
     /**
      * Clock needed by the BufferManager
@@ -326,6 +331,8 @@ export default function Stream({
         liveEventsHandler(videoElement, manifest, fetchManifest) :
         observableOf;
 
+    const authorizations$ = streamAuthorizationManager.getAuthorizations$();
+
     /**
      * Creates Observable which will manage every Buffer for the given Content.
      * @type {Observable}
@@ -344,7 +351,8 @@ export default function Stream({
         maxRetryOffline: networkConfig.offlineRetry,
         textTrackOptions,
       },
-      warning$
+      warning$,
+      authorizations$
     ).pipe(mergeMap((evt) : Observable<IStreamEvent> => {
         switch (evt.type) {
           case "end-of-stream":
@@ -366,7 +374,8 @@ export default function Stream({
      * issue.
      * @type {Observable}
      */
-    const emeManager$ = createEMEManager(videoElement, keySystems, warning$);
+    const emeManager$ = createEMEManager(
+      videoElement, keySystems, warning$, streamAuthorizationManager);
 
     /**
      * Translate errors coming from the video element into RxPlayer errors

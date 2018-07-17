@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import arrayIncludes from "../../utils/array-includes";
+
 import {
   defer as observableDefer,
   EMPTY,
@@ -47,9 +49,11 @@ import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
 import { retryObsWithBackoff } from "../../utils/retry";
 import tryCatch from "../../utils/rx-tryCatch";
+import StreamAuthorizationManager from "../stream/stream_authorization_manager";
 import {
   IKeySystemOption,
   KEY_STATUS_ERRORS,
+  KEY_STATUSES,
 } from "./types";
 
 export type ILicense =
@@ -83,7 +87,8 @@ export interface IMediaKeySessionHandledEvents {
 export default function handleSessionEvents(
   session: IMediaKeySession|MediaKeySession,
   keySystem: IKeySystemOption,
-  errorStream: Subject<Error|ICustomError>
+  errorStream: Subject<Error|ICustomError>,
+  streamAuthManager?: StreamAuthorizationManager
 ) : Observable<IMediaKeySessionHandledEvents> {
   log.debug("eme: handle message events", session);
 
@@ -127,14 +132,30 @@ export default function handleSessionEvents(
           session,
           keyStatusesEvent
         );
-
       // find out possible errors associated with this event
-      session.keyStatuses.forEach((keyStatus : string, keyId : string) => {
+      session.keyStatuses.forEach((
+        keyStatus : string|ArrayBuffer, keyId : string|ArrayBuffer
+      ) => {
         // Hack present because the order of the arguments has changed in spec
         // and is not the same between some versions of Edge and Chrome.
-        if (KEY_STATUS_ERRORS[keyId]) {
+        if (streamAuthManager) {
+          if (
+            arrayIncludes(KEY_STATUSES, keyStatus) &&
+            typeof keyId === "object" &&
+            typeof keyStatus === "string"
+          ) {
+            streamAuthManager.updateStatusForKID(keyId, keyStatus);
+          } else if (
+            arrayIncludes(KEY_STATUSES, keyId) &&
+            typeof keyId === "string" &&
+            typeof keyStatus === "object"
+          ) {
+            streamAuthManager.updateStatusForKID(keyStatus, keyId);
+          }
+        }
+        if (typeof keyId === "string" && KEY_STATUS_ERRORS[keyId]) {
           throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
-        } else if (KEY_STATUS_ERRORS[keyStatus]) {
+        } else if (typeof keyStatus === "string" && KEY_STATUS_ERRORS[keyStatus]) {
           throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
         }
       });

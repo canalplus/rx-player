@@ -658,6 +658,39 @@ export default class SegmentBookkeeper {
       }
       return true;
     }
+
+  }
+
+  /**
+   * For given IDS (period, adaptation, representation), get buffer ranges
+   * from segment bookkeeper.
+   * @param {Object} ids
+   */
+  public getBufferedRanges(ids: {
+    periodId: string|number;
+    adaptationId: string|number;
+    representationId: string|number;
+  }) {
+    const ranges = [];
+    const { periodId, adaptationId, representationId } = ids;
+    const length = this.inventory.length;
+    for (let i = 0; i < length; i++) {
+      const element = this.inventory[i];
+      const { infos } = element;
+      const { period, adaptation, representation } = infos;
+      if (
+        period.id === periodId &&
+        adaptation.id === adaptationId &&
+        representation.id === representationId
+      ) {
+        const segment = this.inventory[i];
+        ranges.push({
+          start: segment.bufferedStart,
+          end: segment.bufferedEnd,
+        });
+      }
+    }
+    return ranges;
   }
 
   /**

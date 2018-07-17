@@ -28,11 +28,13 @@ import {
 import features from "../../features";
 import log from "../../log";
 import { IKeySystemOption } from "../eme/types";
+import StreamAuthorizationManager from "./stream_authorization_manager";
 
 export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
-  errorStream : Subject<Error|ICustomError>
+  errorStream : Subject<Error|ICustomError>,
+  streamAuthorizationManager? : StreamAuthorizationManager
 ) : Observable<never> {
   if (features.emeManager == null) {
     return onEncrypted$(mediaElement).pipe(map(() => {
@@ -55,5 +57,6 @@ export default function createEMEManager(
     }));
   }
 
-  return features.emeManager(mediaElement, keySystems, errorStream);
+  return features.emeManager(
+    mediaElement, keySystems, errorStream, streamAuthorizationManager);
 }

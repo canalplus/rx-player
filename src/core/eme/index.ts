@@ -38,6 +38,7 @@ import { onEncrypted$ } from "../../compat/events";
 import { ICustomError } from "../../errors";
 import { assertInterface } from "../../utils/assert";
 import noop from "../../utils/noop";
+import StreamAuthorizationManager from "../stream/stream_authorization_manager";
 import attachMediaKeys from "./attach_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
 import generateKeyRequest from "./generate_key_request";
@@ -85,7 +86,8 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
 export default function EMEManager(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
-  errorStream: Subject<Error|ICustomError>
+  errorStream: Subject<Error|ICustomError>,
+  streamAuthorizationManager?: StreamAuthorizationManager
 ) : Observable<never> {
   if (__DEV__) {
     keySystemsConfigs.forEach((config) => assertInterface(config, {
@@ -141,7 +143,12 @@ export default function EMEManager(
       } = handledEncryptedEvent.value;
 
       return observableMerge(
-        handleSessionEvents(mediaKeySession, keySystemOptions, errorStream),
+        handleSessionEvents(
+          mediaKeySession,
+          keySystemOptions,
+          errorStream,
+          streamAuthorizationManager
+        ),
 
         // only perform generate request on new sessions
         handledEncryptedEvent.type === "created-session" ?

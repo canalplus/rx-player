@@ -72,6 +72,7 @@ import ActivePeriodEmitter, {
   IPeriodBufferInfos,
 } from "./active_period_emitter";
 import SegmentBookkeeper from "./segment_bookkeeper";
+import { IAuthorization } from "./stream_authorization_manager";
 import EVENTS, {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
@@ -167,7 +168,8 @@ export default function BuffersHandler(
     maxRetryOffline? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
   },
-  errorStream : Subject<Error | ICustomError>
+  errorStream : Subject<Error | ICustomError>,
+  authorizations$ : Observable<IAuthorization[]>
 ) : Observable<IBufferHandlerEvent> {
   const manifest = content.manifest;
   const firstPeriod = content.period;
@@ -554,6 +556,26 @@ export default function BuffersHandler(
       const bufferGarbageCollector$ = garbageCollectors.get(queuedSourceBuffer);
       const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
 
+      // Watch authorization changes to clean-up restricted stream concerned
+      // buffer ranges.
+      const cleanRestrictedStreamBuffer$ = authorizations$.pipe(
+        tap((authorizations) => {
+          authorizations.forEach((authorization) => {
+            const IDSet = authorization.IDSet;
+            if (!authorization.isPlayable) {
+              segmentBookkeeper.getBufferedRanges(IDSet).forEach((range) => {
+                if (range.start !== undefined && range.end !== undefined) {
+                  queuedSourceBuffer
+                    .removeBuffer(range as { start: number; end: number})
+                    .subscribe();
+                }
+              });
+            }
+          });
+        }),
+        ignoreElements()
+      );
+
       // TODO Clean previous QueuedSourceBuffer for previous content in the period
       // // 3 - Clean possible content from a precedent adaptation in this period
       // // (take the clock into account to avoid removing "now" for native sourceBuffers)
@@ -596,7 +618,11 @@ export default function BuffersHandler(
       // 5 - Return the buffer and send right events
       return observableConcat(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
-        observableMerge(adaptationBuffer$, bufferGarbageCollector$)
+        observableMerge(
+          adaptationBuffer$,
+          bufferGarbageCollector$,
+          cleanRestrictedStreamBuffer$
+        )
       );
     }));
   }
