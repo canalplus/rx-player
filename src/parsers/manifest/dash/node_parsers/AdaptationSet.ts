@@ -56,7 +56,7 @@ export interface IAdaptationSetChildren {
   // optional
   accessibility? : IScheme;
   contentComponent? : IParsedContentComponent;
-  contentProtection? : IParsedContentProtection[];
+  contentProtections? : IParsedContentProtection[];
   role? : IScheme;
 
   // TODO
@@ -147,10 +147,10 @@ function parseAdaptationSetChildren(
         case "ContentProtection":
           const contentProtection = parseContentProtection(currentElement);
           if (contentProtection) {
-            if (!children.contentProtection) {
-              children.contentProtection = [];
+            if (!children.contentProtections) {
+              children.contentProtections = [];
             }
-            children.contentProtection.push(contentProtection);
+            children.contentProtections.push(contentProtection);
           }
           break;
 

@@ -35,7 +35,7 @@ export interface IRepresentationArguments {
   id? : string|number;
   mimeType? : string;
   width? : number;
-  contentProtection? : IContentProtection[];
+  contentProtections? : IContentProtection[];
 }
 
 /**
@@ -53,7 +53,7 @@ class Representation {
   public height? : number;
   public mimeType? : string;
   public width? : number;
-  public contentProtection? : IContentProtection[];
+  public contentProtections? : IContentProtection[];
 
   /**
    * @constructor
@@ -77,8 +77,8 @@ class Representation {
       this.mimeType = args.mimeType;
     }
 
-    if (args.contentProtection) {
-      this.contentProtection = args.contentProtection;
+    if (args.contentProtections) {
+      this.contentProtections = args.contentProtections;
     }
 
     this.index = args.index;
