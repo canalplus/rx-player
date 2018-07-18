@@ -26,7 +26,7 @@ import parsePlayreadyKid from "./playready";
 const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
 
 /**
- * Associate KID to parsing function.
+ * Associate systemId to a parsing function.
  * @param {Uint8Array} privateData
  */
 const parseKIDForSystemId: { [id: string]: (privateData: Uint8Array) => string } = {
