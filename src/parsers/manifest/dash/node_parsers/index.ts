@@ -540,9 +540,9 @@ export default function parseManifest(
                 adaptation.attributes.width;
             }
 
-            if (adaptation.children.contentProtection) {
-              parsedRepresentation.contentProtection =
-                adaptation.children.contentProtection;
+            if (adaptation.children.contentProtections) {
+              parsedRepresentation.contentProtections =
+                adaptation.children.contentProtections;
             }
 
             return parsedRepresentation;

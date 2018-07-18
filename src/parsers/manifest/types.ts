@@ -48,7 +48,7 @@ export interface IParsedRepresentation {
   width?: number;
 
   // TODO move to DASH Segment's privateInfos
-  contentProtection?: IParsedContentProtection[];
+  contentProtections?: IParsedContentProtection[];
 }
 
 export type IParsedAdaptations =
