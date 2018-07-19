@@ -40,27 +40,32 @@ import filterByWidth from "./filterByWidth";
 import fromBitrateCeil from "./fromBitrateCeil";
 
 const {
+  ABR_REGULAR_FACTOR,
+  ABR_STARVATION_FACTOR,
   ABR_STARVATION_GAP,
   OUT_OF_STARVATION_GAP,
-  ABR_STARVATION_FACTOR,
-  ABR_REGULAR_FACTOR,
 } = config;
 
 interface IRepresentationChooserClockTick {
-  bufferGap : number;
-  position : number;
-  bitrate : number|undefined;
-  speed : number;
+  bitrate : number|undefined; // currently set bitrate, in bit per seconds
+  bufferGap : number; // time to the end of the buffer, in seconds
+  position : number; // current position, in seconds
+  speed : number; // current playback rate
+}
+
+interface IProgressEventValue {
+  duration : number; // current duration for the request, in ms
+  id: string|number; // unique ID for the request
+  size : number; // current downloaded size, in bytes
+  timestamp : number; // timestamp of the progress event since unix epoch, in ms
+  totalSize : number; // total size to download, in bytes
 }
 
 interface IRequestInfo {
-  time: number;
-  duration: number;
-  requestTimestamp: number;
-  progress: Array<{
-    size: number;
-    timestamp: number;
-  }>;
+  duration : number; // duration of the corresponding chunk, in seconds
+  progress: IProgressEventValue[]; // progress events for this request
+  requestTimestamp: number; // unix timestamp at which the request began, in ms
+  time: number; // time at which the corresponding segment begins, in seconds
 }
 
 type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
@@ -68,13 +73,7 @@ type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
 interface IProgressRequest {
   type: IBufferType;
   event: "progress";
-  value: {
-    id: string|number;
-    duration : number;
-    size: number;
-    totalSize : number;
-    timestamp: number;
-  };
+  value: IProgressEventValue;
 }
 
 interface IBeginRequest {
