@@ -355,9 +355,23 @@ export default {
   OUT_OF_STARVATION_GAP: 7,
 
   /**
-   * Defines the degree of weighting decrease for EMA.
+   * Half-life, in seconds for a fastly-evolving exponential weighted moving
+   * average.
+   * The lower it is, the faster the ABR logic will react to the bandwidth
+   * falling quickly.
+   * Should be kept to a lower number than ABR_SLOW_EMA for coherency reasons.
+   * @type {Number}
    */
   ABR_FAST_EMA: 2,
+
+  /**
+   * Half-life, in seconds for a slowly-evolving exponential weighted moving
+   * average.
+   * The lower it is, the faster the ABR logic is going to react to recent
+   * bandwidth variation, on the higher and on the lower side.
+   * Should be kept to a higher number than ABR_FAST_EMA for coherency reasons.
+   * @type {Number}
+   */
   ABR_SLOW_EMA: 10,
 
   /**
