@@ -18,7 +18,7 @@ import { expect } from "chai";
 import { Representation } from "../../../manifest";
 import _filterByBitrate from "../filterByBitrate";
 
-describe("core - abr - filterByBitrate", () => {
+describe("ABR - filterByBitrate", () => {
   const fakeReps = [
     { bitrate : 100 },
     { bitrate : 1000 },
