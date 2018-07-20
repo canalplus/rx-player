@@ -60,9 +60,9 @@ export default class BandwidthEstimator {
 
   /**
    * Takes a bandwidth sample.
-   * @param {number} durationMs The amount of time, in milliseconds, for a
+   * @param {number} durationMs - The amount of time, in milliseconds, for a
    *   particular request.
-   * @param {number} numBytes The total number of bytes transferred in that
+   * @param {number} numBytes - The total number of bytes transferred in that
    *   request.
    */
   public addSample(durationInMs : number, numberOfBytes : number) : void {
