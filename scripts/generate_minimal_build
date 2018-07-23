@@ -174,5 +174,5 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import RxPlayer from \"_esm5.minimal/index\";
+import RxPlayer from \"./_esm5.minimal/index\";
 export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts > /dev/null
