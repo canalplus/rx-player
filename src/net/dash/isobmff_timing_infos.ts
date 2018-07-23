@@ -96,13 +96,17 @@ function getISOBMFFTimingInfos(
   }
 
   if (startTime == null) {
-      const sidxStart = _sidxSegments[0].time;
-      if (sidxStart >= 0) {
-        const sidxTimescale = _sidxSegments[0].timescale;
-        startTime = sidxTimescale != null && sidxTimescale !== timescale ?
-          (sidxStart / sidxTimescale) * timescale : sidxStart;
-      } else {
+      if (_sidxSegments.length === 0) {
         startTime = segmentStart;
+      } else {
+        const sidxStart = _sidxSegments[0].time;
+        if (sidxStart >= 0) {
+          const sidxTimescale = _sidxSegments[0].timescale;
+          startTime = sidxTimescale != null && sidxTimescale !== timescale ?
+            (sidxStart / sidxTimescale) * timescale : sidxStart;
+        } else {
+          startTime = segmentStart;
+        }
       }
   }
 
