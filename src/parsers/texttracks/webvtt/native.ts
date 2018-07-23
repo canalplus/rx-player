@@ -86,7 +86,7 @@ function toNativeCue(cueObj : {
  * @param {VTTCue|TextTrackCue} cue
  */
 function setSettingsOnCue(
-  settings : { [settingName : string ] : string },
+  settings : Partial<Record<string, string>>,
   cue : VTTCue
 ) : void {
   if (

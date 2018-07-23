@@ -22,10 +22,9 @@
  */
 export default function listToMap(
   list : string[]
-) : IDictionary<string> {
-
-  const map = list.reduce<IDictionary<string>>(
-    (obj : { [key: string] : string }, name : string) => {
+) : Partial<Record<string, string>> {
+  const map = list.reduce<Partial<Record<string, string>>>(
+    (obj, name : string) => {
       obj[name] = name;
       return obj;
     }, {});

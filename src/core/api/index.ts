@@ -449,14 +449,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   /**
    * @returns {Object}
    */
-  static get ErrorTypes() : IDictionary<string> {
+  static get ErrorTypes() : Partial<Record<string, string>> {
     return ErrorTypes;
   }
 
   /**
    * @returns {Object}
    */
-  static get ErrorCodes() : IDictionary<string> {
+  static get ErrorCodes() : Partial<Record<string, string>> {
     return ErrorCodes;
   }
 

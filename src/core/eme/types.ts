@@ -50,6 +50,17 @@ export interface IPersistedSessionStorage {
   save(x : IPersistedSessionData[]) : void;
 }
 
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
+
 // Options given by the caller
 export interface IKeySystemOption {
   type : string;
@@ -77,5 +88,5 @@ export const KEY_STATUS_ERRORS = {
    // "output-restricted",
    // "output-downscaled",
    // "status-pending",
-} as IDictionary<boolean>;
+} as Partial<Record<string, boolean>>;
 /* tslint:enable no-object-literal-type-assertion */

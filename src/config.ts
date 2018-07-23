@@ -118,7 +118,7 @@ export default {
     other: Infinity, // tracks which are not audio/video
                      // Though those are generally at a single bitrate, so no
                      // adaptive mechanism is triggered for them.
-  } as IDictionary<number>,
+  } as Record<"audio"|"video"|"other", number>,
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
@@ -625,7 +625,7 @@ export default {
       "com.chromecast.playready",
       "com.youtube.playready",
     ],
-  } as IDictionary<string[]>,
+  } as Partial<Record<string, string[]>>,
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
