@@ -48,18 +48,18 @@ interface IHSSManifestSegment {
   r : number;
 }
 
-const DEFAULT_MIME_TYPES: IDictionary<string> = {
+const DEFAULT_MIME_TYPES: Partial<Record<string, string>> = {
   audio: "audio/mp4",
   video: "video/mp4",
   text: "application/ttml+xml",
 };
 
-const DEFAULT_CODECS: IDictionary<string> = {
+const DEFAULT_CODECS: Partial<Record<string, string>> = {
   audio: "mp4a.40.2",
   video: "avc1.4D401E",
 };
 
-const MIME_TYPES: IDictionary<string> = {
+const MIME_TYPES: Partial<Record<string, string>> = {
   AACL: "audio/mp4",
   AVC1: "video/mp4",
   H264: "video/mp4",

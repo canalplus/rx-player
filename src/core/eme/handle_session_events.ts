@@ -52,6 +52,17 @@ import {
   KEY_STATUS_ERRORS,
 } from "./types";
 
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
+
 export type ILicense =
   TypedArray |
   ArrayBuffer;

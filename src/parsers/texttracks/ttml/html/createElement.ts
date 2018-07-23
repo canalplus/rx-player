@@ -105,7 +105,7 @@ function generateCSSTextOutline(
  */
 function applyTextStyle(
   element : HTMLElement,
-  style : IDictionary<string>
+  style : Partial<Record<string, string>>
 ) {
   // applies to span
   const color = style.color;
@@ -264,7 +264,10 @@ function applyTextStyle(
  * @param {HTMLElement} element - The <div> the style will be applied on.
  * @param {Object} style - The general style object of the paragraph.
  */
-function applyGeneralStyle(element : HTMLElement, style : IDictionary<string>) {
+function applyGeneralStyle(
+  element : HTMLElement,
+  style : Partial<Record<string, string>>
+) {
   // applies to tt, region
   const extent = style.extent;
   if (extent) {
@@ -346,7 +349,10 @@ function applyGeneralStyle(element : HTMLElement, style : IDictionary<string>) {
  * @param {HTMLElement} element - The <p> element
  * @param {Object} style - The general style object of the paragraph.
  */
-function applyPStyle(element : HTMLElement, style : IDictionary<string>) {
+function applyPStyle(
+  element : HTMLElement,
+  style : Partial<Record<string, string>>
+) {
   // applies to body, div, p, region, span
   const paragraphBackgroundColor = style.backgroundColor;
   if (paragraphBackgroundColor) {
@@ -394,7 +400,7 @@ function applyPStyle(element : HTMLElement, style : IDictionary<string>) {
  */
 function createTextElement(
   el : Node,
-  style : IDictionary<string>,
+  style : Partial<Record<string, string>>,
   shouldTrimWhiteSpaceParam : boolean
 ) : HTMLElement {
   const textElement = document.createElement("span");
@@ -437,7 +443,7 @@ function generateTextContent(
   paragraph : Element,
   regions : IStyleObject[],
   styles : IStyleObject[],
-  paragraphStyle : IDictionary<string>,
+  paragraphStyle : Partial<Record<string, string>>,
   shouldTrimWhiteSpace : boolean
 ) {
   /**
