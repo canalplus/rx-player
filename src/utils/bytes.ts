@@ -16,7 +16,16 @@
 
 import assert from "./assert";
 
-type TypedArray = Uint8Array | Uint16Array | Uint32Array;
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
 
 /**
  * Returns Uint8Array from UTF16 string.

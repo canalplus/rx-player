@@ -45,7 +45,7 @@ export default class MediaError extends Error {
 
     this.reason = reason;
     this.code = ErrorCodes.hasOwnProperty(code) ?
-      (ErrorCodes as IDictionary<string>)[code] : "";
+      (ErrorCodes as Record<string, string>)[code] : "";
     this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, this.reason);
   }

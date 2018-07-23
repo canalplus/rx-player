@@ -54,7 +54,7 @@ const WANTED_STYLE_ATTRIBUTES = [
 /**
  * @type {Object}
  */
-const TEXT_ALIGN_TO_LIGN_ALIGN : IDictionary<string> = {
+const TEXT_ALIGN_TO_LIGN_ALIGN : Partial<Record<string, string>> = {
   left: "start",
   center: "center",
   right: "end",
@@ -65,7 +65,7 @@ const TEXT_ALIGN_TO_LIGN_ALIGN : IDictionary<string> = {
 /**
  * @type {Object}
  */
-const TEXT_ALIGN_TO_POSITION_ALIGN : IDictionary<string> = {
+const TEXT_ALIGN_TO_POSITION_ALIGN : Partial<Record<string, string>> = {
   left: "line-left",
   center: "center",
   right: "line-right",

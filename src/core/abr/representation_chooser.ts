@@ -140,7 +140,7 @@ function setManualRepresentation(
  * @returns {IRequestInfo|undefined}
  */
 function getConcernedRequest(
-  requests : IDictionary<IRequestInfo>,
+  requests : Partial<Record<string, IRequestInfo>>,
   segmentPosition : number
 ) : IRequestInfo|undefined {
   const currentRequestIds = Object.keys(requests);
@@ -149,14 +149,16 @@ function getConcernedRequest(
   for (let i = 0; i < len; i++) {
     const request = requests[currentRequestIds[i]];
 
-    const {
-      time: chunkTime,
-      duration: chunkDuration,
-    } = request;
+    if (request != null) {
+      const {
+        time: chunkTime,
+        duration: chunkDuration,
+      } = request;
 
-    // TODO review this
-    if (Math.abs(segmentPosition - chunkTime) < chunkDuration) {
-      return request;
+      // TODO review this
+      if (Math.abs(segmentPosition - chunkTime) < chunkDuration) {
+        return request;
+      }
     }
   }
 }
@@ -288,7 +290,7 @@ export default class RepresentationChooser {
   private readonly _throttle$ : Observable<number>|undefined;
   private readonly estimator : BandwidthEstimator;
   private readonly _initialBitrate : number;
-  private _currentRequests : IDictionary<IRequestInfo>;
+  private _currentRequests : Partial<Record<string, IRequestInfo>>;
 
   /**
    * @param {Object} options
@@ -536,7 +538,6 @@ export default class RepresentationChooser {
       requestTimestamp,
       progress: [],
     };
-    this._currentRequests[id].progress = [];
   }
 
   /**
@@ -548,14 +549,15 @@ export default class RepresentationChooser {
    * @param {Object} progress
    */
   public addRequestProgress(id : string|number, progress: IProgressRequest) : void {
-    if (!this._currentRequests[id]) {
+    const request = this._currentRequests[id];
+    if (!request) {
       if (__DEV__) {
         throw new Error("ABR: progress for a request not added");
       }
       log.warn("ABR: progress for a request not added");
       return;
     }
-    this._currentRequests[id].progress.push(progress.value);
+    request.progress.push(progress.value);
   }
 
   /**

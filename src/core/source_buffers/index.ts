@@ -23,6 +23,17 @@ import QueuedSourceBuffer from "./queued_source_buffer";
 // Every SourceBuffer types managed here
 export type IBufferType = "audio"|"video"|"text"|"image";
 
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
+
 const POSSIBLE_BUFFER_TYPES : IBufferType[] =
   ["audio", "video", "text", "image"];
 
