@@ -260,7 +260,7 @@ body {
 .control-button {
   width: 2em;
   border: none;
-  font-family: "sans-serif";
+  font-family: "icons", sans-serif;
   color: #ccc;
   background: transparent;
   font-size: 1.2em;
