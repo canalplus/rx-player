@@ -14,7 +14,7 @@ body {
 }
 
 .title-wrapper h1 {
-  font-family: "Open Sans", sans serif;
+  font-family: "Open Sans", sans-serif;
   display: block;
   width: 100%;
   text-align: center;
@@ -23,7 +23,7 @@ body {
 }
 
 .title-wrapper .light {
-  font-family: "Open Sans", sans serif;
+  font-family: "Open Sans", sans-serif;
   font-weight: lighter;
   font-size: 25px;
 }
