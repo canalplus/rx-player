@@ -58,9 +58,6 @@ body {
   display: inline;
 }
 
-.choice-input select {
-}
-
 .choice-input.text-input {
   width: 80%;
   margin-right: 10px;
