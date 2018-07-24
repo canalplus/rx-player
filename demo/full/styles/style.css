@@ -3,14 +3,14 @@ body {
 }
 
 @font-face {
-  font-family: 'icons';
+  font-family: "icons";
   src: url("../fonts/FontAwesome.otf");
   font-weight: normal;
   font-style: normal;
 }
 
 .icon {
-  font-family: "icons";
+  font-family: "icons", sans-serif;
 }
 
 .title-wrapper h1 {
@@ -242,7 +242,7 @@ body {
 .load-button {
   width: 70px;
   border: none;
-  font-family: "icons";
+  font-family: "icons", sans-serif;
   color: #222;
   font-size: 1.5em;
   cursor: pointer;
@@ -260,7 +260,7 @@ body {
 .control-button {
   width: 2em;
   border: none;
-  font-family: "icons";
+  font-family: "sans-serif";
   color: #ccc;
   background: transparent;
   font-size: 1.2em;
