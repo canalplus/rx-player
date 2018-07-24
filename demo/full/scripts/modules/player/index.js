@@ -65,10 +65,6 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
       player.setVolume(volume);
     },
 
-    SET_POSITION: (position) => {
-      player.setPosition(position);
-    },
-
     LOAD: (arg) => {
       player.loadVideo(Object.assign({
         textTrackElement,
