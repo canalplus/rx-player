@@ -23,7 +23,7 @@ export interface ISmoothInitSegmentPrivateInfos {
   samplingRate? : number;
   protection? : {
     keyId : string;
-    keySystems: Array<{
+    keySystems : Array<{
       systemId : string;
       privateData : Uint8Array;
     }>;
@@ -31,7 +31,7 @@ export interface ISmoothInitSegmentPrivateInfos {
 }
 
 export interface IPrivateInfos {
-  smoothInit?: ISmoothInitSegmentPrivateInfos;
+  smoothInit? : ISmoothInitSegmentPrivateInfos;
 }
 
 // ISegment Object.

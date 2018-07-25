@@ -104,6 +104,7 @@ function parseAdaptationSetChildren(
     baseURL: "",
     representations: [],
   };
+  const contentProtections = [];
   for (let i = 0; i < adaptationSetChildren.length; i++) {
     if (adaptationSetChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = adaptationSetChildren[i] as Element;
@@ -147,10 +148,7 @@ function parseAdaptationSetChildren(
         case "ContentProtection":
           const contentProtection = parseContentProtection(currentElement);
           if (contentProtection) {
-            if (!children.contentProtections) {
-              children.contentProtections = [];
-            }
-            children.contentProtections.push(contentProtection);
+            contentProtections.push(contentProtection);
           }
           break;
 
@@ -163,6 +161,9 @@ function parseAdaptationSetChildren(
           //   break;
       }
     }
+  }
+  if (contentProtections.length) {
+    children.contentProtections = contentProtections;
   }
   return children;
 }

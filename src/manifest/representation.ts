@@ -18,8 +18,8 @@ import generateNewId from "../utils/id";
 import IRepresentationIndex from "./representation_index";
 
 interface IContentProtection {
-  KID?: string;
-  pssh?: string;
+  keyId?: string;
+  systemId?: string;
 }
 
 export interface IRepresentationArguments {

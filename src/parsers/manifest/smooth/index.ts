@@ -15,36 +15,34 @@
  */
 
 import config from "../../../config";
-import log from "../../../log";
-import arrayIncludes from "../../../utils/array-includes";
 import assert from "../../../utils/assert";
-import {
-  concat,
-  hexToBytes,
-  strToBytes,
-} from "../../../utils/bytes";
 import generateNewId from "../../../utils/id";
 import { normalize as normalizeLang } from "../../../utils/languages";
 import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../utils/url";
-import getKID from "../../drm/playready";
 import {
-  IKeySystem,
+  IContentProtection,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
   IParsedRepresentation,
 } from "../types";
-import { replaceRepresentationSmoothTokens } from "./helpers";
+import checkManifestIDs from "./check_manifest_ids";
+import {
+  getAudioCodecs,
+  getVideoCodecs,
+} from "./get_codecs";
+import parseCNodes from "./parse_C_nodes";
+import parseProtectionNode, {
+  IContentProtectionSmooth,
+  IKeySystem,
+} from "./parse_protection_node";
 import RepresentationIndex from "./representationIndex";
-
-interface IHSSManifestSegment {
-  ts : number;
-  d : number;
-  r : number;
-}
+import parseBoolean from "./utils/parseBoolean";
+import reduceChildren from "./utils/reduceChildren";
+import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 
 const DEFAULT_MIME_TYPES: Partial<Record<string, string>> = {
   audio: "audio/mp4",
@@ -64,90 +62,11 @@ const MIME_TYPES: Partial<Record<string, string>> = {
   TTML: "application/ttml+xml+mp4",
 };
 
-/**
- * @param {string} codecPrivateData
- * @returns {string}
- */
-function extractVideoCodecs(codecPrivateData : string) : string {
-  // we can extract codes only if fourCC is on of "H264", "X264", "DAVC", "AVC1"
-  const [, avcProfile = ""] = /00000001\d7([0-9a-fA-F]{6})/
-    .exec(codecPrivateData) || [];
-  return avcProfile && "avc1." + avcProfile;
-}
-
-/**
- * @param {string} fourCC
- * @param {string} codecPrivateData
- * @returns {string}
- */
-function extractAudioCodecs(
-  fourCC : string,
-  codecPrivateData : string
-) : string {
-  let mpProfile;
-  if (fourCC === "AACH") {
-    mpProfile = 5; // High Efficiency AAC Profile
-  } else {
-    mpProfile = codecPrivateData ?
-      (parseInt(codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3 : 2;
-  }
-  return mpProfile ? ("mp4a.40." + mpProfile) : "";
-}
-
-/**
- * @param {*} parseBoolean
- * @returns {Boolean}
- */
-function parseBoolean(val : string|null) : boolean {
-  if (typeof val === "boolean") {
-    return val;
-  }
-  else if (typeof val === "string") {
-    return val.toUpperCase() === "TRUE";
-  }
-  else {
-    return false;
-  }
-}
-
-/**
- * @param {Uint8Array} keyIdBytes
- * @returns {Array.<Object>}
- */
-function getKeySystems(
-  keyIdBytes : Uint8Array
-) : IKeySystem[] {
-  return [
-    {
-      // Widevine
-      systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
-      privateData: concat([0x08, 0x01, 0x12, 0x10], keyIdBytes),
-      // keyIds: [keyIdBytes],
-    },
-    // {
-    //   // Clearkey
-    /* tslint:disable:max-line-length */
-    //   // (https://dvcs.w3.org/hg/html-media/raw-file/tip/encrypted-media/cenc-format.html)
-    /* tslint:enable:max-line-length */
-    //   systemId: "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b",
-    //   privateData: strToBytes(JSON.stringify({
-    //     kids: [toBase64URL(bytesToStr(keyIdBytes))],
-    //     type: "temporary"
-    //   }))
-    // }
-  ];
-}
-
 export interface IHSSParserConfiguration {
   suggestedPresentationDelay? : number;
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
   keySystems? : (hex? : Uint8Array) => IKeySystem[];
-}
-
-export interface IContentProtectionSmooth {
-  keyId : string;
-  keySystems: IKeySystem[];
 }
 
 /**
@@ -167,112 +86,6 @@ function createSmoothStreamingParser(
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
   const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate ||
     190000;
-
-  const keySystems = parserOptions.keySystems || getKeySystems;
-
-  /**
-   * Reduce implementation for the children of the given element.
-   * TODO better typings
-   * @param {Element} root
-   * @param {Function} fn
-   * @param {*} init
-   * @returns {*}
-   */
-  function reduceChildren<T>(
-    root : Element,
-    fn : (r : T, nodeName : string, node : Element) => T,
-    init : T
-  ) : T {
-    let node = root.firstElementChild;
-    let r = init;
-    while (node) {
-      r = fn(r, node.nodeName, node);
-      node = node.nextElementSibling;
-    }
-    return r;
-  }
-
-  /**
-   * @param {Element} root
-   * @returns {Object}
-   */
-  function parseProtection(
-    root : Element
-  ) : {
-    keyId : string;
-    keySystems: IKeySystem[];
-  } {
-    if (
-      !root.firstElementChild ||
-      root.firstElementChild.nodeName !== "ProtectionHeader"
-    ) {
-      throw new Error("Protection should have ProtectionHeader child");
-    }
-    const header = root.firstElementChild;
-    const privateData = strToBytes(atob(header.textContent || ""));
-    const keyId = getKID(privateData);
-    const keyIdBytes = hexToBytes(keyId);
-
-    // remove possible braces
-    const systemId = (header.getAttribute("SystemID") || "").toLowerCase()
-      .replace(/\{|\}/g, "");
-    return {
-      keyId,
-      keySystems: [
-        {
-          systemId,
-          privateData,
-          // keyIds: [keyIdBytes],
-        },
-      ].concat(keySystems(keyIdBytes)),
-    };
-  }
-
-  /**
-   * Parse C nodes to build index timeline.
-   * @param {Element} nodes
-   */
-  function parseCNodes(
-    nodes : Element[]
-  ) : IHSSManifestSegment[] {
-    return nodes.reduce<IHSSManifestSegment[]>((timeline, node , i) => {
-      const dAttr = node.getAttribute("d");
-      const tAttr = node.getAttribute("t");
-      const rAttr = node.getAttribute("r");
-
-      const r = rAttr ? +rAttr - 1 : 0;
-      let ts = tAttr ? +tAttr : undefined;
-      let d = dAttr ? +dAttr : undefined;
-
-      if (i === 0) { // first node
-        ts = ts || 0;
-      } else { // from second node to the end
-        const prev = timeline[i - 1];
-        if (ts == null || isNaN(ts)) {
-          if (prev.d == null || isNaN(prev.d)) {
-            throw new Error("Smooth: Invalid CNodes. Missing timestamp.");
-          }
-          ts = prev.ts + prev.d * (prev.r + 1);
-        }
-      }
-      if (d == null || isNaN(d)) {
-        const nextNode = nodes[i + 1];
-        if (nextNode) {
-          const nextTAttr = nextNode.getAttribute("t");
-          const nextTS = nextTAttr ? +nextTAttr : null;
-          if (nextTS === null) {
-            throw new Error(
-              "Can't build index timeline from Smooth Manifest.");
-          }
-          d = nextTS - ts;
-        } else {
-          return timeline;
-        }
-      }
-      timeline.push({ d, ts, r });
-      return timeline;
-    }, []);
-  }
 
   /**
    * @param {Element} q
@@ -343,7 +156,7 @@ function createSmoothStreamingParser(
           bitrate: bitrate ? parseInt(bitrate, 10) || 0 : 0,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
           codecPrivateData: codecPrivateData || "",
-          codecs: extractVideoCodecs(codecPrivateData || ""),
+          codecs: getVideoCodecs(codecPrivateData || ""),
           width: width !== undefined ? parseInt(width, 10) : undefined,
           height: height !== undefined ? parseInt(height, 10) : undefined,
         };
@@ -379,7 +192,7 @@ function createSmoothStreamingParser(
     root : Element,
     rootURL : string,
     timescale : number,
-    protection? : IContentProtectionSmooth
+    protections : IContentProtectionSmooth[]
   ) : IParsedAdaptation|null {
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
@@ -412,7 +225,7 @@ function createSmoothStreamingParser(
           if (adaptationType === "audio") {
             const fourCC = node.getAttribute("FourCC") || "";
 
-            rep.codecs = extractAudioCodecs(
+            rep.codecs = getAudioCodecs(
               fourCC,
               rep.codecPrivateData
             );
@@ -462,13 +275,36 @@ function createSmoothStreamingParser(
         representation.mimeType + "-" +
         representation.codecs + "-" + representation.bitrate;
 
+      let firstProtection : IContentProtectionSmooth|undefined;
+      if (protections.length) {
+        firstProtection = protections[0];
+        const contentProtections : IContentProtection[] = [];
+        protections.forEach((protection) => {
+          const keyId = protection.keyId;
+          protection.keySystems.forEach((keySystem) => {
+            contentProtections.push({
+              keyId,
+              systemId: keySystem.systemId,
+            });
+          });
+        });
+        if (contentProtections.length) {
+          representation.contentProtections = contentProtections;
+        }
+      }
+
       const initSegmentInfos = {
         bitsPerSample: representation.bitsPerSample,
         channels: representation.channels,
         codecPrivateData: representation.codecPrivateData || "",
         packetSize: representation.packetSize,
         samplingRate: representation.samplingRate,
-        protection,
+
+        // TODO set multiple protections here instead of the first one
+        protection: firstProtection != null ? {
+          keyId: firstProtection.keyId,
+          keySystems: firstProtection.keySystems,
+        } : undefined,
       };
       representation.index = new RepresentationIndex(repIndex, initSegmentInfos);
     });
@@ -510,15 +346,15 @@ function createSmoothStreamingParser(
     const timescale = +(root.getAttribute("Timescale") || 10000000);
 
     const {
-      protection,
+      protections,
       adaptationNodes,
     } = reduceChildren <{
-      protection?: IContentProtectionSmooth;
+      protections: IContentProtectionSmooth[];
       adaptationNodes: Element[];
     }> (root, (res, name, node) => {
       switch (name) {
       case "Protection":  {
-        res.protection = parseProtection(node);
+        res.protections.push(parseProtectionNode(node, parserOptions.keySystems));
         break;
       }
       case "StreamIndex":
@@ -528,13 +364,14 @@ function createSmoothStreamingParser(
       return res;
     }, {
       adaptationNodes: [],
+      protections : [],
     });
 
     const initialAdaptations: IParsedAdaptations = {};
 
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
-        return parseAdaptation(node, rootURL, timescale, protection);
+        return parseAdaptation(node, rootURL, timescale, protections);
       })
       .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {
@@ -661,49 +498,6 @@ function createSmoothStreamingParser(
   }
 
   return parseFromDocument;
-}
-
-/**
- * Ensure that no two adaptations have the same ID and that no two
- * representations from a same adaptation neither.
- *
- * Log and mutate their ID if not until this is verified.
- *
- * @param {Object} manifest
- */
-function checkManifestIDs(manifest : IParsedManifest) : void {
-  manifest.periods.forEach(({ adaptations }) => {
-    const adaptationIDs : string[] = [];
-    Object.keys(adaptations).forEach((type) => {
-      (adaptations[type] || []).forEach(adaptation => {
-        const adaptationID = adaptation.id;
-        if (arrayIncludes(adaptationIDs, adaptationID)) {
-          log.warn("Smooth: Two adaptations with the same ID found. Updating.",
-            adaptationID);
-          const newID =  adaptationID + "-";
-          adaptation.id = newID;
-          checkManifestIDs(manifest);
-          adaptationIDs.push(newID);
-        } else {
-          adaptationIDs.push(adaptationID);
-        }
-        const representationIDs : string[] = [];
-        adaptation.representations.forEach(representation => {
-          const representationID = representation.id;
-          if (arrayIncludes(representationIDs, representationID)) {
-            log.warn("Smooth: Two representations with the same ID found. Updating.",
-              representationID);
-            const newID =  representationID + "-";
-            representation.id = newID;
-            checkManifestIDs(manifest);
-            representationIDs.push(newID);
-          } else {
-            representationIDs.push(representationID);
-          }
-        });
-      });
-    });
-  });
 }
 
 export default createSmoothStreamingParser;

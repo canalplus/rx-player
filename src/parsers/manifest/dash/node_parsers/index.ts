@@ -27,6 +27,7 @@ import {
   resolveURL,
 } from "../../../../utils/url";
 import {
+  IContentProtection,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
@@ -541,8 +542,16 @@ export default function parseManifest(
             }
 
             if (adaptation.children.contentProtections) {
-              parsedRepresentation.contentProtections =
-                adaptation.children.contentProtections;
+              const contentProtections : IContentProtection[] = [];
+              for (let k = 0; k < adaptation.children.contentProtections.length; k++) {
+                const protection = adaptation.children.contentProtections[k];
+                if (protection.keyId != null) {
+                  contentProtections.push({ keyId: protection.keyId });
+                }
+              }
+              if (contentProtections.length) {
+                parsedRepresentation.contentProtections = contentProtections;
+              }
             }
 
             return parsedRepresentation;
