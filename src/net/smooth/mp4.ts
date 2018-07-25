@@ -34,7 +34,7 @@ import {
   strToBytes,
 } from "../../utils/bytes";
 
-type PSSList = Array<{
+type IPSSList = Array<{
   systemId : string;
   privateData? : Uint8Array;
   keyIds? : Uint8Array;
@@ -720,7 +720,7 @@ function moovChildren(
   mvhd : Uint8Array,
   mvex : Uint8Array,
   trak : Uint8Array,
-  pssList : PSSList
+  pssList : IPSSList
 ) : Uint8Array[] {
   const moov = [mvhd, mvex, trak];
   pssList.forEach((pss) => {
@@ -808,7 +808,7 @@ function createInitSegment(
   mhd : Uint8Array,
   width : number,
   height : number,
-  pssList : PSSList
+  pssList : IPSSList
 ) : Uint8Array {
 
   const stbl = atoms.mult("stbl", [
@@ -914,7 +914,7 @@ export default {
     nalLength : number,
     codecPrivateData : string,
     keyId? : string,
-    pssList? : PSSList
+    pssList? : IPSSList
   ) : Uint8Array {
     const _pssList = pssList || [];
     const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
@@ -986,7 +986,7 @@ export default {
     sampleRate : number,
     codecPrivateData : string,
     keyId? : string,
-    pssList? : PSSList
+    pssList? : IPSSList
   ) {
     const _pssList = pssList || [];
     const _codecPrivateData =

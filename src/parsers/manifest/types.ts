@@ -16,9 +16,15 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
-export interface IKeySystem {
-  systemId : string;
-  privateData : Uint8Array;
+// XXX TODO
+// export interface IKeySystem {
+//   systemId : string;
+//   privateData : Uint8Array;
+// }
+
+export interface IContentProtection {
+  systemId? : string;
+  keyId : string;
 }
 
 export interface IParsedRepresentation {
@@ -35,6 +41,7 @@ export interface IParsedRepresentation {
   codecPrivateData? : string;
   codecs?: string;
   codingDependency?: boolean;
+  contentProtections? : IContentProtection[];
   frameRate?: number;
   height?: number;
   maxPlayoutRate?: number;
@@ -46,9 +53,6 @@ export interface IParsedRepresentation {
   samplingRate? : number;
   segmentProfiles?: string;
   width?: number;
-
-  // TODO move to DASH Segment's privateInfos
-  contentProtections?: IParsedContentProtection[];
 }
 
 export type IParsedAdaptations =
@@ -78,9 +82,6 @@ export interface IParsedAdaptation {
   par?: string;
   segmentAlignment?: number|boolean;
   subsegmentAlignment?: number|boolean;
-
-  // TODO move to DASH Segment's privateInfos
-  contentProtection?: IParsedContentProtection;
 }
 
 export interface IParsedPeriod {
@@ -117,12 +118,4 @@ export interface IParsedManifest {
   publishTime?: number;
   suggestedPresentationDelay?: number;
   timeShiftBufferDepth?: number;
-}
-
-// TODO move to DASH Segment's privateInfos
-export interface IParsedContentProtection {
-  schemeIdUri?: string;
-  value?: string;
-  KID?: string;
-  pssh?: string;
 }

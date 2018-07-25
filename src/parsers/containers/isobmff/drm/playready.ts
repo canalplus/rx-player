@@ -19,15 +19,20 @@ import {
     bytesToUTF16Str,
     guidToUuid,
     le2toi,
-} from "../../utils/bytes";
+} from "../../../../utils/bytes";
 
 /**
- * @param {Uint8Array} buf
+ * Parse PlayReady privateData to get KID.
+ * @param {Uint8Array} privateData
  * @returns {string}
  */
-function getHexKeyId(buf : Uint8Array) : string {
-  const len = le2toi(buf, 8);
-  const xml = bytesToUTF16Str(buf.subarray(10, len + 10));
+export default function getPlayreadyKIDFromPrivateData(
+  privateData: Uint8Array
+) : string {
+  const dataLength = be4toi(privateData, 0);
+  const data = privateData.subarray(4, dataLength);
+  const xmlLength = le2toi(data, 8);
+  const xml = bytesToUTF16Str(data.subarray(10, xmlLength + 10));
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   const kidElement = doc.querySelector("KID");
   if (!kidElement) {
@@ -35,14 +40,4 @@ function getHexKeyId(buf : Uint8Array) : string {
   }
   const kid = kidElement.textContent || "";
   return guidToUuid(atob(kid)).toLowerCase();
-}
-
-/**
- * Parse PlayReady privateData to get KID.
- * @param {Uint8Array} privateData
- * @returns {string}
- */
-export default function parsePlayreadyKID(privateData: Uint8Array): string {
-  const length = be4toi(privateData, 0);
-  return getHexKeyId(privateData.subarray(4, length));
 }

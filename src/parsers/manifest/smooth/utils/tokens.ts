@@ -15,8 +15,8 @@
  */
 
  // for typings
- import { Representation } from "../../../manifest";
-import { IParsedRepresentation } from "../types";
+import { Representation } from "../../../../manifest";
+import { IParsedRepresentation } from "../../types";
 
 /**
  * @param {string} url
