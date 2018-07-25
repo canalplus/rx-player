@@ -48,7 +48,7 @@ This documentation is automatically generated from the content of the
 ## Demo ########################################################################
 
 You can view our online Demo, built from our last version,
-[here](http://canalplus.github.io/rx-player/).
+[here](http://developers.canal-plus.com/rx-player/).
 
 This demo is a small application written in
 [React](https://github.com/facebook/react) demonstrating a simple usage of the
