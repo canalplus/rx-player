@@ -85,7 +85,7 @@ function createSmoothStreamingParser(
   const REFERENCE_DATE_TIME = parserOptions.referenceDateTime ||
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
   const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate ||
-    190000;
+    0;
 
   /**
    * @param {Element} q
