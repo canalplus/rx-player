@@ -189,7 +189,7 @@ function TextTrackParser({
       end: segmentInfos.time + (segmentInfos.duration || 0),
       language,
       timescale: segmentInfos.timescale,
-      timeOffset: 0,
+      dataTimeOffset: 0,
     };
     if (isMP4) {
       const { codec = "" } = representation;
