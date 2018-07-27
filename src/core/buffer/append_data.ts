@@ -40,7 +40,6 @@ export interface IAppendedSegmentInfos<T> {
  * _garbage collector_.
  *
  * @param {Object} queuedSourceBuffer
- * @param {Object|null} initSegmentData
  * @param {Object} appendedSegmentInfos
  * @returns {Observable}
  */
