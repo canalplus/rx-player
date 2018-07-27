@@ -35,9 +35,9 @@ export interface ISegmentTimingInfos {
 }
 
 export interface INextSegmentsInfos {
-  duration : number;
-  time : number;
-  timescale : number;
+  duration : number; // duration of the segment, in timescale
+  time : number; // start time of the segment, in timescale
+  timescale : number; // convert duration and time into seconds
 }
 
 // ---- LOADER ----
@@ -46,12 +46,13 @@ export interface INextSegmentsInfos {
 
 // for the manifest pipeline
 export interface IManifestLoaderArguments {
-  url : string;
+  url : string; // URL of the concerned manifest
 }
 
 // for every other pipelines
 export interface ISegmentLoaderArguments {
-  init? : ISegmentTimingInfos;
+  init? : ISegmentTimingInfos; // Infos about the initialization segment of the
+                               // corresponding Representation
   manifest : Manifest;
   period : Period;
   adaptation : Adaptation;
@@ -127,8 +128,9 @@ export interface IManifestResult {
 export type IManifestParserObservable = Observable<IManifestResult>;
 
 export type SegmentParserObservable = Observable<{
-  segmentData : Uint8Array|ArrayBuffer|null;
-  segmentInfos : ISegmentTimingInfos|null;
+  segmentData : Uint8Array|ArrayBuffer|null; // Data to push
+  segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
+  segmentOffset : number; // Offset to add to the segment at decode time
 }>;
 
 export interface ITextTrackSegmentData {
@@ -136,28 +138,28 @@ export interface ITextTrackSegmentData {
   end? : number; // end time until which the segment apply
   language? : string; // language in which the text track is
   start : number; // start time from which the segment apply
-  dataTimeOffset : number; // time offset, in seconds, to add to each subtitle
   timescale : number; // timescale to convert the start and end into seconds
   type : string; // the type of the data (examples: "ttml", "srt" or "vtt")
 }
 
 export type TextTrackParserObservable = Observable<{
-  segmentData : ITextTrackSegmentData|null;
-  segmentInfos : ISegmentTimingInfos|null;
+  segmentData : ITextTrackSegmentData|null; // Data to push
+  segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
+  segmentOffset : number; // Offset to add to the segment at decode time
 }>;
 
 export interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
   end : number; // end time time until which the segment apply
   start : number; // start time from which the segment apply
-  dataTimeOffset : number; // time offset, in seconds, to add to each image
   timescale : number; // timescale to convert the start and end into seconds
   type : string; // the type of the data (example: "bif")
 }
 
 export type ImageParserObservable = Observable<{
-  segmentData : IImageTrackSegmentData|null;
-  segmentInfos : ISegmentTimingInfos|null;
+  segmentData : IImageTrackSegmentData|null; // Data to push
+  segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
+  segmentOffset : number; // Offset to add to the segment at decode time
 }>;
 
 interface ITransportManifestPipeline {

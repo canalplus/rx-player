@@ -197,7 +197,7 @@ interface IBufferInternalStateNeedSegments {
 
 // temporal informations of a Segment
 interface ISegmentInfos {
-  duration : number; // timescaled duration of the Segment
+  duration? : number; // timescaled duration of the Segment
   time : number; // timescaled start time of the Segment
   timescale : number;
 }
@@ -205,7 +205,9 @@ interface ISegmentInfos {
 // Informations about any Segment of a given Representation.
 interface ISegmentObject<T> {
   segmentData : T|null; // What will be pushed to the SourceBuffer
-  segmentInfos : ISegmentInfos|null; // temporal information
+  segmentInfos : ISegmentInfos|null; // informations about the segment's start
+                                     // and duration
+  segmentOffset : number; // Offset to add to the segment at decode time
 }
 
 // Informations about a loaded Segment
@@ -258,7 +260,7 @@ export default function RepresentationBuffer<T>({
 
   // Saved initSegment state for this representation.
   let initSegmentObject : ISegmentObject<T>|null = initSegment == null ?
-    { segmentData: null, segmentInfos: null } : null;
+    { segmentData: null, segmentInfos: null, segmentOffset: 0 } : null;
 
   // Subject to start/restart a Buffer Queue.
   const startQueue$ = new ReplaySubject<void>(1);
@@ -330,7 +332,7 @@ export default function RepresentationBuffer<T>({
   ) : Observable<IBufferEventAddedSegment<T>> {
     return observableDefer(() => {
       const { segment } = data;
-      const { segmentInfos, segmentData } = data.value;
+      const { segmentInfos, segmentData, segmentOffset } = data.value;
 
       if (segment.isInit) {
         initSegmentObject = data.value;
@@ -343,8 +345,8 @@ export default function RepresentationBuffer<T>({
       }
 
       const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
-      const append$ = appendDataInSourceBuffer(
-        clock$, queuedSourceBuffer, initSegmentData, segment, segmentData);
+      const dataToAppend = { initSegmentData, segmentData, segment, segmentOffset };
+      const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, dataToAppend);
 
       sourceBufferWaitingQueue.add(segment.id);
 

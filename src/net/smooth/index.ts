@@ -174,7 +174,7 @@ export default function(
     ) : SegmentParserObservable {
       const { responseData } = response;
       if (responseData == null) {
-        return observableOf({ segmentData: null, segmentInfos: null });
+        return observableOf({ segmentData: null, segmentInfos: null, segmentOffset: 0 });
       }
 
       if (segment.isInit) {
@@ -188,6 +188,7 @@ export default function(
         return observableOf({
           segmentData: responseData,
           segmentInfos: initSegmentInfos,
+          segmentOffset: 0,
         });
       }
       const responseBuffer = responseData instanceof Uint8Array ?
@@ -200,7 +201,7 @@ export default function(
       if (nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
-      return observableOf({ segmentData, segmentInfos });
+      return observableOf({ segmentData, segmentInfos, segmentOffset: 0 });
     },
   };
 
@@ -255,6 +256,7 @@ export default function(
             time: segment.isInit ? -1 : segment.time,
             timescale: segment.timescale,
           } : null,
+          segmentOffset: 0,
         });
       }
 
@@ -353,9 +355,9 @@ export default function(
           timescale: _sdTimescale,
           start: _sdStart,
           end: _sdEnd,
-          dataTimeOffset: _sdStart / _sdTimescale,
         },
         segmentInfos,
+        segmentOffset: _sdStart / _sdTimescale,
       });
     },
   };
@@ -389,6 +391,7 @@ export default function(
             time: segment.isInit ? -1 : segment.time,
             timescale: segment.timescale,
           } : null,
+          segmentOffset: 0,
         });
       }
 
@@ -400,7 +403,6 @@ export default function(
           start: 0,
           end: Number.MAX_VALUE,
           timescale: 1,
-          dataTimeOffset: 0,
           type: "bif",
         },
         segmentInfos: {
@@ -408,6 +410,7 @@ export default function(
           duration: Number.MAX_VALUE,
           timescale: bifObject.timescale,
         },
+        segmentOffset: 0,
       });
     },
   };

@@ -31,6 +31,7 @@ export interface ICustomSourceBuffer<T> {
   ) => void;
   buffered : TimeRanges;
   updating : boolean;
+  timestampOffset : number;
   appendBuffer(data : T) : void;
   remove(from : number, to : number) : void;
   abort() : void;
@@ -45,6 +46,7 @@ export default abstract class AbstractSourceBuffer<T>
   extends EventEmitter<string, any>
   implements ICustomSourceBuffer<T>
 {
+  public timestampOffset : number;
   public updating : boolean;
   public buffered : ManualTimeRanges;
   public readyState : string;
@@ -54,6 +56,7 @@ export default abstract class AbstractSourceBuffer<T>
     this.updating = false;
     this.readyState = "opened";
     this.buffered = new ManualTimeRanges();
+    this.timestampOffset = 0;
   }
 
   /**

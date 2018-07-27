@@ -27,7 +27,7 @@ export interface IHTMLCue {
  * Convert text track data into timed HTML Cues.
  * @param {string} type - Text track format wanted
  * @param {string} data - Text track data
- * @param {Number} dataTimeOffset - offset to apply to every timed text
+ * @param {Number} timestampOffset - offset to apply to every timed text
  * @param {string} [language] - language of the text tracks
  * @returns {Array.<Object>}
  * @throws Error - Throw if no parser is found for the given type
@@ -35,7 +35,7 @@ export interface IHTMLCue {
 export default function parseTextTrackToElements(
   type : string,
   data : string,
-  dataTimeOffset : number,
+  timestampOffset : number,
   language? : string
 ) : IHTMLCue[] {
   log.debug("finding parser for html text tracks:", type);
@@ -45,7 +45,7 @@ export default function parseTextTrackToElements(
     throw new Error("no parser found for the given text track");
   }
   log.debug("parser found, parsing...");
-  const parsed = parser(data, dataTimeOffset, language);
+  const parsed = parser(data, timestampOffset, language);
   log.debug("parsed successfully!", parsed);
   return parsed;
 }
