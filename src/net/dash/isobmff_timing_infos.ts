@@ -48,7 +48,7 @@ function getISOBMFFTimingInfos(
   let startTime;
   let duration;
 
-  const decodeTime = parseTfdt(buffer);
+  const baseDecodeTime = parseTfdt(buffer);
   const trunDuration = getDurationFromTrun(buffer);
 
   const timescale = initInfos && initInfos.timescale ?
@@ -81,8 +81,9 @@ function getISOBMFFTimingInfos(
       (segment.duration / segment.timescale) * timescale : undefined;
   }
 
-  if (decodeTime >= 0) {
-    startTime = decodeTime;
+  if (baseDecodeTime >= 0) {
+    startTime = segment.timestampOffset != null ?
+      baseDecodeTime + segment.timestampOffset : baseDecodeTime;
   }
 
   if (
@@ -96,18 +97,20 @@ function getISOBMFFTimingInfos(
   }
 
   if (startTime == null) {
-      if (_sidxSegments.length === 0) {
-        startTime = segmentStart;
+    if (_sidxSegments.length === 0) {
+      startTime = segmentStart;
+    } else {
+      const sidxStart = _sidxSegments[0].time;
+      if (sidxStart >= 0) {
+        const sidxTimescale = _sidxSegments[0].timescale;
+        const baseStartTime = sidxTimescale != null && sidxTimescale !== timescale ?
+          (sidxStart / sidxTimescale) * timescale : sidxStart;
+        startTime = segment.timestampOffset != null ?
+          baseStartTime + segment.timestampOffset : baseStartTime;
       } else {
-        const sidxStart = _sidxSegments[0].time;
-        if (sidxStart >= 0) {
-          const sidxTimescale = _sidxSegments[0].timescale;
-          startTime = sidxTimescale != null && sidxTimescale !== timescale ?
-            (sidxStart / sidxTimescale) * timescale : sidxStart;
-        } else {
-          startTime = segmentStart;
-        }
+        startTime = segmentStart;
       }
+    }
   }
 
   if (duration == null) {

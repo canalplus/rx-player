@@ -27,6 +27,13 @@ import { ISegment } from "../../manifest";
 import { QueuedSourceBuffer } from "../source_buffers";
 import forceGarbageCollection from "./force_garbage_collection";
 
+export interface IAppendedSegmentInfos<T> {
+  segment : ISegment;
+  initSegmentData : T|null;
+  segmentData : T;
+  segmentOffset : number;
+}
+
 /**
  * Append buffer to the queuedSourceBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
@@ -34,26 +41,23 @@ import forceGarbageCollection from "./force_garbage_collection";
  *
  * @param {Object} queuedSourceBuffer
  * @param {Object|null} initSegmentData
- * @param {Object} segment
- * @param {Object} segmentData
+ * @param {Object} appendedSegmentInfos
  * @returns {Observable}
  */
 function appendDataToSourceBuffer<T>(
   queuedSourceBuffer : QueuedSourceBuffer<T>,
-  initSegmentData : T|null,
-  segment : ISegment,
-  segmentData : T
+  { segment, initSegmentData, segmentData, segmentOffset } : IAppendedSegmentInfos<T>
 ) : Observable<void> {
 
   let append$ : Observable<void>;
   if (segment.isInit) {
     append$ = initSegmentData == null ?
       observableOf(undefined) :
-      queuedSourceBuffer.appendBuffer(initSegmentData, null);
+      queuedSourceBuffer.appendBuffer(initSegmentData, null, segmentOffset);
   } else {
     append$ = segmentData == null ?
       observableOf(undefined) :
-      queuedSourceBuffer.appendBuffer(initSegmentData, segmentData);
+      queuedSourceBuffer.appendBuffer(initSegmentData, segmentData, segmentOffset);
   }
   return append$;
 }
@@ -65,20 +69,15 @@ function appendDataToSourceBuffer<T>(
  *
  * @param {Observable} clock$
  * @param {Object} queuedSourceBuffer
- * @param {Object|null} initSegmentData
- * @param {Object} segment
- * @param {Object} segmentData
+ * @param {Object} appendedSegmentInfos
  * @returns {Observable}
  */
 export default function appendDataToSourceBufferWithRetries<T>(
   clock$ : Observable<{ currentTime : number }>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
-  initSegmentData : T|null,
-  segment : ISegment,
-  segmentData : T
+  dataInfos : IAppendedSegmentInfos<T>
 ) : Observable<void> {
-  const append$ = appendDataToSourceBuffer(
-    queuedSourceBuffer, initSegmentData, segment, segmentData);
+  const append$ = appendDataToSourceBuffer(queuedSourceBuffer, dataInfos);
 
   return append$.pipe(
     catchError((appendError : Error) : Observable<void> => {

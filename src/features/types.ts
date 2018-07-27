@@ -58,11 +58,11 @@ interface IBifThumbnail {
   ts : number;
   data : Uint8Array;
 }
+
 interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
   end : number; // end time time until which the segment apply
   start : number; // start time from which the segment apply
-  dataTimeOffset : number; // time offset, in seconds, to add to each image
   timescale : number; // timescale to convert the start and end into seconds
   type : string; // the type of the data (example: "bif")
 }

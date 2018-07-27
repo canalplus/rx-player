@@ -51,7 +51,6 @@ export interface IHTMLTextTrackData {
   data : string;
   type : string;
   language : string;
-  dataTimeOffset : number;
 }
 
 const {
@@ -170,7 +169,6 @@ export default class HTMLTextTrackSourceBuffer
       data: dataString, // text track content. Should be a string
       type, // type of texttracks (e.g. "ttml" or "vtt")
       language, // language the texttrack is in
-      dataTimeOffset,
     } = data;
     if (timescaledEnd && timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
@@ -185,7 +183,7 @@ export default class HTMLTextTrackSourceBuffer
       timescaledEnd / timescale : undefined;
 
     const cues = parseTextTrackToElements(
-      type, dataString, dataTimeOffset, language);
+      type, dataString, this.timestampOffset, language);
     const start = startTime;
     const end = endTime != null ? endTime : cues[cues.length - 1].end;
     this._buffer.insert(cues, start, end);
