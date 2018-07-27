@@ -31,7 +31,7 @@ export interface INativeTextTrackData {
   language : string;
   timescale : number;
   start: number;
-  timeOffset: number;
+  dataTimeOffset: number;
   end? : number;
   type : string;
 }
@@ -83,7 +83,7 @@ export default class NativeTextTrackSourceBuffer
       data: dataString, // text track content. Should be a string
       type, // type of texttracks (e.g. "ttml" or "vtt")
       language, // language the texttrack is in
-      timeOffset,
+      dataTimeOffset,
     } = data;
     if (timescaledEnd != null && timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
@@ -95,7 +95,7 @@ export default class NativeTextTrackSourceBuffer
     const endTime = timescaledEnd != null ?
       timescaledEnd / timescale : undefined;
 
-    const cues = parseTextTrackToCues(type, dataString, timeOffset, language);
+    const cues = parseTextTrackToCues(type, dataString, dataTimeOffset, language);
     if (cues.length > 0) {
       const firstCue = cues[0];
 

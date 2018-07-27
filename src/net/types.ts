@@ -136,7 +136,7 @@ export interface ITextTrackSegmentData {
   end? : number; // end time until which the segment apply
   language? : string; // language in which the text track is
   start : number; // start time from which the segment apply
-  timeOffset : number; // time offset, in seconds, to add to each subtitle
+  dataTimeOffset : number; // time offset, in seconds, to add to each subtitle
   timescale : number; // timescale to convert the start and end into seconds
   type : string; // the type of the data (examples: "ttml", "srt" or "vtt")
 }
@@ -150,7 +150,7 @@ export interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
   end : number; // end time time until which the segment apply
   start : number; // start time from which the segment apply
-  timeOffset : number; // time offset, in seconds, to add to each image
+  dataTimeOffset : number; // time offset, in seconds, to add to each image
   timescale : number; // timescale to convert the start and end into seconds
   type : string; // the type of the data (example: "bif")
 }

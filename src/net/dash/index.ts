@@ -183,7 +183,7 @@ export default function(
           start: 0,
           end: Number.MAX_VALUE,
           timescale: 1,
-          timeOffset: 0,
+          dataTimeOffset: 0,
           type: "bif",
         },
         segmentInfos: {

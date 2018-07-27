@@ -18,7 +18,7 @@ import { getLeftSizeOfRange } from "../../utils/ranges";
 
 export interface ITimingData {
   currentTime : number;
-  timeOffset : number;
+  wantedTimeOffset : number;
   liveGap? : number;
 }
 
@@ -39,7 +39,7 @@ export default function getWantedRange(
   bufferGoal : number,
   paddings : { low : number; high : number }
 ) : { start : number; end : number } {
-  const currentTime = timing.currentTime + timing.timeOffset;
+  const currentTime = timing.currentTime + timing.wantedTimeOffset;
   const limitEnd = timing.liveGap == null ?
     hardLimits.end :
     Math.min(hardLimits.end || Infinity, timing.currentTime + timing.liveGap);

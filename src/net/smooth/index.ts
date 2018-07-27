@@ -353,7 +353,7 @@ export default function(
           timescale: _sdTimescale,
           start: _sdStart,
           end: _sdEnd,
-          timeOffset: _sdStart / _sdTimescale,
+          dataTimeOffset: _sdStart / _sdTimescale,
         },
         segmentInfos,
       });
@@ -400,7 +400,7 @@ export default function(
           start: 0,
           end: Number.MAX_VALUE,
           timescale: 1,
-          timeOffset: 0,
+          dataTimeOffset: 0,
           type: "bif",
         },
         segmentInfos: {
