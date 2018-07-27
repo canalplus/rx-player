@@ -23,10 +23,10 @@ import parseTimestamp from "./parseTimestamp";
  */
 function parseSettings(
   settingsString : string
-) : IDictionary<string> {
+) : Partial<Record<string, string>> {
   const splittedSettings = settingsString.split(/ |\t/);
-  return splittedSettings.reduce<IDictionary<string>>((
-    acc : IDictionary<string>,
+  return splittedSettings.reduce<Partial<Record<string, string>>>((
+    acc,
     setting : string
   ) => {
     const splittedSetting = setting.split(":");
@@ -51,7 +51,7 @@ function parseTimeAndSettings(
 ) : {
   start : number;
   end : number;
-  settings : { [settingName : string ] : string };
+  settings : Partial<Record<string, string>>;
 }|null {
   /**
    * RegExp for the timestamps + settings line.
@@ -88,7 +88,7 @@ export interface IVTTCueObject {
   start : number;
   end : number;
   header? : string;
-  settings: { [settingName : string ] : string };
+  settings: Partial<Record<string, string>>;
   payload : string[];
 }
 

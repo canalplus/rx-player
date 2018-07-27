@@ -43,7 +43,7 @@ const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
  * @param {string} str
  * @returns {Object}
  */
-function getClassNameByLang(str : string) : IDictionary<string> {
+function getClassNameByLang(str : string) : Partial<Record<string, string>> {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   const langs : { [lang : string ] : string } = {};
   let m;

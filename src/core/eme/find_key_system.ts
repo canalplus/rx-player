@@ -128,7 +128,7 @@ function checkCachedMediaKeySystemAccess(
 function findKeySystemCanonicalName(ksType: string)
 : string|undefined {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
-    if (arrayIncludes(EME_KEY_SYSTEMS[ksName], ksType)) {
+    if (arrayIncludes(EME_KEY_SYSTEMS[ksName] as string[], ksType)) {
       return ksName;
     }
   }
@@ -284,10 +284,11 @@ export default function getMediaKeySystemAccess(
     const keySystemsType: IKeySystemType[] = keySystemsConfigs.reduce(
       (arr: IKeySystemType[], keySystemOptions) => {
 
+        const managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
         let ksType;
 
-        if (EME_KEY_SYSTEMS[keySystemOptions.type]) {
-          ksType = EME_KEY_SYSTEMS[keySystemOptions.type].map((keyType) => {
+        if (managedRDNs != null) {
+          ksType = managedRDNs.map((keyType) => {
             const keyName = keySystemOptions.type;
             return { keyName, keyType, keySystemOptions };
           }

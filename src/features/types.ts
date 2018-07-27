@@ -88,13 +88,13 @@ export type IImageParser =
 // interface of the global `features` object through which features are
 // accessed.
 export interface IFeaturesObject {
-  transports : IDictionary<ITransportFunction>;
+  transports : Partial<Record<string, ITransportFunction>>;
   imageBuffer : IImageBuffer|null;
   imageParser : IImageParser|null;
   nativeTextTracksBuffer : INativeTextTracksBuffer|null;
-  nativeTextTracksParsers : IDictionary<INativeTextTracksParserFn>;
+  nativeTextTracksParsers : Partial<Record<string, INativeTextTracksParserFn>>;
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
-  htmlTextTracksParsers : IDictionary<IHTMLTextTracksParserFn>;
+  htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
   emeManager : IEMEManager|null;
   directfile : IDirectFileStream|null;
 }

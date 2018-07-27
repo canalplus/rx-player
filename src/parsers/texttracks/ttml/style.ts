@@ -18,9 +18,8 @@ import arrayFind from "array-find";
 import arrayIncludes from "../../../utils/array-includes";
 import startsWith from "../../../utils/starts-with";
 
-export interface IStyleList {
-  [styleName: string] : string;
-}
+export type IStyleList =
+  Partial<Record<string, string>>;
 
 export interface IStyleObject {
   id: string;

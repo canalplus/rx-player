@@ -3,18 +3,18 @@ body {
 }
 
 @font-face {
-  font-family: 'icons';
+  font-family: "icons";
   src: url("../fonts/FontAwesome.otf");
   font-weight: normal;
   font-style: normal;
 }
 
 .icon {
-  font-family: "icons";
+  font-family: "icons", sans-serif;
 }
 
 .title-wrapper h1 {
-  font-family: "Open Sans", sans serif;
+  font-family: "Open Sans", sans-serif;
   display: block;
   width: 100%;
   text-align: center;
@@ -23,7 +23,7 @@ body {
 }
 
 .title-wrapper .light {
-  font-family: "Open Sans", sans serif;
+  font-family: "Open Sans", sans-serif;
   font-weight: lighter;
   font-size: 25px;
 }
@@ -56,9 +56,6 @@ body {
 .choice-input {
   margin: 0px;
   display: inline;
-}
-
-.choice-input select {
 }
 
 .choice-input.text-input {
@@ -245,7 +242,7 @@ body {
 .load-button {
   width: 70px;
   border: none;
-  font-family: "icons";
+  font-family: "icons", sans-serif;
   color: #222;
   font-size: 1.5em;
   cursor: pointer;
@@ -263,7 +260,7 @@ body {
 .control-button {
   width: 2em;
   border: none;
-  font-family: "icons";
+  font-family: "icons", sans-serif;
   color: #ccc;
   background: transparent;
   font-size: 1.2em;

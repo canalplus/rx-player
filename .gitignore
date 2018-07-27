@@ -11,6 +11,7 @@
 
 /.scannerwork
 
+/dist/*.d.ts
 /dist/_esm5.minimal
 /dist/_esm5.raw
 

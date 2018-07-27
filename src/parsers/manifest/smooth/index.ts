@@ -48,18 +48,18 @@ interface IHSSManifestSegment {
   r : number;
 }
 
-const DEFAULT_MIME_TYPES: IDictionary<string> = {
+const DEFAULT_MIME_TYPES: Partial<Record<string, string>> = {
   audio: "audio/mp4",
   video: "video/mp4",
   text: "application/ttml+xml",
 };
 
-const DEFAULT_CODECS: IDictionary<string> = {
+const DEFAULT_CODECS: Partial<Record<string, string>> = {
   audio: "mp4a.40.2",
   video: "avc1.4D401E",
 };
 
-const MIME_TYPES: IDictionary<string> = {
+const MIME_TYPES: Partial<Record<string, string>> = {
   AACL: "audio/mp4",
   AVC1: "video/mp4",
   H264: "video/mp4",
@@ -168,7 +168,7 @@ function createSmoothStreamingParser(
   const REFERENCE_DATE_TIME = parserOptions.referenceDateTime ||
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
   const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate ||
-    190000;
+    0;
 
   const keySystems = parserOptions.keySystems || getKeySystems;
 

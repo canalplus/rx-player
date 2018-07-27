@@ -18,7 +18,7 @@ import { expect } from "chai";
 import { Representation } from "../../../manifest";
 import _fromBitrateCeil from "../fromBitrateCeil";
 
-describe("core - abr - fromBitrateCeil", () => {
+describe("ABR - fromBitrateCeil", () => {
   const fakeReps = [
     { bitrate : 100 },
     { bitrate : 1000 },
