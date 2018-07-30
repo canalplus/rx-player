@@ -129,6 +129,7 @@ function getInitSegment(
     timescale: number;
     initialization?: { mediaURL: string; range?: [number, number] };
     indexRange?: [number, number];
+    indexTimeOffset : number;
   }
 ) : ISegment {
   const { initialization } = index;
@@ -141,6 +142,7 @@ function getInitSegment(
     indexRange: index.indexRange || undefined,
     mediaURL: initialization ? initialization.mediaURL : null,
     timescale: index.timescale,
+    timestampOffset: -(index.indexTimeOffset / index.timescale),
   };
 }
 
