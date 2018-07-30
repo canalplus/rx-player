@@ -28,7 +28,7 @@ import {
   getTimescaledRange,
 } from "./helpers";
 
-// index property defined for a Template RepresentationIndex
+// index property defined for a SegmentTemplate RepresentationIndex
 export interface ITemplateIndex {
   duration : number; // duration of each element in the timeline, in the
                      // timescale given (see timescale and timeline)
@@ -59,11 +59,22 @@ export interface ITemplateIndex {
                                     // ```
                                     // The time given here is in the timescale
                                     // given (see timescale)
+  indexTimeOffset : number; // Temporal offset, in the current timescale (see
+                            // timescale), to add to the presentation time
+                            // (time a segment has at decoding time) to
+                            // obtain the corresponding media time (original
+                            // time of the media segment in the index and on
+                            // the media file).
+                            // For example, to look for a segment beginning at
+                            // a second `T` on a HTMLMediaElement, we
+                            // actually will look for a segment in the index
+                            // beginning at:
+                            // ``` T * timescale + indexTimeOffset ```
   startNumber? : number; // number from which the first segments in this index
                          // starts with
 }
 
-// `index` Argument for a Template RepresentationIndex
+// `index` Argument for a SegmentTemplate RepresentationIndex
 // All of the properties here are already defined in ITemplateIndex.
 export interface ITemplateIndexIndexArgument {
   duration : number;
@@ -76,7 +87,7 @@ export interface ITemplateIndexIndexArgument {
   startNumber? : number;
 }
 
-// Aditional arguments for a Template RepresentationIndex
+// Aditional argument for a SegmentTemplate RepresentationIndex
 export interface ITemplateIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
@@ -86,7 +97,6 @@ export interface ITemplateIndexContextArgument {
 }
 
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
-  protected _manifestTimeOffset : number;
   private _index : ITemplateIndex;
   private _periodStart : number;
 
@@ -108,13 +118,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._periodStart = periodStart;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset : 0;
-    this._manifestTimeOffset =
+    const indexTimeOffset =
       presentationTimeOffset - periodStart * index.timescale;
 
     this._index = {
       duration: index.duration,
       timescale: index.timescale,
       indexRange: index.indexRange,
+      indexTimeOffset,
       initialization: index.initialization && {
         mediaURL: createIndexURL(
           representationURL,
@@ -182,7 +193,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         duration,
         timescale,
         mediaURL: replaceSegmentDASHTokens(mediaURL, manifestTime, number),
-        timestampOffset: -(this._manifestTimeOffset / timescale),
+        timestampOffset: -(index.indexTimeOffset / timescale),
       };
       segments.push(args);
     }

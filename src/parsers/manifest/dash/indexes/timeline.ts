@@ -20,13 +20,15 @@ import {
 } from "../../../../manifest";
 import { createIndexURL } from "../helpers";
 import {
+  fromIndexTime,
   getInitSegment,
   getSegmentsFromTimeline,
   getTimelineItemRangeEnd,
   IIndexSegment,
+  toIndexTime,
 } from "./helpers";
 
-// index property defined for a Timeline RepresentationIndex
+// index property defined for a SegmentTimeline RepresentationIndex
 export interface ITimelineIndex {
   duration? : number; // duration of each element in the timeline, in the
                       // timescale given (see timescale and timeline)
@@ -38,6 +40,35 @@ export interface ITimelineIndex {
   };
   mediaURL : string; // base URL to access any segment. Can contain token to
                      // replace to convert it to a real URL
+  indexTimeOffset : number; // Temporal offset, in the current timescale (see
+                            // timescale), to add to the presentation time
+                            // (time a segment has at decoding time) to
+                            // obtain the corresponding media time (original
+                            // time of the media segment in the index and on
+                            // the media file).
+                            // For example, to look for a segment beginning at
+                            // a second `T` on a HTMLMediaElement, we
+                            // actually will look for a segment in the index
+                            // beginning at:
+                            // ``` T * timescale + indexTimeOffset ```
+  startNumber? : number; // number from which the first segments in this index
+                         // starts with
+  timeline : IIndexSegment[]; // Every segments defined in this index
+  timescale : number; // timescale to convert a time given here into seconds.
+                      // This is done by this simple operation:
+                      // ``timeInSeconds = timeInIndex * timescale``
+}
+
+// `index` Argument for a SegmentTimeline RepresentationIndex
+// Most of the properties here are already defined in ITimelineIndex.
+export interface ITimelineIndexIndexArgument {
+  duration? : number;
+  indexRange?: [number, number];
+  initialization? : { media? : string; range?: [number, number] };
+  media? : string;
+  startNumber? : number;
+  timeline : IIndexSegment[];
+  timescale : number;
   presentationTimeOffset? : number; // Offset present in the index to convert
                                     // from the mediaTime (time declared in the
                                     // media segments and in this index) to the
@@ -51,30 +82,11 @@ export interface ITimelineIndex {
                                     //   presentationTimeOffsetInSeconds *
                                     //   periodStartInSeconds
                                     // ```
-                                    // The time given here is in the timescale
-                                    // given (see timescale)
-  startNumber? : number; // number from which the first segments in this index
-                         // starts with
-  timeline : IIndexSegment[]; // Every segments defined in this index
-  timescale : number; // timescale to convert a time given here into seconds.
-                      // This is done by this simple operation:
-                      // ``timeInSeconds = timeInIndex * timescale``
+                                    // The time given here is in the current
+                                    // timescale (see timescale)
 }
 
-// `index` Argument for a Timeline RepresentationIndex
-// All of the properties here are already defined in ITimelineIndex.
-export interface ITimelineIndexIndexArgument {
-  duration? : number;
-  indexRange?: [number, number];
-  initialization? : { media? : string; range?: [number, number] };
-  media? : string;
-  presentationTimeOffset? : number;
-  startNumber? : number;
-  timeline : IIndexSegment[];
-  timescale : number;
-}
-
-// Aditional arguments for a Timeline RepresentationIndex
+// Aditional argument for a SegmentTimeline RepresentationIndex
 export interface ITimelineIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
@@ -119,14 +131,13 @@ function getSegmentIndex(
  * @param {Object} index
  * @param {Object} newSegment
  * @param {Object} currentSegmentInfos
- * @param {Number} manifestTimeOffset
+ * @param {Number} indexTimeOffset
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
   index : ITimelineIndex,
   newSegment : { time : number; duration : number; timescale : number },
-  currentSegmentInfos? : { time : number; duration? : number; timescale : number },
-  manifestTimeOffset? : number // TODO simplify this mess
+  currentSegmentInfos? : { time : number; duration? : number; timescale : number }
 ) : boolean {
   const { timeline, timescale } = index;
   const timelineLength = timeline.length;
@@ -147,7 +158,7 @@ function _addSegmentInfos(
       currentSegmentInfos.timescale === timescale ?
         currentSegmentInfos.time :
         (currentSegmentInfos.time / currentSegmentInfos.timescale) * timescale
-    ) + (manifestTimeOffset || 0);
+    ) + index.indexTimeOffset;
   }
 
   // in some circumstances, the new segment informations are only
@@ -207,7 +218,6 @@ function _addSegmentInfos(
 
 export default class TimelineRepresentationIndex implements IRepresentationIndex {
   protected _index : ITimelineIndex;
-  protected _manifestTimeOffset : number;
 
   /**
    * @param {Object} index
@@ -227,11 +237,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset : 0;
 
-    this._manifestTimeOffset =
-      presentationTimeOffset - periodStart * index.timescale;
+    const indexTimeOffset = presentationTimeOffset - periodStart * index.timescale;
 
     this._index = {
       duration: index.duration,
+      indexTimeOffset,
       indexRange: index.indexRange,
       initialization: index.initialization && {
         mediaURL: createIndexURL(
@@ -248,7 +258,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
         representationId,
         representationBitrate
       ),
-      presentationTimeOffset,
       startNumber: index.startNumber,
       timeline: index.timeline,
       timescale: index.timescale,
@@ -270,7 +279,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @returns {Array.<Object>}
    */
   getSegments(from : number, duration : number) : ISegment[] {
-    return getSegmentsFromTimeline(this._index, from, duration, this._manifestTimeOffset);
+    return getSegmentsFromTimeline(this._index, from, duration);
   }
 
   /**
@@ -280,8 +289,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @returns {Boolean}
    */
   shouldRefresh(_start : number, end : number) : boolean {
-    const { timeline, timescale } = this._index;
-    const scaledTo = end * timescale + this._manifestTimeOffset;
+    const { timeline } = this._index;
+    const scaledTo = toIndexTime(this._index, end);
 
     let lastItem = timeline[timeline.length - 1];
     if (!lastItem) {
@@ -304,7 +313,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (!index.timeline.length) {
       return undefined;
     }
-    return (index.timeline[0].ts / index.timescale) - this._manifestTimeOffset;
+    return fromIndexTime(index, index.timeline[0].ts);
   }
 
   /**
@@ -317,8 +326,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return undefined;
     }
     const lastTimelineElement = index.timeline[index.timeline.length - 1];
-    return (getTimelineItemRangeEnd(lastTimelineElement) / index.timescale) -
-      this._manifestTimeOffset;
+    return fromIndexTime(
+      index, getTimelineItemRangeEnd(lastTimelineElement));
   }
 
   /**
@@ -332,7 +341,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   checkDiscontinuity(_time : number) : number {
     const { timeline, timescale } = this._index;
-    const scaledTime = _time * timescale * this._manifestTimeOffset;
+    const scaledTime = toIndexTime(this._index, _time);
 
     if (scaledTime <= 0) {
       return -1;
@@ -362,7 +371,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
         scaledTime >= rangeUp &&
         scaledTime <= rangeTo &&
         (rangeTo - scaledTime) < timescale) {
-      return (nextRange.ts / timescale) - this._manifestTimeOffset;
+      return fromIndexTime(this._index, nextRange.ts);
     }
 
     return -1;
@@ -392,8 +401,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
   ) : void {
     for (let i = 0; i < nextSegments.length; i++) {
-      _addSegmentInfos(
-        this._index, nextSegments[i], currentSegmentInfos, this._manifestTimeOffset);
+      _addSegmentInfos(this._index, nextSegments[i], currentSegmentInfos);
     }
   }
 }

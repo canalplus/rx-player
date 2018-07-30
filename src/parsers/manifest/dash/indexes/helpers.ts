@@ -50,6 +50,34 @@ function calculateRepeat(
 }
 
 /**
+ * Convert from `presentationTime`, the time of the segment at the moment it
+ * is decoded to `mediaTime`, the original time the segments point at.
+ * @param {Object} index
+ * @param {number} time
+ * @returns {number}
+ */
+function toIndexTime(
+  index : { timescale : number; indexTimeOffset : number },
+  time : number
+) {
+  return time * index.timescale + index.indexTimeOffset;
+}
+
+/**
+ * Convert from `mediaTime`, the original time the segments point at to
+ * `presentationTime`, the time of the segment at the moment it is decoded.
+ * @param {Object} index
+ * @param {number} time
+ * @returns {number}
+ */
+function fromIndexTime(
+  index : { timescale : number; indexTimeOffset : number },
+  time : number
+) {
+  return (time - index.indexTimeOffset) / index.timescale;
+}
+
+/**
  * @param {Object} index
  * @param {Number} ts
  * @param {Number} duration
@@ -143,11 +171,11 @@ function getWantedRepeatIndex(
  * @param {Object} index - index object, constructed by parsing the manifest.
  * @param {number} from - starting timestamp wanted, in seconds
  * @param {number} duration - duration wanted, in seconds
- * @param {number} manifestTimeOffset - offset used to convert from decoding
+ * @param {number} indexTimeOffset - offset used to convert from decoding
  * time (used by the `from` argument) to manifest time (used in the `index`
  * argument). Basically, we should be able to convert the `from` argument into
  * manifest time by doing something like:
- * ``from * index.timescale + manifestTimeOffset``
+ * ``from * index.timescale + indexTimeOffset``
  */
 function getSegmentsFromTimeline(
   index : {
@@ -155,16 +183,14 @@ function getSegmentsFromTimeline(
     startNumber? : number;
     timeline : IIndexSegment[];
     timescale : number;
+    indexTimeOffset : number;
   },
   from : number,
-  duration : number,
-  manifestTimeOffset : number
+  duration : number
 ) : ISegment[] {
-  const { up, to } = getTimescaledRange(index, from, duration);
+  const scaledUp = toIndexTime(index, from);
+  const scaledTo = toIndexTime(index, from + duration);
   const { timeline, timescale, mediaURL, startNumber } = index;
-
-  const scaledUp = up + manifestTimeOffset;
-  const scaledTo = to + manifestTimeOffset;
 
   let currentNumber = startNumber != null ? startNumber : undefined;
 
@@ -189,14 +215,14 @@ function getSegmentsFromTimeline(
         const segmentNumber = currentNumber != null ? currentNumber : undefined;
         const segment = {
           id: "" + ts,
-          time: ts - manifestTimeOffset,
+          time: toIndexTime(index, ts),
           isInit: false,
           range,
           duration: undefined,
           timescale,
           mediaURL: replaceSegmentDASHTokens(mediaURL, ts, segmentNumber),
           number: segmentNumber,
-          timestampOffset: -(manifestTimeOffset / timescale),
+          timestampOffset: -(index.indexTimeOffset / timescale),
         };
         segments.push(segment);
       }
@@ -211,14 +237,14 @@ function getSegmentsFromTimeline(
         currentNumber + segmentNumberInCurrentRange : undefined;
       const segment = {
         id: "" + segmentTime,
-        time: segmentTime - manifestTimeOffset,
+        time: toIndexTime(index, segmentTime),
         isInit: false,
         range,
         duration: d,
         timescale,
         mediaURL: replaceSegmentDASHTokens(mediaURL, segmentTime, segmentNumber),
         number: segmentNumber,
-        timestampOffset: -(manifestTimeOffset / timescale),
+        timestampOffset: -(index.indexTimeOffset / timescale),
       };
       segments.push(segment);
 
@@ -247,4 +273,6 @@ export {
   getTimelineItemRangeEnd,
   getTimelineItemRangeStart,
   getTimescaledRange,
+  fromIndexTime,
+  toIndexTime,
 };
