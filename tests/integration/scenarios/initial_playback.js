@@ -237,7 +237,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(40);
 
     // The real limit is actually closer to the duration of a segment
-    expect(Math.round(player.getVideoLoadedTime())).to.be.below(12);
+    expect(Math.round(player.getVideoLoadedTime())).to.be.below(13);
   });
 
   it("should delete buffer behind", async function() {
