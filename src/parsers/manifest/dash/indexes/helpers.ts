@@ -25,21 +25,25 @@ interface IIndexSegment {
 }
 
 /**
- * Calculate the number of times a segment repeat based on the next segment.
- * @param {Object} seg
- * @param {Object} nextSeg
+ * Calculate the number of times a timeline element repeat based on the next
+ * segment.
+ * @param {Object} element
+ * @param {Object} nextElement
  * @returns {Number}
  */
-function calculateRepeat(seg : IIndexSegment, nextSeg : IIndexSegment) : number {
-  let rep = seg.r || 0;
+function calculateRepeat(
+  element : IIndexSegment,
+  nextElement : IIndexSegment
+) : number {
+  let rep = element.r || 0;
 
   // A negative value of the @r attribute of the S element indicates
   // that the duration indicated in @d attribute repeats until the
   // start of the next S element, the end of the Period or until the
   // next MPD update.
   if (rep < 0) {
-    const repEnd = nextSeg ? nextSeg.ts : Infinity;
-    rep = Math.ceil((repEnd - seg.ts) / seg.d) - 1;
+    const repEnd = nextElement ? nextElement.ts : Infinity;
+    rep = Math.ceil((repEnd - element.ts) / element.d) - 1;
   }
 
   return rep;
@@ -71,7 +75,7 @@ function getTimescaledRange(
 
 /**
  * Get start of the given index range, timescaled.
- * @param {Object} range
+ * @param {Object} element
  * @returns {Number} - absolute start time of the range
  */
 function getTimelineItemRangeStart({ ts, d, r }: IIndexSegment) : number {
@@ -80,7 +84,7 @@ function getTimelineItemRangeStart({ ts, d, r }: IIndexSegment) : number {
 
 /**
  * Get end of the given index range, timescaled.
- * @param {Object} range
+ * @param {Object} element
  * @returns {Number} - absolute end time of the range
  */
 function getTimelineItemRangeEnd({ ts, d, r }: IIndexSegment) : number {
@@ -113,15 +117,18 @@ function getInitSegment(
 }
 
 /**
+ * For the given start time and duration of a timeline element, calculate how
+ * much this element should be repeated to contain the time given.
+ * 0 being the same element, 1 being the next one etc.
  * @param {Number} segmentStartTime
- * @param {Number} wantedTime
  * @param {Number} segmentDuration
+ * @param {Number} wantedTime
  * @returns {Number}
  */
-function getSegmentItemRepeatNumber(
+function getWantedRepeatIndex(
   segmentStartTime : number,
-  wantedTime : number,
-  segmentDuration : number
+  segmentDuration : number,
+  wantedTime : number
 ) : number {
   const diff = wantedTime - segmentStartTime;
   if (diff > 0) {
@@ -131,6 +138,17 @@ function getSegmentItemRepeatNumber(
   }
 }
 
+/**
+ * Get a list of Segments for the time range wanted.
+ * @param {Object} index - index object, constructed by parsing the manifest.
+ * @param {number} from - starting timestamp wanted, in seconds
+ * @param {number} duration - duration wanted, in seconds
+ * @param {number} manifestTimeOffset - offset used to convert from decoding
+ * time (used by the `from` argument) to manifest time (used in the `index`
+ * argument). Basically, we should be able to convert the `from` argument into
+ * manifest time by doing something like:
+ * ``from * index.timescale + manifestTimeOffset``
+ */
 function getSegmentsFromTimeline(
   index : {
     mediaURL : string;
@@ -158,8 +176,8 @@ function getSegmentsFromTimeline(
   let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
 
   for (let i = 0; i < timelineLength; i++) {
-    const segmentItem = timeline[i];
-    const { d, ts, range } = segmentItem;
+    const timelineItem = timeline[i];
+    const { d, ts, range } = timelineItem;
 
     maxEncounteredDuration = Math.max(maxEncounteredDuration, d);
 
@@ -185,8 +203,8 @@ function getSegmentsFromTimeline(
       return segments;
     }
 
-    const repeat = calculateRepeat(segmentItem, timeline[i + 1]);
-    let segmentNumberInCurrentRange = getSegmentItemRepeatNumber(ts, scaledUp, d);
+    const repeat = calculateRepeat(timelineItem, timeline[i + 1]);
+    let segmentNumberInCurrentRange = getWantedRepeatIndex(ts, d, scaledUp);
     let segmentTime = ts + segmentNumberInCurrentRange * d;
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
       const segmentNumber = currentNumber != null ?
