@@ -25,7 +25,7 @@ import {
 } from "../helpers";
 import {
   getInitSegment,
-  normalizeRange,
+  getTimescaledRange,
 } from "./helpers";
 
 export interface ITemplateIndex {
@@ -58,6 +58,7 @@ export interface ITemplateIndexContextArgument {
 }
 
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
+  protected _manifestTimeOffset : number;
   private _index : ITemplateIndex;
   private _periodStart : number;
 
@@ -77,6 +78,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     } = context;
 
     this._periodStart = periodStart;
+    const presentationTimeOffset = index.presentationTimeOffset != null ?
+      index.presentationTimeOffset : 0;
+    this._manifestTimeOffset =
+      presentationTimeOffset - periodStart * index.timescale;
 
     this._index = {
       duration: index.duration,
@@ -97,6 +102,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         representationId,
         representationBitrate
       ),
+      presentationTimeOffset,
       startNumber: index.startNumber,
     };
   }
@@ -110,13 +116,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * @param {Number} _up
-   * @param {Number} _to
+   * @param {Number} fromTime
+   * @param {Number} dur
    * @returns {Array.<Object>}
    */
-  getSegments(_up : number, _to : number) : ISegment[] {
+  getSegments(fromTime : number, dur : number) : ISegment[] {
     const index = this._index;
-    const { up, to } = normalizeRange(index, _up, _to);
+    const { up, to } = getTimescaledRange(index, fromTime, dur);
     if (to <= up) {
       return [];
     }
@@ -131,20 +137,24 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const segments : ISegment[] = [];
     for (let baseTime = up; baseTime <= to; baseTime += duration) {
 
-      const periodRelativeNumber = baseTime - (this._periodStart * timescale);
-      const number = Math.floor((periodRelativeNumber / duration)) +
-        (startNumber == null ? 1 : startNumber);
+      const periodRelativeStart = baseTime - (this._periodStart * timescale);
+      const baseNumber = Math.floor((periodRelativeStart / duration));
+      const number = baseNumber + (startNumber == null ? 1 : startNumber);
 
-      const time = (number * duration);
+      const manifestTime = (baseNumber * duration) +
+        (this._index.presentationTimeOffset || 0);
+      const presentationTime = baseNumber * duration +
+        this._periodStart * this._index.timescale;
 
       const args = {
         id: "" + number,
         number,
-        time,
+        time: presentationTime,
         isInit: false,
         duration,
         timescale,
-        mediaURL: replaceSegmentDASHTokens(mediaURL, time, number),
+        mediaURL: replaceSegmentDASHTokens(mediaURL, manifestTime, number),
+        timestampOffset: -(this._manifestTimeOffset / timescale),
       };
       segments.push(args);
     }

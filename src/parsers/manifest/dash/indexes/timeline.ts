@@ -22,7 +22,7 @@ import { createIndexURL } from "../helpers";
 import {
   getInitSegment,
   getSegmentsFromTimeline,
-  getTimelineRangeEnd,
+  getTimelineItemRangeEnd,
   IIndexSegment,
 } from "./helpers";
 
@@ -90,17 +90,19 @@ function getSegmentIndex(
  * /!\ Mutate the given index
  * @param {Object} index
  * @param {Object} newSegment
- * @param {Object} currentSegment
+ * @param {Object} currentSegmentInfos
+ * @param {Number} manifestTimeOffset
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
   index : ITimelineIndex,
   newSegment : { time : number; duration : number; timescale : number },
-  currentSegment? : { time : number; duration? : number; timescale : number }
+  currentSegmentInfos? : { time : number; duration? : number; timescale : number },
+  manifestTimeOffset? : number // TODO simplify this mess
 ) : boolean {
   const { timeline, timescale } = index;
   const timelineLength = timeline.length;
-  const last = timeline[timelineLength - 1];
+  const lastItem = timeline[timelineLength - 1];
 
   const scaledNewSegment = newSegment.timescale === timescale ? {
     time: newSegment.time,
@@ -112,10 +114,12 @@ function _addSegmentInfos(
 
   let scaledCurrentTime;
 
-  if (currentSegment && currentSegment.timescale) {
-    scaledCurrentTime = currentSegment.timescale === timescale ?
-      currentSegment.time :
-      (currentSegment.time / currentSegment.timescale) * timescale;
+  if (currentSegmentInfos && currentSegmentInfos.timescale) {
+    scaledCurrentTime = (
+      currentSegmentInfos.timescale === timescale ?
+        currentSegmentInfos.time :
+        (currentSegmentInfos.time / currentSegmentInfos.timescale) * timescale
+    ) + (manifestTimeOffset || 0);
   }
 
   // in some circumstances, the new segment informations are only
@@ -126,23 +130,23 @@ function _addSegmentInfos(
     (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {
     const newSegmentTs = scaledNewSegment.time + scaledNewSegment.duration;
-    const lastSegmentTs = (last.ts + last.d * last.r);
+    const lastSegmentTs = (lastItem.ts + lastItem.d * lastItem.r);
     const tsDiff = newSegmentTs - lastSegmentTs;
 
-    if (tsDiff <= 0) { // same segment / behind the last
+    if (tsDiff <= 0) { // same segment / behind the lastItem
       return false;
     }
 
-    // try to use the compact notation with @r attribute on the last
+    // try to use the compact notation with @r attribute on the lastItem
     // to elements of the timeline if we find out they have the same
     // duration
-    if (last.d === -1) {
+    if (lastItem.d === -1) {
       const prev = timeline[timelineLength - 2];
       if (prev && prev.d === tsDiff) {
         prev.r++;
         timeline.pop();
       } else {
-        last.d = tsDiff;
+        lastItem.d = tsDiff;
       }
     }
 
@@ -156,10 +160,10 @@ function _addSegmentInfos(
 
   // if the given timing has a timestamp after the timeline end we
   // just need to push a new element in the timeline, or increase
-  // the @r attribute of the last element.
-  else if (scaledNewSegment.time >= getTimelineRangeEnd(last)) {
-    if (last.d === scaledNewSegment.duration) {
-      last.r++;
+  // the @r attribute of the lastItem element.
+  else if (scaledNewSegment.time >= getTimelineItemRangeEnd(lastItem)) {
+    if (lastItem.d === scaledNewSegment.duration) {
+      lastItem.r++;
     } else {
       index.timeline.push({
         d: scaledNewSegment.duration,
@@ -175,6 +179,7 @@ function _addSegmentInfos(
 
 export default class TimelineRepresentationIndex implements IRepresentationIndex {
   protected _index : ITimelineIndex;
+  protected _manifestTimeOffset : number;
 
   /**
    * @param {Object} index
@@ -188,7 +193,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       representationURL,
       representationId,
       representationBitrate,
+      periodStart,
     } = context;
+
+    const presentationTimeOffset = index.presentationTimeOffset != null ?
+      index.presentationTimeOffset : 0;
+
+    this._manifestTimeOffset =
+      presentationTimeOffset - periodStart * index.timescale;
 
     this._index = {
       duration: index.duration,
@@ -208,6 +220,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
         representationId,
         representationBitrate
       ),
+      presentationTimeOffset,
       startNumber: index.startNumber,
       timeline: index.timeline,
       timescale: index.timescale,
@@ -223,38 +236,35 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * @param {Number} _up
-   * @param {Number} _to
+   * Asks for segments to download for a given time range.
+   * @param {Number} from - Beginning of the time wanted, in seconds
+   * @param {Number} duration - duration wanted, in seconds
    * @returns {Array.<Object>}
    */
-  getSegments(_up : number, _to : number) : ISegment[] {
-    return getSegmentsFromTimeline(this._index, _up, _to);
+  getSegments(from : number, duration : number) : ISegment[] {
+    return getSegmentsFromTimeline(this._index, from, duration, this._manifestTimeOffset);
   }
 
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
-   * @param {Number} _up
-   * @param {Number} _to
+   * @param {Number} _start
+   * @param {Number} end
    * @returns {Boolean}
    */
-  shouldRefresh(_up : number, to : number) : boolean {
-    const {
-      timeline,
-      timescale,
-    } = this._index;
+  shouldRefresh(_start : number, end : number) : boolean {
+    const { timeline, timescale } = this._index;
+    const scaledTo = end * timescale + this._manifestTimeOffset;
 
-    const scaledTo = to * timescale;
-
-    let last = timeline[timeline.length - 1];
-    if (!last) {
+    let lastItem = timeline[timeline.length - 1];
+    if (!lastItem) {
       return false;
     }
 
-    if (last.d < 0) {
-      last = { ts: last.ts, d: 0, r: last.r };
+    if (lastItem.d < 0) {
+      lastItem = { ts: lastItem.ts, d: 0, r: lastItem.r };
     }
 
-    return !(scaledTo <= getTimelineRangeEnd(last));
+    return scaledTo > getTimelineItemRangeEnd(lastItem);
   }
 
   /**
@@ -266,11 +276,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (!index.timeline.length) {
       return undefined;
     }
-    return index.timeline[0].ts / index.timescale;
+    return (index.timeline[0].ts / index.timescale) - this._manifestTimeOffset;
   }
 
   /**
-   * Returns last position in index.
+   * Returns lastItem position in index.
    * @returns {Number|undefined}
    */
   getLastPosition() : number|undefined {
@@ -279,7 +289,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return undefined;
     }
     const lastTimelineElement = index.timeline[index.timeline.length - 1];
-    return (getTimelineRangeEnd(lastTimelineElement) / index.timescale);
+    return (getTimelineItemRangeEnd(lastTimelineElement) / index.timescale) -
+      this._manifestTimeOffset;
   }
 
   /**
@@ -292,34 +303,38 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * for the next (discontinuited) range. If not this is equal to -1.
    */
   checkDiscontinuity(_time : number) : number {
-    const { timeline, timescale = 1 } = this._index;
-    const time = _time * timescale;
+    const { timeline, timescale } = this._index;
+    const scaledTime = _time * timescale * this._manifestTimeOffset;
 
-    if (time <= 0) {
+    if (scaledTime <= 0) {
       return -1;
     }
 
-    const segmentIndex = getSegmentIndex(this._index, time);
+    const segmentIndex = getSegmentIndex(this._index, scaledTime);
     if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
       return -1;
     }
 
-    const range = timeline[segmentIndex];
-    if (range.d === -1) {
+    const timelineItem = timeline[segmentIndex];
+    if (timelineItem.d === -1) {
       return -1;
     }
 
-    const rangeUp = range.ts;
-    const rangeTo = getTimelineRangeEnd(range);
     const nextRange = timeline[segmentIndex + 1];
+    if (nextRange == null) {
+      return -1;
+    }
+
+    const rangeUp = timelineItem.ts;
+    const rangeTo = getTimelineItemRangeEnd(timelineItem);
 
     // when we are actually inside the found range and this range has
     // an explicit discontinuity with the next one
     if (rangeTo !== nextRange.ts &&
-        time >= rangeUp &&
-        time <= rangeTo &&
-        (rangeTo - time) < timescale) {
-      return nextRange.ts / timescale;
+        scaledTime >= rangeUp &&
+        scaledTime <= rangeTo &&
+        (rangeTo - scaledTime) < timescale) {
+      return (nextRange.ts / timescale) - this._manifestTimeOffset;
     }
 
     return -1;
@@ -337,19 +352,20 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @param {Array.<Object>} nextSegments
-   * @param {Object|undefined} currentSegment
+   * @param {Object|undefined} currentSegmentInfos
    * @returns {Array}
    */
   _addSegments(
     nextSegments : Array<{ duration : number; time : number; timescale : number }>,
-    currentSegment? : {
+    currentSegmentInfos? : {
       duration? : number;
       time : number;
       timescale : number;
     }
   ) : void {
     for (let i = 0; i < nextSegments.length; i++) {
-      _addSegmentInfos(this._index, nextSegments[i], currentSegment);
+      _addSegmentInfos(
+        this._index, nextSegments[i], currentSegmentInfos, this._manifestTimeOffset);
     }
   }
 }
