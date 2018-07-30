@@ -22,7 +22,7 @@ import { createIndexURL } from "../helpers";
 import {
   getInitSegment,
   getSegmentsFromTimeline,
-  getTimelineRangeEnd,
+  getTimelineItemRangeStart,
   IIndexSegment,
 } from "./helpers";
 
@@ -104,6 +104,7 @@ function _addSegmentInfos(
  * Reimplement from scratch
  */
 export default class BaseRepresentationIndex implements IRepresentationIndex {
+  protected _manifestTimeOffset : number;
   private _index : IBaseIndex;
 
   /**
@@ -112,10 +113,17 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
     const {
+      periodStart,
       representationURL,
       representationId,
       representationBitrate,
     } = context;
+
+    const presentationTimeOffset = index.presentationTimeOffset != null ?
+      index.presentationTimeOffset : 0;
+
+    this._manifestTimeOffset =
+      presentationTimeOffset - periodStart * index.timescale;
 
     this._index = {
       mediaURL: createIndexURL(
@@ -138,6 +146,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
         ),
         range: index.initialization.range,
       },
+      presentationTimeOffset,
     };
   }
 
@@ -155,7 +164,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments(_up : number, _to : number) : ISegment[] {
-    return getSegmentsFromTimeline(this._index, _up, _to);
+    return getSegmentsFromTimeline(this._index, _up, _to, this._manifestTimeOffset);
   }
 
   /**
@@ -175,7 +184,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (!index.timeline.length) {
       return undefined;
     }
-    return index.timeline[0].ts / index.timescale;
+    return (index.timeline[0].ts / index.timescale) - this._manifestTimeOffset;
   }
 
   /**
@@ -188,7 +197,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       return undefined;
     }
     const lastTimelineElement = index.timeline[index.timeline.length - 1];
-    return (getTimelineRangeEnd(lastTimelineElement) / index.timescale);
+    return (getTimelineItemRangeStart(lastTimelineElement) / index.timescale)
+      - this._manifestTimeOffset;
   }
 
   /**

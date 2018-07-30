@@ -46,8 +46,6 @@ function calculateRepeat(seg : IIndexSegment, nextSeg : IIndexSegment) : number 
 }
 
 /**
- * Convert second-based start time and duration to the timescale of the
- * manifest's index.
  * @param {Object} index
  * @param {Number} ts
  * @param {Number} duration
@@ -55,7 +53,7 @@ function calculateRepeat(seg : IIndexSegment, nextSeg : IIndexSegment) : number 
  *   - up {Number}: timescaled timestamp of the beginning time
  *   - to {Number}: timescaled timestamp of the end time (start time + duration)
  */
-function normalizeRange(
+function getTimescaledRange(
   index: { timescale?: number }, // TODO
   ts: number,
   duration: number
@@ -76,7 +74,7 @@ function normalizeRange(
  * @param {Object} range
  * @returns {Number} - absolute start time of the range
  */
-function getTimelineRangeStart({ ts, d, r }: IIndexSegment) : number {
+function getTimelineItemRangeStart({ ts, d, r }: IIndexSegment) : number {
   return d === -1 ? ts : ts + r * d;
 }
 
@@ -85,7 +83,7 @@ function getTimelineRangeStart({ ts, d, r }: IIndexSegment) : number {
  * @param {Object} range
  * @returns {Number} - absolute end time of the range
  */
-function getTimelineRangeEnd({ ts, d, r }: IIndexSegment) : number {
+function getTimelineItemRangeEnd({ ts, d, r }: IIndexSegment) : number {
   return d === -1 ? ts : ts + (r + 1) * d;
 }
 
@@ -115,19 +113,19 @@ function getInitSegment(
 }
 
 /**
- * @param {Number} ts
- * @param {Number} up
- * @param {Number} duration
+ * @param {Number} segmentStartTime
+ * @param {Number} wantedTime
+ * @param {Number} segmentDuration
  * @returns {Number}
  */
-function getSegmentNumber(
-  ts : number,
-  up : number,
-  duration : number
+function getSegmentItemRepeatNumber(
+  segmentStartTime : number,
+  wantedTime : number,
+  segmentDuration : number
 ) : number {
-  const diff = up - ts;
+  const diff = wantedTime - segmentStartTime;
   if (diff > 0) {
-    return Math.floor(diff / duration);
+    return Math.floor(diff / segmentDuration);
   } else {
     return 0;
   }
@@ -140,11 +138,15 @@ function getSegmentsFromTimeline(
     timeline : IIndexSegment[];
     timescale : number;
   },
-  _up : number,
-  _to : number
+  from : number,
+  duration : number,
+  manifestTimeOffset : number
 ) : ISegment[] {
-  const { up, to } = normalizeRange(index, _up, _to);
+  const { up, to } = getTimescaledRange(index, from, duration);
   const { timeline, timescale, mediaURL, startNumber } = index;
+
+  const scaledUp = up + manifestTimeOffset;
+  const scaledTo = to + manifestTimeOffset;
 
   let currentNumber = startNumber != null ? startNumber : undefined;
 
@@ -156,8 +158,8 @@ function getSegmentsFromTimeline(
   let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
 
   for (let i = 0; i < timelineLength; i++) {
-    const segmentRange = timeline[i];
-    const { d, ts, range } = segmentRange;
+    const segmentItem = timeline[i];
+    const { d, ts, range } = segmentItem;
 
     maxEncounteredDuration = Math.max(maxEncounteredDuration, d);
 
@@ -165,38 +167,40 @@ function getSegmentsFromTimeline(
     if (d < 0) {
       // TODO what? May be to play it safe and avoid adding segments which are
       // not completely generated
-      if (ts + maxEncounteredDuration < to) {
-        const number = currentNumber != null ? currentNumber : undefined;
+      if (ts + maxEncounteredDuration < scaledTo) {
+        const segmentNumber = currentNumber != null ? currentNumber : undefined;
         const segment = {
           id: "" + ts,
-          time: ts,
+          time: ts - manifestTimeOffset,
           isInit: false,
           range,
           duration: undefined,
           timescale,
-          mediaURL: replaceSegmentDASHTokens(mediaURL, ts, number),
-          number,
+          mediaURL: replaceSegmentDASHTokens(mediaURL, ts, segmentNumber),
+          number: segmentNumber,
+          timestampOffset: -(manifestTimeOffset / timescale),
         };
         segments.push(segment);
       }
       return segments;
     }
 
-    const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
-    let segmentNumberInCurrentRange = getSegmentNumber(ts, up, d);
+    const repeat = calculateRepeat(segmentItem, timeline[i + 1]);
+    let segmentNumberInCurrentRange = getSegmentItemRepeatNumber(ts, scaledUp, d);
     let segmentTime = ts + segmentNumberInCurrentRange * d;
-    while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
-      const number = currentNumber != null ?
+    while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
+      const segmentNumber = currentNumber != null ?
         currentNumber + segmentNumberInCurrentRange : undefined;
       const segment = {
         id: "" + segmentTime,
-        time: segmentTime,
+        time: segmentTime - manifestTimeOffset,
         isInit: false,
         range,
         duration: d,
         timescale,
-        mediaURL: replaceSegmentDASHTokens(mediaURL, segmentTime, number),
-        number,
+        mediaURL: replaceSegmentDASHTokens(mediaURL, segmentTime, segmentNumber),
+        number: segmentNumber,
+        timestampOffset: -(manifestTimeOffset / timescale),
       };
       segments.push(segment);
 
@@ -205,8 +209,8 @@ function getSegmentsFromTimeline(
       segmentTime = ts + segmentNumberInCurrentRange * d;
     }
 
-    if (segmentTime >= to) {
-      // we reached ``to``, we're done
+    if (segmentTime >= scaledTo) {
+      // we reached ``scaledTo``, we're done
       return segments;
     }
 
@@ -219,10 +223,10 @@ function getSegmentsFromTimeline(
 }
 
 export {
-  normalizeRange,
-  getSegmentsFromTimeline,
-  getTimelineRangeStart,
-  getTimelineRangeEnd,
-  getInitSegment,
   IIndexSegment,
+  getInitSegment,
+  getSegmentsFromTimeline,
+  getTimelineItemRangeEnd,
+  getTimelineItemRangeStart,
+  getTimescaledRange,
 };

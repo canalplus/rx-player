@@ -22,7 +22,7 @@ import {
 import { createIndexURL } from "../helpers";
 import {
   getInitSegment,
-  normalizeRange,
+  getTimescaledRange,
 } from "./helpers";
 
 export interface IListIndex {
@@ -63,6 +63,8 @@ export interface IListIndexContextArgument {
  * @type {Object}
  */
 export default class ListRepresentationIndex implements IRepresentationIndex {
+  protected _periodStart : number;
+  protected _manifestTimeOffset : number;
   private _index : IListIndex;
 
   /**
@@ -71,10 +73,17 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    */
   constructor(index : IListIndexIndexArgument, context : IListIndexContextArgument) {
     const {
+      periodStart,
       representationURL,
       representationId,
       representationBitrate,
     } = context;
+
+    this._periodStart = periodStart;
+    const presentationTimeOffset = index.presentationTimeOffset != null ?
+      index.presentationTimeOffset : 0;
+    this._manifestTimeOffset =
+      presentationTimeOffset - periodStart * index.timescale;
 
     this._index = {
       list: index.list.map((lItem) => ({
@@ -98,6 +107,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
         ),
         range: index.initialization.range,
       },
+      presentationTimeOffset,
     };
   }
 
@@ -110,13 +120,14 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @param {Number} _up
-   * @param {Number} _to
+   * @param {Number} fromTime
+   * @param {Number} duration
    * @returns {Array.<Object>}
    */
-  getSegments(_up : number, _to : number) : ISegment[] {
+  getSegments(fromTime : number, dur : number) : ISegment[] {
     const index = this._index;
-    const { up, to } = normalizeRange(index, _up, _to);
+    const fromTimeInPeriod = fromTime + this._periodStart;
+    const { up, to } = getTimescaledRange(index, fromTimeInPeriod, dur);
 
     const { duration, list, timescale } = index;
     const length = Math.min(list.length - 1, Math.floor(to / duration));
@@ -133,6 +144,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
         duration,
         timescale,
         mediaURL,
+        timestampOffset: -(this._manifestTimeOffset / timescale),
       };
       segments.push(args);
       i++;
@@ -143,18 +155,18 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
-   * @param {Number} up
-   * @param {Number} to
+   * @param {Number} _fromTime
+   * @param {Number} toTime
    * @returns {Boolean}
    */
-  shouldRefresh(_up : number, to : number) : boolean {
+  shouldRefresh(_fromTime : number, toTime : number) : boolean {
     const {
       timescale,
       duration,
       list,
     } = this._index;
 
-    const scaledTo = to * timescale;
+    const scaledTo = toTime * timescale;
     const i = Math.floor(scaledTo / duration);
     return !(i >= 0 && i < list.length);
   }
@@ -164,7 +176,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @returns {Number}
    */
   getFirstPosition() : number {
-    return 0;
+    return this._periodStart;
   }
 
   /**
@@ -174,7 +186,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   getLastPosition() : number {
     const index = this._index;
     const { duration, list } = index;
-    return (list.length * duration) / index.timescale;
+    return ((list.length * duration) / index.timescale) + this._periodStart;
   }
 
   /**
