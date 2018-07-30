@@ -28,17 +28,43 @@ import {
   getTimescaledRange,
 } from "./helpers";
 
+// index property defined for a Template RepresentationIndex
 export interface ITemplateIndex {
-  duration : number;
-  timescale : number;
+  duration : number; // duration of each element in the timeline, in the
+                     // timescale given (see timescale and timeline)
+  timescale : number; // timescale to convert a time given here into seconds.
+                      // This is done by this simple operation:
+                      // ``timeInSeconds = timeInIndex * timescale``
 
-  indexRange?: [number, number];
-  initialization?: { mediaURL: string; range?: [number, number] };
-  mediaURL : string;
-  presentationTimeOffset? : number;
-  startNumber? : number;
+  indexRange?: [number, number]; // byte range for a possible index of segments
+                                 // in the server
+  initialization?: { // informations on the initialization segment
+    mediaURL: string; // URL to access the initialization segment
+    range?: [number, number]; // possible byte range to request it
+  };
+  mediaURL : string; // base URL to access any segment. Can contain token to
+                     // replace to convert it to a real URL
+  presentationTimeOffset? : number; // Offset present in the index to convert
+                                    // from the mediaTime (time declared in the
+                                    // media segments and in this index) to the
+                                    // presentationTime (time wanted when
+                                    // decoding the segment).
+                                    // Basically by doing something along the
+                                    // line of:
+                                    // ```
+                                    // presentationTimeInSeconds =
+                                    //   mediaTimeInSeconds -
+                                    //   presentationTimeOffsetInSeconds *
+                                    //   periodStartInSeconds
+                                    // ```
+                                    // The time given here is in the timescale
+                                    // given (see timescale)
+  startNumber? : number; // number from which the first segments in this index
+                         // starts with
 }
 
+// `index` Argument for a Template RepresentationIndex
+// All of the properties here are already defined in ITemplateIndex.
 export interface ITemplateIndexIndexArgument {
   duration : number;
   timescale : number;
@@ -50,11 +76,13 @@ export interface ITemplateIndexIndexArgument {
   startNumber? : number;
 }
 
+// Aditional arguments for a Template RepresentationIndex
 export interface ITemplateIndexContextArgument {
-  periodStart : number;
-  representationURL : string;
-  representationId? : string;
-  representationBitrate? : number;
+  periodStart : number; // Start of the period concerned by this
+                        // RepresentationIndex, in seconds
+  representationURL : string; // Base URL for the Representation concerned
+  representationId? : string; // ID of the Representation concerned
+  representationBitrate? : number; // Bitrate of the Representation concerned
 }
 
 export default class TemplateRepresentationIndex implements IRepresentationIndex {

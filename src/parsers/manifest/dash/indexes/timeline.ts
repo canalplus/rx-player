@@ -26,17 +26,43 @@ import {
   IIndexSegment,
 } from "./helpers";
 
+// index property defined for a Timeline RepresentationIndex
 export interface ITimelineIndex {
-  duration? : number;
-  indexRange?: [number, number];
-  initialization? : { mediaURL: string; range?: [number, number] };
-  mediaURL : string;
-  presentationTimeOffset? : number;
-  startNumber? : number;
-  timeline : IIndexSegment[];
-  timescale : number;
+  duration? : number; // duration of each element in the timeline, in the
+                      // timescale given (see timescale and timeline)
+  indexRange?: [number, number]; // byte range for a possible index of segments
+                                 // in the server
+  initialization? : { // informations on the initialization segment
+    mediaURL: string; // URL to access the initialization segment
+    range?: [number, number]; // possible byte range to request it
+  };
+  mediaURL : string; // base URL to access any segment. Can contain token to
+                     // replace to convert it to a real URL
+  presentationTimeOffset? : number; // Offset present in the index to convert
+                                    // from the mediaTime (time declared in the
+                                    // media segments and in this index) to the
+                                    // presentationTime (time wanted when
+                                    // decoding the segment).
+                                    // Basically by doing something along the
+                                    // line of:
+                                    // ```
+                                    // presentationTimeInSeconds =
+                                    //   mediaTimeInSeconds -
+                                    //   presentationTimeOffsetInSeconds *
+                                    //   periodStartInSeconds
+                                    // ```
+                                    // The time given here is in the timescale
+                                    // given (see timescale)
+  startNumber? : number; // number from which the first segments in this index
+                         // starts with
+  timeline : IIndexSegment[]; // Every segments defined in this index
+  timescale : number; // timescale to convert a time given here into seconds.
+                      // This is done by this simple operation:
+                      // ``timeInSeconds = timeInIndex * timescale``
 }
 
+// `index` Argument for a Timeline RepresentationIndex
+// All of the properties here are already defined in ITimelineIndex.
 export interface ITimelineIndexIndexArgument {
   duration? : number;
   indexRange?: [number, number];
@@ -48,11 +74,13 @@ export interface ITimelineIndexIndexArgument {
   timescale : number;
 }
 
+// Aditional arguments for a Timeline RepresentationIndex
 export interface ITimelineIndexContextArgument {
-  periodStart : number;
-  representationURL : string;
-  representationId? : string;
-  representationBitrate? : number;
+  periodStart : number; // Start of the period concerned by this
+                        // RepresentationIndex, in seconds
+  representationURL : string; // Base URL for the Representation concerned
+  representationId? : string; // ID of the Representation concerned
+  representationBitrate? : number; // Bitrate of the Representation concerned
 }
 
 /**
