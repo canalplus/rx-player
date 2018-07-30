@@ -51,8 +51,8 @@ export interface ISegment {
   number? : number; // Optional number of the Segment
   range? : [number, number]; // Optional byte range to retrieve the Segment
   timestampOffset? : number; // Estimated time, in seconds, at which the
-                             // concerned segment segment will be offseted when
-                             // pushed.
+                             // concerned segment will be offseted when
+                             // decoded.
   privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
                                  // supplementary informations in a given
                                  // Segment for later downloading/parsing
