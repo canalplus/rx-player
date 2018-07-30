@@ -147,8 +147,7 @@ function canPlay(
   } else {
     return observableFromEvent(mediaElement, "canplay")
       .pipe(
-        take(1),
-        mapTo(undefined)
+        take(1)
       );
   }
 }
