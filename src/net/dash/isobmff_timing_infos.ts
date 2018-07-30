@@ -83,7 +83,8 @@ function getISOBMFFTimingInfos(
 
   if (baseDecodeTime >= 0) {
     startTime = segment.timestampOffset != null ?
-      baseDecodeTime + segment.timestampOffset : baseDecodeTime;
+      baseDecodeTime + (segment.timestampOffset * timescale) :
+      baseDecodeTime;
   }
 
   if (
@@ -106,7 +107,8 @@ function getISOBMFFTimingInfos(
         const baseStartTime = sidxTimescale != null && sidxTimescale !== timescale ?
           (sidxStart / sidxTimescale) * timescale : sidxStart;
         startTime = segment.timestampOffset != null ?
-          baseStartTime + segment.timestampOffset : baseStartTime;
+          baseStartTime + (segment.timestampOffset * timescale) :
+          baseStartTime;
       } else {
         startTime = segmentStart;
       }
