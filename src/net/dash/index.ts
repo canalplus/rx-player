@@ -190,8 +190,8 @@ export default function(
           start: 0,
           end: Number.MAX_VALUE,
           timescale: 1,
-            type: "bif",
-          },
+          type: "bif",
+        },
         segmentInfos: {
           time: 0,
           duration: Number.MAX_VALUE,
