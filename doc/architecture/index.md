@@ -34,7 +34,6 @@ Such modules are (with link to their respective documentation, if one):
     implementing it.
 
 
-
   - __the [Stream](./stream/index.md)__
 
     starts playing a content and connects the different modules between one
@@ -66,21 +65,24 @@ Such modules are (with link to their respective documentation, if one):
 
   - __the Source Buffers__
 
-    Provides abstractions on top of the SourceBuffers,
-    which are used to push media segments.
+    Provides abstractions on top of the SourceBuffers, which are used to push
+    media segments.
     These files help to handle "native" SourceBuffers already defined by the
     browser (for audio and video segments), but also define custom ones for
     media managed entirely by the RxPlayer (example: subtitles and thumbnails).
 
 
-  - __Net__
+  - __the [Networking code](./net/index.md)__
 
     Perform manifest/segment requests, and parse them.
-    _Net_ in essence abstracts the transport protocol used (example:
+    "_net_" in essence abstracts the transport protocol used (example:
     HSS/DASH) to provide an unified definition of a segment or manifest to
     the other modules.
     In theory, it should be the only directory to update when adding /
     modifying / deleting a transport protocol
+
+    Various files documenting the Net architecture should be available in the
+    ``doc/architecture/net`` directory.
 
 
   - __the [Pipelines](./pipelines/index.md)__
