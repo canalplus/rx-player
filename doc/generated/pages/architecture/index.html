@@ -55,20 +55,22 @@ SourceBuffer.</p>
 </li>
 <li>
 <p><strong>the Source Buffers</strong></p>
-<p>Provides abstractions on top of the SourceBuffers,
-which are used to push media segments.
+<p>Provides abstractions on top of the SourceBuffers, which are used to push
+media segments.
 These files help to handle &#x201C;native&#x201D; SourceBuffers already defined by the
 browser (for audio and video segments), but also define custom ones for
 media managed entirely by the RxPlayer (example: subtitles and thumbnails).</p>
 </li>
 <li>
-<p><strong>Net</strong></p>
+<p><strong>the <a href="net/index.html">Networking code</a></strong></p>
 <p>Perform manifest/segment requests, and parse them.
-<em>Net</em> in essence abstracts the transport protocol used (example:
+&#x201C;<em>net</em>&#x201D; in essence abstracts the transport protocol used (example:
 HSS/DASH) to provide an unified definition of a segment or manifest to
 the other modules.
 In theory, it should be the only directory to update when adding /
 modifying / deleting a transport protocol</p>
+<p>Various files documenting the Net architecture should be available in the
+<code>doc/architecture/net</code> directory.</p>
 </li>
 <li>
 <p><strong>the <a href="pipelines/index.html">Pipelines</a></strong></p>
