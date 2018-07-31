@@ -731,13 +731,16 @@ export default function parseManifest(
       parsedMPD.periods.length - 1
     ].adaptations;
 
-    if (!lastPeriodAdaptations.video) {
-      throw new Error("Can't find first video adaptation from last period");
+    const firstAdaptationsFromLastPeriod = lastPeriodAdaptations.video ||
+      lastPeriodAdaptations.audio;
+
+    if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) {
+      throw new Error("Can't find first adaptation from last period");
     }
 
-    const firstVideoAdaptationFromLastPeriod = lastPeriodAdaptations.video[0];
+    const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
 
-    const lastRef = getLastLiveTimeReference(firstVideoAdaptationFromLastPeriod);
+    const lastRef = getLastLiveTimeReference(firstAdaptationFromLastPeriod);
     parsedMPD.presentationLiveGap = lastRef != null ?
       Date.now() / 1000 - (lastRef + parsedMPD.availabilityStartTime) : 10;
   }
