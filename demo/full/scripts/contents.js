@@ -1,6 +1,6 @@
 export default [
   {
-    "name": "BIF Thumbnail Track example",
+    "name": "Canal + - BIF Thumbnail Track example",
     "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
     "transport": "smooth",
     "supplementaryImageTracks": {
@@ -9,55 +9,49 @@ export default [
     },
   },
   {
-    "name": "DASH-IF SegmentTimeline",
+    "name": "DASH-IF - SegmentTimeline live stream",
     "url": "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
   {
-    "name": "DASH-IF SegmentTemplate",
+    "name": "DASH-IF - SegmentTemplate live stream",
     "url": "http://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
   {
-    "name": "DASH-IF Multi-Subtitles",
+    "name": "BBC - presentationTimeOffset on audio and video",
+    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-pto_both-events.mpd",
+    "transport": "dash",
+    "live": false,
+  },
+  {
+    "name": "DASH-IF - Multi-Subtitles",
     "url": "http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
     "transport": "dash",
     "live": false,
   },
   {
-    "name": "IRTDash Subtitles",
-    "url": "http://irtdashreference-i.akamaihd.net/dash/live/901161/bfs/manifestARD.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
-    "name": "Elephant Dream Subtitles",
-    "url": "http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
-    "name": "Testcard Audio-only",
+    "name": "BBC - Testcard Audio-only",
     "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
     "transport": "dash",
-    "live": true,
+    "live": false,
   },
   {
-    "name": "DASH-IF Audio-only",
+    "name": "DASH-IF - Audio-only",
     "url": "http://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
     "transport": "dash",
     "live": true,
   },
   {
-    "name": "Big Buck Bunny Wowza",
+    "name": "Wowza - Big Buck Bunny",
     "url": "https://wowzaec2demo.streamlock.net/live/_definst_/bigbuckbunny/manifest_mpm4sav_mvtime_w925796611.mpd",
     "transport": "dash",
     "live": true,
   },
   {
-    "name": "Envivio DASH",
+    "name": "Envivio - DASH",
     "url": "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd",
     "transport": "dash",
   },
