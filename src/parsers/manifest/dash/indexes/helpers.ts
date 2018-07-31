@@ -217,7 +217,7 @@ function getSegmentsFromTimeline(
         const segmentNumber = currentNumber != null ? currentNumber : undefined;
         const segment = {
           id: "" + ts,
-          time: toIndexTime(index, ts),
+          time: ts - index.indexTimeOffset,
           isInit: false,
           range,
           duration: undefined,
@@ -239,7 +239,7 @@ function getSegmentsFromTimeline(
         currentNumber + segmentNumberInCurrentRange : undefined;
       const segment = {
         id: "" + segmentTime,
-        time: toIndexTime(index, segmentTime),
+        time: segmentTime - index.indexTimeOffset,
         isInit: false,
         range,
         duration: d,
