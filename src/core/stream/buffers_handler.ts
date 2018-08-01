@@ -293,24 +293,25 @@ export default function BuffersHandler(
 
     const restartBuffers$ = clock$.pipe(
 
-      filter(({ currentTime, timeOffset }) => {
-        if (!manifest.getPeriodForTime(timeOffset + currentTime)) {
+      filter(({ currentTime, wantedTimeOffset }) => {
+        if (!manifest.getPeriodForTime(wantedTimeOffset + currentTime)) {
           // TODO Manage out-of-manifest situations
           return false;
         }
-        return isOutOfPeriodList(timeOffset + currentTime);
+        return isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
 
       take(1),
 
-      tap(({ currentTime, timeOffset }) => {
+      tap(({ currentTime, wantedTimeOffset }) => {
         log.info("Current position out of the bounds of the active periods," +
-          "re-creating buffers.", bufferType, currentTime + timeOffset);
+          "re-creating buffers.", bufferType, currentTime + wantedTimeOffset);
         destroyCurrentBuffers.next();
       }),
 
-      mergeMap(({ currentTime, timeOffset }) => {
-        const newInitialPeriod = manifest.getPeriodForTime(currentTime + timeOffset);
+      mergeMap(({ currentTime, wantedTimeOffset }) => {
+        const newInitialPeriod = manifest
+          .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
         } else {
@@ -402,8 +403,8 @@ export default function BuffersHandler(
      * @type {Subject}
      */
     const endOfCurrentBuffer$ = clock$
-      .pipe(filter(({ currentTime, timeOffset }) =>
-        !!basePeriod.end && (currentTime + timeOffset) >= basePeriod.end
+      .pipe(filter(({ currentTime, wantedTimeOffset }) =>
+        !!basePeriod.end && (currentTime + wantedTimeOffset) >= basePeriod.end
       ));
 
     /**

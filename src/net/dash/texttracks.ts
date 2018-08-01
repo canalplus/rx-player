@@ -134,6 +134,7 @@ function TextTrackParser({
         time: segment.isInit ? -1 : segment.time,
         timescale: segment.timescale,
       } : null,
+      segmentOffset: segment.timestampOffset || 0,
     });
   }
 
@@ -189,7 +190,6 @@ function TextTrackParser({
       end: segmentInfos.time + (segmentInfos.duration || 0),
       language,
       timescale: segmentInfos.timescale,
-      timeOffset: 0,
     };
     if (isMP4) {
       const { codec = "" } = representation;
@@ -250,7 +250,11 @@ function TextTrackParser({
   if (nextSegments) {
     addNextSegments(representation, nextSegments, segmentInfos);
   }
-  return observableOf({ segmentData, segmentInfos });
+  return observableOf({
+    segmentData,
+    segmentInfos,
+    segmentOffset: segment.timestampOffset || 0,
+  });
 }
 
 export {

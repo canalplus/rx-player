@@ -38,18 +38,21 @@ export interface IPrivateInfos {
 // Represent a single Segment from a Representation.
 export interface ISegment {
   id : string; // ID of the Segment. Should be unique for this Representation
-  isInit : boolean; // If true, it's an initialization Segment
-  time : number; // Time of beginning for the segment
+  isInit : boolean; // If true, this Segment contains initialization data
+  time : number; // Estimated time of beginning for the segment, in timescale
   timescale : number; // Timescale to convert time and duration into seconds
-  mediaURL : string|null; // string used to link to the media
+  mediaURL : string|null; // URL of the segment
 
-  duration? : number; // duration of the segment
-  indexRange? : [number, number]; // If set, the corresponding byte Range in the
+  duration? : number; // Estimated duration of the segment, in timescale
+  indexRange? : [number, number]; // If set, the corresponding byte-range in the
                                   // downloaded Segment will contain an index
-                                  // for other Segments
+                                  // describing other Segments
+                                  // TODO put in privateInfos?
   number? : number; // Optional number of the Segment
   range? : [number, number]; // Optional byte range to retrieve the Segment
-
+  timestampOffset? : number; // Estimated time, in seconds, at which the
+                             // concerned segment will be offseted when
+                             // decoded.
   privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
                                  // supplementary informations in a given
                                  // Segment for later downloading/parsing

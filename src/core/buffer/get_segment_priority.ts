@@ -33,10 +33,10 @@ export default function getSegmentPriority(
   segment : ISegment,
   clockTick : {
     currentTime : number;
-    timeOffset : number;
+    wantedTimeOffset : number;
   }
 ) : number {
-  const currentTime = clockTick.currentTime + clockTick.timeOffset;
+  const currentTime = clockTick.currentTime + clockTick.wantedTimeOffset;
   const segmentStart = segment.time / segment.timescale;
   const distance = segmentStart - currentTime;
 
