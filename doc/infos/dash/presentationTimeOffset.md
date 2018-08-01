@@ -3,9 +3,6 @@
 The presentationTimeOffset is an attribute which can be encountered in an MPD
 (the "manifest" of the DASH streaming technology).
 
-It's a concept that we took some time to grasp in the player team, so I thought
-that writing a documentation on it would be helpful.
-
 
 
 ## Overview ####################################################################
@@ -169,8 +166,6 @@ As an added bonus, SourceBuffers defined in the HTML5 MediaSource Extentions
 also have a [`timestampOffset` property
 ](https://www.w3.org/TR/media-source/#dom-sourcebuffer-timestampoffset), which
 means exactly the same thing as defined here!
-
-Temps dans le RxPlayer
 
 
 
