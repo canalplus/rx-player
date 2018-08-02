@@ -20,7 +20,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  mergeMap,
+  mergeMapTo,
   shareReplay,
   tap,
 } from "rxjs/operators";
@@ -81,10 +81,9 @@ export default function handleVideoEvents(
     initialSeek$,
     handledCanPlay$
   ).pipe(
-    mergeMap(() =>
-      mustAutoPlay ?
-        playUnlessAutoPlayPolicy$(videoElement) :
-        observableOf(undefined)
+    mergeMapTo(mustAutoPlay ?
+      playUnlessAutoPlayPolicy$(videoElement) :
+      observableOf(undefined)
     ),
     shareReplay() // avoid doing "play" each time someone subscribes
   );
