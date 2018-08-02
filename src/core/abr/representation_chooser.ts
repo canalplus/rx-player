@@ -133,7 +133,7 @@ function setManualRepresentation(
 }
 
 /**
- * Get the pending request containing the asked segment position.
+ * Get the pending request starting with the asked segment position.
  * @param {Object} requests
  * @param {number} segmentPosition
  * @returns {IRequestInfo|undefined}
@@ -154,7 +154,8 @@ function getConcernedRequest(
         duration: chunkDuration,
       } = request;
 
-      if ((chunkTime - segmentPosition) < chunkDuration) {
+      // We check that this chunk has a high probability of being the one we want
+      if (Math.abs(chunkTime - segmentPosition) < chunkDuration * 0.3) {
         return request;
       }
     }
