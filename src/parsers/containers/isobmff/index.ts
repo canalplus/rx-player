@@ -25,6 +25,7 @@ import {
   itobe4,
   strToBytes,
 } from "../../../utils/bytes";
+import { getPlayReadyKIDFromPrivateData } from "./drm";
 import {
   getMDAT,
   getMDIA,
@@ -418,6 +419,7 @@ function patchPssh(buf : Uint8Array, pssList : IISOBMFFKeySystem[]) : Uint8Array
 
 export {
   getMDHDTimescale,
+  getPlayReadyKIDFromPrivateData,
   parseTfdt,
   getDurationFromTrun,
   parseSidx,

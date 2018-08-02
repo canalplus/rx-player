@@ -56,7 +56,7 @@ export interface IAdaptationSetChildren {
   // optional
   accessibility? : IScheme;
   contentComponent? : IParsedContentComponent;
-  contentProtection? : IParsedContentProtection;
+  contentProtections? : IParsedContentProtection[];
   role? : IScheme;
 
   // TODO
@@ -104,6 +104,7 @@ function parseAdaptationSetChildren(
     baseURL: "",
     representations: [],
   };
+  const contentProtections = [];
   for (let i = 0; i < adaptationSetChildren.length; i++) {
     if (adaptationSetChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = adaptationSetChildren[i] as Element;
@@ -145,7 +146,10 @@ function parseAdaptationSetChildren(
           break;
 
         case "ContentProtection":
-          children.contentProtection = parseContentProtection(currentElement);
+          const contentProtection = parseContentProtection(currentElement);
+          if (contentProtection) {
+            contentProtections.push(contentProtection);
+          }
           break;
 
           // case "Rating":
@@ -157,6 +161,9 @@ function parseAdaptationSetChildren(
           //   break;
       }
     }
+  }
+  if (contentProtections.length) {
+    children.contentProtections = contentProtections;
   }
   return children;
 }

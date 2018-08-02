@@ -18,9 +18,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-// import { IHSSManifestSegment } from "../types";
-
-import { replaceSegmentSmoothTokens } from "./helpers";
+import { replaceSegmentSmoothTokens } from "./utils/tokens";
 
 export interface IIndexSegment {
   ts : number; // start timestamp
