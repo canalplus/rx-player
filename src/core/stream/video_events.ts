@@ -16,22 +16,24 @@
 
 import {
   combineLatest as observableCombineLatest,
-  Observable
+  Observable,
+  of as observableOf,
 } from "rxjs";
 import {
-  mapTo,
+  mergeMap,
   shareReplay,
   tap,
 } from "rxjs/operators";
 import {
   canPlay,
   hasLoadedMetadata,
+  playUnlessAutoPlayPolicy$,
 } from "../../compat";
 import log from "../../log";
 
 /**
  * Set the initial time given as soon as possible on the video element.
- * Emit "null" when done.
+ * Emit when done.
  * @param {HMTLMediaElement} videoElement
  * @param {number|Function} startTime
  * @returns {Observable}
@@ -51,29 +53,9 @@ function doInitialSeek(
         videoElement.currentTime = typeof startTime === "function" ?
           startTime() : startTime;
       }),
-      shareReplay()
+      shareReplay() // we don't want to repeat the side-effect on each
+                    // subscription of this very same observable
     );
-}
-
-/**
- * If video must auto-play, trigger video playback.
- * If playback is not allowed, warn user about it.
- * @param {HTMLMediaElement} videoElement
- */
-function autoPlay(videoElement : HTMLMediaElement): void {
-  const playPromise = videoElement.play();
-  if (playPromise !== undefined) {
-    playPromise.catch((error:  Error) => {
-      if (error.name === "NotAllowedError") {
-        // auto-play was probably prevented.
-        log.warn(
-          "Media element can't play." +
-          " It may be due to browser auto-play policies.");
-      } else {
-        throw error;
-      }
-    });
-  }
 }
 
 /**
@@ -99,13 +81,12 @@ export default function handleVideoEvents(
     initialSeek$,
     handledCanPlay$
   ).pipe(
-    tap(() => {
-      if (mustAutoPlay) {
-        autoPlay(videoElement);
-      }
-    }),
-    mapTo(undefined),
-    shareReplay()
+    mergeMap(() =>
+      mustAutoPlay ?
+        playUnlessAutoPlayPolicy$(videoElement) :
+        observableOf(undefined)
+    ),
+    shareReplay() // avoid doing "play" each time someone subscribes
   );
 
   return {
