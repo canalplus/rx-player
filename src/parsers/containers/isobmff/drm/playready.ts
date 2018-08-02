@@ -15,28 +15,25 @@
  */
 
 import {
-    be4toi,
     bytesToUTF16Str,
     guidToUuid,
     le2toi,
 } from "../../../../utils/bytes";
 
 /**
- * Parse PlayReady privateData to get KID.
+ * Parse PlayReady privateData to get its Hexa-coded KeyID.
  * @param {Uint8Array} privateData
  * @returns {string}
  */
-export default function getPlayreadyKIDFromPrivateData(
-  privateData: Uint8Array
+export default function getPlayReadyKIDFromPrivateData(
+  data: Uint8Array
 ) : string {
-  const dataLength = be4toi(privateData, 0);
-  const data = privateData.subarray(4, dataLength);
   const xmlLength = le2toi(data, 8);
   const xml = bytesToUTF16Str(data.subarray(10, xmlLength + 10));
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   const kidElement = doc.querySelector("KID");
   if (!kidElement) {
-    throw new Error("invalid XML");
+    throw new Error("Cannot parse PlayReady private data: invalid XML");
   }
   const kid = kidElement.textContent || "";
   return guidToUuid(atob(kid)).toLowerCase();
