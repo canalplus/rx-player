@@ -24,7 +24,7 @@ import {
 } from "rxjs";
 import {
   map,
-  share,
+  shareReplay,
   switchMap,
   takeUntil,
   tap,
@@ -228,9 +228,9 @@ function estimateRemainingTime(
  * Check if the request for the most needed segment is too slow.
  * If that's the case, re-calculate the bandwidth urgently based on
  * this single request.
- * @param {Object} requests
- * @param {Object} clock
- * @param {Number} lastEstimatedBitrate
+ * @param {Object} requests - Current pending requests.
+ * @param {Object} clock - Informations on the current playback.
+ * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
  * @returns {Number|undefined}
  */
 function estimateStarvationModeBitrate(
@@ -246,29 +246,31 @@ function estimateStarvationModeBitrate(
 
   const currentBitrate = clock.bitrate;
   const chunkDuration = concernedRequest.duration;
-  const requestElapsedTime =
-    (Date.now() - concernedRequest.requestTimestamp) / 1000;
+  const now = Date.now();
+  const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const lastProgressEvent = concernedRequest.progress ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
     null;
 
   // first, try to do a quick estimate from progress events
   const bandwidthEstimate = estimateRequestBandwidth(concernedRequest);
-  const shouldUpdateBitrate =
-    lastProgressEvent != null && bandwidthEstimate != null ?
-    estimateRemainingTime(lastProgressEvent, bandwidthEstimate) * 1.2
-    > (clock.bufferGap / clock.speed) :
-    requestElapsedTime > ((chunkDuration * 1.5 + 1) / clock.speed);
+  if (lastProgressEvent != null && bandwidthEstimate != null) {
+    const remainingTime =
+      estimateRemainingTime(lastProgressEvent, bandwidthEstimate) * 1.2;
 
-  if (!shouldUpdateBitrate) {
-    return undefined;
+    // if this remaining time is reliable and is not enough to avoid buffering
+    if (
+      (now - lastProgressEvent.timestamp) / 1000 <= remainingTime &&
+      remainingTime > (clock.bufferGap / clock.speed)
+    ) {
+      return bandwidthEstimate;
+    }
   }
 
-  if (bandwidthEstimate != null) {
-    return bandwidthEstimate;
-  }
-
-  if (currentBitrate == null) {
+  if (
+    currentBitrate == null ||
+    requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
+  ) {
     return undefined;
   }
 
@@ -413,9 +415,11 @@ export default class RepresentationChooser {
             const { bufferGap } = clock;
 
             // check if should get in/out of starvation mode
-            if (bufferGap <= ABR_STARVATION_GAP) {
+            if (!inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
+              log.info("ABR - enter starvation mode.");
               inStarvationMode = true;
             } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+              log.info("ABR - exit starvation mode.");
               inStarvationMode = false;
             }
 
@@ -427,6 +431,7 @@ export default class RepresentationChooser {
                 this._currentRequests, clock, lastEstimatedBitrate);
 
               if (bandwidthEstimate != null) {
+                log.info("ABR - starvation mode emergency estimate:", bandwidthEstimate);
                 this.resetEstimate();
                 const currentBitrate = clock.bitrate;
                 nextBitrate = currentBitrate == null ?
@@ -471,11 +476,12 @@ export default class RepresentationChooser {
 
           tap(({ bitrate }) => {
             if (bitrate != null) {
+              log.debug("ABR - calculated bitrate:", bitrate);
               lastEstimatedBitrate = bitrate;
             }
           }),
 
-          share()
+          shareReplay()
         );
     }));
   }
