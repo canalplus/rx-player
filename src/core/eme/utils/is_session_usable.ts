@@ -27,7 +27,7 @@ import arrayIncludes from "../../../utils/array-includes";
  * @returns {MediaKeySession}
  */
 export default function isSessionUsable(
-  loadedSession : MediaKeySession|IMediaKeySession
+  loadedSession : IMediaKeySession
 ) : boolean {
   if (loadedSession.sessionId === "") {
     return false;
@@ -35,7 +35,7 @@ export default function isSessionUsable(
 
   const keyStatusesMap = loadedSession.keyStatuses;
   const keyStatuses: string[] = [];
-  keyStatusesMap.forEach((keyStatus: string) => {
+  keyStatusesMap.forEach((keyStatus: MediaKeyStatus) => {
     keyStatuses.push(keyStatus);
   });
 

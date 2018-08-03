@@ -57,6 +57,7 @@ export default class Logger {
     }
 
     /* tslint:disable no-invalid-this */
+    /* tslint:disable no-console */
     this.error = (level >= this.LEVELS.ERROR) ?
       console.error.bind(console) : noop;
     this.warn = (level >= this.LEVELS.WARNING) ?
@@ -65,6 +66,7 @@ export default class Logger {
       console.info.bind(console) : noop;
     this.debug = (level >= this.LEVELS.DEBUG) ?
       console.log.bind(console) : noop;
+    /* tslint:enable no-console */
     /* tslint:enable no-invalid-this */
   }
 
