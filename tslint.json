@@ -95,7 +95,6 @@
     "no-unsafe-any": false, // TODO
     "no-unsafe-finally": true,
     "no-unused-expression": true,
-    "no-unused-variable": true,
     "no-use-before-declare": true,
     "no-var-requires": true,
     "no-var-keyword": true,
