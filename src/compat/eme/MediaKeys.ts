@@ -27,7 +27,9 @@ import {
   strToBytes,
 } from "../../utils/bytes";
 import castToObservable from "../../utils/castToObservable";
-import EventEmitter from "../../utils/eventemitter";
+import EventEmitter, {
+  IEventEmitter,
+} from "../../utils/eventemitter";
 import {
   MediaKeys_,
 } from "../constants";
@@ -59,14 +61,48 @@ type MEDIA_KEY_SESSION_EVENTS =
   // "ready" |
   // "keyerror" |
   // "error";
+//
+
+interface IMediaKeyStatusMap {
+    readonly size: number;
+    forEach(callback: (status : MediaKeyStatus) => void, thisArg?: any): void;
+    get(
+      keyId: Int8Array |
+             Int16Array |
+             Int32Array |
+             Uint8Array |
+             Uint16Array |
+             Uint32Array |
+             Uint8ClampedArray |
+             Float32Array |
+             Float64Array |
+             DataView |
+             ArrayBuffer |
+             null
+    ) : MediaKeyStatus|undefined;
+    has(
+      keyId: Int8Array |
+             Int16Array |
+             Int32Array |
+             Uint8Array |
+             Uint16Array |
+             Uint32Array |
+             Uint8ClampedArray |
+             Float32Array |
+             Float64Array |
+             DataView |
+             ArrayBuffer |
+             null
+      ) : boolean;
+}
 
 export interface IMediaKeySession
-  extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
+  extends IEventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
 {
   // Attributes
   readonly closed: Promise<void>;
   expiration: number;
-  keyStatuses: MediaKeyStatusMap;
+  keyStatuses: IMediaKeyStatusMap;
   sessionId : string;
 
   // Event handlers
@@ -152,7 +188,7 @@ if (navigator.requestMediaKeySystemAccess) {
       ) => Promise<void>;
       public readonly closed: Promise<void>;
       public expiration: number;
-      public keyStatuses: MediaKeyStatusMap;
+      public keyStatuses: IMediaKeyStatusMap;
       public sessionId : string;
 
       private readonly _vid : HTMLMediaElement;
@@ -336,7 +372,7 @@ if (navigator.requestMediaKeySystemAccess) {
       ) => Promise<void>;
       public readonly closed: Promise<void>;
       public expiration: number;
-      public keyStatuses: MediaKeyStatusMap;
+      public keyStatuses: IMediaKeyStatusMap;
       public sessionId : string;
 
       private readonly _mk : IIE11MediaKeys;
