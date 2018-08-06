@@ -28,6 +28,7 @@ import {
   filter,
   map,
   mergeMap,
+  shareReplay,
   switchMap,
   tap,
 } from "rxjs/operators";
@@ -160,7 +161,7 @@ export default class AdaptationBufferManager {
   ) : Observable<IAdaptationBufferEvent<T>> {
 
     const { manifest, period, adaptation } = content;
-    const abr$ = this._getABRForAdaptation(adaptation);
+    const abr$ = this._getABRForAdaptation(adaptation).pipe(shareReplay());
 
     /**
      * Emit at each bitrate estimate done by the ABRManager

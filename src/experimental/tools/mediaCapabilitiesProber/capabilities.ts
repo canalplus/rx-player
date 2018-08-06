@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayFind from "array-find";
 import { IMediaConfiguration } from "./types";
 
 export type ICapabilitiesTypes =
@@ -154,13 +155,13 @@ function extend(target: ICapabilities, objects: ICapabilities[]): ICapabilities 
   objects.forEach((obj) => {
     obj.forEach((element) => {
       if (typeof element === "string") {
-        if (!target.find((targetElement) => targetElement === element)) {
+        if (!arrayFind(target, (targetElement) => targetElement === element)) {
           target.push(element);
         }
       } else {
         const entry = Object.entries(element)[0];
         const [ key, value ] = entry;
-        const foundTargetElement = target.find((targetElement) =>
+        const foundTargetElement = arrayFind(target, (targetElement) =>
           typeof targetElement !== "string" && !!targetElement[key]);
         if (!foundTargetElement) {
           const toPush: { [key: string]: ICapabilities } = {};

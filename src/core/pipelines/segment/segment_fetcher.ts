@@ -47,10 +47,11 @@ import BasePipeline, {
 interface ISegmentResponseParsed<T> {
   segmentData : T;
   segmentInfos : {
-    duration : number;
+    duration? : number;
     time : number;
     timescale : number;
   };
+  segmentOffset : number;
 }
 
 // Response that should be emitted by the given Pipeline

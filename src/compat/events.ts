@@ -36,7 +36,7 @@ import {
 } from "rxjs/operators";
 import config from "../config";
 import log from "../log";
-import EventEmitter from "../utils/eventemitter";
+import { IEventEmitter } from "../utils/eventemitter";
 
 import {
   BROWSER_PREFIXES,
@@ -96,7 +96,7 @@ export interface IEventEmitterLike {
 export type IEventTargetLike =
   HTMLElement |
   IEventEmitterLike |
-  EventEmitter<string, any>;
+  IEventEmitter<string, any>;
 
 /**
  * @param {Array.<string>} eventNames

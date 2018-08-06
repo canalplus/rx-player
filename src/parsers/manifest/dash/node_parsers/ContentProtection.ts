@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  parseScheme,
-} from "../helpers";
-
 export interface IParsedContentProtection {
   schemeIdUri?: string;
   value?: string;
+  keyId?: string;
 }
 
 /**
@@ -32,5 +29,35 @@ export interface IParsedContentProtection {
 export default function parseContentProtection(
   root: Element
 ) : IParsedContentProtection|undefined {
-  return parseScheme(root);
+  let schemeIdUri : string|undefined;
+  let value : string|undefined;
+  let keyId : string|undefined;
+  for (let i = 0; i < root.attributes.length; i++) {
+    const attribute = root.attributes[i];
+
+    switch (attribute.name) {
+      case "schemeIdUri":
+        schemeIdUri = attribute.value;
+        break;
+      case "value":
+        value = attribute.value;
+        break;
+      case "cenc:default_KID":
+        keyId = attribute.value.toString().split("-").join("").toUpperCase();
+    }
+  }
+
+  // TODO Take systemId from PSSH?
+  // for (let i = 0; i < root.childElementCount; i++) {
+  //   const child = root.children[i];
+  //   if (child.nodeName === "cenc:pssh" && child.textContent) {
+  //     pssh = atob(child.textContent);
+  //   }
+  // }
+
+  return {
+    schemeIdUri,
+    value,
+    keyId,
+  };
 }

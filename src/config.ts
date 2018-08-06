@@ -118,7 +118,7 @@ export default {
     other: Infinity, // tracks which are not audio/video
                      // Though those are generally at a single bitrate, so no
                      // adaptive mechanism is triggered for them.
-  } as IDictionary<number>,
+  } as Record<"audio"|"video"|"other", number>,
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
@@ -353,6 +353,26 @@ export default {
    */
   ABR_STARVATION_GAP: 5,
   OUT_OF_STARVATION_GAP: 7,
+
+  /**
+   * Half-life, in seconds for a fastly-evolving exponential weighted moving
+   * average.
+   * The lower it is, the faster the ABR logic will react to the bandwidth
+   * falling quickly.
+   * Should be kept to a lower number than ABR_SLOW_EMA for coherency reasons.
+   * @type {Number}
+   */
+  ABR_FAST_EMA: 2,
+
+  /**
+   * Half-life, in seconds for a slowly-evolving exponential weighted moving
+   * average.
+   * The lower it is, the faster the ABR logic is going to react to recent
+   * bandwidth variation, on the higher and on the lower side.
+   * Should be kept to a higher number than ABR_FAST_EMA for coherency reasons.
+   * @type {Number}
+   */
+  ABR_SLOW_EMA: 10,
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume when
@@ -605,7 +625,7 @@ export default {
       "com.chromecast.playready",
       "com.youtube.playready",
     ],
-  } as IDictionary<string[]>,
+  } as Partial<Record<string, string[]>>,
   /* tslint:enable no-object-literal-type-assertion */
 
   /**

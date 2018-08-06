@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "./dist/_esm5.raw",
-    "allowJs": true,
+    "declaration": true,
     "target": "es5",
     "lib": ["es2017", "dom"],
     "strict": true,

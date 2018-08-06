@@ -1,5 +1,23 @@
 # Changelog
 
+## v3.5.2 (2018/08/06)
+
+### Bug fixes
+
+- dash: Manage presentationTimeOffset completely (allow advanced multi-period configurations)
+- dash: Fix Adaptations bug when the first DASH adaptation was a "main" one
+- smooth: Remove the limitation of a minimum bitrate in Smooth Streaming
+- dash: Fix condition which prevented to play audio-only live DASH streams
+
+### Other improvements
+
+- typescript: add typescript declaration files
+- abr: update ABR mechanisms when the estimated bandtwidth fall suddenly
+- api: warn in the log when the browser reject a wanted autoplay
+- drm: Add keyId information to the internal Manifest structure
+- typescript: update typescript to v3.0.1
+
+
 ## v3.5.1 (2018/07/11)
 
 ### Bug fixes

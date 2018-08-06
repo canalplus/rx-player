@@ -1,0 +1,58 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>Networking code - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Networking%20code">Networking code</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Code%20organization">Code organization</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Networking%20code"></a></p>
+<h1>Networking code</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The networking code in the <code>net/</code> directory is the code handling streaming
+protocols.</p>
+<p>Its roles are to:</p>
+<ul>
+<li>
+<p>download the manifest and parse it into an object that can be understood
+by the core of the rx-player</p>
+</li>
+<li>
+<p>download segments, convert them into a decodable format if needed, and
+report important informations about them (like the duration of a segment)</p>
+</li>
+<li>
+<p>give networking metrics to allow the core to better adapt to poor networking
+conditions</p>
+</li>
+</ul>
+<p>As such, most network request needed by the player are directly performed by
+the networking code.</p>
+<p>The networking code is completely divided by streaming protocols used.
+E.g.  <code>DASH</code> streaming has its own networking code and same thing for <code>Smooth Streaming</code>.
+When playing a <code>DASH</code> content only the DASH-related code will be called. When
+switching to an <code>HSS</code> content, the <code>Smooth Streaming</code> code will be used instead.</p>
+<p>To allow this logic, any streaming protocol exposed in the networking code
+exposes the same interface and abstracts the difference to the rest of the code.
+For the core of the rx-player, we do not have any difference between playing
+any of the streaming protocols available.</p>
+<p>This also means that all code relative to a specific streaming technology is
+completely within the networking code.
+This allows to greatly simplify code maintenance and evolutivity. For example,
+managing a new streaming protocol would mainly just need us to add some code
+there. Same thing for adding a new feature to e.g. <code>DASH</code> or <code>HSS</code>.</p>
+<p><a name="chapter-Code%20organization"></a></p>
+<h2>Code organization</h2>
+<p>Each streaming protocol implementation present in the networking code exports
+a single &#x201C;transport&#x201D; function.</p>
+<p>This function takes configuration options as argument and returns an object
+containing multiple other functions allowing to download and parse the manifest
+and all type of segments managed in the rx-player.</p>
+<p>It is then the task of the core of the rx-player to call those functions at the
+right time.</p>
+<p>The interface used by the transport function, its arguments and what it returns
+is heavily documented in the typings declared in the corresponding code.</p>
+<p>The networking code written there should limit at most any observable
+side-effects and should stay relatively pure, meaning that calling functions
+defined there with the same arguments should always return the same response.</p>
+<p>As this code is heavily decoupled from the core, we found that keeping it that
+way greatly simplified how we can both write it and use it in the core.</p>
+</body></html></div></div></div></body>

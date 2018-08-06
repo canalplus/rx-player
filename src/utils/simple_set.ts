@@ -24,7 +24,7 @@ export default class SimpleSet {
    * @type {Object}
    * @private
    */
-  private _hashes : IDictionary<true>;
+  private _hashes : Partial<Record<string, true>>;
 
   constructor() {
     this._hashes = {};

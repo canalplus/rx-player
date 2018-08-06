@@ -27,6 +27,7 @@ import {
   resolveURL,
 } from "../../../../utils/url";
 import {
+  IContentProtection,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
@@ -540,6 +541,19 @@ export default function parseManifest(
                 adaptation.attributes.width;
             }
 
+            if (adaptation.children.contentProtections) {
+              const contentProtections : IContentProtection[] = [];
+              for (let k = 0; k < adaptation.children.contentProtections.length; k++) {
+                const protection = adaptation.children.contentProtections[k];
+                if (protection.keyId != null) {
+                  contentProtections.push({ keyId: protection.keyId });
+                }
+              }
+              if (contentProtections.length) {
+                parsedRepresentation.contentProtections = contentProtections;
+              }
+            }
+
             return parsedRepresentation;
           });
 
@@ -648,6 +662,9 @@ export default function parseManifest(
           const parsedAdaptation = parsedAdaptations[type];
           if (!parsedAdaptation) {
             parsedAdaptations[type] = [parsedAdaptationSet];
+            if (isMainAdaptation) {
+              acc.mainAdaptations[type] = parsedAdaptationSet;
+            }
           } else if (isMainAdaptation) {
             // put "main" adaptation as the first
             parsedAdaptation.unshift(parsedAdaptationSet);
@@ -728,13 +745,16 @@ export default function parseManifest(
       parsedMPD.periods.length - 1
     ].adaptations;
 
-    if (!lastPeriodAdaptations.video) {
-      throw new Error("Can't find first video adaptation from last period");
+    const firstAdaptationsFromLastPeriod = lastPeriodAdaptations.video ||
+      lastPeriodAdaptations.audio;
+
+    if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) {
+      throw new Error("Can't find first adaptation from last period");
     }
 
-    const firstVideoAdaptationFromLastPeriod = lastPeriodAdaptations.video[0];
+    const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
 
-    const lastRef = getLastLiveTimeReference(firstVideoAdaptationFromLastPeriod);
+    const lastRef = getLastLiveTimeReference(firstAdaptationFromLastPeriod);
     parsedMPD.presentationLiveGap = lastRef != null ?
       Date.now() / 1000 - (lastRef + parsedMPD.availabilityStartTime) : 10;
   }

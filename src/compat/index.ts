@@ -15,19 +15,21 @@
  */
 
 import {
+  defer as observableDefer,
   fromEvent as observableFromEvent,
   Observable,
   Observer,
   of as observableOf,
 } from "rxjs";
 import {
+  catchError,
   mapTo,
   take,
 } from "rxjs/operators";
-
 import log from "../log";
+import castToObservable from "../utils/castToObservable";
 import EventEmitter from "../utils/eventemitter";
-
+import tryCatch from "../utils/rx-tryCatch";
 import {
   isFirefox,
   isIE,
@@ -357,7 +359,55 @@ function makeCue(
   return new VTTCue_(startTime, endTime, payload);
 }
 
+/**
+ * Call play on the media element on subscription and return the response as an
+ * observable.
+ * @param {HTMLMediaElement} videoElement
+ * @returns {Observable}
+ */
+function play$(mediaElement : HTMLMediaElement) : Observable<void> {
+  return observableDefer(() =>
+    // mediaElement.play is not always a Promise. In the improbable case it
+    // throws, I prefer still to catch to return the error wrapped in an
+    // Observable
+    tryCatch(() => castToObservable(mediaElement.play()))
+      .pipe(mapTo(undefined))
+  );
+}
+
+/**
+ * Try to call play on the given media element:
+ *
+ *   - If it works emit `undefined` through the returned Observable, then
+ *     complete it.
+ *
+ *   - If it fails probably because of an auto-play policy, warn through the
+ *     logger then emit `undefined` through the returned Observable then
+ *     complete it.
+ *
+ *   - if it fails for any other reason, throw through the Observable.
+ * @param {HTMLMediaElement} videoElement
+ * @returns {Observable}
+ */
+function playUnlessAutoPlayPolicy$(
+  mediaElement : HTMLMediaElement
+) : Observable<void> {
+  return play$(mediaElement)
+    .pipe(catchError((error) => {
+      if (error.name === "NotAllowedError") {
+        // auto-play was probably prevented.
+        log.warn("Media element can't play." +
+          " It may be due to browser auto-play policies.");
+        return observableOf(undefined);
+      } else {
+        throw error;
+      }
+    }));
+}
+
 export {
+  play$,
+  playUnlessAutoPlayPolicy$,
   getInitData,
   KeySystemAccess,
   MediaSource_,

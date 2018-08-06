@@ -18,7 +18,7 @@ import { expect } from "chai";
 import { Representation } from "../../../manifest";
 import _filterByWidth from "../filterByWidth";
 
-describe("core - abr - filterByWidth", () => {
+describe("ABR - filterByWidth", () => {
   const fakeReps = [
     { width : 100 },
     { width : 1000 },

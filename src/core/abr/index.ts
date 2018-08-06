@@ -85,7 +85,7 @@ const createChooser = (
 export default class ABRManager {
   private readonly _dispose$: Subject<void>;
 
-  private _choosers:  IDictionary<RepresentationChooser>;
+  private _choosers:  Partial<Record<IBufferType, RepresentationChooser>>;
   private _chooserInstanceOptions: IRepresentationChoosersOptions;
 
   /**
@@ -178,12 +178,12 @@ export default class ABRManager {
     metrics$
       .pipe(takeUntil(this._dispose$))
       .subscribe(({ type, value }) => {
-        this._lazilyCreateChooser(type);
+        const chooser = this._lazilyCreateChooser(type);
         const { duration, size } = value;
 
         // TODO Should we do a single estimate instead of a per-type one?
         // Test it thoroughly
-        this._choosers[type].addEstimate(duration, size);
+        chooser.addEstimate(duration, size);
       });
 
     requests$
@@ -194,8 +194,8 @@ export default class ABRManager {
       )
       .subscribe((request) => {
         const { type, value } = request;
+        const chooser = this._lazilyCreateChooser(type);
 
-        this._lazilyCreateChooser(type);
         switch (request.event) {
         case "requestBegin":
           // use the id of the segment as in any case, we should only have at
@@ -203,13 +203,13 @@ export default class ABRManager {
           // This might be not optimal if this changes however. The best I think
           // for now is to just throw/warn in DEV mode when two pending ids
           // are identical
-          this._choosers[type].addPendingRequest(value.id, request);
+          chooser.addPendingRequest(value.id, request);
           break;
         case "requestEnd":
-          this._choosers[type].removePendingRequest(value.id);
+          chooser.removePendingRequest(value.id);
           break;
         case "progress":
-          this._choosers[type].addRequestProgress(value.id, request);
+          chooser.addRequestProgress(value.id, request);
           break;
         }
       });
@@ -232,8 +232,7 @@ export default class ABRManager {
     bitrate: undefined|number;
     representation: Representation|null;
   }> {
-    this._lazilyCreateChooser(type);
-    return this._choosers[type].get$(clock$, representations);
+    return this._lazilyCreateChooser(type).get$(clock$, representations);
   }
 
   /**
@@ -307,7 +306,7 @@ export default class ABRManager {
    */
   public dispose() : void {
     Object.keys(this._choosers).forEach(type => {
-      this._choosers[type].dispose();
+      (this._choosers[type as IBufferType] as RepresentationChooser).dispose();
     });
     this._chooserInstanceOptions = defaultChooserOptions;
     this._choosers = {};
@@ -319,12 +318,14 @@ export default class ABRManager {
    * If it doesn't exist, create a RepresentationChooser under the
    * _choosers[bufferType] property.
    * @param {string} bufferType
+   * @returns {Object}
    */
-  private _lazilyCreateChooser(bufferType : IBufferType) {
+  private _lazilyCreateChooser(bufferType : IBufferType) : RepresentationChooser {
     if (!this._choosers[bufferType]) {
       this._choosers[bufferType] =
         createChooser(bufferType, this._chooserInstanceOptions);
     }
+    return this._choosers[bufferType] as RepresentationChooser;
   }
 }
 

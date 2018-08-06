@@ -66,18 +66,18 @@ export default function createBufferClock(
   startTime : number
 ) : Observable<IBufferClockTick> {
   /**
-   * Time offset is an offset to add to the timing's current time to have
-   * the "real" position.
+   * wantedTimeOffset is an offset to add to the timing's current time to have
+   * the "real" wanted position.
    * For now, this is seen when the video has not yet seeked to its initial
    * position, the currentTime will most probably be 0 where the effective
    * starting position will be _startTime_.
-   * Thus we initially set a timeOffset equal to startTime.
+   * Thus we initially set a wantedTimeOffset equal to startTime.
    * @type {Number}
    */
-  let timeOffset = startTime;
+  let wantedTimeOffset = startTime;
   const updateTimeOffset$ = initialSeek$.pipe(
     take(1),
-    tap(() => { timeOffset = 0; }), // (initial seek performed)
+    tap(() => { wantedTimeOffset = 0; }), // (initial seek performed)
     ignoreElements()
   );
 
@@ -87,7 +87,7 @@ export default function createBufferClock(
         liveGap: manifest.isLive ?
           getMaximumBufferPosition(manifest) - timing.currentTime :
           Infinity,
-        timeOffset,
+        wantedTimeOffset,
       }, timing)
     ));
 

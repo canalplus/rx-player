@@ -52,6 +52,17 @@ import {
   KEY_STATUS_ERRORS,
 } from "./types";
 
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
+
 export type ILicense =
   TypedArray |
   ArrayBuffer;
@@ -129,7 +140,7 @@ export default function handleSessionEvents(
         );
 
       // find out possible errors associated with this event
-      session.keyStatuses.forEach((keyStatus : string, keyId : string) => {
+      (session.keyStatuses as any).forEach((keyStatus : string, keyId : string) => {
         // Hack present because the order of the arguments has changed in spec
         // and is not the same between some versions of Edge and Chrome.
         if (KEY_STATUS_ERRORS[keyId]) {

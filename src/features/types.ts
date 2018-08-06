@@ -58,11 +58,11 @@ interface IBifThumbnail {
   ts : number;
   data : Uint8Array;
 }
+
 interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
   end : number; // end time time until which the segment apply
   start : number; // start time from which the segment apply
-  timeOffset : number; // time offset, in seconds, to add to each image
   timescale : number; // timescale to convert the start and end into seconds
   type : string; // the type of the data (example: "bif")
 }
@@ -88,13 +88,13 @@ export type IImageParser =
 // interface of the global `features` object through which features are
 // accessed.
 export interface IFeaturesObject {
-  transports : IDictionary<ITransportFunction>;
+  transports : Partial<Record<string, ITransportFunction>>;
   imageBuffer : IImageBuffer|null;
   imageParser : IImageParser|null;
   nativeTextTracksBuffer : INativeTextTracksBuffer|null;
-  nativeTextTracksParsers : IDictionary<INativeTextTracksParserFn>;
+  nativeTextTracksParsers : Partial<Record<string, INativeTextTracksParserFn>>;
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
-  htmlTextTracksParsers : IDictionary<IHTMLTextTracksParserFn>;
+  htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
   emeManager : IEMEManager|null;
   directfile : IDirectFileStream|null;
 }

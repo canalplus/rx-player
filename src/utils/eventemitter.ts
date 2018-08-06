@@ -23,7 +23,13 @@ type IListeners<T extends string, U> =
   >>;
 type listenerFunction<U> = (payload : U) => void;
 
-export default class EventEmitter<T extends string, U> {
+export interface IEventEmitter<T extends string, U> {
+  addEventListener(evt : T, fn : listenerFunction<U>) : void;
+  removeEventListener(evt? : T, fn? : listenerFunction<U>) : void;
+}
+
+export default class EventEmitter<T extends string, U>
+  implements IEventEmitter<T, U> {
   /**
    * @type {Object}
    * @private
@@ -45,7 +51,8 @@ export default class EventEmitter<T extends string, U> {
   public addEventListener(evt : T, fn : listenerFunction<U>) : void {
     const listeners = this._listeners[evt];
     if (!listeners) {
-      this._listeners[evt] = [fn];
+      // TS Bug?
+      (this._listeners[evt] as Array<listenerFunction<U>>) = [fn];
     } else {
       listeners.push(fn);
     }

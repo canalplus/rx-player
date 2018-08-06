@@ -112,7 +112,11 @@ export default function(
     ) : SegmentParserObservable {
       const { responseData } = response;
       if (responseData == null) {
-        return observableOf({ segmentData: null, segmentInfos: null });
+        return observableOf({
+          segmentData: null,
+          segmentInfos: null,
+          segmentOffset: 0,
+        });
       }
       const segmentData : Uint8Array = responseData instanceof Uint8Array ?
         responseData :
@@ -124,6 +128,7 @@ export default function(
         return observableOf({
           segmentData,
           segmentInfos: getISOBMFFTimingInfos(segment, segmentData, sidxSegments, init),
+          segmentOffset: segment.timestampOffset || 0,
         });
       }
 
@@ -135,6 +140,7 @@ export default function(
       return observableOf({
         segmentData,
         segmentInfos: timescale > 0 ? { time: -1, duration: 0, timescale } : null,
+        segmentOffset: segment.timestampOffset || 0,
       });
     },
   };
@@ -172,6 +178,7 @@ export default function(
             time: segment.isInit ? -1 : segment.time,
             timescale: segment.timescale,
           } : null,
+          segmentOffset: segment.timestampOffset || 0,
         });
       }
 
@@ -183,7 +190,6 @@ export default function(
           start: 0,
           end: Number.MAX_VALUE,
           timescale: 1,
-          timeOffset: 0,
           type: "bif",
         },
         segmentInfos: {
@@ -191,6 +197,7 @@ export default function(
           duration: Number.MAX_VALUE,
           timescale: bifObject.timescale,
         },
+        segmentOffset: segment.timestampOffset || 0,
       });
     },
   };

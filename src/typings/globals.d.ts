@@ -50,19 +50,3 @@ declare const __RELATIVE_PATH__ : {
   HTML_SAMI: string;
   DIRECTFILE: string;
 };
-
-// Map of string to anything
-interface IDictionary<T> {
-  [keyName : string] : T;
-}
-
-type TypedArray =
-  Int8Array |
-  Int16Array |
-  Int32Array |
-  Uint8Array |
-  Uint16Array |
-  Uint32Array |
-  Uint8ClampedArray |
-  Float32Array |
-  Float64Array;

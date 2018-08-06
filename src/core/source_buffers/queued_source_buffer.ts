@@ -27,20 +27,20 @@ import ICustomTimeRanges from "./time_ranges";
 
 enum SourceBufferAction { Append, Remove }
 
-/**
- * Action to append a new Segment to the SourceBuffer.
- * T is the type of the segment pushed.
- */
-interface ISourceBufferAppendQueueElement<T> {
+// Item waiting in the queue to append a new segment to the SourceBuffer.
+// T is the type of the segment pushed.
+interface IAppendQueueItem<T> {
   type : SourceBufferAction.Append;
-  args : T;
+  args : {
+    segment : T;
+    timestampOffset? : number;
+  };
   subject : Subject<Event>|null;
 }
 
-/**
- * Action to remove some buffer from the SourceBuffer.
- */
-interface ISourceBufferRemoveQueueElement {
+// Item waiting in the queue to remove segment(s) from the SourceBuffer.
+// T is the type of the segment pushed.
+interface IRemoveQueueItem {
   type : SourceBufferAction.Remove;
   args : {
     start : number;
@@ -49,13 +49,29 @@ interface ISourceBufferRemoveQueueElement {
   subject : Subject<Event>;
 }
 
-/**
- * Action performed on a QueuedSourceBuffer
- *
- * T is the type of the segments pushed.
- */
-type ISourceBufferQueueElement<T> =
-  ISourceBufferAppendQueueElement<T> | ISourceBufferRemoveQueueElement;
+// Item waiting in a queue to perform updates on a SourceBuffer.
+// T is the type of the segments pushed.
+type IQSBQueueItems<T> =
+  IAppendQueueItem<T> | IRemoveQueueItem;
+
+// Order created by the QueuedSourceBuffer to append a Segment.
+interface IAppendOrder<T> {
+  type : SourceBufferAction.Append;
+  segment : T|null;
+  initSegment: T|null;
+  timestampOffset? : number;
+}
+
+// Order created by the QueuedSourceBuffer to remove Segment(s).
+interface IRemoveOrder {
+  type : SourceBufferAction.Remove;
+  start : number;
+  end : number;
+}
+
+// Orders understood by the QueuedSourceBuffer
+type IQSBOrders<T> =
+  IAppendOrder<T> | IRemoveOrder;
 
 /**
  * Wrap a SourceBuffer and append/remove segments in it in a queue.
@@ -106,11 +122,11 @@ export default class QueuedSourceBuffer<T> {
    * Queue of awaited buffer actions.
    *
    * The last element in this array will be the first action to perform.
-   * See ISourceBufferQueueElement for more infos on those actions.
+   * See IQSBQueueItems for more infos on those actions.
    * @private
    * @type {Array.<Object>}
    */
-  private _queue : Array<ISourceBufferQueueElement<T>>;
+  private _queue : Array<IQSBQueueItems<T>>;
 
   /**
    * Subject linked to the current buffer action.
@@ -163,17 +179,20 @@ export default class QueuedSourceBuffer<T> {
    * argument to null.
    * @param {*|null} initSegment
    * @param {*|null} segment
+   * @param {number|undefined} timestampOffset
    * @returns {Observable}
    */
   public appendBuffer(
     initSegment : T|null,
-    segment : T|null
+    segment : T|null,
+    timestampOffset? : number
   ) : Observable<void> {
     return observableDefer(() =>
-      this._queueAction({
+      this._addToQueue({
         type: SourceBufferAction.Append,
         segment,
         initSegment,
+        timestampOffset,
       })
     );
   }
@@ -192,7 +211,7 @@ export default class QueuedSourceBuffer<T> {
     }
   ) : Observable<void> {
     return observableDefer(() =>
-      this._queueAction({
+      this._addToQueue({
         type: SourceBufferAction.Remove,
         start,
         end,
@@ -274,22 +293,12 @@ export default class QueuedSourceBuffer<T> {
    * @param {Object} action
    * @returns {Subject} - Can be used to follow the buffer action advancement.
    */
-  private _queueAction(action :
-    {
-      type : SourceBufferAction.Append;
-      segment : T|null;
-      initSegment: T|null;
-    } | {
-      type : SourceBufferAction.Remove;
-      start : number;
-      end : number;
-    }
-  ) : Observable<void> {
+  private _addToQueue(action : IQSBOrders<T>) : Observable<void> {
     const shouldFlush = !this._queue.length;
     const subject = new Subject<Event>();
 
     if (action.type === SourceBufferAction.Append) {
-      const { segment, initSegment } = action;
+      const { segment, initSegment, timestampOffset } = action;
 
       if (initSegment === null && segment === null) {
         log.warn("QueuedSourceBuffer: no segment appended.");
@@ -299,8 +308,7 @@ export default class QueuedSourceBuffer<T> {
       if (initSegment === null) {
         this._queue.unshift({
           type: SourceBufferAction.Append,
-          args: segment as T, // TODO Make it clear to TS that that's always the
-                              // case
+          args: { segment: segment as T, timestampOffset },
           subject,
         });
       } else if (segment === null) {
@@ -309,20 +317,20 @@ export default class QueuedSourceBuffer<T> {
         }
         this._queue.unshift({
           type: SourceBufferAction.Append,
-          args: initSegment,
+          args: { segment: initSegment, timestampOffset },
           subject,
         });
       } else {
         if (this._lastInitSegment !== initSegment) {
           this._queue.unshift({
             type: SourceBufferAction.Append,
-            args: initSegment,
+            args: { segment: initSegment, timestampOffset },
             subject: null,
           });
         }
         this._queue.unshift({
           type: SourceBufferAction.Append,
-          args: segment,
+          args: { segment, timestampOffset },
           subject,
         });
       }
@@ -359,16 +367,24 @@ export default class QueuedSourceBuffer<T> {
 
     // TODO TypeScrypt do not get the previous length check? Find solution /
     // open issue
-    const queueElement = this._queue.pop() as ISourceBufferQueueElement<T>;
-    this._flushing = queueElement.subject;
+    const queueItem = this._queue.pop() as IQSBQueueItems<T>;
+    this._flushing = queueItem.subject;
     try {
-      switch (queueElement.type) {
+      switch (queueItem.type) {
         case SourceBufferAction.Append:
-          log.debug("pushing data to source buffer", queueElement.args);
-          this._buffer.appendBuffer(queueElement.args);
+          const { segment, timestampOffset = 0 } = queueItem.args;
+          if (this._buffer.timestampOffset !== timestampOffset) {
+            const newTimestampOffset = timestampOffset || 0;
+            log.debug("updating timestampOffset",
+              this._buffer.timestampOffset, newTimestampOffset);
+            this._buffer.timestampOffset = newTimestampOffset;
+          }
+
+          log.debug("pushing data to source buffer", queueItem.args);
+          this._buffer.appendBuffer(segment);
           break;
         case SourceBufferAction.Remove:
-          const { start, end } = queueElement.args;
+          const { start, end } = queueItem.args;
           log.debug("removing data from source buffer", start, end);
           this._buffer.remove(start, end);
           break;

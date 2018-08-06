@@ -165,7 +165,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Current version of the RxPlayer.
    * @type {string}
    */
-  public static version = /*PLAYER_VERSION*/"3.5.1";
+  public static version = /*PLAYER_VERSION*/"3.5.2";
   public readonly version : string;
 
   /**
@@ -449,14 +449,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   /**
    * @returns {Object}
    */
-  static get ErrorTypes() : IDictionary<string> {
+  static get ErrorTypes() : Partial<Record<string, string>> {
     return ErrorTypes;
   }
 
   /**
    * @returns {Object}
    */
-  static get ErrorCodes() : IDictionary<string> {
+  static get ErrorCodes() : Partial<Record<string, string>> {
     return ErrorCodes;
   }
 
@@ -506,7 +506,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.5.1";
+    this.version = /*PLAYER_VERSION*/"3.5.2";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;

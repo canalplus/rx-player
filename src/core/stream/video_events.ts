@@ -16,23 +16,24 @@
 
 import {
   combineLatest as observableCombineLatest,
-  Observable
+  Observable,
+  of as observableOf,
 } from "rxjs";
 import {
-  mapTo,
-  share,
-  take,
+  mergeMapTo,
+  shareReplay,
   tap,
 } from "rxjs/operators";
 import {
   canPlay,
   hasLoadedMetadata,
+  playUnlessAutoPlayPolicy$,
 } from "../../compat";
 import log from "../../log";
 
 /**
  * Set the initial time given as soon as possible on the video element.
- * Emit "null" when done.
+ * Emit when done.
  * @param {HMTLMediaElement} videoElement
  * @param {number|Function} startTime
  * @returns {Observable}
@@ -52,30 +53,8 @@ function doInitialSeek(
         videoElement.currentTime = typeof startTime === "function" ?
           startTime() : startTime;
       }),
-      share()
-    );
-}
-
-/**
- * @param {HTMLMediaElement} videoElement
- * @param {boolean} autoPlay
- * @returns {Observable}
- */
-function handleCanPlay(
-  videoElement : HTMLMediaElement,
-  autoPlay : boolean
-) : Observable<void> {
-  return canPlay(videoElement)
-    .pipe(
-      tap(() => {
-        log.info("canplay event");
-        if (autoPlay) {
-          /* tslint:disable no-floating-promises */
-          videoElement.play();
-          /* tslint:enable no-floating-promises */
-        }
-      }),
-      share()
+      shareReplay() // we don't want to repeat the side-effect on each
+                    // subscription of this very same observable
     );
 }
 
@@ -88,15 +67,26 @@ function handleCanPlay(
 export default function handleVideoEvents(
   videoElement : HTMLMediaElement,
   startTime : number|(() => number),
-  autoPlay : boolean
+  mustAutoPlay : boolean
 ) : {
   initialSeek$ : Observable<void>;
   loadAndPlay$ : Observable<void>;
 } {
   const initialSeek$ = doInitialSeek(videoElement, startTime);
-  const hasHandledCanPlay$ = handleCanPlay(videoElement, autoPlay);
-  const loadAndPlay$ = observableCombineLatest(initialSeek$, hasHandledCanPlay$)
-    .pipe(take(1), mapTo(undefined));
+  const handledCanPlay$ = canPlay(videoElement).pipe(
+    tap(() => log.info("canplay event"))
+  );
+
+  const loadAndPlay$ = observableCombineLatest(
+    initialSeek$,
+    handledCanPlay$
+  ).pipe(
+    mergeMapTo(mustAutoPlay ?
+      playUnlessAutoPlayPolicy$(videoElement) :
+      observableOf(undefined)
+    ),
+    shareReplay() // avoid doing "play" each time someone subscribes
+  );
 
   return {
     initialSeek$,

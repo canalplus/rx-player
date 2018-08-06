@@ -24,7 +24,7 @@ import {
 } from "rxjs";
 import {
   map,
-  share,
+  shareReplay,
   switchMap,
   takeUntil,
   tap,
@@ -40,27 +40,32 @@ import filterByWidth from "./filterByWidth";
 import fromBitrateCeil from "./fromBitrateCeil";
 
 const {
+  ABR_REGULAR_FACTOR,
+  ABR_STARVATION_FACTOR,
   ABR_STARVATION_GAP,
   OUT_OF_STARVATION_GAP,
-  ABR_STARVATION_FACTOR,
-  ABR_REGULAR_FACTOR,
 } = config;
 
 interface IRepresentationChooserClockTick {
-  bufferGap : number;
-  position : number;
-  bitrate : number|undefined;
-  speed : number;
+  bitrate : number|undefined; // currently set bitrate, in bit per seconds
+  bufferGap : number; // time to the end of the buffer, in seconds
+  position : number; // current position, in seconds
+  speed : number; // current playback rate
+}
+
+interface IProgressEventValue {
+  duration : number; // current duration for the request, in ms
+  id: string|number; // unique ID for the request
+  size : number; // current downloaded size, in bytes
+  timestamp : number; // timestamp of the progress event since unix epoch, in ms
+  totalSize : number; // total size to download, in bytes
 }
 
 interface IRequestInfo {
-  time: number;
-  duration: number;
-  requestTimestamp: number;
-  progress: Array<{
-    size: number;
-    timestamp: number;
-  }>;
+  duration : number; // duration of the corresponding chunk, in seconds
+  progress: IProgressEventValue[]; // progress events for this request
+  requestTimestamp: number; // unix timestamp at which the request began, in ms
+  time: number; // time at which the corresponding segment begins, in seconds
 }
 
 type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
@@ -68,13 +73,7 @@ type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
 interface IProgressRequest {
   type: IBufferType;
   event: "progress";
-  value: {
-    id: string|number;
-    duration : number;
-    size: number;
-    totalSize : number;
-    timestamp: number;
-  };
+  value: IProgressEventValue;
 }
 
 interface IBeginRequest {
@@ -134,14 +133,14 @@ function setManualRepresentation(
 }
 
 /**
- * Get the pending request containing the asked segment position.
+ * Get the pending request starting with the asked segment position.
  * @param {Object} requests
- * @param {number} segmentPosition
+ * @param {number} position
  * @returns {IRequestInfo|undefined}
  */
 function getConcernedRequest(
-  requests : IDictionary<IRequestInfo>,
-  segmentPosition : number
+  requests : Partial<Record<string, IRequestInfo>>,
+  position : number
 ) : IRequestInfo|undefined {
   const currentRequestIds = Object.keys(requests);
   const len = currentRequestIds.length;
@@ -149,13 +148,11 @@ function getConcernedRequest(
   for (let i = 0; i < len; i++) {
     const request = requests[currentRequestIds[i]];
 
-    const {
-      time: chunkTime,
-      duration: chunkDuration,
-    } = request;
-
-    // TODO review this
-    if (Math.abs(segmentPosition - chunkTime) < chunkDuration) {
+    // We check that this chunk has a high probability of being the one we want
+    if (
+      request != null &&
+      Math.abs(request.time - position) < request.duration * 0.3
+    ) {
       return request;
     }
   }
@@ -165,53 +162,25 @@ function getConcernedRequest(
  * Estimate the __VERY__ recent bandwidth based on a single unfinished request.
  * Useful when the current bandwidth seemed to have fallen quickly.
  *
- * Use progress events if available, set a much more random lower bitrate
- * if no progress events are available.
- *
  * @param {Object} request
- * @param {number} requestTime - Amount of time the request has taken for now,
- * in seconds.
- * @param {number} bitrate - Current bitrate at the time of download
- * @returns {number}
+ * @returns {number|undefined}
  */
-function estimateRequestBandwidth(
-  request : IRequestInfo,
-  requestTime : number,
-  bitrate : number|undefined
-) : number|undefined {
-  let estimate;
+function estimateRequestBandwidth(request : IRequestInfo) : number|undefined {
+  if (request.progress.length < 2) {
+    return undefined;
+  }
 
   // try to infer quickly the current bitrate based on the
   // progress events
-
-  if (request.progress.length >= 2) {
-    const ewma1 = new EWMA(2);
-
-    const { progress } = request;
-    for (let i = 1; i < progress.length; i++) {
-      const bytesDownloaded =
-        progress[i].size - progress[i - 1].size;
-
-      const timeElapsed =
-        progress[i].timestamp - progress[i - 1].timestamp;
-
-      const reqBitrate =
-        (bytesDownloaded * 8) / (timeElapsed / 1000);
-
-      ewma1.addSample(timeElapsed / 1000, reqBitrate);
-    }
-    estimate = ewma1.getEstimate();
+  const ewma1 = new EWMA(2);
+  const { progress } = request;
+  for (let i = 1; i < progress.length; i++) {
+    const bytesDownloaded = progress[i].size - progress[i - 1].size;
+    const timeElapsed = progress[i].timestamp - progress[i - 1].timestamp;
+    const reqBitrate = (bytesDownloaded * 8) / (timeElapsed / 1000);
+    ewma1.addSample(timeElapsed / 1000, reqBitrate);
   }
-
-  // if that fails / no progress event, take a guess
-  if (!estimate && bitrate) {
-    const chunkDuration = request.duration;
-    const chunkSize = chunkDuration * bitrate;
-
-    // take current duration of request as a base
-    estimate = chunkSize / (requestTime * 5 / 4);
-  }
-  return estimate;
+  return ewma1.getEstimate();
 }
 
 /**
@@ -241,19 +210,75 @@ function getFilteredRepresentations(
 }
 
 /**
- * Returns true if the request takes too much time relatively to how much we
- * should actually wait.
- * Depends on the chunk duration.
- * @param {number} durationOfRequest - time, in s, since the request has been
- * performed.
- * @param {number} chunkDuration - duration, in s, of a single chunk
- * @returns {Boolean}
+ * Estimate remaining time for a pending request from a progress event.
+ * TODO Add time since last progress event?
+ * @param {Object} lastProgressEvent
+ * @param {number} bandwidthEstimate
+ * @returns {number}
  */
-function requestTakesTime(
-  durationOfRequest : number,
-  chunkDuration : number
-) : boolean {
-  return durationOfRequest > chunkDuration * 1.2 + 1;
+function estimateRemainingTime(
+  lastProgressEvent: IProgressEventValue,
+  bandwidthEstimate : number
+) : number {
+  const remainingData = (lastProgressEvent.totalSize - lastProgressEvent.size) * 8;
+  return Math.max(remainingData / bandwidthEstimate, 0);
+}
+
+/**
+ * Check if the request for the most needed segment is too slow.
+ * If that's the case, re-calculate the bandwidth urgently based on
+ * this single request.
+ * @param {Object} requests - Current pending requests.
+ * @param {Object} clock - Informations on the current playback.
+ * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
+ * @returns {Number|undefined}
+ */
+function estimateStarvationModeBitrate(
+  requests : Partial<Record<string, IRequestInfo>>,
+  clock : IRepresentationChooserClockTick,
+  lastEstimatedBitrate : number|undefined
+) : number|undefined {
+  const nextNeededPosition = clock.position + clock.bufferGap;
+  const concernedRequest = getConcernedRequest(requests, nextNeededPosition);
+  if (!concernedRequest) {
+    return undefined;
+  }
+
+  const currentBitrate = clock.bitrate;
+  const chunkDuration = concernedRequest.duration;
+  const now = Date.now();
+  const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
+  const lastProgressEvent = concernedRequest.progress ?
+    concernedRequest.progress[concernedRequest.progress.length - 1] :
+    null;
+
+  // first, try to do a quick estimate from progress events
+  const bandwidthEstimate = estimateRequestBandwidth(concernedRequest);
+  if (lastProgressEvent != null && bandwidthEstimate != null) {
+    const remainingTime =
+      estimateRemainingTime(lastProgressEvent, bandwidthEstimate) * 1.2;
+
+    // if this remaining time is reliable and is not enough to avoid buffering
+    if (
+      (now - lastProgressEvent.timestamp) / 1000 <= remainingTime &&
+      remainingTime > (clock.bufferGap / clock.speed)
+    ) {
+      return bandwidthEstimate;
+    }
+  }
+
+  if (
+    currentBitrate == null ||
+    requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
+  ) {
+    return undefined;
+  }
+
+  // calculate a reduced bitrate from the current one
+  const reducedBitrate = currentBitrate * 0.7;
+  if (lastEstimatedBitrate == null || reducedBitrate < lastEstimatedBitrate) {
+    return reducedBitrate;
+  }
 }
 
 /**
@@ -288,7 +313,7 @@ export default class RepresentationChooser {
   private readonly _throttle$ : Observable<number>|undefined;
   private readonly estimator : BandwidthEstimator;
   private readonly _initialBitrate : number;
-  private _currentRequests : IDictionary<IRequestInfo>;
+  private _currentRequests : Partial<Record<string, IRequestInfo>>;
 
   /**
    * @param {Object} options
@@ -376,12 +401,12 @@ export default class RepresentationChooser {
 
     return manualBitrate$.pipe(switchMap(manualBitrate => {
       if (manualBitrate >= 0) {
-        // MANUAL mode
+        // -- MANUAL mode --
         return setManualRepresentation(representations, manualBitrate);
       }
 
-      // AUTO mode
-      let inStarvationMode = false;
+      // -- AUTO mode --
+      let inStarvationMode = false; // == buffer gap too low == panic mode
       return observableCombineLatest(clock$, maxAutoBitrate$, deviceEvents$)
         .pipe(
           map(([ clock, maxAutoBitrate, deviceEvents ]) => {
@@ -389,62 +414,29 @@ export default class RepresentationChooser {
             let bandwidthEstimate;
             const { bufferGap } = clock;
 
-            // Check for starvation == not much left to play
-            if (bufferGap <= ABR_STARVATION_GAP) {
+            // check if should get in/out of starvation mode
+            if (!inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
+              log.info("ABR - enter starvation mode.");
               inStarvationMode = true;
             } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+              log.info("ABR - exit starvation mode.");
               inStarvationMode = false;
             }
 
-            // If in starvation mode, check if the request for the next segment
-            // takes too much time relatively to the chunk's duration.
-            // If that's the case, re-calculate the bandwidth urgently based on
-            // this single request.
+            // If in starvation mode, check if a quick new estimate can be done
+            // from the last requests.
+            // If so, cancel previous estimations and replace it by the new one
             if (inStarvationMode) {
-              const {
-                position,
-                bitrate,
-              } = clock;
+              bandwidthEstimate = estimateStarvationModeBitrate(
+                this._currentRequests, clock, lastEstimatedBitrate);
 
-              const nextSegmentPosition = bufferGap + position;
-              const request = getConcernedRequest(
-                this._currentRequests, nextSegmentPosition);
-
-              if (request) {
-                const {
-                  duration: chunkDuration,
-                  requestTimestamp,
-                } = request;
-
-                const now = Date.now();
-                const requestTimeInSeconds = (now - requestTimestamp) / 1000;
-                if (
-                  chunkDuration &&
-                  requestTakesTime(requestTimeInSeconds, chunkDuration)
-                ) {
-                  bandwidthEstimate = estimateRequestBandwidth(
-                    request, requestTimeInSeconds, bitrate);
-
-                  if (bandwidthEstimate != null) {
-                    // Reset all estimations to zero
-                    // Note: this is weird to do this type of "global" side effect
-                    // (for this class) in an observable, not too comfortable with
-                    // that.
-                    this.resetEstimate();
-                    if (bitrate != null) {
-                      nextBitrate = Math.min(
-                        bandwidthEstimate,
-                        bitrate,
-                        maxAutoBitrate
-                      );
-                    } else {
-                      nextBitrate = Math.min(
-                        bandwidthEstimate,
-                        maxAutoBitrate
-                      );
-                    }
-                  }
-                }
+              if (bandwidthEstimate != null) {
+                log.info("ABR - starvation mode emergency estimate:", bandwidthEstimate);
+                this.resetEstimate();
+                const currentBitrate = clock.bitrate;
+                nextBitrate = currentBitrate == null ?
+                  Math.min(bandwidthEstimate, maxAutoBitrate) :
+                  Math.min(bandwidthEstimate, maxAutoBitrate, currentBitrate);
               }
             }
 
@@ -484,11 +476,12 @@ export default class RepresentationChooser {
 
           tap(({ bitrate }) => {
             if (bitrate != null) {
+              log.debug("ABR - calculated bitrate:", bitrate);
               lastEstimatedBitrate = bitrate;
             }
           }),
 
-          share()
+          shareReplay()
         );
     }));
   }
@@ -536,7 +529,6 @@ export default class RepresentationChooser {
       requestTimestamp,
       progress: [],
     };
-    this._currentRequests[id].progress = [];
   }
 
   /**
@@ -548,14 +540,15 @@ export default class RepresentationChooser {
    * @param {Object} progress
    */
   public addRequestProgress(id : string|number, progress: IProgressRequest) : void {
-    if (!this._currentRequests[id]) {
+    const request = this._currentRequests[id];
+    if (!request) {
       if (__DEV__) {
         throw new Error("ABR: progress for a request not added");
       }
       log.warn("ABR: progress for a request not added");
       return;
     }
-    this._currentRequests[id].progress.push(progress.value);
+    request.progress.push(progress.value);
   }
 
   /**

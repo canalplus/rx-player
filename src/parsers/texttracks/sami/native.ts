@@ -59,7 +59,7 @@ function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|VTTCue> {
  * @param {string} str
  * @returns {Object}
  */
-function getClassNameByLang(str : string) : IDictionary<string> {
+function getClassNameByLang(str : string) : Partial<Record<string, string>> {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   const langs : { [lang : string] : string } = {};
   let m : RegExpExecArray|null;
