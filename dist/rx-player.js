@@ -19762,7 +19762,7 @@ object-assign
  * @returns {Function}
  */
         function createSmoothStreamingParser() {
-            var parserOptions = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, SUGGESTED_PERSENTATION_DELAY = null == parserOptions.suggestedPresentationDelay ? config.a.DEFAULT_SUGGESTED_PRESENTATION_DELAY.SMOOTH : parserOptions.suggestedPresentationDelay, REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1e3, MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 19e4;
+            var parserOptions = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, SUGGESTED_PERSENTATION_DELAY = null == parserOptions.suggestedPresentationDelay ? config.a.DEFAULT_SUGGESTED_PRESENTATION_DELAY.SMOOTH : parserOptions.suggestedPresentationDelay, REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1e3, MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 0;
             /**
      * @param {Element} q
      * @param {string} type
