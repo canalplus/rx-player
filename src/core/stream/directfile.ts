@@ -132,7 +132,7 @@ export default function StreamDirectFile({
   const {
     initialSeek$,
     loadAndPlay$,
-  } = handleInitialVideoEvents(mediaElement, initialTime, autoPlay);
+  } = handleInitialVideoEvents(mediaElement, initialTime, autoPlay, warning$);
 
   /**
    * Create EME Manager, an observable which will manage every EME-related

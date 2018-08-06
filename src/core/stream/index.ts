@@ -256,7 +256,7 @@ export default function Stream({
     const {
       initialSeek$,
       loadAndPlay$,
-    } = handleInitialVideoEvents(videoElement, initialTime, autoPlay);
+    } = handleInitialVideoEvents(videoElement, initialTime, autoPlay, warning$);
 
     const bufferClock$ = createBufferClock(manifest, clock$, initialSeek$, initialTime);
 

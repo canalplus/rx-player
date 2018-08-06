@@ -18,6 +18,7 @@ import {
   combineLatest as observableCombineLatest,
   Observable,
   of as observableOf,
+  Subject,
 } from "rxjs";
 import {
   mergeMapTo,
@@ -61,13 +62,15 @@ function doInitialSeek(
 /**
  * @param {HTMLMediaElement} videoElement
  * @param {number|Function} startTime
- * @param {boolean} autoPlay
+ * @param {boolean} mustAutoPlay
+ * @param {Subject} warning$
  * @returns {object}
  */
 export default function handleVideoEvents(
   videoElement : HTMLMediaElement,
   startTime : number|(() => number),
-  mustAutoPlay : boolean
+  mustAutoPlay : boolean,
+  warning$ : Subject<Error>
 ) : {
   initialSeek$ : Observable<void>;
   loadAndPlay$ : Observable<void>;
@@ -82,7 +85,7 @@ export default function handleVideoEvents(
     handledCanPlay$
   ).pipe(
     mergeMapTo(mustAutoPlay ?
-      playUnlessAutoPlayPolicy$(videoElement) :
+      playUnlessAutoPlayPolicy$(videoElement, warning$) :
       observableOf(undefined)
     ),
     shareReplay() // avoid doing "play" each time someone subscribes
