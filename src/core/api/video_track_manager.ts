@@ -35,6 +35,14 @@ export type IVideoTrackPreference = null | {
 export interface ILMVideoTrack {
   role? : string;
   id : number|string;
+  representations: Array<{
+    id : string|number;
+    bitrate : number;
+    width? : number;
+    height? : number;
+    codec? : string;
+    frameRate? : number;
+  }>;
 }
 
 // video track from a list of video tracks returned by the VideoTrackManager
@@ -304,9 +312,31 @@ export default class VideoTrackManager {
       return null;
     }
 
+    const representations = chosenVideoAdaptation
+      .representations
+      .map((representation) => {
+        let frameRate;
+        if (representation.frameRate) {
+          frameRate = representation.frameRate;
+        } else {
+          if (chosenVideoAdaptation.representations.length === 1) {
+            frameRate = chosenVideoAdaptation.maxFrameRate;
+          }
+        }
+        return {
+          id: representation.id,
+          bitrate: representation.bitrate,
+          width: representation.width,
+          height: representation.height,
+          codec: representation.codec,
+          frameRate,
+        };
+      });
+
     return {
       role: chosenVideoAdaptation.role,
       id: chosenVideoAdaptation.id,
+      representations,
     };
   }
 
@@ -327,11 +357,36 @@ export default class VideoTrackManager {
     const currentId = chosenVideoAdaptation && chosenVideoAdaptation.id;
 
     return videoInfos.adaptations
-      .map((adaptation) => ({
-        role: adaptation.role,
-        id: adaptation.id,
-        active: currentId == null ? false : currentId === adaptation.id,
-      }));
+      .map((adaptation) => {
+
+        const representations = adaptation
+          .representations
+          .map((representation) => {
+            let frameRate;
+            if (representation.frameRate) {
+              frameRate = representation.frameRate;
+            } else {
+              if (adaptation.representations.length === 1) {
+                frameRate = adaptation.maxFrameRate;
+              }
+            }
+            return {
+              id: representation.id,
+              bitrate: representation.bitrate,
+              width: representation.width,
+              height: representation.height,
+              codec: representation.codec,
+              frameRate,
+            };
+          });
+
+        return {
+          role: adaptation.role,
+          id: adaptation.id,
+          active: currentId == null ? false : currentId === adaptation.id,
+          representations,
+        };
+    });
   }
 }
 

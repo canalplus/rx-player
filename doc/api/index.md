@@ -1079,6 +1079,15 @@ Each of the objects in the returned array have the following properties:
   - ``role`` (``string``): The role of the video track, as set in
     the manifest.
 
+  - ``representations`` (``Array.<Object>``): Representations of
+  video track, with such attributes, as given in the manifest:
+    - ``id`` (``Number|string``): The id used to identify the track.
+    - ``bitrate`` (``Number``): The bitrate of video stream, in bits per seconds.
+    - ``width`` (``Number``): The width of video stream, in pixels.
+    - ``height`` (``Number``): The height of video stream, in pixels.
+    - ``codec`` (``string``): The stream codec, given in standard MIME type format.
+    - ``frameRate`` (``Number``): The video stream framerate, in frame per seconds.
+
   - ``active`` (``Boolean``): Whether the track is the one currently active or
     not.
 
@@ -1166,6 +1175,15 @@ The track is an object with the following properties:
 
   - ``role`` (``string``): The role of the video track, as set in the
     manifest.
+
+  - ``representations`` (``Array.<Object>``): Representations of
+  video track, with such attributes, as given in the manifest:
+    - ``id`` (``Number|string``): The id used to identify the track.
+    - ``bitrate`` (``Number``): The bitrate of video stream, in bits per seconds.
+    - ``width`` (``Number``): The width of video stream, in pixels.
+    - ``height`` (``Number``): The height of video stream, in pixels.
+    - ``codec`` (``string``): The stream codec, given in standard MIME type format.
+    - ``frameRate`` (``Number``): The video stream framerate, in frame per seconds.
 
 ``undefined`` if no content has been loaded yet.
 

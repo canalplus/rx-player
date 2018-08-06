@@ -38,6 +38,7 @@ export interface IAdaptationArguments {
   type : IAdaptationType;
 
   // -- optional
+  maxFrameRate? : number;
   role? : string;
   audioDescription? : boolean;
   closedCaption? : boolean;
@@ -58,6 +59,7 @@ class Adaptation {
   public readonly representations : Representation[];
   public readonly type : IAdaptationType;
   public readonly role? : string;
+  public readonly maxFrameRate? : number;
 
   // optional
   public contentProtection? : IContentProtectionDASH;
@@ -101,6 +103,10 @@ class Adaptation {
 
     if (args.role != null) {
       this.role = args.role;
+    }
+
+    if (args.maxFrameRate) {
+      this.maxFrameRate = args.maxFrameRate;
     }
 
     // for manuallyAdded adaptations (not in the manifest)
