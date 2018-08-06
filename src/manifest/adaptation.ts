@@ -38,6 +38,7 @@ export interface IAdaptationArguments {
   type : IAdaptationType;
 
   // -- optional
+  role? : string;
   audioDescription? : boolean;
   closedCaption? : boolean;
   id? : number|string;
@@ -56,6 +57,7 @@ class Adaptation {
   public readonly id : string|number;
   public readonly representations : Representation[];
   public readonly type : IAdaptationType;
+  public readonly role? : string;
 
   // optional
   public contentProtection? : IContentProtectionDASH;
@@ -95,6 +97,10 @@ class Adaptation {
     // TODO move to DASH's Segment private infos
     if (args.contentProtection != null) {
       this.contentProtection = args.contentProtection;
+    }
+
+    if (args.role != null) {
+      this.role = args.role;
     }
 
     // for manuallyAdded adaptations (not in the manifest)

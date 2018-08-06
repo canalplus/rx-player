@@ -118,6 +118,10 @@ import {
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_parsers";
+import VideoTrackManager, {
+  ILMVideoTrack,
+  ILMVideoTrackListItem
+} from "./video_track_manager";
 
 const {
   DEFAULT_UNMUTED_VOLUME,
@@ -392,6 +396,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_languageManager : LanguageManager|null;
 
   /**
+   * VideoTrackManager instance linked to the current content.
+   * Null if no content has been loaded or if the current content loaded
+   * has no VideoTrackManager.
+   * @private
+   * @type {Object|null}
+   */
+  private _priv_videoTrackManager : VideoTrackManager|null;
+
+  /**
    * ABRManager instance linked to the current content.
    * Null if no content has been loaded or if the current content loaded
    * has no ABRManager.
@@ -433,6 +446,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   private _priv_contentEventsMemory : {
     period: null|Period; // current Period
+    videoTrack: null|ILMVideoTrack; // videoTrack for the current Period
     audioTrack: null|ILMAudioTrack; // audioTrack for the current Period
     textTrack: null|ILMTextTrack; // textTrack for the current Period
     videoBitrate: null|number; // audioBitrate for the current Period
@@ -579,12 +593,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
     this._priv_languageManager = null;
+    this._priv_videoTrackManager = null;
     this._priv_abrManager = null;
     this._priv_currentError = null;
     this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {
       period: null,
+      videoTrack: null,
       audioTrack: null,
       textTrack: null,
       videoBitrate: null,
@@ -1555,6 +1571,21 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
+   * Returns every available video tracks for the current Period.
+   * @returns {Array.<Object>|null}
+   */
+  getAvailableVideoTracks() : ILMVideoTrackListItem[] {
+    if (!this._priv_contentInfos) {
+      return [];
+    }
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_videoTrackManager || !currentPeriod) {
+      return [];
+    }
+    return this._priv_videoTrackManager.getAvailableVideoTracks(currentPeriod);
+  }
+
+  /**
    * Returns every available text tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
@@ -1582,6 +1613,21 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return undefined;
     }
     return this._priv_languageManager.getChosenAudioTrack(currentPeriod);
+  }
+
+  /**
+   * Returns currently chosen video track for the current Period.
+   * @returns {string}
+   */
+  getVideoTrack() : any {
+    if (!this._priv_contentInfos) {
+      return undefined;
+    }
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_videoTrackManager || !currentPeriod) {
+      return undefined;
+    }
+    return this._priv_videoTrackManager.getChosenVideoTrack(currentPeriod);
   }
 
   /**
@@ -1618,6 +1664,28 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     }
     catch (e) {
       throw new Error("player: unknown audio track");
+    }
+  }
+
+  /**
+   * Update the video track for the current Period.
+   * @param {string} videoId
+   * @throws Error - the current content has no VideoTrackManager.
+   * @throws Error - the given id is linked to no video track.
+   */
+  setVideoTrack(videoId : string) : void {
+    if (!this._priv_contentInfos) {
+      throw new Error("No content loaded");
+    }
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_videoTrackManager || !currentPeriod) {
+      throw new Error("No compatible content launched.");
+    }
+    try {
+      this._priv_videoTrackManager.setVideoTrackByID(currentPeriod, videoId);
+    }
+    catch (e) {
+      throw new Error("player: unknown video track");
     }
   }
 
@@ -1728,6 +1796,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     this._priv_contentEventsMemory = {
       period: null,
+      videoTrack: null,
       audioTrack: null,
       textTrack: null,
       videoBitrate: null,
@@ -1757,6 +1826,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {*} value - its new value
    */
   private _priv_triggerContentEvent(
+    type : "videoTrack",
+    value : ILMVideoTrack|null
+  ) : void;
+  private _priv_triggerContentEvent(
     type : "audioTrack",
     value : ILMAudioTrack|null
   ) : void;
@@ -1778,13 +1851,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   ) : void;
   private _priv_triggerContentEvent(
     type :
+      "videoTrack" |
       "audioTrack" |
       "textTrack" |
       "period" |
       "videoBitrate" |
       "audioBitrate" |
       "bitrateEstimation",
-    value : ILMAudioTrack|ILMTextTrack|Period|IBitrateEstimate|number|null
+    value : ILMVideoTrack|ILMAudioTrack|ILMTextTrack|Period|IBitrateEstimate|number|null
   ) : void {
     const prev = this._priv_contentEventsMemory[type];
     if (!deepEqual(prev, value)) {
@@ -1928,6 +2002,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       preferredTextTracks: initialTextTrack === undefined ?
         undefined : [initialTextTrack],
     });
+    this._priv_videoTrackManager = new VideoTrackManager();
     this.trigger("manifestChange", manifest);
   }
 
@@ -1956,6 +2031,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     } else {
       this._priv_triggerContentEvent("audioTrack", null);
       this._priv_triggerContentEvent("textTrack", null);
+    }
+
+    if (this._priv_videoTrackManager) {
+      const videoTrack =
+        this._priv_videoTrackManager.getChosenVideoTrack(period);
+        this._priv_triggerContentEvent("videoTrack", videoTrack);
+    } else {
+      this._priv_triggerContentEvent("videoTrack", null);
     }
 
     const activeAudioRepresentations = this.getCurrentRepresentations();
@@ -1991,6 +2074,16 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     const { type, period, adaptation$ } = value;
 
     switch (type) {
+
+      case "video":
+        if (!this._priv_videoTrackManager) {
+          log.error("VideoTrackManager not instanciated for a new video period");
+          adaptation$.next(null);
+        } else {
+          this._priv_videoTrackManager.addPeriod(type, period, adaptation$);
+          this._priv_videoTrackManager.setInitialVideoTrack(period);
+        }
+        break;
 
       case "audio":
         if (!this._priv_languageManager) {
@@ -2036,10 +2129,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }) : void {
     const { type, period } = value;
 
-    if (type === "audio" || type === "text") {
-      if (this._priv_languageManager) {
-        this._priv_languageManager.removePeriod(type, period);
-      }
+    switch (type) {
+      case "audio" || "text":
+        if (this._priv_languageManager) {
+          this._priv_languageManager.removePeriod(type, period);
+        }
+        break;
+      case "video":
+        if (this._priv_videoTrackManager) {
+          this._priv_videoTrackManager.removePeriod(type, period);
+        }
+       break;
     }
   }
 
@@ -2061,6 +2161,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // Update the languages chosen if it changed
     if (this._priv_languageManager) {
       this._priv_languageManager.update();
+    }
+
+    // Update the role chosen if it changed
+    if (this._priv_videoTrackManager) {
+      this._priv_videoTrackManager.update();
     }
 
     this.trigger("manifestUpdate", manifest);
@@ -2106,16 +2211,25 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     if (
       this._priv_languageManager &&
+      this._priv_videoTrackManager &&
       period != null && period === currentPeriod
     ) {
-      if (type === "audio") {
-        const audioTrack = this._priv_languageManager
-          .getChosenAudioTrack(currentPeriod);
-        this._priv_triggerContentEvent("audioTrack", audioTrack);
-      } else if (type === "text") {
-        const textTrack = this._priv_languageManager
-          .getChosenTextTrack(currentPeriod);
-        this._priv_triggerContentEvent("textTrack", textTrack);
+      switch (type) {
+        case "audio":
+          const audioTrack = this._priv_languageManager
+            .getChosenAudioTrack(currentPeriod);
+          this._priv_triggerContentEvent("audioTrack", audioTrack);
+          break;
+        case "video":
+          const videoTrack = this._priv_videoTrackManager
+            .getChosenVideoTrack(currentPeriod);
+          this._priv_triggerContentEvent("videoTrack", videoTrack);
+          break;
+        case "text":
+          const textTrack = this._priv_languageManager
+            .getChosenTextTrack(currentPeriod);
+          this._priv_triggerContentEvent("textTrack", textTrack);
+          break;
       }
     }
   }
