@@ -238,6 +238,13 @@ _type_: ``Boolean|undefined``
 This property only makes sense for text adaptations. In this case, if ``true``
 it means that the text track has added hints for the hard of hearing.
 
+#### maxFrameRate
+
+_type_: ``string|undefined``
+
+The maximum frame rate for this adaptation. It defines either the number of frames
+per second as an integer (24), or as a ratio (24000 / 1000).
+
 #### representations
 
 _type_: ``Array.<Representation>``
@@ -311,7 +318,12 @@ The represesentation index for this adaptation.
 See [the RepresentationIndex chapter](#representation-index) for more info about
 a Representation's structure.
 
+#### frameRate
 
+_type_: ``string|undefined``
+
+The represesentation frame rate for this adaptation. It defines either the number of frames
+per second as an integer (24), or as a ratio (24000 / 1000).
 
 <a name="representation-index"></a>
 ## Structure of a RepresentationIndex Object ###################################
