@@ -126,6 +126,14 @@ export interface IResumeStreamEvent {
   value: undefined;
 }
 
+// Emit just after content is loaded, with informations about playback
+export interface IInitialPlaybackEvent {
+  type: "initialPlayback";
+  value: {
+    autoPlayStatus?: "allowed"|"blocked";
+  };
+}
+
 function adaptationChange(
   bufferType : IBufferType,
   adaptation : Adaptation|null,
@@ -265,6 +273,18 @@ function bufferComplete(bufferType: IBufferType) : ICompletedBufferEvent {
   };
 }
 
+function initialPlayback(infos?: {
+  autoPlayStatus: "allowed"|"blocked";
+}): IInitialPlaybackEvent {
+  const autoPlayStatus = infos ? infos.autoPlayStatus : undefined;
+  return {
+    type: "initialPlayback",
+    value: {
+      autoPlayStatus,
+    },
+  };
+}
+
 const STREAM_EVENTS = {
   activePeriodChanged,
   adaptationChange,
@@ -277,6 +297,7 @@ const STREAM_EVENTS = {
   nullRepresentation,
   periodBufferCleared,
   periodBufferReady,
+  initialPlayback,
   speedChanged,
   stalled,
   warning,
@@ -297,6 +318,7 @@ export type IStreamEvent =
   ISpeedChangedEvent |
   IStalledEvent |
   IStreamLoadedEvent |
-  IStreamWarningEvent;
+  IStreamWarningEvent |
+  IInitialPlaybackEvent;
 
 export default STREAM_EVENTS;

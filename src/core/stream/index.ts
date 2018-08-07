@@ -23,6 +23,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  filter,
   finalize,
   ignoreElements,
   map,
@@ -255,8 +256,9 @@ export default function Stream({
 
     const {
       initialSeek$,
-      loadAndPlay$,
-    } = handleInitialVideoEvents(videoElement, initialTime, autoPlay, warning$);
+      loadedContent$,
+      handlePlayback$,
+    } = handleInitialVideoEvents(videoElement, initialTime, autoPlay);
 
     const bufferClock$ = createBufferClock(manifest, clock$, initialSeek$, initialTime);
 
@@ -395,9 +397,24 @@ export default function Stream({
 
     // Single lifecycle events
     const manifestReadyEvent$ = observableOf(EVENTS.manifestReady(abrManager, manifest));
-    const loadedEvent$ = loadAndPlay$.pipe(mapTo(EVENTS.loaded()));
+    const loadedEvent$ = loadedContent$.pipe(mapTo(EVENTS.loaded()));
+    const playbackPermission$ = handlePlayback$.pipe(
+      filter((evt) => {
+        if (evt.type === "initialPlayback") {
+          const { value } = evt;
+          const { autoPlayStatus } = value;
+          return (autoPlayStatus == null) ? false : autoPlayStatus === "blocked";
+        }
+        return false;
+      }),
+      map(() => {
+        const mediaError = new MediaError("AUTOPLAY_NOT_ALLOWED", null, false);
+        return EVENTS.warning(mediaError);
+      })
+    );
 
     return observableMerge(
+      playbackPermission$,
       manifestReadyEvent$,
       loadedEvent$,
       buffers$,
