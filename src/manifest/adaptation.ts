@@ -38,6 +38,8 @@ export interface IAdaptationArguments {
   type : IAdaptationType;
 
   // -- optional
+  maxFrameRate? : number;
+  role? : string;
   audioDescription? : boolean;
   closedCaption? : boolean;
   id? : number|string;
@@ -56,6 +58,8 @@ class Adaptation {
   public readonly id : string|number;
   public readonly representations : Representation[];
   public readonly type : IAdaptationType;
+  public readonly role? : string;
+  public readonly maxFrameRate? : number;
 
   // optional
   public contentProtection? : IContentProtectionDASH;
@@ -95,6 +99,14 @@ class Adaptation {
     // TODO move to DASH's Segment private infos
     if (args.contentProtection != null) {
       this.contentProtection = args.contentProtection;
+    }
+
+    if (args.role != null) {
+      this.role = args.role;
+    }
+
+    if (args.maxFrameRate) {
+      this.maxFrameRate = args.maxFrameRate;
     }
 
     // for manuallyAdded adaptations (not in the manifest)
