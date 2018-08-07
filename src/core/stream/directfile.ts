@@ -25,6 +25,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
   mapTo,
@@ -46,6 +47,8 @@ import EVENTS, {
   IStreamEvent,
 } from "./stream_events";
 import handleInitialVideoEvents from "./video_events";
+
+import MediaError from "../../errors/MediaError";
 
 /**
  * @param {HTMLMediaElement} mediaElement
@@ -131,7 +134,8 @@ export default function StreamDirectFile({
 
   const {
     initialSeek$,
-    loadAndPlay$,
+    loadedContent$,
+    handlePlayback$,
   } = handleInitialVideoEvents(mediaElement, initialTime, autoPlay);
 
   /**
@@ -166,8 +170,23 @@ export default function StreamDirectFile({
   const stallingManager$ = StallingManager(mediaElement, clock$)
     .pipe(map(EVENTS.stalled));
 
-  const loadedEvent$ = loadAndPlay$
+  const loadedEvent$ = loadedContent$
     .pipe(mapTo(EVENTS.loaded()));
+
+  const playbackPermission$ = handlePlayback$.pipe(
+    filter((evt) => {
+      if (evt.type === "initialPlayback") {
+        const { value } = evt;
+        const { autoPlayStatus } = value;
+        return (autoPlayStatus == null) ? false : autoPlayStatus === "blocked";
+      }
+      return false;
+    }),
+    map(() => {
+      const mediaError = new MediaError("AUTOPLAY_NOT_ALLOWED", null, false);
+      return EVENTS.warning(mediaError);
+    })
+  );
 
   const linkURL$ = setElementSrc$(mediaElement, url)
     .pipe(ignoreElements());
@@ -177,6 +196,7 @@ export default function StreamDirectFile({
 
   const directFile$ : Observable<IStreamEvent> = observableMerge(
     loadedEvent$,
+    playbackPermission$,
     mutedInitialSeek$,
     emeManager$ as Observable<void>, // TODO RxJS do something weird here
     mediaErrorHandler$ as Observable<void>, // TODO RxJS do something weird here
