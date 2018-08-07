@@ -2130,7 +2130,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     const { type, period } = value;
 
     switch (type) {
-      case "audio" || "text":
+      case "audio":
+      case "text":
         if (this._priv_languageManager) {
           this._priv_languageManager.removePeriod(type, period);
         }
