@@ -15,42 +15,46 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
+  concat as observableConcat,
+  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
 import {
-  mergeMapTo,
+  catchError,
+  mapTo,
+  mergeMap,
   shareReplay,
   tap,
 } from "rxjs/operators";
 import {
   canPlay,
   hasLoadedMetadata,
-  playUnlessAutoPlayPolicy$,
+  play$,
 } from "../../compat";
 import log from "../../log";
 
 /**
  * Set the initial time given as soon as possible on the video element.
  * Emit when done.
- * @param {HMTLMediaElement} videoElement
- * @param {number|Function} startTime
+ * @param {HMTLMediaElement} mediaElement
+ * @param {number|Function} startTime - Initial starting position. As seconds
+ * or as a function returning seconds.
  * @returns {Observable}
  */
 function doInitialSeek(
-  videoElement : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   startTime : number|(() => number)
 ) : Observable<void> {
-  return hasLoadedMetadata(videoElement)
+  return hasLoadedMetadata(mediaElement)
     .pipe(
       tap(() => {
         log.info("set initial time", startTime);
 
         // reset playbackRate to 1 in case we were at 0 (from a stalled
         // retry for instance)
-        videoElement.playbackRate = 1;
-        videoElement.currentTime = typeof startTime === "function" ?
+        mediaElement.playbackRate = 1;
+        mediaElement.currentTime = typeof startTime === "function" ?
           startTime() : startTime;
       }),
       shareReplay() // we don't want to repeat the side-effect on each
@@ -58,38 +62,76 @@ function doInitialSeek(
     );
 }
 
+interface ISeekedEvent {
+  type : "seeked";
+  value : undefined;
+}
+
+interface IPlayedEvent {
+  type : "played";
+  value : "done"|"blocked";
+}
+
+interface ILoadedEvent {
+  type : "loaded";
+  value : undefined;
+}
+
+export type IMediaReadyEvent =
+  ISeekedEvent |
+  IPlayedEvent |
+  ILoadedEvent;
+
 /**
- * @param {HTMLMediaElement} videoElement
- * @param {number|Function} startTime
- * @param {boolean} autoPlay
+ * @param {HTMLMediaElement} mediaElement
+ * @param {number|Function} startTime - Initial starting position. As seconds
+ * or as a function returning seconds.
+ * @param {boolean} autoPlay - Whether the player should auto-play
  * @returns {object}
  */
-export default function handleVideoEvents(
-  videoElement : HTMLMediaElement,
+export default function seekAndPlayOnMediaReady(
+  mediaElement : HTMLMediaElement,
   startTime : number|(() => number),
   mustAutoPlay : boolean
-) : {
-  initialSeek$ : Observable<void>;
-  loadAndPlay$ : Observable<void>;
-} {
-  const initialSeek$ = doInitialSeek(videoElement, startTime);
-  const handledCanPlay$ = canPlay(videoElement).pipe(
-    tap(() => log.info("canplay event"))
+) : Observable<IMediaReadyEvent> {
+  const seek$ = doInitialSeek(mediaElement, startTime)
+    .pipe(mapTo({ type: "seeked" as "seeked", value : undefined }));
+
+  const loadAndPlay$ = canPlay(mediaElement).pipe(
+
+    tap(() => log.info("canplay event")),
+
+    mergeMap(() => {
+      const loadedEvent$ = observableOf({
+        type: "loaded" as "loaded",
+        value: undefined,
+      });
+
+      if (mustAutoPlay) {
+        const autoplay$ = play$(mediaElement).pipe(
+          mapTo({ type: "played" as "played", value: "done" as "done" }),
+          catchError((error) => {
+            if (error.name === "NotAllowedError") {
+              // auto-play was probably prevented.
+              log.warn("Media element can't play." +
+                " It may be due to browser auto-play policies.");
+              return observableOf({
+                type: "played" as "played",
+                value: "blocked" as "blocked",
+              });
+            } else {
+              throw error;
+            }
+          })
+        );
+        return observableConcat(autoplay$, loadedEvent$);
+      }
+
+      return loadedEvent$;
+    }),
+
+    shareReplay()
   );
 
-  const loadAndPlay$ = observableCombineLatest(
-    initialSeek$,
-    handledCanPlay$
-  ).pipe(
-    mergeMapTo(mustAutoPlay ?
-      playUnlessAutoPlayPolicy$(videoElement) :
-      observableOf(undefined)
-    ),
-    shareReplay() // avoid doing "play" each time someone subscribes
-  );
-
-  return {
-    initialSeek$,
-    loadAndPlay$,
-  };
+  return observableMerge(seek$, loadAndPlay$);
 }

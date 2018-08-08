@@ -20,20 +20,26 @@
  */
 
 import {
+  EMPTY,
   merge as observableMerge,
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
-  mapTo,
+  mergeMap,
 } from "rxjs/operators";
 import {
   clearElementSrc,
   setElementSrc$,
 } from "../../compat";
-import { ICustomError } from "../../errors";
+import {
+  ICustomError,
+  MediaError,
+} from "../../errors";
 import log from "../../log";
 import { IKeySystemOption } from "../eme/types";
 import { IStreamClockTick } from "./clock";
@@ -45,7 +51,7 @@ import StallingManager from "./stalling_manager";
 import EVENTS, {
   IStreamEvent,
 } from "./stream_events";
-import handleInitialVideoEvents from "./video_events";
+import seekAndPlayOnMediaReady from "./video_events";
 
 /**
  * @param {HTMLMediaElement} mediaElement
@@ -129,10 +135,8 @@ export default function StreamDirectFile({
     getDirectFileInitialTime(mediaElement, startAt);
   log.debug("initial time calculated:", initialTime);
 
-  const {
-    initialSeek$,
-    loadAndPlay$,
-  } = handleInitialVideoEvents(mediaElement, initialTime, autoPlay);
+  const mediaEvents$ = seekAndPlayOnMediaReady(mediaElement, initialTime, autoPlay);
+  const seek$ = mediaEvents$.pipe(filter(({ type }) => type === "seeked"));
 
   /**
    * Create EME Manager, an observable which will manage every EME-related
@@ -166,13 +170,21 @@ export default function StreamDirectFile({
   const stallingManager$ = StallingManager(mediaElement, clock$)
     .pipe(map(EVENTS.stalled));
 
-  const loadedEvent$ = loadAndPlay$
-    .pipe(mapTo(EVENTS.loaded()));
+    const loadedEvent$ = mediaEvents$
+      .pipe(mergeMap((evt) => {
+        if (evt.type === "played" && evt.value === "blocked") {
+          const error = new MediaError("AUTOPLAY_NOT_ALLOWED", null, false);
+          return observableOf(EVENTS.warning(error), EVENTS.loaded());
+        } else if (evt.type === "loaded") {
+          return observableOf(EVENTS.loaded());
+        }
+        return EMPTY;
+      }));
 
   const linkURL$ = setElementSrc$(mediaElement, url)
     .pipe(ignoreElements());
 
-  const mutedInitialSeek$ = initialSeek$
+  const mutedInitialSeek$ = seek$
     .pipe(ignoreElements());
 
   const directFile$ : Observable<IStreamEvent> = observableMerge(
