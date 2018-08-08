@@ -32,6 +32,7 @@ import {
   map,
   mapTo,
   mergeMap,
+  pairwise,
   share,
   startWith,
   switchMap,
@@ -100,6 +101,8 @@ export type IBufferHandlerEvent =
   IMultiplePeriodBuffersEvent |
   IEndOfStreamEvent |
   IResumeStreamEvent;
+
+const { MIN_BUFFER_ENCLOSE } = config;
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
@@ -514,91 +517,145 @@ export default function BuffersHandler(
     period: Period,
     adaptation$ : Observable<Adaptation|null>
   ) : Observable<IPeriodBufferEvent> {
-    return adaptation$.pipe(switchMap((adaptation) => {
-      if (adaptation == null) {
-        log.info(`set no ${bufferType} Adaptation`, period);
-        let cleanBuffer$ : Observable<null>;
+    return adaptation$.pipe(
+      startWith(null),
+      pairwise(),
+      switchMap(([ oldAdaptation, adaptation ]: [Adaptation|null, Adaptation|null]) => {
+        if (adaptation == null) {
+          log.info(`set no ${bufferType} Adaptation`, period);
+          let cleanBuffer$ : Observable<null>;
 
+          if (sourceBufferManager.has(bufferType)) {
+            log.info(`clearing previous ${bufferType} SourceBuffer`);
+            const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
+            cleanBuffer$ = _queuedSourceBuffer
+              .removeBuffer({ start: period.start, end: period.end || Infinity })
+              .pipe(mapTo(null));
+          } else {
+            cleanBuffer$ = observableOf(null);
+          }
+
+          return observableConcat(
+            cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
+            createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
+          );
+        }
+
+        log.info(`updating ${bufferType} adaptation`, adaptation, period);
+
+        // 1 - create or reuse the SourceBuffer
+        let queuedSourceBuffer : QueuedSourceBuffer<any>;
         if (sourceBufferManager.has(bufferType)) {
-          log.info(`clearing previous ${bufferType} SourceBuffer`);
-          const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
-          cleanBuffer$ = _queuedSourceBuffer
-            .removeBuffer({ start: period.start, end: period.end || Infinity })
-            .pipe(mapTo(null));
+          log.info("reusing a previous SourceBuffer for the type", bufferType);
+          queuedSourceBuffer = sourceBufferManager.get(bufferType);
         } else {
-          cleanBuffer$ = observableOf(null);
+          const codec = getFirstDeclaredMimeType(adaptation);
+          const sourceBufferOptions = bufferType === "text" ?
+            options.textTrackOptions : undefined;
+          queuedSourceBuffer = sourceBufferManager
+            .createSourceBuffer(bufferType, codec, sourceBufferOptions);
         }
 
+        // 2 - create or reuse the associated BufferGarbageCollector and
+        // SegmentBookkeeper
+        const bufferGarbageCollector$ = garbageCollectors.get(queuedSourceBuffer);
+        const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
+
+        // 3 - Clear from buffer all data from previous adaptation, in current period
+        const cleanBuffered$: Observable<void> =
+          (oldAdaptation != null) ? clock$.pipe(
+            take(1),
+            mergeMap(({ currentTime }) => {
+              const bufferedRanges = segmentBookkeeper
+                .getBufferedForAdaptation((oldAdaptation as Adaptation).id);
+
+              const rangesToRemove = bufferedRanges
+                .reduce((acc: Array<{start: number; end: number}>, value) => {
+                  const start = currentTime - MIN_BUFFER_ENCLOSE;
+                  const end = currentTime + MIN_BUFFER_ENCLOSE;
+                  const intersection = {
+                    start: Math.max(start, value.start),
+                    end: Math.min(end, value.end),
+                  };
+                  if (intersection.end > intersection.start) {
+                    if (value.start !== intersection.start) {
+                      acc.push({
+                        start: value.start,
+                        end: intersection.start,
+                      });
+                    }
+                    if (value.end !== intersection.end) {
+                      acc.push({
+                        start: intersection.end,
+                        end: value.end,
+                      });
+                    }
+                  } else {
+                    acc.push({
+                      start: value.start,
+                      end: value.end,
+                    });
+                  }
+                  return acc;
+                }, []);
+
+              log.debug("removing from buffer", rangesToRemove);
+              const removeBuffers$ = rangesToRemove.length > 0 ?
+                rangesToRemove.map((range) => {
+                  return queuedSourceBuffer.removeBuffer(range);
+                }) :
+                [observableOf(undefined)];
+
+              return observableCombineLatest(removeBuffers$);
+            }),
+            mapTo(undefined)
+          ) : observableOf(undefined);
+
+        // 4 - create the pipeline
+        const pipelineOptions = getPipelineOptions(
+          bufferType, options.maxRetry, options.maxRetryOffline);
+        const pipeline = segmentPipelinesManager
+          .createPipeline(bufferType, pipelineOptions);
+
+        // 5 - create the Buffer
+        const adaptationBuffer$ =
+          cleanBuffered$.pipe(
+            mergeMap(() => {
+              return bufferManager.createBuffer(
+                clock$,
+                queuedSourceBuffer,
+                segmentBookkeeper,
+                pipeline,
+                wantedBufferAhead$,
+                { manifest, period, adaptation }
+              ).pipe(catchError<IAdaptationBufferEvent<any>, never>((error : Error) => {
+                // non native buffer should not impact the stability of the
+                // player. ie: if a text buffer sends an error, we want to
+                // continue streaming without any subtitles
+                if (!SourceBufferManager.isNative(bufferType)) {
+                  log.error("custom buffer: ", bufferType,
+                    "has crashed. Aborting it.", error);
+                  sourceBufferManager.disposeSourceBuffer(bufferType);
+                  errorStream.next(error);
+                  return createFakeBuffer(
+                    clock$, wantedBufferAhead$, bufferType, { manifest, period });
+                }
+
+                log.error(
+                  "native buffer: ",
+                  bufferType, "has crashed. Stopping playback.",
+                  error
+                );
+                throw error; // else, throw
+              }));
+            })
+          );
+
+        // 6 - Return the buffer and send right events
         return observableConcat(
-          cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
-          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
+          observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
+          observableMerge(adaptationBuffer$, bufferGarbageCollector$)
         );
-      }
-
-      log.info(`updating ${bufferType} adaptation`, adaptation, period);
-
-      // 1 - create or reuse the SourceBuffer
-      let queuedSourceBuffer : QueuedSourceBuffer<any>;
-      if (sourceBufferManager.has(bufferType)) {
-        log.info("reusing a previous SourceBuffer for the type", bufferType);
-        queuedSourceBuffer = sourceBufferManager.get(bufferType);
-      } else {
-        const codec = getFirstDeclaredMimeType(adaptation);
-        const sourceBufferOptions = bufferType === "text" ?
-          options.textTrackOptions : undefined;
-        queuedSourceBuffer = sourceBufferManager
-          .createSourceBuffer(bufferType, codec, sourceBufferOptions);
-      }
-
-      // 2 - create or reuse the associated BufferGarbageCollector and
-      // SegmentBookkeeper
-      const bufferGarbageCollector$ = garbageCollectors.get(queuedSourceBuffer);
-      const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
-
-      // TODO Clean previous QueuedSourceBuffer for previous content in the period
-      // // 3 - Clean possible content from a precedent adaptation in this period
-      // // (take the clock into account to avoid removing "now" for native sourceBuffers)
-      // // like:
-      // return clock$.pluck("currentTime").take(1).mergeMap(currentTime => {
-      // })
-
-      // 3 - create the pipeline
-      const pipelineOptions = getPipelineOptions(
-        bufferType, options.maxRetry, options.maxRetryOffline);
-      const pipeline = segmentPipelinesManager
-        .createPipeline(bufferType, pipelineOptions);
-
-      // 4 - create the Buffer
-      const adaptationBuffer$ = bufferManager.createBuffer(
-        clock$,
-        queuedSourceBuffer,
-        segmentBookkeeper,
-        pipeline,
-        wantedBufferAhead$,
-        { manifest, period, adaptation }
-      ).pipe(catchError<IAdaptationBufferEvent<any>, never>((error : Error) => {
-        // non native buffer should not impact the stability of the
-        // player. ie: if a text buffer sends an error, we want to
-        // continue streaming without any subtitles
-        if (!SourceBufferManager.isNative(bufferType)) {
-          log.error("custom buffer: ", bufferType,
-            "has crashed. Aborting it.", error);
-          sourceBufferManager.disposeSourceBuffer(bufferType);
-          errorStream.next(error);
-          return createFakeBuffer(
-            clock$, wantedBufferAhead$, bufferType, { manifest, period });
-        }
-
-        log.error(
-          "native buffer: ", bufferType, "has crashed. Stopping playback.", error);
-        throw error; // else, throw
-      }));
-
-      // 5 - Return the buffer and send right events
-      return observableConcat(
-        observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
-        observableMerge(adaptationBuffer$, bufferGarbageCollector$)
-      );
     }));
   }
 }

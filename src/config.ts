@@ -655,4 +655,10 @@ export default {
    * @type {Number|null}
    */
   FORCED_ENDED_THRESHOLD: 0.001,
+
+  /**
+   * It defines the buffer gap (before and after current time) that should be
+   * kept around when removing data from media buffers. (in seconds)
+   */
+  MIN_BUFFER_ENCLOSE: 1,
 };
