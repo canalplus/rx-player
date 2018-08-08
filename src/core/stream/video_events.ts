@@ -87,7 +87,7 @@ export type IMediaReadyEvent =
  * @param {number|Function} startTime - Initial starting position. As seconds
  * or as a function returning seconds.
  * @param {boolean} autoPlay - Whether the player should auto-play
- * @returns {object}
+ * @returns {Observable}
  */
 export default function seekAndPlayOnMediaReady(
   mediaElement : HTMLMediaElement,
