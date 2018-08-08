@@ -401,7 +401,7 @@ export default function Stream({
           const error = new MediaError("AUTOPLAY_NOT_ALLOWED", null, false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
         }
-        return observableOf(EVENTS.loaded);
+        return observableOf(EVENTS.loaded());
       }));
 
     return observableMerge(
