@@ -26,7 +26,6 @@ import {
   finalize,
   ignoreElements,
   map,
-  mapTo,
   mergeMap,
   take,
   takeUntil,
@@ -83,7 +82,7 @@ import StallingManager from "./stalling_manager";
 import EVENTS, {
   IStreamEvent,
 } from "./stream_events";
-import handleInitialVideoEvents from "./video_events";
+import seekAndLoadOnMediaEvent from "./video_events";
 
 function getManifestPipelineOptions(
   networkConfig: {
@@ -254,11 +253,11 @@ export default function Stream({
     }
 
     const {
-      initialSeek$,
-      loadAndPlay$,
-    } = handleInitialVideoEvents(videoElement, initialTime, autoPlay);
+      seek$,
+      load$,
+    } = seekAndLoadOnMediaEvent(videoElement, initialTime, autoPlay);
 
-    const bufferClock$ = createBufferClock(manifest, clock$, initialSeek$, initialTime);
+    const bufferClock$ = createBufferClock(manifest, clock$, seek$, initialTime);
 
     /**
      * Subject through which network metrics will be sent by the segment
@@ -395,7 +394,15 @@ export default function Stream({
 
     // Single lifecycle events
     const manifestReadyEvent$ = observableOf(EVENTS.manifestReady(abrManager, manifest));
-    const loadedEvent$ = loadAndPlay$.pipe(mapTo(EVENTS.loaded()));
+
+    const loadedEvent$ = load$
+      .pipe(mergeMap((evt) => {
+        if (evt === "autoplay-blocked") {
+          const error = new MediaError("AUTOPLAY_NOT_ALLOWED", null, false);
+          return observableOf(EVENTS.warning(error), EVENTS.loaded());
+        }
+        return observableOf(EVENTS.loaded);
+      }));
 
     return observableMerge(
       manifestReadyEvent$,
