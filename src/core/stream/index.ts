@@ -23,10 +23,10 @@ import {
   Subject,
 } from "rxjs";
 import {
+  filter,
   finalize,
   ignoreElements,
   map,
-  mapTo,
   mergeMap,
   take,
   takeUntil,
@@ -83,7 +83,7 @@ import StallingManager from "./stalling_manager";
 import EVENTS, {
   IStreamEvent,
 } from "./stream_events";
-import handleInitialVideoEvents from "./video_events";
+import seekAndPlayOnMediaReady from "./video_events";
 
 function getManifestPipelineOptions(
   networkConfig: {
@@ -253,12 +253,10 @@ export default function Stream({
       throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND", null, true);
     }
 
-    const {
-      initialSeek$,
-      loadAndPlay$,
-    } = handleInitialVideoEvents(videoElement, initialTime, autoPlay);
+    const mediaEvents$ = seekAndPlayOnMediaReady(videoElement, initialTime, autoPlay);
 
-    const bufferClock$ = createBufferClock(manifest, clock$, initialSeek$, initialTime);
+    const seeked$ = mediaEvents$.pipe(filter(({ type }) => type === "seeked"));
+    const bufferClock$ = createBufferClock(manifest, clock$, seeked$, initialTime);
 
     /**
      * Subject through which network metrics will be sent by the segment
@@ -395,7 +393,17 @@ export default function Stream({
 
     // Single lifecycle events
     const manifestReadyEvent$ = observableOf(EVENTS.manifestReady(abrManager, manifest));
-    const loadedEvent$ = loadAndPlay$.pipe(mapTo(EVENTS.loaded()));
+
+    const loadedEvent$ = mediaEvents$
+      .pipe(mergeMap((evt) => {
+        if (evt.type === "played" && evt.value === "blocked") {
+          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
+          return observableOf(EVENTS.warning(error), EVENTS.loaded());
+        } else if (evt.type === "loaded") {
+          return observableOf(EVENTS.loaded());
+        }
+        return EMPTY;
+      }));
 
     return observableMerge(
       manifestReadyEvent$,

@@ -62,7 +62,7 @@ export interface IStreamClockTick {
 export default function createBufferClock(
   manifest : Manifest,
   streamClock$ : Observable<IStreamClockTick>,
-  initialSeek$ : Observable<void>,
+  initialSeek$ : Observable<any>, // we don't care about what's emitted
   startTime : number
 ) : Observable<IBufferClockTick> {
   /**
