@@ -173,7 +173,7 @@ export default function StreamDirectFile({
   const loadedEvent$ = load$
     .pipe(mergeMap((evt) => {
       if (evt === "autoplay-blocked") {
-        const error = new MediaError("AUTOPLAY_NOT_ALLOWED", null, false);
+        const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
         return observableOf(EVENTS.warning(error), EVENTS.loaded());
       }
       return observableOf(EVENTS.loaded);
