@@ -26,13 +26,11 @@ import Manifest, {
   Period,
 } from "../../manifest";
 import { IBufferType } from "../source_buffers";
-import {
-  IBufferClockTick,
-  IBufferStateFull,
-} from "./representation_buffer";
+import { IAdaptationBufferClockTick } from "./adaptation_buffer";
+import { IBufferStateFull } from "./types";
 
 /**
- * Create empty Buffer Observable, linked to a Period.
+ * Create empty AdaptationBuffer Observable, linked to a Period.
  *
  * This observable will never download any segment and just emit a "full"
  * event when reaching the end.
@@ -43,8 +41,8 @@ import {
  * @param {Object} content
  * @returns {Observable}
  */
-export default function createFakeBuffer(
-  bufferClock$ : Observable<IBufferClockTick>,
+export default function createFakeAdaptationBuffer(
+  bufferClock$ : Observable<IAdaptationBufferClockTick>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
   content : { manifest : Manifest; period : Period }

@@ -39,6 +39,8 @@ interface IMetric {
   value : IMetricValue;
 }
 
+export type IABRClockTick = IRepresentationChooserClockTick;
+
 // Options for every RepresentationChoosers
 interface IRepresentationChoosersOptions {
   limitWidth: Partial<Record<IBufferType, Observable<number>>>;
@@ -226,7 +228,7 @@ export default class ABRManager {
    */
   public get$(
     type : IBufferType,
-    clock$: Observable<IRepresentationChooserClockTick>,
+    clock$: Observable<IABRClockTick>,
     representations: Representation[] = []
   ) : Observable<{
     bitrate: undefined|number;

@@ -25,7 +25,7 @@ import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import { getNextRangeGap } from "../../utils/ranges";
-import { IStreamClockTick } from "./clock";
+import { IStreamClockTick } from "./types";
 
 const { DISCONTINUITY_THRESHOLD } = config;
 
