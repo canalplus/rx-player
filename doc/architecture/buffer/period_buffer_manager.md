@@ -1,4 +1,4 @@
-# BufferHandler ################################################################
+# PeriodBufferManager ##########################################################
 
 
 ## Overview ####################################################################
@@ -7,8 +7,8 @@ To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to SourceBuffers.
 
 In the RxPlayer, it is the role of the _Buffers_ to do all of those tasks.
-The _BufferHandler_ is a part of the _Stream_ which dynamically creates and
-remove _Buffers_.
+The _PeriodBufferManager_ is a part of the _Stream_ which dynamically creates
+and remove _Buffers_.
 
 Basically, the _Buffer Handler_:
 

@@ -4,12 +4,10 @@
 ## Overview ####################################################################
 
 Even if the API is the front-facing block of code in the Rx-player, the Stream
-is the part of the code actually doing most logic behind playing a content.
-
-The API is just a higher, object-oriented, layer for easier library interactions.
+is the part of the code actually starting the logic behind playing a content.
 
 Its code is written in the ``src/core/stream`` directory. More specifically,
-all needed code should be exported by its "index file"
+all code needed in the rest of the code should be exported by its "index file"
 ``src/core/stream/index.ts``.
 
 Every times you're calling the API to load a new video, the Stream function is
@@ -34,11 +32,13 @@ to the API through events.
 
 Basically, the job of the Stream is to:
 
-  - initialize the content (creating the MediaSource and SourceBuffers,
-    downloading the manifest)
+  - initialize the content (creating the MediaSource, downloading the manifest)
 
   - Connect most core parts of the player together, such as adaptive
-    streaming management, segment downloads, DRMs...
+    streaming management, DRMs, speed management...
+
+  - Call with the right argument the PeriodBufferManager, which will download
+    and push segment to be decoded by the browser.
 
 As such, during the various events happening on content playback, the Stream
 will create / destroy / update various player blocks. Such example of blocks
@@ -48,9 +48,9 @@ are:
 
   - DRM management
 
-  - Buffer management
+  - Manifest loading, parsing and refreshing
 
-  - Manifest refreshing management
+  - Buffer management
 
   - ...
 
@@ -117,12 +117,6 @@ Multiple of those building bricks are considered as part of the Stream.
 
 Among them, you can find:
 
-  - __[the Buffer Handler](./buffer_handler.md)__
-
-    Create/destroy the Buffer and SourceBuffers needed, that will be used to
-    push new media segments.
-
-
   - __[the Buffer Garbage Collector](./buffer_garbage_collector.md)__
 
     Perform manual garbage collection on SourceBuffers periodically
@@ -147,3 +141,13 @@ Among them, you can find:
   - __the Stalling Manager__
 
     Try to un-stall the player when it does so.
+
+
+
+## Buffer creation #############################################################
+
+
+>   - __[the Buffer Handler](./period_buffer_creator.md)__
+
+>     Create/destroy the Buffer and SourceBuffers needed, that will be used to
+>     push new media segments.

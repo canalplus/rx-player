@@ -28,7 +28,7 @@ import {
   MediaSource_,
 } from "../../compat";
 import { onSourceOpen$ } from "../../compat/events";
-import MediaError from "../../errors/MediaError";
+import { MediaError } from "../../errors";
 import log from "../../log";
 
 /**
