@@ -336,8 +336,7 @@ export default function Stream({
         maxRetry: networkConfig.segmentRetry,
         maxRetryOffline: networkConfig.offlineRetry,
         textTrackOptions,
-      },
-      warning$
+      }
     ).pipe(mergeMap((evt) : Observable<IStreamEvent> => {
         switch (evt.type) {
           case "end-of-stream":

@@ -40,10 +40,7 @@ import {
   tap,
 } from "rxjs/operators";
 import config from "../../config";
-import {
-  ICustomError,
-  MediaError,
-} from "../../errors";
+import { MediaError } from "../../errors";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -127,8 +124,6 @@ export type IBufferHandlerEvent =
  * @param {Object} segmentBookkeepers - use/create SegmentBookeepers lazily at will.
  * @param {Object} garbageCollectors - use/create GarbageCollectors lazily at will.
  * @param {Object} options
- * @param {Subject}} errorStream - TODO remove and replace by warning events
- * directly
  * @returns {Observable}
  *
  * TODO Special case for image Buffer, where we want data for EVERY active
@@ -150,8 +145,7 @@ export default function BuffersHandler(
     maxRetry? : number;
     maxRetryOffline? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
-  },
-  errorStream : Subject<Error | ICustomError>
+  }
 ) : Observable<IBufferHandlerEvent> {
   const manifest = content.manifest;
   const firstPeriod = content.period;
@@ -568,9 +562,11 @@ export default function BuffersHandler(
           log.error("custom buffer: ", bufferType,
             "has crashed. Aborting it.", error);
           sourceBufferManager.disposeSourceBuffer(bufferType);
-          errorStream.next(error);
-          return createFakeBuffer(
-            clock$, wantedBufferAhead$, bufferType, { manifest, period });
+          return observableConcat(
+            observableOf(EVENTS.warning(error)),
+            createFakeBuffer(
+              clock$, wantedBufferAhead$, bufferType, { manifest, period })
+          );
         }
 
         log.error(
