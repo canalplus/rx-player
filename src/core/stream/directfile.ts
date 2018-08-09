@@ -44,7 +44,12 @@ import { IInitialTimeOptions } from "./get_initial_time";
 import createMediaErrorHandler from "./media_error_handler";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
-import EVENTS from "./stream_events";
+import EVENTS, {
+  ISpeedChangedEvent,
+  IStalledEvent,
+  IStreamLoadedEvent,
+  IStreamWarningEvent,
+} from "./stream_events";
 import seekAndLoadOnMediaEvent from "./video_events";
 
 /**
@@ -99,6 +104,12 @@ export interface IDirectFileStreamOptions {
   startAt? : IInitialTimeOptions;
   url : string;
 }
+
+export type IDirectfileEvent =
+  ISpeedChangedEvent |
+  IStalledEvent |
+  IStreamLoadedEvent |
+  IStreamWarningEvent;
 
 /**
  * @param {Object} directfileOptions
