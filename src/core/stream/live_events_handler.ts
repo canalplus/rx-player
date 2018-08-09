@@ -27,9 +27,9 @@ import {
 import log from "../../log";
 import Manifest from "../../manifest";
 import SourceBufferManager from "../source_buffers";
+import { IBufferHandlerEvent } from "./buffers_handler";
 import EVENTS, {
   IManifestUpdateEvent,
-  IStreamEvent,
 } from "./stream_events";
 
 /**
@@ -58,6 +58,10 @@ function refreshManifest(
   );
 }
 
+export type ILiveEventsHandlerEvent =
+  IManifestUpdateEvent |
+  IBufferHandlerEvent;
+
 /**
  * Create handler for Buffer events happening only in live contexts.
  * @param {HTMLMediaElement} videoElement
@@ -69,7 +73,7 @@ export default function liveEventsHandler(
   videoElement : HTMLMediaElement,
   manifest : Manifest,
   fetchManifest : (url : string) => Observable<Manifest>
-) : (message : IStreamEvent) => Observable<IStreamEvent> {
+) : (message : IBufferHandlerEvent) => Observable<ILiveEventsHandlerEvent> {
   return function handleLiveEvents(message) {
     switch (message.type) {
       case "discontinuity-encountered":
