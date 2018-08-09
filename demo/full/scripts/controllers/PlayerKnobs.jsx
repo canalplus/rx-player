@@ -4,6 +4,7 @@ import AudioBitrateKnob from "./knobs/AudioBitrate.jsx";
 import VideoBitrateKnob from "./knobs/VideoBitrate.jsx";
 import LanguageKnob from "./knobs/AudioTrack.jsx";
 import SubtitlesKnob from "./knobs/Subtitles.jsx";
+import VideoTrack from "./knobs/VideoTrack.jsx";
 
 const PlayerKnobs = ({
   player,
@@ -21,6 +22,7 @@ const PlayerKnobs = ({
       <VideoBitrateKnob player={player} />
       <LanguageKnob player={player} />
       <SubtitlesKnob player={player} />
+      <VideoTrack player={player} />
     </div>
   );
 };
