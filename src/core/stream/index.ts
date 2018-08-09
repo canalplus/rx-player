@@ -141,7 +141,7 @@ export interface IStreamOptions {
  * @param {Object} args
  * @returns {Observable}
  */
-export default function Stream({
+export default function initializeStream({
   adaptiveOptions,
   autoPlay,
   bufferOptions,
@@ -217,7 +217,7 @@ export default function Stream({
     openMediaSource(videoElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, manifest ]) =>
-    initializeStream(mediaSource, manifest))
+    startStreamOnMediaSource(mediaSource, manifest))
   );
 
   const warningEvents$ = warning$.pipe(map(EVENTS.warning));
@@ -231,7 +231,7 @@ export default function Stream({
    * @param {Object} manifest
    * @returns {Observable}
    */
-  function initializeStream(
+  function startStreamOnMediaSource(
     mediaSource : MediaSource,
     manifest : Manifest
   ) : Observable<IStreamEvent> {
