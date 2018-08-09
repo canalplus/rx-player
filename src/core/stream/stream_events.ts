@@ -126,6 +126,9 @@ export interface IResumeStreamEvent {
   value: undefined;
 }
 
+export { IAdaptationBufferEvent };
+export { IRepresentationChangeEvent };
+
 function adaptationChange(
   bufferType : IBufferType,
   adaptation : Adaptation|null,
@@ -281,22 +284,5 @@ const STREAM_EVENTS = {
   stalled,
   warning,
 };
-
-// Every possible item emitted by the Stream
-export type IStreamEvent =
-  IManifestReadyEvent | // Generally sent first (if there's no warning)
-  IStreamLoadedEvent | // Generally sent second (if there's no warning)
-  IPeriodBufferReadyEvent |
-  IActivePeriodChangedEvent |
-  IAdaptationChangeEvent |
-  IAdaptationBufferEvent<any> |
-  ICompletedBufferEvent |
-  IEndOfStreamEvent |
-  IResumeStreamEvent |
-  IManifestUpdateEvent |
-  IPeriodBufferClearedEvent |
-  ISpeedChangedEvent |
-  IStalledEvent |
-  IStreamWarningEvent;
 
 export default STREAM_EVENTS;
