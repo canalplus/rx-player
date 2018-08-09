@@ -46,7 +46,7 @@ export interface IAdaptationChangeEvent {
   };
 }
 
-// Emit when the manifest has been downloaded and parsed
+// Emit when the manifest has been downloaded and parsed for the first time
 export interface IManifestReadyEvent {
   type : "manifestReady";
   value : {
@@ -284,19 +284,19 @@ const STREAM_EVENTS = {
 
 // Every possible item emitted by the Stream
 export type IStreamEvent =
+  IManifestReadyEvent | // Generally sent first (if there's no warning)
+  IStreamLoadedEvent | // Generally sent second (if there's no warning)
+  IPeriodBufferReadyEvent |
   IActivePeriodChangedEvent |
-  IAdaptationBufferEvent<any> |
   IAdaptationChangeEvent |
+  IAdaptationBufferEvent<any> |
   ICompletedBufferEvent |
   IEndOfStreamEvent |
   IResumeStreamEvent |
-  IManifestReadyEvent |
   IManifestUpdateEvent |
   IPeriodBufferClearedEvent |
-  IPeriodBufferReadyEvent |
   ISpeedChangedEvent |
   IStalledEvent |
-  IStreamLoadedEvent |
   IStreamWarningEvent;
 
 export default STREAM_EVENTS;
