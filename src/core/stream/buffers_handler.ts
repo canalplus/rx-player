@@ -618,8 +618,9 @@ function getPipelineOptions(
 }
 
 /**
- * Returns an Observable which emits ``undefined`` and complete when all
- * buffers given are _complete_.
+ * Returns an Observable which emits ``true`` when all buffers given are
+ * _complete_.
+ * Returns false otherwise.
  *
  * A PeriodBuffer for a given type is considered _complete_ when both of these
  * conditions are true:
