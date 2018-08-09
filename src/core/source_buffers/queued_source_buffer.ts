@@ -265,8 +265,12 @@ export default class QueuedSourceBuffer<T> {
   private _onUpdate() : void {
     if (this._flushing) {
       this._flushing.next(undefined);
-      this._flushing.complete();
-      this._flushing = null;
+
+      // security against side-effects from the previous `next` instruction
+      if (this._flushing) {
+        this._flushing.complete();
+        this._flushing = null;
+      }
     }
   }
 
