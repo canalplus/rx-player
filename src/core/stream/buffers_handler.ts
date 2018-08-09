@@ -116,35 +116,19 @@ export type IBufferHandlerEvent =
  * Here multiple buffers can be created at the same time to allow smooth
  * transitions between periods.
  * To do this, we dynamically create or destroy buffers as they are needed.
- *
- * @param {Object} content - The content to play. Contains the following
- * properties:
- *   - manifest {Manifest}
- *
- *   - period {Period} - The first period to play in the content
- *
- *   - clock$ {Observable} - Emit current informations about the content
- *     being played. Also regulate the frequencies of the time the Buffer check
- *     for new its status / new segments.
- *
- *   - bufferManager {BufferManager} -  Will be used to create new
- *     AdaptationBuffers at will
- *
- *   - sourceBufferManager {SourceBufferManager} - Will be used to lazily
- *     create SourceBuffer instances associated with the current content.
- *
- *   - segmentPipelinesManager {SegmentPipelinesManager} - Used to download
- *     segments.
- *
- *   - segmentBookkeeper {WeakMapMemory} - Allow to easily retrieve or create
- *     a unique SegmentBookkeeper per SourceBuffer
- *
- *   - garbageCollectors {WeakMapMemory} - Allow to easily retrieve or create
- *     a unique Garbage Collector per SourceBuffer
- *
- *   - options {Object}
- *
- *   - errorStream {Subject} - Subject to emit minor errors
+ * @param {Object} content
+ * @param {Observable} clock$ - Emit position informations
+ * @param {Observable} wantedBufferAhead - Emit the wanted buffer goal
+ * @param {Object} bufferManager - Will be used to create new AdaptationBuffers
+ * at will.
+ * @param {Object} sourceBufferManager - Will be used to lazily create
+ * SourceBuffer instances associated with the current content.
+ * @param {Object} segmentPipelinesManager - Download segments
+ * @param {Object} segmentBookkeepers - use/create SegmentBookeepers lazily at will.
+ * @param {Object} garbageCollectors - use/create GarbageCollectors lazily at will.
+ * @param {Object} options
+ * @param {Subject}} errorStream - TODO remove and replace by warning events
+ * directly
  * @returns {Observable}
  *
  * TODO Special case for image Buffer, where we want data for EVERY active
