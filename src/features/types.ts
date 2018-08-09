@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Subject,
-} from "rxjs";
+import { Observable } from "rxjs";
+import { IEMEManagerEvent } from "../core/eme";
 import { IKeySystemOption } from "../core/eme/types";
 import { ICustomSourceBuffer } from "../core/source_buffers/abstract_source_buffer";
-import { IDirectFileStreamOptions } from "../core/stream/directfile";
-import { IStreamEvent } from "../core/stream/stream_events";
-import { ICustomError } from "../errors";
+import {
+  IDirectfileEvent,
+  IDirectFileStreamOptions,
+} from "../core/stream/directfile";
 import { ITransportFunction } from "../net/types";
 import {
   IHTMLTextTracksParserFn,
@@ -30,13 +29,12 @@ import {
 } from "../parsers/texttracks/types";
 
 export type IDirectFileStream =
-  (args : IDirectFileStreamOptions) => Observable<IStreamEvent>;
+  (args : IDirectFileStreamOptions) => Observable<IDirectfileEvent>;
 
 export type IEMEManager = (
   mediaElement : HTMLMediaElement,
-  keySystems: IKeySystemOption[],
-  errorStream : Subject<Error|ICustomError>
-) => Observable<never>;
+  keySystems: IKeySystemOption[]
+) => Observable<IEMEManagerEvent>;
 
 export interface INativeTextTracksBuffer {
   new(
