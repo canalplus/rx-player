@@ -14,6 +14,7 @@ const AudioTrackKnobBase = ({
   currentLanguage,
   availableLanguages = [],
 }) => {
+  debugger;
   let options = [];
   let selectedIndex;
 

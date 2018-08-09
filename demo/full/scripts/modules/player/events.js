@@ -93,6 +93,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       stateUpdates.videoBitrate = undefined;
       stateUpdates.availableAudioBitrates = [];
       stateUpdates.availableVideoBitrates = [];
+      stateUpdates.availableVideoTracks = [];
       stateUpdates.availableLanguages = [];
       stateUpdates.availableSubtitles = [];
       stateUpdates.images = [];
@@ -116,6 +117,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     .pipe(takeUntil($destroy))
     .subscribe(() => {
       state.set({
+        availableVideoTracks: player.getAvailableVideoTracks(),
         availableAudioBitrates: player.getAvailableAudioBitrates(),
         availableVideoBitrates: player.getAvailableVideoBitrates(),
         availableLanguages: player.getAvailableAudioTracks(),
