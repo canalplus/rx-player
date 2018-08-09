@@ -15,7 +15,6 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
   concat as observableConcat,
   merge as observableMerge,
   Observable,
@@ -25,7 +24,6 @@ import {
 } from "rxjs";
 import {
   catchError,
-  distinctUntilChanged,
   exhaustMap,
   filter,
   ignoreElements,
@@ -33,7 +31,6 @@ import {
   mapTo,
   mergeMap,
   share,
-  startWith,
   switchMap,
   take,
   takeUntil,
@@ -50,16 +47,13 @@ import arrayIncludes from "../../utils/array-includes";
 import InitializationSegmentCache from "../../utils/initialization_segment_cache";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
-import BufferManager, {
-  createFakeBuffer,
-  IAdaptationBufferEvent,
-  IBufferClockTick,
-} from "../buffer";
+import ABRManager from "../abr";
 import {
   IPipelineOptions,
   SegmentPipelinesManager,
 } from "../pipelines";
 import SourceBufferManager, {
+  BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
   ITextTrackSourceBufferOptions,
@@ -68,35 +62,21 @@ import SourceBufferManager, {
 import ActivePeriodEmitter, {
   IPeriodBufferInfos,
 } from "./active_period_emitter";
+import AdaptationBuffer, {
+  IAdaptationBufferClockTick,
+} from "./adaptation_buffer";
+import areBuffersComplete from "./are_buffers_complete";
+import createFakeBuffer from "./create_fake_buffer";
+import EVENTS from "./events_generators";
 import SegmentBookkeeper from "./segment_bookkeeper";
-import EVENTS, {
-  IActivePeriodChangedEvent,
-  IAdaptationChangeEvent,
-  ICompletedBufferEvent,
-  IEndOfStreamEvent,
-  IPeriodBufferClearedEvent,
-  IPeriodBufferReadyEvent,
-  IResumeStreamEvent,
-} from "./stream_events";
+import {
+  IAdaptationBufferEvent,
+  IMultiplePeriodBuffersEvent,
+  IPeriodBufferEvent,
+  IPeriodBufferManagerEvent,
+} from "./types";
 
-// Events coming from single PeriodBuffer
-type IPeriodBufferEvent =
-  IAdaptationBufferEvent<any> |
-  IAdaptationChangeEvent;
-
-// Events coming from function(s) managing multiple PeriodBuffers.
-type IMultiplePeriodBuffersEvent =
-  IPeriodBufferEvent |
-  IPeriodBufferReadyEvent |
-  IPeriodBufferClearedEvent |
-  ICompletedBufferEvent;
-
-// Every events sent by the BuffersHandler exported here.
-export type IBufferHandlerEvent =
-  IActivePeriodChangedEvent |
-  IMultiplePeriodBuffersEvent |
-  IEndOfStreamEvent |
-  IResumeStreamEvent;
+export type IPeriodBufferManagerClockTick = IAdaptationBufferClockTick;
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
@@ -115,14 +95,11 @@ export type IBufferHandlerEvent =
  * To do this, we dynamically create or destroy buffers as they are needed.
  * @param {Object} content
  * @param {Observable} clock$ - Emit position informations
- * @param {Observable} wantedBufferAhead - Emit the wanted buffer goal
- * @param {Object} bufferManager - Will be used to create new AdaptationBuffers
- * at will.
+ * @param {Object} abrManager - Emit bitrate estimation and best Representation
+ * to play.
  * @param {Object} sourceBufferManager - Will be used to lazily create
  * SourceBuffer instances associated with the current content.
  * @param {Object} segmentPipelinesManager - Download segments
- * @param {Object} segmentBookkeepers - use/create SegmentBookeepers lazily at will.
- * @param {Object} garbageCollectors - use/create GarbageCollectors lazily at will.
  * @param {Object} options
  * @returns {Observable}
  *
@@ -132,35 +109,53 @@ export type IBufferHandlerEvent =
  * TODO Special garbage collection for text and image buffers, as we want to
  * clean it for potentially very long sessions.
  */
-export default function BuffersHandler(
-  content : { manifest : Manifest; period : Period },
-  clock$ : Observable<IBufferClockTick>,
-  wantedBufferAhead$ : Observable<number>,
-  bufferManager : BufferManager,
+export default function PeriodBufferManager(
+  content : { manifest : Manifest; initialPeriod : Period },
+  clock$ : Observable<IPeriodBufferManagerClockTick>,
+  abrManager : ABRManager,
   sourceBufferManager : SourceBufferManager,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
-  segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<any>, SegmentBookkeeper>,
-  garbageCollectors : WeakMapMemory<QueuedSourceBuffer<any>, Observable<never>>,
   options: {
-    maxRetry? : number;
-    maxRetryOffline? : number;
+    wantedBufferAhead$ : Observable<number>;
+    maxBufferAhead$ : Observable<number>;
+    maxBufferBehind$ : Observable<number>;
+    segmentRetry? : number;
+    offlineRetry? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
   }
-) : Observable<IBufferHandlerEvent> {
-  const manifest = content.manifest;
-  const firstPeriod = content.period;
+) : Observable<IPeriodBufferManagerEvent> {
+  const { manifest, initialPeriod } = content;
 
-  // Initialize all native source buffers from the first period at the same
-  // time.
-  // We cannot lazily create native sourcebuffers since the spec does not
-  // allow adding them during playback.
-  //
-  // From https://w3c.github.io/media-source/#methods
-  //    For example, a user agent may throw a QuotaExceededError
-  //    exception if the media element has reached the HAVE_METADATA
-  //    readyState. This can occur if the user agent's media engine
-  //    does not support adding more tracks during playback.
-  createNativeSourceBuffersForPeriod(sourceBufferManager, firstPeriod);
+  const {
+    wantedBufferAhead$,
+    maxBufferAhead$,
+    maxBufferBehind$,
+  } = options;
+
+  /**
+   * Keep track of a unique BufferGarbageCollector created per
+   * QueuedSourceBuffer.
+   * @type {WeakMapMemory}
+   */
+  const garbageCollectors =
+    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<any>) =>
+      BufferGarbageCollector({
+        queuedSourceBuffer: qSourceBuffer,
+        clock$: clock$.pipe(map(tick => tick.currentTime)),
+        maxBufferBehind$,
+        maxBufferAhead$,
+      })
+    );
+
+  /**
+   * Keep track of a unique segmentBookkeeper created per
+   * QueuedSourceBuffer.
+   * @type {WeakMapMemory}
+   */
+  const segmentBookkeepers =
+    new WeakMapMemory<QueuedSourceBuffer<any>, SegmentBookkeeper>(() =>
+      new SegmentBookkeeper()
+    );
 
   const addPeriodBuffer$ = new Subject<IPeriodBufferInfos>();
   const removePeriodBuffer$ = new Subject<IPeriodBufferInfos>();
@@ -173,7 +168,7 @@ export default function BuffersHandler(
    */
   const buffersArray = bufferTypes
     .map((bufferType) => {
-      return manageEveryBuffers(bufferType, firstPeriod)
+      return manageEveryBuffers(bufferType, initialPeriod)
         .pipe(
           tap((evt) => {
             if (evt.type === "periodBufferReady") {
@@ -209,7 +204,7 @@ export default function BuffersHandler(
    * Emits an "end-of-stream" event once every PeriodBuffer are complete.
    * @type {Observable}
    */
-  const streamHasEnded$ = buffersAreComplete(...buffersArray)
+  const streamHasEnded$ = areBuffersComplete(...buffersArray)
     .pipe(map((areComplete) =>
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
@@ -357,49 +352,31 @@ export default function BuffersHandler(
   ) : Observable<IMultiplePeriodBuffersEvent> {
     log.info("creating new Buffer for", bufferType, basePeriod);
 
-    /**
-     * Emits the chosen adaptation for the current type.
-     * @type {ReplaySubject}
-     */
+    // Emits the chosen adaptation for the current type.
     const adaptation$ = new ReplaySubject<Adaptation|null>(1);
 
-    /**
-     * Emits the Period of the next Period Buffer when it can be created.
-     * @type {Subject}
-     */
+    // Emits the Period of the next Period Buffer when it can be created.
     const createNextPeriodBuffer$ = new Subject<Period>();
 
-    /**
-     * Emits when the Buffers for the next Periods should be destroyed, if
-     * created.
-     * @type {Subject}
-     */
+    // Emits when the Buffers for the next Periods should be destroyed, if
+    // created.
     const destroyNextBuffers$ = new Subject<void>();
 
-    /**
-     * Emits when the current position goes over the end of the current buffer.
-     * @type {Subject}
-     */
+    // Emits when the current position goes over the end of the current buffer.
     const endOfCurrentBuffer$ = clock$
       .pipe(filter(({ currentTime, wantedTimeOffset }) =>
         !!basePeriod.end && (currentTime + wantedTimeOffset) >= basePeriod.end
       ));
 
-    /**
-     * Create Period Buffer for the next Period.
-     * @type {Observable}
-     */
+    // Create Period Buffer for the next Period.
     const nextPeriodBuffer$ = createNextPeriodBuffer$
       .pipe(exhaustMap((nextPeriod) => {
         return manageConsecutivePeriodBuffers(
           bufferType, nextPeriod, destroyNextBuffers$);
       }));
 
-    /**
-     * Allows to destroy each created Buffer, from the newest to the oldest,
-     * once destroy$ emits.
-     * @type {Observable}
-     */
+    // Allows to destroy each created Buffer, from the newest to the oldest,
+    // once destroy$ emits.
     const destroyAll$ = destroy$.pipe(
       take(1),
       tap(() => {
@@ -415,10 +392,7 @@ export default function BuffersHandler(
       share() // share side-effects
     );
 
-    /**
-     * Will emit when the current buffer should be destroyed.
-     * @type {Observable}
-     */
+    // Will emit when the current buffer should be destroyed.
     const killCurrentBuffer$ = observableMerge(endOfCurrentBuffer$, destroyAll$);
 
     const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$).pipe(
@@ -449,10 +423,7 @@ export default function BuffersHandler(
       share()
     );
 
-    /**
-     * Buffer for the current Period.
-     * @type {Observable}
-     */
+    // Buffer for the current Period.
     const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent> =
       observableConcat(
         observableOf(EVENTS.periodBufferReady(bufferType, basePeriod, adaptation$)),
@@ -542,18 +513,19 @@ export default function BuffersHandler(
 
       // 3 - create the pipeline
       const pipelineOptions = getPipelineOptions(
-        bufferType, options.maxRetry, options.maxRetryOffline);
+        bufferType, options.segmentRetry, options.offlineRetry);
       const pipeline = segmentPipelinesManager
         .createPipeline(bufferType, pipelineOptions);
 
       // 4 - create the Buffer
-      const adaptationBuffer$ = bufferManager.createBuffer(
+      const adaptationBuffer$ = AdaptationBuffer(
         clock$,
         queuedSourceBuffer,
         segmentBookkeeper,
         pipeline,
         wantedBufferAhead$,
-        { manifest, period, adaptation }
+        { manifest, period, adaptation },
+        abrManager
       ).pipe(catchError<IAdaptationBufferEvent<any>, never>((error : Error) => {
         // non native buffer should not impact the stability of the
         // player. ie: if a text buffer sends an error, we want to
@@ -618,51 +590,6 @@ function getPipelineOptions(
 }
 
 /**
- * Returns an Observable which emits ``true`` when all buffers given are
- * _complete_.
- * Returns false otherwise.
- *
- * A PeriodBuffer for a given type is considered _complete_ when both of these
- * conditions are true:
- *   - it is the last PeriodBuffer in the content for the given type
- *   - it has finished downloading segments (it is _full_)
- *
- * Simply put a _complete_ PeriodBuffer for a given type means that every
- * segments needed for this Buffer have been downloaded.
- *
- * When the Observable returned here emits, every Buffer are finished.
- * @param {...Observable} buffers
- * @returns {Observable}
- */
-function buffersAreComplete(
-  ...buffers : Array<Observable<IMultiplePeriodBuffersEvent>>
-) : Observable<boolean> {
-  /**
-   * Array of Observables linked to the Array of Buffers which emit:
-   *   - true when the corresponding buffer is considered _complete_.
-   *   - false when the corresponding buffer is considered _active_.
-   * @type {Array.<Observable>}
-   */
-  const isCompleteArray : Array<Observable<boolean>> = buffers
-    .map((buffer) => {
-      return buffer.pipe(
-        filter((evt) => {
-          return evt.type === "complete-buffer" || evt.type === "active-buffer";
-        }),
-        map((evt) => evt.type === "complete-buffer"),
-        startWith(false),
-        distinctUntilChanged()
-      );
-    });
-
-  return observableCombineLatest(...isCompleteArray)
-    .pipe(
-      map((areComplete) => areComplete.every((isComplete) => isComplete)),
-      distinctUntilChanged()
-    );
-}
-
-/**
  * Get mimetype string of the first representation declared in the given
  * adaptation.
  * @param {Adaptation} adaptation
@@ -673,31 +600,4 @@ function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
   return (
     representations[0] && representations[0].getMimeTypeString()
   ) || "";
-}
-
-/**
- * Create all native SourceBuffers needed for a given Period.
- *
- * Native Buffers have the particulary to need to be created at the beginning of
- * the content.
- * Custom source buffers (entirely managed in JS) can generally be created and
- * disposed at will during the lifecycle of the content.
- * @param {SourceBufferManager} sourceBufferManager
- * @param {Period} period
- */
-function createNativeSourceBuffersForPeriod(
-  sourceBufferManager : SourceBufferManager,
-  period : Period
-) : void {
-  Object.keys(period.adaptations).forEach(bufferType => {
-    if (SourceBufferManager.isNative(bufferType)) {
-      const adaptations = period.adaptations[bufferType] || [];
-      const representations = adaptations ?
-        adaptations[0].representations : [];
-      if (representations.length) {
-        const codec = representations[0].getMimeTypeString();
-        sourceBufferManager.createSourceBuffer(bufferType, codec);
-      }
-    }
-  });
 }

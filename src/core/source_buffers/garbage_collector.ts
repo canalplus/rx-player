@@ -27,7 +27,7 @@ import {
 } from "rxjs/operators";
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
-import { QueuedSourceBuffer } from "../source_buffers";
+import QueuedSourceBuffer from "./queued_source_buffer";
 
 /**
  * Perform cleaning of the buffer according to the values set by the user

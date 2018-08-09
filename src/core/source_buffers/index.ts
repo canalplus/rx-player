@@ -18,6 +18,7 @@ import MediaError from "../../errors/MediaError";
 import features from "../../features";
 import log from "../../log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
+import BufferGarbageCollector from "./garbage_collector";
 import QueuedSourceBuffer from "./queued_source_buffer";
 
 // Every SourceBuffer types managed here
@@ -341,5 +342,6 @@ function shouldHaveNativeSourceBuffer(
 }
 
 export {
+  BufferGarbageCollector,
   QueuedSourceBuffer,
 };

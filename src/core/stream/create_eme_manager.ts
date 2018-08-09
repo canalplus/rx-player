@@ -51,3 +51,5 @@ export default function createEMEManager(
 
   return features.emeManager(mediaElement, keySystems);
 }
+
+export { IEMEManagerEvent };

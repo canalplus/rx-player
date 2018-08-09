@@ -67,7 +67,7 @@ function doInitialSeek(
  * @param {boolean} autoPlay - Whether the player should auto-play
  * @returns {object}
  */
-export default function seekAndLoadOnMediaEvent(
+export default function seekAndLoadOnMediaEvents(
   mediaElement : HTMLMediaElement,
   startTime : number|(() => number),
   mustAutoPlay : boolean

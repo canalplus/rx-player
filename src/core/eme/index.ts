@@ -71,12 +71,13 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
   });
 }
 
+// A minor error happened
 export interface IEMEWarningEvent {
   type : "warning";
   value : ICustomError|Error;
 }
 
-// TODO
+// TODO More events
 export type IEMEManagerEvent =
   IEMEWarningEvent;
 

@@ -16,6 +16,7 @@
 
 import objectAssign from "object-assign";
 import {
+  combineLatest as observableCombineLatest,
   merge as observableMerge,
   Observable,
 } from "rxjs";
@@ -27,27 +28,8 @@ import {
 } from "rxjs/operators";
 import Manifest from "../../manifest";
 import { getMaximumBufferPosition } from "../../manifest/timings";
-import { IBufferClockTick } from "../buffer";
-
-// Object emitted when the stream's clock tick
-export interface IStreamClockTick {
-  currentTime : number;
-  buffered : TimeRanges;
-  duration : number;
-  bufferGap : number;
-  state : string;
-  playbackRate : number;
-  currentRange : {
-    start : number;
-      end : number;
-  } | null;
-  readyState : number;
-  paused : boolean;
-  stalled : {
-    reason : "seeking" | "not-ready" | "buffering";
-    timestamp : number;
-  } | null;
-}
+import { IPeriodBufferManagerClockTick } from "../buffer";
+import { IStreamClockTick } from "./types";
 
 /**
  * Create clock$ and seekings$ Observables:
@@ -63,8 +45,9 @@ export default function createBufferClock(
   manifest : Manifest,
   streamClock$ : Observable<IStreamClockTick>,
   initialSeek$ : Observable<void>,
+  speed$ : Observable<number>,
   startTime : number
-) : Observable<IBufferClockTick> {
+) : Observable<IPeriodBufferManagerClockTick> {
   /**
    * wantedTimeOffset is an offset to add to the timing's current time to have
    * the "real" wanted position.
@@ -81,15 +64,18 @@ export default function createBufferClock(
     ignoreElements()
   );
 
-  const clock$ : Observable<IBufferClockTick> = streamClock$.pipe(
-    map((timing) =>
-      objectAssign({
-        liveGap: manifest.isLive ?
-          getMaximumBufferPosition(manifest) - timing.currentTime :
-          Infinity,
-        wantedTimeOffset,
-      }, timing)
-    ));
+  const clock$ : Observable<IPeriodBufferManagerClockTick> =
+    observableCombineLatest(streamClock$, speed$)
+      .pipe(map(([tick, speed]) =>
+        objectAssign({
+          isLive: manifest.isLive,
+          liveGap: manifest.isLive ?
+            getMaximumBufferPosition(manifest) - tick.currentTime :
+            Infinity,
+          wantedTimeOffset,
+          speed,
+        }, tick)
+      ));
 
   return observableMerge(clock$, updateTimeOffset$);
 }

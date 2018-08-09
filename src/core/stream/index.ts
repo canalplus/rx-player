@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   concat as observableConcat,
@@ -46,22 +47,22 @@ import {
   SegmentPipelinesManager,
 } from "../pipelines";
 import {
-  IBufferType ,
+  IBufferType,
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
-import { IStreamClockTick } from "./clock";
 import openMediaSource from "./create_media_source";
+import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import SegmentBookkeeper from "./segment_bookkeeper";
-import startStreamOnMediaSource, {
+import loadStreamOnMediaSource, {
   IStartStreamEvent,
-} from "./start_stream";
-import EVENTS, {
+} from "./load_stream_on_media_source";
+import {
   IManifestReadyEvent,
+  IStreamClockTick,
   IStreamWarningEvent,
-} from "./stream_events";
+} from "./types";
 
 function getManifestPipelineOptions(
   networkConfig: {
@@ -77,6 +78,7 @@ function getManifestPipelineOptions(
   };
 }
 
+// Arguments to give to the Stream
 export interface IStreamOptions {
   adaptiveOptions: {
     initialBitrates : Partial<Record<IBufferType, number>>;
@@ -108,10 +110,10 @@ export interface IStreamOptions {
   videoElement : HTMLMediaElement;
 }
 
-// Every events returned by the stream
+// Every events emitted by the stream.
 export type IStreamEvent =
-  IStartStreamEvent |
   IManifestReadyEvent |
+  IStartStreamEvent |
   IStreamWarningEvent;
 
 /**
@@ -129,7 +131,7 @@ export type IStreamEvent =
  * @param {Object} args
  * @returns {Observable}
  */
-export default function initializeStream({
+export default function Stream({
   adaptiveOptions,
   autoPlay,
   bufferOptions,
@@ -208,27 +210,24 @@ export default function initializeStream({
 
     return observableConcat(
       observableOf(EVENTS.manifestReady(abrManager, manifest)),
-      startStreamOnMediaSource({
+      loadStreamOnMediaSource({ // Behold!
         mediaElement: videoElement,
         mediaSource,
         manifest,
-        initialSettings: {
-          time: initialTime,
-          shouldPlay: autoPlay,
-        },
+        initialSettings: { time: initialTime, shouldPlay: autoPlay },
         clock$,
         speed$,
         keySystems,
-        pipelineOptions: networkConfig,
-        bufferOptions,
-        textTrackOptions,
         abrManager,
         segmentPipelinesManager,
         refreshManifest: fetchManifest,
+        bufferOptions: objectAssign({
+          textTrackOptions,
+          offlineRetry: networkConfig.offlineRetry,
+          segmentRetry: networkConfig.segmentRetry,
+        }, bufferOptions),
       })
     );
   }));
   return observableMerge(stream$, warning$.pipe(map(EVENTS.warning)));
 }
-
-export { SegmentBookkeeper };
