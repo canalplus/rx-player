@@ -96,7 +96,7 @@ import {
   getCurrentKeySystem,
 } from "../eme";
 import { IBufferType } from "../source_buffers";
-import Stream, {
+import initializeStream, {
   IStreamEvent,
 } from "../stream";
 import createClock, {
@@ -751,7 +751,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       };
 
       // Stream Observable, through which the content will be launched.
-      stream = Stream({
+      stream = initializeStream({
         adaptiveOptions,
         autoPlay,
         bufferOptions: this._priv_bufferOptions,
