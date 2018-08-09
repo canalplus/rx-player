@@ -27,24 +27,21 @@ import {
   ignoreElements,
   map,
   mergeMap,
-  take,
   takeUntil,
 } from "rxjs/operators";
 import config from "../../config";
-import log from "../../log";
-import throttle from "../../utils/rx-throttle";
-import WeakMapMemory from "../../utils/weak_map_memory";
-
-import { onSourceOpen$ } from "../../compat/events";
 import {
   ICustomError,
   MediaError,
 } from "../../errors";
+import log from "../../log";
 import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../manifest";
 import { ITransportPipelines } from "../../net";
+import throttle from "../../utils/rx-throttle";
+import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager, {
   IABRMetric,
   IABRRequest,
@@ -66,7 +63,7 @@ import createBufferClock, {
   IStreamClockTick,
 } from "./clock";
 import createEMEManager from "./create_eme_manager";
-import createMediaSource, {
+import openMediaSource, {
   setDurationToMediaSource,
 } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
@@ -216,15 +213,12 @@ export default function Stream({
    * Start the whole Stream.
    * @type {Observable}
    */
-  const stream$ = createMediaSource(videoElement).pipe(
-    mergeMap(mediaSource => {
-      return observableCombineLatest(
-        fetchManifest(url),
-        onSourceOpen$(mediaSource).pipe(take(1))
-      ).pipe(mergeMap(([manifest]) => {
-        return initializeStream(mediaSource, manifest);
-      }));
-    }));
+  const stream$ = observableCombineLatest(
+    openMediaSource(videoElement),
+    fetchManifest(url)
+  ).pipe(mergeMap(([ mediaSource, manifest ]) =>
+    initializeStream(mediaSource, manifest))
+  );
 
   const warningEvents$ = warning$.pipe(map(EVENTS.warning));
 
