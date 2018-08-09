@@ -84,11 +84,9 @@ class Bandwidth extends React.Component {
   }
 
   componentWillUnmount() {
-    // debugger;
     if (this.subscription) {
       this.subscription.unsubscribe;
     }
-    // this.chart.destroy();
   }
 
   render() {
