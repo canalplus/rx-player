@@ -23,7 +23,6 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  Subject,
 } from "rxjs";
 import {
   ignoreElements,
@@ -35,7 +34,6 @@ import {
   setElementSrc$,
 } from "../../compat";
 import {
-  ICustomError,
   MediaError,
 } from "../../errors";
 import log from "../../log";
@@ -46,9 +44,7 @@ import { IInitialTimeOptions } from "./get_initial_time";
 import createMediaErrorHandler from "./media_error_handler";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
-import EVENTS, {
-  IStreamEvent,
-} from "./stream_events";
+import EVENTS from "./stream_events";
 import seekAndLoadOnMediaEvent from "./video_events";
 
 /**
@@ -116,14 +112,7 @@ export default function StreamDirectFile({
   speed$,
   startAt,
   url,
-} : IDirectFileStreamOptions) : Observable<IStreamEvent> {
-  /**
-   * Observable through which all warning events will be sent.
-   * @type {Subject}
-   */
-  const warning$ = new Subject<Error|ICustomError>();
-  const warningEvents$ = warning$.pipe(map(EVENTS.warning));
-
+} : IDirectFileStreamOptions) : Observable<IDirectfileEvent> {
   clearElementSrc(mediaElement);
 
   log.debug("calculating initial time");
@@ -141,7 +130,7 @@ export default function StreamDirectFile({
    * issue.
    * @type {Observable}
    */
-  const emeManager$ = createEMEManager(mediaElement, keySystems, warning$);
+  const emeManager$ = createEMEManager(mediaElement, keySystems);
 
   /**
    * Translate errors coming from the video element into RxPlayer errors
@@ -181,15 +170,14 @@ export default function StreamDirectFile({
     .pipe(ignoreElements());
 
   const mutedInitialSeek$ = seek$.pipe(ignoreElements());
-  const directFile$ : Observable<IStreamEvent> = observableMerge(
+
+  return observableMerge(
     loadedEvent$,
     mutedInitialSeek$,
-    emeManager$ as Observable<void>, // TODO RxJS do something weird here
+    emeManager$,
     mediaErrorHandler$ as Observable<void>, // TODO RxJS do something weird here
     speedManager$,
     stallingManager$,
     linkURL$
   );
-
-  return observableMerge(directFile$, warningEvents$);
 }
