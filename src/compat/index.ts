@@ -22,7 +22,6 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  catchError,
   mapTo,
   take,
 } from "rxjs/operators";
@@ -375,39 +374,8 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
   );
 }
 
-/**
- * Try to call play on the given media element:
- *
- *   - If it works emit `undefined` through the returned Observable, then
- *     complete it.
- *
- *   - If it fails probably because of an auto-play policy, warn through the
- *     logger then emit `undefined` through the returned Observable then
- *     complete it.
- *
- *   - if it fails for any other reason, throw through the Observable.
- * @param {HTMLMediaElement} videoElement
- * @returns {Observable}
- */
-function playUnlessAutoPlayPolicy$(
-  mediaElement : HTMLMediaElement
-) : Observable<void> {
-  return play$(mediaElement)
-    .pipe(catchError((error) => {
-      if (error.name === "NotAllowedError") {
-        // auto-play was probably prevented.
-        log.warn("Media element can't play." +
-          " It may be due to browser auto-play policies.");
-        return observableOf(undefined);
-      } else {
-        throw error;
-      }
-    }));
-}
-
 export {
   play$,
-  playUnlessAutoPlayPolicy$,
   getInitData,
   KeySystemAccess,
   MediaSource_,
