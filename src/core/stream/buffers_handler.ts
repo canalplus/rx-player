@@ -567,7 +567,7 @@ export default function BuffersHandler(
             take(1),
             mergeMap(({ currentTime }) => {
               const bufferedRanges = segmentBookkeeper
-                .getBufferedForAdaptation((oldAdaptation as Adaptation).id);
+                .getBufferedForAdaptation(oldAdaptation.id);
 
               const rangesToRemove = bufferedRanges
                 .reduce((acc: Array<{start: number; end: number}>, value) => {
