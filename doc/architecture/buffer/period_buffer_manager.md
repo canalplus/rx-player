@@ -6,17 +6,16 @@
 To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to SourceBuffers.
 
-In the RxPlayer, it is the role of the _Buffers_ to do all of those tasks.
-The _PeriodBufferManager_ is a part of the _Stream_ which dynamically creates
-and remove _Buffers_.
+In the RxPlayer, the _PeriodBufferManager_ is the entry point for performing all
+those tasks.
 
-Basically, the _Buffer Handler_:
+Basically, the _PeriodBufferManager_:
 
   - dynamically creates various SourceBuffers depending on the needs of the
     given content
 
-  - create and destroy _Buffers_ linked to these SourceBuffers as the content
-    plays
+  - orchestrates segment downloading and "pushing" to allow the content to
+    play in the best conditions possible.
 
 
 
@@ -48,8 +47,8 @@ SourceBuffer:
 - IMAGE BUFFER _
 |====================      |
 ```
-_(the ``|`` sign delimits the temporal start and end of a Buffer, the ``=`` sign
-represent a pushed segment in the corresponding SourceBuffer)_
+_(the ``|`` sign delimits the temporal start and end of a given buffer, the
+``=`` sign represent a pushed segment in the corresponding SourceBuffer)_
 
 
 
@@ -133,7 +132,7 @@ As such, they have to be considered separately - in a different Period:
         TV Show               Italian Film            American film
 ```
 
-In the RxPlayer, we create one _Buffer_ per Period **and** per type.
+In the RxPlayer, we create one _buffer_ per Period **and** per type.
 Those are called _PeriodBuffers_.
 
 _PeriodBuffers_ are automatically created/destroyed during playback. The job of
@@ -174,11 +173,11 @@ Thus, multiple _PeriodBuffers_ might be active at the same time:
 ```
 +----------------------------   AUDIO   ----------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     | 
+|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
 | 08h05              09h00                       10h30                now |
 |   |=============     |=================          |================   |  |
 |         TV Show               Italian Film            American film     |
-+-------------------------------------------------------------------------+  
++-------------------------------------------------------------------------+
 
 +------------------------------   VIDEO   --------------------------------+
 |                                                                         |
@@ -205,7 +204,7 @@ very precize and optimal way, which gives a higher priority to immediate
 content.
 
 To better grasp how it works, let's imagine a regular use-case, with two periods
-for a single type of Buffer:
+for a single type of buffer:
 
 --------------------------------------------------------------------------------
 
@@ -315,7 +314,7 @@ can re-create P2, which will also keep its already-pushed segments:
 
 --------------------------------------------------------------------------------
 
-For multiple types of Buffers (example: _audio_ and _video_) the same logic is
+For multiple types of buffers (example: _audio_ and _video_) the same logic is
 repeated (and separated) as many times. An _audio_ _PeriodBuffer_ will not
 influence a _video_ one:
 
