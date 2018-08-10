@@ -50,6 +50,9 @@ import {
   IBufferType,
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
+import createEMEManager, {
+  IEMEManagerEvent,
+} from "./create_eme_manager";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
 import getInitialTime, {
@@ -58,6 +61,7 @@ import getInitialTime, {
 import loadStreamOnMediaSource, {
   IStartStreamEvent,
 } from "./load_stream_on_media_source";
+import createMediaErrorManager from "./media_error_manager";
 import {
   IManifestReadyEvent,
   IStreamClockTick,
@@ -114,6 +118,7 @@ export interface IStreamOptions {
 export type IStreamEvent =
   IManifestReadyEvent |
   IStartStreamEvent |
+  IEMEManagerEvent |
   IStreamWarningEvent;
 
 /**
@@ -147,18 +152,11 @@ export default function Stream({
   url,
   videoElement,
 } : IStreamOptions) : Observable<IStreamEvent> {
-  /**
-   * Observable through which all warning events will be sent.
-   * @type {Subject}
-   */
+  // Observable through which all warning events will be sent.
   const warning$ = new Subject<Error|ICustomError>();
 
-  /**
-   * Fetch and parse the manifest from the URL given.
-   * Throttled to avoid doing multiple simultaneous requests.
-   * @param {string} url - the manifest url
-   * @returns {Observable} - the parsed manifest
-   */
+  // Fetch and parse the manifest from the URL given.
+  // Throttled to avoid doing multiple simultaneous requests.
   const fetchManifest = throttle(createManifestPipeline(
     transport,
     getManifestPipelineOptions(networkConfig),
@@ -167,38 +165,31 @@ export default function Stream({
     supplementaryImageTracks
   ));
 
-  /**
-   * Subject through which network metrics will be sent by the segment
-   * pipelines to the ABR manager.
-   * @type {Subject}
-   */
+  // Subject through which network metrics will be sent by the segment
+  // pipelines to the ABR manager.
   const network$ = new Subject<IABRMetric>();
 
-  /**
-   * Subject through which each request progression will be sent by the
-   * segment pipelines to the ABR manager.
-   * @type {Subject}
-   */
+  // Subject through which each request progression will be sent by the
+  // segment pipelines to the ABR manager.
   const requestsInfos$ = new Subject<Subject<IABRRequest>>();
 
-  /**
-   * Creates pipelines for downloading segments.
-   * @type {SegmentPipelinesManager}
-   */
+  // Creates pipelines for downloading segments.
   const segmentPipelinesManager = new SegmentPipelinesManager<any>(
     transport, requestsInfos$, network$, warning$);
 
-  /**
-   * Create ABR Manager, which will choose the right "Representation" for a
-   * given "Adaptation".
-   * @type {ABRManager}
-   */
+  // Create ABR Manager, which will choose the right "Representation" for a
+  // given "Adaptation".
   const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
 
-  /**
-   * Start the whole Stream.
-   * @type {Observable}
-   */
+  // Create EME Manager, an observable which will manage every EME-related
+  // issue.
+  const emeManager$ = createEMEManager(videoElement, keySystems);
+
+  // Translate errors coming from the video element into RxPlayer errors
+  // through a throwing Observable.
+  const mediaErrorManager$ = createMediaErrorManager(videoElement);
+
+  // Start the whole Stream.
   const stream$ = observableCombineLatest(
     openMediaSource(videoElement),
     fetchManifest(url)
@@ -217,7 +208,6 @@ export default function Stream({
         initialSettings: { time: initialTime, shouldPlay: autoPlay },
         clock$,
         speed$,
-        keySystems,
         abrManager,
         segmentPipelinesManager,
         refreshManifest: fetchManifest,
@@ -229,5 +219,10 @@ export default function Stream({
       })
     );
   }));
-  return observableMerge(stream$, warning$.pipe(map(EVENTS.warning)));
+  return observableMerge(
+    stream$,
+    mediaErrorManager$,
+    emeManager$,
+    warning$.pipe(map(EVENTS.warning))
+  );
 }
