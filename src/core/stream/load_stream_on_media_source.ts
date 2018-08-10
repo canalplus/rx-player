@@ -36,20 +36,15 @@ import ABRManager from "../abr";
 import PeriodBufferManager, {
   IPeriodBufferManagerEvent,
 } from "../buffer";
-import { IKeySystemOption } from "../eme/types";
 import { SegmentPipelinesManager } from "../pipelines";
 import SourceBufferManager, {
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createBufferClock from "./create_buffer_clock";
-import createEMEManager, {
-  IEMEManagerEvent,
-} from "./create_eme_manager";
 import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import createMediaErrorManager from "./media_error_manager";
 import onLiveBufferEvent from "./on_live_buffer_event";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
@@ -59,6 +54,7 @@ import {
   IStalledEvent,
   IStreamClockTick,
   IStreamLoadedEvent,
+  IStreamWarningEvent,
 } from "./types";
 
 export interface IStartStreamArguments {
@@ -73,7 +69,6 @@ export interface IStartStreamArguments {
   clock$ : Observable<IStreamClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
-  keySystems : IKeySystemOption[]; // DRM Informations
   abrManager : ABRManager;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
   refreshManifest : (url : string) => Observable<Manifest>;
@@ -92,22 +87,21 @@ export type IStartStreamEvent =
   IStalledEvent |
   ISpeedChangedEvent |
   IStreamLoadedEvent |
-  IEMEManagerEvent |
+  IStreamWarningEvent |
   IPeriodBufferManagerEvent;
 
 /**
  * Start streaming the content defined by the manifest on the given MediaSource.
- * @param {Object} startStreamArguments
+ * @param {Object} loadStreamArguments
  * @returns {Observable}
  */
-export default function startStreamOnMediaSource({
+export default function loadStreamOnMediaSource({
   mediaElement,
   mediaSource,
   manifest,
   initialSettings,
   clock$,
   speed$,
-  keySystems,
   bufferOptions,
   abrManager,
   segmentPipelinesManager,
@@ -181,14 +175,6 @@ export default function startStreamOnMediaSource({
       }
     }));
 
-  // Create EME Manager, an observable which will manage every EME-related
-  // issue.
-  const emeManager$ = createEMEManager(mediaElement, keySystems);
-
-  // Translate errors coming from the video element into RxPlayer errors
-  // through a throwing Observable.
-  const mediaErrorManager$ = createMediaErrorManager(mediaElement);
-
   // Create Speed Manager, an observable which will set the speed set by the
   // user on the video element while pausing a little longer while the buffer
   // is stalled.
@@ -213,8 +199,6 @@ export default function startStreamOnMediaSource({
   return observableMerge(
     loadedEvent$,
     buffers$,
-    emeManager$,
-    mediaErrorManager$ as Observable<any>, // TODO RxJS Bug?
     speedManager$,
     stallingManager$
   ).pipe(finalize(() => {
