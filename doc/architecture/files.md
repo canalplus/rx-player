@@ -14,6 +14,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/compat/: The compatibility files](#src-compat)
   - [src/core/: The core files](#src-core)
   - [src/errors/: Error definitions](#src-errors)
+  - [src/experimental/: Experimental features](#src-experimental)
   - [src/features/: Feature switching](#src-features)
   - [src/manifest/: The Manifest class](#src-manifest)
   - [src/net/: The networking files](#src-net)
@@ -131,6 +132,13 @@ Contains the definition of the error classes used in the rx-player and
 accessible through the API.
 
 
+<a name="src-experimental"></a>
+### src/experimental/: Experimental features ###################################
+
+You will find here experimental features, which are features who might
+completely change their API in each player version.
+
+
 <a name="src-features"></a>
 ### src/features/: Feature switching ###########################################
 
@@ -220,9 +228,6 @@ interact with.
 <a name="core-buffer"></a>
 ### src/core/buffer/: The Buffer management ####################################
 
-Defines the part of the core directly handling the SourceBuffer management
-logic.
-
 The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the sourceBuffers.
 
@@ -250,9 +255,9 @@ core.
 Provide multiple abstraction to manage SourceBuffers, which are the objects
 through which media segments are added to the browser.
 
-In this directory, you have glue code for both SourceBuffer managed natively
-(i.e. Audio and Video SourceBuffers) and SourceBuffer implementations for other
-types of content (text, images etc.).
+In this directory, you have code for both SourceBuffer managed natively (i.e.
+Audio and Video SourceBuffers) and SourceBuffer implementations for other types
+of content (text, images etc.).
 
 
 <a name="core-stream"></a>
@@ -261,7 +266,7 @@ types of content (text, images etc.).
 Main logic for media streaming.
 
 This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate new buffers and link together most subparts of the player.
+instanciate new buffers and link together many subparts of the player.
 
 
 <a name="tests"></a>

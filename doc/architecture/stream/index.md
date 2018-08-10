@@ -35,7 +35,7 @@ Basically, the job of the Stream is to:
   - initialize the content (creating the MediaSource, downloading the manifest)
 
   - Connect most core parts of the player together, such as adaptive
-    streaming management, DRMs, speed management...
+    streaming management, segment pipelines, DRMs, speed management...
 
   - Call with the right argument the PeriodBufferManager, which will download
     and push segment to be decoded by the browser.
@@ -108,46 +108,26 @@ time the wanted language.
 
 
 
-## Building blocks #############################################################
+## The SpeedManager ############################################################
 
-The Stream put in relation multiple part of the code to allow a qualitative
-playback experience.
+The SpeedManager is the part of the Stream updating the playback speed of the
+content.
 
-Multiple of those building bricks are considered as part of the Stream.
+Playback speed can be updated on two occasions:
 
-Among them, you can find:
+  - the API set a new Speed (``speed$`` Observable).
 
-  - __[the Buffer Garbage Collector](./buffer_garbage_collector.md)__
+  - the content needs to build its buffer.
 
-    Perform manual garbage collection on SourceBuffers periodically
-
-
-  - __[the Segment Bookkeeper](./segment_bookkeeper.md)__
-
-    Keep track of the informations of every segments currently present in the
-    buffer, e.g. to know which part of the buffer are linked to which
-    quality/language etc.
-
-    Also useful to know when segments have automatically been garbage-collected
-    by the browser.
-
-
-  - __[the Speed Manager](./speed_manager.md)__
-
-    Handle playback rate management. To pause when we should build buffer, for
-    example, and speed-up/lower-up the playback rate when the user ask for this.
-
-
-  - __the Stalling Manager__
-
-    Try to un-stall the player when it does so.
+    In which case, the playback speed will be set to 0 (paused) even if the
+    API set another speed.
+    The regular speed will be set when enough buffer is available.
 
 
 
-## Buffer creation #############################################################
+### The StallingManager ########################################################
 
+The StallingManager listens to various browser events and properties to detect
+when the player is "stalled" (i.e. stuck on the current position).
 
->   - __[the Buffer Handler](./period_buffer_creator.md)__
-
->     Create/destroy the Buffer and SourceBuffers needed, that will be used to
->     push new media segments.
+It then try to adopt a strategy to easily get out of this situation if it can.
