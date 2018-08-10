@@ -21,5 +21,3 @@ be the most adapted, that is the quality which:
   - will maximize the user experience (example: a quality too high for the
     network to handle would lead to excessive re-bufferings, but a too low would
     be not as pleasant to watch)
-
-More on it soon...
