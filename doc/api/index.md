@@ -55,10 +55,13 @@
     - [unMute](#meth-unMute)
     - [isMute](#meth-isMute)
     - [getAvailableAudioTracks](#meth-getAvailableAudioTracks)
+    - [getAvailableVideoTracks](#meth-getAvailableVideoTracks)
     - [getAvailableTextTracks](#meth-getAvailableTextTracks)
     - [getAudioTrack](#meth-getAudioTrack)
+    - [getVideoTrack](#meth-getVideoTrack)
     - [getTextTrack](#meth-getTextTrack)
     - [setAudioTrack](#meth-setAudioTrack)
+    - [setVideoTrack](#meth-setVideoTrack)
     - [setTextTrack](#meth-setTextTrack)
     - [disableTextTrack](#meth-disableTextTrack)
     - [getManifest](#meth-getManifest)
@@ -1061,6 +1064,38 @@ In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns an empty Array.
 
 
+<a name="meth-getAvailableVideoTracks"></a>
+### getAvailableVideoTracks ####################################################
+
+_returns_: ``Array.<Object>``
+
+Returns the list of available video tracks for the current content.
+
+Each of the objects in the returned array have the following properties:
+
+  - ``id`` (``Number|string``): The id used to identify the track. Use it for
+    setting the track via ``setVideoTrack``.
+
+  - ``role`` (``string``): The role of the video track, as set in
+    the manifest.
+
+  - ``representations`` (``Array.<Object>``): Representations of
+  video track, with such attributes, as given in the manifest:
+    - ``id`` (``Number|string``): The id used to identify the track.
+    - ``bitrate`` (``Number``): The bitrate of video stream, in bits per seconds.
+    - ``width`` (``Number``): The width of video stream, in pixels.
+    - ``height`` (``Number``): The height of video stream, in pixels.
+    - ``codec`` (``string``): The stream codec, given in standard MIME type format.
+    - ``frameRate`` (``Number``): The video stream framerate, in frame per seconds.
+
+  - ``active`` (``Boolean``): Whether the track is the one currently active or
+    not.
+
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+
+
 <a name="meth-getAvailableTextTracks"></a>
 ### getAvailableTextTracks #####################################################
 
@@ -1125,6 +1160,37 @@ The track is an object with the following properties:
 options](./loadVideo_options.md#prop-transport)).
 
 
+<a name="meth-getVideoTrack"></a>
+### getVideoTrack ##############################################################
+
+_returns_: ``Object|null|undefined``
+
+Get the video track currently set. ``null`` if no video track is enabled right
+now.
+
+The track is an object with the following properties:
+
+  - ``id`` (``Number|string``): The id used to identify the track. Use it for
+    setting the track via ``setVideoTrack``.
+
+  - ``role`` (``string``): The role of the video track, as set in the
+    manifest.
+
+  - ``representations`` (``Array.<Object>``): Representations of
+  video track, with such attributes, as given in the manifest:
+    - ``id`` (``Number|string``): The id used to identify the track.
+    - ``bitrate`` (``Number``): The bitrate of video stream, in bits per seconds.
+    - ``width`` (``Number``): The width of video stream, in pixels.
+    - ``height`` (``Number``): The height of video stream, in pixels.
+    - ``codec`` (``string``): The stream codec, given in standard MIME type format.
+    - ``frameRate`` (``Number``): The video stream framerate, in frame per seconds.
+
+``undefined`` if no content has been loaded yet.
+
+``undefined`` in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+
 <a name="meth-getTextTrack"></a>
 ### getTextTrack ###############################################################
 
@@ -1163,6 +1229,21 @@ options](./loadVideo_options.md#prop-transport)).
 _arguments_: ``string|Number``
 
 Set a new audio track from its id, recuperated from ``getAvailableAudioTracks``.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+
+<a name="meth-setVideoTrack"></a>
+### setVideoTrack ##############################################################
+
+_arguments_: ``string|Number``
+
+Set a new video track from its id, recuperated from ``getAvailableVideoTracks``.
 
 ---
 

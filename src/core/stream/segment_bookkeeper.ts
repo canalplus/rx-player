@@ -661,6 +661,45 @@ export default class SegmentBookkeeper {
   }
 
   /**
+   * Get buffered ranges for a given track.
+   * @param {string} adaptationId
+   * @returns {Array.<Object>}
+   */
+  public getBufferedForAdaptation(adaptationId: string|number) {
+    const rawRanges: Array<{start: number; end: number}> = [];
+    this.inventory.forEach((segment) => {
+      const {
+        infos,
+        bufferedStart,
+        bufferedEnd,
+      } = segment;
+      if (
+        infos.adaptation.id === adaptationId &&
+        bufferedStart &&
+        bufferedEnd
+      ) {
+        rawRanges.push({
+          start: bufferedStart,
+          end: bufferedEnd,
+        });
+      }
+    });
+    return rawRanges.reduce((acc: Array<{start: number; end: number}>, value) => {
+      const lastRange = acc[acc.length - 1];
+      if (lastRange != null) {
+        if (value.start <= lastRange.end) {
+          lastRange.end = value.end;
+        } else {
+          acc.push(value);
+        }
+      } else {
+        acc.push(value);
+      }
+      return acc;
+    }, []);
+  }
+
+  /**
    * Empty the current inventory
    */
   public reset() {

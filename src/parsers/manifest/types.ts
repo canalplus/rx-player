@@ -42,7 +42,7 @@ export interface IParsedRepresentation {
   codecs?: string;
   codingDependency?: boolean;
   contentProtections? : IContentProtection[];
-  frameRate?: number;
+  frameRate?: string;
   height?: number;
   maxPlayoutRate?: number;
   maximumSAPPeriod?: number;
@@ -65,6 +65,7 @@ export interface IParsedAdaptation {
   type: string;
 
   // optional
+  role? : string;
   audioDescription? : boolean;
   bitstreamSwitching?: boolean;
   closedCaption? : boolean;
