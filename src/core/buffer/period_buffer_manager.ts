@@ -16,6 +16,7 @@
 
 import {
   concat as observableConcat,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -45,10 +46,6 @@ import Manifest, {
 } from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";
 import InitializationSegmentCache from "../../utils/initialization_segment_cache";
-import {
-  convertToRanges,
-  keepRangeIntersection,
-} from "../../utils/ranges";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
@@ -72,6 +69,7 @@ import AdaptationBuffer, {
 import areBuffersComplete from "./are_buffers_complete";
 import createFakeBuffer from "./create_fake_buffer";
 import EVENTS from "./events_generators";
+import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import {
   IAdaptationBufferEvent,
@@ -85,7 +83,6 @@ export type IPeriodBufferManagerClockTick = IAdaptationBufferClockTick;
 const {
   DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
   DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
-  ADAPTATION_SWITCH_BUFFER_PADDINGS,
 } = config;
 
 /**
@@ -488,7 +485,7 @@ export default function PeriodBufferManager(
           cleanBuffer$ = observableOf(null);
         }
 
-        return observableConcat(
+        return observableConcat<IPeriodBufferEvent>(
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
           createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
         );
@@ -496,20 +493,34 @@ export default function PeriodBufferManager(
 
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
 
-      const qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation);
-      const cleanPreviousBuffer$ = clock$.pipe(
-        take(1),
-        mergeMap(({ currentTime }) =>
-          cleanPreviousSourceBuffer(qSourceBuffer, period, bufferType, currentTime)
-        )
-      );
-      const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
-      const adaptationBuffer$ = createAdaptationBuffer(
-        bufferType, period, adaptation, qSourceBuffer);
-      return observableConcat(
+      const newBuffer$ = clock$.pipe(take(1), mergeMap((tick) => {
+        const qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation);
+        const strategy = getAdaptationSwitchStrategy(
+          qSourceBuffer.getBuffered(), period, bufferType, tick);
+
+        if (strategy.type === "reload-stream") {
+          return observableOf(EVENTS.needsStreamReload());
+        }
+
+        const cleanBuffer$ = strategy.type === "clean-buffer" ?
+          observableConcat(
+            ...strategy.value.map(({ start, end }) =>
+              qSourceBuffer.removeBuffer(start, end)
+            )).pipe(ignoreElements()) : EMPTY;
+
+        const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
+        const adaptationBuffer$ = createAdaptationBuffer(
+          bufferType, period, adaptation, qSourceBuffer);
+
+        return observableConcat(
+          cleanBuffer$,
+          observableMerge(adaptationBuffer$, bufferGarbageCollector$)
+        );
+      }));
+
+      return observableConcat<IPeriodBufferEvent>(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
-        cleanPreviousBuffer$.pipe(ignoreElements()),
-        observableMerge(adaptationBuffer$, bufferGarbageCollector$)
+        newBuffer$
       );
     }));
   }
@@ -550,7 +561,7 @@ export default function PeriodBufferManager(
       bufferType, options.segmentRetry, options.offlineRetry);
     const pipeline = segmentPipelinesManager
       .createPipeline(bufferType, pipelineOptions);
-     return AdaptationBuffer(
+    return AdaptationBuffer(
       clock$,
       qSourceBuffer,
       segmentBookkeeper,
@@ -608,55 +619,6 @@ function getPipelineOptions(
     maxRetry,
     maxRetryOffline,
   };
-}
-
-/**
- * Clean up previous SourceBuffer with paddings relative to the current
- * position.
- *
- * Those paddings are based on the config.
- * @param {QueuedSourceBuffer} qSourceBuffer
- * @param {Object} period
- * @param {string} bufferType
- * @param {number} currentTime
- * @returns {Observable}
- */
-function cleanPreviousSourceBuffer(
-  qSourceBuffer : QueuedSourceBuffer<unknown>,
-  period : Period,
-  bufferType : IBufferType,
-  currentTime : number
-) : Observable<void> {
-  if (!qSourceBuffer.getBuffered().length) {
-    return observableOf(undefined);
-  }
-  const bufferedRanges = convertToRanges(qSourceBuffer.getBuffered());
-  const start = period.start;
-  const end = period.end || Infinity;
-  const intersection = keepRangeIntersection(bufferedRanges, [{ start, end }]);
-  if (!intersection.length) {
-    return observableOf(undefined);
-  }
-
-  const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
-  const paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after || 0;
-  if (
-    !paddingAfter && !paddingBefore ||
-    (currentTime - paddingBefore) >= end ||
-    (currentTime + paddingAfter) <= start
-  ) {
-    return qSourceBuffer.removeBuffer(start, end);
-  }
-  if (currentTime - paddingBefore <= start) {
-    return qSourceBuffer.removeBuffer(currentTime + paddingAfter, end);
-  }
-  if (currentTime + paddingAfter >= end) {
-    return qSourceBuffer.removeBuffer(start, currentTime - paddingBefore);
-  }
-  return observableConcat(
-    qSourceBuffer.removeBuffer(start, currentTime - paddingBefore),
-    qSourceBuffer.removeBuffer(currentTime + paddingAfter, end)
-  );
 }
 
 /**
