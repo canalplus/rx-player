@@ -58,10 +58,10 @@ import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import loadStreamOnMediaSource, {
-  ILoadStreamEvent,
-} from "./load_stream_on_media_source";
 import createMediaErrorManager from "./media_error_manager";
+import StreamLoader, {
+  IStreamLoaderEvent,
+} from "./stream_loader";
 import {
   IManifestReadyEvent,
   IStreamClockTick,
@@ -122,7 +122,7 @@ export interface IStreamOptions {
 // Every events emitted by the stream.
 export type IStreamEvent =
   IManifestReadyEvent |
-  ILoadStreamEvent |
+  IStreamLoaderEvent |
   IEMEManagerEvent |
   IStreamWarningEvent;
 
@@ -198,6 +198,20 @@ export default function Stream({
     openMediaSource(mediaElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, manifest ]) => {
+    const loadStream = StreamLoader({ // Behold!
+      mediaElement,
+      manifest,
+      clock$,
+      speed$,
+      abrManager,
+      segmentPipelinesManager,
+      refreshManifest: fetchManifest,
+      bufferOptions: objectAssign({
+        textTrackOptions,
+        offlineRetry: networkConfig.offlineRetry,
+        segmentRetry: networkConfig.segmentRetry,
+      }, bufferOptions),
+    });
 
     log.debug("calculating initial time");
     const initialTime = getInitialTime(manifest, startAt);
@@ -205,24 +219,10 @@ export default function Stream({
 
     return observableConcat(
       observableOf(EVENTS.manifestReady(abrManager, manifest)),
-      loadStreamOnMediaSource({ // Behold!
-        mediaElement,
-        mediaSource,
-        manifest,
-        initialSettings: { time: initialTime, shouldPlay: autoPlay },
-        clock$,
-        speed$,
-        abrManager,
-        segmentPipelinesManager,
-        refreshManifest: fetchManifest,
-        bufferOptions: objectAssign({
-          textTrackOptions,
-          offlineRetry: networkConfig.offlineRetry,
-          segmentRetry: networkConfig.segmentRetry,
-        }, bufferOptions),
-      })
+      loadStream(mediaSource, initialTime, autoPlay)
     );
   }));
+
   return observableMerge(
     stream$,
     mediaErrorManager$,
