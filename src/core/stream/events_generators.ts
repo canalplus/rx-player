@@ -25,6 +25,7 @@ import { IStallingItem } from "./stalling_manager";
 import {
   IManifestReadyEvent,
   IManifestUpdateEvent,
+  IReloadingStreamEvent,
   ISpeedChangedEvent,
   IStalledEvent,
   IStreamLoadedEvent,
@@ -36,10 +37,7 @@ import {
  * @returns {Object}
  */
 function loaded() : IStreamLoadedEvent {
-  return {
-    type: "loaded",
-    value: true,
-  };
+  return { type: "loaded", value: true };
 }
 
 /**
@@ -48,10 +46,7 @@ function loaded() : IStreamLoadedEvent {
  * @returns {Object}
  */
 function stalled(stalling : IStallingItem|null) : IStalledEvent {
-  return {
-    type: "stalled",
-    value: stalling,
-  };
+  return { type: "stalled", value: stalling };
 }
 
 /**
@@ -66,10 +61,7 @@ function manifestReady(
 ) : IManifestReadyEvent {
   return {
     type: "manifestReady",
-    value: {
-      abrManager,
-      manifest,
-    },
+    value: { abrManager, manifest },
   };
 }
 
@@ -81,9 +73,7 @@ function manifestReady(
 function manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
   return {
     type: "manifestUpdate",
-    value: {
-      manifest,
-    },
+    value: { manifest },
   };
 }
 
@@ -93,10 +83,7 @@ function manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
  * @returns {Object}
  */
 function speedChanged(speed : number) : ISpeedChangedEvent {
-  return {
-    type: "speedChanged",
-    value: speed,
-  };
+  return { type: "speedChanged", value: speed };
 }
 
 /**
@@ -125,10 +112,11 @@ function nullRepresentation(
  * @returns {Object}
  */
 function warning(value : Error | ICustomError) : IStreamWarningEvent {
-  return {
-    type: "warning",
-    value,
-  };
+  return { type: "warning", value };
+}
+
+function reloadingStream() : IReloadingStreamEvent {
+  return { type: "reloading-stream", value: undefined };
 }
 
 const STREAM_EVENTS = {
@@ -136,6 +124,7 @@ const STREAM_EVENTS = {
   manifestReady,
   manifestUpdate,
   nullRepresentation,
+  reloadingStream,
   speedChanged,
   stalled,
   warning,

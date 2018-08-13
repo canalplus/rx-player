@@ -63,6 +63,11 @@ export interface IManifestUpdateEvent {
   };
 }
 
+export interface IReloadingStreamEvent {
+  type: "reloading-stream";
+  value: undefined;
+}
+
 // The current playback rate changed.
 // Note: it can be a change wanted by the user or even a manual `0` speed
 // setting to build a buffer.
