@@ -105,9 +105,7 @@ export interface IDirectFileStreamOptions {
 }
 
 /**
- * Initialize stream playback by merging all Observables that are required to
- * make the system cooperate.
- * @param {MediaSource} mediaSource
+ * @param {Object} directfileOptions
  * @returns {Observable}
  */
 export default function StreamDirectFile({
