@@ -244,6 +244,12 @@ export default class TrackManager {
     }
   }
 
+  public resetPeriods() : void {
+    while (this._periods.length() > 0) {
+      this._periods.pop();
+    }
+  }
+
   /**
    * Update the choice of all added Periods based on:
    *   1. What was the last chosen adaptation
