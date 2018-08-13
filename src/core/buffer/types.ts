@@ -167,9 +167,17 @@ export interface ICompletedBufferEvent {
   };
 }
 
+// The current stream needs to be re-loaded
+export interface INeedsStreamReloadEvent {
+  type: "needs-stream-reload";
+  value: undefined;
+}
+
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent =
   IAdaptationBufferEvent<unknown> |
+  IBufferWarningEvent |
+  INeedsStreamReloadEvent |
   IAdaptationChangeEvent;
 
 // Events coming from function(s) managing multiple PeriodBuffers.

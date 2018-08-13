@@ -29,6 +29,7 @@ import {
   startWith,
   switchMap,
   takeUntil,
+  tap,
 } from "rxjs/operators";
 import config from "../../config";
 import { ICustomError } from "../../errors";
@@ -222,7 +223,6 @@ export default function Stream({
     const initialTime = getInitialTime(manifest, startAt);
     log.debug("initial time calculated:", initialTime);
 
-    // TODO use the Subject somewhere :p
     const reloadStreamSubject$ = new Subject<void>();
     const reloadStream$ : Observable<IStreamEvent> = reloadStreamSubject$.pipe(
       switchMap(() => {
@@ -230,6 +230,11 @@ export default function Stream({
         const isPaused = mediaElement.paused;
         return openMediaSource(mediaElement).pipe(
           mergeMap(newMS => loadStream(newMS, currentPosition, !isPaused)),
+          tap(({ type }) => {
+            if (type === "needs-stream-reload") {
+              reloadStreamSubject$.next();
+            }
+          }),
           startWith(EVENTS.reloadingStream())
         );
       })
@@ -237,8 +242,14 @@ export default function Stream({
 
     const initialLoad$ = observableConcat(
       observableOf(EVENTS.manifestReady(abrManager, manifest)),
-      loadStream(mediaSource, initialTime, autoPlay)
-        .pipe(takeUntil(reloadStreamSubject$))
+      loadStream(mediaSource, initialTime, autoPlay).pipe(
+        takeUntil(reloadStreamSubject$),
+        tap(({ type }) => {
+          if (type === "needs-stream-reload") {
+            reloadStreamSubject$.next();
+          }
+        })
+      )
     );
 
     return observableMerge(initialLoad$, reloadStream$);

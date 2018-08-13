@@ -35,6 +35,7 @@ import {
   IBufferWarningEvent,
   ICompletedBufferEvent,
   IEndOfStreamEvent,
+  INeedsStreamReloadEvent,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
   IRepresentationChangeEvent,
@@ -135,6 +136,10 @@ const EVENTS = {
       type : "needs-manifest-refresh",
       value : { bufferType },
     };
+  },
+
+  needsStreamReload() : INeedsStreamReloadEvent {
+    return { type: "needs-stream-reload", value: undefined };
   },
 
   periodBufferReady(
