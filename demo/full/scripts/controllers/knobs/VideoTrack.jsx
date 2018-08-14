@@ -18,7 +18,8 @@ const VideoTrackKnobBase = ({
     options = ["Not available"];
     selectedIndex = 0;
   } else {
-    options = availableVideoTracks;
+    options = availableVideoTracks
+      .map((track, i) => `track ${i}: ${track.id}`);
 
     selectedIndex = currentVideoTrackId ?
       Math.max(
