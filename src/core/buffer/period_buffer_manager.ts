@@ -472,7 +472,7 @@ export default function PeriodBufferManager(
           log.info(`clearing previous ${bufferType} SourceBuffer`);
           const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
           cleanBuffer$ = _queuedSourceBuffer
-            .removeBuffer({ start: period.start, end: period.end || Infinity })
+            .removeBuffer(period.start, period.end || Infinity)
             .pipe(mapTo(null));
         } else {
           cleanBuffer$ = observableOf(null);
