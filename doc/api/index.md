@@ -1083,7 +1083,7 @@ Each of the objects in the returned array have the following properties:
     - ``width`` (``Number``): The width of video stream, in pixels.
     - ``height`` (``Number``): The height of video stream, in pixels.
     - ``codec`` (``string``): The stream codec, given in standard MIME type format.
-    - ``frameRate`` (``Number``): The video stream framerate, in frame per seconds.
+    - ``frameRate`` (``string``): The video stream framerate.
 
   - ``active`` (``Boolean``): Whether the track is the one currently active or
     not.
@@ -1177,7 +1177,7 @@ The track is an object with the following properties:
     - ``width`` (``Number``): The width of video stream, in pixels.
     - ``height`` (``Number``): The height of video stream, in pixels.
     - ``codec`` (``string``): The stream codec, given in standard MIME type format.
-    - ``frameRate`` (``Number``): The video stream framerate, in frame per seconds.
+    - ``frameRate`` (``string``): The video stream framerate.
 
 ``undefined`` if no content has been loaded yet.
 
