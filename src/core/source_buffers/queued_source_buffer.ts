@@ -204,12 +204,7 @@ export default class QueuedSourceBuffer<T> {
    *   - end {Number} - end position, in seconds
    * @returns {Observable}
    */
-  public removeBuffer(
-    { start, end } : {
-      start : number;
-      end : number;
-    }
-  ) : Observable<void> {
+  public removeBuffer(start : number, end : number) : Observable<void> {
     return observableDefer(() =>
       this._addToQueue({
         type: SourceBufferAction.Remove,

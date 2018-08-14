@@ -62,7 +62,7 @@ export default function forceGarbageCollection(
 
       log.debug("buffer: gc cleaning", cleanedupRanges);
       return observableFrom(
-        cleanedupRanges.map((range) => bufferingQueue.removeBuffer(range))
+        cleanedupRanges.map(({ start, end }) => bufferingQueue.removeBuffer(start, end))
       ).pipe(concatAll());
     })
   );
