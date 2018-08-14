@@ -1076,9 +1076,6 @@ Each of the objects in the returned array have the following properties:
   - ``id`` (``Number|string``): The id used to identify the track. Use it for
     setting the track via ``setVideoTrack``.
 
-  - ``role`` (``string``): The role of the video track, as set in
-    the manifest.
-
   - ``representations`` (``Array.<Object>``): Representations of
   video track, with such attributes, as given in the manifest:
     - ``id`` (``Number|string``): The id used to identify the track.
@@ -1172,9 +1169,6 @@ The track is an object with the following properties:
 
   - ``id`` (``Number|string``): The id used to identify the track. Use it for
     setting the track via ``setVideoTrack``.
-
-  - ``role`` (``string``): The role of the video track, as set in the
-    manifest.
 
   - ``representations`` (``Array.<Object>``): Representations of
   video track, with such attributes, as given in the manifest:
