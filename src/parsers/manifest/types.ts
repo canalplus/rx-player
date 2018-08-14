@@ -65,7 +65,6 @@ export interface IParsedAdaptation {
   type: string;
 
   // optional
-  role? : string;
   audioDescription? : boolean;
   bitstreamSwitching?: boolean;
   closedCaption? : boolean;
