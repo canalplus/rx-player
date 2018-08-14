@@ -34,6 +34,7 @@ import {
   IParsedPeriod,
   IParsedRepresentation,
 } from "../../types";
+import checkManifestIDs from "../../utils/check_manifest_ids";
 import {
   IScheme,
   isHardOfHearing,
@@ -759,5 +760,6 @@ export default function parseManifest(
       Date.now() / 1000 - (lastRef + parsedMPD.availabilityStartTime) : 10;
   }
 
+  checkManifestIDs(parsedMPD);
   return parsedMPD;
 }
