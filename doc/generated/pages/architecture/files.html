@@ -9,6 +9,7 @@
 <li><a href="#subchapter-src/compat/:%20The%20compatibility%20files">src/compat/: The compatibility files</a></li>
 <li><a href="#subchapter-src/core/:%20The%20core%20files">src/core/: The core files</a></li>
 <li><a href="#subchapter-src/errors/:%20Error%20definitions">src/errors/: Error definitions</a></li>
+<li><a href="#subchapter-src/experimental/:%20Experimental%20features">src/experimental/: Experimental features</a></li>
 <li><a href="#subchapter-src/features/:%20Feature%20switching">src/features/: Feature switching</a></li>
 <li><a href="#subchapter-src/manifest/:%20The%20Manifest%20class">src/manifest/: The Manifest class</a></li>
 <li><a href="#subchapter-src/net/:%20The%20networking%20and%20files">src/net/: The networking and files</a></li>
@@ -122,6 +123,11 @@ chapter.</p>
 <h3>src/errors/: Error definitions</h3>
 <p>Contains the definition of the error classes used in the rx-player and
 accessible through the API.</p>
+<p><a name="src-experimental"></a>
+<a name="subchapter-src/experimental/:%20Experimental%20features"></a></p>
+<h3>src/experimental/: Experimental features</h3>
+<p>You will find here experimental features, which are features who might
+completely change their API in each player version.</p>
 <p><a name="src-features"></a>
 <a name="subchapter-src/features/:%20Feature%20switching"></a></p>
 <h3>src/features/: Feature switching</h3>
@@ -188,8 +194,6 @@ interact with.</p>
 <p><a name="core-buffer"></a>
 <a name="subchapter-src/core/buffer/:%20The%20Buffer%20management"></a></p>
 <h3>src/core/buffer/: The Buffer management</h3>
-<p>Defines the part of the core directly handling the SourceBuffer management
-logic.</p>
 <p>The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the sourceBuffers.</p>
 <p><a name="core-eme"></a>
@@ -209,15 +213,15 @@ core.</p>
 <h3>src/core/source_buffers/: SourceBuffers definitions</h3>
 <p>Provide multiple abstraction to manage SourceBuffers, which are the objects
 through which media segments are added to the browser.</p>
-<p>In this directory, you have glue code for both SourceBuffer managed natively
-(i.e. Audio and Video SourceBuffers) and SourceBuffer implementations for other
-types of content (text, images etc.).</p>
+<p>In this directory, you have code for both SourceBuffer managed natively (i.e.
+Audio and Video SourceBuffers) and SourceBuffer implementations for other types
+of content (text, images etc.).</p>
 <p><a name="core-stream"></a>
 <a name="subchapter-src/core/stream/:%20Media%20streaming%20logic"></a></p>
 <h3>src/core/stream/: Media streaming logic</h3>
 <p>Main logic for media streaming.</p>
 <p>This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate new buffers and link together most subparts of the player.</p>
+instanciate new buffers and link together many subparts of the player.</p>
 <p><a name="tests"></a>
 <a name="chapter-The%20tests/%20directory:%20Test%20strategies%20and%20integration%20tests"></a></p>
 <h2>The tests/ directory: Test strategies and integration tests</h2>

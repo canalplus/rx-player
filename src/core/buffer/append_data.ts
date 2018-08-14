@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * This file allows any Buffer to push data to a QueuedSourceBuffer.
+ */
+
 import {
   Observable,
   of as observableOf,

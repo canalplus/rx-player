@@ -1,4 +1,4 @@
-<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>BufferHandler - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-BufferHandler">BufferHandler</a></p>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>PeriodBufferManager - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-PeriodBufferManager">PeriodBufferManager</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
 <li><a href="#chapter-Multiple%20types%20handling">Multiple types handling</a></li>
@@ -10,24 +10,23 @@
 </ul>
 </li>
 </ul>
-</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-BufferHandler"></a></p>
-<h1>BufferHandler</h1>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-PeriodBufferManager"></a></p>
+<h1>PeriodBufferManager</h1>
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to SourceBuffers.</p>
-<p>In the RxPlayer, it is the role of the <em>Buffers</em> to do all of those tasks.
-The <em>BufferHandler</em> is a part of the <em>Stream</em> which dynamically creates and
-remove <em>Buffers</em>.</p>
-<p>Basically, the <em>Buffer Handler</em>:</p>
+<p>In the RxPlayer, the <em>PeriodBufferManager</em> is the entry point for performing all
+those tasks.</p>
+<p>Basically, the <em>PeriodBufferManager</em>:</p>
 <ul>
 <li>
 <p>dynamically creates various SourceBuffers depending on the needs of the
 given content</p>
 </li>
 <li>
-<p>create and destroy <em>Buffers</em> linked to these SourceBuffers as the content
-plays</p>
+<p>orchestrates segment downloading and &#x201C;pushing&#x201D; to allow the content to
+play in the best conditions possible.</p>
 </li>
 </ul>
 <p><a name="chapter-Multiple%20types%20handling"></a></p>
@@ -54,8 +53,8 @@ SourceBuffer:</p>
 - IMAGE BUFFER _
 |====================      |
 </code></pre>
-<p><em>(the <code>|</code> sign delimits the temporal start and end of a Buffer, the <code>=</code> sign
-represent a pushed segment in the corresponding SourceBuffer)</em></p>
+<p><em>(the <code>|</code> sign delimits the temporal start and end of a given buffer, the
+<code>=</code> sign represent a pushed segment in the corresponding SourceBuffer)</em></p>
 <p><a name="chapter-Native%20SourceBuffers"></a></p>
 <h2>Native SourceBuffers</h2>
 <p>SourceBuffers created for the audio and/or video types are called <em>native
@@ -139,7 +138,7 @@ film is finished, to report about it immediately in a graphical interface.</p>
   |==================|===========================|===================|
         TV Show               Italian Film            American film
 </code></pre>
-<p>In the RxPlayer, we create one <em>Buffer</em> per Period <strong>and</strong> per type.
+<p>In the RxPlayer, we create one <em>buffer</em> per Period <strong>and</strong> per type.
 Those are called <em>PeriodBuffers</em>.</p>
 <p><em>PeriodBuffers</em> are automatically created/destroyed during playback. The job of
 a single <em>PeriodBuffer</em> is to process and download optimally the content linked
@@ -173,11 +172,11 @@ described by the previous one.
 Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
 <pre><code>+----------------------------   AUDIO   ----------------------------------+
 |                                                                         |
-|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     | 
+|      PERIOD BUFFER 1        PERIOD BUFFER 2         PERIOD BUFFER 3     |
 | 08h05              09h00                       10h30                now |
 |   |=============     |=================          |================   |  |
 |         TV Show               Italian Film            American film     |
-+-------------------------------------------------------------------------+  
++-------------------------------------------------------------------------+
 
 +------------------------------   VIDEO   --------------------------------+
 |                                                                         |
@@ -201,7 +200,7 @@ Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
 very precize and optimal way, which gives a higher priority to immediate
 content.</p>
 <p>To better grasp how it works, let&#x2019;s imagine a regular use-case, with two periods
-for a single type of Buffer:</p>
+for a single type of buffer:</p>
 <hr>
 <p>Let&#x2019;s say that the <em>PeriodBuffer</em> for the first <em>Period</em> (named P1) is currently
 actively downloading segments (the &#x201C;^&#x201D; sign is the current position):</p>
@@ -269,7 +268,7 @@ can re-create P2, which will also keep its already-pushed segments:</p>
     ^
 </code></pre>
 <hr>
-<p>For multiple types of Buffers (example: <em>audio</em> and <em>video</em>) the same logic is
+<p>For multiple types of buffers (example: <em>audio</em> and <em>video</em>) the same logic is
 repeated (and separated) as many times. An <em>audio</em> <em>PeriodBuffer</em> will not
 influence a <em>video</em> one:</p>
 <pre><code>---------------------------   AUDIO   --------------------------------

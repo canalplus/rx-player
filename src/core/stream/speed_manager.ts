@@ -28,7 +28,7 @@ import {
   tap,
 } from "rxjs/operators";
 import log from "../../log";
-import { IStreamClockTick } from "./clock";
+import { IStreamClockTick } from "./types";
 
 export interface ISpeedManagerOptions {
   pauseWhenStalled? : boolean;

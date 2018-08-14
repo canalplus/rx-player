@@ -35,7 +35,7 @@ any of the streaming protocols available.
 This also means that all code relative to a specific streaming technology is
 completely within the networking code.
 This allows to greatly simplify code maintenance and evolutivity. For example,
-managing a new streaming protocol would mainly just need us to add some code 
+managing a new streaming protocol would mainly just need us to add some code
 there. Same thing for adding a new feature to e.g. `DASH` or `HSS`.
 
 

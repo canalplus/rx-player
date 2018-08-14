@@ -19,7 +19,7 @@ import {
   Observable
 } from "rxjs";
 import { mergeMap } from "rxjs/operators";
-import MediaError from "../../errors/MediaError";
+import { MediaError } from "../../errors";
 import log from "../../log";
 
 /**
@@ -28,7 +28,7 @@ import log from "../../log";
  * @see MediaError
  * @returns {Observable}
  */
-export default function createMediaErrorHandler(
+export default function MediaErrorManager(
   videoElement : HTMLMediaElement
 ) : Observable<never> {
   return observableFromEvent(videoElement, "error")

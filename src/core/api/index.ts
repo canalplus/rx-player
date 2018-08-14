@@ -1832,7 +1832,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         this._priv_onStreamWarning(streamInfos.value);
         break;
       case "added-segment":
-
         if (!this._priv_contentInfos) {
           log.error("Added segment while no content is loaded");
           return;
@@ -1843,8 +1842,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         // implementation
         const { bufferType, segmentData } = streamInfos.value;
         if (bufferType === "image") {
-          if (segmentData != null && segmentData.type === "bif") {
-            const imageData = segmentData.data as IBifThumbnail[];
+          if (segmentData != null && (segmentData as { type : string }).type === "bif") {
+            const imageData = (segmentData as { data : IBifThumbnail[] }).data;
 
             // TODO merge multiple data from the same track together
             this._priv_contentInfos.thumbnails = imageData;

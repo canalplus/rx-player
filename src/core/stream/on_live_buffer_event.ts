@@ -26,11 +26,10 @@ import {
 } from "rxjs/operators";
 import log from "../../log";
 import Manifest from "../../manifest";
+import { IPeriodBufferManagerEvent } from "../buffer";
 import SourceBufferManager from "../source_buffers";
-import EVENTS, {
-  IManifestUpdateEvent,
-  IStreamEvent,
-} from "./stream_events";
+import EVENTS from "./events_generators";
+import { IManifestUpdateEvent } from "./types";
 
 /**
  * Re-fetch the manifest and merge it with the previous version.
@@ -58,6 +57,10 @@ function refreshManifest(
   );
 }
 
+export type ILiveEventsHandlerEvent =
+  IManifestUpdateEvent |
+  IPeriodBufferManagerEvent;
+
 /**
  * Create handler for Buffer events happening only in live contexts.
  * @param {HTMLMediaElement} videoElement
@@ -69,7 +72,7 @@ export default function liveEventsHandler(
   videoElement : HTMLMediaElement,
   manifest : Manifest,
   fetchManifest : (url : string) => Observable<Manifest>
-) : (message : IStreamEvent) => Observable<IStreamEvent> {
+) : (message : IPeriodBufferManagerEvent) => Observable<ILiveEventsHandlerEvent> {
   return function handleLiveEvents(message) {
     switch (message.type) {
       case "discontinuity-encountered":
