@@ -15,7 +15,7 @@
  */
 
 /**
- * This file is used to abstract the notion of text and audio language-switching
+ * This file is used to abstract the notion of text and audio tracks switching
  * for an easier API management.
  */
 
@@ -40,68 +40,64 @@ export type ITextTrackPreference = null | {
   closedCaption : boolean;
 };
 
-// audio track returned by the LanguageManager
-export interface ILMAudioTrack {
+// audio track returned by the TrackManager
+export interface ITMAudioTrack {
   language : string;
   normalized : string;
   audioDescription : boolean;
   id : number|string;
 }
 
-// text track returned by the LanguageManager
-export interface ILMTextTrack {
+// text track returned by the TrackManager
+export interface ITMTextTrack {
   language : string;
   normalized : string;
   closedCaption : boolean;
   id : number|string;
 }
 
-// audio track from a list of audio tracks returned by the LanguageManager
-export interface ILMAudioTrackListItem extends ILMAudioTrack {
+// audio track from a list of audio tracks returned by the TrackManager
+export interface ITMAudioTrackListItem extends ITMAudioTrack {
   active : boolean;
 }
 
-// text track from a list of text tracks returned by the LanguageManager
-export interface ILMTextTrackListItem extends ILMTextTrack {
+// text track from a list of text tracks returned by the TrackManager
+export interface ITMTextTrackListItem extends ITMTextTrack {
   active : boolean;
 }
 
 // stored audio informations for a single period
-interface ILMPeriodAudioInfos {
+interface ITMPeriodAudioInfos {
   adaptations : Adaptation[];
   adaptation$ : Subject<Adaptation|null> ;
 }
 
 // stored text informations for a single period
-interface ILMPeriodTextInfos {
+interface ITMPeriodTextInfos {
   adaptations : Adaptation[];
   adaptation$ : Subject<Adaptation|null> ;
 }
 
 // stored informations for a single period
-interface ILMPeriodInfos {
+interface ITMPeriodInfos {
   period : Period;
-  audio? : ILMPeriodAudioInfos;
-  text? : ILMPeriodTextInfos;
+  audio? : ITMPeriodAudioInfos;
+  text? : ITMPeriodTextInfos;
 }
 
 /**
  * Manage audio and text tracks for all active periods.
- *
- * Most methods here allow to interact with the first chronologically added
- * Period.
- *
- * Languages for subsequent periods are also chosen accordingly.
- * @class LanguageManager
+ * Chose the audio and text tracks for each period and record this choice.
+ * @class TrackManager
  */
-export default class LanguageManager {
+export default class TrackManager {
   /**
-   * Current Periods considered by the LanguageManager.
+   * Current Periods considered by the TrackManager.
    * Sorted by start time ascending
    * @type {SortedList}
    * @private
    */
-  private _periods : SortedList<ILMPeriodInfos>;
+  private _periods : SortedList<ITMPeriodInfos>;
 
   /**
    * Array of preferred languages for audio tracks.
@@ -165,7 +161,7 @@ export default class LanguageManager {
     const periodItem = getPeriodItem(this._periods, period);
     if (periodItem != null) {
       if (periodItem[bufferType] != null) {
-        log.warn(`LanguageManager: ${bufferType} already added for period`, period);
+        log.warn(`TrackManager: ${bufferType} already added for period`, period);
         return;
       } else {
         periodItem[bufferType] = {
@@ -195,13 +191,13 @@ export default class LanguageManager {
   ) : void {
     const periodIndex = findPeriodIndex(this._periods, period);
     if (periodIndex == null) {
-      log.warn(`LanguageManager: ${bufferType} not found for period`, period);
+      log.warn(`TrackManager: ${bufferType} not found for period`, period);
       return;
     }
 
     const periodItem = this._periods.get(periodIndex);
     if (periodItem[bufferType] == null) {
-      log.warn(`LanguageManager: ${bufferType} already removed for period`, period);
+      log.warn(`TrackManager: ${bufferType} already removed for period`, period);
       return;
     }
     delete periodItem[bufferType];
@@ -232,7 +228,7 @@ export default class LanguageManager {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos || !periodItem) {
-      throw new Error("LanguageManager: Given Period not found.");
+      throw new Error("TrackManager: Given Period not found.");
     }
 
     const preferredAudioTracks = this._preferredAudioTracks;
@@ -265,7 +261,7 @@ export default class LanguageManager {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos || !periodItem) {
-      throw new Error("LanguageManager: Given Period not found.");
+      throw new Error("TrackManager: Given Period not found.");
     }
 
     const preferredTextTracks = this._preferredTextTracks;
@@ -299,7 +295,7 @@ export default class LanguageManager {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos) {
-      throw new Error("LanguageManager: Given Period not found.");
+      throw new Error("TrackManager: Given Period not found.");
     }
 
     const wantedAdaptation = arrayFind(audioInfos.adaptations, ({ id }) =>
@@ -331,7 +327,7 @@ export default class LanguageManager {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos) {
-      throw new Error("LanguageManager: Given Period not found.");
+      throw new Error("TrackManager: Given Period not found.");
     }
     const wantedAdaptation = arrayFind(textInfos.adaptations, ({ id }) =>
       id === wantedId);
@@ -359,7 +355,7 @@ export default class LanguageManager {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (!audioInfos) {
-      throw new Error("LanguageManager: Given Period not found.");
+      throw new Error("TrackManager: Given Period not found.");
     }
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
     if (chosenAudioAdaptation === null) {
@@ -381,7 +377,7 @@ export default class LanguageManager {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (!textInfos) {
-      throw new Error("LanguageManager: Given Period not found.");
+      throw new Error("TrackManager: Given Period not found.");
     }
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (chosenTextAdaptation === null) {
@@ -402,7 +398,7 @@ export default class LanguageManager {
    * @param {Period} period
    * @returns {Object|null}
    */
-  public getChosenAudioTrack(period : Period) : ILMAudioTrack|null {
+  public getChosenAudioTrack(period : Period) : ITMAudioTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (audioInfos == null) {
@@ -432,7 +428,7 @@ export default class LanguageManager {
    * @param {Period} period
    * @returns {Object|null}
    */
-  public getChosenTextTrack(period : Period) : ILMTextTrack|null {
+  public getChosenTextTrack(period : Period) : ITMTextTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (textInfos == null) {
@@ -458,7 +454,7 @@ export default class LanguageManager {
    *
    * @returns {Array.<Object>}
    */
-  public getAvailableAudioTracks(period : Period) : ILMAudioTrackListItem[] {
+  public getAvailableAudioTracks(period : Period) : ITMAudioTrackListItem[] {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem && periodItem.audio;
     if (audioInfos == null) {
@@ -485,7 +481,7 @@ export default class LanguageManager {
    * @param {Period} period
    * @returns {Array.<Object>}
    */
-  public getAvailableTextTracks(period : Period) : ILMTextTrackListItem[] {
+  public getAvailableTextTracks(period : Period) : ITMTextTrackListItem[] {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem && periodItem.text;
     if (textInfos == null) {
@@ -779,7 +775,7 @@ function findFirstOptimalTextAdaptation(
 }
 
 function findPeriodIndex(
-  periods : SortedList<ILMPeriodInfos>,
+  periods : SortedList<ITMPeriodInfos>,
   period : Period
 ) : number|undefined {
   for (let i = 0; i < periods.length(); i++) {
@@ -791,9 +787,9 @@ function findPeriodIndex(
 }
 
 function getPeriodItem(
-  periods : SortedList<ILMPeriodInfos>,
+  periods : SortedList<ITMPeriodInfos>,
   period : Period
-) : ILMPeriodInfos|undefined {
+) : ITMPeriodInfos|undefined {
   for (let i = 0; i < periods.length(); i++) {
     const periodI = periods.get(i);
     if (periodI.period.id === period.id) {
