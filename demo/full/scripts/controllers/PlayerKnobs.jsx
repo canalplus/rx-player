@@ -8,6 +8,7 @@ import VideoTrack from "./knobs/VideoTrack.jsx";
 
 const PlayerKnobs = ({
   player,
+  availableVideoTracks,
   hasLoadedContent,
   hasEnded,
 }) => {
@@ -22,7 +23,10 @@ const PlayerKnobs = ({
       <VideoBitrateKnob player={player} />
       <LanguageKnob player={player} />
       <SubtitlesKnob player={player} />
-      <VideoTrack player={player} />
+      {
+        availableVideoTracks.length > 1 ?
+          <VideoTrack player={player} /> : null
+      }
     </div>
   );
 };
@@ -32,5 +36,6 @@ export default withModulesState({
     isStopped: "isStopped",
     hasLoadedContent: "hasLoadedContent",
     hasEnded: "hasEnded",
+    availableVideoTracks: "availableVideoTracks",
   },
 })(PlayerKnobs);
