@@ -307,21 +307,13 @@ export default class VideoTrackManager {
     const representations = chosenVideoAdaptation
       .representations
       .map((representation) => {
-        let frameRate;
-        if (representation.frameRate) {
-          frameRate = representation.frameRate;
-        } else {
-          if (chosenVideoAdaptation.representations.length === 1) {
-            frameRate = chosenVideoAdaptation.maxFrameRate;
-          }
-        }
         return {
           id: representation.id,
           bitrate: representation.bitrate,
+          frameRate: representation.frameRate,
           width: representation.width,
           height: representation.height,
           codec: representation.codec,
-          frameRate,
         };
       });
 
@@ -353,21 +345,13 @@ export default class VideoTrackManager {
         const representations = adaptation
           .representations
           .map((representation) => {
-            let frameRate;
-            if (representation.frameRate) {
-              frameRate = representation.frameRate;
-            } else {
-              if (adaptation.representations.length === 1) {
-                frameRate = adaptation.maxFrameRate;
-              }
-            }
             return {
               id: representation.id,
               bitrate: representation.bitrate,
+              frameRate: representation.frameRate,
               width: representation.width,
               height: representation.height,
               codec: representation.codec,
-              frameRate,
             };
           });
 
