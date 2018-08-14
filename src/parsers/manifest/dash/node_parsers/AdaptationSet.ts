@@ -18,7 +18,6 @@ import log from "../../../../log";
 import {
   IScheme,
   parseBoolean,
-  parseFrameRate,
   parseIntOrBoolean,
   parseScheme,
 } from "../helpers";
@@ -85,7 +84,7 @@ export interface IAdaptationSetAttributes {
   maximumSAPPeriod? : number;
   mimeType? : string;
   minBitrate? : number;
-  minFrameRate? : number;
+  minFrameRate? : string;
   minHeight? : number;
   minWidth? : number;
   normalizedLanguage? : string;
@@ -265,12 +264,7 @@ function parseAdaptationSetAttributes(
         break;
 
       case "minFrameRate": {
-        const minFrameRate = parseFrameRate(attribute.value);
-        if (isNaN(minFrameRate)) {
-          log.warn(`DASH: invalid minFrameRate ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.minFrameRate = minFrameRate;
-        }
+        parsedAdaptation.minFrameRate = attribute.value;
       }
         break;
 
