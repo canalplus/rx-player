@@ -29,7 +29,7 @@ import {
   IParsedManifest,
   IParsedRepresentation,
 } from "../types";
-import checkManifestIDs from "./check_manifest_ids";
+import checkManifestIDs from "../utils/check_manifest_ids";
 import {
   getAudioCodecs,
   getVideoCodecs,
