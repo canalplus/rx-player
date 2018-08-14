@@ -580,9 +580,6 @@ export default function parseManifest(
           adaptation.children.role.value === "main" &&
           adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011";
 
-        const adaptationRole = !!adaptation.children.role ?
-          adaptation.children.role.value : undefined;
-
         const mainAdaptationForType = acc.mainAdaptations[type];
 
         if (mainAdaptationForType !== undefined && isMainAdaptation) {
@@ -646,7 +643,6 @@ export default function parseManifest(
             id: adaptationID,
             representations,
             type,
-            role: adaptationRole,
           };
 
           if (adaptation.attributes.language != null) {
