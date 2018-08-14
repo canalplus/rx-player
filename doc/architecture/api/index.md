@@ -26,7 +26,7 @@ To facilitate those actions, the API rely on multiple building blocks:
     the Player. Many RxPlayer modules rely on a clock.
 
 
-  - __the LanguageManager__
+  - __the TrackManager__
 
     Ease up text/audio language management to provide a simple-to-use API.
 
