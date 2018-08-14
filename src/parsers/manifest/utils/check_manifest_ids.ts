@@ -35,9 +35,9 @@ export default function checkManifestIDs(
       (adaptations[type] || []).forEach(adaptation => {
         const adaptationID = adaptation.id;
         if (arrayIncludes(adaptationIDs, adaptationID)) {
-          log.warn("Smooth: Two adaptations with the same ID found. Updating.",
+          log.warn("Two adaptations with the same ID found. Updating.",
             adaptationID);
-          const newID =  adaptationID + "-";
+          const newID =  adaptationID + "-dup";
           adaptation.id = newID;
           checkManifestIDs(manifest);
           adaptationIDs.push(newID);
@@ -48,9 +48,9 @@ export default function checkManifestIDs(
         adaptation.representations.forEach(representation => {
           const representationID = representation.id;
           if (arrayIncludes(representationIDs, representationID)) {
-            log.warn("Smooth: Two representations with the same ID found. Updating.",
+            log.warn("Two representations with the same ID found. Updating.",
               representationID);
-            const newID =  representationID + "-";
+            const newID =  representationID + "-dup";
             representation.id = newID;
             checkManifestIDs(manifest);
             representationIDs.push(newID);
