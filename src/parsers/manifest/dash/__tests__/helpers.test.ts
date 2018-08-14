@@ -19,25 +19,11 @@ import { expect } from "chai";
 import {
   parseByteRange,
   parseDuration,
-  parseFrameRate,
   replaceRepresentationDASHTokens,
   replaceSegmentDASHTokens,
 } from "../helpers";
 
 describe("dash parser helpers", function() {
-
-  describe("parseFrameRate", () => {
-    it("should correctly parse ratio framerate", function() {
-      expect(parseFrameRate("24000/1000")).to.equal(24);
-    });
-    it("should correctly parse integer framerate", function() {
-      expect(parseFrameRate("24")).to.equal(24);
-    });
-    it("should return -1 if can't parse given framerate", function() {
-      expect(parseFrameRate("main")).to.equal(-1);
-    });
-  });
-
   describe("parseDuration", () => {
     it("should correctly parse duration in ISO8061 format", function() {
       expect(parseDuration("P18Y9M4DT11H9M8S")).to.equal(591361748);
