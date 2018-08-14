@@ -655,4 +655,23 @@ export default {
    * @type {Number|null}
    */
   FORCED_ENDED_THRESHOLD: 0.001,
+
+  /**
+   * Maximum duration from the current position we will let in the buffer when
+   * switching an Adaptation of a given type.
+   *
+   * For example, if we have ``text: { before: 1, after: 4 }``, it means that
+   * when switching subtitles, we will let 1 second before and 4 second after
+   * the current position in the previous language (until the new segments
+   * overwrite it).
+   * This is to allow smooth transitions and avoid de-synchronization that
+   * can happen when removing the content being decoded.
+   * @type {Object}
+   */
+  ADAPTATION_SWITCH_BUFFER_PADDINGS: {
+    video: { before: 2, after: 3 },
+    audio: { before: 2, after: 2 },
+    text: { before: 0, after: 0 }, // not managed natively, so no problem here
+    image: { before: 0, after: 0 }, // not managed natively, so no problem here
+  },
 };

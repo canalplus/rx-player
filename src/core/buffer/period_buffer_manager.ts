@@ -16,6 +16,7 @@
 
 import {
   concat as observableConcat,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -77,6 +78,12 @@ import {
 } from "./types";
 
 export type IPeriodBufferManagerClockTick = IAdaptationBufferClockTick;
+
+const {
+  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+  DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
+  ADAPTATION_SWITCH_BUFFER_PADDINGS,
+} = config;
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
@@ -470,8 +477,8 @@ export default function PeriodBufferManager(
 
         if (sourceBufferManager.has(bufferType)) {
           log.info(`clearing previous ${bufferType} SourceBuffer`);
-          const _queuedSourceBuffer = sourceBufferManager.get(bufferType);
-          cleanBuffer$ = _queuedSourceBuffer
+          const _qSourceBuffer = sourceBufferManager.get(bufferType);
+          cleanBuffer$ = _qSourceBuffer
             .removeBuffer(period.start, period.end || Infinity)
             .pipe(mapTo(null));
         } else {
@@ -487,29 +494,30 @@ export default function PeriodBufferManager(
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
 
       // 1 - create or reuse the SourceBuffer
-      let queuedSourceBuffer : QueuedSourceBuffer<any>;
+      let qSourceBuffer : QueuedSourceBuffer<any>;
       if (sourceBufferManager.has(bufferType)) {
         log.info("reusing a previous SourceBuffer for the type", bufferType);
-        queuedSourceBuffer = sourceBufferManager.get(bufferType);
+        qSourceBuffer = sourceBufferManager.get(bufferType);
       } else {
         const codec = getFirstDeclaredMimeType(adaptation);
         const sourceBufferOptions = bufferType === "text" ?
           options.textTrackOptions : undefined;
-        queuedSourceBuffer = sourceBufferManager
+        qSourceBuffer = sourceBufferManager
           .createSourceBuffer(bufferType, codec, sourceBufferOptions);
       }
 
       // 2 - create or reuse the associated BufferGarbageCollector and
       // SegmentBookkeeper
-      const bufferGarbageCollector$ = garbageCollectors.get(queuedSourceBuffer);
-      const segmentBookkeeper = segmentBookkeepers.get(queuedSourceBuffer);
+      const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
+      const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
 
-      // TODO Clean previous QueuedSourceBuffer for previous content in the period
-      // // 3 - Clean possible content from a precedent adaptation in this period
-      // // (take the clock into account to avoid removing "now" for native sourceBuffers)
-      // // like:
-      // return clock$.pluck("currentTime").take(1).mergeMap(currentTime => {
-      // })
+      // 3 - Clean possible content from a precedent adaptation in this period
+      const cleanPreviousBuffer$ = clock$.pipe(
+        take(1),
+        mergeMap(({ currentTime }) =>
+          cleanPreviousSourceBuffer(qSourceBuffer, period, bufferType, currentTime)
+        )
+      );
 
       // 3 - create the pipeline
       const pipelineOptions = getPipelineOptions(
@@ -520,7 +528,7 @@ export default function PeriodBufferManager(
       // 4 - create the Buffer
       const adaptationBuffer$ = AdaptationBuffer(
         clock$,
-        queuedSourceBuffer,
+        qSourceBuffer,
         segmentBookkeeper,
         pipeline,
         wantedBufferAhead$,
@@ -549,6 +557,7 @@ export default function PeriodBufferManager(
       // 5 - Return the buffer and send right events
       return observableConcat(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
+        cleanPreviousBuffer$.pipe(ignoreElements()),
         observableMerge(adaptationBuffer$, bufferGarbageCollector$)
       );
     }));
@@ -576,17 +585,60 @@ function getPipelineOptions(
     maxRetry = 0; // Deactivate BIF fetching if it fails
   } else {
     maxRetry = retry != null ?
-      retry : config.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
+      retry : DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
   }
 
   maxRetryOffline = offlineRetry != null ?
-    offlineRetry : config.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
+    offlineRetry : DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
 
   return {
     cache,
     maxRetry,
     maxRetryOffline,
   };
+}
+
+/**
+ * Clean up previous SourceBuffer with paddings relative to the current
+ * position.
+ *
+ * Those paddings are based on the config.
+ * @param {QueuedSourceBuffer} qSourceBuffer
+ * @param {Object} period
+ * @param {string} bufferType
+ * @param {number} currentTime
+ * @returns {Observable}
+ */
+function cleanPreviousSourceBuffer(
+  qSourceBuffer : QueuedSourceBuffer<unknown>,
+  period : Period,
+  bufferType : IBufferType,
+  currentTime : number
+) : Observable<void> {
+  if (!qSourceBuffer.getBuffered().length) {
+    return EMPTY;
+  }
+  const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
+  const paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after || 0;
+  const start = period.start;
+  const end = period.end || Infinity;
+  if (
+    !paddingAfter && !paddingBefore ||
+    (currentTime - paddingBefore) >= end ||
+    (currentTime + paddingAfter) <= start
+  ) {
+    return qSourceBuffer.removeBuffer(start, end);
+  }
+  if (currentTime - paddingBefore <= start) {
+    return qSourceBuffer.removeBuffer(currentTime + paddingAfter, end);
+  }
+  if (currentTime + paddingAfter >= end) {
+    return qSourceBuffer.removeBuffer(start, currentTime - paddingBefore);
+  }
+  return observableConcat(
+    qSourceBuffer.removeBuffer(start, currentTime - paddingBefore),
+    qSourceBuffer.removeBuffer(currentTime + paddingAfter, end)
+  );
 }
 
 /**
