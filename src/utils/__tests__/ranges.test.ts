@@ -26,8 +26,8 @@ import {
   // insertInto,
   // isAfter,
   // isBefore,
-  // isTimeInRange,
-  // keepRangeIntersection,
+  isTimeInRange,
+  keepRangeIntersection,
   // mergeContiguousRanges,
   // removeEmptyRanges,
 } from "../ranges";
@@ -438,6 +438,77 @@ describe("utils - ranges", () => {
       expect(getSizeOfRange(timeRanges, 38)).to.equal(0);
       expect(getSizeOfRange(timeRanges, -Infinity)).to.equal(0);
       expect(getSizeOfRange(timeRanges, Infinity)).to.equal(0);
+    });
+  });
+
+  describe("keepRangeIntersection", () => {
+    it("should return the same range if both given are equal", () => {
+      const timeRanges = [
+        { start: 0, end: 10 },
+        { start: 20, end: 30 },
+        { start: 50, end: 70 },
+      ];
+      expect(keepRangeIntersection(timeRanges, timeRanges)).to.deep.equal(timeRanges);
+    });
+
+    it("should return the other range if one of it contains the other", () => {
+      const timeRanges1 = [
+        { start: 0, end: 10 },
+        { start: 20, end: 30 },
+        { start: 50, end: 70 },
+      ];
+      const timeRanges2 = [
+        { start: 0, end: 70},
+        { start: 90, end: 100},
+        { start: 100, end: 120},
+      ];
+      expect(keepRangeIntersection(timeRanges1, timeRanges2)).to.deep.equal(timeRanges1);
+      expect(keepRangeIntersection(timeRanges2, timeRanges1)).to.deep.equal(timeRanges1);
+    });
+
+    it("should return the intersection between two ranges", () => {
+      const timeRanges1 = [
+        { start: 0, end: 10 },
+        { start: 20, end: 30 },
+        { start: 50, end: 70 },
+      ];
+      const timeRanges2 = [
+        { start: 5, end: 24},
+        { start: 27, end: 29},
+        { start: 40, end: 80},
+      ];
+      const result = [
+        { start: 5, end: 10 },
+        { start: 20, end: 24 },
+        { start: 27, end: 29 },
+        { start: 50, end: 70 },
+      ];
+      expect(keepRangeIntersection(timeRanges1, timeRanges2)).to.deep.equal(result);
+      expect(keepRangeIntersection(timeRanges2, timeRanges1)).to.deep.equal(result);
+    });
+  });
+
+  describe("isTimeInRange", () => {
+    it("should return true if the given time is equal to the start of the range", () => {
+      expect(isTimeInRange({ start: 30, end: 70 }, 30)).to.equal(true);
+      expect(isTimeInRange({ start: 72, end: Infinity }, 72)).to.equal(true);
+      expect(isTimeInRange({ start: 0, end: 1 }, 0)).to.equal(true);
+    });
+    it("should return false if the given time is equal to the end of the range", () => {
+      expect(isTimeInRange({ start: 30, end: 70 }, 70)).to.equal(false);
+      expect(isTimeInRange({ start: 72, end: Infinity }, Infinity)).to.equal(false);
+      expect(isTimeInRange({ start: 0, end: 1 }, 1)).to.equal(false);
+    });
+    it("should return true if the given time is inside the range", () => {
+      expect(isTimeInRange({ start: 30, end: 70 }, 40)).to.equal(true);
+      expect(isTimeInRange({ start: 72, end: Infinity }, 10000)).to.equal(true);
+      expect(isTimeInRange({ start: 0, end: 1 }, 0.5)).to.equal(true);
+    });
+    it("should return false if the given time is not inside the range", () => {
+      expect(isTimeInRange({ start: 30, end: 70 }, 20)).to.equal(false);
+      expect(isTimeInRange({ start: 30, end: 70 }, 80)).to.equal(false);
+      expect(isTimeInRange({ start: 72, end: Infinity }, 70)).to.equal(false);
+      expect(isTimeInRange({ start: 0, end: 1 }, 7)).to.equal(false);
     });
   });
 });
