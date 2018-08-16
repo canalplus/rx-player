@@ -28,6 +28,7 @@ import {
   ConnectableObservable,
   EMPTY,
   merge as observableMerge,
+  of as observableOf,
   ReplaySubject,
   Subject,
   Subscription,
@@ -38,10 +39,12 @@ import {
   filter,
   map,
   mapTo,
+  mergeMapTo,
   publish,
   share,
   skipUntil,
   startWith,
+  switchMapTo,
   take,
   takeUntil,
 } from "rxjs/operators";
@@ -703,10 +706,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // get every properties used from context for clarity
     const videoElement = this.videoElement;
 
-    /**
-     * Global clock used for the whole application.
-     * @type {Observable.<Object>}
-     */
+    // Global clock used for the whole application.
     const clock$ = createClock(videoElement, {
       withMediaSource: !isDirectFile,
     });
@@ -726,10 +726,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
       const transportObj = transportFn(transportOptions);
 
-      /**
-       * Options used by the ABR Manager.
-       * @type {Object}
-       */
+      // Options used by the ABR Manager.
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
@@ -747,10 +744,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         } : {},
       };
 
-      /**
-       * Options used by the TextTrack SourceBuffer
-       * @type {Object}
-       */
+      // Options used by the TextTrack SourceBuffer
       const textTrackOptions = options.textTrackMode === "native" ? {
         textTrackMode: "native" as "native",
         hideNativeSubtitle: options.hideNativeSubtitle,
@@ -795,67 +789,77 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         .pipe(publish()) as ConnectableObservable<IStreamEvent>;
     }
 
-    /**
-     * Emit a truthy value when the player stalls, a falsy value as it unstalls.
-     * @type {Observable}
-     */
+    // Emit a truthy value when the player stalls, a falsy value as it unstalls.
     const stalled$ = stream
       .pipe(
         filter((evt) => evt.type === "stalled"),
         map(x => x.value)
       );
 
-    /**
-     * Emit when the stream is considered "loaded".
-     * @type {Observable}
-     */
-    const loaded = stream
-      .pipe(
-        filter(({ type }) => type === "loaded"),
-        take(1),
-        share()
-      );
+    // Emit when the Stream is considered "loaded".
+    const loaded$ = stream.pipe(
+      filter(({ type }) => type === "loaded"),
+      share()
+    );
 
-    /**
-     * Emit when the media element emits an "ended" event.
-     * @type {Observable}
-     */
+    // Emit when the Stream "reloads" the MediaSource
+    const reloading$ = stream.pipe(
+      filter(({ type }) => type === "reloading-stream"),
+      share()
+    );
+
+    // Emit when the media element emits an "ended" event.
     const endedEvent$ = onEnded$(videoElement)
       .pipe(mapTo(null));
 
-    /**
-     * Emit when the media element emits a "seeking" event.
-     * @type {Observable}
-     */
+    // Emit when the media element emits a "seeking" event.
     const seekingEvent$ = onSeeking$(videoElement)
       .pipe(mapTo(null));
 
-    /**
-     * Emit the player state as it changes.
-     * @type {Observable.<string>}
-     */
-    const stateChanges$ = observableConcat(
-      loaded.pipe(mapTo(PLAYER_STATES.LOADED)),
-
-      observableCombineLatest(
-        this._priv_playing$,
-        stalled$.pipe(startWith(null as { reason : string }|null)),
-        endedEvent$.pipe(startWith(null)),
-        seekingEvent$.pipe(startWith(null))
+    // State updates when the content is considered "loaded"
+    const loadedStateUpdates$ = observableCombineLatest(
+      this._priv_playing$,
+      stalled$.pipe(startWith(null as { reason : string }|null)),
+      endedEvent$.pipe(startWith(null)),
+      seekingEvent$.pipe(startWith(null))
+    )
+    .pipe(
+      takeUntil(this._priv_stopCurrentContent$),
+      map(([isPlaying, stalledStatus]) =>
+        getPlayerState(videoElement, isPlaying, stalledStatus)
       )
-      .pipe(
-        takeUntil(this._priv_stopCurrentContent$),
-        map(([isPlaying, stalledStatus]) => {
-          return getPlayerState(videoElement, isPlaying, stalledStatus);
-        }),
+    );
 
-        // begin emitting those only when the content start to play
-        skipUntil(
-          this._priv_playing$
-          .pipe(filter(isPlaying => isPlaying))
+    // Emit the player state as it changes.
+    const playerState$ = observableConcat(
+      observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
+
+      // LOADED as soon as the first "loaded" event is sent from the Stream
+      loaded$.pipe(take(1), mapTo(PLAYER_STATES.LOADED)),
+
+      observableMerge(
+        loadedStateUpdates$
+          .pipe(
+            // From the first reload onward, we enter another dynamic (below)
+            takeUntil(reloading$),
+
+            // begin only post-LOADED states when the first "play" has been done
+            // (Either auto-play or user play). Else, stay as LOADED.
+            skipUntil(this._priv_playing$.pipe(filter(isPlaying => isPlaying)))
+          ),
+
+        // when reloading
+        reloading$.pipe(
+          switchMapTo(
+            loaded$.pipe(
+              take(1), // wait for the next loaded Stream event
+              mergeMapTo(loadedStateUpdates$), // to update the state as usual
+              startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
+            )
+          )
         )
       )
-    ).pipe(distinctUntilChanged(), startWith(PLAYER_STATES.LOADING));
+    ).pipe(distinctUntilChanged());
 
     /**
      * Emit true each time the player goes into a "play" state.
@@ -881,7 +885,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_triggerTimeChange(x), noop);
 
-    stateChanges$
+    playerState$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_setPlayerState(x), noop);
 
@@ -2375,6 +2379,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_triggerTimeChange(clockTick : IClockTick) : void {
     if (!this._priv_contentInfos) {
       log.warn("Cannot perform time update: no content loaded.");
+      return;
+    }
+
+    if (this.state === PLAYER_STATES.RELOADING) {
       return;
     }
 
