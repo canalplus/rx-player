@@ -36,6 +36,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
 
   linkPlayerEventToState("textTrackChange", "subtitle");
   linkPlayerEventToState("audioTrackChange", "language");
+  linkPlayerEventToState("videoTrackChange", "videoTrack");
   linkPlayerEventToState("videoBitrateChange", "videoBitrate");
   linkPlayerEventToState("audioBitrateChange", "audioBitrate");
   linkPlayerEventToState("error", "error");
