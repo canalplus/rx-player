@@ -74,9 +74,11 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   ).subscribe((arg) => {
     const stateUpdates = {
       hasEnded: arg === "ENDED",
-      hasLoadedContent: !["STOPPED", "LOADING"].includes(arg),
+      hasCurrentContent: !["STOPPED", "LOADING"].includes(arg),
+      isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(arg),
       isBuffering: arg === "BUFFERING",
       isLoading: arg === "LOADING",
+      isReloading: arg === "RELOADING",
       isSeeking: arg === "SEEKING",
       isStopped: arg === "STOPPED",
       speed: arg === "PLAYING" ? player.getPlaybackRate() : 0,

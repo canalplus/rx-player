@@ -12,15 +12,15 @@ import VolumeBar from "./VolumeBar.jsx";
 const ControlBar = ({
   currentTime,
   duration,
-  hasLoadedContent,
+  isContentLoaded,
   isLive,
   player,
   videoElement,
 }) => {
-  const displayControls = hasLoadedContent;
+  const displayProgressBar = isContentLoaded;
 
   let positionElement;
-  if (!displayControls) {
+  if (!displayProgressBar) {
     positionElement = null;
   } else if (isLive) {
     positionElement = <LivePosition />;
@@ -33,7 +33,7 @@ const ControlBar = ({
 
   return (
     <div className="controls-bar-container">
-      { (!displayControls) ?
+      { (!displayProgressBar) ?
         null : <Progressbar player={player} />
       }
       <div className="controls-bar">
@@ -68,7 +68,7 @@ export default withModulesState({
   player: {
     currentTime: "currentTime",
     duration: "duration",
-    hasLoadedContent: "hasLoadedContent",
+    isContentLoaded: "isContentLoaded",
     isLive: "isLive",
   },
 })(ControlBar);
