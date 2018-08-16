@@ -2,14 +2,14 @@ import React from "react";
 import withModulesState from "../../lib/withModulesState.jsx";
 import Knob from "../../components/Knob.jsx";
 
-const findVideoTrackIndex = (trackId, tracks) => {
-  return tracks.findIndex(tk => tk.id === trackId);
+const findVideoTrackIndex = (track, tracks) => {
+  return tracks.findIndex(ln => ln.id === track.id);
 };
 
 const VideoTrackKnobBase = ({
   player,
-  currentVideoTrackId,
   availableVideoTracks = [],
+  currentVideoTrack,
 }) => {
   let options = [];
   let selectedIndex;
@@ -21,11 +21,9 @@ const VideoTrackKnobBase = ({
     options = availableVideoTracks
       .map((track, i) => `track ${i}: ${track.id}`);
 
-    selectedIndex = currentVideoTrackId ?
-      Math.max(
-        findVideoTrackIndex(currentVideoTrackId, availableVideoTracks),
-        0
-      ) : 0;
+    selectedIndex = currentVideoTrack ?
+      Math.max(findVideoTrackIndex(currentVideoTrack, availableVideoTracks), 0)
+      : 0;
   }
 
   const onTrackChange = (evt) => {
@@ -47,7 +45,7 @@ const VideoTrackKnobBase = ({
 
 export default withModulesState({
   player: {
-    videoTrackId: "currentVideoTrackId",
+    videoTrack: "currentVideoTrack",
     availableVideoTracks: "availableVideoTracks",
   },
 })(VideoTrackKnobBase);
