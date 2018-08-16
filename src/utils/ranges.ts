@@ -355,21 +355,21 @@ function insertInto(ranges : IRange[], rangeToAddArg : IRange) : IRange[] {
  * in argument. null if none is found.
  * @param {Object} range
  * @param {Array.<Object>} ranges
- * @returns {Object|null}
+ * @returns {Array.<Object>}
  */
-function findOverlappingRange(range : IRange, ranges : IRange[]) : IRange|null {
+function findOverlappingRanges(range : IRange, ranges : IRange[]) : IRange[] {
+  const resultingRanges : IRange[] = [];
   for (let i = 0; i < ranges.length; i++) {
     if (areRangesOverlapping(range, ranges[i])) {
-      return ranges[i];
+      resultingRanges.push(ranges[i]);
     }
   }
-  return null;
+  return resultingRanges;
 }
 
 /**
  * Returns only the intersection between the two ranges, from the first
  * ranges argument given.
- * /!\ Mutates the ranges1 array given
  * @param {Array.<Range>} ranges1
  * @param {Array.<Range>} ranges2
  * @returns {Array.<Range>}
@@ -378,18 +378,22 @@ function keepRangeIntersection(
   ranges1 : IRange[],
   ranges2 : IRange[]
 ) : IRange[] {
+  const result : IRange[] = [];
+
   for (let i = 0; i < ranges1.length; i++) {
     const range = ranges1[i];
-    const overlappingRange = findOverlappingRange(range, ranges2);
-    if (!overlappingRange) {
-      ranges1.splice(i--, 1);
-    } else if (overlappingRange.start > range.start) {
-      range.start = overlappingRange.start;
-    } else if (overlappingRange.end < range.end) {
-      range.end = overlappingRange.end;
+    const overlappingRanges = findOverlappingRanges(range, ranges2);
+    if (overlappingRanges.length) {
+      for (let j = 0; j < overlappingRanges.length; j++) {
+        const overlappingRange = overlappingRanges[j];
+        result.push({
+          start: Math.max(range.start, overlappingRange.start),
+          end: Math.min(range.end, overlappingRange.end),
+        });
+      }
     }
   }
-  return ranges1;
+  return result;
 }
 
 export {

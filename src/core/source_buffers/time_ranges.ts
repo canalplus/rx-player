@@ -62,7 +62,7 @@ export default class ManualTimeRanges implements TimeRanges {
     if (end < Infinity) {
       rangesToIntersect.push({ start: end, end: Infinity });
     }
-    keepRangeIntersection(this._ranges, rangesToIntersect);
+    this._ranges = keepRangeIntersection(this._ranges, rangesToIntersect);
     this.length = this._ranges.length;
   }
 
