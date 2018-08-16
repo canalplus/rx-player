@@ -32,14 +32,14 @@ class Player extends React.Component {
     this._$destroySubject = new Subject();
     this._$destroySubject.subscribe(() => player.destroy());
 
-    player.$get("isSeeking", "isBuffering", "isLoading")
+    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading")
       .pipe(takeUntil(this._$destroySubject))
-      .subscribe(([isSeeking, isBuffering, isLoading]) => {
-        if (isSeeking || isBuffering || isLoading) {
+      .subscribe(([isSeeking, isBuffering, isLoading, isReloading]) => {
+        if (isLoading || isReloading) {
+          this.setState({ displaySpinner: true });
+        } else if (isSeeking || isBuffering) {
           this._displaySpinnerTimeout = setTimeout(() => {
-            this.setState({
-              displaySpinner: true,
-            });
+            this.setState({ displaySpinner: true });
           }, SPINNER_TIMEOUT);
         } else {
           if (this._displaySpinnerTimeout) {
@@ -73,10 +73,10 @@ class Player extends React.Component {
   }
 
   onVideoClick() {
-    const { isPaused, hasLoadedContent } =
+    const { isPaused, isContentLoaded } =
       this.state.player.get();
 
-    if (!hasLoadedContent) {
+    if (!isContentLoaded) {
       return;
     }
 

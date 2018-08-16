@@ -9,11 +9,11 @@ import VideoTrack from "./knobs/VideoTrack.jsx";
 const PlayerKnobs = ({
   player,
   availableVideoTracks,
-  hasLoadedContent,
+  isContentLoaded,
   hasEnded,
 }) => {
 
-  if (!hasLoadedContent || hasEnded) {
+  if (!isContentLoaded || hasEnded) {
     return null;
   }
 
@@ -34,7 +34,7 @@ const PlayerKnobs = ({
 export default withModulesState({
   player: {
     isStopped: "isStopped",
-    hasLoadedContent: "hasLoadedContent",
+    isContentLoaded: "isContentLoaded",
     hasEnded: "hasEnded",
     availableVideoTracks: "availableVideoTracks",
   },

@@ -107,7 +107,7 @@ class LogDisplayer extends React.Component {
       this.addLog(text);
     });
 
-    player.$get("hasLoadedContent").pipe(
+    player.$get("hasCurrentContent").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
       filter(x => x)

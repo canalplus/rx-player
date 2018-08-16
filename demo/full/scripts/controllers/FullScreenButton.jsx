@@ -127,7 +127,7 @@ class FullscreenButton extends React.Component {
   render() {
     const {
       className = "",
-      hasLoadedContent,
+      hasCurrentContent,
       hasEnded,
     } = this.props;
     const { isFullscreen } = this.state;
@@ -138,7 +138,7 @@ class FullscreenButton extends React.Component {
           () => { this.exitFullscreen(); } :
           () => { this.requestFullscreen(); }
         }
-        disabled={!hasLoadedContent || hasEnded}
+        disabled={!hasCurrentContent || hasEnded}
         value={String.fromCharCode(isFullscreen ? 0xf066 : 0xf065)}
       />
     );
@@ -147,7 +147,7 @@ class FullscreenButton extends React.Component {
 
 export default withModulesState({
   player: {
-    hasLoadedContent: "hasLoadedContent",
+    hasCurrentContent: "hasCurrentContent",
     hasEnded: "hasEnded",
   },
 })(FullscreenButton);
