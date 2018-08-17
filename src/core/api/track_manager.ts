@@ -22,7 +22,11 @@
 import arrayFind from "array-find";
 import { Subject } from "rxjs";
 import log from "../../log";
-import { Adaptation, Period } from "../../manifest";
+import {
+  Adaptation,
+  Period,
+  Representation,
+} from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";
 import SortedList from "../../utils/sorted_list";
 
@@ -56,17 +60,19 @@ export interface ITMTextTrack {
   id : number|string;
 }
 
+interface ITMVideoRepresentation {
+  id : string|number;
+  bitrate : number;
+  width? : number;
+  height? : number;
+  codec? : string;
+  frameRate? : string;
+}
+
 // video track returned by the TrackManager
 export interface ITMVideoTrack {
   id : number|string;
-  representations: Array<{
-    id : string|number;
-    bitrate : number;
-    width? : number;
-    height? : number;
-    codec? : string;
-    frameRate? : string;
-  }>;
+  representations: ITMVideoRepresentation[];
 }
 
 // audio track from a list of audio tracks returned by the TrackManager
@@ -565,23 +571,10 @@ export default class TrackManager {
     if (!chosenVideoAdaptation) {
       return null;
     }
-
-    const representations = chosenVideoAdaptation
-      .representations
-      .map((representation) => {
-        return {
-          id: representation.id,
-          bitrate: representation.bitrate,
-          frameRate: representation.frameRate,
-          width: representation.width,
-          height: representation.height,
-          codec: representation.codec,
-        };
-      });
-
     return {
       id: chosenVideoAdaptation.id,
-      representations,
+      representations: chosenVideoAdaptation.representations
+        .map(parseVideoRepresentation),
     };
   }
 
@@ -656,24 +649,10 @@ export default class TrackManager {
 
     return videoInfos.adaptations
       .map((adaptation) => {
-
-        const representations = adaptation
-          .representations
-          .map((representation) => {
-            return {
-              id: representation.id,
-              bitrate: representation.bitrate,
-              frameRate: representation.frameRate,
-              width: representation.width,
-              height: representation.height,
-              codec: representation.codec,
-            };
-          });
-
         return {
           id: adaptation.id,
           active: currentId == null ? false : currentId === adaptation.id,
-          representations,
+          representations: adaptation.representations.map(parseVideoRepresentation),
         };
     });
   }
@@ -1018,4 +997,15 @@ function getPeriodItem(
       return periodI;
     }
   }
+}
+
+/**
+ * Parse video Representation into a ITMVideoRepresentation.
+ * @param {Object} representation
+ * @returns {Object}
+ */
+function parseVideoRepresentation(
+  { id, bitrate, frameRate, width, height, codec } : Representation
+) : ITMVideoRepresentation {
+  return { id, bitrate, frameRate, width, height, codec };
 }
