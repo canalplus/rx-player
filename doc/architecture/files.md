@@ -119,7 +119,7 @@ That's where:
   - the buffer is managed
   - the MSE and EME APIs are called and managed
   - the segments are downloaded
-  - ABR strategies are set
+  - adaptive bitrate strategies are set
 
 This directory contains other subdirectories which are listed in the next
 chapter.
@@ -176,7 +176,8 @@ the code is exported in the index.js file at the root of this directory.
 <a name="src-parsers"></a>
 ### src/parsers/: The parsing files ############################################
 
-Functions to parse given formats (isobmff, ttml, sami etc.).
+Functions to parse given formats (isobmff, ttml, sami, DASH and HSS manifests
+etc.).
 
 
 <a name="src-typings"></a>
@@ -241,7 +242,7 @@ Defines functions allowing to handle encrypted contents through the EME APIs.
 <a name="core-pipelines"></a>
 ### src/core/pipelines/: The networking pipelines ##############################
 
-Handle the segment downloading pipelines (resolve/load/parse) as defined in the
+Handle the segment downloading pipelines (load and parse) as defined in the
 ``src/net/`` directory.
 
 This is the layer directly interacting with the transport part (HSS, DASH).
@@ -263,10 +264,8 @@ of content (text, images etc.).
 <a name="core-stream"></a>
 ### src/core/stream/: Media streaming logic ####################################
 
-Main logic for media streaming.
-
 This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate new buffers and link together many subparts of the player.
+instanciate the Buffer and link together many subparts of the player.
 
 
 <a name="tests"></a>
