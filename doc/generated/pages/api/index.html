@@ -60,11 +60,14 @@
 <li><a href="#subchapter-isMute">isMute</a></li>
 <li><a href="#subchapter-getAvailableAudioTracks">getAvailableAudioTracks</a></li>
 <li><a href="#subchapter-getAvailableTextTracks">getAvailableTextTracks</a></li>
+<li><a href="#subchapter-getAvailableVideoTracks">getAvailableVideoTracks</a></li>
 <li><a href="#subchapter-getAudioTrack">getAudioTrack</a></li>
 <li><a href="#subchapter-getTextTrack">getTextTrack</a></li>
+<li><a href="#subchapter-getVideoTrack">getVideoTrack</a></li>
 <li><a href="#subchapter-setAudioTrack">setAudioTrack</a></li>
 <li><a href="#subchapter-setTextTrack">setTextTrack</a></li>
 <li><a href="#subchapter-disableTextTrack">disableTextTrack</a></li>
+<li><a href="#subchapter-setVideoTrack">setVideoTrack</a></li>
 <li><a href="#subchapter-getManifest">getManifest</a></li>
 <li><a href="#subchapter-getCurrentAdaptations">getCurrentAdaptations</a></li>
 <li><a href="#subchapter-getCurrentRepresentations">getCurrentRepresentations</a></li>
@@ -827,7 +830,7 @@ call.</p>
 <p>Each of the objects in the returned array have the following properties:</p>
 <ul>
 <li>
-<p><code>id</code> (<code>Number|string</code>): The id used to identify the track. Use it for
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
 setting the track via <code>setAudioTrack</code>.</p>
 </li>
 <li>
@@ -860,7 +863,7 @@ options</a>), returns an empty Array.</p>
 <p>Each of the objects in the returned array have the following properties:</p>
 <ul>
 <li>
-<p><code>id</code> (<code>Number|string</code>): The id used to identify the track. Use it for
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
 setting the track via <code>setTextTrack</code>.</p>
 </li>
 <li>
@@ -881,6 +884,50 @@ the hard of hearing or not.</p>
 <li>
 <p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
 not.</p>
+</li>
+</ul>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns an empty Array.</p>
+<p><a name="meth-getAvailableVideoTracks"></a>
+<a name="subchapter-getAvailableVideoTracks"></a></p>
+<h3>getAvailableVideoTracks</h3>
+<p><em>returns</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the list of available video tracks for the current content.</p>
+<p>Each of the objects in the returned array have the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether this track is the one currently
+active or not.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>): Representations of this video
+track, with attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
 </li>
 </ul>
 <p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
@@ -947,6 +994,48 @@ the hard of hearing or not.</p>
 <p><code>undefined</code> if no content has been loaded yet.</p>
 <p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>).</p>
+<p><a name="meth-getVideoTrack"></a>
+<a name="subchapter-getVideoTrack"></a></p>
+<h3>getVideoTrack</h3>
+<p><em>returns</em>: <code>Object|null|undefined</code></p>
+<p>Get the video track currently set. <code>null</code> if no video track is enabled right
+now.</p>
+<p>The track is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for setting
+the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>): Representations of this video
+track, with attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><code>undefined</code> if no content has been loaded yet.</p>
+<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
 <p><a name="meth-setAudioTrack"></a>
 <a name="subchapter-setAudioTrack"></a></p>
 <h3>setAudioTrack</h3>
@@ -969,6 +1058,15 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <a name="subchapter-disableTextTrack"></a></p>
 <h3>disableTextTrack</h3>
 <p>Deactivate the current text track, if one.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setVideoTrack"></a>
+<a name="subchapter-setVideoTrack"></a></p>
+<h3>setVideoTrack</h3>
+<p><em>arguments</em>: <code>string|Number</code></p>
+<p>Set a new video track from its id, recuperated from <code>getAvailableVideoTracks</code>.</p>
 <hr>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
 mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
