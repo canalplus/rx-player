@@ -669,8 +669,8 @@ export default {
    * @type {Object}
    */
   ADAPTATION_SWITCH_BUFFER_PADDINGS: {
-    video: { before: 2, after: 3 },
-    audio: { before: 2, after: 2 },
+    video: { before: 0.5, after: 1 },
+    audio: { before: 0.5, after: 2 },
     text: { before: 0, after: 0 }, // not managed natively, so no problem here
     image: { before: 0, after: 0 }, // not managed natively, so no problem here
   },
