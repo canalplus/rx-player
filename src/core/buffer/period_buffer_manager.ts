@@ -16,7 +16,6 @@
 
 import {
   concat as observableConcat,
-  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -46,6 +45,10 @@ import Manifest, {
 } from "../../manifest";
 import arrayIncludes from "../../utils/array-includes";
 import InitializationSegmentCache from "../../utils/initialization_segment_cache";
+import {
+  convertToRanges,
+  keepRangeIntersection,
+} from "../../utils/ranges";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
@@ -616,12 +619,18 @@ function cleanPreviousSourceBuffer(
   currentTime : number
 ) : Observable<void> {
   if (!qSourceBuffer.getBuffered().length) {
-    return EMPTY;
+    return observableOf(undefined);
   }
-  const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
-  const paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after || 0;
+  const bufferedRanges = convertToRanges(qSourceBuffer.getBuffered());
   const start = period.start;
   const end = period.end || Infinity;
+  const intersection = keepRangeIntersection(bufferedRanges, [{ start, end }]);
+  if (!intersection.length) {
+    return observableOf(undefined);
+  }
+
+  const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
+  const paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after || 0;
   if (
     !paddingAfter && !paddingBefore ||
     (currentTime - paddingBefore) >= end ||
