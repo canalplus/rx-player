@@ -496,73 +496,82 @@ export default function PeriodBufferManager(
 
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
 
-      // 1 - create or reuse the SourceBuffer
-      let qSourceBuffer : QueuedSourceBuffer<any>;
-      if (sourceBufferManager.has(bufferType)) {
-        log.info("reusing a previous SourceBuffer for the type", bufferType);
-        qSourceBuffer = sourceBufferManager.get(bufferType);
-      } else {
-        const codec = getFirstDeclaredMimeType(adaptation);
-        const sourceBufferOptions = bufferType === "text" ?
-          options.textTrackOptions : undefined;
-        qSourceBuffer = sourceBufferManager
-          .createSourceBuffer(bufferType, codec, sourceBufferOptions);
-      }
-
-      // 2 - create or reuse the associated BufferGarbageCollector and
-      // SegmentBookkeeper
-      const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
-      const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
-
-      // 3 - Clean possible content from a precedent adaptation in this period
+      const qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation);
       const cleanPreviousBuffer$ = clock$.pipe(
         take(1),
         mergeMap(({ currentTime }) =>
           cleanPreviousSourceBuffer(qSourceBuffer, period, bufferType, currentTime)
         )
       );
-
-      // 3 - create the pipeline
-      const pipelineOptions = getPipelineOptions(
-        bufferType, options.segmentRetry, options.offlineRetry);
-      const pipeline = segmentPipelinesManager
-        .createPipeline(bufferType, pipelineOptions);
-
-      // 4 - create the Buffer
-      const adaptationBuffer$ = AdaptationBuffer(
-        clock$,
-        qSourceBuffer,
-        segmentBookkeeper,
-        pipeline,
-        wantedBufferAhead$,
-        { manifest, period, adaptation },
-        abrManager
-      ).pipe(catchError<IAdaptationBufferEvent<any>, never>((error : Error) => {
-        // non native buffer should not impact the stability of the
-        // player. ie: if a text buffer sends an error, we want to
-        // continue streaming without any subtitles
-        if (!SourceBufferManager.isNative(bufferType)) {
-          log.error("custom buffer: ", bufferType,
-            "has crashed. Aborting it.", error);
-          sourceBufferManager.disposeSourceBuffer(bufferType);
-          return observableConcat(
-            observableOf(EVENTS.warning(error)),
-            createFakeBuffer(
-              clock$, wantedBufferAhead$, bufferType, { manifest, period })
-          );
-        }
-
-        log.error(
-          "native buffer: ", bufferType, "has crashed. Stopping playback.", error);
-        throw error; // else, throw
-      }));
-
-      // 5 - Return the buffer and send right events
+      const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
+      const adaptationBuffer$ = createAdaptationBuffer(
+        bufferType, period, adaptation, qSourceBuffer);
       return observableConcat(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
         cleanPreviousBuffer$.pipe(ignoreElements()),
         observableMerge(adaptationBuffer$, bufferGarbageCollector$)
       );
+    }));
+  }
+
+  /**
+   * @param {string} bufferType
+   * @param {Object} adaptation
+   * @returns {Object}
+   */
+  function createOrReuseQueuedSourceBuffer<T>(
+    bufferType : IBufferType,
+    adaptation : Adaptation
+  ) : QueuedSourceBuffer<T> {
+    if (sourceBufferManager.has(bufferType)) {
+      log.info("reusing a previous SourceBuffer for the type", bufferType);
+      return sourceBufferManager.get(bufferType);
+    }
+    const codec = getFirstDeclaredMimeType(adaptation);
+    const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
+    return sourceBufferManager.createSourceBuffer(bufferType, codec, sbOptions);
+  }
+
+  /**
+   * @param {string} bufferType
+   * @param {Object} period
+   * @param {Object} adaptation
+   * @param {Object} qSourceBuffer
+   * @returns {Observable}
+   */
+  function createAdaptationBuffer<T>(
+    bufferType : IBufferType,
+    period: Period,
+    adaptation : Adaptation,
+    qSourceBuffer : QueuedSourceBuffer<T>
+  ) : Observable<IAdaptationBufferEvent<T>> {
+    const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
+    const pipelineOptions = getPipelineOptions(
+      bufferType, options.segmentRetry, options.offlineRetry);
+    const pipeline = segmentPipelinesManager
+      .createPipeline(bufferType, pipelineOptions);
+     return AdaptationBuffer(
+      clock$,
+      qSourceBuffer,
+      segmentBookkeeper,
+      pipeline,
+      wantedBufferAhead$,
+      { manifest, period, adaptation },
+      abrManager
+    ).pipe(catchError<IAdaptationBufferEvent<any>, never>((error : Error) => {
+      // non native buffer should not impact the stability of the
+      // player. ie: if a text buffer sends an error, we want to
+      // continue streaming without any subtitles
+      if (!SourceBufferManager.isNative(bufferType)) {
+        log.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
+        sourceBufferManager.disposeSourceBuffer(bufferType);
+        return observableConcat<IPeriodBufferEvent>(
+          observableOf(EVENTS.warning(error)),
+          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
+        );
+      }
+      log.error(`native ${bufferType} buffer has crashed. Stopping playback.`, error);
+      throw error;
     }));
   }
 }
