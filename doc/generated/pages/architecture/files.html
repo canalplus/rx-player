@@ -114,7 +114,7 @@ the streaming technology used.</p>
 <li>the buffer is managed</li>
 <li>the MSE and EME APIs are called and managed</li>
 <li>the segments are downloaded</li>
-<li>ABR strategies are set</li>
+<li>adaptive bitrate strategies are set</li>
 </ul>
 <p>This directory contains other subdirectories which are listed in the next
 chapter.</p>
@@ -157,7 +157,8 @@ the code is exported in the index.js file at the root of this directory.</p>
 <p><a name="src-parsers"></a>
 <a name="subchapter-src/parsers/:%20The%20parsing%20files"></a></p>
 <h3>src/parsers/: The parsing files</h3>
-<p>Functions to parse given formats (isobmff, ttml, sami etc.).</p>
+<p>Functions to parse given formats (isobmff, ttml, sami, DASH and HSS manifests
+etc.).</p>
 <p><a name="src-typings"></a>
 <a name="subchapter-src/typings/:%20Typescript%20typings"></a></p>
 <h3>src/typings/: Typescript typings</h3>
@@ -203,7 +204,7 @@ download and push the segments into the sourceBuffers.</p>
 <p><a name="core-pipelines"></a>
 <a name="subchapter-src/core/pipelines/:%20The%20networking%20pipelines"></a></p>
 <h3>src/core/pipelines/: The networking pipelines</h3>
-<p>Handle the segment downloading pipelines (resolve/load/parse) as defined in the
+<p>Handle the segment downloading pipelines (load and parse) as defined in the
 <code>src/net/</code> directory.</p>
 <p>This is the layer directly interacting with the transport part (HSS, DASH).
 It facilitates the role of loading manifest and new segments for the rest of the
@@ -219,9 +220,8 @@ of content (text, images etc.).</p>
 <p><a name="core-stream"></a>
 <a name="subchapter-src/core/stream/:%20Media%20streaming%20logic"></a></p>
 <h3>src/core/stream/: Media streaming logic</h3>
-<p>Main logic for media streaming.</p>
 <p>This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate new buffers and link together many subparts of the player.</p>
+instanciate the Buffer and link together many subparts of the player.</p>
 <p><a name="tests"></a>
 <a name="chapter-The%20tests/%20directory:%20Test%20strategies%20and%20integration%20tests"></a></p>
 <h2>The tests/ directory: Test strategies and integration tests</h2>
