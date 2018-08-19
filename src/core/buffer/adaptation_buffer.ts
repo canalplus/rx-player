@@ -92,7 +92,6 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
  * @param {Observable} wantedBufferAhead$ - Emits the buffer goal
  * @param {Object} content - Content to download
  * @param {Object} abrManager
- * @param {Observable} abrBaseClock$
  * @returns {Observable}
  */
 export default function AdaptationBuffer<T>(
