@@ -369,8 +369,10 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
     // mediaElement.play is not always a Promise. In the improbable case it
     // throws, I prefer still to catch to return the error wrapped in an
     // Observable
-    tryCatch(() => castToObservable(mediaElement.play()))
-      .pipe(mapTo(undefined))
+    tryCatch(() =>
+      castToObservable(mediaElement.play())
+        .pipe(mapTo(undefined))
+    )
   );
 }
 
