@@ -232,21 +232,12 @@ function getABRForAdaptation(
   const abrClock$ = abrBaseClock$.pipe(
     map((tick) => {
       let bitrate;
-      let lastIndexPosition;
 
       if (currentRepresentation) {
         bitrate = currentRepresentation.bitrate;
-
-        if (currentRepresentation.index) {
-          lastIndexPosition =
-            currentRepresentation.index.getLastPosition();
-        }
       }
 
-      return objectAssign({
-        bitrate,
-        lastIndexPosition,
-      }, tick);
+      return objectAssign({ bitrate }, tick);
     }));
 
   return abrManager.get$(adaptation.type, abrClock$, representations).pipe(
