@@ -113,7 +113,6 @@
     "array-find-index": "^1.0.2",
     "deep-equal": "^1.0.1",
     "next-tick": "^1.0.0",
-    "npm": "^5.6.0",
     "object-assign": "^4.1.1",
     "rxjs": "^6.2.1"
   },
