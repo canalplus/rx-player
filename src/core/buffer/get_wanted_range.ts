@@ -53,8 +53,8 @@ export default function getWantedRange(
   // Difference between the current time and the end of the current range
   const bufferGap = getLeftSizeOfRange(buffered, currentTime);
 
-  // the ts padding is the time offset that we want to apply to our current
-  // start in order to calculate the starting point of the list of
+  // the timestamp padding is the time offset that we want to apply to our
+  // current start in order to calculate the starting point of the list of
   // segments to inject.
   const timestampPadding = bufferGap > lowPadding && bufferGap < Infinity ?
     Math.min(bufferGap, highPadding) : 0;
