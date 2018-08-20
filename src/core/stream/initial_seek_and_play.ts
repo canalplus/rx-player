@@ -61,6 +61,16 @@ function doInitialSeek(
 }
 
 /**
+ * Returns two Observables:
+ *
+ *   - seek$: when subscribed, will seek to the wanted started time as soon as
+ *     it can. Emit and complete when done.
+ *
+ *   - load$: when subscribed, will play if and only if the `mustAutoPlay`
+ *     option is set as soon as it can. Emit and complete when done.
+ *     When this observable emits, it also means that the content is `loaded`
+ *     and can begin to play the current content.
+ *
  * @param {HTMLMediaElement} mediaElement
  * @param {number|Function} startTime - Initial starting position. As seconds
  * or as a function returning seconds.

@@ -37,12 +37,12 @@ export interface IStallingItem {
 /**
  * Receive "stalling" events from the clock, try to get out of it, and re-emit
  * them for the player if the stalling status changed.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @param {Observable} timings$
  * @returns {Observable}
  */
 function StallingManager(
-  videoElement : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   timings$ : Observable<IStreamClockTick>
 ) : Observable<IStallingItem|null> {
   return timings$.pipe(
@@ -71,11 +71,11 @@ function StallingManager(
         )
       ) {
         log.warn("after freeze seek", currentTime, timing.currentRange);
-        videoElement.currentTime = currentTime;
+        mediaElement.currentTime = currentTime;
       } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
         const seekTo = (currentTime + nextRangeGap + 1 / 60);
         log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
-        videoElement.currentTime = seekTo;
+        mediaElement.currentTime = seekTo;
       }
     }),
     share(),

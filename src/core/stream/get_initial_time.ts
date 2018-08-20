@@ -40,7 +40,6 @@ export interface IInitialTimeOptions {
  *   2. else if the video is live, use the live edge and suggested delays from
  *      it
  *   3. else returns the minimum time announced in the manifest
- *
  * @param {Manifest} manifest
  * @param {Object} startAt
  * @returns {Number}

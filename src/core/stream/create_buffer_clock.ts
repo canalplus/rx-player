@@ -32,14 +32,12 @@ import { IPeriodBufferManagerClockTick } from "../buffer";
 import { IStreamClockTick } from "./types";
 
 /**
- * Create clock$ and seekings$ Observables:
- *   - clock$ is the given clock$ observable with added informations.
- *   - seekings$ emits each time the player go in a seeking state.
+ * Create clock Observable for the Buffer.
  * @param {Object} manifest
  * @param {Observable} streamClock$
  * @param {Observable} initialSeek$
  * @param {Number} startTime
- * @returns {Object}
+ * @returns {Observable}
  */
 export default function createBufferClock(
   manifest : Manifest,

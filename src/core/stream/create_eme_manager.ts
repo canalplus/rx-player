@@ -24,6 +24,13 @@ import log from "../../log";
 import { IEMEManagerEvent } from "../eme";
 import { IKeySystemOption } from "../eme/types";
 
+/**
+ * Create EMEManager if possible (has the APIs and configuration).
+ * Else, return an Observable throwing at the next encrypted event encountered.
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Array.<Object>} keySystems
+ * @returns {Observable}
+ */
 export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[]

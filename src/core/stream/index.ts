@@ -59,7 +59,7 @@ import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
 import loadStreamOnMediaSource, {
-  IStartStreamEvent,
+  ILoadStreamEvent,
 } from "./load_stream_on_media_source";
 import createMediaErrorManager from "./media_error_manager";
 import {
@@ -68,6 +68,11 @@ import {
   IStreamWarningEvent,
 } from "./types";
 
+/**
+ * Returns pipeline options based on the global config and the user config.
+ * @param {Object} networkConfig
+ * @returns {Object}
+ */
 function getManifestPipelineOptions(
   networkConfig: {
     manifestRetry? : number;
@@ -117,7 +122,7 @@ export interface IStreamOptions {
 // Every events emitted by the stream.
 export type IStreamEvent =
   IManifestReadyEvent |
-  IStartStreamEvent |
+  ILoadStreamEvent |
   IEMEManagerEvent |
   IStreamWarningEvent;
 
@@ -132,7 +137,6 @@ export type IStreamEvent =
  *  - get Buffers for each active adaptations.
  *  - give choice of the adaptation to the caller (e.g. to choose a language)
  *  - returns Observable emitting notifications about the stream lifecycle.
- *
  * @param {Object} args
  * @returns {Observable}
  */
@@ -152,7 +156,7 @@ export default function Stream({
   url,
   videoElement,
 } : IStreamOptions) : Observable<IStreamEvent> {
-  // Observable through which all warning events will be sent.
+  // Subject through which warnings will be sent
   const warning$ = new Subject<Error|ICustomError>();
 
   // Fetch and parse the manifest from the URL given.
