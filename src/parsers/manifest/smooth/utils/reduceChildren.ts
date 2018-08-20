@@ -16,7 +16,6 @@
 
 /**
  * Reduce implementation for the children of the given element.
- * TODO better typings
  * @param {Element} root
  * @param {Function} fn
  * @param {*} init
@@ -24,14 +23,14 @@
  */
 export default function reduceChildren<T>(
   root : Element,
-  fn : (r : T, nodeName : string, node : Element) => T,
+  fn : (accumulator : T, nodeName : string, node : Element) => T,
   init : T
 ) : T {
   let node = root.firstElementChild;
-  let r = init;
+  let accumulator = init;
   while (node) {
-    r = fn(r, node.nodeName, node);
+    accumulator = fn(accumulator, node.nodeName, node);
     node = node.nextElementSibling;
   }
-  return r;
+  return accumulator;
 }

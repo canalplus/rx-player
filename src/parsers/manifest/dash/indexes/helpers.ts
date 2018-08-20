@@ -18,9 +18,9 @@ import { ISegment } from "../../../../manifest";
 import { replaceSegmentDASHTokens } from "../helpers";
 
 interface IIndexSegment {
-  start: number; // start timestamp
-  d: number; // duration
-  r: number; // repeat counter
+  start: number;
+  duration: number;
+  repeatCount: number; // repeat counter
   range?: [number, number];
 }
 
@@ -35,7 +35,7 @@ function calculateRepeat(
   element : IIndexSegment,
   nextElement : IIndexSegment
 ) : number {
-  let rep = element.r || 0;
+  let rep = element.repeatCount || 0;
 
   // A negative value of the @r attribute of the S element indicates
   // that the duration indicated in @d attribute repeats until the
@@ -43,7 +43,7 @@ function calculateRepeat(
   // next MPD update.
   if (rep < 0) {
     const repEnd = nextElement ? nextElement.start : Infinity;
-    rep = Math.ceil((repEnd - element.start) / element.d) - 1;
+    rep = Math.ceil((repEnd - element.start) / element.duration) - 1;
   }
 
   return rep;
@@ -106,8 +106,12 @@ function getTimescaledRange(
  * @param {Object} element
  * @returns {Number} - absolute start time of the range
  */
-function getTimelineItemRangeStart({ start, d, r }: IIndexSegment) : number {
-  return d === -1 ? start : start + r * d;
+function getTimelineItemRangeStart({
+  start,
+  duration,
+  repeatCount,
+}: IIndexSegment) : number {
+  return duration === -1 ? start : start + repeatCount * duration;
 }
 
 /**
@@ -115,8 +119,12 @@ function getTimelineItemRangeStart({ start, d, r }: IIndexSegment) : number {
  * @param {Object} element
  * @returns {Number} - absolute end time of the range
  */
-function getTimelineItemRangeEnd({ start, d, r }: IIndexSegment) : number {
-  return d === -1 ? start : start + (r + 1) * d;
+function getTimelineItemRangeEnd({
+  start,
+  duration,
+  repeatCount,
+}: IIndexSegment) : number {
+  return duration === -1 ? start : start + (repeatCount + 1) * duration;
 }
 
 /**
@@ -188,10 +196,10 @@ function getSegmentsFromTimeline(
     indexTimeOffset : number;
   },
   from : number,
-  duration : number
+  durationWanted : number
 ) : ISegment[] {
   const scaledUp = toIndexTime(index, from);
-  const scaledTo = toIndexTime(index, from + duration);
+  const scaledTo = toIndexTime(index, from + durationWanted);
   const { timeline, timescale, mediaURL, startNumber } = index;
 
   let currentNumber = startNumber != null ? startNumber : undefined;
@@ -201,16 +209,16 @@ function getSegmentsFromTimeline(
   const timelineLength = timeline.length;
 
   // TODO(pierre): use @maxSegmentDuration if possible
-  let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
+  let maxEncounteredDuration = (timeline.length && timeline[0].duration) || 0;
 
   for (let i = 0; i < timelineLength; i++) {
     const timelineItem = timeline[i];
-    const { d, start, range } = timelineItem;
+    const { duration, start, range } = timelineItem;
 
-    maxEncounteredDuration = Math.max(maxEncounteredDuration, d);
+    maxEncounteredDuration = Math.max(maxEncounteredDuration, duration);
 
     // live-added segments have @d attribute equals to -1
-    if (d < 0) {
+    if (duration < 0) {
       // TODO what? May be to play it safe and avoid adding segments which are
       // not completely generated
       if (start + maxEncounteredDuration < scaledTo) {
@@ -232,8 +240,8 @@ function getSegmentsFromTimeline(
     }
 
     const repeat = calculateRepeat(timelineItem, timeline[i + 1]);
-    let segmentNumberInCurrentRange = getWantedRepeatIndex(start, d, scaledUp);
-    let segmentTime = start + segmentNumberInCurrentRange * d;
+    let segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
+    let segmentTime = start + segmentNumberInCurrentRange * duration;
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
       const segmentNumber = currentNumber != null ?
         currentNumber + segmentNumberInCurrentRange : undefined;
@@ -242,7 +250,7 @@ function getSegmentsFromTimeline(
         time: segmentTime - index.indexTimeOffset,
         isInit: false,
         range,
-        duration: d,
+        duration,
         timescale,
         mediaURL: replaceSegmentDASHTokens(mediaURL, segmentTime, segmentNumber),
         number: segmentNumber,
@@ -252,7 +260,7 @@ function getSegmentsFromTimeline(
 
       // update segment number and segment time for the next segment
       segmentNumberInCurrentRange++;
-      segmentTime = start + segmentNumberInCurrentRange * d;
+      segmentTime = start + segmentNumberInCurrentRange * duration;
     }
 
     if (segmentTime >= scaledTo) {

@@ -21,9 +21,9 @@ import {
 import { replaceSegmentSmoothTokens } from "./utils/tokens";
 
 export interface IIndexSegment {
-  start : number; // start timestamp
-  d : number; // duration
-  r : number; // repeat counter
+  start : number;
+  duration : number;
+  repeatCount: number;
 }
 
 interface ITimelineIndex {
@@ -84,7 +84,7 @@ function _addSegmentInfos(
     (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {
     const newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration;
-    const lastSegmentStart = (last.start + (last.d || 0) * last.r);
+    const lastSegmentStart = (last.start + (last.duration || 0) * last.repeatCount);
     const startDiff = newSegmentStart - lastSegmentStart;
 
     if (startDiff <= 0) { // same segment / behind the last
@@ -94,20 +94,20 @@ function _addSegmentInfos(
     // try to use the compact notation with @r attribute on the last
     // to elements of the timeline if we find out they have the same
     // duration
-    if (last.d === -1) {
+    if (last.duration === -1) {
       const prev = timeline[timelineLength - 2];
-      if (prev && prev.d === startDiff) {
-        prev.r++;
+      if (prev && prev.duration === startDiff) {
+        prev.repeatCount++;
         timeline.pop();
       } else {
-        last.d = startDiff;
+        last.duration = startDiff;
       }
     }
 
     index.timeline.push({
-      d: -1,
+      duration: -1,
       start: newSegmentStart,
-      r: 0,
+      repeatCount: 0,
     });
     return true;
   }
@@ -116,13 +116,13 @@ function _addSegmentInfos(
   // just need to push a new element in the timeline, or increase
   // the @r attribute of the last element.
   else if (scaledNewSegment.time >= getTimelineRangeEnd(last)) {
-    if (last.d === scaledNewSegment.duration) {
-      last.r++;
+    if (last.duration === scaledNewSegment.duration) {
+      last.repeatCount++;
     } else {
       index.timeline.push({
-        d: scaledNewSegment.duration,
+        duration: scaledNewSegment.duration,
         start: scaledNewSegment.time,
-        r: 0,
+        repeatCount: 0,
       });
     }
     return true;
@@ -184,12 +184,13 @@ function getSegmentNumber(
  * @param {Object} range
  * @returns {Number} - absolute end time of the range
  */
-function getTimelineRangeEnd({ start, d, r }: {
+function getTimelineRangeEnd({ start, duration, repeatCount }: {
   start : number;
-  d? : number;
-  r : number;
+  duration? : number;
+  repeatCount : number;
 }) : number {
-  return (d == null || d === -1) ? start : start + (r + 1) * d;
+  return (duration == null || duration === -1) ?
+    start : start + (repeatCount + 1) * duration;
 }
 
 // interface ISmoothIndex {
@@ -236,16 +237,16 @@ function calculateRepeat(
   segment : IIndexSegment,
   nextSegment : IIndexSegment
 ) : number {
-  let repeatCount = segment.r || 0;
+  let repeatCount = segment.repeatCount || 0;
 
   // A negative value of the @r attribute of the S element indicates
   // that the duration indicated in @d attribute repeats until the
   // start of the next S element, the end of the Period or until the
   // next MPD update.
   // TODO Also for SMOOTH????
-  if (segment.d != null && repeatCount < 0) {
+  if (segment.duration != null && repeatCount < 0) {
     const repeatEnd = nextSegment ? nextSegment.start : Infinity;
-    repeatCount = Math.ceil((repeatEnd - segment.start) / segment.d) - 1;
+    repeatCount = Math.ceil((repeatEnd - segment.start) / segment.duration) - 1;
   }
 
   return repeatCount;
@@ -345,16 +346,16 @@ export default class SmoothRepresentationIndex
       const timelineLength = timeline.length;
 
       // TODO(pierre): use @maxSegmentDuration if possible
-      let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
+      let maxEncounteredDuration = (timeline.length && timeline[0].duration) || 0;
 
       for (let i = 0; i < timelineLength; i++) {
         const segmentRange = timeline[i];
-        const { d, start } = segmentRange;
+        const { duration, start } = segmentRange;
 
-        maxEncounteredDuration = Math.max(maxEncounteredDuration, d || 0);
+        maxEncounteredDuration = Math.max(maxEncounteredDuration, duration || 0);
 
         // live-added segments have @d attribute equals to -1
-        if (d != null && d < 0) {
+        if (duration != null && duration < 0) {
           // TODO what? May be to play it safe and avoid adding segments which are
           // not completely generated
           if (start + maxEncounteredDuration < to) {
@@ -373,8 +374,9 @@ export default class SmoothRepresentationIndex
         }
 
         const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
-        let segmentNumberInCurrentRange = getSegmentNumber(start, up, d);
-        let segmentTime = start + segmentNumberInCurrentRange * (d == null ? 0 : d);
+        let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
+        let segmentTime = start + segmentNumberInCurrentRange *
+          (duration == null ? 0 : duration);
         while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
           const time = segmentTime;
           const number = currentNumber != null ?
@@ -383,7 +385,7 @@ export default class SmoothRepresentationIndex
             id: "" + segmentTime,
             time,
             isInit: false,
-            duration: d,
+            duration,
             timescale,
             number,
             mediaURL: replaceSegmentSmoothTokens(media, time),
@@ -392,7 +394,7 @@ export default class SmoothRepresentationIndex
 
           // update segment number and segment time for the next segment
           segmentNumberInCurrentRange++;
-          segmentTime = start + segmentNumberInCurrentRange * d;
+          segmentTime = start + segmentNumberInCurrentRange * duration;
         }
 
         if (segmentTime >= to) {
@@ -426,10 +428,10 @@ export default class SmoothRepresentationIndex
         return false;
       }
 
-      const repeat = lastSegmentInCurrentTimeline.r || 0;
+      const repeat = lastSegmentInCurrentTimeline.repeatCount || 0;
       const endOfLastSegmentInCurrentTimeline =
         lastSegmentInCurrentTimeline.start + (repeat + 1) *
-          lastSegmentInCurrentTimeline.d;
+          lastSegmentInCurrentTimeline.duration;
 
       if (to * timescale < endOfLastSegmentInCurrentTimeline) {
         return false;
@@ -442,7 +444,8 @@ export default class SmoothRepresentationIndex
       // ----
 
       const startOfLastSegmentInCurrentTimeline =
-        lastSegmentInCurrentTimeline.start + repeat * lastSegmentInCurrentTimeline.d;
+        lastSegmentInCurrentTimeline.start + repeat *
+          lastSegmentInCurrentTimeline.duration;
 
       return up > startOfLastSegmentInCurrentTimeline;
     }
@@ -500,7 +503,7 @@ export default class SmoothRepresentationIndex
       }
 
       const range = timeline[segmentIndex];
-      if (range.d === -1) {
+      if (range.duration === -1) {
         return -1;
       }
 

@@ -22,9 +22,9 @@ import parseS, {
 export type IParsedTimeline = ITimelineElement[];
 
 export interface ITimelineElement {
-  start: number; // Time of start, timescaled. TODO Rename
-  r: number; // Amount of repetition(s), 0 = no repeat. TODO Rename
-  d: number; // Duration of a segment. TODO Rename
+  start: number;
+  repeatCount: number; // Amount of repetition(s), 0 = no repeat. TODO Rename
+  duration: number;
 }
 
 function fromParsedSToTimelineElement(
@@ -33,27 +33,27 @@ function fromParsedSToTimelineElement(
   nextS : IParsedS|null
 ) : ITimelineElement|null {
   let start = parsedS.start;
-  let d = parsedS.d;
-  const r = parsedS.r;
-  if (start == null && previousS && previousS.d != null) {
-    start = previousS.start + (previousS.d * (previousS.r + 1));
+  let duration = parsedS.duration;
+  const repeatCount = parsedS.repeatCount;
+  if (start == null && previousS && previousS.duration != null) {
+    start = previousS.start + (previousS.duration * (previousS.repeatCount + 1));
   }
   if (
-    (d == null || isNaN(d)) &&
+    (duration == null || isNaN(duration)) &&
     nextS && nextS.start != null && !isNaN(nextS.start) &&
     start != null && !isNaN(start)
   ) {
-    d = nextS.start - start;
+    duration = nextS.start - start;
   }
   if (
     (start != null && !isNaN(start)) &&
-    (d != null && !isNaN(d)) &&
-    (r == null || !isNaN(r))
+    (duration != null && !isNaN(duration)) &&
+    (repeatCount == null || !isNaN(repeatCount))
   ) {
     return {
       start,
-      d,
-      r: r || 0,
+      duration,
+      repeatCount: repeatCount || 0,
     };
   }
   log.warn("DASH: A \"S\" Element could not have been parsed.");

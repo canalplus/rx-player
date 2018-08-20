@@ -16,8 +16,8 @@
 
 interface IHSSManifestSegment {
   start : number;
-  d : number;
-  r : number;
+  duration : number;
+  repeatCount : number;
 }
 
 /**
@@ -32,22 +32,22 @@ export default function parseCNodes(
     const tAttr = node.getAttribute("t");
     const rAttr = node.getAttribute("r");
 
-    const r = rAttr ? +rAttr - 1 : 0;
+    const repeatCount = rAttr ? +rAttr - 1 : 0;
     let start = tAttr ? +tAttr : undefined;
-    let d = dAttr ? +dAttr : undefined;
+    let duration = dAttr ? +dAttr : undefined;
 
     if (i === 0) { // first node
       start = start || 0;
     } else { // from second node to the end
       const prev = timeline[i - 1];
       if (start == null || isNaN(start)) {
-        if (prev.d == null || isNaN(prev.d)) {
+        if (prev.duration == null || isNaN(prev.duration)) {
           throw new Error("Smooth: Invalid CNodes. Missing timestamp.");
         }
-        start = prev.start + prev.d * (prev.r + 1);
+        start = prev.start + prev.duration * (prev.repeatCount + 1);
       }
     }
-    if (d == null || isNaN(d)) {
+    if (duration == null || isNaN(duration)) {
       const nextNode = nodes[i + 1];
       if (nextNode) {
         const nextTAttr = nextNode.getAttribute("t");
@@ -56,12 +56,12 @@ export default function parseCNodes(
           throw new Error(
             "Can't build index timeline from Smooth Manifest.");
         }
-        d = nextStart - start;
+        duration = nextStart - start;
       } else {
         return timeline;
       }
     }
-    timeline.push({ d, start, r });
+    timeline.push({ duration, start, repeatCount });
     return timeline;
   }, []);
 }
