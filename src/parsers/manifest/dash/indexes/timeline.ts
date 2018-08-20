@@ -98,12 +98,12 @@ export interface ITimelineIndexContextArgument {
 /**
  * Get index of the segment containing the given timescaled timestamp.
  * @param {Object} index
- * @param {Number} ts
+ * @param {Number} start
  * @returns {Number}
  */
 function getSegmentIndex(
   index : ITimelineIndex,
-  ts : number
+  start : number
 ) : number {
   const { timeline } = index;
 
@@ -112,7 +112,7 @@ function getSegmentIndex(
 
   while (low < high) {
     const mid = (low + high) >>> 1;
-    if (timeline[mid].ts < ts) {
+    if (timeline[mid].start < start) {
       low = mid + 1;
     } else {
       high = mid;
@@ -162,17 +162,17 @@ function _addSegmentInfos(
   }
 
   // in some circumstances, the new segment informations are only
-  // duration informations that we can use to deduct the ts of the
+  // duration informations that we can use to deduct the start of the
   // next segment. this is the case where the new segment are
-  // associated to a current segment and have the same ts
+  // associated to a current segment and have the same start
   const shouldDeductNextSegment = scaledCurrentTime != null &&
     (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {
-    const newSegmentTs = scaledNewSegment.time + scaledNewSegment.duration;
-    const lastSegmentTs = (lastItem.ts + lastItem.d * lastItem.r);
-    const tsDiff = newSegmentTs - lastSegmentTs;
+    const newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration;
+    const lastSegmentStart = (lastItem.start + lastItem.d * lastItem.r);
+    const startDiff = newSegmentStart - lastSegmentStart;
 
-    if (tsDiff <= 0) { // same segment / behind the lastItem
+    if (startDiff <= 0) { // same segment / behind the lastItem
       return false;
     }
 
@@ -181,17 +181,17 @@ function _addSegmentInfos(
     // duration
     if (lastItem.d === -1) {
       const prev = timeline[timelineLength - 2];
-      if (prev && prev.d === tsDiff) {
+      if (prev && prev.d === startDiff) {
         prev.r++;
         timeline.pop();
       } else {
-        lastItem.d = tsDiff;
+        lastItem.d = startDiff;
       }
     }
 
     index.timeline.push({
       d: -1,
-      ts: newSegmentTs,
+      start: newSegmentStart,
       r: 0,
     });
     return true;
@@ -206,7 +206,7 @@ function _addSegmentInfos(
     } else {
       index.timeline.push({
         d: scaledNewSegment.duration,
-        ts: scaledNewSegment.time,
+        start: scaledNewSegment.time,
         r: 0,
       });
     }
@@ -298,7 +298,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     if (lastItem.d < 0) {
-      lastItem = { ts: lastItem.ts, d: 0, r: lastItem.r };
+      lastItem = { start: lastItem.start, d: 0, r: lastItem.r };
     }
 
     return scaledTo > getTimelineItemRangeEnd(lastItem);
@@ -313,7 +313,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (!index.timeline.length) {
       return undefined;
     }
-    return fromIndexTime(index, index.timeline[0].ts);
+    return fromIndexTime(index, index.timeline[0].start);
   }
 
   /**
@@ -336,8 +336,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    *     is inferior to the timescale)
    *   - The next range starts after the end of the current range.
    * @param {Number} _time
-   * @returns {Number} - If a discontinuity is present, this is the Starting ts
-   * for the next (discontinuited) range. If not this is equal to -1.
+   * @returns {Number} - If a discontinuity is present, this is the Starting
+   * time for the next (discontinuited) range. If not this is equal to -1.
    */
   checkDiscontinuity(_time : number) : number {
     const { timeline, timescale } = this._index;
@@ -362,16 +362,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return -1;
     }
 
-    const rangeUp = timelineItem.ts;
+    const rangeUp = timelineItem.start;
     const rangeTo = getTimelineItemRangeEnd(timelineItem);
 
     // when we are actually inside the found range and this range has
     // an explicit discontinuity with the next one
-    if (rangeTo !== nextRange.ts &&
+    if (rangeTo !== nextRange.start &&
         scaledTime >= rangeUp &&
         scaledTime <= rangeTo &&
         (rangeTo - scaledTime) < timescale) {
-      return fromIndexTime(this._index, nextRange.ts);
+      return fromIndexTime(this._index, nextRange.start);
     }
 
     return -1;

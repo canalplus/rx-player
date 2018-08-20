@@ -15,7 +15,7 @@
  */
 
 interface IHSSManifestSegment {
-  ts : number;
+  start : number;
   d : number;
   r : number;
 }
@@ -33,35 +33,35 @@ export default function parseCNodes(
     const rAttr = node.getAttribute("r");
 
     const r = rAttr ? +rAttr - 1 : 0;
-    let ts = tAttr ? +tAttr : undefined;
+    let start = tAttr ? +tAttr : undefined;
     let d = dAttr ? +dAttr : undefined;
 
     if (i === 0) { // first node
-      ts = ts || 0;
+      start = start || 0;
     } else { // from second node to the end
       const prev = timeline[i - 1];
-      if (ts == null || isNaN(ts)) {
+      if (start == null || isNaN(start)) {
         if (prev.d == null || isNaN(prev.d)) {
           throw new Error("Smooth: Invalid CNodes. Missing timestamp.");
         }
-        ts = prev.ts + prev.d * (prev.r + 1);
+        start = prev.start + prev.d * (prev.r + 1);
       }
     }
     if (d == null || isNaN(d)) {
       const nextNode = nodes[i + 1];
       if (nextNode) {
         const nextTAttr = nextNode.getAttribute("t");
-        const nextTS = nextTAttr ? +nextTAttr : null;
-        if (nextTS === null) {
+        const nextStart = nextTAttr ? +nextTAttr : null;
+        if (nextStart === null) {
           throw new Error(
             "Can't build index timeline from Smooth Manifest.");
         }
-        d = nextTS - ts;
+        d = nextStart - start;
       } else {
         return timeline;
       }
     }
-    timeline.push({ d, ts, r });
+    timeline.push({ d, start, r });
     return timeline;
   }, []);
 }

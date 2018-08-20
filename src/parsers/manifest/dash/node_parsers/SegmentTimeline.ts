@@ -22,7 +22,7 @@ import parseS, {
 export type IParsedTimeline = ITimelineElement[];
 
 export interface ITimelineElement {
-  ts: number; // Time of start, timescaled. TODO Rename
+  start: number; // Time of start, timescaled. TODO Rename
   r: number; // Amount of repetition(s), 0 = no repeat. TODO Rename
   d: number; // Duration of a segment. TODO Rename
 }
@@ -32,26 +32,26 @@ function fromParsedSToTimelineElement(
   previousS : ITimelineElement|null,
   nextS : IParsedS|null
 ) : ITimelineElement|null {
-  let ts = parsedS.ts;
+  let start = parsedS.start;
   let d = parsedS.d;
   const r = parsedS.r;
-  if (ts == null && previousS && previousS.d != null) {
-    ts = previousS.ts + (previousS.d * (previousS.r + 1));
+  if (start == null && previousS && previousS.d != null) {
+    start = previousS.start + (previousS.d * (previousS.r + 1));
   }
   if (
     (d == null || isNaN(d)) &&
-    nextS && nextS.ts != null && !isNaN(nextS.ts) &&
-    ts != null && !isNaN(ts)
+    nextS && nextS.start != null && !isNaN(nextS.start) &&
+    start != null && !isNaN(start)
   ) {
-    d = nextS.ts - ts;
+    d = nextS.start - start;
   }
   if (
-    (ts != null && !isNaN(ts)) &&
+    (start != null && !isNaN(start)) &&
     (d != null && !isNaN(d)) &&
     (r == null || !isNaN(r))
   ) {
     return {
-      ts,
+      start,
       d,
       r: r || 0,
     };
