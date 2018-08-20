@@ -57,7 +57,7 @@ class Representation {
 
   /**
    * @constructor
-   * @param {Object|undefined} args
+   * @param {Object} args
    */
   constructor(args : IRepresentationArguments) {
     const nId = generateNewId();
@@ -88,7 +88,10 @@ class Representation {
     this.index = args.index;
   }
 
-  getMimeTypeString() {
+  /**
+   * @returns {string}
+   */
+  getMimeTypeString() : string {
     return `${this.mimeType};codecs="${this.codec}"`;
   }
 }

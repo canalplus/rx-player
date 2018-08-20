@@ -26,12 +26,6 @@ export type IAdaptationType = "video"|"audio"|"text"|"image";
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
   ["audio", "video", "text", "image"];
 
-// TODO
-export interface IContentProtectionDASH {
-  schemeIdUri?: string;
-  value?: string;
-}
-
 export interface IAdaptationArguments {
   // -- required
   representations : IRepresentationArguments[];
@@ -44,7 +38,6 @@ export interface IAdaptationArguments {
   language? : string;
   manuallyAdded? : boolean;
   normalizedLanguage? : string;
-  contentProtection? : IContentProtectionDASH;
 }
 
 /**
@@ -58,7 +51,6 @@ class Adaptation {
   public readonly type : IAdaptationType;
 
   // optional
-  public contentProtection? : IContentProtectionDASH;
   public isAudioDescription? : boolean;
   public isClosedCaption? : boolean;
   public language? : string;
@@ -67,6 +59,7 @@ class Adaptation {
 
   /**
    * @constructor
+   * @param {Object} args
    */
   constructor(args : IAdaptationArguments) {
     const nId = generateNewId();
@@ -90,11 +83,6 @@ class Adaptation {
     }
     if (args.audioDescription != null) {
       this.isAudioDescription = args.audioDescription;
-    }
-
-    // TODO move to DASH's Segment private infos
-    if (args.contentProtection != null) {
-      this.contentProtection = args.contentProtection;
     }
 
     // for manuallyAdded adaptations (not in the manifest)

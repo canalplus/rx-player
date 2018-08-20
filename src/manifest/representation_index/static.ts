@@ -30,7 +30,10 @@ export interface IStaticRepresentationIndexInfos {
 export default class StaticRepresentationIndex implements IRepresentationIndex {
   private readonly _media: string;
 
-  constructor(infos: IStaticRepresentationIndexInfos) {
+  /**
+   * @param {Object} infos
+   */
+  constructor(infos : IStaticRepresentationIndexInfos) {
     this._media = infos.media;
   }
 

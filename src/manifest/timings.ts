@@ -15,7 +15,7 @@
  */
 
 /**
- * TODO methods of manifest class?
+ * TODO implement as methods of manifest class?
  */
 import Manifest from "./index";
 

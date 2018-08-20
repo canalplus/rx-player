@@ -49,6 +49,7 @@ import { IRepresentationArguments } from "./representation";
  * manifest as an adaptation.
  * @param {Array.<Object>|Object} externalImageTracks - Will be added to the
  * manifest as an adaptation.
+ * @param {Subject} warning$
  * @returns {Object}
  */
 export default function createManifest(
@@ -96,6 +97,7 @@ export default function createManifest(
  * Throws if something is wrong.
  *
  * @param {Array.<Object>} initialAdaptations
+ * @param {Subject} warning$
  * @returns {Array.<Object>}
  */
 function checkAdaptations(
