@@ -15,7 +15,6 @@
  */
 
 import {
-  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -42,43 +41,24 @@ function regularSegmentLoader(
 ) : ILoaderObservable<ArrayBuffer> {
   const { range, indexRange } = segment;
 
-  // fire a single time contiguous init and index ranges.
-  if (
-    range && indexRange &&
-    range[1] === indexRange[0] - 1
-  ) {
+  // fire a single time for init and index ranges
+  if (range != null && indexRange != null) {
     return request({
       url,
       responseType: "arraybuffer",
       headers: {
-        Range: byteRange([range[0], indexRange[1]]),
+        Range: byteRange([
+          Math.min(range[0], indexRange[0]),
+          Math.max(range[1], indexRange[1]),
+        ]),
       },
     });
   }
-
-  const mediaHeaders = range ?
-    { Range: byteRange(range) } : null;
-
-  const mediaOrInitRequest = request({
+  return request({
     url,
     responseType: "arraybuffer",
-    headers: mediaHeaders,
+    headers: range ? { Range: byteRange(range) } : null,
   });
-
-  // If init segment has indexRange metadata, we need to fetch
-  // both the initialization data and the index metadata. We do
-  // this in parallel and send the both blobs into the pipeline.
-  if (indexRange) {
-    const indexRequest = request({
-      url,
-      responseType: "arraybuffer",
-      headers: { Range: byteRange(indexRange) },
-    });
-    return observableMerge(mediaOrInitRequest, indexRequest);
-  }
-  else {
-    return mediaOrInitRequest;
-  }
 }
 
 /**
