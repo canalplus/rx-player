@@ -24,6 +24,7 @@ import {
 import hashBuffer from "../../utils/hash_buffer";
 import SimpleSet from "../../utils/simple_set";
 
+// The way "pssh" will be written in those encrypted events
 const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
 
 /**

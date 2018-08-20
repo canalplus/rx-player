@@ -245,7 +245,10 @@ function addTextTrack(
  * buffer.
  *
  * TODO This seems to be about an old Firefox version. Delete it?
- * @param {Object} timing
+ * @param {number} time
+ * @param {Object|null} currentRange
+ * @param {string} state
+ * @param {Boolean} isStalled
  * @returns {Boolean}
  */
 function isPlaybackStuck(
@@ -337,7 +340,8 @@ function isOffline() : boolean {
  * @param {Number} startTime
  * @param {Number} endTime
  * @param {string} payload
- * @returns {TextTrackCue} or null if the parameters were invalid.
+ * @returns {VTTCue|TextTrackCue|null} Text track cue or null if the parameters
+ * were invalid.
  */
 function makeCue(
   startTime : number,
@@ -361,7 +365,7 @@ function makeCue(
 /**
  * Call play on the media element on subscription and return the response as an
  * observable.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function play$(mediaElement : HTMLMediaElement) : Observable<void> {
