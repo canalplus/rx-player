@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-// ugly webpack workaround to export require-style
+// ugly but working webpack workaround to be able to import the library in
+// CommonJS mode.
+// TODO investigate
 /* tslint:disable no-var-requires */
 module.exports = require("./index.ts").default;
 /* tslint:enable no-var-requires */
