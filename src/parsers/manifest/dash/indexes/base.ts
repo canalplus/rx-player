@@ -116,14 +116,14 @@ function _addSegmentInfos(
   if (segmentInfos.timescale !== index.timescale) {
     const { timescale } = index;
     index.timeline.push({
-      ts: (segmentInfos.time / segmentInfos.timescale) * timescale,
+      start: (segmentInfos.time / segmentInfos.timescale) * timescale,
       d: (segmentInfos.duration / segmentInfos.timescale) * timescale,
       r: segmentInfos.count || 0,
       range: segmentInfos.range,
     });
   } else {
     index.timeline.push({
-      ts: segmentInfos.time,
+      start: segmentInfos.time,
       d: segmentInfos.duration,
       r: segmentInfos.count || 0,
       range: segmentInfos.range,
@@ -218,7 +218,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (!index.timeline.length) {
       return undefined;
     }
-    return fromIndexTime(index, index.timeline[0].ts);
+    return fromIndexTime(index, index.timeline[0].start);
   }
 
   /**

@@ -39,7 +39,7 @@ export interface ISegmentBaseAttributes {
 }
 
 interface ISegmentBaseSegment {
-  ts: number; // start timestamp
+  start: number; // start timestamp
   d: number; // duration
   r: number; // repeat counter
   range?: [number, number];
