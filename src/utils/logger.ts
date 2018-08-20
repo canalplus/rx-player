@@ -23,7 +23,7 @@ export type ILoggerLevel =
   "INFO" |
   "DEBUG";
 
-type tConsoleFn = (...args : any[]) => void;
+type tConsoleFn = (...args : Array<unknown>) => void;
 
 const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
 
