@@ -240,11 +240,11 @@ export default function PeriodBufferManager(
     basePeriod : Period
   ) : Observable<IMultiplePeriodBuffersEvent> {
     /**
-     * Keep a PeriodList for cases such as seeking ahead/before the
-     * buffers already created.
+     * Keep a SortedList for cases such as seeking ahead/before the buffers
+     * already created.
      * When that happens, interrupt the previous buffers and create one back
      * from the new initial period.
-     * @type {ConsecutivePeriodList}
+     * @type {SortedList}
      */
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
 
@@ -314,7 +314,7 @@ export default function PeriodBufferManager(
         if (message.type === "periodBufferReady") {
           periodList.add(message.value.period);
         } else if (message.type === "periodBufferCleared") {
-          periodList.removeFirst(message.value.period);
+          periodList.removeElement(message.value.period);
         }
       }),
       share() // as always, with side-effects

@@ -240,7 +240,7 @@ export default class TrackManager {
     }
     delete periodItem[bufferType];
     if (periodItem.audio == null && periodItem.text == null) {
-      this._periods.removeFirst(periodItem);
+      this._periods.removeElement(periodItem);
     }
   }
 

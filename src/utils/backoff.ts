@@ -30,7 +30,7 @@ function getFuzzedDelay(retryDelay : number) : number {
  * Calculate a "backed off" fuzzed delay.
  * That is, a delay augmented depending on the current retry count.
  * @param {Number} retryDelay
- * @param {Number|undefined} retryCount
+ * @param {Number} [retryCount=1]
  * @returns {Number}
  */
 function getBackedoffDelay(

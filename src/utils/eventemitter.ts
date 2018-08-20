@@ -28,6 +28,10 @@ export interface IEventEmitter<T extends string, U> {
   removeEventListener(evt? : T, fn? : listenerFunction<U>) : void;
 }
 
+/**
+ * Simple EventEmitted implementation.
+ * @class EventEmitter
+ */
 export default class EventEmitter<T extends string, U>
   implements IEventEmitter<T, U> {
   /**
