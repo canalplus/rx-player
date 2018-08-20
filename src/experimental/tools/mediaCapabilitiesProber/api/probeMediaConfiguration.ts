@@ -46,6 +46,7 @@ export type IBrowserAPIS =
  * If no API was called or some capabilites could not be probed and status is "Probably",
  * return "Maybe".
  * @param {Object} config
+ * @param {Array.<Object>} browserAPIs
  * @returns {Promise}
  */
 async function probeMediaConfiguration(
