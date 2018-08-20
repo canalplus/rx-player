@@ -121,7 +121,7 @@ function parseSami(
   let up;
   let to;
 
-  // XXX TODO FIXME Is that wanted?
+  // FIXME Is that wanted?
   // previously written as let to = SyncClose.exec(smi); but never used
   syncClose.exec(smi);
 
