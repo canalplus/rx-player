@@ -704,7 +704,7 @@ export default function parseManifest(
       rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
     periods: parsedPeriods,
     transportType: "dash",
-    type: rootAttributes.type || "static",
+    isLive: rootAttributes.type === "dynamic",
     uris: [uri, ...rootChildren.locations],
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
@@ -741,7 +741,7 @@ export default function parseManifest(
     parsedMPD.maxSubsegmentDuration = rootAttributes.maxSubsegmentDuration;
   }
 
-  if (parsedMPD.type === "dynamic") {
+  if (parsedMPD.isLive) {
     const lastPeriodAdaptations = parsedMPD.periods[
       parsedMPD.periods.length - 1
     ].adaptations;

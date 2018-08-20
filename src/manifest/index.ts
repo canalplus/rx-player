@@ -50,6 +50,7 @@ interface ISupplementaryTextTrack {
 interface IManifestArguments {
   availabilityStartTime? : number;
   duration : number;
+  isLive : boolean;
   minimumTime? : number;
   id : string;
   periods : IPeriodArguments[];
@@ -57,7 +58,6 @@ interface IManifestArguments {
   suggestedPresentationDelay? : number;
   timeShiftBufferDepth? : number;
   transportType : string;
-  type? : string;
   uris : string[];
 }
 
@@ -100,7 +100,7 @@ export default class Manifest {
     this.adaptations = (this.periods[0] && this.periods[0].adaptations) || [];
 
     this.minimumTime = args.minimumTime;
-    this.isLive = args.type === "dynamic";
+    this.isLive = args.isLive;
     this.uris = args.uris;
 
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
