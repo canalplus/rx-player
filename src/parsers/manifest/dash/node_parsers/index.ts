@@ -562,11 +562,11 @@ export default function parseManifest(
         const adaptationCodecs = adaptation.attributes.codecs;
 
         const representationMimeTypes = representations
-          .map(r => r.mimeType)
+          .map(representation => representation.mimeType)
           .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
 
         const representationCodecs = representations
-          .map(r => r.codecs)
+          .map(representation => representation.codecs)
           .filter((codecs : string|undefined) : codecs is string => codecs != null);
 
         const type = inferAdaptationType(

@@ -169,7 +169,8 @@ function _addSegmentInfos(
     (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {
     const newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration;
-    const lastSegmentStart = (lastItem.start + lastItem.d * lastItem.r);
+    const lastSegmentStart =
+      (lastItem.start + lastItem.duration * lastItem.repeatCount);
     const startDiff = newSegmentStart - lastSegmentStart;
 
     if (startDiff <= 0) { // same segment / behind the lastItem
@@ -179,20 +180,20 @@ function _addSegmentInfos(
     // try to use the compact notation with @r attribute on the lastItem
     // to elements of the timeline if we find out they have the same
     // duration
-    if (lastItem.d === -1) {
+    if (lastItem.duration === -1) {
       const prev = timeline[timelineLength - 2];
-      if (prev && prev.d === startDiff) {
-        prev.r++;
+      if (prev && prev.duration === startDiff) {
+        prev.repeatCount++;
         timeline.pop();
       } else {
-        lastItem.d = startDiff;
+        lastItem.duration = startDiff;
       }
     }
 
     index.timeline.push({
-      d: -1,
+      duration: -1,
       start: newSegmentStart,
-      r: 0,
+      repeatCount: 0,
     });
     return true;
   }
@@ -201,13 +202,13 @@ function _addSegmentInfos(
   // just need to push a new element in the timeline, or increase
   // the @r attribute of the lastItem element.
   else if (scaledNewSegment.time >= getTimelineItemRangeEnd(lastItem)) {
-    if (lastItem.d === scaledNewSegment.duration) {
-      lastItem.r++;
+    if (lastItem.duration === scaledNewSegment.duration) {
+      lastItem.repeatCount++;
     } else {
       index.timeline.push({
-        d: scaledNewSegment.duration,
+        duration: scaledNewSegment.duration,
         start: scaledNewSegment.time,
-        r: 0,
+        repeatCount: 0,
       });
     }
     return true;
@@ -297,8 +298,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return false;
     }
 
-    if (lastItem.d < 0) {
-      lastItem = { start: lastItem.start, d: 0, r: lastItem.r };
+    if (lastItem.duration < 0) {
+      lastItem = {
+        start: lastItem.start,
+        duration: 0,
+        repeatCount: lastItem.repeatCount,
+      };
     }
 
     return scaledTo > getTimelineItemRangeEnd(lastItem);
@@ -353,7 +358,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     const timelineItem = timeline[segmentIndex];
-    if (timelineItem.d === -1) {
+    if (timelineItem.duration === -1) {
       return -1;
     }
 

@@ -117,15 +117,15 @@ function _addSegmentInfos(
     const { timescale } = index;
     index.timeline.push({
       start: (segmentInfos.time / segmentInfos.timescale) * timescale,
-      d: (segmentInfos.duration / segmentInfos.timescale) * timescale,
-      r: segmentInfos.count || 0,
+      duration: (segmentInfos.duration / segmentInfos.timescale) * timescale,
+      repeatCount: segmentInfos.count || 0,
       range: segmentInfos.range,
     });
   } else {
     index.timeline.push({
       start: segmentInfos.time,
-      d: segmentInfos.duration,
-      r: segmentInfos.count || 0,
+      duration: segmentInfos.duration,
+      repeatCount: segmentInfos.count || 0,
       range: segmentInfos.range,
     });
   }
