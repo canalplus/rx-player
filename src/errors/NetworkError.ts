@@ -41,6 +41,11 @@ export default class NetworkError extends Error {
   public readonly errorType : string;
   public fatal : boolean;
 
+  /**
+   * @param {string} code
+   * @param {Error} requestError
+   * @param {Boolean} [fatal]
+   */
   constructor(code : string, requestError : RequestError, fatal? : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
