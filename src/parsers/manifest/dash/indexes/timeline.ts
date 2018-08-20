@@ -385,9 +385,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /**
    * @param {Object} newIndex
    */
-  _update(
-    newIndex : TimelineRepresentationIndex /* TODO @ index refacto */
-  ) : void {
+  _update(newIndex : TimelineRepresentationIndex) : void {
     this._index = newIndex._index;
   }
 

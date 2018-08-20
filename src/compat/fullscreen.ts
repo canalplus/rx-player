@@ -28,7 +28,6 @@ function requestFullscreen(elt : HTMLMediaElement) : void {
     } else if (elt.mozRequestFullScreen) {
       elt.mozRequestFullScreen();
     } else if (elt.webkitRequestFullscreen) {
-      // TODO Open issue in TypeScript?
       (
         elt.webkitRequestFullscreen as any
       )((Element as any).ALLOW_KEYBOARD_INPUT);

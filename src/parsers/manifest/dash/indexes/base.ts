@@ -135,8 +135,6 @@ function _addSegmentInfos(
 /**
  * Provide helpers for SegmentBase-based indexes.
  * @type {Object}
- * TODO weird that everything is inherited from Timeline...
- * Reimplement from scratch
  */
 export default class BaseRepresentationIndex implements IRepresentationIndex {
   private _index : IBaseIndex;
@@ -261,9 +259,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object} newIndex
    */
-  _update(
-    newIndex : BaseRepresentationIndex /* TODO @ index refacto */
-  ) : void {
+  _update(newIndex : BaseRepresentationIndex) : void {
     this._index = newIndex._index;
   }
 }

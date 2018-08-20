@@ -110,8 +110,7 @@ function getResumeGap(stalled : stalledStatus) : number {
 }
 
 /**
- * TODO I just don't get it for this one.
- * gap + range.end ??? HELP
+ * TODO I just don't get it for this one. gap + range.end ??? HELP
  * @param {Number} gap
  * @param {Object} range
  * @param {Number} duration

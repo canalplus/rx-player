@@ -50,12 +50,10 @@ class ImageSourceBuffer
     );
   }
 
-  // TODO
   /* tslint:disable no-empty */
   _remove() {}
   /* tslint:enable no-empty */
 
-  // TODO
   /* tslint:disable no-empty */
   _abort() {}
   /* tslint:enable no-empty */

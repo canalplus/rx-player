@@ -181,7 +181,7 @@ export default function StreamDirectFile({
     loadedEvent$,
     initialSeek$,
     emeManager$,
-    errorManager$ as Observable<void>, // TODO RxJS do something weird here
+    errorManager$,
     speedManager$,
     stallingManager$,
     linkURL$

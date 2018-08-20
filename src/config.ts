@@ -46,7 +46,6 @@ export default {
    *     element. Can be useful to display richer TTML subtitles, for example.
    * @type {Object|null}
    */
-  // TODO ugly TypeScript workaround. Find better way
   DEFAULT_TEXT_TRACK_MODE: "native" as "native"|"html",
 
   /**

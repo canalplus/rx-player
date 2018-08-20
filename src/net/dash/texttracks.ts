@@ -145,7 +145,7 @@ function TextTrackParser({
       segmentInfos = { time: -1, duration: 0, timescale: segment.timescale };
     } else {
       segmentInfos = {
-        time: segment.time || 0, // TODO either force time tbd or better logic
+        time: segment.time,
         duration: segment.duration,
         timescale: segment.timescale,
       };

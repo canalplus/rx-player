@@ -410,7 +410,7 @@ export default class Manifest {
    * @returns {Array.<number>}
    */
   public getCurrentPositionLimits() : [number, number] {
-    // TODO use RTT for the manifest request + 3 or something
+    // TODO use RTT for the manifest request? (+ 3 or something)
     const BUFFER_DEPTH_SECURITY = 5;
 
     if (!this.isLive) {

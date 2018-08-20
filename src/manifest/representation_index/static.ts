@@ -67,9 +67,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * @returns {undefined}
    */
   getFirstPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
+    return ;
     /* tslint:enable return-undefined */
   }
 
@@ -78,10 +76,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * @returns {undefined}
    */
   getLastPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
-    /* tslint:enable return-undefined */
+    return ;
   }
 
   /**

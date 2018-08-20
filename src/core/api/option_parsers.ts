@@ -23,6 +23,10 @@ import objectAssign from "object-assign";
 import config from "../../config";
 import log from "../../log";
 import {
+  CustomManifestLoader,
+  CustomSegmentLoader,
+} from "../../net/types";
+import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
@@ -41,13 +45,12 @@ const {
   DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
 
-// TODO
-// Set a real interface for transport options (i.e. same for DASH and SMOOTH).
-interface ITransportOption {
-  [keyName : string] : any;
+export interface ITransportOption {
+  manifestLoader? : CustomManifestLoader;
+  segmentLoader? : CustomSegmentLoader;
 }
 
-interface ISupplementaryTextTrackOption {
+export interface ISupplementaryTextTrackOption {
   url : string;
   language : string;
   closedCaption : boolean;
@@ -55,31 +58,34 @@ interface ISupplementaryTextTrackOption {
   codecs? : string;
 }
 
-interface ISupplementaryImageTrackOption {
+export interface ISupplementaryImageTrackOption {
   url : string;
   mimeType : string;
 }
 
-interface IDefaultAudioTrackOption {
+export interface IDefaultAudioTrackOption {
   language : string;
   normalized : string;
   audioDescription : boolean;
 }
 
-interface IDefaultTextTrackOption {
+export interface IDefaultTextTrackOption {
   language : string;
   normalized : string;
   closedCaption : boolean;
 }
 
-interface INetworkConfigOption {
+export interface INetworkConfigOption {
   manifestRetry? : number;
   offlineRetry? : number;
   segmentRetry? : number;
 }
 
-type IParsedStartAtOption = { position : number } | { wallClockTime : number } |
-  { percentage : number } | { fromLastPosition : number } |
+type IParsedStartAtOption =
+  { position : number } |
+  { wallClockTime : number } |
+  { percentage : number } |
+  { fromLastPosition : number } |
   { fromFirstPosition : number };
 
 export interface IConstructorOptions {
@@ -114,7 +120,7 @@ export interface IParsedConstructorOptions {
   stopAtEnd : boolean;
 }
 
-interface ILoadVideoOptionsBase {
+export interface ILoadVideoOptionsBase {
   url : string;
   transport : string;
   autoPlay? : boolean;
@@ -130,17 +136,19 @@ interface ILoadVideoOptionsBase {
     { fromFirstPosition : number };
 }
 
-interface ILoadVideoOptionsNative extends ILoadVideoOptionsBase {
+export interface ILoadVideoOptionsNative extends ILoadVideoOptionsBase {
   textTrackMode? : "native";
   hideNativeSubtitle? : boolean;
 }
 
-interface ILoadVideoOptionsHTML extends ILoadVideoOptionsBase {
+export interface ILoadVideoOptionsHTML extends ILoadVideoOptionsBase {
   textTrackMode : "html";
   textTrackElement : HTMLElement;
 }
 
-export type ILoadVideoOptions = ILoadVideoOptionsNative | ILoadVideoOptionsHTML;
+export type ILoadVideoOptions =
+  ILoadVideoOptionsNative |
+  ILoadVideoOptionsHTML;
 
 interface IParsedLoadVideoOptionsBase {
   url : string;
@@ -166,7 +174,8 @@ interface IParsedLoadVideoOptionsHTML extends IParsedLoadVideoOptionsBase {
   textTrackElement : HTMLElement;
 }
 
-export type IParsedLoadVideoOptions = IParsedLoadVideoOptionsNative |
+export type IParsedLoadVideoOptions =
+  IParsedLoadVideoOptionsNative |
   IParsedLoadVideoOptionsHTML;
 
 /**

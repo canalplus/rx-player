@@ -28,7 +28,6 @@ import {
   ConnectableObservable,
   EMPTY,
   merge as observableMerge,
-  Observable,
   ReplaySubject,
   Subject,
   Subscription,
@@ -669,7 +668,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     }
 
     // now that every check has passed, stop previous content
-    // TODO First stop?
     this.stop();
 
     const isDirectFile = transport === "directfile";
@@ -787,14 +785,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     /**
      * Emit a truthy value when the player stalls, a falsy value as it unstalls.
-     * TODO Find a way with TS
      * @type {Observable}
      */
     const stalled$ = stream
       .pipe(
-        filter(({ type }) => type === "stalled"),
+        filter((evt) => evt.type === "stalled"),
         map(x => x.value)
-      )  as Observable<null|{ reason : string }>;
+      );
 
     /**
      * Emit when the stream is considered "loaded".
@@ -823,7 +820,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     /**
      * Emit the player state as it changes.
-     * TODO only way to call setPlayerState?
      * @type {Observable.<string>}
      */
     const stateChanges$ = observableConcat(

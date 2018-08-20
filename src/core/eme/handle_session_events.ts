@@ -195,10 +195,7 @@ export default function handleSessionEvents(
               error;
           })
         );
-      // TODO TypeScript/tslint/RxJS bug?
-      /* tslint:disable no-unnecessary-type-assertion */
       }) as Observable<TypedArray|ArrayBuffer>;
-      /* tslint:enable no-unnecessary-type-assertion */
 
       return retryObsWithBackoff(getLicense$, getLicenseRetryOptions)
         .pipe(map((license) => {
