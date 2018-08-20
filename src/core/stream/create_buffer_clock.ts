@@ -48,9 +48,9 @@ export default function createBufferClock(
   /**
    * wantedTimeOffset is an offset to add to the timing's current time to have
    * the "real" wanted position.
-   * For now, this is seen when the video has not yet seeked to its initial
-   * position, the currentTime will most probably be 0 where the effective
-   * starting position will be _startTime_.
+   * For now, this is seen when the media element has not yet seeked to its
+   * initial position, the currentTime will most probably be 0 where the
+   * effective starting position will be _startTime_.
    * Thus we initially set a wantedTimeOffset equal to startTime.
    * @type {Number}
    */

@@ -754,6 +754,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         bufferOptions: this._priv_bufferOptions,
         clock$,
         keySystems,
+        mediaElement: videoElement,
         networkConfig,
         speed$: this._priv_speed$,
         startAt,
@@ -762,7 +763,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         textTrackOptions,
         transport: transportObj,
         url,
-        videoElement,
       })
         .pipe(takeUntil(closeStream$))
         .pipe(publish()) as ConnectableObservable<IStreamEvent>;

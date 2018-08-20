@@ -116,7 +116,7 @@ export interface IStreamOptions {
   textTrackOptions : ITextTrackSourceBufferOptions;
   transport : ITransportPipelines;
   url : string;
-  videoElement : HTMLMediaElement;
+  mediaElement : HTMLMediaElement;
 }
 
 // Every events emitted by the stream.
@@ -154,7 +154,7 @@ export default function Stream({
   textTrackOptions,
   transport,
   url,
-  videoElement,
+  mediaElement,
 } : IStreamOptions) : Observable<IStreamEvent> {
   // Subject through which warnings will be sent
   const warning$ = new Subject<Error|ICustomError>();
@@ -187,15 +187,15 @@ export default function Stream({
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
-  const emeManager$ = createEMEManager(videoElement, keySystems);
+  const emeManager$ = createEMEManager(mediaElement, keySystems);
 
-  // Translate errors coming from the video element into RxPlayer errors
+  // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
-  const mediaErrorManager$ = createMediaErrorManager(videoElement);
+  const mediaErrorManager$ = createMediaErrorManager(mediaElement);
 
   // Start the whole Stream.
   const stream$ = observableCombineLatest(
-    openMediaSource(videoElement),
+    openMediaSource(mediaElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, manifest ]) => {
 
@@ -206,7 +206,7 @@ export default function Stream({
     return observableConcat(
       observableOf(EVENTS.manifestReady(abrManager, manifest)),
       loadStreamOnMediaSource({ // Behold!
-        mediaElement: videoElement,
+        mediaElement,
         mediaSource,
         manifest,
         initialSettings: { time: initialTime, shouldPlay: autoPlay },

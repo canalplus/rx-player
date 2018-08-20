@@ -30,9 +30,9 @@ export interface IInitialTimeOptions {
 /**
  * Returns the calculated initial time for the stream described by the given
  * manifest:
- *   1. if a start time is defined by user, calculate video starting time from
- *      the manifest informations
- *   2. else if the video is live, use the live edge and suggested delays from
+ *   1. if a start time is defined by user, calculate starting time from the
+ *      manifest informations
+ *   2. else if the media is live, use the live edge and suggested delays from
  *      it
  *   3. else returns the minimum time announced in the manifest
  * @param {Manifest} manifest

@@ -18,7 +18,7 @@
  * This file defines a global clock for the RxPlayer.
  *
  * Each clock tick also pass informations about the current state of the
- * video element to sub-parts of the player.
+ * media element to sub-parts of the player.
  */
 
 import objectAssign from "object-assign";
@@ -34,9 +34,9 @@ import {
 import config from "../../config";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
-// Informations recuperated on the video element on each clock
+// Informations recuperated on the media element on each clock
 // tick
-interface IVideoInfos {
+interface IMediaInfos {
   bufferGap : number;
   buffered : TimeRanges;
   currentRange : {
@@ -59,7 +59,7 @@ type stalledStatus = {
 } | null;
 
 // Global informations emitted on each clock tick
-export interface IClockTick extends IVideoInfos {
+export interface IClockTick extends IMediaInfos {
   stalled : stalledStatus;
 }
 
@@ -76,7 +76,7 @@ const {
  * HTMLMediaElement Events for which timings are calculated and emitted.
  * @type {Array.<string>}
  */
-const SCANNED_VIDEO_EVENTS = [
+const SCANNED_MEDIA_ELEMENTS_EVENTS = [
   "canplay",
   "play",
   "progress",
@@ -129,16 +129,16 @@ function isEnding(
 }
 
 /**
- * Generate a basic timings object from the video element and the eventName
+ * Generate a basic timings object from the media element and the eventName
  * which triggered the request.
- * @param {HTMLMediaElement} video
+ * @param {HTMLMediaElement} mediaElement
  * @param {string} currentState
  * @returns {Object}
  */
-function getVideoInfos(
-  video : HTMLMediaElement,
+function getMediaInfos(
+  mediaElement : HTMLMediaElement,
   currentState : string
-) : IVideoInfos {
+) : IMediaInfos {
   const {
     buffered,
     currentTime,
@@ -148,7 +148,7 @@ function getVideoInfos(
     playbackRate,
     readyState,
     seeking,
-  } = video;
+  } = mediaElement;
 
   return {
     bufferGap: getLeftSizeOfRange(buffered, currentTime),
@@ -166,8 +166,8 @@ function getVideoInfos(
 }
 
 /**
- * Infer stalled status of the video based on:
- *   - the return of the function getVideoInfos
+ * Infer stalled status of the media based on:
+ *   - the return of the function getMediaInfos
  *   - the previous timings object.
  *
  * @param {Object} prevTimings - Previous timings object. See function to know
@@ -179,7 +179,7 @@ function getVideoInfos(
  */
 function getStalledStatus(
   prevTimings : IClockTick,
-  currentTimings : IVideoInfos,
+  currentTimings : IMediaInfos,
   withMediaSource : boolean
 ) : stalledStatus {
   const {
@@ -226,8 +226,8 @@ function getStalledStatus(
     }
   }
 
-  // when using a direct file, the video will stall and unstall on its
-  // own, so we only try to detect when the video timestamp has not changed
+  // when using a direct file, the media will stall and unstall on its
+  // own, so we only try to detect when the media timestamp has not changed
   // between two consecutive timeupdates
   else {
     if (
@@ -279,27 +279,27 @@ function getStalledStatus(
  *   * playback rate
  *   * current buffered range
  *   * gap with current buffered range ending
- *   * video duration
+ *   * media duration
  *
  * In addition to sampling, this stream also reacts to "seeking" and "play"
  * events.
  *
  * Observable is shared for performance reason: reduces the number of event
- * listeners and intervals/timeouts but also limit access to <video>
+ * listeners and intervals/timeouts but also limit access to the media element
  * properties and gap calculations.
  *
  * The sampling is manual instead of based on "timeupdate" to reduce the
  * number of events.
- * @param {HTMLMediaElement} video
+ * @param {HTMLMediaElement} mediaElement
  * @param {Object} options
  * @returns {Observable}
  */
 function createClock(
-  video : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   { withMediaSource } : { withMediaSource : boolean }
 ) : Observable<IClockTick> {
   return Observable.create((obs : Observer<IClockTick>) => {
-    let lastTimings : IClockTick = objectAssign(getVideoInfos(video, "init"),
+    let lastTimings : IClockTick = objectAssign(getMediaInfos(mediaElement, "init"),
       { stalled: null }
     );
 
@@ -310,12 +310,12 @@ function createClock(
      */
     function emitSample(evt? : Event) {
       const timingEventType = evt && evt.type || "timeupdate";
-      const videoTimings = getVideoInfos(video, timingEventType);
+      const mediaTimings = getMediaInfos(mediaElement, timingEventType);
       const stalledState =
-        getStalledStatus(lastTimings, videoTimings, withMediaSource);
+        getStalledStatus(lastTimings, mediaTimings, withMediaSource);
 
-      // /!\ Mutate videoTimings
-      lastTimings = objectAssign(videoTimings,
+      // /!\ Mutate mediaTimings
+      lastTimings = objectAssign(mediaTimings,
         { stalled: stalledState }
       );
       obs.next(lastTimings);
@@ -326,15 +326,15 @@ function createClock(
       : SAMPLING_INTERVAL_NO_MEDIASOURCE;
 
     const intervalID = setInterval(emitSample, interval);
-    SCANNED_VIDEO_EVENTS.forEach((eventName) =>
-      video.addEventListener(eventName, emitSample));
+    SCANNED_MEDIA_ELEMENTS_EVENTS.forEach((eventName) =>
+      mediaElement.addEventListener(eventName, emitSample));
 
     obs.next(lastTimings);
 
     return () => {
       clearInterval(intervalID);
-      SCANNED_VIDEO_EVENTS.forEach((eventName) =>
-        video.removeEventListener(eventName, emitSample));
+      SCANNED_MEDIA_ELEMENTS_EVENTS.forEach((eventName) =>
+        mediaElement.removeEventListener(eventName, emitSample));
     };
   }).pipe(
     multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last

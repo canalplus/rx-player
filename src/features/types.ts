@@ -38,14 +38,14 @@ export type IEMEManager = (
 
 export interface INativeTextTracksBuffer {
   new(
-    videoElement : HTMLMediaElement,
+    mediaElement : HTMLMediaElement,
     hideNativeSubtitle: boolean
   ) : ICustomSourceBuffer<unknown>;
 }
 
 export interface IHTMLTextTracksBuffer {
   new(
-    videoElement : HTMLMediaElement,
+    mediaElement : HTMLMediaElement,
     textTrackElement: HTMLElement
   ) : ICustomSourceBuffer<unknown>;
 }
