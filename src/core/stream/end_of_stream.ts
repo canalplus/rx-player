@@ -58,7 +58,6 @@ function getUpdatingSourceBuffers(
  * Trigger the `endOfStream` method of a MediaSource.
  *
  * If the MediaSource is ended/closed, do not call this method.
- *
  * If SourceBuffers are updating, wait for them to be updated before closing
  * it.
  * @param {MediaSource} mediaSource

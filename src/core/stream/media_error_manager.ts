@@ -24,16 +24,17 @@ import log from "../../log";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
- * event is received through the videoElement.
+ * event is received through the media element.
  * @see MediaError
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 export default function MediaErrorManager(
-  videoElement : HTMLMediaElement
+  mediaElement : HTMLMediaElement
 ) : Observable<never> {
-  return observableFromEvent(videoElement, "error")
+  return observableFromEvent(mediaElement, "error")
     .pipe(mergeMap(() => {
-      const errorCode = videoElement.error && videoElement.error.code;
+      const errorCode = mediaElement.error && mediaElement.error.code;
       let errorDetail;
 
       switch (errorCode) {

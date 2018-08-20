@@ -32,8 +32,7 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 
 /**
- * Side effect that set the media duration in the mediaSource.
- *
+ * Set the media duration in the mediaSource.
  * @param {MediaSource} mediaSource
  * @param {number} duration
  */
@@ -56,8 +55,8 @@ export function setDurationToMediaSource(
  *   - Clear the mediaElement's src (stop the mediaElement)
  *   - Revoke MediaSource' URL
  * @param {HTMLMediaElement} mediaElement
- * @param {MediaSource|null} mediaSource
- * @param {string|null} mediaSourceURL
+ * @param {MediaSource|null|undefined} mediaSource
+ * @param {string|null|undefined} mediaSourceURL
  */
 function resetMediaSource(
   mediaElement : HTMLMediaElement,

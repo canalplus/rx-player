@@ -57,7 +57,8 @@ import {
   IStreamWarningEvent,
 } from "./types";
 
-export interface IStartStreamArguments {
+// Arguments for loadStreamOnMediaSource
+export interface ILoadStreamArguments {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // streamed
   mediaSource : MediaSource; // MediaSource where SourceBuffer will be added
@@ -82,7 +83,8 @@ export interface IStartStreamArguments {
   };
 }
 
-export type IStartStreamEvent =
+// Events emitted by loadStreamOnMediaSource
+export type ILoadStreamEvent =
   IManifestUpdateEvent |
   IStalledEvent |
   ISpeedChangedEvent |
@@ -106,7 +108,7 @@ export default function loadStreamOnMediaSource({
   abrManager,
   segmentPipelinesManager,
   refreshManifest,
-} : IStartStreamArguments) : Observable<IStartStreamEvent> {
+} : ILoadStreamArguments) : Observable<ILoadStreamEvent> {
   setDurationToMediaSource(mediaSource, manifest.getDuration());
 
   const {
@@ -162,7 +164,7 @@ export default function loadStreamOnMediaSource({
     sourceBufferManager,
     segmentPipelinesManager,
     bufferOptions
-  ).pipe(mergeMap((evt) : Observable<IStartStreamEvent> => {
+  ).pipe(mergeMap((evt) : Observable<ILoadStreamEvent> => {
       switch (evt.type) {
         case "end-of-stream":
           return maintainEndOfStream(mediaSource)

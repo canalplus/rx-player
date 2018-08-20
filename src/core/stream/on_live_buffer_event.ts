@@ -35,7 +35,8 @@ import { IManifestUpdateEvent } from "./types";
  * Re-fetch the manifest and merge it with the previous version.
  *
  * /!\ Mutates the given manifest
- * @param {Object} manifest
+ * @param {Function} manifestPipeline - download the manifest
+ * @param {Object} currentManifest
  * @returns {Observable}
  */
 function refreshManifest(
@@ -63,13 +64,13 @@ export type ILiveEventsHandlerEvent =
 
 /**
  * Create handler for Buffer events happening only in live contexts.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @param {Object} manifest
  * @param {Function} fetchManifest
  * @returns {Function}
  */
 export default function liveEventsHandler(
-  videoElement : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   manifest : Manifest,
   fetchManifest : (url : string) => Observable<Manifest>
 ) : (message : IPeriodBufferManagerEvent) => Observable<ILiveEventsHandlerEvent> {
@@ -78,7 +79,7 @@ export default function liveEventsHandler(
       case "discontinuity-encountered":
         if (SourceBufferManager.isNative(message.value.bufferType)) {
           log.warn("explicit discontinuity seek", message.value.nextTime);
-          videoElement.currentTime = message.value.nextTime;
+          mediaElement.currentTime = message.value.nextTime;
         }
         break;
 

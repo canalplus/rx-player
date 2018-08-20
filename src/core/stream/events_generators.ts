@@ -31,6 +31,10 @@ import {
   IStreamWarningEvent,
 } from "./types";
 
+/**
+ * Construct a "loaded" event.
+ * @returns {Object}
+ */
 function loaded() : IStreamLoadedEvent {
   return {
     type: "loaded",
@@ -38,6 +42,11 @@ function loaded() : IStreamLoadedEvent {
   };
 }
 
+/**
+ * Construct a "stalled" event.
+ * @param {Object|null} stalling
+ * @returns {Object}
+ */
 function stalled(stalling : IStallingItem|null) : IStalledEvent {
   return {
     type: "stalled",
@@ -45,6 +54,12 @@ function stalled(stalling : IStallingItem|null) : IStalledEvent {
   };
 }
 
+/**
+ * Construct a "manifestReady" event.
+ * @param {Object} abrManager
+ * @param {Object} manifest
+ * @returns {Object}
+ */
 function manifestReady(
   abrManager : ABRManager,
   manifest : Manifest
@@ -58,6 +73,11 @@ function manifestReady(
   };
 }
 
+/**
+ * Construct a "manifestUpdate" event.
+ * @param {Object} manifest
+ * @returns {Object}
+ */
 function manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
   return {
     type: "manifestUpdate",
@@ -67,6 +87,12 @@ function manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
   };
 }
 
+/**
+ * Construct a "speed" event.
+ * TODO rename "speedChanged"
+ * @param {Number} speed
+ * @returns {Object}
+ */
 function speedChanged(speed : number) : ISpeedChangedEvent {
   return {
     type: "speed",
@@ -74,6 +100,12 @@ function speedChanged(speed : number) : ISpeedChangedEvent {
   };
 }
 
+/**
+ * Construct a "representationChange" event.
+ * @param {string} type
+ * @param {Object} period
+ * @returns {Object}
+ */
 function nullRepresentation(
   type : IBufferType,
   period : Period
@@ -88,6 +120,11 @@ function nullRepresentation(
   };
 }
 
+/**
+ * Construct a "warning" event.
+ * @param {Error} value
+ * @returns {Object}
+ */
 function warning(value : Error | ICustomError) : IStreamWarningEvent {
   return {
     type: "warning",
