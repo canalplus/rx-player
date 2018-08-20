@@ -67,7 +67,7 @@ export interface IManifestUpdateEvent {
 // Note: it can be a change wanted by the user or even a manual `0` speed
 // setting to build a buffer.
 export interface ISpeedChangedEvent {
-  type : "speed";
+  type : "speedChanged";
   value : number;
 }
 

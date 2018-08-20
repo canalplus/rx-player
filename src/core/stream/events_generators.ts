@@ -88,14 +88,13 @@ function manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
 }
 
 /**
- * Construct a "speed" event.
- * TODO rename event as "speedChanged"
+ * Construct a "speedChanged" event.
  * @param {Number} speed
  * @returns {Object}
  */
 function speedChanged(speed : number) : ISpeedChangedEvent {
   return {
-    type: "speed",
+    type: "speedChanged",
     value: speed,
   };
 }
