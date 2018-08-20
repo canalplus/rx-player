@@ -38,6 +38,11 @@ export default class EncryptedMediaError extends Error {
   public readonly reason? : IEncryptedMediaErrorReason;
   public fatal : boolean;
 
+  /**
+   * @param {string} code
+   * @param {Object} [reason]
+   * @Param {Boolean} [fatal]
+   */
   constructor(
     code : string,
     reason? : IEncryptedMediaErrorReason,

@@ -25,7 +25,6 @@ import errorMessage from "./errorMessage";
  * Error linked to the Index part of the Manifest.
  *
  * TODO Rename ManifestError or something?
- *
  * @class IndexError
  * @extends Error
  */
@@ -37,6 +36,10 @@ export default class IndexError extends Error {
   public readonly reason? : { message : string }|string|null;
   public fatal : boolean;
 
+  /**
+   * @param {string} code
+   * @param {boolean} [fatal]
+   */
   constructor(code : string, fatal? : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
