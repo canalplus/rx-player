@@ -92,9 +92,9 @@ describe("utils - array-includes", () => {
     const obj2 = { a: obj1, b: { a: 4 } };
     const obj3 = { o: 4 };
     const obj4 = { z: obj1, t: { a: 4 } };
-    expect(arrayIncludes<any>([obj1, obj2, obj3], obj4))
+    expect(arrayIncludes<unknown>([obj1, obj2, obj3], obj4))
       .to.equal(false);
-    expect(arrayIncludes<any>([1, obj4, 3, obj3, 5], obj2)).to.equal(false);
+    expect(arrayIncludes<unknown>([1, obj4, 3, obj3, 5], obj2)).to.equal(false);
   });
 
   it("should not work for deep equality with objects", () => {
