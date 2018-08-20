@@ -152,7 +152,7 @@ function parseSidx(
       throw new Error("not implemented");
     }
 
-    const d = be4toi(buf, pos);
+    const duration = be4toi(buf, pos);
     pos += 4;
 
     // let sapChunk = be4toi(buf, pos + 8);
@@ -165,13 +165,13 @@ function parseSidx(
 
     segments.push({
       time,
-      duration: d,
+      duration,
       count: 0,
       timescale,
       range: [offset, offset + refSize - 1],
     });
 
-    time += d;
+    time += duration;
     offset += refSize;
   }
 

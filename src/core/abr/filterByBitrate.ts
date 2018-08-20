@@ -29,7 +29,7 @@ export default function filterByBitrate(
 ) : Representation[] {
   const firstSuperiorBitrate = arrayFindIndex(
     representations,
-    (r) => r.bitrate > bitrate
+    (representation) => representation.bitrate > bitrate
   );
 
   if (firstSuperiorBitrate === -1) {

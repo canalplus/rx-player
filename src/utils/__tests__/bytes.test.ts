@@ -126,7 +126,7 @@ describe("utils - bytes", () => {
       );
       const res = bytes.concat(arr8, arr16, arr32);
       expect(res).to.have.lengthOf(arr8.length + arr16.length + arr32.length);
-      res.forEach((r, i) => expect(r).to.equal(expected[i]));
+      res.forEach((x, i) => expect(x).to.equal(expected[i]));
     });
 
     it("should consider number arguments as 0-filled offests", () => {
@@ -140,7 +140,7 @@ describe("utils - bytes", () => {
       expect(res).to.have.lengthOf(
         arr8.length + arr16.length + arr32.length + 0 + 2 + 1
       );
-      res.forEach((r, i) => expect(r).to.equal(expected[i]));
+      res.forEach((x, i) => expect(x).to.equal(expected[i]));
     });
 
     it("should return only 0-filled arrays if only numbers are provided", () => {
@@ -149,7 +149,7 @@ describe("utils - bytes", () => {
 
       const res2 = bytes.concat(10, 2);
       expect(res2).to.have.lengthOf(10 + 2);
-      res2.forEach(r => expect(r).to.equal(0));
+      res2.forEach(x => expect(x).to.equal(0));
     });
   });
 
