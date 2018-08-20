@@ -83,8 +83,6 @@ type IBufferDownloadQueueState =
 export interface IRepresentationBufferClockTick {
   currentTime : number;
   readyState : number;
-
-  // TODO Rename "baseTime" or something which will be currentTime + wantedTimeOffset?
   wantedTimeOffset : number;
   stalled : object|null;
   liveGap? : number;

@@ -182,9 +182,6 @@ export default class ABRManager {
       .subscribe(({ type, value }) => {
         const chooser = this._lazilyCreateChooser(type);
         const { duration, size } = value;
-
-        // TODO Should we do a single estimate instead of a per-type one?
-        // Test it thoroughly
         chooser.addEstimate(duration, size);
       });
 

@@ -23,7 +23,6 @@ export interface ITTParameters {
 
 /**
  * Returns global parameters from a TTML Document
- * TODO Missing parameters.
  * @param {Element} tt - <tt> node
  * @throws Error - Throws if the spacing style is invalid.
  * @returns {Object}

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// TODO https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-
 import {
   ErrorCodes,
   ErrorTypes,

@@ -31,20 +31,6 @@ const {
   MINIMUM_SEGMENT_SIZE,
 } = config;
 
-/**
- * TODO Find what to do with that one empirically. Either delete or uncomment.
- *
- * Tolerated margin when comparing segments.
- * If the absolute difference between two segment's start time is inferior or
- * equal to this margin, we infer that they begin at the exact same time, same
- * logic for the end time (where we infer that they end at the exact same
- * time).
- * Used to know whether a newly downloaded segment replace/update an old one in
- * the bookkeeping we perform on currently downloaded segments.
- * @type {Number}
- */
-// const SEGMENT_EPSILON = 0.3;
-
 interface IBufferedSegmentInfos {
   adaptation : Adaptation;
   period : Period;
@@ -323,8 +309,8 @@ export default class SegmentBookkeeper {
     for (let i = inventory.length - 1; i >= 0; i--) {
       const segmentI = inventory[i];
 
-      if ((segmentI.start/* - SEGMENT_EPSILON */) <= start) {
-        if ((segmentI.end/* - SEGMENT_EPSILON */) <= start) {
+      if ((segmentI.start) <= start) {
+        if ((segmentI.end) <= start) {
           // our segment is after, push it after this one
           //
           // Case 1:
@@ -337,7 +323,7 @@ export default class SegmentBookkeeper {
           this.inventory.splice(i + 1, 0, newSegment);
           return;
         } else { // /!\ also goes here if end is undefined
-          if (segmentI.start >= (start/* - SEGMENT_EPSILON */)) {
+          if (segmentI.start >= (start)) {
             // In those cases, replace
             // Case 1:
             //  segmentI     : |-------|
@@ -457,7 +443,7 @@ export default class SegmentBookkeeper {
       //
       // *|??? - unknown end
       this.inventory.splice(0, 0, newSegment);
-    } else if ((firstSegment.end/* - SEGMENT_EPSILON */) <= end) {
+    } else if ((firstSegment.end) <= end) {
       // Our segment is bigger, replace the first
       // Case 1:
       //  firstSegment :   |---|

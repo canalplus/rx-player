@@ -89,7 +89,7 @@ function manifestUpdate(manifest : Manifest) : IManifestUpdateEvent {
 
 /**
  * Construct a "speed" event.
- * TODO rename "speedChanged"
+ * TODO rename event as "speedChanged"
  * @param {Number} speed
  * @returns {Object}
  */

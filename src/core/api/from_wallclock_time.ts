@@ -30,7 +30,6 @@ export default function fromWallClockTime(
 }
 
 /**
- * TODO This function should have more of a seekTo kind of name
  * @param {number|date}
  * @param {Object} manifest
  * @retunrs {number}

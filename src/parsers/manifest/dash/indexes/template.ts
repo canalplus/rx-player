@@ -206,10 +206,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {undefined}
    */
   getFirstPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
-    /* tslint:enable return-undefined */
+    return ;
   }
 
   /**
@@ -217,10 +214,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {undefined}
    */
   getLastPosition() : undefined {
-    // TODO tslint bug? Document.
-    /* tslint:disable return-undefined */
-    return undefined;
-    /* tslint:enable return-undefined */
+    return ;
   }
 
   /**
@@ -253,9 +247,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * @param {Object} newIndex
    */
-  _update(
-    newIndex : TemplateRepresentationIndex /* TODO @ index refacto */
-  ) : void {
+  _update(newIndex : TemplateRepresentationIndex) : void {
     this._index = newIndex._index;
   }
 }

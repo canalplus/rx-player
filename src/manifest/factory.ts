@@ -26,7 +26,6 @@ import {
 import arrayIncludes from "../utils/array-includes";
 import { SUPPORTED_ADAPTATIONS_TYPE } from "./adaptation";
 import Manifest, {
-  IManifestArguments,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "./index";
@@ -83,8 +82,7 @@ export default function createManifest(
     return period;
   });
 
-  // TODO Better way than this "as"
-  const manifest = new Manifest(manifestObject as IManifestArguments);
+  const manifest = new Manifest(manifestObject);
   manifest.addSupplementaryTextAdaptations(externalTextTracks);
   manifest.addSupplementaryImageAdaptations(externalImageTracks);
   return manifest;

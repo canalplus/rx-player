@@ -93,7 +93,7 @@ function checkCachedMediaKeySystemAccess(
   }
 
   const firstCompatibleOption = keySystems.filter((ks) => {
-    // XXX TODO Do it with MediaKeySystemAccess.prototype.keySystem instead
+    // TODO Do it with MediaKeySystemAccess.prototype.keySystem instead
     if (ks.type !== currentKeySystemOptions.type) {
       return false;
     }

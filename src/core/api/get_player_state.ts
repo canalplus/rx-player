@@ -17,6 +17,8 @@
 import config from "../../config";
 import { PLAYER_STATES } from "./constants";
 
+const { FORCED_ENDED_THRESHOLD } = config;
+
 /**
  * Get state string for a loaded content.
  * @param {HTMLMediaElement} mediaElement
@@ -36,12 +38,6 @@ export default function getLoadedContentState(
   }
 
   if (stalledStatus) {
-    // TODO This is a TypeScript bug. Try to reproduce it easily and
-    // open an issue:
-    // Basically, putting this line at the top of the file would
-    // trigger a TypeScript error down the line.
-    const { FORCED_ENDED_THRESHOLD } = config;
-
     // On some old browsers (e.g. Chrome 54), the browser does not
     // emit an 'ended' event in some conditions. Detect if we
     // reached the end by comparing the current position and the

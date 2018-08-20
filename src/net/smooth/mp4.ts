@@ -839,7 +839,6 @@ function createInitSegment(
   return concat(ftyp, moov);
 }
 
-// TODO
 export default {
   getMdat: getMDAT,
   getTraf: getTRAF,

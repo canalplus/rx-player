@@ -330,8 +330,6 @@ if (navigator.requestMediaKeySystemAccess) {
             audioCapabilities,
             initDataTypes: ["cenc"],
             sessionTypes: ["temporary"],
-
-            // TODO TypesScript bug or what? Check and open an issue
             distinctiveIdentifier: "not-allowed" as "not-allowed",
             persistentState: "not-allowed" as "not-allowed",
           };
@@ -482,8 +480,6 @@ if (navigator.requestMediaKeySystemAccess) {
           return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
-
-              // TODO Authorize 1 argument for IE?
               new (MediaKeys_ as any)(keyType),
               keySystemConfigurationResponse
             )

@@ -15,7 +15,6 @@
  */
 
 declare module "object-assign" {
-  // TODO Update when/if variadic types are possible with intersections
   function objectAssign<T, U>(target : T, source : U) : T & U;
   function objectAssign<T, U, V>(
     target : T,
@@ -43,6 +42,6 @@ declare module "object-assign" {
     source4 : X,
     source5 : Y
   ) : T & U & V & W & Y;
-  function objectAssign(target : object, ...sources : any[]) : any;
+  function objectAssign<T>(target : object, ...sources : T[]) : T;
   export default objectAssign;
 }

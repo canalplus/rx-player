@@ -181,8 +181,7 @@ export default function AdaptationBuffer<T>(
       wantedBufferAhead$,
     }).pipe(
     catchError((error) => {
-      // TODO only for smooth/to Delete?
-      // TODO Do it in the stream?
+      // TODO only for smooth/to Delete? Do it in the stream?
       // for live adaptations, handle 412 errors as precondition-
       // failed errors, ie: we are requesting for segments before they
       // exist

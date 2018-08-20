@@ -211,7 +211,6 @@ function getFilteredRepresentations(
 
 /**
  * Estimate remaining time for a pending request from a progress event.
- * TODO Add time since last progress event?
  * @param {Object} lastProgressEvent
  * @param {number} bandwidthEstimate
  * @returns {number}
@@ -574,7 +573,7 @@ export default class RepresentationChooser {
   }
 
   /**
-   * TODO See if we can avoid this
+   * Free up the resources used by the RepresentationChooser.
    */
   public dispose() : void {
     this._dispose$.next();

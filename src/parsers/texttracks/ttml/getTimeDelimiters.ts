@@ -38,7 +38,7 @@ export default function getTimeDelimiters(
     throw new Error("Invalid text cue");
   }
 
-// TODO Huh? Is TypeScript that dumb here?
+// Huh? Is TypeScript that dumb here?
   const end = parsedEnd == null ?
     start + (duration as number) : parsedEnd;
   return { start, end };

@@ -71,7 +71,6 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
   const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
     .pipe(mapTo(null), startWith(null));
 
-  // TODO Better way to express that
   return manualRefresh$.pipe(
     startWith(null),
     switchMapTo(
