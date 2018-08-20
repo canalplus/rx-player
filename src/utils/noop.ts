@@ -15,7 +15,11 @@
  */
 
 /**
- * Do nothing, well.
+ * Do nothing (but do it well).
+ *
+ * Having this definition here allow to use the same reference each time a noop
+ * is needed.
+ * Also, it allows to avoid telling tslint to ignore empty blocks everywhere.
  */
 /* tslint:disable:no-empty */
 export default function() : void {}

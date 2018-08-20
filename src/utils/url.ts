@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-/**
- * Scheme part of an url (e.g. "http://").
- */
+// Scheme part of an url (e.g. "http://").
 const schemeRe = /^(?:[a-z]+:)?\/\//i;
 
-/**
- * Captures "/../" or "/./".
- */
+// Captures "/../" or "/./".
 const selfDirRe = /\/\.{1,2}\//;
 
 /**

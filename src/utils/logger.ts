@@ -27,6 +27,10 @@ type tConsoleFn = (...args : any[]) => void;
 
 const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
 
+/**
+ * Logger implementation.
+ * @class Logger
+ */
 export default class Logger {
   public error : tConsoleFn = noop;
   public warn : tConsoleFn = noop;
@@ -45,6 +49,9 @@ export default class Logger {
     this.currentLevel = DEFAULT_LOG_LEVEL;
   }
 
+  /**
+   * @param {string} levelStr
+   */
   public setLevel(levelStr : string) {
     let level : number;
     const foundLevel = this.LEVELS[levelStr as ILoggerLevel];
@@ -70,6 +77,9 @@ export default class Logger {
     /* tslint:enable no-invalid-this */
   }
 
+  /**
+   * @returns {string}
+   */
   public getLevel() : ILoggerLevel {
     return this.currentLevel;
   }

@@ -56,12 +56,19 @@ export default class WeakMapMemory<T extends object, U> {
   private readonly _fn : (obj : T) => U;
   private _weakMap : WeakMap<T, U>;
 
+  /**
+   * @param {Function}
+   */
   constructor(fn : (obj : T) => U) {
     this._weakMap = new WeakMap();
     this._fn = fn;
   }
 
-  get(obj : T) {
+  /**
+   * @param {Object} obj
+   * @returns {*}
+   */
+  public get(obj : T) : U {
     const fromMemory = this._weakMap.get(obj);
     if (!fromMemory) {
       const newElement = this._fn(obj);
@@ -72,7 +79,10 @@ export default class WeakMapMemory<T extends object, U> {
     }
   }
 
-  destroy(obj : T) {
+  /**
+   * @param {Object} obj
+   */
+  public destroy(obj : T) {
     this._weakMap.delete(obj);
   }
 }

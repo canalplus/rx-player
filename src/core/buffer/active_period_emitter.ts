@@ -129,7 +129,7 @@ export default function ActivePeriodEmitter(
       periodItem.buffers.delete(type);
 
       if (!periodItem.buffers.size) {
-        periodsList.removeFirst(periodItem);
+        periodsList.removeElement(periodItem);
       }
     }));
 

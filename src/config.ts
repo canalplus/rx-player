@@ -34,6 +34,12 @@ export default {
   DEFAULT_UNMUTED_VOLUME: 0.1,
 
   /**
+   * Default time interval after which a request will timeout, in ms.
+   * @type {Number}
+   */
+  DEFAULT_REQUEST_TIMEOUT: 30 * 1000,
+
+  /**
    * Can be either:
    *   - "native": Subtitles are all displayed in a <track> element
    *   - "html": Subtitles are all displayed in a <div> separated from the video
