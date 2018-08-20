@@ -22,7 +22,6 @@ import {
 
 // Custom Errors
 import EncryptedMediaError from "./EncryptedMediaError";
-import IndexError from "./IndexError";
 import MediaError from "./MediaError";
 import OtherError from "./OtherError";
 
@@ -33,7 +32,6 @@ import RequestError from "./RequestError";
 
 export type ICustomError =
   EncryptedMediaError |
-  IndexError |
   MediaError |
   OtherError |
   NetworkError;
@@ -57,7 +55,6 @@ export {
   RequestErrorTypes,
 
   EncryptedMediaError,
-  IndexError,
   MediaError,
   NetworkError,
   OtherError,
