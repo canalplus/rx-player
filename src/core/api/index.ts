@@ -82,12 +82,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import {
-  fromWallClockTime,
-  getMaximumBufferPosition,
-  getMinimumBufferPosition,
-  toWallClockTime,
-} from "../../manifest/timings";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import ABRManager from "../abr";
 import {
@@ -103,6 +97,7 @@ import createClock, {
   IClockTick
 } from "./clock";
 import { PLAYER_STATES } from "./constants";
+import fromWallClockTime from "./from_wallclock_time";
 import getPlayerState from "./get_player_state";
 import {
   IConstructorOptions,
@@ -1120,7 +1115,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (manifest) {
       const currentTime = this.videoElement.currentTime;
       return this.isLive() ?
-        (+toWallClockTime(currentTime, manifest) / 1000) :
+        (currentTime + (manifest.availabilityStartTime || 0)) :
         currentTime;
     }
     return 0;
@@ -1735,7 +1730,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     const { manifest } = this._priv_contentInfos;
     if (manifest) {
-      return getMinimumBufferPosition(manifest);
+      return manifest.getMinimumPosition();
     }
     return null;
   }
@@ -1762,7 +1757,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     }
 
     if (manifest) {
-      return getMaximumBufferPosition(manifest);
+      return manifest.getMaximumPosition();
     }
     return null;
   }
@@ -2350,10 +2345,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       clockTick.currentTime > 0
     ) {
       positionData.wallClockTime =
-        toWallClockTime(clockTick.currentTime, manifest)
-          .getTime() / 1000;
+        clockTick.currentTime + (manifest.availabilityStartTime || 0);
       positionData.liveGap =
-        getMaximumBufferPosition(manifest) - clockTick.currentTime;
+        manifest.getMaximumPosition() - clockTick.currentTime;
     }
 
     this.trigger("positionUpdate", positionData);

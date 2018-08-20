@@ -27,7 +27,6 @@ import {
   tap,
 } from "rxjs/operators";
 import Manifest from "../../manifest";
-import { getMaximumBufferPosition } from "../../manifest/timings";
 import { IPeriodBufferManagerClockTick } from "../buffer";
 import { IStreamClockTick } from "./types";
 
@@ -68,7 +67,7 @@ export default function createBufferClock(
         objectAssign({
           isLive: manifest.isLive,
           liveGap: manifest.isLive ?
-            getMaximumBufferPosition(manifest) - tick.currentTime :
+            manifest.getMaximumPosition() - tick.currentTime :
             Infinity,
           wantedTimeOffset,
           speed,
