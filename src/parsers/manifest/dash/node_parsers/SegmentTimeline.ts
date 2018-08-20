@@ -23,7 +23,7 @@ export type IParsedTimeline = ITimelineElement[];
 
 export interface ITimelineElement {
   start: number;
-  repeatCount: number; // Amount of repetition(s), 0 = no repeat. TODO Rename
+  repeatCount: number; // Amount of repetition(s), 0 = no repeat
   duration: number;
 }
 

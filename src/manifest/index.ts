@@ -380,6 +380,60 @@ export default class Manifest {
       }
     }
   }
+
+  /**
+   * Get minimum position currently defined by the Manifest.
+   * @returns {number}
+   */
+  public getMinimumPosition() : number {
+    // we have to know both the min and the max to be sure
+    const [min] = this.getCurrentPositionLimits();
+    return min;
+  }
+
+  /**
+   * Get maximum position currently defined by the Manifest.
+   * @returns {number}
+   */
+  public getMaximumPosition() : number {
+    if (!this.isLive) {
+      return this.getDuration();
+    }
+    const ast = this.availabilityStartTime || 0;
+    const plg = this.presentationLiveGap || 0;
+    const now = Date.now() / 1000;
+    return now - ast - plg;
+  }
+
+  /**
+   * Get minimum AND maximum positions currently defined by the manifest.
+   * @returns {Array.<number>}
+   */
+  public getCurrentPositionLimits() : [number, number] {
+    // TODO use RTT for the manifest request + 3 or something
+    const BUFFER_DEPTH_SECURITY = 5;
+
+    if (!this.isLive) {
+      return [this.minimumTime || 0, this.getDuration()];
+    }
+
+    const ast = this.availabilityStartTime || 0;
+    const plg = this.presentationLiveGap || 0;
+    const tsbd = this.timeShiftBufferDepth || 0;
+
+    const now = Date.now() / 1000;
+    const max = now - ast - plg;
+    return [
+      Math.min(
+        max,
+        Math.max(
+          this.minimumTime != null ? this.minimumTime : 0,
+          max - tsbd + BUFFER_DEPTH_SECURITY
+        )
+      ),
+      max,
+    ];
+  }
 }
 
 export {

@@ -212,7 +212,7 @@ function getTimelineRangeEnd({ start, duration, repeatCount }: {
  *   - to {Number}: timescaled timestamp of the end time (start time + duration)
  */
 function normalizeRange(
-  index: { timescale?: number }, // TODO
+  index: { timescale?: number },
   start: number,
   duration: number
 ) : {
@@ -356,7 +356,7 @@ export default class SmoothRepresentationIndex
 
         // live-added segments have @d attribute equals to -1
         if (duration != null && duration < 0) {
-          // TODO what? May be to play it safe and avoid adding segments which are
+          // what? May be to play it safe and avoid adding segments which are
           // not completely generated
           if (start + maxEncounteredDuration < to) {
             const time = start;

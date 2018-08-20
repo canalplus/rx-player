@@ -58,7 +58,6 @@ export interface IAdaptationSetChildren {
   contentProtections? : IParsedContentProtection[];
   role? : IScheme;
 
-  // TODO
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
   segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;

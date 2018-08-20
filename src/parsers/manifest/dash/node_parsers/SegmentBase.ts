@@ -54,7 +54,6 @@ export interface IParsedSegmentBase extends ISegmentBaseAttributes {
 }
 
 /**
- * TODO Only for SegmentBase not for other types
  * @param {Element} root
  * @returns {Object}
  */
