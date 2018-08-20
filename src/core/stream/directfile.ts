@@ -146,12 +146,12 @@ export default function StreamDirectFile({
   // issue.
   const emeManager$ = createEMEManager(mediaElement, keySystems);
 
-  // Translate errors coming from the video element into RxPlayer errors
+  // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
   const errorManager$ = createMediaErrorManager(mediaElement);
 
   // Create Speed Manager, an observable which will set the speed set by the
-  // user on the video element while pausing a little longer while the buffer
+  // user on the media element while pausing a little longer while the buffer
   // is stalled.
   const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
     pauseWhenStalled: true,

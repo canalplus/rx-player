@@ -256,10 +256,10 @@ const onFullscreenChange$ = compatibleListener(
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-const onPlayPause$ = (videoElement : HTMLMediaElement) : Observable<Event> =>
+const onPlayPause$ = (mediaElement : HTMLMediaElement) : Observable<Event> =>
   observableMerge(
-    compatibleListener(["play"])(videoElement),
-    compatibleListener(["pause"])(videoElement)
+    compatibleListener(["play"])(mediaElement),
+    compatibleListener(["pause"])(mediaElement)
   );
 
 /**

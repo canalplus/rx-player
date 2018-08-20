@@ -33,7 +33,7 @@ import {
 import log from "../../log";
 
 /**
- * Set the initial time given as soon as possible on the video element.
+ * Set the initial time given as soon as possible on the media element.
  * Emit when done.
  * @param {HMTLMediaElement} mediaElement
  * @param {number|Function} startTime - Initial starting position. As seconds

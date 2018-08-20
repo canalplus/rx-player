@@ -111,7 +111,7 @@ export default class SourceBufferManager {
     return shouldHaveNativeSourceBuffer(bufferType);
   }
 
-  private readonly _videoElement : HTMLMediaElement;
+  private readonly _mediaElement : HTMLMediaElement;
   private readonly _mediaSource : MediaSource;
 
   private _initializedNativeSourceBuffers : {
@@ -125,12 +125,12 @@ export default class SourceBufferManager {
   };
 
   /**
-   * @param {HTMLMediaElement} videoElement
+   * @param {HTMLMediaElement} mediaElement
    * @param {MediaSource} mediaSource
    * @constructor
    */
-  constructor(videoElement : HTMLMediaElement, mediaSource : MediaSource) {
-    this._videoElement = videoElement;
+  constructor(mediaElement : HTMLMediaElement, mediaSource : MediaSource) {
+    this._mediaElement = mediaElement;
     this._mediaSource = mediaSource;
     this._initializedNativeSourceBuffers = {};
     this._initializedCustomSourceBuffers = {};
@@ -225,13 +225,13 @@ export default class SourceBufferManager {
           throw new Error("HTML Text track feature not activated");
         }
         sourceBuffer = new features
-          .htmlTextTracksBuffer(this._videoElement, options.textTrackElement);
+          .htmlTextTracksBuffer(this._mediaElement, options.textTrackElement);
       } else {
         if (features.nativeTextTracksBuffer == null) {
           throw new Error("Native Text track feature not activated");
         }
         sourceBuffer = new features
-          .nativeTextTracksBuffer(this._videoElement, !!options.hideNativeSubtitle);
+          .nativeTextTracksBuffer(this._mediaElement, !!options.hideNativeSubtitle);
       }
 
       const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
