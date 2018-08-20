@@ -148,7 +148,7 @@ export default function PeriodBufferManager(
    * @type {WeakMapMemory}
    */
   const garbageCollectors =
-    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<any>) =>
+    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) =>
       BufferGarbageCollector({
         queuedSourceBuffer: qSourceBuffer,
         clock$: clock$.pipe(map(tick => tick.currentTime)),
@@ -163,7 +163,7 @@ export default function PeriodBufferManager(
    * @type {WeakMapMemory}
    */
   const segmentBookkeepers =
-    new WeakMapMemory<QueuedSourceBuffer<any>, SegmentBookkeeper>(() =>
+    new WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>(() =>
       new SegmentBookkeeper()
     );
 
@@ -558,7 +558,7 @@ export default function PeriodBufferManager(
       wantedBufferAhead$,
       { manifest, period, adaptation },
       abrManager
-    ).pipe(catchError<IAdaptationBufferEvent<any>, never>((error : Error) => {
+    ).pipe(catchError<IAdaptationBufferEvent<T>, never>((error : Error) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue streaming without any subtitles

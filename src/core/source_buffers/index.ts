@@ -120,8 +120,8 @@ export default class SourceBufferManager {
   };
 
   private _initializedCustomSourceBuffers : {
-    text? : ICreatedSourceBuffer<any>;
-    image? : ICreatedSourceBuffer<any>;
+    text? : ICreatedSourceBuffer<unknown>;
+    image? : ICreatedSourceBuffer<unknown>;
   };
 
   /**
@@ -219,7 +219,7 @@ export default class SourceBufferManager {
     if (bufferType === "text") {
       log.info("creating a new text SourceBuffer with codec", codec);
 
-      let sourceBuffer : ICustomSourceBuffer<any>;
+      let sourceBuffer : ICustomSourceBuffer<unknown>;
       if (options.textTrackMode === "html") {
         if (features.htmlTextTracksBuffer == null) {
           throw new Error("HTML Text track feature not activated");
@@ -234,7 +234,7 @@ export default class SourceBufferManager {
           .nativeTextTracksBuffer(this._videoElement, !!options.hideNativeSubtitle);
       }
 
-      const queuedSourceBuffer = new QueuedSourceBuffer<any>(sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
 
       this._initializedCustomSourceBuffers.text = {
         codec,
@@ -247,7 +247,7 @@ export default class SourceBufferManager {
       }
       log.info("creating a new image SourceBuffer with codec", codec);
       const sourceBuffer = new features.imageBuffer();
-      const queuedSourceBuffer = new QueuedSourceBuffer<any>(sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
       this._initializedCustomSourceBuffers.image = {
         codec,
         sourceBuffer: queuedSourceBuffer,

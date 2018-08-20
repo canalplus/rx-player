@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
- // for typings
-import { Representation } from "../../../../manifest";
-import { IParsedRepresentation } from "../../types";
-
 /**
  * @param {string} url
- * @param {Representation} representation
+ * @param {string|number} bitrate
  * @returns {string}
  */
 function replaceRepresentationSmoothTokens(
     url : string,
-    representation : IParsedRepresentation|Representation
+    bitrate : string|number
   ) : string {
-    return url.replace(/\{bitrate\}/g, String(representation.bitrate));
+    return url.replace(/\{bitrate\}/g, String(bitrate));
   }
 
 /**
