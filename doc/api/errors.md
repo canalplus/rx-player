@@ -9,7 +9,6 @@
     - [NETWORK_ERROR](#types-network_error)
     - [MEDIA_ERROR](#types-media_error)
     - [ENCRYPTED_MEDIA_ERROR](#types-encrypted_media_error)
-    - [INDEX_ERROR](#types-index_error)
     - [OTHER_ERROR](#types-other_error)
 - [Codes](#codes)
 
@@ -216,22 +215,6 @@ An EncryptedMediaError can have the following codes (``code`` property):
   - ``"MEDIA_IS_ENCRYPTED_ERROR"``: The media is encrypted and no key system
     was given to the RxPlayer's APIs.
 
-
-
-<a name="types-index_error"></a>
-### INDEX_ERROR ################################################################
-
-Those errors are specific to the index, which is the place in the manifest
-describing how to access wanted segments.
-
-They all have a ``type`` property equal to ``"INDEX_ERROR"``.
-
-#### codes #####################################################################
-
-An IndexERROR can only have the following code (``code`` property):
-
-  - ``"OUT_OF_INDEX_ERROR"``: The wanted segments are currently out of the
-    manifest's index.
 
 
 <a name="types-other_error"></a>
