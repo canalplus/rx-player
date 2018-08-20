@@ -1607,7 +1607,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Returns currently chosen video track for the current Period.
    * @returns {string}
    */
-  getVideoTrack() : any {
+  getVideoTrack() : ITMVideoTrack|null|undefined {
     if (!this._priv_contentInfos) {
       return undefined;
     }

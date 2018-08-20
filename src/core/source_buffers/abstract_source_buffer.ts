@@ -116,7 +116,7 @@ export default abstract class AbstractSourceBuffer<T>
    * @param {string} eventName
    * @param {*} value - value sent with the given event.
    */
-  private _unlock(eventName : string, value? : any) : void {
+  private _unlock(eventName : string, value? : unknown) : void {
     this.updating = false;
     this.trigger(eventName, value);
     this.trigger("updateend", undefined);

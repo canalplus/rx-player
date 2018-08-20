@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import config from "../../../config";
 import assert from "../../../utils/assert";
 import generateNewId from "../../../utils/id";
@@ -69,6 +70,24 @@ export interface IHSSParserConfiguration {
   keySystems? : (hex? : Uint8Array) => IKeySystem[];
 }
 
+interface ISmoothParsedQualityLevel {
+  // required
+  bitrate: number;
+  codecPrivateData: string;
+
+  // optional
+  audiotag?: number;
+  bitsPerSample?: number;
+  channels?: number;
+  codecs?: string;
+  height?: number;
+  id?: string;
+  mimeType?: string;
+  packetSize?: number;
+  samplingRate?: number;
+  width?: number;
+}
+
 /**
  * @param {Object|undefined} parserOptions
  * @returns {Function}
@@ -92,23 +111,10 @@ function createSmoothStreamingParser(
    * @param {string} type
    * @return {Object}
    */
-  function parseQualityLevel(q : Element, type : string) : {
-    // required
-    bitrate: number;
-    codecPrivateData: string;
-
-    // optional
-    audiotag?: number;
-    bitsPerSample?: number;
-    channels?: number;
-    codecs?: string;
-    height?: number;
-    id?: string;
-    mimeType?: string;
-    packetSize?: number;
-    samplingRate?: number;
-    width?: number;
-  } {
+  function parseQualityLevel(
+    q : Element,
+    type : string
+  ) : ISmoothParsedQualityLevel {
     /**
      * @param {string} name
      * @returns {string|undefined}
@@ -213,27 +219,30 @@ function createSmoothStreamingParser(
     }
 
     const {
-      representations,
+      qualityLevels,
       cNodes,
     } = reduceChildren<{
-      representations: any[]; /* TODO */
+      qualityLevels: ISmoothParsedQualityLevel[];
       cNodes : Element[];
     }>(root, (res, _name, node) => {
       switch (_name) {
         case "QualityLevel":
-          const rep = parseQualityLevel(node, adaptationType);
+          const qualityLevel = parseQualityLevel(node, adaptationType);
           if (adaptationType === "audio") {
             const fourCC = node.getAttribute("FourCC") || "";
 
-            rep.codecs = getAudioCodecs(
+            qualityLevel.codecs = getAudioCodecs(
               fourCC,
-              rep.codecPrivateData
+              qualityLevel.codecPrivateData
             );
           }
 
-          // filter out video representations with small bitrates
-          if (adaptationType !== "video" || rep.bitrate > MIN_REPRESENTATION_BITRATE) {
-            res.representations.push(rep);
+          // filter out video qualityLevels with small bitrates
+          if (
+            adaptationType !== "video" ||
+            qualityLevel.bitrate > MIN_REPRESENTATION_BITRATE
+          ) {
+            res.qualityLevels.push(qualityLevel);
           }
           break;
         case "c":
@@ -242,7 +251,7 @@ function createSmoothStreamingParser(
       }
       return res;
     }, {
-      representations: [],
+      qualityLevels: [],
       cNodes: [],
     });
 
@@ -251,34 +260,31 @@ function createSmoothStreamingParser(
       timescale: _timescale,
     };
 
-    // we assume that all representations have the same
+    // we assume that all qualityLevels have the same
     // codec and mimeType
     assert(
-      representations.length !== 0,
+      qualityLevels.length !== 0,
       "adaptation should have at least one representation"
     );
 
-    const id = adaptationType + (language ? ("_" + language) : "");
+    const adaptationID = adaptationType + (language ? ("_" + language) : "");
 
-    // apply default properties
-    representations.forEach((representation: IParsedRepresentation) => {
+    const representations = qualityLevels.map((qualityLevel) => {
       const path = resolveURL(rootURL, baseURL);
       const repIndex = {
         timeline: index.timeline,
         timescale: index.timescale,
-        media: replaceRepresentationSmoothTokens(path, representation),
+        media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate),
       };
-      representation.mimeType =
-        representation.mimeType || DEFAULT_MIME_TYPES[adaptationType];
-      representation.codecs = representation.codecs || DEFAULT_CODECS[adaptationType];
-      representation.id = id + "_" + adaptationType + "-" +
-        representation.mimeType + "-" +
-        representation.codecs + "-" + representation.bitrate;
+      const mimeType = qualityLevel.mimeType || DEFAULT_MIME_TYPES[adaptationType];
+      const codecs = qualityLevel.codecs || DEFAULT_CODECS[adaptationType];
+      const id =  adaptationID + "_" + adaptationType + "-" + mimeType + "-" +
+        codecs + "-" + qualityLevel.bitrate;
 
+      const contentProtections : IContentProtection[] = [];
       let firstProtection : IContentProtectionSmooth|undefined;
       if (protections.length) {
         firstProtection = protections[0];
-        const contentProtections : IContentProtection[] = [];
         protections.forEach((protection) => {
           const keyId = protection.keyId;
           protection.keySystems.forEach((keySystem) => {
@@ -288,17 +294,14 @@ function createSmoothStreamingParser(
             });
           });
         });
-        if (contentProtections.length) {
-          representation.contentProtections = contentProtections;
-        }
       }
 
       const initSegmentInfos = {
-        bitsPerSample: representation.bitsPerSample,
-        channels: representation.channels,
-        codecPrivateData: representation.codecPrivateData || "",
-        packetSize: representation.packetSize,
-        samplingRate: representation.samplingRate,
+        bitsPerSample: qualityLevel.bitsPerSample,
+        channels: qualityLevel.channels,
+        codecPrivateData: qualityLevel.codecPrivateData || "",
+        packetSize: qualityLevel.packetSize,
+        samplingRate: qualityLevel.samplingRate,
 
         // TODO set multiple protections here instead of the first one
         protection: firstProtection != null ? {
@@ -306,7 +309,17 @@ function createSmoothStreamingParser(
           keySystems: firstProtection.keySystems,
         } : undefined,
       };
-      representation.index = new RepresentationIndex(repIndex, initSegmentInfos);
+
+      const representation : IParsedRepresentation = objectAssign({}, qualityLevel, {
+        index: new RepresentationIndex(repIndex, initSegmentInfos),
+        mimeType,
+        codecs,
+        id,
+      });
+      if (contentProtections.length) {
+        representation.contentProtections = contentProtections;
+      }
+      return representation;
     });
 
     // TODO(pierre): real ad-insert support
@@ -315,7 +328,7 @@ function createSmoothStreamingParser(
     }
 
     const parsedAdaptation : IParsedAdaptation = {
-      id,
+      id: adaptationID,
       type: adaptationType,
       representations,
       name: name == null ? undefined : name,

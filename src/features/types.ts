@@ -40,14 +40,14 @@ export interface INativeTextTracksBuffer {
   new(
     videoElement : HTMLMediaElement,
     hideNativeSubtitle: boolean
-  ) : ICustomSourceBuffer<any>;
+  ) : ICustomSourceBuffer<unknown>;
 }
 
 export interface IHTMLTextTracksBuffer {
   new(
     videoElement : HTMLMediaElement,
     textTrackElement: HTMLElement
-  ) : ICustomSourceBuffer<any>;
+  ) : ICustomSourceBuffer<unknown>;
 }
 
 interface IBifThumbnail {

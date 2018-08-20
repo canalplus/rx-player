@@ -169,7 +169,7 @@ export interface ICompletedBufferEvent {
 
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent =
-  IAdaptationBufferEvent<any> |
+  IAdaptationBufferEvent<unknown> |
   IAdaptationChangeEvent;
 
 // Events coming from function(s) managing multiple PeriodBuffers.
