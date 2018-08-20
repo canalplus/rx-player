@@ -230,12 +230,8 @@ function getABRForAdaptation(
 
   const abrClock$ = abrBaseClock$.pipe(
     map((tick) => {
-      let bitrate;
-
-      if (currentRepresentation) {
-        bitrate = currentRepresentation.bitrate;
-      }
-
+      const bitrate = currentRepresentation ?
+        currentRepresentation.bitrate : undefined;
       return objectAssign({ bitrate }, tick);
     }));
 
