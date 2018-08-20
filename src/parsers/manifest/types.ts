@@ -97,7 +97,7 @@ export interface IParsedManifest {
   id: string;
   periods: IParsedPeriod[];
   transportType: string; // "smooth", "dash" etc.
-  type: string; // "static" or "dynamic" TODO isLive?
+  isLive : boolean;
   uris: string[]; // uris where the manifest can be refreshed
 
   // optional

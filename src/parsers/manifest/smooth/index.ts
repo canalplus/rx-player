@@ -495,7 +495,7 @@ function createSmoothStreamingParser(
       suggestedPresentationDelay,
       timeShiftBufferDepth,
       transportType: "smooth",
-      type: isLive ? "dynamic" : "static",
+      isLive,
       uris: [url],
       minimumTime,
       periods: [{
