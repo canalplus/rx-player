@@ -16,12 +16,6 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
-// XXX TODO
-// export interface IKeySystem {
-//   systemId : string;
-//   privateData : Uint8Array;
-// }
-
 export interface IContentProtection {
   systemId? : string;
   keyId : string;
