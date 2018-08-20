@@ -342,8 +342,8 @@ export default class Manifest {
 
             for (let k = 0; k < oldRepresentations.length; k++) {
               const oldRepresentation = oldRepresentations[k];
-              const newRepresentation =
-                arrayFind(newRepresentations, r => r.id === oldRepresentation.id);
+              const newRepresentation = arrayFind(newRepresentations,
+                representation => representation.id === oldRepresentation.id);
 
               if (!newRepresentation) {
                 /* tslint:disable:max-line-length */

@@ -67,7 +67,9 @@ class Adaptation {
     this.type = args.type;
     this.representations = Array.isArray(args.representations) ?
       args.representations
-        .map(r => new Representation(objectAssign({ rootId: this.id }, r)))
+        .map(representation =>
+          new Representation(objectAssign({ rootId: this.id }, representation))
+        )
         .sort((a, b) => a.bitrate - b.bitrate) : [];
 
     if (args.language != null) {
@@ -94,7 +96,7 @@ class Adaptation {
    */
   getAvailableBitrates() : number[] {
     return this.representations
-      .map(r => r.bitrate);
+      .map(representation => representation.bitrate);
   }
 
   /**
@@ -110,7 +112,8 @@ class Adaptation {
    * @returns {Array.<Representations>|null}
    */
   getRepresentationsForBitrate(bitrate : number) : Representation[]|null {
-    return this.representations.filter(r => r.bitrate === bitrate) || null;
+    return this.representations.filter(representation =>
+      representation.bitrate === bitrate) || null;
   }
 }
 
