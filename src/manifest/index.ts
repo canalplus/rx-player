@@ -89,13 +89,12 @@ export default class Manifest {
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
 
-    // TODO Real period management
     this.periods = args.periods.map((period) => {
       return new Period(period);
     });
 
     /**
-     * @deprecated TODO It is here to ensure compatibility with the way the
+     * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
     this.adaptations = (this.periods[0] && this.periods[0].adaptations) || [];
@@ -301,7 +300,7 @@ export default class Manifest {
    * Update the current manifest properties
    * @param {Object} Manifest
    */
-  update(newManifest : Manifest) {
+  update(newManifest : Manifest) : void {
     this._duration = newManifest.getDuration();
     this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.availabilityStartTime = newManifest.availabilityStartTime;

@@ -89,7 +89,7 @@ export default class Period {
    */
   addSupplementaryImageAdaptations(
     imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
-  ) {
+  ) : void {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       const adaptationID = "gen-image-ada-" + generateNewId();
@@ -119,7 +119,7 @@ export default class Period {
    */
   addSupplementaryTextAdaptations(
     textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
-  ) {
+  ) : void {
     const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
     const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
       mimeType,
@@ -178,11 +178,19 @@ export default class Period {
     return adaptationsList;
   }
 
+  /**
+   * @param {string} adaptationType
+   * @returns {Array.<Object>}
+   */
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
     const adaptations = this.adaptations[adaptationType];
     return adaptations || [];
   }
 
+  /**
+   * @param {number|string} wantedId
+   * @returns {Object|undefined}
+   */
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }

@@ -134,7 +134,6 @@ export default interface IRepresentationIndex {
    * Think of another implementation?
    * @param {Array.<Object>} nextSegments
    * @param {Object} currentSegment
-   * @returns {Array.<Object>}
    */
   _addSegments(
     nextSegments : Array<{
