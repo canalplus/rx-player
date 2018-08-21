@@ -2,18 +2,18 @@
 set -e
 
 echo "cleaning previous builds..."
-./scripts/clean-up_minimal_build
+./scripts/clean-up_builds
 
-echo "bundling modular version..."
+echo "bundling raw modular version..."
 npm run build:modules
 rm dist/_esm5.raw/exports.js
 
-echo "preparing minimal build..."
-cp -r dist/_esm5.raw/ dist/_esm5.minimal
+echo "processing raw modular build..."
+cp -r dist/_esm5.raw/ dist/_esm5.processed
 
 # TODO So ugly right now. We should find a way to transform the JS in a cleaner
 # way
-files="$(find dist/_esm5.minimal -type f -iname '*.js')"
+files="$(find dist/_esm5.processed -type f -iname '*.js')"
 for f in "$files"; do
   sed -i -E "s/\b__DEV__\b/false/g" $f
 
@@ -51,6 +51,9 @@ for f in "$files"; do
   sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/stream\/directfile.js\"/g" $f
 done
 
+echo "processed modular build succesfully created!"
+
+echo "creating minimal build..."
 rm -rf minimal
 mkdir minimal
 echo "/**
@@ -68,7 +71,7 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import MinimalPlayer from \"../dist/_esm5.minimal/minimal.js\";
+import MinimalPlayer from \"../dist/_esm5.processed/minimal.js\";
 export default MinimalPlayer;" > minimal/index.js
 echo "/**
  * Copyright 2015 CANAL+ Group
@@ -85,9 +88,10 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import MinimalPlayer from \"../dist/_esm5.minimal/minimal\";
+import MinimalPlayer from \"../dist/_esm5.processed/minimal\";
 export default MinimalPlayer;" > minimal/index.d.ts
 
+echo "creating features build..."
 rm -rf features
 mkdir features
 echo "/**
@@ -105,7 +109,7 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from \"../dist/_esm5.minimal/features/list/index.js\";" > features/index.js
+export * from \"../dist/_esm5.processed/features/list/index.js\";" > features/index.js
 echo "/**
  * Copyright 2015 CANAL+ Group
  *
@@ -121,8 +125,9 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from \"../dist/_esm5.minimal/features/list/index\";" > features/index.d.ts
+export * from \"../dist/_esm5.processed/features/list/index\";" > features/index.d.ts
 
+echo "creating experimental build..."
 rm -rf experimental
 mkdir -p experimental/tools
 echo "/**
@@ -140,7 +145,7 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from \"../../dist/_esm5.minimal/experimental/tools/index.js\";" > experimental/tools/index.js
+export * from \"../../dist/_esm5.processed/experimental/tools/index.js\";" > experimental/tools/index.js
 echo "/**
  * Copyright 2015 CANAL+ Group
  *
@@ -156,8 +161,29 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from \"../../dist/_esm5.minimal/experimental/tools/index\";" > experimental/tools/index.d.ts
+export * from \"../../dist/_esm5.processed/experimental/tools/index\";" > experimental/tools/index.d.ts
 
+echo "creating types build..."
+rm -rf types
+mkdir types
+echo "/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+export * from \"../dist/_esm5.processed/exported_types\";" > types/index.ts
+
+echo "creating types for legacy code bases..."
 rm -f dist/rx-player.d.ts rx-player.min.d.ts
 echo "/**
  * Copyright 2015 CANAL+ Group
@@ -174,5 +200,7 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import RxPlayer from \"./_esm5.minimal/index\";
+import RxPlayer from \"./_esm5.processed/index\";
 export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts > /dev/null
+
+echo "done"
