@@ -95,7 +95,7 @@ export interface ISidxSegment {
  *     from the anchor point (first byte after the sidx box) for the
  *     concerned subsegment.
  */
-function parseSidx(
+function getSegmentsFromSidx(
   buf : Uint8Array,
   initialOffset : number
 ) : ISidxSegment[]|null {
@@ -186,7 +186,7 @@ function parseSidx(
  * @param {Uint8Array} buffer
  * @returns {Number}
  */
-function parseTfdt(buffer : Uint8Array) : number {
+function getTrackFragmentDecodeTime(buffer : Uint8Array) : number {
   const traf = getTRAF(buffer);
   if (!traf) {
     return -1;
@@ -420,9 +420,9 @@ function patchPssh(buf : Uint8Array, pssList : IISOBMFFKeySystem[]) : Uint8Array
 export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
-  parseTfdt,
+  getTrackFragmentDecodeTime,
   getDurationFromTrun,
-  parseSidx,
+  getSegmentsFromSidx,
   getMDAT,
   getMDIA,
   getTRAF,

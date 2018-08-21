@@ -19,8 +19,8 @@ import assert from "../../utils/assert";
 import { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
+  getTrackFragmentDecodeTime,
   ISidxSegment,
-  parseTfdt,
 } from "../../parsers/containers/isobmff";
 import { ISegmentTimingInfos } from "../types";
 
@@ -48,7 +48,7 @@ function getISOBMFFTimingInfos(
   let startTime;
   let duration;
 
-  const baseDecodeTime = parseTfdt(buffer);
+  const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
   const trunDuration = getDurationFromTrun(buffer);
 
   const timescale = initInfos && initInfos.timescale ?
