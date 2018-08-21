@@ -196,6 +196,13 @@ Has the following property in its payload:
 <a name="events-fullscreenChange"></a>
 ### fullscreenChange ###########################################################
 
+---
+
+:warning: This event is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
 _payload type_: ``Boolean``
 
 Triggered each time the video player goes/exits fullscreen mode.
@@ -258,6 +265,13 @@ documentation](./errors.md) for more informations.
 
 <a name="events-nativeTextTracksChange"></a>
 ### nativeTextTracksChange #####################################################
+
+---
+
+:warning: This event is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
 
 _payload type_: ``Array<TextTrackElement>``
 

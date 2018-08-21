@@ -19,6 +19,7 @@ import log from "../log";
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
+import warnOnce from "../utils/warnOnce";
 import Adaptation, {
   IAdaptationType,
 } from "./adaptation";
@@ -238,11 +239,12 @@ export default class Manifest {
   }
 
   /**
-   * TODO log deprecation
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
+    warnOnce("manifest.getAdaptations() is deprecated." +
+      " Please use manifest.period[].getAdaptations() instead");
     const firstPeriod = this.periods[0];
     if (!firstPeriod) {
       return [];
@@ -260,11 +262,12 @@ export default class Manifest {
   }
 
   /**
-   * TODO log deprecation
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+    warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
+      " Please use manifest.period[].getAdaptationsForType(type) instead");
     const firstPeriod = this.periods[0];
     if (!firstPeriod) {
       return [];
@@ -273,11 +276,12 @@ export default class Manifest {
   }
 
   /**
-   * TODO log deprecation
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
+    warnOnce("manifest.getAdaptation(id) is deprecated." +
+      " Please use manifest.period[].getAdaptation(id) instead");
     /* tslint:disable:deprecation */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
     /* tslint:enable:deprecation */
