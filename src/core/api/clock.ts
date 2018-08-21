@@ -110,22 +110,15 @@ function getResumeGap(stalled : stalledStatus) : number {
 }
 
 /**
- * XXX TODO I just don't get it for this one. gap + range.end ??? HELP
- * @param {Number} gap
- * @param {Object} range
+ * @param {Object} currentRange
  * @param {Number} duration
  * @returns {Boolean}
  */
-function isEnding(
-  bufferGap : number,
-  currentRange : {
-    start : number;
-    end : number;
-  }|null,
+function hasLoadedUntilTheEnd(
+  currentRange : { start : number; end : number }|null,
   duration : number
 ) : boolean {
-  return currentRange != null &&
-    (duration - (bufferGap + currentRange.end)) <= STALL_GAP;
+  return currentRange != null && (duration - currentRange.end) <= STALL_GAP;
 }
 
 /**
@@ -199,13 +192,13 @@ function getStalledStatus(
     currentTime: prevTime,
   } = prevTimings;
 
-  const ending = isEnding(bufferGap, currentRange, duration);
+  const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration);
 
   const canStall = (
     readyState >= 1 &&
     currentState !== "loadedmetadata" &&
     !prevStalled &&
-    !(ending || ended)
+    !(fullyLoaded || ended)
   );
 
   let shouldStall;
@@ -220,7 +213,8 @@ function getStalledStatus(
     } else if (
       prevStalled &&
       readyState > 1 &&
-      bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || ending || ended)
+      bufferGap < Infinity &&
+      (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)
     ) {
       shouldUnstall = true;
     }
@@ -242,7 +236,7 @@ function getStalledStatus(
       (currentState !== "seeking" && currentTime !== prevTime ||
         currentState === "canplay" ||
         bufferGap < Infinity &&
-        (bufferGap > getResumeGap(prevStalled) || ending || ended)
+        (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)
       )
     ) {
       shouldUnstall = true;
