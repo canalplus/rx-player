@@ -146,7 +146,7 @@
     "highlight.js": "^9.12.0",
     "istanbul-instrumenter-loader": "^3.0.1",
     "jsx-loader": "^0.13.2",
-    "karma": "^2.0.5",
+    "karma": "^3.0.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.2",
     "karma-firefox-launcher": "^1.1.0",
