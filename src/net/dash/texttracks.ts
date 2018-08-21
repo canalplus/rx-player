@@ -22,7 +22,7 @@ import { stringFromUTF8 } from "../../utils/strings";
 import {
   getMDAT,
   getMDHDTimescale,
-  parseSidx,
+  getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
 
 import request from "../../utils/request";
@@ -130,7 +130,7 @@ function TextTrackParser({
     responseData = new Uint8Array(response.responseData as ArrayBuffer);
 
     const sidxSegments =
-      parseSidx(responseData, indexRange ? indexRange[0] : 0);
+      getSegmentsFromSidx(responseData, indexRange ? indexRange[0] : 0);
 
     if (sidxSegments) {
       nextSegments = sidxSegments;

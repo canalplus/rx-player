@@ -23,7 +23,7 @@ import { of as observableOf } from "rxjs";
 import features from "../../features";
 import {
   getMDHDTimescale,
-  parseSidx,
+  getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
 import dashManifestParser from "../../parsers/manifest/dash";
 import request from "../../utils/request";
@@ -122,7 +122,8 @@ export default function(
         responseData :
         new Uint8Array(responseData);
       const indexRange = segment.indexRange;
-      const sidxSegments = parseSidx(segmentData, indexRange ? indexRange[0] : 0);
+      const sidxSegments =
+        getSegmentsFromSidx(segmentData, indexRange ? indexRange[0] : 0);
 
       if (!segment.isInit) {
         return observableOf({
