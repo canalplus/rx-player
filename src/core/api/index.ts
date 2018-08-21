@@ -517,10 +517,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     this._priv_destroy$ = new Subject();
 
+    /** @deprecated */
     onFullscreenChange$(videoElement)
       .pipe(takeUntil(this._priv_destroy$))
+      /* tslint:disable deprecation */
       .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
+      /* tslint:enable deprecation */
 
+    /** @deprecated */
     onTextTrackChanges$(videoElement.textTracks)
       .pipe(
         takeUntil(this._priv_destroy$),
