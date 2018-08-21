@@ -1943,6 +1943,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = error;
+    log.error("the player stopped because of an error:", error);
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the
