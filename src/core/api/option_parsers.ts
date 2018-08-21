@@ -45,7 +45,9 @@ const {
   DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
 
-export interface ITransportOption {
+export { IKeySystemOption };
+
+export interface ITransportOptions {
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
 }
@@ -80,6 +82,13 @@ export interface INetworkConfigOption {
   offlineRetry? : number;
   segmentRetry? : number;
 }
+
+export type IStartAtOption =
+  { position : number } |
+  { wallClockTime : Date|number } |
+  { percentage : number } |
+  { fromLastPosition : number } |
+  { fromFirstPosition : number };
 
 type IParsedStartAtOption =
   { position : number } |
@@ -120,35 +129,23 @@ export interface IParsedConstructorOptions {
   stopAtEnd : boolean;
 }
 
-export interface ILoadVideoOptionsBase {
+export interface ILoadVideoOptions {
   url : string;
   transport : string;
+
   autoPlay? : boolean;
   keySystems? : IKeySystemOption[];
-  transportOptions? : ITransportOption|undefined;
+  transportOptions? : ITransportOptions|undefined;
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
   networkConfig? : INetworkConfigOption;
-  startAt? : { position : number } | { wallClockTime : Date|number } |
-    { percentage : number } | { fromLastPosition : number } |
-    { fromFirstPosition : number };
-}
-
-export interface ILoadVideoOptionsNative extends ILoadVideoOptionsBase {
-  textTrackMode? : "native";
+  startAt? : IStartAtOption;
+  textTrackMode? : "native"|"html";
   hideNativeSubtitle? : boolean;
+  textTrackElement? : HTMLElement;
 }
-
-export interface ILoadVideoOptionsHTML extends ILoadVideoOptionsBase {
-  textTrackMode : "html";
-  textTrackElement : HTMLElement;
-}
-
-export type ILoadVideoOptions =
-  ILoadVideoOptionsNative |
-  ILoadVideoOptionsHTML;
 
 interface IParsedLoadVideoOptionsBase {
   url : string;
@@ -156,7 +153,7 @@ interface IParsedLoadVideoOptionsBase {
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
   networkConfig: INetworkConfigOption;
-  transportOptions : ITransportOption|undefined;
+  transportOptions : ITransportOptions|undefined;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
   supplementaryImageTracks : ISupplementaryImageTrackOption[];
   defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
@@ -331,7 +328,7 @@ function parseLoadVideoOptions(
   let transport : string;
   let autoPlay : boolean;
   let keySystems : IKeySystemOption[];
-  let transportOptions : ITransportOption|undefined;
+  let transportOptions : ITransportOptions|undefined;
   let supplementaryTextTracks : ISupplementaryTextTrackOption[];
   let supplementaryImageTracks : ISupplementaryImageTrackOption[];
   let textTrackMode : "native"|"html";

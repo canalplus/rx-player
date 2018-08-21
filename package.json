@@ -66,7 +66,7 @@
   "scripts": {
     "build": "webpack --progress --config webpack.config.js",
     "build:min": "cross-env RXP_MINIFY=true webpack --progress --config webpack.config.js",
-    "build:modular": "./scripts/generate_minimal_build",
+    "build:modular": "./scripts/generate_builds",
     "build:modules": "tsc -p tsconfig.modules.json",
     "build:report": "cross-env RXP_SIZE_REPORT=true webpack --progress --config webpack.config.js",
     "build:min:report": "cross-env RXP_SIZE_REPORT=true cross-env RXP_MINIFY=true webpack --progress --config webpack.config.js",
