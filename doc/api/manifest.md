@@ -81,9 +81,14 @@ content.
 
 #### adaptations
 
-_type_: ``Object``
+---
 
-:warn: This property is deprecated and is only here for legacy reasons.
+:warning: This property is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_type_: ``Object``
 
 Adaptation objects for the first Period.
 

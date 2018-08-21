@@ -56,6 +56,7 @@ import {
   getPlayedSizeOfRange,
   getSizeOfRange,
 } from "../../utils/ranges";
+import warnOnce from "../../utils/warnOnce";
 
 import {
   exitFullscreen,
@@ -972,6 +973,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {TextTrack}
    */
   getNativeTextTrack() : TextTrack|null {
+    warnOnce("getNativeTextTrack is deprecated." +
+      " Please open an issue if you used this API.");
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
@@ -1356,6 +1359,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Boolean}
    */
   isFullscreen() : boolean {
+    warnOnce("isFullscreen is deprecated." +
+      " Fullscreen management should now be managed by the application");
     return isFullscreen();
   }
 
@@ -1365,6 +1370,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Boolean} [goFull=true] - if false, exit full screen.
    */
   setFullscreen(goFull : boolean = true) : void {
+    warnOnce("setFullscreen is deprecated." +
+      " Fullscreen management should now be managed by the application");
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
@@ -1381,6 +1388,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @deprecated
    */
   exitFullscreen() : void {
+    warnOnce("exitFullscreen is deprecated." +
+      " Fullscreen management should now be managed by the application");
     exitFullscreen();
   }
 

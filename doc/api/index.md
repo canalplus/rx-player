@@ -610,6 +610,13 @@ if (url) {
 <a name="meth-isFullscreen"></a>
 ### isFullscreen ###############################################################
 
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
 _return value_: ``Boolean``
 
 Returns ``true`` if the video element is in fullscreen mode, ``false``
@@ -982,6 +989,13 @@ Returns the maximum kept buffer ahead of the current position, in seconds.
 <a name="meth-setFullscreen"></a>
 ### setFullscreen ##############################################################
 
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
 _arguments_: ``Boolean``
 
 Switch or exit the ``<video>`` element to fullscreen mode. The argument is an
@@ -998,6 +1012,13 @@ prefer to implement your own method to include your controls in the final UI.
 
 <a name="meth-exitFullscreen"></a>
 ### exitFullscreen #############################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
 
 Exit fullscreen mode. Same than ``setFullscreen(false)``.
 
@@ -1355,6 +1376,13 @@ Free the ressources used by the player.
 
 <a name="meth-getNativeTextTrack"></a>
 ### getNativeTextTrack #########################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
 
 _return value_: ``TextTrack|null``
 
