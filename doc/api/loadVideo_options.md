@@ -443,7 +443,7 @@ defined by TTML styling attributes or SAMI's CSS. It is particularly useful to
 correctly manage complex closed captions (with multiple colors, positionning
 etc.).
 With this mode, you will need to provide a wrapper HTML element with the
-[textTrackElement option](#prop-textTrackMode).
+[textTrackElement option](#prop-textTrackElement).
 
 All text track formats supported in ``"native"`` mode also work in ``"html"``
 mode.
