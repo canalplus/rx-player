@@ -80,7 +80,7 @@ quality.
 RxPlayer's Buffer can describe two things, depending on the context:
 
   - the part of a code downloading [media segments](#segment) and doing what is
-    needed to play them (and by extention, to play the content).
+    needed to play them.
 
   - The content downloaded (and thus "bufferized") itself.
 

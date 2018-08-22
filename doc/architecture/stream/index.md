@@ -10,7 +10,7 @@ Its code is written in the ``src/core/stream`` directory. More specifically,
 all code needed in the rest of the code should be exported by its "index file"
 ``src/core/stream/index.ts``.
 
-Every times you're calling the API to load a new video, the Stream function is
+Every time you're calling the API to load a new video, the Stream function is
 called by it with a handful of arguments.
 
 The Stream does then the major part of the job and communicate back its progress
@@ -68,7 +68,7 @@ This Observable:
 
   - communicate on various streaming events through emitted notifications
 
-  - throw in the case of a fatal error (error interruption playback)
+  - throw in the case of a fatal error (i.e. an error interrupting playback)
 
 
 ### Communication between the API and the Stream ###############################
@@ -96,7 +96,7 @@ Thus, there is three ways the API and Stream can communicate:
 ### Emitted Events #############################################################
 
 Events allows the Stream to reports milestones of the content playback, such as
-when the content has been loaded.
+when the content is ready to play.
 
 It's also a way for the Stream to communicate informations about the content and
 give some controls to the user.
