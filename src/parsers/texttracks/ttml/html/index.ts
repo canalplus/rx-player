@@ -138,6 +138,10 @@ export default function parseTTMLStringToDIV(
             STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
         );
 
+        const paragraphSpaceAttribute = paragraph.getAttribute("xml:space");
+        const shouldTrimWhiteSpaceOnParagraph = paragraphSpaceAttribute ?
+          paragraphSpaceAttribute === "default" : params.spaceStyle === "default";
+
         const cue = parseCue(
           paragraph,
           timeOffset,
@@ -145,7 +149,8 @@ export default function parseTTMLStringToDIV(
           regions,
           body,
           paragraphStyle,
-          params
+          params,
+          shouldTrimWhiteSpaceOnParagraph
         );
         if (cue) {
           ret.push(cue);
