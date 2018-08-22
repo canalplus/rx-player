@@ -22,7 +22,7 @@ is the part of the code actually starting the logic behind playing a content.</p
 <p>Its code is written in the <code>src/core/stream</code> directory. More specifically,
 all code needed in the rest of the code should be exported by its &#x201C;index file&#x201D;
 <code>src/core/stream/index.ts</code>.</p>
-<p>Every times you&#x2019;re calling the API to load a new video, the Stream function is
+<p>Every time you&#x2019;re calling the API to load a new video, the Stream function is
 called by it with a handful of arguments.</p>
 <p>The Stream does then the major part of the job and communicate back its progress
 to the API through events.</p>
@@ -88,7 +88,7 @@ unsubscription</p>
 <p>communicate on various streaming events through emitted notifications</p>
 </li>
 <li>
-<p>throw in the case of a fatal error (error interruption playback)</p>
+<p>throw in the case of a fatal error (i.e. an error interrupting playback)</p>
 </li>
 </ul>
 <p><a name="subchapter-Communication%20between%20the%20API%20and%20the%20Stream"></a></p>
@@ -121,7 +121,7 @@ its event</p>
 <p><a name="subchapter-Emitted%20Events"></a></p>
 <h3>Emitted Events</h3>
 <p>Events allows the Stream to reports milestones of the content playback, such as
-when the content has been loaded.</p>
+when the content is ready to play.</p>
 <p>It&#x2019;s also a way for the Stream to communicate informations about the content and
 give some controls to the user.</p>
 <p>For example, as available audio languages are only known after the manifest has
