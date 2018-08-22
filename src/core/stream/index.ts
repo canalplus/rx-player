@@ -29,7 +29,6 @@ import {
   startWith,
   switchMap,
   takeUntil,
-  tap,
 } from "rxjs/operators";
 import config from "../../config";
 import { ICustomError } from "../../errors";
@@ -224,17 +223,14 @@ export default function Stream({
     log.debug("initial time calculated:", initialTime);
 
     const reloadStreamSubject$ = new Subject<void>();
+    const onStreamLoaderEvent = streamLoaderEventProcessor(reloadStreamSubject$);
     const reloadStream$ : Observable<IStreamEvent> = reloadStreamSubject$.pipe(
       switchMap(() => {
         const currentPosition = mediaElement.currentTime;
         const isPaused = mediaElement.paused;
         return openMediaSource(mediaElement).pipe(
           mergeMap(newMS => loadStream(newMS, currentPosition, !isPaused)),
-          tap(({ type }) => {
-            if (type === "needs-stream-reload") {
-              reloadStreamSubject$.next();
-            }
-          }),
+          map(onStreamLoaderEvent),
           startWith(EVENTS.reloadingStream())
         );
       })
@@ -244,11 +240,7 @@ export default function Stream({
       observableOf(EVENTS.manifestReady(abrManager, manifest)),
       loadStream(mediaSource, initialTime, autoPlay).pipe(
         takeUntil(reloadStreamSubject$),
-        tap(({ type }) => {
-          if (type === "needs-stream-reload") {
-            reloadStreamSubject$.next();
-          }
-        })
+        map(onStreamLoaderEvent)
       )
     );
 
@@ -261,4 +253,25 @@ export default function Stream({
     emeManager$,
     warning$.pipe(map(EVENTS.warning))
   );
+}
+
+/**
+ * Generate function reacting to StreamLoader events.
+ * @param {Subject} reloadStreamSubject$
+ * @returns {Function}
+ */
+function streamLoaderEventProcessor(
+  reloadStreamSubject$ : Subject<void>
+) : (evt : IStreamLoaderEvent) => IStreamEvent {
+  /**
+   * React to StreamLoader events.
+   * @param {Object} evt
+   * @returns {Object}
+   */
+  return function onStreamLoaderEvent(evt : IStreamLoaderEvent) : IStreamEvent {
+    if (evt.type === "needs-stream-reload") {
+      reloadStreamSubject$.next();
+    }
+    return evt;
+  };
 }
