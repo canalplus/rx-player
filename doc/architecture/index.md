@@ -36,7 +36,7 @@ Such modules are (with link to their respective documentation, if one):
 
   - __the [Stream](./stream/index.md)__
 
-    Initialize th content and connects the different modules between one
+    Initialize the content and connects the different modules between one
     another to allow continuous playback.
 
 
@@ -72,7 +72,7 @@ Such modules are (with link to their respective documentation, if one):
   - __the [Networking code](./net/index.md)__
 
     Perform manifest/segment requests, and parse them.
-    "_net_" in essence abstracts the transport protocol used (example:
+    "_Net_" in essence abstracts the transport protocol used (example:
     HSS/DASH) to provide an unified definition of a segment or manifest to
     the other modules.
     In theory, it should be the only directory to update when adding /
@@ -124,22 +124,22 @@ To better understand the player's architecture, you can find below a
   +-------------------+           +--------------------+ ----> +------------+
   | Manifest Pipeline | <-------- |                    | <---- | EMEManager |
   +-------------------+ --------> |                    |       +------------+
-   Download and parse             |                    |       Handle encrypted
-   the manifest                   |                    |       contents
-                      +---------- |                    | <---------------+
-                      |  +------> |       Stream       | ------------+   |
-                      v  |        |                    |             V   |
- +----------------------------+   |                    |      +----------------+
- | SegmentPipelineManager (1) |   |                    |      | ABRManager (1) |
- +----------------------------+   |                    |      +----------------+
-  Factory creating segment        |                    |           Find the best
-  `pipelines` to download         +--------------------+                 bitrate
-  segments                         ^ |    |  ^  Initialize
-                                   | |    |  |  a content
-+---------------------+ -----------+ |    |  |  and connect
-|                     | <------------+    |  |  everything
-| SourceBufferManager |                   |  |
-|         (1)         |                   |  |
+   Download and parse             |                    |     Handle encrypted
+   the manifest                   |                    |             contents
+                      +---------- |                    |
+                      |  +------> |       Stream       | ----> +--------------+
+                      v  |        |                    | <---- | SpeedManager |
+ +----------------------------+   |                    |       +--------------+
+ | SegmentPipelineManager (1) |   |                    |       Manage playback
+ +----------------------------+   |                    |                  rate
+  Factory creating segment        |                    | <---------------+
+  `pipelines` to download         +--------------------+ ------------+   |
+  segments                         ^ |    |  ^  Initialize           V   |
+                                   | |    |  |  a content     +----------------+
++---------------------+ -----------+ |    |  |  and connect   | ABRManager (1) |
+|                     | <------------+    |  |  everything    +----------------+
+| SourceBufferManager |                   |  |                     Find the best
+|         (1)         |                   |  |                           bitrate
 |                     |                   |  |
 +---------------------+                   |  |
  Create and handle                        |  |
