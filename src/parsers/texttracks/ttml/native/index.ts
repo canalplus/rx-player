@@ -253,7 +253,20 @@ function generateTextContent(
           trimmed = trimmed.replace(/\s+/g, " ");
           textContent = trimmed;
         }
-        text += textContent;
+
+        // DOM Parser turns HTML escape caracters into caracters,
+        // that may be misinterpreted by VTTCue API (typically, less-than sign
+        // and greater-than sign can be interpreted as HTML tags signs).
+        // Original escaped caracters must be conserved.
+        const escapedTextContent = textContent
+          .replace(/&|\u0026/g, "&amp;")
+          .replace(/<|\u003C/g, "&lt;")
+          .replace(/>|\u2265/g, "&gt;")
+          .replace(/\u200E/g, "&lrm;")
+          .replace(/\u200F/g, "&rlm;")
+          .replace(/\u00A0/g, "&nbsp;");
+
+        text += escapedTextContent;
       } else if (currentNode.nodeName === "br") {
         text += "\n";
       } else if (
