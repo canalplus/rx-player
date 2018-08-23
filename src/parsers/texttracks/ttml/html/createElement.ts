@@ -480,12 +480,12 @@ function generateTextContent(
         elements.push(br);
       } else if (
         currentNode.nodeName === "span" &&
+        currentNode.nodeType === Node.ELEMENT_NODE &&
         currentNode.childNodes.length > 0
       ) {
         const spaceAttribute = (currentNode as Element).getAttribute("xml:space");
         const shouldTrimWhiteSpaceOnSpan = spaceAttribute ?
           spaceAttribute === "default" : shouldTrimWhiteSpaceFromParent;
-        style.whiteSpace = shouldTrimWhiteSpaceOnSpan ? "normal" : "pre";
 
         // compute the new applyable style
         const newStyle = objectAssign({}, style, getStylingAttributes(

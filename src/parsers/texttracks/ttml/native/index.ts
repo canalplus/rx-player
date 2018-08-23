@@ -277,6 +277,7 @@ function generateTextContent(
         text += "\n";
       } else if (
         currentNode.nodeName === "span" &&
+        currentNode.nodeType === Node.ELEMENT_NODE &&
         currentNode.childNodes.length > 0
       ) {
         const spaceAttribute = (currentNode as Element).getAttribute("xml:space");
