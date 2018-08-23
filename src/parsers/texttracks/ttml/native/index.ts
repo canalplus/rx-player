@@ -93,6 +93,7 @@ function parseTTMLStringToVTT(
     const body = getBodyNode(tt);
     const styleNodes = getStyleNodes(tt);
     const regionNodes = getRegionNodes(tt);
+    const paragraphNodes = getTextNodes(tt);
     const params = getParameters(tt);
 
     // construct styles array based on the xml as an optimization
@@ -145,8 +146,6 @@ function parseTTMLStringToVTT(
     const bodySpaceAttribute = body ? body.getAttribute("xml:space") : undefined;
     const shouldTrimWhiteSpaceOnBody =
       bodySpaceAttribute === "default" || params.spaceStyle === "default";
-
-    const paragraphNodes = getTextNodes(tt);
 
     for (let i = 0; i < paragraphNodes.length; i++) {
       const paragraph = paragraphNodes[i];
