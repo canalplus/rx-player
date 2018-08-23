@@ -105,7 +105,8 @@ function generateCSSTextOutline(
  */
 function applyTextStyle(
   element : HTMLElement,
-  style : Partial<Record<string, string>>
+  style : Partial<Record<string, string>>,
+  shouldTrimWhiteSpace : boolean
 ) {
   // applies to span
   const color = style.color;
@@ -259,8 +260,7 @@ function applyTextStyle(
   }
 
   // applies to body, div, p, region, span
-  const whiteSpace = style.whiteSpace;
-  if (whiteSpace === "pre") {
+  if (!shouldTrimWhiteSpace) {
     element.style.whiteSpace = "pre";
   }
 }
@@ -348,12 +348,6 @@ function applyGeneralStyle(
   if (display === "none") {
     element.style.display = "none";
   }
-
-  // applies to body, div, p, region, span
-  const whiteSpace = style.whiteSpace;
-  if (whiteSpace === "pre") {
-    element.style.whiteSpace = whiteSpace;
-  }
 }
 
 /**
@@ -397,12 +391,6 @@ function applyPStyle(
         break;
     }
   }
-
-  // applies to p
-  const whiteSpace = style.whiteSpace;
-  if (whiteSpace === "pre") {
-    element.style.whiteSpace = whiteSpace;
-  }
 }
 
 /**
@@ -412,20 +400,20 @@ function applyPStyle(
  * @param {Element} el - the #text element, which text content should be
  * displayed
  * @param {Object} style - the style object for the given text
- * @param {Boolean} shouldTrimWhiteSpaceFromParent - True if the space should be
- * trimmed by default. From the parent xml:space parameter.
+ * @param {Boolean} shouldTrimWhiteSpace - True if the space should be
+ * trimmed.
  * @returns {HTMLElement}
  */
 function createTextElement(
   el : Node,
   style : Partial<Record<string, string>>,
-  shouldTrimWhiteSpaceFromParent : boolean
+  shouldTrimWhiteSpace : boolean
 ) : HTMLElement {
   const textElement = document.createElement("span");
 
   let textContent = el.textContent || "";
 
-  if (shouldTrimWhiteSpaceFromParent) {
+  if (shouldTrimWhiteSpace) {
     // 1. Trim leading and trailing whitespace.
     // 2. Collapse multiple spaces into one.
     let trimmed = textContent.trim();
@@ -436,7 +424,7 @@ function createTextElement(
   textElement.innerHTML = textContent;
   textElement.className = "rxp-texttrack-span";
 
-  applyTextStyle(textElement, style);
+  applyTextStyle(textElement, style, shouldTrimWhiteSpace);
   return textElement;
 }
 
