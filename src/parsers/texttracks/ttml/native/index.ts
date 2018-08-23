@@ -146,9 +146,7 @@ function parseTTMLStringToVTT(
     const shouldTrimWhiteSpaceOnBody =
       bodySpaceAttribute === "default" || params.spaceStyle === "default";
 
-    const paragraphNodes = body ?
-      body.querySelectorAll("div")[0].children :
-      getTextNodes(tt);
+    const paragraphNodes = getTextNodes(tt);
 
     for (let i = 0; i < paragraphNodes.length; i++) {
       const paragraph = paragraphNodes[i];
