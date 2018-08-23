@@ -514,7 +514,7 @@ export default function createElement(
   regions : IStyleObject[],
   styles : IStyleObject[],
   paragraphStyle : IStyleList,
-  shouldTrimWhiteSpaceOnParagraph : boolean
+  shouldTrimWhiteSpace : boolean
 ) : HTMLElement {
   const divs = getParentElementsByTagName(paragraph, "div");
 
@@ -537,7 +537,7 @@ export default function createElement(
   applyPStyle(pElement, paragraphStyle);
 
   const textContent = generateTextContent(
-    paragraph, regions, styles, paragraphStyle, shouldTrimWhiteSpaceOnParagraph);
+    paragraph, regions, styles, paragraphStyle, shouldTrimWhiteSpace);
 
   for (let i = 0; i < textContent.length; i++) {
     pElement.appendChild(textContent[i]);

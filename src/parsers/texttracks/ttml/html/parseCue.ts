@@ -47,7 +47,7 @@ export default function parseCue(
   body : Element|null,
   styleBase : IStyleList,
   ttParams : ITTParameters,
-  shouldTrimWhiteSpaceOnParagraph : boolean
+  shouldTrimWhiteSpace : boolean
 ) : ITTMLHTMLCue|null {
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
@@ -66,7 +66,7 @@ export default function parseCue(
     regions,
     styles,
     styleBase,
-    shouldTrimWhiteSpaceOnParagraph
+    shouldTrimWhiteSpace
   );
   return {
     start: start + offset,

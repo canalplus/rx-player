@@ -198,7 +198,7 @@ function parseCue(
   _regions : IStyleObject[],
   paragraphStyle : IStyleList,
   params : ITTParameters,
-  shouldTrimWhiteSpaceOnParagraph : boolean
+  shouldTrimWhiteSpace : boolean
 ) : VTTCue|TextTrackCue|null {
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
@@ -211,7 +211,7 @@ function parseCue(
   }
 
   const { start, end } = getTimeDelimiters(paragraph, params);
-  const text = generateTextContent(paragraph, shouldTrimWhiteSpaceOnParagraph);
+  const text = generateTextContent(paragraph, shouldTrimWhiteSpace);
   const cue = makeCue(start + offset, end + offset, text);
   if (!cue) {
     return null;
