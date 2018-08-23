@@ -49,11 +49,9 @@ function isMP4EmbeddedTrack(representation : Representation) : boolean {
  * @returns {string}
  */
 function byteRange([start, end] : [number, number]) : string {
-  if (!end || end === Infinity) {
-    return "bytes=" + (+start) + "-";
-  } else {
-    return "bytes=" + (+start) + "-" + (+end);
-  }
+  return end === Infinity ?
+    "bytes=" + (+start) + "-" :
+    "bytes=" + (+start) + "-" + (+end);
 }
 
 export {
