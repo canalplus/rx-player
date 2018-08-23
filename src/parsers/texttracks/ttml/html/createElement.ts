@@ -121,12 +121,6 @@ function applyTextStyle(
   }
 
   // applies to span
-  const wrapOption = style.wrapOption;
-  if (wrapOption && wrapOption === "noWrap") {
-    element.style.whiteSpace = "nowrap";
-  }
-
-  // applies to span
   const textOutline = style.textOutline;
   if (textOutline) {
     const outlineData = textOutline.trim().replace(/\s+/g, " ").split(" ");
@@ -260,9 +254,10 @@ function applyTextStyle(
   }
 
   // applies to body, div, p, region, span
-  if (!shouldTrimWhiteSpace) {
-    element.style.whiteSpace = "pre";
-  }
+  const wrapOption = style.wrapOption;
+  element.style.whiteSpace = wrapOption === "noWrap" ?
+    (shouldTrimWhiteSpace ? "nowrap" : "pre") :
+    (shouldTrimWhiteSpace ? "normal" : "pre-wrap");
 }
 
 /**
