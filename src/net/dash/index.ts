@@ -25,6 +25,10 @@ import {
   getMDHDTimescale,
   getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
+import {
+  getSegmentsFromCues,
+  getTimeCodeScale,
+} from "../../parsers/containers/matroska";
 import dashManifestParser from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import generateManifestLoader from "../utils/manifest_loader";
@@ -122,25 +126,34 @@ export default function(
         responseData :
         new Uint8Array(responseData);
       const indexRange = segment.indexRange;
-      const sidxSegments =
+      const isWEBM = representation.mimeType === "video/webm" ||
+        representation.mimeType === "audio/webm";
+      const nextSegments = isWEBM ?
+        getSegmentsFromCues(segmentData, 0) :
         getSegmentsFromSidx(segmentData, indexRange ? indexRange[0] : 0);
 
       if (!segment.isInit) {
-        return observableOf({
-          segmentData,
-          segmentInfos: getISOBMFFTimingInfos(segment, segmentData, sidxSegments, init),
-          segmentOffset: segment.timestampOffset || 0,
-        });
+        const segmentInfos = isWEBM ?
+          {
+            time: segment.time,
+            duration: segment.duration,
+            timescale: segment.timescale,
+          } :
+          getISOBMFFTimingInfos(segment, segmentData, nextSegments, init);
+        const segmentOffset = segment.timestampOffset || 0;
+        return observableOf({ segmentData, segmentInfos, segmentOffset });
       }
 
-      if (sidxSegments) {
-        const nextSegments = sidxSegments;
+      if (nextSegments) {
         addNextSegments(representation, nextSegments);
       }
-      const timescale = getMDHDTimescale(segmentData);
+      const timescale = isWEBM ?
+        getTimeCodeScale(segmentData, 0) :
+        getMDHDTimescale(segmentData);
       return observableOf({
         segmentData,
-        segmentInfos: timescale > 0 ? { time: -1, duration: 0, timescale } : null,
+        segmentInfos: timescale && timescale > 0 ?
+          { time: -1, duration: 0, timescale } : null,
         segmentOffset: segment.timestampOffset || 0,
       });
     },
