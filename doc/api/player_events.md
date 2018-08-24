@@ -9,6 +9,7 @@
     - [positionUpdate](#events-positionUpdate)
     - [audioTrackChange](#events-audioTrackChange)
     - [textTrackChange](#events-textTrackChange)
+    - [videoTrackChange](#events-videoTrackChange)
     - [audioBitrateChange](#events-audioBitrateChange)
     - [videoBitrateChange](#events-videoBitrateChange)
     - [imageTrackUpdate](#events-imageTrackUpdate)
@@ -97,7 +98,7 @@ The object emitted as the following properties:
 <a name="events-audioTrackChange"></a>
 ### audioTrackChange ###########################################################
 
-_payload type_: ``Object``
+_payload type_: ``Object|null``
 
 ---
 
@@ -120,7 +121,7 @@ properties:
 <a name="events-textTrackChange"></a>
 ### textTrackChange ############################################################
 
-_payload type_: ``Object``
+_payload type_: ``Object|null``
 
 ---
 
@@ -138,6 +139,46 @@ properties:
   - ``language`` (``string``): The language the text track is in.
   - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for
     the hard of hearing or not.
+
+
+<a name="events-videoTrackChange"></a>
+### videoTrackChange ############################################################
+
+_payload type_: ``Object|null``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Information about the current video track, each time it changes (the last
+received segment got a new one).
+
+The payload is an object describing the new track, with the following
+properties:
+
+  - ``id`` (``string``): The id used to identify the track. Use it for setting
+    the track via ``setVideoTrack``.
+
+
+  - ``representations`` (``Array.<Object>``): Representations of this video
+    track, with attributes:
+
+    - ``id`` (``string``): The id used to identify this Representation.
+
+    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
+      seconds.
+
+    - ``width`` (``Number|undefined``): The width of video, in pixels.
+
+    - ``height`` (``Number|undefined``): The height of video, in pixels.
+
+    - ``codec`` (``string|undefined``): The codec given in standard MIME type
+      format.
+
+    - ``frameRate`` (``string|undefined``): The video framerate.
 
 
 <a name="events-audioBitrateChange"></a>
