@@ -10729,7 +10729,7 @@ object-assign
                     var adaptationsForType = period.adaptations[type];
                     if (adaptationsForType) {
                         var checkedAdaptations = checkAdaptations(adaptationsForType, warning$);
-                        checkAdaptations.length ? period.adaptations[type] = checkedAdaptations : delete period.adaptations[type];
+                        checkedAdaptations.length ? period.adaptations[type] = checkedAdaptations : delete period.adaptations[type];
                     } else delete period.adaptations[type];
                 }), !period.adaptations.video && !period.adaptations.audio) throw new MediaError.a("MANIFEST_PARSE_ERROR", null, !0);
                 return period;
