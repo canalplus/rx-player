@@ -39,9 +39,9 @@ export interface ISegmentBaseAttributes {
 }
 
 interface ISegmentBaseSegment {
-  ts: number; // start timestamp
-  d: number; // duration
-  r: number; // repeat counter
+  start: number; // start timestamp
+  duration: number; // duration
+  repeatCount: number; // repeat counter
   range?: [number, number];
 }
 
@@ -54,7 +54,6 @@ export interface IParsedSegmentBase extends ISegmentBaseAttributes {
 }
 
 /**
- * TODO Only for SegmentBase not for other types
  * @param {Element} root
  * @returns {Object}
  */

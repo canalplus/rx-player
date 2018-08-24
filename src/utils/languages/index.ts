@@ -84,7 +84,7 @@ function normalizeBase(base : string) : string {
  *   - normalized {string}: An attempt to normalize the language into an
  *     ISO 639-3 code
  *   - closedCaption {Boolean}: Whether the track is a closed caption track
- * @param {Object|string} _language
+ * @param {Object|string|null|undefined} _language
  * @returns {Object|null|undefined}
  */
 function normalizeTextTrack(
@@ -118,7 +118,7 @@ function normalizeTextTrack(
  *   - normalized {string}: An attempt to normalize the language into an
  *     ISO 639-3 code
  *   - audioDescription {Boolean}: Whether the track is a closed caption track
- * @param {Object|string} _language
+ * @param {Object|string|null|undefined} _language
  * @returns {Object|null|undefined}
  */
 function normalizeAudioTrack(

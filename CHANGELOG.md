@@ -1,5 +1,41 @@
 # Changelog
 
+## v3.6.0 (2018/08/24)
+
+## features
+  - api: add video track switching
+  - dash: add webm support
+  - api: Emit warning if autoPlay is blocked on the current browser
+  - api: add ``getAvailableVideoTracks`` method to retrieve every video tracks
+  - api: add ``getVideoTrack`` method to get the active video track
+  - api: add ``setVideoTrack`` method to switch the video track
+  - api: add ``videoTrackChange`` event to know when a video track has been switched
+  - api: add ``RELOADING`` event for cases where the player needs to reload (such as during a video track switch)
+
+## Deprecated
+
+  - api: the method ``isFullscreen`` has been deprecated
+  - api: the method ``setFullscreen`` has been deprecated
+  - api: the method ``exitFullscreen`` has been deprecated
+  - api: the method ``getNativeTextTrack`` has been deprecated
+  - api: the event ``fullscreenChange`` has been deprecated
+  - api: the event ``nativeTextTrackChange`` has been deprecated
+
+## bug fixes
+
+  - ttml: display forbidden characters (such as ">") in a ``"native"`` ``textTrackMode``
+  - ttml: process ``xml:space`` even if it is not defined at the top level
+  - buffer: perform a better clean-up of previous media in a SourceBuffer when switching audio or text track
+  - manifest/dash: throw a MANIFEST_PARSE_ERROR when no AdaptationSet of a given type in a Period is in a compatible codec
+
+## Other improvements
+
+  - types: export and document main typings used internally such as ILoadVideoOptions (the loadVideo argument)
+  - misc: log every fatal errors
+  - misc: remove dumb npm inclusion as a project dependency
+  - doc: improve architecture documentation
+
+
 ## v3.5.2 (2018/08/06)
 
 ### Bug fixes

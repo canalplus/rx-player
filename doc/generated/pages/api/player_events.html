@@ -7,6 +7,7 @@
 <li><a href="#subchapter-positionUpdate">positionUpdate</a></li>
 <li><a href="#subchapter-audioTrackChange">audioTrackChange</a></li>
 <li><a href="#subchapter-textTrackChange">textTrackChange</a></li>
+<li><a href="#subchapter-videoTrackChange">videoTrackChange</a></li>
 <li><a href="#subchapter-audioBitrateChange">audioBitrateChange</a></li>
 <li><a href="#subchapter-videoBitrateChange">videoBitrateChange</a></li>
 <li><a href="#subchapter-imageTrackUpdate">imageTrackUpdate</a></li>
@@ -93,7 +94,7 @@ video element).</p>
 <p><a name="events-audioTrackChange"></a>
 <a name="subchapter-audioTrackChange"></a></p>
 <h3>audioTrackChange</h3>
-<p><em>payload type</em>: <code>Object</code></p>
+<p><em>payload type</em>: <code>Object|null</code></p>
 <hr>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>).</p>
@@ -111,7 +112,7 @@ description (for the visually impaired or not).</li>
 <p><a name="events-textTrackChange"></a>
 <a name="subchapter-textTrackChange"></a></p>
 <h3>textTrackChange</h3>
-<p><em>payload type</em>: <code>Object</code></p>
+<p><em>payload type</em>: <code>Object|null</code></p>
 <hr>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>).</p>
@@ -125,6 +126,50 @@ properties:</p>
 <li><code>language</code> (<code>string</code>): The language the text track is in.</li>
 <li><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
 the hard of hearing or not.</li>
+</ul>
+<p><a name="events-videoTrackChange"></a>
+<a name="subchapter-videoTrackChange"></a></p>
+<h3>videoTrackChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Information about the current video track, each time it changes (the last
+received segment got a new one).</p>
+<p>The payload is an object describing the new track, with the following
+properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for setting
+the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>): Representations of this video
+track, with attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
 </ul>
 <p><a name="events-audioBitrateChange"></a>
 <a name="subchapter-audioBitrateChange"></a></p>
@@ -162,6 +207,10 @@ page</a>.</p>
 <p><a name="events-fullscreenChange"></a>
 <a name="subchapter-fullscreenChange"></a></p>
 <h3>fullscreenChange</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p><em>payload type</em>: <code>Boolean</code></p>
 <p>Triggered each time the video player goes/exits fullscreen mode.</p>
 <p>The payload is <code>true</code> if the player entered fullscreen, <code>false</code> if it exited
@@ -208,6 +257,10 @@ documentation</a> for more informations.</p>
 <p><a name="events-nativeTextTracksChange"></a>
 <a name="subchapter-nativeTextTracksChange"></a></p>
 <h3>nativeTextTracksChange</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p><em>payload type</em>: <code>Array&lt;TextTrackElement&gt;</code></p>
 <hr>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo

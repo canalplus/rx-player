@@ -16,6 +16,10 @@
 
 import { IDisplayConfiguration } from "../../types";
 
+/**
+ * @param {Object} display
+ * @returns {string|null}
+ */
 export default function formatMediaDisplayInfosConfigForAPI(
   display: IDisplayConfiguration
 ) : string|null {

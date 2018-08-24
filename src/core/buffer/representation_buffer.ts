@@ -49,65 +49,23 @@ import {
   IBufferType ,
   QueuedSourceBuffer,
 } from "../source_buffers";
-import { SegmentBookkeeper } from "../stream";
-
 import appendDataInSourceBuffer from "./append_data";
+import EVENTS from "./events_generators";
 import getBufferPaddings from "./get_buffer_paddings";
 import getSegmentPriority from "./get_segment_priority";
 import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
+import SegmentBookkeeper from "./segment_bookkeeper";
 import shouldDownloadSegment from "./segment_filter";
+import {
+  IBufferEventAddedSegment,
+  IBufferNeededActions,
+  IBufferStateActive,
+  IBufferStateFull,
+  IRepresentationBufferEvent,
+  IRepresentationBufferStateEvent,
+} from "./types";
 
-// Emitted after a new segment has been added to the SourceBuffer
-export interface IBufferEventAddedSegment<T> {
-  type : "added-segment";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-    segment : ISegment; // The concerned Segment
-    segmentData : T; // The data pushed
-  };
-}
-
-// The Manifest needs to be refreshed.
-// The buffer might still download segments after this message
-export interface IBufferNeedsManifestRefresh {
-  type : "needs-manifest-refresh";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-  };
-}
-
-// Emit when a discontinuity is encountered and the user is "stuck" on it.
-export interface IBufferNeedsDiscontinuitySeek {
-  type : "discontinuity-encountered";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-    nextTime : number; // the time we should seek to TODO this is ugly
-  };
-}
-
-// Events communicating about actions that need to be taken
-type IBufferNeededActions =
-  IBufferNeedsManifestRefresh |
-  IBufferNeedsDiscontinuitySeek;
-
-// State emitted when the Buffer is scheduling segments
-export interface IBufferStateActive {
-  type : "active-buffer";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-  };
-}
-
-// State emitted when the buffer has been filled to the end
-export interface IBufferStateFull {
-  type : "full-buffer";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-  };
-}
-
-// State emitted when the buffer waits
 interface IBufferStateIdle {
   type : "idle-buffer";
   value : {
@@ -121,22 +79,10 @@ type IBufferDownloadQueueState =
   IBufferStateActive |
   IBufferStateIdle;
 
-type IBufferStateEvent =
-  IBufferNeededActions |
-  IBufferStateFull |
-  IBufferStateActive;
-
-// Events emitted by the Buffer
-export type IRepresentationBufferEvent<T> =
-  IBufferEventAddedSegment<T> |
-  IBufferStateEvent;
-
 // Item emitted by the Buffer's clock$
-export interface IBufferClockTick {
+export interface IRepresentationBufferClockTick {
   currentTime : number;
   readyState : number;
-
-  // TODO Rename "baseTime" or something which will be currentTime + wantedTimeOffset?
   wantedTimeOffset : number;
   stalled : object|null;
   liveGap? : number;
@@ -144,7 +90,7 @@ export interface IBufferClockTick {
 
 // Arguments to give to the Buffer
 export interface IRepresentationBufferArguments<T> {
-  clock$ : Observable<IBufferClockTick>;
+  clock$ : Observable<IRepresentationBufferClockTick>;
   content: {
     representation : Representation;
     adaptation : Adaptation;
@@ -351,14 +297,7 @@ export default function RepresentationBuffer<T>({
       sourceBufferWaitingQueue.add(segment.id);
 
       return append$.pipe(
-        mapTo({
-          type: "added-segment" as "added-segment",
-          value : {
-            bufferType,
-            segment,
-            segmentData,
-          },
-        }),
+        mapTo(EVENTS.addedSegment(bufferType, segment, segmentData)),
         tap(() => {
           if (segment.isInit) {
             return;
@@ -400,7 +339,7 @@ export default function RepresentationBuffer<T>({
    * @returns {Object}
    */
   function getBufferStatus(
-    [timing, bufferGoal] : [IBufferClockTick, number]
+    [timing, bufferGoal] : [IRepresentationBufferClockTick, number]
   ) : IBufferCurrentStatus {
     const buffered = queuedSourceBuffer.getBuffered();
     const neededRange = getWantedRange(
@@ -461,7 +400,7 @@ export default function RepresentationBuffer<T>({
    */
   function handleBufferStatus(
     status : IBufferCurrentStatus
-  ) : Observable<IBufferStateEvent> {
+  ) : Observable<IRepresentationBufferStateEvent> {
     const {
       discontinuity,
       shouldRefreshManifest,
@@ -499,10 +438,8 @@ export default function RepresentationBuffer<T>({
       }
       downloadQueue = [];
       startQueue$.next(); // (re-)start with an empty queue
-      return state.type === "full-buffer" ? {
-        type: "full-buffer" as "full-buffer",
-        value: { bufferType },
-      } : {
+      return state.type === "full-buffer" ?
+        EVENTS.fullBuffer(bufferType) : {
         type: "idle-buffer" as "idle-buffer",
         value: { bufferType },
       };
@@ -537,11 +474,7 @@ export default function RepresentationBuffer<T>({
       // (pending request)
       downloadQueue = newQueue;
     }
-
-    return {
-      type: "active-buffer",
-      value: { bufferType },
-    };
+    return EVENTS.activeBuffer(bufferType);
   }
 
   /**
@@ -553,7 +486,7 @@ export default function RepresentationBuffer<T>({
    *   - start/restart the BufferQueue
    * @type {Observable}
    */
-  const bufferState$ : Observable<IBufferStateEvent> =
+  const bufferState$ : Observable<IRepresentationBufferStateEvent> =
     observableCombineLatest(clock$, wantedBufferAhead$).pipe(
       map(getBufferStatus),
       mergeMap(handleBufferStatus)
@@ -586,7 +519,7 @@ function getCurrentDiscontinuity(
     manifest : Manifest;
     representation : Representation;
   },
-  timing : IBufferClockTick
+  timing : IRepresentationBufferClockTick
 ) : number {
   return !timing.stalled || !manifest.isLive ?
     -1 : representation.index.checkDiscontinuity(timing.currentTime);
@@ -620,20 +553,11 @@ function getNeededActions(
   const neededActions : IBufferNeededActions[] = [];
 
   if (discontinuity > 1) {
-    neededActions.push({
-      type: "discontinuity-encountered" as "discontinuity-encountered",
-      value: {
-        nextTime: discontinuity + 1,
-        bufferType,
-      },
-    });
+    neededActions.push(EVENTS.discontinuityEncountered(bufferType, discontinuity + 1));
   }
 
   if (shouldRefreshManifest) {
-    neededActions.push({
-      type: "needs-manifest-refresh" as "needs-manifest-refresh",
-      value: { bufferType },
-    });
+    neededActions.push(EVENTS.needsManifestRefresh(bufferType));
   }
 
   return neededActions;

@@ -34,6 +34,7 @@ import {
   IParsedPeriod,
   IParsedRepresentation,
 } from "../../types";
+import checkManifestIDs from "../../utils/check_manifest_ids";
 import {
   IScheme,
   isHardOfHearing,
@@ -210,7 +211,7 @@ const getLastLiveTimeReference = (
   const lastLiveTimeReferences : Array<number|undefined> = representations
     .map(representation => {
       const lastPosition = representation.index.getLastPosition();
-      return lastPosition != null ? lastPosition - 10 : undefined; // TODO
+      return lastPosition != null ? lastPosition - 10 : undefined;
     });
 
   if (lastLiveTimeReferences.some((x) => x == null)) {
@@ -561,11 +562,11 @@ export default function parseManifest(
         const adaptationCodecs = adaptation.attributes.codecs;
 
         const representationMimeTypes = representations
-          .map(r => r.mimeType)
+          .map(representation => representation.mimeType)
           .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
 
         const representationCodecs = representations
-          .map(r => r.codecs)
+          .map(representation => representation.codecs)
           .filter((codecs : string|undefined) : codecs is string => codecs != null);
 
         const type = inferAdaptationType(
@@ -703,7 +704,7 @@ export default function parseManifest(
       rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
     periods: parsedPeriods,
     transportType: "dash",
-    type: rootAttributes.type || "static",
+    isLive: rootAttributes.type === "dynamic",
     uris: [uri, ...rootChildren.locations],
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
@@ -740,7 +741,7 @@ export default function parseManifest(
     parsedMPD.maxSubsegmentDuration = rootAttributes.maxSubsegmentDuration;
   }
 
-  if (parsedMPD.type === "dynamic") {
+  if (parsedMPD.isLive) {
     const lastPeriodAdaptations = parsedMPD.periods[
       parsedMPD.periods.length - 1
     ].adaptations;
@@ -759,5 +760,6 @@ export default function parseManifest(
       Date.now() / 1000 - (lastRef + parsedMPD.availabilityStartTime) : 10;
   }
 
+  checkManifestIDs(parsedMPD);
   return parsedMPD;
 }

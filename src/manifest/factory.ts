@@ -26,7 +26,6 @@ import {
 import arrayIncludes from "../utils/array-includes";
 import { SUPPORTED_ADAPTATIONS_TYPE } from "./adaptation";
 import Manifest, {
-  IManifestArguments,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "./index";
@@ -49,6 +48,7 @@ import { IRepresentationArguments } from "./representation";
  * manifest as an adaptation.
  * @param {Array.<Object>|Object} externalImageTracks - Will be added to the
  * manifest as an adaptation.
+ * @param {Subject} warning$
  * @returns {Object}
  */
 export default function createManifest(
@@ -64,7 +64,7 @@ export default function createManifest(
         delete period.adaptations[type];
       } else {
         const checkedAdaptations = checkAdaptations(adaptationsForType, warning$);
-        if (!checkAdaptations.length) {
+        if (!checkedAdaptations.length) {
           delete period.adaptations[type];
         } else {
           period.adaptations[type] = checkedAdaptations;
@@ -82,8 +82,7 @@ export default function createManifest(
     return period;
   });
 
-  // TODO Better way than this "as"
-  const manifest = new Manifest(manifestObject as IManifestArguments);
+  const manifest = new Manifest(manifestObject);
   manifest.addSupplementaryTextAdaptations(externalTextTracks);
   manifest.addSupplementaryImageAdaptations(externalImageTracks);
   return manifest;
@@ -96,6 +95,7 @@ export default function createManifest(
  * Throws if something is wrong.
  *
  * @param {Array.<Object>} initialAdaptations
+ * @param {Subject} warning$
  * @returns {Array.<Object>}
  */
 function checkAdaptations(

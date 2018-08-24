@@ -48,7 +48,7 @@ const pixelRatio = window.devicePixelRatio || 1;
 
 /**
  * Find the first supported event from the list given.
- * @param {Element} element
+ * @param {HTMLElement} element
  * @param {string} eventNameSuffix
  * @returns {Boolean}
  */
@@ -68,9 +68,9 @@ function isEventSupported(
 
 /**
  * Find the first supported event from the list given.
- * @param {Element} element
+ * @param {HTMLElement} element
  * @param {Array.<string>} eventNames
- * @returns {string}
+ * @returns {string|undefined}
  */
 function findSupportedEvent(
   element : HTMLElement,
@@ -80,6 +80,11 @@ function findSupportedEvent(
     .filter((name) => isEventSupported(element, name))[0];
 }
 
+/**
+ * @param {Array.<string>} eventNames
+ * @param {Array.<string>|undefined} prefixes
+ * @returns {Array.<string>}
+ */
 function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
   return eventNames.reduce((parent : string[], name : string) =>
     parent
@@ -92,7 +97,6 @@ export interface IEventEmitterLike {
   removeEventListener: (eventName: string, handler: () => void) => void;
 }
 
-// XXX TODO
 export type IEventTargetLike =
   HTMLElement |
   IEventEmitterLike |
@@ -100,7 +104,7 @@ export type IEventTargetLike =
 
 /**
  * @param {Array.<string>} eventNames
- * @param {Array.<string>} prefixes
+ * @param {Array.<string>|undefined} prefixes
  * @returns {Observable}
  */
 function compatibleListener<T extends Event>(
@@ -165,41 +169,82 @@ function visibilityChange() : Observable<boolean> {
     .pipe(map(() => document[hidden as "hidden"]));
 }
 
+/**
+ * @returns {Observable}
+ */
 function videoSizeChange() : Observable<null> {
   return observableFromEvent(window, "resize")
     .pipe(mapTo(null));
 }
 
-const isVisible = visibilityChange()
+const isVisible$ = visibilityChange()
   .pipe(filter((x) => !x)); // emit false when visible
 
 // Emit true if the visibility changed to hidden since 60s
-const isHidden = visibilityChange()
+const isHidden$ = visibilityChange()
   .pipe(
     debounceTime(INACTIVITY_DELAY),
     filter((x) => x)
   );
 
-const isInBackground$ = () => observableMerge(isVisible, isHidden)
-  .pipe(startWith(false));
+/**
+ * @returns {Observable}
+ */
+function isInBackground$() {
+  return observableMerge(isVisible$, isHidden$)
+    .pipe(startWith(false));
+}
 
-function videoWidth$(videoElement : HTMLMediaElement) : Observable<number> {
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+function videoWidth$(mediaElement : HTMLMediaElement) : Observable<number> {
   return observableMerge(
     observableInterval(20000).pipe(mapTo(null)),
     videoSizeChange().pipe(debounceTime(500))
   )
     .pipe(
       startWith(null), // emit on subscription
-      map(() => videoElement.clientWidth * pixelRatio),
+      map(() => mediaElement.clientWidth * pixelRatio),
       distinctUntilChanged()
     );
 }
 
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
 const onLoadedMetadata$ = compatibleListener(["loadedmetadata"]);
+
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
 const onSeeking$ = compatibleListener(["seeking"]);
+
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
 const onSeeked$ = compatibleListener(["seeked"]);
+
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
 const onEnded$ = compatibleListener(["ended"]);
+
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
 const onTimeUpdate$ = compatibleListener(["timeupdate"]);
+
+/**
+ * @param {HTMLElement} element
+ * @returns {Observable}
+ */
 const onFullscreenChange$ = compatibleListener(
   ["fullscreenchange", "FullscreenChange"],
 
@@ -207,12 +252,20 @@ const onFullscreenChange$ = compatibleListener(
   BROWSER_PREFIXES.concat("MS")
 );
 
-const onPlayPause$ = (videoElement : HTMLMediaElement) : Observable<Event> =>
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+const onPlayPause$ = (mediaElement : HTMLMediaElement) : Observable<Event> =>
   observableMerge(
-    compatibleListener(["play"])(videoElement),
-    compatibleListener(["pause"])(videoElement)
+    compatibleListener(["play"])(mediaElement),
+    compatibleListener(["pause"])(mediaElement)
   );
 
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
 const onTextTrackChanges$ =
   (textTrackList : TextTrackList) : Observable<TrackEvent> =>
     observableMerge(
@@ -220,14 +273,52 @@ const onTextTrackChanges$ =
       compatibleListener<TrackEvent>(["removetrack"])(textTrackList)
     );
 
+/**
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
 const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
+
+/**
+ * @param {SourceBuffer} sourceBuffer
+ * @returns {Observable}
+ */
 const onUpdate$ = compatibleListener(["update"]);
+
+/**
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */
 const onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
 
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
 const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(["encrypted", "needkey"]);
+
+/**
+ * @param {MediaKeySession} mediaKeySession
+ * @returns {Observable}
+ */
 const onKeyMessage$ = compatibleListener<MediaKeyMessageEvent>(["keymessage", "message"]);
+
+/**
+ * @param {MediaKeySession} mediaKeySession
+ * @returns {Observable}
+ */
 const onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
+
+/**
+ * @param {MediaKeySession} mediaKeySession
+ * @returns {Observable}
+ */
 const onKeyError$ = compatibleListener(["keyerror", "error"]);
+
+/**
+ * @param {MediaKeySession} mediaKeySession
+ * @returns {Observable}
+ */
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 export {

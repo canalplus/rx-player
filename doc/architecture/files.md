@@ -14,6 +14,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/compat/: The compatibility files](#src-compat)
   - [src/core/: The core files](#src-core)
   - [src/errors/: Error definitions](#src-errors)
+  - [src/experimental/: Experimental features](#src-experimental)
   - [src/features/: Feature switching](#src-features)
   - [src/manifest/: The Manifest class](#src-manifest)
   - [src/net/: The networking files](#src-net)
@@ -54,7 +55,7 @@ Store the player builds of the last version released.
 Contains two files: the minified (``rx-player.min.js``) and the non-minified
 files (``rx-player.js``). Both are automatically generated with scripts.
 
-Two directories, namely ``_esm5.raw`` and ``_esm5.minimal`` can also be
+Two directories, namely ``_esm5.raw`` and ``_esm5.processed`` can also be
 generated in here if the right scripts are called.
 These allow to publish more modular codebases to npm.
 
@@ -118,7 +119,7 @@ That's where:
   - the buffer is managed
   - the MSE and EME APIs are called and managed
   - the segments are downloaded
-  - ABR strategies are set
+  - adaptive bitrate strategies are set
 
 This directory contains other subdirectories which are listed in the next
 chapter.
@@ -129,6 +130,13 @@ chapter.
 
 Contains the definition of the error classes used in the rx-player and
 accessible through the API.
+
+
+<a name="src-experimental"></a>
+### src/experimental/: Experimental features ###################################
+
+You will find here experimental features, which are features who might
+completely change their API in each player version.
 
 
 <a name="src-features"></a>
@@ -168,7 +176,8 @@ the code is exported in the index.js file at the root of this directory.
 <a name="src-parsers"></a>
 ### src/parsers/: The parsing files ############################################
 
-Functions to parse given formats (isobmff, ttml, sami etc.).
+Functions to parse given formats (isobmff, ttml, sami, DASH and HSS manifests
+etc.).
 
 
 <a name="src-typings"></a>
@@ -220,9 +229,6 @@ interact with.
 <a name="core-buffer"></a>
 ### src/core/buffer/: The Buffer management ####################################
 
-Defines the part of the core directly handling the SourceBuffer management
-logic.
-
 The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the sourceBuffers.
 
@@ -236,7 +242,7 @@ Defines functions allowing to handle encrypted contents through the EME APIs.
 <a name="core-pipelines"></a>
 ### src/core/pipelines/: The networking pipelines ##############################
 
-Handle the segment downloading pipelines (resolve/load/parse) as defined in the
+Handle the segment downloading pipelines (load and parse) as defined in the
 ``src/net/`` directory.
 
 This is the layer directly interacting with the transport part (HSS, DASH).
@@ -250,18 +256,16 @@ core.
 Provide multiple abstraction to manage SourceBuffers, which are the objects
 through which media segments are added to the browser.
 
-In this directory, you have glue code for both SourceBuffer managed natively
-(i.e. Audio and Video SourceBuffers) and SourceBuffer implementations for other
-types of content (text, images etc.).
+In this directory, you have code for both SourceBuffer managed natively (i.e.
+Audio and Video SourceBuffers) and SourceBuffer implementations for other types
+of content (text, images etc.).
 
 
 <a name="core-stream"></a>
 ### src/core/stream/: Media streaming logic ####################################
 
-Main logic for media streaming.
-
 This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate new buffers and link together most subparts of the player.
+instanciate the Buffer and link together many subparts of the player.
 
 
 <a name="tests"></a>

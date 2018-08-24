@@ -49,7 +49,7 @@ const {
 interface IRepresentationChooserClockTick {
   bitrate : number|undefined; // currently set bitrate, in bit per seconds
   bufferGap : number; // time to the end of the buffer, in seconds
-  position : number; // current position, in seconds
+  currentTime : number; // current position, in seconds
   speed : number; // current playback rate
 }
 
@@ -211,7 +211,6 @@ function getFilteredRepresentations(
 
 /**
  * Estimate remaining time for a pending request from a progress event.
- * TODO Add time since last progress event?
  * @param {Object} lastProgressEvent
  * @param {number} bandwidthEstimate
  * @returns {number}
@@ -238,7 +237,7 @@ function estimateStarvationModeBitrate(
   clock : IRepresentationChooserClockTick,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
-  const nextNeededPosition = clock.position + clock.bufferGap;
+  const nextNeededPosition = clock.currentTime + clock.bufferGap;
   const concernedRequest = getConcernedRequest(requests, nextNeededPosition);
   if (!concernedRequest) {
     return undefined;
@@ -574,7 +573,7 @@ export default class RepresentationChooser {
   }
 
   /**
-   * TODO See if we can avoid this
+   * Free up the resources used by the RepresentationChooser.
    */
   public dispose() : void {
     this._dispose$.next();

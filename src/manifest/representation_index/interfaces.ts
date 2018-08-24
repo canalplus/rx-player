@@ -112,8 +112,8 @@ export default interface IRepresentationIndex {
    *     is inferior to the timescale)
    *   - The next range starts after the end of the current range.
    * @param {Number} _time
-   * @returns {Number} - If a discontinuity is present, this is the Starting ts
-   * for the next (discontinuited) range. If not this is equal to -1.
+   * @returns {Number} - If a discontinuity is present, this is the Starting
+   * time for the next (discontinuited) range. If not this is equal to -1.
    */
   checkDiscontinuity(time : number) : number;
 
@@ -134,7 +134,6 @@ export default interface IRepresentationIndex {
    * Think of another implementation?
    * @param {Array.<Object>} nextSegments
    * @param {Object} currentSegment
-   * @returns {Array.<Object>}
    */
   _addSegments(
     nextSegments : Array<{

@@ -105,7 +105,8 @@ function generateCSSTextOutline(
  */
 function applyTextStyle(
   element : HTMLElement,
-  style : Partial<Record<string, string>>
+  style : Partial<Record<string, string>>,
+  shouldTrimWhiteSpace : boolean
 ) {
   // applies to span
   const color = style.color;
@@ -117,12 +118,6 @@ function applyTextStyle(
   const backgroundColor = style.backgroundColor;
   if (backgroundColor) {
     element.style.backgroundColor = ttmlColorToCSSColor(backgroundColor);
-  }
-
-  // applies to span
-  const wrapOption = style.wrapOption;
-  if (wrapOption && wrapOption === "noWrap") {
-    element.style.whiteSpace = "nowrap";
   }
 
   // applies to span
@@ -257,6 +252,12 @@ function applyTextStyle(
   if (display === "none") {
     element.style.display = "none";
   }
+
+  // applies to body, div, p, region, span
+  const wrapOption = style.wrapOption;
+  element.style.whiteSpace = wrapOption === "noWrap" ?
+    (shouldTrimWhiteSpace ? "nowrap" : "pre") :
+    (shouldTrimWhiteSpace ? "normal" : "pre-wrap");
 }
 
 /**
@@ -394,27 +395,19 @@ function applyPStyle(
  * @param {Element} el - the #text element, which text content should be
  * displayed
  * @param {Object} style - the style object for the given text
- * @param {Boolean} shouldTrimWhiteSpaceParam - True if the space should be
- * trimmed by default. From the <tt> xml:space parameter.
+ * @param {Boolean} shouldTrimWhiteSpace - True if the space should be
+ * trimmed.
  * @returns {HTMLElement}
  */
 function createTextElement(
   el : Node,
   style : Partial<Record<string, string>>,
-  shouldTrimWhiteSpaceParam : boolean
+  shouldTrimWhiteSpace : boolean
 ) : HTMLElement {
   const textElement = document.createElement("span");
 
   let textContent = el.textContent || "";
 
-  const shouldTrimWhiteSpace = shouldTrimWhiteSpaceParam;
-
-  // TODO Also parse it from parent elements
-  // const spaceAttr = getAttributeInElements("xml:space", [
-  //   ...spans, p, ...divs, body,
-  // ]);
-  // const shouldTrimWhiteSpace = spaceAttr ?
-  //   spaceAttr === "default" : shouldTrimWhiteSpaceParam;
   if (shouldTrimWhiteSpace) {
     // 1. Trim leading and trailing whitespace.
     // 2. Collapse multiple spaces into one.
@@ -426,7 +419,7 @@ function createTextElement(
   textElement.innerHTML = textContent;
   textElement.className = "rxp-texttrack-span";
 
-  applyTextStyle(textElement, style);
+  applyTextStyle(textElement, style, shouldTrimWhiteSpace);
   return textElement;
 }
 
@@ -453,12 +446,15 @@ function generateTextContent(
    * @param {Object} style - the current state of the style for the node.
    * /!\ The style object can be mutated, provide a copy of it.
    * @param {Array.<Element>} spans - The spans parent of this node.
+   * @param {Boolean} shouldTrimWhiteSpaceFromParent - True if the space should be
+   * trimmed by default. From the parent xml:space parameter.
    * @returns {Array.<HTMLElement>}
    */
   function loop(
     node : Node,
     style : IStyleList,
-    spans : Node[]
+    spans : Node[],
+    shouldTrimWhiteSpaceFromParent : boolean
   ) : HTMLElement[] {
     const childNodes = node.childNodes;
     const elements : HTMLElement[] = [];
@@ -472,24 +468,35 @@ function generateTextContent(
         } else {
           delete style.backgroundColor;
         }
-        const el = createTextElement(currentNode, style, shouldTrimWhiteSpace);
+        const el = createTextElement(currentNode, style, shouldTrimWhiteSpaceFromParent);
         elements.push(el);
       } else if (currentNode.nodeName === "br") {
         const br = document.createElement("BR");
         elements.push(br);
       } else if (
         currentNode.nodeName === "span" &&
+        currentNode.nodeType === Node.ELEMENT_NODE &&
         currentNode.childNodes.length > 0
       ) {
+        const spaceAttribute = (currentNode as Element).getAttribute("xml:space");
+        const shouldTrimWhiteSpaceOnSpan = spaceAttribute ?
+          spaceAttribute === "default" : shouldTrimWhiteSpaceFromParent;
+
         // compute the new applyable style
         const newStyle = objectAssign({}, style, getStylingAttributes(
           SPAN_LEVEL_ATTRIBUTES, [currentNode], styles, regions));
-        elements.push(...loop(currentNode, newStyle, [currentNode, ...spans]));
+
+        elements.push(...loop(
+          currentNode,
+          newStyle,
+          [currentNode, ...spans],
+          shouldTrimWhiteSpaceOnSpan)
+        );
       }
     }
     return elements;
   }
-  return loop(paragraph, objectAssign({}, paragraphStyle), []);
+  return loop(paragraph, objectAssign({}, paragraphStyle), [], shouldTrimWhiteSpace);
 }
 
 /**
@@ -498,7 +505,7 @@ function generateTextContent(
  * @param {Array.<Object>} regions
  * @param {Array.<Object>} styles
  * @param {Object} paragraphStyle
- * @param {Boolean} shouldTrimWhiteSpace
+ * @param {Boolean} shouldTrimWhiteSpaceOnParagraph
  * @returns {HTMLElement}
  */
 export default function createElement(

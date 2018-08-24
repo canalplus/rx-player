@@ -116,16 +116,16 @@ function _addSegmentInfos(
   if (segmentInfos.timescale !== index.timescale) {
     const { timescale } = index;
     index.timeline.push({
-      ts: (segmentInfos.time / segmentInfos.timescale) * timescale,
-      d: (segmentInfos.duration / segmentInfos.timescale) * timescale,
-      r: segmentInfos.count || 0,
+      start: (segmentInfos.time / segmentInfos.timescale) * timescale,
+      duration: (segmentInfos.duration / segmentInfos.timescale) * timescale,
+      repeatCount: segmentInfos.count || 0,
       range: segmentInfos.range,
     });
   } else {
     index.timeline.push({
-      ts: segmentInfos.time,
-      d: segmentInfos.duration,
-      r: segmentInfos.count || 0,
+      start: segmentInfos.time,
+      duration: segmentInfos.duration,
+      repeatCount: segmentInfos.count || 0,
       range: segmentInfos.range,
     });
   }
@@ -135,8 +135,6 @@ function _addSegmentInfos(
 /**
  * Provide helpers for SegmentBase-based indexes.
  * @type {Object}
- * TODO weird that everything is inherited from Timeline...
- * Reimplement from scratch
  */
 export default class BaseRepresentationIndex implements IRepresentationIndex {
   private _index : IBaseIndex;
@@ -218,7 +216,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (!index.timeline.length) {
       return undefined;
     }
-    return fromIndexTime(index, index.timeline[0].ts);
+    return fromIndexTime(index, index.timeline[0].start);
   }
 
   /**
@@ -261,9 +259,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object} newIndex
    */
-  _update(
-    newIndex : BaseRepresentationIndex /* TODO @ index refacto */
-  ) : void {
+  _update(newIndex : BaseRepresentationIndex) : void {
     this._index = newIndex._index;
   }
 }

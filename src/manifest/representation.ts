@@ -28,6 +28,7 @@ export interface IRepresentationArguments {
   index : IRepresentationIndex;
 
   // -- optional
+  frameRate? : string;
   codecs? : string;
   height? : number;
   id? : string|number;
@@ -47,6 +48,7 @@ class Representation {
   public bitrate : number;
 
   // opt readonly onal
+  public frameRate? : string;
   public codec? : string;
   public height? : number;
   public mimeType? : string;
@@ -55,7 +57,7 @@ class Representation {
 
   /**
    * @constructor
-   * @param {Object|undefined} args
+   * @param {Object} args
    */
   constructor(args : IRepresentationArguments) {
     const nId = generateNewId();
@@ -79,10 +81,17 @@ class Representation {
       this.contentProtections = args.contentProtections;
     }
 
+    if (args.frameRate) {
+      this.frameRate = args.frameRate;
+    }
+
     this.index = args.index;
   }
 
-  getMimeTypeString() {
+  /**
+   * @returns {string}
+   */
+  getMimeTypeString() : string {
     return `${this.mimeType};codecs="${this.codec}"`;
   }
 }

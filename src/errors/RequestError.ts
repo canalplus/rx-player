@@ -28,6 +28,11 @@ export default class RequestError extends Error {
   public readonly url : string;
   public readonly status : number;
 
+  /**
+   * @param {XMLHttpRequest} xhr
+   * @param {string} url
+   * @param {string} type
+   */
   constructor(xhr : XMLHttpRequest, url : string, type : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class

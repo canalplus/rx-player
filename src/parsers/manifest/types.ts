@@ -16,12 +16,6 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
-// XXX TODO
-// export interface IKeySystem {
-//   systemId : string;
-//   privateData : Uint8Array;
-// }
-
 export interface IContentProtection {
   systemId? : string;
   keyId : string;
@@ -42,7 +36,7 @@ export interface IParsedRepresentation {
   codecs?: string;
   codingDependency?: boolean;
   contentProtections? : IContentProtection[];
-  frameRate?: number;
+  frameRate?: string;
   height?: number;
   maxPlayoutRate?: number;
   maximumSAPPeriod?: number;
@@ -103,7 +97,7 @@ export interface IParsedManifest {
   id: string;
   periods: IParsedPeriod[];
   transportType: string; // "smooth", "dash" etc.
-  type: string; // "static" or "dynamic" TODO isLive?
+  isLive : boolean;
   uris: string[]; // uris where the manifest can be refreshed
 
   // optional

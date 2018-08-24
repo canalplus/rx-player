@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// TODO https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-
 import {
   ErrorCodes,
   ErrorTypes,
@@ -35,6 +33,11 @@ export default class OtherError extends Error {
   public readonly reason? : Error|string|null;
   public fatal : boolean;
 
+  /**
+   * @param {string} code
+   * @param {Error|null} [reason]
+   * @param {Boolean} [fatal]
+   */
   constructor(code : string, reason? : Error|null, fatal? : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class

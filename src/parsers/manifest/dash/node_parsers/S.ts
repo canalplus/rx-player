@@ -15,9 +15,9 @@
  */
 
 export interface IParsedS {
-  ts? : number; // Time of start, timescaled. TODO Rename
-  r? : number; // Amount of repetition(s), 0 = no repeat. TODO Rename
-  d? : number; // Duration of a segment. TODO Rename
+  start? : number;
+  repeatCount? : number; // Amount of repetition(s), 0 = no repeat
+  duration? : number;
 }
 
 /**
@@ -25,23 +25,23 @@ export interface IParsedS {
  * @returns {Object}
  */
 export default function parseS(root : Element) : IParsedS {
-  let ts : number|undefined;
-  let d : number|undefined;
-  let r : number|undefined;
+  let start : number|undefined;
+  let duration : number|undefined;
+  let repeatCount : number|undefined;
   for (let j = 0; j < root.attributes.length; j++) {
     const attribute = root.attributes[j];
 
     switch (attribute.name) {
       case "t":
-        ts = parseInt(attribute.value, 10);
+        start = parseInt(attribute.value, 10);
         break;
       case "d":
-        d = parseInt(attribute.value, 10);
+        duration = parseInt(attribute.value, 10);
         break;
       case "r":
-        r = parseInt(attribute.value, 10);
+        repeatCount = parseInt(attribute.value, 10);
         break;
     }
   }
-  return { ts, d, r };
+  return { start, duration, repeatCount };
 }

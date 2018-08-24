@@ -36,11 +36,8 @@ Such modules are (with link to their respective documentation, if one):
 
   - __the [Stream](./stream/index.md)__
 
-    starts playing a content and connects the different modules between one
+    Initialize the content and connects the different modules between one
     another to allow continuous playback.
-
-    Various files documenting the Stream architecture should be available in the
-    ``doc/architecture/stream`` directory.
 
 
   - __the EMEManager__
@@ -56,8 +53,8 @@ Such modules are (with link to their respective documentation, if one):
 
   - __the [Buffer](./buffer/index.md)__
 
-    Choose which segments to download and push them to the corresponding
-    SourceBuffer.
+    Choose which media segments to download and push them to SourceBuffers to
+    then be able to decode them.
 
     Various files documenting the Stream architecture should be available in the
     ``doc/architecture/buffer`` directory.
@@ -75,14 +72,11 @@ Such modules are (with link to their respective documentation, if one):
   - __the [Networking code](./net/index.md)__
 
     Perform manifest/segment requests, and parse them.
-    "_net_" in essence abstracts the transport protocol used (example:
+    "_Net_" in essence abstracts the transport protocol used (example:
     HSS/DASH) to provide an unified definition of a segment or manifest to
     the other modules.
     In theory, it should be the only directory to update when adding /
     modifying / deleting a transport protocol
-
-    Various files documenting the Net architecture should be available in the
-    ``doc/architecture/net`` directory.
 
 
   - __the [Pipelines](./pipelines/index.md)__
@@ -91,9 +85,6 @@ Such modules are (with link to their respective documentation, if one):
     download/refresh the manifest and collect data (such as the user's
     bandwidth) for the other modules.
 
-    Various files documenting the Stream architecture should be available in the
-    ``doc/architecture/pipelines`` directory.
-
 
 The RxPlayer also has multiple isolated helpers (for manifest management,
 segment parsing, browser compatibility) which are used by these different
@@ -101,3 +92,85 @@ modules.
 
 A documentation about the file organization of the project is also available
 [here](./files.md).
+
+
+
+## Global architecture #########################################################
+
+To better understand the player's architecture, you can find below a
+(simplified!) schema of it:
+
+```
+               +---------------------------------------------+
+               |                                             |
+               |               Application/UI                |
+               |                                             |
+               +---------------------------------------------+
+                   |       ^
+                   |       |
+-----RxPlayer-------------------------------------------------------------------
+                   |       |
+                   V       |                  Front-facing API
+               +---------------------------------------------+
+               |                    API                      |
+               +---------------------------------------------+
+                            ^ |         |          ^
+                            | |         |          |
+ +----------------------+ --+ |         |          |
+ |     TrackManager     | <---+         |          |
+ +----------------------+               |          |
+ Manage track switching                 |          |
+                                        V          |
+  +-------------------+           +--------------------+ ----> +------------+
+  | Manifest Pipeline | <-------- |                    | <---- | EMEManager |
+  +-------------------+ --------> |                    |       +------------+
+   Download and parse             |                    |     Handle encrypted
+   the manifest                   |                    |             contents
+                      +---------- |                    |
+                      |  +------> |       Stream       | ----> +--------------+
+                      v  |        |                    | <---- | SpeedManager |
+ +----------------------------+   |                    |       +--------------+
+ | SegmentPipelineManager (1) |   |                    |       Manage playback
+ +----------------------------+   |                    |                  rate
+  Factory creating segment        |                    | <---------------+
+  `pipelines` to download         +--------------------+ ------------+   |
+  segments                         ^ |    |  ^  Initialize           V   |
+                                   | |    |  |  a content     +----------------+
++---------------------+ -----------+ |    |  |  and connect   | ABRManager (1) |
+|                     | <------------+    |  |  everything    +----------------+
+| SourceBufferManager |                   |  |                     Find the best
+|         (1)         |                   |  |                           bitrate
+|                     |                   |  |
++---------------------+                   |  |
+ Create and handle                        |  |
+ SourceBuffers                            |  |
+                                          |  |
++------------------------------------------------------------------------------+
+|                                         |  |                                 |
+|                                         V  |                                 |
+|                               +--------------------------------+             |
+| +-------------------+ ------> |       PeriodBufferManager      |             |
+| | SegmentBookkeeper | <------ +--------------------------------+             |
+| +-------------------+   +------^ | |          ^     Create the right         |
+|  Keeps track of which   | -------+ |          |     AdaptationBuffer(s)      |
+|  segments are currently | |        |          |                              |
+|  available              | |        |          |                              |
+|                         | V        |          |                              |
+| +------------------------+   +------------------------+                      |
+| | BufferGarbageCollector |   |    AdaptationBuffer    | Create the right     |
+| +------------------------+   +------------------------+ RepresentationBuffer |
+|  Control memory taken              |          ^                              |
+|  by the SourceBuffers              V          |                              |
+|  (Needed on some peculiar    +----------------------+                        |
+|  devices)                    + RepresentationBuffer |                        |
+|                              +----------------------+                        |
+|                                 Download and push media                      |
+|   ...                           segments for a given                         |
+|                                 type (video/audio/text...)                   |
+|                                                                              |
++------------------------------------------------------------------------------+
+                                                                        Buffers
+
+(1) The SourceBufferManager, SegmentPipelineManager and ABRManager are actually
+initialized by the Stream but are then mainly used by the Buffers.
+```

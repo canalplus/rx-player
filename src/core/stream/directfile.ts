@@ -22,33 +22,41 @@
 import {
   merge as observableMerge,
   Observable,
-  Subject,
+  of as observableOf,
 } from "rxjs";
 import {
   ignoreElements,
   map,
-  mapTo,
+  mergeMap,
 } from "rxjs/operators";
 import {
   clearElementSrc,
   setElementSrc$,
 } from "../../compat";
-import { ICustomError } from "../../errors";
+import {
+  MediaError,
+} from "../../errors";
 import log from "../../log";
 import { IKeySystemOption } from "../eme/types";
-import { IStreamClockTick } from "./clock";
 import createEMEManager from "./create_eme_manager";
+import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
-import createMediaErrorHandler from "./media_error_handler";
+import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
+import createMediaErrorManager from "./media_error_manager";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
-import EVENTS, {
-  IStreamEvent,
-} from "./stream_events";
-import handleInitialVideoEvents from "./video_events";
+import {
+  ISpeedChangedEvent,
+  IStalledEvent,
+  IStreamClockTick,
+  IStreamLoadedEvent,
+  IStreamWarningEvent,
+} from "./types";
 
 /**
+ * calculate initial time as a position in seconds.
  * @param {HTMLMediaElement} mediaElement
+ * @param {Object|undefined} startAt
  * @returns {number}
  */
 function getDirectFileInitialTime(
@@ -90,6 +98,7 @@ function getDirectFileInitialTime(
   return 0;
 }
 
+// Argument used by `StreamDirectFile`
 export interface IDirectFileStreamOptions {
   autoPlay : boolean;
   clock$ : Observable<IStreamClockTick>;
@@ -100,10 +109,16 @@ export interface IDirectFileStreamOptions {
   url : string;
 }
 
+// Events emitted by `StreamDirectFile`
+export type IDirectfileEvent =
+  ISpeedChangedEvent |
+  IStalledEvent |
+  IStreamLoadedEvent |
+  IStreamWarningEvent;
+
 /**
- * Initialize stream playback by merging all Observables that are required to
- * make the system cooperate.
- * @param {MediaSource} mediaSource
+ * Launch a Stream in "Directfile mode".
+ * @param {Object} directfileOptions
  * @returns {Observable}
  */
 export default function StreamDirectFile({
@@ -114,14 +129,7 @@ export default function StreamDirectFile({
   speed$,
   startAt,
   url,
-} : IDirectFileStreamOptions) : Observable<IStreamEvent> {
-  /**
-   * Observable through which all warning events will be sent.
-   * @type {Subject}
-   */
-  const warning$ = new Subject<Error|ICustomError>();
-  const warningEvents$ = warning$.pipe(map(EVENTS.warning));
-
+} : IDirectFileStreamOptions) : Observable<IDirectfileEvent> {
   clearElementSrc(mediaElement);
 
   log.debug("calculating initial time");
@@ -130,60 +138,52 @@ export default function StreamDirectFile({
   log.debug("initial time calculated:", initialTime);
 
   const {
-    initialSeek$,
-    loadAndPlay$,
-  } = handleInitialVideoEvents(mediaElement, initialTime, autoPlay);
+    seek$,
+    load$,
+  } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
 
-  /**
-   * Create EME Manager, an observable which will manage every EME-related
-   * issue.
-   * @type {Observable}
-   */
-  const emeManager$ = createEMEManager(mediaElement, keySystems, warning$);
+  // Create EME Manager, an observable which will manage every EME-related
+  // issue.
+  const emeManager$ = createEMEManager(mediaElement, keySystems);
 
-  /**
-   * Translate errors coming from the video element into RxPlayer errors
-   * through a throwing Observable.
-   * @type {Observable}
-   */
-  const mediaErrorHandler$ = createMediaErrorHandler(mediaElement);
+  // Translate errors coming from the media element into RxPlayer errors
+  // through a throwing Observable.
+  const errorManager$ = createMediaErrorManager(mediaElement);
 
-  /**
-   * Create Speed Manager, an observable which will set the speed set by the
-   * user on the video element while pausing a little longer while the buffer
-   * is stalled.
-   * @type {Observable}
-   */
+  // Create Speed Manager, an observable which will set the speed set by the
+  // user on the media element while pausing a little longer while the buffer
+  // is stalled.
   const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
     pauseWhenStalled: true,
   }).pipe(map(EVENTS.speedChanged));
 
-  /**
-   * Create Stalling Manager, an observable which will try to get out of
-   * various infinite stalling issues
-   * @type {Observable}
-   */
+  // Create Stalling Manager, an observable which will try to get out of
+  // various infinite stalling issues
   const stallingManager$ = StallingManager(mediaElement, clock$)
     .pipe(map(EVENTS.stalled));
 
-  const loadedEvent$ = loadAndPlay$
-    .pipe(mapTo(EVENTS.loaded()));
+  // Manage "loaded" event and warn if autoplay is blocked on the current browser
+  const loadedEvent$ = load$
+    .pipe(mergeMap((evt) => {
+      if (evt === "autoplay-blocked") {
+        const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
+        return observableOf(EVENTS.warning(error), EVENTS.loaded());
+      }
+      return observableOf(EVENTS.loaded);
+    }));
 
-  const linkURL$ = setElementSrc$(mediaElement, url)
-    .pipe(ignoreElements());
+  // Start everything! (Just put the URL in the element's src).
+  const linkURL$ = setElementSrc$(mediaElement, url).pipe(ignoreElements());
 
-  const mutedInitialSeek$ = initialSeek$
-    .pipe(ignoreElements());
+  const initialSeek$ = seek$.pipe(ignoreElements());
 
-  const directFile$ : Observable<IStreamEvent> = observableMerge(
+  return observableMerge(
     loadedEvent$,
-    mutedInitialSeek$,
-    emeManager$ as Observable<void>, // TODO RxJS do something weird here
-    mediaErrorHandler$ as Observable<void>, // TODO RxJS do something weird here
+    initialSeek$,
+    emeManager$,
+    errorManager$,
     speedManager$,
     stallingManager$,
     linkURL$
   );
-
-  return observableMerge(directFile$, warningEvents$);
 }

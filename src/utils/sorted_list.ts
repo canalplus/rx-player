@@ -36,7 +36,7 @@ import arrayIncludes from "./array-includes";
  * console.log(sortedList.unwrap());
  * // -> [{ start: 10 }, { start : 15 }, { start: 20 }]
  *
- * sortedList.removeFirst(element2);
+ * sortedList.removeElement(element2);
  * // -> [{ start: 10 }, { start: 15 }]
  * ```
  * @class SortedList
@@ -69,18 +69,6 @@ export default class SortedList<T> {
       throw new Error("Invalid index.");
     }
     return this._array[index];
-  }
-
-  /**
-   * Returns this list as a JS array.
-   *
-   * /!\ The returned Array shares the same reference with what is used
-   * internally, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
-   * @returns {Array.<*>}
-   */
-  unwrap() : T[] {
-    return this._array;
   }
 
   /**
@@ -159,7 +147,7 @@ export default class SortedList<T> {
    * Returns the index of the removed element. Undefined if not found.
    * @returns {number|undefined}
    */
-  removeFirst(element : T) : number|undefined {
+  removeElement(element : T) : number|undefined {
     const indexOf = this._array.indexOf(element);
     if (indexOf >= 0) {
       this._array.splice(indexOf, 1);
@@ -207,32 +195,6 @@ export default class SortedList<T> {
    */
   pop() : T|undefined {
     return this._array.pop();
-  }
-
-  /**
-   * Returns true if the given element is before the whole list when sorted.
-   * As in, it would be the first element is pushed to the sortedList.
-   * @param {*} element
-   * @returns {boolean}
-   */
-  isBefore(element : T) : boolean {
-    if (!this._array.length) {
-      return true;
-    }
-    return this._sortingFn(element, this._array[0]) < 0;
-  }
-
-  /**
-   * Returns true if the given element is after the whole list when sorted.
-   * As in, it would be the last element is pushed to the sortedList.
-   * @param {*} element
-   * @returns {boolean}
-   */
-  isAfter(element : T) : boolean {
-    if (!this._array.length) {
-      return true;
-    }
-    return this._sortingFn(element, this._array[this._array.length - 1]) >= 0;
   }
 
   /**

@@ -21,9 +21,9 @@ import {
 import { replaceSegmentSmoothTokens } from "./utils/tokens";
 
 export interface IIndexSegment {
-  ts : number; // start timestamp
-  d : number; // duration
-  r : number; // repeat counter
+  start : number;
+  duration : number;
+  repeatCount: number;
 }
 
 interface ITimelineIndex {
@@ -77,37 +77,37 @@ function _addSegmentInfos(
   }
 
   // in some circumstances, the new segment informations are only
-  // duration informations that we can use to deduct the ts of the
+  // duration informations that we can use to deduct the start of the
   // next segment. this is the case where the new segment are
-  // associated to a current segment and have the same ts
+  // associated to a current segment and have the same start
   const shouldDeductNextSegment = scaledCurrentTime != null &&
     (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {
-    const newSegmentTs = scaledNewSegment.time + scaledNewSegment.duration;
-    const lastSegmentTs = (last.ts + (last.d || 0) * last.r);
-    const tsDiff = newSegmentTs - lastSegmentTs;
+    const newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration;
+    const lastSegmentStart = (last.start + (last.duration || 0) * last.repeatCount);
+    const startDiff = newSegmentStart - lastSegmentStart;
 
-    if (tsDiff <= 0) { // same segment / behind the last
+    if (startDiff <= 0) { // same segment / behind the last
       return false;
     }
 
     // try to use the compact notation with @r attribute on the last
     // to elements of the timeline if we find out they have the same
     // duration
-    if (last.d === -1) {
+    if (last.duration === -1) {
       const prev = timeline[timelineLength - 2];
-      if (prev && prev.d === tsDiff) {
-        prev.r++;
+      if (prev && prev.duration === startDiff) {
+        prev.repeatCount++;
         timeline.pop();
       } else {
-        last.d = tsDiff;
+        last.duration = startDiff;
       }
     }
 
     index.timeline.push({
-      d: -1,
-      ts: newSegmentTs,
-      r: 0,
+      duration: -1,
+      start: newSegmentStart,
+      repeatCount: 0,
     });
     return true;
   }
@@ -116,13 +116,13 @@ function _addSegmentInfos(
   // just need to push a new element in the timeline, or increase
   // the @r attribute of the last element.
   else if (scaledNewSegment.time >= getTimelineRangeEnd(last)) {
-    if (last.d === scaledNewSegment.duration) {
-      last.r++;
+    if (last.duration === scaledNewSegment.duration) {
+      last.repeatCount++;
     } else {
       index.timeline.push({
-        d: scaledNewSegment.duration,
-        ts: scaledNewSegment.time,
-        r: 0,
+        duration: scaledNewSegment.duration,
+        start: scaledNewSegment.time,
+        repeatCount: 0,
       });
     }
     return true;
@@ -134,10 +134,10 @@ function _addSegmentInfos(
 /**
  * Get index of the segment containing the given timescaled timestamp.
  * @param {Object} index
- * @param {Number} ts
+ * @param {Number} start
  * @returns {Number}
  */
-function getSegmentIndex(index : ITimelineIndex, ts : number) : number {
+function getSegmentIndex(index : ITimelineIndex, start : number) : number {
   const { timeline } = index;
 
   let low = 0;
@@ -145,7 +145,7 @@ function getSegmentIndex(index : ITimelineIndex, ts : number) : number {
 
   while (low < high) {
     const mid = (low + high) >>> 1;
-    if (timeline[mid].ts < ts) {
+    if (timeline[mid].start < start) {
       low = mid + 1;
     } else {
       high = mid;
@@ -158,20 +158,20 @@ function getSegmentIndex(index : ITimelineIndex, ts : number) : number {
 }
 
 /**
- * @param {Number} ts
+ * @param {Number} start
  * @param {Number} up
  * @param {Number} duration
  * @returns {Number}
  */
 function getSegmentNumber(
-  ts : number,
+  start : number,
   up : number,
   duration? : number
 ) : number {
   if (!duration) {
     return 0;
   }
-  const diff = up - ts;
+  const diff = up - start;
   if (diff > 0) {
     return Math.floor(diff / duration);
   } else {
@@ -184,12 +184,13 @@ function getSegmentNumber(
  * @param {Object} range
  * @returns {Number} - absolute end time of the range
  */
-function getTimelineRangeEnd({ ts, d, r }: {
-  ts : number;
-  d? : number;
-  r : number;
+function getTimelineRangeEnd({ start, duration, repeatCount }: {
+  start : number;
+  duration? : number;
+  repeatCount : number;
 }) : number {
-  return (d == null || d === -1) ? ts : ts + (r + 1) * d;
+  return (duration == null || duration === -1) ?
+    start : start + (repeatCount + 1) * duration;
 }
 
 // interface ISmoothIndex {
@@ -204,15 +205,15 @@ function getTimelineRangeEnd({ ts, d, r }: {
  * Convert second-based start time and duration to the timescale of the
  * manifest's index.
  * @param {Object} index
- * @param {Number} ts
+ * @param {Number} start
  * @param {Number} duration
  * @returns {Object} - Object with two properties:
  *   - up {Number}: timescaled timestamp of the beginning time
  *   - to {Number}: timescaled timestamp of the end time (start time + duration)
  */
 function normalizeRange(
-  index: { timescale?: number }, // TODO
-  ts: number,
+  index: { timescale?: number },
+  start: number,
   duration: number
 ) : {
   up: number;
@@ -221,8 +222,8 @@ function normalizeRange(
   const timescale = index.timescale || 1;
 
   return {
-    up: (ts) * timescale,
-    to: (ts + duration) * timescale,
+    up: start * timescale,
+    to: (start + duration) * timescale,
   };
 }
 
@@ -236,16 +237,16 @@ function calculateRepeat(
   segment : IIndexSegment,
   nextSegment : IIndexSegment
 ) : number {
-  let repeatCount = segment.r || 0;
+  let repeatCount = segment.repeatCount || 0;
 
   // A negative value of the @r attribute of the S element indicates
   // that the duration indicated in @d attribute repeats until the
   // start of the next S element, the end of the Period or until the
   // next MPD update.
   // TODO Also for SMOOTH????
-  if (segment.d != null && repeatCount < 0) {
-    const repeatEnd = nextSegment ? nextSegment.ts : Infinity;
-    repeatCount = Math.ceil((repeatEnd - segment.ts) / segment.d) - 1;
+  if (segment.duration != null && repeatCount < 0) {
+    const repeatEnd = nextSegment ? nextSegment.start : Infinity;
+    repeatCount = Math.ceil((repeatEnd - segment.start) / segment.duration) - 1;
   }
 
   return repeatCount;
@@ -345,20 +346,20 @@ export default class SmoothRepresentationIndex
       const timelineLength = timeline.length;
 
       // TODO(pierre): use @maxSegmentDuration if possible
-      let maxEncounteredDuration = (timeline.length && timeline[0].d) || 0;
+      let maxEncounteredDuration = (timeline.length && timeline[0].duration) || 0;
 
       for (let i = 0; i < timelineLength; i++) {
         const segmentRange = timeline[i];
-        const { d, ts } = segmentRange;
+        const { duration, start } = segmentRange;
 
-        maxEncounteredDuration = Math.max(maxEncounteredDuration, d || 0);
+        maxEncounteredDuration = Math.max(maxEncounteredDuration, duration || 0);
 
         // live-added segments have @d attribute equals to -1
-        if (d != null && d < 0) {
-          // TODO what? May be to play it safe and avoid adding segments which are
+        if (duration != null && duration < 0) {
+          // what? May be to play it safe and avoid adding segments which are
           // not completely generated
-          if (ts + maxEncounteredDuration < to) {
-            const time = ts;
+          if (start + maxEncounteredDuration < to) {
+            const time = start;
             const segment = {
               id: "" + time,
               time,
@@ -373,8 +374,9 @@ export default class SmoothRepresentationIndex
         }
 
         const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
-        let segmentNumberInCurrentRange = getSegmentNumber(ts, up, d);
-        let segmentTime = ts + segmentNumberInCurrentRange * (d == null ? 0 : d);
+        let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
+        let segmentTime = start + segmentNumberInCurrentRange *
+          (duration == null ? 0 : duration);
         while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
           const time = segmentTime;
           const number = currentNumber != null ?
@@ -383,7 +385,7 @@ export default class SmoothRepresentationIndex
             id: "" + segmentTime,
             time,
             isInit: false,
-            duration: d,
+            duration,
             timescale,
             number,
             mediaURL: replaceSegmentSmoothTokens(media, time),
@@ -392,7 +394,7 @@ export default class SmoothRepresentationIndex
 
           // update segment number and segment time for the next segment
           segmentNumberInCurrentRange++;
-          segmentTime = ts + segmentNumberInCurrentRange * d;
+          segmentTime = start + segmentNumberInCurrentRange * duration;
         }
 
         if (segmentTime >= to) {
@@ -426,9 +428,10 @@ export default class SmoothRepresentationIndex
         return false;
       }
 
-      const repeat = lastSegmentInCurrentTimeline.r || 0;
+      const repeat = lastSegmentInCurrentTimeline.repeatCount || 0;
       const endOfLastSegmentInCurrentTimeline =
-        lastSegmentInCurrentTimeline.ts + (repeat + 1) * lastSegmentInCurrentTimeline.d;
+        lastSegmentInCurrentTimeline.start + (repeat + 1) *
+          lastSegmentInCurrentTimeline.duration;
 
       if (to * timescale < endOfLastSegmentInCurrentTimeline) {
         return false;
@@ -441,7 +444,8 @@ export default class SmoothRepresentationIndex
       // ----
 
       const startOfLastSegmentInCurrentTimeline =
-        lastSegmentInCurrentTimeline.ts + repeat * lastSegmentInCurrentTimeline.d;
+        lastSegmentInCurrentTimeline.start + repeat *
+          lastSegmentInCurrentTimeline.duration;
 
       return up > startOfLastSegmentInCurrentTimeline;
     }
@@ -457,7 +461,7 @@ export default class SmoothRepresentationIndex
       if (!index.timeline.length) {
         return undefined;
       }
-      return index.timeline[0].ts / index.timescale;
+      return index.timeline[0].start / index.timescale;
     }
 
     /**
@@ -481,8 +485,8 @@ export default class SmoothRepresentationIndex
      *   - The next range starts after the end of the current range.
      *
      * @param {Number} _time
-     * @returns {Number} - If a discontinuity is present, this is the Starting ts
-     * for the next (discontinuited) range. If not this is equal to -1.
+     * @returns {Number} - If a discontinuity is present, this is the Starting
+     * time for the next (discontinuited) range. If not this is equal to -1.
      */
     checkDiscontinuity(_time : number) : number {
       const index = this._index;
@@ -499,21 +503,21 @@ export default class SmoothRepresentationIndex
       }
 
       const range = timeline[segmentIndex];
-      if (range.d === -1) {
+      if (range.duration === -1) {
         return -1;
       }
 
-      const rangeUp = range.ts;
+      const rangeUp = range.start;
       const rangeTo = getTimelineRangeEnd(range);
       const nextRange = timeline[segmentIndex + 1];
 
       // when we are actually inside the found range and this range has
       // an explicit discontinuity with the next one
-      if (rangeTo !== nextRange.ts &&
+      if (rangeTo !== nextRange.start &&
           time >= rangeUp &&
           time <= rangeTo &&
           (rangeTo - time) < timescale) {
-        return nextRange.ts / timescale;
+        return nextRange.start / timescale;
       }
 
       return -1;

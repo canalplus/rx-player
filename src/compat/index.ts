@@ -22,7 +22,6 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  catchError,
   mapTo,
   take,
 } from "rxjs/operators";
@@ -246,7 +245,10 @@ function addTextTrack(
  * buffer.
  *
  * TODO This seems to be about an old Firefox version. Delete it?
- * @param {Object} timing
+ * @param {number} time
+ * @param {Object|null} currentRange
+ * @param {string} state
+ * @param {Boolean} isStalled
  * @returns {Boolean}
  */
 function isPlaybackStuck(
@@ -338,7 +340,8 @@ function isOffline() : boolean {
  * @param {Number} startTime
  * @param {Number} endTime
  * @param {string} payload
- * @returns {TextTrackCue} or null if the parameters were invalid.
+ * @returns {VTTCue|TextTrackCue|null} Text track cue or null if the parameters
+ * were invalid.
  */
 function makeCue(
   startTime : number,
@@ -362,7 +365,7 @@ function makeCue(
 /**
  * Call play on the media element on subscription and return the response as an
  * observable.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function play$(mediaElement : HTMLMediaElement) : Observable<void> {
@@ -370,44 +373,15 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
     // mediaElement.play is not always a Promise. In the improbable case it
     // throws, I prefer still to catch to return the error wrapped in an
     // Observable
-    tryCatch(() => castToObservable(mediaElement.play()))
-      .pipe(mapTo(undefined))
+    tryCatch(() =>
+      castToObservable(mediaElement.play())
+        .pipe(mapTo(undefined))
+    )
   );
-}
-
-/**
- * Try to call play on the given media element:
- *
- *   - If it works emit `undefined` through the returned Observable, then
- *     complete it.
- *
- *   - If it fails probably because of an auto-play policy, warn through the
- *     logger then emit `undefined` through the returned Observable then
- *     complete it.
- *
- *   - if it fails for any other reason, throw through the Observable.
- * @param {HTMLMediaElement} videoElement
- * @returns {Observable}
- */
-function playUnlessAutoPlayPolicy$(
-  mediaElement : HTMLMediaElement
-) : Observable<void> {
-  return play$(mediaElement)
-    .pipe(catchError((error) => {
-      if (error.name === "NotAllowedError") {
-        // auto-play was probably prevented.
-        log.warn("Media element can't play." +
-          " It may be due to browser auto-play policies.");
-        return observableOf(undefined);
-      } else {
-        throw error;
-      }
-    }));
 }
 
 export {
   play$,
-  playUnlessAutoPlayPolicy$,
   getInitData,
   KeySystemAccess,
   MediaSource_,

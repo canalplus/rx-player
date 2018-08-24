@@ -100,4 +100,10 @@ export default [
     "transport": "directfile",
     "live": false,
   },
+  {
+    "name": "Google - Sintel webm only",
+    "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-webm-only/dash.mpd",
+    "transport": "dash",
+    live: false,
+  },
 ];

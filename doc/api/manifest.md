@@ -81,9 +81,14 @@ content.
 
 #### adaptations
 
-_type_: ``Object``
+---
 
-:warn: This property is deprecated and is only here for legacy reasons.
+:warning: This property is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_type_: ``Object``
 
 Adaptation objects for the first Period.
 
@@ -311,7 +316,12 @@ The represesentation index for this adaptation.
 See [the RepresentationIndex chapter](#representation-index) for more info about
 a Representation's structure.
 
+#### frameRate
 
+_type_: ``string|undefined``
+
+The represesentation frame rate for this adaptation. It defines either the number of frames
+per second as an integer (24), or as a ratio (24000 / 1000).
 
 <a name="representation-index"></a>
 ## Structure of a RepresentationIndex Object ###################################

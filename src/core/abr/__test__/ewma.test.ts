@@ -18,12 +18,6 @@ import { expect } from "chai";
 import EWMA from "../ewma";
 
 describe("ABR - EWMA", () => {
-  // TODO?
-  xit("should return 0 if no sample has been added", () => {
-    const ewma = new EWMA(0);
-    expect(ewma.getEstimate()).to.equal(0);
-  });
-
   it("should return the last bitrate if half-life is at 0", () => {
     const ewma = new EWMA(0);
     ewma.addSample(8000, 1000000);

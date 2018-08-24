@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Subject,
-} from "rxjs";
+import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { hasEMEAPIs } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
-import {
-  EncryptedMediaError,
-  ICustomError,
-} from "../../errors";
+import { EncryptedMediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
+import { IEMEManagerEvent } from "../eme";
 import { IKeySystemOption } from "../eme/types";
 
+/**
+ * Create EMEManager if possible (has the APIs and configuration).
+ * Else, return an Observable throwing at the next encrypted event encountered.
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Array.<Object>} keySystems
+ * @returns {Observable}
+ */
 export default function createEMEManager(
   mediaElement : HTMLMediaElement,
-  keySystems : IKeySystemOption[],
-  errorStream : Subject<Error|ICustomError>
-) : Observable<never> {
+  keySystems : IKeySystemOption[]
+) : Observable<IEMEManagerEvent> {
   if (features.emeManager == null) {
     return onEncrypted$(mediaElement).pipe(map(() => {
       log.error("eme: encrypted event but EME feature not activated");
@@ -55,5 +56,7 @@ export default function createEMEManager(
     }));
   }
 
-  return features.emeManager(mediaElement, keySystems, errorStream);
+  return features.emeManager(mediaElement, keySystems);
 }
+
+export { IEMEManagerEvent };

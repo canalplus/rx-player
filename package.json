@@ -1,7 +1,7 @@
 {
   "name": "rx-player",
   "author": "Canal+",
-  "version": "3.5.2",
+  "version": "3.6.0",
   "description": "Canal+ HTML5 Video Player",
   "main": "./dist/rx-player.js",
   "keywords": [
@@ -29,6 +29,8 @@
     "build:min": "Build the player and minify it in dist/rx-player.min.js",
     "build:modular": "Build the modular build of the rx-player and create corresponding files and directories.",
     "build:modules": "Build the base for the modular build in dist/_esm5.raw.",
+    "build:report": "Build the player in dist/rx-player.js and display a report on its size",
+    "build:min:report": "Build the player then minify it in dist/rx-player.min.js and display a report on its size",
     "build:watch": "Build the player in dist/rx-player.js each times the files update",
     "check": "Check validity of the src directory by running the linter and every tests",
     "demo": "Build the demo in demo/bundle.js",
@@ -64,8 +66,10 @@
   "scripts": {
     "build": "webpack --progress --config webpack.config.js",
     "build:min": "cross-env RXP_MINIFY=true webpack --progress --config webpack.config.js",
-    "build:modular": "./scripts/generate_minimal_build",
+    "build:modular": "./scripts/generate_builds",
     "build:modules": "tsc -p tsconfig.modules.json",
+    "build:report": "cross-env RXP_SIZE_REPORT=true webpack --progress --config webpack.config.js",
+    "build:min:report": "cross-env RXP_SIZE_REPORT=true cross-env RXP_MINIFY=true webpack --progress --config webpack.config.js",
     "build:watch": "webpack --progress --config webpack.config.js -w",
     "check": "npm run types && npm run lint && npm run test",
     "demo": "webpack --progress --config webpack-demo.config.js",
@@ -109,7 +113,6 @@
     "array-find-index": "^1.0.2",
     "deep-equal": "^1.0.1",
     "next-tick": "^1.0.0",
-    "npm": "^5.6.0",
     "object-assign": "^4.1.1",
     "rxjs": "^6.2.1"
   },
@@ -143,7 +146,7 @@
     "highlight.js": "^9.12.0",
     "istanbul-instrumenter-loader": "^3.0.1",
     "jsx-loader": "^0.13.2",
-    "karma": "^2.0.5",
+    "karma": "^3.0.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.2",
     "karma-firefox-launcher": "^1.1.0",

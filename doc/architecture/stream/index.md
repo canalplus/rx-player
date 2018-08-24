@@ -4,15 +4,13 @@
 ## Overview ####################################################################
 
 Even if the API is the front-facing block of code in the Rx-player, the Stream
-is the part of the code actually doing most logic behind playing a content.
-
-The API is just a higher, object-oriented, layer for easier library interactions.
+is the part of the code actually starting the logic behind playing a content.
 
 Its code is written in the ``src/core/stream`` directory. More specifically,
-all needed code should be exported by its "index file"
+all code needed in the rest of the code should be exported by its "index file"
 ``src/core/stream/index.ts``.
 
-Every times you're calling the API to load a new video, the Stream function is
+Every time you're calling the API to load a new video, the Stream function is
 called by it with a handful of arguments.
 
 The Stream does then the major part of the job and communicate back its progress
@@ -34,11 +32,13 @@ to the API through events.
 
 Basically, the job of the Stream is to:
 
-  - initialize the content (creating the MediaSource and SourceBuffers,
-    downloading the manifest)
+  - initialize the content (creating the MediaSource, downloading the manifest)
 
   - Connect most core parts of the player together, such as adaptive
-    streaming management, segment downloads, DRMs...
+    streaming management, segment pipelines, DRMs, speed management...
+
+  - Call with the right argument the PeriodBufferManager, which will download
+    and push segment to be decoded by the browser.
 
 As such, during the various events happening on content playback, the Stream
 will create / destroy / update various player blocks. Such example of blocks
@@ -48,9 +48,9 @@ are:
 
   - DRM management
 
-  - Buffer management
+  - Manifest loading, parsing and refreshing
 
-  - Manifest refreshing management
+  - Buffer management
 
   - ...
 
@@ -68,7 +68,7 @@ This Observable:
 
   - communicate on various streaming events through emitted notifications
 
-  - throw in the case of a fatal error (error interruption playback)
+  - throw in the case of a fatal error (i.e. an error interrupting playback)
 
 
 ### Communication between the API and the Stream ###############################
@@ -96,7 +96,7 @@ Thus, there is three ways the API and Stream can communicate:
 ### Emitted Events #############################################################
 
 Events allows the Stream to reports milestones of the content playback, such as
-when the content has been loaded.
+when the content is ready to play.
 
 It's also a way for the Stream to communicate informations about the content and
 give some controls to the user.
@@ -108,42 +108,26 @@ time the wanted language.
 
 
 
-## Building blocks #############################################################
+## The SpeedManager ############################################################
 
-The Stream put in relation multiple part of the code to allow a qualitative
-playback experience.
+The SpeedManager is the part of the Stream updating the playback speed of the
+content.
 
-Multiple of those building bricks are considered as part of the Stream.
+Playback speed can be updated on two occasions:
 
-Among them, you can find:
+  - the API set a new Speed (``speed$`` Observable).
 
-  - __[the Buffer Handler](./buffer_handler.md)__
+  - the content needs to build its buffer.
 
-    Create/destroy the Buffer and SourceBuffers needed, that will be used to
-    push new media segments.
-
-
-  - __[the Buffer Garbage Collector](./buffer_garbage_collector.md)__
-
-    Perform manual garbage collection on SourceBuffers periodically
+    In which case, the playback speed will be set to 0 (paused) even if the
+    API set another speed.
+    The regular speed will be set when enough buffer is available.
 
 
-  - __[the Segment Bookkeeper](./segment_bookkeeper.md)__
 
-    Keep track of the informations of every segments currently present in the
-    buffer, e.g. to know which part of the buffer are linked to which
-    quality/language etc.
+### The StallingManager ########################################################
 
-    Also useful to know when segments have automatically been garbage-collected
-    by the browser.
+The StallingManager listens to various browser events and properties to detect
+when the player is "stalled" (i.e. stuck on the current position).
 
-
-  - __[the Speed Manager](./speed_manager.md)__
-
-    Handle playback rate management. To pause when we should build buffer, for
-    example, and speed-up/lower-up the playback rate when the user ask for this.
-
-
-  - __the Stalling Manager__
-
-    Try to un-stall the player when it does so.
+It then try to adopt a strategy to easily get out of this situation if it can.

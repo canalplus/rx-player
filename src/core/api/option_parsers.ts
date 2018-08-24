@@ -23,6 +23,10 @@ import objectAssign from "object-assign";
 import config from "../../config";
 import log from "../../log";
 import {
+  CustomManifestLoader,
+  CustomSegmentLoader,
+} from "../../net/types";
+import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
@@ -41,13 +45,14 @@ const {
   DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
 
-// TODO
-// Set a real interface for transport options (i.e. same for DASH and SMOOTH).
-interface ITransportOption {
-  [keyName : string] : any;
+export { IKeySystemOption };
+
+export interface ITransportOptions {
+  manifestLoader? : CustomManifestLoader;
+  segmentLoader? : CustomSegmentLoader;
 }
 
-interface ISupplementaryTextTrackOption {
+export interface ISupplementaryTextTrackOption {
   url : string;
   language : string;
   closedCaption : boolean;
@@ -55,31 +60,41 @@ interface ISupplementaryTextTrackOption {
   codecs? : string;
 }
 
-interface ISupplementaryImageTrackOption {
+export interface ISupplementaryImageTrackOption {
   url : string;
   mimeType : string;
 }
 
-interface IDefaultAudioTrackOption {
+export interface IDefaultAudioTrackOption {
   language : string;
   normalized : string;
   audioDescription : boolean;
 }
 
-interface IDefaultTextTrackOption {
+export interface IDefaultTextTrackOption {
   language : string;
   normalized : string;
   closedCaption : boolean;
 }
 
-interface INetworkConfigOption {
+export interface INetworkConfigOption {
   manifestRetry? : number;
   offlineRetry? : number;
   segmentRetry? : number;
 }
 
-type IParsedStartAtOption = { position : number } | { wallClockTime : number } |
-  { percentage : number } | { fromLastPosition : number } |
+export type IStartAtOption =
+  { position : number } |
+  { wallClockTime : Date|number } |
+  { percentage : number } |
+  { fromLastPosition : number } |
+  { fromFirstPosition : number };
+
+type IParsedStartAtOption =
+  { position : number } |
+  { wallClockTime : number } |
+  { percentage : number } |
+  { fromLastPosition : number } |
   { fromFirstPosition : number };
 
 export interface IConstructorOptions {
@@ -114,33 +129,23 @@ export interface IParsedConstructorOptions {
   stopAtEnd : boolean;
 }
 
-interface ILoadVideoOptionsBase {
+export interface ILoadVideoOptions {
   url : string;
   transport : string;
+
   autoPlay? : boolean;
   keySystems? : IKeySystemOption[];
-  transportOptions? : ITransportOption|undefined;
+  transportOptions? : ITransportOptions|undefined;
   supplementaryTextTracks? : ISupplementaryTextTrackOption[];
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
   networkConfig? : INetworkConfigOption;
-  startAt? : { position : number } | { wallClockTime : Date|number } |
-    { percentage : number } | { fromLastPosition : number } |
-    { fromFirstPosition : number };
-}
-
-interface ILoadVideoOptionsNative extends ILoadVideoOptionsBase {
-  textTrackMode? : "native";
+  startAt? : IStartAtOption;
+  textTrackMode? : "native"|"html";
   hideNativeSubtitle? : boolean;
+  textTrackElement? : HTMLElement;
 }
-
-interface ILoadVideoOptionsHTML extends ILoadVideoOptionsBase {
-  textTrackMode : "html";
-  textTrackElement : HTMLElement;
-}
-
-export type ILoadVideoOptions = ILoadVideoOptionsNative | ILoadVideoOptionsHTML;
 
 interface IParsedLoadVideoOptionsBase {
   url : string;
@@ -148,7 +153,7 @@ interface IParsedLoadVideoOptionsBase {
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
   networkConfig: INetworkConfigOption;
-  transportOptions : ITransportOption|undefined;
+  transportOptions : ITransportOptions|undefined;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
   supplementaryImageTracks : ISupplementaryImageTrackOption[];
   defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
@@ -166,7 +171,8 @@ interface IParsedLoadVideoOptionsHTML extends IParsedLoadVideoOptionsBase {
   textTrackElement : HTMLElement;
 }
 
-export type IParsedLoadVideoOptions = IParsedLoadVideoOptionsNative |
+export type IParsedLoadVideoOptions =
+  IParsedLoadVideoOptionsNative |
   IParsedLoadVideoOptionsHTML;
 
 /**
@@ -322,7 +328,7 @@ function parseLoadVideoOptions(
   let transport : string;
   let autoPlay : boolean;
   let keySystems : IKeySystemOption[];
-  let transportOptions : ITransportOption|undefined;
+  let transportOptions : ITransportOptions|undefined;
   let supplementaryTextTracks : ISupplementaryTextTrackOption[];
   let supplementaryImageTracks : ISupplementaryImageTrackOption[];
   let textTrackMode : "native"|"html";

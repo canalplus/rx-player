@@ -28,22 +28,26 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     availableAudioBitrates: [],
     availableLanguages: [],
     availableVideoBitrates: [],
+    availableVideoTracks: [],
     availableSubtitles: [],
     bufferGap: undefined,
     currentTime: undefined,
     duration: undefined,
     error: null,
     hasEnded: false,
-    hasLoadedContent: false,
+    hasCurrentContent: false,
     images: [],
     isBuffering: false,
+    isContentLoaded: false,
     isFullscreen: player.isFullscreen(),
     isLive: false,
     isLoading: false,
     isPaused: false,
+    isReloading: false,
     isSeeking: false,
     isStopped: true,
     language: undefined,
+    videoTrackId: undefined,
     loadedVideo: null,
     minimumPosition: undefined,
     maximumPosition: undefined,
@@ -135,6 +139,10 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     SET_AUDIO_TRACK: (track) => {
       player.setAudioTrack(track.id);
+    },
+
+    SET_VIDEO_TRACK: (track) => {
+      player.setVideoTrack(track.id);
     },
 
     SET_SUBTITLES_TRACK: (track) => {

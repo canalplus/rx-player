@@ -74,7 +74,7 @@ export default function parseTTMLStringToDIV(
     const body = getBodyNode(tt);
     const styleNodes = getStyleNodes(tt);
     const regionNodes = getRegionNodes(tt);
-    const textNodes = getTextNodes(tt);
+    const paragraphNodes = getTextNodes(tt);
     const params = getParameters(tt);
 
     // construct styles array based on the xml as an optimization
@@ -129,14 +129,22 @@ export default function parseTTMLStringToDIV(
       getStylingAttributes(STYLE_ATTRIBUTES, [body], styles, regions) :
       getStylingAttributes(STYLE_ATTRIBUTES, [], styles, regions);
 
-    for (let i = 0; i < textNodes.length; i++) {
-      const paragraph = textNodes[i];
+    const bodySpaceAttribute = body ? body.getAttribute("xml:space") : undefined;
+    const shouldTrimWhiteSpaceOnBody =
+      bodySpaceAttribute === "default" || params.spaceStyle === "default";
+
+    for (let i = 0; i < paragraphNodes.length; i++) {
+      const paragraph = paragraphNodes[i];
       if (paragraph instanceof Element) {
         const divs = getParentElementsByTagName(paragraph , "div");
         const paragraphStyle = objectAssign({}, bodyStyle,
           getStylingAttributes(
             STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
         );
+
+        const paragraphSpaceAttribute = paragraph.getAttribute("xml:space");
+        const shouldTrimWhiteSpaceOnParagraph = paragraphSpaceAttribute ?
+          paragraphSpaceAttribute === "default" : shouldTrimWhiteSpaceOnBody;
 
         const cue = parseCue(
           paragraph,
@@ -145,7 +153,8 @@ export default function parseTTMLStringToDIV(
           regions,
           body,
           paragraphStyle,
-          params
+          params,
+          shouldTrimWhiteSpaceOnParagraph
         );
         if (cue) {
           ret.push(cue);

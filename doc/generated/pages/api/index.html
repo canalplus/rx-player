@@ -60,11 +60,14 @@
 <li><a href="#subchapter-isMute">isMute</a></li>
 <li><a href="#subchapter-getAvailableAudioTracks">getAvailableAudioTracks</a></li>
 <li><a href="#subchapter-getAvailableTextTracks">getAvailableTextTracks</a></li>
+<li><a href="#subchapter-getAvailableVideoTracks">getAvailableVideoTracks</a></li>
 <li><a href="#subchapter-getAudioTrack">getAudioTrack</a></li>
 <li><a href="#subchapter-getTextTrack">getTextTrack</a></li>
+<li><a href="#subchapter-getVideoTrack">getVideoTrack</a></li>
 <li><a href="#subchapter-setAudioTrack">setAudioTrack</a></li>
 <li><a href="#subchapter-setTextTrack">setTextTrack</a></li>
 <li><a href="#subchapter-disableTextTrack">disableTextTrack</a></li>
+<li><a href="#subchapter-setVideoTrack">setVideoTrack</a></li>
 <li><a href="#subchapter-getManifest">getManifest</a></li>
 <li><a href="#subchapter-getCurrentAdaptations">getCurrentAdaptations</a></li>
 <li><a href="#subchapter-getCurrentRepresentations">getCurrentRepresentations</a></li>
@@ -223,7 +226,9 @@ Can be either one of those strings:</p>
 <p><code>&quot;STOPPED&quot;</code>: The player is idle. No content is loading nor is loaded.</p>
 </li>
 <li>
-<p><code>&quot;LOADING&quot;</code>: The player is loading a new content.</p>
+<p><code>&quot;LOADING&quot;</code>: The player is loading a new content.
+Most APIs related to the current content are not yet available while the
+content is loading.</p>
 </li>
 <li>
 <p><code>&quot;LOADED&quot;</code>: The player can begin to play a new stream.</p>
@@ -245,30 +250,37 @@ for data to be appended.</p>
 <p><code>&quot;SEEKING&quot;</code>: The player has reached the end of the buffer because a seek
 has been performed, new segments are being loaded.</p>
 </li>
+<li>
+<p><code>&quot;RELOADING&quot;</code>: The player needs to reload its current (for example, when
+switching the current video track).
+While this state is active, most API related to the currently playing
+content are not available. This state should be treated like the <code>LOADING</code>
+state.</p>
+</li>
 </ul>
 <p>State chart:</p>
 <pre><code>    +---------+
     | STOPPED | &lt;-------------------+
     +---------+                     | stop() or &quot;error&quot; event
        |                            |
-+------| loadVideo() ----------------------------------------------------+
-|      |                           +---------------------+               |
-|      V                           |                     |               |
-|  +---------+     +--------+   play()   +---------+     |    +-------+  |
-|  | LOADING | --&gt; | LOADED | -----|---&gt; | PLAYING | ----|--&gt; | ENDED |  |
-|  +---------+     +--------+  autoPlay  +---------+     |    +-------+  |
-|                                  |         | ^         |               |
-|       +-----------+              |         | |         |               |
-|       | BUFFERING |  &lt;--------&gt;  |  play() | | pause() |               |
-|       +-----------+              |         | |         |               |
-|                                  |         | |         |               |
-|       +---------+    seekTo()    |         V |         |               |
-|       |         |  &lt;-----------  |     +--------+      |               |
-|       | SEEKING |                |     | PAUSED |      |               |
-|       |         |  -----------&gt;  |     +--------+      |               |
-|       +---------+                |                     |               |
-|                                  +---------------------+               |
-+------------------------------------------------------------------------+
++------| loadVideo() ---------------------------------------------------------+
+|      |                           +---------------------+                    |
+|      V                           |                     |                    |
+|  +---------+     +--------+   play()   +---------+     |    +-------+       |
+|  | LOADING | --&gt; | LOADED | -----|---&gt; | PLAYING | ----|--&gt; | ENDED |       |
+|  +---------+     +--------+  autoPlay  +---------+     |    +-------+       |
+|                                  |         | ^         |                    |
+|       +-----------+              |         | |         |                    |
+|       | BUFFERING |  &lt;--------&gt;  |  play() | | pause() |                    |
+|       +-----------+              |         | |         |                    |
+|                                  |         | |         |                    |
+|       +---------+    seekTo()    |         V |         |     +-----------+  |
+|       |         |  &lt;-----------  |     +--------+      | --&gt; | RELOADING |  |
+|       | SEEKING |                |     | PAUSED |      |     +-----------+  |
+|       |         |  -----------&gt;  |     +--------+      |       |            |
+|       +---------+                |                     | &lt;-----+            |
+|                                  +---------------------+                    |
++-----------------------------------------------------------------------------+
 </code></pre>
 <h4>Example</h4>
 <pre><code class="language-js"><span class="hljs-keyword">switch</span> (player.getPlayerState()) {
@@ -295,6 +307,9 @@ has been performed, new segments are being loaded.</p>
     <span class="hljs-keyword">break</span>;
   <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;ENDED&quot;</span>:
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content has reached the end.&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;RELOADING&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content is currently reloading&quot;</span>);
     <span class="hljs-keyword">break</span>;
   <span class="hljs-keyword">default</span>:
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;This is impossible (issue material!).&quot;</span>)
@@ -515,6 +530,10 @@ being played.</p>
 <p><a name="meth-isFullscreen"></a>
 <a name="subchapter-isFullscreen"></a></p>
 <h3>isFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p><em>return value</em>: <code>Boolean</code></p>
 <p>Returns <code>true</code> if the video element is in fullscreen mode, <code>false</code>
 otherwise.</p>
@@ -778,6 +797,10 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p><a name="meth-setFullscreen"></a>
 <a name="subchapter-setFullscreen"></a></p>
 <h3>setFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p><em>arguments</em>: <code>Boolean</code></p>
 <p>Switch or exit the <code>&lt;video&gt;</code> element to fullscreen mode. The argument is an
 optional boolean:</p>
@@ -798,6 +821,10 @@ prefer to implement your own method to include your controls in the final UI.</p
 <p><a name="meth-exitFullscreen"></a>
 <a name="subchapter-exitFullscreen"></a></p>
 <h3>exitFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p>Exit fullscreen mode. Same than <code>setFullscreen(false)</code>.</p>
 <p><a name="meth-setVolume"></a>
 <a name="subchapter-setVolume"></a></p>
@@ -827,7 +854,7 @@ call.</p>
 <p>Each of the objects in the returned array have the following properties:</p>
 <ul>
 <li>
-<p><code>id</code> (<code>Number|string</code>): The id used to identify the track. Use it for
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
 setting the track via <code>setAudioTrack</code>.</p>
 </li>
 <li>
@@ -860,7 +887,7 @@ options</a>), returns an empty Array.</p>
 <p>Each of the objects in the returned array have the following properties:</p>
 <ul>
 <li>
-<p><code>id</code> (<code>Number|string</code>): The id used to identify the track. Use it for
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
 setting the track via <code>setTextTrack</code>.</p>
 </li>
 <li>
@@ -881,6 +908,50 @@ the hard of hearing or not.</p>
 <li>
 <p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
 not.</p>
+</li>
+</ul>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns an empty Array.</p>
+<p><a name="meth-getAvailableVideoTracks"></a>
+<a name="subchapter-getAvailableVideoTracks"></a></p>
+<h3>getAvailableVideoTracks</h3>
+<p><em>returns</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the list of available video tracks for the current content.</p>
+<p>Each of the objects in the returned array have the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether this track is the one currently
+active or not.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>): Representations of this video
+track, with attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
 </li>
 </ul>
 <p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
@@ -947,6 +1018,48 @@ the hard of hearing or not.</p>
 <p><code>undefined</code> if no content has been loaded yet.</p>
 <p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>).</p>
+<p><a name="meth-getVideoTrack"></a>
+<a name="subchapter-getVideoTrack"></a></p>
+<h3>getVideoTrack</h3>
+<p><em>returns</em>: <code>Object|null|undefined</code></p>
+<p>Get the video track currently set. <code>null</code> if no video track is enabled right
+now.</p>
+<p>The track is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for setting
+the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>): Representations of this video
+track, with attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><code>undefined</code> if no content has been loaded yet.</p>
+<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
 <p><a name="meth-setAudioTrack"></a>
 <a name="subchapter-setAudioTrack"></a></p>
 <h3>setAudioTrack</h3>
@@ -969,6 +1082,39 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <a name="subchapter-disableTextTrack"></a></p>
 <h3>disableTextTrack</h3>
 <p>Deactivate the current text track, if one.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setVideoTrack"></a>
+<a name="subchapter-setVideoTrack"></a></p>
+<h3>setVideoTrack</h3>
+<p><em>arguments</em>: <code>string|Number</code></p>
+<p>Set a new video track from its id, recuperated from <code>getAvailableVideoTracks</code>.</p>
+<p>Setting a new video track when a previous one was already playing can lead the
+rx-player to &#x201C;reload&#x201D; this content.</p>
+<p>During this period:</p>
+<ul>
+<li>the player will have the state <code>RELOADING</code></li>
+<li>Multiple APIs linked to the current content might not work.
+Most notably:
+<ul>
+<li><code>play</code> will not work</li>
+<li><code>pause</code> will not work</li>
+<li><code>seekTo</code> will not work</li>
+<li><code>getPosition</code> will return 0</li>
+<li><code>getWallClockTime</code> will return 0</li>
+<li><code>getVideoDuration</code> will return <code>NaN</code></li>
+<li><code>getAvailableAudioTracks</code> will return an empty array</li>
+<li><code>getAvailableTextTracks</code> will return an empty array</li>
+<li><code>getAvailableVideoTracks</code> will return an empty array</li>
+<li><code>getTextTrack</code> will return <code>null</code></li>
+<li><code>getAudioTrack</code> will return <code>null</code></li>
+<li><code>setAudioTrack</code> will throw</li>
+<li><code>setTextTrack</code> will throw</li>
+</ul>
+</li>
+</ul>
 <hr>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
 mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
@@ -1016,6 +1162,10 @@ options</a>).</p>
 <p><a name="meth-getNativeTextTrack"></a>
 <a name="subchapter-getNativeTextTrack"></a></p>
 <h3>getNativeTextTrack</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p><em>return value</em>: <code>TextTrack|null</code></p>
 <p>Returns the first text track of the video&#x2019;s element, null if none.</p>
 <p>This is equivalent to:</p>

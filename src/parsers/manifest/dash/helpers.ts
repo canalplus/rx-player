@@ -35,7 +35,6 @@ export interface IAccessibility {
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
-const frameRateRe = /([0-9]+)(\/([0-9]+))?/;
 
 /**
  * Parse MPD string attributes.
@@ -100,25 +99,6 @@ function parseDuration(date : string) : number {
     parseFloat(match[10] || "0") * 60 +
     parseFloat(match[12] || "0")
   );
-}
-
-/**
- * Parse MPD frame rate attributes.
- * -1 if the frameRate could not be parsed,
- * @param {string} str
- * @returns {Number}
- */
-function parseFrameRate(str : string) : number {
-  const match = frameRateRe.exec(str);
-  if (!match) {
-    return -1;
-  }
-
-  const nom = parseInt(match[1], 10) || 0;
-  const den = parseInt(match[2], 10) || 0;
-  return den > 0
-    ? nom / den
-    : nom;
 }
 
 /**
@@ -319,7 +299,6 @@ export {
   parseByteRange,
   parseDateTime,
   parseDuration,
-  parseFrameRate,
   parseIntOrBoolean,
   parseRatio,
   parseScheme,

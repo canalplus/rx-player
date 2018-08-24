@@ -16,8 +16,8 @@
 
 /**
  * Convert given buffer to a 32bit integer hash
- * @param {Array|TypedArray} buffer
- * @returns {Number}
+ * @param {Array.<number>|TypedArray} buffer
+ * @returns {number}
  */
 export default function hashBuffer(buffer : Uint8Array|number[]) : number {
   let hash = 0;

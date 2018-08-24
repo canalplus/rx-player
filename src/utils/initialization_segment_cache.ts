@@ -22,6 +22,7 @@ import {
 /**
  * Caching object used to cache initialization segments.
  * This allow to have a faster representation switch and faster seeking.
+ * @class InitializationSegmentCache
  */
 class InitializationSegmentCache<T> {
   private _cache : WeakMap<Representation, T>;
@@ -52,7 +53,6 @@ class InitializationSegmentCache<T> {
   /**
    * @param {Object} obj
    * @returns {*} response
-   * TODO just add segment directly, not in an object?
    */
   public get(
     {
@@ -62,7 +62,7 @@ class InitializationSegmentCache<T> {
       representation : Representation;
       segment : ISegment;
     }
-  ) {
+  ) : T|null {
     if (segment.isInit) {
       const value = this._cache.get(representation);
       if (value != null) {

@@ -19,12 +19,11 @@ import {
   Observable,
 } from "rxjs";
 import { tap } from "rxjs/operators";
-import castToObservable from "./castToObservable";
 import noop from "./noop";
 
 /**
- * Throttle an asynchronous function (returning an Observable or Promise) to
- * drop calls done before a previous one has finished or failed.
+ * Throttle an asynchronous function returning an Observable to drop calls done
+ * before a previous one has finished or failed.
  *
  * @example
  * ```js
@@ -42,12 +41,10 @@ import noop from "./noop";
  * @param {Function} func
  * @returns {Function} - Function taking in argument the arguments you want
  * to give your function, and returning an Observable.
- *
- * TODO Add typings from castToObservable?
  */
-export default function throttle<T>(
-  func : (...args : T[]) => any
-) : (...args : T[]) => Observable<any> {
+export default function throttle<T, U>(
+  func : (...args : T[]) => Observable<U>
+) : (...args : T[]) => Observable<U> {
   let isPending = false;
 
   return (...args) => {
@@ -56,8 +53,7 @@ export default function throttle<T>(
     }
 
     isPending = true;
-
-    return castToObservable(func(...args))
+    return func(...args)
       .pipe(tap(
         noop,
         () => isPending = false,

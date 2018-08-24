@@ -19,7 +19,7 @@ import AssertionError from "../errors/AssertionError";
 /**
  * Throw an AssertionError if the given assertion is false.
  * @param {boolean} assertion
- * @param {string} message - Optional message property for the AssertionError.
+ * @param {string} [message] - Optional message property for the AssertionError.
  * @throws AssertionError - Throws if the assertion given is false
  */
 export default function assert(assertion : boolean, message? : string) {

@@ -36,6 +36,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
 
   linkPlayerEventToState("textTrackChange", "subtitle");
   linkPlayerEventToState("audioTrackChange", "language");
+  linkPlayerEventToState("videoTrackChange", "videoTrack");
   linkPlayerEventToState("videoBitrateChange", "videoBitrate");
   linkPlayerEventToState("audioBitrateChange", "audioBitrate");
   linkPlayerEventToState("error", "error");
@@ -73,9 +74,11 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   ).subscribe((arg) => {
     const stateUpdates = {
       hasEnded: arg === "ENDED",
-      hasLoadedContent: !["STOPPED", "LOADING"].includes(arg),
+      hasCurrentContent: !["STOPPED", "LOADING"].includes(arg),
+      isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(arg),
       isBuffering: arg === "BUFFERING",
       isLoading: arg === "LOADING",
+      isReloading: arg === "RELOADING",
       isSeeking: arg === "SEEKING",
       isStopped: arg === "STOPPED",
       speed: arg === "PLAYING" ? player.getPlaybackRate() : 0,
@@ -93,6 +96,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       stateUpdates.videoBitrate = undefined;
       stateUpdates.availableAudioBitrates = [];
       stateUpdates.availableVideoBitrates = [];
+      stateUpdates.availableVideoTracks = [];
       stateUpdates.availableLanguages = [];
       stateUpdates.availableSubtitles = [];
       stateUpdates.images = [];
@@ -116,6 +120,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     .pipe(takeUntil($destroy))
     .subscribe(() => {
       state.set({
+        availableVideoTracks: player.getAvailableVideoTracks(),
         availableAudioBitrates: player.getAvailableAudioBitrates(),
         availableVideoBitrates: player.getAvailableVideoBitrates(),
         availableLanguages: player.getAvailableAudioTracks(),

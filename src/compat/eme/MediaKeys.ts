@@ -195,10 +195,10 @@ if (navigator.requestMediaKeySystemAccess) {
       private readonly _key : string;
       private readonly _closeSession$ : Subject<void>;
 
-      constructor(video : HTMLMediaElement, keySystem : string) {
+      constructor(mediaElement : HTMLMediaElement, keySystem : string) {
         super();
         this._closeSession$ = new Subject();
-        this._vid = video;
+        this._vid = mediaElement;
         this._key = keySystem;
 
         this.sessionId = "";
@@ -208,9 +208,9 @@ if (navigator.requestMediaKeySystemAccess) {
         this.keyStatuses = new Map();
         this.expiration = NaN;
         observableMerge(
-          events.onKeyMessage$(video),
-          events.onKeyAdded$(video),
-          events.onKeyError$(video)
+          events.onKeyMessage$(mediaElement),
+          events.onKeyAdded$(mediaElement),
+          events.onKeyError$(mediaElement)
         )
           .pipe(takeUntil(this._closeSession$))
           .subscribe((evt : Event) => this.trigger(evt.type, evt));
@@ -282,10 +282,10 @@ if (navigator.requestMediaKeySystemAccess) {
     const isTypeSupported = function(keyType : string) : boolean {
       // get any <video> element from the DOM or create one
       // and try the `canPlayType` method
-      const video = document.querySelector("video") ||
+      const videoElement = document.querySelector("video") ||
         document.createElement("video");
-      if (video && video.canPlayType) {
-        return !!(video as any).canPlayType("video/mp4", keyType);
+      if (videoElement && videoElement.canPlayType) {
+        return !!(videoElement as any).canPlayType("video/mp4", keyType);
       } else {
         return false;
       }
@@ -330,8 +330,6 @@ if (navigator.requestMediaKeySystemAccess) {
             audioCapabilities,
             initDataTypes: ["cenc"],
             sessionTypes: ["temporary"],
-
-            // TODO TypesScript bug or what? Check and open an issue
             distinctiveIdentifier: "not-allowed" as "not-allowed",
             persistentState: "not-allowed" as "not-allowed",
           };
@@ -482,8 +480,6 @@ if (navigator.requestMediaKeySystemAccess) {
           return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
-
-              // TODO Authorize 1 argument for IE?
               new (MediaKeys_ as any)(keyType),
               keySystemConfigurationResponse
             )

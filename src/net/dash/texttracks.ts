@@ -15,18 +15,14 @@
  */
 
 import objectAssign from "object-assign";
-import {
-  merge as observableMerge,
-  of as observableOf,
-} from "rxjs";
-
+import { of as observableOf } from "rxjs";
 import assert from "../../utils/assert";
 import { stringFromUTF8 } from "../../utils/strings";
 
 import {
   getMDAT,
   getMDHDTimescale,
-  parseSidx,
+  getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
 
 import request from "../../utils/request";
@@ -73,41 +69,26 @@ function TextTrackLoader(
     });
   }
 
-  // fire a single time for contiguous init and index ranges
-  if (range && indexRange && range[1] === indexRange[0] - 1) {
+  // fire a single time for init and index ranges
+  if (range != null && indexRange != null) {
     return request({
       url: mediaURL,
       responseType,
       headers: {
-        Range: byteRange([range[0], indexRange[1]]),
+        Range: byteRange([
+          Math.min(range[0], indexRange[0]),
+          Math.max(range[1], indexRange[1]),
+        ]),
       },
     });
   }
-
-  const mediaRequest = request<ArrayBuffer|string>({
+  return request<ArrayBuffer|string>({
     url: mediaURL,
     responseType,
     headers: range ? {
       Range: byteRange(range),
     } : null,
   });
-
-  if (!indexRange) {
-    return mediaRequest;
-  }
-
-  // If init segment has indexRange metadata, we need to fetch
-  // both the initialization data and the index metadata. We do
-  // this in parallel and send the both blobs into the pipeline.
-  // TODO Find a solution for calling only one time the parser
-  const indexRequest = request<ArrayBuffer|string>({
-    url: mediaURL,
-    responseType,
-    headers: {
-      Range: byteRange(indexRange),
-    },
-  });
-  return observableMerge(mediaRequest, indexRequest);
 }
 
 /**
@@ -149,7 +130,7 @@ function TextTrackParser({
     responseData = new Uint8Array(response.responseData as ArrayBuffer);
 
     const sidxSegments =
-      parseSidx(responseData, indexRange ? indexRange[0] : 0);
+      getSegmentsFromSidx(responseData, indexRange ? indexRange[0] : 0);
 
     if (sidxSegments) {
       nextSegments = sidxSegments;
@@ -164,7 +145,7 @@ function TextTrackParser({
       segmentInfos = { time: -1, duration: 0, timescale: segment.timescale };
     } else {
       segmentInfos = {
-        time: segment.time || 0, // TODO either force time tbd or better logic
+        time: segment.time,
         duration: segment.duration,
         timescale: segment.timescale,
       };

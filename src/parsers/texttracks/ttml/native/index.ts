@@ -93,7 +93,7 @@ function parseTTMLStringToVTT(
     const body = getBodyNode(tt);
     const styleNodes = getStyleNodes(tt);
     const regionNodes = getRegionNodes(tt);
-    const textNodes = getTextNodes(tt);
+    const paragraphNodes = getTextNodes(tt);
     const params = getParameters(tt);
 
     // construct styles array based on the xml as an optimization
@@ -143,8 +143,12 @@ function parseTTMLStringToVTT(
       getStylingAttributes(WANTED_STYLE_ATTRIBUTES, [body], styles, regions) :
       getStylingAttributes(WANTED_STYLE_ATTRIBUTES, [], styles, regions);
 
-    for (let i = 0; i < textNodes.length; i++) {
-      const paragraph = textNodes[i];
+    const bodySpaceAttribute = body ? body.getAttribute("xml:space") : undefined;
+    const shouldTrimWhiteSpaceOnBody =
+      bodySpaceAttribute === "default" || params.spaceStyle === "default";
+
+    for (let i = 0; i < paragraphNodes.length; i++) {
+      const paragraph = paragraphNodes[i];
       if (paragraph instanceof Element) {
         const divs = getParentElementsByTagName(paragraph , "div");
         const paragraphStyle = objectAssign({}, bodyStyle,
@@ -152,13 +156,18 @@ function parseTTMLStringToVTT(
             WANTED_STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
         );
 
+        const paragraphSpaceAttribute = paragraph.getAttribute("xml:space");
+        const shouldTrimWhiteSpaceOnParagraph = paragraphSpaceAttribute ?
+          paragraphSpaceAttribute === "default" : shouldTrimWhiteSpaceOnBody;
+
         const cue = parseCue(
           paragraph,
           timeOffset,
           styles,
           regions,
           paragraphStyle,
-          params
+          params,
+          shouldTrimWhiteSpaceOnParagraph
         );
         if (cue) {
           ret.push(cue);
@@ -179,6 +188,7 @@ function parseTTMLStringToVTT(
  * @param {Array.<Object>} regions
  * @param {Object} paragraphStyle
  * @param {Object} params
+ * @param {Boolean} shouldTrimWhiteSpaceOnParagraph
  * @returns {TextTrackCue|null}
  */
 function parseCue(
@@ -187,7 +197,8 @@ function parseCue(
   _styles : IStyleObject[],
   _regions : IStyleObject[],
   paragraphStyle : IStyleList,
-  params : ITTParameters
+  params : ITTParameters,
+  shouldTrimWhiteSpace : boolean
 ) : VTTCue|TextTrackCue|null {
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
@@ -200,7 +211,7 @@ function parseCue(
   }
 
   const { start, end } = getTimeDelimiters(paragraph, params);
-  const text = generateTextContent(paragraph, params.spaceStyle === "default");
+  const text = generateTextContent(paragraph, shouldTrimWhiteSpace);
   const cue = makeCue(start + offset, end + offset, text);
   if (!cue) {
     return null;
@@ -214,12 +225,12 @@ function parseCue(
 /**
  * Generate text to display for a given paragraph.
  * @param {Element} paragraph - The <p> tag.
- * @param {Boolean} shouldTrimWhiteSpace
+ * @param {Boolean} shouldTrimWhiteSpaceForParagraph
  * @returns {string}
  */
 function generateTextContent(
   paragraph : Element,
-  shouldTrimWhiteSpace : boolean
+  shouldTrimWhiteSpaceForParagraph : boolean
 ) : string {
   /**
    * Recursive function, taking a node in argument and returning the
@@ -227,7 +238,10 @@ function generateTextContent(
    * @param {Node} node - the node in question
    * @returns {string}
    */
-  function loop(node : Node) : string {
+  function loop(
+    node : Node,
+    shouldTrimWhiteSpaceFromParent : boolean
+  ) : string {
     const childNodes = node.childNodes;
     let text = "";
     for (let i = 0; i < childNodes.length; i++) {
@@ -235,32 +249,44 @@ function generateTextContent(
       if (currentNode.nodeName === "#text") {
         let textContent = currentNode.textContent || "";
 
-        // TODO Also parse it from parent elements
-        // const spaceAttr = getAttribute("xml:space", [
-        //   ...spans, p, ...divs, body,
-        // ]);
-        // const shouldTrimWhiteSpace = spaceAttr ?
-        //   spaceAttr === "default" : shouldTrimWhiteSpaceParam;
-        if (shouldTrimWhiteSpace) {
+        if (shouldTrimWhiteSpaceFromParent) {
           // 1. Trim leading and trailing whitespace.
           // 2. Collapse multiple spaces into one.
           let trimmed = textContent.trim();
           trimmed = trimmed.replace(/\s+/g, " ");
           textContent = trimmed;
         }
-        text += textContent;
+
+        // DOM Parser turns HTML escape caracters into caracters,
+        // that may be misinterpreted by VTTCue API (typically, less-than sign
+        // and greater-than sign can be interpreted as HTML tags signs).
+        // Original escaped caracters must be conserved.
+        const escapedTextContent = textContent
+          .replace(/&|\u0026/g, "&amp;")
+          .replace(/<|\u003C/g, "&lt;")
+          .replace(/>|\u2265/g, "&gt;")
+          .replace(/\u200E/g, "&lrm;")
+          .replace(/\u200F/g, "&rlm;")
+          .replace(/\u00A0/g, "&nbsp;");
+
+        text += escapedTextContent;
       } else if (currentNode.nodeName === "br") {
         text += "\n";
       } else if (
         currentNode.nodeName === "span" &&
+        currentNode.nodeType === Node.ELEMENT_NODE &&
         currentNode.childNodes.length > 0
       ) {
-        text += loop(currentNode);
+        const spaceAttribute = (currentNode as Element).getAttribute("xml:space");
+        const shouldTrimWhiteSpaceForSpan = spaceAttribute ?
+          spaceAttribute === "default" : shouldTrimWhiteSpaceFromParent;
+
+        text += loop(currentNode, shouldTrimWhiteSpaceForSpan);
       }
     }
     return text;
   }
-  return loop(paragraph);
+  return loop(paragraph, shouldTrimWhiteSpaceForParagraph);
 }
 
 /**

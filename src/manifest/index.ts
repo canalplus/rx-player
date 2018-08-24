@@ -19,6 +19,7 @@ import log from "../log";
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
+import warnOnce from "../utils/warnOnce";
 import Adaptation, {
   IAdaptationType,
 } from "./adaptation";
@@ -50,6 +51,7 @@ interface ISupplementaryTextTrack {
 interface IManifestArguments {
   availabilityStartTime? : number;
   duration : number;
+  isLive : boolean;
   minimumTime? : number;
   id : string;
   periods : IPeriodArguments[];
@@ -57,7 +59,6 @@ interface IManifestArguments {
   suggestedPresentationDelay? : number;
   timeShiftBufferDepth? : number;
   transportType : string;
-  type? : string;
   uris : string[];
 }
 
@@ -89,19 +90,18 @@ export default class Manifest {
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
 
-    // TODO Real period management
     this.periods = args.periods.map((period) => {
       return new Period(period);
     });
 
     /**
-     * @deprecated TODO It is here to ensure compatibility with the way the
+     * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
     this.adaptations = (this.periods[0] && this.periods[0].adaptations) || [];
 
     this.minimumTime = args.minimumTime;
-    this.isLive = args.type === "dynamic";
+    this.isLive = args.isLive;
     this.uris = args.uris;
 
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
@@ -239,11 +239,12 @@ export default class Manifest {
   }
 
   /**
-   * TODO log deprecation
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
+    warnOnce("manifest.getAdaptations() is deprecated." +
+      " Please use manifest.period[].getAdaptations() instead");
     const firstPeriod = this.periods[0];
     if (!firstPeriod) {
       return [];
@@ -261,11 +262,12 @@ export default class Manifest {
   }
 
   /**
-   * TODO log deprecation
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+    warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
+      " Please use manifest.period[].getAdaptationsForType(type) instead");
     const firstPeriod = this.periods[0];
     if (!firstPeriod) {
       return [];
@@ -274,11 +276,12 @@ export default class Manifest {
   }
 
   /**
-   * TODO log deprecation
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
+    warnOnce("manifest.getAdaptation(id) is deprecated." +
+      " Please use manifest.period[].getAdaptation(id) instead");
     /* tslint:disable:deprecation */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
     /* tslint:enable:deprecation */
@@ -301,7 +304,7 @@ export default class Manifest {
    * Update the current manifest properties
    * @param {Object} Manifest
    */
-  update(newManifest : Manifest) {
+  update(newManifest : Manifest) : void {
     this._duration = newManifest.getDuration();
     this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.availabilityStartTime = newManifest.availabilityStartTime;
@@ -343,8 +346,8 @@ export default class Manifest {
 
             for (let k = 0; k < oldRepresentations.length; k++) {
               const oldRepresentation = oldRepresentations[k];
-              const newRepresentation =
-                arrayFind(newRepresentations, r => r.id === oldRepresentation.id);
+              const newRepresentation = arrayFind(newRepresentations,
+                representation => representation.id === oldRepresentation.id);
 
               if (!newRepresentation) {
                 /* tslint:disable:max-line-length */
@@ -380,6 +383,60 @@ export default class Manifest {
         }
       }
     }
+  }
+
+  /**
+   * Get minimum position currently defined by the Manifest.
+   * @returns {number}
+   */
+  public getMinimumPosition() : number {
+    // we have to know both the min and the max to be sure
+    const [min] = this.getCurrentPositionLimits();
+    return min;
+  }
+
+  /**
+   * Get maximum position currently defined by the Manifest.
+   * @returns {number}
+   */
+  public getMaximumPosition() : number {
+    if (!this.isLive) {
+      return this.getDuration();
+    }
+    const ast = this.availabilityStartTime || 0;
+    const plg = this.presentationLiveGap || 0;
+    const now = Date.now() / 1000;
+    return now - ast - plg;
+  }
+
+  /**
+   * Get minimum AND maximum positions currently defined by the manifest.
+   * @returns {Array.<number>}
+   */
+  public getCurrentPositionLimits() : [number, number] {
+    // TODO use RTT for the manifest request? (+ 3 or something)
+    const BUFFER_DEPTH_SECURITY = 5;
+
+    if (!this.isLive) {
+      return [this.minimumTime || 0, this.getDuration()];
+    }
+
+    const ast = this.availabilityStartTime || 0;
+    const plg = this.presentationLiveGap || 0;
+    const tsbd = this.timeShiftBufferDepth || 0;
+
+    const now = Date.now() / 1000;
+    const max = now - ast - plg;
+    return [
+      Math.min(
+        max,
+        Math.max(
+          this.minimumTime != null ? this.minimumTime : 0,
+          max - tsbd + BUFFER_DEPTH_SECURITY
+        )
+      ),
+      max,
+    ];
   }
 }
 

@@ -29,20 +29,34 @@ export interface IMediaKeySystemAccess {
  * @class CustomMediaKeySystemAccess
  */
 export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess {
+  /**
+   * @param {string} _keyType
+   * @param {Object} _mediaKeys
+   * @param {Object} _configuration
+   */
   constructor(
     private readonly _keyType : string,
     private readonly _mediaKeys : IMockMediaKeys|MediaKeys,
     private readonly _configuration : MediaKeySystemConfiguration
   ) {}
 
+  /**
+   * @returns {string}
+   */
   get keySystem() : string {
     return this._keyType;
   }
 
+  /**
+   * @returns {Promise}
+   */
   public createMediaKeys() : Promise<IMockMediaKeys|MediaKeys> {
     return new Promise((res) => res(this._mediaKeys));
   }
 
+  /**
+   * @returns {Object}
+   */
   public getConfiguration() : MediaKeySystemConfiguration {
     return this._configuration;
   }

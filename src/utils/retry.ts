@@ -148,6 +148,7 @@ function retryObsWithBackoff<T>(
  * backoff.
  * The backoff behavior can be tweaked through the options given.
  *
+ * @param {Function} func
  * @param {Object} options - Configuration object. @see retryObsWithBackoff
  * @returns {Observable}
  */

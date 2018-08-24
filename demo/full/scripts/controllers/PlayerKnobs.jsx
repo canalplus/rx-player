@@ -4,14 +4,16 @@ import AudioBitrateKnob from "./knobs/AudioBitrate.jsx";
 import VideoBitrateKnob from "./knobs/VideoBitrate.jsx";
 import LanguageKnob from "./knobs/AudioTrack.jsx";
 import SubtitlesKnob from "./knobs/Subtitles.jsx";
+import VideoTrack from "./knobs/VideoTrack.jsx";
 
 const PlayerKnobs = ({
   player,
-  hasLoadedContent,
+  availableVideoTracks,
+  isContentLoaded,
   hasEnded,
 }) => {
 
-  if (!hasLoadedContent || hasEnded) {
+  if (!isContentLoaded || hasEnded) {
     return null;
   }
 
@@ -21,6 +23,10 @@ const PlayerKnobs = ({
       <VideoBitrateKnob player={player} />
       <LanguageKnob player={player} />
       <SubtitlesKnob player={player} />
+      {
+        availableVideoTracks.length > 1 ?
+          <VideoTrack player={player} /> : null
+      }
     </div>
   );
 };
@@ -28,7 +34,8 @@ const PlayerKnobs = ({
 export default withModulesState({
   player: {
     isStopped: "isStopped",
-    hasLoadedContent: "hasLoadedContent",
+    isContentLoaded: "isContentLoaded",
     hasEnded: "hasEnded",
+    availableVideoTracks: "availableVideoTracks",
   },
 })(PlayerKnobs);

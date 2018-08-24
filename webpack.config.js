@@ -171,4 +171,7 @@ module.exports = {
     __dirname: false,
     setImmediate: false,
   },
+  watchOptions: {
+    ignored: /node_modules/,
+  },
 };

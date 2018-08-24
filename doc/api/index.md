@@ -56,11 +56,14 @@
     - [isMute](#meth-isMute)
     - [getAvailableAudioTracks](#meth-getAvailableAudioTracks)
     - [getAvailableTextTracks](#meth-getAvailableTextTracks)
+    - [getAvailableVideoTracks](#meth-getAvailableVideoTracks)
     - [getAudioTrack](#meth-getAudioTrack)
     - [getTextTrack](#meth-getTextTrack)
+    - [getVideoTrack](#meth-getVideoTrack)
     - [setAudioTrack](#meth-setAudioTrack)
     - [setTextTrack](#meth-setTextTrack)
     - [disableTextTrack](#meth-disableTextTrack)
+    - [setVideoTrack](#meth-setVideoTrack)
     - [getManifest](#meth-getManifest)
     - [getCurrentAdaptations](#meth-getCurrentAdaptations)
     - [getCurrentRepresentations](#meth-getCurrentRepresentations)
@@ -254,6 +257,8 @@ Can be either one of those strings:
   - ``"STOPPED"``: The player is idle. No content is loading nor is loaded.
 
   - ``"LOADING"``: The player is loading a new content.
+    Most APIs related to the current content are not yet available while the
+    content is loading.
 
   - ``"LOADED"``: The player can begin to play a new stream.
 
@@ -269,6 +274,12 @@ Can be either one of those strings:
   - ``"SEEKING"``: The player has reached the end of the buffer because a seek
     has been performed, new segments are being loaded.
 
+  - ``"RELOADING"``: The player needs to reload its current (for example, when
+    switching the current video track).
+    While this state is active, most API related to the currently playing
+    content are not available. This state should be treated like the ``LOADING``
+    state.
+
 
 State chart:
 
@@ -277,24 +288,24 @@ State chart:
     | STOPPED | <-------------------+
     +---------+                     | stop() or "error" event
        |                            |
-+------| loadVideo() ----------------------------------------------------+
-|      |                           +---------------------+               |
-|      V                           |                     |               |
-|  +---------+     +--------+   play()   +---------+     |    +-------+  |
-|  | LOADING | --> | LOADED | -----|---> | PLAYING | ----|--> | ENDED |  |
-|  +---------+     +--------+  autoPlay  +---------+     |    +-------+  |
-|                                  |         | ^         |               |
-|       +-----------+              |         | |         |               |
-|       | BUFFERING |  <-------->  |  play() | | pause() |               |
-|       +-----------+              |         | |         |               |
-|                                  |         | |         |               |
-|       +---------+    seekTo()    |         V |         |               |
-|       |         |  <-----------  |     +--------+      |               |
-|       | SEEKING |                |     | PAUSED |      |               |
-|       |         |  ----------->  |     +--------+      |               |
-|       +---------+                |                     |               |
-|                                  +---------------------+               |
-+------------------------------------------------------------------------+
++------| loadVideo() ---------------------------------------------------------+
+|      |                           +---------------------+                    |
+|      V                           |                     |                    |
+|  +---------+     +--------+   play()   +---------+     |    +-------+       |
+|  | LOADING | --> | LOADED | -----|---> | PLAYING | ----|--> | ENDED |       |
+|  +---------+     +--------+  autoPlay  +---------+     |    +-------+       |
+|                                  |         | ^         |                    |
+|       +-----------+              |         | |         |                    |
+|       | BUFFERING |  <-------->  |  play() | | pause() |                    |
+|       +-----------+              |         | |         |                    |
+|                                  |         | |         |                    |
+|       +---------+    seekTo()    |         V |         |     +-----------+  |
+|       |         |  <-----------  |     +--------+      | --> | RELOADING |  |
+|       | SEEKING |                |     | PAUSED |      |     +-----------+  |
+|       |         |  ----------->  |     +--------+      |       |            |
+|       +---------+                |                     | <-----+            |
+|                                  +---------------------+                    |
++-----------------------------------------------------------------------------+
 ```
 
 #### Example
@@ -323,6 +334,9 @@ switch (player.getPlayerState()) {
     break;
   case "ENDED":
     console.log("The content has reached the end.");
+    break;
+  case "RELOADING":
+    console.log("The content is currently reloading");
     break;
   default:
     console.log("This is impossible (issue material!).")
@@ -606,6 +620,13 @@ if (url) {
 
 <a name="meth-isFullscreen"></a>
 ### isFullscreen ###############################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
 
 _return value_: ``Boolean``
 
@@ -979,6 +1000,13 @@ Returns the maximum kept buffer ahead of the current position, in seconds.
 <a name="meth-setFullscreen"></a>
 ### setFullscreen ##############################################################
 
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
 _arguments_: ``Boolean``
 
 Switch or exit the ``<video>`` element to fullscreen mode. The argument is an
@@ -995,6 +1023,13 @@ prefer to implement your own method to include your controls in the final UI.
 
 <a name="meth-exitFullscreen"></a>
 ### exitFullscreen #############################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
 
 Exit fullscreen mode. Same than ``setFullscreen(false)``.
 
@@ -1038,7 +1073,7 @@ Returns the list of available audio tracks for the current content.
 
 Each of the objects in the returned array have the following properties:
 
-  - ``id`` (``Number|string``): The id used to identify the track. Use it for
+  - ``id`` (``string``): The id used to identify the track. Use it for
     setting the track via ``setAudioTrack``.
 
   - ``language`` (``string``): The language the audio track is in, as set in
@@ -1070,7 +1105,7 @@ Returns the list of available text tracks (subtitles) for the current content.
 
 Each of the objects in the returned array have the following properties:
 
-  - ``id`` (``Number|string``): The id used to identify the track. Use it for
+  - ``id`` (``string``): The id used to identify the track. Use it for
     setting the track via ``setTextTrack``.
 
   - ``language`` (``string``): The language the text track is in, as set in the
@@ -1087,6 +1122,43 @@ Each of the objects in the returned array have the following properties:
 
   - ``active`` (``Boolean``): Whether the track is the one currently active or
     not.
+
+
+In _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+
+
+<a name="meth-getAvailableVideoTracks"></a>
+### getAvailableVideoTracks ####################################################
+
+_returns_: ``Array.<Object>``
+
+Returns the list of available video tracks for the current content.
+
+Each of the objects in the returned array have the following properties:
+
+  - ``id`` (``string``): The id used to identify the track. Use it for
+    setting the track via ``setVideoTrack``.
+
+  - ``active`` (``Boolean``): Whether this track is the one currently
+    active or not.
+
+  - ``representations`` (``Array.<Object>``): Representations of this video
+    track, with attributes:
+
+    - ``id`` (``string``): The id used to identify this Representation.
+
+    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
+      seconds.
+
+    - ``width`` (``Number|undefined``): The width of video, in pixels.
+
+    - ``height`` (``Number|undefined``): The height of video, in pixels.
+
+    - ``codec`` (``string|undefined``): The codec given in standard MIME type
+      format.
+
+    - ``frameRate`` (``string|undefined``): The video framerate.
 
 
 In _DirectFile_ mode (see [loadVideo
@@ -1157,6 +1229,43 @@ The track is an object with the following properties:
 options](./loadVideo_options.md#prop-transport)).
 
 
+<a name="meth-getVideoTrack"></a>
+### getVideoTrack ##############################################################
+
+_returns_: ``Object|null|undefined``
+
+Get the video track currently set. ``null`` if no video track is enabled right
+now.
+
+The track is an object with the following properties:
+
+  - ``id`` (``string``): The id used to identify the track. Use it for setting
+    the track via ``setVideoTrack``.
+
+
+  - ``representations`` (``Array.<Object>``): Representations of this video
+    track, with attributes:
+
+    - ``id`` (``string``): The id used to identify this Representation.
+
+    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
+      seconds.
+
+    - ``width`` (``Number|undefined``): The width of video, in pixels.
+
+    - ``height`` (``Number|undefined``): The height of video, in pixels.
+
+    - ``codec`` (``string|undefined``): The codec given in standard MIME type
+      format.
+
+    - ``frameRate`` (``string|undefined``): The video framerate.
+
+``undefined`` if no content has been loaded yet.
+
+``undefined`` in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+
 <a name="meth-setAudioTrack"></a>
 ### setAudioTrack ##############################################################
 
@@ -1191,6 +1300,42 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 ### disableTextTrack ###########################################################
 
 Deactivate the current text track, if one.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+
+<a name="meth-setVideoTrack"></a>
+### setVideoTrack ##############################################################
+
+_arguments_: ``string|Number``
+
+Set a new video track from its id, recuperated from ``getAvailableVideoTracks``.
+
+Setting a new video track when a previous one was already playing can lead the
+rx-player to "reload" this content.
+
+During this period:
+  - the player will have the state ``RELOADING``
+  - Multiple APIs linked to the current content might not work.
+    Most notably:
+      - ``play`` will not work
+      - ``pause`` will not work
+      - ``seekTo`` will not work
+      - ``getPosition`` will return 0
+      - ``getWallClockTime`` will return 0
+      - ``getVideoDuration`` will return ``NaN``
+      - ``getAvailableAudioTracks`` will return an empty array
+      - ``getAvailableTextTracks`` will return an empty array
+      - ``getAvailableVideoTracks`` will return an empty array
+      - ``getTextTrack`` will return ``null``
+      - ``getAudioTrack`` will return ``null``
+      - ``setAudioTrack`` will throw
+      - ``setTextTrack`` will throw
 
 ---
 
@@ -1263,6 +1408,13 @@ Free the ressources used by the player.
 
 <a name="meth-getNativeTextTrack"></a>
 ### getNativeTextTrack #########################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
 
 _return value_: ``TextTrack|null``
 

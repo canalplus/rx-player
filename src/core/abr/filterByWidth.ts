@@ -33,12 +33,13 @@ export default function filterByWidth(
     .slice() // clone
     .sort((a, b) => (a.width || 0) - (b.width || 0));
 
-  const repWithMaxWidth =
-    arrayFind(sortedRepsByWidth, (r) => (r.width || 0) >= width);
+  const repWithMaxWidth = arrayFind(sortedRepsByWidth, (representation) =>
+    (representation.width || 0) >= width);
 
   if (repWithMaxWidth) {
     const maxWidth = repWithMaxWidth.width || 0;
-    return representations.filter(r => (r.width || 0) <= maxWidth);
+    return representations.filter(representation =>
+      (representation.width || 0) <= maxWidth);
   }
   return representations;
 }

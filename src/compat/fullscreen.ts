@@ -28,7 +28,6 @@ function requestFullscreen(elt : HTMLMediaElement) : void {
     } else if (elt.mozRequestFullScreen) {
       elt.mozRequestFullScreen();
     } else if (elt.webkitRequestFullscreen) {
-      // TODO Open issue in TypeScript?
       (
         elt.webkitRequestFullscreen as any
       )((Element as any).ALLOW_KEYBOARD_INPUT);
@@ -38,8 +37,6 @@ function requestFullscreen(elt : HTMLMediaElement) : void {
 
 /**
  * Exit fullscreen if an element is currently in fullscreen.
- * TODO this exit fullscreen mode even if any element in the document is in
- * fullscreen, is it really what we want?
  */
 function exitFullscreen() : void {
   if (isFullscreen()) {

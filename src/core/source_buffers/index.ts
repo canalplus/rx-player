@@ -18,6 +18,7 @@ import MediaError from "../../errors/MediaError";
 import features from "../../features";
 import log from "../../log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
+import BufferGarbageCollector from "./garbage_collector";
 import QueuedSourceBuffer from "./queued_source_buffer";
 
 // Every SourceBuffer types managed here
@@ -110,7 +111,7 @@ export default class SourceBufferManager {
     return shouldHaveNativeSourceBuffer(bufferType);
   }
 
-  private readonly _videoElement : HTMLMediaElement;
+  private readonly _mediaElement : HTMLMediaElement;
   private readonly _mediaSource : MediaSource;
 
   private _initializedNativeSourceBuffers : {
@@ -119,17 +120,17 @@ export default class SourceBufferManager {
   };
 
   private _initializedCustomSourceBuffers : {
-    text? : ICreatedSourceBuffer<any>;
-    image? : ICreatedSourceBuffer<any>;
+    text? : ICreatedSourceBuffer<unknown>;
+    image? : ICreatedSourceBuffer<unknown>;
   };
 
   /**
-   * @param {HTMLMediaElement} videoElement
+   * @param {HTMLMediaElement} mediaElement
    * @param {MediaSource} mediaSource
    * @constructor
    */
-  constructor(videoElement : HTMLMediaElement, mediaSource : MediaSource) {
-    this._videoElement = videoElement;
+  constructor(mediaElement : HTMLMediaElement, mediaSource : MediaSource) {
+    this._mediaElement = mediaElement;
     this._mediaSource = mediaSource;
     this._initializedNativeSourceBuffers = {};
     this._initializedCustomSourceBuffers = {};
@@ -218,22 +219,22 @@ export default class SourceBufferManager {
     if (bufferType === "text") {
       log.info("creating a new text SourceBuffer with codec", codec);
 
-      let sourceBuffer : ICustomSourceBuffer<any>;
+      let sourceBuffer : ICustomSourceBuffer<unknown>;
       if (options.textTrackMode === "html") {
         if (features.htmlTextTracksBuffer == null) {
           throw new Error("HTML Text track feature not activated");
         }
         sourceBuffer = new features
-          .htmlTextTracksBuffer(this._videoElement, options.textTrackElement);
+          .htmlTextTracksBuffer(this._mediaElement, options.textTrackElement);
       } else {
         if (features.nativeTextTracksBuffer == null) {
           throw new Error("Native Text track feature not activated");
         }
         sourceBuffer = new features
-          .nativeTextTracksBuffer(this._videoElement, !!options.hideNativeSubtitle);
+          .nativeTextTracksBuffer(this._mediaElement, !!options.hideNativeSubtitle);
       }
 
-      const queuedSourceBuffer = new QueuedSourceBuffer<any>(sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
 
       this._initializedCustomSourceBuffers.text = {
         codec,
@@ -246,7 +247,7 @@ export default class SourceBufferManager {
       }
       log.info("creating a new image SourceBuffer with codec", codec);
       const sourceBuffer = new features.imageBuffer();
-      const queuedSourceBuffer = new QueuedSourceBuffer<any>(sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
       this._initializedCustomSourceBuffers.image = {
         codec,
         sourceBuffer: queuedSourceBuffer,
@@ -341,5 +342,6 @@ function shouldHaveNativeSourceBuffer(
 }
 
 export {
+  BufferGarbageCollector,
   QueuedSourceBuffer,
 };

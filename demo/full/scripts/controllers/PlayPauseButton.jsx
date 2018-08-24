@@ -18,11 +18,11 @@ const PlayPauseButton = ({
   className = "",
   player,
   isPaused,
-  hasLoadedContent,
+  isContentLoaded,
   hasEnded,
 }) => {
-  const disabled = !hasLoadedContent;
-  const displayPause = !isPaused && hasLoadedContent &&
+  const disabled = !isContentLoaded;
+  const displayPause = !isPaused && isContentLoaded &&
     !hasEnded;
 
   const completeClassName = "play-pause-button " +
@@ -45,7 +45,7 @@ const PlayPauseButton = ({
 export default withModulesState({
   player: {
     isPaused: "isPaused",
-    hasLoadedContent: "hasLoadedContent",
+    isContentLoaded: "isContentLoaded",
     hasEnded: "hasEnded",
     stopAtEnd: "stopAtEnd",
   },

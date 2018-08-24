@@ -19,15 +19,20 @@ import {
   Observer,
 } from "rxjs";
 import {
+  mapTo,
+  mergeMap,
+  take,
+} from "rxjs/operators";
+import {
   clearElementSrc,
   MediaSource_,
 } from "../../compat";
-import MediaError from "../../errors/MediaError";
+import { onSourceOpen$ } from "../../compat/events";
+import { MediaError } from "../../errors";
 import log from "../../log";
 
 /**
- * Side effect that set the media duration in the mediaSource.
- *
+ * Set the media duration in the mediaSource.
  * @param {MediaSource} mediaSource
  * @param {number} duration
  */
@@ -47,14 +52,14 @@ export function setDurationToMediaSource(
 /**
  * Dispose of ressources taken by the MediaSource:
  *   - Clear the MediaSource' SourceBuffers
- *   - Clear the video's src (stop the video)
+ *   - Clear the mediaElement's src (stop the mediaElement)
  *   - Revoke MediaSource' URL
- * @param {HTMLMediaElement} video
- * @param {MediaSource|null} mediaSource
- * @param {string|null} mediaSourceURL
+ * @param {HTMLMediaElement} mediaElement
+ * @param {MediaSource|null|undefined} mediaSource
+ * @param {string|null|undefined} mediaSourceURL
  */
-export function resetMediaSource(
-  video : HTMLMediaElement,
+function resetMediaSource(
+  mediaElement : HTMLMediaElement,
   mediaSource? : MediaSource|null,
   mediaSourceURL? : string|null
 ) : void {
@@ -79,7 +84,7 @@ export function resetMediaSource(
     }
   }
 
-  clearElementSrc(video);
+  clearElementSrc(mediaElement);
 
   if (mediaSourceURL) {
     try {
@@ -93,21 +98,21 @@ export function resetMediaSource(
 
 /**
  * Create, on subscription, a MediaSource instance and attach it to the given
- * video element's src attribute.
+ * mediaElement element's src attribute.
  *
  * Returns an Observable which emits the MediaSource when created and attached
- * to the video element.
+ * to the mediaElement element.
  * This Observable never completes. It can throw if MediaSource is not
  * available in the current environment.
  *
- * On unsubscription, the video.src is cleaned, MediaSource sourceBuffers and
- * customBuffers are aborted and some minor cleaning is done.
+ * On unsubscription, the mediaElement.src is cleaned, MediaSource sourceBuffers
+ * and customBuffers are aborted and some minor cleaning is done.
  *
- * @param {HTMLMediaElement} video
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-export default function createMediaSource(
-  video : HTMLMediaElement
+function createMediaSource(
+  mediaElement : HTMLMediaElement
 ) : Observable<MediaSource> {
   return Observable.create((observer : Observer<MediaSource>) => {
     if (!MediaSource_) {
@@ -115,18 +120,37 @@ export default function createMediaSource(
     }
 
     // make sure the media has been correctly reset
-    resetMediaSource(video, null, video.src || null);
+    resetMediaSource(mediaElement, null, mediaElement.src || null);
 
     log.info("creating MediaSource");
     const mediaSource = new MediaSource_();
     const objectURL = URL.createObjectURL(mediaSource);
 
-    log.info("attaching MediaSource URL to video element", objectURL);
-    video.src = objectURL;
+    log.info("attaching MediaSource URL to the media element", objectURL);
+    mediaElement.src = objectURL;
 
     observer.next(mediaSource);
     return () => {
-      resetMediaSource(video, mediaSource, objectURL);
+      resetMediaSource(mediaElement, mediaSource, objectURL);
     };
   });
+}
+
+/**
+ * Create and open a new MediaSource object on the given media element.
+ * Emit the MediaSource when done.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+export default function openMediaSource(
+  mediaElement : HTMLMediaElement
+) : Observable<MediaSource> {
+  return createMediaSource(mediaElement).pipe(
+    mergeMap(mediaSource => {
+      return onSourceOpen$(mediaSource).pipe(
+        take(1),
+        mapTo(mediaSource)
+      );
+    })
+  );
 }

@@ -28,7 +28,7 @@ import {
   tap,
 } from "rxjs/operators";
 import log from "../../log";
-import { IStreamClockTick } from "./clock";
+import { IStreamClockTick } from "./types";
 
 export interface ISpeedManagerOptions {
   pauseWhenStalled? : boolean;
@@ -39,7 +39,7 @@ export interface ISpeedManagerOptions {
  * Set playback rate set by the user, pause playback when the player appear to
  * stall and restore the speed once it appears to un-stall.
  *
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
  * @param {Observable} clock$
  * @param {Object} options - Contains the following properties:
@@ -48,7 +48,7 @@ export interface ISpeedManagerOptions {
  * @returns {Observable}
  */
 const speedManager = (
-  videoElement : HTMLMediaElement,
+  mediaElement : HTMLMediaElement,
   speed$ : Observable<number>,
   clock$ : Observable<IStreamClockTick>,
   { pauseWhenStalled = true } : ISpeedManagerOptions
@@ -83,14 +83,14 @@ const speedManager = (
       if (shouldForcePause) {
         return observableDefer(() => {
           log.info("pause playback to build buffer");
-          videoElement.playbackRate = 0;
+          mediaElement.playbackRate = 0;
           return observableOf(0);
         });
       }
       return speed$
         .pipe(tap((speed) => {
           log.info("resume playback speed", speed);
-          videoElement.playbackRate = speed;
+          mediaElement.playbackRate = speed;
         }));
     }));
 };

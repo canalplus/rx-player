@@ -15,10 +15,7 @@
  */
 
 import log from "../../../../log";
-import {
-  parseBoolean,
-  parseFrameRate,
-} from "../helpers";
+import { parseBoolean } from "../helpers";
 import parseSegmentBase, {
   IParsedSegmentBase,
 } from "./SegmentBase";
@@ -51,7 +48,7 @@ export interface IRepresentationAttributes {
   bitrate? : number;
   codecs? : string;
   codingDependency? : boolean;
-  frameRate? : number;
+  frameRate? : string;
   height? : number;
   id? : string;
   maxPlayoutRate? : number;
@@ -132,14 +129,8 @@ function parseRepresentationAttributes(
         attributes.codingDependency = parseBoolean(attribute.value);
         break;
 
-      case "frameRate": {
-        const frameRate = parseFrameRate(attribute.value);
-        if (isNaN(frameRate)) {
-          log.warn(`DASH: invalid frameRate ("${attribute.value}")`);
-        } else {
-          attributes.frameRate = frameRate;
-        }
-      }
+      case "frameRate":
+        attributes.frameRate = attribute.value;
         break;
 
       case "height": {

@@ -199,17 +199,11 @@ export default class QueuedSourceBuffer<T> {
 
   /**
    * Remove data from the attached SourceBuffer, in a FIFO queue.
-   * @param {Object} range - Range of positions. With two properties:
-   *   - start {Number} - start position, in seconds
-   *   - end {Number} - end position, in seconds
+   * @param {number} start - start position, in seconds
+   * @param {number} end - end position, in seconds
    * @returns {Observable}
    */
-  public removeBuffer(
-    { start, end } : {
-      start : number;
-      end : number;
-    }
-  ) : Observable<void> {
+  public removeBuffer(start : number, end : number) : Observable<void> {
     return observableDefer(() =>
       this._addToQueue({
         type: SourceBufferAction.Remove,
@@ -265,8 +259,12 @@ export default class QueuedSourceBuffer<T> {
   private _onUpdate() : void {
     if (this._flushing) {
       this._flushing.next(undefined);
-      this._flushing.complete();
-      this._flushing = null;
+
+      // security against side-effects from the previous `next` instruction
+      if (this._flushing) {
+        this._flushing.complete();
+        this._flushing = null;
+      }
     }
   }
 

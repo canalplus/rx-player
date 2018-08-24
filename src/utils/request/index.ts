@@ -15,10 +15,12 @@
  */
 
 import { Observable ,  Observer } from "rxjs";
+import config from "../../config";
 import { RequestError, RequestErrorTypes } from "../../errors";
 
+const { DEFAULT_REQUEST_TIMEOUT } = config;
+
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
-const DEFAULT_REQUEST_TIMEOUT = 30 * 1000; // TODO move to config?
 
 // Interface for "progress" events
 export interface IRequestProgress {
@@ -59,7 +61,11 @@ export interface IRequestOptions<T, U> {
   body? : any;
 }
 
-function toJSONForIE(data : string) : any|null {
+/**
+ * @param {string} data
+ * @returns {Object|null}
+ */
+function toJSONForIE(data : string) : unknown|null {
   try {
     return JSON.parse(data);
   } catch (e) {
@@ -151,9 +157,9 @@ function request(options : IRequestOptions<"document", false|undefined>) :
 function request(options : IRequestOptions<"document", true>) :
   Observable<IRequestResponse<Document, "document">>;
 function request(options : IRequestOptions<"json", false|undefined>) :
-  Observable<IRequestResponse<any, "json">|IRequestProgress>;
+  Observable<IRequestResponse<object, "json">|IRequestProgress>;
 function request(options : IRequestOptions<"json", true>) :
-  Observable<IRequestResponse<any, "json">>;
+  Observable<IRequestResponse<object, "json">>;
 function request(options : IRequestOptions<"blob", false|undefined>) :
   Observable<IRequestResponse<Blob, "blob">|IRequestProgress>;
 function request(options : IRequestOptions<"blob", true>) :
@@ -250,9 +256,7 @@ function request<T>(
       };
     }
 
-    // XXX TODO:
-    // Waiting for https://github.com/Microsoft/TypeScript/issues/19830
-    (xhr as any).onload = function onXHRLoad(event : ProgressEvent) {
+    xhr.onload = function onXHRLoad(event : ProgressEvent) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = Date.now();

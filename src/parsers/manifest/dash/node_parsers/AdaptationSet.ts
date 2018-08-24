@@ -18,7 +18,6 @@ import log from "../../../../log";
 import {
   IScheme,
   parseBoolean,
-  parseFrameRate,
   parseIntOrBoolean,
   parseScheme,
 } from "../helpers";
@@ -59,7 +58,6 @@ export interface IAdaptationSetChildren {
   contentProtections? : IParsedContentProtection[];
   role? : IScheme;
 
-  // TODO
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
   segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;
@@ -72,20 +70,20 @@ export interface IAdaptationSetAttributes {
   codecs? : string;
   codingDependency? : boolean;
   contentType? : string;
-  frameRate? : number;
+  frameRate? : string;
   group? : number;
   height? : number;
   id? : string;
   language? : string;
   maxBitrate? : number;
-  maxFrameRate? : number;
+  maxFrameRate? : string;
   maxHeight? : number;
   maxPlayoutRate? : number;
   maxWidth? : number;
   maximumSAPPeriod? : number;
   mimeType? : string;
   minBitrate? : number;
-  minFrameRate? : number;
+  minFrameRate? : string;
   minHeight? : number;
   minWidth? : number;
   normalizedLanguage? : string;
@@ -265,23 +263,12 @@ function parseAdaptationSetAttributes(
         break;
 
       case "minFrameRate": {
-        const minFrameRate = parseFrameRate(attribute.value);
-        if (isNaN(minFrameRate)) {
-          log.warn(`DASH: invalid minFrameRate ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.minFrameRate = minFrameRate;
-        }
+        parsedAdaptation.minFrameRate = attribute.value;
       }
         break;
 
-      case "maxFrameRate": {
-        const maxFrameRate = parseFrameRate(attribute.value);
-        if (isNaN(maxFrameRate)) {
-          log.warn(`DASH: invalid maxFrameRate ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.maxFrameRate = maxFrameRate;
-        }
-      }
+      case "maxFrameRate":
+        parsedAdaptation.maxFrameRate = attribute.value;
         break;
 
       case "segmentAlignment": {
@@ -320,14 +307,8 @@ function parseAdaptationSetAttributes(
         parsedAdaptation.codingDependency = parseBoolean(attribute.value);
         break;
 
-      case "frameRate": {
-        const frameRate = parseFrameRate(attribute.value);
-        if (isNaN(frameRate)) {
-          log.warn(`DASH: invalid frameRate ("${attribute.value}")`);
-        } else {
-          parsedAdaptation.frameRate = frameRate;
-        }
-      }
+      case "frameRate":
+        parsedAdaptation.frameRate = attribute.value;
         break;
 
       case "height": {

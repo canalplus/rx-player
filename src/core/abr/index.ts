@@ -39,6 +39,8 @@ interface IMetric {
   value : IMetricValue;
 }
 
+export type IABRClockTick = IRepresentationChooserClockTick;
+
 // Options for every RepresentationChoosers
 interface IRepresentationChoosersOptions {
   limitWidth: Partial<Record<IBufferType, Observable<number>>>;
@@ -180,9 +182,6 @@ export default class ABRManager {
       .subscribe(({ type, value }) => {
         const chooser = this._lazilyCreateChooser(type);
         const { duration, size } = value;
-
-        // TODO Should we do a single estimate instead of a per-type one?
-        // Test it thoroughly
         chooser.addEstimate(duration, size);
       });
 
@@ -226,7 +225,7 @@ export default class ABRManager {
    */
   public get$(
     type : IBufferType,
-    clock$: Observable<IRepresentationChooserClockTick>,
+    clock$: Observable<IABRClockTick>,
     representations: Representation[] = []
   ) : Observable<{
     bitrate: undefined|number;
