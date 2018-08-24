@@ -64,7 +64,7 @@ export default function createManifest(
         delete period.adaptations[type];
       } else {
         const checkedAdaptations = checkAdaptations(adaptationsForType, warning$);
-        if (!checkAdaptations.length) {
+        if (!checkedAdaptations.length) {
           delete period.adaptations[type];
         } else {
           period.adaptations[type] = checkedAdaptations;
