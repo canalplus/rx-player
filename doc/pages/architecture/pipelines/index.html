@@ -1,6 +1,12 @@
 <head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>The Pipelines - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-The%20Pipelines">The Pipelines</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-The%20Manifest%20Pipeline">The Manifest Pipeline</a></li>
+<li><a href="#chapter-The%20SegmentPipelinesManager">The SegmentPipelinesManager</a>
+<ul>
+<li><a href="#subchapter-Priorization">Priorization</a></li>
+</ul>
+</li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-The%20Pipelines"></a></p>
 <h1>The Pipelines</h1>
@@ -15,12 +21,62 @@ defined in <em>Net</em>, to download and parse:</p>
 <p>Each of those task is performed by a discrete component of the Pipeline:</p>
 <ul>
 <li>
-<p><a href="manifest_pipeline.html">The Manifest Pipeline</a> is used to download and
-parse the manifest file.</p>
+<p>The <strong>Manifest Pipeline</strong> is used to download and parse the manifest file.</p>
 </li>
 <li>
-<p><a href="segment_pipeline_manager.html">The SegmentPipelinesManager</a> is used to
-download and parse media segments.</p>
+<p>The <strong>SegmentPipelinesManager</strong> is used to create Segment pipelines,
+allowing to download and parse media segments.</p>
 </li>
 </ul>
+<p><a name="chapter-The%20Manifest%20Pipeline"></a></p>
+<h2>The Manifest Pipeline</h2>
+<p>The Manifest Pipeline allows to download and parse the Manifest/Playlist of the
+current transport protocol to return an unified Manifest object.</p>
+<p>This is the part of the code that interacts with <em>Net</em> to perform the request
+and parsing  of the Manifest file.</p>
+<p>It can also add multiple supplementary Image or Text tracks to a given Manifest.</p>
+<p><a name="chapter-The%20SegmentPipelinesManager"></a></p>
+<h2>The SegmentPipelinesManager</h2>
+<p>The SegmentPipelineManager allows to easily perform Segment downloads for the
+rest of the code.
+This is the part of the code that interacts with the transport protocols -
+defined in <em>Net</em> - to load and parse media segments.</p>
+<p>To do so, the SegmentPipelineManager creates Pipelines of different types
+(example: a video or audio Pipeline) when you ask for it.
+Through those Pipelines, you can then schedule various segment requests with a
+given priority.</p>
+<p>The priority of this request is then corroborated with the
+priority of all requests currently pending in the SegmentPipelineManager (and
+not only with those on the current pipeline) to know when the request should
+effectively be done.</p>
+<p>During the lifecycle of the request, the Pipeline will communicate about data
+and metrics through several means - documented in the code.</p>
+<p><a name="subchapter-Priorization"></a></p>
+<h3>Priorization</h3>
+<p>Each Segment request can be linked to a priorization number.
+Such number will indicate which segment is needed more immediately than other
+(lower it is, the higher the priority of the segment is).</p>
+<p>If the request has no priorization number, the lowest priorization number
+(the highest priority) will be set on it: <code>0</code></p>
+<p>Basically, any new request will have their priorization number compared to the
+one of the current request(s) done by the SegmentPipelineManager:</p>
+<ul>
+<li>
+<p>if no request is already pending, we perform the request immediately</p>
+</li>
+<li>
+<p>if (and only if) this priorization number is higher (so lower priority) than
+all current requests, this new request will be postponed to let the
+higher-priority ones finish.</p>
+</li>
+<li>
+<p>If a new request has a priorization number lower or equal than all current
+downloads, we perform the request immediately without interrupting the
+current, lower-priority ones.</p>
+</li>
+</ul>
+<p>The priority of a download can be updated at any time, until this request either
+has finished, was canceled or failed. The same rules apply when the priorization
+number is updated (if this request is already pending, we keep it going in any
+case).</p>
 </body></html></div></div></div></body>

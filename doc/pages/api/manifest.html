@@ -78,8 +78,11 @@ be each in different languages, for example.</p>
 concept. For those, the Manifest will only have one Period for the whole
 content.</p>
 <h4>adaptations</h4>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This property is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p><em>type</em>: <code>Object</code></p>
-<p>:warn: This property is deprecated and is only here for legacy reasons.</p>
 <p>Adaptation objects for the first Period.</p>
 <p>Both of those lines have the same effect:</p>
 <pre><code class="language-js"><span class="hljs-built_in">console</span>.log(manifest.adaptations);
@@ -219,6 +222,10 @@ It defines the width of the video, in pixels.</p>
 <p>The represesentation index for this adaptation.</p>
 <p>See <a href="#representation-index">the RepresentationIndex chapter</a> for more info about
 a Representation&#x2019;s structure.</p>
+<h4>frameRate</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The represesentation frame rate for this adaptation. It defines either the number of frames
+per second as an integer (24), or as a ratio (24000 / 1000).</p>
 <p><a name="representation-index"></a>
 <a name="chapter-Structure%20of%20a%20RepresentationIndex%20Object"></a></p>
 <h2>Structure of a RepresentationIndex Object</h2>

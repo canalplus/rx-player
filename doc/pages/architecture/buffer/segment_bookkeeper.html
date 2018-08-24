@@ -9,8 +9,8 @@
 <h2>Overview</h2>
 <p>The SegmentBookkeeper is a class which registers informations about every
 segments currently present in a SourceBuffer.
-The RxPlayer&#x2019;s Stream creates one of them for each SourceBuffer created.</p>
-<p>This helps Buffers to avoid re-downloading segments unnecessarily and know when
+The RxPlayer creates one of them for each SourceBuffer created.</p>
+<p>This helps buffers to avoid re-downloading segments unnecessarily and know when
 old one have been garbage collected.
 For example, we could decide not to re-download a segment in any of the
 following cases:</p>

@@ -7,19 +7,22 @@
 <li><a href="#subchapter-Emitted%20Events">Emitted Events</a></li>
 </ul>
 </li>
-<li><a href="#chapter-Building%20blocks">Building blocks</a></li>
+<li><a href="#chapter-The%20SpeedManager">The SpeedManager</a>
+<ul>
+<li><a href="#subchapter-The%20StallingManager">The StallingManager</a></li>
+</ul>
+</li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-The%20Stream"></a></p>
 <h1>The Stream</h1>
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>Even if the API is the front-facing block of code in the Rx-player, the Stream
-is the part of the code actually doing most logic behind playing a content.</p>
-<p>The API is just a higher, object-oriented, layer for easier library interactions.</p>
+is the part of the code actually starting the logic behind playing a content.</p>
 <p>Its code is written in the <code>src/core/stream</code> directory. More specifically,
-all needed code should be exported by its &#x201C;index file&#x201D;
+all code needed in the rest of the code should be exported by its &#x201C;index file&#x201D;
 <code>src/core/stream/index.ts</code>.</p>
-<p>Every times you&#x2019;re calling the API to load a new video, the Stream function is
+<p>Every time you&#x2019;re calling the API to load a new video, the Stream function is
 called by it with a handful of arguments.</p>
 <p>The Stream does then the major part of the job and communicate back its progress
 to the API through events.</p>
@@ -38,12 +41,15 @@ to the API through events.</p>
 <p>Basically, the job of the Stream is to:</p>
 <ul>
 <li>
-<p>initialize the content (creating the MediaSource and SourceBuffers,
-downloading the manifest)</p>
+<p>initialize the content (creating the MediaSource, downloading the manifest)</p>
 </li>
 <li>
 <p>Connect most core parts of the player together, such as adaptive
-streaming management, segment downloads, DRMs&#x2026;</p>
+streaming management, segment pipelines, DRMs, speed management&#x2026;</p>
+</li>
+<li>
+<p>Call with the right argument the PeriodBufferManager, which will download
+and push segment to be decoded by the browser.</p>
 </li>
 </ul>
 <p>As such, during the various events happening on content playback, the Stream
@@ -57,10 +63,10 @@ are:</p>
 <p>DRM management</p>
 </li>
 <li>
-<p>Buffer management</p>
+<p>Manifest loading, parsing and refreshing</p>
 </li>
 <li>
-<p>Manifest refreshing management</p>
+<p>Buffer management</p>
 </li>
 <li>
 <p>&#x2026;</p>
@@ -82,7 +88,7 @@ unsubscription</p>
 <p>communicate on various streaming events through emitted notifications</p>
 </li>
 <li>
-<p>throw in the case of a fatal error (error interruption playback)</p>
+<p>throw in the case of a fatal error (i.e. an error interrupting playback)</p>
 </li>
 </ul>
 <p><a name="subchapter-Communication%20between%20the%20API%20and%20the%20Stream"></a></p>
@@ -115,45 +121,32 @@ its event</p>
 <p><a name="subchapter-Emitted%20Events"></a></p>
 <h3>Emitted Events</h3>
 <p>Events allows the Stream to reports milestones of the content playback, such as
-when the content has been loaded.</p>
+when the content is ready to play.</p>
 <p>It&#x2019;s also a way for the Stream to communicate informations about the content and
 give some controls to the user.</p>
 <p>For example, as available audio languages are only known after the manifest has
 been downloaded and parsed, and as it is most of all a user preference, the
 Stream can emit to the API RxJS Subjects allowing the API to &#x201C;choose&#x201D; at any
 time the wanted language.</p>
-<p><a name="chapter-Building%20blocks"></a></p>
-<h2>Building blocks</h2>
-<p>The Stream put in relation multiple part of the code to allow a qualitative
-playback experience.</p>
-<p>Multiple of those building bricks are considered as part of the Stream.</p>
-<p>Among them, you can find:</p>
+<p><a name="chapter-The%20SpeedManager"></a></p>
+<h2>The SpeedManager</h2>
+<p>The SpeedManager is the part of the Stream updating the playback speed of the
+content.</p>
+<p>Playback speed can be updated on two occasions:</p>
 <ul>
 <li>
-<p><strong><a href="buffer_handler.html">the Buffer Handler</a></strong></p>
-<p>Create/destroy the Buffer and SourceBuffers needed, that will be used to
-push new media segments.</p>
+<p>the API set a new Speed (<code>speed$</code> Observable).</p>
 </li>
 <li>
-<p><strong><a href="buffer_garbage_collector.html">the Buffer Garbage Collector</a></strong></p>
-<p>Perform manual garbage collection on SourceBuffers periodically</p>
-</li>
-<li>
-<p><strong><a href="segment_bookkeeper.html">the Segment Bookkeeper</a></strong></p>
-<p>Keep track of the informations of every segments currently present in the
-buffer, e.g. to know which part of the buffer are linked to which
-quality/language etc.</p>
-<p>Also useful to know when segments have automatically been garbage-collected
-by the browser.</p>
-</li>
-<li>
-<p><strong><a href="speed_manager.html">the Speed Manager</a></strong></p>
-<p>Handle playback rate management. To pause when we should build buffer, for
-example, and speed-up/lower-up the playback rate when the user ask for this.</p>
-</li>
-<li>
-<p><strong>the Stalling Manager</strong></p>
-<p>Try to un-stall the player when it does so.</p>
+<p>the content needs to build its buffer.</p>
+<p>In which case, the playback speed will be set to 0 (paused) even if the
+API set another speed.
+The regular speed will be set when enough buffer is available.</p>
 </li>
 </ul>
+<p><a name="subchapter-The%20StallingManager"></a></p>
+<h3>The StallingManager</h3>
+<p>The StallingManager listens to various browser events and properties to detect
+when the player is &#x201C;stalled&#x201D; (i.e. stuck on the current position).</p>
+<p>It then try to adopt a strategy to easily get out of this situation if it can.</p>
 </body></html></div></div></div></body>

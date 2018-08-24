@@ -7,7 +7,6 @@
 <li><a href="#subchapter-NETWORK_ERROR">NETWORK_ERROR</a></li>
 <li><a href="#subchapter-MEDIA_ERROR">MEDIA_ERROR</a></li>
 <li><a href="#subchapter-ENCRYPTED_MEDIA_ERROR">ENCRYPTED_MEDIA_ERROR</a></li>
-<li><a href="#subchapter-INDEX_ERROR">INDEX_ERROR</a></li>
 <li><a href="#subchapter-OTHER_ERROR">OTHER_ERROR</a></li>
 </ul>
 </li>
@@ -152,6 +151,12 @@ AdaptationSet or Smooth&#x2019;s StreamIndex) has a type (e.g. &#x201C;audio&#x2
 aborted.</p>
 </li>
 <li>
+<p><code>&quot;MEDIA_ERR_BLOCKED_AUTOPLAY&quot;</code>: The current browser has a policy which
+forbids us to autoPlay the content. As a consequence, the rx-player stays
+in a <code>&quot;LOADED&quot;</code> state.
+This code is always a warning and it never causes playback interruption.</p>
+</li>
+<li>
 <p><code>&quot;MEDIA_ERR_DECODE&quot;</code>: A pushed segment/media could not be decoded by the
 browser. This happens most-of-all with malformed segments.</p>
 </li>
@@ -231,18 +236,6 @@ license was given to the CDM).</p>
 <p><code>&quot;MEDIA_IS_ENCRYPTED_ERROR&quot;</code>: The media is encrypted and no key system
 was given to the RxPlayer&#x2019;s APIs.</p>
 </li>
-</ul>
-<p><a name="types-index_error"></a>
-<a name="subchapter-INDEX_ERROR"></a></p>
-<h3>INDEX_ERROR</h3>
-<p>Those errors are specific to the index, which is the place in the manifest
-describing how to access wanted segments.</p>
-<p>They all have a <code>type</code> property equal to <code>&quot;INDEX_ERROR&quot;</code>.</p>
-<h4>codes</h4>
-<p>An IndexERROR can only have the following code (<code>code</code> property):</p>
-<ul>
-<li><code>&quot;OUT_OF_INDEX_ERROR&quot;</code>: The wanted segments are currently out of the
-manifest&#x2019;s index.</li>
 </ul>
 <p><a name="types-other_error"></a>
 <a name="subchapter-OTHER_ERROR"></a></p>
