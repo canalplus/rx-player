@@ -5,7 +5,7 @@
 ## features
   - api: add video track switching
   - dash: add webm support
-  - api: Emit warning if autoPlay is blocked on the current browser (#280)
+  - api: Emit warning if autoPlay is blocked on the current browser
   - api: add ``getAvailableVideoTracks`` method to retrieve every video tracks
   - api: add ``getVideoTrack`` method to get the active video track
   - api: add ``setVideoTrack`` method to switch the video track
