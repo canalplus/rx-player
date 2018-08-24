@@ -149,6 +149,11 @@ A MediaError can have the following codes (``code`` property):
   - ``"MEDIA_ERR_ABORTED"``: A crucial browser-side fetching operation was
     aborted.
 
+  - ``"MEDIA_ERR_BLOCKED_AUTOPLAY"``: The current browser has a policy which
+    forbids us to autoPlay the content. As a consequence, the rx-player stays
+    in a ``"LOADED"`` state.
+    This code is always a warning and it never causes playback interruption.
+
   - ``"MEDIA_ERR_DECODE"``: A pushed segment/media could not be decoded by the
     browser. This happens most-of-all with malformed segments.
 

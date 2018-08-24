@@ -151,6 +151,12 @@ AdaptationSet or Smooth&#x2019;s StreamIndex) has a type (e.g. &#x201C;audio&#x2
 aborted.</p>
 </li>
 <li>
+<p><code>&quot;MEDIA_ERR_BLOCKED_AUTOPLAY&quot;</code>: The current browser has a policy which
+forbids us to autoPlay the content. As a consequence, the rx-player stays
+in a <code>&quot;LOADED&quot;</code> state.
+This code is always a warning and it never causes playback interruption.</p>
+</li>
+<li>
 <p><code>&quot;MEDIA_ERR_DECODE&quot;</code>: A pushed segment/media could not be decoded by the
 browser. This happens most-of-all with malformed segments.</p>
 </li>
