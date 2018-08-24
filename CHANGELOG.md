@@ -26,6 +26,7 @@
   - ttml: display forbidden characters (such as ">") in a ``"native"`` ``textTrackMode``
   - ttml: process ``xml:space`` even if it is not defined at the top level
   - buffer: perform a better clean-up of previous media in a SourceBuffer when switching audio or text track
+  - manifest/dash: throw a MANIFEST_PARSE_ERROR when no AdaptationSet of a given type in a Period is in a compatible codec
 
 ## Other improvements
 
