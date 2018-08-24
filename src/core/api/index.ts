@@ -142,6 +142,7 @@ type PLAYER_EVENT_STRINGS =
   "positionUpdate" |
   "audioTrackChange" |
   "textTrackChange" |
+  "videoTrackChange" |
   "audioBitrateChange" |
   "videoBitrateChange" |
   "imageTrackUpdate" |

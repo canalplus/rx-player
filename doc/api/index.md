@@ -257,6 +257,8 @@ Can be either one of those strings:
   - ``"STOPPED"``: The player is idle. No content is loading nor is loaded.
 
   - ``"LOADING"``: The player is loading a new content.
+    Most APIs related to the current content are not yet available while the
+    content is loading.
 
   - ``"LOADED"``: The player can begin to play a new stream.
 
@@ -272,6 +274,12 @@ Can be either one of those strings:
   - ``"SEEKING"``: The player has reached the end of the buffer because a seek
     has been performed, new segments are being loaded.
 
+  - ``"RELOADING"``: The player needs to reload its current (for example, when
+    switching the current video track).
+    While this state is active, most API related to the currently playing
+    content are not available. This state should be treated like the ``LOADING``
+    state.
+
 
 State chart:
 
@@ -280,24 +288,24 @@ State chart:
     | STOPPED | <-------------------+
     +---------+                     | stop() or "error" event
        |                            |
-+------| loadVideo() ----------------------------------------------------+
-|      |                           +---------------------+               |
-|      V                           |                     |               |
-|  +---------+     +--------+   play()   +---------+     |    +-------+  |
-|  | LOADING | --> | LOADED | -----|---> | PLAYING | ----|--> | ENDED |  |
-|  +---------+     +--------+  autoPlay  +---------+     |    +-------+  |
-|                                  |         | ^         |               |
-|       +-----------+              |         | |         |               |
-|       | BUFFERING |  <-------->  |  play() | | pause() |               |
-|       +-----------+              |         | |         |               |
-|                                  |         | |         |               |
-|       +---------+    seekTo()    |         V |         |               |
-|       |         |  <-----------  |     +--------+      |               |
-|       | SEEKING |                |     | PAUSED |      |               |
-|       |         |  ----------->  |     +--------+      |               |
-|       +---------+                |                     |               |
-|                                  +---------------------+               |
-+------------------------------------------------------------------------+
++------| loadVideo() ---------------------------------------------------------+
+|      |                           +---------------------+                    |
+|      V                           |                     |                    |
+|  +---------+     +--------+   play()   +---------+     |    +-------+       |
+|  | LOADING | --> | LOADED | -----|---> | PLAYING | ----|--> | ENDED |       |
+|  +---------+     +--------+  autoPlay  +---------+     |    +-------+       |
+|                                  |         | ^         |                    |
+|       +-----------+              |         | |         |                    |
+|       | BUFFERING |  <-------->  |  play() | | pause() |                    |
+|       +-----------+              |         | |         |                    |
+|                                  |         | |         |                    |
+|       +---------+    seekTo()    |         V |         |     +-----------+  |
+|       |         |  <-----------  |     +--------+      | --> | RELOADING |  |
+|       | SEEKING |                |     | PAUSED |      |     +-----------+  |
+|       |         |  ----------->  |     +--------+      |       |            |
+|       +---------+                |                     | <-----+            |
+|                                  +---------------------+                    |
++-----------------------------------------------------------------------------+
 ```
 
 #### Example
@@ -326,6 +334,9 @@ switch (player.getPlayerState()) {
     break;
   case "ENDED":
     console.log("The content has reached the end.");
+    break;
+  case "RELOADING":
+    console.log("The content is currently reloading");
     break;
   default:
     console.log("This is impossible (issue material!).")
@@ -1304,6 +1315,27 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 _arguments_: ``string|Number``
 
 Set a new video track from its id, recuperated from ``getAvailableVideoTracks``.
+
+Setting a new video track when a previous one was already playing can lead the
+rx-player to "reload" this content.
+
+During this period:
+  - the player will have the state ``RELOADING``
+  - Multiple APIs linked to the current content might not work.
+    Most notably:
+      - ``play`` will not work
+      - ``pause`` will not work
+      - ``seekTo`` will not work
+      - ``getPosition`` will return 0
+      - ``getWallClockTime`` will return 0
+      - ``getVideoDuration`` will return ``NaN``
+      - ``getAvailableAudioTracks`` will return an empty array
+      - ``getAvailableTextTracks`` will return an empty array
+      - ``getAvailableVideoTracks`` will return an empty array
+      - ``getTextTrack`` will return ``null``
+      - ``getAudioTrack`` will return ``null``
+      - ``setAudioTrack`` will throw
+      - ``setTextTrack`` will throw
 
 ---
 
