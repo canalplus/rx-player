@@ -50,6 +50,7 @@ import tryCatch from "../../utils/rx-tryCatch";
 import { IKeySystemOption } from "./types";
 
 const KEY_STATUS_INTERNAL_ERROR = "internal-error";
+const KEY_STATUS_EXPIRED = "expired";
 
 type TypedArray =
   Int8Array |
@@ -146,6 +147,14 @@ export default function handleSessionEvents(
           throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
         } else if (keyStatus === KEY_STATUS_INTERNAL_ERROR) {
           throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
+        }
+
+        if (!keySystem || keySystem.onKeyStatusesChange == null) {
+          if (keyId === KEY_STATUS_EXPIRED) {
+            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
+          } else if (keyStatus === KEY_STATUS_EXPIRED) {
+            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
+          }
         }
       });
 
