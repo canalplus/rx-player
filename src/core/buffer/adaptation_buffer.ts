@@ -54,9 +54,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import ABRManager, {
-  IABREstimation,
-} from "../abr";
+import ABRManager from "../abr";
 import { IPrioritizedSegmentFetcher } from "../pipelines";
 import { QueuedSourceBuffer } from "../source_buffers";
 import createFakeBuffer from "./create_fake_buffer";
@@ -74,6 +72,8 @@ import {
   IBufferStateFull,
   IRepresentationBufferEvent,
 } from "./types";
+
+import getSmoothnessInfos from "./get_smoothness_infos";
 
 export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTick {
   isLive : boolean;
@@ -111,29 +111,45 @@ export default function AdaptationBuffer<T>(
   wantedBufferAhead$ : Observable<number>,
   content : { manifest : Manifest; period : Period; adaptation : Adaptation },
   abrManager : ABRManager,
-  options : { manualBitrateSwitchingMode : "seamless"|"direct" }
+  options : { manualBitrateSwitchingMode : "seamless"|"direct" },
+  videoElement : HTMLMediaElement
 ) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
-  // Keep track of the currently considered representation to add informations
-  // to the ABR clock.
+  /**
+   * Keep track of the current representation to add informations to the
+   * ABR clock.
+   * TODO isn't that a little bit ugly?
+   * @type {Object|null}
+   */
   let currentRepresentation : Representation|null = null;
 
-  const abrClock$ = clock$.pipe(map((tick) => {
-    const downloadBitrate = currentRepresentation ?
-      currentRepresentation.bitrate : undefined;
-    return objectAssign({ downloadBitrate }, tick);
-  }));
+  const abrClock$ = clock$.pipe(
+    map((tick) => {
+      const downloadBitrate = currentRepresentation ?
+        currentRepresentation.bitrate : undefined;
+      return objectAssign({ downloadBitrate }, tick);
+    }));
 
-  const abr$ : Observable<IABREstimation> =
-    abrManager.get$(adaptation.type, abrClock$, adaptation.representations).pipe(
-      // equivalent to a sane shareReplay:
-      // https://github.com/ReactiveX/rxjs/issues/3336
-      // TODO Replace it when that issue is resolved
-      multicast(() => new ReplaySubject(1)),
-      refCount()
-    );
+  let smoothnessInfos;
+
+  if (videoElement instanceof HTMLVideoElement) {
+    smoothnessInfos = adaptation.type === "video" ?
+      getSmoothnessInfos(segmentBookkeeper, videoElement) :
+      undefined;
+  }
+
+  const abr$ = abrManager.get$(
+    adaptation.type, abrClock$, adaptation.representations, smoothnessInfos).pipe(
+    tap(({ representation }) => {
+      currentRepresentation = representation;
+    }),
+    // equivalent to a sane shareReplay:
+    // https://github.com/ReactiveX/rxjs/issues/3336
+    multicast(() => new ReplaySubject(1)),
+    refCount()
+  );
 
   // emit when the current RepresentationBuffer should be stopped right now
   const killCurrentBuffer$ = new Subject<void>();

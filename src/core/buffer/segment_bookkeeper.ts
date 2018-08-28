@@ -651,6 +651,28 @@ export default class SegmentBookkeeper {
   }
 
   /**
+   * Give all segments that are playable through the given time range.
+   * @param {Object} range
+   * @returns {Array.<Object>}
+   */
+  public getBufferedSegments(range: {
+    start: number; end: number; }
+  ): IBufferedSegment[] {
+    const { start, end } = range;
+    return this.inventory
+      .filter((element) => {
+        const { bufferedStart, bufferedEnd } = element;
+        if (bufferedStart != null && bufferedEnd != null) {
+          return (
+            end <= bufferedEnd && end > bufferedStart ||
+            start >= bufferedStart && start < bufferedEnd
+          );
+        }
+        return false;
+      });
+  }
+
+  /**
    * Empty the current inventory
    */
   public reset() {
