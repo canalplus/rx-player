@@ -26,6 +26,7 @@ import {
   catchError,
   ignoreElements,
   mapTo,
+  tap,
 } from "rxjs/operators";
 import {
   IMediaKeySession,
@@ -173,9 +174,11 @@ export default class MediaKeySessionsStore {
   public closeAllSessions() : Observable<null> {
     return observableDefer(() => {
       const disposed = this._entries.map((e) => this.closeSession(e.session));
-      this._entries = [];
       return observableConcat(
-        observableMerge(...disposed).pipe(ignoreElements()),
+        observableMerge(...disposed).pipe(
+          tap(() => this._entries = []),
+          ignoreElements()
+        ),
         observableOf(null)
       );
     });
