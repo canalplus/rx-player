@@ -145,7 +145,7 @@ export default function createSession(
       if (sessionStorage.get(initData, initDataType) !== null) {
         sessionStorage.delete(initData, initDataType);
       }
-      return sessionsStore.closeSession(session)
+      return sessionsStore.deleteAndCloseSession(session)
         .pipe(map(() => {
           const newSession =
             sessionsStore.createSession(initData, initDataType, sessionType);
