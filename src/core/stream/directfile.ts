@@ -169,7 +169,7 @@ export default function StreamDirectFile({
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
         return observableOf(EVENTS.warning(error), EVENTS.loaded());
       }
-      return observableOf(EVENTS.loaded);
+      return observableOf(EVENTS.loaded());
     }));
 
   // Start everything! (Just put the URL in the element's src).
