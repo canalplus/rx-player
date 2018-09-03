@@ -59,10 +59,10 @@ describe("basic playback use cases: direct file", function () {
     player.setPlaybackRate(0.5);
     player.play();
     const lastPosition = player.getPosition();
-    await sleep(300);
+    await sleep(600);
     expect(player.getPlayerState()).to.equal("PLAYING");
-    expect(player.getPosition()).to.be.below(0.35);
-    expect(player.getPosition()).to.be.above(0.05);
+    expect(player.getPosition()).to.be.below(0.500);
+    expect(player.getPosition()).to.be.above(0.150);
     expect(player.getPosition()).to.be.above(lastPosition);
     expect(player.getVideoLoadedTime()).to.be.above(0);
     expect(player.getVideoPlayedTime()).to.be.above(0);
@@ -77,10 +77,10 @@ describe("basic playback use cases: direct file", function () {
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(3);
     player.play();
-    await sleep(300);
+    await sleep(600);
     expect(player.getPlayerState()).to.equal("PLAYING");
-    expect(player.getPosition()).to.be.below(1);
-    expect(player.getPosition()).to.be.above(0.5);
+    expect(player.getPosition()).to.be.below(2);
+    expect(player.getPosition()).to.be.above(1);
     expect(player.getVideoLoadedTime()).to.be.above(0);
     expect(player.getVideoPlayedTime()).to.be.above(0);
     expect(player.getPlaybackRate()).to.equal(3);
@@ -97,7 +97,7 @@ describe("basic playback use cases: direct file", function () {
     expect(player.getPosition()).to.equal(2);
     expect(player.getPlayerState()).to.equal("LOADED");
     player.play();
-    await sleep(200);
+    await sleep(800);
     expect(player.getPlayerState()).to.equal("PLAYING");
     expect(player.getPosition()).to.be.above(2);
   });
