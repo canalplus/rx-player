@@ -69,7 +69,7 @@ import {
 interface IBufferStateIdle {
   type : "idle-buffer";
   value : {
-    bufferType : IBufferType; // The type of the Representation
+    bufferType : IBufferType;
   };
 }
 
@@ -477,27 +477,21 @@ export default function RepresentationBuffer<T>({
     return EVENTS.activeBuffer(bufferType);
   }
 
-  /**
-   * State Checker:
-   *   - indicates when the manifest should be refreshed
-   *   - indicates if a discontinuity is encountered
-   *   - emit state updates
-   *   - update the downloadQueue
-   *   - start/restart the BufferQueue
-   * @type {Observable}
-   */
+  // State Checker:
+  //   - indicates when the manifest should be refreshed
+  //   - indicates if a discontinuity is encountered
+  //   - emit state updates
+  //   - update the downloadQueue
+  //   - start/restart the BufferQueue
   const bufferState$ : Observable<IRepresentationBufferStateEvent> =
     observableCombineLatest(clock$, wantedBufferAhead$).pipe(
       map(getBufferStatus),
       mergeMap(handleBufferStatus)
     );
 
-  /**
-   * Buffer Queue:
-   *   - download segment
-   *   - append them to the SourceBuffer
-   * @type {Observable}
-   */
+  // Buffer Queue:
+  //   - download segment
+  //   - append them to the SourceBuffer
   const bufferQueue$ = startQueue$.pipe(
     switchMap(requestSegments),
     mergeMap(appendSegment)
@@ -528,7 +522,6 @@ function getCurrentDiscontinuity(
 /**
  * Returns true if the current Manifest needs to be downloaded.
  * @param {Object} content
- * @param {Object} segmentBookkeeper
  * @param {Object} wantedRange
  * @returns {Boolean}
  */
@@ -541,6 +534,7 @@ function shouldRefreshManifestForRange(
 }
 
 /**
+ * @param {string} bufferType
  * @param {number} discontinuity
  * @param {boolean} shouldRefreshManifest
  * @returns {Array.<Object>}

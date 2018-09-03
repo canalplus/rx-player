@@ -592,8 +592,8 @@ export default function PeriodBufferManager(
 
 /**
  * @param {string} bufferType
- * @param {number} retry
- * @param {number} offlineRetry
+ * @param {number|undefined} retry
+ * @param {number|undefined} offlineRetry
  * @returns {Object} - Options to give to the Pipeline
  */
 function getPipelineOptions(

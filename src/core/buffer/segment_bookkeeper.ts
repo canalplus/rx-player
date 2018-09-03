@@ -256,11 +256,13 @@ export default class SegmentBookkeeper {
    * Note: As new segments can "replace" partially or completely old ones, we
    * have to perform a complex logic and might update previously added segments.
    *
+   * @param {Object} period
+   * @param {Object} adaptation
+   * @param {Object} representation
    * @param {Object} segment
    * @param {Number} start - start time of the segment, in seconds
    * @param {Number|undefined} end - end time of the segment, in seconds. Can
    * be undefined in some rare cases
-   * @param {Number} bitrate - bitrate of the representation the segment is in
    */
   public insert(
     period : Period,
@@ -488,9 +490,7 @@ export default class SegmentBookkeeper {
    * as it depends on it to categorize "incomplete" from "complete" segments.
    *
    * @param {Object} wantedRange
-   * @param {Number} time
-   * @param {Number} duration
-   * @param {Number} timescale
+   * @param {Object} segmentInfos
    * @returns {Object|null}
    */
   public hasPlayableSegment(

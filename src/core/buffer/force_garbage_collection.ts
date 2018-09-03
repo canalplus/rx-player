@@ -38,7 +38,7 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
  * If it does not succeed to clean up space, use a higher gcCap.
  *
  * @param {Observable} timings$
- * @param {QueuedSourceBuffer} bufferingQueue
+ * @param {Object} bufferingQueue
  * @returns {Observable}
  */
 export default function forceGarbageCollection(
@@ -79,7 +79,7 @@ export default function forceGarbageCollection(
  * @param {TimeRanges} buffered - current buffered ranges
  * @param {Number} gcGap - delta gap from current timestamp from which we
  * should consider cleaning up.
- * @returns {Array.<Range>} - Ranges selected for clean up
+ * @returns {Array.<Object>} - Ranges selected for clean up
  */
 function selectGCedRanges(
   currentTime : number,

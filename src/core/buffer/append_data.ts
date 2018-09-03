@@ -72,7 +72,7 @@ function appendDataToSourceBuffer<T>(
  *
  * @param {Observable} clock$
  * @param {Object} queuedSourceBuffer
- * @param {Object} appendedSegmentInfos
+ * @param {Object} dataInfos
  * @returns {Observable}
  */
 export default function appendDataToSourceBufferWithRetries<T>(
