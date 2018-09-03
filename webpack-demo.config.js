@@ -38,7 +38,7 @@ module.exports = {
             cacheDirectory: true,
             presets: [
               "react",
-              ["env", { loose: true, modules: false }],
+              ["@babel/env", { loose: true, modules: false }],
             ],
           },
         },

@@ -150,7 +150,7 @@ module.exports = {
             options: {
               cacheDirectory: true,
               presets: [
-                [ "env", { loose: true, modules: false } ],
+                [ "@babel/env", { loose: true, modules: false } ],
               ],
             },
           },
