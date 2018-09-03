@@ -167,9 +167,10 @@ export default class MediaKeySessionsStore {
    */
   public closeAllSessions() : Observable<null> {
     return observableDefer(() => {
-      const entries = this._entries.slice();
+      const previousEntries = this._entries;
       this._entries = []; // clean completely the cache first
-      const disposed = entries.map((e) => this.deleteAndCloseSession(e.session));
+      const disposed = previousEntries
+        .map((entry) => this.deleteAndCloseSession(entry.session));
       return observableConcat(
         observableMerge(...disposed).pipe(ignoreElements()),
         observableOf(null)
