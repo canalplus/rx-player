@@ -96,6 +96,11 @@ import { IBufferType } from "../source_buffers";
 import Stream, {
   IStreamEvent,
 } from "../stream";
+import {
+  IReloadingStreamEvent,
+  IStalledEvent,
+  IStreamLoadedEvent,
+} from "../stream/types";
 import createClock, {
   IClockTick
 } from "./clock";
@@ -790,22 +795,21 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         .pipe(publish()) as ConnectableObservable<IStreamEvent>;
     }
 
-    // Emit a truthy value when the player stalls, a falsy value as it unstalls.
-    const stalled$ = stream
-      .pipe(
-        filter((evt) => evt.type === "stalled"),
-        map(x => x.value)
-      );
+    // Emit an object when the player stalls and null when it unstall
+    const stalled$ = stream.pipe(
+      filter((evt) : evt is IStalledEvent => evt.type === "stalled"),
+      map(x => x.value)
+    );
 
     // Emit when the Stream is considered "loaded".
     const loaded$ = stream.pipe(
-      filter(({ type }) => type === "loaded"),
+      filter((evt) : evt is IStreamLoadedEvent => evt.type === "loaded"),
       share()
     );
 
     // Emit when the Stream "reloads" the MediaSource
     const reloading$ = stream.pipe(
-      filter(({ type }) => type === "reloading-stream"),
+      filter((evt) : evt is IReloadingStreamEvent => evt.type === "reloading-stream"),
       share()
     );
 
@@ -820,7 +824,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // State updates when the content is considered "loaded"
     const loadedStateUpdates$ = observableCombineLatest(
       this._priv_playing$,
-      stalled$.pipe(startWith(null as { reason : string }|null)),
+      stalled$.pipe(startWith(null)),
       endedEvent$.pipe(startWith(null)),
       seekingEvent$.pipe(startWith(null))
     )

@@ -68,7 +68,7 @@ export default function handleEncryptedEvent(
   handledInitData : InitDataStore,
   mediaKeysInfos : IMediaKeysInfos
 ) : Observable<IHandledEncryptedEvent> {
-  return observableDefer(() => {
+  return observableDefer<IHandledEncryptedEvent>(() => {
     const {
       initData,
       initDataType,
