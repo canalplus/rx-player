@@ -578,7 +578,7 @@ export default function parseManifest(
           adaptation.children.role.value === "main" &&
           adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011";
 
-        const videoMainAdaptation: IParsedAdaptation|null = acc.videoMainAdaptation;
+        const videoMainAdaptation = acc.videoMainAdaptation;
 
         if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
           videoMainAdaptation.representations.push(...representations);
