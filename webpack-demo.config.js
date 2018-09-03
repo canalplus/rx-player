@@ -38,9 +38,7 @@ module.exports = {
             cacheDirectory: true,
             presets: [
               "react",
-              ["es2015", { loose: true, modules: false }],
-              "es2016",
-              "es2017",
+              ["env", { loose: true, modules: false }],
             ],
           },
         },
