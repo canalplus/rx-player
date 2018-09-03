@@ -50,9 +50,6 @@ import {
 
 import { IRepresentationIntermediateRepresentation } from "./Representation";
 
-type IMainAdaptations =
-  Partial<Record<string, IParsedAdaptation>>;
-
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
@@ -295,7 +292,7 @@ export default function parseManifest(
     // 4. Construct underlying adaptations
     const { adaptations } = period.children.adaptations
       .reduce<{
-        mainAdaptations : IMainAdaptations;
+        videoMainAdaptation : IParsedAdaptation|null;
         adaptations : IParsedAdaptations;
       }>((acc, adaptation) => {
         const parsedAdaptations = acc.adaptations;
@@ -581,10 +578,10 @@ export default function parseManifest(
           adaptation.children.role.value === "main" &&
           adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011";
 
-        const mainAdaptationForType = acc.mainAdaptations[type];
+        const videoMainAdaptation = acc.videoMainAdaptation;
 
-        if (mainAdaptationForType !== undefined && isMainAdaptation) {
-          mainAdaptationForType.representations.push(...representations);
+        if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
+          videoMainAdaptation.representations.push(...representations);
         } else {
           let closedCaption : boolean|undefined;
           let audioDescription : boolean|undefined;
@@ -663,22 +660,22 @@ export default function parseManifest(
           const parsedAdaptation = parsedAdaptations[type];
           if (!parsedAdaptation) {
             parsedAdaptations[type] = [parsedAdaptationSet];
-            if (isMainAdaptation) {
-              acc.mainAdaptations[type] = parsedAdaptationSet;
+            if (isMainAdaptation && type === "video") {
+              acc.videoMainAdaptation = parsedAdaptationSet;
             }
-          } else if (isMainAdaptation) {
+          } else if (isMainAdaptation && type === "video") {
             // put "main" adaptation as the first
             parsedAdaptation.unshift(parsedAdaptationSet);
-            acc.mainAdaptations[type] = parsedAdaptationSet;
+            acc.videoMainAdaptation = parsedAdaptationSet;
           } else {
             parsedAdaptation.push(parsedAdaptationSet);
           }
         }
         return {
           adaptations: parsedAdaptations,
-          mainAdaptations: acc.mainAdaptations,
+          videoMainAdaptation: acc.videoMainAdaptation,
         };
-      }, { mainAdaptations: {}, adaptations: {} });
+      }, { videoMainAdaptation: null, adaptations: {} });
 
       const parsedPeriod : IParsedPeriod = {
         id: periodID,

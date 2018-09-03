@@ -207,6 +207,8 @@ export default function AdaptationBuffer<T>(
 /**
  * Returns ABR Observable.
  * @param {Object} adaptation
+ * @param {Object} abrManager
+ * @param {Observable} abrBaseClock$
  * @returns {Observable}
  */
 function getABRForAdaptation(

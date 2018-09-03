@@ -21,11 +21,9 @@ import {
 
 /**
  * Returns every segments currently wanted.
- *
  * @param {Object} representation - The representation of the chosen
  * adaptation
  * @param {Object} range
- * @param {Object} options
  * @returns {Array.<Object>}
  */
 export default function getSegmentsNeeded(

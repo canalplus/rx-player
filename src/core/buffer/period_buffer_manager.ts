@@ -73,6 +73,7 @@ import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import {
   IAdaptationBufferEvent,
+  IBufferWarningEvent,
   IMultiplePeriodBuffersEvent,
   IPeriodBufferEvent,
   IPeriodBufferManagerEvent,
@@ -493,30 +494,32 @@ export default function PeriodBufferManager(
 
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
 
-      const newBuffer$ = clock$.pipe(take(1), mergeMap((tick) => {
-        const qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation);
-        const strategy = getAdaptationSwitchStrategy(
-          qSourceBuffer.getBuffered(), period, bufferType, tick);
+      const newBuffer$ = clock$.pipe(
+        take(1),
+        mergeMap<IPeriodBufferManagerClockTick, IPeriodBufferEvent>((tick) => {
+          const qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation);
+          const strategy = getAdaptationSwitchStrategy(
+            qSourceBuffer.getBuffered(), period, bufferType, tick);
 
-        if (strategy.type === "reload-stream") {
-          return observableOf(EVENTS.needsStreamReload());
-        }
+          if (strategy.type === "reload-stream") {
+            return observableOf(EVENTS.needsStreamReload());
+          }
 
-        const cleanBuffer$ = strategy.type === "clean-buffer" ?
-          observableConcat(
-            ...strategy.value.map(({ start, end }) =>
-              qSourceBuffer.removeBuffer(start, end)
-            )).pipe(ignoreElements()) : EMPTY;
+          const cleanBuffer$ = strategy.type === "clean-buffer" ?
+            observableConcat(
+              ...strategy.value.map(({ start, end }) =>
+                qSourceBuffer.removeBuffer(start, end)
+              )).pipe(ignoreElements()) : EMPTY;
 
-        const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
-        const adaptationBuffer$ = createAdaptationBuffer(
-          bufferType, period, adaptation, qSourceBuffer);
+          const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
+          const adaptationBuffer$ = createAdaptationBuffer(
+            bufferType, period, adaptation, qSourceBuffer);
 
-        return observableConcat(
-          cleanBuffer$,
-          observableMerge(adaptationBuffer$, bufferGarbageCollector$)
-        );
-      }));
+          return observableConcat(
+            cleanBuffer$,
+            observableMerge(adaptationBuffer$, bufferGarbageCollector$)
+          );
+        }));
 
       return observableConcat<IPeriodBufferEvent>(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
@@ -555,7 +558,7 @@ export default function PeriodBufferManager(
     period: Period,
     adaptation : Adaptation,
     qSourceBuffer : QueuedSourceBuffer<T>
-  ) : Observable<IAdaptationBufferEvent<T>> {
+  ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
     const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
     const pipelineOptions = getPipelineOptions(
       bufferType, options.segmentRetry, options.offlineRetry);
@@ -569,14 +572,14 @@ export default function PeriodBufferManager(
       wantedBufferAhead$,
       { manifest, period, adaptation },
       abrManager
-    ).pipe(catchError<IAdaptationBufferEvent<T>, never>((error : Error) => {
+    ).pipe(catchError((error : Error) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue streaming without any subtitles
       if (!SourceBufferManager.isNative(bufferType)) {
         log.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
         sourceBufferManager.disposeSourceBuffer(bufferType);
-        return observableConcat<IPeriodBufferEvent>(
+        return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
           observableOf(EVENTS.warning(error)),
           createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
         );
@@ -589,8 +592,8 @@ export default function PeriodBufferManager(
 
 /**
  * @param {string} bufferType
- * @param {number} retry
- * @param {number} offlineRetry
+ * @param {number|undefined} retry
+ * @param {number|undefined} offlineRetry
  * @returns {Object} - Options to give to the Pipeline
  */
 function getPipelineOptions(

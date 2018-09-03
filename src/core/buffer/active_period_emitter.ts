@@ -81,6 +81,7 @@ interface IPeriodItem {
  * already inform that it is the current Period.
  * ```
  *
+ * @param {Array.<string>} bufferTypes - Every buffer types in the content.
  * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer informations when
  * one is added.
  * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer informations when
@@ -152,7 +153,8 @@ export default function ActivePeriodEmitter(
 /**
  * Returns true if the set of given buffer types is complete (has all possible
  * types).
- * @param {Set} bufferList
+ * @param {Array.<string>} bufferTypes - Every buffer types in the content.
+ * @param {Set.<string>} bufferList
  * @returns {Boolean}
  */
 function isBufferListFull(

@@ -37,10 +37,8 @@ module.exports = {
           options: {
             cacheDirectory: true,
             presets: [
-              "react",
-              ["es2015", { loose: true, modules: false }],
-              "es2016",
-              "es2017",
+              "@babel/react",
+              ["@babel/env", { loose: true, modules: false }],
             ],
           },
         },

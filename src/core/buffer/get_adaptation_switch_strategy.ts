@@ -38,7 +38,7 @@ export type IAdaptationSwitchStrategy =
  * @param {Object} period
  * @param {string} bufferType
  * @param {Object} clockTick
- * @returns {Observable}
+ * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
   buffered : TimeRanges,

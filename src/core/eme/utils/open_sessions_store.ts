@@ -141,21 +141,16 @@ export default class MediaKeySessionsStore {
   }
 
   /**
-   * Close a MediaKeySession stored here and remove its entry in the store.
-   * @param {MediaKeySession} session_
+   * Close a MediaKeySession and remove its entry if it's found in the store.
+   * @param {MediaKeySession} session
    * @returns {Observable}
    */
-  public closeSession(
-    session_ : IMediaKeySession|MediaKeySession
+  public deleteAndCloseSession(
+    session : IMediaKeySession|MediaKeySession
   ) : Observable<null> {
     return observableDefer(() => {
-      const session = this._delete(session_);
-      if (session == null) {
-        return observableOf(null);
-      }
-
+      this._delete(session);
       log.debug("eme-mem-store: close session", session);
-
       return castToObservable(session.close()).pipe(
         mapTo(null),
         catchError(() => {
@@ -172,8 +167,10 @@ export default class MediaKeySessionsStore {
    */
   public closeAllSessions() : Observable<null> {
     return observableDefer(() => {
-      const disposed = this._entries.map((e) => this.closeSession(e.session));
-      this._entries = [];
+      const previousEntries = this._entries;
+      this._entries = []; // clean completely the cache first
+      const disposed = previousEntries
+        .map((entry) => this.deleteAndCloseSession(entry.session));
       return observableConcat(
         observableMerge(...disposed).pipe(ignoreElements()),
         observableOf(null)
@@ -184,21 +181,20 @@ export default class MediaKeySessionsStore {
   /**
    * Remove a MediaKeySession from the Cache, without closing it.
    * Returns the entry if found, null otherwise.
-   * @param {MediaKeySession} session_
-   * @returns {MediaKeySession|null}
+   * @param {MediaKeySession} session
+   * @returns {number} - index of the session in the cache. -1 of not found.
    */
   private _delete(
-    session_ : IMediaKeySession|MediaKeySession
-  ) : IMediaKeySession|MediaKeySession|null {
-    const entry = arrayFind(this._entries, (e) => e.session === session_);
+    session : IMediaKeySession|MediaKeySession
+  ) : number {
+    const entry = arrayFind(this._entries, (e) => e.session === session);
     if (!entry) {
-      return null;
+      return -1;
     }
 
-    const { session } = entry;
     log.debug("eme-mem-store: delete session", entry);
     const idx = this._entries.indexOf(entry);
     this._entries.splice(idx, 1);
-    return session;
+    return idx;
   }
 }
