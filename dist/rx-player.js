@@ -103,7 +103,7 @@
         }, 
         /******/
         /******/ // __webpack_public_path__
-        /******/ __webpack_require__.p = "", __webpack_require__(__webpack_require__.s = 104);
+        /******/ __webpack_require__.p = "", __webpack_require__(__webpack_require__.s = 110);
         /******/    }
     /************************************************************************/
     /******/ ([ 
@@ -111,11 +111,42 @@
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./src/utils/noop.ts
-                var noop = __webpack_require__(28);
+                var noop = __webpack_require__(27), DEFAULT_LOG_LEVEL = "NONE", logger = new (
+        /* */
+        function() {
+            function Logger() {
+                this.error = noop.a, this.warn = noop.a, this.info = noop.a, this.debug = noop.a, 
+                this.LEVELS = {
+                    NONE: 0,
+                    ERROR: 1,
+                    WARNING: 2,
+                    INFO: 3,
+                    DEBUG: 4
+                }, this.currentLevel = DEFAULT_LOG_LEVEL;
+            }
+            /**
+   * @param {string} levelStr
+   */            var _proto = Logger.prototype;
+            return _proto.setLevel = function setLevel(levelStr) {
+                var level, foundLevel = this.LEVELS[levelStr];
+                foundLevel ? (
+                // levelStr is a ILoggerLevel
+                level = foundLevel, this.currentLevel = levelStr) : (
+                // either 0 or not found
+                level = 0, this.currentLevel = "NONE")
+                /* tslint:disable no-invalid-this */
+                /* tslint:disable no-console */ , this.error = level >= this.LEVELS.ERROR ? console.error.bind(console) : noop.a, 
+                this.warn = level >= this.LEVELS.WARNING ? console.warn.bind(console) : noop.a, 
+                this.info = level >= this.LEVELS.INFO ? console.info.bind(console) : noop.a, this.debug = level >= this.LEVELS.DEBUG ? console.log.bind(console) : noop.a;
+            }, 
+            /**
+   * @returns {string}
+   */
+            _proto.getLevel = function getLevel() {
+                return this.currentLevel;
+            }, Logger;
+        }())();
         // CONCATENATED MODULE: ./src/utils/logger.ts
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -130,42 +161,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */        var DEFAULT_LOG_LEVEL = "NONE", log_logger = new (function() {
-            function Logger() {
-                _classCallCheck(this, Logger), this.error = noop.a, this.warn = noop.a, this.info = noop.a, 
-                this.debug = noop.a, this.LEVELS = {
-                    NONE: 0,
-                    ERROR: 1,
-                    WARNING: 2,
-                    INFO: 3,
-                    DEBUG: 4
-                }, this.currentLevel = DEFAULT_LOG_LEVEL;
-            }
-            /**
-     * @param {string} levelStr
-     */            return Logger.prototype.setLevel = function setLevel(levelStr) {
-                var level = void 0, foundLevel = this.LEVELS[levelStr];
-                foundLevel ? (
-                // levelStr is a ILoggerLevel
-                level = foundLevel, this.currentLevel = levelStr) : (
-                // either 0 or not found
-                level = 0, this.currentLevel = "NONE")
-                /* tslint:disable no-invalid-this */
-                /* tslint:disable no-console */ , this.error = level >= this.LEVELS.ERROR ? console.error.bind(console) : noop.a, 
-                this.warn = level >= this.LEVELS.WARNING ? console.warn.bind(console) : noop.a, 
-                this.info = level >= this.LEVELS.INFO ? console.info.bind(console) : noop.a, this.debug = level >= this.LEVELS.DEBUG ? console.log.bind(console) : noop.a;
-            }, 
-            /**
-     * @returns {string}
-     */
-            Logger.prototype.getLevel = function getLevel() {
-                return this.currentLevel;
-            }, Logger;
-        }())();
-        /**
- * Logger implementation.
- * @class Logger
- */        __webpack_exports__.a = log_logger;
+ */        __webpack_exports__.a = logger;
     }, 
     /* 1 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
@@ -282,8 +278,9 @@
  * @param {Uint8Array} bytes
  * @param {string} [sep=""] - separator. Separate each two hex character.
  * @returns {string}
- */        function bytesToHex(bytes) {
-            for (var sep = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "", hex = "", i = 0; i < bytes.byteLength; i++) hex += (bytes[i] >>> 4).toString(16), 
+ */        function bytesToHex(bytes, sep) {
+            void 0 === sep && (sep = "");
+            for (var hex = "", i = 0; i < bytes.byteLength; i++) hex += (bytes[i] >>> 4).toString(16), 
             hex += (15 & bytes[i]).toString(16), sep.length && i < bytes.byteLength - 1 && (hex += sep);
             return hex;
         }
@@ -294,9 +291,9 @@
  * @param {...(Number|Uint8Array)} args
  * @returns {Uint8Array}
  */        function concat() {
-            for (var l = arguments.length, i = -1, len = 0, arg = void 0; ++i < l; ) len += "number" == typeof (arg = arguments.length <= i ? void 0 : arguments[i]) ? arg : arg.length;
+            for (var arg, l = arguments.length, i = -1, len = 0; ++i < l; ) len += "number" == typeof (arg = i < 0 || arguments.length <= i ? void 0 : arguments[i]) ? arg : arg.length;
             var arr = new Uint8Array(len), offset = 0;
-            for (i = -1; ++i < l; ) "number" == typeof (arg = arguments.length <= i ? void 0 : arguments[i]) ? offset += arg : arg.length > 0 && (arr.set(arg, offset), 
+            for (i = -1; ++i < l; ) "number" == typeof (arg = i < 0 || arguments.length <= i ? void 0 : arguments[i]) ? offset += arg : arg.length > 0 && (arr.set(arg, offset), 
             offset += arg.length);
             return arr;
         }
@@ -401,61 +398,6 @@
  * @returns {string}
  */    }, 
     /* 2 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return __extends;
-        });
-        /* unused harmony export __assign */
-        /* unused harmony export __rest */
-        /* unused harmony export __decorate */
-        /* unused harmony export __param */
-        /* unused harmony export __metadata */
-        /* unused harmony export __awaiter */
-        /* unused harmony export __generator */
-        /* unused harmony export __exportStar */
-        /* unused harmony export __values */
-        /* unused harmony export __read */
-        /* unused harmony export __spread */
-        /* unused harmony export __await */
-        /* unused harmony export __asyncGenerator */
-        /* unused harmony export __asyncDelegator */
-        /* unused harmony export __asyncValues */
-        /* unused harmony export __makeTemplateObject */
-        /* unused harmony export __importStar */
-        /* unused harmony export __importDefault */
-        /*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-        /* global Reflect, Promise */
-        var extendStatics = Object.setPrototypeOf || {
-            __proto__: []
-        } instanceof Array && function(d, b) {
-            d.__proto__ = b;
-        } || function(d, b) {
-            for (var p in b) b.hasOwnProperty(p) && (d[p] = b[p]);
-        };
-        function __extends(d, b) {
-            function __() {
-                this.constructor = d;
-            }
-            extendStatics(d, b), d.prototype = null === b ? Object.create(b) : (__.prototype = b.prototype, 
-            new __());
-        }
-        Object.assign;
-    }, 
-    /* 3 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /**
@@ -1086,6 +1028,62 @@ and limitations under the License.
             }
         };
     }, 
+    /* 3 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return __extends;
+        });
+        /* unused harmony export __assign */
+        /* unused harmony export __rest */
+        /* unused harmony export __decorate */
+        /* unused harmony export __param */
+        /* unused harmony export __metadata */
+        /* unused harmony export __awaiter */
+        /* unused harmony export __generator */
+        /* unused harmony export __exportStar */
+        /* unused harmony export __values */
+        /* unused harmony export __read */
+        /* unused harmony export __spread */
+        /* unused harmony export __await */
+        /* unused harmony export __asyncGenerator */
+        /* unused harmony export __asyncDelegator */
+        /* unused harmony export __asyncValues */
+        /* unused harmony export __makeTemplateObject */
+        /* unused harmony export __importStar */
+        /* unused harmony export __importDefault */
+        /*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+        /* global Reflect, Promise */
+        var extendStatics = function(d, b) {
+            return (extendStatics = Object.setPrototypeOf || {
+                __proto__: []
+            } instanceof Array && function(d, b) {
+                d.__proto__ = b;
+            } || function(d, b) {
+                for (var p in b) b.hasOwnProperty(p) && (d[p] = b[p]);
+            })(d, b);
+        };
+        function __extends(d, b) {
+            function __() {
+                this.constructor = d;
+            }
+            extendStatics(d, b), d.prototype = null === b ? Object.create(b) : (__.prototype = b.prototype, 
+            new __());
+        }
+    }, 
     /* 4 */ 
     /* 5 */ , 
     /* 6 */
@@ -1174,11 +1172,11 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromEvent.js
-                var fromEvent = __webpack_require__(135), Observable = __webpack_require__(17), noop = __webpack_require__(37), NEVER = /* */ new Observable.a(noop.a);
+                var fromEvent = __webpack_require__(136), Observable = __webpack_require__(13), noop = __webpack_require__(35), NEVER = /* */ new Observable.a(noop.a);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 2 modules
                 //# sourceMappingURL=never.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/merge.js
-        var merge = __webpack_require__(134), interval = __webpack_require__(139), map = __webpack_require__(63), mapTo = __webpack_require__(136), filter = __webpack_require__(137), tslib_es6 = __webpack_require__(2), Subscriber = __webpack_require__(10), scheduler_async = __webpack_require__(39);
+        var merge = __webpack_require__(135), interval = __webpack_require__(140), map = __webpack_require__(64), mapTo = __webpack_require__(137), filter = __webpack_require__(138), tslib_es6 = __webpack_require__(3), Subscriber = __webpack_require__(10), scheduler_async = __webpack_require__(38);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/interval.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/debounceTime.js
         /** PURE_IMPORTS_START tslib,_Subscriber,_scheduler_async PURE_IMPORTS_END */
@@ -1220,7 +1218,7 @@ object-assign
         }
         //# sourceMappingURL=debounceTime.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/startWith.js
-                var startWith = __webpack_require__(138), distinctUntilChanged = __webpack_require__(140), config = __webpack_require__(3), constants = __webpack_require__(24);
+                var startWith = __webpack_require__(139), distinctUntilChanged = __webpack_require__(141), config = __webpack_require__(2), constants = __webpack_require__(24);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/distinctUntilChanged.js
                 // CONCATENATED MODULE: ./src/compat/events.ts
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -1331,7 +1329,7 @@ object-assign
  * @param {Array.<string>|undefined} prefixes
  * @returns {Observable}
  */        function compatibleListener(eventNames, prefixes) {
-            var mem = void 0, prefixedEvents = eventPrefixed(eventNames, prefixes);
+            var mem, prefixedEvents = eventPrefixed(eventNames, prefixes);
             return function(element) {
                 // if the element is a HTMLElement we can detect
                 // the supported event, and memoize it in `mem`
@@ -1339,7 +1337,7 @@ object-assign
                 mem ? Object(fromEvent.a)(element, mem) : NEVER) : merge.a.apply(void 0, prefixedEvents.map(function(eventName) {
                     return Object(fromEvent.a)(element, eventName);
                 }));
-                // otherwise, we need to listen to all the events
+ // otherwise, we need to listen to all the events
                 // and merge them into one observable sequence
                         };
         }
@@ -1349,7 +1347,7 @@ object-assign
  *   - emitting false when the visibility of document changes to visible
  * @returns {Observable}
  */        function visibilityChange() {
-            var prefix = void 0;
+            var prefix;
             null != document.hidden ? prefix = "" : null != document.mozHidden ? prefix = "moz" : null != document.msHidden ? prefix = "ms" : null != document.webkitHidden && (prefix = "webkit");
             var hidden = prefix ? prefix + "Hidden" : "hidden", visibilityChangeEvent = prefix + "visibilitychange";
             return Object(fromEvent.a)(document, visibilityChangeEvent).pipe(Object(map.a)(function() {
@@ -1387,8 +1385,7 @@ object-assign
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */        var onLoadedMetadata$ = compatibleListener([ "loadedmetadata" ]), onSeeking$ = compatibleListener([ "seeking" ]), onSeeked$ = compatibleListener([ "seeked" ]), onEnded$ = compatibleListener([ "ended" ]), onFullscreenChange$ = (compatibleListener([ "timeupdate" ]), 
-        compatibleListener([ "fullscreenchange", "FullscreenChange" ], 
-        // On IE11, fullscreen change events is called MSFullscreenChange
+        compatibleListener([ "fullscreenchange", "FullscreenChange" ], // On IE11, fullscreen change events is called MSFullscreenChange
         constants.a.concat("MS"))), events_onPlayPause$ = function onPlayPause$(mediaElement) {
             return Object(merge.a)(compatibleListener([ "play" ])(mediaElement), compatibleListener([ "pause" ])(mediaElement));
         }, events_onTextTrackChanges$ = function onTextTrackChanges$(textTrackList) {
@@ -1402,23 +1399,67 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // CONCATENATED MODULE: ./src/errors/AssertionError.ts
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        function _assertThisInitialized(self) {
+            if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return self;
         }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
+        function _wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map() : void 0;
+            return (_wrapNativeSuper = function _wrapNativeSuper(Class) {
+                if (null === Class || !_isNativeFunction(Class)) return Class;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
                 }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+                function Wrapper() {
+                    return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                return Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                }), _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
+        function isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                return Date.prototype.toString.call(Reflect.construct(Date, [], function() {})), 
+                !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function _construct(Parent, args, Class) {
+            return (_construct = isNativeReflectConstruct() ? Reflect.construct : function _construct(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a))();
+                return Class && _setPrototypeOf(instance, Class.prototype), instance;
+            }).apply(null, arguments);
+        }
+        function _isNativeFunction(fn) {
+            return -1 !== Function.toString.call(fn).indexOf("[native code]");
+        }
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+                return o.__proto__ = p, o;
+            })(o, p);
+        }
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -1440,33 +1481,23 @@ object-assign
  *
  * @class AssertionError
  * @extends Error
- */        var errors_AssertionError = function(_Error) {
+ */        var AssertionError = 
+        /* */
+        function(_Error) {
             /**
    * @param {string} message
    */
             function AssertionError(message) {
-                _classCallCheck(this, AssertionError);
-                // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-                var _this = _possibleConstructorReturn(this, _Error.call(this));
-                return Object.setPrototypeOf(_this, AssertionError.prototype), _this.name = "AssertionError", 
-                _this.message = message, Error.captureStackTrace && Error.captureStackTrace(_this, AssertionError), 
+                var _this;
+                return _this = _Error.call(this) || this, // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+                Object.setPrototypeOf(_assertThisInitialized(_assertThisInitialized(_this)), AssertionError.prototype), 
+                _this.name = "AssertionError", _this.message = message, Error.captureStackTrace && Error.captureStackTrace(_assertThisInitialized(_assertThisInitialized(_this)), AssertionError), 
                 _this;
             }
-            return _inherits(AssertionError, _Error), AssertionError;
-        }(Error);
-        /* harmony default export */        
+            return _inheritsLoose(AssertionError, _Error), AssertionError;
+        }(_wrapNativeSuper(Error));
         // CONCATENATED MODULE: ./src/utils/assert.ts
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() {
-            return assert;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
-            return assertInterface;
-        });
-        var _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
-            return typeof obj;
-        } : function(obj) {
-            return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-        };
+        /* harmony export (binding) */        
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -1487,8 +1518,9 @@ object-assign
  * @param {boolean} assertion
  * @param {string} [message] - Optional message property for the AssertionError.
  * @throws AssertionError - Throws if the assertion given is false
- */        function assert(assertion, message) {
-            if (!assertion) throw new errors_AssertionError(message || "invalid assertion");
+ */
+        function assert(assertion, message) {
+            if (!assertion) throw new AssertionError(message || "invalid assertion");
         }
         /**
  * Throws if the given Object does not respect the interface.
@@ -1498,24 +1530,30 @@ object-assign
  * @param {string} [name="object"] - name of the _interface_
  * @throws AssertionError - The argument o given is not an object
  * @throws AssertionError - The _interface_ is not respected.
- */        function assertInterface(o, iface) {
-            var name = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : "object";
-            for (var k in assert(null != o, name + " should be an object"), iface) iface.hasOwnProperty(k) && 
+ */        function assertInterface(o, iface, name) {
+            for (var k in void 0 === name && (name = "object"), assert(null != o, name + " should be an object"), 
+            iface) iface.hasOwnProperty(k) && 
             /* tslint:disable:max-line-length */
-            assert(_typeof(o[k]) === iface[k], name + " should have property " + k + " as a " + iface[k]);
+            assert(typeof o[k] === iface[k], name + " should have property " + k + " as a " + iface[k]);
         }
-        /***/    }, 
+        /***/        __webpack_require__.d(__webpack_exports__, "b", function() {
+            return assert;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
+            return assertInterface;
+        });
+    }, 
     /* 10 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return Subscriber;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _util_isFunction__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(47), _Observer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(56), _Subscription__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(14), _internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(50), _config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(33), _util_hostReportError__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(49), Subscriber = /* */ function(_super) {
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _util_isFunction__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(48), _Observer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(57), _Subscription__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(15), _internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(51), _config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(32), _util_hostReportError__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(50), Subscriber = /* */ function(_super) {
             function Subscriber(destinationOrNext, error, complete) {
                 var _this = _super.call(this) || this;
                 switch (_this.syncErrorValue = null, _this.syncErrorThrown = !1, _this.syncErrorThrowable = !1, 
-                _this.isStopped = !1, arguments.length) {
+                _this.isStopped = !1, _this._parentSubscription = null, arguments.length) {
                   case 0:
                     _this.destination = _Observer__WEBPACK_IMPORTED_MODULE_2__.a;
                     break;
@@ -1529,7 +1567,7 @@ object-assign
                         if (isTrustedSubscriber(destinationOrNext)) {
                             var trustedSubscriber = destinationOrNext[_internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_4__.a]();
                             _this.syncErrorThrowable = trustedSubscriber.syncErrorThrowable, _this.destination = trustedSubscriber, 
-                            trustedSubscriber.add(_this);
+                            trustedSubscriber._addParentTeardownLogic(_this);
                         } else _this.syncErrorThrowable = !0, _this.destination = new SafeSubscriber(_this, destinationOrNext);
                         break;
                     }
@@ -1547,9 +1585,9 @@ object-assign
             }, Subscriber.prototype.next = function(value) {
                 this.isStopped || this._next(value);
             }, Subscriber.prototype.error = function(err) {
-                this.isStopped || (this.isStopped = !0, this._error(err));
+                this.isStopped || (this.isStopped = !0, this._error(err), this._unsubscribeParentSubscription());
             }, Subscriber.prototype.complete = function() {
-                this.isStopped || (this.isStopped = !0, this._complete());
+                this.isStopped || (this.isStopped = !0, this._complete(), this._unsubscribeParentSubscription());
             }, Subscriber.prototype.unsubscribe = function() {
                 this.closed || (this.isStopped = !0, _super.prototype.unsubscribe.call(this));
             }, Subscriber.prototype._next = function(value) {
@@ -1558,10 +1596,15 @@ object-assign
                 this.destination.error(err), this.unsubscribe();
             }, Subscriber.prototype._complete = function() {
                 this.destination.complete(), this.unsubscribe();
+            }, Subscriber.prototype._addParentTeardownLogic = function(parentTeardownLogic) {
+                parentTeardownLogic !== this && (this._parentSubscription = this.add(parentTeardownLogic));
+            }, Subscriber.prototype._unsubscribeParentSubscription = function() {
+                null !== this._parentSubscription && this._parentSubscription.unsubscribe();
             }, Subscriber.prototype._unsubscribeAndRecycle = function() {
                 var _parent = this._parent, _parents = this._parents;
                 return this._parent = null, this._parents = null, this.unsubscribe(), this.closed = !1, 
-                this.isStopped = !1, this._parent = _parent, this._parents = _parents, this;
+                this.isStopped = !1, this._parent = _parent, this._parents = _parents, this._parentSubscription = null, 
+                this;
             }, Subscriber;
         }(_Subscription__WEBPACK_IMPORTED_MODULE_3__.a), SafeSubscriber = /* */ function(_super) {
             function SafeSubscriber(_parentSubscriber, observerOrNext, error, complete) {
@@ -1693,8 +1736,7 @@ object-assign
             var len = arr.length >>> 0;
             if (0 === len) return !1;
             for (var n = 0 | fromIndex, k = Math.max(n >= 0 ? n : len - Math.abs(n), 0), areTheSame = function areTheSame(x, y) {
-                return x === y || 
-                // Viva las JavaScriptas!
+                return x === y || // Viva las JavaScriptas!
                 "number" == typeof x && "number" == typeof y && isNaN(x) && isNaN(y);
             }; k < len; ) {
                 if (areTheSame(arr[k], searchElement)) return !0;
@@ -1749,7 +1791,7 @@ object-assign
             return shouldUnsetMediaKeys;
         });
         /* unused harmony export onSourceOpen$ */
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(75), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(135), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(17), rxjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(133), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(142), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(136), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_castToObservable__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(15), _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(41), _utils_rx_tryCatch__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(44), _constants__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(24), _events__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(8), _eme__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(131);
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(76), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(136), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(13), rxjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(134), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(143), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(137), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_castToObservable__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(17), _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(40), _utils_rx_tryCatch__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(45), _constants__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(24), _events__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(8), _eme__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(132);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -1818,7 +1860,7 @@ object-assign
  */        function canPlay(mediaElement) {
             return mediaElement.readyState >= _constants__WEBPACK_IMPORTED_MODULE_10__.e.HAVE_ENOUGH_DATA ? Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(void 0) : Object(rxjs__WEBPACK_IMPORTED_MODULE_1__.a)(mediaElement, "canplay").pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__.a)(1), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__.a)(void 0));
         }
-        // old WebKit SourceBuffer implementation,
+ // old WebKit SourceBuffer implementation,
         // where a synchronous append is used instead of appendBuffer
                 if (window.WebKitSourceBuffer && !window.WebKitSourceBuffer.prototype.addEventListener) {
             var sourceBufferWebkitProto = window.WebKitSourceBuffer.prototype;
@@ -1851,7 +1893,7 @@ object-assign
  * @param {Boolean} hidden
  * @returns {Object}
  */        function addTextTrack(mediaElement, hidden) {
-            var track = void 0, trackElement = void 0;
+            var track, trackElement;
             if (_constants__WEBPACK_IMPORTED_MODULE_10__.h) {
                 var tracksLength = mediaElement.textTracks.length;
                 (track = tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack("subtitles")).mode = hidden ? track.HIDDEN : track.SHOWING;
@@ -1964,181 +2006,10 @@ object-assign
         }
         /***/    }, 
     /* 13 */
-    /***/ function(module, exports, __webpack_require__) {
-        "use strict";
-        module.exports = function find(array, predicate, context) {
-            if ("function" == typeof Array.prototype.find) return array.find(predicate, context);
-            context = context || this;
-            var i, length = array.length;
-            if ("function" != typeof predicate) throw new TypeError(predicate + " is not a function");
-            for (i = 0; i < length; i++) if (predicate.call(context, array[i], i, array)) return array[i];
-        };
-    }, 
-    /* 14 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isArray.js
-                var isArray = __webpack_require__(42), isObject = __webpack_require__(67), isFunction = __webpack_require__(47), tryCatch = __webpack_require__(57), errorObject = __webpack_require__(32), tslib_es6 = __webpack_require__(2), UnsubscriptionError_UnsubscriptionError = /* */ function(_super) {
-            function UnsubscriptionError(errors) {
-                var _this = _super.call(this, errors ? errors.length + " errors occurred during unsubscription:\n  " + errors.map(function(err, i) {
-                    return i + 1 + ") " + err.toString();
-                }).join("\n  ") : "") || this;
-                return _this.errors = errors, _this.name = "UnsubscriptionError", Object.setPrototypeOf(_this, UnsubscriptionError.prototype), 
-                _this;
-            }
-            return tslib_es6.a(UnsubscriptionError, _super), UnsubscriptionError;
-        }(Error);
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isObject.js
-                //# sourceMappingURL=UnsubscriptionError.js.map
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/Subscription.js
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
-            return Subscription_Subscription;
-        });
-        /** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_tryCatch,_util_errorObject,_util_UnsubscriptionError PURE_IMPORTS_END */
-        var Subscription_Subscription = /* */ function() {
-            function Subscription(unsubscribe) {
-                this.closed = !1, this._parent = null, this._parents = null, this._subscriptions = null, 
-                unsubscribe && (this._unsubscribe = unsubscribe);
-            }
-            return Subscription.prototype.unsubscribe = function() {
-                var errors, hasErrors = !1;
-                if (!this.closed) {
-                    var _parent = this._parent, _parents = this._parents, _unsubscribe = this._unsubscribe, _subscriptions = this._subscriptions;
-                    this.closed = !0, this._parent = null, this._parents = null, this._subscriptions = null;
-                    for (var index = -1, len = _parents ? _parents.length : 0; _parent; ) _parent.remove(this), 
-                    _parent = ++index < len && _parents[index] || null;
-                    if (Object(isFunction.a)(_unsubscribe)) Object(tryCatch.a)(_unsubscribe).call(this) === errorObject.a && (hasErrors = !0, 
-                    errors = errors || (errorObject.a.e instanceof UnsubscriptionError_UnsubscriptionError ? flattenUnsubscriptionErrors(errorObject.a.e.errors) : [ errorObject.a.e ]));
-                    if (Object(isArray.a)(_subscriptions)) for (index = -1, len = _subscriptions.length; ++index < len; ) {
-                        var sub = _subscriptions[index];
-                        if (Object(isObject.a)(sub)) if (Object(tryCatch.a)(sub.unsubscribe).call(sub) === errorObject.a) {
-                            hasErrors = !0, errors = errors || [];
-                            var err = errorObject.a.e;
-                            err instanceof UnsubscriptionError_UnsubscriptionError ? errors = errors.concat(flattenUnsubscriptionErrors(err.errors)) : errors.push(err);
-                        }
-                    }
-                    if (hasErrors) throw new UnsubscriptionError_UnsubscriptionError(errors);
-                }
-            }, Subscription.prototype.add = function(teardown) {
-                if (!teardown || teardown === Subscription.EMPTY) return Subscription.EMPTY;
-                if (teardown === this) return this;
-                var subscription = teardown;
-                switch (typeof teardown) {
-                  case "function":
-                    subscription = new Subscription(teardown);
-
-                  case "object":
-                    if (subscription.closed || "function" != typeof subscription.unsubscribe) return subscription;
-                    if (this.closed) return subscription.unsubscribe(), subscription;
-                    if ("function" != typeof subscription._addParent) {
-                        var tmp = subscription;
-                        (subscription = new Subscription())._subscriptions = [ tmp ];
-                    }
-                    break;
-
-                  default:
-                    throw new Error("unrecognized teardown " + teardown + " added to Subscription.");
-                }
-                return (this._subscriptions || (this._subscriptions = [])).push(subscription), subscription._addParent(this), 
-                subscription;
-            }, Subscription.prototype.remove = function(subscription) {
-                var subscriptions = this._subscriptions;
-                if (subscriptions) {
-                    var subscriptionIndex = subscriptions.indexOf(subscription);
-                    -1 !== subscriptionIndex && subscriptions.splice(subscriptionIndex, 1);
-                }
-            }, Subscription.prototype._addParent = function(parent) {
-                var _parent = this._parent, _parents = this._parents;
-                _parent && _parent !== parent ? _parents ? -1 === _parents.indexOf(parent) && _parents.push(parent) : this._parents = [ parent ] : this._parent = parent;
-            }, Subscription.EMPTY = function(empty) {
-                return empty.closed = !0, empty;
-            }(new Subscription()), Subscription;
-        }();
-        function flattenUnsubscriptionErrors(errors) {
-            return errors.reduce(function(errs, err) {
-                return errs.concat(err instanceof UnsubscriptionError_UnsubscriptionError ? err.errors : err);
-            }, []);
-        }
-        //# sourceMappingURL=Subscription.js.map
-        /***/    }, 
-    /* 15 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(27), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(75);
-        /* harmony import */        
-        /* harmony default export */ __webpack_exports__.a = 
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        function castToObservable(value) {
-            if (value instanceof rxjs__WEBPACK_IMPORTED_MODULE_0__.a) return value;
-            if (value && "function" == typeof value.subscribe) {
-                var valObsLike = value;
-                return new rxjs__WEBPACK_IMPORTED_MODULE_0__.a(function(obs) {
-                    var sub = valObsLike.subscribe(function(val) {
-                        obs.next(val);
-                    }, function(err) {
-                        obs.error(err);
-                    }, function() {
-                        obs.complete();
-                    });
-                    return function() {
-                        sub && sub.dispose ? sub.dispose() : sub && sub.unsubscribe && sub.unsubscribe();
-                    };
-                });
-            }
-            return value && "function" == typeof value.then ? Object(rxjs__WEBPACK_IMPORTED_MODULE_1__.a)(value) : Object(rxjs__WEBPACK_IMPORTED_MODULE_2__.a)(value);
-        };
-    }, 
-    /* 16 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return isKnownError;
-        });
-        /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23);
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        // Custom Errors
-        // Error used for XHRs
-        /**
- * Whether the error given is a ICustomError.
- * @param {Error} error
- * @returns {Boolean}
- */        function isKnownError(error) {
-            return !!error && !!error.type && Object.keys(_constants__WEBPACK_IMPORTED_MODULE_0__.b).indexOf(error.type) >= 0;
-        }
-        /***/    }, 
-    /* 17 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscriber.js
-                var Subscriber = __webpack_require__(10), rxSubscriber = __webpack_require__(50), Observer = __webpack_require__(56);
+                var Subscriber = __webpack_require__(10), rxSubscriber = __webpack_require__(51), Observer = __webpack_require__(57);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/rxSubscriber.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/toSubscriber.js
         /** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
@@ -2151,7 +2022,7 @@ object-assign
         }
         //# sourceMappingURL=toSubscriber.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/observable.js
-                var observable = __webpack_require__(43), noop = __webpack_require__(37);
+                var observable = __webpack_require__(42), noop = __webpack_require__(35);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/noop.js
                 function pipeFromArray(fns) {
             return fns ? 1 === fns.length ? fns[0] : function piped(input) {
@@ -2162,7 +2033,7 @@ object-assign
         }
         //# sourceMappingURL=pipe.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/config.js
-                var config = __webpack_require__(33);
+                var config = __webpack_require__(32);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return Observable_Observable;
@@ -2177,7 +2048,7 @@ object-assign
                 return observable.source = this, observable.operator = operator, observable;
             }, Observable.prototype.subscribe = function(observerOrNext, error, complete) {
                 var operator = this.operator, sink = toSubscriber(observerOrNext, error, complete);
-                if (operator ? operator.call(sink, this.source) : sink.add(this.source || config.a.useDeprecatedSynchronousErrorHandling && !sink.syncErrorThrowable ? this._subscribe(sink) : this._trySubscribe(sink)), 
+                if (operator ? operator.call(sink, this.source) : sink._addParentTeardownLogic(this.source || config.a.useDeprecatedSynchronousErrorHandling && !sink.syncErrorThrowable ? this._subscribe(sink) : this._trySubscribe(sink)), 
                 config.a.useDeprecatedSynchronousErrorHandling && sink.syncErrorThrowable && (sink.syncErrorThrowable = !1, 
                 sink.syncErrorThrown)) throw sink.syncErrorValue;
                 return sink;
@@ -2230,7 +2101,105 @@ object-assign
         }
         //# sourceMappingURL=Observable.js.map
         /***/    }, 
-    /* 18 */
+    /* 14 */
+    /***/ function(module, exports, __webpack_require__) {
+        "use strict";
+        module.exports = function find(array, predicate, context) {
+            if ("function" == typeof Array.prototype.find) return array.find(predicate, context);
+            context = context || this;
+            var i, length = array.length;
+            if ("function" != typeof predicate) throw new TypeError(predicate + " is not a function");
+            for (i = 0; i < length; i++) if (predicate.call(context, array[i], i, array)) return array[i];
+        };
+    }, 
+    /* 15 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isArray.js
+                var isArray = __webpack_require__(41), isObject = __webpack_require__(68), isFunction = __webpack_require__(48), tryCatch = __webpack_require__(58), errorObject = __webpack_require__(31);
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isObject.js
+                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/UnsubscriptionError.js
+        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+        function UnsubscriptionErrorImpl(errors) {
+            return Error.call(this), this.message = errors ? errors.length + " errors occurred during unsubscription:\n" + errors.map(function(err, i) {
+                return i + 1 + ") " + err.toString();
+            }).join("\n  ") : "", this.name = "UnsubscriptionError", this.errors = errors, this;
+        }
+        UnsubscriptionErrorImpl.prototype = /* */ Object.create(Error.prototype);
+        var UnsubscriptionError = UnsubscriptionErrorImpl;
+        //# sourceMappingURL=UnsubscriptionError.js.map
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/Subscription.js
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return Subscription_Subscription;
+        });
+        /** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_tryCatch,_util_errorObject,_util_UnsubscriptionError PURE_IMPORTS_END */
+        var Subscription_Subscription = /* */ function() {
+            function Subscription(unsubscribe) {
+                this.closed = !1, this._parent = null, this._parents = null, this._subscriptions = null, 
+                unsubscribe && (this._unsubscribe = unsubscribe);
+            }
+            return Subscription.prototype.unsubscribe = function() {
+                var errors, hasErrors = !1;
+                if (!this.closed) {
+                    var _parent = this._parent, _parents = this._parents, _unsubscribe = this._unsubscribe, _subscriptions = this._subscriptions;
+                    this.closed = !0, this._parent = null, this._parents = null, this._subscriptions = null;
+                    for (var index = -1, len = _parents ? _parents.length : 0; _parent; ) _parent.remove(this), 
+                    _parent = ++index < len && _parents[index] || null;
+                    if (Object(isFunction.a)(_unsubscribe)) Object(tryCatch.a)(_unsubscribe).call(this) === errorObject.a && (hasErrors = !0, 
+                    errors = errors || (errorObject.a.e instanceof UnsubscriptionError ? flattenUnsubscriptionErrors(errorObject.a.e.errors) : [ errorObject.a.e ]));
+                    if (Object(isArray.a)(_subscriptions)) for (index = -1, len = _subscriptions.length; ++index < len; ) {
+                        var sub = _subscriptions[index];
+                        if (Object(isObject.a)(sub)) if (Object(tryCatch.a)(sub.unsubscribe).call(sub) === errorObject.a) {
+                            hasErrors = !0, errors = errors || [];
+                            var err = errorObject.a.e;
+                            err instanceof UnsubscriptionError ? errors = errors.concat(flattenUnsubscriptionErrors(err.errors)) : errors.push(err);
+                        }
+                    }
+                    if (hasErrors) throw new UnsubscriptionError(errors);
+                }
+            }, Subscription.prototype.add = function(teardown) {
+                if (!teardown || teardown === Subscription.EMPTY) return Subscription.EMPTY;
+                if (teardown === this) return this;
+                var subscription = teardown;
+                switch (typeof teardown) {
+                  case "function":
+                    subscription = new Subscription(teardown);
+
+                  case "object":
+                    if (subscription.closed || "function" != typeof subscription.unsubscribe) return subscription;
+                    if (this.closed) return subscription.unsubscribe(), subscription;
+                    if ("function" != typeof subscription._addParent) {
+                        var tmp = subscription;
+                        (subscription = new Subscription())._subscriptions = [ tmp ];
+                    }
+                    break;
+
+                  default:
+                    throw new Error("unrecognized teardown " + teardown + " added to Subscription.");
+                }
+                return (this._subscriptions || (this._subscriptions = [])).push(subscription), subscription._addParent(this), 
+                subscription;
+            }, Subscription.prototype.remove = function(subscription) {
+                var subscriptions = this._subscriptions;
+                if (subscriptions) {
+                    var subscriptionIndex = subscriptions.indexOf(subscription);
+                    -1 !== subscriptionIndex && subscriptions.splice(subscriptionIndex, 1);
+                }
+            }, Subscription.prototype._addParent = function(parent) {
+                var _parent = this._parent, _parents = this._parents;
+                _parent && _parent !== parent ? _parents ? -1 === _parents.indexOf(parent) && _parents.push(parent) : this._parents = [ parent ] : this._parent = parent;
+            }, Subscription.EMPTY = function(empty) {
+                return empty.closed = !0, empty;
+            }(new Subscription()), Subscription;
+        }();
+        function flattenUnsubscriptionErrors(errors) {
+            return errors.reduce(function(errs, err) {
+                return errs.concat(err instanceof UnsubscriptionError ? err.errors : err);
+            }, []);
+        }
+        //# sourceMappingURL=Subscription.js.map
+        /***/    }, 
+    /* 16 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* unused harmony export createRange */
@@ -2495,8 +2464,7 @@ object-assign
  * @returns {Array.<Object>}
  */        function insertInto(ranges, rangeToAddArg) {
             if (rangeToAddArg.start === rangeToAddArg.end) return ranges;
-            for (var rangeToAdd = rangeToAddArg, index = 0
-            // For each present range check if we need to:
+            for (var rangeToAdd = rangeToAddArg, index = 0 // For each present range check if we need to:
             // - In case we are overlapping or contiguous:
             //   - if added range has the same bitrate as the overlapped or
             //     contiguous one, we can merge themcurrentRange
@@ -2523,7 +2491,7 @@ object-assign
                 // of them. Insert here.
                 break;
             }
-            // Now that we are sure we don't overlap with any range, just add it.
+ // Now that we are sure we don't overlap with any range, just add it.
                         return ranges.splice(index, 0, rangeToAdd), mergeContiguousRanges(removeEmptyRanges(ranges));
         }
         /**
@@ -2554,6 +2522,79 @@ object-assign
                 }
             }
             return result;
+        }
+        /***/    }, 
+    /* 17 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(44), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(76);
+        /* harmony import */        
+        /* harmony default export */ __webpack_exports__.a = 
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        function castToObservable(value) {
+            if (value instanceof rxjs__WEBPACK_IMPORTED_MODULE_0__.a) return value;
+            if (value && "function" == typeof value.subscribe) {
+                var valObsLike = value;
+                return new rxjs__WEBPACK_IMPORTED_MODULE_0__.a(function(obs) {
+                    var sub = valObsLike.subscribe(function(val) {
+                        obs.next(val);
+                    }, function(err) {
+                        obs.error(err);
+                    }, function() {
+                        obs.complete();
+                    });
+                    return function() {
+                        sub && sub.dispose ? sub.dispose() : sub && sub.unsubscribe && sub.unsubscribe();
+                    };
+                });
+            }
+            return value && "function" == typeof value.then ? Object(rxjs__WEBPACK_IMPORTED_MODULE_1__.a)(value) : Object(rxjs__WEBPACK_IMPORTED_MODULE_2__.a)(value);
+        };
+    }, 
+    /* 18 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return isKnownError;
+        });
+        /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23);
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        // Custom Errors
+        // Error used for XHRs
+        /**
+ * Whether the error given is a ICustomError.
+ * @param {Error} error
+ * @returns {Boolean}
+ */        function isKnownError(error) {
+            return !!error && !!error.type && Object.keys(_constants__WEBPACK_IMPORTED_MODULE_0__.b).indexOf(error.type) >= 0;
         }
         /***/    }, 
     /* 19 */
@@ -2643,9 +2684,24 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return subscribeToResult;
+        });
+        /* harmony import */ var _InnerSubscriber__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(36), _subscribeTo__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(69);
+        /* harmony import */        
+        /** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo PURE_IMPORTS_END */
+        function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
+            if (void 0 === destination && (destination = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_0__.a(outerSubscriber, outerValue, outerIndex)), 
+            !destination.closed) return Object(_subscribeTo__WEBPACK_IMPORTED_MODULE_1__.a)(result)(destination);
+        }
+        //# sourceMappingURL=subscribeToResult.js.map
+        /***/    }, 
+    /* 22 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return OuterSubscriber;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), OuterSubscriber = /* */ function(_super) {
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), OuterSubscriber = /* */ function(_super) {
             function OuterSubscriber() {
                 return null !== _super && _super.apply(this, arguments) || this;
             }
@@ -2658,37 +2714,6 @@ object-assign
             }, OuterSubscriber;
         }(__webpack_require__(10).a);
         /* harmony import */    }, 
-    /* 22 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(2), InnerSubscriber_InnerSubscriber = /* */ function(_super) {
-            function InnerSubscriber(parent, outerValue, outerIndex) {
-                var _this = _super.call(this) || this;
-                return _this.parent = parent, _this.outerValue = outerValue, _this.outerIndex = outerIndex, 
-                _this.index = 0, _this;
-            }
-            return tslib_es6.a(InnerSubscriber, _super), InnerSubscriber.prototype._next = function(value) {
-                this.parent.notifyNext(this.outerValue, value, this.outerIndex, this.index++, this);
-            }, InnerSubscriber.prototype._error = function(error) {
-                this.parent.notifyError(error, this), this.unsubscribe();
-            }, InnerSubscriber.prototype._complete = function() {
-                this.parent.notifyComplete(this), this.unsubscribe();
-            }, InnerSubscriber;
-        }(__webpack_require__(10).a), subscribeTo = __webpack_require__(68);
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscriber.js
-                /** PURE_IMPORTS_START _InnerSubscriber,_subscribeTo PURE_IMPORTS_END */
-        function subscribeToResult(outerSubscriber, result, outerValue, outerIndex) {
-            var destination = new InnerSubscriber_InnerSubscriber(outerSubscriber, outerValue, outerIndex);
-            return Object(subscribeTo.a)(result)(destination);
-        }
-        //# sourceMappingURL=subscribeToResult.js.map
-        /***/        
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeToResult.js
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
-            return subscribeToResult;
-        });
-    }, 
     /* 23 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
@@ -2784,10 +2809,7 @@ object-assign
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() {
             return VTTCue_;
         });
-        /* harmony import */ var _errors_MediaError__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(62);
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
+        /* harmony import */ var _errors_MediaError__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(63), BROWSER_PREFIXES = [ "", "webkit", "moz", "ms" ], HTMLElement_ = window.HTMLElement, VTTCue_ = window.VTTCue || window.TextTrackCue, MediaSource_ = window.MediaSource || window.MozMediaSource || window.WebKitMediaSource || window.MSMediaSource, MediaKeys_ = window.MediaKeys || window.MozMediaKeys || window.WebKitMediaKeys || window.MSMediaKeys;
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -2802,17 +2824,16 @@ object-assign
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */        var BROWSER_PREFIXES = [ "", "webkit", "moz", "ms" ], HTMLElement_ = window.HTMLElement, VTTCue_ = window.VTTCue || window.TextTrackCue, MediaSource_ = window.MediaSource || window.MozMediaSource || window.WebKitMediaSource || window.MSMediaSource, MediaKeys_ = window.MediaKeys || window.MozMediaKeys || window.WebKitMediaKeys || window.MSMediaKeys;
-        if (!MediaKeys_) {
+ */        if (!MediaKeys_) {
             var noMediaKeys = function noMediaKeys() {
                 throw new _errors_MediaError__WEBPACK_IMPORTED_MODULE_0__.a("MEDIA_KEYS_NOT_SUPPORTED", null, !0);
             };
             MediaKeys_ = function MediaKeys_() {
-                _classCallCheck(this, MediaKeys_), this.create = noMediaKeys, this.createSession = noMediaKeys, 
-                this.isTypeSupported = noMediaKeys, this.setServerCertificate = noMediaKeys;
+                this.create = noMediaKeys, this.createSession = noMediaKeys, this.isTypeSupported = noMediaKeys, 
+                this.setServerCertificate = noMediaKeys;
             };
         }
-        // true for IE / Edge
+ // true for IE / Edge
                 var isIE = "Microsoft Internet Explorer" === navigator.appName || "Netscape" === navigator.appName && /(Trident|Edge)\//.test(navigator.userAgent), isFirefox = -1 !== navigator.userAgent.toLowerCase().indexOf("firefox"), READY_STATES = {
             HAVE_NOTHING: 0,
             HAVE_METADATA: 1,
@@ -2825,13 +2846,32 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return fromArray;
+        });
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _Subscription__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(15), _util_subscribeToArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(72);
+        /* harmony import */        
+        /** PURE_IMPORTS_START _Observable,_Subscription,_util_subscribeToArray PURE_IMPORTS_END */
+        function fromArray(input, scheduler) {
+            return scheduler ? new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
+                var sub = new _Subscription__WEBPACK_IMPORTED_MODULE_1__.a(), i = 0;
+                return sub.add(scheduler.schedule(function() {
+                    i !== input.length ? (subscriber.next(input[i++]), subscriber.closed || sub.add(this.schedule())) : subscriber.complete();
+                })), sub;
+            }) : new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(Object(_util_subscribeToArray__WEBPACK_IMPORTED_MODULE_2__.a)(input));
+        }
+        //# sourceMappingURL=fromArray.js.map
+        /***/    }, 
+    /* 26 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return EMPTY;
         }), 
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() {
             return empty;
         });
         /* unused harmony export emptyScheduled */
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), EMPTY = /* */ new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), EMPTY = /* */ new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
             return subscriber.complete();
         });
         /** PURE_IMPORTS_START _Observable PURE_IMPORTS_END */        function empty(scheduler) {
@@ -2846,200 +2886,7 @@ object-assign
         }
         //# sourceMappingURL=empty.js.map
         /***/    }, 
-    /* 26 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "b", function() {
-            return SubjectSubscriber;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
-            return Subject;
-        });
-        /* unused harmony export AnonymousSubject */
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Observable__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(17), _Subscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(10), _Subscription__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(14), _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(45), _SubjectSubscription__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(77), _internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(50), SubjectSubscriber = /* */ function(_super) {
-            function SubjectSubscriber(destination) {
-                var _this = _super.call(this, destination) || this;
-                return _this.destination = destination, _this;
-            }
-            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(SubjectSubscriber, _super), SubjectSubscriber;
-        }(_Subscriber__WEBPACK_IMPORTED_MODULE_2__.a), Subject = /* */ function(_super) {
-            function Subject() {
-                var _this = _super.call(this) || this;
-                return _this.observers = [], _this.closed = !1, _this.isStopped = !1, _this.hasError = !1, 
-                _this.thrownError = null, _this;
-            }
-            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(Subject, _super), Subject.prototype[_internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_6__.a] = function() {
-                return new SubjectSubscriber(this);
-            }, Subject.prototype.lift = function(operator) {
-                var subject = new AnonymousSubject(this, this);
-                return subject.operator = operator, subject;
-            }, Subject.prototype.next = function(value) {
-                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
-                if (!this.isStopped) for (var observers = this.observers, len = observers.length, copy = observers.slice(), i = 0; i < len; i++) copy[i].next(value);
-            }, Subject.prototype.error = function(err) {
-                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
-                this.hasError = !0, this.thrownError = err, this.isStopped = !0;
-                for (var observers = this.observers, len = observers.length, copy = observers.slice(), i = 0; i < len; i++) copy[i].error(err);
-                this.observers.length = 0;
-            }, Subject.prototype.complete = function() {
-                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
-                this.isStopped = !0;
-                for (var observers = this.observers, len = observers.length, copy = observers.slice(), i = 0; i < len; i++) copy[i].complete();
-                this.observers.length = 0;
-            }, Subject.prototype.unsubscribe = function() {
-                this.isStopped = !0, this.closed = !0, this.observers = null;
-            }, Subject.prototype._trySubscribe = function(subscriber) {
-                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
-                return _super.prototype._trySubscribe.call(this, subscriber);
-            }, Subject.prototype._subscribe = function(subscriber) {
-                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
-                return this.hasError ? (subscriber.error(this.thrownError), _Subscription__WEBPACK_IMPORTED_MODULE_3__.a.EMPTY) : this.isStopped ? (subscriber.complete(), 
-                _Subscription__WEBPACK_IMPORTED_MODULE_3__.a.EMPTY) : (this.observers.push(subscriber), 
-                new _SubjectSubscription__WEBPACK_IMPORTED_MODULE_5__.a(this, subscriber));
-            }, Subject.prototype.asObservable = function() {
-                var observable = new _Observable__WEBPACK_IMPORTED_MODULE_1__.a();
-                return observable.source = this, observable;
-            }, Subject.create = function(destination, source) {
-                return new AnonymousSubject(destination, source);
-            }, Subject;
-        }(_Observable__WEBPACK_IMPORTED_MODULE_1__.a), AnonymousSubject = /* */ function(_super) {
-            function AnonymousSubject(destination, source) {
-                var _this = _super.call(this) || this;
-                return _this.destination = destination, _this.source = source, _this;
-            }
-            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(AnonymousSubject, _super), AnonymousSubject.prototype.next = function(value) {
-                var destination = this.destination;
-                destination && destination.next && destination.next(value);
-            }, AnonymousSubject.prototype.error = function(err) {
-                var destination = this.destination;
-                destination && destination.error && this.destination.error(err);
-            }, AnonymousSubject.prototype.complete = function() {
-                var destination = this.destination;
-                destination && destination.complete && this.destination.complete();
-            }, AnonymousSubject.prototype._subscribe = function(subscriber) {
-                return this.source ? this.source.subscribe(subscriber) : _Subscription__WEBPACK_IMPORTED_MODULE_3__.a.EMPTY;
-            }, AnonymousSubject;
-        }(Subject);
-        /* harmony import */    }, 
     /* 27 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 2 modules
-                var Observable = __webpack_require__(17), isPromise = __webpack_require__(72), isArrayLike = __webpack_require__(70), symbol_observable = __webpack_require__(43);
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isPromise.js
-                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/isInteropObservable.js
-        /** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
-        function isInteropObservable(input) {
-            return input && "function" == typeof input[symbol_observable.a];
-        }
-        //# sourceMappingURL=isInteropObservable.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/iterator.js
-                var symbol_iterator = __webpack_require__(51);
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/isIterable.js
-        /** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */        function isIterable(input) {
-            return input && "function" == typeof input[symbol_iterator.a];
-        }
-        //# sourceMappingURL=isIterable.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromArray.js
-                var fromArray = __webpack_require__(34), Subscription = __webpack_require__(14), subscribeToPromise = __webpack_require__(73);
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscription.js + 1 modules
-                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromPromise.js
-        /** PURE_IMPORTS_START _Observable,_Subscription,_util_subscribeToPromise PURE_IMPORTS_END */
-        function fromPromise(input, scheduler) {
-            return scheduler ? new Observable.a(function(subscriber) {
-                var sub = new Subscription.a();
-                return sub.add(scheduler.schedule(function() {
-                    return input.then(function(value) {
-                        sub.add(scheduler.schedule(function() {
-                            subscriber.next(value), sub.add(scheduler.schedule(function() {
-                                return subscriber.complete();
-                            }));
-                        }));
-                    }, function(err) {
-                        sub.add(scheduler.schedule(function() {
-                            return subscriber.error(err);
-                        }));
-                    });
-                })), sub;
-            }) : new Observable.a(Object(subscribeToPromise.a)(input));
-        }
-        //# sourceMappingURL=fromPromise.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeToIterable.js
-                var subscribeToIterable = __webpack_require__(74);
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromIterable.js
-        /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_iterator,_util_subscribeToIterable PURE_IMPORTS_END */        function fromIterable(input, scheduler) {
-            if (!input) throw new Error("Iterable cannot be null");
-            return scheduler ? new Observable.a(function(subscriber) {
-                var iterator, sub = new Subscription.a();
-                return sub.add(function() {
-                    iterator && "function" == typeof iterator.return && iterator.return();
-                }), sub.add(scheduler.schedule(function() {
-                    iterator = input[symbol_iterator.a](), sub.add(scheduler.schedule(function() {
-                        if (!subscriber.closed) {
-                            var value, done;
-                            try {
-                                var result = iterator.next();
-                                value = result.value, done = result.done;
-                            } catch (err) {
-                                return void subscriber.error(err);
-                            }
-                            done ? subscriber.complete() : (subscriber.next(value), this.schedule());
-                        }
-                    }));
-                })), sub;
-            }) : new Observable.a(Object(subscribeToIterable.a)(input));
-        }
-        //# sourceMappingURL=fromIterable.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeToObservable.js
-                var subscribeToObservable = __webpack_require__(69);
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromObservable.js
-        /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable,_util_subscribeToObservable PURE_IMPORTS_END */        function fromObservable(input, scheduler) {
-            return scheduler ? new Observable.a(function(subscriber) {
-                var sub = new Subscription.a();
-                return sub.add(scheduler.schedule(function() {
-                    var observable = input[symbol_observable.a]();
-                    sub.add(observable.subscribe({
-                        next: function(value) {
-                            sub.add(scheduler.schedule(function() {
-                                return subscriber.next(value);
-                            }));
-                        },
-                        error: function(err) {
-                            sub.add(scheduler.schedule(function() {
-                                return subscriber.error(err);
-                            }));
-                        },
-                        complete: function() {
-                            sub.add(scheduler.schedule(function() {
-                                return subscriber.complete();
-                            }));
-                        }
-                    }));
-                })), sub;
-            }) : new Observable.a(Object(subscribeToObservable.a)(input));
-        }
-        //# sourceMappingURL=fromObservable.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeTo.js
-                var subscribeTo = __webpack_require__(68);
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/from.js
-        /* harmony export (binding) */        
-        /** PURE_IMPORTS_START _Observable,_util_isPromise,_util_isArrayLike,_util_isInteropObservable,_util_isIterable,_fromArray,_fromPromise,_fromIterable,_fromObservable,_util_subscribeTo PURE_IMPORTS_END */
-        function from(input, scheduler) {
-            if (!scheduler) return input instanceof Observable.a ? input : new Observable.a(Object(subscribeTo.a)(input));
-            if (null != input) {
-                if (isInteropObservable(input)) return fromObservable(input, scheduler);
-                if (Object(isPromise.a)(input)) return fromPromise(input, scheduler);
-                if (Object(isArrayLike.a)(input)) return Object(fromArray.a)(input, scheduler);
-                if (isIterable(input) || "string" == typeof input) return fromIterable(input, scheduler);
-            }
-            throw new TypeError((null !== input && typeof input || input) + " is not observable");
-        }
-        //# sourceMappingURL=from.js.map
-        /***/        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return from;
-        });
-    }, 
-    /* 28 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /**
@@ -3067,7 +2914,7 @@ object-assign
         /* tslint:disable:no-empty */
         /* harmony default export */        __webpack_exports__.a = function() {};
     }, 
-    /* 29 */
+    /* 28 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /**
@@ -3183,10 +3030,10 @@ object-assign
         };
         /* harmony default export */        __webpack_exports__.a = STREAM_EVENTS;
     }, 
-    /* 30 */
+    /* 29 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(23), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(82), DEFAULT_REQUEST_TIMEOUT = _config__WEBPACK_IMPORTED_MODULE_1__.a.DEFAULT_REQUEST_TIMEOUT, DEFAULT_RESPONSE_TYPE = "json";
+        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(23), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(83), DEFAULT_REQUEST_TIMEOUT = _config__WEBPACK_IMPORTED_MODULE_1__.a.DEFAULT_REQUEST_TIMEOUT, DEFAULT_RESPONSE_TYPE = "json";
         /* harmony import */        
         /**
  * @param {string} data
@@ -3237,7 +3084,7 @@ object-assign
                     });
                 }), xhr.onload = function onXHRLoad(event) {
                     if (4 === xhr.readyState) if (xhr.status >= 200 && xhr.status < 300) {
-                        var receivedTime = Date.now(), totalSize = event.total, status = xhr.status, loadedResponseType = xhr.responseType, _url = xhr.responseURL || url, responseData = void 0;
+                        var responseData, receivedTime = Date.now(), totalSize = event.total, status = xhr.status, loadedResponseType = xhr.responseType, _url = xhr.responseURL || url;
                         if (null == (
                         // IE bug where response is string with responseType json
                         responseData = "json" === loadedResponseType ? "string" !== xhr.response ? xhr.response : toJSONForIE(xhr.responseText) : xhr.response)) {
@@ -3267,11 +3114,11 @@ object-assign
             });
         };
     }, 
-    /* 31 */
+    /* 30 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-                var find = __webpack_require__(13), find_default = /* */ __webpack_require__.n(find), array_includes = __webpack_require__(11);
+                var find = __webpack_require__(14), find_default = /* */ __webpack_require__.n(find), array_includes = __webpack_require__(11);
         // CONCATENATED MODULE: ./src/utils/starts-with.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -3303,17 +3150,7 @@ object-assign
             return "function" == typeof String.prototype.startsWith ? completeString.startsWith(searchString, position) : completeString.substr(position || 0, searchString.length) === searchString;
         }
         // CONCATENATED MODULE: ./src/parsers/texttracks/ttml/style.ts
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return getStylingAttributes;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() {
-            return getStylingFromElement;
-        });
-        var _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
-            return typeof obj;
-        } : function(obj) {
-            return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-        };
+        /* harmony export (binding) */        
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -3341,7 +3178,8 @@ object-assign
  * @param {Array.<Object>} styles
  * @param {Array.<Object>} regions
  * @returns {Object}
- */        function getStylingAttributes(attributes, nodes, styles, regions) {
+ */
+        function getStylingAttributes(attributes, nodes, styles, regions) {
             for (var currentStyle = {}, leftAttributes = attributes.slice(), i = 0; i <= nodes.length - 1; i++) {
                 var node = nodes[i];
                 if (node) {
@@ -3358,7 +3196,7 @@ object-assign
                                 };
                             }
                         }
-                        // 2. the style is referenced on a "style" attribute
+ // 2. the style is referenced on a "style" attribute
                                                 if (styleID) {
                             var style = find_default()(styles, function(x) {
                                 return x.id === styleID;
@@ -3374,7 +3212,7 @@ object-assign
                                 }
                             }
                         }
-                        // 3. the node reference a region (which can have a value for the
+ // 3. the node reference a region (which can have a value for the
                         //    corresponding style)
                                                 if (regionID) {
                             var region = find_default()(regions, function(x) {
@@ -3392,7 +3230,7 @@ object-assign
                             }
                         }
                     }();
-                    if ("object" === (void 0 === _ret ? "undefined" : _typeof(_ret))) return _ret.v;
+                    if ("object" == typeof _ret) return _ret.v;
                 }
             }
             return currentStyle;
@@ -3409,8 +3247,14 @@ object-assign
             }
             return currentStyle;
         }
-        /***/    }, 
-    /* 32 */
+        /***/        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return getStylingAttributes;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() {
+            return getStylingFromElement;
+        });
+    }, 
+    /* 31 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -3422,7 +3266,7 @@ object-assign
         };
         //# sourceMappingURL=errorObject.js.map
         /***/    }, 
-    /* 33 */
+    /* 32 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -3440,26 +3284,7 @@ object-assign
             }
         };
     }, 
-    /* 34 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return fromArray;
-        });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _Subscription__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(14), _util_subscribeToArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(71);
-        /* harmony import */        
-        /** PURE_IMPORTS_START _Observable,_Subscription,_util_subscribeToArray PURE_IMPORTS_END */
-        function fromArray(input, scheduler) {
-            return scheduler ? new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
-                var sub = new _Subscription__WEBPACK_IMPORTED_MODULE_1__.a(), i = 0;
-                return sub.add(scheduler.schedule(function() {
-                    i !== input.length ? (subscriber.next(input[i++]), subscriber.closed || sub.add(this.schedule())) : subscriber.complete();
-                })), sub;
-            }) : new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(Object(_util_subscribeToArray__WEBPACK_IMPORTED_MODULE_2__.a)(input));
-        }
-        //# sourceMappingURL=fromArray.js.map
-        /***/    }, 
-    /* 35 */
+    /* 33 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -3472,7 +3297,7 @@ object-assign
             return isScheduler;
         });
     }, 
-    /* 36 */
+    /* 34 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "b", function() {
@@ -3488,7 +3313,7 @@ object-assign
             return getSegmentsFromSidx;
         });
         /* unused harmony export patchPssh */
-        /* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9), _utils_bytes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1), _read__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(64);
+        /* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9), _utils_bytes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1), _read__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(65);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -3514,7 +3339,7 @@ object-assign
  * size), 0 if not found.
  */
         function findAtom(buf, atomName) {
-            for (var l = buf.length, i = 0, name = void 0, size = 0; i + 8 < l && (size = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, i), 
+            for (var name, l = buf.length, i = 0, size = 0; i + 8 < l && (size = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, i), 
             name = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, i + 4), Object(_utils_assert__WEBPACK_IMPORTED_MODULE_0__.b)(size > 0, "out of range size"), 
             name !== atomName); ) i += size;
             return i >= l ? -1 : (Object(_utils_assert__WEBPACK_IMPORTED_MODULE_0__.b)(i + size <= l, "atom out of range"), 
@@ -3537,16 +3362,17 @@ object-assign
  *     from the anchor point (first byte after the sidx box) for the
  *     concerned subsegment.
  */        function getSegmentsFromSidx(buf, initialOffset) {
-            var index = findAtom(buf, 1936286840 /* "sidx" */);
+            var index = findAtom(buf, 1936286840
+            /* "sidx" */);
             if (-1 === index) return null;
-            var offset = initialOffset, size = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, index), pos = index + /* size */ 4 + /* name */ 4, version = buf[pos];
+            var offset = initialOffset, size = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, index), pos = index + 
+            /* size */
+            4 + 
+            /* name */
+            4, version = buf[pos];
             pos += 8;
-            var timescale = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, pos);
-            pos += 4;
-            /* earliest_presentation_time(32 / 64) */
-            /* first_offset(32 / 64) */
-            var time = void 0;
-            if (0 === version) time = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, pos), 
+            var time, timescale = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, pos);
+            if (pos += 4, 0 === version) time = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, pos), 
             pos += 4, offset += Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, pos) + size, 
             pos += 4; else {
                 if (1 !== version) return null;
@@ -3569,10 +3395,8 @@ object-assign
                 // when set to 1 indicates that the reference is to a sidx, else to media
                 if (1 === (2147483648 & refChunk) >>> 31) throw new Error("not implemented");
                 var duration = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, pos);
-                pos += 4, 
-                // let sapChunk = be4toi(buf, pos + 8);
-                pos += 4, 
-                // TODO(pierre): handle sap
+                pos += 4, // let sapChunk = be4toi(buf, pos + 8);
+                pos += 4, // TODO(pierre): handle sap
                 // let startsWithSap = (sapChunk & 0x80000000) >>> 31;
                 // let sapType = (sapChunk & 0x70000000) >>> 28;
                 // let sapDelta = sapChunk & 0x0FFFFFFF;
@@ -3596,18 +3420,30 @@ object-assign
  */        function getTrackFragmentDecodeTime(buffer) {
             var traf = Object(_read__WEBPACK_IMPORTED_MODULE_2__.c)(buffer);
             if (!traf) return -1;
-            var index = findAtom(traf, 1952867444 /* tfdt */);
+            var index = findAtom(traf, 1952867444
+            /* tfdt */);
             if (-1 === index) return -1;
-            var pos = index + /* size */ 4 + /* name */ 4, version = traf[pos];
+            var pos = index + 
+            /* size */
+            4 + 
+            /* name */
+            4, version = traf[pos];
             return pos += 4, version > 1 ? -1 : version ? Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.d)(traf, pos) : Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(traf, pos);
         }
         /**
  * @param {Uint8Array} traf
  * @returns {number}
  */        function getDefaultDurationFromTFHDInTRAF(traf) {
-            var index = findAtom(traf, 1952868452 /* tfhd */);
+            var index = findAtom(traf, 1952868452
+            /* tfhd */);
             if (-1 === index) return -1;
-            var pos = index + /* size */ 4 + /* name */ 4 + /* version */ 1, flags = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.b)(traf, pos);
+            var pos = index + 
+            /* size */
+            4 + 
+            /* name */
+            4 + 
+            /* version */
+            1, flags = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.b)(traf, pos);
             return 8 & flags ? (pos += 4, 1 & flags && (pos += 8), 2 & flags && (pos += 4), 
             Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(traf, pos)) : -1;
         }
@@ -3617,9 +3453,14 @@ object-assign
  */        function getDurationFromTrun(buffer) {
             var traf = Object(_read__WEBPACK_IMPORTED_MODULE_2__.c)(buffer);
             if (!traf) return -1;
-            var index = findAtom(traf, 1953658222 /* tfdt */);
+            var index = findAtom(traf, 1953658222
+            /* tfdt */);
             if (-1 === index) return -1;
-            var pos = index + /* size */ 4 + /* name */ 4, version = traf[pos];
+            var pos = index + 
+            /* size */
+            4 + 
+            /* name */
+            4, version = traf[pos];
             if (pos += 1, version > 1) return -1;
             var flags = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.b)(traf, pos);
             pos += 3;
@@ -3642,9 +3483,14 @@ object-assign
  */        function getMDHDTimescale(buffer) {
             var mdia = Object(_read__WEBPACK_IMPORTED_MODULE_2__.b)(buffer);
             if (!mdia) return -1;
-            var index = findAtom(mdia, 1835296868 /* "mdhd" */);
+            var index = findAtom(mdia, 1835296868
+            /* "mdhd" */);
             if (-1 === index) return -1;
-            var pos = index + /* size */ 4 + /* name */ 4, version = mdia[pos];
+            var pos = index + 
+            /* size */
+            4 + 
+            /* name */
+            4, version = mdia[pos];
             return pos += 4, 1 === version ? (pos += 16, Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(mdia, pos)) : 0 === version ? (pos += 8, 
             Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(mdia, pos)) : -1;
         }
@@ -3653,7 +3499,7 @@ object-assign
  * @param {string} name - The box name (e.g. sidx, moov, pssh etc.)
  * @param {Uint8Array} buff - The box's content
  */    }, 
-    /* 37 */
+    /* 35 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -3664,7 +3510,28 @@ object-assign
             return noop;
         });
     }, 
-    /* 38 */
+    /* 36 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return InnerSubscriber;
+        });
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), InnerSubscriber = /* */ function(_super) {
+            function InnerSubscriber(parent, outerValue, outerIndex) {
+                var _this = _super.call(this) || this;
+                return _this.parent = parent, _this.outerValue = outerValue, _this.outerIndex = outerIndex, 
+                _this.index = 0, _this;
+            }
+            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(InnerSubscriber, _super), InnerSubscriber.prototype._next = function(value) {
+                this.parent.notifyNext(this.outerValue, value, this.outerIndex, this.index++, this);
+            }, InnerSubscriber.prototype._error = function(error) {
+                this.parent.notifyError(error, this), this.unsubscribe();
+            }, InnerSubscriber.prototype._complete = function() {
+                this.parent.notifyComplete(this), this.unsubscribe();
+            }, InnerSubscriber;
+        }(__webpack_require__(10).a);
+        /* harmony import */    }, 
+    /* 37 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "b", function() {
@@ -3690,7 +3557,7 @@ object-assign
  */
         // Scheme part of an url (e.g. "http://").
         var schemeRe = /^(?:[a-z]+:)?\/\//i, selfDirRe = /\/\.{1,2}\//;
-        // Captures "/../" or "/./".
+ // Captures "/../" or "/./".
                 /**
  * Resolve self directory and previous directory references to obtain a
  * "normalized" url.
@@ -3716,15 +3583,13 @@ object-assign
  * @param {...string|undefined} args
  * @returns {string}
  */        function resolveURL() {
-            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) args[_key] = arguments[_key];
-            var len = args.length;
+            var len = arguments.length;
             if (0 === len) return "";
             for (var base = "", i = 0; i < len; i++) {
-                var part = args[i];
+                var part = i < 0 || arguments.length <= i ? void 0 : arguments[i];
                 "string" == typeof part && "" !== part && (schemeRe.test(part) ? base = part : (
                 // trim if begins with "/"
-                "/" === part[0] && (part = part.substr(1)), 
-                // trim if ends with "/"
+                "/" === part[0] && (part = part.substr(1)), // trim if ends with "/"
                 "/" === base[base.length - 1] && (base = base.substr(0, base.length - 1)), base = base + "/" + part));
             }
             return _normalizeUrl(base);
@@ -3738,15 +3603,15 @@ object-assign
             return slash >= 0 ? url.substring(0, slash + 1) : url;
         }
         /***/    }, 
-    /* 39 */
+    /* 38 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return async;
         });
-        /* harmony import */ var _AsyncAction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(101), async = /* */ new (__webpack_require__(102).a)(_AsyncAction__WEBPACK_IMPORTED_MODULE_0__.a);
+        /* harmony import */ var _AsyncAction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(102), async = /* */ new (__webpack_require__(103).a)(_AsyncAction__WEBPACK_IMPORTED_MODULE_0__.a);
         /* harmony import */    }, 
-    /* 40 */
+    /* 39 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // CONCATENATED MODULE: ./src/utils/languages/ISO_639-1_to_ISO_639-3.ts
@@ -4009,7 +3874,7 @@ object-assign
  * @param {string} base
  * @returns {string}
  */        function normalizeBase(base) {
-            var result = void 0;
+            var result;
             switch (base.length) {
               case 2:
                 result = ISO_639_1_to_ISO_639_3[base];
@@ -4030,16 +3895,14 @@ object-assign
  * @param {Object|string|null|undefined} _language
  * @returns {Object|null|undefined}
  */        function normalizeTextTrack(_language) {
-            if (null != _language) {
-                var language = void 0, closedCaption = void 0;
-                return "string" == typeof _language ? (language = _language, closedCaption = !1) : (language = _language.language, 
-                closedCaption = !!_language.closedCaption), {
-                    language: language,
-                    closedCaption: closedCaption,
-                    normalized: normalize(language)
-                };
-            }
-            return _language;
+            var language, closedCaption;
+            return null != _language ? ("string" == typeof _language ? (language = _language, 
+            closedCaption = !1) : (language = _language.language, closedCaption = !!_language.closedCaption), 
+            {
+                language: language,
+                closedCaption: closedCaption,
+                normalized: normalize(language)
+            }) : _language;
         }
         /**
  * Normalize audio track from a user given input into an object
@@ -4051,16 +3914,14 @@ object-assign
  * @param {Object|string|null|undefined} _language
  * @returns {Object|null|undefined}
  */        function normalizeAudioTrack(_language) {
-            if (null != _language) {
-                var language = void 0, audioDescription = void 0;
-                return "string" == typeof _language ? (language = _language, audioDescription = !1) : (language = _language.language, 
-                audioDescription = !!_language.audioDescription), {
-                    language: language,
-                    audioDescription: audioDescription,
-                    normalized: normalize(language)
-                };
-            }
-            return _language;
+            var language, audioDescription;
+            return null != _language ? ("string" == typeof _language ? (language = _language, 
+            audioDescription = !1) : (language = _language.language, audioDescription = !!_language.audioDescription), 
+            {
+                language: language,
+                audioDescription: audioDescription,
+                normalized: normalize(language)
+            }) : _language;
         }
         /***/        
         // CONCATENATED MODULE: ./src/utils/languages/index.ts
@@ -4074,13 +3935,67 @@ object-assign
             return normalizeTextTrack;
         });
     }, 
-    /* 41 */
+    /* 40 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var _log__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return EventEmitter;
+        });
+        /* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0), EventEmitter = 
+        /* */
+        function() {
+            function EventEmitter() {
+                this._listeners = {};
+            }
+            /**
+   * Register a new callback for an event.
+   *
+   * @param {string} evt - The event to register a callback to
+   * @param {Function} fn - The callback to call as that event is triggered.
+   * The callback will take as argument the eventual payload of the event
+   * (single argument).
+   */            var _proto = EventEmitter.prototype;
+            return _proto.addEventListener = function addEventListener(evt, fn) {
+                var listeners = this._listeners[evt];
+                listeners ? listeners.push(fn) : 
+                // TS Bug?
+                this._listeners[evt] = [ fn ];
+            }, 
+            /**
+   * Unregister callbacks linked to events.
+   * @param {string} [evt] - The event for which the callback[s] should be
+   * unregistered. Set it to null or undefined to remove all callbacks
+   * currently registered (for any event).
+   * @param {Function} [fn] - The callback to unregister. If set to null
+   * or undefined while the evt argument is set, all callbacks linked to that
+   * event will be unregistered.
+   */
+            _proto.removeEventListener = function removeEventListener(evt, fn) {
+                if (null != evt) {
+                    var listeners = this._listeners[evt];
+                    if (listeners) if (null != fn) {
+                        var index = listeners.indexOf(fn);
+                        ~index && listeners.splice(index, 1), listeners.length || delete this._listeners[evt];
+                    } else delete this._listeners[evt];
+                } else this._listeners = {};
+            }, 
+            /**
+   * Trigger every registered callbacks for a given event
+   * @param {string} evt - The event to trigger
+   * @param {*} arg - The eventual payload for that event. All triggered
+   * callbacks will recieve this payload as argument.
+   */
+            _proto.trigger = function trigger(evt, arg) {
+                var listeners = this._listeners[evt];
+                listeners && listeners.slice().forEach(function(listener) {
+                    try {
+                        listener(arg);
+                    } catch (e) {
+                        _log__WEBPACK_IMPORTED_MODULE_0__.a.error(e, e.stack);
+                    }
+                });
+            }, EventEmitter;
+        }();
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -4099,61 +4014,8 @@ object-assign
         /**
  * Simple EventEmitted implementation.
  * @class EventEmitter
- */        var EventEmitter = function() {
-            function EventEmitter() {
-                _classCallCheck(this, EventEmitter), this._listeners = {};
-            }
-            /**
-     * Register a new callback for an event.
-     *
-     * @param {string} evt - The event to register a callback to
-     * @param {Function} fn - The callback to call as that event is triggered.
-     * The callback will take as argument the eventual payload of the event
-     * (single argument).
-     */            return EventEmitter.prototype.addEventListener = function addEventListener(evt, fn) {
-                var listeners = this._listeners[evt];
-                listeners ? listeners.push(fn) : 
-                // TS Bug?
-                this._listeners[evt] = [ fn ];
-            }, 
-            /**
-     * Unregister callbacks linked to events.
-     * @param {string} [evt] - The event for which the callback[s] should be
-     * unregistered. Set it to null or undefined to remove all callbacks
-     * currently registered (for any event).
-     * @param {Function} [fn] - The callback to unregister. If set to null
-     * or undefined while the evt argument is set, all callbacks linked to that
-     * event will be unregistered.
-     */
-            EventEmitter.prototype.removeEventListener = function removeEventListener(evt, fn) {
-                if (null != evt) {
-                    var listeners = this._listeners[evt];
-                    if (listeners) if (null != fn) {
-                        var index = listeners.indexOf(fn);
-                        ~index && listeners.splice(index, 1), listeners.length || delete this._listeners[evt];
-                    } else delete this._listeners[evt];
-                } else this._listeners = {};
-            }, 
-            /**
-     * Trigger every registered callbacks for a given event
-     * @param {string} evt - The event to trigger
-     * @param {*} arg - The eventual payload for that event. All triggered
-     * callbacks will recieve this payload as argument.
-     */
-            EventEmitter.prototype.trigger = function trigger(evt, arg) {
-                var listeners = this._listeners[evt];
-                listeners && listeners.slice().forEach(function(listener) {
-                    try {
-                        listener(arg);
-                    } catch (e) {
-                        _log__WEBPACK_IMPORTED_MODULE_0__.a.error(e, e.stack);
-                    }
-                });
-            }, EventEmitter;
-        }();
-        /* harmony default export */        __webpack_exports__.a = EventEmitter;
-    }, 
-    /* 42 */
+ */    }, 
+    /* 41 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -4165,7 +4027,7 @@ object-assign
         };
         //# sourceMappingURL=isArray.js.map
         /***/    }, 
-    /* 43 */
+    /* 42 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -4175,13 +4037,206 @@ object-assign
         var observable = "function" == typeof Symbol && Symbol.observable || "@@observable";
         //# sourceMappingURL=observable.js.map
         /***/    }, 
+    /* 43 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "b", function() {
+            return SubjectSubscriber;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
+            return Subject;
+        });
+        /* unused harmony export AnonymousSubject */
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Observable__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(13), _Subscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(10), _Subscription__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(15), _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(46), _SubjectSubscription__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(78), _internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(51), SubjectSubscriber = /* */ function(_super) {
+            function SubjectSubscriber(destination) {
+                var _this = _super.call(this, destination) || this;
+                return _this.destination = destination, _this;
+            }
+            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(SubjectSubscriber, _super), SubjectSubscriber;
+        }(_Subscriber__WEBPACK_IMPORTED_MODULE_2__.a), Subject = /* */ function(_super) {
+            function Subject() {
+                var _this = _super.call(this) || this;
+                return _this.observers = [], _this.closed = !1, _this.isStopped = !1, _this.hasError = !1, 
+                _this.thrownError = null, _this;
+            }
+            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(Subject, _super), Subject.prototype[_internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_6__.a] = function() {
+                return new SubjectSubscriber(this);
+            }, Subject.prototype.lift = function(operator) {
+                var subject = new AnonymousSubject(this, this);
+                return subject.operator = operator, subject;
+            }, Subject.prototype.next = function(value) {
+                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
+                if (!this.isStopped) for (var observers = this.observers, len = observers.length, copy = observers.slice(), i = 0; i < len; i++) copy[i].next(value);
+            }, Subject.prototype.error = function(err) {
+                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
+                this.hasError = !0, this.thrownError = err, this.isStopped = !0;
+                for (var observers = this.observers, len = observers.length, copy = observers.slice(), i = 0; i < len; i++) copy[i].error(err);
+                this.observers.length = 0;
+            }, Subject.prototype.complete = function() {
+                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
+                this.isStopped = !0;
+                for (var observers = this.observers, len = observers.length, copy = observers.slice(), i = 0; i < len; i++) copy[i].complete();
+                this.observers.length = 0;
+            }, Subject.prototype.unsubscribe = function() {
+                this.isStopped = !0, this.closed = !0, this.observers = null;
+            }, Subject.prototype._trySubscribe = function(subscriber) {
+                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
+                return _super.prototype._trySubscribe.call(this, subscriber);
+            }, Subject.prototype._subscribe = function(subscriber) {
+                if (this.closed) throw new _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__.a();
+                return this.hasError ? (subscriber.error(this.thrownError), _Subscription__WEBPACK_IMPORTED_MODULE_3__.a.EMPTY) : this.isStopped ? (subscriber.complete(), 
+                _Subscription__WEBPACK_IMPORTED_MODULE_3__.a.EMPTY) : (this.observers.push(subscriber), 
+                new _SubjectSubscription__WEBPACK_IMPORTED_MODULE_5__.a(this, subscriber));
+            }, Subject.prototype.asObservable = function() {
+                var observable = new _Observable__WEBPACK_IMPORTED_MODULE_1__.a();
+                return observable.source = this, observable;
+            }, Subject.create = function(destination, source) {
+                return new AnonymousSubject(destination, source);
+            }, Subject;
+        }(_Observable__WEBPACK_IMPORTED_MODULE_1__.a), AnonymousSubject = /* */ function(_super) {
+            function AnonymousSubject(destination, source) {
+                var _this = _super.call(this) || this;
+                return _this.destination = destination, _this.source = source, _this;
+            }
+            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(AnonymousSubject, _super), AnonymousSubject.prototype.next = function(value) {
+                var destination = this.destination;
+                destination && destination.next && destination.next(value);
+            }, AnonymousSubject.prototype.error = function(err) {
+                var destination = this.destination;
+                destination && destination.error && this.destination.error(err);
+            }, AnonymousSubject.prototype.complete = function() {
+                var destination = this.destination;
+                destination && destination.complete && this.destination.complete();
+            }, AnonymousSubject.prototype._subscribe = function(subscriber) {
+                return this.source ? this.source.subscribe(subscriber) : _Subscription__WEBPACK_IMPORTED_MODULE_3__.a.EMPTY;
+            }, AnonymousSubject;
+        }(Subject);
+        /* harmony import */    }, 
     /* 44 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 2 modules
+                var Observable = __webpack_require__(13), isPromise = __webpack_require__(73), isArrayLike = __webpack_require__(71), symbol_observable = __webpack_require__(42);
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isPromise.js
+                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/isInteropObservable.js
+        /** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
+        function isInteropObservable(input) {
+            return input && "function" == typeof input[symbol_observable.a];
+        }
+        //# sourceMappingURL=isInteropObservable.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/iterator.js
+                var symbol_iterator = __webpack_require__(52);
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/isIterable.js
+        /** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */        function isIterable(input) {
+            return input && "function" == typeof input[symbol_iterator.a];
+        }
+        //# sourceMappingURL=isIterable.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromArray.js
+                var fromArray = __webpack_require__(25), Subscription = __webpack_require__(15), subscribeToPromise = __webpack_require__(74);
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscription.js + 1 modules
+                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromPromise.js
+        /** PURE_IMPORTS_START _Observable,_Subscription,_util_subscribeToPromise PURE_IMPORTS_END */
+        function fromPromise(input, scheduler) {
+            return scheduler ? new Observable.a(function(subscriber) {
+                var sub = new Subscription.a();
+                return sub.add(scheduler.schedule(function() {
+                    return input.then(function(value) {
+                        sub.add(scheduler.schedule(function() {
+                            subscriber.next(value), sub.add(scheduler.schedule(function() {
+                                return subscriber.complete();
+                            }));
+                        }));
+                    }, function(err) {
+                        sub.add(scheduler.schedule(function() {
+                            return subscriber.error(err);
+                        }));
+                    });
+                })), sub;
+            }) : new Observable.a(Object(subscribeToPromise.a)(input));
+        }
+        //# sourceMappingURL=fromPromise.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeToIterable.js
+                var subscribeToIterable = __webpack_require__(75);
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromIterable.js
+        /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_iterator,_util_subscribeToIterable PURE_IMPORTS_END */        function fromIterable(input, scheduler) {
+            if (!input) throw new Error("Iterable cannot be null");
+            return scheduler ? new Observable.a(function(subscriber) {
+                var iterator, sub = new Subscription.a();
+                return sub.add(function() {
+                    iterator && "function" == typeof iterator.return && iterator.return();
+                }), sub.add(scheduler.schedule(function() {
+                    iterator = input[symbol_iterator.a](), sub.add(scheduler.schedule(function() {
+                        if (!subscriber.closed) {
+                            var value, done;
+                            try {
+                                var result = iterator.next();
+                                value = result.value, done = result.done;
+                            } catch (err) {
+                                return void subscriber.error(err);
+                            }
+                            done ? subscriber.complete() : (subscriber.next(value), this.schedule());
+                        }
+                    }));
+                })), sub;
+            }) : new Observable.a(Object(subscribeToIterable.a)(input));
+        }
+        //# sourceMappingURL=fromIterable.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeToObservable.js
+                var subscribeToObservable = __webpack_require__(70);
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromObservable.js
+        /** PURE_IMPORTS_START _Observable,_Subscription,_symbol_observable,_util_subscribeToObservable PURE_IMPORTS_END */        function fromObservable(input, scheduler) {
+            return scheduler ? new Observable.a(function(subscriber) {
+                var sub = new Subscription.a();
+                return sub.add(scheduler.schedule(function() {
+                    var observable = input[symbol_observable.a]();
+                    sub.add(observable.subscribe({
+                        next: function(value) {
+                            sub.add(scheduler.schedule(function() {
+                                return subscriber.next(value);
+                            }));
+                        },
+                        error: function(err) {
+                            sub.add(scheduler.schedule(function() {
+                                return subscriber.error(err);
+                            }));
+                        },
+                        complete: function() {
+                            sub.add(scheduler.schedule(function() {
+                                return subscriber.complete();
+                            }));
+                        }
+                    }));
+                })), sub;
+            }) : new Observable.a(Object(subscribeToObservable.a)(input));
+        }
+        //# sourceMappingURL=fromObservable.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeTo.js
+                var subscribeTo = __webpack_require__(69);
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/from.js
+        /* harmony export (binding) */        
+        /** PURE_IMPORTS_START _Observable,_util_isPromise,_util_isArrayLike,_util_isInteropObservable,_util_isIterable,_fromArray,_fromPromise,_fromIterable,_fromObservable,_util_subscribeTo PURE_IMPORTS_END */
+        function from(input, scheduler) {
+            if (!scheduler) return input instanceof Observable.a ? input : new Observable.a(Object(subscribeTo.a)(input));
+            if (null != input) {
+                if (isInteropObservable(input)) return fromObservable(input, scheduler);
+                if (Object(isPromise.a)(input)) return fromPromise(input, scheduler);
+                if (Object(isArrayLike.a)(input)) return Object(fromArray.a)(input, scheduler);
+                if (isIterable(input) || "string" == typeof input) return fromIterable(input, scheduler);
+            }
+            throw new TypeError((null !== input && typeof input || input) + " is not observable");
+        }
+        //# sourceMappingURL=from.js.map
+        /***/        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return from;
+        });
+    }, 
+    /* 45 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return tryCatch;
         });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(78);
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(79);
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -4210,22 +4265,22 @@ object-assign
             }
         }
         /***/    }, 
-    /* 45 */
+    /* 46 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+        /* harmony export (binding) */        
+        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+        function ObjectUnsubscribedErrorImpl() {
+            return Error.call(this), this.message = "object unsubscribed", this.name = "ObjectUnsubscribedError", 
+            this;
+        }
+        __webpack_require__.d(__webpack_exports__, "a", function() {
             return ObjectUnsubscribedError;
-        });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), ObjectUnsubscribedError = /* */ function(_super) {
-            function ObjectUnsubscribedError() {
-                var _this = _super.call(this, "object unsubscribed") || this;
-                return _this.name = "ObjectUnsubscribedError", Object.setPrototypeOf(_this, ObjectUnsubscribedError.prototype), 
-                _this;
-            }
-            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(ObjectUnsubscribedError, _super), ObjectUnsubscribedError;
-        }(Error);
-        /** PURE_IMPORTS_START tslib PURE_IMPORTS_END */    }, 
-    /* 46 */
+        }), ObjectUnsubscribedErrorImpl.prototype = /* */ Object.create(Error.prototype);
+        var ObjectUnsubscribedError = ObjectUnsubscribedErrorImpl;
+        //# sourceMappingURL=ObjectUnsubscribedError.js.map
+        /***/    }, 
+    /* 47 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -4282,7 +4337,7 @@ object-assign
             return getTextNodes;
         });
     }, 
-    /* 47 */
+    /* 48 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -4295,7 +4350,7 @@ object-assign
             return isFunction;
         });
     }, 
-    /* 48 */
+    /* 49 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -4332,8 +4387,7 @@ object-assign
  * @param {string} text
  * @returns {Boolean}
  */        function isStartOfStyleBlock(lines, index) {
-            return !!lines[index] && /^STYLE( .*)?$/g.test(lines[index]) && (
-            // A cue identifer can also contain "STYLe". Check that we have no timings
+            return !!lines[index] && /^STYLE( .*)?$/g.test(lines[index]) && (// A cue identifer can also contain "STYLe". Check that we have no timings
             // on the second line
             !lines[index + 1] || lines[index + 1].indexOf("--\x3e") < 0);
         }
@@ -4342,8 +4396,7 @@ object-assign
  * @param {string} text
  * @returns {Boolean}
  */        function isStartOfNoteBlock(lines, index) {
-            return !!lines[index] && /^NOTE( .*)?$/g.test(lines[index]) && (
-            // A cue identifer can also contain "NOTE". Check that we have no timings
+            return !!lines[index] && /^NOTE( .*)?$/g.test(lines[index]) && (// A cue identifer can also contain "NOTE". Check that we have no timings
             // on the second line
             !lines[index + 1] || lines[index + 1].indexOf("--\x3e") < 0);
         }
@@ -4352,8 +4405,7 @@ object-assign
  * @param {string} text
  * @returns {Boolean}
  */        function isStartOfRegionBlock(lines, index) {
-            return !!lines[index] && /^REGION( .*)?$/g.test(lines[index]) && (
-            // A cue identifer can also contain "REGION". Check that we have no timings
+            return !!lines[index] && /^REGION( .*)?$/g.test(lines[index]) && (// A cue identifer can also contain "REGION". Check that we have no timings
             // on the second line
             !lines[index + 1] || lines[index + 1].indexOf("--\x3e") < 0);
         }
@@ -4403,7 +4455,7 @@ object-assign
             return findEndOfCueBlock;
         });
     }, 
-    /* 49 */
+    /* 50 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -4418,7 +4470,7 @@ object-assign
             return hostReportError;
         });
     }, 
-    /* 50 */
+    /* 51 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -4428,7 +4480,7 @@ object-assign
         /** PURE_IMPORTS_START  PURE_IMPORTS_END */
         var rxSubscriber = "function" == typeof Symbol && "function" == typeof Symbol.for ? /* */ Symbol.for("rxSubscriber") : "@@rxSubscriber";
     }, 
-    /* 51 */
+    /* 52 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* unused harmony export getSymbolIterator */
@@ -4442,7 +4494,7 @@ object-assign
             return "function" == typeof Symbol && Symbol.iterator ? Symbol.iterator : "@@iterator";
         }();
     }, 
-    /* 52 */
+    /* 53 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -4475,12 +4527,12 @@ object-assign
             return errorMessage;
         });
     }, 
-    /* 53 */
+    /* 54 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return SimpleSet;
+        });
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -4499,15 +4551,19 @@ object-assign
         /**
  * Simple hash-based set.
  * @class SimpleSet
- */        var SimpleSet = function() {
+ */
+        var SimpleSet = 
+        /* */
+        function() {
             function SimpleSet() {
-                _classCallCheck(this, SimpleSet), this._hashes = {};
+                this._hashes = {};
             }
             /**
    * Add a new hash entry in the set.
    * Do not have any effect on already-added hashes
    * @param {string|number} x
-   */            return SimpleSet.prototype.add = function add(x) {
+   */            var _proto = SimpleSet.prototype;
+            return _proto.add = function add(x) {
                 this._hashes[x] = !0;
             }, 
             /**
@@ -4515,7 +4571,7 @@ object-assign
    * Do not have any effect on already-removed or inexistant hashes
    * @param {string|number} x
    */
-            SimpleSet.prototype.remove = function remove(x) {
+            _proto.remove = function remove(x) {
                 delete this._hashes[x];
             }, 
             /**
@@ -4523,20 +4579,19 @@ object-assign
    * @param {string|number} x
    * @returns {boolean}
    */
-            SimpleSet.prototype.test = function test(x) {
+            _proto.test = function test(x) {
                 return !!this._hashes[x];
             }, 
             /**
    * Returns true if there's currently no hash in this set.
    * @returns {boolean}
    */
-            SimpleSet.prototype.isEmpty = function isEmpty() {
+            _proto.isEmpty = function isEmpty() {
                 return !Object.keys(this._hashes).length;
             }, SimpleSet;
         }();
-        /* harmony default export */        __webpack_exports__.a = SimpleSet;
-    }, 
-    /* 54 */
+        /***/    }, 
+    /* 55 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -4576,45 +4631,23 @@ object-assign
             return getParentElementsByTagName;
         });
     }, 
-    /* 55 */
+    /* 56 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-                var of = __webpack_require__(75), assert = __webpack_require__(9), eventemitter = __webpack_require__(41), rx_tryCatch = __webpack_require__(44), ranges = __webpack_require__(18);
-        // EXTERNAL MODULE: ./src/utils/assert.ts + 1 modules
-                // CONCATENATED MODULE: ./src/core/source_buffers/time_ranges.ts
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Simulate TimeRanges as returned by SourceBuffer.prototype.buffered.
- * Add an "insert" and "remove" methods to manually update it.
- * @class ManualTimeRanges
- */        var time_ranges = function() {
+                var of = __webpack_require__(76), assert = __webpack_require__(9), eventemitter = __webpack_require__(40), rx_tryCatch = __webpack_require__(45), ranges = __webpack_require__(16), time_ranges_ManualTimeRanges = 
+        /* */
+        function() {
             function ManualTimeRanges() {
-                _classCallCheck(this, ManualTimeRanges), this._ranges = [], this.length = 0;
+                this._ranges = [], this.length = 0;
             }
-            return ManualTimeRanges.prototype.insert = function insert(start, end) {
+            var _proto = ManualTimeRanges.prototype;
+            return _proto.insert = function insert(start, end) {
                 Object(ranges.h)(this._ranges, {
                     start: start,
                     end: end
                 }), this.length = this._ranges.length;
-            }, ManualTimeRanges.prototype.remove = function remove(start, end) {
+            }, _proto.remove = function remove(start, end) {
                 var rangesToIntersect = [];
                 start > 0 && rangesToIntersect.push({
                     start: 0,
@@ -4623,33 +4656,18 @@ object-assign
                     start: end,
                     end: Infinity
                 }), this._ranges = Object(ranges.j)(this._ranges, rangesToIntersect), this.length = this._ranges.length;
-            }, ManualTimeRanges.prototype.start = function start(index) {
+            }, _proto.start = function start(index) {
                 if (index >= this._ranges.length) throw new Error("INDEX_SIZE_ERROR");
                 return this._ranges[index].start;
-            }, ManualTimeRanges.prototype.end = function end(index) {
+            }, _proto.end = function end(index) {
                 if (index >= this._ranges.length) throw new Error("INDEX_SIZE_ERROR");
                 return this._ranges[index].end;
             }, ManualTimeRanges;
         }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/core/source_buffers/abstract_source_buffer.ts
-        function abstract_source_buffer_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
-        }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
-                }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+        // EXTERNAL MODULE: ./src/utils/assert.ts + 1 modules
+                function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -4670,47 +4688,56 @@ object-assign
  * Abstract class for a custom SourceBuffer implementation.
  * @class AbstractSourceBuffer
  * @extends EventEmitter
- */        var abstract_source_buffer_AbstractSourceBuffer = function(_EventEmitter) {
+ */        
+        // CONCATENATED MODULE: ./src/core/source_buffers/abstract_source_buffer.ts
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
+            return abstract_source_buffer_AbstractSourceBuffer;
+        });
+        var abstract_source_buffer_AbstractSourceBuffer = 
+        /* */
+        function(_EventEmitter) {
             function AbstractSourceBuffer() {
-                abstract_source_buffer_classCallCheck(this, AbstractSourceBuffer);
-                var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
-                return _this.updating = !1, _this.readyState = "opened", _this.buffered = new time_ranges(), 
-                _this.timestampOffset = 0, _this;
+                var _this;
+                return (_this = _EventEmitter.call(this) || this).updating = !1, _this.readyState = "opened", 
+                _this.buffered = new time_ranges_ManualTimeRanges(), _this.timestampOffset = 0, 
+                _this;
             }
             /**
-     * Mimic the SourceBuffer _appendBuffer_ method: Append segment.
-     * @param {*} data
-     */            return _inherits(AbstractSourceBuffer, _EventEmitter), AbstractSourceBuffer.prototype.appendBuffer = function appendBuffer(data) {
+   * Mimic the SourceBuffer _appendBuffer_ method: Append segment.
+   * @param {*} data
+   */            _inheritsLoose(AbstractSourceBuffer, _EventEmitter);
+            var _proto = AbstractSourceBuffer.prototype;
+            return _proto.appendBuffer = function appendBuffer(data) {
                 var _this2 = this;
                 this._lock(function() {
                     return _this2._append(data);
                 });
             }, 
             /**
-     * Mimic the SourceBuffer _remove_ method: remove segment.
-     * @param {Number} from
-     * @param {Number} to
-     */
-            AbstractSourceBuffer.prototype.remove = function remove(from, to) {
+   * Mimic the SourceBuffer _remove_ method: remove segment.
+   * @param {Number} from
+   * @param {Number} to
+   */
+            _proto.remove = function remove(from, to) {
                 var _this3 = this;
                 this._lock(function() {
                     return _this3._remove(from, to);
                 });
             }, 
             /**
-     * Mimic the SourceBuffer _abort_ method.
-     */
-            AbstractSourceBuffer.prototype.abort = function abort() {
+   * Mimic the SourceBuffer _abort_ method.
+   */
+            _proto.abort = function abort() {
                 this.remove(0, Infinity), this.updating = !1, this.readyState = "closed", this._abort();
             }, 
             /**
-     * Active a lock, execute the given function, unlock when finished (on
-     * nextTick).
-     * Throws if multiple lock are active at the same time.
-     * Also triggers the right events on start, error and end
-     * @param {Function} func
-     */
-            AbstractSourceBuffer.prototype._lock = function _lock(func) {
+   * Active a lock, execute the given function, unlock when finished (on
+   * nextTick).
+   * Throws if multiple lock are active at the same time.
+   * Also triggers the right events on start, error and end
+   * @param {Function} func
+   */
+            _proto._lock = function _lock(func) {
                 var _this4 = this;
                 Object(assert.b)(!this.updating, "updating"), this.updating = !0, this.trigger("updatestart", void 0), 
                 Object(rx_tryCatch.a)(function() {
@@ -4726,23 +4753,22 @@ object-assign
                 });
             }, 
             /**
-     * Free the lock and trigger the right events.
-     * @param {string} eventName
-     * @param {*} value - value sent with the given event.
-     */
-            AbstractSourceBuffer.prototype._unlock = function _unlock(eventName, value) {
+   * Free the lock and trigger the right events.
+   * @param {string} eventName
+   * @param {*} value - value sent with the given event.
+   */
+            _proto._unlock = function _unlock(eventName, value) {
                 this.updating = !1, this.trigger(eventName, value), this.trigger("updateend", void 0);
             }, AbstractSourceBuffer;
         }(eventemitter.a);
-        /* harmony default export */        __webpack_exports__.a = abstract_source_buffer_AbstractSourceBuffer;
-    }, 
-    /* 56 */
+        /***/    }, 
+    /* 57 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return empty;
         });
-        /* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(33), _util_hostReportError__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(49), empty = {
+        /* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(32), _util_hostReportError__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(50), empty = {
             closed: !0,
             next: function(value) {},
             error: function(err) {
@@ -4752,13 +4778,13 @@ object-assign
             complete: function() {}
         };
         /* harmony import */    }, 
-    /* 57 */
+    /* 58 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return tryCatch;
         });
-        /* harmony import */ var tryCatchTarget, _errorObject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(32);
+        /* harmony import */ var tryCatchTarget, _errorObject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(31);
         /** PURE_IMPORTS_START _errorObject PURE_IMPORTS_END */        function tryCatcher() {
             try {
                 return tryCatchTarget.apply(this, arguments);
@@ -4771,7 +4797,7 @@ object-assign
         }
         //# sourceMappingURL=tryCatch.js.map
         /***/    }, 
-    /* 58 */
+    /* 59 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "b", function() {
@@ -4810,29 +4836,28 @@ object-assign
  * @param {Number} retryDelay
  * @param {Number} [retryCount=1]
  * @returns {Number}
- */        function getBackedoffDelay(retryDelay) {
-            var retryCount = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 1;
-            return getFuzzedDelay(retryDelay * Math.pow(2, retryCount - 1));
+ */        function getBackedoffDelay(retryDelay, retryCount) {
+            return void 0 === retryCount && (retryCount = 1), getFuzzedDelay(retryDelay * Math.pow(2, retryCount - 1));
         }
         /***/    }, 
-    /* 59 */
+    /* 60 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return isNumeric;
         });
-        /* harmony import */ var _isArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(42);
+        /* harmony import */ var _isArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(41);
         /** PURE_IMPORTS_START _isArray PURE_IMPORTS_END */        function isNumeric(val) {
             return !Object(_isArray__WEBPACK_IMPORTED_MODULE_0__.a)(val) && val - parseFloat(val) + 1 >= 0;
         }
         //# sourceMappingURL=isNumeric.js.map
         /***/    }, 
-    /* 60 */
+    /* 61 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
-        var defer = __webpack_require__(133), empty = __webpack_require__(25), Subject = __webpack_require__(26), combineLatest = __webpack_require__(145), merge = __webpack_require__(134), ignoreElements = __webpack_require__(144), map = __webpack_require__(63), mergeMap = __webpack_require__(66), tap = __webpack_require__(148), compat = __webpack_require__(12), events = __webpack_require__(8), noop = __webpack_require__(28), of = __webpack_require__(75), mapTo = __webpack_require__(136), castToObservable = __webpack_require__(15), MediaKeys = __webpack_require__(131);
+        var defer = __webpack_require__(134), empty = __webpack_require__(26), Subject = __webpack_require__(43), combineLatest = __webpack_require__(146), merge = __webpack_require__(135), ignoreElements = __webpack_require__(145), map = __webpack_require__(64), mergeMap = __webpack_require__(67), tap = __webpack_require__(149), compat = __webpack_require__(12), events = __webpack_require__(8), noop = __webpack_require__(27), of = __webpack_require__(76), mapTo = __webpack_require__(137), castToObservable = __webpack_require__(17), MediaKeys = __webpack_require__(132);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/empty.js
                 // CONCATENATED MODULE: ./src/compat/eme/setMediaKeys.ts
         /**
@@ -4914,7 +4939,7 @@ object-assign
             });
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/mergeMapTo.js
-                var mergeMapTo = __webpack_require__(143);
+                var mergeMapTo = __webpack_require__(144);
         // CONCATENATED MODULE: ./src/core/eme/dispose_media_keys.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -4943,7 +4968,7 @@ object-assign
             });
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/catchError.js
-                var catchError = __webpack_require__(146), EncryptedMediaError = __webpack_require__(80);
+                var catchError = __webpack_require__(147), EncryptedMediaError = __webpack_require__(81);
         // EXTERNAL MODULE: ./src/errors/EncryptedMediaError.ts
                 // CONCATENATED MODULE: ./src/core/eme/generate_key_request.ts
         /**
@@ -4977,7 +5002,7 @@ object-assign
             });
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 2 modules
-                var Observable = __webpack_require__(17), config = __webpack_require__(3), array_includes = __webpack_require__(11), EME_DEFAULT_WIDEVINE_ROBUSTNESSES = config.a.EME_DEFAULT_WIDEVINE_ROBUSTNESSES, EME_KEY_SYSTEMS = config.a.EME_KEY_SYSTEMS;
+                var Observable = __webpack_require__(13), config = __webpack_require__(2), array_includes = __webpack_require__(11), EME_DEFAULT_WIDEVINE_ROBUSTNESSES = config.a.EME_DEFAULT_WIDEVINE_ROBUSTNESSES, EME_KEY_SYSTEMS = config.a.EME_KEY_SYSTEMS;
         // EXTERNAL MODULE: ./src/config.ts
                 /**
  * @param {Array.<Object>} keySystems
@@ -4986,7 +5011,7 @@ object-assign
  */
         function checkCachedMediaKeySystemAccess(keySystems, currentKeySystemAccess, currentKeySystemOptions) {
             var mksConfiguration = currentKeySystemAccess.getConfiguration();
-            // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
+ // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
             // creation of a new MydiaKeys instance for each session creation
                         if (Object(compat.l)() || !mksConfiguration) return null;
             var firstCompatibleOption = keySystems.filter(function(ks) {
@@ -5003,17 +5028,8 @@ object-assign
  * @param {string} ksType - Obtained via inversion
  * @returns {string|undefined} - Either the canonical name, or undefined.
  */        function findKeySystemCanonicalName(ksType) {
-            var _iterator = Object.keys(EME_KEY_SYSTEMS), _isArray = Array.isArray(_iterator), _i = 0;
-            for (_iterator = _isArray ? _iterator : _iterator[Symbol.iterator](); ;) {
-                var _ref;
-                if (_isArray) {
-                    if (_i >= _iterator.length) break;
-                    _ref = _iterator[_i++];
-                } else {
-                    if ((_i = _iterator.next()).done) break;
-                    _ref = _i.value;
-                }
-                var ksName = _ref;
+            for (var _arr = Object.keys(EME_KEY_SYSTEMS), _i = 0; _i < _arr.length; _i++) {
+                var ksName = _arr[_i];
                 if (Object(array_includes.a)(EME_KEY_SYSTEMS[ksName], ksType)) return ksName;
             }
         }
@@ -5103,14 +5119,14 @@ object-assign
                     });
                 }
                 /**
-         * Array of set keySystems for this content.
-         * Each item of this array is an object containing the following keys:
-         *   - keyName {string}: keySystem canonical name (e.g. "widevine")
-         *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
-         *   - keySystem {Object}: the original keySystem object
-         * @type {Array.<Object>}
-         */                var keySystemsType = keySystemsConfigs.reduce(function(arr, keySystemOptions) {
-                    var managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type], ksType = void 0;
+     * Array of set keySystems for this content.
+     * Each item of this array is an object containing the following keys:
+     *   - keyName {string}: keySystem canonical name (e.g. "widevine")
+     *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
+     *   - keySystem {Object}: the original keySystem object
+     * @type {Array.<Object>}
+     */                var keySystemsType = keySystemsConfigs.reduce(function(arr, keySystemOptions) {
+                    var ksType, managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
                     null != managedRDNs ? ksType = managedRDNs.map(function(keyType) {
                         return {
                             keyName: keySystemOptions.type,
@@ -5125,15 +5141,14 @@ object-assign
                     return arr.concat(ksType);
                 }, []);
                 return Observable.a.create(function(obs) {
-                    var disposed = !1, sub = void 0;
+                    var sub, disposed = !1;
                     /**
-             * Test the key system as defined in keySystemsType[index].
-             * @param {Number} index
-             */
+       * Test the key system as defined in keySystemsType[index].
+       * @param {Number} index
+       */
                     return function testKeySystem(index) {
                         // completely quit the loop if unsubscribed
-                        if (!disposed) 
-                        // if we iterated over the whole keySystemsType Array, quit on error
+                        if (!disposed) // if we iterated over the whole keySystemsType Array, quit on error
                         if (index >= keySystemsType.length) obs.error(new EncryptedMediaError.a("INCOMPATIBLE_KEYSYSTEMS", null, !0)); else {
                             var _keySystemsType$index = keySystemsType[index], keyName = _keySystemsType$index.keyName, keyType = _keySystemsType$index.keyType, keySystemOptions = _keySystemsType$index.keySystemOptions, keySystemConfigurations = buildKeySystemConfigurations(keyName, keySystemOptions);
                             if (log.a.debug("eme: request keysystem access " + keyType + "," + (index + 1) + " of " + keySystemsType.length, keySystemConfigurations), 
@@ -5206,7 +5221,7 @@ object-assign
             })) : Object(of.a)(null);
         }
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-                var find = __webpack_require__(13), find_default = /* */ __webpack_require__.n(find), concat = __webpack_require__(107);
+                var find = __webpack_require__(14), find_default = /* */ __webpack_require__.n(find), concat = __webpack_require__(106);
         // CONCATENATED MODULE: ./src/utils/hash_buffer.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -5234,9 +5249,6 @@ object-assign
             return hash;
         }
         // CONCATENATED MODULE: ./src/core/eme/utils/open_sessions_store.ts
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -5259,13 +5271,16 @@ object-assign
  * Keep track of sessionTypes and of the initialization data each
  * MediaKeySession is created for.
  * @class MediaKeySessionsStore
- */        var open_sessions_store = function() {
+ */        var open_sessions_store_MediaKeySessionsStore = 
+        /* */
+        function() {
             function MediaKeySessionsStore(mediaKeys) {
-                _classCallCheck(this, MediaKeySessionsStore), this._mediaKeys = mediaKeys, this._entries = [];
+                this._mediaKeys = mediaKeys, this._entries = [];
             }
             /**
-     * @returns {Array.<Object>}
-     */            return MediaKeySessionsStore.prototype.getAll = function getAll() {
+   * @returns {Array.<Object>}
+   */            var _proto = MediaKeySessionsStore.prototype;
+            return _proto.getAll = function getAll() {
                 return this._entries.map(function(entry) {
                     return {
                         session: entry.session,
@@ -5274,14 +5289,14 @@ object-assign
                 });
             }, 
             /**
-     * Returns an entry in this cache with the initData and initDataType given.
-     * null if no such session is stored.
-     *
-     * @param {Uint8Array} initData
-     * @param {string|undefined} initDataType
-     * @returns {Object|null}
-     */
-            MediaKeySessionsStore.prototype.get = function get(initData, initDataType) {
+   * Returns an entry in this cache with the initData and initDataType given.
+   * null if no such session is stored.
+   *
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {Object|null}
+   */
+            _proto.get = function get(initData, initDataType) {
                 var initDataHash = hashBuffer(initData), foundEntry = find_default()(this._entries, function(entry) {
                     return entry.initData === initDataHash && entry.initDataType === initDataType;
                 });
@@ -5291,19 +5306,20 @@ object-assign
                 } : null;
             }, 
             /**
-     * @param {Uint8Array} initData
-     * @param {string|undefined} initDataType
-     * @param {string} sessionType
-     * @returns {MediaKeySession}
-     * @throws {EncryptedMediaError}
-     */
-            MediaKeySessionsStore.prototype.createSession = function createSession(initData, initDataType, sessionType) {
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @param {string} sessionType
+   * @returns {MediaKeySession}
+   * @throws {EncryptedMediaError}
+   */
+            _proto.createSession = function createSession(initData, initDataType, sessionType) {
                 var _this = this;
                 if (this.get(initData, initDataType)) {
                     var error = new Error("This initialization data was already stored.");
                     throw new EncryptedMediaError.a("MULTIPLE_SESSIONS_SAME_INIT_DATA", error, !0);
                 }
-                var session = this._mediaKeys /* TS bug */ .createSession(sessionType), entry = {
+                var session = this._mediaKeys
+                /* TS bug */ .createSession(sessionType), entry = {
                     session: session,
                     sessionType: sessionType,
                     initData: hashBuffer(initData),
@@ -5317,56 +5333,54 @@ object-assign
                 session;
             }, 
             /**
-     * Close a MediaKeySession stored here and remove its entry in the store.
-     * @param {MediaKeySession} session_
-     * @returns {Observable}
-     */
-            MediaKeySessionsStore.prototype.closeSession = function closeSession(session_) {
+   * Close a MediaKeySession and remove its entry if it's found in the store.
+   * @param {MediaKeySession} session
+   * @returns {Observable}
+   */
+            _proto.deleteAndCloseSession = function deleteAndCloseSession(session) {
                 var _this2 = this;
                 return Object(defer.a)(function() {
-                    var session = _this2._delete(session_);
-                    return null == session ? Object(of.a)(null) : (log.a.debug("eme-mem-store: close session", session), 
+                    return _this2._delete(session), log.a.debug("eme-mem-store: close session", session), 
                     Object(castToObservable.a)(session.close()).pipe(Object(mapTo.a)(null), Object(catchError.a)(function() {
                         return Object(of.a)(null);
-                    })));
+                    }));
                 });
             }, 
             /**
-     * Close all sessions in this store.
-     * Emit null when done
-     * @returns {Observable}
-     */
-            MediaKeySessionsStore.prototype.closeAllSessions = function closeAllSessions() {
+   * Close all sessions in this store.
+   * Emit null when done
+   * @returns {Observable}
+   */
+            _proto.closeAllSessions = function closeAllSessions() {
                 var _this3 = this;
                 return Object(defer.a)(function() {
-                    var disposed = _this3._entries.map(function(e) {
-                        return _this3.closeSession(e.session);
+                    var previousEntries = _this3._entries;
+                    _this3._entries = [];
+                    // clean completely the cache first
+                    var disposed = previousEntries.map(function(entry) {
+                        return _this3.deleteAndCloseSession(entry.session);
                     });
-                    return _this3._entries = [], Object(concat.a)(merge.a.apply(void 0, disposed).pipe(Object(ignoreElements.a)()), Object(of.a)(null));
+                    return Object(concat.a)(merge.a.apply(void 0, disposed).pipe(Object(ignoreElements.a)()), Object(of.a)(null));
                 });
             }, 
             /**
-     * Remove a MediaKeySession from the Cache, without closing it.
-     * Returns the entry if found, null otherwise.
-     * @param {MediaKeySession} session_
-     * @returns {MediaKeySession|null}
-     */
-            MediaKeySessionsStore.prototype._delete = function _delete(session_) {
+   * Remove a MediaKeySession from the Cache, without closing it.
+   * Returns the entry if found, null otherwise.
+   * @param {MediaKeySession} session
+   * @returns {number} - index of the session in the cache. -1 of not found.
+   */
+            _proto._delete = function _delete(session) {
                 var entry = find_default()(this._entries, function(e) {
-                    return e.session === session_;
+                    return e.session === session;
                 });
-                if (!entry) return null;
-                var session = entry.session;
+                if (!entry) return -1;
                 log.a.debug("eme-mem-store: delete session", entry);
                 var idx = this._entries.indexOf(entry);
-                return this._entries.splice(idx, 1), session;
+                return this._entries.splice(idx, 1), idx;
             }, MediaKeySessionsStore;
         }(), assert = __webpack_require__(9);
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/core/eme/utils/persisted_session_store.ts
-        function persisted_session_store_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
+        // EXTERNAL MODULE: ./src/utils/assert.ts + 1 modules
+                // CONCATENATED MODULE: ./src/core/eme/utils/persisted_session_store.ts
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -5381,7 +5395,8 @@ object-assign
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */        function checkStorage(storage) {
+ */
+        function checkStorage(storage) {
             Object(assert.b)(null != storage, "no licenseStorage given for keySystem with persistentLicense"), 
             Object(assert.a)(storage, {
                 save: "function",
@@ -5396,13 +5411,14 @@ object-assign
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
  * @class PersistedSessionsStore
- */        var persisted_session_store = function() {
+ */        var persisted_session_store_PersistedSessionsStore = 
+        /* */
+        function() {
             /**
-     * @param {Object} storage
-     */
+   * @param {Object} storage
+   */
             function PersistedSessionsStore(storage) {
-                persisted_session_store_classCallCheck(this, PersistedSessionsStore), checkStorage(storage), 
-                this._entries = [], this._storage = storage;
+                checkStorage(storage), this._entries = [], this._storage = storage;
                 try {
                     this._entries = this._storage.load(), Object(assert.b)(Array.isArray(this._entries));
                 } catch (e) {
@@ -5411,23 +5427,24 @@ object-assign
                 }
             }
             /**
-     * Retrieve entry (sessionId + initData) based on its initData.
-     * @param {Uint8Array}  initData
-     * @param {string|undefined} initDataType
-     * @returns {Object|null}
-     */            return PersistedSessionsStore.prototype.get = function get(initData, initDataType) {
+   * Retrieve entry (sessionId + initData) based on its initData.
+   * @param {Uint8Array}  initData
+   * @param {string|undefined} initDataType
+   * @returns {Object|null}
+   */            var _proto = PersistedSessionsStore.prototype;
+            return _proto.get = function get(initData, initDataType) {
                 var hash = hashBuffer(initData);
                 return find_default()(this._entries, function(e) {
                     return e.initData === hash && e.initDataType === initDataType;
                 }) || null;
             }, 
             /**
-     * Add a new entry in the storage.
-     * @param {Uint8Array}  initData
-     * @param {string|undefined} initDataType
-     * @param {MediaKeySession} session
-     */
-            PersistedSessionsStore.prototype.add = function add(initData, initDataType, session) {
+   * Add a new entry in the storage.
+   * @param {Uint8Array}  initData
+   * @param {string|undefined} initDataType
+   * @param {MediaKeySession} session
+   */
+            _proto.add = function add(initData, initDataType, session) {
                 var sessionId = session && session.sessionId;
                 if (sessionId) {
                     var currentEntry = this.get(initData, initDataType);
@@ -5442,11 +5459,11 @@ object-assign
                 }
             }, 
             /**
-     * Delete entry (sessionId + initData) based on its initData.
-     * @param {Uint8Array}  initData
-     * @param {string|undefined} initDataType
-     */
-            PersistedSessionsStore.prototype.delete = function _delete(initData, initDataType) {
+   * Delete entry (sessionId + initData) based on its initData.
+   * @param {Uint8Array}  initData
+   * @param {string|undefined} initDataType
+   */
+            _proto.delete = function _delete(initData, initDataType) {
                 var hash = hashBuffer(initData), entry = find_default()(this._entries, function(e) {
                     return e.initData === hash && e.initDataType === initDataType;
                 });
@@ -5457,15 +5474,15 @@ object-assign
                 }
             }, 
             /**
-     * Delete all saved entries.
-     */
-            PersistedSessionsStore.prototype.dispose = function dispose() {
+   * Delete all saved entries.
+   */
+            _proto.dispose = function dispose() {
                 this._entries = [], this._save();
             }, 
             /**
-     * Use the given storage to store the current entries.
-     */
-            PersistedSessionsStore.prototype._save = function _save() {
+   * Use the given storage to store the current entries.
+   */
+            _proto._save = function _save() {
                 try {
                     this._storage.save(this._entries);
                 } catch (e) {
@@ -5473,7 +5490,6 @@ object-assign
                 }
             }, PersistedSessionsStore;
         }();
-        /* harmony default export */        
         // CONCATENATED MODULE: ./src/core/eme/get_media_keys.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -5494,19 +5510,18 @@ object-assign
  * @param {Object} keySystemOptions
  * @returns {Object|null}
  * @throws {EncryptedMediaError}
- */
-        function createSessionStorage(keySystemOptions) {
+ */        function createSessionStorage(keySystemOptions) {
             if (!keySystemOptions.persistentLicense) return null;
             var licenseStorage = keySystemOptions.licenseStorage;
             if (!licenseStorage) {
                 var error = new Error("no license storage found for persistent license.");
                 throw new EncryptedMediaError.a("INVALID_KEY_SYSTEM", error, !0);
             }
-            return log.a.info("set the given license storage"), new persisted_session_store(licenseStorage);
+            return log.a.info("set the given license storage"), new persisted_session_store_PersistedSessionsStore(licenseStorage);
         }
         function getMediaKeysInfos(mediaElement, keySystemsConfigs, currentMediaKeysInfos, errorStream) {
             return getMediaKeySystemAccess(mediaElement, keySystemsConfigs, currentMediaKeysInfos).pipe(Object(mergeMap.a)(function(evt) {
-                var _evt$value = evt.value, options = _evt$value.options, mediaKeySystemAccess = _evt$value.mediaKeySystemAccess, currentState = currentMediaKeysInfos.getState(mediaElement), mediaKeys$ = void 0;
+                var mediaKeys$, _evt$value = evt.value, options = _evt$value.options, mediaKeySystemAccess = _evt$value.mediaKeySystemAccess, currentState = currentMediaKeysInfos.getState(mediaElement);
                 if (null != currentState && "reuse-media-key-system-access" === evt.type) {
                     var mediaKeys = currentState.mediaKeys, sessionsStore = currentState.sessionsStore;
                     mediaKeys$ = Object(of.a)({
@@ -5516,7 +5531,7 @@ object-assign
                 } else mediaKeys$ = Object(castToObservable.a)(mediaKeySystemAccess.createMediaKeys()).pipe(Object(map.a)(function(mediaKeys) {
                     return {
                         mediaKeys: mediaKeys,
-                        sessionsStore: new open_sessions_store(mediaKeys)
+                        sessionsStore: new open_sessions_store_MediaKeySessionsStore(mediaKeys)
                     };
                 }));
                 return mediaKeys$.pipe(Object(mergeMap.a)(function(_ref) {
@@ -5532,7 +5547,7 @@ object-assign
             }));
         }
         // EXTERNAL MODULE: ./src/utils/bytes.ts
-                var bytes = __webpack_require__(1), simple_set = __webpack_require__(53), PSSH_TO_INTEGER = Object(bytes.c)(Object(bytes.p)("pssh"), 0);
+                var bytes = __webpack_require__(1), simple_set = __webpack_require__(54), PSSH_TO_INTEGER = Object(bytes.c)(Object(bytes.p)("pssh"), 0);
         // EXTERNAL MODULE: ./src/utils/simple_set.ts
                 /**
  * As we observed on some browsers (IE and Edge), the initialization data on
@@ -5657,7 +5672,7 @@ object-assign
                 var keySystemOptions = mediaKeysInfos.keySystemOptions, mediaKeySystemAccess = mediaKeysInfos.mediaKeySystemAccess, sessionsStore = mediaKeysInfos.sessionsStore, sessionStorage = mediaKeysInfos.sessionStorage, sessionTypes = mediaKeySystemAccess.getConfiguration().sessionTypes, hasPersistence = sessionTypes && Object(array_includes.a)(sessionTypes, "persistent-license"), sessionType = hasPersistence && sessionStorage && keySystemOptions.persistentLicense ? "persistent-license" : "temporary";
                 log.a.debug("eme: create a new " + sessionType + " session");
                 var session = sessionsStore.createSession(initData, initDataType, sessionType);
-                // Re-check for Dumb typescript
+ // Re-check for Dumb typescript
                                 if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) return Object(of.a)({
                     type: "created-session",
                     value: {
@@ -5674,12 +5689,12 @@ object-assign
                     }
                 });
                 /**
-         * Helper function to close and restart the current persistent session
-         * considered, and re-create it from scratch.
-         * @returns {Observable}
-         */                var recreatePersistentSession = function recreatePersistentSession() {
+     * Helper function to close and restart the current persistent session
+     * considered, and re-create it from scratch.
+     * @returns {Observable}
+     */                var recreatePersistentSession = function recreatePersistentSession() {
                     return log.a.info("eme: removing previous persistent session."), null !== sessionStorage.get(initData, initDataType) && sessionStorage.delete(initData, initDataType), 
-                    sessionsStore.closeSession(session).pipe(Object(map.a)(function() {
+                    sessionsStore.deleteAndCloseSession(session).pipe(Object(map.a)(function() {
                         return {
                             type: "created-session",
                             value: {
@@ -5697,8 +5712,7 @@ object-assign
                             mediaKeySession: session,
                             sessionType: sessionType
                         }
-                    })) : (
-                    // Unusable persistent session: recreate a new session from scratch.
+                    })) : (// Unusable persistent session: recreate a new session from scratch.
                     log.a.warn("eme: previous persistent session not usable anymore."), recreatePersistentSession()) : (log.a.warn("eme: no data stored for the loaded session"), 
                     sessionStorage.delete(initData, initDataType), Object(of.a)({
                         type: "created-session",
@@ -5758,9 +5772,9 @@ object-assign
                     });
                     mediaKeysInfos.sessionStorage && mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
                 }
-                return (previousLoadedSession ? sessionsStore.closeSession(previousLoadedSession) : Object(of.a)(null)).pipe(Object(mergeMap.a)(function() {
+                return (previousLoadedSession ? sessionsStore.deleteAndCloseSession(previousLoadedSession) : Object(of.a)(null)).pipe(Object(mergeMap.a)(function() {
                     var cleaningOldSessions$ = [], entries = sessionsStore.getAll().slice();
-                    if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) for (var i = 0; i < MAX_SESSIONS - entries.length + 1; i++) cleaningOldSessions$.push(sessionsStore.closeSession(entries[i].session));
+                    if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) for (var i = 0; i < MAX_SESSIONS - entries.length + 1; i++) cleaningOldSessions$.push(sessionsStore.deleteAndCloseSession(entries[i].session));
                     return Object(concat.a)(merge.a.apply(void 0, cleaningOldSessions$).pipe(Object(ignoreElements.a)()), create_session_createSession(initData, initDataType, mediaKeysInfos).pipe(Object(map.a)(function(evt) {
                         return {
                             type: evt.type,
@@ -5775,26 +5789,24 @@ object-assign
                 }));
             });
         }
-        // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(2), TimeoutError_TimeoutError = /* */ function(_super) {
-            function TimeoutError() {
-                var _this = _super.call(this, "Timeout has occurred") || this;
-                return _this.name = "TimeoutError", Object.setPrototypeOf(_this, TimeoutError.prototype), 
-                _this;
-            }
-            return tslib_es6.a(TimeoutError, _super), TimeoutError;
-        }(Error), scheduler_async = __webpack_require__(39);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/TimeoutError.js
-        /** PURE_IMPORTS_START tslib PURE_IMPORTS_END */        
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/isDate.js
+        /** PURE_IMPORTS_START  PURE_IMPORTS_END */        function TimeoutErrorImpl() {
+            return Error.call(this), this.message = "Timeout has occurred", this.name = "TimeoutError", 
+            this;
+        }
+        TimeoutErrorImpl.prototype = /* */ Object.create(Error.prototype);
+        var TimeoutError = TimeoutErrorImpl, scheduler_async = __webpack_require__(38), tslib_es6 = __webpack_require__(3);
+        //# sourceMappingURL=TimeoutError.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/scheduler/async.js
+                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/isDate.js
         /** PURE_IMPORTS_START  PURE_IMPORTS_END */
         function isDate(value) {
             return value instanceof Date && !isNaN(+value);
         }
         //# sourceMappingURL=isDate.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/OuterSubscriber.js
-                var OuterSubscriber = __webpack_require__(21), subscribeToResult = __webpack_require__(22);
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeToResult.js + 1 modules
+                var OuterSubscriber = __webpack_require__(22), subscribeToResult = __webpack_require__(21);
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/subscribeToResult.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/timeoutWith.js
         /** PURE_IMPORTS_START tslib,_scheduler_async,_util_isDate,_OuterSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
         function timeoutWith(due, withObservable, scheduler) {
@@ -5828,15 +5840,15 @@ object-assign
             }, TimeoutWithSubscriber.prototype._unsubscribe = function() {
                 this.action = null, this.scheduler = null, this.withObservable = null;
             }, TimeoutWithSubscriber;
-        }(OuterSubscriber.a), throwError = __webpack_require__(78);
+        }(OuterSubscriber.a), throwError = __webpack_require__(79);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/timeout.js
         /** PURE_IMPORTS_START _scheduler_async,_util_TimeoutError,_timeoutWith,_observable_throwError PURE_IMPORTS_END */
         function timeout(due, scheduler) {
-            return void 0 === scheduler && (scheduler = scheduler_async.a), timeoutWith(due, Object(throwError.a)(new TimeoutError_TimeoutError()), scheduler);
+            return void 0 === scheduler && (scheduler = scheduler_async.a), timeoutWith(due, Object(throwError.a)(new TimeoutError()), scheduler);
         }
         //# sourceMappingURL=timeout.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/concatMap.js
-                var concatMap = __webpack_require__(109), takeUntil = __webpack_require__(141), errors = __webpack_require__(16), constants = __webpack_require__(23), timer = __webpack_require__(147), backoff = __webpack_require__(58);
+                var concatMap = __webpack_require__(108), takeUntil = __webpack_require__(142), errors = __webpack_require__(18), constants = __webpack_require__(23), timer = __webpack_require__(148), backoff = __webpack_require__(59);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/takeUntil.js
                 // CONCATENATED MODULE: ./src/utils/retry.ts
         /**
@@ -5912,7 +5924,7 @@ object-assign
  * TODO Take errorSelector out. Should probably be entirely managed in the
  * calling code via a catch (much simpler to use and to understand).
  */        function retryObsWithBackoff(obs$, options) {
-            var retryDelay = options.retryDelay, totalRetry = options.totalRetry, shouldRetry = options.shouldRetry, resetDelay = options.resetDelay, errorSelector = options.errorSelector, onRetry = options.onRetry, retryCount = 0, debounceRetryCount = void 0;
+            var debounceRetryCount, retryDelay = options.retryDelay, totalRetry = options.totalRetry, shouldRetry = options.shouldRetry, resetDelay = options.resetDelay, errorSelector = options.errorSelector, onRetry = options.onRetry, retryCount = 0;
             return null != resetDelay && resetDelay > 0 && (debounceRetryCount = debounce(function() {
                 retryCount = 0;
             }, resetDelay)), obs$.pipe(Object(catchError.a)(function(error, source) {
@@ -5934,7 +5946,7 @@ object-assign
  * @returns {Observable}
  */        
         // EXTERNAL MODULE: ./src/utils/rx-tryCatch.ts
-        var rx_tryCatch = __webpack_require__(44), KEY_STATUS_ERRORS = {
+        var rx_tryCatch = __webpack_require__(45), KEY_STATUS_ERRORS = {
             expired: !0,
             "internal-error": !0
         };
@@ -5985,10 +5997,10 @@ object-assign
  */
         function handleSessionEvents(session, keySystem, errorStream) {
             /**
-     * @param {Error|Object} error
-     * @param {Boolean} fatal
-     * @returns {Error|Object}
-     */
+   * @param {Error|Object} error
+   * @param {Boolean} fatal
+   * @returns {Error|Object}
+   */
             function licenseErrorSelector(error, fatal) {
                 return Object(errors.a)(error) && error.type === constants.b.ENCRYPTED_MEDIA_ERROR ? (error.fatal = fatal, 
                 error) : new EncryptedMediaError.a("KEY_LOAD_ERROR", error, fatal);
@@ -6006,8 +6018,7 @@ object-assign
             }, keyErrors = Object(events.f)(session).pipe(Object(map.a)(function(error) {
                 throw new EncryptedMediaError.a("KEY_ERROR", error, !0);
             })), keyStatusesChanges = Object(events.h)(session).pipe(Object(mergeMap.a)(function(keyStatusesEvent) {
-                return log.a.debug("eme: keystatuseschange event", session, keyStatusesEvent), 
-                // find out possible errors associated with this event
+                return log.a.debug("eme: keystatuseschange event", session, keyStatusesEvent), // find out possible errors associated with this event
                 session.keyStatuses.forEach(function(keyStatus, keyId) {
                     // Hack present because the order of the arguments has changed in spec
                     // and is not the same between some versions of Edge and Chrome.
@@ -6031,7 +6042,7 @@ object-assign
                 retryObsWithBackoff(Object(defer.a)(function() {
                     var getLicense = keySystem.getLicense(message, messageType);
                     return Object(castToObservable.a)(getLicense).pipe(timeout(1e4), Object(catchError.a)(function(error) {
-                        throw error instanceof TimeoutError_TimeoutError ? new EncryptedMediaError.a("KEY_LOAD_TIMEOUT", null, !1) : error;
+                        throw error instanceof TimeoutError ? new EncryptedMediaError.a("KEY_LOAD_TIMEOUT", null, !1) : error;
                     }));
                 }), getLicenseRetryOptions).pipe(Object(map.a)(function(license) {
                     return {
@@ -6057,9 +6068,6 @@ object-assign
             return session.closed ? sessionEvents.pipe(Object(takeUntil.a)(Object(castToObservable.a)(session.closed))) : sessionEvents;
         }
         // CONCATENATED MODULE: ./src/core/eme/media_keys_infos_store.ts
-                function media_keys_infos_store_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -6078,23 +6086,63 @@ object-assign
         /**
  * Store the MediaKeys infos attached to a media element.
  * @class MediaKeysInfosStore
- */        var media_keys_infos_store = function() {
+ */        var MediaKeysInfosStore = 
+        /* */
+        function() {
             function MediaKeysInfosStore() {
-                media_keys_infos_store_classCallCheck(this, MediaKeysInfosStore), this._state = new WeakMap();
+                this._state = new WeakMap();
             }
-            return MediaKeysInfosStore.prototype.setState = function setState(mediaElement, state) {
+            var _proto = MediaKeysInfosStore.prototype;
+            return _proto.setState = function setState(mediaElement, state) {
                 this._state.set(mediaElement, state);
-            }, MediaKeysInfosStore.prototype.getState = function getState(mediaElement) {
+            }, _proto.getState = function getState(mediaElement) {
                 return this._state.get(mediaElement) || null;
-            }, MediaKeysInfosStore.prototype.clearState = function clearState(mediaElement) {
+            }, _proto.clearState = function clearState(mediaElement) {
                 this._state.set(mediaElement, null);
             }, MediaKeysInfosStore;
+        }(), init_data_store_InitDataStore = 
+        /* */
+        function() {
+            function InitDataStore() {
+                this._namedTypeData = {}, this._unnamedTypeData = new simple_set.a();
+            }
+            /**
+   * Returns true if this instance has the given initData stored.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {boolean}
+   */            var _proto = InitDataStore.prototype;
+            return _proto.has = function has(initData, initDataType) {
+                return initDataType ? !!this._namedTypeData[initDataType] && this._namedTypeData[initDataType].test(hashBuffer(initData)) : this._unnamedTypeData.test(hashBuffer(initData));
+            }, 
+            /**
+   * Add initialization data to this memory.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   */
+            _proto.add = function add(initData, initDataType) {
+                this.has(initData, initDataType) || (initDataType ? (this._namedTypeData[initDataType] || (this._namedTypeData[initDataType] = new simple_set.a()), 
+                this._namedTypeData[initDataType].add(hashBuffer(initData))) : this._unnamedTypeData.add(hashBuffer(initData)));
+            }, 
+            /**
+   * Remove the initialization data from this memory.
+   * Returns true if this instance had the given initData stored.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {boolean}
+   */
+            _proto.remove = function remove(initData, initDataType) {
+                if (initDataType) {
+                    if (!this._namedTypeData[initDataType]) return !1;
+                    var _hashed = hashBuffer(initData), simpleSet = this._namedTypeData[initDataType];
+                    return !!simpleSet.test(_hashed) && (simpleSet.remove(_hashed), !0);
+                }
+                var hashed = hashBuffer(initData);
+                return !!this._unnamedTypeData.test(hashed) && (this._unnamedTypeData.remove(hashed), 
+                !0);
+            }, InitDataStore;
         }();
-        /* harmony default export */        
         // CONCATENATED MODULE: ./src/core/eme/utils/init_data_store.ts
-        function init_data_store_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -6113,46 +6161,7 @@ object-assign
         /**
  * Memorize initialization data with straightforward methods.
  * @class InitDataStore
- */        var init_data_store = function() {
-            function InitDataStore() {
-                init_data_store_classCallCheck(this, InitDataStore), this._namedTypeData = {}, this._unnamedTypeData = new simple_set.a();
-            }
-            /**
-     * Returns true if this instance has the given initData stored.
-     * @param {Uint8Array} initData
-     * @param {string|undefined} initDataType
-     * @returns {boolean}
-     */            return InitDataStore.prototype.has = function has(initData, initDataType) {
-                return initDataType ? !!this._namedTypeData[initDataType] && this._namedTypeData[initDataType].test(hashBuffer(initData)) : this._unnamedTypeData.test(hashBuffer(initData));
-            }, 
-            /**
-     * Add initialization data to this memory.
-     * @param {Uint8Array} initData
-     * @param {string|undefined} initDataType
-     */
-            InitDataStore.prototype.add = function add(initData, initDataType) {
-                this.has(initData, initDataType) || (initDataType ? (this._namedTypeData[initDataType] || (this._namedTypeData[initDataType] = new simple_set.a()), 
-                this._namedTypeData[initDataType].add(hashBuffer(initData))) : this._unnamedTypeData.add(hashBuffer(initData)));
-            }, 
-            /**
-     * Remove the initialization data from this memory.
-     * Returns true if this instance had the given initData stored.
-     * @param {Uint8Array} initData
-     * @param {string|undefined} initDataType
-     * @returns {boolean}
-     */
-            InitDataStore.prototype.remove = function remove(initData, initDataType) {
-                if (initDataType) {
-                    if (!this._namedTypeData[initDataType]) return !1;
-                    var _hashed = hashBuffer(initData), simpleSet = this._namedTypeData[initDataType];
-                    return !!simpleSet.test(_hashed) && (simpleSet.remove(_hashed), !0);
-                }
-                var hashed = hashBuffer(initData);
-                return !!this._unnamedTypeData.test(hashed) && (this._unnamedTypeData.remove(hashed), 
-                !0);
-            }, InitDataStore;
-        }();
-        /* harmony default export */        
+ */        
         // CONCATENATED MODULE: ./src/core/eme/index.ts
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return EMEManager;
@@ -6185,7 +6194,7 @@ object-assign
  * /!\ This file is feature-switchable.
  * It always should be imported through the `features` object.
  */
-        var attachedMediaKeysInfos = new media_keys_infos_store();
+        var attachedMediaKeysInfos = new MediaKeysInfosStore();
         /**
  * Clear EME ressources that should be cleared when the current content stops
  * its playback.
@@ -6212,10 +6221,9 @@ object-assign
                     type: "warning",
                     value: err
                 };
-            })), handledInitData = new init_data_store(), emeEvents$ = Object(combineLatest.a)(Object(events.b)(mediaElement), getMediaKeysInfos(mediaElement, keySystemsConfigs, attachedMediaKeysInfos, warning$)).pipe(Object(mergeMap.a)(function(_ref, i) {
+            })), handledInitData = new init_data_store_InitDataStore(), emeEvents$ = Object(combineLatest.a)(Object(events.b)(mediaElement), getMediaKeysInfos(mediaElement, keySystemsConfigs, attachedMediaKeysInfos, warning$)).pipe(Object(mergeMap.a)(function(_ref, i) {
                 var encryptedEvent = _ref[0], mediaKeysInfos = _ref[1];
-                return Object(merge.a)(
-                // create a new MediaKeySession if needed
+                return Object(merge.a)(// create a new MediaKeySession if needed
                 handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos).pipe(Object(map.a)(function(evt) {
                     return {
                         type: evt.type,
@@ -6228,13 +6236,11 @@ object-assign
                             sessionStorage: mediaKeysInfos.sessionStorage
                         }
                     };
-                })), 
-                // attach MediaKeys if we're handling the first event
+                })), // attach MediaKeys if we're handling the first event
                 0 === i ? attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos).pipe(Object(ignoreElements.a)()) : empty.a);
             }), Object(mergeMap.a)(function(handledEncryptedEvent) {
                 var _handledEncryptedEven = handledEncryptedEvent.value, initData = _handledEncryptedEven.initData, initDataType = _handledEncryptedEven.initDataType, mediaKeySession = _handledEncryptedEven.mediaKeySession, sessionType = _handledEncryptedEven.sessionType, keySystemOptions = _handledEncryptedEven.keySystemOptions, sessionStorage = _handledEncryptedEven.sessionStorage;
-                return Object(merge.a)(handleSessionEvents(mediaKeySession, keySystemOptions, warning$), 
-                // only perform generate request on new sessions
+                return Object(merge.a)(handleSessionEvents(mediaKeySession, keySystemOptions, warning$), // only perform generate request on new sessions
                 "created-session" === handledEncryptedEvent.type ? generateKeyRequest(mediaKeySession, initData, initDataType).pipe(Object(tap.a)(function() {
                     "persistent-license" === sessionType && null != sessionStorage && sessionStorage.add(initData, initDataType, mediaKeySession);
                 })) : empty.a).pipe(Object(ignoreElements.a)());
@@ -6254,30 +6260,77 @@ object-assign
             return currentState && currentState.keySystemOptions.type;
         }
         /***/    }, 
-    /* 61 */ 
-    /* 62 */
+    /* 62 */ 
+    /* 63 */
     /***/ , 
-    /* 62 */
+    /* 63 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(52);
-        /* harmony import */        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return MediaError;
+        });
+        /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(53);
+        /* harmony import */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        function _assertThisInitialized(self) {
+            if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return self;
         }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
+        function _wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map() : void 0;
+            return (_wrapNativeSuper = function _wrapNativeSuper(Class) {
+                if (null === Class || !_isNativeFunction(Class)) return Class;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
                 }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+                function Wrapper() {
+                    return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                return Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                }), _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
+        function isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                return Date.prototype.toString.call(Reflect.construct(Date, [], function() {})), 
+                !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function _construct(Parent, args, Class) {
+            return (_construct = isNativeReflectConstruct() ? Reflect.construct : function _construct(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a))();
+                return Class && _setPrototypeOf(instance, Class.prototype), instance;
+            }).apply(null, arguments);
+        }
+        function _isNativeFunction(fn) {
+            return -1 !== Function.toString.call(fn).indexOf("[native code]");
+        }
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+                return o.__proto__ = p, o;
+            })(o, p);
+        }
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -6299,34 +6352,34 @@ object-assign
  *
  * @class MediaError
  * @extends Error
- */        var MediaError = function(_Error) {
+ */        var MediaError = 
+        /* */
+        function(_Error) {
             /**
    * @param {string} code
    * @param {Error|null} [reason]
    * @param {Boolean} [fatal]
    */
             function MediaError(code, reason, fatal) {
-                _classCallCheck(this, MediaError);
-                // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-                var _this = _possibleConstructorReturn(this, _Error.call(this));
-                return Object.setPrototypeOf(_this, MediaError.prototype), _this.name = "MediaError", 
-                _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.MEDIA_ERROR, _this.reason = reason, 
-                _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
+                var _this;
+                return _this = _Error.call(this) || this, // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+                Object.setPrototypeOf(_assertThisInitialized(_assertThisInitialized(_this)), MediaError.prototype), 
+                _this.name = "MediaError", _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.MEDIA_ERROR, 
+                _this.reason = reason, _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
                 _this.fatal = !!fatal, _this.message = Object(_errorMessage__WEBPACK_IMPORTED_MODULE_1__.a)(_this.name, _this.code, _this.reason), 
                 _this;
             }
-            return _inherits(MediaError, _Error), MediaError;
-        }(Error);
-        /* harmony default export */        __webpack_exports__.a = MediaError;
-    }, 
-    /* 63 */
+            return _inheritsLoose(MediaError, _Error), MediaError;
+        }(_wrapNativeSuper(Error));
+        /***/    }, 
+    /* 64 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return map;
         });
         /* unused harmony export MapOperator */
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function map(project, thisArg) {
@@ -6359,7 +6412,7 @@ object-assign
             }, MapSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 64 */
+    /* 65 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "c", function() {
@@ -6395,7 +6448,7 @@ object-assign
  * @returns {UInt8Array|null}
  */
         function getBox(buf, boxName) {
-            for (var l = buf.length, i = 0, name = void 0, size = 0; i + 8 < l && (size = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, i), 
+            for (var name, l = buf.length, i = 0, size = 0; i + 8 < l && (size = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, i), 
             name = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_1__.c)(buf, i + 4), Object(_utils_assert__WEBPACK_IMPORTED_MODULE_0__.b)(size > 0, "out of range size"), 
             name !== boxName); ) i += size;
             return i < l ? buf.subarray(i + 8, i + size) : null;
@@ -6406,8 +6459,10 @@ object-assign
  * @param {Uint8Array} buffer
  * @returns {Uint8Array|null}
  */        function getTRAF(buffer) {
-            var moof = getBox(buffer, 1836019558 /* moof */);
-            return moof ? getBox(moof, 1953653094 /* traf */) : null;
+            var moof = getBox(buffer, 1836019558
+            /* moof */);
+            return moof ? getBox(moof, 1953653094
+            /* traf */) : null;
         }
         /**
  * Returns MDAT Box from the whole ISOBMFF File.
@@ -6415,7 +6470,8 @@ object-assign
  * @param {Uint8Array} buffer
  * @returns {Uint8Array|null}
  */        function getMDAT(buf) {
-            return getBox(buf, 1835295092 /* "mdat" */);
+            return getBox(buf, 1835295092
+            /* "mdat" */);
         }
         /**
  * Returns MDIA Box from the whole ISOBMFF File.
@@ -6423,13 +6479,16 @@ object-assign
  * @param {Uint8Array} buffer
  * @returns {Uint8Array|null}
  */        function getMDIA(buf) {
-            var moov = getBox(buf, 1836019574 /* moov */);
+            var moov = getBox(buf, 1836019574
+            /* moov */);
             if (!moov) return null;
-            var trak = getBox(moov, 1953653099 /* "trak" */);
-            return trak ? getBox(trak, 1835297121 /* "mdia" */) : null;
+            var trak = getBox(moov, 1953653099
+            /* "trak" */);
+            return trak ? getBox(trak, 1835297121
+            /* "mdia" */) : null;
         }
         /***/    }, 
-    /* 65 */
+    /* 66 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -6479,7 +6538,7 @@ object-assign
             return isFullscreen;
         });
     }, 
-    /* 66 */
+    /* 67 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -6487,13 +6546,13 @@ object-assign
         });
         /* unused harmony export MergeMapOperator */
         /* unused harmony export MergeMapSubscriber */
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(22), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(21), _map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(63), _observable_from__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(27);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(21), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22), _InnerSubscriber__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(36), _map__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(64), _observable_from__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(44);
         /* harmony import */        
-        /** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_map,_observable_from PURE_IMPORTS_END */
+        /** PURE_IMPORTS_START tslib,_util_subscribeToResult,_OuterSubscriber,_InnerSubscriber,_map,_observable_from PURE_IMPORTS_END */
         function mergeMap(project, resultSelector, concurrent) {
             return void 0 === concurrent && (concurrent = Number.POSITIVE_INFINITY), "function" == typeof resultSelector ? function(source) {
                 return source.pipe(mergeMap(function(a, i) {
-                    return Object(_observable_from__WEBPACK_IMPORTED_MODULE_4__.a)(project(a, i)).pipe(Object(_map__WEBPACK_IMPORTED_MODULE_3__.a)(function(b, ii) {
+                    return Object(_observable_from__WEBPACK_IMPORTED_MODULE_5__.a)(project(a, i)).pipe(Object(_map__WEBPACK_IMPORTED_MODULE_4__.a)(function(b, ii) {
                         return resultSelector(a, b, i, ii);
                     }));
                 }, concurrent));
@@ -6527,7 +6586,8 @@ object-assign
                 }
                 this.active++, this._innerSub(result, value, index);
             }, MergeMapSubscriber.prototype._innerSub = function(ish, value, index) {
-                this.add(Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_1__.a)(this, ish, value, index));
+                var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_3__.a(this, void 0, void 0);
+                this.add(innerSubscriber), Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_1__.a)(this, ish, value, index, innerSubscriber);
             }, MergeMapSubscriber.prototype._complete = function() {
                 this.hasCompleted = !0, 0 === this.active && 0 === this.buffer.length && this.destination.complete();
             }, MergeMapSubscriber.prototype.notifyNext = function(outerValue, innerValue, outerIndex, innerIndex, innerSub) {
@@ -6538,7 +6598,7 @@ object-assign
             }, MergeMapSubscriber;
         }(_OuterSubscriber__WEBPACK_IMPORTED_MODULE_2__.a);
     }, 
-    /* 67 */
+    /* 68 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -6551,13 +6611,13 @@ object-assign
             return isObject;
         });
     }, 
-    /* 68 */
+    /* 69 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return subscribeTo;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _subscribeToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(71), _subscribeToPromise__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(73), _subscribeToIterable__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(74), _subscribeToObservable__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(69), _isArrayLike__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(70), _isPromise__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(72), _isObject__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(67), _symbol_iterator__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(51), _symbol_observable__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(43), subscribeTo = function(result) {
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _subscribeToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(72), _subscribeToPromise__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(74), _subscribeToIterable__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(75), _subscribeToObservable__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(70), _isArrayLike__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(71), _isPromise__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(73), _isObject__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(68), _symbol_iterator__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(52), _symbol_observable__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(42), subscribeTo = function(result) {
             if (result instanceof _Observable__WEBPACK_IMPORTED_MODULE_0__.a) return function(subscriber) {
                 return result._isScalar ? (subscriber.next(result.value), void subscriber.complete()) : result.subscribe(subscriber);
             };
@@ -6569,13 +6629,13 @@ object-assign
             throw new TypeError("You provided " + value + " where a stream was expected. You can provide an Observable, Promise, Array, or Iterable.");
         };
         /* harmony import */    }, 
-    /* 69 */
+    /* 70 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return subscribeToObservable;
         });
-        /* harmony import */ var _symbol_observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(43), subscribeToObservable = function(obj) {
+        /* harmony import */ var _symbol_observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(42), subscribeToObservable = function(obj) {
             return function(subscriber) {
                 var obs = obj[_symbol_observable__WEBPACK_IMPORTED_MODULE_0__.a]();
                 if ("function" != typeof obs.subscribe) throw new TypeError("Provided object does not correctly implement Symbol.observable");
@@ -6583,7 +6643,7 @@ object-assign
             };
         };
         /** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */    }, 
-    /* 70 */
+    /* 71 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -6595,7 +6655,7 @@ object-assign
         };
         //# sourceMappingURL=isArrayLike.js.map
         /***/    }, 
-    /* 71 */
+    /* 72 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -6610,7 +6670,7 @@ object-assign
         };
         //# sourceMappingURL=subscribeToArray.js.map
         /***/    }, 
-    /* 72 */
+    /* 73 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -6623,13 +6683,13 @@ object-assign
             return isPromise;
         });
     }, 
-    /* 73 */
+    /* 74 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return subscribeToPromise;
         });
-        /* harmony import */ var _hostReportError__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(49), subscribeToPromise = function(promise) {
+        /* harmony import */ var _hostReportError__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(50), subscribeToPromise = function(promise) {
             return function(subscriber) {
                 return promise.then(function(value) {
                     subscriber.closed || (subscriber.next(value), subscriber.complete());
@@ -6639,13 +6699,13 @@ object-assign
             };
         };
         /** PURE_IMPORTS_START _hostReportError PURE_IMPORTS_END */    }, 
-    /* 74 */
+    /* 75 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return subscribeToIterable;
         });
-        /* harmony import */ var _symbol_iterator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(51), subscribeToIterable = function(iterable) {
+        /* harmony import */ var _symbol_iterator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(52), subscribeToIterable = function(iterable) {
             return function(subscriber) {
                 for (var iterator = iterable[_symbol_iterator__WEBPACK_IMPORTED_MODULE_0__.a](); ;) {
                     var item = iterator.next();
@@ -6661,13 +6721,13 @@ object-assign
             };
         };
         /** PURE_IMPORTS_START _symbol_iterator PURE_IMPORTS_END */    }, 
-    /* 75 */
+    /* 76 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return of;
         });
-        /* harmony import */ var _util_isScheduler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(35), _fromArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(34), _empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(25), _scalar__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(76);
+        /* harmony import */ var _util_isScheduler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(33), _fromArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(25), _empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(26), _scalar__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(77);
         /* harmony import */        
         /** PURE_IMPORTS_START _util_isScheduler,_fromArray,_empty,_scalar PURE_IMPORTS_END */
         function of() {
@@ -6687,13 +6747,13 @@ object-assign
         }
         //# sourceMappingURL=of.js.map
         /***/    }, 
-    /* 76 */
+    /* 77 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return scalar;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13);
         /** PURE_IMPORTS_START _Observable PURE_IMPORTS_END */        function scalar(value) {
             var result = new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
                 subscriber.next(value), subscriber.complete();
@@ -6702,13 +6762,13 @@ object-assign
         }
         //# sourceMappingURL=scalar.js.map
         /***/    }, 
-    /* 77 */
+    /* 78 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return SubjectSubscription;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), SubjectSubscription = /* */ function(_super) {
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), SubjectSubscription = /* */ function(_super) {
             function SubjectSubscription(subject, subscriber) {
                 var _this = _super.call(this) || this;
                 return _this.subject = subject, _this.subscriber = subscriber, _this.closed = !1, 
@@ -6724,15 +6784,15 @@ object-assign
                     }
                 }
             }, SubjectSubscription;
-        }(__webpack_require__(14).a);
+        }(__webpack_require__(15).a);
         /* harmony import */    }, 
-    /* 78 */
+    /* 79 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return throwError;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13);
         /** PURE_IMPORTS_START _Observable PURE_IMPORTS_END */        function throwError(error, scheduler) {
             return scheduler ? new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
                 return scheduler.schedule(dispatch, 0, {
@@ -6749,42 +6809,89 @@ object-assign
         }
         //# sourceMappingURL=throwError.js.map
         /***/    }, 
-    /* 79 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return ArgumentOutOfRangeError;
-        });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), ArgumentOutOfRangeError = /* */ function(_super) {
-            function ArgumentOutOfRangeError() {
-                var _this = _super.call(this, "argument out of range") || this;
-                return _this.name = "ArgumentOutOfRangeError", Object.setPrototypeOf(_this, ArgumentOutOfRangeError.prototype), 
-                _this;
-            }
-            return tslib__WEBPACK_IMPORTED_MODULE_0__.a(ArgumentOutOfRangeError, _super), ArgumentOutOfRangeError;
-        }(Error);
-        /** PURE_IMPORTS_START tslib PURE_IMPORTS_END */    }, 
     /* 80 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(52);
-        /* harmony import */        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        /* harmony export (binding) */        
+        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+        function ArgumentOutOfRangeErrorImpl() {
+            return Error.call(this), this.message = "argument out of range", this.name = "ArgumentOutOfRangeError", 
+            this;
         }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return ArgumentOutOfRangeError;
+        }), ArgumentOutOfRangeErrorImpl.prototype = /* */ Object.create(Error.prototype);
+        var ArgumentOutOfRangeError = ArgumentOutOfRangeErrorImpl;
+        //# sourceMappingURL=ArgumentOutOfRangeError.js.map
+        /***/    }, 
+    /* 81 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return EncryptedMediaError;
+        });
+        /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(53);
+        /* harmony import */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
+        function _assertThisInitialized(self) {
+            if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return self;
+        }
+        function _wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map() : void 0;
+            return (_wrapNativeSuper = function _wrapNativeSuper(Class) {
+                if (null === Class || !_isNativeFunction(Class)) return Class;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
                 }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+                function Wrapper() {
+                    return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                return Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                }), _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
+        function isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                return Date.prototype.toString.call(Reflect.construct(Date, [], function() {})), 
+                !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function _construct(Parent, args, Class) {
+            return (_construct = isNativeReflectConstruct() ? Reflect.construct : function _construct(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a))();
+                return Class && _setPrototypeOf(instance, Class.prototype), instance;
+            }).apply(null, arguments);
+        }
+        function _isNativeFunction(fn) {
+            return -1 !== Function.toString.call(fn).indexOf("[native code]");
+        }
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+                return o.__proto__ = p, o;
+            })(o, p);
+        }
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -6806,27 +6913,27 @@ object-assign
  *
  * @class EncryptedMediaError
  * @extends Error
- */        var EncryptedMediaError = function(_Error) {
+ */        var EncryptedMediaError = 
+        /* */
+        function(_Error) {
             /**
    * @param {string} code
    * @param {Object} [reason]
    * @Param {Boolean} [fatal]
    */
             function EncryptedMediaError(code, reason, fatal) {
-                _classCallCheck(this, EncryptedMediaError);
-                // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-                var _this = _possibleConstructorReturn(this, _Error.call(this));
-                return Object.setPrototypeOf(_this, EncryptedMediaError.prototype), _this.name = "EncryptedMediaError", 
-                _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.ENCRYPTED_MEDIA_ERROR, _this.reason = reason, 
-                _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
+                var _this;
+                return _this = _Error.call(this) || this, // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+                Object.setPrototypeOf(_assertThisInitialized(_assertThisInitialized(_this)), EncryptedMediaError.prototype), 
+                _this.name = "EncryptedMediaError", _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.ENCRYPTED_MEDIA_ERROR, 
+                _this.reason = reason, _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
                 _this.fatal = !!fatal, _this.message = Object(_errorMessage__WEBPACK_IMPORTED_MODULE_1__.a)(_this.name, _this.code, _this.reason), 
                 _this;
             }
-            return _inherits(EncryptedMediaError, _Error), EncryptedMediaError;
-        }(Error);
-        /* harmony default export */        __webpack_exports__.a = EncryptedMediaError;
-    }, 
-    /* 81 */
+            return _inheritsLoose(EncryptedMediaError, _Error), EncryptedMediaError;
+        }(_wrapNativeSuper(Error));
+        /***/    }, 
+    /* 82 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -6882,26 +6989,70 @@ object-assign
             });
         }
         /***/    }, 
-    /* 82 */
+    /* 83 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        /* harmony export (binding) */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        function _assertThisInitialized(self) {
+            if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return self;
         }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
+        function _wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map() : void 0;
+            return (_wrapNativeSuper = function _wrapNativeSuper(Class) {
+                if (null === Class || !_isNativeFunction(Class)) return Class;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
                 }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+                function Wrapper() {
+                    return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                return Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                }), _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
+        function isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                return Date.prototype.toString.call(Reflect.construct(Date, [], function() {})), 
+                !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function _construct(Parent, args, Class) {
+            return (_construct = isNativeReflectConstruct() ? Reflect.construct : function _construct(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a))();
+                return Class && _setPrototypeOf(instance, Class.prototype), instance;
+            }).apply(null, arguments);
+        }
+        function _isNativeFunction(fn) {
+            return -1 !== Function.toString.call(fn).indexOf("[native code]");
+        }
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+                return o.__proto__ = p, o;
+            })(o, p);
+        }
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -6923,28 +7074,31 @@ object-assign
  *
  * @class RequestError
  * @extends Error
- */        var RequestError = function(_Error) {
+ */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return RequestError;
+        });
+        var RequestError = 
+        /* */
+        function(_Error) {
             /**
    * @param {XMLHttpRequest} xhr
    * @param {string} url
    * @param {string} type
    */
             function RequestError(xhr, url, type) {
-                _classCallCheck(this, RequestError);
-                // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-                var _this = _possibleConstructorReturn(this, _Error.call(this));
-                return Object.setPrototypeOf(_this, RequestError.prototype), _this.name = "RequestError", 
-                _this.url = url, _this.xhr = xhr, _this.status = xhr.status, _this.type = type, 
-                _this.message = type, _this;
+                var _this;
+                return _this = _Error.call(this) || this, // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+                Object.setPrototypeOf(_assertThisInitialized(_assertThisInitialized(_this)), RequestError.prototype), 
+                _this.name = "RequestError", _this.url = url, _this.xhr = xhr, _this.status = xhr.status, 
+                _this.type = type, _this.message = type, _this;
             }
-            return _inherits(RequestError, _Error), RequestError;
-        }(Error);
-        /* harmony default export */        __webpack_exports__.a = RequestError;
-    }, 
-    /* 83 */
+            return _inheritsLoose(RequestError, _Error), RequestError;
+        }(_wrapNativeSuper(Error));
+        /***/    }, 
+    /* 84 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _utils_request__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(30);
+        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _utils_request__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(29);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -6982,9 +7136,8 @@ object-assign
                 var customManifestLoader = options.customManifestLoader, ignoreProgressEvents = options.ignoreProgressEvents;
                 return customManifestLoader ? rxjs__WEBPACK_IMPORTED_MODULE_0__.a.create(function(obs) {
                     var hasFinished = !1, hasFallbacked = !1, abort = customManifestLoader(url, {
-                        reject: function reject() {
-                            var err = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
-                            hasFallbacked || (hasFinished = !0, obs.error(err));
+                        reject: function reject(err) {
+                            void 0 === err && (err = {}), hasFallbacked || (hasFinished = !0, obs.error(err));
                         },
                         resolve: function resolve(_args) {
                             hasFallbacked || (hasFinished = !0, obs.next({
@@ -7007,7 +7160,7 @@ object-assign
             };
         };
     }, 
-    /* 84 */
+    /* 85 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* unused harmony export stringFromCharCode */
@@ -7049,11 +7202,11 @@ object-assign
  */        function stringFromUTF8(data) {
             if (!data) return "";
             var uint8 = new Uint8Array(data);
-            // If present, strip off the UTF-8 BOM.
+ // If present, strip off the UTF-8 BOM.
                         239 === uint8[0] && 187 === uint8[1] && 191 === uint8[2] && (uint8 = uint8.subarray(3));
-            // http://stackoverflow.com/a/13691499
+ // http://stackoverflow.com/a/13691499
                         var utf8 = stringFromCharCode(uint8), escaped = escape(utf8);
-            // This converts each character in the string to an escape sequence.  If the
+ // This converts each character in the string to an escape sequence.  If the
             // character is in the ASCII range, it is not converted; otherwise it is
             // converted to a URI escape sequence.
             // Example: "\x67\x35\xe3\x82\xac" -> "g#%E3%82%AC"
@@ -7067,13 +7220,13 @@ object-assign
             return stringFromUTF8;
         });
     }, 
-    /* 85 */
+    /* 86 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return getCueBlocks;
         });
-        /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(48);
+        /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(49);
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -7110,7 +7263,7 @@ object-assign
             return cueBlocks;
         }
         /***/    }, 
-    /* 86 */
+    /* 87 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        
@@ -7155,13 +7308,13 @@ object-assign
             return getParameters;
         });
     }, 
-    /* 87 */
+    /* 88 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return seekAndLoadOnMediaEvents;
         });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(75), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(148), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(150), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(66), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(136), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(146), _compat__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(12), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0);
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(76), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(149), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(151), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(67), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(137), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(147), _compat__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(12), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -7188,8 +7341,7 @@ object-assign
  */
         function doInitialSeek(mediaElement, startTime) {
             return Object(_compat__WEBPACK_IMPORTED_MODULE_6__.e)(mediaElement).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_1__.a)(function() {
-                _log__WEBPACK_IMPORTED_MODULE_7__.a.info("set initial time", startTime), 
-                // reset playbackRate to 1 in case we were at 0 (from a stalled
+                _log__WEBPACK_IMPORTED_MODULE_7__.a.info("set initial time", startTime), // reset playbackRate to 1 in case we were at 0 (from a stalled
                 // retry for instance)
                 mediaElement.playbackRate = 1, mediaElement.currentTime = "function" == typeof startTime ? startTime() : startTime;
             }), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_2__.a)());
@@ -7227,13 +7379,13 @@ object-assign
             };
         }
         /***/    }, 
-    /* 88 */
+    /* 89 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return createEMEManager;
         });
-        /* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(63), _compat___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12), _compat_events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(80), _features__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6), _log__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(0);
+        /* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(64), _compat___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12), _compat_events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(81), _features__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6), _log__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(0);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -7270,13 +7422,13 @@ object-assign
             }));
         }
         /***/    }, 
-    /* 89 */
+    /* 90 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return MediaErrorManager;
         });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(135), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(66), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(62), _log__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(0);
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(136), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(67), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(63), _log__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(0);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -7302,7 +7454,7 @@ object-assign
  */
         function MediaErrorManager(mediaElement) {
             return Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(mediaElement, "error").pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_1__.a)(function() {
-                var errorDetail = void 0;
+                var errorDetail;
                 switch (mediaElement.error && mediaElement.error.code) {
                   case 1:
                     errorDetail = "MEDIA_ERR_ABORTED";
@@ -7328,10 +7480,10 @@ object-assign
             }));
         }
         /***/    }, 
-    /* 90 */
+    /* 91 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(148), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(151), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(63), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(140), _compat__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(12), _config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_ranges__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(18), DISCONTINUITY_THRESHOLD = _config__WEBPACK_IMPORTED_MODULE_5__.a.DISCONTINUITY_THRESHOLD;
+        /* harmony import */        var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(149), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(152), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(64), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(141), _compat__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(12), _config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_ranges__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(16), DISCONTINUITY_THRESHOLD = _config__WEBPACK_IMPORTED_MODULE_5__.a.DISCONTINUITY_THRESHOLD;
         /* harmony import */        
         /* harmony default export */ __webpack_exports__.a = 
         /**
@@ -7367,13 +7519,13 @@ object-assign
             }));
         };
     }, 
-    /* 91 */
+    /* 92 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return refCount;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function refCount() {
@@ -7410,27 +7562,74 @@ object-assign
             }, RefCountSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 92 */
+    /* 93 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(52);
-        /* harmony import */        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return NetworkError;
+        });
+        /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(53);
+        /* harmony import */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        function _assertThisInitialized(self) {
+            if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return self;
         }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
+        function _wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map() : void 0;
+            return (_wrapNativeSuper = function _wrapNativeSuper(Class) {
+                if (null === Class || !_isNativeFunction(Class)) return Class;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
                 }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+                function Wrapper() {
+                    return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                return Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                }), _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
+        function isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                return Date.prototype.toString.call(Reflect.construct(Date, [], function() {})), 
+                !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function _construct(Parent, args, Class) {
+            return (_construct = isNativeReflectConstruct() ? Reflect.construct : function _construct(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a))();
+                return Class && _setPrototypeOf(instance, Class.prototype), instance;
+            }).apply(null, arguments);
+        }
+        function _isNativeFunction(fn) {
+            return -1 !== Function.toString.call(fn).indexOf("[native code]");
+        }
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+                return o.__proto__ = p, o;
+            })(o, p);
+        }
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -7452,20 +7651,21 @@ object-assign
  *
  * @class NetworkError
  * @extends Error
- */        var NetworkError = function(_Error) {
+ */        var NetworkError = 
+        /* */
+        function(_Error) {
             /**
    * @param {string} code
    * @param {Error} requestError
    * @param {Boolean} [fatal]
    */
             function NetworkError(code, requestError, fatal) {
-                _classCallCheck(this, NetworkError);
-                // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-                var _this = _possibleConstructorReturn(this, _Error.call(this));
-                return Object.setPrototypeOf(_this, NetworkError.prototype), _this.name = "NetworkError", 
-                _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.NETWORK_ERROR, _this.xhr = requestError.xhr, 
-                _this.url = requestError.url, _this.status = requestError.status, _this.errorType = requestError.type, 
-                _this.reason = requestError, _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
+                var _this;
+                return _this = _Error.call(this) || this, // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+                Object.setPrototypeOf(_assertThisInitialized(_assertThisInitialized(_this)), NetworkError.prototype), 
+                _this.name = "NetworkError", _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.NETWORK_ERROR, 
+                _this.xhr = requestError.xhr, _this.url = requestError.url, _this.status = requestError.status, 
+                _this.errorType = requestError.type, _this.reason = requestError, _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
                 _this.fatal = !!fatal, _this.message = Object(_errorMessage__WEBPACK_IMPORTED_MODULE_1__.a)(_this.name, _this.code, _this.reason), 
                 _this;
             }
@@ -7473,33 +7673,79 @@ object-assign
    * Returns true if the NetworkError is due to the given http error code
    * @param {number} httpErrorCode
    * @returns {Boolean}
-   */            return _inherits(NetworkError, _Error), NetworkError.prototype.isHttpError = function isHttpError(httpErrorCode) {
+   */            return _inheritsLoose(NetworkError, _Error), NetworkError.prototype.isHttpError = function isHttpError(httpErrorCode) {
                 return this.errorType === _constants__WEBPACK_IMPORTED_MODULE_0__.c.ERROR_HTTP_CODE && this.status === httpErrorCode;
             }, NetworkError;
-        }(Error);
-        /* harmony default export */        __webpack_exports__.a = NetworkError;
-    }, 
-    /* 93 */
+        }(_wrapNativeSuper(Error));
+        /***/    }, 
+    /* 94 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(52);
-        /* harmony import */        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return OtherError;
+        });
+        /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(23), _errorMessage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(53);
+        /* harmony import */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        function _assertThisInitialized(self) {
+            if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return self;
         }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
+        function _wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map() : void 0;
+            return (_wrapNativeSuper = function _wrapNativeSuper(Class) {
+                if (null === Class || !_isNativeFunction(Class)) return Class;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
                 }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+                function Wrapper() {
+                    return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                return Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                }), _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
+        function isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                return Date.prototype.toString.call(Reflect.construct(Date, [], function() {})), 
+                !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function _construct(Parent, args, Class) {
+            return (_construct = isNativeReflectConstruct() ? Reflect.construct : function _construct(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a))();
+                return Class && _setPrototypeOf(instance, Class.prototype), instance;
+            }).apply(null, arguments);
+        }
+        function _isNativeFunction(fn) {
+            return -1 !== Function.toString.call(fn).indexOf("[native code]");
+        }
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+                return o.__proto__ = p, o;
+            })(o, p);
+        }
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -7519,27 +7765,27 @@ object-assign
         /**
  * @class OtherError
  * @extends Error
- */        var OtherError = function(_Error) {
+ */        var OtherError = 
+        /* */
+        function(_Error) {
             /**
    * @param {string} code
    * @param {Error|null} [reason]
    * @param {Boolean} [fatal]
    */
             function OtherError(code, reason, fatal) {
-                _classCallCheck(this, OtherError);
-                // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-                var _this = _possibleConstructorReturn(this, _Error.call(this));
-                return Object.setPrototypeOf(_this, OtherError.prototype), _this.name = "OtherError", 
-                _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.OTHER_ERROR, _this.reason = reason, 
-                _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
+                var _this;
+                return _this = _Error.call(this) || this, // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+                Object.setPrototypeOf(_assertThisInitialized(_assertThisInitialized(_this)), OtherError.prototype), 
+                _this.name = "OtherError", _this.type = _constants__WEBPACK_IMPORTED_MODULE_0__.b.OTHER_ERROR, 
+                _this.reason = reason, _this.code = _constants__WEBPACK_IMPORTED_MODULE_0__.a.hasOwnProperty(code) ? _constants__WEBPACK_IMPORTED_MODULE_0__.a[code] : "", 
                 _this.fatal = !!fatal, _this.message = Object(_errorMessage__WEBPACK_IMPORTED_MODULE_1__.a)(_this.name, _this.code, _this.reason), 
                 _this;
             }
-            return _inherits(OtherError, _Error), OtherError;
-        }(Error);
-        /* harmony default export */        __webpack_exports__.a = OtherError;
-    }, 
-    /* 94 */
+            return _inheritsLoose(OtherError, _Error), OtherError;
+        }(_wrapNativeSuper(Error));
+        /***/    }, 
+    /* 95 */
     /***/ function(module, exports, __webpack_require__) {
         "use strict";
         module.exports = function(arr, predicate, ctx) {
@@ -7551,11 +7797,11 @@ object-assign
             return -1;
         };
     }, 
-    /* 95 */
+    /* 96 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(2), Subject = __webpack_require__(26), Observable = __webpack_require__(17), Subscriber = __webpack_require__(10), Subscription = __webpack_require__(14), refCount = __webpack_require__(91), connectableProto = /* */ function(_super) {
+                var tslib_es6 = __webpack_require__(3), Subject = __webpack_require__(43), Observable = __webpack_require__(13), Subscriber = __webpack_require__(10), Subscription = __webpack_require__(15), refCount = __webpack_require__(92), connectableProto = /* */ function(_super) {
             function ConnectableObservable(source, subjectFactory) {
                 var _this = _super.call(this) || this;
                 return _this.source = source, _this.subjectFactory = subjectFactory, _this._refCount = 0, 
@@ -7657,11 +7903,11 @@ object-assign
         }();
         //# sourceMappingURL=multicast.js.map
         /***/    }, 
-    /* 96 */
+    /* 97 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/mergeMap.js
-                var mergeMap = __webpack_require__(66);
+                var mergeMap = __webpack_require__(67);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/identity.js
         /** PURE_IMPORTS_START  PURE_IMPORTS_END */        function identity(x) {
             return x;
@@ -7678,7 +7924,7 @@ object-assign
             return mergeAll;
         });
     }, 
-    /* 97 */
+    /* 98 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // CONCATENATED MODULE: ./src/parsers/texttracks/srt/parseTimestamp.ts
@@ -7737,7 +7983,7 @@ object-assign
  */
         function parseCueBlock(cueLines, timeOffset) {
             if (0 === cueLines.length) return null;
-            var startTimeString = void 0, endTimeString = void 0, payload = [];
+            var startTimeString, endTimeString, payload = [];
             // normally in srt, the timing is at second position.
             // We still authorize to put it in the first position for resilience
             if (cueLines[1] && cueLines[1].indexOf("--\x3e")) {
@@ -7748,11 +7994,11 @@ object-assign
                 payload = cueLines.slice(2, cueLines.length);
             }
             if (!startTimeString || !endTimeString) {
+                // Try to see if we find them in the first position
                 var _cueLines$0$split$map = cueLines[0].split("--\x3e").map(function(s) {
                     return s.trim();
                 });
-                // Try to see if we find them in the first position
-                                startTimeString = _cueLines$0$split$map[0], endTimeString = _cueLines$0$split$map[1], 
+                startTimeString = _cueLines$0$split$map[0], endTimeString = _cueLines$0$split$map[1], 
                 payload = cueLines.slice(1, cueLines.length);
             }
             if (!startTimeString || !endTimeString) 
@@ -7769,7 +8015,7 @@ object-assign
             return parseCueBlock;
         });
     }, 
-    /* 98 */
+    /* 99 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // CONCATENATED MODULE: ./src/parsers/texttracks/srt/findEndOfCueBlock.ts
@@ -7842,7 +8088,7 @@ object-assign
             return getCueBlocks;
         });
     }, 
-    /* 99 */
+    /* 100 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./src/parsers/texttracks/ttml/regexps.ts
@@ -7913,7 +8159,7 @@ object-assign
  */        function parseTimeFromRegExp(regex, text) {
             var results = regex.exec(text);
             if (null === results || "" === results[0]) return null;
-            // This capture is optional, but will still be in the array as undefined,
+ // This capture is optional, but will still be in the array as undefined,
             // default to 0.
                         var hours = Number(results[1]) || 0, minutes = Number(results[2]) || 0, seconds = Number(results[3]) || 0;
             return (Number(results[4]) || 0) / 1e3 + seconds + 60 * minutes + 3600 * hours;
@@ -7947,7 +8193,7 @@ object-assign
         function getTimeDelimiters(element, ttParams) {
             var beginAttr = element.getAttribute("begin"), durationAttr = element.getAttribute("dur"), endAttr = element.getAttribute("end"), start = beginAttr ? time_parsing(beginAttr, ttParams) : null, duration = durationAttr ? time_parsing(durationAttr, ttParams) : null, parsedEnd = endAttr ? time_parsing(endAttr, ttParams) : null;
             if (null == start || null == parsedEnd && null == duration) throw new Error("Invalid text cue");
-            // Huh? Is TypeScript that dumb here?
+ // Huh? Is TypeScript that dumb here?
                         return {
                 start: start,
                 end: null == parsedEnd ? start + duration : parsedEnd
@@ -7957,7 +8203,7 @@ object-assign
             return getTimeDelimiters;
         });
     }, 
-    /* 100 */
+    /* 101 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // CONCATENATED MODULE: ./src/parsers/texttracks/webvtt/parseTimestamp.ts
@@ -8027,14 +8273,14 @@ object-assign
  * @returns {Object|null}
  */        function parseTimeAndSettings(timeString) {
             /**
-     * RegExp for the timestamps + settings line.
-     *
-     * Capture groups:
-     *   1 -> start timestamp
-     *   2 -> end timestamp
-     *   3 - settings
-     * @type {RegExp}
-     */
+   * RegExp for the timestamps + settings line.
+   *
+   * Capture groups:
+   *   1 -> start timestamp
+   *   2 -> end timestamp
+   *   3 - settings
+   * @type {RegExp}
+   */
             var matches = timeString.match(/^([\d:.]+)[ |\t]+-->[ |\t]+([\d:.]+)[ |\t]*(.*)$/);
             if (!matches) return null;
             var start = parseTimestamp(matches[1]), end = parseTimestamp(matches[2]);
@@ -8054,7 +8300,7 @@ object-assign
  * @param {Number} timeOffset
  * @returns {Object}
  */        function parseCueBlock(cueLines, timeOffset) {
-            var timingRegexp = /-->/, timeString = void 0, payload = void 0, header = void 0;
+            var timeString, payload, header, timingRegexp = /-->/;
             if (timingRegexp.test(cueLines[0])) timeString = cueLines[0], payload = cueLines.slice(1, cueLines.length); else {
                 if (!timingRegexp.test(cueLines[1])) 
                 // not a cue
@@ -8075,18 +8321,18 @@ object-assign
             return parseCueBlock;
         });
     }, 
-    /* 101 */
+    /* 102 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(2), Action_Action = /* */ function(_super) {
+                var tslib_es6 = __webpack_require__(3), Action_Action = /* */ function(_super) {
             function Action(scheduler, work) {
                 return _super.call(this) || this;
             }
             return tslib_es6.a(Action, _super), Action.prototype.schedule = function(state, delay) {
                 return void 0 === delay && (delay = 0), this;
             }, Action;
-        }(__webpack_require__(14).a);
+        }(__webpack_require__(15).a);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscription.js + 1 modules
                 //# sourceMappingURL=Action.js.map
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/scheduler/AsyncAction.js
@@ -8133,19 +8379,19 @@ object-assign
         }(Action_Action);
         //# sourceMappingURL=AsyncAction.js.map
         /***/    }, 
-    /* 102 */
+    /* 103 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(2), Scheduler = /* */ function() {
+                var tslib_es6 = __webpack_require__(3), Scheduler = /* */ function() {
             function Scheduler(SchedulerAction, now) {
                 void 0 === now && (now = Scheduler.now), this.SchedulerAction = SchedulerAction, 
                 this.now = now;
             }
             return Scheduler.prototype.schedule = function(work, delay, state) {
                 return void 0 === delay && (delay = 0), new this.SchedulerAction(this, work).schedule(state, delay);
-            }, Scheduler.now = Date.now ? Date.now : function() {
-                return +new Date();
+            }, Scheduler.now = function() {
+                return Date.now();
             }, Scheduler;
         }();
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/Scheduler.js
@@ -8182,11 +8428,11 @@ object-assign
         }(Scheduler);
         //# sourceMappingURL=AsyncScheduler.js.map
         /***/    }, 
-    /* 103 */
+    /* 104 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-                var of = __webpack_require__(75), defer = __webpack_require__(133), tslib_es6 = __webpack_require__(2), Subscriber = __webpack_require__(10);
+                var of = __webpack_require__(76), defer = __webpack_require__(134), tslib_es6 = __webpack_require__(3), Subscriber = __webpack_require__(10);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/pairwise.js
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
@@ -8209,9 +8455,9 @@ object-assign
                 this.hasPrev ? this.destination.next([ this.prev, value ]) : this.hasPrev = !0, 
                 this.prev = value;
             }, PairwiseSubscriber;
-        }(Subscriber.a), map = __webpack_require__(63), filter = __webpack_require__(137), startWith = __webpack_require__(138), switchMap = __webpack_require__(116), tap = __webpack_require__(148), log = __webpack_require__(0);
+        }(Subscriber.a), map = __webpack_require__(64), filter = __webpack_require__(138), startWith = __webpack_require__(139), switchMap = __webpack_require__(118), tap = __webpack_require__(149), log = __webpack_require__(0);
         __webpack_exports__.a = function speedManager(mediaElement, speed$, clock$, _ref) {
-            var _ref$pauseWhenStalled = _ref.pauseWhenStalled, forcePause$ = void 0;
+            var forcePause$, _ref$pauseWhenStalled = _ref.pauseWhenStalled;
             forcePause$ = void 0 === _ref$pauseWhenStalled || _ref$pauseWhenStalled ? clock$.pipe(pairwise()).pipe(Object(map.a)(function(_ref2) {
                 var prevTiming = _ref2[0], isStalled = _ref2[1].stalled, wasStalled = prevTiming.stalled;
                 if (!wasStalled != !isStalled || // xor
@@ -8229,7 +8475,94 @@ object-assign
             }));
         };
     }, 
-    /* 104 */
+    /* 105 */ 
+    /* 106 */
+    /***/ , 
+    /* 106 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return concat;
+        });
+        /* harmony import */ var _util_isScheduler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(33), _of__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(76), _from__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(44), _operators_concatAll__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(107);
+        /* harmony import */        
+        /** PURE_IMPORTS_START _util_isScheduler,_of,_from,_operators_concatAll PURE_IMPORTS_END */
+        function concat() {
+            for (var observables = [], _i = 0; _i < arguments.length; _i++) observables[_i] = arguments[_i];
+            return 1 === observables.length || 2 === observables.length && Object(_util_isScheduler__WEBPACK_IMPORTED_MODULE_0__.a)(observables[1]) ? Object(_from__WEBPACK_IMPORTED_MODULE_2__.a)(observables[0]) : Object(_operators_concatAll__WEBPACK_IMPORTED_MODULE_3__.a)()(_of__WEBPACK_IMPORTED_MODULE_1__.a.apply(void 0, observables));
+        }
+        //# sourceMappingURL=concat.js.map
+        /***/    }, 
+    /* 107 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return concatAll;
+        });
+        /* harmony import */ var _mergeAll__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(97);
+        /** PURE_IMPORTS_START _mergeAll PURE_IMPORTS_END */        function concatAll() {
+            return Object(_mergeAll__WEBPACK_IMPORTED_MODULE_0__.a)(1);
+        }
+        //# sourceMappingURL=concatAll.js.map
+        /***/    }, 
+    /* 108 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return concatMap;
+        });
+        /* harmony import */ var _mergeMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(67);
+        /** PURE_IMPORTS_START _mergeMap PURE_IMPORTS_END */        function concatMap(project, resultSelector) {
+            return Object(_mergeMap__WEBPACK_IMPORTED_MODULE_0__.a)(project, resultSelector, 1);
+        }
+        //# sourceMappingURL=concatMap.js.map
+        /***/    }, 
+    /* 109 */
+    /***/ function(module, exports, __webpack_require__) {
+        var pSlice = Array.prototype.slice, objectKeys = __webpack_require__(122), isArguments = __webpack_require__(123), deepEqual = module.exports = function(actual, expected, opts) {
+            // 7.1. All identical values are equivalent, as determined by ===.
+            return opts || (opts = {}), actual === expected || (actual instanceof Date && expected instanceof Date ? actual.getTime() === expected.getTime() : !actual || !expected || "object" != typeof actual && "object" != typeof expected ? opts.strict ? actual === expected : actual == expected : objEquiv(actual, expected, opts));
+        };
+        function isUndefinedOrNull(value) {
+            return null === value || void 0 === value;
+        }
+        function isBuffer(x) {
+            return !(!x || "object" != typeof x || "number" != typeof x.length) && ("function" == typeof x.copy && "function" == typeof x.slice && !(x.length > 0 && "number" != typeof x[0]));
+        }
+        function objEquiv(a, b, opts) {
+            var i, key;
+            if (isUndefinedOrNull(a) || isUndefinedOrNull(b)) return !1;
+            // an identical 'prototype' property.
+                        if (a.prototype !== b.prototype) return !1;
+            //~~~I've managed to break Object.keys through screwy arguments passing.
+            //   Converting to array solves the problem.
+                        if (isArguments(a)) return !!isArguments(b) && (a = pSlice.call(a), 
+            b = pSlice.call(b), deepEqual(a, b, opts));
+            if (isBuffer(a)) {
+                if (!isBuffer(b)) return !1;
+                if (a.length !== b.length) return !1;
+                for (i = 0; i < a.length; i++) if (a[i] !== b[i]) return !1;
+                return !0;
+            }
+            try {
+                var ka = objectKeys(a), kb = objectKeys(b);
+            } catch (e) {
+                //happens when one is a string literal and the other isn't
+                return !1;
+            }
+            // having the same number of owned properties (keys incorporates
+            // hasOwnProperty)
+                        if (ka.length != kb.length) return !1;
+            //the same set of keys (although not necessarily the same order),
+                        //~~~cheap key test
+            for (ka.sort(), kb.sort(), i = ka.length - 1; i >= 0; i--) if (ka[i] != kb[i]) return !1;
+            //equivalent values for every corresponding key, and
+            //~~~possibly expensive deep test
+                        for (i = ka.length - 1; i >= 0; i--) if (key = ka[i], !deepEqual(a[key], b[key], opts)) return !1;
+            return typeof a == typeof b;
+        }
+        /***/    }, 
+    /* 110 */
     /***/ function(module, exports, __webpack_require__) {
         "use strict";
         /**
@@ -8250,71 +8583,17 @@ object-assign
         // ugly but working webpack workaround to be able to import the library in
         // CommonJS mode.
         // TODO investigate
-        /* tslint:disable no-var-requires */        module.exports = __webpack_require__(123).default;
+        /* tslint:disable no-var-requires */        module.exports = __webpack_require__(124).default;
     }, 
-    /* 105 */ 
-    /* 106 */ , 
-    /* 107 */
+    /* 111 */ 
+    /* 112 */
     /***/ , 
-    /* 107 */
+    /* 112 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return concat;
-        });
-        /* harmony import */ var _util_isScheduler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(35), _of__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(75), _from__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(27), _operators_concatAll__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(108);
-        /* harmony import */        
-        /** PURE_IMPORTS_START _util_isScheduler,_of,_from,_operators_concatAll PURE_IMPORTS_END */
-        function concat() {
-            for (var observables = [], _i = 0; _i < arguments.length; _i++) observables[_i] = arguments[_i];
-            return 1 === observables.length || 2 === observables.length && Object(_util_isScheduler__WEBPACK_IMPORTED_MODULE_0__.a)(observables[1]) ? Object(_from__WEBPACK_IMPORTED_MODULE_2__.a)(observables[0]) : Object(_operators_concatAll__WEBPACK_IMPORTED_MODULE_3__.a)()(_of__WEBPACK_IMPORTED_MODULE_1__.a.apply(void 0, observables));
-        }
-        //# sourceMappingURL=concat.js.map
-        /***/    }, 
-    /* 108 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return concatAll;
-        });
-        /* harmony import */ var _mergeAll__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(96);
-        /** PURE_IMPORTS_START _mergeAll PURE_IMPORTS_END */        function concatAll() {
-            return Object(_mergeAll__WEBPACK_IMPORTED_MODULE_0__.a)(1);
-        }
-        //# sourceMappingURL=concatAll.js.map
-        /***/    }, 
-    /* 109 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return concatMap;
-        });
-        /* harmony import */ var _mergeMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(66);
-        /** PURE_IMPORTS_START _mergeMap PURE_IMPORTS_END */        function concatMap(project, resultSelector) {
-            return Object(_mergeMap__WEBPACK_IMPORTED_MODULE_0__.a)(project, resultSelector, 1);
-        }
-        //# sourceMappingURL=concatMap.js.map
-        /***/    }, 
-    /* 110 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
-        }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
-                }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -8333,25 +8612,29 @@ object-assign
  */
         // TODO
                 __webpack_require__.r(__webpack_exports__);
-        var ImageSourceBuffer = function(_AbstractSourceBuffer) {
+        var ImageSourceBuffer = 
+        /* */
+        function(_AbstractSourceBuffer) {
             function ImageSourceBuffer() {
-                return _classCallCheck(this, ImageSourceBuffer), _possibleConstructorReturn(this, _AbstractSourceBuffer.apply(this, arguments));
+                return _AbstractSourceBuffer.apply(this, arguments) || this;
             }
+            _inheritsLoose(ImageSourceBuffer, _AbstractSourceBuffer);
+            var _proto = ImageSourceBuffer.prototype;
             /**
    * @param {Object} data
-   */            return _inherits(ImageSourceBuffer, _AbstractSourceBuffer), ImageSourceBuffer.prototype._append = function _append(data) {
+   */            return _proto._append = function _append(data) {
                 var start = data.start, end = data.end, timescale = data.timescale;
                 this.buffered.insert(start / timescale, null == end ? Number.MAX_VALUE : end / timescale);
             }, 
             /* tslint:disable no-empty */
-            ImageSourceBuffer.prototype._remove = function _remove() {}, 
+            _proto._remove = function _remove() {}, 
             /* tslint:enable no-empty */
             /* tslint:disable no-empty */
-            ImageSourceBuffer.prototype._abort = function _abort() {}, ImageSourceBuffer;
-        }(__webpack_require__(55).a);
+            _proto._abort = function _abort() {}, ImageSourceBuffer;
+        }(__webpack_require__(56).a);
         /* harmony default export */        __webpack_exports__.default = ImageSourceBuffer;
     }, 
-    /* 111 */
+    /* 113 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
@@ -8391,10 +8674,9 @@ object-assign
             var width = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_0__.n)(buf, pos);
             pos += 2;
             var height = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_0__.n)(buf, pos), aspectRatio = [ buf[pos += 2], buf[pos + 1] ].join(":"), isVod = 1 === buf[pos += 2];
-            pos += 1, 
-            // bytes 0x1F to 0x40 is unused data for now
+            pos += 1, // bytes 0x1F to 0x40 is unused data for now
             pos = 64;
-            var thumbs = [], currentImage = void 0, currentTs = 0;
+            var currentImage, thumbs = [], currentTs = 0;
             if (!imageCount) throw new Error("bif: no images to parse");
             for (;pos < length; ) {
                 var currentImageIndex = Object(_utils_bytes__WEBPACK_IMPORTED_MODULE_0__.o)(buf, pos);
@@ -8429,14 +8711,14 @@ object-assign
             };
         };
     }, 
-    /* 112 */
+    /* 114 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__), 
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return parseVTTStringToVTTCues;
         });
-        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12), _utils_array_includes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(11), _getCueBlocks__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(85), _parseCueBlock__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(100), _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(48);
+        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12), _utils_array_includes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(11), _getCueBlocks__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(86), _parseCueBlock__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(101), _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(49);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -8497,23 +8779,23 @@ object-assign
             if (!settings.vertical || "rl" !== settings.vertical && "lr" !== settings.vertical || (cue.vertical = settings.vertical), 
             settings.line) {
                 /**
-         * Capture groups:
-         *   1 -> percentage position
-         *   2 -> optional decimals from percentage position
-         *   3 -> optional follow-up of the string indicating alignment value
-         *   4 -> alignment value
-         * @type {RegExp}
-         */
+     * Capture groups:
+     *   1 -> percentage position
+     *   2 -> optional decimals from percentage position
+     *   3 -> optional follow-up of the string indicating alignment value
+     *   4 -> alignment value
+     * @type {RegExp}
+     */
                 var percentageMatches = settings.line.match(/^(\d+(\.\d+)?)%(,([a-z]+))?/);
                 if (percentageMatches) cue.line = Number(percentageMatches[1]), cue.snapToLines = !1, 
                 Object(_utils_array_includes__WEBPACK_IMPORTED_MODULE_1__.a)([ "start", "center", "end" ], percentageMatches[4]) && (cue.lineAlign = percentageMatches[4]); else {
                     /**
-             * Capture groups:
-             *   1 -> line number
-             *   2 -> optional follow-up of the string indicating alignment value
-             *   3 -> alignment value
-             * @type {RegExp}
-             */
+       * Capture groups:
+       *   1 -> line number
+       *   2 -> optional follow-up of the string indicating alignment value
+       *   3 -> alignment value
+       * @type {RegExp}
+       */
                     var lineMatches = settings.line.match(/^(-?\d+)(,([a-z]+))?/);
                     lineMatches && (cue.line = Number(lineMatches[1]), cue.snapToLines = !0, Object(_utils_array_includes__WEBPACK_IMPORTED_MODULE_1__.a)([ "start", "center", "end" ], lineMatches[3]) && (cue.lineAlign = lineMatches[3]));
                 }
@@ -8528,11 +8810,11 @@ object-assign
             settings.size && (cue.size = settings.size), settings.align && Object(_utils_array_includes__WEBPACK_IMPORTED_MODULE_1__.a)([ "start", "center", "end", "left" ], settings.align) && (cue.align = settings.align);
         }
         /***/    }, 
-    /* 113 */
+    /* 115 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
-        /* harmony import */ var array_find__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), array_find__WEBPACK_IMPORTED_MODULE_0___default = /* */ __webpack_require__.n(array_find__WEBPACK_IMPORTED_MODULE_0__), object_assign__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7), object_assign__WEBPACK_IMPORTED_MODULE_1___default = /* */ __webpack_require__.n(object_assign__WEBPACK_IMPORTED_MODULE_1__), _compat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12), _getParameters__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(86), _getParentElementsByTagName__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(54), _getTimeDelimiters__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(99), _nodes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(46), _regexps__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(20), _style__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(31), WANTED_STYLE_ATTRIBUTES = [ "extent", "writingMode", "origin", "align" ], TEXT_ALIGN_TO_LIGN_ALIGN = {
+        /* harmony import */ var array_find__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(14), array_find__WEBPACK_IMPORTED_MODULE_0___default = /* */ __webpack_require__.n(array_find__WEBPACK_IMPORTED_MODULE_0__), object_assign__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7), object_assign__WEBPACK_IMPORTED_MODULE_1___default = /* */ __webpack_require__.n(object_assign__WEBPACK_IMPORTED_MODULE_1__), _compat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12), _getParameters__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(87), _getParentElementsByTagName__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(55), _getTimeDelimiters__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(100), _nodes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(47), _regexps__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(20), _style__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(30), WANTED_STYLE_ATTRIBUTES = [ "extent", "writingMode", "origin", "align" ], TEXT_ALIGN_TO_LIGN_ALIGN = {
             left: "start",
             center: "center",
             right: "end",
@@ -8572,11 +8854,11 @@ object-assign
  * @returns {string}
  */        function generateTextContent(paragraph, shouldTrimWhiteSpaceForParagraph) {
             /**
-     * Recursive function, taking a node in argument and returning the
-     * corresponding string.
-     * @param {Node} node - the node in question
-     * @returns {string}
-     */
+   * Recursive function, taking a node in argument and returning the
+   * corresponding string.
+   * @param {Node} node - the node in question
+   * @returns {string}
+   */
             return function loop(node, shouldTrimWhiteSpaceFromParent) {
                 for (var childNodes = node.childNodes, text = "", i = 0; i < childNodes.length; i++) {
                     var currentNode = childNodes[i];
@@ -8588,7 +8870,7 @@ object-assign
                             var trimmed = textContent.trim();
                             textContent = trimmed = trimmed.replace(/\s+/g, " ");
                         }
-                        // DOM Parser turns HTML escape caracters into caracters,
+ // DOM Parser turns HTML escape caracters into caracters,
                         // that may be misinterpreted by VTTCue API (typically, less-than sign
                         // and greater-than sign can be interpreted as HTML tags signs).
                         // Original escaped caracters must be conserved.
@@ -8656,7 +8938,7 @@ object-assign
                         });
                     }
                 }
-                // construct regions array based on the xml as an optimization
+ // construct regions array based on the xml as an optimization
                                 for (var regions = [], _i = 0; _i <= regionNodes.length - 1; _i++) {
                     var regionNode = regionNodes[_i];
                     if (regionNode instanceof Element) {
@@ -8676,7 +8958,7 @@ object-assign
                         }();
                     }
                 }
-                // Computing the style takes a lot of ressources.
+ // Computing the style takes a lot of ressources.
                 // To avoid too much re-computation, let's compute the body style right
                 // now and do the rest progressively.
                                 for (var bodyStyle = body ? Object(_style__WEBPACK_IMPORTED_MODULE_8__.a)(WANTED_STYLE_ATTRIBUTES, [ body ], styles, regions) : Object(_style__WEBPACK_IMPORTED_MODULE_8__.a)(WANTED_STYLE_ATTRIBUTES, [], styles, regions), shouldTrimWhiteSpaceOnBody = "default" === (body ? body.getAttribute("xml:space") : void 0) || "default" === params.spaceStyle, _i2 = 0; _i2 < paragraphNodes.length; _i2++) {
@@ -8690,7 +8972,7 @@ object-assign
             return ret;
         };
     }, 
-    /* 114 */
+    /* 116 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
@@ -8717,7 +8999,7 @@ object-assign
  * @param {string} str
  * @returns {Object}
  */        function getClassNameByLang(str) {
-            for (var ruleRe = /\.(\S+)\s*{([^}]*)}/gi, langs = {}, m = void 0; m = ruleRe.exec(str); ) {
+            for (var m, ruleRe = /\.(\S+)\s*{([^}]*)}/gi, langs = {}; m = ruleRe.exec(str); ) {
                 var name = m[1], lang = getCSSProperty(m[2], "lang");
                 null != name && null != lang && (langs[lang] = name);
             }
@@ -8753,7 +9035,7 @@ object-assign
  * @returns {Array.<VTTCue|TextTrackCue>}
  */        
         /* harmony default export */ __webpack_exports__.default = function parseSami(smi, timeOffset, lang) {
-            var syncOpen = /<sync[ >]/gi, syncClose = /<sync[ >]|<\/body>/gi, subs = [], styleMatches = smi.match(STYLE), css = styleMatches ? styleMatches[1] : "", up = void 0, to = void 0;
+            var up, to, syncOpen = /<sync[ >]/gi, syncClose = /<sync[ >]|<\/body>/gi, subs = [], styleMatches = smi.match(STYLE), css = styleMatches ? styleMatches[1] : "";
             // FIXME Is that wanted?
             // previously written as let to = SyncClose.exec(smi); but never used
             syncClose.exec(smi);
@@ -8769,7 +9051,7 @@ object-assign
             }
             return createCuesFromArray(subs);
             function appendToSubs(lines, start) {
-                for (var i = lines.length, m = void 0; --i >= 0; ) if (m = lines[i].match(PARAG)) {
+                for (var m, i = lines.length; --i >= 0; ) if (m = lines[i].match(PARAG)) {
                     var _m = m, kl = _m[1], txt = _m[2];
                     klass === kl && ("&nbsp;" === txt ? subs[subs.length - 1].end = start : subs.push({
                         text: decodeEntities(txt),
@@ -8779,14 +9061,14 @@ object-assign
             }
         };
     }, 
-    /* 115 */
+    /* 117 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__), 
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return parseSRTStringToVTTCues;
         });
-        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12), _getCueBlocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(98), _parseCue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(97);
+        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12), _getCueBlocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(99), _parseCue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(98);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -8837,19 +9119,19 @@ object-assign
             return Object(_compat_index__WEBPACK_IMPORTED_MODULE_0__.i)(start, end, text);
         }
         /***/    }, 
-    /* 116 */
+    /* 118 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return switchMap;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(21), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22), _map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(63), _observable_from__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(27);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(22), _InnerSubscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(36), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(21), _map__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(64), _observable_from__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(44);
         /* harmony import */        
-        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_util_subscribeToResult,_map,_observable_from PURE_IMPORTS_END */
+        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_InnerSubscriber,_util_subscribeToResult,_map,_observable_from PURE_IMPORTS_END */
         function switchMap(project, resultSelector) {
             return "function" == typeof resultSelector ? function(source) {
                 return source.pipe(switchMap(function(a, i) {
-                    return Object(_observable_from__WEBPACK_IMPORTED_MODULE_4__.a)(project(a, i)).pipe(Object(_map__WEBPACK_IMPORTED_MODULE_3__.a)(function(b, ii) {
+                    return Object(_observable_from__WEBPACK_IMPORTED_MODULE_5__.a)(project(a, i)).pipe(Object(_map__WEBPACK_IMPORTED_MODULE_4__.a)(function(b, ii) {
                         return resultSelector(a, b, i, ii);
                     }));
                 }));
@@ -8879,7 +9161,9 @@ object-assign
                 this._innerSub(result, value, index);
             }, SwitchMapSubscriber.prototype._innerSub = function(result, value, index) {
                 var innerSubscription = this.innerSubscription;
-                innerSubscription && innerSubscription.unsubscribe(), this.add(this.innerSubscription = Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_2__.a)(this, result, value, index));
+                innerSubscription && innerSubscription.unsubscribe();
+                var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_2__.a(this, void 0, void 0);
+                this.add(innerSubscriber), this.innerSubscription = Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__.a)(this, result, value, index, innerSubscriber);
             }, SwitchMapSubscriber.prototype._complete = function() {
                 var innerSubscription = this.innerSubscription;
                 innerSubscription && !innerSubscription.closed || _super.prototype._complete.call(this);
@@ -8892,52 +9176,7 @@ object-assign
             }, SwitchMapSubscriber;
         }(_OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 117 */
-    /***/ function(module, exports, __webpack_require__) {
-        var pSlice = Array.prototype.slice, objectKeys = __webpack_require__(121), isArguments = __webpack_require__(122), deepEqual = module.exports = function(actual, expected, opts) {
-            // 7.1. All identical values are equivalent, as determined by ===.
-            return opts || (opts = {}), actual === expected || (actual instanceof Date && expected instanceof Date ? actual.getTime() === expected.getTime() : !actual || !expected || "object" != typeof actual && "object" != typeof expected ? opts.strict ? actual === expected : actual == expected : objEquiv(actual, expected, opts));
-        };
-        function isUndefinedOrNull(value) {
-            return null === value || void 0 === value;
-        }
-        function isBuffer(x) {
-            return !(!x || "object" != typeof x || "number" != typeof x.length) && ("function" == typeof x.copy && "function" == typeof x.slice && !(x.length > 0 && "number" != typeof x[0]));
-        }
-        function objEquiv(a, b, opts) {
-            var i, key;
-            if (isUndefinedOrNull(a) || isUndefinedOrNull(b)) return !1;
-            // an identical 'prototype' property.
-                        if (a.prototype !== b.prototype) return !1;
-            //~~~I've managed to break Object.keys through screwy arguments passing.
-            //   Converting to array solves the problem.
-                        if (isArguments(a)) return !!isArguments(b) && (a = pSlice.call(a), 
-            b = pSlice.call(b), deepEqual(a, b, opts));
-            if (isBuffer(a)) {
-                if (!isBuffer(b)) return !1;
-                if (a.length !== b.length) return !1;
-                for (i = 0; i < a.length; i++) if (a[i] !== b[i]) return !1;
-                return !0;
-            }
-            try {
-                var ka = objectKeys(a), kb = objectKeys(b);
-            } catch (e) {
-                //happens when one is a string literal and the other isn't
-                return !1;
-            }
-            // having the same number of owned properties (keys incorporates
-            // hasOwnProperty)
-                        if (ka.length != kb.length) return !1;
-            //the same set of keys (although not necessarily the same order),
-                        //~~~cheap key test
-            for (ka.sort(), kb.sort(), i = ka.length - 1; i >= 0; i--) if (ka[i] != kb[i]) return !1;
-            //equivalent values for every corresponding key, and
-            //~~~possibly expensive deep test
-                        for (i = ka.length - 1; i >= 0; i--) if (key = ka[i], !deepEqual(a[key], b[key], opts)) return !1;
-            return typeof a == typeof b;
-        }
-        /***/    }, 
-    /* 118 */
+    /* 119 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
@@ -8975,7 +9214,7 @@ object-assign
  * @returns {Object}
  */
         function getClassNameByLang(str) {
-            for (var ruleRe = /\.(\S+)\s*{([^}]*)}/gi, langs = {}, m = void 0; m = ruleRe.exec(str); ) {
+            for (var m, ruleRe = /\.(\S+)\s*{([^}]*)}/gi, langs = {}; m = ruleRe.exec(str); ) {
                 var name = m[1], lang = getCSSProperty(m[2], "lang");
                 null != name && null != lang && (langs[lang] = name);
             }
@@ -9018,7 +9257,7 @@ object-assign
  * @param {string} lang
  */        
         /* harmony default export */ __webpack_exports__.default = function parseSami(smi, timeOffset, lang) {
-            var syncOpen = /<sync[ >]/gi, syncClose = /<sync[ >]|<\/body>/gi, subs = [], styleMatches = smi.match(STYLE), css = styleMatches ? styleMatches[1] : "", up = void 0, to = void 0;
+            var up, to, syncOpen = /<sync[ >]/gi, syncClose = /<sync[ >]|<\/body>/gi, subs = [], styleMatches = smi.match(STYLE), css = styleMatches ? styleMatches[1] : "";
             // FIXME Is that wanted?
             // previously written as let to = SyncClose.exec(smi); but never used
             syncClose.exec(smi);
@@ -9063,14 +9302,14 @@ object-assign
             }
         };
     }, 
-    /* 119 */
+    /* 120 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__), 
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return parseSRTStringToHTML;
         });
-        /* harmony import */ var _getCueBlocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(98), _parseCue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(97);
+        /* harmony import */ var _getCueBlocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(99), _parseCue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(98);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -9180,14 +9419,14 @@ object-assign
             }(secureDiv);
         }
         /***/    }, 
-    /* 120 */
+    /* 121 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__), 
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return StreamDirectFile;
         });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(75), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(134), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(63), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(66), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(144), _compat__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(12), _errors__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(62), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0), _create_eme_manager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(88), _events_generators__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(29), _initial_seek_and_play__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(87), _media_error_manager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(89), _speed_manager__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(103), _stalling_manager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(90);
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(76), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(135), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(64), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(67), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(145), _compat__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(12), _errors__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(63), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0), _create_eme_manager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(89), _events_generators__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(28), _initial_seek_and_play__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(88), _media_error_manager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(90), _speed_manager__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(104), _stalling_manager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(91);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -9247,14 +9486,14 @@ object-assign
                     var error = new _errors__WEBPACK_IMPORTED_MODULE_6__.a("MEDIA_ERR_BLOCKED_AUTOPLAY", null, !1);
                     return Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(_events_generators__WEBPACK_IMPORTED_MODULE_9__.a.warning(error), _events_generators__WEBPACK_IMPORTED_MODULE_9__.a.loaded());
                 }
-                return Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(_events_generators__WEBPACK_IMPORTED_MODULE_9__.a.loaded);
+                return Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(_events_generators__WEBPACK_IMPORTED_MODULE_9__.a.loaded());
             })), linkURL$ = Object(_compat__WEBPACK_IMPORTED_MODULE_5__.k)(mediaElement, url).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__.a)()), initialSeek$ = seek$.pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__.a)());
-            // Create EME Manager, an observable which will manage every EME-related
+ // Create EME Manager, an observable which will manage every EME-related
             // issue.
                         return Object(rxjs__WEBPACK_IMPORTED_MODULE_1__.a)(loadedEvent$, initialSeek$, emeManager$, errorManager$, speedManager$, stallingManager$, linkURL$);
         }
         /***/    }, 
-    /* 121 */
+    /* 122 */
     /***/ function(module, exports) {
         function shim(obj) {
             var keys = [];
@@ -9263,7 +9502,7 @@ object-assign
         }
         /***/        (module.exports = "function" == typeof Object.keys ? Object.keys : shim).shim = shim;
     }, 
-    /* 122 */
+    /* 123 */
     /***/ function(module, exports) {
         var supportsArgumentsClass = "[object Arguments]" == function() {
             return Object.prototype.toString.call(arguments);
@@ -9277,12 +9516,12 @@ object-assign
         (exports = module.exports = supportsArgumentsClass ? supported : unsupported).supported = supported, 
         exports.unsupported = unsupported;
     }, 
-    /* 123 */
+    /* 124 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/deep-equal/index.js
-        var deep_equal = __webpack_require__(117), deep_equal_default = /* */ __webpack_require__.n(deep_equal), Subject = __webpack_require__(26), ReplaySubject = __webpack_require__(126), tslib_es6 = __webpack_require__(2), ObjectUnsubscribedError = __webpack_require__(45), BehaviorSubject_BehaviorSubject = /* */ function(_super) {
+        var deep_equal = __webpack_require__(109), deep_equal_default = /* */ __webpack_require__.n(deep_equal), Subject = __webpack_require__(43), ReplaySubject = __webpack_require__(127), tslib_es6 = __webpack_require__(3), ObjectUnsubscribedError = __webpack_require__(46), BehaviorSubject_BehaviorSubject = /* */ function(_super) {
             function BehaviorSubject(_value) {
                 var _this = _super.call(this) || this;
                 return _this._value = _value, _this;
@@ -9303,7 +9542,7 @@ object-assign
             }, BehaviorSubject.prototype.next = function(value) {
                 _super.prototype.next.call(this, this._value = value);
             }, BehaviorSubject;
-        }(Subject.a), merge = __webpack_require__(134), empty = __webpack_require__(25), combineLatest = __webpack_require__(145), concat = __webpack_require__(107), of = __webpack_require__(75), takeUntil = __webpack_require__(141), map = __webpack_require__(63), distinctUntilChanged = __webpack_require__(140), take = __webpack_require__(142), multicast = __webpack_require__(95);
+        }(Subject.a), merge = __webpack_require__(135), empty = __webpack_require__(26), combineLatest = __webpack_require__(146), concat = __webpack_require__(106), of = __webpack_require__(76), takeUntil = __webpack_require__(142), map = __webpack_require__(64), distinctUntilChanged = __webpack_require__(141), take = __webpack_require__(143), multicast = __webpack_require__(96);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/publish.js
         /** PURE_IMPORTS_START _Subject,_multicast PURE_IMPORTS_END */
         function publish(selector) {
@@ -9313,10 +9552,10 @@ object-assign
         }
         //# sourceMappingURL=publish.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/filter.js
-                var filter = __webpack_require__(137), share = __webpack_require__(151), mapTo = __webpack_require__(136), startWith = __webpack_require__(138), OuterSubscriber = __webpack_require__(21), subscribeToResult = __webpack_require__(22);
+                var filter = __webpack_require__(138), share = __webpack_require__(152), mapTo = __webpack_require__(137), startWith = __webpack_require__(139), OuterSubscriber = __webpack_require__(22), InnerSubscriber = __webpack_require__(36), subscribeToResult = __webpack_require__(21);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/share.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/skipUntil.js
-        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
+        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_InnerSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
         function skipUntil(notifier) {
             return function(source) {
                 return source.lift(new SkipUntilOperator(notifier));
@@ -9332,7 +9571,9 @@ object-assign
         }(), skipUntil_SkipUntilSubscriber = /* */ function(_super) {
             function SkipUntilSubscriber(destination, notifier) {
                 var _this = _super.call(this, destination) || this;
-                return _this.hasValue = !1, _this.add(_this.innerSubscription = Object(subscribeToResult.a)(_this, notifier)), 
+                _this.hasValue = !1;
+                var innerSubscriber = new InnerSubscriber.a(_this, void 0, void 0);
+                return _this.add(innerSubscriber), _this.innerSubscription = innerSubscriber, Object(subscribeToResult.a)(_this, notifier, void 0, void 0, innerSubscriber), 
                 _this;
             }
             return tslib_es6.a(SkipUntilSubscriber, _super), SkipUntilSubscriber.prototype._next = function(value) {
@@ -9340,7 +9581,7 @@ object-assign
             }, SkipUntilSubscriber.prototype.notifyNext = function(outerValue, innerValue, outerIndex, innerIndex, innerSub) {
                 this.hasValue = !0, this.innerSubscription && this.innerSubscription.unsubscribe();
             }, SkipUntilSubscriber.prototype.notifyComplete = function() {}, SkipUntilSubscriber;
-        }(OuterSubscriber.a), switchMapTo = __webpack_require__(149), mergeMapTo = __webpack_require__(143), catchError = __webpack_require__(146), config = __webpack_require__(3), log = __webpack_require__(0), eventemitter = __webpack_require__(41), noop = __webpack_require__(28), utils_ranges = __webpack_require__(18), array_includes = __webpack_require__(11), WARNED_MESSAGES = [];
+        }(OuterSubscriber.a), switchMapTo = __webpack_require__(150), mergeMapTo = __webpack_require__(144), catchError = __webpack_require__(147), config = __webpack_require__(2), log = __webpack_require__(0), eventemitter = __webpack_require__(40), noop = __webpack_require__(27), utils_ranges = __webpack_require__(16), array_includes = __webpack_require__(11), WARNED_MESSAGES = [];
         /**
  * Perform a console.warn only once in the application lifetime.
  *
@@ -9356,7 +9597,7 @@ object-assign
             WARNED_MESSAGES.push(message));
         }
         // EXTERNAL MODULE: ./src/compat/fullscreen.ts
-                var fullscreen = __webpack_require__(65), events = __webpack_require__(8), constants = __webpack_require__(23), features = __webpack_require__(6), eme = __webpack_require__(60), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), mergeMap = __webpack_require__(66), switchMap = __webpack_require__(116), tap = __webpack_require__(148);
+                var fullscreen = __webpack_require__(66), events = __webpack_require__(8), constants = __webpack_require__(23), features = __webpack_require__(6), eme = __webpack_require__(61), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), mergeMap = __webpack_require__(67), switchMap = __webpack_require__(118), tap = __webpack_require__(149);
         // EXTERNAL MODULE: ./src/compat/events.ts + 2 modules
                 // CONCATENATED MODULE: ./src/utils/rx-throttle.ts
         /**
@@ -9406,11 +9647,81 @@ object-assign
             };
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/shareReplay.js
-                var shareReplay = __webpack_require__(150);
+                var shareReplay = __webpack_require__(151), EWMA = 
+        /* */
+        function() {
+            /**
+   * @param {number} halfLife
+   */
+            function EWMA(halfLife) {
+                // (half-life = log(1/2) / log(Decay Factor)
+                this._alpha = Math.exp(Math.log(.5) / halfLife), this._lastEstimate = 0, this._totalWeight = 0;
+            }
+            /**
+   * @param {number} weight
+   * @param {number} value
+   */            var _proto = EWMA.prototype;
+            return _proto.addSample = function addSample(weight, value) {
+                var adjAlpha = Math.pow(this._alpha, weight), newEstimate = value * (1 - adjAlpha) + adjAlpha * this._lastEstimate;
+                isNaN(newEstimate) || (this._lastEstimate = newEstimate, this._totalWeight += weight);
+            }, 
+            /**
+   * @returns {number} value
+   */
+            _proto.getEstimate = function getEstimate() {
+                var zeroFactor = 1 - Math.pow(this._alpha, this._totalWeight);
+                return this._lastEstimate / zeroFactor;
+            }, EWMA;
+        }(), ABR_MINIMUM_TOTAL_BYTES = config.a.ABR_MINIMUM_TOTAL_BYTES, ABR_MINIMUM_CHUNK_SIZE = config.a.ABR_MINIMUM_CHUNK_SIZE, ABR_FAST_EMA = config.a.ABR_FAST_EMA, ABR_SLOW_EMA = config.a.ABR_SLOW_EMA, bandwidth_estimator_BandwidthEstimator = 
+        /* */
+        function() {
+            function BandwidthEstimator() {
+                /**
+     * A fast-moving average.
+     * @private
+     */
+                this._fast = new EWMA(ABR_FAST_EMA), 
+                /**
+     * A slow-moving average.
+     * @private
+     */
+                this._slow = new EWMA(ABR_SLOW_EMA), 
+                /**
+     * Number of bytes sampled.
+     * @private
+     */
+                this._bytesSampled = 0;
+            }
+            /**
+   * Takes a bandwidth sample.
+   * @param {number} durationMs - The amount of time, in milliseconds, for a
+   *   particular request.
+   * @param {number} numBytes - The total number of bytes transferred in that
+   *   request.
+   */            var _proto = BandwidthEstimator.prototype;
+            return _proto.addSample = function addSample(durationInMs, numberOfBytes) {
+                if (!(numberOfBytes < ABR_MINIMUM_CHUNK_SIZE)) {
+                    var bandwidth = 8e3 * numberOfBytes / durationInMs, weight = durationInMs / 1e3;
+                    this._bytesSampled += numberOfBytes, this._fast.addSample(weight, bandwidth), this._slow.addSample(weight, bandwidth);
+                }
+            }, 
+            /**
+   * Get estimate of the bandwidth, in bits per seconds.
+   * @returns {Number|undefined}
+   */
+            _proto.getEstimate = function getEstimate() {
+                if (!(this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES)) // Take the minimum of these two estimates.  This should have the effect of
+                // adapting down quickly, but up more slowly.
+                return Math.min(this._fast.getEstimate(), this._slow.getEstimate());
+            }, 
+            /**
+   * Reset the bandwidth estimation.
+   */
+            _proto.reset = function reset() {
+                this._fast = new EWMA(ABR_FAST_EMA), this._slow = new EWMA(ABR_SLOW_EMA), this._bytesSampled = 0;
+            }, BandwidthEstimator;
+        }(), array_find_index = __webpack_require__(95), array_find_index_default = /* */ __webpack_require__.n(array_find_index);
         // CONCATENATED MODULE: ./src/core/abr/ewma.ts
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -9430,103 +9741,6 @@ object-assign
  * Tweaked implementation of an exponential weighted Moving Average.
  * Heavily "inspired" from the shaka-player one (Ewma).
  * @class EWMA
- */        var ewma = function() {
-            /**
-   * @param {number} halfLife
-   */
-            function EWMA(halfLife) {
-                _classCallCheck(this, EWMA), 
-                // (half-life = log(1/2) / log(Decay Factor)
-                this._alpha = Math.exp(Math.log(.5) / halfLife), this._lastEstimate = 0, this._totalWeight = 0;
-            }
-            /**
-   * @param {number} weight
-   * @param {number} value
-   */            return EWMA.prototype.addSample = function addSample(weight, value) {
-                var adjAlpha = Math.pow(this._alpha, weight), newEstimate = value * (1 - adjAlpha) + adjAlpha * this._lastEstimate;
-                isNaN(newEstimate) || (this._lastEstimate = newEstimate, this._totalWeight += weight);
-            }, 
-            /**
-   * @returns {number} value
-   */
-            EWMA.prototype.getEstimate = function getEstimate() {
-                var zeroFactor = 1 - Math.pow(this._alpha, this._totalWeight);
-                return this._lastEstimate / zeroFactor;
-            }, EWMA;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/core/abr/bandwidth_estimator.ts
-        function bandwidth_estimator_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */        var ABR_MINIMUM_TOTAL_BYTES = config.a.ABR_MINIMUM_TOTAL_BYTES, ABR_MINIMUM_CHUNK_SIZE = config.a.ABR_MINIMUM_CHUNK_SIZE, ABR_FAST_EMA = config.a.ABR_FAST_EMA, ABR_SLOW_EMA = config.a.ABR_SLOW_EMA, bandwidth_estimator = function() {
-            function BandwidthEstimator() {
-                bandwidth_estimator_classCallCheck(this, BandwidthEstimator), 
-                /**
-     * A fast-moving average.
-     * @private
-     */
-                this._fast = new ewma(ABR_FAST_EMA), 
-                /**
-     * A slow-moving average.
-     * @private
-     */
-                this._slow = new ewma(ABR_SLOW_EMA), 
-                /**
-     * Number of bytes sampled.
-     * @private
-     */
-                this._bytesSampled = 0;
-            }
-            /**
-   * Takes a bandwidth sample.
-   * @param {number} durationMs - The amount of time, in milliseconds, for a
-   *   particular request.
-   * @param {number} numBytes - The total number of bytes transferred in that
-   *   request.
-   */            return BandwidthEstimator.prototype.addSample = function addSample(durationInMs, numberOfBytes) {
-                if (!(numberOfBytes < ABR_MINIMUM_CHUNK_SIZE)) {
-                    var bandwidth = 8e3 * numberOfBytes / durationInMs, weight = durationInMs / 1e3;
-                    this._bytesSampled += numberOfBytes, this._fast.addSample(weight, bandwidth), this._slow.addSample(weight, bandwidth);
-                }
-            }, 
-            /**
-   * Get estimate of the bandwidth, in bits per seconds.
-   * @returns {Number|undefined}
-   */
-            BandwidthEstimator.prototype.getEstimate = function getEstimate() {
-                if (!(this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES)) 
-                // Take the minimum of these two estimates.  This should have the effect of
-                // adapting down quickly, but up more slowly.
-                return Math.min(this._fast.getEstimate(), this._slow.getEstimate());
-            }, 
-            /**
-   * Reset the bandwidth estimation.
-   */
-            BandwidthEstimator.prototype.reset = function reset() {
-                this._fast = new ewma(ABR_FAST_EMA), this._slow = new ewma(ABR_SLOW_EMA), this._bytesSampled = 0;
-            }, BandwidthEstimator;
-        }(), array_find_index = __webpack_require__(94), array_find_index_default = /* */ __webpack_require__.n(array_find_index);
-        /**
- * Calculate a mean bandwidth based on the bytes downloaded and the amount
- * of time needed to do so.
- *
- * Heavily "inspired" from the Shaka-Player's "ewma bandwidth estimator".
- * @class BandwidthEstimator
  */        
         // CONCATENATED MODULE: ./src/core/abr/filterByBitrate.ts
         /**
@@ -9557,7 +9771,7 @@ object-assign
             return -1 === firstSuperiorBitrate ? representations : representations.slice(0, firstSuperiorBitrate);
         }
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-                var array_find_find = __webpack_require__(13), find_default = /* */ __webpack_require__.n(array_find_find);
+                var array_find_find = __webpack_require__(14), find_default = /* */ __webpack_require__.n(array_find_find);
         // CONCATENATED MODULE: ./src/core/abr/filterByWidth.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -9623,9 +9837,6 @@ object-assign
             return -1 === tooHighIndex ? representations[representations.length - 1] : representations[tooHighIndex - 1];
         }
         // CONCATENATED MODULE: ./src/core/abr/representation_chooser.ts
-                function representation_chooser_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -9662,7 +9873,7 @@ object-assign
  */        function getConcernedRequest(requests, position) {
             for (var currentRequestIds = Object.keys(requests), len = currentRequestIds.length, i = 0; i < len; i++) {
                 var request = requests[currentRequestIds[i]];
-                // We check that this chunk has a high probability of being the one we want
+ // We check that this chunk has a high probability of being the one we want
                                 if (null != request && Math.abs(request.time - position) < .3 * request.duration) return request;
             }
         }
@@ -9674,10 +9885,9 @@ object-assign
  * @returns {number|undefined}
  */        function estimateRequestBandwidth(request) {
             if (!(request.progress.length < 2)) {
-                for (
-                // try to infer quickly the current bitrate based on the
+                for (// try to infer quickly the current bitrate based on the
                 // progress events
-                var ewma1 = new ewma(2), progress = request.progress, i = 1; i < progress.length; i++) {
+                var ewma1 = new EWMA(2), progress = request.progress, i = 1; i < progress.length; i++) {
                     var bytesDownloaded = progress[i].size - progress[i - 1].size, timeElapsed = progress[i].timestamp - progress[i - 1].timestamp, reqBitrate = 8 * bytesDownloaded / (timeElapsed / 1e3);
                     ewma1.addSample(timeElapsed / 1e3, reqBitrate);
                 }
@@ -9721,7 +9931,7 @@ object-assign
                 var currentBitrate = clock.bitrate, chunkDuration = concernedRequest.duration, now = Date.now(), requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1e3, lastProgressEvent = concernedRequest.progress ? concernedRequest.progress[concernedRequest.progress.length - 1] : null, bandwidthEstimate = estimateRequestBandwidth(concernedRequest);
                 if (null != lastProgressEvent && null != bandwidthEstimate) {
                     var remainingTime = 1.2 * estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
-                    // if this remaining time is reliable and is not enough to avoid buffering
+ // if this remaining time is reliable and is not enough to avoid buffering
                                         if ((now - lastProgressEvent.timestamp) / 1e3 <= remainingTime && remainingTime > clock.bufferGap / clock.speed) return bandwidthEstimate;
                 }
                 if (!(null == currentBitrate || requestElapsedTime <= (1.5 * chunkDuration + 1) / clock.speed)) {
@@ -9753,22 +9963,25 @@ object-assign
  *     this bitrate, the representation with the minimum bitrate will be taken.
  *
  * @class RepresentationChooser
- */        var representation_chooser = function() {
+ */        var representation_chooser_RepresentationChooser = 
+        /* */
+        function() {
             /**
-     * @param {Object} options
-     */
+   * @param {Object} options
+   */
             function RepresentationChooser(options) {
-                representation_chooser_classCallCheck(this, RepresentationChooser), this._dispose$ = new Subject.a(), 
-                this.manualBitrate$ = new BehaviorSubject_BehaviorSubject(null != options.manualBitrate ? options.manualBitrate : -1), 
+                this._dispose$ = new Subject.a(), this.manualBitrate$ = new BehaviorSubject_BehaviorSubject(null != options.manualBitrate ? options.manualBitrate : -1), 
                 this.maxAutoBitrate$ = new BehaviorSubject_BehaviorSubject(null != options.maxAutoBitrate ? options.maxAutoBitrate : Infinity), 
-                this.estimator = new bandwidth_estimator(), this._currentRequests = {}, this._initialBitrate = options.initialBitrate || 0, 
-                this._limitWidth$ = options.limitWidth$, this._throttle$ = options.throttle$;
+                this.estimator = new bandwidth_estimator_BandwidthEstimator(), this._currentRequests = {}, 
+                this._initialBitrate = options.initialBitrate || 0, this._limitWidth$ = options.limitWidth$, 
+                this._throttle$ = options.throttle$;
             }
             /**
-     * @param {Observable} clock$
-     * @param {Array.<Object>} representations
-     * @returns {Observable}
-     */            return RepresentationChooser.prototype.get$ = function get$(clock$, representations) {
+   * @param {Observable} clock$
+   * @param {Array.<Object>} representations
+   * @returns {Observable}
+   */            var _proto = RepresentationChooser.prototype;
+            return _proto.get$ = function get$(clock$, representations) {
                 var _this = this;
                 if (representations.length < 2) return Object(of.a)({
                     bitrate: void 0,
@@ -9785,30 +9998,29 @@ object-assign
                     };
                 })))
                 /**
-         * Emit restrictions on the pools of available representations to choose
-         * from.
-         * @type {Observable}
-         */;
-                var deviceEvents$ = _deviceEventsArray.length ? combineLatest.a.apply(void 0, _deviceEventsArray).pipe(Object(map.a)(function(args) {
+     * Emit restrictions on the pools of available representations to choose
+     * from.
+     * @type {Observable}
+     */;
+                var lastEstimatedBitrate, deviceEvents$ = _deviceEventsArray.length ? combineLatest.a.apply(void 0, _deviceEventsArray).pipe(Object(map.a)(function(args) {
                     return object_assign_default.a.apply(void 0, [ {} ].concat(args));
-                })) : Object(of.a)({}), lastEstimatedBitrate = void 0;
+                })) : Object(of.a)({});
                 /**
-         * Store the last client's bitrate generated by our estimation algorithms.
-         * @type {Number|undefined}
-         */                return manualBitrate$.pipe(Object(switchMap.a)(function(manualBitrate) {
+     * Store the last client's bitrate generated by our estimation algorithms.
+     * @type {Number|undefined}
+     */                return manualBitrate$.pipe(Object(switchMap.a)(function(manualBitrate) {
                     if (manualBitrate >= 0) 
                     // -- MANUAL mode --
                     return setManualRepresentation(representations, manualBitrate);
-                    // -- AUTO mode --
+ // -- AUTO mode --
                                         var inStarvationMode = !1;
  // == buffer gap too low == panic mode
                                         return Object(combineLatest.a)(clock$, maxAutoBitrate$, deviceEvents$).pipe(Object(map.a)(function(_ref) {
-                        var clock = _ref[0], maxAutoBitrate = _ref[1], deviceEvents = _ref[2], nextBitrate = void 0, bandwidthEstimate = void 0, bufferGap = clock.bufferGap;
+                        var nextBitrate, bandwidthEstimate, nextEstimate, clock = _ref[0], maxAutoBitrate = _ref[1], deviceEvents = _ref[2], bufferGap = clock.bufferGap;
                         // If in starvation mode, check if a quick new estimate can be done
                         // from the last requests.
                         // If so, cancel previous estimations and replace it by the new one
-                        if (
-                        // check if should get in/out of starvation mode
+                        if (// check if should get in/out of starvation mode
                         !inStarvationMode && bufferGap <= ABR_STARVATION_GAP ? (log.a.info("ABR - enter starvation mode."), 
                         inStarvationMode = !0) : inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP && (log.a.info("ABR - exit starvation mode."), 
                         inStarvationMode = !1), inStarvationMode && null != (bandwidthEstimate = estimateStarvationModeBitrate(_this._currentRequests, clock, lastEstimatedBitrate))) {
@@ -9816,12 +10028,9 @@ object-assign
                             var currentBitrate = clock.bitrate;
                             nextBitrate = null == currentBitrate ? Math.min(bandwidthEstimate, maxAutoBitrate) : Math.min(bandwidthEstimate, maxAutoBitrate, currentBitrate);
                         }
-                        // if nextBitrate is not yet defined, do the normal estimation
-                                                if (null == nextBitrate) {
-                            var nextEstimate = void 0;
-                            nextEstimate = null != (bandwidthEstimate = _this.estimator.getEstimate()) ? inStarvationMode ? bandwidthEstimate * ABR_STARVATION_FACTOR : bandwidthEstimate * ABR_REGULAR_FACTOR : null != lastEstimatedBitrate ? inStarvationMode ? lastEstimatedBitrate * ABR_STARVATION_FACTOR : lastEstimatedBitrate * ABR_REGULAR_FACTOR : _initialBitrate, 
-                            nextBitrate = Math.min(nextEstimate, maxAutoBitrate);
-                        }
+ // if nextBitrate is not yet defined, do the normal estimation
+                                                null == nextBitrate && (nextEstimate = null != (bandwidthEstimate = _this.estimator.getEstimate()) ? inStarvationMode ? bandwidthEstimate * ABR_STARVATION_FACTOR : bandwidthEstimate * ABR_REGULAR_FACTOR : null != lastEstimatedBitrate ? inStarvationMode ? lastEstimatedBitrate * ABR_STARVATION_FACTOR : lastEstimatedBitrate * ABR_REGULAR_FACTOR : _initialBitrate, 
+                        nextBitrate = Math.min(nextEstimate, maxAutoBitrate));
                         return clock.speed > 1 && (nextBitrate /= clock.speed), {
                             bitrate: bandwidthEstimate,
                             representation: fromBitrateCeil(getFilteredRepresentations(representations, deviceEvents), nextBitrate) || representations[0]
@@ -9833,30 +10042,30 @@ object-assign
                 }));
             }, 
             /**
-     * Add a bandwidth estimate by giving:
-     *   - the duration of the request, in s
-     *   - the size of the request in bytes
-     * @param {number} duration
-     * @param {number} size
-     */
-            RepresentationChooser.prototype.addEstimate = function addEstimate(duration, size) {
+   * Add a bandwidth estimate by giving:
+   *   - the duration of the request, in s
+   *   - the size of the request in bytes
+   * @param {number} duration
+   * @param {number} size
+   */
+            _proto.addEstimate = function addEstimate(duration, size) {
                 null != duration && null != size && this.estimator.addSample(duration, size);
             }, 
             /**
-     * Reset all the estimates done until now.
-     * Useful when the network situation changed completely.
-     */
-            RepresentationChooser.prototype.resetEstimate = function resetEstimate() {
+   * Reset all the estimates done until now.
+   * Useful when the network situation changed completely.
+   */
+            _proto.resetEstimate = function resetEstimate() {
                 this.estimator.reset();
             }, 
             /**
-     * Add informations about a new pending request.
-     * This can be useful if the network bandwidth drastically changes to infer
-     * a new bandwidth through this single request.
-     * @param {string|number} id
-     * @param {Object} payload
-     */
-            RepresentationChooser.prototype.addPendingRequest = function addPendingRequest(id, payload) {
+   * Add informations about a new pending request.
+   * This can be useful if the network bandwidth drastically changes to infer
+   * a new bandwidth through this single request.
+   * @param {string|number} id
+   * @param {Object} payload
+   */
+            _proto.addPendingRequest = function addPendingRequest(id, payload) {
                 if (this._currentRequests[id]) log.a.warn("ABR: request already added."); else {
                     var _payload$value = payload.value, time = _payload$value.time, duration = _payload$value.duration, requestTimestamp = _payload$value.requestTimestamp;
                     this._currentRequests[id] = {
@@ -9868,143 +10077,123 @@ object-assign
                 }
             }, 
             /**
-     * Add progress informations to a pending request.
-     * Progress objects are a key part to calculate the bandwidth from a single
-     * request, in the case the user's bandwidth changes drastically while doing
-     * it.
-     * @param {string|number} id
-     * @param {Object} progress
-     */
-            RepresentationChooser.prototype.addRequestProgress = function addRequestProgress(id, progress) {
+   * Add progress informations to a pending request.
+   * Progress objects are a key part to calculate the bandwidth from a single
+   * request, in the case the user's bandwidth changes drastically while doing
+   * it.
+   * @param {string|number} id
+   * @param {Object} progress
+   */
+            _proto.addRequestProgress = function addRequestProgress(id, progress) {
                 var request = this._currentRequests[id];
                 request ? request.progress.push(progress.value) : log.a.warn("ABR: progress for a request not added");
             }, 
             /**
-     * Remove a request previously set as pending through the addPendingRequest
-     * method.
-     * @param {string|number} id
-     */
-            RepresentationChooser.prototype.removePendingRequest = function removePendingRequest(id) {
+   * Remove a request previously set as pending through the addPendingRequest
+   * method.
+   * @param {string|number} id
+   */
+            _proto.removePendingRequest = function removePendingRequest(id) {
                 this._currentRequests[id] || log.a.warn("ABR: can't remove unknown request"), delete this._currentRequests[id];
             }, 
             /**
-     * Remove informations about all pending requests.
-     */
-            RepresentationChooser.prototype.resetRequests = function resetRequests() {
+   * Remove informations about all pending requests.
+   */
+            _proto.resetRequests = function resetRequests() {
                 this._currentRequests = {};
             }, 
             /**
-     * Free up the resources used by the RepresentationChooser.
-     */
-            RepresentationChooser.prototype.dispose = function dispose() {
+   * Free up the resources used by the RepresentationChooser.
+   */
+            _proto.dispose = function dispose() {
                 this._dispose$.next(), this.manualBitrate$.complete(), this.maxAutoBitrate$.complete();
             }, RepresentationChooser;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/core/abr/index.ts
-        function abr_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */        var defaultChooserOptions = {
+        }(), defaultChooserOptions = {
             limitWidth: {},
             throttle: {},
             initialBitrates: {},
             manualBitrates: {},
             maxAutoBitrates: {}
         }, abr_createChooser = function createChooser(type, options) {
-            return new representation_chooser({
+            return new representation_chooser_RepresentationChooser({
                 limitWidth$: options.limitWidth[type],
                 throttle$: options.throttle[type],
                 initialBitrate: options.initialBitrates[type],
                 manualBitrate: options.manualBitrates[type],
                 maxAutoBitrate: options.maxAutoBitrates[type]
             });
-        }, abr = function() {
+        }, abr_ABRManager = 
+        /* */
+        function() {
             /**
-     * @param {Observable} requests$ - Emit requests infos as they begin, progress
-     * and end.
-     * Allows to know if a request take too much time to be finished in
-     * emergency times (e.g. when the user's bandwidth falls very quickly).
-     *
-     * The items emitted are Observables which each emit infos about a SINGLE
-     * request. These infos are under the form of objects with the following keys:
-     *   - type {string}: the buffer type (example: "video")
-     *
-     *   - event {string}: Wether the request started, is progressing or has
-     *     ended. Should be either one of these three strings:
-     *       1. "requestBegin": The request has just begun.
-     *
-     *       2. "progress": Informations about the request progress were received
-     *          (basically the amount of bytes currently received).
-     *
-     *       2. "requestEnd": The request just ended (successfully/on error/was
-     *          canceled)
-     *
-     *     Note that it should ALWAYS happen in the following order:
-     *     1 requestBegin -> 0+ progress -> 1 requestEnd
-     *
-     *     Also note that EVERY requestBegin should eventually be followed by a
-     *     requestEnd at some point. If that's not the case, a memory leak
-     *     can happen.
-     *
-     *   - value {Object|undefined}: The value depends on the type of event
-     *     received:
-     *       - for "requestBegin" events, it should be an object with the
-     *         following keys:
-     *           - id {number|String}: The id of this particular request.
-     *           - duration {number}: duration, in seconds of the asked segment.
-     *           - time {number}: The start time, in seconds of the asked segment.
-     *           - requestTimestamp {number}: the timestamp at which the request
-     *             was sent, in ms.
-     *
-     *       - for "progress" events, it should be an object with the following
-     *         keys:
-     *           - id {number|String}: The id of this particular request.
-     *           - size {number}: amount currently downloaded, in bytes
-     *           - timestamp {number}: timestamp at which the progress event was
-     *             received, in ms
-     *         Those events SHOULD be received in order (that is, in increasing
-     *         order for both size and timestamp).
-     *
-     *       - for "requestEnd" events:
-     *           - id {number|String}: The id of this particular request.
-     *
-     * @param {Observable} metrics$ - Emit each times the network downloaded
-     * a new segment for a given buffer type. Allows to obtain informations about
-     * the user's bitrate.
-     *
-     * The items emitted are object with the following keys:
-     *   - type {string}: the buffer type (example: "video")
-     *   - value {Object}:
-     *     - duration {number}: duration of the request, in seconds.
-     *     - size {number}: size of the downloaded chunks, in bytes.
-     *
-     * @param {Object|undefined} options
-     */
-            function ABRManager(requests$, metrics$) {
-                var _this = this, options = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : defaultChooserOptions;
-                abr_classCallCheck(this, ABRManager), 
+   * @param {Observable} requests$ - Emit requests infos as they begin, progress
+   * and end.
+   * Allows to know if a request take too much time to be finished in
+   * emergency times (e.g. when the user's bandwidth falls very quickly).
+   *
+   * The items emitted are Observables which each emit infos about a SINGLE
+   * request. These infos are under the form of objects with the following keys:
+   *   - type {string}: the buffer type (example: "video")
+   *
+   *   - event {string}: Wether the request started, is progressing or has
+   *     ended. Should be either one of these three strings:
+   *       1. "requestBegin": The request has just begun.
+   *
+   *       2. "progress": Informations about the request progress were received
+   *          (basically the amount of bytes currently received).
+   *
+   *       2. "requestEnd": The request just ended (successfully/on error/was
+   *          canceled)
+   *
+   *     Note that it should ALWAYS happen in the following order:
+   *     1 requestBegin -> 0+ progress -> 1 requestEnd
+   *
+   *     Also note that EVERY requestBegin should eventually be followed by a
+   *     requestEnd at some point. If that's not the case, a memory leak
+   *     can happen.
+   *
+   *   - value {Object|undefined}: The value depends on the type of event
+   *     received:
+   *       - for "requestBegin" events, it should be an object with the
+   *         following keys:
+   *           - id {number|String}: The id of this particular request.
+   *           - duration {number}: duration, in seconds of the asked segment.
+   *           - time {number}: The start time, in seconds of the asked segment.
+   *           - requestTimestamp {number}: the timestamp at which the request
+   *             was sent, in ms.
+   *
+   *       - for "progress" events, it should be an object with the following
+   *         keys:
+   *           - id {number|String}: The id of this particular request.
+   *           - size {number}: amount currently downloaded, in bytes
+   *           - timestamp {number}: timestamp at which the progress event was
+   *             received, in ms
+   *         Those events SHOULD be received in order (that is, in increasing
+   *         order for both size and timestamp).
+   *
+   *       - for "requestEnd" events:
+   *           - id {number|String}: The id of this particular request.
+   *
+   * @param {Observable} metrics$ - Emit each times the network downloaded
+   * a new segment for a given buffer type. Allows to obtain informations about
+   * the user's bitrate.
+   *
+   * The items emitted are object with the following keys:
+   *   - type {string}: the buffer type (example: "video")
+   *   - value {Object}:
+   *     - duration {number}: duration of the request, in seconds.
+   *     - size {number}: size of the downloaded chunks, in bytes.
+   *
+   * @param {Object|undefined} options
+   */
+            function ABRManager(requests$, metrics$, options) {
+                var _this = this;
+                void 0 === options && (options = defaultChooserOptions), 
                 // Subject emitting and completing on dispose.
                 // Used to clean up every created observables.
-                this._dispose$ = new Subject.a(), 
-                // Will contain every RepresentationChooser attached to the ABRManager,
+                this._dispose$ = new Subject.a(), // Will contain every RepresentationChooser attached to the ABRManager,
                 // by type ("audio"/"video" etc.)
-                this._choosers = {}, 
-                // -- OPTIONS --
+                this._choosers = {}, // -- OPTIONS --
                 // Will contain options used when (lazily) instantiating a
                 // RepresentationChooser
                 this._chooserInstanceOptions = {
@@ -10016,8 +10205,7 @@ object-assign
                 }, metrics$.pipe(Object(takeUntil.a)(this._dispose$)).subscribe(function(_ref) {
                     var type = _ref.type, value = _ref.value, chooser = _this._lazilyCreateChooser(type), duration = value.duration, size = value.size;
                     chooser.addEstimate(duration, size);
-                }), requests$.pipe(
-                // requests$ emits observables which are subscribed to
+                }), requests$.pipe(// requests$ emits observables which are subscribed to
                 Object(mergeMap.a)(function(request$) {
                     return request$;
                 }), Object(takeUntil.a)(this._dispose$)).subscribe(function(request) {
@@ -10042,30 +10230,30 @@ object-assign
                 });
             }
             /**
-     * Take type and an array of the available representations, spit out an
-     * observable emitting the best representation (given the network/buffer
-     * state).
-     * @param {string} type
-     * @param {Observable<Object>} clock$
-     * @param {Array.<Representation>|undefined} representations
-     * @returns {Observable}
-     */            return ABRManager.prototype.get$ = function get$(type, clock$) {
-                var representations = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : [];
-                return this._lazilyCreateChooser(type).get$(clock$, representations);
+   * Take type and an array of the available representations, spit out an
+   * observable emitting the best representation (given the network/buffer
+   * state).
+   * @param {string} type
+   * @param {Observable<Object>} clock$
+   * @param {Array.<Representation>|undefined} representations
+   * @returns {Observable}
+   */            var _proto = ABRManager.prototype;
+            return _proto.get$ = function get$(type, clock$, representations) {
+                return void 0 === representations && (representations = []), this._lazilyCreateChooser(type).get$(clock$, representations);
             }, 
             /**
-     * Set manually the bitrate for a given type.
-     *
-     * The given number will act as a ceil.
-     * If no representation is found with the given bitrate, we will consider:
-     *   1. The representation just lower than it
-     *   2. If no representation is found in the previous step, the representation
-     *   with the lowest bitrate.
-     *
-     * @param {string} type
-     * @param {number} bitrate
-     */
-            ABRManager.prototype.setManualBitrate = function setManualBitrate(type, bitrate) {
+   * Set manually the bitrate for a given type.
+   *
+   * The given number will act as a ceil.
+   * If no representation is found with the given bitrate, we will consider:
+   *   1. The representation just lower than it
+   *   2. If no representation is found in the previous step, the representation
+   *   with the lowest bitrate.
+   *
+   * @param {string} type
+   * @param {number} bitrate
+   */
+            _proto.setManualBitrate = function setManualBitrate(type, bitrate) {
                 var chooser = this._choosers[type];
                 chooser ? chooser.manualBitrate$.next(bitrate) : 
                 // if no chooser yet, store as a chooser option for when it will be
@@ -10073,13 +10261,13 @@ object-assign
                 this._chooserInstanceOptions.initialBitrates[type] = bitrate;
             }, 
             /**
-     * Set a maximum bitrate a given type will be able to automatically switch to.
-     * The chooser for the given type can still emit higher bitrates with the
-     * setManualBitrate method.
-     * @param {string} supportedBufferTypes
-     * @param {number} bitrate
-     */
-            ABRManager.prototype.setMaxAutoBitrate = function setMaxAutoBitrate(type, bitrate) {
+   * Set a maximum bitrate a given type will be able to automatically switch to.
+   * The chooser for the given type can still emit higher bitrates with the
+   * setManualBitrate method.
+   * @param {string} supportedBufferTypes
+   * @param {number} bitrate
+   */
+            _proto.setMaxAutoBitrate = function setMaxAutoBitrate(type, bitrate) {
                 var chooser = this._choosers[type];
                 chooser ? chooser.maxAutoBitrate$.next(bitrate) : 
                 // if no chooser yet, store as a chooser option for when it will be
@@ -10087,28 +10275,28 @@ object-assign
                 this._chooserInstanceOptions.maxAutoBitrates[type] = bitrate;
             }, 
             /**
-     * Returns the set (and active) manual bitrate for the given type.
-     * @param {string} supportedBufferTypes
-     * @returns {number|undefined}
-     */
-            ABRManager.prototype.getManualBitrate = function getManualBitrate(type) {
+   * Returns the set (and active) manual bitrate for the given type.
+   * @param {string} supportedBufferTypes
+   * @returns {number|undefined}
+   */
+            _proto.getManualBitrate = function getManualBitrate(type) {
                 var chooser = this._choosers[type];
                 return chooser ? chooser.manualBitrate$.getValue() : this._chooserInstanceOptions.manualBitrates[type];
             }, 
             /**
-     * Returns the set (and active) maximum auto bitrate for the given type.
-     * @param {string} supportedBufferTypes
-     * @returns {number|undefined}
-     */
-            ABRManager.prototype.getMaxAutoBitrate = function getMaxAutoBitrate(type) {
+   * Returns the set (and active) maximum auto bitrate for the given type.
+   * @param {string} supportedBufferTypes
+   * @returns {number|undefined}
+   */
+            _proto.getMaxAutoBitrate = function getMaxAutoBitrate(type) {
                 var chooser = this._choosers[type];
                 return chooser ? chooser.maxAutoBitrate$.getValue() : this._chooserInstanceOptions.maxAutoBitrates[type];
             }, 
             /**
-     * Clean every ressources linked to the ABRManager.
-     * The ABRManager is unusable after calling this method.
-     */
-            ABRManager.prototype.dispose = function dispose() {
+   * Clean every ressources linked to the ABRManager.
+   * The ABRManager is unusable after calling this method.
+   */
+            _proto.dispose = function dispose() {
                 var _this2 = this;
                 Object.keys(this._choosers).forEach(function(type) {
                     _this2._choosers[type].dispose();
@@ -10116,51 +10304,23 @@ object-assign
                 this._dispose$.complete();
             }, 
             /**
-     * If it doesn't exist, create a RepresentationChooser under the
-     * _choosers[bufferType] property.
-     * @param {string} bufferType
-     * @returns {Object}
-     */
-            ABRManager.prototype._lazilyCreateChooser = function _lazilyCreateChooser(bufferType) {
+   * If it doesn't exist, create a RepresentationChooser under the
+   * _choosers[bufferType] property.
+   * @param {string} bufferType
+   * @returns {Object}
+   */
+            _proto._lazilyCreateChooser = function _lazilyCreateChooser(bufferType) {
                 return this._choosers[bufferType] || (this._choosers[bufferType] = abr_createChooser(bufferType, this._chooserInstanceOptions)), 
                 this._choosers[bufferType];
             }, ABRManager;
-        }(), compat = __webpack_require__(12), MediaError = __webpack_require__(62), utils_id = __webpack_require__(19);
-        /**
- * Create the right RepresentationChooser instance, from the given data.
- * @param {string} type
- * @param {Object} options
- * @returns {RepresentationChooser} - The RepresentationChooser instance
- */        
-        // CONCATENATED MODULE: ./src/manifest/representation.ts
-        function representation_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Normalized Representation structure.
- * @class Representation
- */        var manifest_representation = function() {
+        }(), compat = __webpack_require__(12), MediaError = __webpack_require__(63), utils_id = __webpack_require__(19), manifest_representation = 
+        /* */
+        function() {
             /**
-     * @constructor
-     * @param {Object} args
-     */
+   * @constructor
+   * @param {Object} args
+   */
             function Representation(args) {
-                representation_classCallCheck(this, Representation);
                 var nId = Object(utils_id.a)();
                 this.id = null == args.id ? nId : args.id, this.bitrate = args.bitrate, this.codec = args.codecs, 
                 null != args.height && (this.height = args.height), null != args.width && (this.width = args.width), 
@@ -10168,39 +10328,19 @@ object-assign
                 args.frameRate && (this.frameRate = args.frameRate), this.index = args.index;
             }
             /**
-     * @returns {string}
-     */            return Representation.prototype.getMimeTypeString = function getMimeTypeString() {
+   * @returns {string}
+   */            return Representation.prototype.getMimeTypeString = function getMimeTypeString() {
                 return this.mimeType + ';codecs="' + this.codec + '"';
             }, Representation;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/manifest/adaptation.ts
-        function adaptation_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */        var SUPPORTED_ADAPTATIONS_TYPE = [ "audio", "video", "text", "image" ], manifest_adaptation = function() {
+        }(), SUPPORTED_ADAPTATIONS_TYPE = [ "audio", "video", "text", "image" ], manifest_adaptation = 
+        /* */
+        function() {
             /**
-     * @constructor
-     * @param {Object} args
-     */
+   * @constructor
+   * @param {Object} args
+   */
             function Adaptation(args) {
-                var _this = this;
-                adaptation_classCallCheck(this, Adaptation);
-                var nId = Object(utils_id.a)();
+                var _this = this, nId = Object(utils_id.a)();
                 this.id = null == args.id ? nId : "" + args.id, this.type = args.type, this.representations = Array.isArray(args.representations) ? args.representations.map(function(representation) {
                     return new manifest_representation(object_assign_default()({
                         rootId: _this.id
@@ -10213,77 +10353,54 @@ object-assign
                 this.manuallyAdded = !!args.manuallyAdded;
             }
             /**
-     * @returns {Array.<Number>}
-     */            return Adaptation.prototype.getAvailableBitrates = function getAvailableBitrates() {
+   * @returns {Array.<Number>}
+   */            var _proto = Adaptation.prototype;
+            return _proto.getAvailableBitrates = function getAvailableBitrates() {
                 return this.representations.map(function(representation) {
                     return representation.bitrate;
                 });
             }, 
             /**
-     * @param {Number|string} wantedId
-     * @returns {Representation}
-     */
-            Adaptation.prototype.getRepresentation = function getRepresentation(wantedId) {
+   * @param {Number|string} wantedId
+   * @returns {Representation}
+   */
+            _proto.getRepresentation = function getRepresentation(wantedId) {
                 return find_default()(this.representations, function(_ref) {
                     var id = _ref.id;
                     return wantedId === id;
                 });
             }, 
             /**
-     * @param {Number} bitrate
-     * @returns {Array.<Representations>|null}
-     */
-            Adaptation.prototype.getRepresentationsForBitrate = function getRepresentationsForBitrate(bitrate) {
+   * @param {Number} bitrate
+   * @returns {Array.<Representations>|null}
+   */
+            _proto.getRepresentationsForBitrate = function getRepresentationsForBitrate(bitrate) {
                 return this.representations.filter(function(representation) {
                     return representation.bitrate === bitrate;
                 }) || null;
             }, Adaptation;
-        }(), utils_languages = __webpack_require__(40);
-        /**
- * Normalized Adaptation structure.
- * @class Adaptation
- */        
-        // CONCATENATED MODULE: ./src/manifest/representation_index/static.ts
-        function static_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Simple RepresentationIndex implementation for static files.
- * @class StaticRepresentationIndex
- */        var representation_index_static = function() {
+        }(), utils_languages = __webpack_require__(39), static_StaticRepresentationIndex = 
+        /* */
+        function() {
             /**
-     * @param {Object} infos
-     */
+   * @param {Object} infos
+   */
             function StaticRepresentationIndex(infos) {
-                static_classCallCheck(this, StaticRepresentationIndex), this._media = infos.media;
+                this._media = infos.media;
             }
             /**
-     * Static contents do not have any initialization segments.
-     * Just return null.
-     * @returns {null}
-     */            return StaticRepresentationIndex.prototype.getInitSegment = function getInitSegment() {
+   * Static contents do not have any initialization segments.
+   * Just return null.
+   * @returns {null}
+   */            var _proto = StaticRepresentationIndex.prototype;
+            return _proto.getInitSegment = function getInitSegment() {
                 return null;
             }, 
             /**
-     * Returns the only Segment available here.
-     * @returns {Array.<Object>}
-     */
-            StaticRepresentationIndex.prototype.getSegments = function getSegments() {
+   * Returns the only Segment available here.
+   * @returns {Array.<Object>}
+   */
+            _proto.getSegments = function getSegments() {
                 return [ {
                     id: "0",
                     isInit: !1,
@@ -10295,60 +10412,42 @@ object-assign
                 } ];
             }, 
             /**
-     * Returns first position in index.
-     * @returns {undefined}
-     */
-            StaticRepresentationIndex.prototype.getFirstPosition = function getFirstPosition() {
+   * Returns first position in index.
+   * @returns {undefined}
+   */
+            _proto.getFirstPosition = function getFirstPosition() {
                 /* tslint:enable return-undefined */}, 
             /**
-     * Returns last position in index.
-     * @returns {undefined}
-     */
-            StaticRepresentationIndex.prototype.getLastPosition = function getLastPosition() {}, 
+   * Returns last position in index.
+   * @returns {undefined}
+   */
+            _proto.getLastPosition = function getLastPosition() {}, 
             /**
-     * Returns false as a static file never need to be refreshed.
-     * @returns {Boolean}
-     */
-            StaticRepresentationIndex.prototype.shouldRefresh = function shouldRefresh() {
+   * Returns false as a static file never need to be refreshed.
+   * @returns {Boolean}
+   */
+            _proto.shouldRefresh = function shouldRefresh() {
                 return !1;
             }, 
             /**
-     * @returns {Number}
-     */
-            StaticRepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity() {
+   * @returns {Number}
+   */
+            _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
-            }, StaticRepresentationIndex.prototype._addSegments = function _addSegments() {
+            }, _proto._addSegments = function _addSegments() {
                 0;
-            }, StaticRepresentationIndex.prototype._update = function _update() {
+            }, _proto._update = function _update() {
                 log.a.warn("Tried to update a static RepresentationIndex");
             }, StaticRepresentationIndex;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/manifest/period.ts
-        function period_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */        var manifest_period = function() {
+        }(), period_Period = 
+        /* */
+        function() {
             /**
-     * @constructor
-     * @param {Object} args
-     */
+   * @constructor
+   * @param {Object} args
+   */
             function Period(args) {
-                period_classCallCheck(this, Period), this.id = args.id, this.adaptations = Object.keys(args.adaptations).reduce(function(acc, type) {
+                this.id = args.id, this.adaptations = Object.keys(args.adaptations).reduce(function(acc, type) {
                     if (args.adaptations[type]) {
                         var adaptationsForType = args.adaptations[type];
                         adaptationsForType && (acc[type] = adaptationsForType.map(function(adaptation) {
@@ -10359,9 +10458,10 @@ object-assign
                 }, {}), this.duration = args.duration, this.start = args.start, null != this.duration && null != this.start && (this.end = this.start + this.duration);
             }
             /**
-     * Add supplementary image Adaptation(s) to the manifest.
-     * @param {Object|Array.<Object>} imageTracks
-     */            return Period.prototype.addSupplementaryImageAdaptations = function addSupplementaryImageAdaptations(imageTracks) {
+   * Add supplementary image Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} imageTracks
+   */            var _proto = Period.prototype;
+            return _proto.addSupplementaryImageAdaptations = function addSupplementaryImageAdaptations(imageTracks) {
                 var newImageTracks = (Array.isArray(imageTracks) ? imageTracks : [ imageTracks ]).map(function(_ref) {
                     var mimeType = _ref.mimeType, url = _ref.url, adaptationID = "gen-image-ada-" + Object(utils_id.a)(), representationID = "gen-image-rep-" + Object(utils_id.a)();
                     return new manifest_adaptation({
@@ -10372,7 +10472,7 @@ object-assign
                             bitrate: 0,
                             id: representationID,
                             mimeType: mimeType,
-                            index: new representation_index_static({
+                            index: new static_StaticRepresentationIndex({
                                 media: url
                             })
                         } ]
@@ -10381,10 +10481,10 @@ object-assign
                 newImageTracks.length && (this.adaptations.image = this.adaptations.image ? this.adaptations.image.concat(newImageTracks) : newImageTracks);
             }, 
             /**
-     * Add supplementary text Adaptation(s) to the manifest.
-     * @param {Object|Array.<Object>} textTracks
-     */
-            Period.prototype.addSupplementaryTextAdaptations = function addSupplementaryTextAdaptations(textTracks) {
+   * Add supplementary text Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} textTracks
+   */
+            _proto.addSupplementaryTextAdaptations = function addSupplementaryTextAdaptations(textTracks) {
                 var newTextAdaptations = (Array.isArray(textTracks) ? textTracks : [ textTracks ]).reduce(function(allSubs, _ref2) {
                     var mimeType = _ref2.mimeType, codecs = _ref2.codecs, url = _ref2.url, language = _ref2.language, languages = _ref2.languages, closedCaption = _ref2.closedCaption, langsToMapOn = language ? [ language ] : languages || [];
                     return allSubs.concat(langsToMapOn.map(function(_language) {
@@ -10401,7 +10501,7 @@ object-assign
                                 id: representationID,
                                 mimeType: mimeType,
                                 codecs: codecs,
-                                index: new representation_index_static({
+                                index: new static_StaticRepresentationIndex({
                                     media: url
                                 })
                             } ]
@@ -10411,9 +10511,9 @@ object-assign
                 newTextAdaptations.length && (this.adaptations.text = this.adaptations.text ? this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations);
             }, 
             /**
-     * @returns {Array.<Object>}
-     */
-            Period.prototype.getAdaptations = function getAdaptations() {
+   * @returns {Array.<Object>}
+   */
+            _proto.getAdaptations = function getAdaptations() {
                 var adaptationsByType = this.adaptations;
                 if (!adaptationsByType) return [];
                 var adaptationsList = [];
@@ -10424,73 +10524,50 @@ object-assign
                 return adaptationsList;
             }, 
             /**
-     * @param {string} adaptationType
-     * @returns {Array.<Object>}
-     */
-            Period.prototype.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
+   * @param {string} adaptationType
+   * @returns {Array.<Object>}
+   */
+            _proto.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
                 return this.adaptations[adaptationType] || [];
             }, 
             /**
-     * @param {number|string} wantedId
-     * @returns {Object|undefined}
-     */
-            Period.prototype.getAdaptation = function getAdaptation(wantedId) {
+   * @param {number|string} wantedId
+   * @returns {Object|undefined}
+   */
+            _proto.getAdaptation = function getAdaptation(wantedId) {
                 return find_default()(this.getAdaptations(), function(_ref3) {
                     var id = _ref3.id;
                     return wantedId === id;
                 });
             }, Period;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/manifest/index.ts
-        function manifest_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Normalized Manifest structure.
- * @class Manifest
- */        var src_manifest = function() {
+        }(), manifest_Manifest = 
+        /* */
+        function() {
             /**
-     * @constructor
-     * @param {Object} args
-     */
+   * @constructor
+   * @param {Object} args
+   */
             function Manifest(args) {
-                manifest_classCallCheck(this, Manifest);
                 var nId = Object(utils_id.a)();
                 this.id = null == args.id ? nId : "" + args.id, this.transport = args.transportType || "", 
                 this.periods = args.periods.map(function(period) {
-                    return new manifest_period(period);
+                    return new period_Period(period);
                 }), 
                 /**
-         * @deprecated It is here to ensure compatibility with the way the
-         * v3.x.x manages adaptations at the Manifest level
-         */
+     * @deprecated It is here to ensure compatibility with the way the
+     * v3.x.x manages adaptations at the Manifest level
+     */
                 this.adaptations = this.periods[0] && this.periods[0].adaptations || [], this.minimumTime = args.minimumTime, 
                 this.isLive = args.isLive, this.uris = args.uris, this.suggestedPresentationDelay = args.suggestedPresentationDelay, 
                 this.availabilityStartTime = args.availabilityStartTime, this.presentationLiveGap = args.presentationLiveGap, 
-                this.timeShiftBufferDepth = args.timeShiftBufferDepth, 
-                // --------- private data
+                this.timeShiftBufferDepth = args.timeShiftBufferDepth, // --------- private data
                 this._duration = args.duration;
             }
             /**
-     * Add supplementary image Adaptation(s) to the manifest.
-     * @param {Object|Array.<Object>} imageTracks
-     */            return Manifest.prototype.addSupplementaryImageAdaptations = function addSupplementaryImageAdaptations(imageTracks) {
+   * Add supplementary image Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} imageTracks
+   */            var _proto = Manifest.prototype;
+            return _proto.addSupplementaryImageAdaptations = function addSupplementaryImageAdaptations(imageTracks) {
                 var newImageTracks = (Array.isArray(imageTracks) ? imageTracks : [ imageTracks ]).map(function(_ref) {
                     var mimeType = _ref.mimeType, url = _ref.url, adaptationID = "gen-image-ada-" + Object(utils_id.a)(), representationID = "gen-image-rep-" + Object(utils_id.a)();
                     return new manifest_adaptation({
@@ -10501,7 +10578,7 @@ object-assign
                             bitrate: 0,
                             id: representationID,
                             mimeType: mimeType,
-                            index: new representation_index_static({
+                            index: new static_StaticRepresentationIndex({
                                 media: url
                             })
                         } ]
@@ -10510,10 +10587,10 @@ object-assign
                 newImageTracks.length && (this.adaptations.image = this.adaptations.image ? this.adaptations.image.concat(newImageTracks) : newImageTracks);
             }, 
             /**
-     * Add supplementary text Adaptation(s) to the manifest.
-     * @param {Object|Array.<Object>} textTracks
-     */
-            Manifest.prototype.addSupplementaryTextAdaptations = function addSupplementaryTextAdaptations(textTracks) {
+   * Add supplementary text Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} textTracks
+   */
+            _proto.addSupplementaryTextAdaptations = function addSupplementaryTextAdaptations(textTracks) {
                 var newTextAdaptations = (Array.isArray(textTracks) ? textTracks : [ textTracks ]).reduce(function(allSubs, _ref2) {
                     var mimeType = _ref2.mimeType, codecs = _ref2.codecs, url = _ref2.url, language = _ref2.language, languages = _ref2.languages, closedCaption = _ref2.closedCaption, langsToMapOn = language ? [ language ] : languages || [];
                     return allSubs.concat(langsToMapOn.map(function(_language) {
@@ -10530,7 +10607,7 @@ object-assign
                                 id: representationID,
                                 mimeType: mimeType,
                                 codecs: codecs,
-                                index: new representation_index_static({
+                                index: new static_StaticRepresentationIndex({
                                     media: url
                                 })
                             } ]
@@ -10540,45 +10617,45 @@ object-assign
                 newTextAdaptations.length && (this.adaptations.text = this.adaptations.text ? this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations);
             }, 
             /**
-     * Returns Period encountered at the given time.
-     * Returns undefined if there is no Period exactly at the given time.
-     * @param {number} time
-     * @returns {Period|undefined}
-     */
-            Manifest.prototype.getPeriodForTime = function getPeriodForTime(time) {
+   * Returns Period encountered at the given time.
+   * Returns undefined if there is no Period exactly at the given time.
+   * @param {number} time
+   * @returns {Period|undefined}
+   */
+            _proto.getPeriodForTime = function getPeriodForTime(time) {
                 return find_default()(this.periods, function(period) {
                     return time >= period.start && (null == period.end || period.end > time);
                 });
             }, 
             /**
-     * Returns period coming just after a given period.
-     * Returns undefined if not found.
-     * @param {Period} period
-     * @returns {Period|null}
-     */
-            Manifest.prototype.getPeriodAfter = function getPeriodAfter(period) {
+   * Returns period coming just after a given period.
+   * Returns undefined if not found.
+   * @param {Period} period
+   * @returns {Period|null}
+   */
+            _proto.getPeriodAfter = function getPeriodAfter(period) {
                 var endOfPeriod = period.end;
                 return null == endOfPeriod ? null : find_default()(this.periods, function(_period) {
                     return null == _period.end || endOfPeriod < _period.end;
                 }) || null;
             }, 
             /**
-     * @returns {Number}
-     */
-            Manifest.prototype.getDuration = function getDuration() {
+   * @returns {Number}
+   */
+            _proto.getDuration = function getDuration() {
                 return this._duration;
             }, 
             /**
-     * @returns {string|undefined}
-     */
-            Manifest.prototype.getUrl = function getUrl() {
+   * @returns {string|undefined}
+   */
+            _proto.getUrl = function getUrl() {
                 return this.uris[0];
             }, 
             /**
-     * @deprecated only returns adaptations for the first period
-     * @returns {Array.<Object>}
-     */
-            Manifest.prototype.getAdaptations = function getAdaptations() {
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
+            _proto.getAdaptations = function getAdaptations() {
                 warnOnce("manifest.getAdaptations() is deprecated. Please use manifest.period[].getAdaptations() instead");
                 var firstPeriod = this.periods[0];
                 if (!firstPeriod) return [];
@@ -10590,19 +10667,19 @@ object-assign
                 return adaptationsList;
             }, 
             /**
-     * @deprecated only returns adaptations for the first period
-     * @returns {Array.<Object>}
-     */
-            Manifest.prototype.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
+            _proto.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
                 warnOnce("manifest.getAdaptationsForType(type) is deprecated. Please use manifest.period[].getAdaptationsForType(type) instead");
                 var firstPeriod = this.periods[0];
                 return firstPeriod && firstPeriod.adaptations[adaptationType] || [];
             }, 
             /**
-     * @deprecated only returns adaptations for the first period
-     * @returns {Array.<Object>}
-     */
-            Manifest.prototype.getAdaptation = function getAdaptation(wantedId) {
+   * @deprecated only returns adaptations for the first period
+   * @returns {Array.<Object>}
+   */
+            _proto.getAdaptation = function getAdaptation(wantedId) {
                 /* tslint:disable:deprecation */
                 return warnOnce("manifest.getAdaptation(id) is deprecated. Please use manifest.period[].getAdaptation(id) instead"), 
                 find_default()(this.getAdaptations(), function(_ref3) {
@@ -10611,16 +10688,16 @@ object-assign
                 });
                 /* tslint:enable:deprecation */            }, 
             /**
-     * @param {number} delta
-     */
-            Manifest.prototype.updateLiveGap = function updateLiveGap(delta) {
+   * @param {number} delta
+   */
+            _proto.updateLiveGap = function updateLiveGap(delta) {
                 this.isLive && (this.presentationLiveGap ? this.presentationLiveGap += delta : this.presentationLiveGap = delta);
             }, 
             /**
-     * Update the current manifest properties
-     * @param {Object} Manifest
-     */
-            Manifest.prototype.update = function update(newManifest) {
+   * Update the current manifest properties
+   * @param {Object} Manifest
+   */
+            _proto.update = function update(newManifest) {
                 this._duration = newManifest.getDuration(), this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth, 
                 this.availabilityStartTime = newManifest.availabilityStartTime, this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay, 
                 this.uris = newManifest.uris;
@@ -10647,46 +10724,61 @@ object-assign
                     oldPeriods.splice(_i, 1), _i--;
                     i = _i;
                 }, i = 0; i < oldPeriods.length; i++) _loop(i);
-                // adding - perhaps - new Period[s]
+ // adding - perhaps - new Period[s]
                                 if (newPeriods.length > oldPeriods.length) {
                     var lastOldPeriod = oldPeriods[oldPeriods.length - 1];
-                    if (lastOldPeriod) for (i = 0; i < newPeriods.length - 1; i++) {
-                        var _newPeriod = newPeriods[i];
-                        _newPeriod.start > lastOldPeriod.start && (log.a.info("Adding new period " + _newPeriod.id), 
-                        this.periods.push(_newPeriod));
-                    } else for (var _i2 = 0; _i2 < newPeriods.length - 1; _i2++) {
-                        var _newPeriod2 = newPeriods[_i2];
-                        log.a.info("Adding new period " + _newPeriod2.id), this.periods.push(_newPeriod2);
+                    if (lastOldPeriod) for (var _i2 = 0; _i2 < newPeriods.length - 1; _i2++) {
+                        var newPeriod = newPeriods[_i2];
+                        newPeriod.start > lastOldPeriod.start && (log.a.info("Adding new period " + newPeriod.id), 
+                        this.periods.push(newPeriod));
+                    } else for (var _i3 = 0; _i3 < newPeriods.length - 1; _i3++) {
+                        var _newPeriod = newPeriods[_i3];
+                        log.a.info("Adding new period " + _newPeriod.id), this.periods.push(_newPeriod);
                     }
                 }
             }, 
             /**
-     * Get minimum position currently defined by the Manifest.
-     * @returns {number}
-     */
-            Manifest.prototype.getMinimumPosition = function getMinimumPosition() {
+   * Get minimum position currently defined by the Manifest.
+   * @returns {number}
+   */
+            _proto.getMinimumPosition = function getMinimumPosition() {
                 return this.getCurrentPositionLimits()[0];
             }, 
             /**
-     * Get maximum position currently defined by the Manifest.
-     * @returns {number}
-     */
-            Manifest.prototype.getMaximumPosition = function getMaximumPosition() {
+   * Get maximum position currently defined by the Manifest.
+   * @returns {number}
+   */
+            _proto.getMaximumPosition = function getMaximumPosition() {
                 if (!this.isLive) return this.getDuration();
                 var ast = this.availabilityStartTime || 0, plg = this.presentationLiveGap || 0;
                 return Date.now() / 1e3 - ast - plg;
             }, 
             /**
-     * Get minimum AND maximum positions currently defined by the manifest.
-     * @returns {Array.<number>}
-     */
-            Manifest.prototype.getCurrentPositionLimits = function getCurrentPositionLimits() {
+   * Get minimum AND maximum positions currently defined by the manifest.
+   * @returns {Array.<number>}
+   */
+            _proto.getCurrentPositionLimits = function getCurrentPositionLimits() {
                 if (!this.isLive) return [ this.minimumTime || 0, this.getDuration() ];
                 var ast = this.availabilityStartTime || 0, plg = this.presentationLiveGap || 0, tsbd = this.timeShiftBufferDepth || 0, max = Date.now() / 1e3 - ast - plg;
                 return [ Math.min(max, Math.max(null != this.minimumTime ? this.minimumTime : 0, max - tsbd + 5)), max ];
             }, Manifest;
         }();
-        /* harmony default export */        
+        // CONCATENATED MODULE: ./src/core/abr/index.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */        
         // CONCATENATED MODULE: ./src/manifest/factory.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -10734,7 +10826,7 @@ object-assign
                 }), !period.adaptations.video && !period.adaptations.audio) throw new MediaError.a("MANIFEST_PARSE_ERROR", null, !0);
                 return period;
             });
-            var manifest = new src_manifest(manifestObject);
+            var manifest = new manifest_Manifest(manifestObject);
             return manifest.addSupplementaryTextAdaptations(externalTextTracks), manifest.addSupplementaryImageAdaptations(externalImageTracks), 
             manifest;
         }
@@ -10774,19 +10866,19 @@ object-assign
             return "audio" === adaptationType || "video" === adaptationType ? representations.filter(function(representation) {
                 return Object(compat.f)(getCodec(representation));
             }) : representations;
-            // TODO for the other types
+ // TODO for the other types
                         /**
-     * Construct the codec string from given codecs and mimetype.
-     * @param {Object} representation
-     * @returns {string}
-     */
+   * Construct the codec string from given codecs and mimetype.
+   * @param {Object} representation
+   * @returns {string}
+   */
             function getCodec(representation) {
                 var _representation$codec = representation.codecs, codecs = void 0 === _representation$codec ? "" : _representation$codec, _representation$mimeT = representation.mimeType;
                 return (void 0 === _representation$mimeT ? "" : _representation$mimeT) + ';codecs="' + codecs + '"';
             }
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 2 modules
-                var Observable = __webpack_require__(17), Subscriber = __webpack_require__(10), Subscription = __webpack_require__(14);
+                var Observable = __webpack_require__(13), Subscriber = __webpack_require__(10), Subscription = __webpack_require__(15);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscriber.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/finalize.js
         /** PURE_IMPORTS_START tslib,_Subscriber,_Subscription PURE_IMPORTS_END */
@@ -10808,7 +10900,7 @@ object-assign
                 return _this.add(new Subscription.a(callback)), _this;
             }
             return tslib_es6.a(FinallySubscriber, _super), FinallySubscriber;
-        }(Subscriber.a), errors = __webpack_require__(16), RequestError = __webpack_require__(82), NetworkError = __webpack_require__(92), OtherError = __webpack_require__(93), castToObservable = __webpack_require__(15), rx_tryCatch = __webpack_require__(44), timer = __webpack_require__(147), backoff = __webpack_require__(58);
+        }(Subscriber.a), errors = __webpack_require__(18), RequestError = __webpack_require__(83), NetworkError = __webpack_require__(93), OtherError = __webpack_require__(94), castToObservable = __webpack_require__(17), rx_tryCatch = __webpack_require__(45), timer = __webpack_require__(148), backoff = __webpack_require__(59);
         // CONCATENATED MODULE: ./src/core/pipelines/backoff.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -10889,9 +10981,8 @@ object-assign
  * playback.
  * @returns {Error}
  */
-        function errorSelector(code, error) {
-            var fatal = !(arguments.length > 2 && void 0 !== arguments[2]) || arguments[2];
-            return Object(errors.a)(error) ? error : error instanceof RequestError.a ? new NetworkError.a(code, error, fatal) : new OtherError.a(code, error, fatal);
+        function errorSelector(code, error, fatal) {
+            return void 0 === fatal && (fatal = !0), Object(errors.a)(error) ? error : error instanceof RequestError.a ? new NetworkError.a(code, error, fatal) : new OtherError.a(code, error, fatal);
         }
         /**
  * TODO All that any casting is ugly
@@ -10946,28 +11037,28 @@ object-assign
                 }
             };
             /**
-     * Call the transport's resolver - if it exists - with the given data.
-     *
-     * Throws with the right error if it fails.
-     * @param {Object} resolverArgument
-     * @returns {Observable}
-     */
+   * Call the transport's resolver - if it exists - with the given data.
+   *
+   * Throws with the right error if it fails.
+   * @param {Object} resolverArgument
+   * @returns {Observable}
+   */
             function callResolver(resolverArgument) {
                 return Object(rx_tryCatch.a)(resolver, resolverArgument).pipe().pipe(Object(catchError.a)(function(error) {
                     throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
                 }));
             }
             /**
-     * Load wanted data:
-     *   - get it from cache if present
-     *   - call the transport loader - with an exponential backoff - if not
-     *
-     * @param {Object} loaderArgument - Input given to the loader
-     */            function loadData(loaderArgument) {
+   * Load wanted data:
+   *   - get it from cache if present
+   *   - call the transport loader - with an exponential backoff - if not
+   *
+   * @param {Object} loaderArgument - Input given to the loader
+   */            function loadData(loaderArgument) {
                 /**
-         * Call the Pipeline's loader with an exponential Backoff.
-         * @returns {Observable}
-         */
+     * Call the Pipeline's loader with an exponential Backoff.
+     * @returns {Observable}
+     */
                 function startLoaderWithBackoff() {
                     var request$ = pipelines_backoff(Object(rx_tryCatch.a)(loader, loaderArgument), backoffOptions).pipe(Object(catchError.a)(function(error) {
                         throw errorSelector("PIPELINE_LOAD_ERROR", error);
@@ -10988,12 +11079,12 @@ object-assign
                 }), Object(catchError.a)(startLoaderWithBackoff)) : startLoaderWithBackoff();
             }
             /**
-     * Call the transport's parser with the given data.
-     *
-     * Throws with the right error if it fails.
-     * @param {Object} parserArgument
-     * @returns {Observable}
-     */            function callParser(parserArgument) {
+   * Call the transport's parser with the given data.
+   *
+   * Throws with the right error if it fails.
+   * @param {Object} parserArgument
+   * @returns {Observable}
+   */            function callParser(parserArgument) {
                 return Object(rx_tryCatch.a)(parser, parserArgument).pipe().pipe(Object(catchError.a)(function(error) {
                     throw errorSelector("PIPELINE_PARSING_ERROR", error);
                 }));
@@ -11072,9 +11163,9 @@ object-assign
  * @param {Array.<Object>|undefined} supplementaryTextTracks
  * @param {Array.<Object>|undefined} supplementaryImageTrack
  * @returns {Function}
- */        function createManifestPipeline(transport, pipelineOptions, warning$) {
-            var supplementaryTextTracks = arguments.length > 3 && void 0 !== arguments[3] ? arguments[3] : [], supplementaryImageTracks = arguments.length > 4 && void 0 !== arguments[4] ? arguments[4] : [];
-            return function fetchManifest(url) {
+ */        function createManifestPipeline(transport, pipelineOptions, warning$, supplementaryTextTracks, supplementaryImageTracks) {
+            return void 0 === supplementaryTextTracks && (supplementaryTextTracks = []), void 0 === supplementaryImageTracks && (supplementaryImageTracks = []), 
+            function fetchManifest(url) {
                 return core_pipeline_createPipeline(transport.manifest, pipelineOptions)({
                     url: url
                 }).pipe(Object(tap.a)(function(arg) {
@@ -11118,9 +11209,8 @@ object-assign
      * requested.
      * @returns {Observable}
      */
-                createRequest: function createRequest(content) {
-                    var priority = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 0;
-                    return prioritizer.create(fetcher(content), priority);
+                createRequest: function createRequest(content, priority) {
+                    return void 0 === priority && (priority = 0), prioritizer.create(fetcher(content), priority);
                 },
                 /**
      * Update the priority of a pending request, created through createRequest.
@@ -11133,11 +11223,82 @@ object-assign
             };
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
-                var defer = __webpack_require__(133);
+                var defer = __webpack_require__(134), prioritizer_ObservablePrioritizer = 
+        /* */
+        function() {
+            function ObservablePrioritizer() {
+                this._pendingPriority = null, this._numberOfPendingObservables = 0, this._queue = [];
+            }
+            /**
+   * Create a priorized Observable from a base Observable.
+   *
+   * When subscribed to, this Observable will have its priority compared to
+   * all the already-running Observables created from this class.
+   * Only if this number is inferior or equal to the priority of the
+   * currently-running Observables will it be immediately started.
+   * In the opposite case, we will wait for higher-priority Observables to
+   * finish before starting it.
+   *
+   * Note that while this Observable is waiting for its turn, it is possible
+   * to update its property through the updatePriority method, by providing
+   * the Observable returned by this function and its new priority number.
+   *
+   * @param {Observable} obs
+   * @param {number} priority
+   * @returns {Observable}
+   */            var _proto = ObservablePrioritizer.prototype;
+            return _proto.create = function create(obs, priority) {
+                var _this = this;
+                return Object(defer.a)(function() {
+                    if (null == _this._pendingPriority || _this._pendingPriority >= priority) 
+                    // Update the priority and start immediately the Observable
+                    return _this._pendingPriority = priority, _this._startObservable(obs);
+                    var trigger = new Subject.a();
+                    return _this._queue.push({
+                        observable: obs,
+                        priority: priority,
+                        trigger: trigger
+                    }), trigger.pipe(Object(mergeMap.a)(function() {
+                        return _this._startObservable(obs);
+                    }));
+                });
+            }, 
+            /**
+   * Update the priority of an Observable created through the create method.
+   *
+   * Note that this will only have an effect on Observable which are not yet
+   * started.
+   * This means it will only have an effect on:
+   *   - unsubscribed Observables
+   *   - Observables waiting for Observables with an higher priority to
+   *     finish
+   *
+   * @param {Observable} obs
+   * @param {number} priority
+   */
+            _proto.updatePriority = function updatePriority(obs, priority) {
+                var queueElement = find_default()(this._queue, function(elt) {
+                    return elt.observable === obs;
+                });
+                queueElement && (queueElement.priority = priority);
+            }, _proto._startObservable = function _startObservable(obs) {
+                var _this2 = this;
+                return this._numberOfPendingObservables++, obs.pipe(finalize(function onObservableFinish() {
+                    if (_this2._numberOfPendingObservables--, !(_this2._numberOfPendingObservables > 0) && (_this2._pendingPriority = null, 
+                    0 !== _this2._queue.length)) {
+                        _this2._pendingPriority = _this2._queue.reduce(function(acc, elt) {
+                            return null == acc || acc > elt.priority ? elt.priority : acc;
+                        }, null);
+                        for (var i = 0; i < _this2._queue.length; i++) {
+                            var elt = _this2._queue[i];
+                            elt.priority === _this2._pendingPriority && (_this2._queue.splice(i, 1), i--, elt.trigger.next(), 
+                            elt.trigger.complete());
+                        }
+                    }
+                }));
+            }, ObservablePrioritizer;
+        }();
         // CONCATENATED MODULE: ./src/core/pipelines/segment/prioritizer.ts
-                function prioritizer_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -11212,80 +11373,7 @@ object-assign
  * ```
  *
  * @class ObservablePrioritizer
- */        var prioritizer = function() {
-            function ObservablePrioritizer() {
-                prioritizer_classCallCheck(this, ObservablePrioritizer), this._pendingPriority = null, 
-                this._numberOfPendingObservables = 0, this._queue = [];
-            }
-            /**
-     * Create a priorized Observable from a base Observable.
-     *
-     * When subscribed to, this Observable will have its priority compared to
-     * all the already-running Observables created from this class.
-     * Only if this number is inferior or equal to the priority of the
-     * currently-running Observables will it be immediately started.
-     * In the opposite case, we will wait for higher-priority Observables to
-     * finish before starting it.
-     *
-     * Note that while this Observable is waiting for its turn, it is possible
-     * to update its property through the updatePriority method, by providing
-     * the Observable returned by this function and its new priority number.
-     *
-     * @param {Observable} obs
-     * @param {number} priority
-     * @returns {Observable}
-     */            return ObservablePrioritizer.prototype.create = function create(obs, priority) {
-                var _this = this;
-                return Object(defer.a)(function() {
-                    if (null == _this._pendingPriority || _this._pendingPriority >= priority) 
-                    // Update the priority and start immediately the Observable
-                    return _this._pendingPriority = priority, _this._startObservable(obs);
-                    var trigger = new Subject.a();
-                    return _this._queue.push({
-                        observable: obs,
-                        priority: priority,
-                        trigger: trigger
-                    }), trigger.pipe(Object(mergeMap.a)(function() {
-                        return _this._startObservable(obs);
-                    }));
-                });
-            }, 
-            /**
-     * Update the priority of an Observable created through the create method.
-     *
-     * Note that this will only have an effect on Observable which are not yet
-     * started.
-     * This means it will only have an effect on:
-     *   - unsubscribed Observables
-     *   - Observables waiting for Observables with an higher priority to
-     *     finish
-     *
-     * @param {Observable} obs
-     * @param {number} priority
-     */
-            ObservablePrioritizer.prototype.updatePriority = function updatePriority(obs, priority) {
-                var queueElement = find_default()(this._queue, function(elt) {
-                    return elt.observable === obs;
-                });
-                queueElement && (queueElement.priority = priority);
-            }, ObservablePrioritizer.prototype._startObservable = function _startObservable(obs) {
-                var _this2 = this;
-                return this._numberOfPendingObservables++, obs.pipe(finalize(function onObservableFinish() {
-                    if (_this2._numberOfPendingObservables--, !(_this2._numberOfPendingObservables > 0) && (_this2._pendingPriority = null, 
-                    0 !== _this2._queue.length)) {
-                        _this2._pendingPriority = _this2._queue.reduce(function(acc, elt) {
-                            return null == acc || acc > elt.priority ? elt.priority : acc;
-                        }, null);
-                        for (var i = 0; i < _this2._queue.length; i++) {
-                            var elt = _this2._queue[i];
-                            elt.priority === _this2._pendingPriority && (_this2._queue.splice(i, 1), i--, elt.trigger.next(), 
-                            elt.trigger.complete());
-                        }
-                    }
-                }));
-            }, ObservablePrioritizer;
-        }();
-        /* harmony default export */        
+ */        
         // CONCATENATED MODULE: ./src/core/pipelines/segment/segment_fetcher.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -11321,17 +11409,17 @@ object-assign
  * @returns {Function}
  */
         function createSegmentFetcher(bufferType, transport, network$, requests$, warning$, options) {
-            var basePipeline$ = core_pipeline_createPipeline(transport[bufferType], options), request$ = void 0, id = void 0;
+            var request$, id, basePipeline$ = core_pipeline_createPipeline(transport[bufferType], options);
             /**
-     * Process a pipeline observable to adapt it to the Stream way:
-     *   - use the network$ subject for network metrics (bandwitdh mesure)
-     *   - use the requests subject for network requests and their progress
-     *   - use the warning$ subject for retries' error messages
-     *   - only emit the data
-     * @param {string} pipelineType
-     * @param {Observable} pipeline$
-     * @returns {Observable}
-     */
+   * Process a pipeline observable to adapt it to the Stream way:
+   *   - use the network$ subject for network metrics (bandwitdh mesure)
+   *   - use the requests subject for network requests and their progress
+   *   - use the warning$ subject for retries' error messages
+   *   - only emit the data
+   * @param {string} pipelineType
+   * @param {Observable} pipeline$
+   * @returns {Observable}
+   */
             return function fetchSegment(content) {
                 return basePipeline$(content).pipe(Object(tap.a)(function(arg) {
                     switch (arg.type) {
@@ -11356,7 +11444,7 @@ object-assign
 
                       case "request":
                         var _value = arg.value, segment = _value && _value.segment;
-                        // format it for ABR Handling
+ // format it for ABR Handling
                                                 if (null != segment && null != segment.duration) {
                             request$ = new Subject.a(), requests$.next(request$);
                             var _duration = segment.duration / segment.timescale, time = segment.time / segment.timescale;
@@ -11389,8 +11477,7 @@ object-assign
                     }
                 }), Object(filter.a)(function(arg) {
                     return "data" === arg.type || "cache" === arg.type;
-                }), 
-                // take only value from data/cache events
+                }), // take only value from data/cache events
                 Object(map.a)(function(_ref) {
                     return _ref.value;
                 }), finalize(function() {
@@ -11405,9 +11492,6 @@ object-assign
             };
         }
         // CONCATENATED MODULE: ./src/core/pipelines/segment/index.ts
-                function segment_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -11456,7 +11540,9 @@ object-assign
  * pipeline.createRequest(myContent, 1)
  *   .subscribe((res) => console.log("audio segment downloaded:", res));
  * ```
- */        var pipelines_segment = function() {
+ */        var segment_SegmentPipelinesManager = 
+        /* */
+        function() {
             /**
    * @param {Object} transport
    * @param {Subject} requestsInfos$
@@ -11464,9 +11550,8 @@ object-assign
    * @param {Subject} warning
    */
             function SegmentPipelinesManager(transport, requestsInfos$, metrics$, warning) {
-                segment_classCallCheck(this, SegmentPipelinesManager), this._transport = transport, 
-                this._metrics$ = metrics$, this._requestsInfos$ = requestsInfos$, this._warning$ = warning, 
-                this._prioritizer = new prioritizer();
+                this._transport = transport, this._metrics$ = metrics$, this._requestsInfos$ = requestsInfos$, 
+                this._warning$ = warning, this._prioritizer = new prioritizer_ObservablePrioritizer();
             }
             /**
    * @param {string} bufferType
@@ -11476,9 +11561,9 @@ object-assign
                 var segmentFetcher = createSegmentFetcher(bufferType, this._transport, this._metrics$, this._requestsInfos$, this._warning$, options);
                 return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
             }, SegmentPipelinesManager;
-        }(), create_eme_manager = __webpack_require__(88), compat_constants = __webpack_require__(24);
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/core/stream/create_media_source.ts
+        }(), create_eme_manager = __webpack_require__(89), compat_constants = __webpack_require__(24);
+        // EXTERNAL MODULE: ./src/core/stream/create_eme_manager.ts
+                // CONCATENATED MODULE: ./src/core/stream/create_media_source.ts
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -11548,7 +11633,7 @@ object-assign
  */        function createMediaSource(mediaElement) {
             return Observable.a.create(function(observer) {
                 if (!compat_constants.d) throw new MediaError.a("MEDIA_SOURCE_NOT_SUPPORTED", null, !0);
-                // make sure the media has been correctly reset
+ // make sure the media has been correctly reset
                                 resetMediaSource(mediaElement, null, mediaElement.src || null), 
                 log.a.info("creating MediaSource");
                 var mediaSource = new compat_constants.d(), objectURL = URL.createObjectURL(mediaSource);
@@ -11569,7 +11654,7 @@ object-assign
             }));
         }
         // EXTERNAL MODULE: ./src/core/stream/events_generators.ts
-                var events_generators = __webpack_require__(29), DEFAULT_LIVE_GAP = config.a.DEFAULT_LIVE_GAP;
+                var events_generators = __webpack_require__(28), DEFAULT_LIVE_GAP = config.a.DEFAULT_LIVE_GAP;
         // CONCATENATED MODULE: ./src/core/stream/get_initial_time.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -11626,10 +11711,10 @@ object-assign
             return manifest.getMinimumPosition();
         }
         // EXTERNAL MODULE: ./src/core/stream/media_error_manager.ts
-                var media_error_manager = __webpack_require__(89), ignoreElements = __webpack_require__(144), from = __webpack_require__(27);
+                var media_error_manager = __webpack_require__(90), ignoreElements = __webpack_require__(145), from = __webpack_require__(44);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/ignoreElements.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/exhaustMap.js
-        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_util_subscribeToResult,_map,_observable_from PURE_IMPORTS_END */
+        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_InnerSubscriber,_util_subscribeToResult,_map,_observable_from PURE_IMPORTS_END */
         function exhaustMap(project, resultSelector) {
             return resultSelector ? function(source) {
                 return source.pipe(exhaustMap(function(a, i) {
@@ -11641,7 +11726,7 @@ object-assign
                 return source.lift(new ExhauseMapOperator(project));
             };
         }
-        var ExhauseMapOperator = /* */ function() {
+        var SourceBufferAction, ExhauseMapOperator = /* */ function() {
             function ExhauseMapOperator(project) {
                 this.project = project;
             }
@@ -11657,13 +11742,16 @@ object-assign
             return tslib_es6.a(ExhaustMapSubscriber, _super), ExhaustMapSubscriber.prototype._next = function(value) {
                 this.hasSubscription || this.tryNext(value);
             }, ExhaustMapSubscriber.prototype.tryNext = function(value) {
-                var index = this.index++, destination = this.destination;
+                var result, index = this.index++;
                 try {
-                    var result = this.project(value, index);
-                    this.hasSubscription = !0, this.add(Object(subscribeToResult.a)(this, result, value, index));
+                    result = this.project(value, index);
                 } catch (err) {
-                    destination.error(err);
+                    return void this.destination.error(err);
                 }
+                this.hasSubscription = !0, this._innerSub(result, value, index);
+            }, ExhaustMapSubscriber.prototype._innerSub = function(result, value, index) {
+                var innerSubscriber = new InnerSubscriber.a(this, void 0, void 0);
+                this.add(innerSubscriber), Object(subscribeToResult.a)(this, result, value, index, innerSubscriber);
             }, ExhaustMapSubscriber.prototype._complete = function() {
                 this.hasCompleted = !0, this.hasSubscription || this.destination.complete();
             }, ExhaustMapSubscriber.prototype.notifyNext = function(outerValue, innerValue, outerIndex, innerIndex, innerSub) {
@@ -11673,47 +11761,25 @@ object-assign
             }, ExhaustMapSubscriber.prototype.notifyComplete = function(innerSub) {
                 this.remove(innerSub), this.hasSubscription = !1, this.hasCompleted && this.destination.complete();
             }, ExhaustMapSubscriber;
-        }(OuterSubscriber.a);
-        //# sourceMappingURL=exhaustMap.js.map
-        // CONCATENATED MODULE: ./src/utils/initialization_segment_cache.ts
-        function initialization_segment_cache_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Caching object used to cache initialization segments.
- * This allow to have a faster representation switch and faster seeking.
- * @class InitializationSegmentCache
- */        var initialization_segment_cache = function() {
+        }(OuterSubscriber.a), initialization_segment_cache = 
+        /* */
+        function() {
             function InitializationSegmentCache() {
-                initialization_segment_cache_classCallCheck(this, InitializationSegmentCache), this._cache = new WeakMap();
+                this._cache = new WeakMap();
             }
             /**
-     * @param {Object} obj
-     * @param {*} response
-     */            return InitializationSegmentCache.prototype.add = function add(_ref, response) {
+   * @param {Object} obj
+   * @param {*} response
+   */            var _proto = InitializationSegmentCache.prototype;
+            return _proto.add = function add(_ref, response) {
                 var representation = _ref.representation;
                 _ref.segment.isInit && this._cache.set(representation, response);
             }, 
             /**
-     * @param {Object} obj
-     * @returns {*} response
-     */
-            InitializationSegmentCache.prototype.get = function get(_ref2) {
+   * @param {Object} obj
+   * @returns {*} response
+   */
+            _proto.get = function get(_ref2) {
                 var representation = _ref2.representation;
                 if (_ref2.segment.isInit) {
                     var value = this._cache.get(representation);
@@ -11721,118 +11787,77 @@ object-assign
                 }
                 return null;
             }, InitializationSegmentCache;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/utils/sorted_list.ts
-        function sorted_list_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Creates an Array automatically sorted with the sorting function given to the
- * constructor when the add method is called.
- *
- * @example
- * ```js
- * const sortedList = new SortedList((a, b) => a.start - b.start);
- * const element1 = { start: 20 };
- * const element2 = { start: 10 };
- * const element3 = { start: 15 };
- *
- * sortedList.add(element1, element2);
- * console.log(sortedList.unwrap());
- * // -> [{ start: 10 }, { start : 20 }]
- *
- * sortedList.add(element3);
- * console.log(sortedList.unwrap());
- * // -> [{ start: 10 }, { start : 15 }, { start: 20 }]
- *
- * sortedList.removeElement(element2);
- * // -> [{ start: 10 }, { start: 15 }]
- * ```
- * @class SortedList
- */        var sorted_list = function() {
+        }(), sorted_list_SortedList = 
+        /* */
+        function() {
             /**
-     * @param {Function} sortingFunction
-     */
+   * @param {Function} sortingFunction
+   */
             function SortedList(sortingFunction) {
-                sorted_list_classCallCheck(this, SortedList), this._array = [], this._sortingFn = sortingFunction;
+                this._array = [], this._sortingFn = sortingFunction;
             }
             /**
-     * Returns the nth element. Throws if the index does not exist.
-     *
-     * /!\ The returned Element shares the same reference with what is used
-     * internally, any mutation on your part can lead to an un-sorted SortedList.
-     * You can still re-force the sorting to happen by calling forceSort.
-     * @throws Error - Throws if the given index is negative or superior to the
-     * array's length.
-     * @param {number} index
-     * @returns {*}
-     */            return SortedList.prototype.get = function get(index) {
+   * Returns the nth element. Throws if the index does not exist.
+   *
+   * /!\ The returned Element shares the same reference with what is used
+   * internally, any mutation on your part can lead to an un-sorted SortedList.
+   * You can still re-force the sorting to happen by calling forceSort.
+   * @throws Error - Throws if the given index is negative or superior to the
+   * array's length.
+   * @param {number} index
+   * @returns {*}
+   */            var _proto = SortedList.prototype;
+            return _proto.get = function get(index) {
                 if (index < 0 || index >= this._array.length) throw new Error("Invalid index.");
                 return this._array[index];
             }, 
             /**
-     * Find the first element corresponding to the given predicate.
-     *
-     * /!\ The returned element shares the same reference with what is used
-     * internally, any mutation on your part can lead to an un-sorted SortedList.
-     * You can still re-force the sorting to happen by calling forceSort.
-     * @param {Function} fn
-     * @returns {*}
-     */
-            SortedList.prototype.find = function find(fn) {
+   * Find the first element corresponding to the given predicate.
+   *
+   * /!\ The returned element shares the same reference with what is used
+   * internally, any mutation on your part can lead to an un-sorted SortedList.
+   * You can still re-force the sorting to happen by calling forceSort.
+   * @param {Function} fn
+   * @returns {*}
+   */
+            _proto.find = function find(fn) {
                 return find_default()(this._array, fn);
             }, 
             /**
-     * Returns the index of the given element in the list.
-     * -1 if not found.
-     * @param {*} element
-     * @returns {number}
-     */
-            SortedList.prototype.indexOf = function indexOf(element) {
+   * Returns the index of the given element in the list.
+   * -1 if not found.
+   * @param {*} element
+   * @returns {number}
+   */
+            _proto.indexOf = function indexOf(element) {
                 return this._array.indexOf(element);
             }, 
             /**
-     * Returns true if the List contains the given element.
-     * @param {*} element
-     * @returns {Boolean}
-     */
-            SortedList.prototype.has = function has(element) {
+   * Returns true if the List contains the given element.
+   * @param {*} element
+   * @returns {Boolean}
+   */
+            _proto.has = function has(element) {
                 return Object(array_includes.a)(this._array, element);
             }, 
             /**
-     * Returns the current length of the list.
-     * @returns {number}
-     */
-            SortedList.prototype.length = function length() {
+   * Returns the current length of the list.
+   * @returns {number}
+   */
+            _proto.length = function length() {
                 return this._array.length;
             }, 
             /**
-     * Add a new element to the List at the right place for the List to stay
-     * sorted.
-     *
-     * /!\ The added Element will share the same reference than the given
-     * argument, any mutation on your part can lead to an un-sorted SortedList.
-     * You can still re-force the sorting to happen by calling forceSort.
-     * @param {...*} elements
-     */
-            SortedList.prototype.add = function add() {
-                for (var _len = arguments.length, elements = Array(_len), _key = 0; _key < _len; _key++) elements[_key] = arguments[_key];
+   * Add a new element to the List at the right place for the List to stay
+   * sorted.
+   *
+   * /!\ The added Element will share the same reference than the given
+   * argument, any mutation on your part can lead to an un-sorted SortedList.
+   * You can still re-force the sorting to happen by calling forceSort.
+   * @param {...*} elements
+   */
+            _proto.add = function add() {
+                for (var _len = arguments.length, elements = new Array(_len), _key = 0; _key < _len; _key++) elements[_key] = arguments[_key];
                 elements.sort(this._sortingFn);
                 for (var j = 0, i = 0; i < elements.length; i++) {
                     for (var element = elements[i], inserted = !1; !inserted && j < this._array.length; ) this._sortingFn(element, this._array[j]) < 0 ? (this._array.splice(j, 0, element), 
@@ -11841,175 +11866,118 @@ object-assign
                 }
             }, 
             /**
-     * Remove the first occurence of the given element.
-     * Returns the index of the removed element. Undefined if not found.
-     * @returns {number|undefined}
-     */
-            SortedList.prototype.removeElement = function removeElement(element) {
+   * Remove the first occurence of the given element.
+   * Returns the index of the removed element. Undefined if not found.
+   * @returns {number|undefined}
+   */
+            _proto.removeElement = function removeElement(element) {
                 var indexOf = this._array.indexOf(element);
                 if (indexOf >= 0) return this._array.splice(indexOf, 1), indexOf;
             }, 
             /**
-     * Returns the first element.
-     *
-     * /!\ The returned Element shares the same reference with what is used
-     * internally, any mutation on your part can lead to an un-sorted SortedList.
-     * You can still re-force the sorting to happen by calling forceSort.
-     * @returns {*}
-     */
-            SortedList.prototype.head = function head() {
+   * Returns the first element.
+   *
+   * /!\ The returned Element shares the same reference with what is used
+   * internally, any mutation on your part can lead to an un-sorted SortedList.
+   * You can still re-force the sorting to happen by calling forceSort.
+   * @returns {*}
+   */
+            _proto.head = function head() {
                 return this._array[0];
             }, 
             /**
-     * Returns the last element.
-     *
-     * /!\ The returned Element shares the same reference with what is used
-     * internally, any mutation on your part can lead to an un-sorted SortedList.
-     * You can still re-force the sorting to happen by calling forceSort.
-     * @returns {*}
-     */
-            SortedList.prototype.last = function last() {
+   * Returns the last element.
+   *
+   * /!\ The returned Element shares the same reference with what is used
+   * internally, any mutation on your part can lead to an un-sorted SortedList.
+   * You can still re-force the sorting to happen by calling forceSort.
+   * @returns {*}
+   */
+            _proto.last = function last() {
                 return this._array[this._array.length - 1];
             }, 
             /**
-     * Remove the first element.
-     * Returns the element removed or undefined if no element were removed.
-     * @returns {*}
-     */
-            SortedList.prototype.shift = function shift() {
+   * Remove the first element.
+   * Returns the element removed or undefined if no element were removed.
+   * @returns {*}
+   */
+            _proto.shift = function shift() {
                 return this._array.shift();
             }, 
             /**
-     * Remove the last element.
-     * Returns the element removed or undefined if no element were removed.
-     * @returns {*}
-     */
-            SortedList.prototype.pop = function pop() {
+   * Remove the last element.
+   * Returns the element removed or undefined if no element were removed.
+   * @returns {*}
+   */
+            _proto.pop = function pop() {
                 return this._array.pop();
             }, 
             /**
-     * Returns true if the wrapped Array is well-sorted.
-     *
-     * You might want to call this function to know if a mutation you've done
-     * yourself impacted the order of elements.
-     * You can then call the forceSort function to sort the list manually.
-     *
-     * @example
-     * ```js
-     * const sortedList = new SortedList((a, b) => a.start - b.start);
-     * const element1 = { start: 20 };
-     * const element2 = { start: 10 };
-     *
-     * sortedList.add(element1, element2);
-     * console.log(sortedList.unwrap()); // -> [{ start: 10 }, { start : 20 }]
-     * console.log(sortedList.checkSort()); // -> true
-     *
-     * element2.start = 5; // Mutation impacting the order of elements
-     * console.log(sortedList.unwrap()); // -> [{ start: 10 }, { start : 5 }]
-     * console.log(sortedList.checkSort()); // -> false
-     *
-     * sortedList.forceSort();
-     * console.log(sortedList.unwrap()); // -> [{ start: 5 }, { start : 10 }]
-     * console.log(sortedList.checkSort()); // -> true
-     * ```
-     * @returns {Boolean}
-     */
-            SortedList.prototype.checkSort = function checkSort() {
+   * Returns true if the wrapped Array is well-sorted.
+   *
+   * You might want to call this function to know if a mutation you've done
+   * yourself impacted the order of elements.
+   * You can then call the forceSort function to sort the list manually.
+   *
+   * @example
+   * ```js
+   * const sortedList = new SortedList((a, b) => a.start - b.start);
+   * const element1 = { start: 20 };
+   * const element2 = { start: 10 };
+   *
+   * sortedList.add(element1, element2);
+   * console.log(sortedList.unwrap()); // -> [{ start: 10 }, { start : 20 }]
+   * console.log(sortedList.checkSort()); // -> true
+   *
+   * element2.start = 5; // Mutation impacting the order of elements
+   * console.log(sortedList.unwrap()); // -> [{ start: 10 }, { start : 5 }]
+   * console.log(sortedList.checkSort()); // -> false
+   *
+   * sortedList.forceSort();
+   * console.log(sortedList.unwrap()); // -> [{ start: 5 }, { start : 10 }]
+   * console.log(sortedList.checkSort()); // -> true
+   * ```
+   * @returns {Boolean}
+   */
+            _proto.checkSort = function checkSort() {
                 for (var i = 0; i < this._array.length - 1; i++) if (this._sortingFn(this._array[i], this._array[i + 1]) > 0) return !1;
                 return !0;
             }, 
             /**
-     * Force the array to be sorted.
-     *
-     * You might want to call this function when you're unsure that a mutation
-     * you've done yourself impacted the order of the elements in the list.
-     */
-            SortedList.prototype.forceSort = function forceSort() {
+   * Force the array to be sorted.
+   *
+   * You might want to call this function when you're unsure that a mutation
+   * you've done yourself impacted the order of the elements in the list.
+   */
+            _proto.forceSort = function forceSort() {
                 this._array.sort(this._sortingFn);
             }, SortedList;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/utils/weak_map_memory.ts
-        function weak_map_memory_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Memoize Function results linked to an object, through a WeakMap.
- *
- * @example
- * ```js
- * // Initialize the WeakMapMemory with its logic:
- * const memory = new WeakMapMemory(arg => {
- *   console.log("side-effect");
- *   return [arg.a, arg.b];
- * });
- *
- * const obj = { a: 1, b: 2 };
- *
- * // first time obj is given: call the function, save the result and return it:
- * const arr1 = memory.get(obj);
- * // >  "side-effect"
- * // <- [1, 2]
- *
- * // nth time obj is given, returns the saved result without calling the
- * // function:
- * const arr2 = memory.get(obj);
- * // <- [1, 2]
- *
- * // both of these use the same object, so the result is also the exact same
- * // one
- * console.log(arr1 === arr2); // => true
- *
- * // /!\ with a new object however:
- * const obj2 = { a: 1, b: 2 };
- *
- * const arr3 = memory.get(obj2);
- * // >  "side-effect"
- * // <- [1, 2]
- *
- * console.log(arr1 === arr3); // => false
- * ```
- * @class WeakMapMemory
- */        var SourceBufferAction, weak_map_memory = function() {
+        }(), WeakMapMemory = 
+        /* */
+        function() {
             /**
-     * @param {Function}
-     */
+   * @param {Function}
+   */
             function WeakMapMemory(fn) {
-                weak_map_memory_classCallCheck(this, WeakMapMemory), this._weakMap = new WeakMap(), 
-                this._fn = fn;
+                this._weakMap = new WeakMap(), this._fn = fn;
             }
             /**
-     * @param {Object} obj
-     * @returns {*}
-     */            return WeakMapMemory.prototype.get = function get(obj) {
+   * @param {Object} obj
+   * @returns {*}
+   */            var _proto = WeakMapMemory.prototype;
+            return _proto.get = function get(obj) {
                 var fromMemory = this._weakMap.get(obj);
                 if (fromMemory) return fromMemory;
                 var newElement = this._fn(obj);
                 return this._weakMap.set(obj, newElement), newElement;
             }, 
             /**
-     * @param {Object} obj
-     */
-            WeakMapMemory.prototype.destroy = function destroy(obj) {
+   * @param {Object} obj
+   */
+            _proto.destroy = function destroy(obj) {
                 this._weakMap.delete(obj);
             }, WeakMapMemory;
-        }(), concatAll = __webpack_require__(108);
-        /* harmony default export */        
+        }(), concatAll = __webpack_require__(107);
         // CONCATENATED MODULE: ./src/core/source_buffers/garbage_collector.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -12094,9 +12062,6 @@ object-assign
             })).pipe(Object(concatAll.a)(), Object(ignoreElements.a)());
         }
         // CONCATENATED MODULE: ./src/core/source_buffers/queued_source_buffer.ts
-                function queued_source_buffer_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -12125,39 +12090,41 @@ object-assign
  *
  * @class QueuedSourceBuffer
  */
-        var queued_source_buffer = function() {
+        var queued_source_buffer_QueuedSourceBuffer = 
+        /* */
+        function() {
             /**
-     * @constructor
-     * @param {SourceBuffer} sourceBuffer
-     */
+   * @constructor
+   * @param {SourceBuffer} sourceBuffer
+   */
             function QueuedSourceBuffer(sourceBuffer) {
-                queued_source_buffer_classCallCheck(this, QueuedSourceBuffer), this._buffer = sourceBuffer, 
-                this._queue = [], this._flushing = null, this._lastInitSegment = null, this.__onUpdate = this._onUpdate.bind(this), 
-                this.__onError = this._onError.bind(this), this.__flush = this._flush.bind(this), 
-                this._buffer.addEventListener("update", this.__onUpdate), this._buffer.addEventListener("error", this.__onError), 
-                this._buffer.addEventListener("updateend", this.__flush);
+                this._buffer = sourceBuffer, this._queue = [], this._flushing = null, this._lastInitSegment = null, 
+                this.__onUpdate = this._onUpdate.bind(this), this.__onError = this._onError.bind(this), 
+                this.__flush = this._flush.bind(this), this._buffer.addEventListener("update", this.__onUpdate), 
+                this._buffer.addEventListener("error", this.__onError), this._buffer.addEventListener("updateend", this.__flush);
             }
             /**
-     * Append media segment to the attached SourceBuffer, in a FIFO queue.
-     *
-     * Depending on the type of data appended, this might need an associated
-     * initialization segment.
-     *
-     * Such initialization segment will be pushed in the SourceBuffer if the
-     * last segment pushed was associated to another initialization segment.
-     * This detection is entirely reference-based so make sure that the same
-     * initSegment argument given share the same reference.
-     *
-     * You can deactivate the usage of initialization segment by setting the
-     * initSegment argument to null.
-     *
-     * You can also only push an initialization segment by setting the segment
-     * argument to null.
-     * @param {*|null} initSegment
-     * @param {*|null} segment
-     * @param {number|undefined} timestampOffset
-     * @returns {Observable}
-     */            return QueuedSourceBuffer.prototype.appendBuffer = function appendBuffer(initSegment, segment, timestampOffset) {
+   * Append media segment to the attached SourceBuffer, in a FIFO queue.
+   *
+   * Depending on the type of data appended, this might need an associated
+   * initialization segment.
+   *
+   * Such initialization segment will be pushed in the SourceBuffer if the
+   * last segment pushed was associated to another initialization segment.
+   * This detection is entirely reference-based so make sure that the same
+   * initSegment argument given share the same reference.
+   *
+   * You can deactivate the usage of initialization segment by setting the
+   * initSegment argument to null.
+   *
+   * You can also only push an initialization segment by setting the segment
+   * argument to null.
+   * @param {*|null} initSegment
+   * @param {*|null} segment
+   * @param {number|undefined} timestampOffset
+   * @returns {Observable}
+   */            var _proto = QueuedSourceBuffer.prototype;
+            return _proto.appendBuffer = function appendBuffer(initSegment, segment, timestampOffset) {
                 var _this = this;
                 return Object(defer.a)(function() {
                     return _this._addToQueue({
@@ -12169,12 +12136,12 @@ object-assign
                 });
             }, 
             /**
-     * Remove data from the attached SourceBuffer, in a FIFO queue.
-     * @param {number} start - start position, in seconds
-     * @param {number} end - end position, in seconds
-     * @returns {Observable}
-     */
-            QueuedSourceBuffer.prototype.removeBuffer = function removeBuffer(start, end) {
+   * Remove data from the attached SourceBuffer, in a FIFO queue.
+   * @param {number} start - start position, in seconds
+   * @param {number} end - end position, in seconds
+   * @returns {Observable}
+   */
+            _proto.removeBuffer = function removeBuffer(start, end) {
                 var _this2 = this;
                 return Object(defer.a)(function() {
                     return _this2._addToQueue({
@@ -12185,67 +12152,66 @@ object-assign
                 });
             }, 
             /**
-     * Abort the linked SourceBuffer and dispose of the ressources used by this
-     * QueuedSourceBuffer.
-     *
-     * /!\ You won't be able to use the QueuedSourceBuffer after calling this
-     * function.
-     * @private
-     */
-            QueuedSourceBuffer.prototype.abort = function abort() {
+   * Abort the linked SourceBuffer and dispose of the ressources used by this
+   * QueuedSourceBuffer.
+   *
+   * /!\ You won't be able to use the QueuedSourceBuffer after calling this
+   * function.
+   * @private
+   */
+            _proto.abort = function abort() {
                 this.dispose(), this._buffer.abort();
             }, 
             /**
-     * Returns the currently buffered data, in a TimeRanges object.
-     * @returns {TimeRanges}
-     */
-            QueuedSourceBuffer.prototype.getBuffered = function getBuffered() {
+   * Returns the currently buffered data, in a TimeRanges object.
+   * @returns {TimeRanges}
+   */
+            _proto.getBuffered = function getBuffered() {
                 return this._buffer.buffered;
             }, 
             /**
-     * Free up ressources used by this class.
-     *
-     * /!\ You won't be able to use the QueuedSourceBuffer after calling this
-     * function.
-     */
-            QueuedSourceBuffer.prototype.dispose = function dispose() {
+   * Free up ressources used by this class.
+   *
+   * /!\ You won't be able to use the QueuedSourceBuffer after calling this
+   * function.
+   */
+            _proto.dispose = function dispose() {
                 this._buffer.removeEventListener("update", this.__onUpdate), this._buffer.removeEventListener("error", this.__onError), 
                 this._buffer.removeEventListener("updateend", this.__flush), this._queue.length = 0, 
                 this._flushing = null;
             }, 
             /**
-     * Callback used for the 'update' event, as a segment has been added/removed.
-     *
-     * Emit and complete the corresponding subject to inform the action caller
-     * of completion.
-     *
-     * @private
-     */
-            QueuedSourceBuffer.prototype._onUpdate = function _onUpdate() {
-                this._flushing && (this._flushing.next(void 0), 
-                // security against side-effects from the previous `next` instruction
+   * Callback used for the 'update' event, as a segment has been added/removed.
+   *
+   * Emit and complete the corresponding subject to inform the action caller
+   * of completion.
+   *
+   * @private
+   */
+            _proto._onUpdate = function _onUpdate() {
+                this._flushing && (this._flushing.next(void 0), // security against side-effects from the previous `next` instruction
                 this._flushing && (this._flushing.complete(), this._flushing = null));
             }, 
             /**
-     * Callback used for the 'error' event from the SourceBuffer.
-     *
-     * Emit the error through the corresponding subject to inform the action
-     * caller.
-     *
-     * @private
-     * @param {Error} error
-     */
-            QueuedSourceBuffer.prototype._onError = function _onError(error) {
+   * Callback used for the 'error' event from the SourceBuffer.
+   *
+   * Emit the error through the corresponding subject to inform the action
+   * caller.
+   *
+   * @private
+   * @param {Error} error
+   */
+            _proto._onError = function _onError(error) {
                 this._flushing && (this._flushing.error(error), this._flushing = null);
             }, 
             /**
-     * Queue a new action.
-     * Begin flushing if no action were previously in the queue.
-     * @private
-     * @param {Object} action
-     * @returns {Subject} - Can be used to follow the buffer action advancement.
-     */
-            QueuedSourceBuffer.prototype._addToQueue = function _addToQueue(action) {
+   * Queue a new action.
+   * Begin flushing if no action were previously in the queue.
+   * @private
+   * @param {Object} action
+   * @returns {Subject} - Can be used to follow the buffer action advancement.
+   */
+            _proto._addToQueue = function _addToQueue(action) {
                 var shouldFlush = !this._queue.length, subject = new Subject.a();
                 if (action.type === SourceBufferAction.Append) {
                     var segment = action.segment, initSegment = action.initSegment, timestampOffset = action.timestampOffset;
@@ -12298,10 +12264,10 @@ object-assign
                 return shouldFlush && this._flush(), subject.pipe(Object(mapTo.a)(void 0));
             }, 
             /**
-     * Perform next queued action if one and none are pending.
-     * @private
-     */
-            QueuedSourceBuffer.prototype._flush = function _flush() {
+   * Perform next queued action if one and none are pending.
+   * @private
+   */
+            _proto._flush = function _flush() {
                 if (!this._flushing && 0 !== this._queue.length && !this._buffer.updating) {
                     // TODO TypeScrypt do not get the previous length check? Find solution /
                     // open issue
@@ -12328,12 +12294,8 @@ object-assign
                     }
                 }
             }, QueuedSourceBuffer;
-        }();
-        /* harmony default export */        
+        }(), POSSIBLE_BUFFER_TYPES = [ "audio", "video", "text", "image" ];
         // CONCATENATED MODULE: ./src/core/source_buffers/index.ts
-        function source_buffers_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -12348,12 +12310,13 @@ object-assign
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */        var POSSIBLE_BUFFER_TYPES = [ "audio", "video", "text", "image" ];
+ */        
         /**
  * Get all currently available buffer types.
  * /!\ This list can evolve at runtime depending on feature switching.
  * @returns {Array.<string>}
- */        function getBufferTypes() {
+ */
+        function getBufferTypes() {
             var bufferTypes = [ "audio", "video" ];
             return null == features.a.nativeTextTracksBuffer && null == features.a.htmlTextTracksBuffer || bufferTypes.push("text"), 
             null != features.a.imageBuffer && bufferTypes.push("image"), bufferTypes;
@@ -12373,42 +12336,46 @@ object-assign
  * wrap a SourceBuffer implementation to queue all its actions.
  *
  * @class SourceBufferManager
- */        var source_buffers = function() {
+ */        var source_buffers_SourceBufferManager = 
+        /* */
+        function() {
             /**
-     * @param {HTMLMediaElement} mediaElement
-     * @param {MediaSource} mediaSource
-     * @constructor
-     */
+   * @param {HTMLMediaElement} mediaElement
+   * @param {MediaSource} mediaSource
+   * @constructor
+   */
             function SourceBufferManager(mediaElement, mediaSource) {
-                source_buffers_classCallCheck(this, SourceBufferManager), this._mediaElement = mediaElement, 
-                this._mediaSource = mediaSource, this._initializedNativeSourceBuffers = {}, this._initializedCustomSourceBuffers = {};
+                this._mediaElement = mediaElement, this._mediaSource = mediaSource, this._initializedNativeSourceBuffers = {}, 
+                this._initializedCustomSourceBuffers = {};
             }
             /**
-     * Returns true if a SourceBuffer with the type given has been created with
-     * this instance of the SourceBufferManager.
-     * @param {string} bufferType
-     * @returns {Boolean}
-     */            
+   * Returns true if a SourceBuffer with the type given has been created with
+   * this instance of the SourceBufferManager.
+   * @param {string} bufferType
+   * @returns {Boolean}
+   */            
             /**
-     * Returns true if the source buffer is "native" (has to be attached to the
-     * mediaSource at the beginning of the stream.
-     * @static
-     * @param {string} bufferType
-     * @returns {Boolean}
-     */
-            return SourceBufferManager.isNative = function isNative(bufferType) {
+   * Returns true if the source buffer is "native" (has to be attached to the
+   * mediaSource at the beginning of the stream.
+   * @static
+   * @param {string} bufferType
+   * @returns {Boolean}
+   */
+            SourceBufferManager.isNative = function isNative(bufferType) {
                 return shouldHaveNativeSourceBuffer(bufferType);
-            }, SourceBufferManager.prototype.has = function has(bufferType) {
+            };
+            var _proto = SourceBufferManager.prototype;
+            return _proto.has = function has(bufferType) {
                 return shouldHaveNativeSourceBuffer(bufferType) ? !!this._initializedNativeSourceBuffers[bufferType] : !!this._initializedCustomSourceBuffers[bufferType];
             }, 
             /**
-     * Returns the created QueuedSourceBuffer for the given type.
-     * Throws if no QueuedSourceBuffer were created for the given type.
-     *
-     * @param {string} bufferType
-     * @returns {QueuedSourceBuffer}
-     */
-            SourceBufferManager.prototype.get = function get(bufferType) {
+   * Returns the created QueuedSourceBuffer for the given type.
+   * Throws if no QueuedSourceBuffer were created for the given type.
+   *
+   * @param {string} bufferType
+   * @returns {QueuedSourceBuffer}
+   */
+            _proto.get = function get(bufferType) {
                 if (shouldHaveNativeSourceBuffer(bufferType)) {
                     var sourceBufferInfos = this._initializedNativeSourceBuffers[bufferType];
                     if (!sourceBufferInfos) throw new Error("SourceBufferManager: no " + bufferType + " initialized yet");
@@ -12419,17 +12386,16 @@ object-assign
                 return _sourceBufferInfos.sourceBuffer;
             }, 
             /**
-     * Creates a new QueuedSourceBuffer for the given buffer type.
-     * Reuse an already created one if a QueuedSourceBuffer for the given type
-     * already exists. TODO Throw or abort old one instead?
-     * @param {string} bufferType
-     * @param {string} codec
-     * @param {Object|undefined} options
-     * @returns {QueuedSourceBuffer}
-     */
-            SourceBufferManager.prototype.createSourceBuffer = function createSourceBuffer(bufferType, codec) {
-                var options = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : {};
-                if (shouldHaveNativeSourceBuffer(bufferType)) {
+   * Creates a new QueuedSourceBuffer for the given buffer type.
+   * Reuse an already created one if a QueuedSourceBuffer for the given type
+   * already exists. TODO Throw or abort old one instead?
+   * @param {string} bufferType
+   * @param {string} codec
+   * @param {Object|undefined} options
+   * @returns {QueuedSourceBuffer}
+   */
+            _proto.createSourceBuffer = function createSourceBuffer(bufferType, codec, options) {
+                if (void 0 === options && (options = {}), shouldHaveNativeSourceBuffer(bufferType)) {
                     var memorizedSourceBuffer = this._initializedNativeSourceBuffers[bufferType];
                     if (memorizedSourceBuffer) return memorizedSourceBuffer.codec !== codec ? log.a.warn("reusing native SourceBuffer with codec", memorizedSourceBuffer.codec, "for codec", codec) : log.a.info("reusing native SourceBuffer with codec", codec), 
                     memorizedSourceBuffer.sourceBuffer;
@@ -12444,16 +12410,15 @@ object-assign
                 if (memorizedCustomSourceBuffer) return log.a.info("reusing a previous custom SourceBuffer for the type", bufferType), 
                 memorizedCustomSourceBuffer.sourceBuffer;
                 if ("text" === bufferType) {
-                    log.a.info("creating a new text SourceBuffer with codec", codec);
-                    var sourceBuffer = void 0;
-                    if ("html" === options.textTrackMode) {
+                    var sourceBuffer;
+                    if (log.a.info("creating a new text SourceBuffer with codec", codec), "html" === options.textTrackMode) {
                         if (null == features.a.htmlTextTracksBuffer) throw new Error("HTML Text track feature not activated");
                         sourceBuffer = new features.a.htmlTextTracksBuffer(this._mediaElement, options.textTrackElement);
                     } else {
                         if (null == features.a.nativeTextTracksBuffer) throw new Error("Native Text track feature not activated");
                         sourceBuffer = new features.a.nativeTextTracksBuffer(this._mediaElement, !!options.hideNativeSubtitle);
                     }
-                    var queuedSourceBuffer = new queued_source_buffer(sourceBuffer);
+                    var queuedSourceBuffer = new queued_source_buffer_QueuedSourceBuffer(sourceBuffer);
                     return this._initializedCustomSourceBuffers.text = {
                         codec: codec,
                         sourceBuffer: queuedSourceBuffer
@@ -12462,7 +12427,7 @@ object-assign
                 if ("image" === bufferType) {
                     if (null == features.a.imageBuffer) throw new Error("Image buffer feature not activated");
                     log.a.info("creating a new image SourceBuffer with codec", codec);
-                    var _sourceBuffer = new features.a.imageBuffer(), _queuedSourceBuffer = new queued_source_buffer(_sourceBuffer);
+                    var _sourceBuffer = new features.a.imageBuffer(), _queuedSourceBuffer = new queued_source_buffer_QueuedSourceBuffer(_sourceBuffer);
                     return this._initializedCustomSourceBuffers.image = {
                         codec: codec,
                         sourceBuffer: _queuedSourceBuffer
@@ -12471,10 +12436,10 @@ object-assign
                 throw log.a.error("unknown buffer type:", bufferType), new MediaError.a("BUFFER_TYPE_UNKNOWN", null, !0);
             }, 
             /**
-     * Dispose of the active SourceBuffer for the given type.
-     * @param {string} bufferType
-     */
-            SourceBufferManager.prototype.disposeSourceBuffer = function disposeSourceBuffer(bufferType) {
+   * Dispose of the active SourceBuffer for the given type.
+   * @param {string} bufferType
+   */
+            _proto.disposeSourceBuffer = function disposeSourceBuffer(bufferType) {
                 if (shouldHaveNativeSourceBuffer(bufferType)) {
                     var memorizedNativeSourceBuffer = this._initializedNativeSourceBuffers[bufferType];
                     if (null == memorizedNativeSourceBuffer) return;
@@ -12497,9 +12462,9 @@ object-assign
                 }
             }, 
             /**
-     * Dispose of all QueuedSourceBuffer created on this SourceBufferManager.
-     */
-            SourceBufferManager.prototype.disposeAll = function disposeAll() {
+   * Dispose of all QueuedSourceBuffer created on this SourceBufferManager.
+   */
+            _proto.disposeAll = function disposeAll() {
                 var _this = this;
                 POSSIBLE_BUFFER_TYPES.forEach(function(bufferType) {
                     _this.has(bufferType) && _this.disposeSourceBuffer(bufferType);
@@ -12511,10 +12476,9 @@ object-assign
  * @param {MediaSource} mediaSource
  * @param {string} codec
  * @returns {SourceBuffer}
- */
-        /* harmony default export */        function createNativeQueuedSourceBuffer(mediaSource, codec) {
+ */        function createNativeQueuedSourceBuffer(mediaSource, codec) {
             var sourceBuffer = mediaSource.addSourceBuffer(codec);
-            return new queued_source_buffer(sourceBuffer);
+            return new queued_source_buffer_QueuedSourceBuffer(sourceBuffer);
         }
         /**
  * Returns true if the given buffeType is a native buffer, false otherwise.
@@ -12577,13 +12541,14 @@ object-assign
  * already inform that it is the current Period.
  * ```
  *
+ * @param {Array.<string>} bufferTypes - Every buffer types in the content.
  * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer informations when
  * one is added.
  * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer informations when
  * one is removed.
  * @returns {Observable}
  */        function ActivePeriodEmitter(bufferTypes, addPeriodBuffer$, removePeriodBuffer$) {
-            var periodsList = new sorted_list(function(a, b) {
+            var periodsList = new sorted_list_SortedList(function(a, b) {
                 return a.period.start - b.period.start;
             }), onItemAdd$ = addPeriodBuffer$.pipe(Object(tap.a)(function(_ref) {
                 var period = _ref.period, type = _ref.type, periodItem = periodsList.find(function(p) {
@@ -12615,7 +12580,8 @@ object-assign
         /**
  * Returns true if the set of given buffer types is complete (has all possible
  * types).
- * @param {Set} bufferList
+ * @param {Array.<string>} bufferTypes - Every buffer types in the content.
+ * @param {Set.<string>} bufferList
  * @returns {Boolean}
  */        function isBufferListFull(bufferTypes, bufferList) {
             return bufferList.size >= bufferTypes.length;
@@ -12767,7 +12733,7 @@ object-assign
                     value: value
                 };
             }
-        }, simple_set = __webpack_require__(53), GC_GAP_CALM = config.a.BUFFER_GC_GAPS.CALM, GC_GAP_BEEFY = config.a.BUFFER_GC_GAPS.BEEFY;
+        }, simple_set = __webpack_require__(54), GC_GAP_CALM = config.a.BUFFER_GC_GAPS.CALM, GC_GAP_BEEFY = config.a.BUFFER_GC_GAPS.BEEFY;
         /* harmony default export */        
         /**
  * Run the garbage collector.
@@ -12776,7 +12742,7 @@ object-assign
  * If it does not succeed to clean up space, use a higher gcCap.
  *
  * @param {Observable} timings$
- * @param {QueuedSourceBuffer} bufferingQueue
+ * @param {Object} bufferingQueue
  * @returns {Observable}
  */
         function forceGarbageCollection(timings$, bufferingQueue) {
@@ -12803,7 +12769,7 @@ object-assign
  * @param {TimeRanges} buffered - current buffered ranges
  * @param {Number} gcGap - delta gap from current timestamp from which we
  * should consider cleaning up.
- * @returns {Array.<Range>} - Ranges selected for clean up
+ * @returns {Array.<Object>} - Ranges selected for clean up
  */        function selectGCedRanges(currentTime, buffered, gcGap) {
             // start by trying to remove all ranges that do not contain the
             // current time and respect the gcGap
@@ -12812,7 +12778,7 @@ object-assign
                 var outerRange = outerRanges[i];
                 currentTime - gcGap < outerRange.end ? cleanedupRanges.push(outerRange) : currentTime + gcGap > outerRange.start && cleanedupRanges.push(outerRange);
             }
-            // try to clean up some space in the current range
+ // try to clean up some space in the current range
                         return innerRange && (log.a.debug("buffer: gc removing part of inner range", cleanedupRanges), 
             currentTime - gcGap > innerRange.start && cleanedupRanges.push({
                 start: innerRange.start,
@@ -12860,7 +12826,7 @@ object-assign
  *
  * @param {Observable} clock$
  * @param {Object} queuedSourceBuffer
- * @param {Object} appendedSegmentInfos
+ * @param {Object} dataInfos
  * @returns {Observable}
  */        function appendDataToSourceBufferWithRetries(clock$, queuedSourceBuffer, dataInfos) {
             var append$ = appendDataToSourceBuffer(queuedSourceBuffer, dataInfos);
@@ -12952,11 +12918,9 @@ object-assign
  */
         /**
  * Returns every segments currently wanted.
- *
  * @param {Object} representation - The representation of the chosen
  * adaptation
  * @param {Object} range
- * @param {Object} options
  * @returns {Array.<Object>}
  */        function getSegmentsNeeded(representation, range) {
             var start = range.start, duration = range.end - start;
@@ -13029,7 +12993,7 @@ object-assign
  */        function shouldDownloadSegment(segment, content, segmentBookkeeper, wantedRange, segmentIDsToIgnore) {
             var period = content.period, adaptation = content.adaptation, representation = content.representation;
             if (segmentIDsToIgnore.test(segment.id)) return !1;
-            // segment without time info are usually init segments or some
+ // segment without time info are usually init segments or some
             // kind of metadata segment that we never filter out
                         if (segment.isInit || segment.time < 0) return !0;
             var time = segment.time, duration = segment.duration, timescale = segment.timescale;
@@ -13042,7 +13006,7 @@ object-assign
             });
             if (!currentSegment) return !0;
             if (currentSegment.infos.period.id !== period.id || currentSegment.infos.adaptation.id !== adaptation.id) return !0;
-            // only re-load comparatively-poor bitrates for the same adaptation.
+ // only re-load comparatively-poor bitrates for the same adaptation.
                         var bitrateCeil = currentSegment.infos.representation.bitrate * BITRATE_REBUFFERING_RATIO;
             return representation.bitrate > bitrateCeil;
         }
@@ -13082,14 +13046,14 @@ object-assign
             } : null, startQueue$ = new ReplaySubject.a(1), downloadQueue = [], currentSegmentRequest = null, sourceBufferWaitingQueue = new simple_set.a();
             // unwrap components of the content
                         /**
-     * Update the downloadQueue and start/restart the queue depending on the
-     * internalState and the current RepresentationBuffer's data.
-     *
-     * Returns the new state of the Downloading Queue.
-     *
-     * @param {Object} state
-     * @returns {Object}
-     */
+   * Update the downloadQueue and start/restart the queue depending on the
+   * internalState and the current RepresentationBuffer's data.
+   *
+   * Returns the new state of the Downloading Queue.
+   *
+   * @param {Object} state
+   * @returns {Object}
+   */
             function updateQueueFromInternalState(state) {
                 if ("need-segments" !== state.type || !state.value.neededSegments.length) // (re-)start with an empty queue
                 return currentSegmentRequest && log.a.debug("interrupting segment request."), downloadQueue = [], 
@@ -13114,26 +13078,24 @@ object-assign
                 startQueue$.next();
                 return buffer_events_generators.activeBuffer(bufferType);
             }
+ // State Checker:
+            //   - indicates when the manifest should be refreshed
+            //   - indicates if a discontinuity is encountered
+            //   - emit state updates
+            //   - update the downloadQueue
+            //   - start/restart the BufferQueue
+                        var bufferState$ = Object(combineLatest.a)(clock$, wantedBufferAhead$).pipe(Object(map.a)(
             /**
-     * State Checker:
-     *   - indicates when the manifest should be refreshed
-     *   - indicates if a discontinuity is encountered
-     *   - emit state updates
-     *   - update the downloadQueue
-     *   - start/restart the BufferQueue
-     * @type {Observable}
-     */            var bufferState$ = Object(combineLatest.a)(clock$, wantedBufferAhead$).pipe(Object(map.a)(
-            /**
-     * Perform a check-up of the current status of the RepresentationBuffer:
-     *   - synchronize the SegmentBookkeeper with the current buffered
-     *   - checks if the manifest should be refreshed
-     *   - checks if a discontinuity is encountered
-     *   - check if segments need to be downloaded
-     *   - Emit a description of the current state of the buffer
-     *
-     * @param {Array} arr
-     * @returns {Object}
-     */
+   * Perform a check-up of the current status of the RepresentationBuffer:
+   *   - synchronize the SegmentBookkeeper with the current buffered
+   *   - checks if the manifest should be refreshed
+   *   - checks if a discontinuity is encountered
+   *   - check if segments need to be downloaded
+   *   - Emit a description of the current state of the buffer
+   *
+   * @param {Array} arr
+   * @returns {Object}
+   */
             function getBufferStatus(_ref3) {
                 var timing = _ref3[0], bufferGoal = _ref3[1], buffered = queuedSourceBuffer.getBuffered(), neededRange = getWantedRange(period, buffered, timing, bufferGoal, paddings), discontinuity = getCurrentDiscontinuity(content, timing), shouldRefreshManifest = shouldRefreshManifestForRange(content, neededRange);
                 // /!\ Side effect to the SegmentBookkeeper
@@ -13167,22 +13129,22 @@ object-assign
                 };
             }
             /**
-     * Exploit the status given by ``getBufferStatus``:
-     *   - emit needed actions
-     *   - mutates the downloadQueue
-     *   - start/restart the current BufferQueue
-     *   - emit the state of the Buffer
-     * @param {Object} status
-     * @returns {Observable}
-     */), Object(mergeMap.a)(function handleBufferStatus(status) {
+   * Exploit the status given by ``getBufferStatus``:
+   *   - emit needed actions
+   *   - mutates the downloadQueue
+   *   - start/restart the current BufferQueue
+   *   - emit the state of the Buffer
+   * @param {Object} status
+   * @returns {Observable}
+   */), Object(mergeMap.a)(function handleBufferStatus(status) {
                 var discontinuity = status.discontinuity, shouldRefreshManifest = status.shouldRefreshManifest, state = status.state, neededActions = getNeededActions(bufferType, discontinuity, shouldRefreshManifest), downloadQueueState = updateQueueFromInternalState(state);
                 return "idle-buffer" === downloadQueueState.type ? of.a.apply(void 0, neededActions) : Object(concat.a)(of.a.apply(void 0, neededActions), Object(of.a)(downloadQueueState));
             })), bufferQueue$ = startQueue$.pipe(Object(switchMap.a)(
             /**
-     * Request every Segment in the ``downloadQueue`` on subscription.
-     * Emit the data of a segment when a request succeeded.
-     * @returns {Observable}
-     */
+   * Request every Segment in the ``downloadQueue`` on subscription.
+   * Emit the data of a segment when a request succeeded.
+   * @returns {Observable}
+   */
             function requestSegments() {
                 var requestNextSegment$ = Object(defer.a)(function() {
                     var currentNeededSegment = downloadQueue.shift();
@@ -13213,11 +13175,11 @@ object-assign
                 }));
             }
             /**
-     * Append the given segment to the SourceBuffer.
-     * Emit the right event when it succeeds.
-     * @param {Object} data
-     * @returns {Observable}
-     */), Object(mergeMap.a)(function appendSegment(data) {
+   * Append the given segment to the SourceBuffer.
+   * Emit the right event when it succeeds.
+   * @param {Object} data
+   * @returns {Observable}
+   */), Object(mergeMap.a)(function appendSegment(data) {
                 return Object(defer.a)(function() {
                     var segment = data.segment, _data$value = data.value, segmentInfos = _data$value.segmentInfos, segmentData = _data$value.segmentData, segmentOffset = _data$value.segmentOffset;
                     if (segment.isInit && (initSegmentObject = data.value), null == segmentData) 
@@ -13233,7 +13195,7 @@ object-assign
                     return sourceBufferWaitingQueue.add(segment.id), append$.pipe(Object(mapTo.a)(buffer_events_generators.addedSegment(bufferType, segment, segmentData)), Object(tap.a)(function() {
                         if (!segment.isInit) {
                             var _ref2 = segmentInfos || segment, time = _ref2.time, duration = _ref2.duration, timescale = _ref2.timescale;
-                            // current segment timings informations are used to update
+ // current segment timings informations are used to update
                             // bufferedRanges informations
                                                         segmentBookkeeper.insert(period, adaptation, representation, segment, time / timescale, // start
                             null != duration ? (time + duration) / timescale : void 0);
@@ -13243,12 +13205,10 @@ object-assign
                     }));
                 });
             }));
-            /**
-     * Buffer Queue:
-     *   - download segment
-     *   - append them to the SourceBuffer
-     * @type {Observable}
-     */            return Object(merge.a)(bufferState$, bufferQueue$).pipe(Object(share.a)());
+ // Buffer Queue:
+            //   - download segment
+            //   - append them to the SourceBuffer
+                        return Object(merge.a)(bufferState$, bufferQueue$).pipe(Object(share.a)());
         }
         /**
  * Emit the current discontinuity encountered.
@@ -13263,7 +13223,6 @@ object-assign
         /**
  * Returns true if the current Manifest needs to be downloaded.
  * @param {Object} content
- * @param {Object} segmentBookkeeper
  * @param {Object} wantedRange
  * @returns {Boolean}
  */        function shouldRefreshManifestForRange(_ref5, wantedRange) {
@@ -13271,6 +13230,7 @@ object-assign
             return representation.index.shouldRefresh(start, end);
         }
         /**
+ * @param {string} bufferType
  * @param {number} discontinuity
  * @param {boolean} shouldRefreshManifest
  * @returns {Array.<Object>}
@@ -13341,11 +13301,11 @@ object-assign
             }));
             return Object(merge.a)(buffer$, bitrateEstimate$);
             /**
-     * Create and returns a new RepresentationBuffer Observable, linked to the
-     * given Representation.
-     * @param {Representation} representation
-     * @returns {Observable}
-     */            function createRepresentationBuffer(representation) {
+   * Create and returns a new RepresentationBuffer Observable, linked to the
+   * given Representation.
+   * @param {Representation} representation
+   * @returns {Observable}
+   */            function createRepresentationBuffer(representation) {
                 return log.a.info("changing representation", adaptation.type, representation), RepresentationBuffer({
                     clock$: clock$,
                     content: {
@@ -13376,6 +13336,8 @@ object-assign
         /**
  * Returns ABR Observable.
  * @param {Object} adaptation
+ * @param {Object} abrManager
+ * @param {Observable} abrBaseClock$
  * @returns {Observable}
  */        function getABRForAdaptation(adaptation, abrManager, abrBaseClock$) {
             var representations = adaptation.representations, currentRepresentation = null, abrClock$ = abrBaseClock$.pipe(Object(map.a)(function(tick) {
@@ -13385,16 +13347,16 @@ object-assign
                 }, tick);
             }));
             /**
-     * Keep track of the current representation to add informations to the
-     * ABR clock.
-     * TODO isn't that a little bit ugly?
-     * @type {Object|null}
-     */            return abrManager.get$(adaptation.type, abrClock$, representations).pipe(Object(tap.a)(function(_ref3) {
+   * Keep track of the current representation to add informations to the
+   * ABR clock.
+   * TODO isn't that a little bit ugly?
+   * @type {Object|null}
+   */            return abrManager.get$(adaptation.type, abrClock$, representations).pipe(Object(tap.a)(function(_ref3) {
                 var representation = _ref3.representation;
                 currentRepresentation = representation;
             }));
         }
-        // Re-export RepresentationBuffer events used by the AdaptationBufferManager
+ // Re-export RepresentationBuffer events used by the AdaptationBufferManager
         // CONCATENATED MODULE: ./src/core/buffer/are_buffers_complete.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -13428,7 +13390,7 @@ object-assign
  * @param {...Observable} buffers
  * @returns {Observable}
  */        function areBuffersComplete() {
-            for (var _len = arguments.length, buffers = Array(_len), _key = 0; _key < _len; _key++) buffers[_key] = arguments[_key];
+            for (var _len = arguments.length, buffers = new Array(_len), _key = 0; _key < _len; _key++) buffers[_key] = arguments[_key];
             /**
    * Array of Observables linked to the Array of Buffers which emit:
    *   - true when the corresponding buffer is considered _complete_.
@@ -13511,7 +13473,7 @@ object-assign
  * @param {Object} period
  * @param {string} bufferType
  * @param {Object} clockTick
- * @returns {Observable}
+ * @returns {Object}
  */        function getAdaptationSwitchStrategy(buffered, period, bufferType, clockTick) {
             if (!buffered.length) return {
                 type: "continue",
@@ -13585,14 +13547,11 @@ object-assign
  * @returns {*}
  */        function takeFirstSet() {
             for (var i = 0, len = arguments.length; i < len; ) {
-                if (null != (arguments.length <= i ? void 0 : arguments[i])) return arguments.length <= i ? void 0 : arguments[i];
+                if (null != (i < 0 || arguments.length <= i ? void 0 : arguments[i])) return i < 0 || arguments.length <= i ? void 0 : arguments[i];
                 i++;
             }
         }
         // CONCATENATED MODULE: ./src/core/buffer/segment_bookkeeper.ts
-                function segment_bookkeeper_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -13607,25 +13566,27 @@ object-assign
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */        var MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = config.a.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT, MAX_BUFFERED_DISTANCE = config.a.MAX_BUFFERED_DISTANCE, segment_bookkeeper_MINIMUM_SEGMENT_SIZE = config.a.MINIMUM_SEGMENT_SIZE, segment_bookkeeper = function() {
+ */        var MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = config.a.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT, MAX_BUFFERED_DISTANCE = config.a.MAX_BUFFERED_DISTANCE, segment_bookkeeper_MINIMUM_SEGMENT_SIZE = config.a.MINIMUM_SEGMENT_SIZE, segment_bookkeeper_SegmentBookkeeper = 
+        /* */
+        function() {
             function SegmentBookkeeper() {
-                segment_bookkeeper_classCallCheck(this, SegmentBookkeeper), 
                 /**
-         * The inventory keep track of all the segments which should be currently
-         * in the browser's memory.
-         * This array contains objects, each being related to a single downloaded
-         * segment which is at least partially added in a source buffer.
-         * @type {Array.<Object>}
-         */
+     * The inventory keep track of all the segments which should be currently
+     * in the browser's memory.
+     * This array contains objects, each being related to a single downloaded
+     * segment which is at least partially added in a source buffer.
+     * @type {Array.<Object>}
+     */
                 this.inventory = [];
             }
             /**
-     * Infer each segment's bufferedStart and bufferedEnd from the TimeRanges
-     * given (coming from the source buffer).
-     * @param {TimeRanges}
-     *
-     * TODO implement management of segments whose end is not known
-     */            return SegmentBookkeeper.prototype.synchronizeBuffered = function synchronizeBuffered(buffered) {
+   * Infer each segment's bufferedStart and bufferedEnd from the TimeRanges
+   * given (coming from the source buffer).
+   * @param {TimeRanges}
+   *
+   * TODO implement management of segments whose end is not known
+   */            var _proto = SegmentBookkeeper.prototype;
+            return _proto.synchronizeBuffered = function synchronizeBuffered(buffered) {
                 for (var inventory = this.inventory, ranges = Object(utils_ranges.a)(buffered), inventoryIndex = 0, thisSegment = inventory[0], rangesLength = ranges.length, i = 0; i < rangesLength; i++) {
                     if (null == thisSegment) 
                     // If thisSegment is not set, it means that we arrived at the end of
@@ -13635,49 +13596,46 @@ object-assign
                     // (It may be linked to another adaptation, for example)
                     return;
                     var _ranges$i = ranges[i], rangeStart = _ranges$i.start, rangeEnd = _ranges$i.end;
-                    // if current TimeRange is too small to contain a segment, go to next one
+ // if current TimeRange is too small to contain a segment, go to next one
                                         if (!(rangeEnd - rangeStart < segment_bookkeeper_MINIMUM_SEGMENT_SIZE)) {
                         // Find the first segment either within this TimeRange or past it:
                         // skip until first segment with at least MINIMUM_SEGMENT_SIZE past the
                         // start of that range.
                         for (
                         /**
-             * Inventory index of the last segment not contained in the current range.
-             * Will be used to know how many segments have been garbage collected.
-             * @type {Number}
-             */
-                        var indexBefore = inventoryIndex; thisSegment && 
-                        // TODO better way to indicate to typescript that all is well here
+       * Inventory index of the last segment not contained in the current range.
+       * Will be used to know how many segments have been garbage collected.
+       * @type {Number}
+       */
+                        var indexBefore = inventoryIndex; thisSegment && // TODO better way to indicate to typescript that all is well here
                         takeFirstSet(thisSegment.bufferedEnd, thisSegment.end) - rangeStart < segment_bookkeeper_MINIMUM_SEGMENT_SIZE; ) thisSegment = inventory[++inventoryIndex];
                         /**
-             * Contains the end of the last garbage-collected segment before
-             * thisSegment.
-             * Might be useful to infer later the bufferedStart of thisSegment.
-             *
-             * -1 if no segment have been garbage-collected before thisSegment.
-             * @type {Number}
-             */                        var lastDeletedSegmentEnd = -1, numberOfSegmentToDelete = inventoryIndex - indexBefore;
-                        // remove garbage-collected segments
+       * Contains the end of the last garbage-collected segment before
+       * thisSegment.
+       * Might be useful to infer later the bufferedStart of thisSegment.
+       *
+       * -1 if no segment have been garbage-collected before thisSegment.
+       * @type {Number}
+       */                        var lastDeletedSegmentEnd = -1, numberOfSegmentToDelete = inventoryIndex - indexBefore;
+ // remove garbage-collected segments
                         // (not in that TimeRange nor in the previous one)
                                                 if (numberOfSegmentToDelete > 0) {
                             // last garbage-collected segment
                             var lastDeletedSegment = inventory[indexBefore + numberOfSegmentToDelete - 1];
-                            // TODO better way to indicate to typescript that all is well here
+ // TODO better way to indicate to typescript that all is well here
                                                         lastDeletedSegmentEnd = takeFirstSet(lastDeletedSegment.bufferedEnd, lastDeletedSegment.end), 
                             // mutate inventory
                             inventory.splice(indexBefore, numberOfSegmentToDelete), inventoryIndex = indexBefore;
                         }
-                        // if no segment is left for that range (or any other one), quit
+ // if no segment is left for that range (or any other one), quit
                                                 if (null == thisSegment) return;
-                        // Infer the bufferedStart for this segment, and the bufferedStart and
+ // Infer the bufferedStart for this segment, and the bufferedStart and
                         // bufferedEnd for the following segments included in that range.
                         //
                         // If the current segment is actually completely outside that range (it
                         // is contained in one of the next one), skip that part.
-                                                if (rangeEnd - 
-                        // TODO better way to indicate to typescript that all is well here
-                        takeFirstSet(thisSegment.bufferedStart, thisSegment.start) >= segment_bookkeeper_MINIMUM_SEGMENT_SIZE) 
-                        // Make contiguous until first segment outside that range
+                                                if (rangeEnd - // TODO better way to indicate to typescript that all is well here
+                        takeFirstSet(thisSegment.bufferedStart, thisSegment.start) >= segment_bookkeeper_MINIMUM_SEGMENT_SIZE) // Make contiguous until first segment outside that range
                         // (i.e until the start of the next segment can not constitute a segment
                         // in that range == less than MINIMUM_SEGMENT_SIZE into that range)
                         for (
@@ -13686,16 +13644,15 @@ object-assign
                         // the segment appears to have been partially garbage collected:
                         // Update bufferedStart
                         thisSegment.bufferedStart = rangeStart : null == thisSegment.bufferedStart && (-1 !== lastDeletedSegmentEnd && lastDeletedSegmentEnd > rangeStart && thisSegment.start - lastDeletedSegmentEnd <= MAX_BUFFERED_DISTANCE ? thisSegment.bufferedStart = lastDeletedSegmentEnd : thisSegment.start - rangeStart <= MAX_BUFFERED_DISTANCE ? thisSegment.bufferedStart = rangeStart : thisSegment.bufferedStart = thisSegment.start), 
-                        thisSegment = inventory[++inventoryIndex]; thisSegment && rangeEnd - 
-                        // TODO better way to indicate to typescript that all is well here
+                        thisSegment = inventory[++inventoryIndex]; thisSegment && rangeEnd - // TODO better way to indicate to typescript that all is well here
                         takeFirstSet(thisSegment.bufferedStart, thisSegment.start) >= segment_bookkeeper_MINIMUM_SEGMENT_SIZE; ) {
                             var prevSegment = inventory[inventoryIndex - 1];
-                            // those segments are contiguous, we have no way to infer their real
+ // those segments are contiguous, we have no way to infer their real
                             // end
                                                         null == prevSegment.bufferedEnd && (prevSegment.bufferedEnd = prevSegment.end), 
                             thisSegment.bufferedStart = prevSegment.bufferedEnd, thisSegment = inventory[++inventoryIndex];
                         }
-                        // update the bufferedEnd of the last segment in that range
+ // update the bufferedEnd of the last segment in that range
                                                 var lastSegmentInRange = inventory[inventoryIndex - 1];
                         lastSegmentInRange && (null != lastSegmentInRange.bufferedEnd && lastSegmentInRange.bufferedEnd > rangeEnd ? 
                         // the segment appears to have been partially garbage collected:
@@ -13703,23 +13660,25 @@ object-assign
                         lastSegmentInRange.bufferedEnd = rangeEnd : null == lastSegmentInRange.bufferedEnd && (lastSegmentInRange.bufferedEnd = rangeEnd - lastSegmentInRange.end <= MAX_BUFFERED_DISTANCE ? rangeEnd : lastSegmentInRange.end));
                     }
                 }
-                // if we still have segments left, they are not affiliated to any range.
+ // if we still have segments left, they are not affiliated to any range.
                 // They might have been garbage collected, delete them from here.
                                 thisSegment && inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
             }, 
             /**
-     * Add a new segment in the inventory.
-     *
-     * Note: As new segments can "replace" partially or completely old ones, we
-     * have to perform a complex logic and might update previously added segments.
-     *
-     * @param {Object} segment
-     * @param {Number} start - start time of the segment, in seconds
-     * @param {Number|undefined} end - end time of the segment, in seconds. Can
-     * be undefined in some rare cases
-     * @param {Number} bitrate - bitrate of the representation the segment is in
-     */
-            SegmentBookkeeper.prototype.insert = function insert(period, adaptation, representation, segment, start, end) {
+   * Add a new segment in the inventory.
+   *
+   * Note: As new segments can "replace" partially or completely old ones, we
+   * have to perform a complex logic and might update previously added segments.
+   *
+   * @param {Object} period
+   * @param {Object} adaptation
+   * @param {Object} representation
+   * @param {Object} segment
+   * @param {Number} start - start time of the segment, in seconds
+   * @param {Number|undefined} end - end time of the segment, in seconds. Can
+   * be undefined in some rare cases
+   */
+            _proto.insert = function insert(period, adaptation, representation, segment, start, end) {
                 // TODO (*very* low-priority) manage segments whose end is unknown (rare but
                 // could eventually happen).
                 // This should be properly managed in this method, but it is not in some
@@ -13738,8 +13697,7 @@ object-assign
                             adaptation: adaptation,
                             representation: representation
                         }
-                    }, i = inventory.length - 1
-                    // infer start and end from the segment data
+                    }, i = inventory.length - 1 // infer start and end from the segment data
                     // /!\ Can be a little different than their real start/end time in the
                     // sourcebuffer.
                     // const start = segment.time / segment.timescale;
@@ -13810,7 +13768,7 @@ object-assign
                         // end before the one we're adding now)
                         null != segmentI.end && (segmentI.end = start), void this.inventory.splice(i + 1, 0, newSegment));
                     }
-                    // if we got here, we are the first segment
+ // if we got here, we are the first segment
                     // check bounds of the previous first segment
                                         var firstSegment = this.inventory[0];
                     firstSegment ? null != end ? firstSegment.start >= end ? 
@@ -13878,34 +13836,31 @@ object-assign
                     this.inventory.splice(0, 0, newSegment) : 
                     // we do not have any segment yet
                     this.inventory.push(newSegment);
-                } else 
-                // This leads to excessive re-downloads of segment without an ending time.
+                } else // This leads to excessive re-downloads of segment without an ending time.
                 log.a.warn("SegmentBookkeeper: ending time of the segment not defined");
             }, 
             /**
-     * Returns segment infos for a segment corresponding to the given time,
-     * duration and timescale.
-     *
-     * Returns null if either:
-     *   - no segment can be linked exactly to the given time/duration
-     *   - a segment is linked to this information, but is currently considered
-     *     "incomplete" to be playable, in the sourceBuffer. We check if all
-     *     needed data for playback (from wanted range) is loaded.
-     *
-     * The main purpose of this method is to know if the segment asked should be
-     * downloaded (or re-downloaded).
-     *
-     * /!\ Make sure that this class is synchronized with the sourceBuffer
-     * (see addBufferedInfos method of the same class) before calling this method,
-     * as it depends on it to categorize "incomplete" from "complete" segments.
-     *
-     * @param {Object} wantedRange
-     * @param {Number} time
-     * @param {Number} duration
-     * @param {Number} timescale
-     * @returns {Object|null}
-     */
-            SegmentBookkeeper.prototype.hasPlayableSegment = function hasPlayableSegment(wantedRange, segmentInfos) {
+   * Returns segment infos for a segment corresponding to the given time,
+   * duration and timescale.
+   *
+   * Returns null if either:
+   *   - no segment can be linked exactly to the given time/duration
+   *   - a segment is linked to this information, but is currently considered
+   *     "incomplete" to be playable, in the sourceBuffer. We check if all
+   *     needed data for playback (from wanted range) is loaded.
+   *
+   * The main purpose of this method is to know if the segment asked should be
+   * downloaded (or re-downloaded).
+   *
+   * /!\ Make sure that this class is synchronized with the sourceBuffer
+   * (see addBufferedInfos method of the same class) before calling this method,
+   * as it depends on it to categorize "incomplete" from "complete" segments.
+   *
+   * @param {Object} wantedRange
+   * @param {Object} segmentInfos
+   * @returns {Object|null}
+   */
+            _proto.hasPlayableSegment = function hasPlayableSegment(wantedRange, segmentInfos) {
                 for (var time = segmentInfos.time, duration = segmentInfos.duration, timescale = segmentInfos.timescale, inventory = this.inventory, i = inventory.length - 1; i >= 0; i--) {
                     var currentSegmentI = inventory[i], prevSegmentI = inventory[i - 1], nextSegmentI = inventory[i + 1], segment = currentSegmentI.infos.segment, _time = time, _duration = duration;
                     if (segment.timescale !== timescale && (
@@ -13914,24 +13869,24 @@ object-assign
                     segment.time === _time && segment.duration === _duration && hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI) && hasWantedRange(wantedRange, currentSegmentI, prevSegmentI, nextSegmentI)) return currentSegmentI;
                 }
                 return null;
-                // -- Helpers
+ // -- Helpers
                 /**
-         * Check if segment can be evaluated.
-         * @param {Object} currentSegmentI
-         * @param {Object} prevSegmentI
-         * @param {Object} nextSegmentI
-         * @returns {Boolean}
-         */                function hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI) {
+     * Check if segment can be evaluated.
+     * @param {Object} currentSegmentI
+     * @param {Object} prevSegmentI
+     * @param {Object} nextSegmentI
+     * @returns {Boolean}
+     */                function hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI) {
                     return !(prevSegmentI && null == prevSegmentI.bufferedEnd || null == currentSegmentI.bufferedStart) && !(nextSegmentI && null == nextSegmentI.bufferedStart || null == currentSegmentI.bufferedEnd);
                 }
                 /**
-         * Returns true if the segment given can be played for the wanted range.
-         * @param {Object} _wantedRange
-         * @param {Object} currentSegmentI
-         * @param {Object} prevSegmentI
-         * @param {Object} nextSegmentI
-         * @returns {Boolean}
-         */                function hasWantedRange(_wantedRange, currentSegmentI, prevSegmentI, nextSegmentI) {
+     * Returns true if the segment given can be played for the wanted range.
+     * @param {Object} _wantedRange
+     * @param {Object} currentSegmentI
+     * @param {Object} prevSegmentI
+     * @param {Object} nextSegmentI
+     * @returns {Boolean}
+     */                function hasWantedRange(_wantedRange, currentSegmentI, prevSegmentI, nextSegmentI) {
                     if (!prevSegmentI || null == prevSegmentI.bufferedEnd || null == currentSegmentI.bufferedStart || prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart) {
                         if (null == currentSegmentI.bufferedStart) return !1;
                         var timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
@@ -13955,9 +13910,9 @@ object-assign
                 }
             }, 
             /**
-     * Empty the current inventory
-     */
-            SegmentBookkeeper.prototype.reset = function reset() {
+   * Empty the current inventory
+   */
+            _proto.reset = function reset() {
                 this.inventory = [];
             }, SegmentBookkeeper;
         }(), DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR = config.a.DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR, DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE = config.a.DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
@@ -13971,8 +13926,8 @@ object-assign
  */        
         /**
  * @param {string} bufferType
- * @param {number} retry
- * @param {number} offlineRetry
+ * @param {number|undefined} retry
+ * @param {number|undefined} offlineRetry
  * @returns {Object} - Options to give to the Pipeline
  */
         function getPipelineOptions(bufferType, retry, offlineRetry) {
@@ -14040,7 +13995,7 @@ object-assign
  * clean it for potentially very long sessions.
  */
         function PeriodBufferManager(content, clock$, abrManager, sourceBufferManager, segmentPipelinesManager, options) {
-            var manifest = content.manifest, initialPeriod = content.initialPeriod, wantedBufferAhead$ = options.wantedBufferAhead$, maxBufferAhead$ = options.maxBufferAhead$, maxBufferBehind$ = options.maxBufferBehind$, garbageCollectors = new weak_map_memory(function(qSourceBuffer) {
+            var manifest = content.manifest, initialPeriod = content.initialPeriod, wantedBufferAhead$ = options.wantedBufferAhead$, maxBufferAhead$ = options.maxBufferAhead$, maxBufferBehind$ = options.maxBufferBehind$, garbageCollectors = new WeakMapMemory(function(qSourceBuffer) {
                 return BufferGarbageCollector({
                     queuedSourceBuffer: qSourceBuffer,
                     clock$: clock$.pipe(Object(map.a)(function(tick) {
@@ -14049,8 +14004,8 @@ object-assign
                     maxBufferBehind$: maxBufferBehind$,
                     maxBufferAhead$: maxBufferAhead$
                 });
-            }), segmentBookkeepers = new weak_map_memory(function() {
-                return new segment_bookkeeper();
+            }), segmentBookkeepers = new WeakMapMemory(function() {
+                return new segment_bookkeeper_SegmentBookkeeper();
             }), addPeriodBuffer$ = new Subject.a(), removePeriodBuffer$ = new Subject.a(), bufferTypes = getBufferTypes(), buffersArray = bufferTypes.map(function(bufferType) {
                 return manageEveryBuffers(bufferType, initialPeriod).pipe(Object(tap.a)(function(evt) {
                     "periodBufferReady" === evt.type ? addPeriodBuffer$.next(evt.value) : "periodBufferCleared" === evt.type && removePeriodBuffer$.next(evt.value);
@@ -14066,42 +14021,42 @@ object-assign
             }));
             return merge.a.apply(void 0, [ activePeriodChanged$ ].concat(buffersArray, [ streamHasEnded$ ]));
             /**
-     * Manage creation and removal of Buffers for every Periods.
-     *
-     * Works by creating consecutive buffers through the
-     * manageConsecutivePeriodBuffers function, and restarting it when the clock
-     * goes out of the bounds of these buffers.
-     * @param {string} bufferType - e.g. "audio" or "video"
-     * @param {Period} basePeriod - Initial Period downloaded.
-     * @returns {Observable}
-     */            function manageEveryBuffers(bufferType, basePeriod) {
+   * Manage creation and removal of Buffers for every Periods.
+   *
+   * Works by creating consecutive buffers through the
+   * manageConsecutivePeriodBuffers function, and restarting it when the clock
+   * goes out of the bounds of these buffers.
+   * @param {string} bufferType - e.g. "audio" or "video"
+   * @param {Period} basePeriod - Initial Period downloaded.
+   * @returns {Observable}
+   */            function manageEveryBuffers(bufferType, basePeriod) {
                 /**
-         * Keep a SortedList for cases such as seeking ahead/before the buffers
-         * already created.
-         * When that happens, interrupt the previous buffers and create one back
-         * from the new initial period.
-         * @type {SortedList}
-         */
-                var periodList = new sorted_list(function(a, b) {
+     * Keep a SortedList for cases such as seeking ahead/before the buffers
+     * already created.
+     * When that happens, interrupt the previous buffers and create one back
+     * from the new initial period.
+     * @type {SortedList}
+     */
+                var periodList = new sorted_list_SortedList(function(a, b) {
                     return a.start - b.start;
                 });
                 /**
-         * Returns true if the given time is either:
-         *   - less than the start of the chronologically first Period
-         *   - more than the end of the chronologically last Period
-         * @param {number} time
-         * @returns {boolean}
-         */                function isOutOfPeriodList(time) {
+     * Returns true if the given time is either:
+     *   - less than the start of the chronologically first Period
+     *   - more than the end of the chronologically last Period
+     * @param {number} time
+     * @returns {boolean}
+     */                function isOutOfPeriodList(time) {
                     var head = periodList.head(), last = periodList.last();
                     return null == head || null == last || head.start > time || (last.end || Infinity) < time;
                 }
                 /**
-         * Destroy the current set of consecutive buffers.
-         * Used when the clocks goes out of the bounds of those, e.g. when the user
-         * seeks.
-         * We can then re-create consecutive buffers, from the new point in time.
-         * @type {Subject}
-         */                var destroyCurrentBuffers = new Subject.a(), restartBuffers$ = clock$.pipe(Object(filter.a)(function(_ref) {
+     * Destroy the current set of consecutive buffers.
+     * Used when the clocks goes out of the bounds of those, e.g. when the user
+     * seeks.
+     * We can then re-create consecutive buffers, from the new point in time.
+     * @type {Subject}
+     */                var destroyCurrentBuffers = new Subject.a(), restartBuffers$ = clock$.pipe(Object(filter.a)(function(_ref) {
                     var currentTime = _ref.currentTime, wantedTimeOffset = _ref.wantedTimeOffset;
                     return !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) && isOutOfPeriodList(wantedTimeOffset + currentTime);
                 }), Object(take.a)(1), Object(tap.a)(function(_ref2) {
@@ -14120,37 +14075,37 @@ object-assign
                 return Object(merge.a)(currentBuffers$, restartBuffers$);
             }
             /**
-     * Manage creation and removal of Buffers for consecutive Periods.
-     *
-     * This function is called recursively for each successive Periods as needed.
-     *
-     * This function does not guarantee creation/destruction of the right Buffers
-     * when the user seeks or rewind in the content.
-     * It only manages regular playback, another layer should be used to manage
-     * those cases.
-     *
-     * You can know about buffers creation and destruction respectively through
-     * the "periodBufferReady" and "periodBufferCleared" events.
-     *
-     * The "periodBufferReady" related to the given period should be sent synchronously
-     * on subscription.
-     * Further "periodBufferReady" for further Periods should be sent each time the
-     * Buffer for the previous Buffer is full.
-     *
-     * Buffers for each Period are cleared ("periodBufferCleared" event) either:
-     *   - when it has finished to play (currentTime is after it)
-     *   - when one of the older Buffers becomes active again, in which case the
-     *     Buffers coming after will be cleared from the newest to the oldest.
-     *   - when the destroy$ observable emits, in which case every created Buffer
-     *     here will be cleared from the newest to the oldest.
-     *
-     * TODO The code here can surely be greatly simplified.
-     * @param {string} bufferType - e.g. "audio" or "video"
-     * @param {Period} basePeriod - Initial Period downloaded.
-     * @param {Observable} destroy$ - Emit when/if all created Buffer from this
-     * point should be destroyed.
-     * @returns {Observable}
-     */            function manageConsecutivePeriodBuffers(bufferType, basePeriod, destroy$) {
+   * Manage creation and removal of Buffers for consecutive Periods.
+   *
+   * This function is called recursively for each successive Periods as needed.
+   *
+   * This function does not guarantee creation/destruction of the right Buffers
+   * when the user seeks or rewind in the content.
+   * It only manages regular playback, another layer should be used to manage
+   * those cases.
+   *
+   * You can know about buffers creation and destruction respectively through
+   * the "periodBufferReady" and "periodBufferCleared" events.
+   *
+   * The "periodBufferReady" related to the given period should be sent synchronously
+   * on subscription.
+   * Further "periodBufferReady" for further Periods should be sent each time the
+   * Buffer for the previous Buffer is full.
+   *
+   * Buffers for each Period are cleared ("periodBufferCleared" event) either:
+   *   - when it has finished to play (currentTime is after it)
+   *   - when one of the older Buffers becomes active again, in which case the
+   *     Buffers coming after will be cleared from the newest to the oldest.
+   *   - when the destroy$ observable emits, in which case every created Buffer
+   *     here will be cleared from the newest to the oldest.
+   *
+   * TODO The code here can surely be greatly simplified.
+   * @param {string} bufferType - e.g. "audio" or "video"
+   * @param {Period} basePeriod - Initial Period downloaded.
+   * @param {Observable} destroy$ - Emit when/if all created Buffer from this
+   * point should be destroyed.
+   * @returns {Observable}
+   */            function manageConsecutivePeriodBuffers(bufferType, basePeriod, destroy$) {
                 log.a.info("creating new Buffer for", bufferType, basePeriod);
                 // Emits the chosen adaptation for the current type.
                 var adaptation$ = new ReplaySubject.a(1), createNextPeriodBuffer$ = new Subject.a(), destroyNextBuffers$ = new Subject.a(), endOfCurrentBuffer$ = clock$.pipe(Object(filter.a)(function(_ref4) {
@@ -14162,16 +14117,15 @@ object-assign
                     // first complete createNextBuffer$ to allow completion of the
                     // nextPeriodBuffer$ observable once every further Buffers have been
                     // cleared.
-                    createNextPeriodBuffer$.complete(), 
-                    // emit destruction signal to the next Buffer first
+                    createNextPeriodBuffer$.complete(), // emit destruction signal to the next Buffer first
                     destroyNextBuffers$.next(), destroyNextBuffers$.complete();
                 }), Object(share.a)()), killCurrentBuffer$ = Object(merge.a)(endOfCurrentBuffer$, destroyAll$), periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$).pipe(Object(mergeMap.a)(function(evt) {
                     var type = evt.type;
                     if ("full-buffer" === type) {
                         /**
-                 * The Period coming just after the current one.
-                 * @type {Period|undefined}
-                 */
+         * The Period coming just after the current one.
+         * @type {Period|undefined}
+         */
                         var nextPeriod = manifest.getPeriodAfter(basePeriod);
                         if (null == nextPeriod) 
                         // no more period, emits  event
@@ -14185,37 +14139,35 @@ object-assign
                 }), Object(share.a)()), currentBuffer$ = Object(concat.a)(Object(of.a)(buffer_events_generators.periodBufferReady(bufferType, basePeriod, adaptation$)), periodBuffer$.pipe(Object(takeUntil.a)(killCurrentBuffer$)), Object(of.a)(buffer_events_generators.periodBufferCleared(bufferType, basePeriod)).pipe(Object(tap.a)(function() {
                     log.a.info("destroying buffer for", bufferType, basePeriod);
                 })));
-                // Emits the Period of the next Period Buffer when it can be created.
+ // Emits the Period of the next Period Buffer when it can be created.
                                 return Object(merge.a)(currentBuffer$, nextPeriodBuffer$, destroyAll$.pipe(Object(ignoreElements.a)()));
             }
             /**
-     * Create single PeriodBuffer Observable:
-     *   - Lazily create (or reuse) a SourceBuffer for the given type.
-     *   - Create a Buffer linked to an Adaptation each time it changes, to
-     *     download and append the corresponding Segments in the SourceBuffer.
-     *   - Announce when the Buffer is full or is awaiting new Segments through
-     *     events
-     *
-     * /!\ This Observable has multiple side-effects (creation of SourceBuffers,
-     * downloading and appending of Segments etc.) on subscription.
-     *
-     * @param {string} bufferType
-     * @param {Period} period - The period concerned
-     * @param {Observable} adaptation$ - Emit the chosen adaptation.
-     * Emit null to deactivate a type of adaptation
-     * @returns {Observable}
-     */            function createPeriodBuffer(bufferType, period, adaptation$) {
+   * Create single PeriodBuffer Observable:
+   *   - Lazily create (or reuse) a SourceBuffer for the given type.
+   *   - Create a Buffer linked to an Adaptation each time it changes, to
+   *     download and append the corresponding Segments in the SourceBuffer.
+   *   - Announce when the Buffer is full or is awaiting new Segments through
+   *     events
+   *
+   * /!\ This Observable has multiple side-effects (creation of SourceBuffers,
+   * downloading and appending of Segments etc.) on subscription.
+   *
+   * @param {string} bufferType
+   * @param {Period} period - The period concerned
+   * @param {Observable} adaptation$ - Emit the chosen adaptation.
+   * Emit null to deactivate a type of adaptation
+   * @returns {Observable}
+   */            function createPeriodBuffer(bufferType, period, adaptation$) {
                 return adaptation$.pipe(Object(switchMap.a)(function(adaptation) {
-                    if (null == adaptation) {
-                        log.a.info("set no " + bufferType + " Adaptation", period);
-                        var cleanBuffer$ = void 0;
-                        return sourceBufferManager.has(bufferType) ? (log.a.info("clearing previous " + bufferType + " SourceBuffer"), 
-                        cleanBuffer$ = sourceBufferManager.get(bufferType).removeBuffer(period.start, period.end || Infinity).pipe(Object(mapTo.a)(null))) : cleanBuffer$ = Object(of.a)(null), 
-                        Object(concat.a)(cleanBuffer$.pipe(Object(mapTo.a)(buffer_events_generators.adaptationChange(bufferType, null, period))), createFakeAdaptationBuffer(clock$, wantedBufferAhead$, bufferType, {
-                            manifest: manifest,
-                            period: period
-                        }));
-                    }
+                    var cleanBuffer$;
+                    if (null == adaptation) return log.a.info("set no " + bufferType + " Adaptation", period), 
+                    sourceBufferManager.has(bufferType) ? (log.a.info("clearing previous " + bufferType + " SourceBuffer"), 
+                    cleanBuffer$ = sourceBufferManager.get(bufferType).removeBuffer(period.start, period.end || Infinity).pipe(Object(mapTo.a)(null))) : cleanBuffer$ = Object(of.a)(null), 
+                    Object(concat.a)(cleanBuffer$.pipe(Object(mapTo.a)(buffer_events_generators.adaptationChange(bufferType, null, period))), createFakeAdaptationBuffer(clock$, wantedBufferAhead$, bufferType, {
+                        manifest: manifest,
+                        period: period
+                    }));
                     log.a.info("updating " + bufferType + " adaptation", adaptation, period);
                     var newBuffer$ = clock$.pipe(Object(take.a)(1), Object(mergeMap.a)(function(tick) {
                         var qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation), strategy = getAdaptationSwitchStrategy(qSourceBuffer.getBuffered(), period, bufferType, tick);
@@ -14230,22 +14182,22 @@ object-assign
                 }));
             }
             /**
-     * @param {string} bufferType
-     * @param {Object} adaptation
-     * @returns {Object}
-     */            function createOrReuseQueuedSourceBuffer(bufferType, adaptation) {
+   * @param {string} bufferType
+   * @param {Object} adaptation
+   * @returns {Object}
+   */            function createOrReuseQueuedSourceBuffer(bufferType, adaptation) {
                 if (sourceBufferManager.has(bufferType)) return log.a.info("reusing a previous SourceBuffer for the type", bufferType), 
                 sourceBufferManager.get(bufferType);
                 var codec = getFirstDeclaredMimeType(adaptation), sbOptions = "text" === bufferType ? options.textTrackOptions : void 0;
                 return sourceBufferManager.createSourceBuffer(bufferType, codec, sbOptions);
             }
             /**
-     * @param {string} bufferType
-     * @param {Object} period
-     * @param {Object} adaptation
-     * @param {Object} qSourceBuffer
-     * @returns {Observable}
-     */            function createAdaptationBuffer(bufferType, period, adaptation, qSourceBuffer) {
+   * @param {string} bufferType
+   * @param {Object} period
+   * @param {Object} adaptation
+   * @param {Object} qSourceBuffer
+   * @returns {Observable}
+   */            function createAdaptationBuffer(bufferType, period, adaptation, qSourceBuffer) {
                 var segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer), pipelineOptions = getPipelineOptions(bufferType, options.segmentRetry, options.offlineRetry), pipeline = segmentPipelinesManager.createPipeline(bufferType, pipelineOptions);
                 return AdaptationBuffer(clock$, qSourceBuffer, segmentBookkeeper, pipeline, wantedBufferAhead$, {
                     manifest: manifest,
@@ -14255,7 +14207,7 @@ object-assign
                     // non native buffer should not impact the stability of the
                     // player. ie: if a text buffer sends an error, we want to
                     // continue streaming without any subtitles
-                    if (!source_buffers.isNative(bufferType)) return log.a.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error), 
+                    if (!source_buffers_SourceBufferManager.isNative(bufferType)) return log.a.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error), 
                     sourceBufferManager.disposeSourceBuffer(bufferType), Object(concat.a)(Object(of.a)(buffer_events_generators.warning(error)), createFakeAdaptationBuffer(clock$, wantedBufferAhead$, bufferType, {
                         manifest: manifest,
                         period: period
@@ -14313,7 +14265,7 @@ object-assign
             return Object(merge.a)(clock$, updateTimeOffset$);
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isArray.js
-                var isArray = __webpack_require__(42), fromArray = __webpack_require__(34);
+                var isArray = __webpack_require__(41), fromArray = __webpack_require__(25);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromArray.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/observable/race.js
         /** PURE_IMPORTS_START tslib,_util_isArray,_fromArray,_OuterSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
@@ -14357,7 +14309,7 @@ object-assign
                 }
                 this.destination.next(innerValue);
             }, RaceSubscriber;
-        }(OuterSubscriber.a), ArgumentOutOfRangeError = __webpack_require__(79);
+        }(OuterSubscriber.a), ArgumentOutOfRangeError = __webpack_require__(80);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/takeLast.js
         /** PURE_IMPORTS_START tslib,_Subscriber,_util_ArgumentOutOfRangeError,_observable_empty PURE_IMPORTS_END */
         function takeLast(count) {
@@ -14388,7 +14340,7 @@ object-assign
                 }
                 destination.complete();
             }, TakeLastSubscriber;
-        }(Subscriber.a), concatMap = __webpack_require__(109);
+        }(Subscriber.a), concatMap = __webpack_require__(108);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/concatMapTo.js
         /** PURE_IMPORTS_START _concatMap PURE_IMPORTS_END */
         function concatMapTo(innerObservable, resultSelector) {
@@ -14455,7 +14407,7 @@ object-assign
             return Object(concat.a)(triggerEndOfStream(mediaSource), Object(events.n)(mediaSource).pipe(concatMapTo(triggerEndOfStream(mediaSource))));
         }
         // EXTERNAL MODULE: ./src/core/stream/initial_seek_and_play.ts
-                var initial_seek_and_play = __webpack_require__(87);
+                var initial_seek_and_play = __webpack_require__(88);
         // CONCATENATED MODULE: ./src/core/stream/on_live_buffer_event.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -14497,7 +14449,7 @@ object-assign
             return function handleLiveEvents(message) {
                 switch (message.type) {
                   case "discontinuity-encountered":
-                    source_buffers.isNative(message.value.bufferType) && (log.a.warn("explicit discontinuity seek", message.value.nextTime), 
+                    source_buffers_SourceBufferManager.isNative(message.value.bufferType) && (log.a.warn("explicit discontinuity seek", message.value.nextTime), 
                     mediaElement.currentTime = message.value.nextTime);
                     break;
 
@@ -14510,7 +14462,7 @@ object-assign
             };
         }
         // EXTERNAL MODULE: ./src/core/stream/speed_manager.ts + 1 modules
-                var speed_manager = __webpack_require__(103), stalling_manager = __webpack_require__(90);
+                var speed_manager = __webpack_require__(104), stalling_manager = __webpack_require__(91);
         // EXTERNAL MODULE: ./src/core/stream/stalling_manager.ts
                 // CONCATENATED MODULE: ./src/core/stream/stream_loader.ts
         /**
@@ -14537,18 +14489,18 @@ object-assign
         function StreamLoader(_ref) {
             var mediaElement = _ref.mediaElement, manifest = _ref.manifest, clock$ = _ref.clock$, speed$ = _ref.speed$, bufferOptions = _ref.bufferOptions, abrManager = _ref.abrManager, segmentPipelinesManager = _ref.segmentPipelinesManager, refreshManifest = _ref.refreshManifest;
             /**
-     * Load the content on the given MediaSource.
-     * @param {MediaSource} mediaSource
-     * @param {number} initialTime
-     * @param {boolean} autoPlay
-     */            return function loadStreamOnMediaSource(mediaSource, initialTime, autoPlay) {
+   * Load the content on the given MediaSource.
+   * @param {MediaSource} mediaSource
+   * @param {number} initialTime
+   * @param {boolean} autoPlay
+   */            return function loadStreamOnMediaSource(mediaSource, initialTime, autoPlay) {
                 setDurationToMediaSource(mediaSource, manifest.getDuration());
                 var initialPeriod = manifest.getPeriodForTime(initialTime);
                 if (null == initialPeriod) throw new MediaError.a("MEDIA_STARTING_TIME_NOT_FOUND", null, !0);
-                // Creates SourceBufferManager allowing to create and keep track of a single
+ // Creates SourceBufferManager allowing to create and keep track of a single
                 // SourceBuffer per type.
-                                var sourceBufferManager = new source_buffers(mediaElement, mediaSource);
-                // Initialize all native source buffers from the first period at the same
+                                var sourceBufferManager = new source_buffers_SourceBufferManager(mediaElement, mediaSource);
+ // Initialize all native source buffers from the first period at the same
                 // time.
                 // We cannot lazily create native sourcebuffers since the spec does not
                 // allow adding them during playback.
@@ -14560,7 +14512,8 @@ object-assign
                 //    does not support adding more tracks during playback.
                                 createNativeSourceBuffersForPeriod(sourceBufferManager, initialPeriod);
                 var _seekAndLoadOnMediaEv = Object(initial_seek_and_play.a)(mediaElement, initialTime, autoPlay), seek$ = _seekAndLoadOnMediaEv.seek$, load$ = _seekAndLoadOnMediaEv.load$, bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime), cancelEndOfStream$ = new Subject.a(), onBufferEvent = manifest.isLive ? liveEventsHandler(mediaElement, manifest, refreshManifest) : 
-                /* tslint:disable no-unnecessary-callback-wrapper */ // needed for TS :/
+                /* tslint:disable no-unnecessary-callback-wrapper */
+                // needed for TS :/
                 function(evt) {
                     return Object(of.a)(evt);
                 }, buffers$ = core_buffer({
@@ -14592,17 +14545,17 @@ object-assign
                 }));
             };
             /**
-     * Create all native SourceBuffers needed for a given Period.
-     *
-     * Native Buffers have the particulary to need to be created at the beginning of
-     * the content.
-     * Custom source buffers (entirely managed in JS) can generally be created and
-     * disposed at will during the lifecycle of the content.
-     * @param {SourceBufferManager} sourceBufferManager
-     * @param {Period} period
-     */            function createNativeSourceBuffersForPeriod(sourceBufferManager, period) {
+   * Create all native SourceBuffers needed for a given Period.
+   *
+   * Native Buffers have the particulary to need to be created at the beginning of
+   * the content.
+   * Custom source buffers (entirely managed in JS) can generally be created and
+   * disposed at will during the lifecycle of the content.
+   * @param {SourceBufferManager} sourceBufferManager
+   * @param {Period} period
+   */            function createNativeSourceBuffersForPeriod(sourceBufferManager, period) {
                 Object.keys(period.adaptations).forEach(function(bufferType) {
-                    if (source_buffers.isNative(bufferType)) {
+                    if (source_buffers_SourceBufferManager.isNative(bufferType)) {
                         var adaptations = period.adaptations[bufferType] || [], representations = adaptations ? adaptations[0].representations : [];
                         if (representations.length) {
                             var codec = representations[0].getMimeTypeString();
@@ -14652,7 +14605,7 @@ object-assign
  * @param {Object} args
  * @returns {Observable}
  */        function Stream(_ref) {
-            var adaptiveOptions = _ref.adaptiveOptions, autoPlay = _ref.autoPlay, bufferOptions = _ref.bufferOptions, clock$ = _ref.clock$, keySystems = _ref.keySystems, networkConfig = _ref.networkConfig, speed$ = _ref.speed$, startAt = _ref.startAt, supplementaryImageTracks = _ref.supplementaryImageTracks, supplementaryTextTracks = _ref.supplementaryTextTracks, textTrackOptions = _ref.textTrackOptions, transport = _ref.transport, url = _ref.url, mediaElement = _ref.mediaElement, warning$ = new Subject.a(), fetchManifest = throttle(createManifestPipeline(transport, getManifestPipelineOptions(networkConfig), warning$, supplementaryTextTracks, supplementaryImageTracks)), network$ = new Subject.a(), requestsInfos$ = new Subject.a(), segmentPipelinesManager = new pipelines_segment(transport, requestsInfos$, network$, warning$), abrManager = new abr(requestsInfos$, network$, adaptiveOptions), emeManager$ = Object(create_eme_manager.a)(mediaElement, keySystems), mediaErrorManager$ = Object(media_error_manager.a)(mediaElement), stream$ = Object(combineLatest.a)(openMediaSource(mediaElement), fetchManifest(url)).pipe(Object(mergeMap.a)(function(_ref2) {
+            var adaptiveOptions = _ref.adaptiveOptions, autoPlay = _ref.autoPlay, bufferOptions = _ref.bufferOptions, clock$ = _ref.clock$, keySystems = _ref.keySystems, networkConfig = _ref.networkConfig, speed$ = _ref.speed$, startAt = _ref.startAt, supplementaryImageTracks = _ref.supplementaryImageTracks, supplementaryTextTracks = _ref.supplementaryTextTracks, textTrackOptions = _ref.textTrackOptions, transport = _ref.transport, url = _ref.url, mediaElement = _ref.mediaElement, warning$ = new Subject.a(), fetchManifest = throttle(createManifestPipeline(transport, getManifestPipelineOptions(networkConfig), warning$, supplementaryTextTracks, supplementaryImageTracks)), network$ = new Subject.a(), requestsInfos$ = new Subject.a(), segmentPipelinesManager = new segment_SegmentPipelinesManager(transport, requestsInfos$, network$, warning$), abrManager = new abr_ABRManager(requestsInfos$, network$, adaptiveOptions), emeManager$ = Object(create_eme_manager.a)(mediaElement, keySystems), mediaErrorManager$ = Object(media_error_manager.a)(mediaElement), stream$ = Object(combineLatest.a)(openMediaSource(mediaElement), fetchManifest(url)).pipe(Object(mergeMap.a)(function(_ref2) {
                 var mediaSource = _ref2[0], manifest = _ref2[1], loadStream = StreamLoader({
                     mediaElement: mediaElement,
                     manifest: manifest,
@@ -14687,16 +14640,16 @@ object-assign
  * @returns {Function}
  */        function streamLoaderEventProcessor(reloadStreamSubject$) {
             /**
-     * React to StreamLoader events.
-     * @param {Object} evt
-     * @returns {Object}
-     */
+   * React to StreamLoader events.
+   * @param {Object} evt
+   * @returns {Object}
+   */
             return function onStreamLoaderEvent(evt) {
                 return "needs-stream-reload" === evt.type && reloadStreamSubject$.next(), evt;
             };
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/refCount.js
-                var refCount = __webpack_require__(91), SAMPLING_INTERVAL_MEDIASOURCE = config.a.SAMPLING_INTERVAL_MEDIASOURCE, SAMPLING_INTERVAL_NO_MEDIASOURCE = config.a.SAMPLING_INTERVAL_NO_MEDIASOURCE, RESUME_GAP_AFTER_SEEKING = config.a.RESUME_GAP_AFTER_SEEKING, RESUME_GAP_AFTER_NOT_ENOUGH_DATA = config.a.RESUME_GAP_AFTER_NOT_ENOUGH_DATA, RESUME_GAP_AFTER_BUFFERING = config.a.RESUME_GAP_AFTER_BUFFERING, STALL_GAP = config.a.STALL_GAP, SCANNED_MEDIA_ELEMENTS_EVENTS = [ "canplay", "play", "progress", "seeking", "seeked", "loadedmetadata", "canplay", "ratechange" ];
+                var refCount = __webpack_require__(92), SAMPLING_INTERVAL_MEDIASOURCE = config.a.SAMPLING_INTERVAL_MEDIASOURCE, SAMPLING_INTERVAL_NO_MEDIASOURCE = config.a.SAMPLING_INTERVAL_NO_MEDIASOURCE, RESUME_GAP_AFTER_SEEKING = config.a.RESUME_GAP_AFTER_SEEKING, RESUME_GAP_AFTER_NOT_ENOUGH_DATA = config.a.RESUME_GAP_AFTER_NOT_ENOUGH_DATA, RESUME_GAP_AFTER_BUFFERING = config.a.RESUME_GAP_AFTER_BUFFERING, STALL_GAP = config.a.STALL_GAP, SCANNED_MEDIA_ELEMENTS_EVENTS = [ "canplay", "play", "progress", "seeking", "seeked", "loadedmetadata", "canplay", "ratechange" ];
         // CONCATENATED MODULE: ./src/core/api/clock.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -14780,15 +14733,12 @@ object-assign
  * @param {Boolean} withMediaSource - False if the directfile API is used.
  * @returns {Object|null}
  */        function getStalledStatus(prevTimings, currentTimings, withMediaSource) {
-            var currentState = currentTimings.state, currentTime = currentTimings.currentTime, bufferGap = currentTimings.bufferGap, currentRange = currentTimings.currentRange, duration = currentTimings.duration, paused = currentTimings.paused, readyState = currentTimings.readyState, ended = currentTimings.ended, prevStalled = prevTimings.stalled, prevState = prevTimings.state, prevTime = prevTimings.currentTime, fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration), canStall = readyState >= 1 && "loadedmetadata" !== currentState && !prevStalled && !(fullyLoaded || ended), shouldStall = void 0, shouldUnstall = void 0;
-            if (withMediaSource ? canStall && (bufferGap <= STALL_GAP || Infinity === bufferGap || 1 === readyState) ? shouldStall = !0 : prevStalled && readyState > 1 && bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended) && (shouldUnstall = !0) : canStall && (!paused && "timeupdate" === currentState && "timeupdate" === prevState && currentTime === prevTime || "seeking" === currentState && Infinity === bufferGap) ? shouldStall = !0 : prevStalled && ("seeking" !== currentState && currentTime !== prevTime || "canplay" === currentState || bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)) && (shouldUnstall = !0), 
-            shouldStall) {
-                return {
-                    reason: "seeking" === currentState || currentTimings.seeking ? "seeking" : 1 === readyState ? "not-ready" : "buffering",
-                    timestamp: Date.now()
-                };
-            }
-            return shouldUnstall ? null : prevStalled;
+            var shouldStall, shouldUnstall, currentState = currentTimings.state, currentTime = currentTimings.currentTime, bufferGap = currentTimings.bufferGap, currentRange = currentTimings.currentRange, duration = currentTimings.duration, paused = currentTimings.paused, readyState = currentTimings.readyState, ended = currentTimings.ended, prevStalled = prevTimings.stalled, prevState = prevTimings.state, prevTime = prevTimings.currentTime, fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration), canStall = readyState >= 1 && "loadedmetadata" !== currentState && !prevStalled && !(fullyLoaded || ended);
+            return withMediaSource ? canStall && (bufferGap <= STALL_GAP || Infinity === bufferGap || 1 === readyState) ? shouldStall = !0 : prevStalled && readyState > 1 && bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended) && (shouldUnstall = !0) : canStall && (!paused && "timeupdate" === currentState && "timeupdate" === prevState && currentTime === prevTime || "seeking" === currentState && Infinity === bufferGap) ? shouldStall = !0 : prevStalled && ("seeking" !== currentState && currentTime !== prevTime || "canplay" === currentState || bufferGap < Infinity && (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)) && (shouldUnstall = !0), 
+            shouldStall ? {
+                reason: "seeking" === currentState || currentTimings.seeking ? "seeking" : 1 === readyState ? "not-ready" : "buffering",
+                timestamp: Date.now()
+            } : shouldUnstall ? null : prevStalled;
         }
         /**
  * Timings observable.
@@ -14820,10 +14770,10 @@ object-assign
                     stalled: null
                 });
                 /**
-         * Emit timings sample.
-         * Meant to be used as a callback on various async events.
-         * @param {Event} [evt] - The Event which triggered the callback, if one.
-         */                function emitSample(evt) {
+     * Emit timings sample.
+     * Meant to be used as a callback on various async events.
+     * @param {Event} [evt] - The Event which triggered the callback, if one.
+     */                function emitSample(evt) {
                     var timingEventType = evt && evt.type || "timeupdate", mediaTimings = getMediaInfos(mediaElement, timingEventType), stalledState = getStalledStatus(lastTimings, mediaTimings, withMediaSource);
                     // /!\ Mutate mediaTimings
                     lastTimings = object_assign_default()(mediaTimings, {
@@ -14974,7 +14924,7 @@ object-assign
  * @param {Object|undefined} options
  * @returns {Object}
  */        function parseConstructorOptions(options) {
-            var limitVideoWidth, throttleWhenHidden, maxBufferAhead = void 0, maxBufferBehind = void 0, wantedBufferAhead = void 0, videoElement = void 0, initialVideoBitrate = void 0, initialAudioBitrate = void 0, maxAudioBitrate = void 0, maxVideoBitrate = void 0, stopAtEnd = void 0;
+            var maxBufferAhead, maxBufferBehind, wantedBufferAhead, limitVideoWidth, throttleWhenHidden, videoElement, initialVideoBitrate, initialAudioBitrate, maxAudioBitrate, maxVideoBitrate, stopAtEnd;
             if (null == options.maxBufferAhead) maxBufferAhead = DEFAULT_MAX_BUFFER_AHEAD; else if (maxBufferAhead = Number(options.maxBufferAhead), 
             isNaN(maxBufferAhead)) throw new Error("Invalid maxBufferAhead parameter. Should be a number.");
             if (null == options.maxBufferBehind) maxBufferBehind = DEFAULT_MAX_BUFFER_BEHIND; else if (maxBufferBehind = Number(options.maxBufferBehind), 
@@ -15033,7 +14983,7 @@ object-assign
  * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */        function parseLoadVideoOptions(options) {
-            var autoPlay, transportOptions, defaultAudioTrack, defaultTextTrack, hideNativeSubtitle, url = void 0, transport = void 0, keySystems = void 0, supplementaryTextTracks = void 0, supplementaryImageTracks = void 0, textTrackMode = void 0, textTrackElement = void 0, startAt = void 0;
+            var url, transport, autoPlay, keySystems, transportOptions, supplementaryTextTracks, supplementaryImageTracks, textTrackMode, textTrackElement, defaultAudioTrack, defaultTextTrack, hideNativeSubtitle, startAt;
             if (!options || null == options.url) throw new Error("No url set on loadVideo");
             if (url = String(options.url), null == options.transport) throw new Error("No transport set on loadVideo");
             if (transport = String(options.transport), autoPlay = null == options.autoPlay ? DEFAULT_AUTO_PLAY : !!options.autoPlay, 
@@ -15135,14 +15085,6 @@ object-assign
             };
             /* tslint:enable no-object-literal-type-assertion */        }
         // CONCATENATED MODULE: ./src/core/api/track_manager.ts
-                var _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
-            return typeof obj;
-        } : function(obj) {
-            return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-        };
-        function track_manager_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -15166,26 +15108,28 @@ object-assign
  * Manage audio and text tracks for all active periods.
  * Chose the audio and text tracks for each period and record this choice.
  * @class TrackManager
- */        var track_manager = function() {
+ */        var track_manager_TrackManager = 
+        /* */
+        function() {
             /**
-     * @param {Object} defaults
-     */
-            function TrackManager() {
-                var defaults = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
-                track_manager_classCallCheck(this, TrackManager);
-                var preferredAudioTracks = defaults.preferredAudioTracks, preferredTextTracks = defaults.preferredTextTracks;
-                this._periods = new sorted_list(function(a, b) {
+   * @param {Object} defaults
+   */
+            function TrackManager(defaults) {
+                void 0 === defaults && (defaults = {});
+                var _defaults = defaults, preferredAudioTracks = _defaults.preferredAudioTracks, preferredTextTracks = _defaults.preferredTextTracks;
+                this._periods = new sorted_list_SortedList(function(a, b) {
                     return a.period.start - b.period.start;
                 }), this._audioChoiceMemory = new WeakMap(), this._textChoiceMemory = new WeakMap(), 
                 this._videoChoiceMemory = new WeakMap(), this._preferredAudioTracks = preferredAudioTracks || [], 
                 this._preferredTextTracks = preferredTextTracks || [];
             }
             /**
-     * Add Subject to choose Adaptation for new "audio" or "text" Period.
-     * @param {string} bufferType
-     * @param {Period} period
-     * @param {Subject} adaptations
-     */            return TrackManager.prototype.addPeriod = function addPeriod(bufferType, period, adaptation$) {
+   * Add Subject to choose Adaptation for new "audio" or "text" Period.
+   * @param {string} bufferType
+   * @param {Period} period
+   * @param {Subject} adaptations
+   */            var _proto = TrackManager.prototype;
+            return _proto.addPeriod = function addPeriod(bufferType, period, adaptation$) {
                 var periodItem = getPeriodItem(this._periods, period);
                 if (null != periodItem) {
                     if (null != periodItem[bufferType]) return void log.a.warn("TrackManager: " + bufferType + " already added for period", period);
@@ -15194,46 +15138,46 @@ object-assign
                         adaptation$: adaptation$
                     };
                 } else {
-                    var _periods$add;
-                    this._periods.add(((_periods$add = {
+                    var _this$_periods$add;
+                    this._periods.add(((_this$_periods$add = {
                         period: period
                     })[bufferType] = {
                         adaptations: period.adaptations[bufferType] || [],
                         adaptation$: adaptation$
-                    }, _periods$add));
+                    }, _this$_periods$add));
                 }
             }, 
             /**
-     * Remove Subject to choose an "audio" or "text" Adaptation for a Period.
-     * @param {string} bufferType
-     * @param {Period} period
-     */
-            TrackManager.prototype.removePeriod = function removePeriod(bufferType, period) {
+   * Remove Subject to choose an "audio" or "text" Adaptation for a Period.
+   * @param {string} bufferType
+   * @param {Period} period
+   */
+            _proto.removePeriod = function removePeriod(bufferType, period) {
                 var periodIndex = findPeriodIndex(this._periods, period);
                 if (null != periodIndex) {
                     var periodItem = this._periods.get(periodIndex);
                     null != periodItem[bufferType] ? (delete periodItem[bufferType], null == periodItem.audio && null == periodItem.text && this._periods.removeElement(periodItem)) : log.a.warn("TrackManager: " + bufferType + " already removed for period", period);
                 } else log.a.warn("TrackManager: " + bufferType + " not found for period", period);
-            }, TrackManager.prototype.resetPeriods = function resetPeriods() {
+            }, _proto.resetPeriods = function resetPeriods() {
                 for (;this._periods.length() > 0; ) this._periods.pop();
             }, 
             /**
-     * Update the choice of all added Periods based on:
-     *   1. What was the last chosen adaptation
-     *   2. If not found, the preferences
-     */
-            TrackManager.prototype.update = function update() {
+   * Update the choice of all added Periods based on:
+   *   1. What was the last chosen adaptation
+   *   2. If not found, the preferences
+   */
+            _proto.update = function update() {
                 this._updateAudioTrackChoices(), this._updateTextTrackChoices(), this._updateVideoTrackChoices();
             }, 
             /**
-     * Emit initial audio Adaptation through the given Subject based on:
-     *   - the preferred audio tracks
-     *   - the last choice for this period, if one
-     * @param {Period} period
-     *
-     * @throws Error - Throws if the period given has not been added
-     */
-            TrackManager.prototype.setInitialAudioTrack = function setInitialAudioTrack(period) {
+   * Emit initial audio Adaptation through the given Subject based on:
+   *   - the preferred audio tracks
+   *   - the last choice for this period, if one
+   * @param {Period} period
+   *
+   * @throws Error - Throws if the period given has not been added
+   */
+            _proto.setInitialAudioTrack = function setInitialAudioTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (!audioInfos || !periodItem) throw new Error("TrackManager: Given Period not found.");
                 var preferredAudioTracks = this._preferredAudioTracks, audioAdaptations = period.adaptations.audio || [], chosenAudioAdaptation = this._audioChoiceMemory.get(period);
@@ -15243,14 +15187,14 @@ object-assign
                 }
             }, 
             /**
-     * Emit initial text Adaptation through the given Subject based on:
-     *   - the preferred text tracks
-     *   - the last choice for this period, if one
-     * @param {Period} period
-     *
-     * @throws Error - Throws if the period given has not been added
-     */
-            TrackManager.prototype.setInitialTextTrack = function setInitialTextTrack(period) {
+   * Emit initial text Adaptation through the given Subject based on:
+   *   - the preferred text tracks
+   *   - the last choice for this period, if one
+   * @param {Period} period
+   *
+   * @throws Error - Throws if the period given has not been added
+   */
+            _proto.setInitialTextTrack = function setInitialTextTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (!textInfos || !periodItem) throw new Error("TrackManager: Given Period not found.");
                 var preferredTextTracks = this._preferredTextTracks, textAdaptations = period.adaptations.text || [], chosenTextAdaptation = this._textChoiceMemory.get(period);
@@ -15260,14 +15204,14 @@ object-assign
                 }
             }, 
             /**
-     * Emit initial video Adaptation through the given Subject based on:
-     *   - the preferred video tracks
-     *   - the last choice for this period, if one
-     * @param {Period} period
-     *
-     * @throws Error - Throws if the period given has not been added
-     */
-            TrackManager.prototype.setInitialVideoTrack = function setInitialVideoTrack(period) {
+   * Emit initial video Adaptation through the given Subject based on:
+   *   - the preferred video tracks
+   *   - the last choice for this period, if one
+   * @param {Period} period
+   *
+   * @throws Error - Throws if the period given has not been added
+   */
+            _proto.setInitialVideoTrack = function setInitialVideoTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), videoInfos = periodItem && periodItem.video;
                 if (!videoInfos || !periodItem) throw new Error("TrackManager: Given Period not found.");
                 var videoAdaptations = period.adaptations.video || [], chosenVideoAdaptation = this._videoChoiceMemory.get(period);
@@ -15277,16 +15221,16 @@ object-assign
                 }
             }, 
             /**
-     * Set audio track based on the ID of its adaptation for a given added Period.
-     *
-     * @param {Period} period - The concerned Period.
-     * @param {string} wantedId - adaptation id of the wanted track
-     *
-     * @throws Error - Throws if the period given has not been added
-     * @throws Error - Throws if the given id is not found in any audio adaptation
-     * of the given Period.
-     */
-            TrackManager.prototype.setAudioTrackByID = function setAudioTrackByID(period, wantedId) {
+   * Set audio track based on the ID of its adaptation for a given added Period.
+   *
+   * @param {Period} period - The concerned Period.
+   * @param {string} wantedId - adaptation id of the wanted track
+   *
+   * @throws Error - Throws if the period given has not been added
+   * @throws Error - Throws if the given id is not found in any audio adaptation
+   * of the given Period.
+   */
+            _proto.setAudioTrackByID = function setAudioTrackByID(period, wantedId) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (!audioInfos) throw new Error("TrackManager: Given Period not found.");
                 var wantedAdaptation = find_default()(audioInfos.adaptations, function(_ref) {
@@ -15297,16 +15241,16 @@ object-assign
                 audioInfos.adaptation$.next(wantedAdaptation));
             }, 
             /**
-     * Set text track based on the ID of its adaptation for a given added Period.
-     *
-     * @param {Period} period - The concerned Period.
-     * @param {string} wantedId - adaptation id of the wanted track
-     *
-     * @throws Error - Throws if the period given has not been added
-     * @throws Error - Throws if the given id is not found in any text adaptation
-     * of the given Period.
-     */
-            TrackManager.prototype.setTextTrackByID = function setTextTrackByID(period, wantedId) {
+   * Set text track based on the ID of its adaptation for a given added Period.
+   *
+   * @param {Period} period - The concerned Period.
+   * @param {string} wantedId - adaptation id of the wanted track
+   *
+   * @throws Error - Throws if the period given has not been added
+   * @throws Error - Throws if the given id is not found in any text adaptation
+   * of the given Period.
+   */
+            _proto.setTextTrackByID = function setTextTrackByID(period, wantedId) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (!textInfos) throw new Error("TrackManager: Given Period not found.");
                 var wantedAdaptation = find_default()(textInfos.adaptations, function(_ref2) {
@@ -15317,16 +15261,16 @@ object-assign
                 textInfos.adaptation$.next(wantedAdaptation));
             }, 
             /**
-     * Set video track based on the ID of its adaptation for a given added Period.
-     *
-     * @param {Period} period - The concerned Period.
-     * @param {string} wantedId - adaptation id of the wanted track
-     *
-     * @throws Error - Throws if the period given has not been added
-     * @throws Error - Throws if the given id is not found in any video adaptation
-     * of the given Period.
-     */
-            TrackManager.prototype.setVideoTrackByID = function setVideoTrackByID(period, wantedId) {
+   * Set video track based on the ID of its adaptation for a given added Period.
+   *
+   * @param {Period} period - The concerned Period.
+   * @param {string} wantedId - adaptation id of the wanted track
+   *
+   * @throws Error - Throws if the period given has not been added
+   * @throws Error - Throws if the given id is not found in any video adaptation
+   * of the given Period.
+   */
+            _proto.setVideoTrackByID = function setVideoTrackByID(period, wantedId) {
                 var periodItem = getPeriodItem(this._periods, period), videoInfos = periodItem && periodItem.video;
                 if (!videoInfos) throw new Error("LanguageManager: Given Period not found.");
                 var wantedAdaptation = find_default()(videoInfos.adaptations, function(_ref3) {
@@ -15337,42 +15281,42 @@ object-assign
                 videoInfos.adaptation$.next(wantedAdaptation));
             }, 
             /**
-     * Disable the given audio track for a given Period.
-     *
-     * @param {Period} period - The concerned Period.
-     *
-     * @throws Error - Throws if the period given has not been added
-     */
-            TrackManager.prototype.disableAudioTrack = function disableAudioTrack(period) {
+   * Disable the given audio track for a given Period.
+   *
+   * @param {Period} period - The concerned Period.
+   *
+   * @throws Error - Throws if the period given has not been added
+   */
+            _proto.disableAudioTrack = function disableAudioTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (!audioInfos) throw new Error("TrackManager: Given Period not found.");
                 null !== this._audioChoiceMemory.get(period) && (this._audioChoiceMemory.set(period, null), 
                 audioInfos.adaptation$.next(null));
             }, 
             /**
-     * Disable the current text track for a given period.
-     *
-     * @param {Period} period - The concerned Period.
-     *
-     * @throws Error - Throws if the period given has not been added
-     */
-            TrackManager.prototype.disableTextTrack = function disableTextTrack(period) {
+   * Disable the current text track for a given period.
+   *
+   * @param {Period} period - The concerned Period.
+   *
+   * @throws Error - Throws if the period given has not been added
+   */
+            _proto.disableTextTrack = function disableTextTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (!textInfos) throw new Error("TrackManager: Given Period not found.");
                 null !== this._textChoiceMemory.get(period) && (this._textChoiceMemory.set(period, null), 
                 textInfos.adaptation$.next(null));
             }, 
             /**
-     * Returns an object describing the chosen audio track for the given audio
-     * Period.
-     *
-     * Returns null is the the current audio track is disabled or not
-     * set yet.
-     *
-     * @param {Period} period
-     * @returns {Object|null}
-     */
-            TrackManager.prototype.getChosenAudioTrack = function getChosenAudioTrack(period) {
+   * Returns an object describing the chosen audio track for the given audio
+   * Period.
+   *
+   * Returns null is the the current audio track is disabled or not
+   * set yet.
+   *
+   * @param {Period} period
+   * @returns {Object|null}
+   */
+            _proto.getChosenAudioTrack = function getChosenAudioTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period);
                 if (null == (periodItem && periodItem.audio)) return null;
                 var chosenAudioAdaptation = this._audioChoiceMemory.get(period);
@@ -15384,16 +15328,16 @@ object-assign
                 } : null;
             }, 
             /**
-     * Returns an object describing the chosen text track for the given text
-     * Period.
-     *
-     * Returns null is the the current text track is disabled or not
-     * set yet.
-     *
-     * @param {Period} period
-     * @returns {Object|null}
-     */
-            TrackManager.prototype.getChosenTextTrack = function getChosenTextTrack(period) {
+   * Returns an object describing the chosen text track for the given text
+   * Period.
+   *
+   * Returns null is the the current text track is disabled or not
+   * set yet.
+   *
+   * @param {Period} period
+   * @returns {Object|null}
+   */
+            _proto.getChosenTextTrack = function getChosenTextTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period);
                 if (null == (periodItem && periodItem.text)) return null;
                 var chosenTextAdaptation = this._textChoiceMemory.get(period);
@@ -15405,16 +15349,16 @@ object-assign
                 } : null;
             }, 
             /**
-     * Returns an object describing the chosen video track for the given video
-     * Period.
-     *
-     * Returns null is the the current video track is disabled or not
-     * set yet.
-     *
-     * @param {Period} period
-     * @returns {Object|null}
-     */
-            TrackManager.prototype.getChosenVideoTrack = function getChosenVideoTrack(period) {
+   * Returns an object describing the chosen video track for the given video
+   * Period.
+   *
+   * Returns null is the the current video track is disabled or not
+   * set yet.
+   *
+   * @param {Period} period
+   * @returns {Object|null}
+   */
+            _proto.getChosenVideoTrack = function getChosenVideoTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period);
                 if (null == (periodItem && periodItem.video)) return null;
                 var chosenVideoAdaptation = this._videoChoiceMemory.get(period);
@@ -15424,12 +15368,12 @@ object-assign
                 } : null;
             }, 
             /**
-     * Returns all available audio tracks for a given Period, as an array of
-     * objects.
-     *
-     * @returns {Array.<Object>}
-     */
-            TrackManager.prototype.getAvailableAudioTracks = function getAvailableAudioTracks(period) {
+   * Returns all available audio tracks for a given Period, as an array of
+   * objects.
+   *
+   * @returns {Array.<Object>}
+   */
+            _proto.getAvailableAudioTracks = function getAvailableAudioTracks(period) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (null == audioInfos) return [];
                 var chosenAudioAdaptation = this._audioChoiceMemory.get(period), currentId = chosenAudioAdaptation && chosenAudioAdaptation.id;
@@ -15444,13 +15388,13 @@ object-assign
                 });
             }, 
             /**
-     * Returns all available text tracks for a given Period, as an array of
-     * objects.
-     *
-     * @param {Period} period
-     * @returns {Array.<Object>}
-     */
-            TrackManager.prototype.getAvailableTextTracks = function getAvailableTextTracks(period) {
+   * Returns all available text tracks for a given Period, as an array of
+   * objects.
+   *
+   * @param {Period} period
+   * @returns {Array.<Object>}
+   */
+            _proto.getAvailableTextTracks = function getAvailableTextTracks(period) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (null == textInfos) return [];
                 var chosenTextAdaptation = this._textChoiceMemory.get(period), currentId = chosenTextAdaptation && chosenTextAdaptation.id;
@@ -15465,12 +15409,12 @@ object-assign
                 });
             }, 
             /**
-     * Returns all available video tracks for a given Period, as an array of
-     * objects.
-     *
-     * @returns {Array.<Object>}
-     */
-            TrackManager.prototype.getAvailableVideoTracks = function getAvailableVideoTracks(period) {
+   * Returns all available video tracks for a given Period, as an array of
+   * objects.
+   *
+   * @returns {Array.<Object>}
+   */
+            _proto.getAvailableVideoTracks = function getAvailableVideoTracks(period) {
                 var periodItem = getPeriodItem(this._periods, period), videoInfos = periodItem && periodItem.video;
                 if (null == videoInfos) return [];
                 var chosenVideoAdaptation = this._videoChoiceMemory.get(period), currentId = chosenVideoAdaptation && chosenVideoAdaptation.id;
@@ -15481,7 +15425,7 @@ object-assign
                         representations: adaptation.representations.map(parseVideoRepresentation)
                     };
                 });
-            }, TrackManager.prototype._updateAudioTrackChoices = function _updateAudioTrackChoices() {
+            }, _proto._updateAudioTrackChoices = function _updateAudioTrackChoices() {
                 var _this = this, preferredAudioTracks = this._preferredAudioTracks;
                 !function recursiveUpdateAudioTrack(index) {
                     if (!(index >= _this._periods.length())) {
@@ -15501,7 +15445,7 @@ object-assign
                         recursiveUpdateAudioTrack(index + 1);
                     }
                 }(0);
-            }, TrackManager.prototype._updateTextTrackChoices = function _updateTextTrackChoices() {
+            }, _proto._updateTextTrackChoices = function _updateTextTrackChoices() {
                 var _this2 = this, preferredTextTracks = this._preferredTextTracks;
                 !function recursiveUpdateTextTrack(index) {
                     if (!(index >= _this2._periods.length())) {
@@ -15521,7 +15465,7 @@ object-assign
                         recursiveUpdateTextTrack(index + 1);
                     }
                 }(0);
-            }, TrackManager.prototype._updateVideoTrackChoices = function _updateVideoTrackChoices() {
+            }, _proto._updateVideoTrackChoices = function _updateVideoTrackChoices() {
                 var _this3 = this;
                 !function recursiveUpdateVideoTrack(index) {
                     if (!(index >= _this3._periods.length())) {
@@ -15543,7 +15487,7 @@ object-assign
                 }(0);
             }, TrackManager;
         }();
-        // /**
+ // /**
         //  * Returns true if the given audio adaptation is an optimal choice for a period
         //  * given:
         //  *
@@ -15593,8 +15537,7 @@ object-assign
  * null if the most optimal audio adaptation is no audio adaptation.
  * @param {Array.<Adaptation>} audioAdaptations
  * @returns {Adaptation|null}
- */
-        /* harmony default export */        function findFirstOptimalAudioAdaptation(audioAdaptations, preferredAudioTracks) {
+ */        function findFirstOptimalAudioAdaptation(audioAdaptations, preferredAudioTracks) {
             if (!audioAdaptations.length) return null;
             for (var _loop = function _loop(i) {
                 var preferredAudioTrack = preferredAudioTracks[i];
@@ -15609,12 +15552,12 @@ object-assign
                 } : void 0;
             }, i = 0; i < preferredAudioTracks.length; i++) {
                 var _ret = _loop(i);
-                if ("object" === (void 0 === _ret ? "undefined" : _typeof(_ret))) return _ret.v;
+                if ("object" == typeof _ret) return _ret.v;
             }
-            // no optimal adaptation, just return the first one
+ // no optimal adaptation, just return the first one
                         return audioAdaptations[0];
         }
-        // /**
+ // /**
         //  * Returns true if the given text adaptation is an optimal choice for a period
         //  * given:
         //  *
@@ -15679,9 +15622,9 @@ object-assign
                 } : void 0;
             }, i = 0; i < preferredTextTracks.length; i++) {
                 var _ret2 = _loop2(i);
-                if ("object" === (void 0 === _ret2 ? "undefined" : _typeof(_ret2))) return _ret2.v;
+                if ("object" == typeof _ret2) return _ret2.v;
             }
-            // no optimal adaptation
+ // no optimal adaptation
                         return null;
         }
         function findPeriodIndex(periods, period) {
@@ -15710,40 +15653,20 @@ object-assign
             };
         }
         // CONCATENATED MODULE: ./src/core/api/index.ts
-                var api_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(obj) {
-            return typeof obj;
-        } : function(obj) {
-            return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-        }, _createClass = function() {
-            function defineProperties(target, props) {
-                for (var i = 0; i < props.length; i++) {
-                    var descriptor = props[i];
-                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
-                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, descriptor.key, descriptor);
-                }
+                function _defineProperties(target, props) {
+            for (var i = 0; i < props.length; i++) {
+                var descriptor = props[i];
+                descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, descriptor.key, descriptor);
             }
-            return function(Constructor, protoProps, staticProps) {
-                return protoProps && defineProperties(Constructor.prototype, protoProps), staticProps && defineProperties(Constructor, staticProps), 
-                Constructor;
-            };
-        }();
-        function api_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
         }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        function _createClass(Constructor, protoProps, staticProps) {
+            return protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+            Constructor;
         }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
-                }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -15764,19 +15687,23 @@ object-assign
  * This file and directory defines the public API for the RxPlayer.
  *
  * It also starts the different sub-parts of the player on various API calls.
- */        var DEFAULT_UNMUTED_VOLUME = config.a.DEFAULT_UNMUTED_VOLUME, api_Player = function(_EventEmitter) {
+ */        var DEFAULT_UNMUTED_VOLUME = config.a.DEFAULT_UNMUTED_VOLUME, api_Player = 
+        /* */
+        function(_EventEmitter) {
             /**
-     * @constructor
-     * @param {Object} options
-     */
-            function Player() {
-                var options = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
-                api_classCallCheck(this, Player);
-                var _this = _possibleConstructorReturn(this, _EventEmitter.call(this)), _parseConstructorOpti = parseConstructorOptions(options), initialAudioBitrate = _parseConstructorOpti.initialAudioBitrate, initialVideoBitrate = _parseConstructorOpti.initialVideoBitrate, limitVideoWidth = _parseConstructorOpti.limitVideoWidth, maxAudioBitrate = _parseConstructorOpti.maxAudioBitrate, maxBufferAhead = _parseConstructorOpti.maxBufferAhead, maxBufferBehind = _parseConstructorOpti.maxBufferBehind, maxVideoBitrate = _parseConstructorOpti.maxVideoBitrate, throttleWhenHidden = _parseConstructorOpti.throttleWhenHidden, videoElement = _parseConstructorOpti.videoElement, wantedBufferAhead = _parseConstructorOpti.wantedBufferAhead, stopAtEnd = _parseConstructorOpti.stopAtEnd;
-                // Workaround to support Firefox autoplay on FF 42.
+   * @constructor
+   * @param {Object} options
+   */
+            function Player(options) {
+                var _this;
+                void 0 === options && (options = {}), _this = _EventEmitter.call(this) || this;
+                var _parseConstructorOpti = parseConstructorOptions(options), initialAudioBitrate = _parseConstructorOpti.initialAudioBitrate, initialVideoBitrate = _parseConstructorOpti.initialVideoBitrate, limitVideoWidth = _parseConstructorOpti.limitVideoWidth, maxAudioBitrate = _parseConstructorOpti.maxAudioBitrate, maxBufferAhead = _parseConstructorOpti.maxBufferAhead, maxBufferBehind = _parseConstructorOpti.maxBufferBehind, maxVideoBitrate = _parseConstructorOpti.maxVideoBitrate, throttleWhenHidden = _parseConstructorOpti.throttleWhenHidden, videoElement = _parseConstructorOpti.videoElement, wantedBufferAhead = _parseConstructorOpti.wantedBufferAhead, stopAtEnd = _parseConstructorOpti.stopAtEnd;
+ // Workaround to support Firefox autoplay on FF 42.
                 // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
-                return videoElement.preload = "auto", _this.version = /*PLAYER_VERSION*/ "3.6.0", 
-                _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, _this._priv_destroy$ = new Subject.a(), 
+                                return videoElement.preload = "auto", _this.version = 
+                /*PLAYER_VERSION*/
+                "3.6.1", _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, 
+                _this._priv_destroy$ = new Subject.a(), 
                 /** @deprecated */
                 Object(events.d)(videoElement).pipe(Object(takeUntil.a)(_this._priv_destroy$))
                 /* tslint:disable deprecation */ .subscribe(function() {
@@ -15790,8 +15717,7 @@ object-assign
                         arr.push(textTrack);
                     }
                     return arr;
-                }), 
-                // We can have two consecutive textTrackChanges with the exact same
+                }), // We can have two consecutive textTrackChanges with the exact same
                 // payload when we perform multiple texttrack operations before the event
                 // loop is freed.
                 // In that case we only want to fire one time the observable.
@@ -15835,27 +15761,26 @@ object-assign
                 _this;
             }
             /**
-     * All possible Error types emitted by the RxPlayer.
-     * @type {Object}
-     */
+   * All possible Error types emitted by the RxPlayer.
+   * @type {Object}
+   */            _inheritsLoose(Player, _EventEmitter);
+            var _proto = Player.prototype;
             /**
-     * Stop the playback for the current content.
-     */            return _inherits(Player, _EventEmitter), Player.prototype.stop = function stop() {
+   * Stop the playback for the current content.
+   */            return _proto.stop = function stop() {
                 this.state !== PLAYER_STATES.STOPPED && (this._priv_stopCurrentContent$.next(), 
                 this._priv_cleanUpCurrentContentState(), this._priv_setPlayerState(PLAYER_STATES.STOPPED));
             }, 
             /**
-     * Free the resources used by the player.
-     * /!\ The player cannot be "used" anymore after this method has been called.
-     */
-            Player.prototype.dispose = function dispose() {
+   * Free the resources used by the player.
+   * /!\ The player cannot be "used" anymore after this method has been called.
+   */
+            _proto.dispose = function dispose() {
                 // free resources linked to the loaded content
                 this.stop(), this.videoElement && 
                 // free resources used for EME management
-                Object(eme.disposeEME)(this.videoElement), 
-                // free Observables linked to the Player instance
-                this._priv_destroy$.next(), this._priv_destroy$.complete(), 
-                // Complete all subjects
+                Object(eme.disposeEME)(this.videoElement), // free Observables linked to the Player instance
+                this._priv_destroy$.next(), this._priv_destroy$.complete(), // Complete all subjects
                 this._priv_stopCurrentContent$.complete(), this._priv_playing$.complete(), this._priv_speed$.complete(), 
                 this._priv_streamLock$.complete(), this._priv_bufferOptions.wantedBufferAhead$.complete(), 
                 this._priv_bufferOptions.maxBufferAhead$.complete(), this._priv_bufferOptions.maxBufferBehind$.complete(), 
@@ -15863,21 +15788,21 @@ object-assign
                 this.videoElement = null;
             }, 
             /**
-     * Load a new video.
-     * @param {Object} opts
-     * @returns {Observable}
-     * @throws Error - throws if no url is given.
-     * @throws Error - throws if no transport is given and no default transport
-     * has been set.
-     * @throws Error - throws if the asked transport does not exist
-     */
-            Player.prototype.loadVideo = function loadVideo(opts) {
+   * Load a new video.
+   * @param {Object} opts
+   * @returns {Observable}
+   * @throws Error - throws if no url is given.
+   * @throws Error - throws if no transport is given and no default transport
+   * has been set.
+   * @throws Error - throws if the asked transport does not exist
+   */
+            _proto.loadVideo = function loadVideo(opts) {
                 var _this2 = this, options = parseLoadVideoOptions(opts);
                 log.a.info("loadvideo", options);
                 var autoPlay = options.autoPlay, defaultAudioTrack = options.defaultAudioTrack, defaultTextTrack = options.defaultTextTrack, keySystems = options.keySystems, networkConfig = options.networkConfig, startAt = options.startAt, supplementaryImageTracks = options.supplementaryImageTracks, supplementaryTextTracks = options.supplementaryTextTracks, transport = options.transport, transportOptions = options.transportOptions, url = options.url;
-                // Perform multiple checks on the given options
+ // Perform multiple checks on the given options
                                 if (!this.videoElement) throw new Error("the attached video element is disposed");
-                // now that every check has passed, stop previous content
+ // now that every check has passed, stop previous content
                                 this.stop();
                 var isDirectFile = "directfile" === transport;
                 this._priv_currentError = null, this._priv_contentInfos = {
@@ -15890,14 +15815,13 @@ object-assign
                     activeRepresentations: null,
                     initialAudioTrack: defaultAudioTrack,
                     initialTextTrack: defaultTextTrack
-                }, 
-                // inilialize to false
+                }, // inilialize to false
                 this._priv_playing$.next(!1);
                 // get every properties used from context for clarity
-                var videoElement = this.videoElement, clock$ = api_clock(videoElement, {
+                var stream, videoElement = this.videoElement, clock$ = api_clock(videoElement, {
                     withMediaSource: !isDirectFile
-                }), closeStream$ = Object(merge.a)(this._priv_stopCurrentContent$, this._priv_stopAtEnd ? Object(events.c)(videoElement) : empty.a).pipe(Object(take.a)(1)), stream = void 0;
-                // Global clock used for the whole application.
+                }), closeStream$ = Object(merge.a)(this._priv_stopCurrentContent$, this._priv_stopAtEnd ? Object(events.c)(videoElement) : empty.a).pipe(Object(take.a)(1));
+ // Global clock used for the whole application.
                                 if (isDirectFile) {
                     if (null == features.a.directfile) throw new Error("DirectFile feature not activated in your build.");
                     stream = features.a.directfile({
@@ -15909,8 +15833,7 @@ object-assign
                         startAt: startAt,
                         url: url
                     }).pipe(Object(takeUntil.a)(closeStream$)).pipe(publish());
-                }
-                // Emit a truthy value when the player stalls, a falsy value as it unstalls.
+                } // Emit an object when the player stalls and null when it unstall
                  else {
                     var transportFn = features.a.transports[transport];
                     if (!transportFn) throw new Error('transport "' + transport + '" not supported');
@@ -15933,7 +15856,7 @@ object-assign
                         textTrackMode: "html",
                         textTrackElement: options.textTrackElement
                     };
-                    // Options used by the ABR Manager.
+ // Options used by the ABR Manager.
                                         // Stream Observable, through which the content will be launched.
                     stream = Stream({
                         adaptiveOptions: adaptiveOptions,
@@ -15952,34 +15875,31 @@ object-assign
                         url: url
                     }).pipe(Object(takeUntil.a)(closeStream$)).pipe(publish());
                 }
-                var stalled$ = stream.pipe(Object(filter.a)(function(evt) {
+                var streamDisposable, stalled$ = stream.pipe(Object(filter.a)(function(evt) {
                     return "stalled" === evt.type;
                 }), Object(map.a)(function(x) {
                     return x.value;
-                })), loaded$ = stream.pipe(Object(filter.a)(function(_ref) {
-                    return "loaded" === _ref.type;
-                }), Object(share.a)()), reloading$ = stream.pipe(Object(filter.a)(function(_ref2) {
-                    return "reloading-stream" === _ref2.type;
-                }), Object(share.a)()), endedEvent$ = Object(events.c)(videoElement).pipe(Object(mapTo.a)(null)), seekingEvent$ = Object(events.m)(videoElement).pipe(Object(mapTo.a)(null)), loadedStateUpdates$ = Object(combineLatest.a)(this._priv_playing$, stalled$.pipe(Object(startWith.a)(null)), endedEvent$.pipe(Object(startWith.a)(null)), seekingEvent$.pipe(Object(startWith.a)(null))).pipe(Object(takeUntil.a)(this._priv_stopCurrentContent$), Object(map.a)(function(_ref3) {
-                    var isPlaying = _ref3[0], stalledStatus = _ref3[1];
+                })), loaded$ = stream.pipe(Object(filter.a)(function(evt) {
+                    return "loaded" === evt.type;
+                }), Object(share.a)()), reloading$ = stream.pipe(Object(filter.a)(function(evt) {
+                    return "reloading-stream" === evt.type;
+                }), Object(share.a)()), endedEvent$ = Object(events.c)(videoElement).pipe(Object(mapTo.a)(null)), seekingEvent$ = Object(events.m)(videoElement).pipe(Object(mapTo.a)(null)), loadedStateUpdates$ = Object(combineLatest.a)(this._priv_playing$, stalled$.pipe(Object(startWith.a)(null)), endedEvent$.pipe(Object(startWith.a)(null)), seekingEvent$.pipe(Object(startWith.a)(null))).pipe(Object(takeUntil.a)(this._priv_stopCurrentContent$), Object(map.a)(function(_ref) {
+                    var isPlaying = _ref[0], stalledStatus = _ref[1];
                     return getLoadedContentState(videoElement, isPlaying, stalledStatus);
                 })), playerState$ = Object(concat.a)(Object(of.a)(PLAYER_STATES.LOADING), // Begin with LOADING
                 // LOADED as soon as the first "loaded" event is sent from the Stream
-                loaded$.pipe(Object(take.a)(1), Object(mapTo.a)(PLAYER_STATES.LOADED)), Object(merge.a)(loadedStateUpdates$.pipe(
-                // From the first reload onward, we enter another dynamic (below)
-                Object(takeUntil.a)(reloading$), 
-                // begin only post-LOADED states when the first "play" has been done
+                loaded$.pipe(Object(take.a)(1), Object(mapTo.a)(PLAYER_STATES.LOADED)), Object(merge.a)(loadedStateUpdates$.pipe(// From the first reload onward, we enter another dynamic (below)
+                Object(takeUntil.a)(reloading$), // begin only post-LOADED states when the first "play" has been done
                 // (Either auto-play or user play). Else, stay as LOADED.
                 skipUntil(this._priv_playing$.pipe(Object(filter.a)(function(isPlaying) {
                     return isPlaying;
-                })))), 
-                // when reloading
+                })))), // when reloading
                 reloading$.pipe(Object(switchMapTo.a)(loaded$.pipe(Object(take.a)(1), // wait for the next loaded Stream event
                 Object(mergeMapTo.a)(loadedStateUpdates$), // to update the state as usual
                 Object(startWith.a)(PLAYER_STATES.RELOADING)))))).pipe(Object(distinctUntilChanged.a)()), videoPlays$ = Object(events.j)(videoElement).pipe(Object(map.a)(function(evt) {
                     return "play" === evt.type;
-                })), streamDisposable = void 0;
-                // Emit when the Stream is considered "loaded".
+                }));
+ // Emit when the Stream is considered "loaded".
                                 this._priv_stopCurrentContent$.pipe(Object(take.a)(1)).subscribe(function() {
                     streamDisposable && streamDisposable.unsubscribe();
                 }), videoPlays$.pipe(Object(takeUntil.a)(this._priv_stopCurrentContent$)).subscribe(function(x) {
@@ -15994,8 +15914,7 @@ object-assign
                     return _this2._priv_onStreamError(err);
                 }, function() {
                     return _this2._priv_onStreamComplete();
-                }), 
-                // connect the stream when the lock is inactive
+                }), // connect the stream when the lock is inactive
                 this._priv_streamLock$.pipe(Object(filter.a)(function(isLocked) {
                     return !isLocked;
                 }), Object(take.a)(1), Object(takeUntil.a)(this._priv_stopCurrentContent$)).subscribe(function() {
@@ -16003,149 +15922,149 @@ object-assign
                 });
             }, 
             /**
-     * Returns fatal error if one for the current content.
-     * null otherwise.
-     * @returns {Object|null}
-     */
-            Player.prototype.getError = function getError() {
+   * Returns fatal error if one for the current content.
+   * null otherwise.
+   * @returns {Object|null}
+   */
+            _proto.getError = function getError() {
                 return this._priv_currentError;
             }, 
             /**
-     * Returns manifest/playlist object.
-     * null if the player is STOPPED.
-     * @returns {Manifest|null}
-     */
-            Player.prototype.getManifest = function getManifest() {
+   * Returns manifest/playlist object.
+   * null if the player is STOPPED.
+   * @returns {Manifest|null}
+   */
+            _proto.getManifest = function getManifest() {
                 return this._priv_contentInfos && this._priv_contentInfos.manifest;
             }, 
             /**
-     * Returns adaptations (tracks) for every currently playing type
-     * (audio/video/text...).
-     * @returns {Object|null}
-     */
-            Player.prototype.getCurrentAdaptations = function getCurrentAdaptations() {
+   * Returns adaptations (tracks) for every currently playing type
+   * (audio/video/text...).
+   * @returns {Object|null}
+   */
+            _proto.getCurrentAdaptations = function getCurrentAdaptations() {
                 if (!this._priv_contentInfos) return null;
-                var _priv_contentInfos = this._priv_contentInfos, currentPeriod = _priv_contentInfos.currentPeriod, activeAdaptations = _priv_contentInfos.activeAdaptations;
+                var _this$_priv_contentIn = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn.currentPeriod, activeAdaptations = _this$_priv_contentIn.activeAdaptations;
                 return currentPeriod && activeAdaptations && activeAdaptations.get(currentPeriod) || null;
             }, 
             /**
-     * Returns representations (qualities) for every currently playing type
-     * (audio/video/text...).
-     * @returns {Object|null}
-     */
-            Player.prototype.getCurrentRepresentations = function getCurrentRepresentations() {
+   * Returns representations (qualities) for every currently playing type
+   * (audio/video/text...).
+   * @returns {Object|null}
+   */
+            _proto.getCurrentRepresentations = function getCurrentRepresentations() {
                 if (!this._priv_contentInfos) return null;
-                var _priv_contentInfos2 = this._priv_contentInfos, currentPeriod = _priv_contentInfos2.currentPeriod, activeRepresentations = _priv_contentInfos2.activeRepresentations;
+                var _this$_priv_contentIn2 = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn2.currentPeriod, activeRepresentations = _this$_priv_contentIn2.activeRepresentations;
                 return currentPeriod && activeRepresentations && activeRepresentations.get(currentPeriod) || null;
             }, 
             /**
-     * Returns the media DOM element used by the player.
-     * You should not its HTML5 API directly and use the player's method instead,
-     * to ensure a well-behaved player.
-     * @returns {HTMLMediaElement|null}
-     */
-            Player.prototype.getVideoElement = function getVideoElement() {
+   * Returns the media DOM element used by the player.
+   * You should not its HTML5 API directly and use the player's method instead,
+   * to ensure a well-behaved player.
+   * @returns {HTMLMediaElement|null}
+   */
+            _proto.getVideoElement = function getVideoElement() {
                 return this.videoElement;
             }, 
             /**
-     * If one returns the first native text-track element attached to the media element.
-     * @deprecated
-     * @returns {TextTrack}
-     */
-            Player.prototype.getNativeTextTrack = function getNativeTextTrack() {
+   * If one returns the first native text-track element attached to the media element.
+   * @deprecated
+   * @returns {TextTrack}
+   */
+            _proto.getNativeTextTrack = function getNativeTextTrack() {
                 if (warnOnce("getNativeTextTrack is deprecated. Please open an issue if you used this API."), 
                 !this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return videoElement.textTracks.length > 0 ? videoElement.textTracks[0] : null;
             }, 
             /**
-     * Returns the player's current state.
-     * @returns {string}
-     */
-            Player.prototype.getPlayerState = function getPlayerState() {
+   * Returns the player's current state.
+   * @returns {string}
+   */
+            _proto.getPlayerState = function getPlayerState() {
                 return this.state;
             }, 
             /**
-     * Returns true if both:
-     *   - a content is loaded
-     *   - the content loaded is a live content
-     * @returns {Boolean}
-     */
-            Player.prototype.isLive = function isLive() {
+   * Returns true if both:
+   *   - a content is loaded
+   *   - the content loaded is a live content
+   * @returns {Boolean}
+   */
+            _proto.isLive = function isLive() {
                 if (!this._priv_contentInfos) return !1;
-                var _priv_contentInfos3 = this._priv_contentInfos, isDirectFile = _priv_contentInfos3.isDirectFile, manifest = _priv_contentInfos3.manifest;
+                var _this$_priv_contentIn3 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn3.isDirectFile, manifest = _this$_priv_contentIn3.manifest;
                 return !(isDirectFile || !manifest) && manifest.isLive;
             }, 
             /**
-     * Returns the url of the content's manifest
-     * @returns {string|undefined}
-     */
-            Player.prototype.getUrl = function getUrl() {
+   * Returns the url of the content's manifest
+   * @returns {string|undefined}
+   */
+            _proto.getUrl = function getUrl() {
                 if (this._priv_contentInfos) {
-                    var _priv_contentInfos4 = this._priv_contentInfos, isDirectFile = _priv_contentInfos4.isDirectFile, manifest = _priv_contentInfos4.manifest, url = _priv_contentInfos4.url;
+                    var _this$_priv_contentIn4 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn4.isDirectFile, manifest = _this$_priv_contentIn4.manifest, url = _this$_priv_contentIn4.url;
                     return isDirectFile ? url : manifest ? manifest.getUrl() : void 0;
                 }
             }, 
             /**
-     * Returns the video duration, in seconds.
-     * NaN if no video is playing.
-     * @returns {Number}
-     */
-            Player.prototype.getVideoDuration = function getVideoDuration() {
+   * Returns the video duration, in seconds.
+   * NaN if no video is playing.
+   * @returns {Number}
+   */
+            _proto.getVideoDuration = function getVideoDuration() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return this.videoElement.duration;
             }, 
             /**
-     * Returns in seconds the difference between:
-     *   - the end of the current contiguous loaded range.
-     *   - the current time
-     * @returns {Number}
-     */
-            Player.prototype.getVideoBufferGap = function getVideoBufferGap() {
+   * Returns in seconds the difference between:
+   *   - the end of the current contiguous loaded range.
+   *   - the current time
+   * @returns {Number}
+   */
+            _proto.getVideoBufferGap = function getVideoBufferGap() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return Object(utils_ranges.c)(videoElement.buffered, videoElement.currentTime);
             }, 
             /**
-     * Returns in seconds the difference between:
-     *   - the end of the current contiguous loaded range.
-     *   - the start of the current contiguous loaded range.
-     * @returns {Number}
-     */
-            Player.prototype.getVideoLoadedTime = function getVideoLoadedTime() {
+   * Returns in seconds the difference between:
+   *   - the end of the current contiguous loaded range.
+   *   - the start of the current contiguous loaded range.
+   * @returns {Number}
+   */
+            _proto.getVideoLoadedTime = function getVideoLoadedTime() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return Object(utils_ranges.g)(videoElement.buffered, videoElement.currentTime);
             }, 
             /**
-     * Returns in seconds the difference between:
-     *   - the current time.
-     *   - the start of the current contiguous loaded range.
-     * @returns {Number}
-     */
-            Player.prototype.getVideoPlayedTime = function getVideoPlayedTime() {
+   * Returns in seconds the difference between:
+   *   - the current time.
+   *   - the start of the current contiguous loaded range.
+   * @returns {Number}
+   */
+            _proto.getVideoPlayedTime = function getVideoPlayedTime() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return Object(utils_ranges.e)(videoElement.buffered, videoElement.currentTime);
             }, 
             /**
-     * Get the current position, in s, in wall-clock time.
-     * That is:
-     *   - for live content, get a timestamp, in s, of the current played content.
-     *   - for static content, returns the position from beginning in s.
-     *
-     * If you do not know if you want to use this method or getPosition:
-     *   - If what you want is to display the current time to the user, use this
-     *     one.
-     *   - If what you want is to interact with the player's API or perform other
-     *     actions (like statistics) with the real player data, use getPosition.
-     *
-     * @returns {Number}
-     */
-            Player.prototype.getWallClockTime = function getWallClockTime() {
+   * Get the current position, in s, in wall-clock time.
+   * That is:
+   *   - for live content, get a timestamp, in s, of the current played content.
+   *   - for static content, returns the position from beginning in s.
+   *
+   * If you do not know if you want to use this method or getPosition:
+   *   - If what you want is to display the current time to the user, use this
+   *     one.
+   *   - If what you want is to interact with the player's API or perform other
+   *     actions (like statistics) with the real player data, use getPosition.
+   *
+   * @returns {Number}
+   */
+            _proto.getWallClockTime = function getWallClockTime() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 if (!this._priv_contentInfos) return this.videoElement.currentTime;
-                var _priv_contentInfos5 = this._priv_contentInfos, isDirectFile = _priv_contentInfos5.isDirectFile, manifest = _priv_contentInfos5.manifest;
+                var _this$_priv_contentIn5 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn5.isDirectFile, manifest = _this$_priv_contentIn5.manifest;
                 if (isDirectFile) return this.videoElement.currentTime;
                 if (manifest) {
                     var currentTime = this.videoElement.currentTime;
@@ -16154,129 +16073,129 @@ object-assign
                 return 0;
             }, 
             /**
-     * Get the current position, in seconds, of the video element.
-     *
-     * If you do not know if you want to use this method or getWallClockTime:
-     *   - If what you want is to display the current time to the user, use
-     *     getWallClockTime.
-     *   - If what you want is to interact with the player's API or perform other
-     *     actions (like statistics) with the real player data, use this one.
-     *
-     * @returns {Number}
-     */
-            Player.prototype.getPosition = function getPosition() {
+   * Get the current position, in seconds, of the video element.
+   *
+   * If you do not know if you want to use this method or getWallClockTime:
+   *   - If what you want is to display the current time to the user, use
+   *     getWallClockTime.
+   *   - If what you want is to interact with the player's API or perform other
+   *     actions (like statistics) with the real player data, use this one.
+   *
+   * @returns {Number}
+   */
+            _proto.getPosition = function getPosition() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return this.videoElement.currentTime;
             }, 
             /**
-     * Returns the current speed at which the video plays.
-     * @returns {Number}
-     */
-            Player.prototype.getPlaybackRate = function getPlaybackRate() {
+   * Returns the current speed at which the video plays.
+   * @returns {Number}
+   */
+            _proto.getPlaybackRate = function getPlaybackRate() {
                 return this._priv_speed$.getValue();
             }, 
             /**
-     * Update the playback rate of the video.
-     * @param {Number} rate
-     */
-            Player.prototype.setPlaybackRate = function setPlaybackRate(rate) {
+   * Update the playback rate of the video.
+   * @param {Number} rate
+   */
+            _proto.setPlaybackRate = function setPlaybackRate(rate) {
                 this._priv_speed$.next(rate);
             }, 
             /**
-     * Returns all available bitrates for the current video Adaptation.
-     * @returns {Array.<Number>}
-     */
-            Player.prototype.getAvailableVideoBitrates = function getAvailableVideoBitrates() {
+   * Returns all available bitrates for the current video Adaptation.
+   * @returns {Array.<Number>}
+   */
+            _proto.getAvailableVideoBitrates = function getAvailableVideoBitrates() {
                 if (!this._priv_contentInfos) return [];
-                var _priv_contentInfos6 = this._priv_contentInfos, currentPeriod = _priv_contentInfos6.currentPeriod, activeAdaptations = _priv_contentInfos6.activeAdaptations;
+                var _this$_priv_contentIn6 = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn6.currentPeriod, activeAdaptations = _this$_priv_contentIn6.activeAdaptations;
                 if (!currentPeriod || !activeAdaptations) return [];
                 var adaptations = activeAdaptations.get(currentPeriod), videoAdaptation = adaptations && adaptations.video;
-                return videoAdaptation ? videoAdaptation.representations.map(function(_ref4) {
-                    return _ref4.bitrate;
+                return videoAdaptation ? videoAdaptation.representations.map(function(_ref2) {
+                    return _ref2.bitrate;
                 }) : [];
             }, 
             /**
-     * Returns all available bitrates for the current audio Adaptation.
-     * @returns {Array.<Number>}
-     */
-            Player.prototype.getAvailableAudioBitrates = function getAvailableAudioBitrates() {
+   * Returns all available bitrates for the current audio Adaptation.
+   * @returns {Array.<Number>}
+   */
+            _proto.getAvailableAudioBitrates = function getAvailableAudioBitrates() {
                 if (!this._priv_contentInfos) return [];
-                var _priv_contentInfos7 = this._priv_contentInfos, currentPeriod = _priv_contentInfos7.currentPeriod, activeAdaptations = _priv_contentInfos7.activeAdaptations;
+                var _this$_priv_contentIn7 = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn7.currentPeriod, activeAdaptations = _this$_priv_contentIn7.activeAdaptations;
                 if (!currentPeriod || !activeAdaptations) return [];
                 var adaptations = activeAdaptations.get(currentPeriod), audioAdaptation = adaptations && adaptations.audio;
-                return audioAdaptation ? audioAdaptation.representations.map(function(_ref5) {
-                    return _ref5.bitrate;
+                return audioAdaptation ? audioAdaptation.representations.map(function(_ref3) {
+                    return _ref3.bitrate;
                 }) : [];
             }, 
             /**
-     * Returns the manual audio bitrate set. -1 if in AUTO mode.
-     * @returns {Number}
-     */
-            Player.prototype.getManualAudioBitrate = function getManualAudioBitrate() {
+   * Returns the manual audio bitrate set. -1 if in AUTO mode.
+   * @returns {Number}
+   */
+            _proto.getManualAudioBitrate = function getManualAudioBitrate() {
                 return this._priv_bitrateInfos.manualBitrates.audio;
             }, 
             /**
-     * Returns the manual video bitrate set. -1 if in AUTO mode.
-     * @returns {Number}
-     */
-            Player.prototype.getManualVideoBitrate = function getManualVideoBitrate() {
+   * Returns the manual video bitrate set. -1 if in AUTO mode.
+   * @returns {Number}
+   */
+            _proto.getManualVideoBitrate = function getManualVideoBitrate() {
                 return this._priv_bitrateInfos.manualBitrates.video;
             }, 
             /**
-     * Returns currently considered bitrate for video segments.
-     * @returns {Number|undefined}
-     */
-            Player.prototype.getVideoBitrate = function getVideoBitrate() {
+   * Returns currently considered bitrate for video segments.
+   * @returns {Number|undefined}
+   */
+            _proto.getVideoBitrate = function getVideoBitrate() {
                 var representations = this.getCurrentRepresentations();
                 if (representations && representations.video) return representations.video.bitrate;
             }, 
             /**
-     * Returns currently considered bitrate for audio segments.
-     * @returns {Number|undefined}
-     */
-            Player.prototype.getAudioBitrate = function getAudioBitrate() {
+   * Returns currently considered bitrate for audio segments.
+   * @returns {Number|undefined}
+   */
+            _proto.getAudioBitrate = function getAudioBitrate() {
                 var representations = this.getCurrentRepresentations();
                 if (representations && representations.audio) return representations.audio.bitrate;
             }, 
             /**
-     * Returns max wanted video bitrate currently set.
-     * @returns {Number}
-     */
-            Player.prototype.getMaxVideoBitrate = function getMaxVideoBitrate() {
+   * Returns max wanted video bitrate currently set.
+   * @returns {Number}
+   */
+            _proto.getMaxVideoBitrate = function getMaxVideoBitrate() {
                 return this._priv_abrManager ? this._priv_abrManager.getMaxAutoBitrate("video") : this._priv_bitrateInfos.initialMaxAutoBitrates.video;
             }, 
             /**
-     * Returns max wanted audio bitrate currently set.
-     * @returns {Number}
-     */
-            Player.prototype.getMaxAudioBitrate = function getMaxAudioBitrate() {
+   * Returns max wanted audio bitrate currently set.
+   * @returns {Number}
+   */
+            _proto.getMaxAudioBitrate = function getMaxAudioBitrate() {
                 return this._priv_abrManager ? this._priv_abrManager.getMaxAutoBitrate("audio") : this._priv_bitrateInfos.initialMaxAutoBitrates.audio;
             }, 
             /**
-     * Play/Resume the current video.
-     */
-            Player.prototype.play = function play() {
+   * Play/Resume the current video.
+   */
+            _proto.play = function play() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 /* tslint:disable no-floating-promises */                this.videoElement.play();
             }, 
             /**
-     * Pause the current video.
-     */
-            Player.prototype.pause = function pause() {
+   * Pause the current video.
+   */
+            _proto.pause = function pause() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 this.videoElement.pause();
             }, 
             /**
-     * Seek to a given absolute position.
-     * @param {Number|Object} time
-     * @returns {Number} - The time the player has seek to
-     */
-            Player.prototype.seekTo = function seekTo(time) {
+   * Seek to a given absolute position.
+   * @param {Number|Object} time
+   * @returns {Number} - The time the player has seek to
+   */
+            _proto.seekTo = function seekTo(time) {
                 if (!this.videoElement) throw new Error("Disposed player");
                 if (!this._priv_contentInfos) throw new Error("player: no content loaded");
-                var _priv_contentInfos8 = this._priv_contentInfos, isDirectFile = _priv_contentInfos8.isDirectFile, manifest = _priv_contentInfos8.manifest;
+                var positionWanted, _this$_priv_contentIn8 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn8.isDirectFile, manifest = _this$_priv_contentIn8.manifest;
                 if (!isDirectFile && !manifest) throw new Error("player: the content did not load yet");
-                var positionWanted = void 0, typeOf = void 0 === time ? "undefined" : api_typeof(time);
+                var typeOf = typeof time;
                 if ("number" === typeOf) positionWanted = time; else if ("object" === typeOf) {
                     var currentTs = this.videoElement.currentTime;
                     if (null != time.relative) positionWanted = currentTs + time.relative; else if (null != time.position) positionWanted = time.position; else {
@@ -16288,225 +16207,222 @@ object-assign
                 return this.videoElement.currentTime = positionWanted, positionWanted;
             }, 
             /**
-     * Returns true if the media element is full screen.
-     * @deprecated
-     * @returns {Boolean}
-     */
-            Player.prototype.isFullscreen = function isFullscreen() {
+   * Returns true if the media element is full screen.
+   * @deprecated
+   * @returns {Boolean}
+   */
+            _proto.isFullscreen = function isFullscreen() {
                 return warnOnce("isFullscreen is deprecated. Fullscreen management should now be managed by the application"), 
                 Object(fullscreen.b)();
             }, 
             /**
-     * Set/exit fullScreen.
-     * @deprecated
-     * @param {Boolean} [goFull=true] - if false, exit full screen.
-     */
-            Player.prototype.setFullscreen = function setFullscreen() {
-                var goFull = !(arguments.length > 0 && void 0 !== arguments[0]) || arguments[0];
-                if (warnOnce("setFullscreen is deprecated. Fullscreen management should now be managed by the application"), 
+   * Set/exit fullScreen.
+   * @deprecated
+   * @param {Boolean} [goFull=true] - if false, exit full screen.
+   */
+            _proto.setFullscreen = function setFullscreen(goFull) {
+                if (void 0 === goFull && (goFull = !0), warnOnce("setFullscreen is deprecated. Fullscreen management should now be managed by the application"), 
                 !this.videoElement) throw new Error("Disposed player");
                 goFull ? Object(fullscreen.c)(this.videoElement) : Object(fullscreen.a)();
             }, 
             /**
-     * Exit from full screen mode.
-     * @deprecated
-     */
-            Player.prototype.exitFullscreen = function exitFullscreen() {
+   * Exit from full screen mode.
+   * @deprecated
+   */
+            _proto.exitFullscreen = function exitFullscreen() {
                 warnOnce("exitFullscreen is deprecated. Fullscreen management should now be managed by the application"), 
                 Object(fullscreen.a)();
             }, 
             /**
-     * Returns the current player's audio volume on the media element.
-     * From 0 (no audio) to 1 (maximum volume).
-     * @returns {Number}
-     */
-            Player.prototype.getVolume = function getVolume() {
+   * Returns the current player's audio volume on the media element.
+   * From 0 (no audio) to 1 (maximum volume).
+   * @returns {Number}
+   */
+            _proto.getVolume = function getVolume() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return this.videoElement.volume;
             }, 
             /**
-     * Set the player's audio volume. From 0 (no volume) to 1 (maximum volume).
-     * @param {Number} volume
-     */
-            Player.prototype.setVolume = function setVolume(volume) {
+   * Set the player's audio volume. From 0 (no volume) to 1 (maximum volume).
+   * @param {Number} volume
+   */
+            _proto.setVolume = function setVolume(volume) {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 volume !== videoElement.volume && (videoElement.volume = volume, this.trigger("volumeChange", volume));
             }, 
             /**
-     * Returns true if the volume is set to 0. false otherwise.
-     * @returns {Boolean}
-     */
-            Player.prototype.isMute = function isMute() {
+   * Returns true if the volume is set to 0. false otherwise.
+   * @returns {Boolean}
+   */
+            _proto.isMute = function isMute() {
                 return !this.getVolume();
             }, 
             /**
-     * Set the volume to 0 and save current one for when unmuted.
-     */
-            Player.prototype.mute = function mute() {
+   * Set the volume to 0 and save current one for when unmuted.
+   */
+            _proto.mute = function mute() {
                 this._priv_mutedMemory = this.getVolume(), this.setVolume(0);
             }, 
             /**
-     * Set the volume back to when it was when mute was last called.
-     * If the volume was set to 0, set a default volume instead (see config).
-     */
-            Player.prototype.unMute = function unMute() {
+   * Set the volume back to when it was when mute was last called.
+   * If the volume was set to 0, set a default volume instead (see config).
+   */
+            _proto.unMute = function unMute() {
                 0 === this.getVolume() && this.setVolume(this._priv_mutedMemory || DEFAULT_UNMUTED_VOLUME);
             }, 
             /**
-     * Force the video bitrate to a given value. Act as a ceil.
-     * -1 to set it on AUTO Mode
-     * @param {Number} btr
-     */
-            Player.prototype.setVideoBitrate = function setVideoBitrate(btr) {
+   * Force the video bitrate to a given value. Act as a ceil.
+   * -1 to set it on AUTO Mode
+   * @param {Number} btr
+   */
+            _proto.setVideoBitrate = function setVideoBitrate(btr) {
                 this._priv_bitrateInfos.manualBitrates.video = btr, this._priv_abrManager && this._priv_abrManager.setManualBitrate("video", btr);
             }, 
             /**
-     * Force the audio bitrate to a given value. Act as a ceil.
-     * -1 to set it on AUTO Mode
-     * @param {Number} btr
-     */
-            Player.prototype.setAudioBitrate = function setAudioBitrate(btr) {
+   * Force the audio bitrate to a given value. Act as a ceil.
+   * -1 to set it on AUTO Mode
+   * @param {Number} btr
+   */
+            _proto.setAudioBitrate = function setAudioBitrate(btr) {
                 this._priv_bitrateInfos.manualBitrates.audio = btr, this._priv_abrManager && this._priv_abrManager.setManualBitrate("audio", btr);
             }, 
             /**
-     * Update the maximum video bitrate the user can switch to.
-     * @param {Number} btr
-     */
-            Player.prototype.setMaxVideoBitrate = function setMaxVideoBitrate(btr) {
+   * Update the maximum video bitrate the user can switch to.
+   * @param {Number} btr
+   */
+            _proto.setMaxVideoBitrate = function setMaxVideoBitrate(btr) {
                 // set it for the next content loaded
-                this._priv_bitrateInfos.initialMaxAutoBitrates.video = btr, 
-                // set it for the current if one is loaded
+                this._priv_bitrateInfos.initialMaxAutoBitrates.video = btr, // set it for the current if one is loaded
                 this._priv_abrManager && this._priv_abrManager.setMaxAutoBitrate("video", btr);
             }, 
             /**
-     * Update the maximum video bitrate the user can switch to.
-     * @param {Number} btr
-     */
-            Player.prototype.setMaxAudioBitrate = function setMaxAudioBitrate(btr) {
+   * Update the maximum video bitrate the user can switch to.
+   * @param {Number} btr
+   */
+            _proto.setMaxAudioBitrate = function setMaxAudioBitrate(btr) {
                 // set it for the next content loaded
-                this._priv_bitrateInfos.initialMaxAutoBitrates.audio = btr, 
-                // set it for the current if one is loaded
+                this._priv_bitrateInfos.initialMaxAutoBitrates.audio = btr, // set it for the current if one is loaded
                 this._priv_abrManager && this._priv_abrManager.setMaxAutoBitrate("audio", btr);
             }, 
             /**
-     * Set the max buffer size for the buffer behind the current position.
-     * Every buffer data before will be removed.
-     * @param {Number} depthInSeconds
-     */
-            Player.prototype.setMaxBufferBehind = function setMaxBufferBehind(depthInSeconds) {
+   * Set the max buffer size for the buffer behind the current position.
+   * Every buffer data before will be removed.
+   * @param {Number} depthInSeconds
+   */
+            _proto.setMaxBufferBehind = function setMaxBufferBehind(depthInSeconds) {
                 this._priv_bufferOptions.maxBufferBehind$.next(depthInSeconds);
             }, 
             /**
-     * Set the max buffer size for the buffer behind the current position.
-     * Every buffer data before will be removed.
-     * @param {Number} depthInSeconds
-     */
-            Player.prototype.setMaxBufferAhead = function setMaxBufferAhead(depthInSeconds) {
+   * Set the max buffer size for the buffer behind the current position.
+   * Every buffer data before will be removed.
+   * @param {Number} depthInSeconds
+   */
+            _proto.setMaxBufferAhead = function setMaxBufferAhead(depthInSeconds) {
                 this._priv_bufferOptions.maxBufferAhead$.next(depthInSeconds);
             }, 
             /**
-     * Set the max buffer size for the buffer ahead of the current position.
-     * The player will stop downloading chunks when this size is reached.
-     * @param {Number} sizeInSeconds
-     */
-            Player.prototype.setWantedBufferAhead = function setWantedBufferAhead(sizeInSeconds) {
+   * Set the max buffer size for the buffer ahead of the current position.
+   * The player will stop downloading chunks when this size is reached.
+   * @param {Number} sizeInSeconds
+   */
+            _proto.setWantedBufferAhead = function setWantedBufferAhead(sizeInSeconds) {
                 this._priv_bufferOptions.wantedBufferAhead$.next(sizeInSeconds);
             }, 
             /**
-     * Returns the max buffer size for the buffer behind the current position.
-     * @returns {Number}
-     */
-            Player.prototype.getMaxBufferBehind = function getMaxBufferBehind() {
+   * Returns the max buffer size for the buffer behind the current position.
+   * @returns {Number}
+   */
+            _proto.getMaxBufferBehind = function getMaxBufferBehind() {
                 return this._priv_bufferOptions.maxBufferBehind$.getValue();
             }, 
             /**
-     * Returns the max buffer size for the buffer behind the current position.
-     * @returns {Number}
-     */
-            Player.prototype.getMaxBufferAhead = function getMaxBufferAhead() {
+   * Returns the max buffer size for the buffer behind the current position.
+   * @returns {Number}
+   */
+            _proto.getMaxBufferAhead = function getMaxBufferAhead() {
                 return this._priv_bufferOptions.maxBufferAhead$.getValue();
             }, 
             /**
-     * Returns the max buffer size for the buffer ahead of the current position.
-     * @returns {Number}
-     */
-            Player.prototype.getWantedBufferAhead = function getWantedBufferAhead() {
+   * Returns the max buffer size for the buffer ahead of the current position.
+   * @returns {Number}
+   */
+            _proto.getWantedBufferAhead = function getWantedBufferAhead() {
                 return this._priv_bufferOptions.wantedBufferAhead$.getValue();
             }, 
             /**
-     * Returns type of current keysystem (e.g. playready, widevine) if the content
-     * is encrypted. null otherwise.
-     * @returns {string|null}
-     */
-            Player.prototype.getCurrentKeySystem = function getCurrentKeySystem() {
+   * Returns type of current keysystem (e.g. playready, widevine) if the content
+   * is encrypted. null otherwise.
+   * @returns {string|null}
+   */
+            _proto.getCurrentKeySystem = function getCurrentKeySystem() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return Object(eme.getCurrentKeySystem)(this.videoElement);
             }, 
             /**
-     * Returns every available audio tracks for the current Period.
-     * @returns {Array.<Object>|null}
-     */
-            Player.prototype.getAvailableAudioTracks = function getAvailableAudioTracks() {
+   * Returns every available audio tracks for the current Period.
+   * @returns {Array.<Object>|null}
+   */
+            _proto.getAvailableAudioTracks = function getAvailableAudioTracks() {
                 if (!this._priv_contentInfos) return [];
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 return this._priv_trackManager && currentPeriod ? this._priv_trackManager.getAvailableAudioTracks(currentPeriod) : [];
             }, 
             /**
-     * Returns every available text tracks for the current Period.
-     * @returns {Array.<Object>|null}
-     */
-            Player.prototype.getAvailableTextTracks = function getAvailableTextTracks() {
+   * Returns every available text tracks for the current Period.
+   * @returns {Array.<Object>|null}
+   */
+            _proto.getAvailableTextTracks = function getAvailableTextTracks() {
                 if (!this._priv_contentInfos) return [];
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 return this._priv_trackManager && currentPeriod ? this._priv_trackManager.getAvailableTextTracks(currentPeriod) : [];
             }, 
             /**
-     * Returns every available video tracks for the current Period.
-     * @returns {Array.<Object>|null}
-     */
-            Player.prototype.getAvailableVideoTracks = function getAvailableVideoTracks() {
+   * Returns every available video tracks for the current Period.
+   * @returns {Array.<Object>|null}
+   */
+            _proto.getAvailableVideoTracks = function getAvailableVideoTracks() {
                 if (!this._priv_contentInfos) return [];
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 return this._priv_trackManager && currentPeriod ? this._priv_trackManager.getAvailableVideoTracks(currentPeriod) : [];
             }, 
             /**
-     * Returns currently chosen audio language for the current Period.
-     * @returns {string}
-     */
-            Player.prototype.getAudioTrack = function getAudioTrack() {
+   * Returns currently chosen audio language for the current Period.
+   * @returns {string}
+   */
+            _proto.getAudioTrack = function getAudioTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.getChosenAudioTrack(currentPeriod);
                 }
             }, 
             /**
-     * Returns currently chosen subtitle for the current Period.
-     * @returns {string}
-     */
-            Player.prototype.getTextTrack = function getTextTrack() {
+   * Returns currently chosen subtitle for the current Period.
+   * @returns {string}
+   */
+            _proto.getTextTrack = function getTextTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.getChosenTextTrack(currentPeriod);
                 }
             }, 
             /**
-     * Returns currently chosen video track for the current Period.
-     * @returns {string}
-     */
-            Player.prototype.getVideoTrack = function getVideoTrack() {
+   * Returns currently chosen video track for the current Period.
+   * @returns {string}
+   */
+            _proto.getVideoTrack = function getVideoTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.getChosenVideoTrack(currentPeriod);
                 }
             }, 
             /**
-     * Update the audio language for the current Period.
-     * @param {string} audioId
-     * @throws Error - the current content has no TrackManager.
-     * @throws Error - the given id is linked to no audio track.
-     */
-            Player.prototype.setAudioTrack = function setAudioTrack(audioId) {
+   * Update the audio language for the current Period.
+   * @param {string} audioId
+   * @throws Error - the current content has no TrackManager.
+   * @throws Error - the given id is linked to no audio track.
+   */
+            _proto.setAudioTrack = function setAudioTrack(audioId) {
                 if (!this._priv_contentInfos) throw new Error("No content loaded");
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 if (!this._priv_trackManager || !currentPeriod) throw new Error("No compatible content launched.");
@@ -16517,12 +16433,12 @@ object-assign
                 }
             }, 
             /**
-     * Update the text language for the current Period.
-     * @param {string} sub
-     * @throws Error - the current content has no TrackManager.
-     * @throws Error - the given id is linked to no text track.
-     */
-            Player.prototype.setTextTrack = function setTextTrack(textId) {
+   * Update the text language for the current Period.
+   * @param {string} sub
+   * @throws Error - the current content has no TrackManager.
+   * @throws Error - the given id is linked to no text track.
+   */
+            _proto.setTextTrack = function setTextTrack(textId) {
                 if (!this._priv_contentInfos) throw new Error("No content loaded");
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 if (!this._priv_trackManager || !currentPeriod) throw new Error("No compatible content launched.");
@@ -16533,21 +16449,21 @@ object-assign
                 }
             }, 
             /**
-     * Disable subtitles for the current content.
-     */
-            Player.prototype.disableTextTrack = function disableTextTrack() {
+   * Disable subtitles for the current content.
+   */
+            _proto.disableTextTrack = function disableTextTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.disableTextTrack(currentPeriod);
                 }
             }, 
             /**
-     * Update the video track for the current Period.
-     * @param {string} videoId
-     * @throws Error - the current content has no TrackManager.
-     * @throws Error - the given id is linked to no video track.
-     */
-            Player.prototype.setVideoTrack = function setVideoTrack(videoId) {
+   * Update the video track for the current Period.
+   * @param {string} videoId
+   * @throws Error - the current content has no TrackManager.
+   * @throws Error - the given id is linked to no video track.
+   */
+            _proto.setVideoTrack = function setVideoTrack(videoId) {
                 if (!this._priv_contentInfos) throw new Error("No content loaded");
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 if (!this._priv_trackManager || !currentPeriod) throw new Error("No compatible content launched.");
@@ -16558,28 +16474,28 @@ object-assign
                 }
             }, 
             /**
-     * @returns {Array.<Object>|null}
-     */
-            Player.prototype.getImageTrackData = function getImageTrackData() {
+   * @returns {Array.<Object>|null}
+   */
+            _proto.getImageTrackData = function getImageTrackData() {
                 return this._priv_contentInfos && this._priv_contentInfos.thumbnails;
             }, 
             /**
-     * Get minimum seek-able position.
-     * @returns {number}
-     */
-            Player.prototype.getMinimumPosition = function getMinimumPosition() {
+   * Get minimum seek-able position.
+   * @returns {number}
+   */
+            _proto.getMinimumPosition = function getMinimumPosition() {
                 if (!this._priv_contentInfos) return null;
                 if (this._priv_contentInfos.isDirectFile) return 0;
                 var manifest = this._priv_contentInfos.manifest;
                 return manifest ? manifest.getMinimumPosition() : null;
             }, 
             /**
-     * Get maximum seek-able position.
-     * @returns {number}
-     */
-            Player.prototype.getMaximumPosition = function getMaximumPosition() {
+   * Get maximum seek-able position.
+   * @returns {number}
+   */
+            _proto.getMaximumPosition = function getMaximumPosition() {
                 if (!this._priv_contentInfos) return null;
-                var _priv_contentInfos9 = this._priv_contentInfos, isDirectFile = _priv_contentInfos9.isDirectFile, manifest = _priv_contentInfos9.manifest;
+                var _this$_priv_contentIn9 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn9.isDirectFile, manifest = _this$_priv_contentIn9.manifest;
                 if (isDirectFile) {
                     if (!this.videoElement) throw new Error("Disposed player");
                     return this.videoElement.duration;
@@ -16587,10 +16503,10 @@ object-assign
                 return manifest ? manifest.getMaximumPosition() : null;
             }, 
             /**
-     * Reset all state properties relative to a playing content.
-     * @private
-     */
-            Player.prototype._priv_cleanUpCurrentContentState = function _priv_cleanUpCurrentContentState() {
+   * Reset all state properties relative to a playing content.
+   * @private
+   */
+            _proto._priv_cleanUpCurrentContentState = function _priv_cleanUpCurrentContentState() {
                 var _this3 = this;
                 // lock creation of new streams while cleaning up is pending
                                 this._priv_streamLock$.next(!0), this._priv_contentInfos = null, 
@@ -16611,21 +16527,21 @@ object-assign
                 this.videoElement ? Object(eme.clearEMESession)(this.videoElement).pipe(Object(catchError.a)(function() {
                     return empty.a;
                 })).subscribe(noop.a, freeUpStreamLock, freeUpStreamLock) : freeUpStreamLock();
-            }, Player.prototype._priv_triggerContentEvent = function _priv_triggerContentEvent(type, value) {
+            }, _proto._priv_triggerContentEvent = function _priv_triggerContentEvent(type, value) {
                 var prev = this._priv_contentEventsMemory[type];
                 deep_equal_default()(prev, value) || (this._priv_contentEventsMemory[type] = value, 
                 // SAD
                 this.trigger(type + "Change", value));
             }, 
             /**
-     * Triggered each time the Stream Observable emits.
-     *
-     * React to various events.
-     *
-     * @param {Object} streamInfos - payload emitted
-     * @private
-     */
-            Player.prototype._priv_onStreamNext = function _priv_onStreamNext(streamInfos) {
+   * Triggered each time the Stream Observable emits.
+   *
+   * React to various events.
+   *
+   * @param {Object} streamInfos - payload emitted
+   * @private
+   */
+            _proto._priv_onStreamNext = function _priv_onStreamNext(streamInfos) {
                 switch (streamInfos.type) {
                   case "activePeriodChanged":
                     this._priv_onActivePeriodChanged(streamInfos.value);
@@ -16669,13 +16585,13 @@ object-assign
 
                   case "added-segment":
                     if (!this._priv_contentInfos) return void log.a.error("Added segment while no content is loaded");
-                    // Manage image tracks
+ // Manage image tracks
                     // TODO Better way? Perhaps linked to an ImageSourceBuffer
                     // implementation
                                         var _streamInfos$value = streamInfos.value, bufferType = _streamInfos$value.bufferType, segmentData = _streamInfos$value.segmentData;
                     if ("image" === bufferType && null != segmentData && "bif" === segmentData.type) {
                         var imageData = segmentData.data;
-                        // TODO merge multiple data from the same track together
+ // TODO merge multiple data from the same track together
                                                 this._priv_contentInfos.thumbnails = imageData, this.trigger("imageTrackUpdate", {
                             data: this._priv_contentInfos.thumbnails
                         });
@@ -16683,71 +16599,70 @@ object-assign
                 }
             }, 
             /**
-     * Triggered when the Stream throws (fatal errors).
-     *
-     * Clean-up ressources and signal that the content has stopped on error.
-     *
-     * @param {Error} error
-     * @private
-     */
-            Player.prototype._priv_onStreamError = function _priv_onStreamError(error) {
+   * Triggered when the Stream throws (fatal errors).
+   *
+   * Clean-up ressources and signal that the content has stopped on error.
+   *
+   * @param {Error} error
+   * @private
+   */
+            _proto._priv_onStreamError = function _priv_onStreamError(error) {
                 this._priv_stopCurrentContent$.next(), this._priv_cleanUpCurrentContentState(), 
                 this._priv_currentError = error, log.a.error("the player stopped because of an error:", error), 
-                this._priv_setPlayerState(PLAYER_STATES.STOPPED), 
-                // TODO This condition is here because the eventual callback called when the
+                this._priv_setPlayerState(PLAYER_STATES.STOPPED), // TODO This condition is here because the eventual callback called when the
                 // player state is updated can launch a new content, thus the error will not
                 // be here anymore, in which case triggering the "error" event is unwanted.
                 // This is very ugly though, and we should probable have a better solution
                 this._priv_currentError === error && this.trigger("error", error);
             }, 
             /**
-     * Triggered when the Stream instance ends.
-     *
-     * Clean-up ressources and signal that the content has ended.
-     * @private
-     */
-            Player.prototype._priv_onStreamComplete = function _priv_onStreamComplete() {
+   * Triggered when the Stream instance ends.
+   *
+   * Clean-up ressources and signal that the content has ended.
+   * @private
+   */
+            _proto._priv_onStreamComplete = function _priv_onStreamComplete() {
                 this._priv_stopCurrentContent$.next(), this._priv_cleanUpCurrentContentState(), 
                 this._priv_setPlayerState(PLAYER_STATES.ENDED);
             }, 
             /**
-     * Triggered when the Stream emits a warning.
-     *
-     * Trigger the right Player event.
-     * @param {Object} streamInfos
-     * @private
-     */
-            Player.prototype._priv_onStreamWarning = function _priv_onStreamWarning(error) {
+   * Triggered when the Stream emits a warning.
+   *
+   * Trigger the right Player event.
+   * @param {Object} streamInfos
+   * @private
+   */
+            _proto._priv_onStreamWarning = function _priv_onStreamWarning(error) {
                 this.trigger("warning", error);
             }, 
             /**
-     * Triggered when the stream starts.
-     *
-     * Initialize various private properties and emit initial event.
-     *
-     * @param {Object} value
-     * @private
-     */
-            Player.prototype._priv_onManifestReady = function _priv_onManifestReady(value) {
+   * Triggered when the stream starts.
+   *
+   * Initialize various private properties and emit initial event.
+   *
+   * @param {Object} value
+   * @private
+   */
+            _proto._priv_onManifestReady = function _priv_onManifestReady(value) {
                 if (this._priv_contentInfos) {
                     var manifest = value.manifest, abrManager = value.abrManager;
                     this._priv_contentInfos.manifest = manifest, this._priv_abrManager = abrManager;
-                    var _priv_contentInfos10 = this._priv_contentInfos, initialAudioTrack = _priv_contentInfos10.initialAudioTrack, initialTextTrack = _priv_contentInfos10.initialTextTrack;
-                    this._priv_trackManager = new track_manager({
+                    var _this$_priv_contentIn10 = this._priv_contentInfos, initialAudioTrack = _this$_priv_contentIn10.initialAudioTrack, initialTextTrack = _this$_priv_contentIn10.initialTextTrack;
+                    this._priv_trackManager = new track_manager_TrackManager({
                         preferredAudioTracks: void 0 === initialAudioTrack ? void 0 : [ initialAudioTrack ],
                         preferredTextTracks: void 0 === initialTextTrack ? void 0 : [ initialTextTrack ]
                     }), this.trigger("manifestChange", manifest);
                 } else log.a.error("The manifest is loaded but no content is.");
             }, 
             /**
-     * Triggered each times the current Period Changed.
-     * Store and emit initial state for the Period.
-     *
-     * @param {Object} value
-     * @private
-     */
-            Player.prototype._priv_onActivePeriodChanged = function _priv_onActivePeriodChanged(_ref6) {
-                var period = _ref6.period;
+   * Triggered each times the current Period Changed.
+   * Store and emit initial state for the Period.
+   *
+   * @param {Object} value
+   * @private
+   */
+            _proto._priv_onActivePeriodChanged = function _priv_onActivePeriodChanged(_ref4) {
+                var period = _ref4.period;
                 if (this._priv_contentInfos) {
                     // Emit intial events for the Period
                     if (this._priv_contentInfos.currentPeriod = period, this._priv_triggerContentEvent("period", period), 
@@ -16770,15 +16685,15 @@ object-assign
                 } else log.a.error("The active period changed but no content is loaded");
             }, 
             /**
-     * Triggered each times the Stream "prepares" a new Period, and
-     * needs the API to send it its chosen Adaptation.
-     *
-     * Choose the right Adaptation for the Period and emit it.
-     *
-     * @param {Object} value
-     * @private
-     */
-            Player.prototype._priv_onPeriodBufferReady = function _priv_onPeriodBufferReady(value) {
+   * Triggered each times the Stream "prepares" a new Period, and
+   * needs the API to send it its chosen Adaptation.
+   *
+   * Choose the right Adaptation for the Period and emit it.
+   *
+   * @param {Object} value
+   * @private
+   */
+            _proto._priv_onPeriodBufferReady = function _priv_onPeriodBufferReady(value) {
                 var type = value.type, period = value.period, adaptation$ = value.adaptation$;
                 switch (type) {
                   case "video":
@@ -16805,14 +16720,14 @@ object-assign
                 }
             }, 
             /**
-     * Triggered each times the Stream "removes" a Period.
-     *
-     * Update the TrackManager to remove the corresponding Period.
-     *
-     * @param {Object} value
-     * @private
-     */
-            Player.prototype._priv_onPeriodBufferCleared = function _priv_onPeriodBufferCleared(value) {
+   * Triggered each times the Stream "removes" a Period.
+   *
+   * Update the TrackManager to remove the corresponding Period.
+   *
+   * @param {Object} value
+   * @private
+   */
+            _proto._priv_onPeriodBufferCleared = function _priv_onPeriodBufferCleared(value) {
                 var type = value.type, period = value.period;
                 switch (type) {
                   case "audio":
@@ -16820,39 +16735,38 @@ object-assign
                   case "video":
                     this._priv_trackManager && this._priv_trackManager.removePeriod(type, period);
                 }
-            }, Player.prototype._priv_onStreamReload = function _priv_onStreamReload() {
+            }, _proto._priv_onStreamReload = function _priv_onStreamReload() {
                 this._priv_trackManager && this._priv_trackManager.resetPeriods();
             }, 
             /**
-     * Triggered each times the Manifest is updated.
-     *
-     * Update the TrackManager and emit events.
-     *
-     * @param {Object} value
-     * @private
-     */
-            Player.prototype._priv_onManifestUpdate = function _priv_onManifestUpdate(value) {
+   * Triggered each times the Manifest is updated.
+   *
+   * Update the TrackManager and emit events.
+   *
+   * @param {Object} value
+   * @private
+   */
+            _proto._priv_onManifestUpdate = function _priv_onManifestUpdate(value) {
                 if (this._priv_contentInfos) {
                     var manifest = value.manifest;
-                    this._priv_contentInfos.manifest = manifest, 
-                    // Update the tracks chosen if it changed
+                    this._priv_contentInfos.manifest = manifest, // Update the tracks chosen if it changed
                     this._priv_trackManager && this._priv_trackManager.update(), this.trigger("manifestUpdate", manifest);
                 } else log.a.error("The manifest is updated but no content is loaded.");
             }, 
             /**
-     * Triggered each times a new Adaptation is considered by the Stream.
-     *
-     * Store given Adaptation and emit it if from the current Period.
-     *
-     * @param {Object} value
-     * @private
-     */
-            Player.prototype._priv_onAdaptationChange = function _priv_onAdaptationChange(_ref7) {
-                var type = _ref7.type, adaptation = _ref7.adaptation, period = _ref7.period;
+   * Triggered each times a new Adaptation is considered by the Stream.
+   *
+   * Store given Adaptation and emit it if from the current Period.
+   *
+   * @param {Object} value
+   * @private
+   */
+            _proto._priv_onAdaptationChange = function _priv_onAdaptationChange(_ref5) {
+                var type = _ref5.type, adaptation = _ref5.adaptation, period = _ref5.period;
                 if (this._priv_contentInfos) {
                     // lazily create this._priv_contentInfos.activeAdaptations
                     this._priv_contentInfos.activeAdaptations || (this._priv_contentInfos.activeAdaptations = new Map());
-                    var _activeAdaptations$se, _priv_contentInfos11 = this._priv_contentInfos, activeAdaptations = _priv_contentInfos11.activeAdaptations, currentPeriod = _priv_contentInfos11.currentPeriod, activePeriodAdaptations = activeAdaptations.get(period);
+                    var _activeAdaptations$se, _this$_priv_contentIn11 = this._priv_contentInfos, activeAdaptations = _this$_priv_contentIn11.activeAdaptations, currentPeriod = _this$_priv_contentIn11.currentPeriod, activePeriodAdaptations = activeAdaptations.get(period);
                     if (activePeriodAdaptations) activePeriodAdaptations[type] = adaptation; else activeAdaptations.set(period, ((_activeAdaptations$se = {})[type] = adaptation, 
                     _activeAdaptations$se));
                     if (this._priv_trackManager && null != period && period === currentPeriod) switch (type) {
@@ -16873,19 +16787,19 @@ object-assign
                 } else log.a.error("The adaptations changed but no content is loaded");
             }, 
             /**
-     * Triggered each times a new Representation is considered by the Stream.
-     *
-     * Store given Representation and emit it if from the current Period.
-     *
-     * @param {Object} obj
-     * @private
-     */
-            Player.prototype._priv_onRepresentationChange = function _priv_onRepresentationChange(_ref8) {
-                var type = _ref8.type, period = _ref8.period, representation = _ref8.representation;
+   * Triggered each times a new Representation is considered by the Stream.
+   *
+   * Store given Representation and emit it if from the current Period.
+   *
+   * @param {Object} obj
+   * @private
+   */
+            _proto._priv_onRepresentationChange = function _priv_onRepresentationChange(_ref6) {
+                var type = _ref6.type, period = _ref6.period, representation = _ref6.representation;
                 if (this._priv_contentInfos) {
                     // lazily create this._priv_contentInfos.activeRepresentations
                     this._priv_contentInfos.activeRepresentations || (this._priv_contentInfos.activeRepresentations = new Map());
-                    var _activeRepresentation, _priv_contentInfos12 = this._priv_contentInfos, activeRepresentations = _priv_contentInfos12.activeRepresentations, currentPeriod = _priv_contentInfos12.currentPeriod, activePeriodRepresentations = activeRepresentations.get(period);
+                    var _activeRepresentation, _this$_priv_contentIn12 = this._priv_contentInfos, activeRepresentations = _this$_priv_contentIn12.activeRepresentations, currentPeriod = _this$_priv_contentIn12.currentPeriod, activePeriodRepresentations = activeRepresentations.get(period);
                     if (activePeriodRepresentations) activePeriodRepresentations[type] = representation; else activeRepresentations.set(period, ((_activeRepresentation = {})[type] = representation, 
                     _activeRepresentation));
                     var bitrate = representation && representation.bitrate;
@@ -16893,67 +16807,67 @@ object-assign
                 } else log.a.error("The representations changed but no content is loaded");
             }, 
             /**
-     * Triggered each time a bitrate estimate is calculated.
-     *
-     * Emit it.
-     *
-     * @param {Object} value
-     * @private
-     */
-            Player.prototype._priv_onBitrateEstimationChange = function _priv_onBitrateEstimationChange(_ref9) {
-                var type = _ref9.type, bitrate = _ref9.bitrate;
+   * Triggered each time a bitrate estimate is calculated.
+   *
+   * Emit it.
+   *
+   * @param {Object} value
+   * @private
+   */
+            _proto._priv_onBitrateEstimationChange = function _priv_onBitrateEstimationChange(_ref7) {
+                var type = _ref7.type, bitrate = _ref7.bitrate;
                 this._priv_triggerContentEvent("bitrateEstimation", {
                     type: type,
                     bitrate: bitrate
                 });
             }, 
             /**
-     * Triggered each time the videoElement alternates between play and pause.
-     *
-     * Emit the info through the right Subject.
-     *
-     * @param {Boolean} isPlaying
-     * @private
-     */
-            Player.prototype._priv_onPlayPauseNext = function _priv_onPlayPauseNext(isPlaying) {
+   * Triggered each time the videoElement alternates between play and pause.
+   *
+   * Emit the info through the right Subject.
+   *
+   * @param {Boolean} isPlaying
+   * @private
+   */
+            _proto._priv_onPlayPauseNext = function _priv_onPlayPauseNext(isPlaying) {
                 if (!this.videoElement) throw new Error("Disposed player");
                 this._priv_playing$.next(isPlaying);
             }, 
             /**
-     * Triggered each time a textTrack is added to the video DOM Element.
-     *
-     * Trigger the right Player Event.
-     *
-     * @param {Array.<TextTrackElement>} tracks
-     * @private
-     */
-            Player.prototype._priv_onNativeTextTracksNext = function _priv_onNativeTextTracksNext(tracks) {
+   * Triggered each time a textTrack is added to the video DOM Element.
+   *
+   * Trigger the right Player Event.
+   *
+   * @param {Array.<TextTrackElement>} tracks
+   * @private
+   */
+            _proto._priv_onNativeTextTracksNext = function _priv_onNativeTextTracksNext(tracks) {
                 this.trigger("nativeTextTracksChange", tracks);
             }, 
             /**
-     * Triggered each time the player state updates.
-     *
-     * Trigger the right Player Event.
-     *
-     * @param {string} newState
-     * @private
-     */
-            Player.prototype._priv_setPlayerState = function _priv_setPlayerState(newState) {
+   * Triggered each time the player state updates.
+   *
+   * Trigger the right Player Event.
+   *
+   * @param {string} newState
+   * @private
+   */
+            _proto._priv_setPlayerState = function _priv_setPlayerState(newState) {
                 this.state !== newState && (this.state = newState, log.a.info("playerStateChange", newState), 
                 this.trigger("playerStateChange", newState));
             }, 
             /**
-     * Triggered each time a new clock tick object is emitted.
-     *
-     * Trigger the right Player Event
-     *
-     * @param {Object} clockTick
-     * @private
-     */
-            Player.prototype._priv_triggerTimeChange = function _priv_triggerTimeChange(clockTick) {
+   * Triggered each time a new clock tick object is emitted.
+   *
+   * Trigger the right Player Event
+   *
+   * @param {Object} clockTick
+   * @private
+   */
+            _proto._priv_triggerTimeChange = function _priv_triggerTimeChange(clockTick) {
                 if (this._priv_contentInfos) {
                     if (this.state !== PLAYER_STATES.RELOADING) {
-                        var _priv_contentInfos13 = this._priv_contentInfos, isDirectFile = _priv_contentInfos13.isDirectFile, manifest = _priv_contentInfos13.manifest;
+                        var _this$_priv_contentIn13 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn13.isDirectFile, manifest = _this$_priv_contentIn13.manifest;
                         if ((isDirectFile || manifest) && clockTick) {
                             var positionData = {
                                 position: clockTick.currentTime,
@@ -16973,25 +16887,25 @@ object-assign
                     return constants.b;
                 }
                 /**
-         * All possible Error codes emitted by the RxPlayer.
-         * @type {Object}
-         */            }, {
+     * All possible Error codes emitted by the RxPlayer.
+     * @type {Object}
+     */            }, {
                 key: "ErrorCodes",
                 get: function get() {
                     return constants.a;
                 }
                 /**
-         * Current log level.
-         * Update current log level.
-         * Should be either (by verbosity ascending):
-         *   - "NONE"
-         *   - "ERROR"
-         *   - "WARNING"
-         *   - "INFO"
-         *   - "DEBUG"
-         * Any other value will be translated to "NONE".
-         * @type {string}
-         */            }, {
+     * Current log level.
+     * Update current log level.
+     * Should be either (by verbosity ascending):
+     *   - "NONE"
+     *   - "ERROR"
+     *   - "WARNING"
+     *   - "INFO"
+     *   - "DEBUG"
+     * Any other value will be translated to "NONE".
+     * @type {string}
+     */            }, {
                 key: "LogLevel",
                 get: function get() {
                     return log.a.getLevel();
@@ -17009,7 +16923,7 @@ object-assign
  * Current version of the RxPlayer.
  * @type {string}
  */
-        api_Player.version = "3.6.0";
+        api_Player.version = "3.6.1";
         /* harmony default export */ var api = api_Player;
         // CONCATENATED MODULE: ./src/features/initialize_features.ts
         /**
@@ -17056,23 +16970,23 @@ object-assign
  */
         // set initial features according to environment variables
         !function initializeFeaturesObject() {
-            features.a.emeManager = __webpack_require__(60).default, features.a.imageBuffer = __webpack_require__(110).default, 
-            features.a.imageParser = __webpack_require__(111).default, features.a.transports.smooth = __webpack_require__(125).default, 
-            features.a.transports.dash = __webpack_require__(124).default, features.a.nativeTextTracksBuffer = __webpack_require__(130).default, 
-            features.a.nativeTextTracksParsers.vtt = __webpack_require__(112).default, features.a.nativeTextTracksParsers.ttml = __webpack_require__(113).default, 
-            features.a.nativeTextTracksParsers.sami = __webpack_require__(114).default, features.a.nativeTextTracksParsers.srt = __webpack_require__(115).default, 
-            features.a.htmlTextTracksBuffer = __webpack_require__(129).default, features.a.htmlTextTracksParsers.sami = __webpack_require__(118).default, 
-            features.a.htmlTextTracksParsers.ttml = __webpack_require__(127).default, features.a.htmlTextTracksParsers.srt = __webpack_require__(119).default, 
-            features.a.htmlTextTracksParsers.vtt = __webpack_require__(128).default, features.a.directfile = __webpack_require__(120).default;
+            features.a.emeManager = __webpack_require__(61).default, features.a.imageBuffer = __webpack_require__(112).default, 
+            features.a.imageParser = __webpack_require__(113).default, features.a.transports.smooth = __webpack_require__(126).default, 
+            features.a.transports.dash = __webpack_require__(125).default, features.a.nativeTextTracksBuffer = __webpack_require__(131).default, 
+            features.a.nativeTextTracksParsers.vtt = __webpack_require__(114).default, features.a.nativeTextTracksParsers.ttml = __webpack_require__(115).default, 
+            features.a.nativeTextTracksParsers.sami = __webpack_require__(116).default, features.a.nativeTextTracksParsers.srt = __webpack_require__(117).default, 
+            features.a.htmlTextTracksBuffer = __webpack_require__(130).default, features.a.htmlTextTracksParsers.sami = __webpack_require__(119).default, 
+            features.a.htmlTextTracksParsers.ttml = __webpack_require__(128).default, features.a.htmlTextTracksParsers.srt = __webpack_require__(120).default, 
+            features.a.htmlTextTracksParsers.vtt = __webpack_require__(129).default, features.a.directfile = __webpack_require__(121).default;
         }();
         /* harmony default export */ __webpack_exports__.default = api;
         /***/    }, 
-    /* 124 */
+    /* 125 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-        var of = __webpack_require__(75), features = __webpack_require__(6), isobmff = __webpack_require__(36), log = __webpack_require__(0);
+        var of = __webpack_require__(76), features = __webpack_require__(6), isobmff = __webpack_require__(34), log = __webpack_require__(0);
         // EXTERNAL MODULE: ./src/features/index.ts
                 // CONCATENATED MODULE: ./src/parsers/containers/matroska/utils.ts
         /**
@@ -17245,7 +17159,7 @@ object-assign
             return segments;
         }
         // EXTERNAL MODULE: ./src/config.ts
-                var config = __webpack_require__(3), array_includes = __webpack_require__(11), utils_id = __webpack_require__(19), languages = __webpack_require__(40), utils_url = __webpack_require__(38), check_manifest_ids = __webpack_require__(81), assert = __webpack_require__(9), iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/, rangeRe = /([0-9]+)-([0-9]+)/;
+                var config = __webpack_require__(2), array_includes = __webpack_require__(11), utils_id = __webpack_require__(19), languages = __webpack_require__(39), utils_url = __webpack_require__(37), check_manifest_ids = __webpack_require__(82), assert = __webpack_require__(9), iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/, rangeRe = /([0-9]+)-([0-9]+)/;
         // EXTERNAL MODULE: ./src/utils/array-includes.ts
                 /**
  * Parse MPD boolean attributes.
@@ -17317,7 +17231,7 @@ object-assign
  * @param {Element} root
  * @returns {Object}
  */        function parseScheme(root) {
-            for (var schemeIdUri = void 0, value = void 0, i = 0; i < root.attributes.length; i++) {
+            for (var schemeIdUri, value, i = 0; i < root.attributes.length; i++) {
                 var attribute = root.attributes[i];
                 switch (attribute.name) {
                   case "schemeIdUri":
@@ -17409,7 +17323,7 @@ object-assign
  * @returns {Number}
  */        function calculateRepeat(element, nextElement) {
             var rep = element.repeatCount || 0;
-            // A negative value of the @r attribute of the S element indicates
+ // A negative value of the @r attribute of the S element indicates
             // that the duration indicated in @d attribute repeats until the
             // start of the next S element, the end of the Period or until the
             // next MPD update.
@@ -17541,8 +17455,7 @@ object-assign
                         number: _segmentNumber,
                         timestampOffset: -index.indexTimeOffset / timescale
                     };
-                    segments.push(_segment), segmentTime = start + 
-                    // update segment number and segment time for the next segment
+                    segments.push(_segment), segmentTime = start + // update segment number and segment time for the next segment
                     ++segmentNumberInCurrentRange * duration;
                 }
                 if (segmentTime >= scaledTo) 
@@ -17553,9 +17466,6 @@ object-assign
             return segments;
         }
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/indexes/base.ts
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -17598,13 +17508,14 @@ object-assign
         /**
  * Provide helpers for SegmentBase-based indexes.
  * @type {Object}
- */        var indexes_base = function() {
+ */        var base_BaseRepresentationIndex = 
+        /* */
+        function() {
             /**
-     * @param {Object} index
-     * @param {Object} context
-     */
+   * @param {Object} index
+   * @param {Object} context
+   */
             function BaseRepresentationIndex(index, context) {
-                _classCallCheck(this, BaseRepresentationIndex);
                 var periodStart = context.periodStart, representationURL = context.representationURL, representationId = context.representationId, representationBitrate = context.representationBitrate, indexTimeOffset = (null != index.presentationTimeOffset ? index.presentationTimeOffset : 0) - periodStart * index.timescale;
                 this._index = {
                     mediaURL: createIndexURL(representationURL, index.media, representationId, representationBitrate),
@@ -17621,93 +17532,71 @@ object-assign
                 };
             }
             /**
-     * Construct init Segment.
-     * @returns {Object}
-     */            return BaseRepresentationIndex.prototype.getInitSegment = function getInitSegment() {
+   * Construct init Segment.
+   * @returns {Object}
+   */            var _proto = BaseRepresentationIndex.prototype;
+            return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
             }, 
             /**
-     * @param {Number} _up
-     * @param {Number} _to
-     * @returns {Array.<Object>}
-     */
-            BaseRepresentationIndex.prototype.getSegments = function getSegments(_up, _to) {
+   * @param {Number} _up
+   * @param {Number} _to
+   * @returns {Array.<Object>}
+   */
+            _proto.getSegments = function getSegments(_up, _to) {
                 return getSegmentsFromTimeline(this._index, _up, _to);
             }, 
             /**
-     * Returns false as no Segment-Base based index should need to be refreshed.
-     * @returns {Boolean}
-     */
-            BaseRepresentationIndex.prototype.shouldRefresh = function shouldRefresh() {
+   * Returns false as no Segment-Base based index should need to be refreshed.
+   * @returns {Boolean}
+   */
+            _proto.shouldRefresh = function shouldRefresh() {
                 return !1;
             }, 
             /**
-     * Returns first position in index.
-     * @returns {Number|undefined}
-     */
-            BaseRepresentationIndex.prototype.getFirstPosition = function getFirstPosition() {
+   * Returns first position in index.
+   * @returns {Number|undefined}
+   */
+            _proto.getFirstPosition = function getFirstPosition() {
                 var index = this._index;
                 if (index.timeline.length) return fromIndexTime(index, index.timeline[0].start);
             }, 
             /**
-     * Returns last position in index.
-     * @returns {Number|undefined}
-     */
-            BaseRepresentationIndex.prototype.getLastPosition = function getLastPosition() {
+   * Returns last position in index.
+   * @returns {Number|undefined}
+   */
+            _proto.getLastPosition = function getLastPosition() {
                 var index = this._index;
                 if (index.timeline.length) return fromIndexTime(index, getTimelineItemRangeStart(index.timeline[index.timeline.length - 1]));
             }, 
             /**
-     * We do not check for discontinuity in SegmentBase-based indexes.
-     * @returns {Number}
-     */
-            BaseRepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity() {
+   * We do not check for discontinuity in SegmentBase-based indexes.
+   * @returns {Number}
+   */
+            _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
             }, 
             /**
-     * @param {Array.<Object>} nextSegments
-     * @returns {Array.<Object>}
-     */
-            BaseRepresentationIndex.prototype._addSegments = function _addSegments(nextSegments) {
+   * @param {Array.<Object>} nextSegments
+   * @returns {Array.<Object>}
+   */
+            _proto._addSegments = function _addSegments(nextSegments) {
                 for (var i = 0; i < nextSegments.length; i++) _addSegmentInfos(this._index, nextSegments[i]);
             }, 
             /**
-     * @param {Object} newIndex
-     */
-            BaseRepresentationIndex.prototype._update = function _update(newIndex) {
+   * @param {Object} newIndex
+   */
+            _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
             }, BaseRepresentationIndex;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/parsers/manifest/dash/indexes/list.ts
-        function list_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Provide helpers for SegmentList-based DASH indexes.
- * @type {Object}
- */        var indexes_list = function() {
+        }(), list_ListRepresentationIndex = 
+        /* */
+        function() {
             /**
-     * @param {Object} index
-     * @param {Object} context
-     */
+   * @param {Object} index
+   * @param {Object} context
+   */
             function ListRepresentationIndex(index, context) {
-                list_classCallCheck(this, ListRepresentationIndex);
                 var periodStart = context.periodStart, representationURL = context.representationURL, representationId = context.representationId, representationBitrate = context.representationBitrate;
                 this._periodStart = periodStart;
                 var indexTimeOffset = (null != index.presentationTimeOffset ? index.presentationTimeOffset : 0) - periodStart * index.timescale;
@@ -17729,17 +17618,18 @@ object-assign
                 };
             }
             /**
-     * Construct init Segment.
-     * @returns {Object}
-     */            return ListRepresentationIndex.prototype.getInitSegment = function getInitSegment() {
+   * Construct init Segment.
+   * @returns {Object}
+   */            var _proto = ListRepresentationIndex.prototype;
+            return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
             }, 
             /**
-     * @param {Number} fromTime
-     * @param {Number} duration
-     * @returns {Array.<Object>}
-     */
-            ListRepresentationIndex.prototype.getSegments = function getSegments(fromTime, dur) {
+   * @param {Number} fromTime
+   * @param {Number} duration
+   * @returns {Array.<Object>}
+   */
+            _proto.getSegments = function getSegments(fromTime, dur) {
                 for (var index = this._index, _getTimescaledRange = getTimescaledRange(index, fromTime + this._periodStart, dur), up = _getTimescaledRange.up, to = _getTimescaledRange.to, duration = index.duration, list = index.list, timescale = index.timescale, length = Math.min(list.length - 1, Math.floor(to / duration)), segments = [], i = Math.floor(up / duration); i <= length; ) {
                     var args = {
                         id: "" + i,
@@ -17756,78 +17646,59 @@ object-assign
                 return segments;
             }, 
             /**
-     * Returns true if, based on the arguments, the index should be refreshed.
-     * (If we should re-fetch the manifest)
-     * @param {Number} _fromTime
-     * @param {Number} toTime
-     * @returns {Boolean}
-     */
-            ListRepresentationIndex.prototype.shouldRefresh = function shouldRefresh(_fromTime, toTime) {
-                var _index = this._index, timescale = _index.timescale, duration = _index.duration, list = _index.list, scaledTo = toTime * timescale, i = Math.floor(scaledTo / duration);
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * (If we should re-fetch the manifest)
+   * @param {Number} _fromTime
+   * @param {Number} toTime
+   * @returns {Boolean}
+   */
+            _proto.shouldRefresh = function shouldRefresh(_fromTime, toTime) {
+                var _this$_index = this._index, timescale = _this$_index.timescale, duration = _this$_index.duration, list = _this$_index.list, scaledTo = toTime * timescale, i = Math.floor(scaledTo / duration);
                 return !(i >= 0 && i < list.length);
             }, 
             /**
-     * Returns first position in index.
-     * @returns {Number}
-     */
-            ListRepresentationIndex.prototype.getFirstPosition = function getFirstPosition() {
+   * Returns first position in index.
+   * @returns {Number}
+   */
+            _proto.getFirstPosition = function getFirstPosition() {
                 return this._periodStart;
             }, 
             /**
-     * Returns last position in index.
-     * @returns {Number}
-     */
-            ListRepresentationIndex.prototype.getLastPosition = function getLastPosition() {
+   * Returns last position in index.
+   * @returns {Number}
+   */
+            _proto.getLastPosition = function getLastPosition() {
                 var index = this._index, duration = index.duration;
                 return index.list.length * duration / index.timescale + this._periodStart;
             }, 
             /**
-     * We do not check for discontinuity in SegmentList-based indexes.
-     * @returns {Number}
-     */
-            ListRepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity() {
+   * We do not check for discontinuity in SegmentList-based indexes.
+   * @returns {Number}
+   */
+            _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
             }, 
             /**
-     * @param {Object} newIndex
-     */
-            ListRepresentationIndex.prototype._update = function _update(newIndex) {
+   * @param {Object} newIndex
+   */
+            _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
             }, 
             /**
-     * We do not have to add new segments to SegmentList-based indexes.
-     * @returns {Array}
-     */
-            ListRepresentationIndex.prototype._addSegments = function _addSegments() {
+   * We do not have to add new segments to SegmentList-based indexes.
+   * @returns {Array}
+   */
+            _proto._addSegments = function _addSegments() {
                 0;
             }, ListRepresentationIndex;
-        }();
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/parsers/manifest/dash/indexes/template.ts
-        function template_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */        var template = function() {
+        }(), template_TemplateRepresentationIndex = 
+        /* */
+        function() {
             /**
-     * @param {Object} index
-     * @param {Object} context
-     */
+   * @param {Object} index
+   * @param {Object} context
+   */
             function TemplateRepresentationIndex(index, context) {
-                template_classCallCheck(this, TemplateRepresentationIndex);
                 var periodStart = context.periodStart, representationURL = context.representationURL, representationId = context.representationId, representationBitrate = context.representationBitrate;
                 this._periodStart = periodStart;
                 var presentationTimeOffset = null != index.presentationTimeOffset ? index.presentationTimeOffset : 0, indexTimeOffset = presentationTimeOffset - periodStart * index.timescale;
@@ -17846,17 +17717,18 @@ object-assign
                 };
             }
             /**
-     * Construct init Segment.
-     * @returns {Object}
-     */            return TemplateRepresentationIndex.prototype.getInitSegment = function getInitSegment() {
+   * Construct init Segment.
+   * @returns {Object}
+   */            var _proto = TemplateRepresentationIndex.prototype;
+            return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
             }, 
             /**
-     * @param {Number} fromTime
-     * @param {Number} dur
-     * @returns {Array.<Object>}
-     */
-            TemplateRepresentationIndex.prototype.getSegments = function getSegments(fromTime, dur) {
+   * @param {Number} fromTime
+   * @param {Number} dur
+   * @returns {Array.<Object>}
+   */
+            _proto.getSegments = function getSegments(fromTime, dur) {
                 var index = this._index, _getTimescaledRange = getTimescaledRange(index, fromTime, dur), up = _getTimescaledRange.up, to = _getTimescaledRange.to;
                 if (to <= up) return [];
                 for (var duration = index.duration, startNumber = index.startNumber, timescale = index.timescale, mediaURL = index.mediaURL, segments = [], baseTime = up; baseTime <= to; baseTime += duration) {
@@ -17875,49 +17747,65 @@ object-assign
                 return segments;
             }, 
             /**
-     * Returns first position in index.
-     * @returns {undefined}
-     */
-            TemplateRepresentationIndex.prototype.getFirstPosition = function getFirstPosition() {}, 
+   * Returns first position in index.
+   * @returns {undefined}
+   */
+            _proto.getFirstPosition = function getFirstPosition() {}, 
             /**
-     * Returns last position in index.
-     * @returns {undefined}
-     */
-            TemplateRepresentationIndex.prototype.getLastPosition = function getLastPosition() {}, 
+   * Returns last position in index.
+   * @returns {undefined}
+   */
+            _proto.getLastPosition = function getLastPosition() {}, 
             /**
-     * Returns true if, based on the arguments, the index should be refreshed.
-     * We never have to refresh a SegmentTemplate-based manifest.
-     * @returns {Boolean}
-     */
-            TemplateRepresentationIndex.prototype.shouldRefresh = function shouldRefresh() {
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * We never have to refresh a SegmentTemplate-based manifest.
+   * @returns {Boolean}
+   */
+            _proto.shouldRefresh = function shouldRefresh() {
                 return !1;
             }, 
             /**
-     * We cannot check for discontinuity in SegmentTemplate-based indexes.
-     * @returns {Number}
-     */
-            TemplateRepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity() {
+   * We cannot check for discontinuity in SegmentTemplate-based indexes.
+   * @returns {Number}
+   */
+            _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
             }, 
             /**
-     * We do not have to add new segments to SegmentList-based indexes.
-     * @returns {Array}
-     */
-            TemplateRepresentationIndex.prototype._addSegments = function _addSegments() {
+   * We do not have to add new segments to SegmentList-based indexes.
+   * @returns {Array}
+   */
+            _proto._addSegments = function _addSegments() {
                 0;
             }, 
             /**
-     * @param {Object} newIndex
-     */
-            TemplateRepresentationIndex.prototype._update = function _update(newIndex) {
+   * @param {Object} newIndex
+   */
+            _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
             }, TemplateRepresentationIndex;
         }();
-        /* harmony default export */        
+        // CONCATENATED MODULE: ./src/parsers/manifest/dash/indexes/list.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        /**
+ * Provide helpers for SegmentList-based DASH indexes.
+ * @type {Object}
+ */        
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/indexes/timeline.ts
-        function timeline_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -17938,7 +17826,8 @@ object-assign
  * @param {Object} index
  * @param {Number} start
  * @returns {Number}
- */        function getSegmentIndex(index, start) {
+ */
+        function getSegmentIndex(index, start) {
             for (var timeline = index.timeline, low = 0, high = timeline.length; low < high; ) {
                 var mid = low + high >>> 1;
                 timeline[mid].start < start ? low = mid + 1 : high = mid;
@@ -17955,20 +17844,20 @@ object-assign
  * @param {Number} indexTimeOffset
  * @returns {Boolean} - true if the segment has been added
  */        function timeline_addSegmentInfos(index, newSegment, currentSegmentInfos) {
-            var timeline = index.timeline, timescale = index.timescale, timelineLength = timeline.length, lastItem = timeline[timelineLength - 1], scaledNewSegment = newSegment.timescale === timescale ? {
+            var scaledCurrentTime, timeline = index.timeline, timescale = index.timescale, timelineLength = timeline.length, lastItem = timeline[timelineLength - 1], scaledNewSegment = newSegment.timescale === timescale ? {
                 time: newSegment.time,
                 duration: newSegment.duration
             } : {
                 time: newSegment.time / newSegment.timescale * timescale,
                 duration: newSegment.duration / newSegment.timescale * timescale
-            }, scaledCurrentTime = void 0;
+            };
             if (currentSegmentInfos && currentSegmentInfos.timescale && (scaledCurrentTime = (currentSegmentInfos.timescale === timescale ? currentSegmentInfos.time : currentSegmentInfos.time / currentSegmentInfos.timescale * timescale) + index.indexTimeOffset), 
             null != scaledCurrentTime && scaledNewSegment.time === scaledCurrentTime) {
                 var newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration, startDiff = newSegmentStart - (lastItem.start + lastItem.duration * lastItem.repeatCount);
                 if (startDiff <= 0) 
                 // same segment / behind the lastItem
                 return !1;
-                // try to use the compact notation with @r attribute on the lastItem
+ // try to use the compact notation with @r attribute on the lastItem
                 // to elements of the timeline if we find out they have the same
                 // duration
                                 if (-1 === lastItem.duration) {
@@ -17981,7 +17870,7 @@ object-assign
                     repeatCount: 0
                 }), !0;
             }
-            // if the given timing has a timestamp after the timeline end we
+ // if the given timing has a timestamp after the timeline end we
             // just need to push a new element in the timeline, or increase
             // the @r attribute of the lastItem element.
                         return scaledNewSegment.time >= getTimelineItemRangeEnd(lastItem) && (lastItem.duration === scaledNewSegment.duration ? lastItem.repeatCount++ : index.timeline.push({
@@ -17990,13 +17879,14 @@ object-assign
                 repeatCount: 0
             }), !0);
         }
-        var indexes_timeline = function() {
+        var timeline_TimelineRepresentationIndex = 
+        /* */
+        function() {
             /**
-     * @param {Object} index
-     * @param {Object} context
-     */
+   * @param {Object} index
+   * @param {Object} context
+   */
             function TimelineRepresentationIndex(index, context) {
-                timeline_classCallCheck(this, TimelineRepresentationIndex);
                 var representationURL = context.representationURL, representationId = context.representationId, representationBitrate = context.representationBitrate, periodStart = context.periodStart, indexTimeOffset = (null != index.presentationTimeOffset ? index.presentationTimeOffset : 0) - periodStart * index.timescale;
                 this._index = {
                     duration: index.duration,
@@ -18013,27 +17903,28 @@ object-assign
                 };
             }
             /**
-     * Construct init Segment.
-     * @returns {Object}
-     */            return TimelineRepresentationIndex.prototype.getInitSegment = function getInitSegment() {
+   * Construct init Segment.
+   * @returns {Object}
+   */            var _proto = TimelineRepresentationIndex.prototype;
+            return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
             }, 
             /**
-     * Asks for segments to download for a given time range.
-     * @param {Number} from - Beginning of the time wanted, in seconds
-     * @param {Number} duration - duration wanted, in seconds
-     * @returns {Array.<Object>}
-     */
-            TimelineRepresentationIndex.prototype.getSegments = function getSegments(from, duration) {
+   * Asks for segments to download for a given time range.
+   * @param {Number} from - Beginning of the time wanted, in seconds
+   * @param {Number} duration - duration wanted, in seconds
+   * @returns {Array.<Object>}
+   */
+            _proto.getSegments = function getSegments(from, duration) {
                 return getSegmentsFromTimeline(this._index, from, duration);
             }, 
             /**
-     * Returns true if, based on the arguments, the index should be refreshed.
-     * @param {Number} _start
-     * @param {Number} end
-     * @returns {Boolean}
-     */
-            TimelineRepresentationIndex.prototype.shouldRefresh = function shouldRefresh(_start, end) {
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * @param {Number} _start
+   * @param {Number} end
+   * @returns {Boolean}
+   */
+            _proto.shouldRefresh = function shouldRefresh(_start, end) {
                 var timeline = this._index.timeline, scaledTo = toIndexTime(this._index, end), lastItem = timeline[timeline.length - 1];
                 return !!lastItem && (lastItem.duration < 0 && (lastItem = {
                     start: lastItem.start,
@@ -18042,32 +17933,32 @@ object-assign
                 }), scaledTo > getTimelineItemRangeEnd(lastItem));
             }, 
             /**
-     * Returns first position in index.
-     * @returns {Number|undefined}
-     */
-            TimelineRepresentationIndex.prototype.getFirstPosition = function getFirstPosition() {
+   * Returns first position in index.
+   * @returns {Number|undefined}
+   */
+            _proto.getFirstPosition = function getFirstPosition() {
                 var index = this._index;
                 if (index.timeline.length) return fromIndexTime(index, index.timeline[0].start);
             }, 
             /**
-     * Returns lastItem position in index.
-     * @returns {Number|undefined}
-     */
-            TimelineRepresentationIndex.prototype.getLastPosition = function getLastPosition() {
+   * Returns lastItem position in index.
+   * @returns {Number|undefined}
+   */
+            _proto.getLastPosition = function getLastPosition() {
                 var index = this._index;
                 if (index.timeline.length) return fromIndexTime(index, getTimelineItemRangeEnd(index.timeline[index.timeline.length - 1]));
             }, 
             /**
-     * Checks if the time given is in a discontinuity. That is:
-     *   - We're on the upper bound of the current range (end of the range - time
-     *     is inferior to the timescale)
-     *   - The next range starts after the end of the current range.
-     * @param {Number} _time
-     * @returns {Number} - If a discontinuity is present, this is the Starting
-     * time for the next (discontinuited) range. If not this is equal to -1.
-     */
-            TimelineRepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity(_time) {
-                var _index = this._index, timeline = _index.timeline, timescale = _index.timescale, scaledTime = toIndexTime(this._index, _time);
+   * Checks if the time given is in a discontinuity. That is:
+   *   - We're on the upper bound of the current range (end of the range - time
+   *     is inferior to the timescale)
+   *   - The next range starts after the end of the current range.
+   * @param {Number} _time
+   * @returns {Number} - If a discontinuity is present, this is the Starting
+   * time for the next (discontinuited) range. If not this is equal to -1.
+   */
+            _proto.checkDiscontinuity = function checkDiscontinuity(_time) {
+                var _this$_index = this._index, timeline = _this$_index.timeline, timescale = _this$_index.timescale, scaledTime = toIndexTime(this._index, _time);
                 if (scaledTime <= 0) return -1;
                 var segmentIndex = getSegmentIndex(this._index, scaledTime);
                 if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) return -1;
@@ -18081,22 +17972,21 @@ object-assign
                 return rangeTo !== nextRange.start && scaledTime >= rangeUp && scaledTime <= rangeTo && rangeTo - scaledTime < timescale ? fromIndexTime(this._index, nextRange.start) : -1;
             }, 
             /**
-     * @param {Object} newIndex
-     */
-            TimelineRepresentationIndex.prototype._update = function _update(newIndex) {
+   * @param {Object} newIndex
+   */
+            _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
             }, 
             /**
-     * We do not have to add new segments to SegmentList-based indexes.
-     * @param {Array.<Object>} nextSegments
-     * @param {Object|undefined} currentSegmentInfos
-     * @returns {Array}
-     */
-            TimelineRepresentationIndex.prototype._addSegments = function _addSegments(nextSegments, currentSegmentInfos) {
+   * We do not have to add new segments to SegmentList-based indexes.
+   * @param {Array.<Object>} nextSegments
+   * @param {Object|undefined} currentSegmentInfos
+   * @returns {Array}
+   */
+            _proto._addSegments = function _addSegments(nextSegments, currentSegmentInfos) {
                 for (var i = 0; i < nextSegments.length; i++) timeline_addSegmentInfos(this._index, nextSegments[i], currentSegmentInfos);
             }, TimelineRepresentationIndex;
         }();
-        /* harmony default export */        
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/node_parsers/ContentComponent.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -18117,8 +18007,7 @@ object-assign
  * Parse a "ContentComponent" Element in a DASH MPD.
  * @param {Element} root
  * @returns {Object}
- */
-        function parseContentComponent(root) {
+ */        function parseContentComponent(root) {
             for (var ret = {}, i = 0; i < root.attributes.length; i++) {
                 var attribute = root.attributes[i];
                 switch (attribute.name) {
@@ -18162,7 +18051,7 @@ object-assign
  * @param {Function} [contentProtectionParser]
  * @returns {Object}
  */        function parseContentProtection(root) {
-            for (var schemeIdUri = void 0, value = void 0, keyId = void 0, i = 0; i < root.attributes.length; i++) {
+            for (var schemeIdUri, value, keyId, i = 0; i < root.attributes.length; i++) {
                 var attribute = root.attributes[i];
                 switch (attribute.name) {
                   case "schemeIdUri":
@@ -18177,7 +18066,7 @@ object-assign
                     keyId = attribute.value.toString().split("-").join("").toUpperCase();
                 }
             }
-            // TODO Take systemId from PSSH?
+ // TODO Take systemId from PSSH?
             // for (let i = 0; i < root.childElementCount; i++) {
             //   const child = root.children[i];
             //   if (child.nodeName === "cenc:pssh" && child.textContent) {
@@ -18401,7 +18290,7 @@ object-assign
  * @param {Element} root
  * @returns {Object}
  */        function parseS(root) {
-            for (var start = void 0, duration = void 0, repeatCount = void 0, j = 0; j < root.attributes.length; j++) {
+            for (var start, duration, repeatCount, j = 0; j < root.attributes.length; j++) {
                 var attribute = root.attributes[j];
                 switch (attribute.name) {
                   case "t":
@@ -18495,7 +18384,7 @@ object-assign
  * @param {Element} root
  * @returns {Object}
  */        function parseSegmentTemplate(root) {
-            for (var base = parseSegmentBase(root), ret = void 0, index = void 0, media = void 0, bitstreamSwitching = void 0, timeline = void 0, i = 0; i < root.childNodes.length; i++) if (root.childNodes[i].nodeType === Node.ELEMENT_NODE) {
+            for (var ret, index, media, bitstreamSwitching, timeline, base = parseSegmentBase(root), i = 0; i < root.childNodes.length; i++) if (root.childNodes[i].nodeType === Node.ELEMENT_NODE) {
                 var currentNode = root.childNodes[i];
                 "SegmentTimeline" === currentNode.nodeName && (timeline = parseSegmentTimeline(currentNode));
             }
@@ -19067,8 +18956,7 @@ object-assign
         function inferAdaptationType(adaptationMimeType, representationMimeTypes, adaptationCodecs, representationCodecs, adaptationRole) {
             function fromMimeType(mimeType, role) {
                 var topLevel = mimeType.split("/")[0];
-                return Object(array_includes.a)(KNOWN_ADAPTATION_TYPES, topLevel) ? topLevel : "application/bif" === mimeType ? "image" : "application/ttml+xml" === mimeType ? "text" : 
-                // manage DASH-IF mp4-embedded subtitles and metadata
+                return Object(array_includes.a)(KNOWN_ADAPTATION_TYPES, topLevel) ? topLevel : "application/bif" === mimeType ? "image" : "application/ttml+xml" === mimeType ? "text" : // manage DASH-IF mp4-embedded subtitles and metadata
                 "application/mp4" === mimeType ? role && "urn:mpeg:dash:role:2011" === role.schemeIdUri && Object(array_includes.a)(SUPPORTED_TEXT_TYPES, role.value) ? "text" : "metadata" : void 0;
             }
             function fromCodecs(codecs) {
@@ -19166,10 +19054,10 @@ object-assign
             // Transform whole MPD into a parsed JS object representation
             var _createMPDIntermediat = createMPDIntermediateRepresentation(root), rootChildren = _createMPDIntermediat.children, rootAttributes = _createMPDIntermediat.attributes, mpdRootURL = Object(utils_url.b)(Object(utils_url.a)(uri), rootChildren.baseURL), parsedPeriods = [], _loop = function _loop(i) {
                 var period = rootChildren.periods[i], periodRootURL = Object(utils_url.b)(mpdRootURL, period.children.baseURL), periodID = void 0;
-                // 1. Construct partial URL for contents
+ // 1. Construct partial URL for contents
                                 null == period.attributes.id ? (log.a.warn("DASH: No usable id found in the Period. Generating one."), 
                 periodID = "gen-dash-period-" + Object(utils_id.a)()) : periodID = period.attributes.id;
-                // 3. Find the start of the Period (required)
+ // 3. Find the start of the Period (required)
                                 var periodStart = void 0;
                 if (null != period.attributes.start) periodStart = period.attributes.start; else if (0 === i) periodStart = "static" === rootAttributes.type || null == rootAttributes.availabilityStartTime ? 0 : rootAttributes.availabilityStartTime; else {
                     var prevPeriod = parsedPeriods[i - 1];
@@ -19181,15 +19069,15 @@ object-assign
                     var nextPeriod = parsedPeriods[i + 1];
                     nextPeriod && null != nextPeriod.start ? periodDuration = nextPeriod.start - periodStart : 0 === i && rootAttributes.duration && !nextPeriod && (periodDuration = rootAttributes.duration);
                 }
-                // 4. Construct underlying adaptations
+ // 4. Construct underlying adaptations
                                 var adaptations = period.children.adaptations.reduce(function(acc, adaptation) {
                     var parsedAdaptations = acc.adaptations, adaptationRootURL = Object(utils_url.b)(periodRootURL, adaptation.children.baseURL), adaptationChildren = adaptation.children;
                     // 4-1. Find Index
                     function findAdaptationIndex(representation) {
-                        var repId = representation.attributes.id || "", repBitrate = representation.attributes.bitrate, baseURL = representation.children.baseURL, representationURL = Object(utils_url.b)(adaptationRootURL, baseURL), adaptationIndex = void 0;
+                        var adaptationIndex, repId = representation.attributes.id || "", repBitrate = representation.attributes.bitrate, baseURL = representation.children.baseURL, representationURL = Object(utils_url.b)(adaptationRootURL, baseURL);
                         if (null != adaptationChildren.segmentBase) {
                             var segmentBase = adaptationChildren.segmentBase;
-                            adaptationIndex = new indexes_base(segmentBase, {
+                            adaptationIndex = new base_BaseRepresentationIndex(segmentBase, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
@@ -19197,7 +19085,7 @@ object-assign
                             });
                         } else if (null != adaptationChildren.segmentList) {
                             var segmentList = adaptationChildren.segmentList;
-                            adaptationIndex = new indexes_list(segmentList, {
+                            adaptationIndex = new list_ListRepresentationIndex(segmentList, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
@@ -19205,18 +19093,18 @@ object-assign
                             });
                         } else if (null != adaptationChildren.segmentTemplate) {
                             var segmentTemplate = adaptationChildren.segmentTemplate;
-                            adaptationIndex = "timeline" === segmentTemplate.indexType ? new indexes_timeline(segmentTemplate, {
+                            adaptationIndex = "timeline" === segmentTemplate.indexType ? new timeline_TimelineRepresentationIndex(segmentTemplate, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
                                 representationBitrate: repBitrate
-                            }) : new template(segmentTemplate, {
+                            }) : new template_TemplateRepresentationIndex(segmentTemplate, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
                                 representationBitrate: repBitrate
                             });
-                        } else adaptationIndex = new template({
+                        } else adaptationIndex = new template_TemplateRepresentationIndex({
                             duration: Number.MAX_VALUE,
                             timescale: 1,
                             startNumber: 0,
@@ -19232,16 +19120,14 @@ object-assign
                         });
                         return adaptationIndex;
                     }
-                    // 4-2. Construct Representations
+ // 4-2. Construct Representations
                                         var representations = adaptation.children.representations.map(function(representation) {
-                        var repId = representation.attributes.id || "", repBitrate = representation.attributes.bitrate, baseURL = representation.children.baseURL, representationURL = Object(utils_url.b)(adaptationRootURL, baseURL), representationBitrate = void 0;
-                        null == representation.attributes.bitrate ? (log.a.warn("DASH: No usable bitrate found in the Representation."), 
-                        representationBitrate = 0) : representationBitrate = representation.attributes.bitrate;
-                        // 4-2-2. Find Index
-                                                var representationIndex = void 0;
-                        if (null != representation.children.segmentBase) {
+                        var representationBitrate, representationIndex, repId = representation.attributes.id || "", repBitrate = representation.attributes.bitrate, baseURL = representation.children.baseURL, representationURL = Object(utils_url.b)(adaptationRootURL, baseURL);
+                        if (null == representation.attributes.bitrate ? (log.a.warn("DASH: No usable bitrate found in the Representation."), 
+                        representationBitrate = 0) : representationBitrate = representation.attributes.bitrate, 
+                        null != representation.children.segmentBase) {
                             var segmentBase = representation.children.segmentBase;
-                            representationIndex = new indexes_base(segmentBase, {
+                            representationIndex = new base_BaseRepresentationIndex(segmentBase, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
@@ -19249,7 +19135,7 @@ object-assign
                             });
                         } else if (null != representation.children.segmentList) {
                             var segmentList = representation.children.segmentList;
-                            representationIndex = new indexes_list(segmentList, {
+                            representationIndex = new list_ListRepresentationIndex(segmentList, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
@@ -19257,25 +19143,25 @@ object-assign
                             });
                         } else if (null != representation.children.segmentTemplate) {
                             var segmentTemplate = representation.children.segmentTemplate;
-                            representationIndex = "timeline" === segmentTemplate.indexType ? new indexes_timeline(segmentTemplate, {
+                            representationIndex = "timeline" === segmentTemplate.indexType ? new timeline_TimelineRepresentationIndex(segmentTemplate, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
                                 representationBitrate: repBitrate
-                            }) : new template(segmentTemplate, {
+                            }) : new template_TemplateRepresentationIndex(segmentTemplate, {
                                 periodStart: periodStart,
                                 representationURL: representationURL,
                                 representationId: repId,
                                 representationBitrate: repBitrate
                             });
                         } else representationIndex = findAdaptationIndex(representation);
-                        // 4-2-3. Set ID
-                                                var parsedRepresentation = {
+ // 4-2-3. Set ID
+                                                var codecs, parsedRepresentation = {
                             bitrate: representationBitrate,
                             index: representationIndex,
                             id: null != representation.attributes.id ? representation.attributes.id : representation.attributes.bitrate + (null != representation.attributes.height ? "-" + representation.attributes.height : "") + (null != representation.attributes.width ? "-" + representation.attributes.width : "") + (null != representation.attributes.mimeType ? "-" + representation.attributes.mimeType : "") + (null != representation.attributes.codecs ? "-" + representation.attributes.codecs : "")
-                        }, codecs = void 0;
-                        // 4-2-4. Construct Representation Base
+                        };
+ // 4-2-4. Construct Representation Base
                                                 if (null != representation.attributes.codecs ? codecs = representation.attributes.codecs : null != adaptation.attributes.codecs && (codecs = adaptation.attributes.codecs), 
                         null != codecs && (codecs = "mp4a.40.02" === codecs ? "mp4a.40.2" : codecs, parsedRepresentation.codecs = codecs), 
                         null != representation.attributes.audioSamplingRate ? parsedRepresentation.audioSamplingRate = representation.attributes.audioSamplingRate : null != adaptation.attributes.audioSamplingRate && (parsedRepresentation.audioSamplingRate = adaptation.attributes.audioSamplingRate), 
@@ -19307,16 +19193,15 @@ object-assign
                         return representation.codecs;
                     }).filter(function(codecs) {
                         return null != codecs;
-                    }), type = inferAdaptationType(adaptationMimeType || null, representationMimeTypes, adaptationCodecs || null, representationCodecs, adaptationChildren.role || null), isMainAdaptation = !!adaptation.children.role && "main" === adaptation.children.role.value && "urn:mpeg:dash:role:2011" === adaptation.children.role.schemeIdUri, mainAdaptationForType = acc.mainAdaptations[type];
-                    if (void 0 !== mainAdaptationForType && isMainAdaptation) {
-                        var _mainAdaptationForTyp;
-                        (_mainAdaptationForTyp = mainAdaptationForType.representations).push.apply(_mainAdaptationForTyp, representations);
+                    }), type = inferAdaptationType(adaptationMimeType || null, representationMimeTypes, adaptationCodecs || null, representationCodecs, adaptationChildren.role || null), isMainAdaptation = !!adaptation.children.role && "main" === adaptation.children.role.value && "urn:mpeg:dash:role:2011" === adaptation.children.role.schemeIdUri, videoMainAdaptation = acc.videoMainAdaptation;
+                    if ("video" === type && null !== videoMainAdaptation && isMainAdaptation) {
+                        var _videoMainAdaptation$;
+                        (_videoMainAdaptation$ = videoMainAdaptation.representations).push.apply(_videoMainAdaptation$, representations);
                     } else {
-                        var closedCaption = void 0, audioDescription = void 0;
-                        "text" === type && adaptationChildren.accessibility && isHardOfHearing(adaptationChildren.accessibility) && (closedCaption = !0), 
-                        "audio" === type && adaptationChildren.accessibility && isVisuallyImpaired(adaptationChildren.accessibility) && (audioDescription = !0);
-                        var adaptationID = void 0;
-                        if (null != adaptation.attributes.id) adaptationID = adaptation.attributes.id; else {
+                        var closedCaption, audioDescription, adaptationID;
+                        if ("text" === type && adaptationChildren.accessibility && isHardOfHearing(adaptationChildren.accessibility) && (closedCaption = !0), 
+                        "audio" === type && adaptationChildren.accessibility && isVisuallyImpaired(adaptationChildren.accessibility) && (audioDescription = !0), 
+                        null != adaptation.attributes.id) adaptationID = adaptation.attributes.id; else {
                             var idString = type;
                             adaptation.attributes.language && (idString += "-" + adaptation.attributes.language), 
                             closedCaption && (idString += "-cc"), audioDescription && (idString += "-ad"), adaptation.attributes.contentType && (idString += "-" + adaptation.attributes.contentType), 
@@ -19335,17 +19220,17 @@ object-assign
                         parsedAdaptationSet.normalizedLanguage = Object(languages.a)(adaptation.attributes.language)), 
                         null != closedCaption && (parsedAdaptationSet.closedCaption = closedCaption), null != audioDescription && (parsedAdaptationSet.audioDescription = audioDescription);
                         var parsedAdaptation = parsedAdaptations[type];
-                        parsedAdaptation ? isMainAdaptation ? (
+                        parsedAdaptation ? isMainAdaptation && "video" === type ? (
                         // put "main" adaptation as the first
-                        parsedAdaptation.unshift(parsedAdaptationSet), acc.mainAdaptations[type] = parsedAdaptationSet) : parsedAdaptation.push(parsedAdaptationSet) : (parsedAdaptations[type] = [ parsedAdaptationSet ], 
-                        isMainAdaptation && (acc.mainAdaptations[type] = parsedAdaptationSet));
+                        parsedAdaptation.unshift(parsedAdaptationSet), acc.videoMainAdaptation = parsedAdaptationSet) : parsedAdaptation.push(parsedAdaptationSet) : (parsedAdaptations[type] = [ parsedAdaptationSet ], 
+                        isMainAdaptation && "video" === type && (acc.videoMainAdaptation = parsedAdaptationSet));
                     }
                     return {
                         adaptations: parsedAdaptations,
-                        mainAdaptations: acc.mainAdaptations
+                        videoMainAdaptation: acc.videoMainAdaptation
                     };
                 }, {
-                    mainAdaptations: {},
+                    videoMainAdaptation: null,
                     adaptations: {}
                 }).adaptations, parsedPeriod = {
                     id: periodID,
@@ -19366,7 +19251,7 @@ object-assign
                 uris: [ uri ].concat(rootChildren.locations),
                 suggestedPresentationDelay: null != rootAttributes.suggestedPresentationDelay ? rootAttributes.suggestedPresentationDelay : config.a.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH
             };
-            // -- add optional fields --
+ // -- add optional fields --
                         if (null != rootAttributes.profiles && (parsedMPD.profiles = rootAttributes.profiles), 
             "static" !== rootAttributes.type && null != rootAttributes.availabilityEndTime && (parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime), 
             null != rootAttributes.publishTime && (parsedMPD.publishTime = rootAttributes.publishTime), 
@@ -19407,10 +19292,11 @@ object-assign
  */        function parseFromDocument(document, uri) {
             var root = document.documentElement;
             if (!root || "MPD" !== root.nodeName) throw new Error("document root should be MPD");
-            return parseManifest(root, uri /*, contentProtectionParser*/);
+            return parseManifest(root, uri
+            /*, contentProtectionParser*/);
         }
         // EXTERNAL MODULE: ./src/utils/request/index.ts
-                var request = __webpack_require__(30), manifest_loader = __webpack_require__(83);
+                var request = __webpack_require__(29), manifest_loader = __webpack_require__(84);
         // EXTERNAL MODULE: ./src/net/utils/manifest_loader.ts
                 /* harmony default export */ var isobmff_timing_infos = 
         // CONCATENATED MODULE: ./src/net/dash/isobmff_timing_infos.ts
@@ -19444,7 +19330,7 @@ object-assign
  * @returns {Object}
  */
         function getISOBMFFTimingInfos(segment, buffer, sidxSegments, initInfos) {
-            var _sidxSegments = sidxSegments || [], startTime = void 0, duration = void 0, baseDecodeTime = Object(isobmff.d)(buffer), trunDuration = Object(isobmff.a)(buffer), timescale = initInfos && initInfos.timescale ? initInfos.timescale : segment.timescale, maxDecodeTimeDelta = void 0, segmentDuration = void 0, segmentStart = void 0;
+            var startTime, duration, maxDecodeTimeDelta, segmentDuration, segmentStart, _sidxSegments = sidxSegments || [], baseDecodeTime = Object(isobmff.d)(buffer), trunDuration = Object(isobmff.a)(buffer), timescale = initInfos && initInfos.timescale ? initInfos.timescale : segment.timescale;
             if (timescale === segment.timescale ? (maxDecodeTimeDelta = Math.min(.9 * timescale, null != segment.duration ? segment.duration / 4 : .25), 
             segmentStart = segment.time, segmentDuration = segment.duration) : (maxDecodeTimeDelta = Math.min(.9 * timescale, null != segment.duration ? segment.duration / segment.timescale * timescale / 4 : .25), 
             segmentStart = (segment.time || 0) / segment.timescale * timescale, segmentDuration = null != segment.duration ? segment.duration / segment.timescale * timescale : void 0), 
@@ -19468,7 +19354,7 @@ object-assign
                 time: startTime || 0,
                 duration: duration || 0
             };
-        }, Observable = __webpack_require__(17);
+        }, Observable = __webpack_require__(13);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 2 modules
                 // CONCATENATED MODULE: ./src/net/dash/utils.ts
         /**
@@ -19571,9 +19457,8 @@ object-assign
                 };
                 return customSegmentLoader ? Observable.a.create(function(obs) {
                     var hasFinished = !1, hasFallbacked = !1, abort = customSegmentLoader(args, {
-                        reject: function reject() {
-                            var err = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
-                            hasFallbacked || (hasFinished = !0, obs.error(err));
+                        reject: function reject(err) {
+                            void 0 === err && (err = {}), hasFallbacked || (hasFinished = !0, obs.error(err));
                         },
                         resolve: function resolve(_args) {
                             hasFallbacked || (hasFinished = !0, obs.next({
@@ -19594,7 +19479,7 @@ object-assign
                     };
                 }) : regularSegmentLoader(args);
             };
-        }, strings = __webpack_require__(84), read = __webpack_require__(64);
+        }, strings = __webpack_require__(85), read = __webpack_require__(65);
         /* harmony default export */        
         // CONCATENATED MODULE: ./src/net/dash/texttracks.ts
         /**
@@ -19626,8 +19511,7 @@ object-assign
                 value: {
                     responseData: null
                 }
-            }) : 
-            // fire a single time for init and index ranges
+            }) : // fire a single time for init and index ranges
             null != range && null != indexRange ? Object(request.a)({
                 url: mediaURL,
                 responseType: responseType,
@@ -19647,7 +19531,7 @@ object-assign
  * @param {Object} infos
  * @returns {Observable.<Object>}
  */        function TextTrackParser(_ref2) {
-            var response = _ref2.response, segment = _ref2.segment, adaptation = _ref2.adaptation, representation = _ref2.representation, init = _ref2.init, language = adaptation.language, isInit = segment.isInit, indexRange = segment.indexRange;
+            var responseData, nextSegments, segmentInfos, segmentData, response = _ref2.response, segment = _ref2.segment, adaptation = _ref2.adaptation, representation = _ref2.representation, init = _ref2.init, language = adaptation.language, isInit = segment.isInit, indexRange = segment.indexRange;
             if (null == response.responseData) return Object(of.a)({
                 segmentData: null,
                 segmentInfos: segment.timescale > 0 ? {
@@ -19657,7 +19541,7 @@ object-assign
                 } : null,
                 segmentOffset: segment.timestampOffset || 0
             });
-            var responseData = void 0, nextSegments = void 0, segmentInfos = void 0, segmentData = void 0, isMP4 = isMP4EmbeddedTrack(representation);
+            var isMP4 = isMP4EmbeddedTrack(representation);
             if (isMP4) {
                 Object(assert.b)(response.responseData instanceof ArrayBuffer), responseData = new Uint8Array(response.responseData);
                 var sidxSegments = Object(isobmff.c)(responseData, indexRange ? indexRange[0] : 0);
@@ -19698,7 +19582,7 @@ object-assign
                     timescale: segmentInfos.timescale
                 };
                 if (isMP4) {
-                    var _representation$codec = representation.codec, type = void 0;
+                    var type, _representation$codec = representation.codec;
                     switch ((void 0 === _representation$codec ? "" : _representation$codec).toLowerCase()) {
                       case "stpp":
                         // stpp === TTML in MP4
@@ -19718,7 +19602,7 @@ object-assign
                     }, segmentDataBase);
                 } else {
                     // not MP4: check for plain text subtitles
-                    var _type = void 0, _representation$mimeT = representation.mimeType, mimeType = void 0 === _representation$mimeT ? "" : _representation$mimeT;
+                    var _type, _representation$mimeT = representation.mimeType, mimeType = void 0 === _representation$mimeT ? "" : _representation$mimeT;
                     switch (representation.mimeType) {
                       case "application/ttml+xml":
                         _type = "ttml";
@@ -19778,8 +19662,9 @@ object-assign
  * implementation. Used for each generated http request.
  * @returns {Object}
  */
-        /* harmony default export */        __webpack_exports__.default = function() {
-            var options = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, manifestLoader = Object(manifest_loader.a)({
+        /* harmony default export */        __webpack_exports__.default = function(options) {
+            void 0 === options && (options = {});
+            var manifestLoader = Object(manifest_loader.a)({
                 customManifestLoader: options.manifestLoader
             }), segmentLoader = segment_loader(options.segmentLoader), segmentPipeline = {
                 loader: function loader(_ref3) {
@@ -19894,12 +19779,12 @@ object-assign
             };
         };
         /***/    }, 
-    /* 125 */
+    /* 126 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-        var of = __webpack_require__(75), map = __webpack_require__(63), features = __webpack_require__(6), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(3), assert = __webpack_require__(9), utils_id = __webpack_require__(19), languages = __webpack_require__(40), utils_url = __webpack_require__(38), check_manifest_ids = __webpack_require__(81);
+        var of = __webpack_require__(76), map = __webpack_require__(64), features = __webpack_require__(6), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(2), assert = __webpack_require__(9), utils_id = __webpack_require__(19), languages = __webpack_require__(39), utils_url = __webpack_require__(37), check_manifest_ids = __webpack_require__(82);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/map.js
                 // CONCATENATED MODULE: ./src/parsers/manifest/smooth/get_codecs.ts
         /**
@@ -19923,7 +19808,7 @@ object-assign
  * @returns {string}
  */
         function getAudioCodecs(fourCC, codecPrivateData) {
-            var mpProfile = void 0;
+            var mpProfile;
             return (mpProfile = "AACH" === fourCC ? 5 : codecPrivateData ? (248 & parseInt(codecPrivateData.substr(0, 2), 16)) >> 3 : 2) ? "mp4a.40." + mpProfile : "";
         }
         /**
@@ -20037,9 +19922,9 @@ object-assign
  * Parse "Protection" Node, which contains DRM informations
  * @param {Element} protectionNode
  * @returns {Object}
- */        function parseProtectionNode(protectionNode) {
-            var keySystemCreator = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : createWidevineKeySystem;
-            if (!protectionNode.firstElementChild || "ProtectionHeader" !== protectionNode.firstElementChild.nodeName) throw new Error("Protection should have ProtectionHeader child");
+ */        function parseProtectionNode(protectionNode, keySystemCreator) {
+            if (void 0 === keySystemCreator && (keySystemCreator = createWidevineKeySystem), 
+            !protectionNode.firstElementChild || "ProtectionHeader" !== protectionNode.firstElementChild.nodeName) throw new Error("Protection should have ProtectionHeader child");
             var header = protectionNode.firstElementChild, privateData = Object(bytes.p)(atob(header.textContent || "")), keyIdHex = getPlayReadyKIDFromPrivateData(privateData), keyIdBytes = Object(bytes.j)(keyIdHex);
             return {
                 keyId: keyIdHex,
@@ -20080,9 +19965,6 @@ object-assign
             return url.replace(/\{start time\}/g, String(time));
         }
         // CONCATENATED MODULE: ./src/parsers/manifest/smooth/representationIndex.ts
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -20107,20 +19989,20 @@ object-assign
  * @param {Object} currentSegment
  * @returns {Boolean} - true if the segment has been added
  */        function _addSegmentInfos(index, newSegment, currentSegment) {
-            var timeline = index.timeline, timescale = index.timescale, timelineLength = timeline.length, last = timeline[timelineLength - 1], scaledNewSegment = newSegment.timescale === timescale ? {
+            var scaledCurrentTime, timeline = index.timeline, timescale = index.timescale, timelineLength = timeline.length, last = timeline[timelineLength - 1], scaledNewSegment = newSegment.timescale === timescale ? {
                 time: newSegment.time,
                 duration: newSegment.duration
             } : {
                 time: newSegment.time / newSegment.timescale * timescale,
                 duration: newSegment.duration / newSegment.timescale * timescale
-            }, scaledCurrentTime = void 0;
+            };
             if (currentSegment && currentSegment.timescale && (scaledCurrentTime = currentSegment.timescale === timescale ? currentSegment.time : currentSegment.time / currentSegment.timescale * timescale), 
             null != scaledCurrentTime && scaledNewSegment.time === scaledCurrentTime) {
                 var newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration, startDiff = newSegmentStart - (last.start + (last.duration || 0) * last.repeatCount);
                 if (startDiff <= 0) 
                 // same segment / behind the last
                 return !1;
-                // try to use the compact notation with @r attribute on the last
+ // try to use the compact notation with @r attribute on the last
                 // to elements of the timeline if we find out they have the same
                 // duration
                                 if (-1 === last.duration) {
@@ -20133,7 +20015,7 @@ object-assign
                     repeatCount: 0
                 }), !0;
             }
-            // if the given timing has a timestamp after the timeline end we
+ // if the given timing has a timestamp after the timeline end we
             // just need to push a new element in the timeline, or increase
             // the @r attribute of the last element.
                         return scaledNewSegment.time >= getTimelineRangeEnd(last) && (last.duration === scaledNewSegment.duration ? last.repeatCount++ : index.timeline.push({
@@ -20172,7 +20054,7 @@ object-assign
             var start = _ref.start, duration = _ref.duration, repeatCount = _ref.repeatCount;
             return null == duration || -1 === duration ? start : start + (repeatCount + 1) * duration;
         }
-        // interface ISmoothIndex {
+ // interface ISmoothIndex {
         //   presentationTimeOffset? : number;
         //   timescale : number;
         //   media? : string;
@@ -20202,7 +20084,7 @@ object-assign
  * @returns {Number}
  */        function calculateRepeat(segment, nextSegment) {
             var repeatCount = segment.repeatCount || 0;
-            // A negative value of the @r attribute of the S element indicates
+ // A negative value of the @r attribute of the S element indicates
             // that the duration indicated in @d attribute repeats until the
             // start of the next S element, the end of the Period or until the
             // next MPD update.
@@ -20219,16 +20101,19 @@ object-assign
  * Allows to interact with the index to create new Segments.
  *
  * @class SmoothRepresentationIndex
- */        var representationIndex = function() {
+ */        var representationIndex_SmoothRepresentationIndex = 
+        /* */
+        function() {
             function SmoothRepresentationIndex(index, infos) {
-                _classCallCheck(this, SmoothRepresentationIndex), this._index = index, this._bitsPerSample = infos.bitsPerSample, 
-                this._channels = infos.channels, this._codecPrivateData = infos.codecPrivateData, 
-                this._packetSize = infos.packetSize, this._samplingRate = infos.samplingRate, this._protection = infos.protection;
+                this._index = index, this._bitsPerSample = infos.bitsPerSample, this._channels = infos.channels, 
+                this._codecPrivateData = infos.codecPrivateData, this._packetSize = infos.packetSize, 
+                this._samplingRate = infos.samplingRate, this._protection = infos.protection;
             }
             /**
-     * Construct init Segment compatible with a Smooth Manifest.
-     * @returns {Object}
-     */            return SmoothRepresentationIndex.prototype.getInitSegment = function getInitSegment() {
+   * Construct init Segment compatible with a Smooth Manifest.
+   * @returns {Object}
+   */            var _proto = SmoothRepresentationIndex.prototype;
+            return _proto.getInitSegment = function getInitSegment() {
                 return {
                     id: "init",
                     isInit: !0,
@@ -20248,14 +20133,14 @@ object-assign
                 };
             }, 
             /**
-     * Generate a list of Segments for a particular period of time.
-     *
-     * @param {Number} _up
-     * @param {Number} _to
-     * @returns {Array.<Object>}
-     */
-            SmoothRepresentationIndex.prototype.getSegments = function getSegments(_up, _to) {
-                for (var index = this._index, _normalizeRange = normalizeRange(index, _up, _to), up = _normalizeRange.up, to = _normalizeRange.to, timeline = index.timeline, timescale = index.timescale, media = index.media, currentNumber = void 0, segments = [], timelineLength = timeline.length, maxEncounteredDuration = timeline.length && timeline[0].duration || 0, i = 0; i < timelineLength; i++) {
+   * Generate a list of Segments for a particular period of time.
+   *
+   * @param {Number} _up
+   * @param {Number} _to
+   * @returns {Array.<Object>}
+   */
+            _proto.getSegments = function getSegments(_up, _to) {
+                for (var currentNumber, index = this._index, _normalizeRange = normalizeRange(index, _up, _to), up = _normalizeRange.up, to = _normalizeRange.to, timeline = index.timeline, timescale = index.timescale, media = index.media, segments = [], timelineLength = timeline.length, maxEncounteredDuration = timeline.length && timeline[0].duration || 0, i = 0; i < timelineLength; i++) {
                     var segmentRange = timeline[i], duration = segmentRange.duration, start = segmentRange.start;
                     // live-added segments have @d attribute equals to -1
                     if (maxEncounteredDuration = Math.max(maxEncounteredDuration, duration || 0), null != duration && duration < 0) {
@@ -20284,8 +20169,7 @@ object-assign
                             number: null != currentNumber ? currentNumber + segmentNumberInCurrentRange : void 0,
                             mediaURL: replaceSegmentSmoothTokens(media, segmentTime)
                         };
-                        segments.push(_segment), segmentTime = start + 
-                        // update segment number and segment time for the next segment
+                        segments.push(_segment), segmentTime = start + // update segment number and segment time for the next segment
                         ++segmentNumberInCurrentRange * duration;
                     }
                     if (segmentTime >= to) 
@@ -20296,48 +20180,48 @@ object-assign
                 return segments;
             }, 
             /**
-     * Returns true if, based on the arguments, the index should be refreshed.
-     * (If we should re-fetch the manifest)
-     * @param {Number} from
-     * @param {Number} to
-     * @returns {Boolean}
-     */
-            SmoothRepresentationIndex.prototype.shouldRefresh = function shouldRefresh(up, to) {
-                var _index = this._index, timeline = _index.timeline, timescale = _index.timescale, lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * (If we should re-fetch the manifest)
+   * @param {Number} from
+   * @param {Number} to
+   * @returns {Boolean}
+   */
+            _proto.shouldRefresh = function shouldRefresh(up, to) {
+                var _this$_index = this._index, timeline = _this$_index.timeline, timescale = _this$_index.timescale, lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
                 if (!lastSegmentInCurrentTimeline) return !1;
                 var repeat = lastSegmentInCurrentTimeline.repeatCount || 0, endOfLastSegmentInCurrentTimeline = lastSegmentInCurrentTimeline.start + (repeat + 1) * lastSegmentInCurrentTimeline.duration;
                 return !(to * timescale < endOfLastSegmentInCurrentTimeline) && (up * timescale >= endOfLastSegmentInCurrentTimeline || up > lastSegmentInCurrentTimeline.start + repeat * lastSegmentInCurrentTimeline.duration);
             }, 
             /**
-     * Returns first position in the index.
-     *
-     * @param {Object} index
-     * @returns {Number}
-     */
-            SmoothRepresentationIndex.prototype.getFirstPosition = function getFirstPosition() {
+   * Returns first position in the index.
+   *
+   * @param {Object} index
+   * @returns {Number}
+   */
+            _proto.getFirstPosition = function getFirstPosition() {
                 var index = this._index;
                 if (index.timeline.length) return index.timeline[0].start / index.timescale;
             }, 
             /**
-     * Returns last position in the index.
-     * @param {Object} index
-     * @returns {Number}
-     */
-            SmoothRepresentationIndex.prototype.getLastPosition = function getLastPosition() {
+   * Returns last position in the index.
+   * @param {Object} index
+   * @returns {Number}
+   */
+            _proto.getLastPosition = function getLastPosition() {
                 var index = this._index;
                 if (index.timeline.length) return getTimelineRangeEnd(index.timeline[index.timeline.length - 1]) / index.timescale;
             }, 
             /**
-     * Checks if the time given is in a discontinuity. That is:
-     *   - We're on the upper bound of the current range (end of the range - time
-     *     is inferior to the timescale)
-     *   - The next range starts after the end of the current range.
-     *
-     * @param {Number} _time
-     * @returns {Number} - If a discontinuity is present, this is the Starting
-     * time for the next (discontinuited) range. If not this is equal to -1.
-     */
-            SmoothRepresentationIndex.prototype.checkDiscontinuity = function checkDiscontinuity(_time) {
+   * Checks if the time given is in a discontinuity. That is:
+   *   - We're on the upper bound of the current range (end of the range - time
+   *     is inferior to the timescale)
+   *   - The next range starts after the end of the current range.
+   *
+   * @param {Number} _time
+   * @returns {Number} - If a discontinuity is present, this is the Starting
+   * time for the next (discontinuited) range. If not this is equal to -1.
+   */
+            _proto.checkDiscontinuity = function checkDiscontinuity(_time) {
                 var index = this._index, timeline = index.timeline, _index$timescale = index.timescale, timescale = void 0 === _index$timescale ? 1 : _index$timescale, time = _time * timescale;
                 if (time <= 0) return -1;
                 var segmentIndex = getSegmentIndex(index, time);
@@ -20348,13 +20232,12 @@ object-assign
                 // when we are actually inside the found range and this range has
                 // an explicit discontinuity with the next one
                 return rangeTo !== nextRange.start && time >= rangeUp && time <= rangeTo && rangeTo - time < timescale ? nextRange.start / timescale : -1;
-            }, SmoothRepresentationIndex.prototype._update = function _update(newIndex) {
+            }, _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
-            }, SmoothRepresentationIndex.prototype._addSegments = function _addSegments(nextSegments, currentSegment) {
+            }, _proto._addSegments = function _addSegments(nextSegments, currentSegment) {
                 for (var i = 0; i < nextSegments.length; i++) _addSegmentInfos(this._index, nextSegments[i], currentSegment);
             }, SmoothRepresentationIndex;
         }();
-        /* harmony default export */        
         // CONCATENATED MODULE: ./src/parsers/manifest/smooth/utils/parseBoolean.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -20374,8 +20257,7 @@ object-assign
         /**
  * @param {*} parseBoolean
  * @returns {Boolean}
- */
-        function parseBoolean(val) {
+ */        function parseBoolean(val) {
             return "boolean" == typeof val ? val : "string" == typeof val && "TRUE" === val.toUpperCase();
         }
         // CONCATENATED MODULE: ./src/parsers/manifest/smooth/utils/reduceChildren.ts
@@ -20438,18 +20320,19 @@ object-assign
  * @param {Object|undefined} parserOptions
  * @returns {Function}
  */
-        function createSmoothStreamingParser() {
-            var parserOptions = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, SUGGESTED_PERSENTATION_DELAY = null == parserOptions.suggestedPresentationDelay ? config.a.DEFAULT_SUGGESTED_PRESENTATION_DELAY.SMOOTH : parserOptions.suggestedPresentationDelay, REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1e3, MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 0;
+        function createSmoothStreamingParser(parserOptions) {
+            void 0 === parserOptions && (parserOptions = {});
+            var SUGGESTED_PERSENTATION_DELAY = null == parserOptions.suggestedPresentationDelay ? config.a.DEFAULT_SUGGESTED_PRESENTATION_DELAY.SMOOTH : parserOptions.suggestedPresentationDelay, REFERENCE_DATE_TIME = parserOptions.referenceDateTime || Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1e3, MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate || 0;
             /**
-     * @param {Element} q
-     * @param {string} type
-     * @return {Object}
-     */
+   * @param {Element} q
+   * @param {string} type
+   * @return {Object}
+   */
             function parseQualityLevel(q, type) {
                 /**
-         * @param {string} name
-         * @returns {string|undefined}
-         */
+     * @param {string} name
+     * @returns {string|undefined}
+     */
                 function getAttribute(name) {
                     var attr = q.getAttribute(name);
                     return null == attr ? void 0 : attr;
@@ -20492,15 +20375,15 @@ object-assign
                 }
             }
             /**
-     * Parse the adaptations (<StreamIndex>) tree containing
-     * representations (<QualityLevels>) and timestamp indexes (<c>).
-     * Indexes can be quite huge, and this function needs to
-     * to be optimized.
-     * @param {Element} root
-     * @param {string} rootURL
-     * @param {Number} timescale
-     * @returns {Object}
-     */            function parseAdaptation(root, rootURL, timescale, protections) {
+   * Parse the adaptations (<StreamIndex>) tree containing
+   * representations (<QualityLevels>) and timestamp indexes (<c>).
+   * Indexes can be quite huge, and this function needs to
+   * to be optimized.
+   * @param {Element} root
+   * @param {string} rootURL
+   * @param {Number} timescale
+   * @returns {Object}
+   */            function parseAdaptation(root, rootURL, timescale, protections) {
                 var _timescale = root.hasAttribute("Timescale") ? +(root.getAttribute("Timescale") || 0) : timescale, adaptationType = root.getAttribute("Type");
                 if (null == adaptationType) throw new Error("StreamIndex without type.");
                 var subType = root.getAttribute("Subtype"), name = root.getAttribute("Name"), language = root.getAttribute("Language"), normalizedLanguage = null == language ? language : Object(languages.a)(language), baseURL = root.getAttribute("Url") || "", _reduceChildren = reduceChildren(root, function(res, _name, node) {
@@ -20511,7 +20394,7 @@ object-assign
                             var fourCC = node.getAttribute("FourCC") || "";
                             qualityLevel.codecs = getAudioCodecs(fourCC, qualityLevel.codecPrivateData);
                         }
-                        // filter out video qualityLevels with small bitrates
+ // filter out video qualityLevels with small bitrates
                                                 ("video" !== adaptationType || qualityLevel.bitrate > MIN_REPRESENTATION_BITRATE) && res.qualityLevels.push(qualityLevel);
                         break;
 
@@ -20530,11 +20413,11 @@ object-assign
                 // codec and mimeType
                 Object(assert.b)(0 !== qualityLevels.length, "adaptation should have at least one representation");
                 var adaptationID = adaptationType + (language ? "_" + language : ""), representations = qualityLevels.map(function(qualityLevel) {
-                    var path = Object(utils_url.b)(rootURL, baseURL), repIndex = {
+                    var firstProtection, path = Object(utils_url.b)(rootURL, baseURL), repIndex = {
                         timeline: index.timeline,
                         timescale: index.timescale,
                         media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate)
-                    }, mimeType = qualityLevel.mimeType || DEFAULT_MIME_TYPES[adaptationType], codecs = qualityLevel.codecs || DEFAULT_CODECS[adaptationType], id = adaptationID + "_" + adaptationType + "-" + mimeType + "-" + codecs + "-" + qualityLevel.bitrate, contentProtections = [], firstProtection = void 0;
+                    }, mimeType = qualityLevel.mimeType || DEFAULT_MIME_TYPES[adaptationType], codecs = qualityLevel.codecs || DEFAULT_CODECS[adaptationType], id = adaptationID + "_" + adaptationType + "-" + mimeType + "-" + codecs + "-" + qualityLevel.bitrate, contentProtections = [];
                     protections.length && (firstProtection = protections[0], protections.forEach(function(protection) {
                         var keyId = protection.keyId;
                         protection.keySystems.forEach(function(keySystem) {
@@ -20556,7 +20439,7 @@ object-assign
                             keySystems: firstProtection.keySystems
                         } : void 0
                     }, representation = object_assign_default()({}, qualityLevel, {
-                        index: new representationIndex(repIndex, initSegmentInfos),
+                        index: new representationIndex_SmoothRepresentationIndex(repIndex, initSegmentInfos),
                         mimeType: mimeType,
                         codecs: codecs,
                         id: id
@@ -20581,7 +20464,7 @@ object-assign
                 var rootURL = Object(utils_url.a)(url), root = doc.documentElement;
                 Object(assert.b)("SmoothStreamingMedia" === root.nodeName, "document root should be SmoothStreamingMedia"), 
                 Object(assert.b)(/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")), "Version should be 2.0, 2.1 or 2.2");
-                var timescale = +(root.getAttribute("Timescale") || 1e7), _reduceChildren2 = reduceChildren(root, function(res, name, node) {
+                var suggestedPresentationDelay, presentationLiveGap, timeShiftBufferDepth, availabilityStartTime, duration, firstTimeReference, lastTimeReference, timescale = +(root.getAttribute("Timescale") || 1e7), _reduceChildren2 = reduceChildren(root, function(res, name, node) {
                     switch (name) {
                       case "Protection":
                         res.protections.push(parseProtectionNode(node, parserOptions.keySystems));
@@ -20602,7 +20485,7 @@ object-assign
                     var type = adaptation.type;
                     return void 0 === acc[type] ? acc[type] = [ adaptation ] : (acc[type] || []).push(adaptation), 
                     acc;
-                }, {}), suggestedPresentationDelay = void 0, presentationLiveGap = void 0, timeShiftBufferDepth = void 0, availabilityStartTime = void 0, duration = void 0, firstVideoAdaptation = adaptations.video ? adaptations.video[0] : void 0, firstAudioAdaptation = adaptations.audio ? adaptations.audio[0] : void 0, firstTimeReference = void 0, lastTimeReference = void 0;
+                }, {}), firstVideoAdaptation = adaptations.video ? adaptations.video[0] : void 0, firstAudioAdaptation = adaptations.audio ? adaptations.audio[0] : void 0;
                 if (firstVideoAdaptation || firstAudioAdaptation) {
                     var firstTimeReferences = [], lastTimeReferences = [];
                     if (firstVideoAdaptation) {
@@ -20656,7 +20539,7 @@ object-assign
                 };
                 return Object(check_manifest_ids.a)(manifest), manifest;
             };
-        }, request = __webpack_require__(30), strings = __webpack_require__(84), manifest_loader = __webpack_require__(83), log = __webpack_require__(0), isobmff = __webpack_require__(36), constants = __webpack_require__(24), read = __webpack_require__(64), SAMPLING_FREQUENCIES = [ 96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350 ], boxNamesMem = {};
+        }, request = __webpack_require__(29), strings = __webpack_require__(85), manifest_loader = __webpack_require__(84), log = __webpack_require__(0), isobmff = __webpack_require__(34), constants = __webpack_require__(24), read = __webpack_require__(65), SAMPLING_FREQUENCIES = [ 96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350 ], boxNamesMem = {};
         // EXTERNAL MODULE: ./src/utils/request/index.ts
                 /**
  * Convert the string name of an ISOBMFF box into the corresponding bytes.
@@ -20688,34 +20571,35 @@ object-assign
  * @param {Number} id4
  * @returns {Uint8Array|undefined}
  */        function readUuid(buf, id1, id2, id3, id4) {
-            for (var l = buf.length, i = 0, len = void 0; i < l; ) {
-                if (len = Object(bytes.c)(buf, i), 1970628964 /* === "uuid" */ === Object(bytes.c)(buf, i + 4) && Object(bytes.c)(buf, i + 8) === id1 && Object(bytes.c)(buf, i + 12) === id2 && Object(bytes.c)(buf, i + 16) === id3 && Object(bytes.c)(buf, i + 20) === id4) return buf.subarray(i + 24, i + len);
+            for (var len, l = buf.length, i = 0; i < l; ) {
+                if (len = Object(bytes.c)(buf, i), 1970628964
+                /* === "uuid" */ === Object(bytes.c)(buf, i + 4) && Object(bytes.c)(buf, i + 8) === id1 && Object(bytes.c)(buf, i + 12) === id2 && Object(bytes.c)(buf, i + 16) === id3 && Object(bytes.c)(buf, i + 20) === id4) return buf.subarray(i + 24, i + len);
                 i += len;
             }
         }
         var atoms = {
             /**
-     * @param {string} name
-     * @param {Array.<Uint8Array>} children
-     * @returns {Uint8Array}
-     */
+   * @param {string} name
+   * @param {Array.<Uint8Array>} children
+   * @returns {Uint8Array}
+   */
             mult: function mult(name, children) {
                 return Atom(name, bytes.h.apply(null, children));
             },
             /**
-     * @param {string} name - "avc1" or "encv"
-     * @param {Number} drefIdx - shall be 1
-     * @param {Number} width
-     * @param {Number} height
-     * @param {Number} hRes - horizontal resolution, eg 72
-     * @param {Number} vRes - horizontal resolution, eg 72
-     * @param {string} encDepth
-     * @param {Number} colorDepth - eg 24
-     * @param {Uint8Array} avcc - Uint8Array representing the avcC atom
-     * @param {Uint8Array} [sinf] - Uint8Array representing the sinf atom,
-     * only if name == "encv"
-     * @returns {Uint8Array}
-     */
+   * @param {string} name - "avc1" or "encv"
+   * @param {Number} drefIdx - shall be 1
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Number} hRes - horizontal resolution, eg 72
+   * @param {Number} vRes - horizontal resolution, eg 72
+   * @param {string} encDepth
+   * @param {Number} colorDepth - eg 24
+   * @param {Uint8Array} avcc - Uint8Array representing the avcC atom
+   * @param {Uint8Array} [sinf] - Uint8Array representing the sinf atom,
+   * only if name == "encv"
+   * @returns {Uint8Array}
+   */
             avc1encv: function avc1encv(name, drefIdx, width, height, hRes, vRes, encName, colorDepth, avcc, sinf) {
                 return Atom(name, Object(bytes.h)(6, // 6 bytes reserved
                 Object(bytes.k)(drefIdx), 16, // drefIdx + QuickTime reserved, zeroes
@@ -20732,63 +20616,63 @@ object-assign
                 "encv" === name && sinf || []));
             },
             /**
-     * @param {Uint8Array} sps
-     * @param {Uint8Array} pps
-     * @param {Number} nalLen - NAL Unit length: 1, 2 or 4 bytes
-     * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0",
-     * 1, "68ef3880")
-     * @returns {Uint8Array}
-     */
+   * @param {Uint8Array} sps
+   * @param {Uint8Array} pps
+   * @param {Number} nalLen - NAL Unit length: 1, 2 or 4 bytes
+   * eg: avcc(0x4d, 0x40, 0x0d, 4, 0xe1, "674d400d96560c0efcb80a70505050a0",
+   * 1, "68ef3880")
+   * @returns {Uint8Array}
+   */
             avcc: function avcc(sps, pps, nalLen) {
                 var nal = 2 === nalLen ? 1 : 4 === nalLen ? 3 : 0, h264Profile = sps[1], h264CompatibleProfile = sps[2], h264Level = sps[3];
-                // Deduce AVC Profile from SPS
+ // Deduce AVC Profile from SPS
                                 return Atom("avcC", Object(bytes.h)([ 1, h264Profile, h264CompatibleProfile, h264Level, 252 | nal, 225 ], Object(bytes.k)(sps.length), sps, [ 1 ], Object(bytes.k)(pps.length), pps));
             },
             /**
-     * @param {url} Uint8Array
-     * @returns {Uint8Array}
-     */
+   * @param {url} Uint8Array
+   * @returns {Uint8Array}
+   */
             dref: function dref(url) {
                 // only one description here... FIXME
                 return Atom("dref", Object(bytes.h)(7, [ 1 ], url));
             },
             /**
-     * @param {Number} stream
-     * @param {string} codecPrivateData - hex string
-     * eg: esds(1, 98800, "1190")
-     * @returns {Uint8Array}
-     */
+   * @param {Number} stream
+   * @param {string} codecPrivateData - hex string
+   * eg: esds(1, 98800, "1190")
+   * @returns {Uint8Array}
+   */
             esds: function esds(stream, codecPrivateData) {
                 return Atom("esds", Object(bytes.h)(4, [ 3, 25 ], Object(bytes.k)(stream), [ 0, 4, 17, 64, 21 ], 11, [ 5, 2 ], Object(bytes.j)(codecPrivateData), [ 6, 1, 2 ]));
             },
             /**
-     * @param {string} dataFormat - four letters (eg "avc1")
-     * @returns {Uint8Array}
-     */
+   * @param {string} dataFormat - four letters (eg "avc1")
+   * @returns {Uint8Array}
+   */
             frma: function frma(dataFormat) {
                 return Atom("frma", Object(bytes.p)(dataFormat));
             },
             /**
-     * @param {Number} length
-     * @returns {Uint8Array}
-     */
+   * @param {Number} length
+   * @returns {Uint8Array}
+   */
             free: function free(length) {
                 return Atom("free", new Uint8Array(length - 8));
             },
             /**
-     * @param {string} majorBrand
-     * @param {Array.<string>} brands
-     * @returns {Uint8Array}
-     */
+   * @param {string} majorBrand
+   * @param {Array.<string>} brands
+   * @returns {Uint8Array}
+   */
             ftyp: function ftyp(majorBrand, brands) {
                 return Atom("ftyp", bytes.h.apply(null, [ Object(bytes.p)(majorBrand), [ 0, 0, 0, 1 ] ].concat(brands.map(bytes.p))));
             },
             /**
-     * @param {string} type - "video" or "audio"
-     * @returns {Uint8Array}
-     */
+   * @param {string} type - "video" or "audio"
+   * @returns {Uint8Array}
+   */
             hdlr: function hdlr(type) {
-                var name = void 0, handlerName = void 0;
+                var name, handlerName;
                 switch (type) {
                   case "video":
                     name = "vide", handlerName = "VideoHandler";
@@ -20804,40 +20688,40 @@ object-assign
                 return Atom("hdlr", Object(bytes.h)(8, Object(bytes.p)(name), 12, Object(bytes.p)(handlerName), 1));
             },
             /**
-     * @param {number} timescale
-     * @returns {Uint8Array}
-     */
+   * @param {number} timescale
+   * @returns {Uint8Array}
+   */
             mdhd: function mdhd(timescale) {
                 return Atom("mdhd", Object(bytes.h)(12, Object(bytes.l)(timescale), 8));
             },
             /**
-     * @param {Uint8Array} mfhd
-     * @param {Uint8Array} traf
-     * @returns {Uint8Array}
-     */
+   * @param {Uint8Array} mfhd
+   * @param {Uint8Array} traf
+   * @returns {Uint8Array}
+   */
             moof: function moof(mfhd, traf) {
                 return atoms.mult("moof", [ mfhd, traf ]);
             },
             /**
-     * @param {string} name - "mp4a" or "enca"
-     * @param {Number} drefIdx
-     * @param {Number} channelsCount
-     * @param {Number} sampleSize
-     * @param {Number} packetSize
-     * @param {Number} sampleRate
-     * @param {Uint8Array} esds - Uint8Array representing the esds atom
-     * @param {Uint8Array} [sinf] - Uint8Array representing the sinf atom,
-     * only if name == "enca"
-     * @returns {Uint8Array}
-     */
+   * @param {string} name - "mp4a" or "enca"
+   * @param {Number} drefIdx
+   * @param {Number} channelsCount
+   * @param {Number} sampleSize
+   * @param {Number} packetSize
+   * @param {Number} sampleRate
+   * @param {Uint8Array} esds - Uint8Array representing the esds atom
+   * @param {Uint8Array} [sinf] - Uint8Array representing the sinf atom,
+   * only if name == "enca"
+   * @returns {Uint8Array}
+   */
             mp4aenca: function mp4aenca(name, drefIdx, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf) {
                 return Atom(name, Object(bytes.h)(6, Object(bytes.k)(drefIdx), 8, Object(bytes.k)(channelsCount), Object(bytes.k)(sampleSize), 2, Object(bytes.k)(packetSize), Object(bytes.k)(sampleRate), 2, esds, "enca" === name && sinf || []));
             },
             /**
-     * @param {Number} timescale
-     * @param {Number} trackId
-     * @returns {Uint8Array}
-     */
+   * @param {Number} timescale
+   * @param {Number} trackId
+   * @returns {Uint8Array}
+   */
             mvhd: function mvhd(timescale, trackId) {
                 return Atom("mvhd", Object(bytes.h)(12, Object(bytes.l)(timescale), 4, [ 0, 1 ], 2, // we assume rate = 1;
                 [ 1, 0 ], 10, // we assume volume = 100%;
@@ -20846,82 +20730,82 @@ object-assign
                 [ 64, 0, 0, 0 ], 26, Object(bytes.k)(trackId + 1)));
             },
             /**
-     * @param {string} systemId - Hex string representing the CDM, 16 bytes.
-     * @param {Uint8Array|undefined} privateData - Data associated to protection
-     * specific system.
-     * @param {Array.<Uint8Array>} keyIds - List of key ids contained in the PSSH
-     * @returns {Uint8Array}
-     */
-            pssh: function pssh(systemId) {
-                var privateData = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : new Uint8Array(0), keyIds = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : new Uint8Array(0), _systemId = systemId.replace(/-/g, "");
+   * @param {string} systemId - Hex string representing the CDM, 16 bytes.
+   * @param {Uint8Array|undefined} privateData - Data associated to protection
+   * specific system.
+   * @param {Array.<Uint8Array>} keyIds - List of key ids contained in the PSSH
+   * @returns {Uint8Array}
+   */
+            pssh: function pssh(systemId, privateData, keyIds) {
+                void 0 === privateData && (privateData = new Uint8Array(0)), void 0 === keyIds && (keyIds = new Uint8Array(0));
+                var version, kidList, _systemId = systemId.replace(/-/g, "");
                 Object(assert.b)(32 === _systemId.length, "wrong system id length");
-                var version = void 0, kidList = void 0, kidCount = keyIds.length;
+                var kidCount = keyIds.length;
                 return kidCount > 0 ? (version = 1, kidList = bytes.h.apply(void 0, [ Object(bytes.l)(kidCount) ].concat(keyIds))) : (version = 0, 
                 kidList = []), Atom("pssh", Object(bytes.h)([ version, 0, 0, 0 ], Object(bytes.j)(_systemId), kidList, Object(bytes.l)(privateData.length), privateData));
             },
             /**
-     * @param {Uint8Array} mfhd
-     * @param {Uint8Array} tfhd
-     * @param {Uint8Array} tfdt
-     * @param {Uint8Array} trun
-     * @returns {Uint8Array}
-     */
+   * @param {Uint8Array} mfhd
+   * @param {Uint8Array} tfhd
+   * @param {Uint8Array} tfdt
+   * @param {Uint8Array} trun
+   * @returns {Uint8Array}
+   */
             saio: function saio(mfhd, tfhd, tfdt, trun) {
                 return Atom("saio", Object(bytes.h)(4, [ 0, 0, 0, 1 ], // ??
                 Object(bytes.l)(mfhd.length + tfhd.length + tfdt.length + trun.length + 8 + 8 + 8 + 8)));
             },
             /**
-     * @param {Uint8Array} sencData - including 8 bytes flags and entries count
-     * @returns {Uint8Array}
-     */
+   * @param {Uint8Array} sencData - including 8 bytes flags and entries count
+   * @returns {Uint8Array}
+   */
             saiz: function saiz(senc) {
                 if (0 === senc.length) return Atom("saiz", new Uint8Array(0));
                 var flags = Object(bytes.c)(senc, 0), entries = Object(bytes.c)(senc, 4), arr = new Uint8Array(entries + 9);
                 arr.set(Object(bytes.l)(entries), 5);
-                for (var i = 9, j = 8, pairsCnt = void 0, pairsLen = void 0; j < senc.length; ) j += 8, 
-                // assuming IV is 8 bytes TODO handle 16 bytes IV
+                for (var pairsCnt, pairsLen, i = 9, j = 8; j < senc.length; ) j += 8, // assuming IV is 8 bytes TODO handle 16 bytes IV
                 // if we have extradata for each entry
                 2 == (2 & flags) ? (pairsLen = 2, j += 6 * (pairsCnt = Object(bytes.a)(senc, j)) + 2) : (pairsCnt = 0, 
                 pairsLen = 0), arr[i] = 6 * pairsCnt + 8 + pairsLen, i++;
                 return Atom("saiz", arr);
             },
             /**
-     * @param {string} schemeType - four letters (eg "cenc" for Common Encryption)
-     * @param {Number} schemeVersion - eg 65536
-     * @returns {Uint8Array}
-     */
+   * @param {string} schemeType - four letters (eg "cenc" for Common Encryption)
+   * @param {Number} schemeVersion - eg 65536
+   * @returns {Uint8Array}
+   */
             schm: function schm(schemeType, schemeVersion) {
                 return Atom("schm", Object(bytes.h)(4, Object(bytes.p)(schemeType), Object(bytes.l)(schemeVersion)));
             },
             /**
-     * @param {Uint8Array} buf
-     * @returns {Uint8Array}
-     */
+   * @param {Uint8Array} buf
+   * @returns {Uint8Array}
+   */
             senc: function senc(buf) {
                 return Atom("senc", buf);
             },
             /**
-     * @returns {Uint8Array}
-     */
+   * @returns {Uint8Array}
+   */
             smhd: function smhd() {
                 return Atom("smhd", new Uint8Array(8));
             },
             /**
-     * @param {Array.<Uint8Array>} representations - arrays of Uint8Array,
-     * typically [avc1] or [encv, avc1]
-     * @returns {Uint8Array}
-     */
+   * @param {Array.<Uint8Array>} representations - arrays of Uint8Array,
+   * typically [avc1] or [encv, avc1]
+   * @returns {Uint8Array}
+   */
             stsd: function stsd(reps) {
                 // only one description here... FIXME
                 var arrBase = [ 7, [ reps.length ] ];
                 return Atom("stsd", bytes.h.apply(void 0, arrBase.concat(reps)));
             },
             /**
-     * @param {Number} width
-     * @param {Number} height
-     * @param {Number} trackId
-     * @returns {Uint8Array}
-     */
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Number} trackId
+   * @returns {Uint8Array}
+   */
             tkhd: function tkhd(width, height, trackId) {
                 return Atom("tkhd", Object(bytes.h)(Object(bytes.l)(7), 8, // we assume track is enabled,
                 // in media and in preview.
@@ -20934,49 +20818,49 @@ object-assign
                 Object(bytes.k)(height), 2));
             },
             /**
-     * @param {Number} trackId
-     * @returns {Uint8Array}
-     */
+   * @param {Number} trackId
+   * @returns {Uint8Array}
+   */
             trex: function trex(trackId) {
                 // default sample desc idx = 1
                 return Atom("trex", Object(bytes.h)(4, Object(bytes.l)(trackId), [ 0, 0, 0, 1 ], 12));
             },
             /**
-     * @param {Number} decodeTime
-     * @returns {Uint8Array}
-     */
+   * @param {Number} decodeTime
+   * @returns {Uint8Array}
+   */
             tfdt: function tfdt(decodeTime) {
                 return Atom("tfdt", Object(bytes.h)([ 1, 0, 0, 0 ], Object(bytes.m)(decodeTime)));
             },
             /**
-     * @param {Number} algId - eg 1
-     * @param {Number} ivSize - eg 8
-     * @param {string} keyId - Hex KID 93789920e8d6520098577df8f2dd5546
-     * @returns {Uint8Array}
-     */
+   * @param {Number} algId - eg 1
+   * @param {Number} ivSize - eg 8
+   * @param {string} keyId - Hex KID 93789920e8d6520098577df8f2dd5546
+   * @returns {Uint8Array}
+   */
             tenc: function tenc(algId, ivSize, keyId) {
                 return Atom("tenc", Object(bytes.h)(6, [ algId, ivSize ], Object(bytes.j)(keyId)));
             },
             /**
-     * @param {Uint8Array} tfhd
-     * @param {Uint8Array} tfdt
-     * @param {Uint8Array} trun
-     * @param {Uint8Array} senc
-     * @param {Uint8Array} mfhd
-     * @returns {Uint8Array}
-     */
+   * @param {Uint8Array} tfhd
+   * @param {Uint8Array} tfdt
+   * @param {Uint8Array} trun
+   * @param {Uint8Array} senc
+   * @param {Uint8Array} mfhd
+   * @returns {Uint8Array}
+   */
             traf: function traf(tfhd, tfdt, trun, mfhd, senc) {
                 var trafs = [ tfhd, tfdt, trun ];
                 return senc && trafs.push(atoms.senc(senc), atoms.saiz(senc), atoms.saio(mfhd, tfhd, tfdt, trun)), 
                 atoms.mult("traf", trafs);
             },
             /**
-     * @param {Uint8Array} oldtrun
-     * @returns {Uint8Array}
-     */
+   * @param {Uint8Array} oldtrun
+   * @returns {Uint8Array}
+   */
             trun: function trun(oldtrun) {
                 if (1 & oldtrun[11]) return oldtrun;
-                // If no dataoffset is present, we change the headers and add one
+ // If no dataoffset is present, we change the headers and add one
                                 var trun = new Uint8Array(oldtrun.length + 4);
                 return trun.set(Object(bytes.l)(oldtrun.length + 4), 0), trun.set(oldtrun.subarray(4, 16), 4), 
                 // name + (version + headers) +
@@ -20986,8 +20870,8 @@ object-assign
                 trun.set(oldtrun.subarray(16, oldtrun.length), 20), trun;
             },
             /**
-     * @returns {Uint8Array}
-     */
+   * @returns {Uint8Array}
+   */
             vmhd: function vmhd() {
                 var arr = new Uint8Array(12);
                 // QuickTime...
@@ -21012,7 +20896,7 @@ object-assign
  * @returns {string}
  */
         function aacesHeader(type, frequency, chans) {
-            var val = void 0;
+            var val;
             return val = ((val = ((val = (63 & type) << 4) | 31 & SAMPLING_FREQUENCIES.indexOf(frequency)) << 4) | 31 & chans) << 3, 
             Object(bytes.e)(Object(bytes.k)(val));
         }
@@ -21079,9 +20963,9 @@ object-assign
             getMdat: read.a,
             getTraf: read.c,
             /**
-     * @param {Uint8Array} traf
-     * @returns {Array.<Object>}
-     */
+   * @param {Uint8Array} traf
+   * @returns {Array.<Object>}
+   */
             parseTfrf: function parseTfrf(traf) {
                 var tfrf = reads_tfrf(traf);
                 if (!tfrf) return [];
@@ -21096,9 +20980,9 @@ object-assign
                 return frags;
             },
             /**
-     * @param {Uint8Array} traf
-     * @returns {Object|undefined}
-     */
+   * @param {Uint8Array} traf
+   * @returns {Object|undefined}
+   */
             parseTfxd: function parseTfxd(traf) {
                 var tfxd = reads_tfxd(traf);
                 if (tfxd) return {
@@ -21107,23 +20991,23 @@ object-assign
                 };
             },
             /**
-     * Return full video Init segment as Uint8Array
-     * @param {Number} timescale - lowest number, this one will be set into mdhd
-     * *10000 in mvhd, e.g. 1000
-     * @param {Number} width
-     * @param {Number} height
-     * @param {Number} hRes
-     * @param {Number} vRes
-     * @param {Number} nalLength (1, 2 or 4)
-     * @param {string} codecPrivateData
-     * @param {string} keyId - hex string representing the key Id,
-     * 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b
-     * @param {Array.<Object>} [pssList] - List of dict, example:
-     * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
-     * @returns {Uint8Array}
-     */
+   * Return full video Init segment as Uint8Array
+   * @param {Number} timescale - lowest number, this one will be set into mdhd
+   * *10000 in mvhd, e.g. 1000
+   * @param {Number} width
+   * @param {Number} height
+   * @param {Number} hRes
+   * @param {Number} vRes
+   * @param {Number} nalLength (1, 2 or 4)
+   * @param {string} codecPrivateData
+   * @param {string} keyId - hex string representing the key Id,
+   * 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b
+   * @param {Array.<Object>} [pssList] - List of dict, example:
+   * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
+   * @returns {Uint8Array}
+   */
             createVideoInitSegment: function createVideoInitSegment(timescale, width, height, hRes, vRes, nalLength, codecPrivateData, keyId, pssList) {
-                var _pssList = pssList || [], _codecPrivateData$spl = codecPrivateData.split("00000001"), spsHex = _codecPrivateData$spl[1], ppsHex = _codecPrivateData$spl[2], sps = Object(bytes.j)(spsHex), pps = Object(bytes.j)(ppsHex), avcc = atoms.avcc(sps, pps, nalLength), stsd = void 0;
+                var stsd, _pssList = pssList || [], _codecPrivateData$spl = codecPrivateData.split("00000001"), spsHex = _codecPrivateData$spl[1], ppsHex = _codecPrivateData$spl[2], sps = Object(bytes.j)(spsHex), pps = Object(bytes.j)(ppsHex), avcc = atoms.avcc(sps, pps, nalLength);
                 if (_pssList.length && null != keyId) {
                     var tenc = atoms.tenc(1, 8, keyId), schi = atoms.mult("schi", [ tenc ]), schm = atoms.schm("cenc", 65536), frma = atoms.frma("avc1"), sinf = atoms.mult("sinf", [ frma, schm, schi ]), encv = atoms.avc1encv("encv", 1, width, height, hRes, vRes, "AVC Coding", 24, avcc, sinf);
                     stsd = atoms.stsd([ encv ]);
@@ -21138,21 +21022,21 @@ object-assign
                 return createInitSegment(timescale, "video", stsd, atoms.vmhd(), width, height, _pssList);
             },
             /**
-     * Return full audio Init segment as Uint8Array
-     * @param {Number} timescale
-     * @param {Number} channelsCount
-     * @param {Number} sampleSize
-     * @param {Number} packetSize
-     * @param {Number} sampleRate
-     * @param {string} codecPrivateData
-     * @param {string} keyId - hex string representing the key Id, 32 chars.
-     * eg. a800dbed49c12c4cb8e0b25643844b9b
-     * @param {Array.<Object>} [pssList] - List of dict, example:
-     * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"}
-     * @returns {Uint8Array}
-     */
+   * Return full audio Init segment as Uint8Array
+   * @param {Number} timescale
+   * @param {Number} channelsCount
+   * @param {Number} sampleSize
+   * @param {Number} packetSize
+   * @param {Number} sampleRate
+   * @param {string} codecPrivateData
+   * @param {string} keyId - hex string representing the key Id, 32 chars.
+   * eg. a800dbed49c12c4cb8e0b25643844b9b
+   * @param {Array.<Object>} [pssList] - List of dict, example:
+   * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF"}
+   * @returns {Uint8Array}
+   */
             createAudioInitSegment: function createAudioInitSegment(timescale, channelsCount, sampleSize, packetSize, sampleRate, codecPrivateData, keyId, pssList) {
-                var _pssList = pssList || [], _codecPrivateData = codecPrivateData || aacesHeader(2, sampleRate, channelsCount), esds = atoms.esds(1, _codecPrivateData), stsd = void 0;
+                var stsd, _pssList = pssList || [], _codecPrivateData = codecPrivateData || aacesHeader(2, sampleRate, channelsCount), esds = atoms.esds(1, _codecPrivateData);
                 if (_pssList.length && null != keyId) {
                     var tenc = atoms.tenc(1, 8, keyId), schi = atoms.mult("schi", [ tenc ]), schm = atoms.schm("cenc", 65536), frma = atoms.frma("mp4a"), sinf = atoms.mult("sinf", [ frma, schm, schi ]), enca = atoms.mp4aenca("enca", 1, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf);
                     stsd = atoms.stsd([ enca ]);
@@ -21163,21 +21047,22 @@ object-assign
                 return createInitSegment(timescale, "audio", stsd, atoms.smhd(), 0, 0, _pssList);
             },
             /**
-     * Add decodeTime info in a segment (tfdt box)
-     * @param {Uint8Array} segment
-     * @param {Number} decodeTime
-     * @return {Uint8Array}
-     */
+   * Add decodeTime info in a segment (tfdt box)
+   * @param {Uint8Array} segment
+   * @param {Number} decodeTime
+   * @return {Uint8Array}
+   */
             patchSegment: function patchSegment(segment, decodeTime) {
                 var oldmoof = segment.subarray(0, Object(bytes.c)(segment, 0)), newtfdt = atoms.tfdt(decodeTime), tfdtlen = newtfdt.length, mfhdlen = Object(bytes.c)(oldmoof, 8), traflen = Object(bytes.c)(oldmoof, mfhdlen + 8), tfhdlen = Object(bytes.c)(oldmoof, mfhdlen + 8 + 8), trunlen = Object(bytes.c)(oldmoof, mfhdlen + 8 + 8 + tfhdlen), oldmfhd = oldmoof.subarray(8, mfhdlen + 8), oldtraf = oldmoof.subarray(mfhdlen + 8 + 8, mfhdlen + 8 + 8 + traflen - 8), oldtfhd = oldtraf.subarray(0, tfhdlen), oldtrun = oldtraf.subarray(tfhdlen, tfhdlen + trunlen);
                 // force trackId=1 since trackIds are not always reliable...
                 oldtfhd.set([ 0, 0, 0, 1 ], 12);
                 // TODO fallback?
                 var oldsenc = reads_senc(oldtraf), newtrun = atoms.trun(oldtrun), newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldmfhd, oldsenc), newmoof = atoms.moof(oldmfhd, newtraf), trunoffset = mfhdlen + 8 + 8 + tfhdlen + tfdtlen;
-                // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
+ // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
                                 // TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
                 // try to put free atom inside traf children
-                return constants.h ? createNewSegment(segment, newmoof, oldmoof, trunoffset) : oldmoof.length - newmoof.length >= 8 /* minimum "free" atom size */ ? patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) : createNewSegment(segment, newmoof, oldmoof, trunoffset);
+                return constants.h ? createNewSegment(segment, newmoof, oldmoof, trunoffset) : oldmoof.length - newmoof.length >= 8
+                /* minimum "free" atom size */ ? patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset) : createNewSegment(segment, newmoof, oldmoof, trunoffset);
             }
         }, getTraf = mp4.getTraf, isobmff_timings_infos_parseTfrf = mp4.parseTfrf, isobmff_timings_infos_parseTfxd = mp4.parseTfxd;
         // CONCATENATED MODULE: ./src/net/smooth/isobmff_timings_infos.ts
@@ -21197,7 +21082,7 @@ object-assign
  * limitations under the License.
  */        
         /* harmony default export */ var isobmff_timings_infos = function extractTimingsInfos(responseData, segment, isLive) {
-            var nextSegments = [], segmentInfos = void 0, tfxdSegment = void 0, tfrfSegments = void 0;
+            var segmentInfos, tfxdSegment, tfrfSegments, nextSegments = [];
             if (isLive) {
                 var traf = getTraf(responseData);
                 traf ? (tfrfSegments = isobmff_timings_infos_parseTfrf(traf), tfxdSegment = isobmff_timings_infos_parseTfxd(traf)) : log.a.warn("smooth: could not find traf atom");
@@ -21230,7 +21115,7 @@ object-assign
                 nextSegments: nextSegments,
                 segmentInfos: segmentInfos
             };
-        }, Observable = __webpack_require__(17), ISM_REG = /\.(isml?)(\?token=\S+)?$/, TOKEN_REG = /\?token=(\S+)/;
+        }, Observable = __webpack_require__(13), ISM_REG = /\.(isml?)(\?token=\S+)?$/, TOKEN_REG = /\?token=(\S+)/;
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 2 modules
                 function byteRange(_ref) {
             var start = _ref[0], end = _ref[1];
@@ -21287,7 +21172,7 @@ object-assign
  * @param {Object} opt
  * @returns {Observable}
  */        function regularSegmentLoader(_ref) {
-            var url = _ref.url, headers = void 0, range = _ref.segment.range;
+            var headers, url = _ref.url, range = _ref.segment.range;
             return range && (headers = {
                 Range: byteRange(range)
             }), Object(request.a)({
@@ -21304,7 +21189,7 @@ object-assign
                 var segment = _ref2.segment, representation = _ref2.representation, adaptation = _ref2.adaptation, period = _ref2.period, manifest = _ref2.manifest, init = _ref2.init;
                 if (segment.isInit) {
                     if (!segment.privateInfos || null == segment.privateInfos.smoothInit) throw new Error("Smooth: Invalid segment format");
-                    var smoothInitPrivateInfos = segment.privateInfos.smoothInit, responseData = void 0, protection = smoothInitPrivateInfos.protection;
+                    var responseData, smoothInitPrivateInfos = segment.privateInfos.smoothInit, protection = smoothInitPrivateInfos.protection;
                     switch (adaptation.type) {
                       case "video":
                         responseData = segment_loader_createVideoInitSegment(segment.timescale, representation.width || 0, representation.height || 0, 72, 72, 4, // vRes, hRes, nal
@@ -21345,9 +21230,8 @@ object-assign
                 };
                 return customSegmentLoader ? Observable.a.create(function(obs) {
                     var hasFinished = !1, hasFallbacked = !1, abort = customSegmentLoader(args, {
-                        reject: function reject() {
-                            var err = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
-                            hasFallbacked || (hasFinished = !0, obs.error(err));
+                        reject: function reject(err) {
+                            void 0 === err && (err = {}), hasFallbacked || (hasFinished = !0, obs.error(err));
                         },
                         resolve: function resolve(_args) {
                             hasFallbacked || (hasFinished = !0, obs.next({
@@ -21380,8 +21264,9 @@ object-assign
                 representations[i].index._addSegments(nextSegments, dlSegment);
             }
         }
-        /* harmony default export */        __webpack_exports__.default = function() {
-            var options = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, smoothManifestParser = smooth(options), segmentLoader = segment_loader(options.segmentLoader), manifestLoaderOptions = {
+        /* harmony default export */        __webpack_exports__.default = function(options) {
+            void 0 === options && (options = {});
+            var smoothManifestParser = smooth(options), segmentLoader = segment_loader(options.segmentLoader), manifestLoaderOptions = {
                 customManifestLoader: options.manifestLoader,
                 ignoreProgressEvents: !0
             }, manifestLoader = Object(manifest_loader.a)(manifestLoaderOptions), segmentPipeline = {
@@ -21476,7 +21361,7 @@ object-assign
                     },
                     parser: function parser(_ref8) {
                         var response = _ref8.response, segment = _ref8.segment, representation = _ref8.representation, adaptation = _ref8.adaptation, manifest = _ref8.manifest, language = adaptation.language, _representation$mimeT = representation.mimeType, mimeType = void 0 === _representation$mimeT ? "" : _representation$mimeT, _representation$codec = representation.codec, codec = void 0 === _representation$codec ? "" : _representation$codec;
-                        var responseData = response.responseData;
+                        var parsedResponse, nextSegments, responseData = response.responseData;
                         if (null === responseData) return Object(of.a)({
                             segmentData: null,
                             segmentInfos: segment.timescale > 0 ? {
@@ -21486,7 +21371,7 @@ object-assign
                             } : null,
                             segmentOffset: 0
                         });
-                        var parsedResponse = void 0, nextSegments = void 0, segmentInfos = null, isMP4 = mimeType.indexOf("mp4") >= 0, _sdStart = void 0, _sdEnd = void 0, _sdTimescale = void 0, _sdData = void 0, _sdType = void 0;
+                        var _sdStart, _sdEnd, _sdTimescale, _sdData, _sdType, segmentInfos = null, isMP4 = mimeType.indexOf("mp4") >= 0;
                         if (isMP4) {
                             0, parsedResponse = new Uint8Array(responseData);
                             var timings = isobmff_timings_infos(parsedResponse, segment, manifest.isLive);
@@ -21496,7 +21381,7 @@ object-assign
                         } else {
                             0, parsedResponse = responseData;
                             var segmentTime = segment.time || 0;
-                            // vod is simple WebVTT or TTML text
+ // vod is simple WebVTT or TTML text
                                                         _sdStart = segmentTime, _sdEnd = null != segment.duration ? segmentTime + segment.duration : void 0, 
                             _sdTimescale = segment.timescale;
                         }
@@ -21598,11 +21483,11 @@ object-assign
             return !!representation.mimeType && representation.mimeType.indexOf("mp4") >= 0;
         }
         /***/    }, 
-    /* 126 */
+    /* 127 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(2), Subject = __webpack_require__(26), QueueAction_QueueAction = /* */ function(_super) {
+                var tslib_es6 = __webpack_require__(3), Subject = __webpack_require__(43), QueueAction_QueueAction = /* */ function(_super) {
             function QueueAction(scheduler, work) {
                 var _this = _super.call(this, scheduler, work) || this;
                 return _this.scheduler = scheduler, _this.work = work, _this;
@@ -21615,12 +21500,12 @@ object-assign
             }, QueueAction.prototype.requestAsyncId = function(scheduler, id, delay) {
                 return void 0 === delay && (delay = 0), null !== delay && delay > 0 || null === delay && this.delay > 0 ? _super.prototype.requestAsyncId.call(this, scheduler, id, delay) : scheduler.flush(this);
             }, QueueAction;
-        }(__webpack_require__(101).a), queue = /* */ new (/* */ function(_super) {
+        }(__webpack_require__(102).a), queue = /* */ new (/* */ function(_super) {
             function QueueScheduler() {
                 return null !== _super && _super.apply(this, arguments) || this;
             }
             return tslib_es6.a(QueueScheduler, _super), QueueScheduler;
-        }(__webpack_require__(102).a))(QueueAction_QueueAction), Subscription = __webpack_require__(14), Subscriber = __webpack_require__(10), empty = __webpack_require__(25), of = __webpack_require__(75), throwError = __webpack_require__(78), Notification_Notification = /* */ function() {
+        }(__webpack_require__(103).a))(QueueAction_QueueAction), Subscription = __webpack_require__(15), Subscriber = __webpack_require__(10), empty = __webpack_require__(26), of = __webpack_require__(76), throwError = __webpack_require__(79), Notification_Notification = /* */ function() {
             function Notification(kind, value, error) {
                 this.kind = kind, this.value = value, this.error = error, this.hasValue = "N" === kind;
             }
@@ -21692,7 +21577,7 @@ object-assign
             return function ObserveOnMessage(notification, destination) {
                 this.notification = notification, this.destination = destination;
             };
-        }(), ObjectUnsubscribedError = __webpack_require__(45), SubjectSubscription = __webpack_require__(77);
+        }(), ObjectUnsubscribedError = __webpack_require__(46), SubjectSubscription = __webpack_require__(78);
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/ReplaySubject.js
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
             return ReplaySubject_ReplaySubject;
@@ -21734,12 +21619,12 @@ object-assign
             };
         }();
     }, 
-    /* 127 */
+    /* 128 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-        var find = __webpack_require__(13), find_default = /* */ __webpack_require__.n(find), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), getParameters = __webpack_require__(86), getParentElementsByTagName = __webpack_require__(54), nodes = __webpack_require__(46), ttml_style = __webpack_require__(31), STYLE_ATTRIBUTES = [ "backgroundColor", "color", "direction", "display", "displayAlign", "extent", "fontFamily", "fontSize", "fontStyle", "fontWeight", "lineHeight", "opacity", "origin", "overflow", "padding", "textAlign", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption", "writingMode" ], getTimeDelimiters = __webpack_require__(99), regexps = __webpack_require__(20), SPAN_LEVEL_ATTRIBUTES = [ "color", "direction", "display", "fontFamily", "fontSize", "fontStyle", "fontWeight", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption" ];
+        var find = __webpack_require__(14), find_default = /* */ __webpack_require__.n(find), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), getParameters = __webpack_require__(87), getParentElementsByTagName = __webpack_require__(55), nodes = __webpack_require__(47), ttml_style = __webpack_require__(30), STYLE_ATTRIBUTES = [ "backgroundColor", "color", "direction", "display", "displayAlign", "extent", "fontFamily", "fontSize", "fontStyle", "fontWeight", "lineHeight", "opacity", "origin", "overflow", "padding", "textAlign", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption", "writingMode" ], getTimeDelimiters = __webpack_require__(100), regexps = __webpack_require__(20), SPAN_LEVEL_ATTRIBUTES = [ "color", "direction", "display", "fontFamily", "fontSize", "fontStyle", "fontWeight", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption" ];
         /**
  * Translate a color indicated in TTML-style to a CSS-style color.
  * @param {string} color
@@ -21747,7 +21632,7 @@ object-assign
  */
         function ttmlColorToCSSColor(color) {
             // TODO check all possible color fomats
-            var regRes = void 0;
+            var regRes;
             return null != (regRes = regexps.b.exec(color)) ? "rgba(" + parseInt(regRes[1], 16) + "," + parseInt(regRes[2], 16) + "," + parseInt(regRes[3], 16) + "," + parseInt(regRes[4], 16) / 255 + ")" : null != (regRes = regexps.a.exec(color)) ? "rgba(" + parseInt(regRes[1] + regRes[1], 16) + "," + parseInt(regRes[2] + regRes[2], 16) + "," + parseInt(regRes[3] + regRes[3], 16) + "," + parseInt(regRes[4] + regRes[4], 16) / 255 + ")" : color;
         }
         /**
@@ -21762,7 +21647,7 @@ object-assign
  */        function generateCSSTextOutline(color, thickness) {
             return "-1px -1px " + thickness + " " + color + ",1px -1px " + thickness + " " + color + ",-1px 1px " + thickness + " " + color + ",1px 1px " + thickness + " " + color;
         }
-        // TODO
+ // TODO
         // tts:showBackground (applies to region)
         // tts:zIndex (applies to region)
         /**
@@ -21773,10 +21658,10 @@ object-assign
             // applies to span
             var color = style.color;
             color && (element.style.color = ttmlColorToCSSColor(color));
-            // applies to body, div, p, region, span
+ // applies to body, div, p, region, span
                         var backgroundColor = style.backgroundColor;
             backgroundColor && (element.style.backgroundColor = ttmlColorToCSSColor(backgroundColor));
-            // applies to span
+ // applies to span
                         var textOutline = style.textOutline;
             if (textOutline) {
                 var outlineData = textOutline.trim().replace(/\s+/g, " ").split(" "), len = outlineData.length;
@@ -21798,7 +21683,7 @@ object-assign
                     }
                 }
             }
-            // applies to span
+ // applies to span
                         var textDecoration = style.textDecoration;
             if (textDecoration) switch (textDecoration) {
               case "noUnderline":
@@ -21814,7 +21699,7 @@ object-assign
               default:
                 element.style.textDecoration = textDecoration;
             }
-            // applies to span
+ // applies to span
                         var fontFamily = style.fontFamily;
             if (fontFamily) switch (fontFamily) {
               case "proportionalSansSerif":
@@ -21840,21 +21725,21 @@ object-assign
               default:
                 element.style.fontFamily = fontFamily;
             }
-            // applies to span
+ // applies to span
                         var fontStyle = style.fontStyle;
             fontStyle && (element.style.fontStyle = fontStyle);
-            // applies to span
+ // applies to span
                         var fontWeight = style.fontWeight;
             fontWeight && (element.style.fontWeight = fontWeight);
-            // applies to span
+ // applies to span
                         var fontSize = style.fontSize;
             fontSize && (
             // TODO Check if formats are always really 1:1
             element.style.fontSize = fontSize);
-            // applies to p, span
+ // applies to p, span
                         var direction = style.direction;
             direction && (element.style.direction = direction);
-            // applies to p, span
+ // applies to p, span
                         var unicodeBidi = style.unicodeBidi;
             if (unicodeBidi) switch (unicodeBidi) {
               case "bidiOverride":
@@ -21868,10 +21753,10 @@ object-assign
               default:
                 element.style.unicodeBidi = "normal";
             }
-            // applies to body, div, p, region, span
+ // applies to body, div, p, region, span
                         var visibility = style.visibility;
             visibility && (element.style.visibility = visibility), "none" === style.display && (element.style.display = "none");
-            // applies to body, div, p, region, span
+ // applies to body, div, p, region, span
                         // applies to body, div, p, region, span
             var wrapOption = style.wrapOption;
             element.style.whiteSpace = "noWrap" === wrapOption ? shouldTrimWhiteSpace ? "nowrap" : "pre" : shouldTrimWhiteSpace ? "normal" : "pre-wrap";
@@ -21887,21 +21772,21 @@ object-assign
                 var results = regexps.c.exec(extent);
                 null != results && (element.style.width = results[1] + "%", element.style.height = results[2] + "%");
             }
-            // applies to region
+ // applies to region
                         style.writingMode;
             var overflow = style.overflow;
             element.style.overflow = overflow || "hidden";
             // applies to region
             var padding = style.padding;
             padding && (element.style.padding = padding);
-            // applies to region
+ // applies to region
                         var origin = style.origin;
             if (origin) {
                 var resultsPercent = regexps.c.exec(origin);
                 null != resultsPercent && (element.style.position = "relative", element.style.left = resultsPercent[1] + "%", 
                 element.style.top = resultsPercent[2] + "%");
             }
-            // applies to region
+ // applies to region
                         var displayAlign = style.displayAlign;
             if (element.style.display = "flex", element.style.flexDirection = "column", displayAlign) switch (displayAlign) {
               case "before":
@@ -21915,13 +21800,13 @@ object-assign
               case "after":
                 element.style.justifyContent = "flex-end";
             }
-            // applies to region
+ // applies to region
                         var opacity = style.opacity;
             opacity && (element.style.opacity = opacity);
-            // applies to body, div, p, region, span
+ // applies to body, div, p, region, span
                         var visibility = style.visibility;
             visibility && (element.style.visibility = visibility), "none" === style.display && (element.style.display = "none");
-            // applies to body, div, p, region, span
+ // applies to body, div, p, region, span
                 }
         /**
  * Apply style set for a <p> element
@@ -21931,10 +21816,10 @@ object-assign
             // applies to body, div, p, region, span
             var paragraphBackgroundColor = style.backgroundColor;
             paragraphBackgroundColor && (element.style.backgroundColor = ttmlColorToCSSColor(paragraphBackgroundColor));
-            // applies to p
+ // applies to p
                         var lineHeight = style.lineHeight;
             lineHeight && (element.style.lineHeight = lineHeight);
-            // applies to p
+ // applies to p
                         var textAlign = style.textAlign;
             if (textAlign) switch (textAlign) {
               case "center":
@@ -21984,16 +21869,16 @@ object-assign
  * @returns {Array.<HTMLElement>}
  */        function generateTextContent(paragraph, regions, styles, paragraphStyle, shouldTrimWhiteSpace) {
             /**
-     * Recursive function, taking a node in argument and returning the
-     * corresponding array of HTMLElement in order.
-     * @param {Node} node - the node in question
-     * @param {Object} style - the current state of the style for the node.
-     * /!\ The style object can be mutated, provide a copy of it.
-     * @param {Array.<Element>} spans - The spans parent of this node.
-     * @param {Boolean} shouldTrimWhiteSpaceFromParent - True if the space should be
-     * trimmed by default. From the parent xml:space parameter.
-     * @returns {Array.<HTMLElement>}
-     */
+   * Recursive function, taking a node in argument and returning the
+   * corresponding array of HTMLElement in order.
+   * @param {Node} node - the node in question
+   * @param {Object} style - the current state of the style for the node.
+   * /!\ The style object can be mutated, provide a copy of it.
+   * @param {Array.<Element>} spans - The spans parent of this node.
+   * @param {Boolean} shouldTrimWhiteSpaceFromParent - True if the space should be
+   * trimmed by default. From the parent xml:space parameter.
+   * @returns {Array.<HTMLElement>}
+   */
             return function loop(node, style, spans, shouldTrimWhiteSpaceFromParent) {
                 for (var childNodes = node.childNodes, elements = [], i = 0; i < childNodes.length; i++) {
                     var currentNode = childNodes[i];
@@ -22026,13 +21911,13 @@ object-assign
             if (parentElement.className = "rxp-texttrack-region", applyGeneralStyle(parentElement, paragraphStyle), 
             body) {
                 // applies to body, div, p, region, span
-                var bodyBackgroundColor = Object(ttml_style.a)([ "backgroundColor" ], [].concat(divs, [ body ]), styles, regions).bodyBackgroundColor;
+                var bodyBackgroundColor = Object(ttml_style.a)([ "backgroundColor" ], divs.concat([ body ]), styles, regions).bodyBackgroundColor;
                 bodyBackgroundColor && (parentElement.style.backgroundColor = ttmlColorToCSSColor(bodyBackgroundColor));
             }
             var pElement = document.createElement("p");
             pElement.className = "rxp-texttrack-p", applyPStyle(pElement, paragraphStyle);
             for (var textContent = generateTextContent(paragraph, regions, styles, paragraphStyle, shouldTrimWhiteSpace), i = 0; i < textContent.length; i++) pElement.appendChild(textContent[i]);
-            // NOTE:
+ // NOTE:
             // The following code is for the inclusion of div elements. This has no
             // advantage for now, and might only with future evolutions.
             // (This is only an indication of what the base of the code could look like).
@@ -22152,7 +22037,7 @@ object-assign
                         });
                     }
                 }
-                // construct regions array based on the xml as an optimization
+ // construct regions array based on the xml as an optimization
                                 for (var regions = [], _i = 0; _i <= regionNodes.length - 1; _i++) {
                     var regionNode = regionNodes[_i];
                     if (regionNode instanceof Element) {
@@ -22172,7 +22057,7 @@ object-assign
                         }();
                     }
                 }
-                // Computing the style takes a lot of ressources.
+ // Computing the style takes a lot of ressources.
                 // To avoid too much re-computation, let's compute the body style right
                 // now and do the rest progressively.
                 // TODO Compute corresponding CSS style here (as soon as we now the TTML
@@ -22192,12 +22077,12 @@ object-assign
             return parseTTMLStringToDIV;
         });
     }, 
-    /* 128 */
+    /* 129 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./src/parsers/texttracks/webvtt/getCueBlocks.ts
-        var getCueBlocks = __webpack_require__(85), utils = __webpack_require__(48);
+        var getCueBlocks = __webpack_require__(86), utils = __webpack_require__(49);
         // EXTERNAL MODULE: ./src/parsers/texttracks/webvtt/utils.ts
                 // CONCATENATED MODULE: ./src/parsers/texttracks/webvtt/getStyleBlocks.ts
         /**
@@ -22242,7 +22127,7 @@ object-assign
             return styleBlocks;
         }
         // EXTERNAL MODULE: ./src/parsers/texttracks/webvtt/parseCueBlock.ts + 1 modules
-                var parseCueBlock = __webpack_require__(100), array_includes = __webpack_require__(11);
+                var parseCueBlock = __webpack_require__(101), array_includes = __webpack_require__(11);
         // EXTERNAL MODULE: ./src/utils/array-includes.ts
                 // CONCATENATED MODULE: ./src/parsers/texttracks/webvtt/html/convertPayloadToHTML.ts
         /**
@@ -22269,7 +22154,7 @@ object-assign
  * @returns {Node}
  */
         function createStyledElement(baseNode, styleElements, styleClasses) {
-            var HTMLTags = [ "u", "i", "b" ], mainNodeName = baseNode.nodeName.toLowerCase().split(".")[0], nodeWithStyle = void 0;
+            var nodeWithStyle, HTMLTags = [ "u", "i", "b" ], mainNodeName = baseNode.nodeName.toLowerCase().split(".")[0];
             if (Object(array_includes.a)([ "u", "i", "b", "c", "#text" ], mainNodeName)) if ("#text" === mainNodeName) {
                 var linifiedText = baseNode.wholeText.split("\n");
                 nodeWithStyle = document.createElement("span");
@@ -22346,7 +22231,7 @@ object-assign
             if (styleBlock.length < 2) return [];
             if (styleBlock[1].match(/::cue {/)) classNames.push({
                 isGlobalStyle: !0
-            }), index++; else for (var cueClassLine = void 0; styleBlock[index] && (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)); ) classNames.push({
+            }), index++; else for (var cueClassLine; styleBlock[index] && (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/)); ) classNames.push({
                 className: cueClassLine[1],
                 isGlobalStyle: !1
             }), index++;
@@ -22452,71 +22337,20 @@ object-assign
             return parseWebVTT;
         });
     }, 
-    /* 129 */
+    /* 130 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/merge.js
-        var merge = __webpack_require__(134), interval = __webpack_require__(139), concat = __webpack_require__(107), of = __webpack_require__(75), Subject = __webpack_require__(26), mapTo = __webpack_require__(136), startWith = __webpack_require__(138), switchMapTo = __webpack_require__(149), takeUntil = __webpack_require__(141), events = __webpack_require__(8), config = __webpack_require__(3), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(55);
+        var merge = __webpack_require__(135), interval = __webpack_require__(140), concat = __webpack_require__(106), of = __webpack_require__(76), Subject = __webpack_require__(43), mapTo = __webpack_require__(137), startWith = __webpack_require__(139), switchMapTo = __webpack_require__(150), takeUntil = __webpack_require__(142), events = __webpack_require__(8), config = __webpack_require__(2), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(56), MAX_DELTA_BUFFER_TIME = .2;
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/interval.js
-                // CONCATENATED MODULE: ./src/core/source_buffers/text/html/buffer_manager.ts
-        function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Maximum time difference, in seconds, between two text segment's start times
- * and/or end times for them to be considered the same in the custom text's
- * source buffer used for the "html" textTrackMode.
- *
- * For example for two segments s1 and s2 which have a start time respectively
- * of st1 and st2 and end time of et1 and et2:
- *   - if both the absolute difference between st1 and st2 AND the one between
- *     et1 and et2 is inferior or equal to the MAX_DELTA_BUFFER_TIME, s1 and s2
- *     are considered to target the exact same time. As a consequence, if s2 is
- *     added after s1 in the source buffer, s1 will be completely replaced by
- *     it and vice-versa.
- *   - if only one of the two (absolute difference between st1 and st2 OR et1
- *     and et2) is inferior to the MAX_DELTA_BUFFER_TIME then the last added
- *     is not completely considered the same. It WILL still replace - either
- *     partially or completely (depending on the sign of the other difference) -
- *     the previously added segment.
- *   - if both differences are strictly superior to the MAX_DELTA_BUFFER_TIME,
- *     then they are not considered to have the same start nor the same end.
- *     They can still overlap however, and MIGHT thus still replace partially
- *     or completely each other.
- *
- * Setting a value too low might lead to two segments targeting the same time,
- * both being present in the source buffer. In worst case scenarios, this could
- * lead to indicate that an unwanted text track is still here (theorically
- * though, this is a case that should never happen for reasons that might be too
- * long to explain here).
- *
- * Setting a value too high might lead to two segments targeting different times
- * to be wrongly believed to target the same time. In worst case scenarios, this
- * could lead to wanted text tracks being removed.
- * @type Number
- */        var MAX_DELTA_BUFFER_TIME = .2;
-        /**
+                /**
  * @see MAX_DELTA_BUFFER_TIME
  * @param {Number} a
  * @param {Number} b
  * @returns {Boolean}
- */        function areNearlyEqual(a, b) {
+ */
+        function areNearlyEqual(a, b) {
             return Math.abs(a - b) <= MAX_DELTA_BUFFER_TIME;
         }
         /**
@@ -22564,28 +22398,31 @@ object-assign
  * Manage the buffer of the HTML text Sourcebuffer.
  * Allows to add, remove and recuperate cues at given times.
  * @class TextBufferManager
- */        var buffer_manager = function() {
+ */        var TextBufferManager = 
+        /* */
+        function() {
             function TextBufferManager() {
-                _classCallCheck(this, TextBufferManager), this._cuesBuffer = [];
+                this._cuesBuffer = [];
             }
             /**
-     * Get corresponding cue for the given time.
-     * A cue is an object with three properties:
-     *   - start {Number}: start time for which the cue should be displayed.
-     *   - end {Number}: end time for which the cue should be displayed.
-     *   - element {HTMLElement}: The cue to diplay
-     *
-     * We do not mutate individual cue here.
-     * That is, if the ``get`` method returns the same cue's reference than a
-     * previous ``get`` call, its properties are guaranteed to have the exact same
-     * values than before, if you did not mutate it on your side.
-     * The inverse is true, if the values are the same than before, the reference
-     * will stay the same (this is useful to easily check if the DOM should be
-     * updated, for example).
-     *
-     * @param {Number} time
-     * @returns {HTMLElement|undefined} - The cue to display
-     */            return TextBufferManager.prototype.get = function get(time) {
+   * Get corresponding cue for the given time.
+   * A cue is an object with three properties:
+   *   - start {Number}: start time for which the cue should be displayed.
+   *   - end {Number}: end time for which the cue should be displayed.
+   *   - element {HTMLElement}: The cue to diplay
+   *
+   * We do not mutate individual cue here.
+   * That is, if the ``get`` method returns the same cue's reference than a
+   * previous ``get`` call, its properties are guaranteed to have the exact same
+   * values than before, if you did not mutate it on your side.
+   * The inverse is true, if the values are the same than before, the reference
+   * will stay the same (this is useful to easily check if the DOM should be
+   * updated, for example).
+   *
+   * @param {Number} time
+   * @returns {HTMLElement|undefined} - The cue to display
+   */            var _proto = TextBufferManager.prototype;
+            return _proto.get = function get(time) {
                 // begins at the end as most of the time the player will ask for the last
                 // CuesGroup
                 for (var cuesBuffer = this._cuesBuffer, i = cuesBuffer.length - 1; i >= 0; i--) for (var cues = cuesBuffer[i].cues, j = cues.length - 1; j >= 0; j--) {
@@ -22594,22 +22431,22 @@ object-assign
                 }
             }, 
             /**
-     * Remove cue from a certain range of time.
-     * @param {Number} from
-     * @param {Number} to
-     */
-            TextBufferManager.prototype.remove = function remove(from, _to) {
+   * Remove cue from a certain range of time.
+   * @param {Number} from
+   * @param {Number} to
+   */
+            _proto.remove = function remove(from, _to) {
                 for (var to = Math.max(from, _to), cuesBuffer = this._cuesBuffer, len = cuesBuffer.length, i = 0; i < len; i++) if (cuesBuffer[i].end > from) {
                     var startCuesInfos = cuesBuffer[i];
                     if (startCuesInfos.start >= to) 
                     // our cue is strictly after this interval, we have nothing to do
                     return;
-                    // ``to`` is within this segment
+ // ``to`` is within this segment
                                         if (startCuesInfos.end >= to) {
                         var _removeCuesInfosBetwe = removeCuesInfosBetween(startCuesInfos, from, to), cuesInfos1 = _removeCuesInfosBetwe[0], cuesInfos2 = _removeCuesInfosBetwe[1];
                         return this._cuesBuffer[i] = cuesInfos1, void cuesBuffer.splice(i + 1, 0, cuesInfos2);
                     }
-                    // Else remove the part of the segment after ``from``, and the concerned
+ // Else remove the part of the segment after ``from``, and the concerned
                     // segments after that
                                         startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from), 
                     startCuesInfos.end = Math.max(from, startCuesInfos.start);
@@ -22617,8 +22454,7 @@ object-assign
                         var endCuesInfos = cuesBuffer[i];
                         if (to <= endCuesInfos.end) 
                         // remove all cues from the start to this one non-included
-                        return cuesBuffer.splice(i + 1, j - (i + 1)), void (
-                        // if ``to`` is in the middle of the last segment
+                        return cuesBuffer.splice(i + 1, j - (i + 1)), void (// if ``to`` is in the middle of the last segment
                         to > endCuesInfos.start && (endCuesInfos.cues = getCuesAfter(endCuesInfos.cues, to), 
                         endCuesInfos.start = to));
                     }
@@ -22626,33 +22462,33 @@ object-assign
                 }
             }, 
             /**
-     * Insert new cues in our text buffer.
-     * cues is an array of objects with three properties:
-     *   - start {Number}: start time for which the cue should be displayed.
-     *   - end {Number}: end time for which the cue should be displayed.
-     *   - element {HTMLElement}: The cue to diplay
-     *
-     * @param {Array.<Object>} cues - CuesGroups, array of objects with the
-     * following properties:
-     *   - start {Number}: the time at which the cue will start to be displayed
-     *   - end {Number}: the time at which the cue will end to be displayed
-     *   - cue {HTMLElement}: The cue
-     * @param {Number} start - Start time at which the CuesGroup applies.
-     * This is different than the start of the first cue to display in it, this
-     * has more to do with the time at which the _text segment_ starts.
-     * @param {Number} end - End time at which the CuesGroup applies.
-     * This is different than the end of the last cue to display in it, this
-     * has more to do with the time at which the _text segment_ ends.
-     *
-     * TODO add securities to ensure that:
-     *   - the start of a CuesGroup is inferior or equal to the start of the first
-     *     cue in it
-     *   - the end of a CuesGroup is superior or equal to the end of the last
-     *     cue in it
-     * If those requirements are not met, we could delete some cues when adding
-     * a CuesGroup before/after. Find a solution.
-     */
-            TextBufferManager.prototype.insert = function insert(cues, start, end) {
+   * Insert new cues in our text buffer.
+   * cues is an array of objects with three properties:
+   *   - start {Number}: start time for which the cue should be displayed.
+   *   - end {Number}: end time for which the cue should be displayed.
+   *   - element {HTMLElement}: The cue to diplay
+   *
+   * @param {Array.<Object>} cues - CuesGroups, array of objects with the
+   * following properties:
+   *   - start {Number}: the time at which the cue will start to be displayed
+   *   - end {Number}: the time at which the cue will end to be displayed
+   *   - cue {HTMLElement}: The cue
+   * @param {Number} start - Start time at which the CuesGroup applies.
+   * This is different than the start of the first cue to display in it, this
+   * has more to do with the time at which the _text segment_ starts.
+   * @param {Number} end - End time at which the CuesGroup applies.
+   * This is different than the end of the last cue to display in it, this
+   * has more to do with the time at which the _text segment_ ends.
+   *
+   * TODO add securities to ensure that:
+   *   - the start of a CuesGroup is inferior or equal to the start of the first
+   *     cue in it
+   *   - the end of a CuesGroup is superior or equal to the end of the last
+   *     cue in it
+   * If those requirements are not met, we could delete some cues when adding
+   * a CuesGroup before/after. Find a solution.
+   */
+            _proto.insert = function insert(cues, start, end) {
                 for (var cuesBuffer = this._cuesBuffer, cuesInfosToInsert = {
                     start: start,
                     end: end,
@@ -22669,7 +22505,7 @@ object-assign
                             // Which means:
                             //   1. replace the current cue with ours
                             return void (cuesBuffer[i] = cuesInfosToInsert);
-                            // our cue goes beyond the current one:
+ // our cue goes beyond the current one:
                             //   ours:            |AAAAAAA|
                             //   the current one: |BBBB|
                             //   Result:          |AAAAAAA|
@@ -22692,14 +22528,13 @@ object-assign
                             return !cuesInfos || // There is no cue here
                             areNearlyEqual(end, cuesInfos.end) ? 
                             // put in place
-                            void (cuesBuffer[i] = cuesInfosToInsert) : (
-                            // else -> end < cuesInfos.end (overlapping case)
+                            void (cuesBuffer[i] = cuesInfosToInsert) : (// else -> end < cuesInfos.end (overlapping case)
                             //   ours:            |AAAAA|
                             //   the current one: |BBBBBBBB|
                             //   Result:          |AAAAABBB|
                             cuesInfos.cues = getCuesAfter(cuesInfos.cues, end), cuesInfos.start = end, void cuesBuffer.splice(i, 0, cuesInfosToInsert));
                         }
-                        // else -> start > cuesInfos.start
+ // else -> start > cuesInfos.start
                                                 if (start < cuesInfos.start) return end < cuesInfos.start ? 
                         // our cue goes strictly before the current one:
                         //   ours:            |AAAAAAA|
@@ -22715,8 +22550,7 @@ object-assign
                         // Which means:
                         //   - update start time of the current one to be sure
                         //   - add ours before the current one
-                        cuesInfos.start = end, void cuesBuffer.splice(i, 0, cuesInfosToInsert)) : (
-                        // our cue overlaps the current one:
+                        cuesInfos.start = end, void cuesBuffer.splice(i, 0, cuesInfosToInsert)) : (// our cue overlaps the current one:
                         //   ours:            |AAAAAAA|
                         //   the current one:     |BBBBB|
                         //   Result:          |AAAAAAABB|
@@ -22740,7 +22574,7 @@ object-assign
                         //   3. add ours after current one
                         return cuesInfos.cues = getCuesBefore(cuesInfos.cues, start), cuesInfos.end = start, 
                         void cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
-                        // else -> end < cuesInfos.end
+ // else -> end < cuesInfos.end
                         // our cue is in the current one:
                         //   ours:              |AAA|
                         //   the current one: |BBBBBBB|
@@ -22753,13 +22587,13 @@ object-assign
                         void cuesBuffer.splice(i + 2, 0, cuesInfos2);
                     }
                 }
-                // no cues group has the end after our current start.
+ // no cues group has the end after our current start.
                 // These cues should be the last one
                                 cuesBuffer.push(cuesInfosToInsert);
             }, TextBufferManager;
         }(), features = __webpack_require__(6);
-        /* harmony default export */        
-        // CONCATENATED MODULE: ./src/core/source_buffers/text/html/parsers.ts
+        // EXTERNAL MODULE: ./src/features/index.ts
+                // CONCATENATED MODULE: ./src/core/source_buffers/text/html/parsers.ts
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -22793,23 +22627,9 @@ object-assign
             return log.a.debug("parsed successfully!", parsed), parsed;
         }
         // CONCATENATED MODULE: ./src/core/source_buffers/text/html/index.ts
-                function html_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
-        }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
-                }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+        /* harmony export (binding) */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -22829,7 +22649,10 @@ object-assign
         /**
  * /!\ This file is feature-switchable.
  * It always should be imported through the `features` object.
- */        var MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL = config.a.MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL;
+ */        __webpack_require__.d(__webpack_exports__, "default", function() {
+            return html_HTMLTextTrackSourceBuffer;
+        });
+        var MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL = config.a.MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL;
         /**
  * Generate the clock at which TextTrack HTML Cues should be refreshed.
  * @param {HTMLMediaElement} videoElement
@@ -22851,20 +22674,21 @@ object-assign
         /**
  * Source buffer to display TextTracks in the given HTML element.
  * @class HTMLTextTrackSourceBuffer
- */        var html_HTMLTextTrackSourceBuffer = function(_AbstractSourceBuffer) {
+ */        var html_HTMLTextTrackSourceBuffer = 
+        /* */
+        function(_AbstractSourceBuffer) {
             /**
-     * @param {HTMLMediaElement} videoElement
-     * @param {HTMLElement} textTrackElement
-     */
+   * @param {HTMLMediaElement} videoElement
+   * @param {HTMLElement} textTrackElement
+   */
             function HTMLTextTrackSourceBuffer(videoElement, textTrackElement) {
-                html_classCallCheck(this, HTMLTextTrackSourceBuffer), log.a.debug("creating html text track source buffer");
-                var _this = _possibleConstructorReturn(this, _AbstractSourceBuffer.call(this));
-                return _this._videoElement = videoElement, _this._textTrackElement = textTrackElement, 
-                _this._destroy$ = new Subject.a(), _this._buffer = new buffer_manager(), _this._currentElement = null, 
-                generateClock(_this._videoElement).pipe(Object(takeUntil.a)(_this._destroy$)).subscribe(function(shouldDisplay) {
+                var _this;
+                return log.a.debug("creating html text track source buffer"), (_this = _AbstractSourceBuffer.call(this) || this)._videoElement = videoElement, 
+                _this._textTrackElement = textTrackElement, _this._destroy$ = new Subject.a(), _this._buffer = new TextBufferManager(), 
+                _this._currentElement = null, generateClock(_this._videoElement).pipe(Object(takeUntil.a)(_this._destroy$)).subscribe(function(shouldDisplay) {
                     if (!shouldDisplay) return safelyRemoveChild(textTrackElement, _this._currentElement), 
                     void (_this._currentElement = null);
-                    // to spread the time error, we divide the regular chosen interval.
+ // to spread the time error, we divide the regular chosen interval.
                     // As the clock is also based on real video events, we cannot just
                     // divide by two the regular interval.
                                         var time = Math.max(_this._videoElement.currentTime - MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 2e3, 0), cue = _this._buffer.get(time);
@@ -22874,9 +22698,11 @@ object-assign
                 }), _this;
             }
             /**
-     * Append text tracks.
-     * @param {Object} data
-     */            return _inherits(HTMLTextTrackSourceBuffer, _AbstractSourceBuffer), HTMLTextTrackSourceBuffer.prototype._append = function _append(data) {
+   * Append text tracks.
+   * @param {Object} data
+   */            _inheritsLoose(HTMLTextTrackSourceBuffer, _AbstractSourceBuffer);
+            var _proto = HTMLTextTrackSourceBuffer.prototype;
+            return _proto._append = function _append(data) {
                 log.a.debug("appending new html text tracks", data);
                 var timescale = data.timescale, timescaledStart = data.start, timescaledEnd = data.end, dataString = data.data, type = data.type, language = data.language;
                 if (timescaledEnd && timescaledEnd - timescaledStart <= 0) 
@@ -22888,29 +22714,28 @@ object-assign
                 }
             }, 
             /**
-     * @param {Number} from
-     * @param {Number} to
-     */
-            HTMLTextTrackSourceBuffer.prototype._remove = function _remove(from, to) {
+   * @param {Number} from
+   * @param {Number} to
+   */
+            _proto._remove = function _remove(from, to) {
                 log.a.debug("removing html text track data", from, to), this._buffer.remove(from, to), 
                 this.buffered.remove(from, to);
             }, 
             /**
-     * Free up ressources from this sourceBuffer
-     */
-            HTMLTextTrackSourceBuffer.prototype._abort = function _abort() {
+   * Free up ressources from this sourceBuffer
+   */
+            _proto._abort = function _abort() {
                 log.a.debug("aborting html text track source buffer"), this._destroy$.next(), this._destroy$.complete(), 
                 safelyRemoveChild(this._textTrackElement, this._currentElement);
             }, HTMLTextTrackSourceBuffer;
         }(abstract_source_buffer.a);
-        /* harmony default export */        __webpack_exports__.default = html_HTMLTextTrackSourceBuffer;
-    }, 
-    /* 130 */
+        /***/    }, 
+    /* 131 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./src/compat/index.ts
-        var compat = __webpack_require__(12), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(55), features = __webpack_require__(6);
+        var compat = __webpack_require__(12), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(56), features = __webpack_require__(6);
         // EXTERNAL MODULE: ./src/log.ts + 1 modules
                 // CONCATENATED MODULE: ./src/core/source_buffers/text/native/parsers.ts
         /**
@@ -22946,23 +22771,9 @@ object-assign
             return log.a.debug("parsed successfully!", parsed), parsed;
         }
         // CONCATENATED MODULE: ./src/core/source_buffers/text/native/index.ts
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
-        }
-        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
-        }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
-                }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+        /* harmony export (binding) */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -22988,21 +22799,29 @@ object-assign
  * video element.
  * @class NativeTextTrackSourceBuffer
  * @extends AbstractSourceBuffer
- */        var native_NativeTextTrackSourceBuffer = function(_AbstractSourceBuffer) {
+ */        __webpack_require__.d(__webpack_exports__, "default", function() {
+            return native_NativeTextTrackSourceBuffer;
+        });
+        var native_NativeTextTrackSourceBuffer = 
+        /* */
+        function(_AbstractSourceBuffer) {
             /**
-     * @param {HTMLMediaElement} videoElement
-     * @param {Boolean} hideNativeSubtitle
-     */
+   * @param {HTMLMediaElement} videoElement
+   * @param {Boolean} hideNativeSubtitle
+   */
             function NativeTextTrackSourceBuffer(videoElement, hideNativeSubtitle) {
-                _classCallCheck(this, NativeTextTrackSourceBuffer), log.a.debug("creating native text track source buffer");
-                var _this = _possibleConstructorReturn(this, _AbstractSourceBuffer.call(this)), _addTextTrack = Object(compat.a)(videoElement, hideNativeSubtitle), track = _addTextTrack.track, trackElement = _addTextTrack.trackElement;
+                var _this;
+                log.a.debug("creating native text track source buffer"), _this = _AbstractSourceBuffer.call(this) || this;
+                var _addTextTrack = Object(compat.a)(videoElement, hideNativeSubtitle), track = _addTextTrack.track, trackElement = _addTextTrack.trackElement;
                 return _this._videoElement = videoElement, _this._track = track, _this._trackElement = trackElement, 
                 _this;
             }
             /**
-     * Append text tracks.
-     * @param {Object} data
-     */            return _inherits(NativeTextTrackSourceBuffer, _AbstractSourceBuffer), NativeTextTrackSourceBuffer.prototype._append = function _append(data) {
+   * Append text tracks.
+   * @param {Object} data
+   */            _inheritsLoose(NativeTextTrackSourceBuffer, _AbstractSourceBuffer);
+            var _proto = NativeTextTrackSourceBuffer.prototype;
+            return _proto._append = function _append(data) {
                 log.a.debug("appending new native text tracks", data);
                 var timescale = data.timescale, timescaledStart = data.start, timescaledEnd = data.end, dataString = data.data, type = data.type, language = data.language;
                 if (null != timescaledEnd && timescaledEnd - timescaledStart <= 0) 
@@ -23011,7 +22830,7 @@ object-assign
                     var startTime = timescaledStart / timescale, endTime = null != timescaledEnd ? timescaledEnd / timescale : void 0, cues = parseTextTrackToCues(type, dataString, this.timestampOffset, language);
                     if (cues.length > 0) {
                         var firstCue = cues[0], currentCues = this._track.cues;
-                        // NOTE(compat): cleanup all current cues if the newly added
+ // NOTE(compat): cleanup all current cues if the newly added
                         // ones are in the past. this is supposed to fix an issue on
                         // IE/Edge.
                                                 currentCues.length > 0 && firstCue.startTime < currentCues[currentCues.length - 1].startTime && this._remove(firstCue.startTime, Infinity);
@@ -23021,17 +22840,17 @@ object-assign
                 }
             }, 
             /**
-     * @param {Number} from
-     * @param {Number} to
-     */
-            NativeTextTrackSourceBuffer.prototype._remove = function _remove(from, to) {
+   * @param {Number} from
+   * @param {Number} to
+   */
+            _proto._remove = function _remove(from, to) {
                 log.a.debug("removing native text track data", from, to);
                 for (var track = this._track, cues = track.cues, i = cues.length - 1; i >= 0; i--) {
                     var cue = cues[i], startTime = cue.startTime, endTime = cue.endTime;
                     startTime >= from && startTime <= to && endTime <= to && track.removeCue(cue);
                 }
                 this.buffered.remove(from, to);
-            }, NativeTextTrackSourceBuffer.prototype._abort = function _abort() {
+            }, _proto._abort = function _abort() {
                 log.a.debug("aborting native text track source buffer");
                 var _trackElement = this._trackElement, _videoElement = this._videoElement;
                 if (_trackElement && _videoElement && _videoElement.hasChildNodes()) try {
@@ -23042,28 +22861,24 @@ object-assign
                 this._track && (this._track.mode = "disabled"), this._trackElement && (this._trackElement.innerHTML = "");
             }, NativeTextTrackSourceBuffer;
         }(abstract_source_buffer.a);
-        /* harmony default export */        __webpack_exports__.default = native_NativeTextTrackSourceBuffer;
-    }, 
-    /* 131 */
+        /***/    }, 
+    /* 132 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subject.js
-                var Subject = __webpack_require__(26), merge = __webpack_require__(134), throwError = __webpack_require__(78), of = __webpack_require__(75), takeUntil = __webpack_require__(141), bytes = __webpack_require__(1), castToObservable = __webpack_require__(15), eventemitter = __webpack_require__(41), constants = __webpack_require__(24), events = __webpack_require__(8), _createClass = function() {
-            function defineProperties(target, props) {
-                for (var i = 0; i < props.length; i++) {
-                    var descriptor = props[i];
-                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
-                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, descriptor.key, descriptor);
-                }
-            }
-            return function(Constructor, protoProps, staticProps) {
-                return protoProps && defineProperties(Constructor.prototype, protoProps), staticProps && defineProperties(Constructor, staticProps), 
-                Constructor;
-            };
-        }();
+                var Subject = __webpack_require__(43), merge = __webpack_require__(135), throwError = __webpack_require__(79), of = __webpack_require__(76), takeUntil = __webpack_require__(142), bytes = __webpack_require__(1), castToObservable = __webpack_require__(17), eventemitter = __webpack_require__(40), constants = __webpack_require__(24), events = __webpack_require__(8);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/merge.js
-                function _classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+                // CONCATENATED MODULE: ./src/compat/eme/keySystemAccess.ts
+        function _defineProperties(target, props) {
+            for (var i = 0; i < props.length; i++) {
+                var descriptor = props[i];
+                descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, descriptor.key, descriptor);
+            }
+        }
+        function _createClass(Constructor, protoProps, staticProps) {
+            return protoProps && _defineProperties(Constructor.prototype, protoProps), staticProps && _defineProperties(Constructor, staticProps), 
+            Constructor;
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -23085,22 +22900,23 @@ object-assign
  *
  * All needed arguments are given to the constructor
  * @class CustomMediaKeySystemAccess
- */        var keySystemAccess = function() {
+ */        var MediaKeys_requestMediaKeySystemAccess, CustomMediaKeySystemAccess = 
+        /* */
+        function() {
             /**
    * @param {string} _keyType
    * @param {Object} _mediaKeys
    * @param {Object} _configuration
    */
             function CustomMediaKeySystemAccess(_keyType, _mediaKeys, _configuration) {
-                _classCallCheck(this, CustomMediaKeySystemAccess), this._keyType = _keyType, this._mediaKeys = _mediaKeys, 
-                this._configuration = _configuration;
+                this._keyType = _keyType, this._mediaKeys = _mediaKeys, this._configuration = _configuration;
             }
             /**
    * @returns {string}
-   */
+   */            var _proto = CustomMediaKeySystemAccess.prototype;
             /**
    * @returns {Promise}
-   */            return CustomMediaKeySystemAccess.prototype.createMediaKeys = function createMediaKeys() {
+   */            return _proto.createMediaKeys = function createMediaKeys() {
                 var _this = this;
                 return new Promise(function(res) {
                     return res(_this._mediaKeys);
@@ -23109,7 +22925,7 @@ object-assign
             /**
    * @returns {Object}
    */
-            CustomMediaKeySystemAccess.prototype.getConfiguration = function getConfiguration() {
+            _proto.getConfiguration = function getConfiguration() {
                 return this._configuration;
             }, _createClass(CustomMediaKeySystemAccess, [ {
                 key: "keySystem",
@@ -23118,23 +22934,10 @@ object-assign
                 }
             } ]), CustomMediaKeySystemAccess;
         }();
-        /* harmony default export */        function _possibleConstructorReturn(self, call) {
-            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" != typeof call && "function" != typeof call ? self : call;
-        }
-        function _inherits(subClass, superClass) {
-            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-            subClass.prototype = Object.create(superClass && superClass.prototype, {
-                constructor: {
-                    value: subClass,
-                    enumerable: !1,
-                    writable: !0,
-                    configurable: !0
-                }
-            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
-        }
-        function MediaKeys_classCallCheck(instance, Constructor) {
-            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        // CONCATENATED MODULE: ./src/compat/eme/MediaKeys.ts
+        /* harmony export (binding) */        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype), subClass.prototype.constructor = subClass, 
+            subClass.__proto__ = superClass;
         }
         /**
  * Copyright 2015 CANAL+ Group
@@ -23150,28 +22953,27 @@ object-assign
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */        
-        // CONCATENATED MODULE: ./src/compat/eme/MediaKeys.ts
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
+ */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return MockMediaKeys;
         }), 
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() {
             return MediaKeys_requestMediaKeySystemAccess;
         });
-        var MediaKeys_requestMediaKeySystemAccess = void 0, MockMediaKeys = function() {
-            function MockMediaKeys() {
-                MediaKeys_classCallCheck(this, MockMediaKeys);
-            }
-            return MockMediaKeys.prototype._setVideo = function _setVideo() {
+        // Default MockMediaKeys implementation
+        var MockMediaKeys = 
+        /* */
+        function() {
+            function MockMediaKeys() {}
+            var _proto = MockMediaKeys.prototype;
+            return _proto._setVideo = function _setVideo() {
                 throw new Error("MediaKeys is not implemented in your browser");
-            }, MockMediaKeys.prototype.createSession = function createSession() {
+            }, _proto.createSession = function createSession() {
                 throw new Error("MediaKeys is not implemented in your browser");
-            }, MockMediaKeys.prototype.setServerCertificate = function setServerCertificate() {
+            }, _proto.setServerCertificate = function setServerCertificate() {
                 throw new Error("MediaKeys is not implemented in your browser");
             }, MockMediaKeys;
         }();
-        // Default MockMediaKeys implementation
-                if (navigator.requestMediaKeySystemAccess) MediaKeys_requestMediaKeySystemAccess = function requestMediaKeySystemAccess(a, b) {
+        if (navigator.requestMediaKeySystemAccess) MediaKeys_requestMediaKeySystemAccess = function requestMediaKeySystemAccess(a, b) {
             return Object(castToObservable.a)(navigator.requestMediaKeySystemAccess(a, b));
         }; else {
             // Wrap "MediaKeys.prototype.update" form an event based system to a
@@ -23188,14 +22990,15 @@ object-assign
                     });
                 };
             };
-            // This is for Chrome with unprefixed EME api
+ // This is for Chrome with unprefixed EME api
                         if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
-                var MediaKeys_WebkitMediaKeySession = function(_EventEmitter) {
+                var MediaKeys_WebkitMediaKeySession = 
+                /* */
+                function(_EventEmitter) {
                     function WebkitMediaKeySession(mediaElement, keySystem) {
-                        MediaKeys_classCallCheck(this, WebkitMediaKeySession);
-                        var _this2 = _possibleConstructorReturn(this, _EventEmitter.call(this));
-                        return _this2._closeSession$ = new Subject.a(), _this2._vid = mediaElement, _this2._key = keySystem, 
-                        _this2.sessionId = "", _this2.closed = new Promise(function(resolve) {
+                        var _this2;
+                        return (_this2 = _EventEmitter.call(this) || this)._closeSession$ = new Subject.a(), 
+                        _this2._vid = mediaElement, _this2._key = keySystem, _this2.sessionId = "", _this2.closed = new Promise(function(resolve) {
                             _this2._closeSession$.subscribe(resolve);
                         }), _this2.keyStatuses = new Map(), _this2.expiration = NaN, Object(merge.a)(events.g(mediaElement), events.e(mediaElement), events.f(mediaElement)).pipe(Object(takeUntil.a)(_this2._closeSession$)).subscribe(function(evt) {
                             return _this2.trigger(evt.type, evt);
@@ -23207,33 +23010,38 @@ object-assign
                             _this2.sessionId = sessionId;
                         }), _this2;
                     }
-                    return _inherits(WebkitMediaKeySession, _EventEmitter), WebkitMediaKeySession.prototype.generateRequest = function generateRequest(_initDataType, initData) {
+                    _inheritsLoose(WebkitMediaKeySession, _EventEmitter);
+                    var _proto2 = WebkitMediaKeySession.prototype;
+                    return _proto2.generateRequest = function generateRequest(_initDataType, initData) {
                         var _this3 = this;
                         return new Promise(function(resolve) {
                             if ("function" != typeof _this3._vid.webkitGenerateKeyRequest) throw new Error("impossible to generate a key request");
                             _this3._vid.webkitGenerateKeyRequest(_this3._key, initData), resolve();
                         });
-                    }, WebkitMediaKeySession.prototype.close = function close() {
+                    }, _proto2.close = function close() {
                         var _this4 = this;
                         return new Promise(function(resolve) {
                             _this4._closeSession$.next(), _this4._closeSession$.complete(), resolve();
                         });
-                    }, WebkitMediaKeySession.prototype.load = function load() {
+                    }, _proto2.load = function load() {
                         return Promise.resolve(!1);
-                    }, WebkitMediaKeySession.prototype.remove = function remove() {
+                    }, _proto2.remove = function remove() {
                         return Promise.resolve();
                     }, WebkitMediaKeySession;
                 }(eventemitter.a);
-                MockMediaKeys = function() {
+                MockMediaKeys = 
+                /* */
+                function() {
                     function MockMediaKeys(keySystem) {
-                        MediaKeys_classCallCheck(this, MockMediaKeys), this.ks_ = keySystem;
+                        this.ks_ = keySystem;
                     }
-                    return MockMediaKeys.prototype._setVideo = function _setVideo(vid) {
+                    var _proto3 = MockMediaKeys.prototype;
+                    return _proto3._setVideo = function _setVideo(vid) {
                         this._vid = vid;
-                    }, MockMediaKeys.prototype.createSession = function createSession() {
+                    }, _proto3.createSession = function createSession() {
                         if (!this._vid) throw new Error("Video not attached to the MediaKeys");
                         return new MediaKeys_WebkitMediaKeySession(this._vid, this.ks_);
-                    }, MockMediaKeys.prototype.setServerCertificate = function setServerCertificate() {
+                    }, _proto3.setServerCertificate = function setServerCertificate() {
                         throw new Error("Server certificate is not implemented in your browser");
                     }, MockMediaKeys;
                 }();
@@ -23260,35 +23068,38 @@ object-assign
                                 distinctiveIdentifier: "not-allowed",
                                 persistentState: "not-allowed"
                             };
-                            return Object(of.a)(new keySystemAccess(keyType, new MockMediaKeys(keyType), keySystemConfigurationResponse));
+                            return Object(of.a)(new CustomMediaKeySystemAccess(keyType, new MockMediaKeys(keyType), keySystemConfigurationResponse));
                         }
                     }
                     return Object(throwError.a)(void 0);
                 };
-            }
-            // This is for IE11
+            } // This is for IE11
              else if (constants.c && constants.c.prototype && "function" == typeof constants.c.prototype.createSession && "function" == typeof constants.c.isTypeSupported) {
                 // TODO implement MediaKeySession completely
-                var MediaKeys_IE11MediaKeySession = function(_EventEmitter2) {
+                var MediaKeys_IE11MediaKeySession = 
+                /* */
+                function(_EventEmitter2) {
                     function IE11MediaKeySession(mk) {
-                        MediaKeys_classCallCheck(this, IE11MediaKeySession);
-                        var _this5 = _possibleConstructorReturn(this, _EventEmitter2.call(this));
-                        return _this5.sessionId = "", _this5.expiration = NaN, _this5.keyStatuses = new Map(), 
-                        _this5._mk = mk, _this5._closeSession$ = new Subject.a(), _this5.closed = new Promise(function(resolve) {
+                        var _this5;
+                        return (_this5 = _EventEmitter2.call(this) || this).sessionId = "", _this5.expiration = NaN, 
+                        _this5.keyStatuses = new Map(), _this5._mk = mk, _this5._closeSession$ = new Subject.a(), 
+                        _this5.closed = new Promise(function(resolve) {
                             _this5._closeSession$.subscribe(resolve);
                         }), _this5.update = wrapUpdate(function(license, sessionId) {
                             if (!_this5._ss) throw new Error("MediaKeySession not set");
                             _this5._ss.update(license, sessionId), _this5.sessionId = sessionId;
                         }), _this5;
                     }
-                    return _inherits(IE11MediaKeySession, _EventEmitter2), IE11MediaKeySession.prototype.generateRequest = function generateRequest(_initDataType, initData) {
+                    _inheritsLoose(IE11MediaKeySession, _EventEmitter2);
+                    var _proto4 = IE11MediaKeySession.prototype;
+                    return _proto4.generateRequest = function generateRequest(_initDataType, initData) {
                         var _this6 = this;
                         return new Promise(function(resolve) {
                             _this6._ss = _this6._mk.memCreateSession("video/mp4", initData), Object(merge.a)(events.g(_this6._ss), events.e(_this6._ss), events.f(_this6._ss)).pipe(Object(takeUntil.a)(_this6._closeSession$)).subscribe(function(evt) {
                                 return _this6.trigger(evt.type, evt);
                             }), resolve();
                         });
-                    }, IE11MediaKeySession.prototype.close = function close() {
+                    }, _proto4.close = function close() {
                         var _this7 = this;
                         return new Promise(function(resolve) {
                             _this7._ss && (
@@ -23298,13 +23109,13 @@ object-assign
                             _this7._ss = void 0), _this7._closeSession$.next(), _this7._closeSession$.complete(), 
                             resolve();
                         });
-                    }, IE11MediaKeySession.prototype.load = function load() {
+                    }, _proto4.load = function load() {
                         return Promise.resolve(!1);
-                    }, IE11MediaKeySession.prototype.remove = function remove() {
+                    }, _proto4.remove = function remove() {
                         return Promise.resolve();
                     }, IE11MediaKeySession;
                 }(eventemitter.a);
-                // on IE11, each created session needs to be created on a new
+ // on IE11, each created session needs to be created on a new
                 // MediaKeys object
                                 constants.c.prototype.alwaysRenew = !0, constants.c.prototype.memCreateSession = constants.c.prototype.createSession, 
                 constants.c.prototype.createSession = function() {
@@ -23326,7 +23137,7 @@ object-assign
                                 persistentState: "required",
                                 sessionTypes: [ "temporary", "persistent-license" ]
                             };
-                            return Object(of.a)(new keySystemAccess(keyType, new constants.c(keyType), keySystemConfigurationResponse));
+                            return Object(of.a)(new CustomMediaKeySystemAccess(keyType, new constants.c(keyType), keySystemConfigurationResponse));
                         }
                     }
                     return Object(throwError.a)(void 0);
@@ -23334,16 +23145,16 @@ object-assign
             } else MediaKeys_requestMediaKeySystemAccess = null;
         }
         /***/    }, 
-    /* 132 */ 
-    /* 133 */
+    /* 133 */ 
+    /* 134 */
     /***/ , 
-    /* 133 */
+    /* 134 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return defer;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _from__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(27), _empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(25);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _from__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(44), _empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(26);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_from,_empty PURE_IMPORTS_END */
         function defer(observableFactory) {
@@ -23359,13 +23170,13 @@ object-assign
         }
         //# sourceMappingURL=defer.js.map
         /***/    }, 
-    /* 134 */
+    /* 135 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return merge;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _util_isScheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(35), _operators_mergeAll__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(96), _fromArray__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(34);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _util_isScheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(33), _operators_mergeAll__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(97), _fromArray__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(25);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_util_isScheduler,_operators_mergeAll,_fromArray PURE_IMPORTS_END */
         function merge() {
@@ -23377,13 +23188,13 @@ object-assign
         }
         //# sourceMappingURL=merge.js.map
         /***/    }, 
-    /* 135 */
+    /* 136 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return fromEvent;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _util_isArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(42), _util_isFunction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(47), _operators_map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(63);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _util_isArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41), _util_isFunction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(48), _operators_map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(64);
         /* harmony import */        Object.prototype.toString;
         function fromEvent(target, eventName, options, resultSelector) {
             return Object(_util_isFunction__WEBPACK_IMPORTED_MODULE_2__.a)(options) && (resultSelector = options, 
@@ -23429,13 +23240,13 @@ object-assign
         }
         //# sourceMappingURL=fromEvent.js.map
         /***/    }, 
-    /* 136 */
+    /* 137 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return mapTo;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function mapTo(value) {
@@ -23460,13 +23271,13 @@ object-assign
             }, MapToSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 137 */
+    /* 138 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return filter;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function filter(predicate, thisArg) {
@@ -23497,13 +23308,13 @@ object-assign
             }, FilterSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 138 */
+    /* 139 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return startWith;
         });
-        /* harmony import */ var _observable_fromArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(34), _observable_scalar__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(76), _observable_empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(25), _observable_concat__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(107), _util_isScheduler__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(35);
+        /* harmony import */ var _observable_fromArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(25), _observable_scalar__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(77), _observable_empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(26), _observable_concat__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(106), _util_isScheduler__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(33);
         /* harmony import */        
         /** PURE_IMPORTS_START _observable_fromArray,_observable_scalar,_observable_empty,_observable_concat,_util_isScheduler PURE_IMPORTS_END */
         function startWith() {
@@ -23517,13 +23328,13 @@ object-assign
         }
         //# sourceMappingURL=startWith.js.map
         /***/    }, 
-    /* 139 */
+    /* 140 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return interval;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(39), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(59);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(38), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(60);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_scheduler_async,_util_isNumeric PURE_IMPORTS_END */
         function interval(period, scheduler) {
@@ -23548,13 +23359,13 @@ object-assign
         }
         //# sourceMappingURL=interval.js.map
         /***/    }, 
-    /* 140 */
+    /* 141 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return distinctUntilChanged;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10), _util_tryCatch__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(57), _util_errorObject__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(32);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10), _util_tryCatch__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(58), _util_errorObject__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(31);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber,_util_tryCatch,_util_errorObject PURE_IMPORTS_END */
         function distinctUntilChanged(compare, keySelector) {
@@ -23589,13 +23400,13 @@ object-assign
             }, DistinctUntilChangedSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 141 */
+    /* 142 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return takeUntil;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(21), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(22), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(21);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_OuterSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
         function takeUntil(notifier) {
@@ -23609,25 +23420,26 @@ object-assign
             }
             return TakeUntilOperator.prototype.call = function(subscriber, source) {
                 var takeUntilSubscriber = new TakeUntilSubscriber(subscriber), notifierSubscription = Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_2__.a)(takeUntilSubscriber, this.notifier);
-                return notifierSubscription && !notifierSubscription.closed ? (takeUntilSubscriber.add(notifierSubscription), 
+                return notifierSubscription && !takeUntilSubscriber.seenValue ? (takeUntilSubscriber.add(notifierSubscription), 
                 source.subscribe(takeUntilSubscriber)) : takeUntilSubscriber;
             }, TakeUntilOperator;
         }(), TakeUntilSubscriber = /* */ function(_super) {
             function TakeUntilSubscriber(destination) {
-                return _super.call(this, destination) || this;
+                var _this = _super.call(this, destination) || this;
+                return _this.seenValue = !1, _this;
             }
             return tslib__WEBPACK_IMPORTED_MODULE_0__.a(TakeUntilSubscriber, _super), TakeUntilSubscriber.prototype.notifyNext = function(outerValue, innerValue, outerIndex, innerIndex, innerSub) {
-                this.complete();
+                this.seenValue = !0, this.complete();
             }, TakeUntilSubscriber.prototype.notifyComplete = function() {}, TakeUntilSubscriber;
         }(_OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 142 */
+    /* 143 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return take;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10), _util_ArgumentOutOfRangeError__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(79), _observable_empty__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(25);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10), _util_ArgumentOutOfRangeError__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(80), _observable_empty__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(26);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber,_util_ArgumentOutOfRangeError,_observable_empty PURE_IMPORTS_END */
         function take(count) {
@@ -23654,13 +23466,13 @@ object-assign
             }, TakeSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 143 */
+    /* 144 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return mergeMapTo;
         });
-        /* harmony import */ var _mergeMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(66);
+        /* harmony import */ var _mergeMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(67);
         /** PURE_IMPORTS_START _mergeMap PURE_IMPORTS_END */        function mergeMapTo(innerObservable, resultSelector, concurrent) {
             return void 0 === concurrent && (concurrent = Number.POSITIVE_INFINITY), "function" == typeof resultSelector ? Object(_mergeMap__WEBPACK_IMPORTED_MODULE_0__.a)(function() {
                 return innerObservable;
@@ -23671,13 +23483,13 @@ object-assign
         }
         //# sourceMappingURL=mergeMapTo.js.map
         /***/    }, 
-    /* 144 */
+    /* 145 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return ignoreElements;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function ignoreElements() {
@@ -23698,7 +23510,7 @@ object-assign
             IgnoreElementsSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 145 */
+    /* 146 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -23706,7 +23518,7 @@ object-assign
         });
         /* unused harmony export CombineLatestOperator */
         /* unused harmony export CombineLatestSubscriber */
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _util_isScheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(35), _util_isArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(42), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(21), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(22), _fromArray__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(34), NONE = {};
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _util_isScheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(33), _util_isArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(41), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(22), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(21), _fromArray__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(25), NONE = {};
         /* harmony import */        function combineLatest() {
             for (var observables = [], _i = 0; _i < arguments.length; _i++) observables[_i] = arguments[_i];
             var resultSelector = null, scheduler = null;
@@ -23755,15 +23567,15 @@ object-assign
             }, CombineLatestSubscriber;
         }(_OuterSubscriber__WEBPACK_IMPORTED_MODULE_3__.a);
     }, 
-    /* 146 */
+    /* 147 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return catchError;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(21), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(22);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(22), _InnerSubscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(36), _util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(21);
         /* harmony import */        
-        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
+        /** PURE_IMPORTS_START tslib,_OuterSubscriber,_InnerSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
         function catchError(selector) {
             return function catchErrorOperatorFunction(source) {
                 var operator = new CatchOperator(selector), caught = source.lift(operator);
@@ -23790,18 +23602,20 @@ object-assign
                     } catch (err2) {
                         return void _super.prototype.error.call(this, err2);
                     }
-                    this._unsubscribeAndRecycle(), this.add(Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_2__.a)(this, result));
+                    this._unsubscribeAndRecycle();
+                    var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_2__.a(this, void 0, void 0);
+                    this.add(innerSubscriber), Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__.a)(this, result, void 0, void 0, innerSubscriber);
                 }
             }, CatchSubscriber;
         }(_OuterSubscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 147 */
+    /* 148 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return timer;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(17), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(39), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(59), _util_isScheduler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(35);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(38), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(60), _util_isScheduler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(33);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_scheduler_async,_util_isNumeric,_util_isScheduler PURE_IMPORTS_END */
         function timer(dueTime, periodOrScheduler, scheduler) {
@@ -23827,13 +23641,13 @@ object-assign
         }
         //# sourceMappingURL=timer.js.map
         /***/    }, 
-    /* 148 */
+    /* 149 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return tap;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10), _util_noop__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(37), _util_isFunction__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(47);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10), _util_noop__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(35), _util_isFunction__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(48);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber,_util_noop,_util_isFunction PURE_IMPORTS_END */
         function tap(nextOrObserver, error, complete) {
@@ -23884,13 +23698,13 @@ object-assign
             }, TapSubscriber;
         }(_Subscriber__WEBPACK_IMPORTED_MODULE_1__.a);
     }, 
-    /* 149 */
+    /* 150 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return switchMapTo;
         });
-        /* harmony import */ var _switchMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(116);
+        /* harmony import */ var _switchMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(118);
         /** PURE_IMPORTS_START _switchMap PURE_IMPORTS_END */        function switchMapTo(innerObservable, resultSelector) {
             return resultSelector ? Object(_switchMap__WEBPACK_IMPORTED_MODULE_0__.a)(function() {
                 return innerObservable;
@@ -23900,15 +23714,16 @@ object-assign
         }
         //# sourceMappingURL=switchMapTo.js.map
         /***/    }, 
-    /* 150 */
+    /* 151 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return shareReplay;
         });
-        /* harmony import */ var _ReplaySubject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(126);
+        /* harmony import */ var _ReplaySubject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(127);
         /** PURE_IMPORTS_START _ReplaySubject PURE_IMPORTS_END */        function shareReplay(bufferSize, windowTime, scheduler) {
-            return function(source) {
+            return void 0 === bufferSize && (bufferSize = Number.POSITIVE_INFINITY), void 0 === windowTime && (windowTime = Number.MAX_VALUE), 
+            function(source) {
                 return source.lift(shareReplayOperator(bufferSize, windowTime, scheduler));
             };
         }
@@ -23935,13 +23750,13 @@ object-assign
         }
         //# sourceMappingURL=shareReplay.js.map
         /***/    }, 
-    /* 151 */
+    /* 152 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return share;
         });
-        /* harmony import */ var _multicast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(95), _refCount__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(91), _Subject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(26);
+        /* harmony import */ var _multicast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(96), _refCount__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(92), _Subject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(43);
         /* harmony import */        
         /** PURE_IMPORTS_START _multicast,_refCount,_Subject PURE_IMPORTS_END */
         function shareSubjectFactory() {
