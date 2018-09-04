@@ -5,7 +5,7 @@
     "target": "es2017",
     "lib": ["es2017", "dom"],
     "strict": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedParameters": true,
