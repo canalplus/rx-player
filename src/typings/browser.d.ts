@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-// deprecated browser API
-// typescript does not seem to know that one
-declare const escape : (str : string) => string;
-
 /* tslint:disable:interface-name */
 interface ObjectConstructor {
   /**
@@ -100,11 +96,6 @@ interface MediaKeysConstructor {
   new(keyType? : string) : MediaKeys;
 }
 
-interface MediaKeys {
-  // for IE11
-  createSession? : (codec : string, initData : ArrayBuffer) => MediaKeySession;
-}
-
 interface Element {
   msRequestFullscreen? : () => void;
   mozRequestFullScreen? : () => void;
@@ -169,7 +160,7 @@ declare class VTTCue {
 // TypeScript seems to have problems with its MediaKeys definition
 // TODO Inspect why
 interface MediaKeys {
-  createSession(sessionType? : MediaKeySessionType) : IMediaKeySession;
+  createSession(sessionType? : MediaKeySessionType) : MediaKeySession;
   setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 /* tslint:enable:interface-name */
