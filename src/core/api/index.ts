@@ -42,11 +42,12 @@ import {
   mergeMapTo,
   publish,
   share,
-  skipUntil,
+  skipWhile,
   startWith,
   switchMapTo,
   take,
   takeUntil,
+  withLatestFrom,
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
@@ -847,10 +848,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           .pipe(
             // From the first reload onward, we enter another dynamic (below)
             takeUntil(reloading$),
-
+            withLatestFrom(this._priv_playing$),
             // begin only post-LOADED states when the first "play" has been done
-            // (Either auto-play or user play). Else, stay as LOADED.
-            skipUntil(this._priv_playing$.pipe(filter(isPlaying => isPlaying)))
+            // (Either auto-play or user play) or the content has ended.
+            // Else, stay as LOADED.
+            skipWhile(([state, isPlaying]) => {
+              return state !== "ENDED" && !isPlaying;
+            }),
+            map(([state]) => state)
           ),
 
         // when reloading
