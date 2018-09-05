@@ -141,6 +141,11 @@ export default function handleSessionEvents(
 
       // find out possible errors associated with this event
       (session.keyStatuses as any).forEach((keyStatus : string, keyId : string) => {
+        if (keyStatus === "expired" || keyId === "expired") {
+          const error =
+            new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "expired", false);
+          errorStream.next(error);
+        }
         // Hack present because the order of the arguments has changed in spec
         // and is not the same between some versions of Edge and Chrome.
         if (KEY_STATUS_ERRORS[keyId]) {
