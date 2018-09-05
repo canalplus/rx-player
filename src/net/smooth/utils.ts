@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
+const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
 const TOKEN_REG = /\?token=(\S+)/;
 
 function byteRange([start, end] : [number, number]) : string {
