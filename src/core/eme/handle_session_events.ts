@@ -82,6 +82,8 @@ export interface IMediaKeySessionHandledEvents {
   };
 }
 
+const KEY_STATUS_EXPIRED = "expired";
+
 /**
  * listen to "message" events from session containing a challenge
  * blob and map them to licenses using the getLicense method from
@@ -141,7 +143,7 @@ export default function handleSessionEvents(
 
       // find out possible errors associated with this event
       (session.keyStatuses as any).forEach((keyStatus : string, keyId : string) => {
-        if (keyStatus === "expired" || keyId === "expired") {
+        if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
           const error =
             new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "expired", false);
           errorStream.next(error);
