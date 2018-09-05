@@ -849,8 +849,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
             // From the first reload onward, we enter another dynamic (below)
             takeUntil(reloading$),
             withLatestFrom(this._priv_playing$),
-            // begin only post-LOADED states when the first "play" has been done
-            // (Either auto-play or user play) or the content has ended.
+            // emit post-LOADED states when either:
+            // - the first "play" has been done (either auto-play or user play)
+            // - the content has ended
             // Else, stay as LOADED.
             skipWhile(([state, isPlaying]) => {
               return state !== "ENDED" && !isPlaying;
