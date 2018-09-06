@@ -356,5 +356,5 @@ exploiting current available media API:
   - Check for DRM support.
 
 - __getStatusForPolicy__ - ?
-(https://github.com/WICG/media-capabilities/blob/master/eme-extension-policy-check.md)
+(https://github.com/WICG/hdcp-detection/blob/master/explainer.md)
   - Query a hypothetical status associated with an HDCP policy.
