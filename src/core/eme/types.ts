@@ -77,16 +77,3 @@ export interface IKeySystemOption {
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
 }
-
-// Keys are the different key statuses possible.
-// Values are ``true`` if such key status defines an error
-/* tslint:disable no-object-literal-type-assertion */
-export const KEY_STATUS_ERRORS = {
-  expired: true,
-  "internal-error": true,
-   // "released",
-   // "output-restricted",
-   // "output-downscaled",
-   // "status-pending",
-} as Partial<Record<string, boolean>>;
-/* tslint:enable no-object-literal-type-assertion */
