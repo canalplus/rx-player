@@ -24,27 +24,35 @@ function mockAllRequests(fakeServer, mock) {
       if (contents && contents.length) {
         for (const content of contents) {
           if (content && content.init) {
-            // fakeServer.respondWith("GET", content.init.url, (req) => {
-            //   req.respond(200, {
-            //     "Content-Type": content.init.contentType,
-            //   }, content.init.data);
-            // });
-            fakeServer.respondWith("GET", content.init.url,
-              [200, {
-                "Content-Type": content.init.contentType,
-              }, content.init.data]);
+            if (typeof content.init.data === "function") {
+              fakeServer.respondWith("GET", content.init.url, (xhr) => {
+                const res = content.init.data();
+                xhr.respond(200, {
+                  "Content-Type": content.init.contentType,
+                }, res);
+              });
+            } else {
+              fakeServer.respondWith("GET", content.init.url,
+                [200, {
+                  "Content-Type": content.init.contentType,
+                }, content.init.data]);
+            }
           }
           if (content && content.segments) {
             for (const segment of content.segments) {
-              // fakeServer.respondWith("GET", segment.url, (req) => {
-              //   req.respond(200, {
-              //     "Content-Type": segment.contentType,
-              //   }, segment.data);
-              // });
-              fakeServer.respondWith("GET", segment.url,
-                [200, {
-                  "Content-Type": segment.contentType,
-                }, segment.data]);
+              if (typeof segment.data === "function") {
+                fakeServer.respondWith("GET", segment.url, (xhr) => {
+                  const res = segment.data();
+                  xhr.respond(200, {
+                    "Content-Type": segment.contentType,
+                  }, res);
+                });
+              } else {
+                fakeServer.respondWith("GET", segment.url,
+                  [200, {
+                    "Content-Type": segment.contentType,
+                  }, segment.data]);
+              }
             }
           }
         }
