@@ -17,17 +17,14 @@
 import {
   Observable,
   of as observableOf,
-  Subject,
 } from "rxjs";
 import {
   map,
-  mapTo,
   mergeMap,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat/";
 import {
   EncryptedMediaError,
-  ICustomError,
 } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
@@ -66,8 +63,7 @@ function createSessionStorage(
 export default function getMediaKeysInfos(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
-  currentMediaKeysInfos : MediaKeysInfosStore,
-  errorStream: Subject<Error|ICustomError>
+  currentMediaKeysInfos : MediaKeysInfosStore
 ) : Observable<IMediaKeysInfos> {
     return getMediaKeySystemAccess(
       mediaElement,
@@ -100,15 +96,20 @@ export default function getMediaKeysInfos(
           const { serverCertificate } = options;
           return (
             serverCertificate != null ?
-            setServerCertificate(mediaKeys, serverCertificate, errorStream) :
-            observableOf(null)
-          ).pipe(mapTo({
-            mediaKeySystemAccess,
-            keySystemOptions: options,
-            mediaKeys,
-            sessionsStore,
-            sessionStorage: createSessionStorage(options),
-          }));
+              setServerCertificate(mediaKeys, serverCertificate) :
+              observableOf(null)
+          ).pipe(
+            map((error) => {
+                return {
+                  mediaKeySystemAccess,
+                  keySystemOptions: options,
+                  mediaKeys,
+                  sessionsStore,
+                  sessionStorage: createSessionStorage(options),
+                  serverCertificateWarning: error,
+                };
+            })
+          );
         }));
     }));
 }

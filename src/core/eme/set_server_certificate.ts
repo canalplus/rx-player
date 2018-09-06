@@ -18,7 +18,6 @@ import {
   defer as observableDefer,
   Observable,
   of as observableOf,
-  Subject,
 } from "rxjs";
 import {
   catchError,
@@ -27,9 +26,9 @@ import {
 import { ICustomMediaKeys } from "../../compat";
 import {
   EncryptedMediaError,
-  ICustomError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
+import { IEMEWarningEvent } from "./types";
 
 type TypedArray =
   Int8Array |
@@ -79,15 +78,16 @@ function setServerCertificate(
  */
 export default function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : ArrayBuffer|TypedArray,
-  errorStream: Subject<Error|ICustomError>
-) : Observable<null> {
+  serverCertificate : ArrayBuffer|TypedArray
+) : Observable<null|IEMEWarningEvent> {
   return typeof mediaKeys.setServerCertificate === "function" ?
     setServerCertificate(mediaKeys, serverCertificate)
       .pipe(catchError(error => {
         error.fatal = false;
-        errorStream.next(error);
-        return observableOf(null);
+        return observableOf({
+          type: "warning" as "warning",
+          value: error,
+        });
       })) :
     observableOf(null);
 }

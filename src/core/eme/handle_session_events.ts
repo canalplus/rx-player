@@ -48,6 +48,7 @@ import castToObservable from "../../utils/castToObservable";
 import { retryObsWithBackoff } from "../../utils/retry";
 import tryCatch from "../../utils/rx-tryCatch";
 import {
+  IEMEWarningEvent,
   IKeySystemOption,
   KEY_STATUS_ERRORS,
 } from "./types";
@@ -95,10 +96,11 @@ const KEY_STATUS_EXPIRED = "expired";
  */
 export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
-  keySystem: IKeySystemOption,
-  errorStream: Subject<Error|ICustomError>
-) : Observable<IMediaKeySessionHandledEvents> {
+  keySystem: IKeySystemOption
+) : Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> {
   log.debug("eme: handle message events", session);
+
+  const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
 
   /**
    * @param {Error|Object} error
@@ -122,9 +124,13 @@ export default function handleSessionEvents(
     totalRetry: 2,
     retryDelay: 200,
     errorSelector: (error: ICustomError|Error) => licenseErrorSelector(error, true),
-    onRetry: (
-      error: ICustomError|Error) => errorStream.next(licenseErrorSelector(error, false)
-    ),
+    onRetry: (error: ICustomError|Error) => {
+      const selectedError = licenseErrorSelector(error, false);
+      return sessionWarningSubject$.next({
+        type: "warning",
+        value: selectedError,
+      });
+    },
   };
 
   const keyErrors: Observable<never> = onKeyError$(session)
@@ -146,7 +152,10 @@ export default function handleSessionEvents(
         if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
           const error =
             new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "expired", false);
-          errorStream.next(error);
+          sessionWarningSubject$.next({
+            type: "warning",
+            value: error,
+          });
         }
         // Hack present because the order of the arguments has changed in spec
         // and is not the same between some versions of Edge and Chrome.
@@ -233,8 +242,13 @@ export default function handleSessionEvents(
           }));
       }));
 
-  const sessionEvents: Observable<IMediaKeySessionHandledEvents> =
-    observableMerge(sessionUpdates, keyErrors);
+  const sessionEvents:
+    Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> =
+      observableMerge(
+        sessionUpdates,
+        keyErrors,
+        sessionWarningSubject$
+      );
 
   if (session.closed) {
     return sessionEvents

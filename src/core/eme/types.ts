@@ -20,8 +20,15 @@ import {
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
 } from "../../compat";
+import { ICustomError } from "../../errors";
 import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
+
+// A minor error happened
+export interface IEMEWarningEvent {
+  type : "warning";
+  value : ICustomError|Error;
+}
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
@@ -36,6 +43,7 @@ export interface IMediaKeysInfos {
   mediaKeys : MediaKeys|ICustomMediaKeys;
   sessionsStore : SessionsStore;
   sessionStorage : PersistedSessionsStore|null;
+  serverCertificateWarning : IEMEWarningEvent|null;
 }
 
 // Data stored in a persistent MediaKeySession storage
