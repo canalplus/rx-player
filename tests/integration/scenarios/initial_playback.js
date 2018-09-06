@@ -98,13 +98,36 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
       transport: "dash",
     });
     await waitForLoadedStateAfterLoadVideo(player);
-    player.seekTo(2);
-    expect(player.getPosition()).to.equal(2);
+    player.seekTo(10);
+    expect(player.getPosition()).to.equal(10);
     expect(player.getPlayerState()).to.equal("LOADED");
     player.play();
     await sleep(200);
     expect(player.getPlayerState()).to.equal("PLAYING");
-    expect(player.getPosition()).to.be.above(2);
+    expect(player.getPosition()).to.be.above(10);
+  });
+
+  it("should end if seeking to the end when loaded", async function () {
+    player.loadVideo({
+      url: Mock.manifest.url,
+      transport: "dash",
+    });
+    await waitForLoadedStateAfterLoadVideo(player);
+    player.seekTo(player.getMaximumPosition() + 1);
+    await sleep(10);
+    expect(player.getPlayerState()).to.equal("ENDED");
+  });
+
+  it("should end if seeking to the end when playing", async function () {
+    player.loadVideo({
+      url: Mock.manifest.url,
+      transport: "dash",
+      autoPlay: true,
+    });
+    await waitForLoadedStateAfterLoadVideo(player);
+    player.seekTo(player.getMaximumPosition() + 1);
+    await sleep(10);
+    expect(player.getPlayerState()).to.equal("ENDED");
   });
 
   it("should seek to minimum position for negative positions when loaded", async function () {
