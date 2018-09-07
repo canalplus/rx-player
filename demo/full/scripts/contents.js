@@ -104,6 +104,16 @@ export default [
     "name": "Google - Sintel webm only",
     "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-webm-only/dash.mpd",
     "transport": "dash",
-    live: false,
+    "live": false,
   },
+  {
+    "name": "Tears of Steal (DRM Widevine)",
+    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+    "transport": "dash",
+    "live": false,
+    "drmInfos": {
+      "licenseServerUrlValue": "https://cwip-shaka-proxy.appspot.com/no_auth",
+      "drm": "widevine", 
+    }
+  }
 ];
