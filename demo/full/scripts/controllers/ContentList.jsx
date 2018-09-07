@@ -5,6 +5,8 @@ import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
+const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
+
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   acc[tech] = contentsDatabase.filter(({ transport }) =>
     transport === tech.toLowerCase()
@@ -20,7 +22,9 @@ class ContentList extends React.Component {
       transportType: TRANSPORT_TYPES[0],
       choiceIndex: 0,
       hasTextInput: !CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length,
-      textValue: "",
+      displayDRMSettings: false,
+      manifestUrlValue: "",
+      drm: DRM_TYPES[0],
     };
   }
 
@@ -38,27 +42,104 @@ class ContentList extends React.Component {
       supplementaryImageTracks,
       supplementaryTextTracks,
       textTrackMode,
+      drmInfos
     } = content;
-    loadVideo({
-      url,
-      transport,
-      autoPlay: !(autoPlay === false),
-      supplementaryImageTracks,
-      supplementaryTextTracks,
-      textTrackMode,
+
+    this.buildKeySystems(drmInfos)
+      .then((keySystems) => {
+        loadVideo({
+          url,
+          transport,
+          autoPlay: !(autoPlay === false),
+          supplementaryImageTracks,
+          supplementaryTextTracks,
+          textTrackMode,
+          keySystems
+        });
+      });
+  }
+
+  getServerCertificate(url) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.responseType = "arraybuffer";
+      xhr.onload = (evt) => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const serverCertificate = evt.target.response;
+          resolve(serverCertificate);
+        } else {
+          reject();
+        }
+      }
+      xhr.send();
+    })
+  }
+
+  getLicenseCallback(licenseServerUrlValue) {
+    return (challenge) => {
+      const xhr = new XMLHttpRequest();
+      xhr.responseType = "arraybuffer";
+      xhr.open("POST", licenseServerUrlValue, true);
+      return new Promise((resolve, reject) => {
+        xhr.onload = (evt) => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const license = evt.target.response;
+            resolve(license);
+          } else {
+            reject();
+          }
+        }
+        xhr.send(challenge);
+      });
+    }
+  }
+
+  buildKeySystems(drmInfos) {
+    return new Promise((resolve) => {
+      if (!drmInfos) {
+        resolve([]);
+      }
+
+      const {
+        licenseServerUrlValue,
+        serverCertificateUrlValue,
+        drm
+      } = drmInfos;
+
+      if (licenseServerUrlValue) {
+        const keySystem = {
+          type: drm.toLowerCase(),
+          getLicense: this.getLicenseCallback(licenseServerUrlValue),
+        };
+        if (serverCertificateUrlValue) {
+          this.getServerCertificate(serverCertificateUrlValue).then((serverCertificate) => {
+            keySystem.serverCertificate = serverCertificate;
+            resolve([keySystem]);
+          });
+        } else {
+          resolve([keySystem]);
+        }
+      } else {
+        resolve([]);
+      }
     });
   }
 
-  loadUrl(url) {
+  loadUrl(url, drmInfos) {
     const { loadVideo } = this.props;
-    loadVideo({
-      url,
-      transport: this.state.transportType.toLowerCase(),
-      autoPlay: true, // TODO add checkBox
-      // native browser subtitles engine (VTTCue) doesn't render stylized subs
-      // we force HTML textTrackMode to vizualise styles
-      textTrackMode: "html",
-    });
+    this.buildKeySystems(drmInfos)
+      .then((keySystems) => {
+        loadVideo({
+          url,
+          transport: this.state.transportType.toLowerCase(),
+          autoPlay: true, // TODO add checkBox
+          // native browser subtitles engine (VTTCue) doesn't render stylized subs
+          // we force HTML textTrackMode to vizualise styles
+          textTrackMode: "html",
+          keySystems
+        });
+      });
   }
 
   changeTransportType(transportType) {
@@ -79,14 +160,50 @@ class ContentList extends React.Component {
   }
 
   // TODO Better event?
-  onTextInput(evt) {
+  onManifestInput(evt) {
     this.setState({
-      textValue: evt.target.value,
+      manifestUrlValue: evt.target.value,
+    });
+  }
+
+  onLicenseServerInput(evt) {
+    this.setState({
+      licenseServerUrlValue: evt.target.value,
+    });
+  }
+
+  onServerCertificateInput(evt) {
+    this.setState({
+      serverCertificateUrlValue: evt.target.value,
+    });
+  }
+
+  onDRMChange(evt) {
+    this.setState({
+      drm: evt.target.value,
+    })
+  }
+
+  onDisplayDRMSettings(evt) {
+    const { target } = evt;
+    const value = target.type === "checkbox" ?
+      target.checked : target.value;
+    this.setState({
+      displayDRMSettings: value,
     });
   }
 
   render() {
-    const { transportType, choiceIndex, hasTextInput, textValue } = this.state;
+    const {
+      transportType,
+      choiceIndex,
+      hasTextInput,
+      manifestUrlValue,
+      licenseServerUrlValue,
+      serverCertificateUrlValue,
+      drm,
+      displayDRMSettings
+    } = this.state;
     const contents = CONTENTS_PER_TYPE[transportType];
 
     const contentsName = contents.map(content =>
@@ -108,13 +225,18 @@ class ContentList extends React.Component {
 
     const onClickLoad = () => {
       if (choiceIndex === contents.length) {
-        this.loadUrl(textValue);
+        const drmInfos = { licenseServerUrlValue, serverCertificateUrlValue, drm };
+        this.loadUrl(manifestUrlValue, drmInfos);
       } else {
         this.loadContent(contents[choiceIndex]);
       }
     };
 
-    const onTextInput = (t) => this.onTextInput(t);
+    const onManifestInput = (evt) => this.onManifestInput(evt);
+    const onLicenseServerInput = (evt) => this.onLicenseServerInput(evt);
+    const onServerCertificateInput = (evt) => this.onServerCertificateInput(evt);
+    const onDRMChange = (evt) => this.onDRMChange(evt);
+    const onDisplayDRMSettings = (evt) => this.onDisplayDRMSettings(evt);
 
     return (
       <div
@@ -143,10 +265,43 @@ class ContentList extends React.Component {
         { hasTextInput ?
           <TextInput
             className="choice-input text-input"
-            onChange={onTextInput}
-            value={textValue}
+            onChange={onManifestInput}
+            value={manifestUrlValue}
             placeholder={`URL for the ${transportType} manifest`}
           /> : null
+        }
+        {
+          hasTextInput ? <div>
+            <span className="chart-checkbox" >
+              Display DRM settings
+              <input
+                name="displayDRMSettingsTextInput"
+                type="checkbox"
+                checked={displayDRMSettings}
+                onChange={onDisplayDRMSettings} />
+            </span>
+            { displayDRMSettings ? <div>
+                <div>
+                  <TextInput
+                    className="choice-input text-input"
+                    onChange={onLicenseServerInput}
+                    value={licenseServerUrlValue}
+                    placeholder={'License server URL'}
+                  />
+                  <Select
+                    className="choice-input"
+                    onChange={onDRMChange}
+                    options={DRM_TYPES}
+                  />
+                </div>
+                <TextInput
+                  className="choice-input text-input"
+                  onChange={onServerCertificateInput}
+                  value={serverCertificateUrlValue}
+                  placeholder={'Server certificate URL'}
+                />
+              </div> : null }
+          </div>: null
         }
       </div>
     );
