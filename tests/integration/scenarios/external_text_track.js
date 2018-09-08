@@ -1,8 +1,12 @@
 import { expect } from "chai";
 import sinon from "sinon";
-import { mockManifestRequest } from "../utils/mock_requests.js";
+
+import {
+  manifestInfos,
+  URLs,
+} from "../contents/DASH_static_SegmentTimeline";
+import mockAllRequests from "../utils/mock_requests.js";
 import sleep from "../utils/sleep.js";
-import Mock from "../mocks/dash_static_SegmentTimeline.js";
 import RxPlayer from "../../../src";
 
 /**
@@ -24,11 +28,11 @@ describe("external text track", function () {
   });
 
   it("should be able to add an external text track", async function () {
-    mockManifestRequest(fakeServer, Mock);
+    mockAllRequests(fakeServer, URLs);
 
     player.loadVideo({
-      transport: "dash",
-      url: Mock.manifest.url,
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
       supplementaryTextTracks: {
         url: "http://fakeURL",
         language: "en",
@@ -52,11 +56,11 @@ describe("external text track", function () {
   });
 
   it("should be able to add a closed caption text track", async function () {
-    mockManifestRequest(fakeServer, Mock);
+    mockAllRequests(fakeServer, URLs);
 
     player.loadVideo({
-      transport: "dash",
-      url: Mock.manifest.url,
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
       supplementaryTextTracks: {
         url: "http://fakeURL",
         language: "arm",
@@ -81,11 +85,11 @@ describe("external text track", function () {
   });
 
   it("should be able to add multiple external text tracks", async function () {
-    mockManifestRequest(fakeServer, Mock);
+    mockAllRequests(fakeServer, URLs);
 
     player.loadVideo({
-      transport: "dash",
-      url: Mock.manifest.url,
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
       supplementaryTextTracks: [
         {
           url: "http://fakeURL1",
@@ -138,7 +142,7 @@ describe("external text track", function () {
   });
 
   it("should switch initially to external text track if set as default language", async function () {
-    mockManifestRequest(fakeServer, Mock);
+    mockAllRequests(fakeServer, URLs);
 
     const waysOfWritingDefaultTextTrack = [
       "en",
@@ -151,8 +155,8 @@ describe("external text track", function () {
 
     for (const defaultTextTrack of waysOfWritingDefaultTextTrack) {
       player.loadVideo({
-        transport: "dash",
-        url: Mock.manifest.url,
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         supplementaryTextTracks: {
           url: "http://fakeURL",
           language: "en",
@@ -170,8 +174,8 @@ describe("external text track", function () {
       expect(textTracks1[0].active).to.equal(true);
 
       player.loadVideo({
-        transport: "dash",
-        url: Mock.manifest.url,
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         supplementaryTextTracks: [
           {
             url: "http://fakeURL1",
@@ -205,7 +209,7 @@ describe("external text track", function () {
   });
 
   it("should switch initially to a closed caption external text track if set as default language", async function () {
-    mockManifestRequest(fakeServer, Mock);
+    mockAllRequests(fakeServer, URLs);
 
     const waysOfWritingDefaultTextTrack = [
       { language: "en", closedCaption: true },
@@ -214,8 +218,8 @@ describe("external text track", function () {
 
     for (const defaultTextTrack of waysOfWritingDefaultTextTrack) {
       player.loadVideo({
-        transport: "dash",
-        url: Mock.manifest.url,
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         supplementaryTextTracks: {
           url: "http://fakeURL",
           language: "en",
@@ -233,8 +237,8 @@ describe("external text track", function () {
       expect(textTracks1[0].active).to.equal(true);
 
       player.loadVideo({
-        transport: "dash",
-        url: Mock.manifest.url,
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         supplementaryTextTracks: [
           {
             url: "http://fakeURL1",
@@ -268,7 +272,7 @@ describe("external text track", function () {
   });
 
   it("should not switch initially to external text track if not set as default language", async function () {
-    mockManifestRequest(fakeServer, Mock);
+    mockAllRequests(fakeServer, URLs);
 
     const waysOfWritingDefaultTextTrack = [
       "fr",
@@ -281,8 +285,8 @@ describe("external text track", function () {
 
     for (const defaultTextTrack of waysOfWritingDefaultTextTrack) {
       player.loadVideo({
-        transport: "dash",
-        url: Mock.manifest.url,
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         supplementaryTextTracks: {
           url: "http://fakeURL",
           language: "en",
@@ -300,8 +304,8 @@ describe("external text track", function () {
       expect(textTracks1[0].active).to.equal(false);
 
       player.loadVideo({
-        transport: "dash",
-        url: Mock.manifest.url,
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         supplementaryTextTracks: [
           {
             url: "http://fakeURL1",

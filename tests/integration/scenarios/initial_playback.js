@@ -16,10 +16,15 @@
 
 import { expect } from "chai";
 import nise from "nise";
+
 import RxPlayer from "../../../src";
+
+import {
+  manifestInfos,
+  URLs,
+} from "../contents/DASH_static_SegmentTimeline";
 import sleep from "../utils/sleep.js";
-import Mock from "../mocks/dash_static_SegmentTimeline.js";
-import { mockAllRequests } from "../utils/mock_requests";
+import mockAllRequests from "../utils/mock_requests";
 import waitForState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../utils/waitForPlayerState";
@@ -34,7 +39,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     player = new RxPlayer();
     server = fakeServer.create();
     server.autoRespond = true;
-    mockAllRequests(server, Mock);
+    mockAllRequests(server, URLs);
   });
 
   afterEach(() => {
@@ -44,8 +49,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should begin playback on play", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.play();
@@ -58,8 +63,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should play slowly for a speed inferior to 1", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(0.5);
@@ -77,8 +82,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should play faster for a speed superior to 1", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(3);
@@ -94,8 +99,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should be able to seek when loaded", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.seekTo(10);
@@ -109,8 +114,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should end if seeking to the end when loaded", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.seekTo(player.getMaximumPosition() + 1);
@@ -120,8 +125,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should end if seeking to the end when playing", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
       autoPlay: true,
     });
     await waitForLoadedStateAfterLoadVideo(player);
@@ -132,8 +137,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should seek to minimum position for negative positions when loaded", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.seekTo(-2);
@@ -147,8 +152,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should seek to maximum position if manual seek is higher than maximum when loaded", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.seekTo(200);
@@ -158,8 +163,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should seek to minimum position for negative positions after playing", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.play();
@@ -171,8 +176,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should seek to maximum position if manual seek is higher than maximum after playing", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     expect(player.getPlayerState()).to.equal("LOADED");
@@ -183,8 +188,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should seek to minimum position for negative positions when paused", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.play();
@@ -199,8 +204,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should seek to maximum position if manual seek is higher than maximum when paused", async function () {
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     expect(player.getPlayerState()).to.equal("LOADED");
@@ -217,8 +222,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
   it("should download first segment when wanted buffer ahead is under first segment duration", async function () {
     player.setWantedBufferAhead(2);
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(100);
@@ -231,8 +236,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
   it("should continue downloading when seek to wanter buffer ahead", async function() {
     player.setWantedBufferAhead(2);
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(100);
@@ -249,8 +254,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     player.setWantedBufferAhead(5);
     player.setMaxBufferAhead(10);
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(40);
@@ -268,8 +273,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     player.setMaxBufferBehind(2);
 
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(200);
@@ -283,8 +288,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
   it("should be in SEEKING state when seeking to a buffered part when playing", async function() {
     player.setWantedBufferAhead(30);
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.play();
@@ -304,8 +309,8 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
     player.setWantedBufferAhead(4);
     player.loadVideo({
-      url: Mock.manifest.url,
-      transport: "dash",
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.play();
