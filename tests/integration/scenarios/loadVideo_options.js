@@ -16,10 +16,15 @@
 
 import { expect } from "chai";
 import nise from "nise";
+
 import RxPlayer from "../../../src";
+
+import {
+  manifestInfos,
+  URLs,
+} from "../contents/DASH_static_SegmentTimeline";
 import sleep from "../utils/sleep.js";
-import Mock from "../mocks/dash_static_SegmentTimeline.js";
-import { mockAllRequests } from "../utils/mock_requests";
+import mockAllRequests from "../utils/mock_requests";
 import /* waitForState, */ {
   waitForLoadedStateAfterLoadVideo,
 } from "../utils/waitForPlayerState";
@@ -33,7 +38,7 @@ describe("loadVideo Options", () => {
     player = new RxPlayer();
     server = fakeServer.create();
     server.autoRespond = true;
-    mockAllRequests(server, Mock);
+    mockAllRequests(server, URLs);
   });
 
   afterEach(() => {
@@ -44,8 +49,8 @@ describe("loadVideo Options", () => {
   describe("autoPlay", () => {
     it("should keep state as LOADED (and not play) if autoPlay is not set", async () => {
       player.loadVideo({
-        url: Mock.manifest.url,
-        transport: "dash",
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("LOADED");
@@ -57,8 +62,8 @@ describe("loadVideo Options", () => {
 
     it("should keep state as LOADED (and not play) if autoPlay is false", async () => {
       player.loadVideo({
-        url: Mock.manifest.url,
-        transport: "dash",
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         autoPlay: false,
       });
       await waitForLoadedStateAfterLoadVideo(player);
@@ -71,8 +76,8 @@ describe("loadVideo Options", () => {
 
     it("should set state as LOADED then to PLAYING (and play) if autoPlay is true", async () => {
       player.loadVideo({
-        url: Mock.manifest.url,
-        transport: "dash",
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
         autoPlay: true,
       });
       await waitForLoadedStateAfterLoadVideo(player);
@@ -88,8 +93,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position if startAt.position is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: false,
           startAt: { position: startAt },
         });
@@ -104,8 +109,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position if startAt.wallClockTime is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: false,
           startAt: { wallClockTime: startAt },
         });
@@ -120,8 +125,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position if startAt.fromFirstPosition is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: false,
           startAt: { fromFirstPosition: startAt },
         });
@@ -137,8 +142,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position if startAt.fromLastPosition is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: false,
           startAt: { fromLastPosition: - startAt },
         });
@@ -153,8 +158,8 @@ describe("loadVideo Options", () => {
 
       it("should seek at the right position if startAt.percentage is set", async function () {
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: false,
           startAt: { percentage: 30 },
         });
@@ -170,8 +175,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position then play if startAt.position and autoPlay is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: true,
           startAt: { position: startAt },
         });
@@ -186,8 +191,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position then play if startAt.wallClockTime and autoPlay is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: true,
           startAt: { wallClockTime: startAt },
         });
@@ -202,8 +207,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position then play if startAt.fromFirstPosition and autoPlay is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: true,
           startAt: { fromFirstPosition: startAt },
         });
@@ -219,8 +224,8 @@ describe("loadVideo Options", () => {
       it("should seek at the right position then play if startAt.fromLastPosition and autoPlay is set", async function () {
         const startAt = 10;
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: true,
           startAt: { fromLastPosition: - startAt },
         });
@@ -235,8 +240,8 @@ describe("loadVideo Options", () => {
 
       it("should seek at the right position then play if startAt.percentage and autoPlay is set", async function () {
         player.loadVideo({
-          url: Mock.manifest.url,
-          transport: "dash",
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
           autoPlay: true,
           startAt: { percentage: 30 },
         });
