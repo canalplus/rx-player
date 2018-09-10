@@ -577,7 +577,7 @@ export default function parseManifest(
           adaptationChildren.roles || null
         );
 
-        const { roles } = adaptation.children;
+        const { roles } = adaptationChildren;
 
         const isMainAdaptation = !!roles &&
           !!arrayFind(roles, (role) => role.value === "main") &&
