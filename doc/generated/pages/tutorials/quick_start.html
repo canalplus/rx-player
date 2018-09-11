@@ -32,7 +32,7 @@ other possible options in the <a href="../api/player_options.html">Player Option
 <p>The next logical step is to load a video.</p>
 <p>Loading a new video is done through the <code>loadVideo</code> method.
 <code>loadVideo</code> takes an object as arguments, which corresponds to its options.
-There is here also <a href="#../api/loadVideo_options.md">a lot of possible options</a>,
+There is here also <a href="../api/loadVideo_options.html">a lot of possible options</a>,
 but to simplify we will start with just three:</p>
 <ul>
 <li>
@@ -115,7 +115,7 @@ player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;<
   <span class="hljs-keyword">if</span> (state === <span class="hljs-string">&quot;LOADED&quot;</span>) {
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loaded&quot;</span>);
 
-    <span class="hljs-comment">// toggle between play pause when the user clicks on the video</span>
+    <span class="hljs-comment">// toggle between play and pause when the user clicks on the video</span>
     videoElement.onclick = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
       <span class="hljs-keyword">if</span> (player.getPlayerState() === <span class="hljs-string">&quot;PLAYING&quot;</span>) {
         player.pause();
