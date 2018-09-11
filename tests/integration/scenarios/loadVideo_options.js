@@ -120,7 +120,7 @@ describe("loadVideo Options", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(player.getPosition()).to.equal(0);
-      await sleep(200);
+      await sleep(300);
       expect(player.getPosition()).to.be.above(0.100);
     });
   });
