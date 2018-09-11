@@ -95,6 +95,8 @@ export default function buildKeySystemConfigurations(
     robustness,
   }));
 
+  // XXX TODO remove "as any" when this issue is resolved:
+  // https://github.com/Microsoft/TypeScript/issues/19189
   return [{
     initDataTypes: ["cenc"],
     videoCapabilities,
@@ -102,5 +104,5 @@ export default function buildKeySystemConfigurations(
     distinctiveIdentifier,
     persistentState,
     sessionTypes,
-  }];
+  }] as any;
 }

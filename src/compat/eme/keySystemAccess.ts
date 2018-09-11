@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
+// XXX TODO remove when the issue is resolved
+// https://github.com/Microsoft/TypeScript/issues/19189
+import { ICompatMediaKeySystemConfiguration } from "../constants";
+
 import { IMockMediaKeys } from "./MediaKeys";
 
 export interface IMediaKeySystemAccess {
   readonly keySystem : string;
-  getConfiguration() : MediaKeySystemConfiguration;
+  getConfiguration() : ICompatMediaKeySystemConfiguration;
   createMediaKeys() : Promise<MediaKeys|IMockMediaKeys>;
 }
 
@@ -37,7 +41,7 @@ export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess
   constructor(
     private readonly _keyType : string,
     private readonly _mediaKeys : IMockMediaKeys|MediaKeys,
-    private readonly _configuration : MediaKeySystemConfiguration
+    private readonly _configuration : ICompatMediaKeySystemConfiguration
   ) {}
 
   /**
@@ -57,7 +61,7 @@ export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess
   /**
    * @returns {Object}
    */
-  public getConfiguration() : MediaKeySystemConfiguration {
+  public getConfiguration() : ICompatMediaKeySystemConfiguration {
     return this._configuration;
   }
 }
