@@ -7,15 +7,15 @@
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Tutorial:%20Quick%20Start"></a></p>
 <h1>Tutorial: Quick Start</h1>
-<p>To just test our RxPlayer to see if it corresponds to your needs, you might not
-want to read our whole API documentation.</p>
-<p>We will here learn how to simply load a video with regular options and to react
-to basic events.</p>
+<p>Because the RxPlayer exports a lot of functionnalities, you might want to
+quickly test basic usecases before you dive deep into the <a href="../api/index.html">whole API
+documentation</a>.</p>
+<p>We will here learn how to simply load a video and to react to basic events.</p>
 <p><a name="chapter-Instanciating%20a%20Player"></a></p>
 <h2>Instanciating a Player</h2>
 <p>The first step is to instanciate a new RxPlayer.</p>
-<p>Each RxPlayer instance is attached to a video (or audio) element, and is able
-to play a single content at once.</p>
+<p>Each RxPlayer instance is attached to a single video (or audio) HTML element,
+and is able to play a single content at once.</p>
 <p>To instanciate it with a linked video element you can just do something along
 the lines of:</p>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
@@ -23,17 +23,17 @@ the lines of:</p>
 <span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
 <span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({ videoElement });
 </code></pre>
-<p><code>videoElement</code> is here an RxPlayer option and will be the media HTMLElement
-the RxPlayer will load your media on.
+<p><code>videoElement</code> is an RxPlayer option and will be the HTMLElement the RxPlayer
+will load your media on.
 When you are ready to make use of more advanced features, you can look at the
-other possible options in the <a href="player_options.html">Player Options page</a>.</p>
+other possible options in the <a href="../api/player_options.html">Player Options page</a>.</p>
 <p><a name="chapter-Loading%20a%20video"></a></p>
 <h2>Loading a video</h2>
 <p>The next logical step is to load a video.</p>
 <p>Loading a new video is done through the <code>loadVideo</code> method.
 <code>loadVideo</code> takes an object as arguments, which corresponds to its options.
-There is <a href="#./loadVideo_options.md">a lot of possible options</a>, but to simplify
-we will start with just three:</p>
+There is here also <a href="#../api/loadVideo_options.md">a lot of possible options</a>,
+but to simplify we will start with just three:</p>
 <ul>
 <li>
 <p><code>transport</code>: String describing the transport protocol (can be <code>&quot;dash&quot;</code>,
@@ -61,11 +61,11 @@ its own).</p>
 <p>Now that we are loading a video, we might want to know:</p>
 <ul>
 <li>if it succeed</li>
-<li>if it fails</li>
+<li>if it failed</li>
 <li>when we are able to interact with the video</li>
 </ul>
 <p>To do all three of those things, you will need to listen to player events.
-This is done through the <a href="index.html#meth-addEventListener">addEventListener
+This is done through the <a href="../api/index.html#meth-addEventListener">addEventListener
 method</a>.</p>
 <p>This method works the same way than the native one you might already use on
 HTML elements.</p>
@@ -84,10 +84,12 @@ interact with it, you can just do:</p>
   }
 });
 </code></pre>
+<p>There is multiple other events, all documented in <a href="../api/player_events.html">the events documentation
+</a>.</p>
 <p><a name="chapter-Interacting%20with%20the%20player"></a></p>
 <h2>Interacting with the player</h2>
 <p>We&#x2019;re now ready to interact with the current content.</p>
-<p>There is <a href="index.html">a huge list of APIs</a> you can use.
+<p>There is <a href="../api/index.html">a huge list of APIs</a> you can use.
 Some are useful only when a content is currently loaded (like <code>play</code>,
 <code>pause</code>, <code>seekTo</code> or <code>setAudioTrack</code>) and others can be used in any case
 (like <code>setVolume</code>, <code>getVideoElement</code> or <code>loadVideo</code>).</p>
@@ -100,15 +102,20 @@ on the video element.</li>
 </ol>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
 
+<span class="hljs-comment">// take the first video element on the page</span>
 <span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
+
 <span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({ videoElement });
 
 player.addEventListener(<span class="hljs-string">&quot;error&quot;</span>, (err) =&gt; {
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content stopped with the following error&quot;</span>, err);
 });
+
 player.addEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, (state) =&gt; {
   <span class="hljs-keyword">if</span> (state === <span class="hljs-string">&quot;LOADED&quot;</span>) {
     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the content is loaded&quot;</span>);
+
+    <span class="hljs-comment">// toggle between play pause when the user clicks on the video</span>
     videoElement.onclick = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
       <span class="hljs-keyword">if</span> (player.getPlayerState() === <span class="hljs-string">&quot;PLAYING&quot;</span>) {
         player.pause();
