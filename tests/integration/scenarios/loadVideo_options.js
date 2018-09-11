@@ -24,7 +24,7 @@ import {
   URLs,
 } from "../contents/DASH_static_SegmentTimeline";
 import sleep from "../utils/sleep.js";
-import mockAllRequests from "../utils/mock_requests";
+import mockRequests from "../utils/mock_requests";
 import /* waitForState, */ {
   waitForLoadedStateAfterLoadVideo,
 } from "../utils/waitForPlayerState";
@@ -38,7 +38,7 @@ describe("loadVideo Options", () => {
     player = new RxPlayer();
     server = fakeServer.create();
     server.autoRespond = true;
-    mockAllRequests(server, URLs);
+    mockRequests(server, URLs);
   });
 
   afterEach(() => {

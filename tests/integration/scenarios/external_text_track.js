@@ -5,7 +5,7 @@ import {
   manifestInfos,
   URLs,
 } from "../contents/DASH_static_SegmentTimeline";
-import mockAllRequests from "../utils/mock_requests.js";
+import mockRequests from "../utils/mock_requests.js";
 import sleep from "../utils/sleep.js";
 import RxPlayer from "../../../src";
 
@@ -28,7 +28,7 @@ describe("external text track", function () {
   });
 
   it("should be able to add an external text track", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -56,7 +56,7 @@ describe("external text track", function () {
   });
 
   it("should be able to add a closed caption text track", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -85,7 +85,7 @@ describe("external text track", function () {
   });
 
   it("should be able to add multiple external text tracks", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -142,7 +142,7 @@ describe("external text track", function () {
   });
 
   it("should switch initially to external text track if set as default language", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     const waysOfWritingDefaultTextTrack = [
       "en",
@@ -209,7 +209,7 @@ describe("external text track", function () {
   });
 
   it("should switch initially to a closed caption external text track if set as default language", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     const waysOfWritingDefaultTextTrack = [
       { language: "en", closedCaption: true },
@@ -272,7 +272,7 @@ describe("external text track", function () {
   });
 
   it("should not switch initially to external text track if not set as default language", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     const waysOfWritingDefaultTextTrack = [
       "fr",

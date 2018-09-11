@@ -20,7 +20,7 @@ function mockRequest(fakeServer, { url, data, contentType }) {
  * @param {Object} fakeServer - Sinon's FakeServer instance.
  * @param {Array.<Object>} urlData
  */
-export default function mockAllRequests(fakeServer, urlData) {
+export default function mockRequests(fakeServer, urlData) {
   for (const media of urlData) {
     mockRequest(fakeServer, media);
   }
