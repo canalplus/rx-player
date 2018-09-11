@@ -130,7 +130,7 @@ player.addEventListener("playerStateChange", (state) => {
   if (state === "LOADED") {
     console.log("the content is loaded");
 
-    // toggle between play pause when the user clicks on the video
+    // toggle between play and pause when the user clicks on the video
     videoElement.onclick = function() {
       if (player.getPlayerState() === "PLAYING") {
         player.pause();
