@@ -30,6 +30,9 @@ import castToObservable from "../utils/castToObservable";
 import EventEmitter from "../utils/eventemitter";
 import tryCatch from "../utils/rx-tryCatch";
 import {
+  ICompatMediaKeySystemConfiguration,
+  ICompatTextTrack,
+  ICompatVTTCue,
   isFirefox,
   isIE,
   MediaSource_,
@@ -154,14 +157,24 @@ function canPlay(
   }
 }
 
+interface IWebKitSourceBufferConstructor {
+  new() : IWebKitSourceBuffer;
+}
+
+interface IWebKitSourceBuffer {
+  append(data : ArrayBuffer) : void;
+  remove(from : number, to : number) : void;
+}
+
 // old WebKit SourceBuffer implementation,
 // where a synchronous append is used instead of appendBuffer
 if (
-  window.WebKitSourceBuffer &&
-  !window.WebKitSourceBuffer.prototype.addEventListener
+  (window as any).WebKitSourceBuffer &&
+  !(window as any).WebKitSourceBuffer.prototype.addEventListener
 ) {
 
-  const sourceBufferWebkitRef = window.WebKitSourceBuffer;
+  const sourceBufferWebkitRef : IWebKitSourceBufferConstructor =
+    (window as any).WebKitSourceBuffer;
   const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
 
   for (const fnName in EventEmitter.prototype) {
@@ -216,7 +229,7 @@ function addTextTrack(
   mediaElement : HTMLMediaElement,
   hidden : boolean
 ) : {
-  track : TextTrack;
+  track : ICompatTextTrack;
   trackElement? : HTMLTrackElement;
 } {
   let track;
@@ -347,7 +360,7 @@ function makeCue(
   startTime : number,
   endTime : number,
   payload : string
-) : VTTCue|TextTrackCue|null {
+) : ICompatVTTCue|TextTrackCue|null {
   if (!VTTCue_) {
     throw new Error("VTT cues not supported in your target");
   }
@@ -393,6 +406,9 @@ export {
   events,
   exitFullscreen,
   hasEMEAPIs,
+  ICompatMediaKeySystemConfiguration,
+  ICompatTextTrack,
+  ICompatVTTCue,
   IMediaKeySession,
   IMediaKeySystemAccess,
   IMockMediaKeys,

@@ -31,15 +31,21 @@ import EventEmitter, {
   IEventEmitter,
 } from "../../utils/eventemitter";
 import {
+  // XXX TODO remove when the issue is resolved
+  // https://github.com/Microsoft/TypeScript/issues/19189
+  ICompatMediaKeySystemConfiguration,
+
   MediaKeys_,
 } from "../constants";
 import * as events from "../events";
-import CustomMediaKeySystemAccess from "./keySystemAccess";
+import CustomMediaKeySystemAccess, {
+  IMediaKeySystemAccess,
+} from "./keySystemAccess";
 
 let requestMediaKeySystemAccess :
 (
-  (keyType : string, config : MediaKeySystemConfiguration[]) =>
-    Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess>
+  (keyType : string, config : ICompatMediaKeySystemConfiguration[]) =>
+    Observable<IMediaKeySystemAccess|CustomMediaKeySystemAccess>
 ) | null;
 
 type TypedArray =
@@ -145,8 +151,10 @@ let MockMediaKeys : IMockMediaKeysConstructor =
   };
 
 if (navigator.requestMediaKeySystemAccess) {
-  requestMediaKeySystemAccess = (a : string, b : MediaKeySystemConfiguration[]) =>
-    castToObservable(navigator.requestMediaKeySystemAccess(a, b));
+  requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
+    castToObservable(
+      navigator.requestMediaKeySystemAccess(a, b) as Promise<IMediaKeySystemAccess>
+    );
 } else {
 
   type wrapUpdateFn =
@@ -175,9 +183,31 @@ if (navigator.requestMediaKeySystemAccess) {
     };
   };
 
-  // This is for Chrome with unprefixed EME api
-  if (HTMLVideoElement.prototype.webkitGenerateKeyRequest) {
+  interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
+    webkitGenerateKeyRequest : (keyType: string, initData : ArrayBuffer) => void;
+    webkitAddKey : (
+      keyType: string,
+      key : ArrayBuffer|TypedArray|DataView,
+      kid : ArrayBuffer|TypedArray|DataView|null,
+      sessionId : string
+    ) => void;
+  }
 
+  /**
+   * Returns true if the given media element has old webkit methods
+   * corresponding to the IOldWebkitHTMLMediaElement interface.
+   * @param {HTMLMediaElement} element
+   * @returns {Boolean}
+   */
+  function isOldWebkitMediaElement(
+    element : HTMLMediaElement|IOldWebkitHTMLMediaElement
+  ) : element is IOldWebkitHTMLMediaElement {
+    return typeof (element as IOldWebkitHTMLMediaElement)
+      .webkitGenerateKeyRequest === "function";
+  }
+
+  // This is for Chrome with unprefixed EME api
+  if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
     class WebkitMediaKeySession
     extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
       implements IMediaKeySession
@@ -191,11 +221,14 @@ if (navigator.requestMediaKeySystemAccess) {
       public keyStatuses: IMediaKeyStatusMap;
       public sessionId : string;
 
-      private readonly _vid : HTMLMediaElement;
+      private readonly _vid : HTMLMediaElement|IOldWebkitHTMLMediaElement;
       private readonly _key : string;
       private readonly _closeSession$ : Subject<void>;
 
-      constructor(mediaElement : HTMLMediaElement, keySystem : string) {
+      constructor(
+        mediaElement : HTMLMediaElement|IOldWebkitHTMLMediaElement,
+        keySystem : string
+      ) {
         super();
         this._closeSession$ = new Subject();
         this._vid = mediaElement;
@@ -216,13 +249,16 @@ if (navigator.requestMediaKeySystemAccess) {
           .subscribe((evt : Event) => this.trigger(evt.type, evt));
 
         this.update = wrapUpdate((license, sessionId?) => {
+          if (!isOldWebkitMediaElement(this._vid)) {
+            throw new Error("impossible to add a new key");
+          }
           if (this._key.indexOf("clearkey") >= 0) {
             const json = JSON.parse(bytesToStr(license));
             const key = strToBytes(atob(json.keys[0].k));
             const kid = strToBytes(atob(json.keys[0].kid));
-            (this._vid as any).webkitAddKey(this._key, key, kid, sessionId);
+            this._vid.webkitAddKey(this._key, key, kid, sessionId);
           } else {
-            (this._vid as any).webkitAddKey(this._key, license, null, sessionId);
+            this._vid.webkitAddKey(this._key, license, null, sessionId);
           }
           this.sessionId = sessionId;
         });
@@ -230,7 +266,7 @@ if (navigator.requestMediaKeySystemAccess) {
 
       generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
         return new Promise((resolve) => {
-          if (typeof this._vid.webkitGenerateKeyRequest !== "function") {
+          if (!isOldWebkitMediaElement(this._vid)) {
             throw new Error("impossible to generate a key request");
           }
           this._vid.webkitGenerateKeyRequest(this._key, initData);
@@ -293,7 +329,7 @@ if (navigator.requestMediaKeySystemAccess) {
 
     requestMediaKeySystemAccess = function(
       keyType : string,
-      keySystemConfigurations : MediaKeySystemConfiguration[]
+      keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
     ) : Observable<CustomMediaKeySystemAccess> {
       if (!isTypeSupported(keyType)) {
         return observableThrow(undefined);
@@ -446,8 +482,8 @@ if (navigator.requestMediaKeySystemAccess) {
 
     requestMediaKeySystemAccess = function(
       keyType : string,
-      keySystemConfigurations : MediaKeySystemConfiguration[]
-    ) : Observable<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
+      keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
+    ) : Observable<IMediaKeySystemAccess|CustomMediaKeySystemAccess> {
       // TODO Why TS Do not understand that isTypeSupported exists here?
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
         return observableThrow(undefined);

@@ -22,6 +22,10 @@ import {
   Subscription,
 } from "rxjs";
 import {
+  // XXX TODO remove when the issue is resolved
+  // https://github.com/Microsoft/TypeScript/issues/19189
+  ICompatMediaKeySystemConfiguration,
+
   IMediaKeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
@@ -147,7 +151,7 @@ function findKeySystemCanonicalName(ksType: string)
 function buildKeySystemConfigurations(
   ksName: string,
   keySystem: IKeySystemOption
-) : MediaKeySystemConfiguration[] {
+) : ICompatMediaKeySystemConfiguration[] {
   const sessionTypes = ["temporary"];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";

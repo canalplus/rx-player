@@ -31,6 +31,17 @@ import {
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
 
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
+
 /**
  * Call the setServerCertificate API with the given certificate.
  * Complete when worked, throw when failed.
@@ -51,7 +62,7 @@ function setServerCertificate(
 ) : Observable<null> {
   return observableDefer(() => {
     return castToObservable(
-      mediaKeys.setServerCertificate(serverCertificate)
+      (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
     ).pipe(catchError((error) => {
       throw new
       EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);

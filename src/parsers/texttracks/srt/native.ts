@@ -22,7 +22,10 @@
 // srt to VTTCue parser, Done for fun.
 // Heavily inspired from the WebVTT implementation
 
-import { makeCue } from "../../../compat/index";
+import {
+  ICompatVTTCue,
+  makeCue,
+} from "../../../compat/index";
 import getCueBlocks from "./getCueBlocks";
 import parseCueBlock from "./parseCue";
 
@@ -36,14 +39,14 @@ import parseCueBlock from "./parseCue";
 export default function parseSRTStringToVTTCues(
   srtStr : string,
   timeOffset : number
-) : Array<VTTCue|TextTrackCue> {
+) : Array<ICompatVTTCue|TextTrackCue> {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);
 
   const cueBlocks : string[][] = getCueBlocks(lines);
 
-  const cues : Array<VTTCue|TextTrackCue> = [];
+  const cues : Array<ICompatVTTCue|TextTrackCue> = [];
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
     if (cueObject) {
@@ -64,7 +67,7 @@ function toNativeCue(cueObj : {
   start : number;
   end : number;
   payload : string[];
-}) : VTTCue|TextTrackCue|null {
+}) : ICompatVTTCue|TextTrackCue|null {
   const { start, end, payload } = cueObj;
   const text = payload.join("\n");
   return makeCue(start, end, text);

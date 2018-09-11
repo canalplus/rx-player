@@ -22,7 +22,10 @@
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
 
-import { makeCue } from "../../../../compat";
+import {
+  ICompatVTTCue,
+  makeCue,
+} from "../../../../compat";
 
 import getParameters, { ITTParameters } from "../getParameters";
 import getParentElementsByTagName from "../getParentElementsByTagName";
@@ -79,8 +82,8 @@ const TEXT_ALIGN_TO_POSITION_ALIGN : Partial<Record<string, string>> = {
 function parseTTMLStringToVTT(
   str : string,
   timeOffset : number
-) : Array<VTTCue|TextTrackCue> {
-  const ret : Array<VTTCue|TextTrackCue> = [];
+) : Array<ICompatVTTCue|TextTrackCue> {
+  const ret : Array<ICompatVTTCue|TextTrackCue> = [];
   const xml = new DOMParser().parseFromString(str, "text/xml");
 
   if (xml) {
@@ -199,7 +202,7 @@ function parseCue(
   paragraphStyle : IStyleList,
   params : ITTParameters,
   shouldTrimWhiteSpace : boolean
-) : VTTCue|TextTrackCue|null {
+) : ICompatVTTCue|TextTrackCue|null {
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
   // If paragraph has neither time attributes, nor
@@ -216,7 +219,7 @@ function parseCue(
   if (!cue) {
     return null;
   }
-  if (cue instanceof VTTCue) {
+  if (cue instanceof ICompatVTTCue) {
     addStyle(cue, paragraphStyle);
   }
   return cue;
@@ -295,7 +298,7 @@ function generateTextContent(
  * @param {VTTCue} cue
  * @param {Object} style
  */
-function addStyle(cue : VTTCue, style : IStyleList) {
+function addStyle(cue : ICompatVTTCue, style : IStyleList) {
   const extent = style.extent;
   if (extent) {
     const results = REGXP_PERCENT_VALUES.exec(extent);

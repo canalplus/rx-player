@@ -19,7 +19,10 @@
  * It always should be imported through the `features` object.
  */
 
-import { makeCue } from "../../../compat";
+import {
+  ICompatVTTCue,
+  makeCue,
+} from "../../../compat";
 import assert from "../../../utils/assert";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
@@ -40,8 +43,8 @@ interface ISubs {
  * text.
  * @returns {Array.<VTTCue>}
  */
-function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|VTTCue> {
-  const nativeCues : Array<TextTrackCue|VTTCue> = [];
+function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|ICompatVTTCue> {
+  const nativeCues : Array<TextTrackCue|ICompatVTTCue> = [];
   for (let i = 0; i < cuesArray.length; i++) {
     const { start, end, text } = cuesArray[i];
     if (text && end != null) {
@@ -110,7 +113,7 @@ function parseSami(
   smi : string,
   timeOffset : number,
   lang? : string
-) : Array<TextTrackCue|VTTCue> {
+) : Array<TextTrackCue|ICompatVTTCue> {
   const syncOpen = /<sync[ >]/ig;
   const syncClose = /<sync[ >]|<\/body>/ig;
 

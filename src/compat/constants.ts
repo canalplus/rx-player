@@ -16,23 +16,94 @@
 
 import MediaError from "../errors/MediaError";
 
+interface ICompatMediaSourceConstructor {
+  isTypeSupported? : (mimeType : string) => boolean;
+  new() : MediaSource;
+}
+
+interface ICompatMediaKeysConstructor {
+  // for IE11
+  isTypeSupported? : (type : string) => boolean;
+
+  // Argument for IE11
+  new(keyType? : string) : MediaKeys;
+}
+
+interface ICompatHTMLElementConstructor {
+  new() : HTMLElement;
+}
+
+interface ICompatVTTCueConstructor {
+  new(start : number, end: number, text: string) : ICompatVTTCue;
+}
+
+declare class ICompatVTTCue {
+  align : string;
+  endTime : number;
+  id : string;
+  line : number|"auto";
+  lineAlign : string;
+  position : number|"auto";
+  positionAlign : string;
+  size : number|string;
+  snapToLines : boolean;
+  startTime : number;
+  vertical : string;
+  constructor(start : number, end : number, cueText : string);
+}
+
+// TODO Open issue on TypeScript
+interface ICompatTextTrack extends TextTrack {
+  addCue(cue: TextTrackCue|ICompatVTTCue) : void;
+  removeCue(cue: TextTrackCue|ICompatVTTCue) : void;
+}
+
+interface ICompatDocument extends Document {
+  msFullscreenElement? : HTMLElement;
+  msExitFullscreen? : () => void;
+  msHidden? : boolean;
+  mozFullScreenElement? : HTMLElement;
+  mozCancelFullScreen? : () => void;
+  mozHidden? : boolean;
+  webkitHidden? : boolean;
+}
+
+interface ICompatElement extends Element {
+  msRequestFullscreen? : () => void;
+  mozRequestFullScreen? : () => void;
+}
+
+// for some reasons, Typescript seem to forget about SessionTypes
+// XXX TODO remove when the issue is resolved
+// https://github.com/Microsoft/TypeScript/issues/19189
+interface ICompatMediaKeySystemConfiguration {
+  audioCapabilities?: MediaKeySystemMediaCapability[];
+  distinctiveIdentifier?: MediaKeysRequirement;
+  initDataTypes?: string[];
+  persistentState?: MediaKeysRequirement;
+  videoCapabilities?: MediaKeySystemMediaCapability[];
+  sessionTypes: string[];
+}
+
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
-const HTMLElement_ : HTMLElementConstructor = window.HTMLElement;
-const VTTCue_ : VTTCueConstructor|undefined = window.VTTCue || window.TextTrackCue;
+const global = window as any;
+const HTMLElement_ : ICompatHTMLElementConstructor = global.HTMLElement;
+const VTTCue_ : ICompatVTTCueConstructor|undefined = global.VTTCue ||
+  global.TextTrackCue;
 
-const MediaSource_ : MediaSourceConstructor|undefined = (
-  window.MediaSource ||
-  window.MozMediaSource ||
-  window.WebKitMediaSource ||
-  window.MSMediaSource
+const MediaSource_ : ICompatMediaSourceConstructor|undefined = (
+  global.MediaSource ||
+  global.MozMediaSource ||
+  global.WebKitMediaSource ||
+  global.MSMediaSource
 );
 
-let MediaKeys_ : MediaKeysConstructor|undefined = (
-  window.MediaKeys ||
-  window.MozMediaKeys ||
-  window.WebKitMediaKeys ||
-  window.MSMediaKeys
+let MediaKeys_ : ICompatMediaKeysConstructor|undefined = (
+  global.MediaKeys ||
+  global.MozMediaKeys ||
+  global.WebKitMediaKeys ||
+  global.MSMediaKeys
 );
 
 if (!MediaKeys_) {
@@ -81,4 +152,13 @@ export {
   isFirefox,
   READY_STATES,
   VTTCue_,
+  ICompatDocument,
+  ICompatElement,
+  ICompatHTMLElementConstructor,
+  ICompatMediaKeySystemConfiguration,
+  ICompatMediaKeysConstructor,
+  ICompatMediaSourceConstructor,
+  ICompatTextTrack,
+  ICompatVTTCue,
+  ICompatVTTCueConstructor,
 };
