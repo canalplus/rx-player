@@ -28,6 +28,16 @@ For a shortcut, here are some other quick links you might want to check:
 
 
 
+## Tutorials ###################################################################
+
+We're under the process of writing tutorials to facilitate the usage of the
+RxPlayer.
+
+For now we have:
+  - [quick start](./tutorials/quick_start.md)
+
+
+
 ## Architecture Documentation ##################################################
 
 An architecture documentation is in progress.

@@ -2,7 +2,7 @@
 
 Because the RxPlayer exports a lot of functionnalities, you might want to
 quickly test basic usecases before you dive deep into the [whole API
-documentation](./index.md).
+documentation](../api/index.md).
 
 We will here learn how to simply load a video with regular options and to react
 to basic events.
@@ -28,7 +28,7 @@ const player = new RxPlayer({ videoElement });
 ``videoElement`` is here an RxPlayer option and will be the media HTMLElement
 the RxPlayer will load your media on.
 When you are ready to make use of more advanced features, you can look at the
-other possible options in the [Player Options page](./player_options.md).
+other possible options in the [Player Options page](../api/player_options.md).
 
 
 
@@ -38,8 +38,8 @@ The next logical step is to load a video.
 
 Loading a new video is done through the ``loadVideo`` method.
 ``loadVideo`` takes an object as arguments, which corresponds to its options.
-There is [a lot of possible options](#./loadVideo_options.md), but to simplify
-we will start with just three:
+There is [a lot of possible options](#../api/loadVideo_options.md), but to
+simplify we will start with just three:
 
   - ``transport``: String describing the transport protocol (can be ``"dash"``,
     ``"smooth"`` or ``"directfile"`` for now).
@@ -71,7 +71,7 @@ Now that we are loading a video, we might want to know:
 
 To do all three of those things, you will need to listen to player events.
 This is done through the [addEventListener
-method](./index.md#meth-addEventListener).
+method](../api/index.md#meth-addEventListener).
 
 This method works the same way than the native one you might already use on
 HTML elements.
@@ -101,7 +101,7 @@ player.addEventListener("playerStateChange", (state) => {
 
 We're now ready to interact with the current content.
 
-There is [a huge list of APIs](./index.md) you can use.
+There is [a huge list of APIs](../api/index.md) you can use.
 Some are useful only when a content is currently loaded (like ``play``,
 ``pause``, ``seekTo`` or ``setAudioTrack``) and others can be used in any case
 (like ``setVolume``, ``getVideoElement`` or ``loadVideo``).
