@@ -1,6 +1,4 @@
 // load chai plugins
-import "@babel/polyfill";
-import "core-js/fn/array/flatMap";
 import chai from "chai";
 
 import ChaiAsPromised from "chai-as-promised";

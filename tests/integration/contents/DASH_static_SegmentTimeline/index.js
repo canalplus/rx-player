@@ -5,6 +5,7 @@
  * avoid being too heavy.
  */
 
+import flatMap from "../../utils/flatMap.js";
 import patchSegmentWithTimeOffset from "../../utils/patchSegmentWithTimeOffset.js";
 
 const baseURL = "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/";
@@ -22,8 +23,9 @@ const audioSegments = [
   };
 });
 
-const videoQualities = [400000, 795000, 1193000, 1996000]
-  .flatMap(quality => {
+const videoQualities = flatMap(
+  [400000, 795000, 1193000, 1996000],
+  quality => {
     const segments = [
       0, 360360, 720720, 1081080, 1441440, 1801800, 2162160, 2522520, 2882880,
       3243240, 3603600, 3963960, 4324320, 4684680, 5045040, 5405400, 5765760,

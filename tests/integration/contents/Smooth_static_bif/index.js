@@ -5,6 +5,7 @@
  * avoid being too heavy.
  */
 
+import flatMap from "../../utils/flatMap.js";
 const baseURL = "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/";
 
 const audioSegments = [
@@ -23,34 +24,34 @@ const audioSegments = [
   };
 });
 
-const videoSegments = [
-  300000, 750000, 1100000, 1500000, 2100000, 3400000, 4000000, 5000000,
-].flatMap(quality => {
-  const segments = [
-    0, 20000000, 40000000, 60000000, 80000000, 100000000, 120000000, 140000000,
-    160000000, 180000000, 200000000, 220000000, 240000000, 260000000, 280000000,
-    300000000, 320000000, 340000000, 360000000, 380000000, 400000000, 420000000,
-    440000000, 460000000, 480000000, 500000000, 520000000, 540000000, 560000000,
-    580000000, 600000000, 620000000, 640000000, 660000000, 680000000, 700000000,
-    720000000,
-  ].map(time => {
-    return {
+const videoSegments = flatMap(
+  [300000, 750000, 1100000, 1500000, 2100000, 3400000, 4000000, 5000000],
+  quality => {
+    const segments = [
+      0, 20000000, 40000000, 60000000, 80000000, 100000000, 120000000,
+      140000000, 160000000, 180000000, 200000000, 220000000, 240000000,
+      260000000, 280000000, 300000000, 320000000, 340000000, 360000000,
+      380000000, 400000000, 420000000, 440000000, 460000000, 480000000,
+      500000000, 520000000, 540000000, 560000000, 580000000, 600000000,
+      620000000, 640000000, 660000000, 680000000, 700000000, 720000000,
+    ].map(time => {
+      return {
+        // TODO Open Sinon issue with malformed RegExp from strings
+        url: baseURL + `QualityLevels${quality}/Fragmentsvideo=${time}`,
+        data: require(`arraybuffer-loader!./media/${quality}-Fragments(video=0).mp4`),
+        contentType: "video/mp4",
+      };
+    });
+
+    segments.push({
       // TODO Open Sinon issue with malformed RegExp from strings
-      url: baseURL + `QualityLevels${quality}/Fragmentsvideo=${time}`,
-      data: require(`arraybuffer-loader!./media/${quality}-Fragments(video=0).mp4`),
+      url: baseURL + `QualityLevels${quality}/Fragmentsvideo=740000000`,
+      data: require(`arraybuffer-loader!./media/${quality}-Fragments(video=740000000).mp4`),
       contentType: "video/mp4",
-    };
-  });
+    });
 
-  segments.push({
-    // TODO Open Sinon issue with malformed RegExp from strings
-    url: baseURL + `QualityLevels${quality}/Fragmentsvideo=740000000`,
-    data: require(`arraybuffer-loader!./media/${quality}-Fragments(video=740000000).mp4`),
-    contentType: "video/mp4",
+    return segments;
   });
-
-  return segments;
-});
 
 const URLs = [
   {
