@@ -4,8 +4,7 @@ Because the RxPlayer exports a lot of functionnalities, you might want to
 quickly test basic usecases before you dive deep into the [whole API
 documentation](../api/index.md).
 
-We will here learn how to simply load a video with regular options and to react
-to basic events.
+We will here learn how to simply load a video and to react to basic events.
 
 
 
@@ -13,8 +12,8 @@ to basic events.
 
 The first step is to instanciate a new RxPlayer.
 
-Each RxPlayer instance is attached to a video (or audio) element, and is able
-to play a single content at once.
+Each RxPlayer instance is attached to a single video (or audio) HTML element,
+and is able to play a single content at once.
 
 To instanciate it with a linked video element you can just do something along
 the lines of:
@@ -25,8 +24,8 @@ const videoElement = document.querySelector("video");
 const player = new RxPlayer({ videoElement });
 ```
 
-``videoElement`` is here an RxPlayer option and will be the media HTMLElement
-the RxPlayer will load your media on.
+``videoElement`` is an RxPlayer option and will be the HTMLElement the RxPlayer
+will load your media on.
 When you are ready to make use of more advanced features, you can look at the
 other possible options in the [Player Options page](../api/player_options.md).
 
@@ -38,8 +37,8 @@ The next logical step is to load a video.
 
 Loading a new video is done through the ``loadVideo`` method.
 ``loadVideo`` takes an object as arguments, which corresponds to its options.
-There is [a lot of possible options](#../api/loadVideo_options.md), but to
-simplify we will start with just three:
+There is here also [a lot of possible options](#../api/loadVideo_options.md),
+but to simplify we will start with just three:
 
   - ``transport``: String describing the transport protocol (can be ``"dash"``,
     ``"smooth"`` or ``"directfile"`` for now).
@@ -66,7 +65,7 @@ player.loadVideo({
 
 Now that we are loading a video, we might want to know:
   - if it succeed
-  - if it fails
+  - if it failed
   - when we are able to interact with the video
 
 To do all three of those things, you will need to listen to player events.
@@ -95,6 +94,9 @@ player.addEventListener("playerStateChange", (state) => {
 });
 ```
 
+There is multiple other events, all documented in [the events documentation
+](../api/player_events.md).
+
 
 
 ## Interacting with the player #################################################
@@ -115,15 +117,20 @@ Here is a complete example where I:
 ```js
 import RxPlayer from "rx-player";
 
+// take the first video element on the page
 const videoElement = document.querySelector("video");
+
 const player = new RxPlayer({ videoElement });
 
 player.addEventListener("error", (err) => {
   console.log("the content stopped with the following error", err);
 });
+
 player.addEventListener("playerStateChange", (state) => {
   if (state === "LOADED") {
     console.log("the content is loaded");
+
+    // toggle between play pause when the user clicks on the video
     videoElement.onclick = function() {
       if (player.getPlayerState() === "PLAYING") {
         player.pause();
