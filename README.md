@@ -74,7 +74,7 @@ import RxPlayer from "rx-player";
 
 // instantiate it
 const player = new RxPlayer({
-  videoElement: document.getElementById("my-video")
+  videoElement: document.querySelector("video")
 });
 
 // play a video
@@ -85,8 +85,18 @@ player.loadVideo({
 });
 ```
 
-To reduce the size of the final code, you can now also import a minimal version
-of the player and only import the features you need. This is documented [here
+### Tutorial ###################################################################
+
+We've also written a short tutorial to help you to familiarize with the RxPlayer
+API, [available here
+](https://canalplus.github.io/rx-player/doc/pages/api/quick_start.html).
+
+
+### Minimal Builds #############################################################
+
+To reduce the size of the final code, you might also want to import a minimal
+version of the player and only import the features you need. This is documented
+[here
 ](https://canalplus.github.io/rx-player/doc/pages/api/minimal_player.html):
 
 ```js
