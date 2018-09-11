@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayFind from "array-find";
 import config from "../../../../config";
 import log from "../../../../log";
 import { IRepresentationIndex } from "../../../../manifest";
@@ -72,12 +73,12 @@ function inferAdaptationType(
   representationMimeTypes : string[],
   adaptationCodecs : string|null,
   representationCodecs : string[],
-  adaptationRole : IScheme|null
+  adaptationRoles : IScheme[]|null
 ) : string {
 
   function fromMimeType(
     mimeType : string,
-    role : IScheme|null
+    roles : IScheme[]|null
   ) : string|undefined {
     const topLevel = mimeType.split("/")[0];
     if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
@@ -94,10 +95,12 @@ function inferAdaptationType(
 
     // manage DASH-IF mp4-embedded subtitles and metadata
     if (mimeType === "application/mp4") {
-      if (role) {
+      if (roles != null) {
         if (
-          role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-          arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
+          arrayFind(roles, (role) =>
+            role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+            arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
+          ) != null
         ) {
           return "text";
         }
@@ -131,7 +134,7 @@ function inferAdaptationType(
   }
 
   if (adaptationMimeType != null) {
-    const typeFromMimeType = fromMimeType(adaptationMimeType, adaptationRole);
+    const typeFromMimeType = fromMimeType(adaptationMimeType, adaptationRoles);
     if (typeFromMimeType != null) {
       return typeFromMimeType;
     }
@@ -147,7 +150,7 @@ function inferAdaptationType(
   for (let i = 0; i < representationMimeTypes.length; i++) {
     const representationMimeType = representationMimeTypes[i];
     if (representationMimeType != null) {
-      const typeFromMimeType = fromMimeType(representationMimeType, adaptationRole);
+      const typeFromMimeType = fromMimeType(representationMimeType, adaptationRoles);
       if (typeFromMimeType != null) {
         return typeFromMimeType;
       }
@@ -571,12 +574,14 @@ export default function parseManifest(
           representationMimeTypes,
           adaptationCodecs || null,
           representationCodecs,
-          adaptationChildren.role || null
+          adaptationChildren.roles || null
         );
 
-        const isMainAdaptation = !!adaptation.children.role &&
-          adaptation.children.role.value === "main" &&
-          adaptation.children.role.schemeIdUri === "urn:mpeg:dash:role:2011";
+        const { roles } = adaptationChildren;
+
+        const isMainAdaptation = !!roles &&
+          !!arrayFind(roles, (role) => role.value === "main") &&
+          !!arrayFind(roles, (role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
 
         const videoMainAdaptation = acc.videoMainAdaptation;
 
