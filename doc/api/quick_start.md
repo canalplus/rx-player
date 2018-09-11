@@ -1,7 +1,8 @@
 # Tutorial: Quick Start ########################################################
 
-To just test our RxPlayer to see if it corresponds to your needs, you might not
-want to read our whole API documentation.
+Because the RxPlayer exports a lot of functionnalities, you might want to
+quickly test basic usecases before you dive deep into the [whole API
+documentation](./index.md).
 
 We will here learn how to simply load a video with regular options and to react
 to basic events.
