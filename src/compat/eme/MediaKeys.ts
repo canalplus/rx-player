@@ -33,19 +33,18 @@ import EventEmitter, {
 import {
   // XXX TODO remove when the issue is resolved
   // https://github.com/Microsoft/TypeScript/issues/19189
+  ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
 
   MediaKeys_,
 } from "../constants";
 import * as events from "../events";
-import CustomMediaKeySystemAccess, {
-  IMediaKeySystemAccess,
-} from "./keySystemAccess";
+import CustomMediaKeySystemAccess from "./keySystemAccess";
 
 let requestMediaKeySystemAccess :
 (
   (keyType : string, config : ICompatMediaKeySystemConfiguration[]) =>
-    Observable<IMediaKeySystemAccess|CustomMediaKeySystemAccess>
+    Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess>
 ) | null;
 
 type TypedArray =
@@ -153,7 +152,7 @@ let MockMediaKeys : IMockMediaKeysConstructor =
 if (navigator.requestMediaKeySystemAccess) {
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
     castToObservable(
-      navigator.requestMediaKeySystemAccess(a, b) as Promise<IMediaKeySystemAccess>
+      navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
     );
 } else {
 
@@ -483,7 +482,7 @@ if (navigator.requestMediaKeySystemAccess) {
     requestMediaKeySystemAccess = function(
       keyType : string,
       keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
-    ) : Observable<IMediaKeySystemAccess|CustomMediaKeySystemAccess> {
+    ) : Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess> {
       // TODO Why TS Do not understand that isTypeSupported exists here?
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
         return observableThrow(undefined);
