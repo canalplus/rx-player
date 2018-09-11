@@ -263,7 +263,7 @@ Can be either one of those strings:
   - ``"LOADED"``: The player has loaded the new content, it is now ready to
     play.
     From this point onward you can use APIs interacting with the current content
-    such as ``seekTo`` or ``setAudioTrack``
+    such as ``seekTo`` or ``setAudioTrack``.
 
   - ``"PLAYING"``: The player is currently playing the stream.
 
