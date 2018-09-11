@@ -33,8 +33,10 @@ For a shortcut, here are some other quick links you might want to check:
 We're under the process of writing tutorials to facilitate the usage of the
 RxPlayer.
 
-For now we have:
-  - [quick start](./tutorials/quick_start.md)
+Those are all linked [here](./tutorials/index.md).
+
+To quickly start using the player, you can directly refer to the [quick start
+tutorial](./tutorials/quick_start.md).
 
 
 
