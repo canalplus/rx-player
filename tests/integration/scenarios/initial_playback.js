@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import nise from "nise";
+import sinon from "sinon";
 
 import RxPlayer from "../../../src";
 
@@ -32,19 +32,18 @@ import waitForState, {
 describe("basic playback use cases: non-linear DASH SegmentTimeline", function () {
 
   let player;
-  const fakeServer = nise.fakeServer;
-  let server;
+  let fakeServer;
 
   beforeEach(() => {
     player = new RxPlayer();
-    server = fakeServer.create();
-    server.autoRespond = true;
-    mockRequests(server, URLs);
+    fakeServer = sinon.fakeServer.create();
+    fakeServer.autoRespond = true;
+    mockRequests(fakeServer, URLs);
   });
 
   afterEach(() => {
     player.dispose();
-    server.restore();
+    fakeServer.restore();
   });
 
   it("should begin playback on play", async function () {
@@ -230,7 +229,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getVideoLoadedTime()).to.be.below(5);
 
     // Manifest + 2 init segments + 2 segments
-    expect(server.requestCount).to.equal(5);
+    expect(fakeServer.requestCount).to.equal(5);
   });
 
   it("should continue downloading when seek to wanter buffer ahead", async function() {
@@ -318,7 +317,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPlayerState()).to.equal("PLAYING");
 
     // deactivate autoRespond for now
-    server.autoRespond = false;
+    fakeServer.autoRespond = false;
 
     player.seekTo(10);
     await waitForState(player, "SEEKING", ["PLAYING"]);
@@ -328,12 +327,12 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPlayerState()).to.equal("SEEKING");
     expect(player.getVideoBufferGap()).to.equal(Infinity);
 
-    server.respond();
+    fakeServer.respond();
     await sleep(100);
     expect(player.getVideoBufferGap()).to.be.above(1);
     expect(player.getVideoBufferGap()).to.be.below(10);
     expect(player.getPlayerState()).to.equal("PLAYING");
 
-    server.autoRespond = true;
+    fakeServer.autoRespond = true;
   });
 });
