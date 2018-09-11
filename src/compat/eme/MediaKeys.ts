@@ -198,12 +198,12 @@ if (navigator.requestMediaKeySystemAccess) {
    * @param {HTMLMediaElement} element
    * @returns {Boolean}
    */
-  function isOldWebkitMediaElement(
+  const isOldWebkitMediaElement = (
     element : HTMLMediaElement|IOldWebkitHTMLMediaElement
-  ) : element is IOldWebkitHTMLMediaElement {
+  ) : element is IOldWebkitHTMLMediaElement => {
     return typeof (element as IOldWebkitHTMLMediaElement)
       .webkitGenerateKeyRequest === "function";
-  }
+  };
 
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
