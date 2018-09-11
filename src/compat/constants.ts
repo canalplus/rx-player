@@ -76,6 +76,9 @@ interface ICompatElement extends Element {
 // for some reasons, Typescript seem to forget about SessionTypes
 // XXX TODO remove when the issue is resolved
 // https://github.com/Microsoft/TypeScript/issues/19189
+interface ICompatMediaKeySystemAccess extends MediaKeySystemAccess {
+  getConfiguration() : ICompatMediaKeySystemConfiguration;
+}
 interface ICompatMediaKeySystemConfiguration {
   audioCapabilities?: MediaKeySystemMediaCapability[];
   distinctiveIdentifier?: MediaKeysRequirement;
@@ -155,6 +158,7 @@ export {
   ICompatDocument,
   ICompatElement,
   ICompatHTMLElementConstructor,
+  ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
   ICompatMediaKeysConstructor,
   ICompatMediaSourceConstructor,

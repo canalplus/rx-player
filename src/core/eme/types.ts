@@ -15,8 +15,9 @@
  */
 
 import {
+  ICompatMediaKeySystemAccess,
+  ICustomMediaKeySystemAccess,
   IMediaKeySession,
-  IMediaKeySystemAccess,
   IMockMediaKeys,
 } from "../../compat";
 import SessionsStore from "./utils/open_sessions_store";
@@ -24,13 +25,13 @@ import PersistedSessionsStore from "./utils/persisted_session_store";
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
-  keySystemAccess: IMediaKeySystemAccess;
+  keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
 }
 
 // Infos identyfing a single MediaKey
 export interface IMediaKeysInfos {
-  mediaKeySystemAccess: IMediaKeySystemAccess;
+  mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption; // options set by the user
   mediaKeys : MediaKeys|IMockMediaKeys;
   sessionsStore : SessionsStore;

@@ -15,7 +15,8 @@
  */
 
 import {
-  IMediaKeySystemAccess,
+  ICompatMediaKeySystemAccess,
+  ICustomMediaKeySystemAccess,
   IMockMediaKeys,
 } from "../../compat";
 import { IKeySystemOption } from "./types";
@@ -23,7 +24,7 @@ import SessionsStore from "./utils/open_sessions_store";
 
 export type IMediaElementMediaKeysInfos = {
   keySystemOptions : IKeySystemOption;
-  mediaKeySystemAccess : IMediaKeySystemAccess;
+  mediaKeySystemAccess : ICustomMediaKeySystemAccess|ICompatMediaKeySystemAccess;
   mediaKeys : MediaKeys|IMockMediaKeys;
   sessionsStore : SessionsStore;
 }|null;

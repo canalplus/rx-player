@@ -24,9 +24,10 @@ import {
 import {
   // XXX TODO remove when the issue is resolved
   // https://github.com/Microsoft/TypeScript/issues/19189
+  ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
 
-  IMediaKeySystemAccess,
+  ICustomMediaKeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
 } from "../../compat";
@@ -42,7 +43,7 @@ type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 export interface IReuseMediaKeySystemAccessEvent {
   type: "reuse-media-key-system-access";
   value: {
-    mediaKeySystemAccess: IMediaKeySystemAccess ;
+    mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
     options: IKeySystemOption;
   };
 }
@@ -50,7 +51,7 @@ export interface IReuseMediaKeySystemAccessEvent {
 export interface ICreateMediaKeySystemAccessEvent {
   type: "create-media-key-system-access";
   value: {
-    mediaKeySystemAccess: IMediaKeySystemAccess;
+    mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
     options: IKeySystemOption;
   };
 }
@@ -82,11 +83,11 @@ const {
  */
 function checkCachedMediaKeySystemAccess(
   keySystems: IKeySystemOption[],
-  currentKeySystemAccess: IMediaKeySystemAccess,
+  currentKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess,
   currentKeySystemOptions: IKeySystemOption
 ) : null|{
   keySystemOptions: IKeySystemOption;
-  keySystemAccess: IMediaKeySystemAccess;
+  keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
 

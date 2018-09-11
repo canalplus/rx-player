@@ -30,6 +30,7 @@ import castToObservable from "../utils/castToObservable";
 import EventEmitter from "../utils/eventemitter";
 import tryCatch from "../utils/rx-tryCatch";
 import {
+  ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
   ICompatTextTrack,
   ICompatVTTCue,
@@ -48,8 +49,8 @@ import {
 
 import {
   getInitData,
+  ICustomMediaKeySystemAccess,
   IMediaKeySession,
-  IMediaKeySystemAccess,
   IMockMediaKeys,
   KeySystemAccess,
   requestMediaKeySystemAccess,
@@ -394,24 +395,24 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
 }
 
 export {
-  play$,
-  getInitData,
+  ICompatMediaKeySystemAccess,
+  ICompatMediaKeySystemConfiguration,
+  ICompatTextTrack,
+  ICompatVTTCue,
+  ICustomMediaKeySystemAccess,
+  IMediaKeySession,
+  IMockMediaKeys,
   KeySystemAccess,
   MediaSource_,
   VTTCue_,
   addTextTrack,
   canPlay,
-  hasLoadedMetadata,
   clearElementSrc,
   events,
   exitFullscreen,
+  getInitData,
   hasEMEAPIs,
-  ICompatMediaKeySystemConfiguration,
-  ICompatTextTrack,
-  ICompatVTTCue,
-  IMediaKeySession,
-  IMediaKeySystemAccess,
-  IMockMediaKeys,
+  hasLoadedMetadata,
   isCodecSupported,
   isFirefox,
   isFullscreen,
@@ -419,11 +420,12 @@ export {
   isOffline,
   isPlaybackStuck,
   makeCue,
+  onSourceOpen$,
+  play$,
   requestFullscreen,
   requestMediaKeySystemAccess,
   setElementSrc$,
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
-  onSourceOpen$,
 };

@@ -20,7 +20,7 @@ import { ICompatMediaKeySystemConfiguration } from "../constants";
 
 import { IMockMediaKeys } from "./MediaKeys";
 
-export interface IMediaKeySystemAccess {
+export interface ICustomMediaKeySystemAccess {
   readonly keySystem : string;
   getConfiguration() : ICompatMediaKeySystemConfiguration;
   createMediaKeys() : Promise<MediaKeys|IMockMediaKeys>;
@@ -32,7 +32,7 @@ export interface IMediaKeySystemAccess {
  * All needed arguments are given to the constructor
  * @class CustomMediaKeySystemAccess
  */
-export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess {
+export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystemAccess {
   /**
    * @param {string} _keyType
    * @param {Object} _mediaKeys
