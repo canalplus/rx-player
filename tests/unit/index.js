@@ -1,4 +1,5 @@
 // load chai plugins
+import "@babel/polyfill";
 import chai from "chai";
 
 import ChaiAsPromised from "chai-as-promised";
