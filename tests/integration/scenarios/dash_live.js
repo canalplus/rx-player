@@ -7,7 +7,7 @@ import {
   manifestInfos,
   URLs,
 } from "../contents/DASH_dynamic_SegmentTimeline";
-import mockAllRequests from "../utils/mock_requests.js";
+import mockRequests from "../utils/mock_requests.js";
 import sleep from "../utils/sleep.js";
 
 describe("DASH live content (SegmentTimeline)", function () {
@@ -25,7 +25,7 @@ describe("DASH live content (SegmentTimeline)", function () {
   });
 
   it("should fetch and parse the manifest", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     player.loadVideo({
       url: manifestInfos.url,
@@ -214,7 +214,7 @@ describe("DASH live content (SegmentTimeline)", function () {
   });
 
   it("should list the right bitrates", async function () {
-    mockAllRequests(fakeServer, URLs);
+    mockRequests(fakeServer, URLs);
 
     player.loadVideo({
       url: manifestInfos.url,
@@ -231,7 +231,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getAvailableAudioTracks", () => {
     it("should list the right audio languages", async function () {
-      mockAllRequests(fakeServer, URLs);
+      mockRequests(fakeServer, URLs);
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -280,7 +280,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getAvailableTextTracks", () => {
     it("should list the right text languages", async function () {
-      mockAllRequests(fakeServer, URLs);
+      mockRequests(fakeServer, URLs);
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -329,7 +329,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getAvailableVideoTracks", () => {
     it("should list the right video tracks", async function () {
-      mockAllRequests(fakeServer, URLs);
+      mockRequests(fakeServer, URLs);
 
       player.loadVideo({
         url: manifestInfos.url,
