@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import nise from "nise";
+import sinon from "sinon";
 
 import RxPlayer from "../../../src";
 
@@ -31,19 +31,56 @@ import /* waitForState, */ {
 
 describe("loadVideo Options", () => {
   let player;
-  const fakeServer = nise.fakeServer;
-  let server;
+  let fakeServer;
 
   beforeEach(() => {
     player = new RxPlayer();
-    server = fakeServer.create();
-    server.autoRespond = true;
-    mockRequests(server, URLs);
+    fakeServer = sinon.fakeServer.create();
+    fakeServer.autoRespond = true;
+    mockRequests(fakeServer, URLs);
   });
 
   afterEach(() => {
     player.dispose();
-    server.restore();
+    fakeServer.restore();
+  });
+
+  describe("url", () => {
+    it("should throw if no url is given", () => {
+      expect(() => {
+        player.loadVideo();
+      }).to.throw();
+      expect(() => {
+        player.loadVideo({ transport: "dash", autoPlay: true });
+      }).to.throw();
+    });
+
+    it("should request the URL if one is given", async () => {
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport: "dash",
+        autoPlay: true,
+      });
+
+      await sleep(0);
+
+      expect(fakeServer.requests.length).to.equal(1);
+      expect(fakeServer.requests[0].url).to.equal(manifestInfos.url);
+    });
+  });
+
+  describe("transport", () => {
+    it("should throw if no transport is given", () => {
+      expect(() => {
+        player.loadVideo();
+      }).to.throw();
+      expect(() => {
+        player.loadVideo({ url: manifestInfos.url });
+      }).to.throw();
+      expect(() => {
+        player.loadVideo({ url: manifestInfos.url, autoPlay: true });
+      }).to.throw();
+    });
   });
 
   describe("autoPlay", () => {
