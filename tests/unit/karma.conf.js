@@ -1,6 +1,6 @@
 /* eslint-env node */
 const path = require("path");
-const webpackConfig = require("../../webpack.config.js");
+const webpackConfig = require("../../webpack-tests.config.js");
 
 const singleRun = !process.env.RXP_TESTS_WATCH;
 
