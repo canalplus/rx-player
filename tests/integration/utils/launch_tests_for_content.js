@@ -328,7 +328,6 @@ export default function launchTestsForContent(
           transport,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        console.log("!!!!! STATE", player.getPlayerState(), player.getCurrentAdaptations());
 
         const currentAdaptations = player.getCurrentAdaptations();
         expect(typeof currentAdaptations).to.eql("object");
