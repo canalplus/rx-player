@@ -63,7 +63,7 @@ function replaceToken(url : string, token? : string) : string {
  * @returns {string}
  */
 function resolveManifest(url : string) : string {
-  return url.replace(ISM_REG, ".ism/manifest");
+  return url.replace(ISM_REG, "$1/manifest$2");
 }
 
 export {
