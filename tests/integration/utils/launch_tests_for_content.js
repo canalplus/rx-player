@@ -464,7 +464,7 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await sleep(1);
+        await sleep(100);
         expect(player.getPlayerState()).to.equal("PLAYING");
       });
 
