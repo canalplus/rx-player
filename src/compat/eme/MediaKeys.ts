@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import Promise from "pinkie-promise";
 import {
   merge as observableMerge,
   Observable,

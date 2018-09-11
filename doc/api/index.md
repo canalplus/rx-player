@@ -215,10 +215,37 @@ You can find its documentation [here](./mediaCapabilitiesProber.md).
 _arguments_:
   - _options_ (``Object``)
 
+-return value_: ``Promise``
+
 Loads a new video described in the argument.
 
 The options possible as arguments are all defined in [this
 page](./loadVideo_options.md).
+
+To know when the content finished loading or if it encountered an events, you
+are encouraged to listen to player events, through the [``addEventListener``
+method](#meth-addEventListener).
+
+The returned Promise resolves with no value when the content can be played (it
+corresponds to the ``"LOADED"`` [player state](#meth-getPlayerState)).
+
+It is rejected in two scenarios:
+
+  - a fatal error happened before the content finished loading.
+    In that case, the rejected value will be under the following form:
+    ```js
+    { reason: "error", err: SOME_ERROR }
+    ```
+    Where ``SOME_ERROR`` is the fatal player error (see [the Player Error
+    documentation](./errors.md) for possible values).
+
+  - This loading step was canceled, either because you called ``stop`` or
+    because you called ``loadVideo`` again while this one was still pending.
+    In that case, the rejected value will be under the following form:
+    ```js
+    { reason: "canceled", err: undefined }
+    ```
+
 
 #### Example
 ```js
@@ -226,7 +253,16 @@ player.loadVideo({
   url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
   autoPlay: true,
-});
+}).then(
+  () => { console.log("the content loaded successfully!"); }
+  (e) => {
+    if (e.reason === "canceled") {
+      console.warn("This call was canceled");
+    } else {
+      console.error("This call errored due to the following error:", error);
+    }
+  }
+);
 ```
 
 
