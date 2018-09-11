@@ -417,20 +417,26 @@ Both parameters and the return value changed.
 
 #### What changed
 
-``loadVideo`` does not return anything anymore.
+From v3.0.0 to v3.6.1, ``loadVideo`` did not return anything.
+This was because using events instead was heavily encouraged.
+
+From the v3.7.0, ``loadVideo`` returns a Promise that is:
+  - resolved when the content has loaded.
+  - rejected when either the player encountered an error before loading or if
+    the load was canceled (by a call to stop or another call to loadVideo).
 
 #### Replacement examples
 
-If you want to know when the player is on error, you will have to listen to the
-``error`` events:
+If you want to know when the player is on error, it is preferred that you listen
+to the ``error`` events:
 ```js
 player.addEventListener("error", (error) => {
   console.log("content on error");
 });
 ```
 
-If you want to know when the content is loaded, you will have to listen to when
-the ``playerStateChange`` events:
+If you want to know when the content is loaded, it is preferred that you listen
+to the ``playerStateChange`` events:
 ```js
 player.addEventListener("playerStateChange", (state) => {
   switch (state) {
@@ -449,6 +455,28 @@ player.addEventListener("playerStateChange", (state) => {
 
 Bear in mind however that both are triggered when ANY content you choosed to
 play are loaded/on error, not just the last one.
+
+From the v3.7.0, you can also know if your content successfully loaded through
+the Promise ``loadVideo`` returns:
+```js
+player.loadVideo({
+  url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+  transport: "dash",
+  autoPlay: true,
+}).then(
+  () => { console.log("the content loaded successfully!"); }
+  (e) => {
+    if (e.reason === "canceled") {
+      console.warn("This call was canceled");
+    } else {
+      console.error("This call errored due to the following error:", error);
+    }
+  }
+);
+```
+
+But you still might want to listen to state change and errors after the content
+loaded.
 
 
 <a name="load-defaultLanguage"></a>
