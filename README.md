@@ -86,8 +86,8 @@ player.loadVideo({
 ```
 
 We've also written a short tutorial to help you familiarize with the RxPlayer
-API, [available here
-](https://canalplus.github.io/rx-player/doc/pages/tutorials/quick_start.html).
+API, [available
+here](https://canalplus.github.io/rx-player/doc/pages/tutorials/quick_start.html).
 
 
 ### Minimal Builds #############################################################
