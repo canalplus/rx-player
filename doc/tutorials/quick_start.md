@@ -37,7 +37,7 @@ The next logical step is to load a video.
 
 Loading a new video is done through the ``loadVideo`` method.
 ``loadVideo`` takes an object as arguments, which corresponds to its options.
-There is here also [a lot of possible options](#../api/loadVideo_options.md),
+There is here also [a lot of possible options](../api/loadVideo_options.md),
 but to simplify we will start with just three:
 
   - ``transport``: String describing the transport protocol (can be ``"dash"``,
