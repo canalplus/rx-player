@@ -21,6 +21,7 @@
  */
 
 import deepEqual from "deep-equal";
+import Promise from "pinkie-promise";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
@@ -78,6 +79,7 @@ import {
 import {
   ErrorCodes,
   ErrorTypes,
+  ICustomError,
 } from "../../errors";
 import features from "../../features";
 import Manifest, {
@@ -664,8 +666,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - throws if no transport is given and no default transport
    * has been set.
    * @throws Error - throws if the asked transport does not exist
+   *
+   * @returns {Promise}
    */
-  loadVideo(opts : ILoadVideoOptions) : void {
+  loadVideo(opts : ILoadVideoOptions) : Promise<void> {
     const options = parseLoadVideoOptions(opts);
     log.info("loadvideo", options);
 
@@ -910,6 +914,20 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       .subscribe(() => {
         streamDisposable = stream.connect();
       });
+
+    return new Promise((res, rej) => {
+      loaded$.pipe(
+        take(1),
+        takeUntil(this._priv_stopCurrentContent$)
+      ).subscribe(
+        () => { res(undefined); },
+        (err : Error | ICustomError) => rej({ reason: "error", err })
+      );
+      this._priv_stopCurrentContent$.pipe(
+        take(1),
+        takeUntil(loaded$)
+      ).subscribe(() => { rej({ reason: "canceled", err: undefined }); });
+    });
   }
 
   /**
