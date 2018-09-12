@@ -152,6 +152,10 @@ export default function handleSessionEvents(
         if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
           const error =
             new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "expired", false);
+            const { throwOnSessionExpiration } = keySystem;
+          if (throwOnSessionExpiration || throwOnSessionExpiration === undefined) {
+            throw error;
+          }
           sessionWarningSubject$.next({
             type: "warning",
             value: error,

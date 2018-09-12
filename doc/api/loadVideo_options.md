@@ -174,6 +174,13 @@ This property is an array of objects with the following properties (only
     If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
     same content needs to be re-decrypted.
 
+  - ``throwOnSessionExpiration`` (``Boolean|undefined``): If set to ``true`` or is undefined,
+    if one of current active ``MediaKeySession`` is expired, then throw. Otherwise, just warn
+    user about session expiration.
+
+    We may want to prevent throwing if a session expiration leads to a license renewal. In that case,
+    content may continue to play once the license has been updated. 
+
 #### Example
 Example of a simple DRM configuration for widevine and playready DRMs:
 ```js
