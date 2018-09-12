@@ -15,7 +15,7 @@
  */
 
 import arrayFind from "array-find";
-import { IMediaKeySession } from "../../../compat";
+import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
 import assert, {
   assertInterface,
@@ -95,7 +95,7 @@ export default class PersistedSessionsStore {
   public add(
     initData : Uint8Array,
     initDataType : string|undefined,
-    session : IMediaKeySession|MediaKeySession
+    session : MediaKeySession|ICustomMediaKeySession
   ) : void {
     const sessionId = session && session.sessionId;
     if (!sessionId) {

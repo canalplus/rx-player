@@ -16,27 +16,14 @@
 
 import MediaError from "../errors/MediaError";
 
-interface ICompatMediaSourceConstructor {
-  isTypeSupported? : (mimeType : string) => boolean;
-  new() : MediaSource;
-}
-
+// regular MediaKeys type + optional functions present in IE11
 interface ICompatMediaKeysConstructor {
-  // for IE11
-  isTypeSupported? : (type : string) => boolean;
-
-  // Argument for IE11
-  new(keyType? : string) : MediaKeys;
+  isTypeSupported? : (type : string) => boolean; // IE11 only
+  new(keyType? : string) : MediaKeys; // argument for IE11 only
 }
 
-interface ICompatHTMLElementConstructor {
-  new() : HTMLElement;
-}
-
-interface ICompatVTTCueConstructor {
-  new(start : number, end: number, text: string) : ICompatVTTCue;
-}
-
+// Regular VTTCue as present in most browsers
+// TODO open TypeScript issue about it?
 declare class ICompatVTTCue {
   align : string;
   endTime : number;
@@ -52,25 +39,27 @@ declare class ICompatVTTCue {
   constructor(start : number, end : number, cueText : string);
 }
 
-// TODO Open issue on TypeScript
+// surcharge TextTrack to allow adding ICompatVTTCue to it
 interface ICompatTextTrack extends TextTrack {
   addCue(cue: TextTrackCue|ICompatVTTCue) : void;
   removeCue(cue: TextTrackCue|ICompatVTTCue) : void;
 }
 
+// Document with added optional functions for old browsers
 interface ICompatDocument extends Document {
-  msFullscreenElement? : HTMLElement;
-  msExitFullscreen? : () => void;
-  msHidden? : boolean;
-  mozFullScreenElement? : HTMLElement;
   mozCancelFullScreen? : () => void;
+  mozFullScreenElement? : HTMLElement;
   mozHidden? : boolean;
+  msExitFullscreen? : () => void;
+  msFullscreenElement? : HTMLElement;
+  msHidden? : boolean;
   webkitHidden? : boolean;
 }
 
+// Element with added optional functions for old browsers
 interface ICompatElement extends Element {
-  msRequestFullscreen? : () => void;
   mozRequestFullScreen? : () => void;
+  msRequestFullscreen? : () => void;
 }
 
 // for some reasons, Typescript seem to forget about SessionTypes
@@ -88,55 +77,46 @@ interface ICompatMediaKeySystemConfiguration {
   sessionTypes: string[];
 }
 
-const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
+const win = window as any;
+const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
+const VTTCue_ : typeof ICompatVTTCue|undefined =
+  win.VTTCue ||
+  win.TextTrackCue;
 
-const global = window as any;
-const HTMLElement_ : ICompatHTMLElementConstructor = global.HTMLElement;
-const VTTCue_ : ICompatVTTCueConstructor|undefined = global.VTTCue ||
-  global.TextTrackCue;
+const MediaSource_ : typeof MediaSource|undefined =
+  win.MediaSource ||
+  win.MozMediaSource ||
+  win.WebKitMediaSource ||
+  win.MSMediaSource;
 
-const MediaSource_ : ICompatMediaSourceConstructor|undefined = (
-  global.MediaSource ||
-  global.MozMediaSource ||
-  global.WebKitMediaSource ||
-  global.MSMediaSource
-);
-
-let MediaKeys_ : ICompatMediaKeysConstructor|undefined = (
-  global.MediaKeys ||
-  global.MozMediaKeys ||
-  global.WebKitMediaKeys ||
-  global.MSMediaKeys
-);
-
-if (!MediaKeys_) {
-  const noMediaKeys = () => {
-    throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED", null, true);
-  };
-
-  MediaKeys_ = class {
+const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
+  win.MediaKeys ||
+  win.MozMediaKeys ||
+  win.WebKitMediaKeys ||
+  win.MSMediaKeys ||
+  class {
     public readonly create : () => never;
     public readonly isTypeSupported : () => never;
     public readonly createSession : () => never;
     public readonly setServerCertificate : () => never;
     constructor() {
+      const noMediaKeys = () => {
+        throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED", null, true);
+      };
       this.create = noMediaKeys;
       this.createSession = noMediaKeys;
       this.isTypeSupported = noMediaKeys;
       this.setServerCertificate = noMediaKeys;
     }
   };
-}
 
 // true for IE / Edge
-const isIE : boolean = (
+const isIE : boolean =
   navigator.appName === "Microsoft Internet Explorer" ||
-  navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
-);
+  navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent);
 
-const isFirefox : boolean = (
-  navigator.userAgent.toLowerCase().indexOf("firefox") !== -1
-);
+const isFirefox : boolean =
+  navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 
 const READY_STATES = {
   HAVE_NOTHING: 0,
@@ -147,22 +127,18 @@ const READY_STATES = {
 };
 
 export {
-  BROWSER_PREFIXES,
   HTMLElement_,
-  MediaSource_,
-  MediaKeys_,
-  isIE,
-  isFirefox,
-  READY_STATES,
-  VTTCue_,
   ICompatDocument,
   ICompatElement,
-  ICompatHTMLElementConstructor,
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
   ICompatMediaKeysConstructor,
-  ICompatMediaSourceConstructor,
   ICompatTextTrack,
   ICompatVTTCue,
-  ICompatVTTCueConstructor,
+  MediaKeys_,
+  MediaSource_,
+  READY_STATES,
+  VTTCue_,
+  isFirefox,
+  isIE,
 };

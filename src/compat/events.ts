@@ -39,10 +39,11 @@ import log from "../log";
 import { IEventEmitter } from "../utils/eventemitter";
 
 import {
-  BROWSER_PREFIXES,
   HTMLElement_,
   ICompatDocument,
 } from "./constants";
+
+const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
 const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
 const pixelRatio = window.devicePixelRatio || 1;

@@ -18,12 +18,12 @@
 // https://github.com/Microsoft/TypeScript/issues/19189
 import { ICompatMediaKeySystemConfiguration } from "../constants";
 
-import { IMockMediaKeys } from "./MediaKeys";
+import { ICustomMediaKeys } from "./MediaKeys";
 
 export interface ICustomMediaKeySystemAccess {
   readonly keySystem : string;
   getConfiguration() : ICompatMediaKeySystemConfiguration;
-  createMediaKeys() : Promise<MediaKeys|IMockMediaKeys>;
+  createMediaKeys() : Promise<MediaKeys|ICustomMediaKeys>;
 }
 
 /**
@@ -40,7 +40,7 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
    */
   constructor(
     private readonly _keyType : string,
-    private readonly _mediaKeys : IMockMediaKeys|MediaKeys,
+    private readonly _mediaKeys : ICustomMediaKeys|MediaKeys,
     private readonly _configuration : ICompatMediaKeySystemConfiguration
   ) {}
 
@@ -54,7 +54,7 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
   /**
    * @returns {Promise}
    */
-  public createMediaKeys() : Promise<IMockMediaKeys|MediaKeys> {
+  public createMediaKeys() : Promise<ICustomMediaKeys|MediaKeys> {
     return new Promise((res) => res(this._mediaKeys));
   }
 

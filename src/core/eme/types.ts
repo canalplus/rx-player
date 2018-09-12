@@ -16,9 +16,9 @@
 
 import {
   ICompatMediaKeySystemAccess,
+  ICustomMediaKeys,
+  ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
-  IMediaKeySession,
-  IMockMediaKeys,
 } from "../../compat";
 import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
@@ -33,7 +33,7 @@ export interface IKeySystemAccessInfos {
 export interface IMediaKeysInfos {
   mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption; // options set by the user
-  mediaKeys : MediaKeys|IMockMediaKeys;
+  mediaKeys : MediaKeys|ICustomMediaKeys;
   sessionsStore : SessionsStore;
   sessionStorage : PersistedSessionsStore|null;
 }
@@ -73,7 +73,7 @@ export interface IKeySystemOption {
   persistentStateRequired? : boolean;
   distinctiveIdentifierRequired? : boolean;
   closeSessionsOnStop? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : IMediaKeySession|MediaKeySession)
+  onKeyStatusesChange? : (evt : Event, session : MediaKeySession|ICustomMediaKeySession)
     => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;

@@ -24,7 +24,7 @@ import {
   mapTo,
   mergeMap,
 } from "rxjs/operators";
-import { IMockMediaKeys } from "../../compat/";
+import { ICustomMediaKeys } from "../../compat/";
 import {
   EncryptedMediaError,
   ICustomError,
@@ -81,7 +81,7 @@ export default function getMediaKeysInfos(
       const currentState = currentMediaKeysInfos.getState(mediaElement);
 
       let mediaKeys$ : Observable<{
-        mediaKeys : IMockMediaKeys|MediaKeys;
+        mediaKeys : ICustomMediaKeys|MediaKeys;
         sessionsStore : SessionsStore;
       }>;
       if (currentState != null && evt.type === "reuse-media-key-system-access") {
