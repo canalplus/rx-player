@@ -14,7 +14,7 @@ export default class ControlBar extends React.Component {
   }
 
   onClickSettings() {
-    const { changeDisplay } = this.props;
+    const { changeDisplay } = this.props;
     changeDisplay();
   }
 
@@ -85,4 +85,4 @@ export default class ControlBar extends React.Component {
       </div>
     );
   }
-};
+}

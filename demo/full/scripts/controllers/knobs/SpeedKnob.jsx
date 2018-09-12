@@ -2,23 +2,25 @@ import React from "react";
 import withModulesState from "../../lib/withModulesState.jsx";
 import Knob from "../../components/Knob.jsx";
 
+const AVAILABLE_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
 const PlaybackRateKnob = ({
   player,
   playbackRate,
 }) => {
-  let rates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
   const aliases = { 1: "Normal" };
-  const options = rates.map((rate) => {
-    return aliases[rate] || rate;
+  const options = AVAILABLE_RATES.map((rate) => {
+    return aliases[rate] || rate;
   });
 
-  let selectedIndex = rates.findIndex((rate) => playbackRate === rate);
+  let selectedIndex = AVAILABLE_RATES
+    .findIndex((rate) => playbackRate === rate);
 
   const onPlaybackRateChange = (evt) => {
     const index = +evt.target.value;
     if (index > -1) {
       selectedIndex = index;
-      const rate = rates[index];
+      const rate = AVAILABLE_RATES[index];
       player.dispatch("SET_PLAYBACK_RATE", rate);
     }
   };

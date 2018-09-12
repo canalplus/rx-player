@@ -35,7 +35,13 @@ class Player extends React.Component {
 
     player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isPlaying")
       .pipe(takeUntil(this._$destroySubject))
-      .subscribe(([isSeeking, isBuffering, isLoading, isReloading, isPlaying]) => {
+      .subscribe(([
+        isSeeking,
+        isBuffering,
+        isLoading,
+        isReloading,
+        isPlaying,
+      ]) => {
         this.setState({ isPlaying });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
@@ -91,9 +97,7 @@ class Player extends React.Component {
     const stopVideo = () => this.state.player.dispatch("STOP");
 
     const changeDisplay = () => {
-      this.setState({
-        displaySettings: !this.state.displaySettings
-      });
+      this.setState({ displaySettings: !this.state.displaySettings });
     };
 
     return (
@@ -126,7 +130,10 @@ class Player extends React.Component {
               <video
                 ref={element => this.videoElement = element }
               />
-              { <PlayerKnobsManager display={this.state.displaySettings} player={player}/> }
+              <PlayerKnobsManager
+                display={this.state.displaySettings}
+                player={player}
+              />
             </div>
             {
               player ?

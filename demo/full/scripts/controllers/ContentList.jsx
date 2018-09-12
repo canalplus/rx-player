@@ -42,7 +42,7 @@ class ContentList extends React.Component {
       supplementaryImageTracks,
       supplementaryTextTracks,
       textTrackMode,
-      drmInfos
+      drmInfos,
     } = content;
 
     this.buildKeySystems(drmInfos)
@@ -54,7 +54,7 @@ class ContentList extends React.Component {
           supplementaryImageTracks,
           supplementaryTextTracks,
           textTrackMode,
-          keySystems
+          keySystems,
         });
       });
   }
@@ -71,9 +71,9 @@ class ContentList extends React.Component {
         } else {
           reject();
         }
-      }
+      };
       xhr.send();
-    })
+    });
   }
 
   getLicenseCallback(licenseServerUrlValue) {
@@ -89,10 +89,10 @@ class ContentList extends React.Component {
           } else {
             reject();
           }
-        }
+        },
         xhr.send(challenge);
       });
-    }
+    };
   }
 
   buildKeySystems(drmInfos) {
@@ -104,7 +104,7 @@ class ContentList extends React.Component {
       const {
         licenseServerUrlValue,
         serverCertificateUrlValue,
-        drm
+        drm,
       } = drmInfos;
 
       if (licenseServerUrlValue) {
@@ -113,10 +113,11 @@ class ContentList extends React.Component {
           getLicense: this.getLicenseCallback(licenseServerUrlValue),
         };
         if (serverCertificateUrlValue) {
-          this.getServerCertificate(serverCertificateUrlValue).then((serverCertificate) => {
-            keySystem.serverCertificate = serverCertificate;
-            resolve([keySystem]);
-          });
+          this.getServerCertificate(serverCertificateUrlValue)
+            .then((serverCertificate) => {
+              keySystem.serverCertificate = serverCertificate;
+              resolve([keySystem]);
+            });
         } else {
           resolve([keySystem]);
         }
@@ -134,10 +135,11 @@ class ContentList extends React.Component {
           url,
           transport: this.state.transportType.toLowerCase(),
           autoPlay,
-          // native browser subtitles engine (VTTCue) doesn't render stylized subs
-          // we force HTML textTrackMode to vizualise styles
+
+          // native browser subtitles engine (VTTCue) doesn't render stylized
+          // subs.  We force HTML textTrackMode to vizualise styles.
           textTrackMode: "html",
-          keySystems
+          keySystems,
         });
       });
   }
@@ -179,9 +181,7 @@ class ContentList extends React.Component {
   }
 
   onDRMChange(evt) {
-    this.setState({
-      drm: evt.target.value,
-    })
+    this.setState({ drm: evt.target.value });
   }
 
   onDisplayDRMSettings(evt) {
@@ -212,7 +212,7 @@ class ContentList extends React.Component {
       serverCertificateUrlValue,
       drm,
       displayDRMSettings,
-      autoPlay
+      autoPlay,
     } = this.state;
     const { isPlaying } = this.props;
     const contents = CONTENTS_PER_TYPE[transportType];
@@ -236,7 +236,11 @@ class ContentList extends React.Component {
 
     const onClickLoad = () => {
       if (choiceIndex === contents.length) {
-        const drmInfos = { licenseServerUrlValue, serverCertificateUrlValue, drm };
+        const drmInfos = {
+          licenseServerUrlValue,
+          serverCertificateUrlValue,
+          drm,
+        };
         this.loadUrl(manifestUrlValue, drmInfos, autoPlay);
       } else {
         this.loadContent(contents[choiceIndex]);
@@ -248,20 +252,22 @@ class ContentList extends React.Component {
       stopVideo();
     };
 
-    const onManifestInput = (evt) => this.onManifestInput(evt);
-    const onLicenseServerInput = (evt) => this.onLicenseServerInput(evt);
-    const onServerCertificateInput = (evt) => this.onServerCertificateInput(evt);
-    const onDRMChange = (evt) => this.onDRMChange(evt);
-    const onDisplayDRMSettings = (evt) => this.onDisplayDRMSettings(evt);
-    const onAutoPlayCheckbox = (evt) => this.onToggleAutoPlay(evt);
+    const onManifestInput = (evt) =>
+      this.onManifestInput(evt);
+    const onLicenseServerInput = (evt) =>
+      this.onLicenseServerInput(evt);
+    const onServerCertificateInput = (evt) =>
+      this.onServerCertificateInput(evt);
+    const onDRMChange = (evt) =>
+      this.onDRMChange(evt);
+    const onDisplayDRMSettings = (evt) =>
+      this.onDisplayDRMSettings(evt);
+    const onAutoPlayCheckbox = (evt) =>
+      this.onToggleAutoPlay(evt);
 
     return (
-      <div
-        className="choice-inputs-wrapper"
-      >
-        <div
-          className="content-inputs"
-        >
+      <div className="choice-inputs-wrapper">
+        <div className="content-inputs">
           <span>
             <Select
               className="choice-input transport-type-choice"
@@ -274,13 +280,14 @@ class ContentList extends React.Component {
               options={contentsName}
               selected={choiceIndex}
             />
-            <div className="chart-checkbox" >
+            <div className="chart-checkbox">
               Auto Play
-            <input
+              <input
                 name="displayBufferSizeChart"
                 type="checkbox"
                 checked={autoPlay}
-                onChange={onAutoPlayCheckbox} />
+                onChange={onAutoPlayCheckbox}
+              />
             </div>
           </span>
           <span>
@@ -297,19 +304,20 @@ class ContentList extends React.Component {
             />
           </span>
         </div>
-        {hasTextInput ?
-          <TextInput
-            className="choice-input text-input"
-            onChange={onManifestInput}
-            value={manifestUrlValue}
-            placeholder={`URL for the ${transportType} manifest`}
-          /> : null
+        {
+          hasTextInput ?
+            <TextInput
+              className="choice-input text-input"
+              onChange={onManifestInput}
+              value={manifestUrlValue}
+              placeholder={`URL for the ${transportType} manifest`}
+            /> : null
         }
         {
           hasTextInput ? <div>
             <span className="chart-checkbox" >
               Display DRM settings
-                <input
+              <input
                 name="displayDRMSettingsTextInput"
                 type="checkbox"
                 checked={displayDRMSettings}
@@ -326,14 +334,14 @@ class ContentList extends React.Component {
                   className="choice-input text-input"
                   onChange={onLicenseServerInput}
                   value={licenseServerUrlValue}
-                  placeholder={'License server URL'}
+                  placeholder={"License server URL"}
                 />
               </div>
               <TextInput
                 className="choice-input text-input"
                 onChange={onServerCertificateInput}
                 value={serverCertificateUrlValue}
-                placeholder={'Server certificate URL'}
+                placeholder={"Server certificate URL"}
               />
             </div> : null}
           </div> : null
