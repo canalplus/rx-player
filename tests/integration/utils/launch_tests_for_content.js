@@ -102,9 +102,9 @@ export default function launchTestsForContent(
         expect(fakeServer.requests.length).to.equal(1);
         expect(fakeServer.requests[0].url).to.equal(manifestInfos.url);
 
-        await sleep(0);
+        await sleep(10);
         fakeServer.respond(); // only wait for the manifest request
-        await sleep(0);
+        await sleep(100);
 
         const firstPeriodAdaptationsInfos = periodsInfos[firstPeriodIndex]
           .adaptations;
@@ -287,14 +287,16 @@ export default function launchTestsForContent(
 
                 if (reprIndexInfos.segments.length) {
                   const timescale = reprIndexInfos.segments[0].timescale;
-                  const firstSegments = reprIndex
-                    .getSegments(
-                      reprIndexInfos.segments[0].time / timescale,
+                  const firstSegmentTime =
+                    reprIndexInfos.segments[0].time / timescale;
+                  const firstSegments = reprIndex.getSegments(firstSegmentTime,
+                    (
                       (
                         reprIndexInfos.segments[0].time +
                           reprIndexInfos.segments[0].duration / 2
                       ) / timescale
-                    );
+                    ) - firstSegmentTime,
+                  );
 
                   expect(firstSegments.length).to.equal(1);
 
@@ -561,7 +563,7 @@ export default function launchTestsForContent(
     describe("getVideoBufferGap", () => {
       // TODO handle live contents
       it("should return the buffer gap of the current range", async function() {
-        this.timeout(3000);
+        this.timeout(10000);
         mockRequests(fakeServer, URLs);
         fakeServer.autoRespond = true;
 
@@ -576,36 +578,38 @@ export default function launchTestsForContent(
         await sleep(200);
 
         let bufferGap = player.getVideoBufferGap();
-        expect(bufferGap).to.be.at.least(10);
-        expect(bufferGap).to.be.below(10 + 5);
+        expect(bufferGap).to.be.at.least(9.5);
+        expect(bufferGap).to.be.at.most(10 + 10);
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(300);
+        await sleep(200);
         bufferGap = player.getVideoBufferGap();
-        expect(bufferGap).to.be.at.least(20);
-        expect(bufferGap).to.be.below(20 + 5);
+        expect(bufferGap).to.be.at.least(19.5);
+        expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(10);
-        await sleep(300);
+        await sleep(200);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
-        expect(bufferGap).to.be.at.least(20);
-        expect(bufferGap).to.be.below(20 + 5);
+        expect(bufferGap).to.be.at.least(19.5);
+        expect(bufferGap).to.be.at.most(20 + 10);
 
-        player.seekTo(10 + 26);
-        await sleep(300);
+        player.seekTo(10 + 30);
+        await sleep(200);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
-        expect(bufferGap).to.be.at.least(20);
-        expect(bufferGap).to.be.below(20 + 5);
+        expect(bufferGap).to.be.at.least(19.5);
+        expect(bufferGap).to.be.at.most(20 + 10);
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
         await sleep(500);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be
-          .closeTo(player.getMaximumPosition() - (10 + 26), 2);
+          .at.least(player.getMaximumPosition() - (10 + 30) - 2);
+        expect(bufferGap).to.be
+          .at.most(player.getMaximumPosition() - (10 + 30) + 10);
       });
     });
 
@@ -638,11 +642,11 @@ export default function launchTestsForContent(
         fakeServer.respond();
         fakeServer.autoRespond = true;
         await sleep(300);
-        expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap + 5, 2);
+        expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap + 5, 10);
 
-        player.seekTo(20);
+        player.seekTo(50);
         await sleep(300);
-        expect(player.getVideoLoadedTime()).to.be.closeTo(20 + 10, 4);
+        expect(player.getVideoLoadedTime()).to.be.closeTo(10, 10);
       });
     });
 
@@ -1795,8 +1799,8 @@ export default function launchTestsForContent(
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.equal(0);
         let endOfCurrentRange = buffered.end(0);
-        expect(endOfCurrentRange).to.be.at.least(10);
-        expect(endOfCurrentRange).to.be.below(10 + 5);
+        expect(endOfCurrentRange).to.be.at.least(9.7);
+        expect(endOfCurrentRange).to.be.at.most(10 + 10);
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
@@ -1805,8 +1809,8 @@ export default function launchTestsForContent(
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.equal(0);
         endOfCurrentRange = buffered.end(0);
-        expect(endOfCurrentRange).to.be.at.least(20);
-        expect(endOfCurrentRange).to.be.below(20 + 5);
+        expect(endOfCurrentRange).to.be.at.least(19.7);
+        expect(endOfCurrentRange).to.be.at.most(20 + 10);
 
         player.seekTo(10);
         await sleep(300);
@@ -1815,27 +1819,30 @@ export default function launchTestsForContent(
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.equal(0);
         endOfCurrentRange = buffered.end(0);
-        expect(endOfCurrentRange).to.be.at.least(10 + 20);
-        expect(endOfCurrentRange).to.be.below(10 + 20 + 5);
+        expect(endOfCurrentRange).to.be.at.least(10 + 19.7);
+        expect(endOfCurrentRange).to.be.at.most(10 + 20 + 10);
 
-        player.seekTo(10 + 20 + 5 + 10);
+        player.seekTo(10 + 20 + 10 + 10);
         await sleep(300);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
-        expect(buffered.start(1)).to.be.at.most(10 + 20 + 5 + 10);
+        expect(buffered.start(1)).to.be.at.most(10 + 20 + 10 + 10);
         endOfCurrentRange = buffered.end(1);
-        expect(endOfCurrentRange).to.be.at.least(20 + 10 + 5 + 10 + 20);
-        expect(endOfCurrentRange).to.be.below(20 + 10 + 5 + 10 + 20 + 5);
+        expect(endOfCurrentRange).to.be.at.least(10 + 20 + 10 +10 + 19.4);
+        expect(endOfCurrentRange).to.be.at.most(10 + 20 + 10 +10 + 20 + 10);
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
         await sleep(500);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(2);
-        expect(buffered.start(1)).to.be.at.most(10 + 20 + 5 + 10);
+        expect(buffered.start(1)).to.be.at.most(10 + 20 + 10 + 10);
         endOfCurrentRange = buffered.end(1);
-        expect(endOfCurrentRange).to.be.closeTo(player.getMaximumPosition(), 2);
+        expect(endOfCurrentRange).to.be
+          .at.least(player.getMaximumPosition() - 2);
+        expect(endOfCurrentRange).to.be
+          .at.most(player.getMaximumPosition()  + 10);
       });
     });
   });

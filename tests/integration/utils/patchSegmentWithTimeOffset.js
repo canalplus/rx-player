@@ -16,18 +16,21 @@
 
 /**
  * Update tehe decode time of ISOBMFF segments.
- * @param {Uint8Array} _data - The ISOBMFF segment
- * @param {number} _offset - The time at which the segment should be offseted.
+ * @param {Uint8Array} segmentData - The ISOBMFF segment
+ * @param {number} timeOffset - The time at which the segment should be
+ * offseted.
  * @param {boolean|undefined} _lmsg - Whether a lmsg should be set. False by
  * default.
  * @returns {Uint8Array} - The updated ISOBMFF
  */
-export default function patchSegmentWithTimeOffset(_data, _offset, _lmsg) {
+export default function patchSegmentWithTimeOffset(
+  segmentData,
+  timeOffset,
+  _lmsg
+) {
   let sizeChange = 0;
-  const segmentData = _data;
   const topLevelBoxesToParse = ["moov", "styp", "sidx", "moof", "mdat"];
   const compositeBoxesToParse = ["trak", "moov", "moof", "traf"];
-  const timeOffset = _offset;
   const lmsg = _lmsg || false;
 
   /**
