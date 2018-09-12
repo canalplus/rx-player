@@ -292,28 +292,28 @@ class ContentList extends React.Component {
                 checked={displayDRMSettings}
                 onChange={onDisplayDRMSettings} />
             </span>
-            { displayDRMSettings ? <div>
-                <div>
-                  <TextInput
-                    className="choice-input text-input"
-                    onChange={onLicenseServerInput}
-                    value={licenseServerUrlValue}
-                    placeholder={'License server URL'}
-                  />
-                  <Select
-                    className="choice-input"
-                    onChange={onDRMChange}
-                    options={DRM_TYPES}
-                  />
-                </div>
+            {displayDRMSettings ? <div className="drm-settings">
+              <div>
+                <Select
+                  className="choice-input"
+                  onChange={onDRMChange}
+                  options={DRM_TYPES}
+                />
                 <TextInput
                   className="choice-input text-input"
-                  onChange={onServerCertificateInput}
-                  value={serverCertificateUrlValue}
-                  placeholder={'Server certificate URL'}
+                  onChange={onLicenseServerInput}
+                  value={licenseServerUrlValue}
+                  placeholder={'License server URL'}
                 />
-              </div> : null }
-          </div>: null
+              </div>
+              <TextInput
+                className="choice-input text-input"
+                onChange={onServerCertificateInput}
+                value={serverCertificateUrlValue}
+                placeholder={'Server certificate URL'}
+              />
+            </div> : null}
+          </div> : null
         }
       </div>
     );
