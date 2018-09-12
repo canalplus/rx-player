@@ -25,6 +25,7 @@ class ContentList extends React.Component {
       displayDRMSettings: false,
       manifestUrlValue: "",
       drm: DRM_TYPES[0],
+      autoPlay: true,
     };
   }
 
@@ -38,7 +39,6 @@ class ContentList extends React.Component {
     const {
       url,
       transport,
-      autoPlay,
       supplementaryImageTracks,
       supplementaryTextTracks,
       textTrackMode,
@@ -50,7 +50,7 @@ class ContentList extends React.Component {
         loadVideo({
           url,
           transport,
-          autoPlay: !(autoPlay === false),
+          autoPlay: !(this.state.autoPlay === false),
           supplementaryImageTracks,
           supplementaryTextTracks,
           textTrackMode,
@@ -126,14 +126,14 @@ class ContentList extends React.Component {
     });
   }
 
-  loadUrl(url, drmInfos) {
+  loadUrl(url, drmInfos, autoPlay) {
     const { loadVideo } = this.props;
     this.buildKeySystems(drmInfos)
       .then((keySystems) => {
         loadVideo({
           url,
           transport: this.state.transportType.toLowerCase(),
-          autoPlay: true, // TODO add checkBox
+          autoPlay,
           // native browser subtitles engine (VTTCue) doesn't render stylized subs
           // we force HTML textTrackMode to vizualise styles
           textTrackMode: "html",
@@ -193,6 +193,15 @@ class ContentList extends React.Component {
     });
   }
 
+  onToggleAutoPlay(evt) {
+    const { target } = evt;
+    const value = target.type === "checkbox" ?
+      target.checked : target.value;
+    this.setState({
+      autoPlay: value,
+    });
+  }
+
   render() {
     const {
       transportType,
@@ -202,7 +211,8 @@ class ContentList extends React.Component {
       licenseServerUrlValue,
       serverCertificateUrlValue,
       drm,
-      displayDRMSettings
+      displayDRMSettings,
+      autoPlay
     } = this.state;
     const { isPlaying } = this.props;
     const contents = CONTENTS_PER_TYPE[transportType];
@@ -227,7 +237,7 @@ class ContentList extends React.Component {
     const onClickLoad = () => {
       if (choiceIndex === contents.length) {
         const drmInfos = { licenseServerUrlValue, serverCertificateUrlValue, drm };
-        this.loadUrl(manifestUrlValue, drmInfos);
+        this.loadUrl(manifestUrlValue, drmInfos, autoPlay);
       } else {
         this.loadContent(contents[choiceIndex]);
       }
@@ -243,6 +253,7 @@ class ContentList extends React.Component {
     const onServerCertificateInput = (evt) => this.onServerCertificateInput(evt);
     const onDRMChange = (evt) => this.onDRMChange(evt);
     const onDisplayDRMSettings = (evt) => this.onDisplayDRMSettings(evt);
+    const onAutoPlayCheckbox = (evt) => this.onToggleAutoPlay(evt);
 
     return (
       <div
@@ -251,30 +262,42 @@ class ContentList extends React.Component {
         <div
           className="content-inputs"
         >
-          <Select
-            className="choice-input transport-type-choice"
-            onChange={onTechChange}
-            options={TRANSPORT_TYPES}
-          />
-          <Select
-            className="choice-input content-choice"
-            onChange={onContentChange}
-            options={contentsName}
-            selected={choiceIndex}
-          />
-          <Button
-            className='choice-input stop-load-button'
-            onClick={onClickLoad}
-            value={String.fromCharCode(0xf144)}
-          />
-          <Button
-            className='choice-input stop-load-button'
-            onClick={onClickStop}
-            value={String.fromCharCode(0xf04d)}
-            disabled={!isPlaying}
-          />
+          <span>
+            <Select
+              className="choice-input transport-type-choice"
+              onChange={onTechChange}
+              options={TRANSPORT_TYPES}
+            />
+            <Select
+              className="choice-input content-choice"
+              onChange={onContentChange}
+              options={contentsName}
+              selected={choiceIndex}
+            />
+            <div className="chart-checkbox" >
+              Auto Play
+            <input
+                name="displayBufferSizeChart"
+                type="checkbox"
+                checked={autoPlay}
+                onChange={onAutoPlayCheckbox} />
+            </div>
+          </span>
+          <span>
+            <Button
+              className='choice-input stop-load-button'
+              onClick={onClickLoad}
+              value={String.fromCharCode(0xf144)}
+            />
+            <Button
+              className='choice-input stop-load-button'
+              onClick={onClickStop}
+              value={String.fromCharCode(0xf04d)}
+              disabled={!isPlaying}
+            />
+          </span>
         </div>
-        { hasTextInput ?
+        {hasTextInput ?
           <TextInput
             className="choice-input text-input"
             onChange={onManifestInput}
@@ -286,7 +309,7 @@ class ContentList extends React.Component {
           hasTextInput ? <div>
             <span className="chart-checkbox" >
               Display DRM settings
-              <input
+                <input
                 name="displayDRMSettingsTextInput"
                 type="checkbox"
                 checked={displayDRMSettings}

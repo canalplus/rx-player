@@ -45,12 +45,20 @@ body {
 }
 
 .choice-inputs-wrapper {
-  margin: 10px auto 30px auto;
+  margin: 10px auto 5px auto;
 }
 
 .content-inputs {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-inputs > * {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 0 1rem 0;
 }
 
 .choice-input {
@@ -58,13 +66,25 @@ body {
   display: inline;
 }
 
+.choice-input > select {
+  border: 0px;
+  border-radius: 4px;
+  padding: 0.4rem;
+  display: flex;
+  background-color: white;
+}
+
 .choice-input.text-input {
-  width: 80%;
+  width: 100%;
   margin-right: 10px;
   margin-bottom: 10px;
   margin-left: 0px;
   margin-top: 15px;
-}
+  border: 0px;
+  border-radius: 4px;
+  padding: 0.4rem;
+  display: flex;
+  background-color: white;
 
 .content-choice {
   flex: 1;
