@@ -15,6 +15,16 @@ export default [
     "live": true,
   },
   {
+    "name": "Tears of Steal (DRM Widevine)",
+    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+    "transport": "dash",
+    "live": false,
+    "drmInfos": [{
+      "licenseServerUrl": "https://cwip-shaka-proxy.appspot.com/no_auth",
+      "drm": "widevine",
+    }],
+  },
+  {
     "name": "DASH-IF - SegmentTemplate live stream",
     "url": "http://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/Manifest.mpd",
     "transport": "dash",
@@ -105,15 +115,5 @@ export default [
     "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-webm-only/dash.mpd",
     "transport": "dash",
     "live": false,
-  },
-  {
-    "name": "Tears of Steal (DRM Widevine)",
-    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
-    "transport": "dash",
-    "live": false,
-    "drmInfos": [{
-      "licenseServerUrl": "https://cwip-shaka-proxy.appspot.com/no_auth",
-      "drm": "widevine",
-    }],
   },
 ];
