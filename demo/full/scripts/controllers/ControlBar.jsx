@@ -1,4 +1,5 @@
 import React from "react";
+import withModulesState from "../lib/withModulesState.jsx";
 import Button from "../components/Button.jsx";
 import PositionInfos from "../components/PositionInfos.jsx";
 import LivePosition from "../components/LivePosition.jsx";
@@ -8,10 +9,9 @@ import Progressbar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
 import VolumeBar from "./VolumeBar.jsx";
 
-export default class ControlBar extends React.Component {
+class ControlBar extends React.Component {
   onClickSettings() {
-    const { changeDisplay } = this.props;
-    changeDisplay();
+    this.props.toggleSettings();
   }
 
   render() {
@@ -82,3 +82,12 @@ export default class ControlBar extends React.Component {
     );
   }
 }
+
+export default withModulesState({
+  player: {
+    isContentLoaded: "isContentLoaded",
+    isLive: "isLive",
+    currentTime: "currentTime",
+    duration: "duration",
+  },
+})(ControlBar);

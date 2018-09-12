@@ -96,7 +96,7 @@ class Player extends React.Component {
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
 
-    const changeDisplay = () => {
+    const toggleSettings = () => {
       this.setState({ displaySettings: !this.state.displaySettings });
     };
 
@@ -140,11 +140,7 @@ class Player extends React.Component {
                 <ControlBar
                   player={player}
                   videoElement={this.playerWrapperElement}
-                  isContentLoaded={this.state.player.get().isContentLoaded}
-                  isLive={this.state.player.get().isLive}
-                  currentTime={this.state.player.get().currentTime}
-                  duration={this.state.player.get().duration}
-                  changeDisplay={changeDisplay}
+                  toggleSettings={toggleSettings}
                 /> : null}
           </div>
           {player ?  <ChartsManager player={player} /> : null }
