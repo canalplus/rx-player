@@ -16,12 +16,12 @@ body {
   margin: 0px;
   font-family: "Roboto";
 }
+
 .icon {
   font-family: "icons", sans-serif;
 }
 
 .title-wrapper h1 {
-  font-family: "Roboto", sans-serif;
   display: block;
   width: 100%;
   text-align: center;
@@ -30,8 +30,7 @@ body {
 }
 
 .title-wrapper .light {
-  font-family: "Roboto", sans-serif;
-  font-weight: lighter;
+  font-weight: bold;
   font-size: 25px;
 }
 
@@ -41,7 +40,7 @@ body {
 
 .video-player-section {
   background-color: #ddd;
-  padding: 50px 4px;
+  padding: 25px 4px;
   text-align: center;
 }
 
@@ -92,6 +91,7 @@ body {
   padding: 0.4rem;
   display: flex;
   background-color: white;
+}
 
 .content-choice {
   flex: 1;
@@ -263,7 +263,8 @@ body {
 .controls-right-side {
   display: flex;
   justify-content: flex-end;
-  width: 100%;
+  align-items: center;
+  flex-grow: 1;
 }
 
 .stop-load-button {
@@ -277,7 +278,7 @@ body {
   width: 60px;
 }
 
-.load-button:hover {
+.stop-load-button:hover {
   background-color: #fff;
   color: #000;
 }
@@ -311,7 +312,7 @@ body {
 .position-infos {
   margin: auto;
   font-size: 0.8em;
-  width: 100%;
+  flex-grow: 1;
 }
 
 .settings-button {
@@ -367,22 +368,59 @@ body {
 }
 
 .player-knobs {
-  margin: 0px auto 20px auto;
-  text-align: left;
+  width: 30%;
+  z-index: 1000;
+  color: white;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(0,0,0);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 200ms;
+}
+
+.player-knobs.fade-in-out {
+  transform: scale(1);
+  opacity: 0.8;
+}
+
+.player-knobs > div {
+  display: flex;
+  justify-content: space-between;
 }
 
 .knob {
-  display: inline-block;
-  margin: 10px;
+  display: flex;
+  margin: 5px 0 5px 0;
 }
 
 .knob-name {
-  display: inline-block;
   margin-right: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .knob-value {
   display: inline-block;
+  flex: 1;
+}
+
+.knob-value > select {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  padding: 3px;
+  background-color: rgba(0,0,0);
+  color: rgb(240,240,240);
+}
+
+.knob-value > select:disabled {
+  color: rgb(130,130,130);
 }
 
 .player-charts {
@@ -394,8 +432,13 @@ body {
 }
 
 .chart-checkbox {
-  display: inline-block;
+  display: flex;
+  align-items: center;
   margin: 0px 5px;
+}
+
+.chart-checkbox > input {
+  margin: 10px;
 }
 
 .player-logs-wrapper {
@@ -440,6 +483,10 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0 1rem 0 1rem;
+}
+
+.github-buttons > * {
+  margin: 0.3rem;
 }
 
 .drm-settings {

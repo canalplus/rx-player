@@ -6,9 +6,9 @@ import PlayerModule from "../modules/player";
 import ControlBar from "./ControlBar.jsx";
 import ContentList from "./ContentList.jsx";
 import ErrorDisplayer from "./ErrorDisplayer.jsx";
-import PlayerKnobsManager from "./PlayerKnobs.jsx";
 import LogDisplayer from "./LogDisplayer.jsx";
 import ChartsManager from "./charts/index.jsx";
+import PlayerKnobsManager from "./PlayerKnobs.jsx";
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
@@ -19,8 +19,9 @@ class Player extends React.Component {
     this.state = {
       player: null,
       displaySpinner: false,
+      displaySettings: false,
+      isPlaying: false,
     };
-
   }
 
   componentDidMount() {
@@ -89,6 +90,12 @@ class Player extends React.Component {
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
 
+    const changeDisplay = () => {
+      this.setState({
+        displaySettings: !this.state.displaySettings
+      });
+    };
+
     return (
       <section className="video-player-section">
         <div className="video-player-content">
@@ -119,15 +126,20 @@ class Player extends React.Component {
               <video
                 ref={element => this.videoElement = element }
               />
+              { <PlayerKnobsManager display={this.state.displaySettings} player={player}/> }
             </div>
             {
               player ?
                 <ControlBar
                   player={player}
                   videoElement={this.playerWrapperElement}
+                  isContentLoaded={this.state.player.get().isContentLoaded}
+                  isLive={this.state.player.get().isLive}
+                  currentTime={this.state.player.get().currentTime}
+                  duration={this.state.player.get().duration}
+                  changeDisplay={changeDisplay}
                 /> : null}
           </div>
-          {player ?  <PlayerKnobsManager player={player} /> : null}
           {player ?  <ChartsManager player={player} /> : null }
           {player ?  <LogDisplayer player={player} /> : null}
         </div>
