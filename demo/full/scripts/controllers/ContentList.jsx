@@ -14,6 +14,69 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   return acc;
 }, {});
 
+function parseDRMConfigurations(drmConfigurations) {
+  return Promise.all(drmConfigurations.map(drmConfig => {
+    const { licenseServerUrl, serverCertificateUrl, drm } = drmConfig;
+
+    if (!licenseServerUrl) {
+      return ;
+    }
+
+    const keySystem = {
+      type: drm.toLowerCase(),
+      getLicense: generateGetLicense(licenseServerUrl),
+    };
+
+    if (!serverCertificateUrl) {
+      return keySystem;
+    }
+
+    return getServerCertificate(serverCertificateUrl)
+      .then((serverCertificate) => {
+        keySystem.serverCertificate = serverCertificate;
+        return keySystem;
+      });
+  })).then(keySystems => {
+    return keySystems.filter(ks => ks);
+  });
+}
+
+function getServerCertificate(url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = (evt) => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const serverCertificate = evt.target.response;
+        resolve(serverCertificate);
+      } else {
+        reject();
+      }
+    };
+    xhr.send();
+  });
+}
+
+function generateGetLicense(licenseServerUrl) {
+  return (challenge) => {
+    const xhr = new XMLHttpRequest();
+    xhr.responseType = "arraybuffer";
+    xhr.open("POST", licenseServerUrl, true);
+    return new Promise((resolve, reject) => {
+      xhr.onload = (evt) => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const license = evt.target.response;
+          resolve(license);
+        } else {
+          reject();
+        }
+      };
+      xhr.send(challenge);
+    });
+  };
+}
+
 class ContentList extends React.Component {
   constructor(...args) {
     super(...args);
@@ -23,7 +86,7 @@ class ContentList extends React.Component {
       choiceIndex: 0,
       hasTextInput: !CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length,
       displayDRMSettings: false,
-      manifestUrlValue: "",
+      manifestUrl: "",
       drm: DRM_TYPES[0],
       autoPlay: true,
     };
@@ -42,10 +105,10 @@ class ContentList extends React.Component {
       supplementaryImageTracks,
       supplementaryTextTracks,
       textTrackMode,
-      drmInfos,
+      drmInfos = [],
     } = content;
 
-    this.buildKeySystems(drmInfos)
+    parseDRMConfigurations(drmInfos)
       .then((keySystems) => {
         loadVideo({
           url,
@@ -59,77 +122,10 @@ class ContentList extends React.Component {
       });
   }
 
-  getServerCertificate(url) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
-      xhr.responseType = "arraybuffer";
-      xhr.onload = (evt) => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const serverCertificate = evt.target.response;
-          resolve(serverCertificate);
-        } else {
-          reject();
-        }
-      };
-      xhr.send();
-    });
-  }
-
-  getLicenseCallback(licenseServerUrlValue) {
-    return (challenge) => {
-      const xhr = new XMLHttpRequest();
-      xhr.responseType = "arraybuffer";
-      xhr.open("POST", licenseServerUrlValue, true);
-      return new Promise((resolve, reject) => {
-        xhr.onload = (evt) => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const license = evt.target.response;
-            resolve(license);
-          } else {
-            reject();
-          }
-        },
-        xhr.send(challenge);
-      });
-    };
-  }
-
-  buildKeySystems(drmInfos) {
-    return new Promise((resolve) => {
-      if (!drmInfos) {
-        resolve([]);
-      }
-
-      const {
-        licenseServerUrlValue,
-        serverCertificateUrlValue,
-        drm,
-      } = drmInfos;
-
-      if (licenseServerUrlValue) {
-        const keySystem = {
-          type: drm.toLowerCase(),
-          getLicense: this.getLicenseCallback(licenseServerUrlValue),
-        };
-        if (serverCertificateUrlValue) {
-          this.getServerCertificate(serverCertificateUrlValue)
-            .then((serverCertificate) => {
-              keySystem.serverCertificate = serverCertificate;
-              resolve([keySystem]);
-            });
-        } else {
-          resolve([keySystem]);
-        }
-      } else {
-        resolve([]);
-      }
-    });
-  }
 
   loadUrl(url, drmInfos, autoPlay) {
     const { loadVideo } = this.props;
-    this.buildKeySystems(drmInfos)
+    parseDRMConfigurations(drmInfos)
       .then((keySystems) => {
         loadVideo({
           url,
@@ -164,19 +160,19 @@ class ContentList extends React.Component {
   // TODO Better event?
   onManifestInput(evt) {
     this.setState({
-      manifestUrlValue: evt.target.value,
+      manifestUrl: evt.target.value,
     });
   }
 
   onLicenseServerInput(evt) {
     this.setState({
-      licenseServerUrlValue: evt.target.value,
+      licenseServerUrl: evt.target.value,
     });
   }
 
   onServerCertificateInput(evt) {
     this.setState({
-      serverCertificateUrlValue: evt.target.value,
+      serverCertificateUrl: evt.target.value,
     });
   }
 
@@ -207,9 +203,9 @@ class ContentList extends React.Component {
       transportType,
       choiceIndex,
       hasTextInput,
-      manifestUrlValue,
-      licenseServerUrlValue,
-      serverCertificateUrlValue,
+      manifestUrl,
+      licenseServerUrl,
+      serverCertificateUrl,
       drm,
       displayDRMSettings,
       autoPlay,
@@ -236,12 +232,12 @@ class ContentList extends React.Component {
 
     const onClickLoad = () => {
       if (choiceIndex === contents.length) {
-        const drmInfos = {
-          licenseServerUrlValue,
-          serverCertificateUrlValue,
+        const drmInfos = [{
+          licenseServerUrl,
+          serverCertificateUrl,
           drm,
-        };
-        this.loadUrl(manifestUrlValue, drmInfos, autoPlay);
+        }];
+        this.loadUrl(manifestUrl, drmInfos, autoPlay);
       } else {
         this.loadContent(contents[choiceIndex]);
       }
@@ -309,7 +305,7 @@ class ContentList extends React.Component {
             <TextInput
               className="choice-input text-input"
               onChange={onManifestInput}
-              value={manifestUrlValue}
+              value={manifestUrl}
               placeholder={`URL for the ${transportType} manifest`}
             /> : null
         }
@@ -333,14 +329,14 @@ class ContentList extends React.Component {
                 <TextInput
                   className="choice-input text-input"
                   onChange={onLicenseServerInput}
-                  value={licenseServerUrlValue}
+                  value={licenseServerUrl}
                   placeholder={"License server URL"}
                 />
               </div>
               <TextInput
                 className="choice-input text-input"
                 onChange={onServerCertificateInput}
-                value={serverCertificateUrlValue}
+                value={serverCertificateUrl}
                 placeholder={"Server certificate URL"}
               />
             </div> : null}

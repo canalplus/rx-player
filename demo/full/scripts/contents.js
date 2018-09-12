@@ -111,9 +111,9 @@ export default [
     "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
     "transport": "dash",
     "live": false,
-    "drmInfos": {
-      "licenseServerUrlValue": "https://cwip-shaka-proxy.appspot.com/no_auth",
-      "drm": "widevine", 
-    }
-  }
+    "drmInfos": [{
+      "licenseServerUrl": "https://cwip-shaka-proxy.appspot.com/no_auth",
+      "drm": "widevine",
+    }],
+  },
 ];
