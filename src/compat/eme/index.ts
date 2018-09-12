@@ -15,21 +15,21 @@
  */
 
 import getInitData from "./get_init_data";
-import KeySystemAccess, {
+import CustomMediaKeySystemAccess, {
   ICustomMediaKeySystemAccess,
 } from "./keySystemAccess";
 import {
-  IMediaKeySession,
-  IMockMediaKeys,
+  ICustomMediaKeys,
+  ICustomMediaKeySession,
   requestMediaKeySystemAccess,
 } from "./MediaKeys";
 import setMediaKeys from "./setMediaKeys";
 
 export {
+  ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
-  IMediaKeySession,
-  IMockMediaKeys,
-  KeySystemAccess,
+  ICustomMediaKeys,
+  CustomMediaKeySystemAccess,
   getInitData,
   requestMediaKeySystemAccess,
   setMediaKeys,

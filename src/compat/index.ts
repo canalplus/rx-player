@@ -48,11 +48,11 @@ import {
 } from "./fullscreen";
 
 import {
+  CustomMediaKeySystemAccess,
   getInitData,
+  ICustomMediaKeys,
+  ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
-  IMediaKeySession,
-  IMockMediaKeys,
-  KeySystemAccess,
   requestMediaKeySystemAccess,
   setMediaKeys,
 } from "./eme";
@@ -67,7 +67,9 @@ function isCodecSupported(codec : string) : boolean {
     return false;
   }
 
+  /* tslint:disable no-unbound-method */
   if (typeof MediaSource_.isTypeSupported === "function") {
+  /* tslint:enable no-unbound-method */
     return MediaSource_.isTypeSupported(codec);
   }
 
@@ -395,14 +397,14 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
 }
 
 export {
+  CustomMediaKeySystemAccess,
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
   ICompatTextTrack,
   ICompatVTTCue,
+  ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
-  IMediaKeySession,
-  IMockMediaKeys,
-  KeySystemAccess,
+  ICustomMediaKeys,
   MediaSource_,
   VTTCue_,
   addTextTrack,

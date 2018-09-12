@@ -28,8 +28,8 @@ import {
   mapTo,
 } from "rxjs/operators";
 import {
-  IMediaKeySession,
-  IMockMediaKeys,
+  ICustomMediaKeys,
+  ICustomMediaKeySession,
 } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
@@ -40,13 +40,13 @@ import hashBuffer from "../../../utils/hash_buffer";
 interface IStoreSessionEntry {
   initData : number;
   initDataType: string|undefined;
-  session : IMediaKeySession|MediaKeySession;
+  session : MediaKeySession|ICustomMediaKeySession;
   sessionType : MediaKeySessionType;
 }
 
 // What is returned by the cache
 export interface IStoreSessionData {
-  session : IMediaKeySession|MediaKeySession;
+  session : MediaKeySession|ICustomMediaKeySession;
   sessionType : MediaKeySessionType;
 }
 
@@ -59,10 +59,10 @@ export interface IStoreSessionData {
  * @class MediaKeySessionsStore
  */
 export default class MediaKeySessionsStore {
-  private readonly _mediaKeys : MediaKeys|IMockMediaKeys;
+  private readonly _mediaKeys : MediaKeys|ICustomMediaKeys;
   private _entries : IStoreSessionEntry[];
 
-  constructor(mediaKeys : MediaKeys|IMockMediaKeys) {
+  constructor(mediaKeys : MediaKeys|ICustomMediaKeys) {
     this._mediaKeys = mediaKeys;
     this._entries = [];
   }
@@ -113,7 +113,7 @@ export default class MediaKeySessionsStore {
     initData : Uint8Array,
     initDataType : string|undefined,
     sessionType : MediaKeySessionType
-  ) : MediaKeySession|IMediaKeySession {
+  ) : MediaKeySession|ICustomMediaKeySession {
     if (this.get(initData, initDataType)) {
       const error = new Error("This initialization data was already stored.");
       throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA", error, true);
@@ -146,7 +146,7 @@ export default class MediaKeySessionsStore {
    * @returns {Observable}
    */
   public deleteAndCloseSession(
-    session : IMediaKeySession|MediaKeySession
+    session : MediaKeySession|ICustomMediaKeySession
   ) : Observable<null> {
     return observableDefer(() => {
       this._delete(session);
@@ -185,7 +185,7 @@ export default class MediaKeySessionsStore {
    * @returns {number} - index of the session in the cache. -1 of not found.
    */
   private _delete(
-    session : IMediaKeySession|MediaKeySession
+    session : MediaKeySession|ICustomMediaKeySession
   ) : number {
     const entry = arrayFind(this._entries, (e) => e.session === session);
     if (!entry) {

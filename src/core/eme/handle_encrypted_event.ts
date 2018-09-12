@@ -29,7 +29,7 @@ import {
 } from "rxjs/operators";
 import {
   getInitData,
-  IMediaKeySession,
+  ICustomMediaKeySession,
 } from "../../compat";
 import config from "../../config";
 import log from "../../log";
@@ -43,7 +43,7 @@ export interface IHandledEncryptedEvent {
     "loaded-open-session" |
     "loaded-persistent-session";
   value : {
-    mediaKeySession : MediaKeySession|IMediaKeySession;
+    mediaKeySession : MediaKeySession|ICustomMediaKeySession;
     sessionType : MediaKeySessionType;
     initData : Uint8Array; // assiociated initialization data
     initDataType : string|undefined; // type of the associated initialization data
@@ -81,7 +81,7 @@ export default function handleEncryptedEvent(
     handledInitData.add(initData, initDataType);
 
     // possible previous loaded session with the same initialization data
-    let previousLoadedSession : IMediaKeySession|MediaKeySession|null = null;
+    let previousLoadedSession : MediaKeySession|ICustomMediaKeySession|null = null;
     const { sessionsStore } = mediaKeysInfos;
     const entry = sessionsStore.get(initData, initDataType);
     if (entry != null) {

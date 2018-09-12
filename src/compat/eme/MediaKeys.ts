@@ -68,7 +68,7 @@ type MEDIA_KEY_SESSION_EVENTS =
   // "error";
 //
 
-interface IMediaKeyStatusMap {
+interface ICustomMediaKeyStatusMap {
     readonly size: number;
     forEach(callback: (status : MediaKeyStatus) => void, thisArg?: any): void;
     get(
@@ -101,13 +101,13 @@ interface IMediaKeyStatusMap {
       ) : boolean;
 }
 
-export interface IMediaKeySession
+export interface ICustomMediaKeySession
   extends IEventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
 {
   // Attributes
   readonly closed: Promise<void>;
   expiration: number;
-  keyStatuses: IMediaKeyStatusMap;
+  keyStatuses: ICustomMediaKeyStatusMap;
   sessionId : string;
 
   // Event handlers
@@ -125,23 +125,23 @@ export interface IMediaKeySession
   remove() : Promise<void>;
 }
 
-export interface IMockMediaKeys {
+export interface ICustomMediaKeys {
   _setVideo : (vid : HTMLMediaElement) => void;
-  createSession(sessionType? : MediaKeySessionType) : IMediaKeySession;
+  createSession(sessionType? : MediaKeySessionType) : ICustomMediaKeySession;
   setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 
 interface IMockMediaKeysConstructor {
-  new(ks : string) : IMockMediaKeys;
+  new(ks : string) : ICustomMediaKeys;
 }
 
 // Default MockMediaKeys implementation
 let MockMediaKeys : IMockMediaKeysConstructor =
-  class implements IMockMediaKeys {
+  class implements ICustomMediaKeys {
     _setVideo() : void {
       throw new Error("MediaKeys is not implemented in your browser");
     }
-    createSession() : IMediaKeySession {
+    createSession() : ICustomMediaKeySession {
       throw new Error("MediaKeys is not implemented in your browser");
     }
     setServerCertificate() : Promise<void> {
@@ -167,7 +167,7 @@ if (navigator.requestMediaKeySystemAccess) {
     memUpdate : memUpdateFn
   ) : wrapUpdateFn => {
     return function(
-      this : IMediaKeySession,
+      this : ICustomMediaKeySession,
       license : ArrayBuffer,
       sessionId? : string
     ) : Promise<void> {
@@ -209,7 +209,7 @@ if (navigator.requestMediaKeySystemAccess) {
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
     class WebkitMediaKeySession
     extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
-      implements IMediaKeySession
+      implements ICustomMediaKeySession
     {
       public readonly update : (
         license : ArrayBuffer,
@@ -217,7 +217,7 @@ if (navigator.requestMediaKeySystemAccess) {
       ) => Promise<void>;
       public readonly closed: Promise<void>;
       public expiration: number;
-      public keyStatuses: IMediaKeyStatusMap;
+      public keyStatuses: ICustomMediaKeyStatusMap;
       public sessionId : string;
 
       private readonly _vid : HTMLMediaElement|IOldWebkitHTMLMediaElement;
@@ -290,7 +290,7 @@ if (navigator.requestMediaKeySystemAccess) {
       }
     }
 
-    MockMediaKeys = class implements IMockMediaKeys {
+    MockMediaKeys = class implements ICustomMediaKeys {
       private readonly ks_ : string;
       private _vid? : HTMLMediaElement;
 
@@ -302,7 +302,7 @@ if (navigator.requestMediaKeySystemAccess) {
         this._vid = vid;
       }
 
-      createSession(/* sessionType */) : IMediaKeySession {
+      createSession(/* sessionType */) : ICustomMediaKeySession {
         if (!this._vid) {
           throw new Error("Video not attached to the MediaKeys");
         }
@@ -397,7 +397,7 @@ if (navigator.requestMediaKeySystemAccess) {
     // TODO implement MediaKeySession completely
     class IE11MediaKeySession
     extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
-      implements IMediaKeySession
+      implements ICustomMediaKeySession
     {
       public readonly update : (
         license : ArrayBuffer,
@@ -405,7 +405,7 @@ if (navigator.requestMediaKeySystemAccess) {
       ) => Promise<void>;
       public readonly closed: Promise<void>;
       public expiration: number;
-      public keyStatuses: IMediaKeyStatusMap;
+      public keyStatuses: ICustomMediaKeyStatusMap;
       public sessionId : string;
 
       private readonly _mk : IIE11MediaKeys;

@@ -24,7 +24,7 @@ import {
   catchError,
   mapTo,
 } from "rxjs/operators";
-import { IMockMediaKeys } from "../../compat";
+import { ICustomMediaKeys } from "../../compat";
 import {
   EncryptedMediaError,
   ICustomError,
@@ -57,7 +57,7 @@ type TypedArray =
  * @returns {Observable}
  */
 function setServerCertificate(
-  mediaKeys : IMockMediaKeys|MediaKeys,
+  mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
 ) : Observable<null> {
   return observableDefer(() => {
@@ -78,7 +78,7 @@ function setServerCertificate(
  * @returns {Observable}
  */
 export default function trySettingServerCertificate(
-  mediaKeys : IMockMediaKeys|MediaKeys,
+  mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray,
   errorStream: Subject<Error|ICustomError>
 ) : Observable<null> {
