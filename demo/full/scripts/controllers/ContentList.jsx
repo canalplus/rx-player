@@ -132,7 +132,7 @@ class ContentList extends React.Component {
           transport: this.state.transportType.toLowerCase(),
           autoPlay,
 
-          // native browser subtitles engine (VTTCue) doesn't render stylized
+          // native browser subtitles engine (VTTCue) doesn"t render stylized
           // subs.  We force HTML textTrackMode to vizualise styles.
           textTrackMode: "html",
           keySystems,
@@ -286,61 +286,65 @@ class ContentList extends React.Component {
               />
             </div>
           </span>
-          <span>
+          <div className="choice-input-button-wrapper">
             <Button
-              className='choice-input stop-load-button'
+              className="choice-input choice-input-button load-button"
               onClick={onClickLoad}
               value={String.fromCharCode(0xf144)}
             />
             <Button
-              className='choice-input stop-load-button'
+              className="choice-input choice-input-button stop-load-button"
               onClick={onClickStop}
               value={String.fromCharCode(0xf04d)}
               disabled={isStopped}
             />
-          </span>
+          </div>
         </div>
         {
           hasTextInput ?
-            <TextInput
-              className="choice-input text-input"
-              onChange={onManifestInput}
-              value={manifestUrl}
-              placeholder={`URL for the ${transportType} manifest`}
-            /> : null
-        }
-        {
-          hasTextInput ? <div>
-            <span className="chart-checkbox" >
-              Display DRM settings
-              <input
-                name="displayDRMSettingsTextInput"
-                type="checkbox"
-                checked={displayDRMSettings}
-                onChange={onDisplayDRMSettings} />
-            </span>
-            {displayDRMSettings ? <div className="drm-settings">
-              <div>
-                <Select
-                  className="choice-input"
-                  onChange={onDRMChange}
-                  options={DRM_TYPES}
-                />
+            (
+              <div className="choice-input custom-input-wrapper">
                 <TextInput
                   className="choice-input text-input"
-                  onChange={onLicenseServerInput}
-                  value={licenseServerUrl}
-                  placeholder={"License server URL"}
+                  onChange={onManifestInput}
+                  value={manifestUrl}
+                  placeholder={`URL for the ${transportType} manifest`}
                 />
+                <span className="encryption-checkbox" >
+                  Encrypted content
+                  <input
+                    name="displayDRMSettingsTextInput"
+                    type="checkbox"
+                    checked={displayDRMSettings}
+                    onChange={onDisplayDRMSettings} />
+                </span>
+                {
+                  displayDRMSettings ?
+                    <div className="drm-settings">
+                      <div>
+                        <Select
+                          className="choice-input"
+                          onChange={onDRMChange}
+                          options={DRM_TYPES}
+                        />
+                        <TextInput
+                          className="choice-input text-input"
+                          onChange={onLicenseServerInput}
+                          value={licenseServerUrl}
+                          placeholder={"License server URL"}
+                        />
+                      </div>
+                      <TextInput
+                        className="choice-input text-input"
+                        onChange={onServerCertificateInput}
+                        value={serverCertificateUrl}
+                        placeholder={"Server certificate URL"}
+                      />
+                    </div> :
+                    null
+                }
               </div>
-              <TextInput
-                className="choice-input text-input"
-                onChange={onServerCertificateInput}
-                value={serverCertificateUrl}
-                placeholder={"Server certificate URL"}
-              />
-            </div> : null}
-          </div> : null
+            ) : null
         }
       </div>
     );
