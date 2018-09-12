@@ -283,6 +283,14 @@ body {
   color: #000;
 }
 
+.stop-load-button.disabled {
+  color: #888;
+}
+
+.stop-load-button.disabled:hover {
+  color: #888;
+}
+
 .control-button {
   width: 2em;
   border: none;

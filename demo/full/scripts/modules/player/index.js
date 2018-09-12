@@ -159,7 +159,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
       state.set({
         playbackRate: rate,
       });
-    }
+    },
   };
 };
 

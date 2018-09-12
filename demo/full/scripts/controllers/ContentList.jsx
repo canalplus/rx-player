@@ -214,7 +214,7 @@ class ContentList extends React.Component {
       displayDRMSettings,
       autoPlay,
     } = this.state;
-    const { isPlaying } = this.props;
+    const { isStopped } = this.props;
     const contents = CONTENTS_PER_TYPE[transportType];
 
     const contentsName = contents.map(content =>
@@ -300,7 +300,7 @@ class ContentList extends React.Component {
               className='choice-input stop-load-button'
               onClick={onClickStop}
               value={String.fromCharCode(0xf04d)}
-              disabled={!isPlaying}
+              disabled={isStopped}
             />
           </span>
         </div>
