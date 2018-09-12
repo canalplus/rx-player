@@ -7,6 +7,14 @@ import SubtitlesKnob from "./knobs/Subtitles.jsx";
 import VideoTrack from "./knobs/VideoTrack.jsx";
 import PlaybackRateKnob from "./knobs/SpeedKnob.jsx";
 
+function stopClickEventPropagation(element) {
+  if (element != null) {
+    element.addEventListener("click", (evt) => {
+      evt.stopPropagation();
+    });
+  }
+}
+
 const PlayerKnobs = ({
   display,
   player,
@@ -19,20 +27,12 @@ const PlayerKnobs = ({
     return null;
   }
 
-  const stopPlayerKnobsPropagation = (element) => {
-    if (element != null) {
-      element.addEventListener("click", (evt) => {
-        evt.stopPropagation();
-      });
-    }
-  };
-
   const className = "player-knobs" + (display ? " fade-in-out" : "");
 
   return (
     <div
       className={className}
-      ref={stopPlayerKnobsPropagation}
+      ref={stopClickEventPropagation}
     >
       <PlaybackRateKnob player={player} />
       <AudioBitrateKnob player={player} />
