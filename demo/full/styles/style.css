@@ -1,7 +1,3 @@
-body {
-  margin: 0px;
-}
-
 @font-face {
   font-family: "icons";
   src: url("../fonts/FontAwesome.otf");
@@ -9,12 +5,23 @@ body {
   font-style: normal;
 }
 
+@font-face {
+  font-family: "Roboto";
+  src: url("../fonts/Roboto-Regular.otf");
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  margin: 0px;
+  font-family: "Roboto";
+}
 .icon {
   font-family: "icons", sans-serif;
 }
 
 .title-wrapper h1 {
-  font-family: "Open Sans", sans-serif;
+  font-family: "Roboto", sans-serif;
   display: block;
   width: 100%;
   text-align: center;
@@ -23,7 +30,7 @@ body {
 }
 
 .title-wrapper .light {
-  font-family: "Open Sans", sans-serif;
+  font-family: "Roboto", sans-serif;
   font-weight: lighter;
   font-size: 25px;
 }
