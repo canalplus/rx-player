@@ -9,78 +9,70 @@ import Progressbar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
 import VolumeBar from "./VolumeBar.jsx";
 
-class ControlBar extends React.Component {
-  onClickSettings() {
-    this.props.toggleSettings();
+function ControlBar({
+  player,
+  videoElement,
+  isContentLoaded,
+  isLive,
+  currentTime,
+  duration,
+  toggleSettings,
+}) {
+  const shouldDisplayProgressBar = isContentLoaded;
+
+  let positionElement;
+  if (!shouldDisplayProgressBar) {
+    positionElement = null;
+  } else if (isLive) {
+    positionElement = <LivePosition />;
+  } else {
+    positionElement = <PositionInfos
+      position={currentTime}
+      duration={duration}
+    />;
   }
 
-  render() {
-    const {
-      player,
-      videoElement,
-      isContentLoaded,
-      isLive,
-      currentTime,
-      duration,
-    } = this.props;
-    const displayProgressBar = isContentLoaded;
+  const onClickSettings = () => {
+    toggleSettings();
+  };
 
-    let positionElement;
-    if (!displayProgressBar) {
-      positionElement = null;
-    } else if (isLive) {
-      positionElement = <LivePosition />;
-    } else {
-      positionElement = <PositionInfos
-        position={currentTime}
-        duration={duration}
-      />;
-    }
-
-    return (
-      <div className="controls-bar-container">
-        { (!displayProgressBar) ?
-          null : <Progressbar player={player} />
-        }
-        <div className="controls-bar">
-          <PlayPauseButton
-            className={"control-button"}
-            player={player}
-          />
-          { positionElement }
-          <div className="controls-right-side">
-            <div>
-              <Button
-                disabled={!isContentLoaded}
-                className='control-button'
-                onClick={
-                  () => {
-                    this.onClickSettings();
-                  }
-                }
-                value={String.fromCharCode(0xf013)}
-              />
-            </div>
-            <div className="volume">
-              <VolumeButton
-                className="control-button"
-                player={player}
-              />
-              <VolumeBar
-                className="control-button"
-                player={player}
-              />
-            </div>
-            <FullscreenButton
-              className={"control-button"}
-              player={player}
-              videoElement={videoElement}
+  return (
+    <div className="controls-bar-container">
+      { (!shouldDisplayProgressBar) ? null : <Progressbar player={player} /> }
+      <div className="controls-bar">
+        <PlayPauseButton
+          className={"control-button"}
+          player={player}
+        />
+        { positionElement }
+        <div className="controls-right-side">
+          <div>
+            <Button
+              disabled={!isContentLoaded}
+              className='control-button'
+              onClick={onClickSettings}
+              value={String.fromCharCode(0xf013)}
             />
           </div>
+          <div className="volume">
+            <VolumeButton
+              className="control-button"
+              player={player}
+            />
+            <VolumeBar
+              className="control-button"
+              player={player}
+            />
+          </div>
+          <FullscreenButton
+            className={"control-button"}
+            player={player}
+            videoElement={videoElement}
+          />
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default withModulesState({
