@@ -9,10 +9,6 @@ import VolumeButton from "./VolumeButton.jsx";
 import VolumeBar from "./VolumeBar.jsx";
 
 export default class ControlBar extends React.Component {
-  constructor(...args) {
-    super(...args);
-  }
-
   onClickSettings() {
     const { changeDisplay } = this.props;
     changeDisplay();
