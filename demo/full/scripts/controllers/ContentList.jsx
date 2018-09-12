@@ -204,6 +204,7 @@ class ContentList extends React.Component {
       drm,
       displayDRMSettings
     } = this.state;
+    const { isPlaying } = this.props;
     const contents = CONTENTS_PER_TYPE[transportType];
 
     const contentsName = contents.map(content =>
@@ -232,6 +233,11 @@ class ContentList extends React.Component {
       }
     };
 
+    const onClickStop = () => {
+      const { stopVideo } = this.props;
+      stopVideo();
+    };
+
     const onManifestInput = (evt) => this.onManifestInput(evt);
     const onLicenseServerInput = (evt) => this.onLicenseServerInput(evt);
     const onServerCertificateInput = (evt) => this.onServerCertificateInput(evt);
@@ -257,9 +263,15 @@ class ContentList extends React.Component {
             selected={choiceIndex}
           />
           <Button
-            className='choice-input load-button'
+            className='choice-input stop-load-button'
             onClick={onClickLoad}
             value={String.fromCharCode(0xf144)}
+          />
+          <Button
+            className='choice-input stop-load-button'
+            onClick={onClickStop}
+            value={String.fromCharCode(0xf04d)}
+            disabled={!isPlaying}
           />
         </div>
         { hasTextInput ?

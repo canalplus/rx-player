@@ -32,9 +32,10 @@ class Player extends React.Component {
     this._$destroySubject = new Subject();
     this._$destroySubject.subscribe(() => player.destroy());
 
-    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading")
+    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isPlaying")
       .pipe(takeUntil(this._$destroySubject))
-      .subscribe(([isSeeking, isBuffering, isLoading, isReloading]) => {
+      .subscribe(([isSeeking, isBuffering, isLoading, isReloading, isPlaying]) => {
+        this.setState({ isPlaying });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
         } else if (isSeeking || isBuffering) {
@@ -84,7 +85,7 @@ class Player extends React.Component {
   }
 
   render() {
-    const { player, displaySpinner } = this.state;
+    const { player, displaySpinner, isPlaying } = this.state;
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
 
@@ -94,6 +95,7 @@ class Player extends React.Component {
           <ContentList
             loadVideo={loadVideo}
             stopVideo={stopVideo}
+            isPlaying={isPlaying}
           />
           <div
             className="video-player-wrapper"
