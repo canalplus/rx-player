@@ -38,7 +38,7 @@ body {
 }
 
 .video-player-section {
-  background-color: #ddd;
+  background-color: #ececec;
   padding: 25px 4px;
   text-align: center;
 }
@@ -121,6 +121,14 @@ body {
 
 .video-wrapper {
   position: relative;
+}
+
+.fullscreen .video-wrapper {
+  position: fixed;
+  width: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .text-track {
@@ -384,22 +392,25 @@ body {
 
 .player-knobs {
   width: 30%;
-  z-index: 1000;
+  max-width: 350px;
   color: white;
   position: absolute;
   bottom: 10px;
   right: 10px;
   background-color: rgba(0,0,0);
-  display: flex;
-  flex-direction: column;
   padding: 20px;
   opacity: 0;
   transform: scale(0.9);
-  transition: all 200ms;
+  transition: opacity 200ms;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  pointer-events:none;
 }
 
 .player-knobs.fade-in-out {
   transform: scale(1);
+  pointer-events: auto;
   opacity: 0.8;
 }
 
@@ -502,6 +513,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0 1rem 0 1rem;
+  background-color: #222424;
+  color: #ffffff;
 }
 
 .github-buttons > * {
