@@ -16,7 +16,8 @@ function stopClickEventPropagation(element) {
 }
 
 const PlayerKnobs = ({
-  display,
+  shouldDisplay,
+  close,
   player,
   availableVideoTracks,
   isContentLoaded,
@@ -27,22 +28,33 @@ const PlayerKnobs = ({
     return null;
   }
 
-  const className = "player-knobs" + (display ? " fade-in-out" : "");
+  const className = "player-knobs" + (shouldDisplay ? " fade-in-out" : "");
 
   return (
     <div
       className={className}
       ref={stopClickEventPropagation}
     >
-      <PlaybackRateKnob player={player} />
-      <AudioBitrateKnob player={player} />
-      <VideoBitrateKnob player={player} />
-      <LanguageKnob player={player} />
-      <SubtitlesKnob player={player} />
-      {
-        availableVideoTracks.length > 1 ?
-          <VideoTrack player={player} /> : null
-      }
+      <div className="player-knobs-header">
+        <span className="player-knobs-title">Settings</span>
+        <span
+          className="player-knobs-close"
+          onClick={() => { close(); }}
+        >
+          {String.fromCharCode(0xf00d)}
+        </span>
+      </div>
+      <div className="player-knobs-knobs">
+        <PlaybackRateKnob player={player} />
+        <AudioBitrateKnob player={player} />
+        <VideoBitrateKnob player={player} />
+        <LanguageKnob player={player} />
+        <SubtitlesKnob player={player} />
+        {
+          availableVideoTracks.length > 1 ?
+            <VideoTrack player={player} /> : null
+        }
+      </div>
     </div>
   );
 };

@@ -96,6 +96,9 @@ class Player extends React.Component {
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
 
+    const closeSettings = () => {
+      this.setState({ displaySettings: false });
+    };
     const toggleSettings = () => {
       this.setState({ displaySettings: !this.state.displaySettings });
     };
@@ -119,7 +122,7 @@ class Player extends React.Component {
               <ErrorDisplayer player={player} />
               { displaySpinner ?
                 <img
-                  src="./assets/spinner.gif"r
+                  src="./assets/spinner.gif"
                   className="video-player-spinner"
                 /> : null
               }
@@ -131,7 +134,8 @@ class Player extends React.Component {
                 ref={element => this.videoElement = element }
               />
               <PlayerKnobsManager
-                display={this.state.displaySettings}
+                close={closeSettings}
+                shouldDisplay={this.state.displaySettings}
                 player={player}
               />
             </div>

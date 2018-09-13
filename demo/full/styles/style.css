@@ -1,4 +1,4 @@
-@font-face {
+  @font-face {
   font-family: "icons";
   src: url("../fonts/FontAwesome.otf");
   font-weight: normal;
@@ -390,6 +390,11 @@ body {
   margin-top: -7px;
 }
 
+.player-knobs-header {
+  padding: 9px 20px 9px 20px;
+  border-bottom: 1px dotted #555;
+}
+
 .player-knobs {
   width: 30%;
   max-width: 350px;
@@ -398,13 +403,10 @@ body {
   bottom: 10px;
   right: 10px;
   background-color: rgba(0,0,0);
-  padding: 20px;
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 200ms;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
+  z-index: 100;
   pointer-events:none;
 }
 
@@ -412,6 +414,25 @@ body {
   transform: scale(1);
   pointer-events: auto;
   opacity: 0.8;
+}
+
+.player-knobs-title {
+  font-weight: bold;
+}
+
+.player-knobs-close {
+  font-family: "icons", sans-serif;
+  color: #d0d0cf;
+  font-size: 14px;
+  margin-top: auto;
+  margin-bottom: auto;
+  cursor: pointer;
+}
+
+.player-knobs-knobs {
+  padding: 15px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .player-knobs > div {
@@ -497,7 +518,7 @@ body {
   left: 0px;
   padding: 5px;
   font-size: 12px;
-  z-index: 100;
+  z-index: 1000;
   transform:scaleY(1);
   animation: fadein 0.6s;
   background-color: #1d1d1d;
