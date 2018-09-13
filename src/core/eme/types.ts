@@ -43,7 +43,6 @@ export interface IMediaKeysInfos {
   mediaKeys : MediaKeys|ICustomMediaKeys;
   sessionsStore : SessionsStore;
   sessionStorage : PersistedSessionsStore|null;
-  serverCertificateWarning : IEMEWarningEvent|null;
 }
 
 // Data stored in a persistent MediaKeySession storage

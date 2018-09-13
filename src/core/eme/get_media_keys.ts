@@ -22,7 +22,6 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import { ICustomMediaKeys } from "../../compat/";
 import {
   EncryptedMediaError,
 } from "../../errors";
@@ -30,7 +29,6 @@ import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
 import getMediaKeySystemAccess from "./find_key_system";
 import MediaKeysInfosStore from "./media_keys_infos_store";
-import setServerCertificate from "./set_server_certificate";
 import {
   IKeySystemOption,
   IMediaKeysInfos,
@@ -76,40 +74,29 @@ export default function getMediaKeysInfos(
       } = evt.value;
       const currentState = currentMediaKeysInfos.getState(mediaElement);
 
-      let mediaKeys$ : Observable<{
-        mediaKeys : ICustomMediaKeys|MediaKeys;
-        sessionsStore : SessionsStore;
-      }>;
+      let mediaKeys$ : Observable<IMediaKeysInfos>;
+      const sessionStorage = createSessionStorage(options);
       if (currentState != null && evt.type === "reuse-media-key-system-access") {
         const { mediaKeys, sessionsStore } = currentState;
-        mediaKeys$ = observableOf({ mediaKeys, sessionsStore });
+        mediaKeys$ =
+          observableOf({
+            mediaKeys,
+            sessionsStore,
+            mediaKeySystemAccess,
+            keySystemOptions: options,
+            sessionStorage,
+          });
       } else {
         mediaKeys$ = castToObservable(mediaKeySystemAccess.createMediaKeys())
           .pipe(map((mediaKeys) => ({
             mediaKeys,
             sessionsStore: new SessionsStore(mediaKeys),
+            mediaKeySystemAccess,
+            keySystemOptions: options,
+            sessionStorage,
           })));
       }
 
-      return mediaKeys$
-        .pipe(mergeMap(({ mediaKeys, sessionsStore }) => {
-          const { serverCertificate } = options;
-          return (
-            serverCertificate != null ?
-              setServerCertificate(mediaKeys, serverCertificate) :
-              observableOf(null)
-          ).pipe(
-            map((error) => {
-                return {
-                  mediaKeySystemAccess,
-                  keySystemOptions: options,
-                  mediaKeys,
-                  sessionsStore,
-                  sessionStorage: createSessionStorage(options),
-                  serverCertificateWarning: error,
-                };
-            })
-          );
-        }));
+      return mediaKeys$;
     }));
 }

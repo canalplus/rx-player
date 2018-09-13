@@ -16,11 +16,13 @@
 
 import {
   defer as observableDefer,
+  EMPTY,
   Observable,
   of as observableOf,
 } from "rxjs";
 import {
   catchError,
+  ignoreElements,
   mapTo,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
@@ -79,17 +81,19 @@ function setServerCertificate(
 export default function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
-) : Observable<null|IEMEWarningEvent> {
+) : Observable<IEMEWarningEvent> {
   return typeof mediaKeys.setServerCertificate === "function" ?
     setServerCertificate(mediaKeys, serverCertificate)
-      .pipe(catchError(error => {
+      .pipe(
+        ignoreElements(),
+        catchError(error => {
         error.fatal = false;
         return observableOf({
           type: "warning" as "warning",
           value: error,
         });
       })) :
-    observableOf(null);
+    EMPTY;
 }
 
 export {

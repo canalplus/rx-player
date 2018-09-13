@@ -21,6 +21,7 @@
 
 import {
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
   defer as observableDefer,
   EMPTY,
   merge as observableMerge,
@@ -28,6 +29,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
   mergeMap,
@@ -49,6 +51,8 @@ import {
   IKeySystemOption,
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
+
+import setServerCertificate from "./set_server_certificate";
 
 const attachedMediaKeysInfos = new MediaKeysInfosStore();
 
@@ -102,7 +106,7 @@ export default function EMEManager(
    // This is to avoid handling multiple times the same encrypted events.
   const handledInitData = new InitDataStore();
 
-  const emeEvents$ : Observable<never> = observableCombineLatest(
+  const emeEvents$ = observableCombineLatest(
     onEncrypted$(mediaElement),
     getMediaKeysInfos(
       mediaElement,
@@ -111,8 +115,11 @@ export default function EMEManager(
     )
   ).pipe(
     mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
-      return observableMerge(
-        // create a new MediaKeySession if needed
+      const { keySystemOptions, mediaKeys } = mediaKeysInfos;
+      const { serverCertificate } = keySystemOptions;
+
+      // create a new MediaKeySession if needed
+      const handleEncryptedEvent$ =
         handleEncryptedEvent(encryptedEvent, handledInitData, mediaKeysInfos).pipe(
           map((evt) => ({
             type: evt.type,
@@ -123,11 +130,16 @@ export default function EMEManager(
               sessionType: evt.value.sessionType,
               keySystemOptions: mediaKeysInfos.keySystemOptions,
               sessionStorage: mediaKeysInfos.sessionStorage,
-              serverCertificateWarning: mediaKeysInfos.serverCertificateWarning,
             },
-          }))),
+          }))
+        );
 
-        // attach MediaKeys if we're handling the first event
+      return observableMerge(
+        serverCertificate != null ?
+          observableConcat(
+            setServerCertificate(mediaKeys, serverCertificate),
+            handleEncryptedEvent$
+          ) : handleEncryptedEvent$, // attach MediaKeys if we're handling the first event
         i === 0 ?
           attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos).pipe(
             ignoreElements()) :
@@ -135,6 +147,9 @@ export default function EMEManager(
       );
     }),
     mergeMap((handledEncryptedEvent) =>  {
+      if (handledEncryptedEvent.type === "warning") {
+        return observableOf(handledEncryptedEvent);
+      }
       const {
         initData,
         initDataType,
@@ -142,12 +157,10 @@ export default function EMEManager(
         sessionType,
         keySystemOptions,
         sessionStorage,
-        serverCertificateWarning,
       } = handledEncryptedEvent.value;
 
       return observableMerge(
         handleSessionEvents(mediaKeySession, keySystemOptions),
-        serverCertificateWarning ? observableOf(serverCertificateWarning) : EMPTY,
         // only perform generate request on new sessions
         handledEncryptedEvent.type === "created-session" ?
           generateKeyRequest(mediaKeySession, initData, initDataType).pipe(
@@ -157,7 +170,12 @@ export default function EMEManager(
               }
             })) :
           EMPTY
-      ).pipe(ignoreElements());
+      ).pipe(filter((evt): evt is IEMEWarningEvent => {
+        return (
+          evt != null &&
+          evt.type === "warning"
+        );
+      }));
     }));
 
   return emeEvents$;
