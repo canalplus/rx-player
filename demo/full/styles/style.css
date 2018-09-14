@@ -121,15 +121,15 @@ body {
   width: 100%;
 }
 
-.video-wrapper-parent {
+.video-screen-parent {
   position: relative;
 }
 
-.video-wrapper {
+.video-screen {
   position: relative;
 }
 
-.fullscreen .video-wrapper {
+.fullscreen .video-screen {
   position: fixed;
   width: 100%;
   top: 50%;

@@ -115,9 +115,9 @@ class Player extends React.Component {
             className="video-player-wrapper"
             ref={element => this.playerWrapperElement = element }
           >
-            <div className="video-wrapper-parent">
+            <div className="video-screen-parent">
               <div
-                className="video-wrapper"
+                className="video-screen"
                 onClick={() => this.onVideoClick()}
               >
                 <ErrorDisplayer player={player} />
