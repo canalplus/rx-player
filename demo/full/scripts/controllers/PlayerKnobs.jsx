@@ -21,10 +21,9 @@ const PlayerKnobs = ({
   player,
   availableVideoTracks,
   isContentLoaded,
-  hasEnded,
 }) => {
 
-  if (!isContentLoaded || hasEnded) {
+  if (!isContentLoaded) {
     return null;
   }
 
@@ -63,7 +62,6 @@ export default withModulesState({
   player: {
     isStopped: "isStopped",
     isContentLoaded: "isContentLoaded",
-    hasEnded: "hasEnded",
     availableVideoTracks: "availableVideoTracks",
   },
 })(PlayerKnobs);
