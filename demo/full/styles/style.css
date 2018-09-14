@@ -603,6 +603,12 @@ body {
   padding: 8px;
 }
 
+.black-knob select:disabled {
+  -moz-appearance:none;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
 @media only screen and (max-width: 660px) {
   .content-inputs {
     flex-direction: column;
