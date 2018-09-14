@@ -602,6 +602,5 @@ body {
 @media only screen and (max-width: 660px) {
   .content-inputs {
     flex-direction: column;
-    height: 140px;
   }
 }

@@ -283,16 +283,16 @@ class ContentList extends React.Component {
               selected={choiceIndex}
             />
           </div>
-          <div className="autoplay-checkbox">
-            Auto Play
-            <input
-              name="displayBufferSizeChart"
-              type="checkbox"
-              checked={autoPlay}
-              onChange={onAutoPlayCheckbox}
-            />
-          </div>
           <div className="choice-input-button-wrapper">
+            <div className="autoplay-checkbox">
+              Auto Play
+              <input
+                name="displayBufferSizeChart"
+                type="checkbox"
+                checked={autoPlay}
+                onChange={onAutoPlayCheckbox}
+              />
+            </div>
             <Button
               className="choice-input choice-input-button load-button"
               onClick={onClickLoad}
