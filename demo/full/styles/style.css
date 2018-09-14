@@ -1,4 +1,4 @@
-  @font-face {
+@font-face {
   font-family: "icons";
   src: url("../fonts/FontAwesome.otf");
   font-weight: normal;
@@ -21,11 +21,23 @@ body {
   font-family: "icons", sans-serif;
 }
 
+.headers-title {
+  display: flex;
+  align-items: center;
+}
+
 .title-wrapper h1 {
-  display: block;
+  display: inline-block;
   width: 100%;
   text-align: center;
   line-height: 1.05;
+}
+
+.title-logo {
+  display: inline-block;
+  height: 25px;
+  display: inline-block;
+  margin: 0px 15px 0px 0px;
 }
 
 .title-wrapper .light {
@@ -178,7 +190,7 @@ body {
   display: inline-block;
   position: relative;
   margin: auto;
-  width: 40px;
+  width: 41px;
   text-align: center;
 }
 
@@ -187,7 +199,7 @@ body {
   display: inline-block;
   position: relative;
   margin: auto;
-  width: 40px;
+  width: 41px;
   text-align: center;
 }
 
@@ -286,7 +298,7 @@ body {
   border: solid 1px #a9a9a9;
   background-color: white;
   margin: 5px;
-  height: 40px;
+  height: 41px;
   width: 60px;
   background-color: #f9f9f9;
 }
@@ -507,10 +519,12 @@ body {
 
 .autoplay-checkbox {
   margin: 5px;
-  border: 1px solid #a9a9a9;
+  /* border: 1px solid #a9a9a9; */
   padding: 9px 8px 9px 8px;
   font-style: italic;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
 }
 
 .player-logs-wrapper {
@@ -559,7 +573,20 @@ body {
   color: #ffffff;
 }
 
-.github-buttons > * {
+.nav-header a {
+  color: #ffffff;
+}
+
+.header-links-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.header-links-buttons > * {
+  margin: 3px;
+}
+
+.github-button {
   margin: 5px;
 }
 
@@ -579,6 +606,7 @@ body {
   background-color: white;
   display: inline-block;
   font: inherit;
+  height: 41px;
   padding: 10px 25px 10px 15px;
 
   /* reset */
@@ -631,5 +659,11 @@ body {
 @media only screen and (max-width: 660px) {
   .content-inputs {
     flex-direction: column;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  .title-logo {
+    display: none;
   }
 }
