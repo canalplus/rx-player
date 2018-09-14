@@ -4,6 +4,7 @@ import Knob from "../../components/Knob.jsx";
 
 const AudioBitrateKnobBase = ({
   player,
+  className,
   audioBitrateAuto,
   audioBitrate,
   availableAudioBitrates = [],
@@ -39,6 +40,7 @@ const AudioBitrateKnobBase = ({
   return (
     <Knob
       name="Audio Bitrate"
+      className={className}
       disabled={options.length < 2}
       onChange={onAudioBitrateChange}
       options={options}

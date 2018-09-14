@@ -272,12 +272,12 @@ class ContentList extends React.Component {
         <div className="content-inputs">
           <span>
             <Select
-              className="choice-input transport-type-choice"
+              className="choice-input transport-type-choice white-select"
               onChange={onTechChange}
               options={TRANSPORT_TYPES}
             />
             <Select
-              className="choice-input content-choice"
+              className="choice-input content-choice white-select"
               onChange={onContentChange}
               options={contentsName}
               selected={choiceIndex}
@@ -332,7 +332,7 @@ class ContentList extends React.Component {
                     <div className="drm-settings">
                       <div>
                         <Select
-                          className="choice-input"
+                          className="choice-input white-select"
                           onChange={onDRMChange}
                           options={DRM_TYPES}
                         />

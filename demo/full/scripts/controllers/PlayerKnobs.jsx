@@ -44,11 +44,11 @@ const PlayerKnobs = ({
         </span>
       </div>
       <div className="player-knobs-knobs">
-        <PlaybackRateKnob player={player} />
-        <AudioBitrateKnob player={player} />
-        <VideoBitrateKnob player={player} />
-        <LanguageKnob player={player} />
-        <SubtitlesKnob player={player} />
+        <PlaybackRateKnob className="black-knob" player={player} />
+        <AudioBitrateKnob className="black-knob" player={player} />
+        <VideoBitrateKnob className="black-knob" player={player} />
+        <LanguageKnob className="black-knob" player={player} />
+        <SubtitlesKnob className="black-knob" player={player} />
         {
           availableVideoTracks.length > 1 ?
             <VideoTrack player={player} /> : null

@@ -120,24 +120,26 @@ class Player extends React.Component {
               onClick={() => this.onVideoClick()}
             >
               <ErrorDisplayer player={player} />
-              { displaySpinner ?
-                <img
-                  src="./assets/spinner.gif"
-                  className="video-player-spinner"
-                /> : null
+              {
+                displaySpinner ?
+                  <img
+                    src="./assets/spinner.gif"
+                    className="video-player-spinner"
+                  /> :
+                  null
               }
               <div
                 className="text-track"
                 ref={element => this.textTrackElement = element }
               />
-              <video
-                ref={element => this.videoElement = element }
-              />
+              <video ref={element => this.videoElement = element }/>
+
               <PlayerKnobsManager
                 close={closeSettings}
                 shouldDisplay={this.state.displaySettings}
                 player={player}
               />
+
             </div>
             {
               player ?

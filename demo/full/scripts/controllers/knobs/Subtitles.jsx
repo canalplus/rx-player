@@ -11,6 +11,7 @@ const findLanguageIndex = (currentSubtitle, languages) => {
 
 const SubtitlesKnobBase = ({
   player,
+  className,
   currentSubtitle,
   availableSubtitles = [],
 }) => {
@@ -41,6 +42,7 @@ const SubtitlesKnobBase = ({
   return (
     <Knob
       name="Subtitles"
+      className={className}
       disabled={!availableSubtitles.length}
       onChange={onLanguageChange}
       options={options}

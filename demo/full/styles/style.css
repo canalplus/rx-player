@@ -72,20 +72,22 @@ body {
 }
 
 .choice-input > select {
-  border: 0px;
   padding: 0.4rem;
   display: flex;
   background-color: white;
 }
 
 .choice-input.text-input {
+  font-family: Roboto;
+  font-size: 1rem;
   width: 100%;
   margin-right: 0px;
-  margin-bottom: 10px;
   margin-left: 0px;
-  margin-top: 15px;
-  border: 0px;
-  padding: 8px 8px 8px 10px;
+  margin-bottom: 12px;
+  margin-top: 12px;
+  padding: 0.5em 8px 0.5em 10px;
+  border: 1px solid #a9a9a9;
+  line-height: 1.5em;
   display: flex;
   background-color: white;
   -webkit-box-sizing: border-box;
@@ -106,8 +108,8 @@ body {
 .video-player-wrapper {
   background-color: #000;
   margin: auto;
-  border: 2px solid black;
-  box-shadow: 0px 0px 75px 0px rgba(10, 10, 10, 0.75);
+  border: 1px solid black;
+  box-shadow: 0px 0px 30px 0px rgba(10, 10, 10, 0.75);
 }
 
 .video-player-wrapper video {
@@ -282,7 +284,7 @@ body {
 .choice-input-button {
   font-family: "icons", sans-serif;
   font-size: 1.3rem;
-  border: solid 1px lightgray;
+  border: solid 1px #a9a9a9;
   background-color: white;
   margin: 5px;
   height: 40px;
@@ -429,6 +431,10 @@ body {
   cursor: pointer;
 }
 
+.player-knobs-close:hover {
+  color: #ffffff;
+}
+
 .player-knobs-knobs {
   padding: 15px 20px 20px 20px;
   display: flex;
@@ -463,6 +469,12 @@ body {
   outline: 0;
   padding: 3px;
   background-color: rgba(0,0,0);
+  color: rgb(240,240,240);
+}
+
+.knob-value > select:focus {
+  border: 0;
+  outline: 0;
   color: rgb(240,240,240);
 }
 
@@ -544,11 +556,40 @@ body {
 
 .drm-settings {
   background: #ffffff;
-  padding: 1rem;
-  margin: 1rem 0 1rem 0;
-  border: solid 1px lightgray;
+  padding: 14px 14px 2px 14px;
+  margin: 12px 0 12px 0;
+  border: solid 1px #a9a9a9;
 }
 
 .drm-settings .input {
-  border: solid 1px lightgray;
+  border: solid 1px #a9a9a9;
+}
+
+.white-select select {
+  /* styling */
+  background-color: white;
+  display: inline-block;
+  font: inherit;
+  line-height: 1.5em;
+  padding: 0.5em 1.5em 0.5em 1em;
+
+  /* reset */
+
+  margin: 0;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("../assets/select_arrow.svg");
+  background-size: 8px;
+  background-repeat: no-repeat;
+  background-position: calc(100% - 8px) 50%;
+
+  border: 1px solid #a9a9a9;
+}
+
+.white-select option {
+  padding: 8px;
 }
