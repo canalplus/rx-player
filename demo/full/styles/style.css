@@ -122,7 +122,6 @@ body {
 }
 
 .choice-input > select {
-  padding: 1px;
   display: flex;
   background-color: white;
 }
@@ -447,6 +446,7 @@ body {
   font: inherit;
 
   margin: 0;
+  padding: 3px 21px 3px 3px;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
@@ -472,9 +472,9 @@ body {
 }
 
 .player-knobs {
-  width: 30%;
-  max-width: 350px;
-  min-width: 300px;
+  width: 60%;
+  max-width: 380px;
+  min-width: 280px;
   color: white;
   position: absolute;
   bottom: 10px;
@@ -542,7 +542,6 @@ body {
   width: 100%;
   border: 0;
   outline: 0;
-  padding: 3px;
   background-color: rgba(0,0,0);
   color: rgb(240,240,240);
 }
