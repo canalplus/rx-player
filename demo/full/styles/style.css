@@ -125,11 +125,7 @@ body {
   position: relative;
 }
 
-.video-screen {
-  position: relative;
-}
-
-.fullscreen .video-screen {
+.fullscreen .video-screen-parent {
   position: fixed;
   width: 100%;
   top: 50%;
