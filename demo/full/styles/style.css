@@ -6,7 +6,7 @@
 }
 
 @font-face {
-  font-family: "Roboto" "Open Sans", sans-serif;;
+  font-family: "Roboto", "Open Sans", sans-serif;
   src: url("../fonts/Roboto-Regular.otf");
   font-weight: normal;
   font-style: normal;
@@ -14,7 +14,7 @@
 
 body {
   margin: 0px;
-  font-family: "Roboto" "Open Sans", sans-serif;
+  font-family: "Roboto", "Open Sans", sans-serif;
 }
 
 .icon {
@@ -127,7 +127,7 @@ body {
 }
 
 .choice-input.text-input {
-  font-family: Roboto "Open Sans", sans-serif;
+  font-family: Roboto, "Open Sans", sans-serif;
   font-size: 1rem;
   width: 100%;
   margin-right: 0px;
@@ -439,33 +439,6 @@ body {
   margin-top: -7px;
 }
 
-.black-knob select {
-  /* styling */
-  background-color: #000;
-  display: inline-block;
-  font: inherit;
-
-  margin: 0;
-  padding: 3px 21px 3px 3px;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  background-image: url("../assets/select_arrow_white.svg");
-  background-size: 8px;
-  background-repeat: no-repeat;
-  background-position: calc(100% - 8px) 50%;
-}
-
-.black-knob select:disabled {
-  -moz-appearance:none;
-  -webkit-appearance:none;
-  appearance:none;
-  background-image: none;
-}
-
 .player-knobs-header {
   padding: 9px 20px 9px 20px;
   border-bottom: 1px dotted #555;
@@ -533,6 +506,33 @@ body {
   flex: 1;
 }
 
+.black-knob select {
+  /* styling */
+  background-color: #000;
+  display: inline-block;
+  font: inherit;
+
+  margin: 0;
+  padding: 3px 21px 3px 3px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("../assets/select_arrow_white.svg");
+  background-size: 8px;
+  background-repeat: no-repeat;
+  background-position: calc(100% - 8px) 50%;
+}
+
+.black-knob select:disabled {
+  -moz-appearance:none;
+  -webkit-appearance:none;
+  appearance:none;
+  background-image: none;
+}
+
 .knob-value {
   display: inline-block;
   flex: 1;
@@ -546,14 +546,14 @@ body {
   color: rgb(240,240,240);
 }
 
+.knob-value > select:disabled {
+  color: rgb(130,130,130);
+}
+
 .knob-value > select:focus {
   border: 0;
   outline: 0;
   color: rgb(240,240,240);
-}
-
-.knob-value > select:disabled {
-  color: rgb(130,130,130);
 }
 
 .player-charts {
