@@ -400,6 +400,7 @@ body {
 .player-knobs {
   width: 30%;
   max-width: 350px;
+  min-width: 300px;
   color: white;
   position: absolute;
   bottom: 10px;
@@ -504,6 +505,10 @@ body {
   margin: 10px;
 }
 
+.autoplay-checkbox {
+  margin: 0px 8px;
+}
+
 .player-logs-wrapper {
   margin-top: 20px;
 }
@@ -592,4 +597,11 @@ body {
 
 .white-select option {
   padding: 8px;
+}
+
+@media only screen and (max-width: 660px) {
+  .content-inputs {
+    flex-direction: column;
+    height: 140px;
+  }
 }

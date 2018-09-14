@@ -270,7 +270,7 @@ class ContentList extends React.Component {
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
-          <span>
+          <div className="content-inputs-selects">
             <Select
               className="choice-input transport-type-choice white-select"
               onChange={onTechChange}
@@ -282,16 +282,16 @@ class ContentList extends React.Component {
               options={contentsName}
               selected={choiceIndex}
             />
-            <div className="chart-checkbox">
-              Auto Play
-              <input
-                name="displayBufferSizeChart"
-                type="checkbox"
-                checked={autoPlay}
-                onChange={onAutoPlayCheckbox}
-              />
-            </div>
-          </span>
+          </div>
+          <div className="autoplay-checkbox">
+            Auto Play
+            <input
+              name="displayBufferSizeChart"
+              type="checkbox"
+              checked={autoPlay}
+              onChange={onAutoPlayCheckbox}
+            />
+          </div>
           <div className="choice-input-button-wrapper">
             <Button
               className="choice-input choice-input-button load-button"
