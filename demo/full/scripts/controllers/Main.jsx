@@ -7,10 +7,10 @@ export default () => (
       <section className="title-wrapper">
         <h1 className="title">
           <a href="https://github.com/canalplus/rx-player">
-            <span className="light">{"Rx-Player"}</span>
+            <span className="name">{"Rx-Player"}</span>
           </a>
           <a href="https://github.com/canalplus/rx-player/releases">
-            <span className="lightgray">{" v" + window.RxPlayer.version}</span>
+            <span className="version">{" v" + window.RxPlayer.version}</span>
           </a>
         </h1>
       </section>
