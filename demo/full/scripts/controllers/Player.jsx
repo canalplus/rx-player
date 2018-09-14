@@ -115,32 +115,34 @@ class Player extends React.Component {
             className="video-player-wrapper"
             ref={element => this.playerWrapperElement = element }
           >
-            <div
-              className="video-wrapper"
-              onClick={() => this.onVideoClick()}
-            >
-              <ErrorDisplayer player={player} />
-              {
-                displaySpinner ?
-                  <img
-                    src="./assets/spinner.gif"
-                    className="video-player-spinner"
-                  /> :
-                  null
-              }
+            <div className="video-wrapper-parent">
               <div
-                className="text-track"
-                ref={element => this.textTrackElement = element }
+                className="video-wrapper"
+                onClick={() => this.onVideoClick()}
+              >
+                <ErrorDisplayer player={player} />
+                {
+                  displaySpinner ?
+                    <img
+                      src="./assets/spinner.gif"
+                      className="video-player-spinner"
+                    /> :
+                    null
+                }
+                <div
+                  className="text-track"
+                  ref={element => this.textTrackElement = element }
+                />
+                <video ref={element => this.videoElement = element }/>
+
+              </div>
+
+              <PlayerKnobsManager
+                close={closeSettings}
+                shouldDisplay={this.state.displaySettings}
+                player={player}
               />
-              <video ref={element => this.videoElement = element }/>
-
             </div>
-
-            <PlayerKnobsManager
-              close={closeSettings}
-              shouldDisplay={this.state.displaySettings}
-              player={player}
-            />
             {
               player ?
                 <ControlBar

@@ -121,6 +121,10 @@ body {
   width: 100%;
 }
 
+.video-wrapper-parent {
+  position: relative;
+}
+
 .video-wrapper {
   position: relative;
 }
