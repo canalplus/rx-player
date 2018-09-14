@@ -33,6 +33,10 @@ body {
   line-height: 1.05;
 }
 
+.title > * {
+  text-decoration: none !important;
+}
+
 .title-logo {
   display: inline-block;
   height: 25px;
@@ -43,6 +47,12 @@ body {
 .title-wrapper .light {
   font-weight: bold;
   font-size: 25px;
+}
+
+.title-wrapper .lightgray {
+  font-weight: normal;
+  font-size: 22px;
+  color: rgb(200,200,200);
 }
 
 #player-container {
