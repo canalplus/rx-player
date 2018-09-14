@@ -7,6 +7,12 @@ import contentsDatabase from "../contents.js";
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
+const URL_DENOMINATIONS = {
+  DASH: "URL to the MPD",
+  Smooth: "URL to the Manifest",
+  DirectFile: "URL to the content",
+};
+
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   acc[tech] = contentsDatabase.filter(({ transport }) =>
     transport === tech.toLowerCase()
@@ -308,7 +314,10 @@ class ContentList extends React.Component {
                   className="choice-input text-input"
                   onChange={onManifestInput}
                   value={manifestUrl}
-                  placeholder={`URL for the ${transportType} manifest`}
+                  placeholder={
+                    URL_DENOMINATIONS[transportType] ||
+                    `URL to the ${transportType} content`
+                  }
                 />
                 <span className="encryption-checkbox" >
                   Encrypted content
@@ -338,7 +347,7 @@ class ContentList extends React.Component {
                         className="choice-input text-input"
                         onChange={onServerCertificateInput}
                         value={serverCertificateUrl}
-                        placeholder={"Server certificate URL"}
+                        placeholder={"Server certificate URL (optional)"}
                       />
                     </div> :
                     null
