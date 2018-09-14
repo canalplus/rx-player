@@ -7,14 +7,6 @@ import SubtitlesKnob from "./knobs/Subtitles.jsx";
 import VideoTrack from "./knobs/VideoTrack.jsx";
 import PlaybackRateKnob from "./knobs/SpeedKnob.jsx";
 
-function stopClickEventPropagation(element) {
-  if (element != null) {
-    element.addEventListener("click", (evt) => {
-      evt.stopPropagation();
-    });
-  }
-}
-
 const PlayerKnobs = ({
   shouldDisplay,
   close,
@@ -30,10 +22,7 @@ const PlayerKnobs = ({
   const className = "player-knobs" + (shouldDisplay ? " fade-in-out" : "");
 
   return (
-    <div
-      className={className}
-      ref={stopClickEventPropagation}
-    >
+    <div className={className}>
       <div className="player-knobs-header">
         <span className="player-knobs-title">Settings</span>
         <span

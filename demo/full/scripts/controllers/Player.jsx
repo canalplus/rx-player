@@ -134,13 +134,13 @@ class Player extends React.Component {
               />
               <video ref={element => this.videoElement = element }/>
 
-              <PlayerKnobsManager
-                close={closeSettings}
-                shouldDisplay={this.state.displaySettings}
-                player={player}
-              />
-
             </div>
+
+            <PlayerKnobsManager
+              close={closeSettings}
+              shouldDisplay={this.state.displaySettings}
+              player={player}
+            />
             {
               player ?
                 <ControlBar
