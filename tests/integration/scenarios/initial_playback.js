@@ -130,7 +130,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.seekTo(player.getMaximumPosition() + 1);
-    await sleep(10);
+    await sleep(200);
     expect(player.getPlayerState()).to.equal("ENDED");
   });
 
