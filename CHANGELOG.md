@@ -19,7 +19,7 @@
 
 ## v3.6.0 (2018/08/24)
 
-### features
+### Features
   - api: add video track switching
   - dash: add webm support
   - api: Emit warning if autoPlay is blocked on the current browser
@@ -38,7 +38,7 @@
   - api: the event ``fullscreenChange`` has been deprecated
   - api: the event ``nativeTextTrackChange`` has been deprecated
 
-### bug fixes
+### Bug Fixes
 
   - ttml: display forbidden characters (such as ">") in a ``"native"`` ``textTrackMode``
   - ttml: process ``xml:space`` even if it is not defined at the top level
