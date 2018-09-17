@@ -231,7 +231,10 @@ Most APIs related to the current content are not yet available while the
 content is loading.</p>
 </li>
 <li>
-<p><code>&quot;LOADED&quot;</code>: The player can begin to play a new stream.</p>
+<p><code>&quot;LOADED&quot;</code>: The player has loaded the new content, it is now ready to
+play.
+From this point onward you can use APIs interacting with the current content
+such as <code>seekTo</code> or <code>setAudioTrack</code>.</p>
 </li>
 <li>
 <p><code>&quot;PLAYING&quot;</code>: The player is currently playing the stream.</p>
@@ -269,16 +272,16 @@ state.</p>
 |  +---------+     +--------+   play()   +---------+     |    +-------+       |
 |  | LOADING | --&gt; | LOADED | -----|---&gt; | PLAYING | ----|--&gt; | ENDED |       |
 |  +---------+     +--------+  autoPlay  +---------+     |    +-------+       |
-|                                  |         | ^         |                    |
-|       +-----------+              |         | |         |                    |
-|       | BUFFERING |  &lt;--------&gt;  |  play() | | pause() |                    |
-|       +-----------+              |         | |         |                    |
-|                                  |         | |         |                    |
-|       +---------+    seekTo()    |         V |         |     +-----------+  |
-|       |         |  &lt;-----------  |     +--------+      | --&gt; | RELOADING |  |
-|       | SEEKING |                |     | PAUSED |      |     +-----------+  |
-|       |         |  -----------&gt;  |     +--------+      |       |            |
-|       +---------+                |                     | &lt;-----+            |
+|                    |             |         | ^         |                    |
+|      +---------+ &lt;-+ seekTo()    |         | |         |                    |
+|      |         | &lt;-------------- |  play() | | pause() |                    |
+|      | SEEKING |                 |         | |         |                    |
+|      |         |  -------------&gt; |         | |         |                    |
+|      +---------+                 |         V |         |     +-----------+  |
+|        +-----------+             |     +--------+      | --&gt; | RELOADING |  |
+|        | BUFFERING |  &lt;--------&gt; |     | PAUSED |      |     +-----------+  |
+|        +-----------+             |     +--------+      |       |            |
+|                                  |                     | &lt;-----+            |
 |                                  +---------------------+                    |
 +-----------------------------------------------------------------------------+
 </code></pre>

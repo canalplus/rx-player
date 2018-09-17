@@ -15,6 +15,12 @@
 </ul>
 </li>
 <li><a href="#chapter-fullscreenChange">fullscreenChange</a></li>
+<li><a href="#chapter-Other%20properties">Other properties</a>
+<ul>
+<li><a href="#subchapter-Manifest">Manifest</a></li>
+<li><a href="#subchapter-Smooth">Smooth</a></li>
+</ul>
+</li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Deprecated%20APIs"></a></p>
 <h1>Deprecated APIs</h1>
@@ -172,4 +178,28 @@ mediaElement.addEventListener(<span class="hljs-string">&quot;fullscreenChange&q
   }
 });
 </code></pre>
+<p><a name="chapter-Other%20properties"></a></p>
+<h2>Other properties</h2>
+<p>Some very specific properties from various methods are deprecated.
+You will find them here.</p>
+<p><a name="subchapter-Manifest"></a></p>
+<h3>Manifest</h3>
+<p>The <code>adaptations</code> property returned by the <code>Manifest</code> object you can obtain
+through the <code>getManifest</code> call is deprecated.</p>
+<p>This corresponds to the <code>adaptations</code> property of the first element in the
+<code>periods</code> object from the same <code>Manifest</code> object, so it&#x2019;s very easy to
+replace:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> manifest = player.getManifest();
+
+<span class="hljs-keyword">if</span> (manifest &amp;&amp; manifest.periods.length) {
+  <span class="hljs-built_in">console</span>.log(manifest.adaptations === manifest.periods[<span class="hljs-number">0</span>]); <span class="hljs-comment">// true</span>
+}
+</code></pre>
+<p><a name="subchapter-Smooth"></a></p>
+<h3>Smooth</h3>
+<p>Setting a <code>*.wsx</code>, a <code>*.ism</code> or a <code>*.isml</code> URL as an <code>url</code> property in
+<code>loadVideo</code> is now deprecated when we&#x2019;re talking about a Smooth Streaming
+content.</p>
+<p>We recommend to only set a Manifest URL in that property when the transport is
+equal to <code>smooth</code>.</p>
 </body></html></div></div></div></body>
