@@ -24,6 +24,7 @@ import objectAssign from "object-assign";
 
 import {
   ICompatVTTCue,
+  isVTTCue,
   makeCue,
 } from "../../../../compat";
 
@@ -219,7 +220,7 @@ function parseCue(
   if (!cue) {
     return null;
   }
-  if (cue instanceof ICompatVTTCue) {
+  if (isVTTCue(cue)) {
     addStyle(cue, paragraphStyle);
   }
   return cue;

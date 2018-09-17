@@ -76,6 +76,10 @@ function isCodecSupported(codec : string) : boolean {
   return true;
 }
 
+function isVTTCue(cue : ICompatVTTCue|TextTrackCue) : cue is ICompatVTTCue {
+  return cue instanceof (window as any).VTTCue;
+}
+
 /**
  * Returns true if the browser has the minimum needed EME APIs to decrypt a
  * content.
@@ -421,6 +425,7 @@ export {
   isIE,
   isOffline,
   isPlaybackStuck,
+  isVTTCue,
   makeCue,
   onSourceOpen$,
   play$,

@@ -21,6 +21,7 @@
 
 import {
   ICompatVTTCue,
+  isVTTCue,
   makeCue,
 } from "../../../compat/index";
 import arrayIncludes from "../../../utils/array-includes";
@@ -58,7 +59,7 @@ export default function parseVTTStringToVTTCues(
     if (cueObject != null) {
       const nativeCue = toNativeCue(cueObject);
       if (nativeCue != null) {
-        if (nativeCue instanceof ICompatVTTCue) {
+        if (isVTTCue(nativeCue)) {
           setSettingsOnCue(cueObject.settings, nativeCue);
         }
         cues.push(nativeCue);
