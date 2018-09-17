@@ -1,5 +1,5 @@
 import React from "react";
-import parseDRMConfigurations from "../lib/drm.js";
+import parseDRMConfigurations from "../lib/parseDRMConfigurations.js";
 import Button from "../components/Button.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
