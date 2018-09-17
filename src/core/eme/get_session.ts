@@ -63,7 +63,7 @@ const {
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
-export default function handleEncryptedEvent(
+export default function getSession(
   encryptedEvent : MediaEncryptedEvent,
   handledInitData : InitDataStore,
   mediaKeysInfos : IMediaKeysInfos

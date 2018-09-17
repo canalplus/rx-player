@@ -72,8 +72,8 @@ function setServerCertificate(
 }
 
 /**
- * Call the setCertificate API. If it fails just emit the error through the
- * errorStream and complete.
+ * Call the setCertificate API. If it fails just emit the error as warning
+ * and complete.
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
  * @returns {Observable}
@@ -87,12 +87,9 @@ export default function trySettingServerCertificate(
       .pipe(
         ignoreElements(),
         catchError(error => {
-        error.fatal = false;
-        return observableOf({
-          type: "warning" as "warning",
-          value: error,
-        });
-      })) :
+          error.fatal = false;
+          return observableOf({ type: "warning" as "warning", value: error });
+        })) :
     EMPTY;
 }
 

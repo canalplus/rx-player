@@ -15,10 +15,12 @@
  */
 
 import {
+  concat as observableConcat,
   defer as observableDefer,
   EMPTY,
   merge as observableMerge,
   Observable,
+  of as observableOf,
   Subject,
   TimeoutError,
 } from "rxjs";
@@ -86,6 +88,24 @@ export interface IMediaKeySessionHandledEvents {
 const KEY_STATUS_EXPIRED = "expired";
 
 /**
+ * @param {Error|Object} error
+ * @param {Boolean} fatal
+ * @returns {Error|Object}
+ */
+function licenseErrorSelector(
+  error: ICustomError|Error,
+  fatal: boolean
+) : ICustomError|Error {
+  if (isKnownError(error)) {
+    if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
+      error.fatal = fatal;
+      return error;
+    }
+  }
+  return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
+}
+
+/**
  * listen to "message" events from session containing a challenge
  * blob and map them to licenses using the getLicense method from
  * selected keySystem.
@@ -101,36 +121,15 @@ export default function handleSessionEvents(
   log.debug("eme: handle message events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
-
-  /**
-   * @param {Error|Object} error
-   * @param {Boolean} fatal
-   * @returns {Error|Object}
-   */
-  function licenseErrorSelector(
-    error: ICustomError|Error,
-    fatal: boolean
-  ) : ICustomError|Error {
-    if (isKnownError(error)) {
-      if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
-        error.fatal = fatal;
-        return error;
-      }
-    }
-    return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
-  }
-
   const getLicenseRetryOptions = {
     totalRetry: 2,
     retryDelay: 200,
     errorSelector: (error: ICustomError|Error) => licenseErrorSelector(error, true),
-    onRetry: (error: ICustomError|Error) => {
-      const selectedError = licenseErrorSelector(error, false);
-      return sessionWarningSubject$.next({
-        type: "warning",
-        value: selectedError,
-      });
-    },
+    onRetry: (error: ICustomError|Error) =>
+      sessionWarningSubject$.next({
+      type: "warning",
+      value: licenseErrorSelector(error, false),
+    }),
   };
 
   const keyErrors: Observable<never> = onKeyError$(session)
@@ -138,60 +137,51 @@ export default function handleSessionEvents(
       throw new EncryptedMediaError("KEY_ERROR", error, true);
     }));
 
-  const keyStatusesChanges : Observable<IMediaKeySessionEvents> =
+  const keyStatusesChanges : Observable<IMediaKeySessionEvents|IEMEWarningEvent> =
     onKeyStatusesChange$(session)
       .pipe(mergeMap((keyStatusesEvent: Event) => {
-        log.debug(
-          "eme: keystatuseschange event",
-          session,
-          keyStatusesEvent
-        );
+        log.debug("eme: keystatuseschange event", session, keyStatusesEvent);
 
-      // find out possible errors associated with this event
-      (session.keyStatuses as any).forEach((keyStatus : string, keyId : string) => {
-        if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
-          const error =
-            new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "expired", false);
+        // find out possible errors associated with this event
+        const warnings : IEMEWarningEvent[] = [];
+        (session.keyStatuses as any).forEach((keyStatus : string, keyId : string) => {
+          // Hack present because the order of the arguments has changed in spec
+          // and is not the same between some versions of Edge and Chrome.
+          if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
             const { throwOnLicenseExpiration } = keySystem;
-          if (throwOnLicenseExpiration || throwOnLicenseExpiration === undefined) {
-            throw error;
+            const error =
+              new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "expired", false);
+
+            if (throwOnLicenseExpiration !== false) {
+              throw error;
+            }
+            warnings.push({ type: "warning", value: error });
           }
-          sessionWarningSubject$.next({
-            type: "warning",
-            value: error,
-          });
-        }
-        // Hack present because the order of the arguments has changed in spec
-        // and is not the same between some versions of Edge and Chrome.
-        if (KEY_STATUS_ERRORS[keyId]) {
-          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
-        } else if (KEY_STATUS_ERRORS[keyStatus]) {
-          throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
-        }
-      });
 
-      const handledKeyStatusesChange$ = tryCatch(() => {
-        return keySystem && keySystem.onKeyStatusesChange ?
-          castToObservable(
-            keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-          ) as Observable<TypedArray|ArrayBuffer> : EMPTY;
-      });
+          if (KEY_STATUS_ERRORS[keyId]) {
+            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
+          } else if (KEY_STATUS_ERRORS[keyStatus]) {
+            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
+          }
+        });
 
-      return handledKeyStatusesChange$
-        .pipe() // TS or RxJS Bug?
-        .pipe(
-          catchError((error: Error) => {
-            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
-          }),
-          map((licenseObject) => {
-            return {
+        const warnings$ = warnings.length ? observableOf(...warnings) : EMPTY;
+        const handledKeyStatusesChange$ = tryCatch(() => {
+          return keySystem && keySystem.onKeyStatusesChange ?
+            castToObservable(
+              keySystem.onKeyStatusesChange(keyStatusesEvent, session)
+            ) as Observable<TypedArray|ArrayBuffer> : EMPTY;
+        }).pipe() // TS or RxJS Bug?
+          .pipe(
+            catchError((error: Error) => {
+              throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
+            }),
+            map((licenseObject) => ({
               type: "key-status-change" as "key-status-change",
-              value : {
-                license: licenseObject,
-              },
-            };
-          })
-        );
+              value : { license: licenseObject },
+            }))
+          );
+        return observableConcat(warnings$, handledKeyStatusesChange$);
       }));
 
   const keyMessages$ : Observable<IMediaKeySessionEvents> =
@@ -228,36 +218,34 @@ export default function handleSessionEvents(
         }));
     }));
 
-  const sessionUpdates: Observable<IMediaKeySessionHandledEvents> =
-    observableMerge(keyMessages$, keyStatusesChanges)
-      .pipe(concatMap((evt) => {
-        log.debug("eme: update session", evt);
-        const license = evt.value.license;
-        return castToObservable((session as any).update(license)).pipe(
-          catchError((error) => {
-            throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
-          }),
-          mapTo({
-            type: evt.type,
-            value: {
-              session,
-              license,
-            },
-          }));
-      }));
+  const sessionUpdates = observableMerge(keyMessages$, keyStatusesChanges)
+    .pipe(
+      concatMap((evt : IMediaKeySessionEvents|IEMEWarningEvent) :
+        Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> => {
+          if (evt.type === "warning") {
+            return observableOf(evt);
+          }
 
-  const sessionEvents:
-    Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> =
-      observableMerge(
-        sessionUpdates,
-        keyErrors,
-        sessionWarningSubject$
-      );
+          log.debug("eme: update session", evt);
+          const license = evt.value.license;
 
-  if (session.closed) {
-    return sessionEvents
-      .pipe(takeUntil(castToObservable(session.closed)));
-  } else {
-    return sessionEvents;
-  }
+          if (license == null) {
+            return EMPTY;
+          }
+          return castToObservable((session as any).update(license)).pipe(
+            catchError((error) => {
+              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
+            }),
+            mapTo({
+              type: evt.type,
+              value: { session, license },
+            }));
+        }));
+
+  const sessionEvents : Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> =
+    observableMerge(sessionUpdates, keyErrors, sessionWarningSubject$);
+
+  return session.closed ?
+    sessionEvents.pipe(takeUntil(castToObservable(session.closed))) :
+    sessionEvents;
 }

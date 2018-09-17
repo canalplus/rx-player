@@ -68,35 +68,28 @@ export default function getMediaKeysInfos(
       keySystemsConfigs,
       currentMediaKeysInfos
     ).pipe(mergeMap((evt) => {
-      const {
-        options,
-        mediaKeySystemAccess,
-      } = evt.value;
+      const { options, mediaKeySystemAccess } = evt.value;
       const currentState = currentMediaKeysInfos.getState(mediaElement);
-
-      let mediaKeys$ : Observable<IMediaKeysInfos>;
       const sessionStorage = createSessionStorage(options);
+
       if (currentState != null && evt.type === "reuse-media-key-system-access") {
         const { mediaKeys, sessionsStore } = currentState;
-        mediaKeys$ =
-          observableOf({
-            mediaKeys,
-            sessionsStore,
-            mediaKeySystemAccess,
-            keySystemOptions: options,
-            sessionStorage,
-          });
-      } else {
-        mediaKeys$ = castToObservable(mediaKeySystemAccess.createMediaKeys())
-          .pipe(map((mediaKeys) => ({
-            mediaKeys,
-            sessionsStore: new SessionsStore(mediaKeys),
-            mediaKeySystemAccess,
-            keySystemOptions: options,
-            sessionStorage,
-          })));
+        return observableOf({
+          mediaKeys,
+          sessionsStore,
+          mediaKeySystemAccess,
+          keySystemOptions: options,
+          sessionStorage,
+        });
       }
 
-      return mediaKeys$;
+      return castToObservable(mediaKeySystemAccess.createMediaKeys())
+        .pipe(map((mediaKeys) => ({
+          mediaKeys,
+          sessionsStore: new SessionsStore(mediaKeys),
+          mediaKeySystemAccess,
+          keySystemOptions: options,
+          sessionStorage,
+        })));
     }));
 }
