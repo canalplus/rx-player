@@ -33,6 +33,7 @@ import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import { stringFromUTF8 } from "../../utils/strings";
+import warnOnce from "../../utils/warnOnce";
 import {
   ILoaderObservable,
   ImageParserObservable,
@@ -104,6 +105,8 @@ export default function(
 
       // TODO Remove WSX logic
       if (WSX_REG.test(url)) {
+        warnOnce("Giving WSX URL to loadVideo is deprecated." +
+          " You should only give Manifest URLs.");
         resolving = request({
           url: replaceToken(url, ""),
           responseType: "document",

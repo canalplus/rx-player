@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import warnOnce from "../../utils/warnOnce";
+
 const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
 const TOKEN_REG = /\?token=(\S+)/;
 
@@ -63,7 +65,12 @@ function replaceToken(url : string, token? : string) : string {
  * @returns {string}
  */
 function resolveManifest(url : string) : string {
-  return url.replace(ISM_REG, "$1/manifest$2");
+  if (ISM_REG.test(url)) {
+    warnOnce("Giving a isml URL to loadVideo is deprecated." +
+      " Please give the Manifest URL directly");
+    return url.replace(ISM_REG, "$1/manifest$2");
+  }
+  return url;
 }
 
 export {
