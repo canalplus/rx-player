@@ -174,12 +174,23 @@ This property is an array of objects with the following properties (only
     If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
     same content needs to be re-decrypted.
 
-  - ``throwOnSessionExpiration`` (``Boolean|undefined``): If set to ``true`` or is undefined,
-    if one of current active ``MediaKeySession`` is expired, then throw. Otherwise, just warn
-    user about session expiration.
+  - ``throwOnLicenseExpiration`` (``Boolean|undefined``): `true` by default.
 
-    We may want to prevent throwing if a session expiration leads to a license renewal. In that case,
-    content may continue to play once the license has been updated. 
+    If set to `true` or not set, the playback will be interrupted as soon as an
+    attached license expires. In that situation, you will be warned with an
+    [``error`` event](./errors.md) with, as a payload, an error with the code
+    `KEY_STATUS_CHANGE_ERROR`.
+
+    If set to `false`, the playback of the current content will not be
+    interrupted even if an attached license is expired. It might however stop
+    decoding in that situation.
+    In that case, it's up to you to update the problematic license, usually
+    through the usual `getLicense` callback.
+
+    You may want to set this value to `false` if a session expiration leads to
+    a license renewal.
+    In that case, content may continue to play once the license has been
+    updated. 
 
 #### Example
 Example of a simple DRM configuration for widevine and playready DRMs:

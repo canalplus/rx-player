@@ -84,7 +84,7 @@ export interface IKeySystemOption {
     => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
-  throwOnSessionExpiration? : boolean;
+  throwOnLicenseExpiration? : boolean;
 }
 
 // Keys are the different key statuses possible.
