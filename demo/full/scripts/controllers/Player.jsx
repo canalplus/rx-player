@@ -6,9 +6,9 @@ import PlayerModule from "../modules/player";
 import ControlBar from "./ControlBar.jsx";
 import ContentList from "./ContentList.jsx";
 import ErrorDisplayer from "./ErrorDisplayer.jsx";
-import PlayerKnobsManager from "./PlayerKnobs.jsx";
 import LogDisplayer from "./LogDisplayer.jsx";
 import ChartsManager from "./charts/index.jsx";
+import PlayerKnobsManager from "./PlayerKnobs.jsx";
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
@@ -19,8 +19,9 @@ class Player extends React.Component {
     this.state = {
       player: null,
       displaySpinner: false,
+      displaySettings: false,
+      isStopped: true,
     };
-
   }
 
   componentDidMount() {
@@ -32,9 +33,16 @@ class Player extends React.Component {
     this._$destroySubject = new Subject();
     this._$destroySubject.subscribe(() => player.destroy());
 
-    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading")
+    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isStopped")
       .pipe(takeUntil(this._$destroySubject))
-      .subscribe(([isSeeking, isBuffering, isLoading, isReloading]) => {
+      .subscribe(([
+        isSeeking,
+        isBuffering,
+        isLoading,
+        isReloading,
+        isStopped,
+      ]) => {
+        this.setState({ isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
         } else if (isSeeking || isBuffering) {
@@ -84,9 +92,16 @@ class Player extends React.Component {
   }
 
   render() {
-    const { player, displaySpinner } = this.state;
+    const { player, displaySpinner, isStopped } = this.state;
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
+
+    const closeSettings = () => {
+      this.setState({ displaySettings: false });
+    };
+    const toggleSettings = () => {
+      this.setState({ displaySettings: !this.state.displaySettings });
+    };
 
     return (
       <section className="video-player-section">
@@ -94,28 +109,38 @@ class Player extends React.Component {
           <ContentList
             loadVideo={loadVideo}
             stopVideo={stopVideo}
+            isStopped={isStopped}
           />
           <div
             className="video-player-wrapper"
             ref={element => this.playerWrapperElement = element }
           >
-            <div
-              className="video-wrapper"
-              onClick={() => this.onVideoClick()}
-            >
-              <ErrorDisplayer player={player} />
-              { displaySpinner ?
-                <img
-                  src="./assets/spinner.gif"r
-                  className="video-player-spinner"
-                /> : null
-              }
+            <div className="video-screen-parent">
               <div
-                className="text-track"
-                ref={element => this.textTrackElement = element }
-              />
-              <video
-                ref={element => this.videoElement = element }
+                className="video-screen"
+                onClick={() => this.onVideoClick()}
+              >
+                <ErrorDisplayer player={player} />
+                {
+                  displaySpinner ?
+                    <img
+                      src="./assets/spinner.gif"
+                      className="video-player-spinner"
+                    /> :
+                    null
+                }
+                <div
+                  className="text-track"
+                  ref={element => this.textTrackElement = element }
+                />
+                <video ref={element => this.videoElement = element }/>
+
+              </div>
+
+              <PlayerKnobsManager
+                close={closeSettings}
+                shouldDisplay={this.state.displaySettings}
+                player={player}
               />
             </div>
             {
@@ -123,9 +148,9 @@ class Player extends React.Component {
                 <ControlBar
                   player={player}
                   videoElement={this.playerWrapperElement}
+                  toggleSettings={toggleSettings}
                 /> : null}
           </div>
-          {player ?  <PlayerKnobsManager player={player} /> : null}
           {player ?  <ChartsManager player={player} /> : null }
           {player ?  <LogDisplayer player={player} /> : null}
         </div>

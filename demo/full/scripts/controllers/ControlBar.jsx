@@ -1,26 +1,27 @@
 import React from "react";
 import withModulesState from "../lib/withModulesState.jsx";
+import Button from "../components/Button.jsx";
 import PositionInfos from "../components/PositionInfos.jsx";
 import LivePosition from "../components/LivePosition.jsx";
-// import SettingsButton from "./SettingsButton.jsx";
 import PlayPauseButton from "./PlayPauseButton.jsx";
 import FullscreenButton from "./FullScreenButton.jsx";
 import Progressbar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
 import VolumeBar from "./VolumeBar.jsx";
 
-const ControlBar = ({
-  currentTime,
-  duration,
-  isContentLoaded,
-  isLive,
+function ControlBar({
   player,
   videoElement,
-}) => {
-  const displayProgressBar = isContentLoaded;
+  isContentLoaded,
+  isLive,
+  currentTime,
+  duration,
+  toggleSettings,
+}) {
+  const shouldDisplayProgressBar = isContentLoaded;
 
   let positionElement;
-  if (!displayProgressBar) {
+  if (!shouldDisplayProgressBar) {
     positionElement = null;
   } else if (isLive) {
     positionElement = <LivePosition />;
@@ -31,11 +32,13 @@ const ControlBar = ({
     />;
   }
 
+  const onClickSettings = () => {
+    toggleSettings();
+  };
+
   return (
     <div className="controls-bar-container">
-      { (!displayProgressBar) ?
-        null : <Progressbar player={player} />
-      }
+      { (!shouldDisplayProgressBar) ? null : <Progressbar player={player} /> }
       <div className="controls-bar">
         <PlayPauseButton
           className={"control-button"}
@@ -43,6 +46,14 @@ const ControlBar = ({
         />
         { positionElement }
         <div className="controls-right-side">
+          <div>
+            <Button
+              disabled={!isContentLoaded}
+              className='control-button'
+              onClick={onClickSettings}
+              value={String.fromCharCode(0xf013)}
+            />
+          </div>
           <div className="volume">
             <VolumeButton
               className="control-button"
@@ -62,13 +73,13 @@ const ControlBar = ({
       </div>
     </div>
   );
-};
+}
 
 export default withModulesState({
   player: {
-    currentTime: "currentTime",
-    duration: "duration",
     isContentLoaded: "isContentLoaded",
     isLive: "isLive",
+    currentTime: "currentTime",
+    duration: "duration",
   },
 })(ControlBar);

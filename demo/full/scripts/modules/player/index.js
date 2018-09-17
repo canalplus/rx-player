@@ -51,7 +51,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     loadedVideo: null,
     minimumPosition: undefined,
     maximumPosition: undefined,
-    speed: 0,
+    playbackRate: player.getPlaybackRate(),
     subtitle: undefined,
     videoBitrateAuto: true,
     videoBitrate: undefined,
@@ -151,6 +151,13 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     DISABLE_SUBTITLES_TRACK: () => {
       player.disableTextTrack();
+    },
+
+    SET_PLAYBACK_RATE: (rate) => {
+      player.setPlaybackRate(rate);
+      state.set({
+        playbackRate: rate,
+      });
     },
   };
 };
