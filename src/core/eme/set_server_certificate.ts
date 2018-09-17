@@ -16,20 +16,21 @@
 
 import {
   defer as observableDefer,
+  EMPTY,
   Observable,
   of as observableOf,
-  Subject,
 } from "rxjs";
 import {
   catchError,
+  ignoreElements,
   mapTo,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
 import {
   EncryptedMediaError,
-  ICustomError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
+import { IEMEWarningEvent } from "./types";
 
 type TypedArray =
   Int8Array |
@@ -71,25 +72,25 @@ function setServerCertificate(
 }
 
 /**
- * Call the setCertificate API. If it fails just emit the error through the
- * errorStream and complete.
+ * Call the setCertificate API. If it fails just emit the error as warning
+ * and complete.
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
  * @returns {Observable}
  */
 export default function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : ArrayBuffer|TypedArray,
-  errorStream: Subject<Error|ICustomError>
-) : Observable<null> {
+  serverCertificate : ArrayBuffer|TypedArray
+) : Observable<IEMEWarningEvent> {
   return typeof mediaKeys.setServerCertificate === "function" ?
     setServerCertificate(mediaKeys, serverCertificate)
-      .pipe(catchError(error => {
-        error.fatal = false;
-        errorStream.next(error);
-        return observableOf(null);
-      })) :
-    observableOf(null);
+      .pipe(
+        ignoreElements(),
+        catchError(error => {
+          error.fatal = false;
+          return observableOf({ type: "warning" as "warning", value: error });
+        })) :
+    EMPTY;
 }
 
 export {

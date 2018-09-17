@@ -111,9 +111,11 @@ This property is an array of objects with the following properties (only
          specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
 
       This function should return either synchronously the license, or a Promise
-      which:
-      - resolves if the license was fetched, with the licence in argument
-      - reject if an error was encountered
+      which should either:
+        - resolves if the license was fetched, with the licence in argument
+        - resolve with ``null`` if you do not want to set a license for this
+          `message` event
+        - reject if an error was encountered
 
       In any case, the license provided by this function should be of a
       ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
@@ -159,12 +161,34 @@ This property is an array of objects with the following properties (only
   - ``onKeyStatusesChange``: (``Function|undefined``): Not needed for most
     usecases. Triggered each time the key statuses of the current session
     changes, except for the following statuses (which throws immediately):
-    ``expired`` and ``internal-error``. Takes 2 arguments:
+      - ``expired`` if (and only if) `throwOnLicenseExpiration` is not set to
+        `false`
+      - `internal-error`
+
+    Takes 2 arguments:
     1. The keystatuseschange event ``{Event}``
     2. The session associated with the event ``{MediaKeySession}``
 
     Like ``getLicense``, this function should return a promise which emit a
-    license when resolved.
+    license or `null` (for no license) when resolved.
+
+  - ``throwOnLicenseExpiration`` (``Boolean|undefined``): `true` by default.
+
+    If set to `true` or not set, the playback will be interrupted as soon as one
+    of the current licenses expires. In that situation, you will be warned with
+    an [``error`` event](./errors.md) with, as a payload, an error with the code
+    `KEY_STATUS_CHANGE_ERROR`.
+
+    If set to `false`, the playback of the current content will not be
+    interrupted even if one of the current licenses is expired. It might however
+    stop decoding in that situation.
+    In that case, it's up to you to update the problematic license, usually
+    through the usual `getLicense` callback.
+
+    You may want to set this value to `false` if a session expiration leads to
+    a license renewal.
+    In that case, content may continue to play once the license has been
+    updated. 
 
   - ``closeSessionsOnStop`` (``Boolean|undefined``): If set to ``true``, the
     ``MediaKeySession`` created for a content will be immediately closed when the
@@ -175,6 +199,7 @@ This property is an array of objects with the following properties (only
     same content needs to be re-decrypted.
 
 #### Example
+
 Example of a simple DRM configuration for widevine and playready DRMs:
 ```js
 player.loadVideo({

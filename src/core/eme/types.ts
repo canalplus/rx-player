@@ -20,8 +20,15 @@ import {
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
 } from "../../compat";
+import { ICustomError } from "../../errors";
 import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
+
+// A minor error happened
+export interface IEMEWarningEvent {
+  type : "warning";
+  value : ICustomError|Error;
+}
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
@@ -77,17 +84,18 @@ export interface IKeySystemOption {
     => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
+  throwOnLicenseExpiration? : boolean;
 }
 
 // Keys are the different key statuses possible.
 // Values are ``true`` if such key status defines an error
 /* tslint:disable no-object-literal-type-assertion */
 export const KEY_STATUS_ERRORS = {
-  expired: true,
   "internal-error": true,
-   // "released",
-   // "output-restricted",
-   // "output-downscaled",
-   // "status-pending",
+  expired: false,
+  released: false,
+  "output-restricted": false,
+  "output-downscaled": false,
+  "status-pending": false,
 } as Partial<Record<string, boolean>>;
 /* tslint:enable no-object-literal-type-assertion */
