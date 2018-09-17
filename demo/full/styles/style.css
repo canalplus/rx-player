@@ -452,7 +452,7 @@ body {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  background-color: rgba(0,0,0);
+  background-color: #000000;
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 200ms;
@@ -580,8 +580,7 @@ body {
 
 .autoplay-checkbox {
   margin: 5px;
-  /* border: 1px solid #a9a9a9; */
-  padding: 9px 8px 9px 8px;
+  text-align: center;
   font-style: italic;
   font-size: 0.9rem;
   display: flex;
@@ -669,6 +668,35 @@ body {
 }
 
 @media only screen and (max-width: 500px) {
+  .title-logo {
+    display: none;
+  }
+}
+
+/* for IE10 & IE11 */
+@media all and (-ms-high-contrast: none) {
+  .player-knobs {
+    opacity: 0;
+    background-color: #000000;
+  }
+  .player-knobs.fade-in-out {
+    opacity: 1;
+    background-color: #000000;
+  }
+  .black-knob select {
+    background-image: none;
+    padding: 3px 3px 3px 3px;
+  }
+  .white-select select {
+    background-image: none;
+    padding: 10px 15px 10px 15px;
+  }
+  .content-choice select {
+    width: auto;
+  }
+  .position-infos {
+    margin: 15px auto;
+  }
   .title-logo {
     display: none;
   }
