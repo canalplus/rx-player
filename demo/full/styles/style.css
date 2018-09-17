@@ -506,6 +506,11 @@ body {
   flex: 1;
 }
 
+.knob-value {
+  display: inline-block;
+  flex: 1;
+}
+
 .black-knob select {
   /* styling */
   background-color: #000;
@@ -526,24 +531,19 @@ body {
   background-position: calc(100% - 8px) 50%;
 }
 
-.black-knob select:disabled {
-  -moz-appearance:none;
-  -webkit-appearance:none;
-  appearance:none;
-  background-image: none;
-}
-
-.knob-value {
-  display: inline-block;
-  flex: 1;
-}
-
 .knob-value > select {
   width: 100%;
   border: 0;
   outline: 0;
   background-color: rgba(0,0,0);
   color: rgb(240,240,240);
+}
+
+.black-knob select:disabled {
+  -moz-appearance:none;
+  -webkit-appearance:none;
+  appearance:none;
+  background-image: none;
 }
 
 .knob-value > select:disabled {
