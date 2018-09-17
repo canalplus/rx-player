@@ -23,11 +23,11 @@ export default ({
   );
 
   const selectEl = disabled ? (
-    <select value={selected != null ? selected : 0} disabled="disabled" onChange={onChange}>
+    <select value={selected} disabled="disabled" onChange={onChange}>
       {optionsEl}
     </select>
   ) : (
-    <select value={selected != null ? selected : 0} onChange={onChange}>
+    <select value={selected} onChange={onChange}>
       {optionsEl}
     </select>
   );
