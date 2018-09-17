@@ -24,12 +24,23 @@ import {
   catchError,
   mapTo,
 } from "rxjs/operators";
-import { IMockMediaKeys } from "../../compat";
+import { ICustomMediaKeys } from "../../compat";
 import {
   EncryptedMediaError,
   ICustomError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
+
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
 
 /**
  * Call the setServerCertificate API with the given certificate.
@@ -46,12 +57,12 @@ import castToObservable from "../../utils/castToObservable";
  * @returns {Observable}
  */
 function setServerCertificate(
-  mediaKeys : IMockMediaKeys|MediaKeys,
+  mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
 ) : Observable<null> {
   return observableDefer(() => {
     return castToObservable(
-      mediaKeys.setServerCertificate(serverCertificate)
+      (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
     ).pipe(catchError((error) => {
       throw new
       EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
@@ -67,7 +78,7 @@ function setServerCertificate(
  * @returns {Observable}
  */
 export default function trySettingServerCertificate(
-  mediaKeys : IMockMediaKeys|MediaKeys,
+  mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray,
   errorStream: Subject<Error|ICustomError>
 ) : Observable<null> {

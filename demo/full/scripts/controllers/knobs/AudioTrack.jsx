@@ -11,6 +11,7 @@ const findLanguageIndex = (language, languages) => {
 
 const AudioTrackKnobBase = ({
   player,
+  className,
   currentLanguage,
   availableLanguages = [],
 }) => {
@@ -42,6 +43,7 @@ const AudioTrackKnobBase = ({
   return (
     <Knob
       name="Audio Language"
+      className={className}
       disabled={availableLanguages.length < 2}
       onChange={onLanguageChange}
       options={options}

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { ICompatVTTCue } from "../../../../compat";
 import features from "../../../../features";
 import log from "../../../../log";
 
@@ -31,7 +32,7 @@ export default function parseTextTrackToCues(
   data : string,
   timestampOffset : number,
   language : string
-) : Array<VTTCue|TextTrackCue> {
+) : Array<ICompatVTTCue|TextTrackCue> {
   log.debug("finding parser for native text tracks:", type);
   const parser = features.nativeTextTracksParsers[type];
 

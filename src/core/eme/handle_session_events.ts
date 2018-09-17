@@ -31,7 +31,7 @@ import {
   takeUntil,
   timeout,
 } from "rxjs/operators";
-import { IMediaKeySession } from "../../compat";
+import { ICustomMediaKeySession } from "../../compat";
 import {
   onKeyError$,
   onKeyMessage$,
@@ -77,7 +77,7 @@ interface IMediaKeySessionEvents {
 export interface IMediaKeySessionHandledEvents {
   type : MediaKeyMessageType|"key-status-change";
   value : {
-    session : IMediaKeySession|MediaKeySession;
+    session : MediaKeySession|ICustomMediaKeySession;
     license: ILicense;
   };
 }
@@ -92,7 +92,7 @@ export interface IMediaKeySessionHandledEvents {
  * @returns {Observable}
  */
 export default function handleSessionEvents(
-  session: IMediaKeySession|MediaKeySession,
+  session: MediaKeySession|ICustomMediaKeySession,
   keySystem: IKeySystemOption,
   errorStream: Subject<Error|ICustomError>
 ) : Observable<IMediaKeySessionHandledEvents> {

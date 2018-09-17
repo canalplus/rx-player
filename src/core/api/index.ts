@@ -42,7 +42,7 @@ import {
   mergeMapTo,
   publish,
   share,
-  skipUntil,
+  skipWhile,
   startWith,
   switchMapTo,
   take,
@@ -847,10 +847,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           .pipe(
             // From the first reload onward, we enter another dynamic (below)
             takeUntil(reloading$),
-
-            // begin only post-LOADED states when the first "play" has been done
-            // (Either auto-play or user play). Else, stay as LOADED.
-            skipUntil(this._priv_playing$.pipe(filter(isPlaying => isPlaying)))
+            skipWhile(state => state === PLAYER_STATES.PAUSED)
           ),
 
         // when reloading

@@ -15,24 +15,25 @@
  */
 
 import {
-  IMediaKeySession,
-  IMediaKeySystemAccess,
-  IMockMediaKeys,
+  ICompatMediaKeySystemAccess,
+  ICustomMediaKeys,
+  ICustomMediaKeySession,
+  ICustomMediaKeySystemAccess,
 } from "../../compat";
 import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
-  keySystemAccess: IMediaKeySystemAccess;
+  keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
 }
 
 // Infos identyfing a single MediaKey
 export interface IMediaKeysInfos {
-  mediaKeySystemAccess: IMediaKeySystemAccess;
+  mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption; // options set by the user
-  mediaKeys : MediaKeys|IMockMediaKeys;
+  mediaKeys : MediaKeys|ICustomMediaKeys;
   sessionsStore : SessionsStore;
   sessionStorage : PersistedSessionsStore|null;
 }
@@ -72,7 +73,7 @@ export interface IKeySystemOption {
   persistentStateRequired? : boolean;
   distinctiveIdentifierRequired? : boolean;
   closeSessionsOnStop? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : IMediaKeySession|MediaKeySession)
+  onKeyStatusesChange? : (evt : Event, session : MediaKeySession|ICustomMediaKeySession)
     => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;

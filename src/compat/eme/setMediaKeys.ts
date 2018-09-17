@@ -21,7 +21,7 @@ import {
 import { mapTo } from "rxjs/operators";
 import castToObservable from "../../utils/castToObservable";
 import {
-  IMockMediaKeys,
+  ICustomMediaKeys,
   MockMediaKeys,
 } from "./MediaKeys";
 
@@ -33,7 +33,7 @@ import {
  */
 function _setMediaKeys(
   elt : HTMLMediaElement,
-  mediaKeys : MediaKeys|IMockMediaKeys|null
+  mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : any {
   if (mediaKeys instanceof MockMediaKeys) {
     return mediaKeys._setVideo(elt);
@@ -69,7 +69,7 @@ function _setMediaKeys(
  */
 export default function setMediaKeys$(
   elt : HTMLMediaElement,
-  mediaKeys : MediaKeys|IMockMediaKeys|null
+  mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : Observable<null> {
   return observableDefer(() =>
     castToObservable(_setMediaKeys(elt, mediaKeys))

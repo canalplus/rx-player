@@ -19,7 +19,10 @@
  * It always should be imported through the `features` object.
  */
 
-import { addTextTrack } from "../../../../compat";
+import {
+  addTextTrack,
+  ICompatTextTrack,
+} from "../../../../compat";
 import log from "../../../../log";
 import AbstractSourceBuffer, {
   ICustomSourceBuffer,
@@ -46,7 +49,7 @@ export default class NativeTextTrackSourceBuffer
   implements ICustomSourceBuffer<INativeTextTrackData>
 {
   private readonly _videoElement : HTMLMediaElement;
-  private readonly _track : TextTrack;
+  private readonly _track : ICompatTextTrack;
   private readonly _trackElement? : HTMLTrackElement;
 
   /**

@@ -8,6 +8,7 @@ const findVideoTrackIndex = (track, tracks) => {
 
 const VideoTrackKnobBase = ({
   player,
+  className,
   availableVideoTracks = [],
   currentVideoTrack,
 }) => {
@@ -35,6 +36,7 @@ const VideoTrackKnobBase = ({
   return (
     <Knob
       name="Video Track"
+      className={className}
       disabled={availableVideoTracks.length < 2}
       onChange={onTrackChange}
       options={options}

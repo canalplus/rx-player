@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
+import {
+  ICompatDocument,
+  ICompatElement,
+} from "./constants";
+
 /**
  * Request fullScreen action on a given element.
  * @param {HTMLElement} elt
  * rs-detect)
  */
-function requestFullscreen(elt : HTMLMediaElement) : void {
+function requestFullscreen(element : HTMLMediaElement) : void {
   if (!isFullscreen()) {
+    const elt = element as ICompatElement;
     if (elt.requestFullscreen) {
       elt.requestFullscreen();
     } else if (elt.msRequestFullscreen) {
@@ -40,14 +46,15 @@ function requestFullscreen(elt : HTMLMediaElement) : void {
  */
 function exitFullscreen() : void {
   if (isFullscreen()) {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
+    const doc = document as ICompatDocument;
+    if (doc.exitFullscreen) {
+      doc.exitFullscreen();
+    } else if (doc.msExitFullscreen) {
+      doc.msExitFullscreen();
+    } else if (doc.mozCancelFullScreen) {
+      doc.mozCancelFullScreen();
+    } else if (doc.webkitExitFullscreen) {
+      doc.webkitExitFullscreen();
     }
   }
 }
@@ -59,11 +66,12 @@ function exitFullscreen() : void {
  * @returns {boolean}
  */
 function isFullscreen() : boolean {
+  const doc = document as ICompatDocument;
   return !!(
-    document.fullscreenElement ||
-    document.mozFullScreenElement ||
-    document.webkitFullscreenElement ||
-    document.msFullscreenElement
+    doc.fullscreenElement ||
+    doc.mozFullScreenElement ||
+    doc.webkitFullscreenElement ||
+    doc.msFullscreenElement
   );
 }
 

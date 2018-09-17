@@ -4,6 +4,7 @@ import Knob from "../../components/Knob.jsx";
 
 const VideoBitrateKnobBase = ({
   player,
+  className,
   videoBitrateAuto,
   videoBitrate,
   availableVideoBitrates = [],
@@ -39,6 +40,7 @@ const VideoBitrateKnobBase = ({
   return (
     <Knob
       name="Video Bitrate"
+      className={className}
       disabled={availableVideoBitrates.length < 2}
       onChange={onVideoBitrateChange}
       options={options}

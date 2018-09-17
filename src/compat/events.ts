@@ -39,9 +39,11 @@ import log from "../log";
 import { IEventEmitter } from "../utils/eventemitter";
 
 import {
-  BROWSER_PREFIXES,
   HTMLElement_,
+  ICompatDocument,
 } from "./constants";
+
+const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
 const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
 const pixelRatio = window.devicePixelRatio || 1;
@@ -152,13 +154,15 @@ function compatibleListener<T extends Event>(
  */
 function visibilityChange() : Observable<boolean> {
   let prefix;
-  if (document.hidden != null) {
+
+  const doc = document as ICompatDocument;
+  if (doc.hidden != null) {
     prefix = "";
-  } else if (document.mozHidden != null) {
+  } else if (doc.mozHidden != null) {
     prefix = "moz";
-  } else if (document.msHidden != null) {
+  } else if (doc.msHidden != null) {
     prefix = "ms";
-  } else if (document.webkitHidden != null) {
+  } else if (doc.webkitHidden != null) {
     prefix = "webkit";
   }
 

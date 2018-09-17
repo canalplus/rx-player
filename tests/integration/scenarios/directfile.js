@@ -15,11 +15,13 @@
  */
 
 import { expect } from "chai";
+
 import RxPlayer from "../../../src";
+
 import sleep from "../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
 
-const WebMFile = require("arraybuffer-loader!../mocks/fixtures/directfile/Schlossbergbahn.webm.480p.webm");
+const WebMFile = require("arraybuffer-loader!../contents/DirectFile.webm");
 
 describe("basic playback use cases: direct file", function () {
   let player;
@@ -186,4 +188,3 @@ describe("basic playback use cases: direct file", function () {
     expect(player.getPlayerState()).to.equal("PAUSED");
   });
 });
-
