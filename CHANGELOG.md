@@ -1,5 +1,36 @@
 # Changelog
 
+# v3.7.0 (Unreleased)
+
+## Features
+
+  - eme: add ``throwOnLicenseExpiration`` boolean to ``keySystems``  (``loadVideo`` option) to allow better expiration management
+  - eme: in the ``getLicense`` property of ``keySystems``  (``loadVideo`` option), it is now possible to resolve with ``null`` to avoid a license update.
+  - eme: in the ``onKeyStatusChange`` property of ``keySystems``  (``loadVideo`` option), it is now possible to resolve with ``null`` to avoid a license update.
+
+## Deprecated
+
+  - smooth: giving a WSX URL instead of the Manifest URL for a smooth content is now deprecated.
+  - smooth: giving a _publishing point definition_ URL (.isml) instead of the Manifest URL for a smooth content is now deprecated.
+  - smooth: giving a _Smooth Streaming server manifest_ URL (.ism) instead of the Manifest URL for a smooth content is now deprecated.
+
+## Bug fixes
+
+  - api: switch state to "ENDED" if seeking to the end while the player is in the "LOADED" state.
+  - api: switch state to "SEEKING" if seeking in the content while the player is in the "LOADED" state.
+  - dash: consider multiple `Role` nodes for an AdaptationSet.
+  - typescript: fix typings error when an application build us without the ``skipLibCheck`` TypeScript option enabled.
+  - smooth: fix Manifest URL generation when a ".ism" or a ".isml" URL is given.
+  - doc: document deprecation of the ``adaptations`` property returned from a ``Manifest`` object (as returned from the ``getManifest`` method).
+
+## Other improvements
+
+  - doc: add quick start tutorial.
+  - demo: add possibility to play encrypted contents.
+  - demo: update demo page.
+  - tests: consolidate our integration tests.
+
+
 ## v3.6.1 (2018/09/03)
 
 ### Bug fixes
