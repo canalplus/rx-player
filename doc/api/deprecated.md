@@ -153,6 +153,7 @@ function exitFullscreen() {
 ```
 
 
+
 ## RxPlayer Events #############################################################
 
 The following RxPlayer events has been deprecated.
@@ -190,3 +191,36 @@ mediaElement.addEventListener("fullscreenChange", () => {
   }
 });
 ```
+
+
+
+## Other properties ############################################################
+
+Some very specific properties from various methods are deprecated.
+You will find them here.
+
+
+### Manifest ###################################################################
+
+The ``adaptations`` property returned by the ``Manifest`` object you can obtain
+through the ``getManifest`` call is deprecated.
+
+This corresponds to the ``adaptations`` property of the first element in the
+``periods`` object from the same ``Manifest`` object, so it's very easy to
+replace:
+```js
+const manifest = player.getManifest();
+
+if (manifest && manifest.periods.length) {
+  console.log(manifest.adaptations === manifest.periods[0]); // true
+}
+```
+
+
+### Smooth #####################################################################
+
+Setting a *.wsx or *.isml URL as an ``url`` property in ``loadVideo`` is now
+deprecated when we're talking about a Smooth Streaming content.
+
+We recommend to only set a Manifest URL in that property when the transport is
+equal to `smooth`.
