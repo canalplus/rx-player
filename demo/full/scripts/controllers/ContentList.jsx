@@ -1,4 +1,5 @@
 import React from "react";
+import parseDRMConfigurations from "../lib/drm.js";
 import Button from "../components/Button.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
@@ -19,69 +20,6 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   );
   return acc;
 }, {});
-
-function parseDRMConfigurations(drmConfigurations) {
-  return Promise.all(drmConfigurations.map(drmConfig => {
-    const { licenseServerUrl, serverCertificateUrl, drm } = drmConfig;
-
-    if (!licenseServerUrl) {
-      return ;
-    }
-
-    const keySystem = {
-      type: drm.toLowerCase(),
-      getLicense: generateGetLicense(licenseServerUrl),
-    };
-
-    if (!serverCertificateUrl) {
-      return keySystem;
-    }
-
-    return getServerCertificate(serverCertificateUrl)
-      .then((serverCertificate) => {
-        keySystem.serverCertificate = serverCertificate;
-        return keySystem;
-      });
-  })).then(keySystems => {
-    return keySystems.filter(ks => ks);
-  });
-}
-
-function getServerCertificate(url) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.responseType = "arraybuffer";
-    xhr.onload = (evt) => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        const serverCertificate = evt.target.response;
-        resolve(serverCertificate);
-      } else {
-        reject();
-      }
-    };
-    xhr.send();
-  });
-}
-
-function generateGetLicense(licenseServerUrl) {
-  return (challenge) => {
-    const xhr = new XMLHttpRequest();
-    xhr.responseType = "arraybuffer";
-    xhr.open("POST", licenseServerUrl, true);
-    return new Promise((resolve, reject) => {
-      xhr.onload = (evt) => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const license = evt.target.response;
-          resolve(license);
-        } else {
-          reject();
-        }
-      };
-      xhr.send(challenge);
-    });
-  };
-}
 
 class ContentList extends React.Component {
   constructor(...args) {
