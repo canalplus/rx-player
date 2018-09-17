@@ -183,7 +183,8 @@ class ContentList extends React.Component {
   }
 
   onDRMChange(evt) {
-    this.setState({ drm: evt.target.value });
+    const index = evt.target.value;
+    this.setState({ drm: DRM_TYPES[index] });
   }
 
   onDisplayDRMSettings(evt) {
