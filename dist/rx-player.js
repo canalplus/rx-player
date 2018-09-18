@@ -6394,9 +6394,9 @@ object-assign
                 }));
             })), sessionUpdates = Object(merge.a)(keyMessages$, keyStatusesChanges).pipe(Object(concatMap.a)(function(evt) {
                 if ("warning" === evt.type) return Object(of.a)(evt);
-                log.a.debug("eme: update session", evt);
                 var license = evt.value.license;
-                return null == license ? empty.a : Object(castToObservable.a)(session.update(license)).pipe(Object(catchError.a)(function(error) {
+                return null == license ? (log.a.info("EME: no license given, skipping session.update"), 
+                empty.a) : (log.a.debug("eme: update session", evt), Object(castToObservable.a)(session.update(license)).pipe(Object(catchError.a)(function(error) {
                     throw new EncryptedMediaError.a("KEY_UPDATE_ERROR", error, !0);
                 }), Object(mapTo.a)({
                     type: evt.type,
@@ -6404,7 +6404,7 @@ object-assign
                         session: session,
                         license: license
                     }
-                }));
+                })));
             })), sessionEvents = Object(merge.a)(sessionUpdates, keyErrors, sessionWarningSubject$);
             return session.closed ? sessionEvents.pipe(Object(takeUntil.a)(Object(castToObservable.a)(session.closed))) : sessionEvents;
         }
