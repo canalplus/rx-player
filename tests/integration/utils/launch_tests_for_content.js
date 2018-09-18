@@ -1781,7 +1781,7 @@ export default function launchTestsForContent(
     describe("setWantedBufferAhead", () => {
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function() {
-        this.timeout(3000);
+        this.timeout(5000);
         mockRequests(fakeServer, URLs);
         fakeServer.autoRespond = true;
 
@@ -1834,7 +1834,7 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
-        await sleep(500);
+        await sleep(1500);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(2);
         expect(buffered.start(1)).to.be.at.most(10 + 20 + 10 + 10);
