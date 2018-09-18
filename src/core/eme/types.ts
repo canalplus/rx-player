@@ -73,7 +73,7 @@ type TypedArray =
 export interface IKeySystemOption {
   type : string;
   getLicense : (message : Uint8Array, messageType : string)
-    => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
+    => Promise<TypedArray|ArrayBuffer|null>|TypedArray|ArrayBuffer|null;
   serverCertificate? : ArrayBuffer|TypedArray;
   persistentLicense? : boolean;
   licenseStorage? : IPersistedSessionStorage;
@@ -81,7 +81,7 @@ export interface IKeySystemOption {
   distinctiveIdentifierRequired? : boolean;
   closeSessionsOnStop? : boolean;
   onKeyStatusesChange? : (evt : Event, session : MediaKeySession|ICustomMediaKeySession)
-    => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
+    => Promise<TypedArray|ArrayBuffer|null>|TypedArray|ArrayBuffer|null;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
   throwOnLicenseExpiration? : boolean;

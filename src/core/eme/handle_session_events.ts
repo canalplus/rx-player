@@ -73,7 +73,7 @@ export type ILicense =
 interface IMediaKeySessionEvents {
   type: MediaKeyMessageType|"key-status-change";
   value: {
-    license: ILicense;
+    license: ILicense|null;
   };
 }
 
@@ -170,7 +170,7 @@ export default function handleSessionEvents(
           return keySystem && keySystem.onKeyStatusesChange ?
             castToObservable(
               keySystem.onKeyStatusesChange(keyStatusesEvent, session)
-            ) as Observable<TypedArray|ArrayBuffer> : EMPTY;
+            ) as Observable<TypedArray|ArrayBuffer|null> : EMPTY;
         }).pipe() // TS or RxJS Bug?
           .pipe(
             catchError((error: Error) => {
@@ -205,15 +205,13 @@ export default function handleSessionEvents(
               error;
           })
         );
-      }) as Observable<TypedArray|ArrayBuffer>;
+      }) as Observable<TypedArray|ArrayBuffer|null>;
 
       return retryObsWithBackoff(getLicense$, getLicenseRetryOptions)
         .pipe(map((license) => {
           return {
             type: messageType,
-            value: {
-              license,
-            },
+            value: { license },
           };
         }));
     }));
