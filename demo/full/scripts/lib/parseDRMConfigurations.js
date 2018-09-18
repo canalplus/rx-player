@@ -64,7 +64,6 @@ function generateGetLicense(licenseServerUrl, drmType) {
     const challenge =  isPlayready ?
       formatPlayreadyChallenge(rawChallenge) : rawChallenge;
     const xhr = new XMLHttpRequest();
-    xhr.responseType = "arraybuffer";
     xhr.open("POST", licenseServerUrl, true);
     return new Promise((resolve, reject) => {
       xhr.onload = (evt) => {
@@ -77,11 +76,12 @@ function generateGetLicense(licenseServerUrl, drmType) {
       };
       if (isPlayready) {
         xhr.setRequestHeader("content-type", "text/xml; charset=utf-8")
+      } else {
+        xhr.responseType = "arraybuffer";
       }
       xhr.send(challenge);
-    }).then(license => {
-      return isPlayready && typeof license === "string" ? strToBytes(license) : license
-    }
+    }).then(license =>
+      isPlayready && typeof license === "string" ? strToBytes(license) : license
     );
   };
 }
