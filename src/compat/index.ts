@@ -77,7 +77,8 @@ function isCodecSupported(codec : string) : boolean {
 }
 
 function isVTTCue(cue : ICompatVTTCue|TextTrackCue) : cue is ICompatVTTCue {
-  return cue instanceof (window as any).VTTCue;
+  return typeof (window as any).VTTCue === "function" &&
+    cue instanceof (window as any).VTTCue;
 }
 
 /**
