@@ -1758,7 +1758,7 @@ object-assign
             "function" != typeof _constants__WEBPACK_IMPORTED_MODULE_10__.c.isTypeSupported || _constants__WEBPACK_IMPORTED_MODULE_10__.c.isTypeSupported(codec));
         }
         function isVTTCue(cue) {
-            return cue instanceof window.VTTCue;
+            return "function" == typeof window.VTTCue && cue instanceof window.VTTCue;
         }
         /**
  * Returns true if the browser has the minimum needed EME APIs to decrypt a
