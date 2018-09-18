@@ -224,12 +224,14 @@ export default function handleSessionEvents(
             return observableOf(evt);
           }
 
-          log.debug("eme: update session", evt);
           const license = evt.value.license;
 
           if (license == null) {
+            log.info("EME: no license given, skipping session.update");
             return EMPTY;
           }
+
+          log.debug("eme: update session", evt);
           return castToObservable((session as any).update(license)).pipe(
             catchError((error) => {
               throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
