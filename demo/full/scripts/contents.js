@@ -25,6 +25,16 @@ export default [
     }],
   },
   {
+    "name": "Tears of Steal (DRM PlayReady)",
+    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-playready.ism/.mpd",
+    "transport": "dash",
+    "live": false,
+    "drmInfos": [{
+      "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
+      "drm": "playready",
+    }],
+  },
+  {
     "name": "DASH-IF - SegmentTemplate live stream",
     "url": "http://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/Manifest.mpd",
     "transport": "dash",

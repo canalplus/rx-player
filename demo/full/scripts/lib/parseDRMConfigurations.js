@@ -55,7 +55,7 @@ function formatPlayreadyChallenge(challenge) {
   const xml = match ?
     atob(match[1]) : /* IE11 / EDGE */
     bytesToStr(new Uint8Array(challenge)); // Chromecast
-  return xml.replace("<?xml version=\"1.0\" encoding=\"utf-8\"?>", "");
+  return xml;
 }
 
 function generateGetLicense(licenseServerUrl, drmType) {
@@ -75,6 +75,9 @@ function generateGetLicense(licenseServerUrl, drmType) {
           reject();
         }
       };
+      if (isPlayready) {
+        xhr.setRequestHeader("content-type", "text/xml; charset=utf-8")
+      }
       xhr.send(challenge);
     }).then(license => {
       return isPlayready && typeof license === "string" ? strToBytes(license) : license
