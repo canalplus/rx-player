@@ -283,33 +283,8 @@ Can be either one of those strings:
     content are not available. This state should be treated like the ``LOADING``
     state.
 
-
-State chart:
-
-```
-    +---------+
-    | STOPPED | <-------------------+
-    +---------+                     | stop() or "error" event
-       |                            |
-+------| loadVideo() ---------------------------------------------------------+
-|      |                           +---------------------+                    |
-|      V                           |                     |                    |
-|  +---------+     +--------+   play()   +---------+     |    +-------+       |
-|  | LOADING | --> | LOADED | -----|---> | PLAYING | ----|--> | ENDED |       |
-|  +---------+     +--------+  autoPlay  +---------+     |    +-------+       |
-|                    |             |         | ^         |                    |
-|      +---------+ <-+ seekTo()    |         | |         |                    |
-|      |         | <-------------- |  play() | | pause() |                    |
-|      | SEEKING |                 |         | |         |                    |
-|      |         |  -------------> |         | |         |                    |
-|      +---------+                 |         V |         |     +-----------+  |
-|        +-----------+             |     +--------+      | --> | RELOADING |  |
-|        | BUFFERING |  <--------> |     | PAUSED |      |     +-----------+  |
-|        +-----------+             |     +--------+      |       |            |
-|                                  |                     | <-----+            |
-|                                  +---------------------+                    |
-+-----------------------------------------------------------------------------+
-```
+As it is a central part of our API and can be difficult concept to understand,
+we have a special [page of documentation on player states](./states.md).
 
 #### Example
 ```js
