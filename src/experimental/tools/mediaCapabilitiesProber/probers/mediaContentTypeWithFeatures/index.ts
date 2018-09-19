@@ -48,7 +48,7 @@ function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
  */
 export default function probeTypeWithFeatures(
   config: IMediaConfiguration
-) : Promise<number> {
+) : Promise<[number]> {
   return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
     const keySystem = config.keySystem;
     const type = keySystem ? (keySystem.type || "org.w3.clearkey") : "org.w3.clearkey";
@@ -81,6 +81,6 @@ export default function probeTypeWithFeatures(
       }
     }
 
-    return formatSupport(result);
+    return [formatSupport(result)] as [number];
   });
 }

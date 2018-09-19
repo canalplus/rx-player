@@ -55,7 +55,7 @@ function isHDCPAPIAvailable(): Promise<void> {
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<number> {
+export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<[number]> {
   return isHDCPAPIAvailable().then(() => {
     if (config.hdcp) {
       const hdcp = "hdcp-" + config.hdcp;
@@ -75,9 +75,9 @@ export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<nu
             (mediaKeys as any).getStatusForPolicy(object)
               .then((result: IMediaKeyStatus) => {
                 if (result === "usable") {
-                  return 2;
+                  return [2];
                 } else {
-                  return 0;
+                  return [0];
                 }
               });
           });

@@ -15,9 +15,10 @@
  */
 
 import log from "../../log";
-import { IMediaConfiguration } from "../../types";
-
-import buildKeySystemConfigurations from "./buildKeySystemConfiguration";
+import {
+  ICompatibleKeySystem,
+  IMediaConfiguration
+} from "../../types";
 
 export interface IMediaKeySystemInfos {
   name: string;
@@ -28,23 +29,39 @@ export interface IMediaKeySystemInfos {
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeDRMInfos(config: IMediaConfiguration): Promise<number> {
+export default function probeDRMInfos(
+  mediaConfig: IMediaConfiguration
+): Promise<[number, ICompatibleKeySystem?]> {
   return new Promise((resolve) => {
     if (!("requestMediaKeySystemAccess" in navigator)) {
       log.warn("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
         "requestMediaKeySystemAccess not available");
       // In that case, the API lack means that no EME workflow may be started.
       // So, the DRM configuration is not supported.
-      resolve(0);
+      resolve([0]);
     }
-    const keySystem = config.keySystem;
+    const keySystem = mediaConfig.keySystem;
     if (keySystem) {
       if (keySystem.type) {
-        const configuration =
-          buildKeySystemConfigurations(keySystem.type, keySystem.configuration || {});
-        return navigator.requestMediaKeySystemAccess(keySystem.type, configuration)
-          .then(() => resolve(2))
-          .catch(() => resolve(0));
+        const type = keySystem.type;
+        const configuration = keySystem.configuration || {};
+        return navigator.requestMediaKeySystemAccess(type, [configuration])
+          .then((keySystemAccess) => {
+            const keySystemConfiguration = keySystemAccess.getConfiguration();
+            const result: ICompatibleKeySystem = {
+              type,
+              configuration: keySystemConfiguration,
+              compatibleConfiguration: keySystemConfiguration,
+            };
+            resolve([2, result]);
+          })
+          .catch(() => {
+            const result = {
+              type,
+              configuration,
+            };
+            resolve([0, result]);
+          });
       }
     }
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +

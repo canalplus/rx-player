@@ -16,8 +16,8 @@
 
 import log from "../log";
 import {
+  ICompatibleKeySystem,
   IDisplayConfiguration,
-  IDRMConfiguration,
   IMediaConfiguration,
 } from "../types";
 import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
@@ -63,8 +63,8 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "getStatusForPolicy",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      switch (result) {
+    return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
+      switch (globalStatusNumber) {
         case 0:
           return "NotSupported";
         case 1:
@@ -96,8 +96,8 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "decodingInfos",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      switch (result) {
+    return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
+      switch (globalStatusNumber) {
         case 0:
           return "NotSupported";
         case 1:
@@ -111,24 +111,44 @@ const mediaCapabilitiesProber = {
   },
 
   /**
-   * Tells if browser support deciphering with given drm type and configuration.
-   * @param {string} type
-   * @param {Object} drmConfig
+   * From an array of given configurations (type  and key system configuration), return
+   * supported ones.
+   * @param {Array.<Object>} configurations
    * @returns {Promise}
    */
-  isDRMSupported(
-    type: string,
-    drmConfig: IDRMConfiguration
-  ) : Promise<boolean> {
-    const config = {
-      keySystem: {
-        type,
-        configuration: drmConfig,
-      },
-    };
-    const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      return result === 2;
+  getCompatibleDRMConfigurations(
+    configurations: Array<{
+      type: string;
+      configuration: MediaKeySystemConfiguration;
+    }>
+  ) : Promise<ICompatibleKeySystem[]> {
+    const promises: Array<Promise<any>> = [];
+    configurations.forEach((configuration) => {
+      const globalConfig = {
+        keySystem: configuration,
+      };
+      const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
+      promises.push(probeMediaConfiguration(globalConfig, browserAPIS)
+        .then(({ globalStatusNumber, resultsFromAPIS }) => {
+          const requestMediaKeySystemAccessResults = resultsFromAPIS
+            .find((result) => result.APIName === "requestMediaKeySystemAccess");
+
+          if (
+            requestMediaKeySystemAccessResults == null ||
+            requestMediaKeySystemAccessResults.result == null
+          ) {
+            throw new Error();
+          }
+
+          return {
+            globalStatusNumber,
+            result: requestMediaKeySystemAccessResults.result,
+          };
+        }));
+    });
+    return Promise.all(promises).then((supportedConfigs) => {
+      return supportedConfigs
+        .map(({ result }) => result);
     });
   },
 
@@ -146,8 +166,8 @@ const mediaCapabilitiesProber = {
       "matchMedia",
       "isTypeSupportedWithFeatures",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      switch (result) {
+    return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
+      switch (globalStatusNumber) {
         case 0:
           return "NotSupported";
         case 1:

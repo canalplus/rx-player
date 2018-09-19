@@ -37,7 +37,7 @@ function isContentTypeAPISupported(): Promise<void> {
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeContentType(config: IMediaConfiguration): Promise<number> {
+export default function probeContentType(config: IMediaConfiguration): Promise<[number]> {
   return isContentTypeAPISupported().then(() => {
     const contentTypes: string[] = [];
     if (
@@ -60,6 +60,6 @@ export default function probeContentType(config: IMediaConfiguration): Promise<n
         const support = (window as any).MediaSource.isTypeSupported(val) ? 2 : 0;
         return Math.min(acc, support);
       }, 3);
-      return result;
+      return [result] as [number];
     });
 }

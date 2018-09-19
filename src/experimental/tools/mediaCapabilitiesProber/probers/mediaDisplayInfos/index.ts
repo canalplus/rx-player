@@ -36,7 +36,7 @@ function isMatchMediaAPIAvailable(): Promise<void> {
  */
 export default function probeMatchMedia(
   config: IMediaConfiguration
-): Promise<number> {
+): Promise<[number]> {
   return isMatchMediaAPIAvailable().then(() => {
     if (config.display) {
       const format = formatConfigFor_matchMedia_API;
@@ -48,7 +48,7 @@ export default function probeMatchMedia(
             "Bad arguments for calling matchMedia.");
         }
         const result = match.matches && match.media !== "not all" ? 2 : 0;
-        return result;
+        return [result] as [number];
       }
     }
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
