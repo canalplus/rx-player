@@ -261,30 +261,8 @@ content are not available. This state should be treated like the <code>LOADING</
 state.</p>
 </li>
 </ul>
-<p>State chart:</p>
-<pre><code>    +---------+
-    | STOPPED | &lt;-------------------+
-    +---------+                     | stop() or &quot;error&quot; event
-       |                            |
-+------| loadVideo() ---------------------------------------------------------+
-|      |                           +---------------------+                    |
-|      V                           |                     |                    |
-|  +---------+     +--------+   play()   +---------+     |    +-------+       |
-|  | LOADING | --&gt; | LOADED | -----|---&gt; | PLAYING | ----|--&gt; | ENDED |       |
-|  +---------+     +--------+  autoPlay  +---------+     |    +-------+       |
-|                    |             |         | ^         |                    |
-|      +---------+ &lt;-+ seekTo()    |         | |         |                    |
-|      |         | &lt;-------------- |  play() | | pause() |                    |
-|      | SEEKING |                 |         | |         |                    |
-|      |         |  -------------&gt; |         | |         |                    |
-|      +---------+                 |         V |         |     +-----------+  |
-|        +-----------+             |     +--------+      | --&gt; | RELOADING |  |
-|        | BUFFERING |  &lt;--------&gt; |     | PAUSED |      |     +-----------+  |
-|        +-----------+             |     +--------+      |       |            |
-|                                  |                     | &lt;-----+            |
-|                                  +---------------------+                    |
-+-----------------------------------------------------------------------------+
-</code></pre>
+<p>As it is a central part of our API and can be difficult concept to understand,
+we have a special <a href="states.html">page of documentation on player states</a>.</p>
 <h4>Example</h4>
 <pre><code class="language-js"><span class="hljs-keyword">switch</span> (player.getPlayerState()) {
   <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;STOPPED&quot;</span>:
