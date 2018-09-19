@@ -35,9 +35,9 @@ Today the player can have one of these 9 possible states:
 `STOPPED` is the default state of the player. It indicates that no content is
 playing.
 
-To simplify state exploitation, STOPPED is also emitted as a transition state
+To simplify state exploitation, `STOPPED` is also emitted as a transition state
 when loading a new content while another one was currently loaded (or loading).
-That way, you can just listen to the STOPPED state to know when the current
+That way, you can just listen to the `STOPPED` state to know when the current
 content is not loaded anymore.
 
 When the player encounters an [error](./errors.md), it will also stop and switch
@@ -147,7 +147,7 @@ not happen at random. There is actually possible state transitions (like from
 `STOPPED` to `LOADING`) and impossible ones (like from `LOADING` to `SEEKING`).
 
 We will list here every possible state transitions.
-_Note that we can never have the same state consecutively_
+_Note that we can never have two times the same state consecutively._
 
 From `STOPPED`:
 

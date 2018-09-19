@@ -48,9 +48,9 @@ rx-player, which is exactly the point of this page.</p>
 <h3>The STOPPED state</h3>
 <p><code>STOPPED</code> is the default state of the player. It indicates that no content is
 playing.</p>
-<p>To simplify state exploitation, STOPPED is also emitted as a transition state
+<p>To simplify state exploitation, <code>STOPPED</code> is also emitted as a transition state
 when loading a new content while another one was currently loaded (or loading).
-That way, you can just listen to the STOPPED state to know when the current
+That way, you can just listen to the <code>STOPPED</code> state to know when the current
 content is not loaded anymore.</p>
 <p>When the player encounters an <a href="errors.html">error</a>, it will also stop and switch
 to the <code>STOPPED</code> state.</p>
@@ -133,7 +133,7 @@ state  (see the &#x201C;Possible state transitions&#x201D; chapter for more info
 not happen at random. There is actually possible state transitions (like from
 <code>STOPPED</code> to <code>LOADING</code>) and impossible ones (like from <code>LOADING</code> to <code>SEEKING</code>).</p>
 <p>We will list here every possible state transitions.
-<em>Note that we can never have the same state consecutively</em></p>
+<em>Note that we can never have two times the same state consecutively.</em></p>
 <p>From <code>STOPPED</code>:</p>
 <ul>
 <li><code>LOADING</code>: a new content begin to load</li>
