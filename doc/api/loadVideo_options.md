@@ -112,8 +112,9 @@ This property is an array of objects with the following properties (only
          There is only 4 possible message types, all defined in [the w3c
          specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
 
-      This function should return either synchronously the license, or a Promise
-      which should either:
+      This function should return either synchronously the license, `null` to
+      not set a license for this `message` event or a Promise which should
+      either:
         - resolves if the license was fetched, with the licence in argument
         - resolve with ``null`` if you do not want to set a license for this
           `message` event
@@ -180,7 +181,9 @@ This property is an array of objects with the following properties (only
     updated.
 
   - ``onKeyStatusesChange``: (``Function|undefined``): Not needed for most
-    usecases. Triggered each time the key statuses of the current session
+    usecases.
+
+    Triggered each time the key statuses of the current session
     changes, except for the following statuses (which throws immediately):
       - ``expired`` if (and only if) `throwOnLicenseExpiration` is not set to
         `false`
@@ -191,7 +194,8 @@ This property is an array of objects with the following properties (only
     2. The session associated with the event ``{MediaKeySession}``
 
     Like ``getLicense``, this function should return a promise which emit a
-    license or `null` (for no license) when resolved.
+    license or `null` (for no license) when resolved. It can also return
+    directly the license or `null` if it can be done synchronously.
 
   - ``closeSessionsOnStop`` (``Boolean|undefined``): If set to ``true``, the
     ``MediaKeySession`` created for a content will be immediately closed when the
