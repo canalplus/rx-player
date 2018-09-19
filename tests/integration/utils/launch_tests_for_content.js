@@ -854,10 +854,10 @@ export default function launchTestsForContent(
 
         expect(player.getAvailableVideoBitrates()).to.eql([]);
 
-        await sleep(1);
+        await sleep(100);
         expect(player.getAvailableVideoBitrates()).to.eql([]);
         fakeServer.respond();
-        await sleep(1);
+        await sleep(100);
 
         expect(player.getAvailableVideoBitrates()).to.eql(videoBitrates);
       });
@@ -874,10 +874,10 @@ export default function launchTestsForContent(
 
         expect(player.getAvailableAudioBitrates()).to.eql([]);
 
-        await sleep(1);
+        await sleep(100);
         expect(player.getAvailableAudioBitrates()).to.eql([]);
         fakeServer.respond();
-        await sleep(1);
+        await sleep(100);
 
         expect(player.getAvailableAudioBitrates()).to.eql(audioBitrates);
       });
@@ -1170,7 +1170,7 @@ export default function launchTestsForContent(
           autoPlay: true,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.equal(0);
+        expect(player.getPosition()).to.be.below(0.01);
         player.seekTo(50);
         expect(player.getPosition()).to.be.closeTo(50, 0.5);
       });
@@ -1630,10 +1630,10 @@ export default function launchTestsForContent(
         });
         expect(player.getAvailableAudioTracks()).to.eql([]);
 
-        await sleep(1);
+        await sleep(100);
         expect(player.getAvailableAudioTracks()).to.eql([]);
         fakeServer.respond();
-        await sleep(1);
+        await sleep(100);
 
         const audioTracks = player.getAvailableAudioTracks();
 
@@ -1679,10 +1679,10 @@ export default function launchTestsForContent(
         });
         expect(player.getAvailableTextTracks()).to.eql([]);
 
-        await sleep(1);
+        await sleep(100);
         expect(player.getAvailableTextTracks()).to.eql([]);
         fakeServer.respond();
-        await sleep(1);
+        await sleep(100);
 
         const textTracks = player.getAvailableTextTracks();
 
@@ -1728,10 +1728,10 @@ export default function launchTestsForContent(
         });
         expect(player.getAvailableVideoTracks()).to.eql([]);
 
-        await sleep(1);
+        await sleep(100);
         expect(player.getAvailableVideoTracks()).to.eql([]);
         fakeServer.respond();
-        await sleep(1);
+        await sleep(100);
 
         const videoTracks = player.getAvailableVideoTracks();
 
