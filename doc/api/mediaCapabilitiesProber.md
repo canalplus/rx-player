@@ -97,38 +97,50 @@ mediaCapabilitiesProber.LogLevel = "NONE";
 ## Functions ###################################################################
 
 
-### isDRMSupported #############################################################
+### getCompatibleDRMConfigurations #############################################
 
 _arguments_:
 
-  - _type_ (``string``): DRM reverse domain name, identifying the keySystem in
+  - _configurations_ (``Array.<Object>``): An array of configuration that contains:
+    - _type_ (``string``): DRM reverse domain name, identifying the keySystem in
     the browser.
 
-  - _configuration_ (``Object|undefined``): MediaKeySystemConfiguration for this
+    - _configuration_ (``Object``): MediaKeySystemConfiguration for this
     key system as defined in [the EME w3c specification
     ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 
-_return value_: ``boolean``
+_return value_: ``Array.<Object>``
 
-Probe for DRM support. The returned boolean is:
-
-  - `true`: This DRM configuration is supported.
-
-  - `false`: The DRM configuration is not supported.
+For each given configuration, probe for support. The API returns the input
+elements, with the compatible configuration subset for each element, if
+configuration is supported.
 
 #### Example
 
 ```js
 import { mediaCapabilitiesProber } from "rx-player/experimental/tools";
 
-mediaCapabilitiesProber.isDRMSupported("com.widevine.alpha", {
+const configurations = [
+  { // Consider this as compatible
+    type: "com.widevine.alpha",
+    configuration, // w3c MediaKeySystemConfiguration
+  },
+  { // Consider this as not compatible
+    type: "com.microsoft.playready",
+    configuration, // w3c MediaKeySystemConfiguration
+  },
+];
+
+mediaCapabilitiesProber.getCompatibleDRMConfigurations("com.widevine.alpha", {
   persistentState: "required"
-}).then((hasWidevineWithPersistentState) => {
-  if (hasWidevineWithPersistentState) {
-    console.log("This DRM configuration is supported");
-  } else {
-    console.log("This DRM configuration is not supported");
-  }
+}).then((drmConfigurations) => {
+  configurations.forEach((drmConfigurations) => {
+    if (drmConfigurations.combatibleConfiguration != null) {
+      console.log("The configuration is supported", drmConfiguration);
+    } else {
+      console.log("The configuration is not supported", drmConfiguration);
+    }
+  });
 });
 ```
 
