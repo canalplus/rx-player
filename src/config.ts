@@ -633,32 +633,6 @@ export default {
   } as Partial<Record<string, string[]>>,
   /* tslint:enable no-object-literal-type-assertion */
 
-  const configurations = [
-      { // Consider this as compatible
-        type: "com.widevine.alpha",
-        configuration, // w3c MediaKeySystemConfiguration
-      },
-      { // Consider this as not compatible
-        type: "com.microsoft.playready",
-        configuration, // w3c MediaKeySystemConfiguration
-      },
-    ];
-
-  getCompatibleKeySystems().then((configurations) => {
-    console.log(configurations);
-    /**
-     * [
-     *  {
-     *    type: "",
-     *     
-     *  },
-     *  {
-     *    type: "",
-     *  },
-     * ]
-     */
-  });
-
   /**
    * Max simultaneous MediaKeySessions that will be kept as a cache to avoid
    * doing superfluous license requests.
