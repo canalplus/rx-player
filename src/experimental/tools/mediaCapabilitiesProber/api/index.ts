@@ -109,18 +109,7 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "decodingInfos",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
-      switch (globalStatusNumber) {
-        case 0:
-          return "NotSupported";
-        case 1:
-          return "MaybeSupported";
-        case 2:
-          return "Supported";
-        default:
-          return "NotSupported";
-      }
-    });
+    return getStatusFromConfiguration(config, browserAPIS);
   },
 
   /**
