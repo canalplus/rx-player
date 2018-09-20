@@ -46,9 +46,8 @@ export default function updateSegmentTimeline(
     return false;
   }
 
-  const prevTimelineLength = oldTimeline.length;
   const newIndexStart = newTimeline[0].start;
-
+  const prevTimelineLength = oldTimeline.length;
   const oldLastElt = oldTimeline[prevTimelineLength - 1];
   const oldIndexEnd = getIndexSegmentEnd(oldLastElt, newTimeline[0]);
   if (oldIndexEnd < newIndexStart) {
