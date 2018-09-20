@@ -146,23 +146,26 @@ const mediaCapabilitiesProber = {
           const requestMediaKeySystemAccessResults = resultsFromAPIS
             .find((result) => result.APIName === "requestMediaKeySystemAccess");
 
-          if (
-            requestMediaKeySystemAccessResults == null ||
-            requestMediaKeySystemAccessResults.result == null
-          ) {
-            throw new Error();
-          }
-
           return {
+            // As only one API is called, global status is
+            // requestMediaKeySystemAccess status.
             globalStatusNumber,
-            result: requestMediaKeySystemAccessResults.result,
+            result: requestMediaKeySystemAccessResults ?
+              requestMediaKeySystemAccessResults.result : undefined,
           };
-        }));
+        })
+        .catch(() => { // API couln't be called.
+          return {
+            globalStatusNumber: 0,
+          };
+        })
+      );
     });
-    return Promise.all(promises).then((supportedConfigs) => {
-      return supportedConfigs
-        .map(({ result }) => result);
-    });
+    return Promise.all(promises)
+      .then((supportedConfigs) => {
+        return supportedConfigs
+          .map(({ result }) => result);
+      });
   },
 
   /**
