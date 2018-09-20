@@ -56,10 +56,10 @@ export default function probeContentType(config: IMediaConfiguration): Promise<[
         throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling isTypeSupported.");
       }
-      const result = contentTypes.reduce((acc, val) => {
+      const result: [number] = [contentTypes.reduce((acc, val) => {
         const support = (window as any).MediaSource.isTypeSupported(val) ? 2 : 0;
         return Math.min(acc, support);
-      }, 3);
-      return [result] as [number];
+      }, 3)];
+      return result;
     });
 }
