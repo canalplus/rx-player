@@ -101,65 +101,91 @@ mediaCapabilitiesProber.LogLevel = "NONE";
 
 _arguments_:
 
-  - _configurations_ (``Array.<Object>``): An array of configuration that contains:
-    - _type_ (``string``): DRM reverse domain name, identifying the keySystem in
-    the browser.
+  - _keySystems_ (``Array.<Object>``): An array of key system
+    configurations. Those objects have the following properties:
 
-    - _configuration_ (``Object``): MediaKeySystemConfiguration for this
-    key system as defined in [the EME w3c specification
-    ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
+    - _type_ (``string``): Key system string identifying it in the browser.
+    Always a reverse domain name (e.g. "org.w3.clearkey").
 
-_return value_:
+    - _configuration_ (``Object``): Wanted MediaKeySystemConfiguration for this
+      key system, as defined in [the EME w3c
+      specification.](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 
-  - _configurations_ (``Array.<Object>``): An array of configuration that contains:
-    - _type_ (``string``): input DRM reverse domain name, identifying the keySystem in
-    the browser.
+_return value_: ``Array.<Object>``
 
-    - _configuration_ (``Object``): input MediaKeySystemConfiguration for this
-    key system as defined in [the EME w3c specification
-    ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
+Probe the support of various key sytems and for each compatible ones, returns
+the corresponding configuration that will be used.
 
-    - _compatibleConfiguration_ (``undefined|Object``): A compatible subset
-    of given MediaKeySystemConfiguration, defined if configuration is supported.
 
-For each given configuration, probe for support. The API returns the input
-elements, with the compatible configuration subset for each element, if
-configuration is supported.
+#### Return value
+
+The returned value is an array of object with the same number of elements than
+the one given in argument.
+
+It indicates the support for each Key System given in argument in the same
+order.
+
+Due to that, the objects in this array look like the ones given in argument (but
+with an added property):
+
+  - _type_ (``string``): Corresponding key system string given in input.
+
+  - _configuration_ (``Object``): Corresponding wanted
+    MediaKeySystemConfiguration given in input.
+
+  - _compatibleConfiguration_ (``undefined|Object``):
+
+    if the type and configuration are both compatible with the browser, this
+    is the corresponding actual MediaKeySystemConfiguration that will be
+    effectively used.
+    It will often correspond to a subset of the inputted _configuration_
+    object (for example, you might have there fewer _videoCapabilities_ that
+    in the _configuration_ object).
+
+    If the type and/or the configuration are not compatible, this property
+    will not be defined.
+
 
 #### Example
 
 ```js
 import { mediaCapabilitiesProber } from "rx-player/experimental/tools";
 
-const configurations = [
-  { // Consider this as compatible
+const keySystems = [
+  { // Let's consider this one as a compatible key system configuration
     type: "com.widevine.alpha",
     configuration, // w3c MediaKeySystemConfiguration
   },
-  { // Consider this as not compatible
+  { // Let's consider this one as not compatible
     type: "com.microsoft.playready",
     configuration, // w3c MediaKeySystemConfiguration
   },
 ];
 
-mediaCapabilitiesProber.getCompatibleDRMConfigurations("com.widevine.alpha", {
-  persistentState: "required"
-}).then((drmConfigurations) => {
-  configurations.forEach((drmConfigurations) => {
-    if (drmConfigurations.combatibleConfiguration != null) {
+mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems)
+  .then((drmConfigs) => {
+    drmConfigs.forEach((config) => {
       const {
-        type,
-        configuration,
-        combatibleConfiguration
-      } = drmConfigurations;
-      console.log("For DRM: " + type + " and given configuration: "
-        + configuration + ", supported configuration is: " + combatibleConfiguration);
-    } else {
-      console.log("DRM: " + type + " and configuration: " + configuration +
-        " are not supported.");
-    }
+      type,
+      configuration,
+      combatibleConfiguration
+      } = config;
+
+      if (combatibleConfiguration !== undefined) {
+        console.log(
+          "For Key System: " + type +
+          " and wanted configuration: " + configuration +
+          ", the supported configuration is: " + combatibleConfiguration
+        );
+      } else {
+        console.log(
+          "The Key System: " + type +
+          "and linked wanted configuration: " + configuration +
+          " is not supported by the browser."
+        );
+      }
+    });
   });
-});
 ```
 
 
