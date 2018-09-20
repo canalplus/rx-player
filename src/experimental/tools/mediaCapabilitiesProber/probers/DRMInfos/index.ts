@@ -50,7 +50,7 @@ export default function probeDRMInfos(
             const keySystemConfiguration = keySystemAccess.getConfiguration();
             const result: ICompatibleKeySystem = {
               type,
-              configuration: keySystemConfiguration,
+              configuration,
               compatibleConfiguration: keySystemConfiguration,
             };
             resolve([2, result]);
