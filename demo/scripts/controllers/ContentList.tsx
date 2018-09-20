@@ -36,13 +36,14 @@ const IS_HTTPS = window.location.protocol.startsWith("https");
 
 const CUSTOM_DRM_NAME = "Other";
 
-const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile", "MetaPlaylist"];
+const TRANSPORT_TYPES = ["HLS", "DASH", "Smooth", "DirectFile", "MetaPlaylist"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey", CUSTOM_DRM_NAME];
 
 const DISABLE_ENCRYPTED_CONTENT = !HAS_EME_APIs && !IS_HTTPS;
 
 const URL_DENOMINATIONS: Partial<Record<string, string>> = {
   DASH: "URL to the MPD",
+  HLS: "URL to the MultiVariant Playlist",
   Smooth: "URL to the Manifest",
   DirectFile: "URL to the content",
 };

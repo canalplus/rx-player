@@ -65,7 +65,7 @@ export interface ITransportPipelines {
 }
 
 /** Name describing the transport pipeline. */
-export type ITransportName = "dash" | "smooth" | "local" | "metaplaylist";
+export type ITransportName = "dash" | "smooth" | "local" | "metaplaylist" | "hls";
 
 /** Functions allowing to load and parse the Manifest. */
 export interface ITransportManifestPipeline {

@@ -19,6 +19,7 @@ export { DASH_WASM } from "./dash_wasm";
 export { DEBUG_ELEMENT } from "./debug_element";
 export { DIRECTFILE } from "./directfile";
 export { EME } from "./eme";
+export { HLS } from "./hls";
 export { HTML_SAMI_PARSER } from "./html_sami_parser";
 export { HTML_SRT_PARSER } from "./html_srt_parser";
 export { HTML_TEXT_BUFFER } from "./html_text_buffer";
