@@ -23,6 +23,30 @@ import {
 import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
 
 /**
+ * Probe configuration and get status from result.
+ * @param {Object} config
+ * @param {Array.<Object>} browserAPIS
+ * @returns {Promise.<string>}
+ */
+function getStatusFromConfiguration(
+  config: IMediaConfiguration,
+  browserAPIS: IBrowserAPIS[]
+): Promise<string> {
+  return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
+    switch (globalStatusNumber) {
+      case 0:
+        return "NotSupported";
+      case 1:
+        return "Unknown";
+      case 2:
+        return "Supported";
+      default:
+        return "NotSupported";
+    }
+  });
+}
+
+/**
  * A set of API to probe media capabilites.
  * Each API allow to evalute a specific feature (HDCP support, decoding infos, etc)
  * and relies on different browser API to probe capabilites.
@@ -63,18 +87,7 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "getStatusForPolicy",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
-      switch (globalStatusNumber) {
-        case 0:
-          return "NotSupported";
-        case 1:
-          return "Unknown";
-        case 2:
-          return "Supported";
-        default:
-          return "NotSupported";
-      }
-    });
+    return getStatusFromConfiguration (config, browserAPIS);
   },
 
   /**
@@ -166,18 +179,7 @@ const mediaCapabilitiesProber = {
       "matchMedia",
       "isTypeSupportedWithFeatures",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
-      switch (globalStatusNumber) {
-        case 0:
-          return "NotSupported";
-        case 1:
-          return "MaybeSupported";
-        case 2:
-          return "Supported";
-        default:
-          return "NotSupported";
-      }
-    });
+    return getStatusFromConfiguration(config, browserAPIS);
   },
 };
 
