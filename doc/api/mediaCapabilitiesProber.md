@@ -109,7 +109,18 @@ _arguments_:
     key system as defined in [the EME w3c specification
     ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 
-_return value_: ``Array.<Object>``
+_return value_:
+
+  - _configurations_ (``Array.<Object>``): An array of configuration that contains:
+    - _type_ (``string``): input DRM reverse domain name, identifying the keySystem in
+    the browser.
+
+    - _configuration_ (``Object``): input MediaKeySystemConfiguration for this
+    key system as defined in [the EME w3c specification
+    ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
+
+    - _compatibleConfiguration_ (``undefined|Object``): A compatible subset
+    of given MediaKeySystemConfiguration, defined if configuration is supported.
 
 For each given configuration, probe for support. The API returns the input
 elements, with the compatible configuration subset for each element, if
@@ -136,9 +147,16 @@ mediaCapabilitiesProber.getCompatibleDRMConfigurations("com.widevine.alpha", {
 }).then((drmConfigurations) => {
   configurations.forEach((drmConfigurations) => {
     if (drmConfigurations.combatibleConfiguration != null) {
-      console.log("The configuration is supported", drmConfiguration);
+      const {
+        type,
+        configuration,
+        combatibleConfiguration
+      } = drmConfigurations;
+      console.log("For DRM: " + type + " and given configuration: "
+        + configuration + ", supported configuration is: " + combatibleConfiguration);
     } else {
-      console.log("The configuration is not supported", drmConfiguration);
+      console.log("DRM: " + type + " and configuration: " + configuration +
+        " are not supported.");
     }
   });
 });
