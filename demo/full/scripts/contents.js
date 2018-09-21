@@ -72,6 +72,26 @@ export default [
     "transport": "dash",
   },
   {
+    "name": "Super SpeedWay",
+    "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+    "transport": "smooth",
+  },
+  {
+    "name": "Big Buck Bunny",
+    "url": "https://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest",
+    "transport": "smooth",
+  },
+  // {
+  //   "name": "Microsoft: XBoxOne Ad",
+  //   "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest",
+  //   "transport": "smooth",
+  //   "live": false,
+  //   "drmInfos": [{
+  //     "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
+  //     "drm": "playready",
+  //   }],
+  // },
+  {
     "name": "Smooth Ingest",
     "url": "https://b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/manifest",
     "transport": "smooth",
@@ -80,11 +100,6 @@ export default [
   {
     "name": "Taxi 3 SoundTrack (Audio-Only)",
     "url": "https://playready.directtaps.net/smoothstreaming/ISMAAACLC/Taxi3_AACLC.ism/Manifest",
-    "transport": "smooth",
-  },
-  {
-    "name": "Super SpeedWay",
-    "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
     "transport": "smooth",
   },
   {
