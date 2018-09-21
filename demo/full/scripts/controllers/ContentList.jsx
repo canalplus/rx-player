@@ -38,7 +38,7 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
         name += " (live)";
       }
     
-      return { name, disabled };
+      return { content, name, disabled };
     });
   return acc;
 }, {});
@@ -57,8 +57,8 @@ class ContentList extends React.Component {
 
     this.state = {
       transportType: TRANSPORT_TYPES[0],
-      choiceIndex: Math.max(firstEnabledContentIndex, 0),
-      hasTextInput: !CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length,
+      choiceIndex: firstEnabledContentIndex,
+      hasTextInput: CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length - 1 === firstEnabledContentIndex,
       displayDRMSettings: false,
       manifestUrl: "",
       drm: DRM_TYPES[0],
@@ -121,13 +121,14 @@ class ContentList extends React.Component {
     this.setState({
       transportType,
       choiceIndex: firstEnabledContentIndex,
-      hasTextInput: !CONTENTS_PER_TYPE[transportType].length,
+      hasTextInput: CONTENTS_PER_TYPE[transportType].length - 1 === firstEnabledContentIndex
     });
   }
 
   changeContentIndex(index) {
     const { transportType } = this.state;
-    const hasTextInput = CONTENTS_PER_TYPE[transportType].length === index;
+    const hasTextInput = CONTENTS_PER_TYPE[transportType].length - 1 === index;
+
     this.setState({
       choiceIndex: index,
       hasTextInput,
@@ -204,7 +205,7 @@ class ContentList extends React.Component {
     };
 
     const onClickLoad = () => {
-      if (choiceIndex === contents.length) {
+      if (choiceIndex === contentsToSelect.length - 1) {
         const drmInfos = [{
           licenseServerUrl,
           serverCertificateUrl,
@@ -212,7 +213,7 @@ class ContentList extends React.Component {
         }];
         this.loadUrl(manifestUrl, drmInfos, autoPlay);
       } else {
-        this.loadContent(contents[choiceIndex]);
+        this.loadContent(contentsToSelect[choiceIndex].content);
       }
     };
 
