@@ -231,7 +231,10 @@ Most APIs related to the current content are not yet available while the
 content is loading.</p>
 </li>
 <li>
-<p><code>&quot;LOADED&quot;</code>: The player can begin to play a new stream.</p>
+<p><code>&quot;LOADED&quot;</code>: The player has loaded the new content, it is now ready to
+play.
+From this point onward you can use APIs interacting with the current content
+such as <code>seekTo</code> or <code>setAudioTrack</code>.</p>
 </li>
 <li>
 <p><code>&quot;PLAYING&quot;</code>: The player is currently playing the stream.</p>
@@ -258,30 +261,8 @@ content are not available. This state should be treated like the <code>LOADING</
 state.</p>
 </li>
 </ul>
-<p>State chart:</p>
-<pre><code>    +---------+
-    | STOPPED | &lt;-------------------+
-    +---------+                     | stop() or &quot;error&quot; event
-       |                            |
-+------| loadVideo() ---------------------------------------------------------+
-|      |                           +---------------------+                    |
-|      V                           |                     |                    |
-|  +---------+     +--------+   play()   +---------+     |    +-------+       |
-|  | LOADING | --&gt; | LOADED | -----|---&gt; | PLAYING | ----|--&gt; | ENDED |       |
-|  +---------+     +--------+  autoPlay  +---------+     |    +-------+       |
-|                                  |         | ^         |                    |
-|       +-----------+              |         | |         |                    |
-|       | BUFFERING |  &lt;--------&gt;  |  play() | | pause() |                    |
-|       +-----------+              |         | |         |                    |
-|                                  |         | |         |                    |
-|       +---------+    seekTo()    |         V |         |     +-----------+  |
-|       |         |  &lt;-----------  |     +--------+      | --&gt; | RELOADING |  |
-|       | SEEKING |                |     | PAUSED |      |     +-----------+  |
-|       |         |  -----------&gt;  |     +--------+      |       |            |
-|       +---------+                |                     | &lt;-----+            |
-|                                  +---------------------+                    |
-+-----------------------------------------------------------------------------+
-</code></pre>
+<p>As it is a central part of our API and can be difficult concept to understand,
+we have a special <a href="states.html">page of documentation on player states</a>.</p>
 <h4>Example</h4>
 <pre><code class="language-js"><span class="hljs-keyword">switch</span> (player.getPlayerState()) {
   <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;STOPPED&quot;</span>:
