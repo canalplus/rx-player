@@ -100,8 +100,9 @@ received.
 There is only 4 possible message types, all defined in <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype">the w3c
 specification</a>.</li>
 </ol>
-<p>This function should return either synchronously the license, or a Promise
-which should either:
+<p>This function should return either synchronously the license, <code>null</code> to
+not set a license for this <code>message</code> event or a Promise which should
+either:
 - resolves if the license was fetched, with the licence in argument
 - resolve with <code>null</code> if you do not want to set a license for this
 <code>message</code> event
@@ -172,7 +173,8 @@ updated.</p>
 </li>
 <li>
 <p><code>onKeyStatusesChange</code>: (<code>Function|undefined</code>): Not needed for most
-usecases. Triggered each time the key statuses of the current session
+usecases.</p>
+<p>Triggered each time the key statuses of the current session
 changes, except for the following statuses (which throws immediately):</p>
 <ul>
 <li><code>expired</code> if (and only if) <code>throwOnLicenseExpiration</code> is not set to
@@ -185,7 +187,8 @@ changes, except for the following statuses (which throws immediately):</p>
 <li>The session associated with the event <code>{MediaKeySession}</code></li>
 </ol>
 <p>Like <code>getLicense</code>, this function should return a promise which emit a
-license or <code>null</code> (for no license) when resolved.</p>
+license or <code>null</code> (for no license) when resolved. It can also return
+directly the license or <code>null</code> if it can be done synchronously.</p>
 </li>
 <li>
 <p><code>closeSessionsOnStop</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, the
