@@ -111,8 +111,8 @@ mv $tmpIndexFile index.html
 mv $tmpRxPlayerFile rx-player.js
 mv $tmpDemoFile bundle.js
 
-sed -i -E "s/\b\"http:\/\/127\.0\.0\.1:3941\/lib.js\"\b/\"rx-player.js\"/g" index.html
-sed -i -E "s/\b\"http:\/\/127\.0\.0\.1:8000\/bundle.js\"\b/\"bundle.js\"/g" index.html
+sed -i -E "s/\bhttp:\/\/127\.0\.0\.1:3941\/lib.js\b/rx-player.js/g" index.html
+sed -i -E "s/\bhttp:\/\/127\.0\.0\.1:8000\/bundle.js\b/bundle.js/g" index.html
 
 
 if [ -n "$(git status --porcelain demo/full)" ]; then
