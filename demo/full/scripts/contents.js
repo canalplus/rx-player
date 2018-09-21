@@ -10,7 +10,7 @@ export default [
   },
   {
     "name": "DASH-IF - SegmentTimeline live stream",
-    "url": "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+    "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
@@ -36,7 +36,7 @@ export default [
   },
   {
     "name": "DASH-IF - SegmentTemplate live stream",
-    "url": "http://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/Manifest.mpd",
+    "url": "https://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
   },
@@ -48,7 +48,7 @@ export default [
   },
   {
     "name": "DASH-IF - Multi-Subtitles",
-    "url": "http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+    "url": "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
     "transport": "dash",
     "live": false,
   },
@@ -60,7 +60,7 @@ export default [
   },
   {
     "name": "DASH-IF - Audio-only",
-    "url": "http://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
+    "url": "https://vm2.dashif.org/livesim/testpic_2s/audio.mpd",
     "transport": "dash",
     "live": true,
   },
@@ -77,12 +77,12 @@ export default [
   },
   {
     "name": "Unified Streaming - Timeline - A-Team",
-    "url": "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
+    "url": "https://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
     "transport": "dash",
   },
   {
     "name": "Smooth Ingest",
-    "url": "http://b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/manifest",
+    "url": "https://b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/manifest",
     "transport": "smooth",
     "live": true,
   },
@@ -93,7 +93,7 @@ export default [
   },
   {
     "name": "Taxi 3 SoundTrack (Audio-Only)",
-    "url": "http://playready.directtaps.net/smoothstreaming/ISMAAACLC/Taxi3_AACLC.ism/Manifest",
+    "url": "https://playready.directtaps.net/smoothstreaming/ISMAAACLC/Taxi3_AACLC.ism/Manifest",
     "transport": "smooth",
   },
   {
