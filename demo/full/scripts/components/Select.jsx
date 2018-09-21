@@ -14,12 +14,20 @@ export default ({
   disabled,
 }) => {
   const optionsEl = options.map((val, index) =>
-    <option
-      key={index}
-      value={index}
-    >
-      {val}
-    </option>
+    typeof val === "object" ?
+      <option
+        key={index}
+        value={index}
+        disabled={val.disabled}
+      >
+        {val.name}
+      </option> :
+      <option
+        key={index}
+        value={index}
+      >
+        {val}
+      </option>
   );
 
   const selectEl = disabled ? (

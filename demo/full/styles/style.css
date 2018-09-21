@@ -6,7 +6,7 @@
 }
 
 @font-face {
-  font-family: "Roboto", "Open Sans", sans-serif;
+  font-family: "Roboto";
   src: url("../fonts/Roboto-Regular.otf");
   font-weight: normal;
   font-style: normal;
@@ -14,7 +14,7 @@
 
 body {
   margin: 0px;
-  font-family: "Roboto", "Open Sans", sans-serif;
+  font-family: "CanalDemiRomain", "Open Sans", sans-serif;
 }
 
 .icon {
@@ -127,7 +127,7 @@ body {
 }
 
 .choice-input.text-input {
-  font-family: Roboto, "Open Sans", sans-serif;
+  font-family: CanalDemiRomain, "Open Sans", sans-serif;
   font-size: 1rem;
   width: 100%;
   margin-right: 0px;
@@ -149,7 +149,6 @@ body {
 }
 
 .content-choice select {
-  max-width: 375px;
   width: 100%;
 }
 
@@ -562,6 +561,10 @@ body {
 
 .encryption-checkbox {
   margin-bottom: 10px;
+}
+
+.encryption-checkbox.disabled {
+  color: #888;
 }
 
 .chart-checkboxes {

@@ -5,6 +5,8 @@ import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
+const IS_HTTPS = window.location.protocol.startsWith("https");
+const HAS_EME_APIs = typeof navigator.requestMediaKeySystemAccess === "function";
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
@@ -15,20 +17,48 @@ const URL_DENOMINATIONS = {
 };
 
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
-  acc[tech] = contentsDatabase.filter(({ transport }) =>
-    transport === tech.toLowerCase()
-  );
+  acc[tech] = contentsDatabase
+    .filter(({ transport }) =>
+      transport === tech.toLowerCase()
+    ).map((content) => {
+      let name = content.name;
+      let disabled = false;
+    
+      if (IS_HTTPS) {
+        if (content.url.startsWith("http:")) {
+          name = "[HTTP only] " + name;
+          disabled = true;
+        }
+      } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
+        name = "[HTTPS only] " + name;
+        disabled = true;
+      }
+    
+      if (content.live) {
+        name += " (live)";
+      }
+    
+      return { content, name, disabled };
+    });
   return acc;
 }, {});
+
+Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
+  CONTENTS_PER_TYPE[key].push({ name: "Custom link", disabled: false });
+})
 
 class ContentList extends React.Component {
   constructor(...args) {
     super(...args);
 
+    const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
+    const firstEnabledContentIndex =
+      contents.findIndex((content) => !content.disabled);
+
     this.state = {
       transportType: TRANSPORT_TYPES[0],
-      choiceIndex: 0,
-      hasTextInput: !CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length,
+      choiceIndex: firstEnabledContentIndex,
+      hasTextInput: CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length - 1 === firstEnabledContentIndex,
       displayDRMSettings: false,
       manifestUrl: "",
       drm: DRM_TYPES[0],
@@ -85,16 +115,20 @@ class ContentList extends React.Component {
   }
 
   changeTransportType(transportType) {
+    const contents = CONTENTS_PER_TYPE[transportType];
+    const firstEnabledContentIndex =
+      contents.findIndex((content) => !content.disabled);
     this.setState({
       transportType,
-      choiceIndex: 0,
-      hasTextInput: !CONTENTS_PER_TYPE[transportType].length,
+      choiceIndex: firstEnabledContentIndex,
+      hasTextInput: CONTENTS_PER_TYPE[transportType].length - 1 === firstEnabledContentIndex
     });
   }
 
   changeContentIndex(index) {
     const { transportType } = this.state;
-    const hasTextInput = CONTENTS_PER_TYPE[transportType].length === index;
+    const hasTextInput = CONTENTS_PER_TYPE[transportType].length - 1 === index;
+
     this.setState({
       choiceIndex: index,
       hasTextInput,
@@ -156,12 +190,7 @@ class ContentList extends React.Component {
       autoPlay,
     } = this.state;
     const { isStopped } = this.props;
-    const contents = CONTENTS_PER_TYPE[transportType];
-
-    const contentsName = contents.map(content =>
-      `${content.name}${content.live ? " (live)" : ""}`
-    );
-    contentsName.push("Custom link");
+    const contentsToSelect = CONTENTS_PER_TYPE[transportType];
 
     const onTechChange = (evt) => {
       const index = +evt.target.value;
@@ -176,7 +205,7 @@ class ContentList extends React.Component {
     };
 
     const onClickLoad = () => {
-      if (choiceIndex === contents.length) {
+      if (choiceIndex === contentsToSelect.length - 1) {
         const drmInfos = [{
           licenseServerUrl,
           serverCertificateUrl,
@@ -184,7 +213,7 @@ class ContentList extends React.Component {
         }];
         this.loadUrl(manifestUrl, drmInfos, autoPlay);
       } else {
-        this.loadContent(contents[choiceIndex]);
+        this.loadContent(contentsToSelect[choiceIndex].content);
       }
     };
 
@@ -206,6 +235,8 @@ class ContentList extends React.Component {
     const onAutoPlayCheckbox = (evt) =>
       this.onToggleAutoPlay(evt);
 
+    const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
+ 
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
@@ -218,7 +249,7 @@ class ContentList extends React.Component {
             <Select
               className="choice-input content-choice white-select"
               onChange={onContentChange}
-              options={contentsName}
+              options={contentsToSelect}
               selected={choiceIndex}
             />
           </div>
@@ -254,13 +285,16 @@ class ContentList extends React.Component {
                   onChange={onManifestInput}
                   value={manifestUrl}
                   placeholder={
-                    URL_DENOMINATIONS[transportType] ||
-                    `URL to the ${transportType} content`
+                    (
+                      URL_DENOMINATIONS[transportType] ||
+                      `URL to the ${transportType} content`
+                    ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
-                <span className="encryption-checkbox" >
-                  Encrypted content
+                <span className={"encryption-checkbox" + (shouldDisableEncryptedContent ? " disabled" : "")}>
+                  {(shouldDisableEncryptedContent ? "[HTTPS only] " : "") + "Encrypted content"}
                   <input
+                    disabled={shouldDisableEncryptedContent}
                     name="displayDRMSettingsTextInput"
                     type="checkbox"
                     checked={displayDRMSettings}

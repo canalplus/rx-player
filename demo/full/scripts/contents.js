@@ -1,18 +1,29 @@
 export default [
   {
-    "name": "Canal + - BIF Thumbnail Track example",
-    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
-    "transport": "smooth",
-    "supplementaryImageTracks": {
-      "mimeType": "application/bif",
-      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
-    },
-  },
-  {
     "name": "DASH-IF - SegmentTimeline live stream",
     "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
     "transport": "dash",
     "live": true,
+  },
+  {
+    "name": "Tears of Steal (DRM Widevine)",
+    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+    "transport": "dash",
+    "live": false,
+    "drmInfos": [{
+      "licenseServerUrl": "https://cwip-shaka-proxy.appspot.com/no_auth",
+      "drm": "widevine",
+    }],
+  },
+  {
+    "name": "Tears of Steal (DRM PlayReady)",
+    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-playready.ism/.mpd",
+    "transport": "dash",
+    "live": false,
+    "drmInfos": [{
+      "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
+      "drm": "playready",
+    }],
   },
   {
     "name": "DASH-IF - SegmentTemplate live stream",
@@ -61,15 +72,30 @@ export default [
     "transport": "dash",
   },
   {
+    "name": "Super SpeedWay",
+    "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+    "transport": "smooth",
+  },
+  {
+    "name": "Big Buck Bunny",
+    "url": "https://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest",
+    "transport": "smooth",
+  },
+  // {
+  //   "name": "Microsoft: XBoxOne Ad",
+  //   "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest",
+  //   "transport": "smooth",
+  //   "live": false,
+  //   "drmInfos": [{
+  //     "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
+  //     "drm": "playready",
+  //   }],
+  // },
+  {
     "name": "Smooth Ingest",
     "url": "https://b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/manifest",
     "transport": "smooth",
     "live": true,
-  },
-  {
-    "name": "Super SpeedWay",
-    "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
-    "transport": "smooth",
   },
   {
     "name": "Taxi 3 SoundTrack (Audio-Only)",
@@ -105,5 +131,14 @@ export default [
     "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-webm-only/dash.mpd",
     "transport": "dash",
     "live": false,
+  },
+  {
+    "name": "Canal + - BIF Thumbnail Track example",
+    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
+    "transport": "smooth",
+    "supplementaryImageTracks": {
+      "mimeType": "application/bif",
+      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
+    },
   },
 ];
