@@ -151,41 +151,107 @@ with an added property):
 ```js
 import { mediaCapabilitiesProber } from "rx-player/experimental/tools";
 
+const mksConfiguration = {
+  initDataTypes: ["cenc"],
+  videoCapabilities: [
+    {
+      contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
+      robustness: "HW_SECURE_CRYPTO",
+    },
+    {
+      contentType: "video/mp4;codecs=\"avc1.4d401e\"",
+      robustness: "SW_SECURE_DECODE",
+    }
+  ]
+};
+
 const keySystems = [
-  { // Let's consider this one as a compatible key system configuration
-    type: "com.widevine.alpha",
-    configuration, // w3c MediaKeySystemConfiguration
-  },
-  { // Let's consider this one as not compatible
-    type: "com.microsoft.playready",
-    configuration, // w3c MediaKeySystemConfiguration
-  },
+  // Let's consider this one as a compatible key system configuration
+  { type: "com.widevine.alpha", configuration: mksConfiguration },
+
+  // Let's consider this one as not compatible
+  { type: "com.microsoft.playready", configuration: mksConfiguration },
 ];
 
 mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems)
   .then((drmConfigs) => {
     drmConfigs.forEach((config) => {
       const {
-      type,
-      configuration,
-      combatibleConfiguration
+        type,
+        configuration,
+        compatibleConfiguration
       } = config;
 
-      if (combatibleConfiguration !== undefined) {
-        console.log(
-          "For Key System: " + type +
-          " and wanted configuration: " + configuration +
-          ", the supported configuration is: " + combatibleConfiguration
-        );
+      if (compatibleConfiguration !== undefined) {
+        console.log("# Compatible configuration #############################");
+        console.log("Key System:", type);
+        console.log("Wanted configuration:", configuration);
+        console.log("Compatible configuration:", compatibleConfiguration);
+        console.log("########################################################");
+        console.log("");
       } else {
-        console.log(
-          "The Key System: " + type +
-          "and linked wanted configuration: " + configuration +
-          " is not supported by the browser."
-        );
+        console.log("# Incompatible configuration ###########################");
+        console.log("Key System:", type);
+        console.log("Wanted configuration:", configuration);
+        console.log("########################################################");
+        console.log("");
       }
     });
   });
+
+// Example output (please note that in this example, one of the widevine
+// robustness is not supported):
+//
+// # Compatible configuration #############################
+// Key System: com.widevine.alpha
+// Wanted configuration:
+// {
+//   "initDataTypes":["cenc"],
+//   "videoCapabilities": [
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "HW_SECURE_CRYPTO"
+//     },
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "SW_SECURE_DECODE"
+//     }
+//   ]
+// }
+// Compatible configuration:
+// {
+//   "audioCapabilities": [],
+//   "distinctiveIdentifier": "not-allowed",
+//   "initDataTypes": ["cenc"],
+//   "label": "",
+//   "persistentState": "not-allowed",
+//   "sessionTypes": ["temporary"],
+//   "videoCapabilities": [
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness":"SW_SECURE_DECODE"
+//     }
+//   ]
+// }
+// ########################################################
+//
+// # Incompatible configuration ###########################
+// Key System: com.microsoft.playready
+// Wanted configuration:
+// {
+//   "initDataTypes":["cenc"],
+//   "videoCapabilities": [
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "HW_SECURE_CRYPTO"
+//     },
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "SW_SECURE_DECODE"
+//     }
+//   ]
+// }
+// ########################################################
 ```
 
 
